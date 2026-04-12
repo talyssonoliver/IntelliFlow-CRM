@@ -1,0 +1,231 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-085",
+  "run_id": "20260126-232700",
+  "attestor": "Claude Code - Task Integrity Validator",
+  "attestation_timestamp": "2026-01-26T23:27:00.000Z",
+  "verdict": "COMPLETE",
+  "context_acknowledgment": {
+    "files_read": [
+      {
+        "path": "apps/ai-worker/src/chains/scoring.chain.ts",
+        "sha256": "564b3e56be200ae002daaa13b894f6232268fdd37fe9c4f01026beb08e37770d"
+      },
+      {
+        "path": "apps/ai-worker/src/chains/ollama-scoring.chain.test.ts",
+        "sha256": "27fcf121067a30a124cedd756324d4451aa79bb8b6740f0140874165a3b75c46"
+      },
+      {
+        "path": "apps/ai-worker/package.json",
+        "sha256": "0b8e1c1fdfabc1e69bfd143946f1121caaa19f905017164e9fe3d445023dd54d"
+      },
+      {
+        "path": "artifacts/benchmarks/accuracy-benchmarks.json",
+        "sha256": "ef6f7a610d8d9a1cf00413ddf423b30fc6e5c98f803b4c6cc778afe623d15936"
+      },
+      {
+        "path": "artifacts/misc/ollama-setup.sh",
+        "sha256": "31da443cec72688b9f08cccda48743e26ab9afc9692be4c76651771b4f55aaa4"
+      },
+      {
+        "path": "artifacts/misc/model-comparison.csv",
+        "sha256": "39f48e8477d5712e8c26ceef00e5499ad6d1f6568304f2adb6bf4e54ecaeee99"
+      },
+      {
+        "path": "artifacts/reports/cost-savings-report.json",
+        "sha256": "edaec29fe8c31556c83ff6c59aa4b5680afd6034d146d629c4471279f11221dc"
+      }
+    ],
+    "invariants_acknowledged": [
+      "Local LLM for dev/test, cost savings",
+      "Ollama provider integrated into scoring.chain.ts",
+      "@langchain/ollama dependency added",
+      "ChatOllama configuration matches aiConfig.ollama settings"
+    ],
+    "acknowledged_at": "2026-01-26T23:27:00.000Z"
+  },
+  "evidence_summary": {
+    "artifacts_verified": 7,
+    "validations_passed": 4,
+    "validations_failed": 0,
+    "gates_passed": 4,
+    "gates_failed": 0,
+    "kpis_met": 3,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/ai-worker/src/chains/scoring.chain.ts": "564b3e56be200ae002daaa13b894f6232268fdd37fe9c4f01026beb08e37770d",
+    "apps/ai-worker/src/chains/ollama-scoring.chain.test.ts": "27fcf121067a30a124cedd756324d4451aa79bb8b6740f0140874165a3b75c46",
+    "apps/ai-worker/package.json": "0b8e1c1fdfabc1e69bfd143946f1121caaa19f905017164e9fe3d445023dd54d",
+    "artifacts/benchmarks/accuracy-benchmarks.json": "ef6f7a610d8d9a1cf00413ddf423b30fc6e5c98f803b4c6cc778afe623d15936",
+    "artifacts/misc/ollama-setup.sh": "31da443cec72688b9f08cccda48743e26ab9afc9692be4c76651771b4f55aaa4",
+    "artifacts/misc/model-comparison.csv": "39f48e8477d5712e8c26ceef00e5499ad6d1f6568304f2adb6bf4e54ecaeee99",
+    "artifacts/reports/cost-savings-report.json": "edaec29fe8c31556c83ff6c59aa4b5680afd6034d146d629c4471279f11221dc"
+  },
+  "validation_results": [
+    {
+      "name": "typecheck",
+      "command": "pnpm --filter @intelliflow/ai-worker typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-01-26T23:25:00.000Z",
+      "duration_ms": 3500
+    },
+    {
+      "name": "lint",
+      "command": "pnpm --filter @intelliflow/ai-worker lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-01-26T23:25:05.000Z",
+      "duration_ms": 2900
+    },
+    {
+      "name": "tests",
+      "command": "pnpm --filter @intelliflow/ai-worker test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-01-26T23:26:03.000Z",
+      "duration_ms": 4150,
+      "details": {
+        "test_files": 24,
+        "tests_passed": 557,
+        "tests_failed": 0,
+        "ollama_tests_passed": 8
+      }
+    },
+    {
+      "name": "build",
+      "command": "pnpm --filter @intelliflow/ai-worker build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-01-26T23:26:30.000Z",
+      "duration_ms": 1500
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "GATE-TYPECHECK",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-01-26T23:25:00.000Z"
+    },
+    {
+      "gate_id": "GATE-LINT",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-01-26T23:25:05.000Z"
+    },
+    {
+      "gate_id": "GATE-TESTS",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-01-26T23:26:03.000Z"
+    },
+    {
+      "gate_id": "GATE-BUILD",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-01-26T23:26:30.000Z"
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Dev costs reduced 90%",
+      "target": ">=90% cost reduction using local LLM",
+      "actual": "100% cost reduction (Ollama is free)",
+      "met": true
+    },
+    {
+      "kpi": "Ollama provider implementation complete",
+      "target": "No 'not yet implemented' error",
+      "actual": "ChatOllama fully integrated with @langchain/ollama",
+      "met": true
+    },
+    {
+      "kpi": "Test coverage for Ollama",
+      "target": "All Ollama-specific tests passing",
+      "actual": "8/8 Ollama tests passing, 557 total tests passing",
+      "met": true
+    }
+  ],
+  "dependencies_verified": [
+    "IFC-005"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Ollama provider integrated into scoring chain",
+      "met": true,
+      "evidence": "ChatOllama from @langchain/ollama added to scoring.chain.ts with proper configuration from aiConfig.ollama"
+    },
+    {
+      "criterion": "Unit tests for Ollama provider",
+      "met": true,
+      "evidence": "8 dedicated tests in ollama-scoring.chain.test.ts covering initialization, scoring, cost tracking, and error handling"
+    },
+    {
+      "criterion": "All existing tests passing",
+      "met": true,
+      "evidence": "557 tests passing (24 test files) including all existing scoring chain tests"
+    },
+    {
+      "criterion": "Build and type-check passing",
+      "met": true,
+      "evidence": "TypeScript compilation and ESM/CJS build both succeed with exit code 0"
+    },
+    {
+      "criterion": "Documentation updated",
+      "met": true,
+      "evidence": "Delivery report created at .specify/sprints/sprint-2/execution/IFC-085/20260126-231700/IFC-085-delivery.md"
+    }
+  ],
+  "files_modified": [
+    {
+      "path": "apps/ai-worker/src/chains/scoring.chain.ts",
+      "change_type": "modified",
+      "description": "Added ChatOllama import and Ollama provider branch"
+    },
+    {
+      "path": "apps/ai-worker/package.json",
+      "change_type": "modified",
+      "description": "Added @langchain/ollama@^1.2.1 dependency"
+    }
+  ],
+  "files_created": [
+    {
+      "path": "apps/ai-worker/src/chains/ollama-scoring.chain.test.ts",
+      "description": "Unit tests for Ollama provider (8 tests)"
+    }
+  ],
+  "coverage_metrics": {
+    "package": "apps/ai-worker",
+    "threshold": 80,
+    "before": {
+      "file_count": 33,
+      "lines": { "pct": 47.95, "covered": 1199, "total": 2500, "met": false },
+      "branches": { "pct": 39.11, "covered": 528, "total": 1350, "met": false },
+      "functions": { "pct": 43.70, "covered": 232, "total": 531, "met": false },
+      "statements": { "pct": 47.82, "covered": 1290, "total": 2698, "met": false },
+      "captured_at": "2026-01-26T23:00:00.000Z"
+    },
+    "after": {
+      "file_count": 34,
+      "lines": { "pct": 48.32, "covered": 1240, "total": 2566, "met": false },
+      "branches": { "pct": 39.54, "covered": 550, "total": 1391, "met": false },
+      "functions": { "pct": 44.28, "covered": 240, "total": 542, "met": false },
+      "statements": { "pct": 48.16, "covered": 1338, "total": 2778, "met": false },
+      "captured_at": "2026-01-26T23:27:00.000Z"
+    },
+    "delta": {
+      "lines": "+0.37%",
+      "branches": "+0.43%",
+      "functions": "+0.58%",
+      "statements": "+0.34%",
+      "files": "+1",
+      "improved": true
+    },
+    "note": "Coverage improved slightly with new Ollama test file. 8 new tests added for Ollama provider."
+  },
+  "notes": "Ollama provider fully implemented for local development. Tests use mocks for CI; live benchmarks require running Ollama instance. Follow-up tasks IFC-164 and IFC-174 scheduled for accuracy benchmarks."
+}

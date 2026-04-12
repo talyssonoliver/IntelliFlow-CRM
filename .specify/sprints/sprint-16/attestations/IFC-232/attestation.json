@@ -1,0 +1,61 @@
+{
+  "task_id": "IFC-232",
+  "run_id": "exec-20260411-33244eec",
+  "verdict": "COMPLETE",
+  "notes": "Verification-only task. All acceptance criteria met by PG-175 (Completed, Sprint 16). No code changes required — only validation and attestation.",
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-04-11T15:21:00Z"
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run apps/web/src/components/deals/__tests__/TrashList.test.tsx",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-04-11T15:28:30Z"
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter @intelliflow/web lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-04-11T15:22:00Z"
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-04-11T15:30:00Z"
+    }
+  ],
+  "artifact_hashes": {
+    "apps/web/src/app/deals/(list)/trash/page.tsx": "2f8f0ebb2c0ece4c0999bc9af9de102f1551ec5e3f66cfd98373e6a958780649",
+    "apps/web/src/components/deals/TrashList.tsx": "051769c81b82cca741dceec9dd4f666a666b42bf794a1224644174efb1029e74",
+    ".specify/sprints/sprint-16/attestations/IFC-232/context_ack.json": "40662ee00026e8df3faf42d028043836ce10220e11ba202cfe7673a101f012aa"
+  },
+  "dependencies_verified": true,
+  "evidence_summary": {
+    "resolved_by": "PG-175",
+    "page_route": "/deals/trash (static, included in build output)",
+    "sidebar_link": "deals.ts:103 → href: /deals/trash",
+    "trpc_procedures": ["opportunity.listTrashed", "opportunity.restore", "opportunity.permanentDelete"],
+    "tests": "75/75 passed",
+    "coverage": "Statements 95.97%, Branches 80.24%, Functions 97.87%, Lines 100%"
+  },
+  "gate_results": [
+    { "gate_id": "gate-0-context-ack", "passed": true, "timestamp": "2026-04-11T15:17:36Z" },
+    { "gate_id": "gate-1-plan-checkboxes", "passed": true, "score": 100, "timestamp": "2026-04-11T15:34:13Z" },
+    { "gate_id": "gate-2-artifact-hashes", "passed": true, "timestamp": "2026-04-11T15:34:13Z" },
+    { "gate_id": "gate-3-build-validation", "passed": true, "timestamp": "2026-04-11T15:30:00Z" },
+    { "gate_id": "gate-3b-scoped-coverage", "passed": true, "score": 95.97, "timestamp": "2026-04-11T15:33:00Z" }
+  ],
+  "kpi_results": [
+    { "target": "Zero 404 from /deals/trash sidebar link", "actual": "/deals/trash route exists in build output (static ○)", "met": true },
+    { "target": "Test coverage >=90%", "actual": "Statements 95.97%, Branches 80.24%, Functions 97.87%, Lines 100% (75 tests)", "met": true }
+  ]
+}

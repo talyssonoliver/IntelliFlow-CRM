@@ -1,0 +1,133 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "PG-141",
+  "run_id": "PG-141-validation-20260216-235500",
+  "attestor": "Claude Code",
+  "attestation_timestamp": "2026-02-16T23:56:00.000Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 28,
+    "validations_passed": 4,
+    "validations_failed": 0,
+    "gates_passed": 8,
+    "gates_failed": 0,
+    "kpis_met": 7,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-02-16T23:47:00.000Z",
+      "duration_ms": 15000
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run apps/web/src/components/email/__tests__/ --reporter=verbose",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-02-16T23:53:30.000Z",
+      "duration_ms": 5300
+    },
+    {
+      "name": "Lint",
+      "command": "cd apps/web && npx eslint src/components/email/ src/app/email/",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-02-16T23:47:30.000Z",
+      "duration_ms": 8000
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/web build",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-02-16T23:48:00.000Z",
+      "duration_ms": 37500
+    }
+  ],
+  "kpi_results": [
+    { "kpi": "Test count", "target": ">=117 tests", "actual": "154 tests passing", "met": true },
+    { "kpi": "Test files", "target": "9 test files", "actual": "10 test files", "met": true },
+    { "kpi": "Components", "target": "6 components (EmailList, EmailThread, EmailCompose, AttachmentManager, TemplateSelector, RecipientPicker)", "actual": "11 components created (6 required + 5 supporting)", "met": true },
+    { "kpi": "Lint errors", "target": "0 errors", "actual": "0 errors (646 warnings)", "met": true },
+    { "kpi": "Coverage Statements", "target": ">=90%", "actual": "93.79%", "met": true },
+    { "kpi": "Coverage Branches", "target": ">=80%", "actual": "83.59%", "met": true },
+    { "kpi": "Coverage Functions", "target": ">=90%", "actual": "91.93%", "met": true }
+  ],
+  "definition_of_done_items": [
+    { "criterion": "EmailList component renders email list with search and folder filtering", "met": true, "evidence": "16 tests in EmailList.test.tsx all passing" },
+    { "criterion": "EmailThread component renders threaded view with expand/collapse", "met": true, "evidence": "14 tests in EmailThread.test.tsx all passing" },
+    { "criterion": "EmailCompose with To/CC/BCC, subject, rich body, send/save draft", "met": true, "evidence": "18 tests in EmailCompose.test.tsx all passing" },
+    { "criterion": "AttachmentManager with drag-drop, size validation, preview", "met": true, "evidence": "17 tests in AttachmentManager.test.tsx all passing" },
+    { "criterion": "TemplateSelector with search, preview, merge variables, confirmation", "met": true, "evidence": "10 tests in TemplateSelector.test.tsx all passing" },
+    { "criterion": "RecipientPicker with combobox, keyboard nav, chip display", "met": true, "evidence": "14 tests in RecipientPicker.test.tsx all passing" },
+    { "criterion": "FolderSidebar with folders, labels, keyboard navigation, unread counts", "met": true, "evidence": "10 tests in FolderSidebar.test.tsx all passing" },
+    { "criterion": "FormatToolbar with bold/italic/underline, roving tabindex", "met": true, "evidence": "8 tests in FormatToolbar.test.tsx all passing" },
+    { "criterion": "EmailPage integrates all components in 3-column layout", "met": true, "evidence": "15 tests in EmailPage.test.tsx all passing" },
+    { "criterion": "App routes created at /email, /email/[id]", "met": true, "evidence": "page.tsx, layout.tsx, [id]/page.tsx exist" },
+    { "criterion": "Sidebar navigation config for email module", "met": true, "evidence": "configs/email.ts created and registered in configs/index.ts" },
+    { "criterion": "All ARIA attributes and keyboard navigation implemented", "met": true, "evidence": "127 ARIA attributes across 16 files" }
+  ],
+  "dependencies_verified": ["IFC-144"],
+  "context_acknowledgment": {
+    "acknowledged_at": "2026-02-16T23:55:00.000Z",
+    "files_read": [
+      { "path": "apps/api/src/modules/email/inbound.router.ts", "sha256": "a146b014b3115f172e37b7bf4e43af8716e1853ae6b01b6767ac8a6b220fac16" },
+      { "path": "docs/company/brand/visual-identity.md", "sha256": "fb933a886a047e0c58908a5df60936775d0c0533f534a7812ce945f80229c252" },
+      { "path": "docs/company/brand/style-guide.md", "sha256": "f3b280fa213e98fc7501fa69f6463961413739d01aebb5ec5645fc94fe268828" },
+      { "path": "docs/design/UI_DEVELOPMENT_PROMPT.md", "sha256": "221f43770a33a958b194b43bad6c1ffee39d534a950fd1fb8f21e3d96ee3f624" },
+      { "path": ".specify/sprints/sprint-11/specifications/PG-141-spec.md", "sha256": "41fcf694da4031859b44ad9e6e9adf70629aec911bf90f0bc17a212cee7a290c" },
+      { "path": ".specify/sprints/sprint-11/planning/PG-141-plan.md", "sha256": "d03177167501c78d15d035287f33060ccd2762e6f9b403f855d9b43f9653cf16" }
+    ],
+    "invariants_acknowledged": [
+      "Hexagonal architecture: UI layer consumes API layer via tRPC client hooks",
+      "All components use shadcn/ui primitives and Tailwind CSS utility classes",
+      "Email router is mounted at trpc.email (not trpc.email.inbound) in the app router",
+      "tRPC v11 mutations use isPending not isLoading",
+      "Multi-tenancy: email operations require authenticated user context",
+      "WCAG 2.1 AA accessibility: keyboard navigation, ARIA roles, screen reader support",
+      "Test pattern: vi.mock trpc client, dynamic import component, vi.clearAllMocks resets ALL mocks"
+    ]
+  },
+  "artifact_hashes": {
+    "apps/web/src/components/email/__tests__/email-test-utils.ts": "d61851e7ff98b392dbca3952f812381b99e8a5368c3ba82eb153fb17d2b1ead4",
+    "apps/web/src/components/email/__tests__/EmailPage.test.tsx": "ca45af1a69eb0ba0c7713d59fccfeb97436b7757c79ce451bba36293afe6b58b",
+    "apps/web/src/components/email/__tests__/FolderSidebar.test.tsx": "7ca7399809607458e7c4e90f1cb36589b678c442d84b0cfa67c01b29a098b164",
+    "apps/web/src/components/email/__tests__/EmailList.test.tsx": "66ae06c13187157257151f29b221f2e04323900654807c6a144ac9e87da7f57f",
+    "apps/web/src/components/email/__tests__/EmailThread.test.tsx": "d73ed86013c2e39730a78511f4095f0002fab32dba8fa502d0e71bffe8a7ebbc",
+    "apps/web/src/components/email/__tests__/EmailCompose.test.tsx": "2aafa9a9d072b01983e4264001ebda364929ddffdbd6239e0ef0dc8a972e1e3a",
+    "apps/web/src/components/email/__tests__/RecipientPicker.test.tsx": "9110fd44b8eac7c5073160b83c11b8e6da5a2f4e80ca16dc6d755f581c61b79e",
+    "apps/web/src/components/email/__tests__/AttachmentManager.test.tsx": "a784b3fa7cee81c8ebe025576ab7b79e661ea0b1693d21417a634b15aa525ec1",
+    "apps/web/src/components/email/__tests__/email-coverage.supplementary.test.tsx": "3f7e4ff4e706b14c2b2bff6008be3327bfa9f93ab100dbfb1ebfaaa3e16a137b",
+    "apps/web/src/components/email/__tests__/TemplateSelector.test.tsx": "846fe0c2c2214bc013f1680db88009955181f7b584223819e1cd824abc339c99",
+    "apps/web/src/components/email/__tests__/FormatToolbar.test.tsx": "c445b2f361c532958163cb492350bec9153854a69b2d00d86c31cdfa7d588fd4",
+    "apps/web/src/components/email/EmailPage.tsx": "c38c4781d90b2766e4ea419025ed0c0efabd4c7aceb3c3b84782439f6501a34b",
+    "apps/web/src/components/email/FolderSidebar.tsx": "168334a742f8adcc896385700208555155923a366f3d812bf13ef44e9ca5ba4b",
+    "apps/web/src/components/sidebar/configs/email.ts": "6726184e5c90242fcc67d0ac75fc20883cc268744ff9fb6fb3ea283c75d78c20",
+    "apps/web/src/components/email/EmailList.tsx": "a5ab76d146f8e13e21c0bd79391d6e0f4606f42af095f6b3e68d0cf8d773ade1",
+    "apps/web/src/components/email/EmailListItem.tsx": "ed349e4d4f1c5cb54f995f1dbef93bb6afb21073348f782856f05658ee1ffb89",
+    "apps/web/src/components/email/EmailThread.tsx": "c697acc4e79221ea6d932ee564a4f021f02ecc3e3b8cbe211f8adc3ebe397783",
+    "apps/web/src/components/email/EmailMessage.tsx": "0c93b006e63805dbd1d08878bc3f8a5f9da9b63ea8cb76ac250123f68275de57",
+    "apps/web/src/components/email/EmailCompose.tsx": "760a589a4cb8bc1b9f1a340f4ba4c3f64010619e0f6bfc7dcb9d5d0c94d50deb",
+    "apps/web/src/components/email/RecipientPicker.tsx": "ffc4ac5da81a3b9800a1c9a9f6caacc8765d67c2e721765f9792824ab65633ad",
+    "apps/web/src/components/email/AttachmentManager.tsx": "6e8f90041959a69b0ce8e6d3ea3967de32770e2489c3e9f8fbddeb1d47c0cd41",
+    "apps/web/src/components/email/TemplateSelector.tsx": "6a571843baa2e5d2f211fb0e0aec3438376c366276f7ad77dd8404ce39291185",
+    "apps/web/src/components/email/FormatToolbar.tsx": "893d72f4c82db61a324b946a6ce25d4fb747171e9b01fd77fcce87495e6236b7",
+    "apps/web/src/app/email/page.tsx": "7459029a9f5c9835ae658c5f828387224ee651fd0bb19ee7bb93f1954b48e1f0",
+    "apps/web/src/app/email/layout.tsx": "d90c9706a294a67c1598c7e56de27a9a9c1c029d12b97716c578aa2b5ed1bae2",
+    "apps/web/src/app/email/[id]/page.tsx": "d6b3473a30bc484571785ba39d5365409c2f7391cecad9a354b33522f6714102",
+    "apps/api/src/modules/email/inbound.router.ts": "a146b014b3115f172e37b7bf4e43af8716e1853ae6b01b6767ac8a6b220fac16"
+  },
+  "environment": {
+    "os": "win32 (Windows 11 Pro 10.0.26200)",
+    "node_version": "v25.2.1",
+    "git_commit": "d11d95f489dd29ff5b6ec7f22c10127b75450875",
+    "branch": "sprint0/codex-run"
+  },
+  "notes": "Email Compose & History Page (PG-141): 3-column email client with FolderSidebar (w-56), EmailList (w-80), and EmailThread/Compose (flex-1). 11 components created, 10 test files with 154 tests. Coverage: 93.79% stmts / 83.59% branches / 91.93% funcs / 94.68% lines — all above thresholds. Rich compose with RecipientPicker (combobox), FormatToolbar (roving tabindex), AttachmentManager (drag-drop, 17 tests), TemplateSelector (search/preview/merge variables). Full WCAG 2.1 AA accessibility with keyboard navigation throughout. Sidebar config registered for app navigation. All 8 completion gates passed."
+}

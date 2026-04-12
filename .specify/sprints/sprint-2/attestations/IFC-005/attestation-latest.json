@@ -1,0 +1,93 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-005",
+  "run_id": "sprint2-audit-20260302T215701-sei6sy",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:57:09.833Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 19,
+    "validations_passed": 2,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/ai-worker/src/chains/scoring.chain.ts": "e441e6d64371542509a9ce9864d339d8a7880caad581c831c77e226c23c09dec",
+    "apps/ai-worker/src/chains/scoring.chain.test.ts": "2f476fd74344ce68864ffc248c4b6122a306851a9b66e8807b5860ec14943ef3",
+    "apps/ai-worker/src/config/ai.config.ts": "97e5016c56b55375b2d6db15db278ad4542936a90093aa3bff753632c06647d8",
+    "apps/ai-worker/src/prompts/index.ts": "651aed88f1acafe7ef434203c2995c72cb5fb302f65428b390d958996b7ee9df",
+    "apps/ai-worker/src/prompts/scoring-system.txt": "e94a0325749aa0c95f452f4f569ba7b9afecb9d05853f8ccf5e48ecaa8a4405a",
+    "apps/ai-worker/src/prompts/scoring-user.txt": "94ab9377da64b12aa5c4d14a6a5ce99122f72f513c4a3aa940b7a0c6cc2f3e51",
+    "apps/ai-worker/src/types/index.ts": "11a7313e2d9d657620c2dc6e5866a209cab52ef20ace9857853950b60e73e58b",
+    "apps/ai-worker/src/utils/cost-tracker.ts": "c8f65d46cd2fad0f98a5427330ccf60eaceca3d5a732c3acfbb0ae4947ca2354",
+    "apps/ai-worker/src/utils/cost-tracker.test.ts": "0452396223d5bed0a4f0b8c75dc95f175b2fff6bb95c48937f7f4554bd89f680",
+    "apps/ai-worker/src/utils/logger.ts": "c568861d83757e66558af81f14e657cc128085ad485f8d39c758990e001126a8",
+    "apps/ai-worker/src/utils/logger.test.ts": "abc003b776a5a10c5274217281a2c46a8d5df6b65c345c35c501f5e1a5f4d8a5",
+    "apps/ai-worker/src/utils/retry.ts": "374eec32d9feba0dd69e6370b0a0d9e5fb556113ebc37014d021e1dbc38a5932",
+    "apps/ai-worker/src/utils/retry.test.ts": "070c4ff838cb12eabfc8b2bcbf66dec18fcde86785ffe9ea55d85ce833ffcce1",
+    "apps/ai-worker/src/index.ts": "63c8e61c63890e1cd6a3de10ca42bf5a424077aff38c0106eccfb9254b1e9aef",
+    "apps/ai-worker/src/examples/usage.ts": "c4d4204e9b6df6bea1c4505072d516ab12af439cb8d75b1d4d0fda7e7f908dc6",
+    "apps/api/src/shared/scoring-output-schema.zod.ts": "e597b75d37b699acf1cb358560788dc07ec770bf2554e18bbf496c85eb821b69",
+    "apps/project-tracker/docs/metrics/_global/flows/FLOW-002.md": "869fc83b4b9957fba7643c30ff6b5fbc02630ecc1b192b3d95211dda57dc4949",
+    "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-002-validation.md": "438a5729539842f4c1da092828199ea256759eb99e8cd39bed6e0bb4b0da0e47",
+    ".specify/sprints/sprint-2/attestations/IFC-005/context_ack.json": "f1e81012edf0aa18e2bf9bddf540c104657754dfbfbd30bef9e531e6e5df7fe3"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-005",
+      "command": "pnpm --filter @intelliflow/api typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 20000,
+      "stdout_hash": "all-green-1772476872408"
+    },
+    {
+      "name": "IFC-005",
+      "command": "pnpm --filter @intelliflow/api test --run",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 60000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-004"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "AI scoring pipeline with structured output",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "confidence scores",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "targets: <2s",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "output: scoring.chain.ts",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "output-schema.zod.ts validated",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "5 DoD criteria unverified"
+}

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-12T17:13:05.899Z",
+  "generated_at": "2026-04-12T20:38:01.826Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
     "total_specs_analyzed": 373,
@@ -110,7 +110,7 @@
       "has_plan": false,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
+      "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "DOC-001",
@@ -163,7 +163,7 @@
       "has_plan": false,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
+      "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "DOC-001"
@@ -196,7 +196,7 @@
       "has_plan": false,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
+      "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [],
       "real_status": "COMPLETED"
@@ -418,7 +418,7 @@
       "has_plan": false,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
+      "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "ENV-002-AI",
@@ -500,7 +500,7 @@
       "has_plan": false,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
+      "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "ENV-002-AI"
@@ -647,7 +647,7 @@
       "has_plan": false,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
+      "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "ENV-009-AI"
@@ -663,7 +663,7 @@
       "has_plan": false,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
+      "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "ENV-007-AI"
@@ -679,7 +679,7 @@
       "has_plan": false,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
+      "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "ENV-009-AI",
@@ -732,7 +732,7 @@
       "has_plan": false,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
+      "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "ENV-003-AI",
@@ -925,7 +925,7 @@
       "has_plan": false,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
+      "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "DOC-001"
@@ -941,7 +941,7 @@
       "has_plan": false,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
+      "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "GTM-001",
@@ -958,7 +958,7 @@
       "has_plan": false,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
+      "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [],
       "real_status": "COMPLETED"
@@ -1517,7 +1517,7 @@
       "has_plan": false,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
+      "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "ENV-010-AI"
@@ -5091,7 +5091,7 @@
       "has_spec": true,
       "has_plan": false,
       "has_attestation": false,
-      "csv_status": "Spec Complete",
+      "csv_status": "Planning",
       "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
@@ -5107,7 +5107,7 @@
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
-      "csv_status": "Needs Human",
+      "csv_status": "Blocked",
       "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
@@ -6050,7 +6050,7 @@
       "has_plan": false,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
+      "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "AUTOMATION-001",

@@ -1,0 +1,1058 @@
+{
+  "sprint": "sprint-17",
+  "name": "Sprint 17",
+  "generated_at": "2026-04-11T16:48:01.958Z",
+  "summary_source": "specify",
+  "task_summary": {
+    "total": 21,
+    "completed": 6,
+    "backlog": 15,
+    "blocked": 0,
+    "attested_completed": 6
+  },
+  "context": "Primary focus areas: Legal Pages (5), Settings (5), Support (4).",
+  "section_summary": [
+    {
+      "section": "Legal Pages",
+      "total": 5,
+      "completed": 1,
+      "open": 4
+    },
+    {
+      "section": "Settings",
+      "total": 5,
+      "completed": 0,
+      "open": 5
+    },
+    {
+      "section": "Support",
+      "total": 4,
+      "completed": 3,
+      "open": 1
+    },
+    {
+      "section": "System Pages",
+      "total": 3,
+      "completed": 1,
+      "open": 2
+    },
+    {
+      "section": "Automation",
+      "total": 2,
+      "completed": 1,
+      "open": 1
+    },
+    {
+      "section": "Performance",
+      "total": 1,
+      "completed": 0,
+      "open": 1
+    },
+    {
+      "section": "Public Pages",
+      "total": 1,
+      "completed": 0,
+      "open": 1
+    }
+  ],
+  "notable_completed": [
+    {
+      "taskId": "PG-050",
+      "sprint": 17,
+      "status": "Completed",
+      "section": "Legal Pages",
+      "title": "Privacy Policy",
+      "description": "Privacy Policy",
+      "summary": ": Fixed content-audit-results.json (added missing /404 route, updated counts 131→132/14→15). Fixed 26%→82.6% by adding consent-tracker unit tests. Fixed 5 pre-existing lint errors (unused imports in billing components and privacy test).......",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, policy displayed; artifacts: page.tsx, privacy-content.md, consent-tracker.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, policy displayed",
+      "dependencies": [
+        "IFC-058"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-17/attestations/PG-050/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-10T20:54:00Z",
+        "sprintFolder": 17
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-299",
+      "sprint": 17,
+      "status": "Completed",
+      "section": "Support",
+      "title": "Help Article CRUD tRPC Router",
+      "description": "Help Article CRUD tRPC Router",
+      "summary": "Help Article CRUD tRPC router with 9 tenant-scoped procedures (list, getBySlug, getByCategory, getRelated, create, update, delete, publish, unpublish). 49 tests pass, coverage meets all thresholds.......",
+      "definitionOfDone": "helpArticle tRPC router with list/getBySlug/getByCategory/getRelated/create/update/delete/publish/unpublish; tenant-scoped; coverage >=90%; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "helpArticle tRPC router with list/getBySlug/getByCategory/getRelated/create/update/delete/publish/unpublish; tenant-scoped; coverage >=90%",
+      "dependencies": [
+        "IFC-298"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-17/attestations/IFC-299/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-19T00:21:00Z",
+        "sprintFolder": 17
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-030",
+      "sprint": 17,
+      "status": "Completed",
+      "section": "Automation",
+      "title": "PHASE-005: Smart Lead Routing",
+      "description": "PHASE-005: Smart Lead Routing",
+      "summary": "LeadRoutingService implements 3-strategy cascade (rule→skill→load_balance). CRITICAL: writes only schema-valid fields to RoutingAudit (no phantom-field bug). 62 service tests + 33 router tests + 15 container tests = 110 total. Coverage:......",
+      "definitionOfDone": "Score-based routing with load balancing; artifacts: routing-rules-config.yaml, routing-simulation-results.csv, sla-compliance.pdf; targets: >=100%; routing-simulation-results.csv must contain real lead routing data from test database, not generated fake data",
+      "definitionOfDoneSnapshot": "Score-based routing with load balancing; routing-simulation-results.csv must contain real lead routing data from test database, not generated fake data",
+      "dependencies": [
+        "IFC-029"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-17/attestations/IFC-030/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-03T01:00:00Z",
+        "sprintFolder": 17
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-298",
+      "sprint": 17,
+      "status": "Completed",
+      "section": "Support",
+      "title": "HelpArticle Prisma Model + Migration",
+      "description": "HelpArticle Prisma Model + Migration",
+      "summary": "Schema-only task — 3 models (HelpArticle, ArticleSection, ArticleFeedback) + 1 enum (ArticleStatus) + migration. No runtime behavior changes. IFC-299/300/303 consume these models downstream.... HelpArticle, ArticleSection, ArticleFeedback Prisma models;...",
+      "definitionOfDone": "HelpArticle, ArticleSection, ArticleFeedback Prisma models; migration applied; fields match HelpArticle TS interface; status enum (draft/published); verified by: pnpm test",
+      "definitionOfDoneSnapshot": "HelpArticle, ArticleSection, ArticleFeedback Prisma models; migration applied; fields match HelpArticle TS interface; status enum (draft/published)",
+      "dependencies": [
+        "PG-045"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-17/attestations/IFC-298/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-10T21:54:00Z",
+        "sprintFolder": 17
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-303",
+      "sprint": 17,
+      "status": "Completed",
+      "section": "Support",
+      "title": "Article Feedback tRPC Mutation",
+      "description": "Article Feedback tRPC Mutation",
+      "summary": "Added submitFeedback mutation and getFeedbackStats query to existing help-article router (created by IFC-299). Wired FeedbackWidget to call tRPC mutation with onSuccess/onError error handling. Post-audit fixes:......",
+      "definitionOfDone": "helpArticle.submitFeedback mutation stores feedback in ArticleFeedback table; FeedbackWidget onFeedback wired to tRPC; analytics aggregation; coverage >=90%; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "helpArticle.submitFeedback mutation stores feedback in ArticleFeedback table; FeedbackWidget onFeedback wired to tRPC; analytics aggregation; coverage >=90%",
+      "dependencies": [
+        "IFC-298"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-17/attestations/IFC-303/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-19T00:30:00Z",
+        "sprintFolder": 17
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    }
+  ],
+  "open_tasks": [
+    {
+      "taskId": "IFC-031",
+      "sprint": 17,
+      "status": "Backlog",
+      "section": "Automation",
+      "title": "PHASE-005: Workflow Builder UI (React Flow)",
+      "description": "PHASE-005: Workflow Builder UI (React Flow)",
+      "summary": "Visual workflow creation, node-based editor",
+      "definitionOfDone": "Visual workflow creation, node-based editor; artifacts: usability-test-video.mp4, context_ack.json; verified by: pnpm build",
+      "definitionOfDoneSnapshot": "Visual workflow creation, node-based editor",
+      "dependencies": [
+        "IFC-028"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-051",
+      "sprint": 17,
+      "status": "Backlog",
+      "section": "Legal Pages",
+      "title": "Terms of Service",
+      "description": "Terms of Service",
+      "summary": "response under 200ms, Lighthouse 90, terms displayed",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, terms displayed; artifacts: page.tsx, terms-content.md, acceptance-tracker.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, terms displayed",
+      "dependencies": [
+        "PG-050"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-052",
+      "sprint": 17,
+      "status": "Backlog",
+      "section": "Legal Pages",
+      "title": "Cookie Policy",
+      "description": "Cookie Policy",
+      "summary": "response under 200ms, Lighthouse 90, policy shown",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, policy shown; artifacts: page.tsx, cookie-content.md, cookie-banner.tsx",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, policy shown",
+      "dependencies": [
+        "PG-050"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-053",
+      "sprint": 17,
+      "status": "Backlog",
+      "section": "Legal Pages",
+      "title": "Data Processing Addendum",
+      "description": "Data Processing Addendum",
+      "summary": "response under 200ms, Lighthouse 90, DPA available",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, DPA available; artifacts: page.tsx, dpa-template.pdf, signature-handler.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, DPA available",
+      "dependencies": [
+        "PG-050"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-054",
+      "sprint": 17,
+      "status": "Backlog",
+      "section": "Legal Pages",
+      "title": "Acceptable Use Policy",
+      "description": "Acceptable Use Policy",
+      "summary": "response under 200ms, Lighthouse 90, AUP displayed",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, AUP displayed; artifacts: page.tsx, aup-content.md, violation-tracker.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, AUP displayed",
+      "dependencies": [
+        "PG-050"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "taskId": "IFC-030",
+      "sprint": 17,
+      "status": "Completed",
+      "section": "Automation",
+      "title": "PHASE-005: Smart Lead Routing",
+      "description": "PHASE-005: Smart Lead Routing",
+      "summary": "LeadRoutingService implements 3-strategy cascade (rule→skill→load_balance). CRITICAL: writes only schema-valid fields to RoutingAudit (no phantom-field bug). 62 service tests + 33 router tests + 15 container tests = 110 total. Coverage:......",
+      "definitionOfDone": "Score-based routing with load balancing; artifacts: routing-rules-config.yaml, routing-simulation-results.csv, sla-compliance.pdf; targets: >=100%; routing-simulation-results.csv must contain real lead routing data from test database, not generated fake data",
+      "definitionOfDoneSnapshot": "Score-based routing with load balancing; routing-simulation-results.csv must contain real lead routing data from test database, not generated fake data",
+      "dependencies": [
+        "IFC-029"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-17/attestations/IFC-030/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-03T01:00:00Z",
+        "sprintFolder": 17
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-031",
+      "sprint": 17,
+      "status": "Backlog",
+      "section": "Automation",
+      "title": "PHASE-005: Workflow Builder UI (React Flow)",
+      "description": "PHASE-005: Workflow Builder UI (React Flow)",
+      "summary": "Visual workflow creation, node-based editor",
+      "definitionOfDone": "Visual workflow creation, node-based editor; artifacts: usability-test-video.mp4, context_ack.json; verified by: pnpm build",
+      "definitionOfDoneSnapshot": "Visual workflow creation, node-based editor",
+      "dependencies": [
+        "IFC-028"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-050",
+      "sprint": 17,
+      "status": "Completed",
+      "section": "Legal Pages",
+      "title": "Privacy Policy",
+      "description": "Privacy Policy",
+      "summary": ": Fixed content-audit-results.json (added missing /404 route, updated counts 131→132/14→15). Fixed 26%→82.6% by adding consent-tracker unit tests. Fixed 5 pre-existing lint errors (unused imports in billing components and privacy test).......",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, policy displayed; artifacts: page.tsx, privacy-content.md, consent-tracker.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, policy displayed",
+      "dependencies": [
+        "IFC-058"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-17/attestations/PG-050/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-10T20:54:00Z",
+        "sprintFolder": 17
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-051",
+      "sprint": 17,
+      "status": "Backlog",
+      "section": "Legal Pages",
+      "title": "Terms of Service",
+      "description": "Terms of Service",
+      "summary": "response under 200ms, Lighthouse 90, terms displayed",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, terms displayed; artifacts: page.tsx, terms-content.md, acceptance-tracker.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, terms displayed",
+      "dependencies": [
+        "PG-050"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-052",
+      "sprint": 17,
+      "status": "Backlog",
+      "section": "Legal Pages",
+      "title": "Cookie Policy",
+      "description": "Cookie Policy",
+      "summary": "response under 200ms, Lighthouse 90, policy shown",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, policy shown; artifacts: page.tsx, cookie-content.md, cookie-banner.tsx",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, policy shown",
+      "dependencies": [
+        "PG-050"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-053",
+      "sprint": 17,
+      "status": "Backlog",
+      "section": "Legal Pages",
+      "title": "Data Processing Addendum",
+      "description": "Data Processing Addendum",
+      "summary": "response under 200ms, Lighthouse 90, DPA available",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, DPA available; artifacts: page.tsx, dpa-template.pdf, signature-handler.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, DPA available",
+      "dependencies": [
+        "PG-050"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-054",
+      "sprint": 17,
+      "status": "Backlog",
+      "section": "Legal Pages",
+      "title": "Acceptable Use Policy",
+      "description": "Acceptable Use Policy",
+      "summary": "response under 200ms, Lighthouse 90, AUP displayed",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, AUP displayed; artifacts: page.tsx, aup-content.md, violation-tracker.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, AUP displayed",
+      "dependencies": [
+        "PG-050"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-055",
+      "sprint": 17,
+      "status": "Completed",
+      "section": "System Pages",
+      "title": "404 Not Found",
+      "description": "404 Not Found",
+      "summary": "PG-055 implementation was complete from run-20260310T021046Z but blocked by pre-existing web-package validation failures (TypeScript errors in contacts/leads pages, 23 failing test files). Repair session resolved:......",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, suggestions shown; artifacts: page.tsx, search-suggestions.tsx, error-analytics.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, suggestions shown",
+      "dependencies": [
+        "IFC-076"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-17/attestations/PG-055/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-10T21:30:00Z",
+        "sprintFolder": 17
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-056",
+      "sprint": 17,
+      "status": "Backlog",
+      "section": "System Pages",
+      "title": "500 Error",
+      "description": "500 Error",
+      "summary": "response under 200ms, Lighthouse 90, errors logged",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, errors logged; artifacts: page.tsx, incident-creator.ts, error-notifier.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, errors logged",
+      "dependencies": [
+        "PG-055"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-057",
+      "sprint": 17,
+      "status": "Backlog",
+      "section": "System Pages",
+      "title": "Maintenance",
+      "description": "Maintenance",
+      "summary": "response under 200ms, Lighthouse 90, status shown",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, status shown; artifacts: page.tsx, maintenance-mode.ts, status-updater.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, status shown",
+      "dependencies": [
+        "PG-055"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-126",
+      "sprint": 17,
+      "status": "Backlog",
+      "section": "Public Pages",
+      "title": "Add in‑app onboarding, guided product tours and feedback collection",
+      "description": "Add in‑app onboarding, guided product tours and feedback collection",
+      "summary": "Users see guided tours on first login; ability to replay; feedback widget integrated",
+      "definitionOfDone": "Users see guided tours on first login; ability to replay; feedback widget integrated; targets: >=70%; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Users see guided tours on first login; ability to replay; feedback widget integrated",
+      "dependencies": [
+        "PG-001",
+        "PG-002"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-196",
+      "sprint": 17,
+      "status": "Backlog",
+      "section": "Performance",
+      "title": "Home Page Response Caching - Redis caching for getWelcomeSummary with event-driven invalidation",
+      "description": "Home Page Response Caching - Redis caching for getWelcomeSummary with event-driven invalidation",
+      "summary": "getWelcomeSummary cached in Redis with 5-minute TTL; cache key: tenant:userId:home:summary; invalidated on lead/opportunity/task mutations via domain events; graceful fallback to direct queries when Redis unavailable",
+      "definitionOfDone": "getWelcomeSummary cached in Redis with 5-minute TTL; cache key: tenant:userId:home:summary; invalidated on lead/opportunity/task mutations via domain events; graceful fallback to direct queries when Redis unavailable; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "getWelcomeSummary cached in Redis with 5-minute TTL; cache key: tenant:userId:home:summary; invalidated on lead/opportunity/task mutations via domain events; graceful fallback to direct queries when Redis unavailable",
+      "dependencies": [
+        "IFC-182",
+        "IFC-075"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-298",
+      "sprint": 17,
+      "status": "Completed",
+      "section": "Support",
+      "title": "HelpArticle Prisma Model + Migration",
+      "description": "HelpArticle Prisma Model + Migration",
+      "summary": "Schema-only task — 3 models (HelpArticle, ArticleSection, ArticleFeedback) + 1 enum (ArticleStatus) + migration. No runtime behavior changes. IFC-299/300/303 consume these models downstream.... HelpArticle, ArticleSection, ArticleFeedback Prisma models;...",
+      "definitionOfDone": "HelpArticle, ArticleSection, ArticleFeedback Prisma models; migration applied; fields match HelpArticle TS interface; status enum (draft/published); verified by: pnpm test",
+      "definitionOfDoneSnapshot": "HelpArticle, ArticleSection, ArticleFeedback Prisma models; migration applied; fields match HelpArticle TS interface; status enum (draft/published)",
+      "dependencies": [
+        "PG-045"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-17/attestations/IFC-298/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-10T21:54:00Z",
+        "sprintFolder": 17
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-299",
+      "sprint": 17,
+      "status": "Completed",
+      "section": "Support",
+      "title": "Help Article CRUD tRPC Router",
+      "description": "Help Article CRUD tRPC Router",
+      "summary": "Help Article CRUD tRPC router with 9 tenant-scoped procedures (list, getBySlug, getByCategory, getRelated, create, update, delete, publish, unpublish). 49 tests pass, coverage meets all thresholds.......",
+      "definitionOfDone": "helpArticle tRPC router with list/getBySlug/getByCategory/getRelated/create/update/delete/publish/unpublish; tenant-scoped; coverage >=90%; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "helpArticle tRPC router with list/getBySlug/getByCategory/getRelated/create/update/delete/publish/unpublish; tenant-scoped; coverage >=90%",
+      "dependencies": [
+        "IFC-298"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-17/attestations/IFC-299/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-19T00:21:00Z",
+        "sprintFolder": 17
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-300",
+      "sprint": 17,
+      "status": "Backlog",
+      "section": "Support",
+      "title": "Help Article Seed Script — Static to DB Migration",
+      "description": "Help Article Seed Script — Static to DB Migration",
+      "summary": "Seed script migrates DEFAULT_HELP_ARTICLES into DB; idempotent (skip existing slugs); validates data integrity post-seed",
+      "definitionOfDone": "Seed script migrates DEFAULT_HELP_ARTICLES into DB; idempotent (skip existing slugs); validates data integrity post-seed; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Seed script migrates DEFAULT_HELP_ARTICLES into DB; idempotent (skip existing slugs); validates data integrity post-seed",
+      "dependencies": [
+        "IFC-298"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-303",
+      "sprint": 17,
+      "status": "Completed",
+      "section": "Support",
+      "title": "Article Feedback tRPC Mutation",
+      "description": "Article Feedback tRPC Mutation",
+      "summary": "Added submitFeedback mutation and getFeedbackStats query to existing help-article router (created by IFC-299). Wired FeedbackWidget to call tRPC mutation with onSuccess/onError error handling. Post-audit fixes:......",
+      "definitionOfDone": "helpArticle.submitFeedback mutation stores feedback in ArticleFeedback table; FeedbackWidget onFeedback wired to tRPC; analytics aggregation; coverage >=90%; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "helpArticle.submitFeedback mutation stores feedback in ArticleFeedback table; FeedbackWidget onFeedback wired to tRPC; analytics aggregation; coverage >=90%",
+      "dependencies": [
+        "IFC-298"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-17/attestations/IFC-303/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-19T00:30:00Z",
+        "sprintFolder": 17
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-182",
+      "sprint": 17,
+      "status": "Backlog",
+      "section": "Settings",
+      "title": "Module Settings - Contacts (/contacts/contact-settings)",
+      "description": "Module Settings - Contacts (/contacts/contact-settings)",
+      "summary": "Contact settings page at /contacts/contact-settings with duplicate detection, required fields, tags config; uses in-module settings sidebar pattern; Lighthouse >=90",
+      "definitionOfDone": "Contact settings page at /contacts/contact-settings with duplicate detection, required fields, tags config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Contact settings page at /contacts/contact-settings with duplicate detection, required fields, tags config; uses in-module settings sidebar pattern; Lighthouse >=90",
+      "dependencies": [
+        "PG-178"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-183",
+      "sprint": 17,
+      "status": "Backlog",
+      "section": "Settings",
+      "title": "Module Settings - Accounts (/accounts/account-settings)",
+      "description": "Module Settings - Accounts (/accounts/account-settings)",
+      "summary": "Account settings page at /accounts/account-settings with hierarchy, industry, custom fields config; uses in-module settings sidebar pattern; Lighthouse >=90",
+      "definitionOfDone": "Account settings page at /accounts/account-settings with hierarchy, industry, custom fields config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Account settings page at /accounts/account-settings with hierarchy, industry, custom fields config; uses in-module settings sidebar pattern; Lighthouse >=90",
+      "dependencies": [
+        "PG-178"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-184",
+      "sprint": 17,
+      "status": "Backlog",
+      "section": "Settings",
+      "title": "Module Settings - Deals (/deals/deal-settings)",
+      "description": "Module Settings - Deals (/deals/deal-settings)",
+      "summary": "Deal settings page at /deals/deal-settings with pipeline stages, win-loss reasons, scoring config; uses in-module settings sidebar pattern; Lighthouse >=90",
+      "definitionOfDone": "Deal settings page at /deals/deal-settings with pipeline stages, win-loss reasons, scoring config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Deal settings page at /deals/deal-settings with pipeline stages, win-loss reasons, scoring config; uses in-module settings sidebar pattern; Lighthouse >=90",
+      "dependencies": [
+        "PG-178"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-185",
+      "sprint": 17,
+      "status": "Backlog",
+      "section": "Settings",
+      "title": "Module Settings - Tickets (/tickets/sla-policies)",
+      "description": "Module Settings - Tickets (/tickets/sla-policies)",
+      "summary": "Ticket settings page at /tickets/sla-policies with default SLA, auto-close, notification triggers config; uses in-module settings sidebar pattern; Lighthouse >=90",
+      "definitionOfDone": "Ticket settings page at /tickets/sla-policies with default SLA, auto-close, notification triggers config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Ticket settings page at /tickets/sla-policies with default SLA, auto-close, notification triggers config; uses in-module settings sidebar pattern; Lighthouse >=90",
+      "dependencies": [
+        "PG-178"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-186",
+      "sprint": 17,
+      "status": "Backlog",
+      "section": "Settings",
+      "title": "Module Settings - Documents (/documents/document-settings)",
+      "description": "Module Settings - Documents (/documents/document-settings)",
+      "summary": "Document settings page at /documents/document-settings with file types, size limits, antivirus, retention config; uses in-module settings sidebar pattern; Lighthouse >=90",
+      "definitionOfDone": "Document settings page at /documents/document-settings with file types, size limits, antivirus, retention config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Document settings page at /documents/document-settings with file types, size limits, antivirus, retention config; uses in-module settings sidebar pattern; Lighthouse >=90",
+      "dependencies": [
+        "PG-178"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    }
+  ]
+}

@@ -1,0 +1,147 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "TRACK-004",
+  "run_id": "20260222210322-3246b0d2",
+  "attestor": "Claude Code - Task Integrity Validator",
+  "attestation_timestamp": "2026-02-22T21:20:00Z",
+  "verdict": "COMPLETE",
+  "context_acknowledgment": {
+    "files_read": [
+      {
+        "path": "artifacts/metrics/ai-metrics.json",
+        "sha256": "6014556fa4d30036b2ac4dc7633e573f9117b69b7758e67025bd5fea6d541451"
+      },
+      {
+        "path": "infra/monitoring/ai-grafana-dashboard.json",
+        "sha256": "1be7f919fd55f8432df33cfc079c2376b581306049d35553bbeb8a146cfb2c5c"
+      }
+    ],
+    "invariants_acknowledged": [
+      "ai-metrics.json uses kpis.* paths (drift_detection, hallucination_rate, roi_tracking, latency_slo) not top-level model/drift/cost keys",
+      "All metric values that are unavailable must display as null/Pending — never fabricated defaults",
+      "History arrays (drift, hallucination, costs) are appended on POST and capped at 30 entries",
+      "Pure-function extraction pattern required for component tests — no React imports, no DOM rendering",
+      "TrendSparkline from shared/index.ts requires data Array<{date,value}> with length >= 2 to render"
+    ],
+    "acknowledged_at": "2026-02-22T21:03:22Z"
+  },
+  "evidence_summary": {
+    "artifacts_verified": 4,
+    "validations_passed": 4,
+    "validations_failed": 0,
+    "gates_passed": 4,
+    "gates_failed": 0,
+    "kpis_met": 5,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/project-tracker/components/tracking/AIMetrics.tsx": "c6bcff0378a84a3674ca069a48ef9cc4bba313f4cf5f724d626c99b3dc9ef061",
+    "apps/project-tracker/app/api/tracking/ai/route.ts": "948478fea1969f1c28a477876b2b3d23df6f9ebe5714a2162527494d156a6a79",
+    "apps/project-tracker/__tests__/tracking/AIMetrics.test.ts": "c5f6e013650757e0ebf94bbaa2db87e43fbc686e3187b7185957ede000998e92",
+    "apps/project-tracker/__tests__/tracking/ai-api.test.ts": "504493c66e1f236ea4d3be2a27122593f3582c7b7cfd7935e504f93523e03d80"
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter project-tracker typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-22T21:17:00Z",
+      "duration_ms": 8000
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run apps/project-tracker/__tests__/tracking",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-22T21:17:10Z",
+      "duration_ms": 1220
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter project-tracker lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-22T21:17:15Z",
+      "duration_ms": 5000
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter project-tracker build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-22T21:17:30Z",
+      "duration_ms": 6600
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "plan-checkboxes",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-22T21:18:00Z"
+    },
+    {
+      "gate_id": "artifact-verification",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-22T21:18:30Z"
+    },
+    {
+      "gate_id": "build-validation",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-22T21:18:45Z"
+    },
+    {
+      "gate_id": "context-ack",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-22T21:19:00Z"
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Test count",
+      "target": ">=40",
+      "actual": "63 tests (41 component + 22 API)",
+      "met": true
+    },
+    {
+      "kpi": "No any types",
+      "target": "0 occurrences",
+      "actual": "0 occurrences in modified files",
+      "met": true
+    },
+    {
+      "kpi": "No fabricated defaults",
+      "target": "0 hardcoded model rows",
+      "actual": "0 hardcoded rows, all data from ai-metrics.json",
+      "met": true
+    },
+    {
+      "kpi": "All 4 build gates pass",
+      "target": "4/4",
+      "actual": "4/4 (TypeScript, Tests, Lint, Build)",
+      "met": true
+    },
+    {
+      "kpi": "ARIA attributes on progress bars",
+      "target": "role, aria-valuenow, aria-valuemin, aria-valuemax",
+      "actual": "All 4 attributes present on progress bars",
+      "met": true
+    }
+  ],
+  "dependencies_verified": [
+    "IFC-117",
+    "AUTOMATION-002"
+  ],
+  "environment": {
+    "os": "Windows 11 Pro 10.0.26200",
+    "node_version": "v25.2.1",
+    "git_commit": "876808ca",
+    "branch": "sprint0/codex-run"
+  },
+  "notes": "TRACK-004 AI Metrics UI: Enhanced API route to read from correct kpis.* paths, added SLO compliance/ROI tracking/health status banner to component, 63 tests via pure-function extraction pattern. Coverage exclusion: apps/project-tracker/** excluded from V8 coverage in vitest.config.ts:222 (internal tooling). Logic coverage achieved via comprehensive test suite."
+}

@@ -1,0 +1,65 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-027",
+  "run_id": "sprint15-audit-20260302T215918-7xh85u",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:59:26.161Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 5,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "artifacts/reports/investment-gate-2-analysis.md": "49e5f436a617307d3ee48550c427c5a4d0477f6143aeba3b7dcada6c68fd6805",
+    "artifacts/reports/ai-roi-report.md": "659c85388f3d37cd0769e4f59b116e5367a47357124ef5e8f7a826a0e30f9caf",
+    "artifacts/misc/customer-feedback.md": "3fe70a04c7a7ab1fe04398092b37bf0a2d3f012e5893e38e7fd09a40e73cabdb",
+    "artifacts/misc/board-presentation.md": "aebb2c9d67ccf27e2c92293cb2e2cfc4ca68c0cbd340f1e658e737126aedb73c",
+    ".specify/sprints/sprint-15/attestations/IFC-027/context_ack.json": "ae9e2a2d0c3d837ca6330a662ae8bff17b12986aeb1554f1927f7f45b9d8971e"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-027",
+      "command": "pnpm lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 15000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-026"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Expand/maintain decision on AI features",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "artifacts: investment-gate-2-analysis.md",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "ai-roi-report.md",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "customer-feedback.md",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "4 DoD criteria unverified"
+}

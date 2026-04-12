@@ -1,0 +1,79 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "PG-170",
+  "run_id": "sprint15-audit-20260302T215918-7xh85u",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:59:26.268Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 5,
+    "validations_passed": 2,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/web/src/app/(developer)/docs/architecture/page.tsx": "27de29650235a1cb865ae64f309c83fc93ca8a74d5d985e9427db50425fa419b",
+    "apps/web/src/components/developer/adr-list.tsx": "977226426b6b70ab1f7f0a4983d268e104424c17ff297a9b0c2565c3c66231af",
+    ".specify/sprints/sprint-15/attestations/PG-170/context_ack.json": "15bbea4352d804f3cfc8696c744e8262b85865723a035d6d95d5c0d1beedd40b",
+    ".specify/sprints/sprint-15/specifications/PG-170-spec.md": "920982343fd742783d25116968e1eb0af3a0e8bd115b2caa0f821799b7a2e345",
+    ".specify/sprints/sprint-15/planning/PG-170-plan.md": "c949a20717651d2d8703e2746ae0ad1f452ffadddab9a257dc0669c766adc883"
+  },
+  "validation_results": [
+    {
+      "name": "PG-170",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 46000,
+      "stdout_hash": "all-green-1772476872408"
+    },
+    {
+      "name": "PG-170",
+      "command": "pnpm --filter @intelliflow/web test --run",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 120000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "PG-032"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Response <200ms",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "Lighthouse >=90",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "ADRs listed and searchable",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "artifacts: page.tsx",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "adr-list.tsx",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "5 DoD criteria unverified"
+}

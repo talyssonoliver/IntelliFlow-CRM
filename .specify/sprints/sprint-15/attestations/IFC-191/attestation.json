@@ -1,0 +1,53 @@
+{
+  "$schema": "../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-191",
+  "run_id": "20260225220728-bad0c3a6",
+  "attestor": "Claude Code - Task Integrity Validator",
+  "attestation_timestamp": "2026-02-27T19:20:00Z",
+  "verdict": "COMPLETE",
+  "artifact_hashes": {
+    "packages/db/prisma/migrations/20260225000000_add_user_timezone/migration.sql": "ee009e2d711849c98cb2052af869ceb0539f9b4aea31c042c631ee96a593366a",
+    "apps/web/src/components/settings/TimezoneSelector.tsx": "43ad39cda72a7341ba40d6f51b167327d2cdb6ec6b4f34ec2c5103ec84efa3b2",
+    "apps/api/src/modules/user/user.router.ts": "4cb044479b4429e533bf2c758053ec2749e7a73df061a01c8b8cf3058bad881a",
+    "packages/validators/src/user.ts": "360deb1fde96ef14b0c786cb121a99cdcd48485a7bec4d962a4ca5d98c1a745f"
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm run typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-27T19:17:00Z",
+      "duration_ms": 15193
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run <IFC-191 test files>",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-27T19:18:00Z",
+      "duration_ms": 1670
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm run lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-27T19:18:10Z",
+      "duration_ms": 4089
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-27T19:16:00Z",
+      "duration_ms": 75940
+    }
+  ],
+  "dependencies_verified": [
+    "IFC-182"
+  ],
+  "notes": "IFC-191 User Timezone Support. 17 files (8 new + 9 modified). 86 tests across 5 test files (all pass). Coverage: user.router 100%/90%/100%/100%, home.router 95%/87%/100%/95%, TimezoneSelector 100%/93.75%/100%/100%. Build passes. Code review fixes applied: UTC always in selector, IANA-only validation enforced, timezone greeting tests fixed, controlled inputs for async data. Pre-existing typecheck errors in opportunity.router.ts and pre-existing plan-linter DOC-* warnings are unrelated to IFC-191."
+}

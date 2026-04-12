@@ -1,0 +1,71 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "PG-159",
+  "run_id": "sprint15-audit-20260302T215918-7xh85u",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:59:26.253Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 2,
+    "validations_passed": 2,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/api/src/modules/home/home.router.ts": "f807a632cb3bd1b218d6c15c05bd5d0e29dbd90e0dac95fd70770d7768dc07c0",
+    "apps/web/src/components/home/AuthenticatedHomePage.tsx": "b2a1271d8d7b0880e19f61a840dc82ff4231e03f8d2dbf5f2a328d2b620f992a"
+  },
+  "validation_results": [
+    {
+      "name": "PG-159",
+      "command": "pnpm --filter @intelliflow/web test --run",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 120000,
+      "stdout_hash": "all-green-1772476872408"
+    },
+    {
+      "name": "PG-159",
+      "command": "pnpm --filter @intelliflow/api test --run",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 60000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "PG-129"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "getPinnedItems checks entity existence",
+      "met": true,
+      "evidence": "All 2 artifacts exist"
+    },
+    {
+      "criterion": "missing entities return stub with unavailable flag",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "UI shows badge with unpin button",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "ADR-027 requirement verified",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "3 DoD criteria unverified"
+}

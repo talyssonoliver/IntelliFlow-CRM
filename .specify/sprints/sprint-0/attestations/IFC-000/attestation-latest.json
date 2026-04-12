@@ -1,0 +1,44 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-000",
+  "run_id": "sprint0-audit-20260302T215641-7da797",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:56:50.047Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 6,
+    "validations_passed": 0,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "artifacts/reports/business-case.md": "42aa705c8669b326f834432256566f4f41ec4108d9ae8a7a32b41d7bbf05d191",
+    "artifacts/reports/swot-analysis.md": "98c2848a316de62fd9488ce47844c12ffca68111bab91ef3d9ce62d05835ed2c",
+    "artifacts/reports/financial-model.md": "afa5d0876f4b82d4cddcaa5f84abe70327a14892cf136ce2bf0c1d6d5ab555c9",
+    "docs/planning/adr/ADR-000-feasibility.md": "b8917f55f19f262b9aa15e9f04d3a6fbc43518298600947845f9967813d89c5d",
+    "artifacts/reports/ifc-000-completion-manifest.json": "1d50a98b85859703af9a63146081b329b83e425b7fec3bb9d1dcfbeeaf261a32",
+    ".specify/sprints/sprint-0/attestations/IFC-000/context_ack.json": "e71d9457f8421d840bfbc9bed881833a482858a2eed256082b09668aa94a260a"
+  },
+  "validation_results": [],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [],
+  "definition_of_done_items": [
+    {
+      "criterion": "Go/No-Go decision documented with clear rationale",
+      "met": true,
+      "evidence": "Documentation found: artifacts/reports/business-case.md, artifacts/reports/swot-analysis.md, artifacts/reports/financial-model.md, docs/planning/adr/ADR-000-feasibility.md"
+    },
+    {
+      "criterion": "targets: >=80%",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "1 DoD criteria unverified"
+}

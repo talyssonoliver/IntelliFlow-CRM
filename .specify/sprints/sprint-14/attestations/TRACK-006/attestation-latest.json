@@ -1,0 +1,63 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "TRACK-006",
+  "run_id": "sprint14-audit-20260302T215859-6dbfyi",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:59:16.668Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 3,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/project-tracker/components/tracking/BuildHealth.tsx": "6724c4c02d71b1cdb53f4c046cc3cb8d8be9152de024dcedacd6b48ca3d66435",
+    "apps/project-tracker/app/api/tracking/build/route.ts": "e26f72eb4605b807e4a5ad11d647c1c3e6bf09da029a9e8c29203dc8ac5efcda",
+    ".specify/sprints/sprint-14/attestations/TRACK-006/attestation.json": "42fd54af09fd579f2b10f1447264fd83c063c31d7da86b08fb97745edc1b064f"
+  },
+  "validation_results": [
+    {
+      "name": "TRACK-006",
+      "command": "pnpm test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 180000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "ENV-005-AI"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Dashboard shows build success rate",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "test results",
+      "met": true,
+      "evidence": "All 1 validations passed"
+    },
+    {
+      "criterion": "validation status",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "run-validation button",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "3 DoD criteria unverified"
+}

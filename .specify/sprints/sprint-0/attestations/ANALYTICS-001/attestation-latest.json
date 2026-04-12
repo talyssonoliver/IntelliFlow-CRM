@@ -1,0 +1,105 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "ANALYTICS-001",
+  "run_id": "sprint0-audit-20260302T215641-7da797",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:56:50.099Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 4,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "docs/analytics/rfm-abc-spec.md": "88e1a8f13120ae69bda704a9138d70b3b55a13e37d68ce8f0860e32ff31edd35",
+    "docs/analytics/event-taxonomy.md": "0753872085913dd800c3122a8a93b48e5edf7f02bc852f25db67add64d07ac11",
+    "docs/analytics/dashboards-requirements.md": "38f638156d05730edd1898b833f3c66cbff354cf98504d6c684fb1652ee33cfc",
+    ".specify/sprints/sprint-0/attestations/ANALYTICS-001/context_ack.json": "70a913ebe84416963c98b11ce44dc6b0ec5e2abf4627519db4e0a1d96a6c0920"
+  },
+  "validation_results": [
+    {
+      "name": "ANALYTICS-001",
+      "command": "pnpm lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 15000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "DOC-001",
+    "GTM-001"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Defines RFM inputs/outputs",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "ABC curve methodology",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "segmentation thresholds",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "and event taxonomy",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "specifies dashboards",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "KPIs",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "and minimal instrumentation requirements to support CRM prioritization",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "includes data privacy notes and open questions log",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "artifacts: rfm-abc-spec.md",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "event-taxonomy.md",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "dashboards-requirements.md",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "verified by: pnpm lint",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "12 DoD criteria unverified"
+}

@@ -1,0 +1,173 @@
+{
+  "$schema": "../../schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "TRACK-005",
+  "run_id": "20260222211500-3b075aae",
+  "attestor": "Claude Code - Task Integrity Validator",
+  "attestation_timestamp": "2026-02-22T21:50:00Z",
+  "verdict": "COMPLETE",
+  "context_acknowledgment": {
+    "files_read": [
+      {
+        "path": "artifacts/reports/security/pnpm-audit-latest.json",
+        "sha256": "c65ded2b296d7c0dff963a9c4e23eb25af52524a46e2a6cd1ee34ed2ba057fc2"
+      },
+      {
+        "path": "scripts/pnpm-audit-report.js",
+        "sha256": "983a162443e77204429f3cc486e88506e220ab7156ba61164767855854321399"
+      },
+      {
+        "path": "artifacts/misc/vulnerability-baseline.json",
+        "sha256": "7330b583a433f1cdea1139e8312c5ff46253345dec5a55ec056e285988d04135"
+      }
+    ],
+    "invariants_acknowledged": [
+      "SecurityDashboard.tsx (310 LOC) and security/route.ts (387 LOC) already exist — extend, do not rewrite",
+      "API returns 8 metric sections; UI only renders 5 — must add outdatedDeps, secretScan, sastScan, remediation",
+      "vulnerability-baseline.json contains remediation_applied with 4 fixed CVEs — parse for remediation tracking",
+      "Scan history uses 'vulnerabilities' field in baseline but API ScanHistory expects 'total' — transform in API",
+      "compliance.deps_current exists in API but not in UI — add as 4th compliance card",
+      "Pure function extraction pattern required for testability (no DOM mounting in Node environment)",
+      "Error messages in route.ts catch blocks must be sanitized to prevent filesystem path leakage"
+    ],
+    "acknowledged_at": "2026-02-22T21:30:00Z"
+  },
+  "evidence_summary": {
+    "artifacts_verified": 4,
+    "validations_passed": 4,
+    "validations_failed": 0,
+    "gates_passed": 6,
+    "gates_failed": 0,
+    "kpis_met": 4,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/project-tracker/components/tracking/SecurityDashboard.tsx": "9c77af147d1d58ccb46805749637997a0e892cab95364449652afbda06ba4f9d",
+    "apps/project-tracker/app/api/tracking/security/route.ts": "7549557ccff58242f71ce7e601cc9cd5ebed33ff36ff7179ca19e4437d8d6fab",
+    "apps/project-tracker/__tests__/tracking/SecurityDashboard.test.ts": "8a18c36f1ebd48a2ea16bf5b295eb296e3116639d602f1401b9f5dba455a29d9",
+    "apps/project-tracker/__tests__/tracking/security-api.test.ts": "8a1ae0a6cb542f61fb29a8c88baaea60cf9321bfa8cc9be002bd559e8b0dced6"
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-22T21:43:00Z",
+      "duration_ms": 59737
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run apps/project-tracker/__tests__/tracking/SecurityDashboard.test.ts apps/project-tracker/__tests__/tracking/security-api.test.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-22T21:43:06Z",
+      "duration_ms": 584
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-22T21:43:30Z",
+      "duration_ms": 12462
+    },
+    {
+      "name": "Build",
+      "command": "pnpm build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-22T21:44:00Z",
+      "duration_ms": 102724
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "plan-checkboxes",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-22T21:48:00Z"
+    },
+    {
+      "gate_id": "artifact-verification",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-22T21:48:00Z"
+    },
+    {
+      "gate_id": "csv-reconcile",
+      "passed": true,
+      "timestamp": "2026-02-22T21:48:00Z"
+    },
+    {
+      "gate_id": "build-validation",
+      "passed": true,
+      "timestamp": "2026-02-22T21:48:00Z"
+    },
+    {
+      "gate_id": "stoa-pass",
+      "passed": true,
+      "timestamp": "2026-02-22T21:48:00Z"
+    },
+    {
+      "gate_id": "coverage-measurement",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-22T21:48:00Z"
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Component tests passing",
+      "target": ">=30 tests",
+      "actual": "33 tests passing",
+      "met": true
+    },
+    {
+      "kpi": "API tests passing",
+      "target": ">=33 tests (no regressions)",
+      "actual": "36 tests passing (33 existing + 3 gap-fill)",
+      "met": true
+    },
+    {
+      "kpi": "Acceptance criteria met",
+      "target": "12/12",
+      "actual": "12/12",
+      "met": true
+    },
+    {
+      "kpi": "Non-functional requirements met",
+      "target": "4/4",
+      "actual": "4/4 (NF-001 polling, NF-002 <3s load, NF-003 error sanitization, NF-004 graceful degradation)",
+      "met": true
+    }
+  ],
+  "dependencies_verified": [
+    "EXC-SEC-001"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "All 12 acceptance criteria verified",
+      "met": true,
+      "evidence": "AC-001 through AC-012 all verified in plan Step 6f"
+    },
+    {
+      "criterion": "4 mandatory validations pass",
+      "met": true,
+      "evidence": "TypeScript (0 errors), Tests (69 pass), Lint (0 errors), Build (20/20 tasks)"
+    },
+    {
+      "criterion": "Plan checkboxes 100% complete",
+      "met": true,
+      "evidence": "All checkboxes in TRACK-005-plan.md marked [x]"
+    }
+  ],
+  "environment": {
+    "os": "Windows 11 Pro 10.0.26200",
+    "node_version": "v25.2.1",
+    "git_commit": "876808ca22c77fdfe2cbd7249abac72753aa1d0e",
+    "branch": "sprint0/codex-run"
+  },
+  "notes": "Security Dashboard UI task completed. Extended SecurityDashboard.tsx (310→753 LOC) with 4 new data sections (outdatedDeps, secretScan, sastScan, remediation), TrendSparkline integration, scan state polling, per-section error handling, 4th compliance card, and 11 exported pure helper functions. Extended route.ts (387→459 LOC) with parseRemediation(), scan history field mapping fix, and error sanitization. Tests use inline function pattern (QualityDashboard precedent) due to Node environment constraint — 33 component tests + 36 API tests = 69 total. Post-completion browser verification found and fixed 2 bugs: (1) 'Invalid Date' in Baseline Comparison — parseBaseline now reads generated_at and summary.vulnerabilities paths; (2) duplicate React key on remediation items sharing GHSA ID — key now includes module name and index."
+}

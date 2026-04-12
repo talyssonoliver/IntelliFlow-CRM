@@ -145,6 +145,10 @@ artifacts/logs/swarm/
 # tools/scripts/lib/stoa/paths.ts getConstitutionPath(). These MUST be tracked.
 !.specify/memory/
 !.specify/memory/**
+# Carve out: .specify/sprints/** holds canonical task attestations used by CI validator
+# and dashboard. This is the single source of truth for sprint task evidence.
+!.specify/sprints/
+!.specify/sprints/**
 artifacts/misc/.locks/
 apps/tree_intelliflow.txt
 

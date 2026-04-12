@@ -1,0 +1,66 @@
+{
+  "task_id": "IFC-209",
+  "run_id": "20260303001511-0c35d462",
+  "sprint": 15,
+  "timestamp": "2026-03-03T00:35:00Z",
+  "verdict": "PASS",
+  "artifact_hashes": {
+    "apps/web/src/app/sitemap.ts": "686d7fa987bdc04a3da9623d4f1e0437f97106cf79ea3e72a6134eb9d54e88d2",
+    "apps/web/src/app/__tests__/sitemap-fixes.test.ts": "b34ef64e83866d847c258a3c91e6755531bca6358939fc54cd8346d4edc4a35e",
+    "apps/web/src/data/blog-posts.ts": "c5e84391d7a9479659d6ffe7f2f18e38ebf21c7a73e9889a41b9e06e0b8b76c4",
+    "apps/web/src/data/job-listings.ts": "22d28d3f9c576eb058258c3643fcb267cf10db8ed927710129ac1469bfe23565"
+  },
+  "dependencies_verified": ["DOC-002", "DOC-009"],
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-03T00:26:00Z"
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run apps/web/src/app/__tests__/sitemap.test.ts apps/web/src/app/__tests__/sitemap-reconciliation.test.ts apps/web/src/app/__tests__/sitemap-fixes.test.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-03T00:26:06Z"
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter @intelliflow/web lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-03T00:26:30Z",
+      "notes": "1 pre-existing error in unrelated file (support/tickets/__tests__/page.test.tsx), zero errors in IFC-209 files"
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-03T00:30:00Z"
+    }
+  ],
+  "evidence_summary": {
+    "tests_passed": 30,
+    "tests_failed": 0,
+    "coverage": {
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "lines": 100,
+      "scope": "apps/web/src/app/sitemap.ts"
+    },
+    "files_created": 3,
+    "files_modified": 4,
+    "acceptance_criteria_met": 11,
+    "acceptance_criteria_total": 11
+  },
+  "gate_results": {
+    "plan_checkboxes": "PASS",
+    "artifact_hashes": "PASS",
+    "build_validation": "PASS",
+    "coverage_measurement": "PASS"
+  }
+}

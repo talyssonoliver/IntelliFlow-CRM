@@ -1,0 +1,564 @@
+{
+  "sprint": "sprint-21",
+  "name": "Sprint 21",
+  "generated_at": "2026-04-11T16:48:01.958Z",
+  "summary_source": "specify",
+  "task_summary": {
+    "total": 11,
+    "completed": 0,
+    "backlog": 11,
+    "blocked": 0,
+    "attested_completed": 0
+  },
+  "context": "Primary focus areas: Core CRM (7), Enhancement (2), Performance (1).",
+  "section_summary": [
+    {
+      "section": "Core CRM",
+      "total": 7,
+      "completed": 0,
+      "open": 7
+    },
+    {
+      "section": "Enhancement",
+      "total": 2,
+      "completed": 0,
+      "open": 2
+    },
+    {
+      "section": "Performance",
+      "total": 1,
+      "completed": 0,
+      "open": 1
+    },
+    {
+      "section": "SEO",
+      "total": 1,
+      "completed": 0,
+      "open": 1
+    }
+  ],
+  "notable_completed": [],
+  "open_tasks": [
+    {
+      "taskId": "IFC-036",
+      "sprint": 21,
+      "status": "Backlog",
+      "section": "Enhancement",
+      "title": "PHASE-006: WhatsApp + tRPC Integration",
+      "description": "PHASE-006: WhatsApp + tRPC Integration",
+      "summary": "WhatsApp messages captured via tRPC mutations; webhook-test-results.json must contain real WhatsApp API responses, adapter must be wired to API router",
+      "definitionOfDone": "WhatsApp messages captured via tRPC mutations; artifacts: webhook-test-results.json, message-flow-diagram.svg, context_ack.json; targets: >=9%, <1s; verified by: pnpm test; gates: latency-check; webhook-test-results.json must contain real WhatsApp API responses, adapter must be wired to API router",
+      "definitionOfDoneSnapshot": "WhatsApp messages captured via tRPC mutations; webhook-test-results.json must contain real WhatsApp API responses, adapter must be wired to API router",
+      "dependencies": [
+        "IFC-035",
+        "IFC-106"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-037",
+      "sprint": 21,
+      "status": "Backlog",
+      "section": "Enhancement",
+      "title": "PHASE-005: Analytics Dashboard Design",
+      "description": "PHASE-005: Analytics Dashboard Design",
+      "summary": "Real-time analytics with shadcn/ui charts",
+      "definitionOfDone": "Real-time analytics with shadcn/ui charts; artifacts: figma-dashboard-designs.url, kpi-definitions.yaml, user-feedback-notes.md",
+      "definitionOfDoneSnapshot": "Real-time analytics with shadcn/ui charts",
+      "dependencies": [
+        "IFC-032",
+        "ANALYTICS-001",
+        "IFC-190"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-076",
+      "sprint": 21,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Pipeline Board",
+      "description": "Pipeline Board",
+      "summary": "response under 200ms, Lighthouse 90, drag smooth",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, drag smooth; artifacts: page.tsx, pipeline-board.tsx, drag-drop-handler.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, drag smooth",
+      "dependencies": [
+        "IFC-091"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-077",
+      "sprint": 21,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Pipeline Stages",
+      "description": "Pipeline Stages",
+      "summary": "response under 200ms, Lighthouse 90, rates calculated",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, rates calculated; artifacts: page.tsx, stage-config.tsx, conversion-calculator.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, rates calculated",
+      "dependencies": [
+        "PG-076"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-078",
+      "sprint": 21,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Stage Detail",
+      "description": "Stage Detail",
+      "summary": "response under 200ms, Lighthouse 90, analytics shown",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, analytics shown; artifacts: page.tsx, stage-analytics.tsx, bottleneck-analyzer.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, analytics shown",
+      "dependencies": [
+        "PG-077"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "taskId": "IFC-036",
+      "sprint": 21,
+      "status": "Backlog",
+      "section": "Enhancement",
+      "title": "PHASE-006: WhatsApp + tRPC Integration",
+      "description": "PHASE-006: WhatsApp + tRPC Integration",
+      "summary": "WhatsApp messages captured via tRPC mutations; webhook-test-results.json must contain real WhatsApp API responses, adapter must be wired to API router",
+      "definitionOfDone": "WhatsApp messages captured via tRPC mutations; artifacts: webhook-test-results.json, message-flow-diagram.svg, context_ack.json; targets: >=9%, <1s; verified by: pnpm test; gates: latency-check; webhook-test-results.json must contain real WhatsApp API responses, adapter must be wired to API router",
+      "definitionOfDoneSnapshot": "WhatsApp messages captured via tRPC mutations; webhook-test-results.json must contain real WhatsApp API responses, adapter must be wired to API router",
+      "dependencies": [
+        "IFC-035",
+        "IFC-106"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-037",
+      "sprint": 21,
+      "status": "Backlog",
+      "section": "Enhancement",
+      "title": "PHASE-005: Analytics Dashboard Design",
+      "description": "PHASE-005: Analytics Dashboard Design",
+      "summary": "Real-time analytics with shadcn/ui charts",
+      "definitionOfDone": "Real-time analytics with shadcn/ui charts; artifacts: figma-dashboard-designs.url, kpi-definitions.yaml, user-feedback-notes.md",
+      "definitionOfDoneSnapshot": "Real-time analytics with shadcn/ui charts",
+      "dependencies": [
+        "IFC-032",
+        "ANALYTICS-001",
+        "IFC-190"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-076",
+      "sprint": 21,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Pipeline Board",
+      "description": "Pipeline Board",
+      "summary": "response under 200ms, Lighthouse 90, drag smooth",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, drag smooth; artifacts: page.tsx, pipeline-board.tsx, drag-drop-handler.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, drag smooth",
+      "dependencies": [
+        "IFC-091"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-077",
+      "sprint": 21,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Pipeline Stages",
+      "description": "Pipeline Stages",
+      "summary": "response under 200ms, Lighthouse 90, rates calculated",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, rates calculated; artifacts: page.tsx, stage-config.tsx, conversion-calculator.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, rates calculated",
+      "dependencies": [
+        "PG-076"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-078",
+      "sprint": 21,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Stage Detail",
+      "description": "Stage Detail",
+      "summary": "response under 200ms, Lighthouse 90, analytics shown",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, analytics shown; artifacts: page.tsx, stage-analytics.tsx, bottleneck-analyzer.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, analytics shown",
+      "dependencies": [
+        "PG-077"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-079",
+      "sprint": 21,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Forecasts",
+      "description": "Forecasts",
+      "summary": "response under 200ms, Lighthouse 90, forecasts accurate",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, forecasts accurate; artifacts: page.tsx, forecast-display.tsx, accuracy-tracker.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, forecasts accurate",
+      "dependencies": [
+        "IFC-092"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-080",
+      "sprint": 21,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Activities",
+      "description": "Activities",
+      "summary": "response under 200ms, Lighthouse 90, timeline smooth",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, timeline smooth; artifacts: page.tsx, activity-timeline.tsx, activity-filters.tsx",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, timeline smooth",
+      "dependencies": [
+        "IFC-089"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-081",
+      "sprint": 21,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Tasks",
+      "description": "Tasks",
+      "summary": "response under 200ms, Lighthouse 90, tasks tracked",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, tasks tracked; artifacts: page.tsx, task-manager.tsx, task-reminder.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, tasks tracked",
+      "dependencies": [
+        "PG-080"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-123",
+      "sprint": 21,
+      "status": "Backlog",
+      "section": "Performance",
+      "title": "Design caching strategy (Redis/CDN) and tune Prisma queries",
+      "description": "Design caching strategy (Redis/CDN) and tune Prisma queries",
+      "summary": "Layered caching added, critical queries optimized, cache invalidation strategy documented",
+      "definitionOfDone": "Layered caching added, critical queries optimized, cache invalidation strategy documented; targets: >=30%, >=90%",
+      "definitionOfDoneSnapshot": "Layered caching added, critical queries optimized, cache invalidation strategy documented",
+      "dependencies": [
+        "IFC-007",
+        "IFC-087"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-208",
+      "sprint": 21,
+      "status": "Backlog",
+      "section": "SEO",
+      "title": "Lighthouse SEO CI enforcement and og:image - change lighthouserc.js SEO assertion from warn to error and add og:image meta tag to root layout (content audit findings F-005 F-006)",
+      "description": "Lighthouse SEO CI enforcement and og:image - change lighthouserc.js SEO assertion from warn to error and add og:image meta tag to root layout (content audit findings F-005 F-006)",
+      "summary": "lighthouserc.js SEO assertions use level error not warn; og:image meta tag defined in root layout metadata; all 25 public pages inherit og:image for social sharing previews; Lighthouse CI blocks on SEO regression",
+      "definitionOfDone": "lighthouserc.js SEO assertions use level error not warn; og:image meta tag defined in root layout metadata; all 25 public pages inherit og:image for social sharing previews; Lighthouse CI blocks on SEO regression; verified by: pnpm test && pnpm run lighthouse",
+      "definitionOfDoneSnapshot": "lighthouserc.js SEO assertions use level error not warn; og:image meta tag defined in root layout metadata; all 25 public pages inherit og:image for social sharing previews; Lighthouse CI blocks on SEO regression",
+      "dependencies": [
+        "DOC-009"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-288",
+      "sprint": 21,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Analytics Dashboard Endpoint Wiring. Wire 9 dead analytics router endpoints: exportConversionFunnel, exportMetrics, exportReport, getConversionFunnel, getLeadMetrics, getOverview, getSalesMetrics, getTimeSeriesData, leadStats. Backend built (ANALYTICS-001), zero web callers. Decision: wire to analytics dashboard UI (IFC-037) with charts/export buttons. Audit: artifacts/reports/dead-endpoints-audit.csv rows 20-28.",
+      "description": "Analytics Dashboard Endpoint Wiring. Wire 9 dead analytics router endpoints: exportConversionFunnel, exportMetrics, exportReport, getConversionFunnel, getLeadMetrics, getOverview, getSalesMetrics, getTimeSeriesData, leadStats. Backend built (ANALYTICS-001), zero web callers. Decision: wire to analytics dashboard UI (IFC-037) with charts/export buttons. Audit: artifacts/reports/dead-endpoints-audit.csv rows 20-28.",
+      "summary": "All 9 analytics endpoints wired to dashboard UI with working charts/exports; zero dead endpoints in analytics router; tests >=90%",
+      "definitionOfDone": "All 9 analytics endpoints wired to dashboard UI with working charts/exports; zero dead endpoints in analytics router; tests >=90%",
+      "definitionOfDoneSnapshot": "All 9 analytics endpoints wired to dashboard UI with working charts/exports; zero dead endpoints in analytics router; tests >=90%",
+      "dependencies": [
+        "IFC-037"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    }
+  ]
+}

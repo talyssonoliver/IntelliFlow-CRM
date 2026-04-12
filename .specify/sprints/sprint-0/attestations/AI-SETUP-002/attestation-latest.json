@@ -1,0 +1,69 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "AI-SETUP-002",
+  "run_id": "sprint0-audit-20260302T215641-7da797",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:56:49.832Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 4,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "docs/shared/copilot-instructions.md": "893926f94d382990df5bcd0199ae5e5f912094d80338db3c20c24f23fcf938e8",
+    "artifacts/misc/team-licenses.csv": "7f7086b29c8a256b46b121dc6709a2cd5fb179c36342e0914242f06d613a971a",
+    "artifacts/misc/workflow-automation.yaml": "ee3d232a319bc3b58560e9a6c492ab89bc73a0062a13e91802b2a74d69914c0a",
+    ".specify/sprints/sprint-0/attestations/AI-SETUP-002/context_ack.json": "5ec56af99b4580e639d640c1272f656e5b35ec6cdee1411f0a4398b9ba279204"
+  },
+  "validation_results": [
+    {
+      "name": "AI-SETUP-002",
+      "command": "pnpm typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 90000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "AI-SETUP-001"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "copilot-instructions.md created",
+      "met": true,
+      "evidence": "All 4 artifacts exist"
+    },
+    {
+      "criterion": "copilot-setup-steps.yml automated",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "coding agent enabled",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "targets: >=100%",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "<2s",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "4 DoD criteria unverified"
+}

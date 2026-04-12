@@ -1,0 +1,79 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-007",
+  "run_id": "sprint3-audit-20260302T215712-mko6ti",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:57:20.304Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 8,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "artifacts/misc/k6/scripts/load-test.js": "1373b792eb101a226770db01553779a1f0991f48947c74776cc77754fc998e51",
+    "artifacts/benchmarks/performance-report.html": "1075d92aaaa6237d6bbd11cb934399abb1a6c4ebfbe304c8731657eaa90cf611",
+    "artifacts/misc/grafana-dashboard.json": "61f74899969a2e687385897bc4c7a9237cec8baac79486dbf2138951850ac86a",
+    "artifacts/metrics/baseline-metrics.csv": "57c77d43937e020f667573a82ae6833c8b3dc88a93cd3c9c0cb46797b68b3e75",
+    "apps/ai-worker/src/scripts/benchmark.ts": "d9d16caaba77a61ad823e8ca8b73f6c6439a92c7b441d588f797171947cb58d5",
+    "apps/project-tracker/docs/metrics/_global/flows/FLOW-003.md": "208cb9c7407375945868d6fcedc54f1da511d03fcaed4c2f6596b31f2a1fe5ed",
+    "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-003-validation.md": "a589684fe082e0f3f9440fd567b2d27676bdc4483dd3aaa30f0bd65633ca2ff0",
+    ".specify/sprints/sprint-3/attestations/IFC-007/context_ack.json": "6d68d57b85b801333db2035b920df16fcb4036d60a1b8f8f784b00c0838aac64"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-007",
+      "command": "pnpm test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 180000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-004",
+    "IFC-005"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Baseline with tRPC",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "Vercel Edge",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "Railway documented",
+      "met": true,
+      "evidence": "Documentation found: apps/project-tracker/docs/metrics/_global/flows/FLOW-003.md, apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-003-validation.md"
+    },
+    {
+      "criterion": "targets: <100ms",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "verified by: pnpm test",
+      "met": true,
+      "evidence": "All 1 validations passed"
+    },
+    {
+      "criterion": "gates: p99-latency-check",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "4 DoD criteria unverified"
+}

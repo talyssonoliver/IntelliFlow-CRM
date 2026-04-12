@@ -1,0 +1,551 @@
+{
+  "sprint": "sprint-23",
+  "name": "Sprint 23",
+  "generated_at": "2026-04-11T16:48:01.958Z",
+  "summary_source": "specify",
+  "task_summary": {
+    "total": 11,
+    "completed": 0,
+    "backlog": 11,
+    "blocked": 0,
+    "attested_completed": 0
+  },
+  "context": "Primary focus areas: Core CRM (9), Documentation (1), Testing (1).",
+  "section_summary": [
+    {
+      "section": "Core CRM",
+      "total": 9,
+      "completed": 0,
+      "open": 9
+    },
+    {
+      "section": "Documentation",
+      "total": 1,
+      "completed": 0,
+      "open": 1
+    },
+    {
+      "section": "Testing",
+      "total": 1,
+      "completed": 0,
+      "open": 1
+    }
+  ],
+  "notable_completed": [],
+  "open_tasks": [
+    {
+      "taskId": "IFC-046",
+      "sprint": 23,
+      "status": "Backlog",
+      "section": "Testing",
+      "title": "Security Tests (OWASP ZAP + Snyk)",
+      "description": "Security Tests (OWASP ZAP + Snyk)",
+      "summary": "Automated security scanning in CI/CD",
+      "definitionOfDone": "Automated security scanning in CI/CD",
+      "definitionOfDoneSnapshot": "Automated security scanning in CI/CD",
+      "dependencies": [
+        "IFC-008"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-083",
+      "sprint": 23,
+      "status": "Backlog",
+      "section": "Documentation",
+      "title": "RAG Integration for Docs",
+      "description": "RAG Integration for Docs",
+      "summary": "LLM can answer questions from documentation",
+      "definitionOfDone": "LLM can answer questions from documentation; targets: >=90%, <2s; gates: response-time-check",
+      "definitionOfDoneSnapshot": "LLM can answer questions from documentation",
+      "dependencies": [
+        "IFC-039",
+        "IFC-082"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-088",
+      "sprint": 23,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Notes",
+      "description": "Notes",
+      "summary": "response under 200ms, Lighthouse 90, notes saved",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, notes saved; artifacts: page.tsx, note-editor.tsx, mention-handler.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, notes saved",
+      "dependencies": [
+        "PG-080"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-089",
+      "sprint": 23,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Files Cross-entity scope: also wire file upload/download handlers on Lead detail (upload btn download btn) Contact detail (document section) and Deal detail (files section). Reuse upload/download infrastructure across all entity detail pages.",
+      "description": "Files Cross-entity scope: also wire file upload/download handlers on Lead detail (upload btn download btn) Contact detail (document section) and Deal detail (files section). Reuse upload/download infrastructure across all entity detail pages.",
+      "summary": "response under 200ms, Lighthouse 90, files organized; File upload/download buttons functional on Lead Contact Deal detail pages in addition to standalone Files page",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, files organized; File upload/download buttons functional on Lead Contact Deal detail pages in addition to standalone Files page",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, files organized; File upload/download buttons functional on Lead Contact Deal detail pages in addition to standalone Files page",
+      "dependencies": [
+        "IFC-094"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-090",
+      "sprint": 23,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "File Detail",
+      "description": "File Detail",
+      "summary": "response under 200ms, Lighthouse 90, previews working",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, previews working; artifacts: page.tsx, file-preview.tsx, file-sharer.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, previews working",
+      "dependencies": [
+        "PG-089"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "taskId": "IFC-046",
+      "sprint": 23,
+      "status": "Backlog",
+      "section": "Testing",
+      "title": "Security Tests (OWASP ZAP + Snyk)",
+      "description": "Security Tests (OWASP ZAP + Snyk)",
+      "summary": "Automated security scanning in CI/CD",
+      "definitionOfDone": "Automated security scanning in CI/CD",
+      "definitionOfDoneSnapshot": "Automated security scanning in CI/CD",
+      "dependencies": [
+        "IFC-008"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-083",
+      "sprint": 23,
+      "status": "Backlog",
+      "section": "Documentation",
+      "title": "RAG Integration for Docs",
+      "description": "RAG Integration for Docs",
+      "summary": "LLM can answer questions from documentation",
+      "definitionOfDone": "LLM can answer questions from documentation; targets: >=90%, <2s; gates: response-time-check",
+      "definitionOfDoneSnapshot": "LLM can answer questions from documentation",
+      "dependencies": [
+        "IFC-039",
+        "IFC-082"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-088",
+      "sprint": 23,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Notes",
+      "description": "Notes",
+      "summary": "response under 200ms, Lighthouse 90, notes saved",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, notes saved; artifacts: page.tsx, note-editor.tsx, mention-handler.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, notes saved",
+      "dependencies": [
+        "PG-080"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-089",
+      "sprint": 23,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Files Cross-entity scope: also wire file upload/download handlers on Lead detail (upload btn download btn) Contact detail (document section) and Deal detail (files section). Reuse upload/download infrastructure across all entity detail pages.",
+      "description": "Files Cross-entity scope: also wire file upload/download handlers on Lead detail (upload btn download btn) Contact detail (document section) and Deal detail (files section). Reuse upload/download infrastructure across all entity detail pages.",
+      "summary": "response under 200ms, Lighthouse 90, files organized; File upload/download buttons functional on Lead Contact Deal detail pages in addition to standalone Files page",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, files organized; File upload/download buttons functional on Lead Contact Deal detail pages in addition to standalone Files page",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, files organized; File upload/download buttons functional on Lead Contact Deal detail pages in addition to standalone Files page",
+      "dependencies": [
+        "IFC-094"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-090",
+      "sprint": 23,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "File Detail",
+      "description": "File Detail",
+      "summary": "response under 200ms, Lighthouse 90, previews working",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, previews working; artifacts: page.tsx, file-preview.tsx, file-sharer.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, previews working",
+      "dependencies": [
+        "PG-089"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-091",
+      "sprint": 23,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Products",
+      "description": "Products",
+      "summary": "response under 200ms, Lighthouse 90, catalog searchable",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, catalog searchable; artifacts: page.tsx, product-catalog.tsx, product-search.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, catalog searchable",
+      "dependencies": [
+        "IFC-089"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-092",
+      "sprint": 23,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Product Detail",
+      "description": "Product Detail",
+      "summary": "response under 200ms, Lighthouse 90, details complete",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, details complete; artifacts: page.tsx, product-detail.tsx, availability-checker.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, details complete",
+      "dependencies": [
+        "PG-091"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-093",
+      "sprint": 23,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Price Books",
+      "description": "Price Books",
+      "summary": "response under 200ms, Lighthouse 90, pricing accurate",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, pricing accurate; artifacts: page.tsx, price-book-manager.tsx, discount-engine.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, pricing accurate",
+      "dependencies": [
+        "PG-091"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-216",
+      "sprint": 23,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Entity Detail File Upload/Download Wiring - Wire file upload and download handlers on entity detail pages (Lead Contact Deal). Upload: file picker to upload mutation to Supabase Storage. Download: presigned URL to browser download. Follows IFC-094 (Pattern 1 - infra-only). Resolves WIRE-IFC-094-001.",
+      "description": "Entity Detail File Upload/Download Wiring - Wire file upload and download handlers on entity detail pages (Lead Contact Deal). Upload: file picker to upload mutation to Supabase Storage. Download: presigned URL to browser download. Follows IFC-094 (Pattern 1 - infra-only). Resolves WIRE-IFC-094-001.",
+      "summary": "Upload/download working on 3 entity detail pages; presigned URLs; file size validation; tenant isolation; tests >=90%",
+      "definitionOfDone": "Upload/download working on 3 entity detail pages; presigned URLs; file size validation; tenant isolation; tests >=90%",
+      "definitionOfDoneSnapshot": "Upload/download working on 3 entity detail pages; presigned URLs; file size validation; tenant isolation; tests >=90%",
+      "dependencies": [
+        "IFC-094"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-290",
+      "sprint": 23,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Integrations Dashboard Endpoint Wiring. Wire 5 dead integrations router endpoints: getAllConnectorsHealth, getConnectorHealth, getConnectorsByType, getDashboardConfig, triggerSync. Backend built (IFC-003), zero web callers. Decision: build integrations settings page to consume these. Audit: artifacts/reports/dead-endpoints-audit.csv rows 61-65.",
+      "description": "Integrations Dashboard Endpoint Wiring. Wire 5 dead integrations router endpoints: getAllConnectorsHealth, getConnectorHealth, getConnectorsByType, getDashboardConfig, triggerSync. Backend built (IFC-003), zero web callers. Decision: build integrations settings page to consume these. Audit: artifacts/reports/dead-endpoints-audit.csv rows 61-65.",
+      "summary": "All 5 integrations endpoints wired to dashboard UI; zero dead endpoints in integrations router; tests >=90%",
+      "definitionOfDone": "All 5 integrations endpoints wired to dashboard UI; zero dead endpoints in integrations router; tests >=90%",
+      "definitionOfDoneSnapshot": "All 5 integrations endpoints wired to dashboard UI; zero dead endpoints in integrations router; tests >=90%",
+      "dependencies": [],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-291",
+      "sprint": 23,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Feedback Submission UI Wiring. Wire 5 dead feedback router endpoints: checkRetraining, exportTrainingData, getForLead, submitCorrection, submitSimple. Backend built (IFC-068), zero web callers. Decision: add feedback UI to AI review workflow. Audit: artifacts/reports/dead-endpoints-audit.csv rows 55-60.",
+      "description": "Feedback Submission UI Wiring. Wire 5 dead feedback router endpoints: checkRetraining, exportTrainingData, getForLead, submitCorrection, submitSimple. Backend built (IFC-068), zero web callers. Decision: add feedback UI to AI review workflow. Audit: artifacts/reports/dead-endpoints-audit.csv rows 55-60.",
+      "summary": "All 5 feedback endpoints wired to feedback UI; zero dead endpoints in feedback router; tests >=90%",
+      "definitionOfDone": "All 5 feedback endpoints wired to feedback UI; zero dead endpoints in feedback router; tests >=90%",
+      "definitionOfDoneSnapshot": "All 5 feedback endpoints wired to feedback UI; zero dead endpoints in feedback router; tests >=90%",
+      "dependencies": [
+        "IFC-068"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "PG-023",
+  "run_id": "sprint13-audit-20260302T215849-ygkkim",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:58:57.344Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 4,
+    "validations_passed": 2,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/web/src/app/(public)/verify-email/[token]/page.tsx": "7110725183e3c94d66253e31dbed25df491856ee59ea6d11c44387a8e844aeca",
+    "apps/web/src/components/shared/email-verification.tsx": "ad5651bee8436829f04781b8d5a1cb187ddaceb582f856cb8895847470981c20",
+    "apps/web/src/lib/shared/account-activation.ts": "06aa61c245a48efd6423e6e8a133847268ce7c21742a862776280e11aab2212f",
+    ".specify/sprints/sprint-13/attestations/PG-023/context_ack.json": "e66c31acac2c6a30e442d2b07fcb2838211c8dd1113fc0e1d4dbd2a492677d70"
+  },
+  "validation_results": [
+    {
+      "name": "PG-023",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 46000,
+      "stdout_hash": "all-green-1772476872408"
+    },
+    {
+      "name": "PG-023",
+      "command": "pnpm --filter @intelliflow/web test --run",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 120000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "PG-016",
+    "IFC-006"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Response <200ms",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "Lighthouse ≥90",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "email verified",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "artifacts: page.tsx",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "email-verification.tsx",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "account-activation.ts",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "6 DoD criteria unverified"
+}

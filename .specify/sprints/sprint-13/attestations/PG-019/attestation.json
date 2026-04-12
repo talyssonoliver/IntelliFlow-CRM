@@ -1,0 +1,200 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "PG-019",
+  "run_id": "PG-019-exec-20260219",
+  "attestor": "Claude Code",
+  "attestation_timestamp": "2026-02-19T18:55:00Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 5,
+    "validations_passed": 4,
+    "validations_failed": 0,
+    "gates_passed": 7,
+    "gates_failed": 0,
+    "kpis_met": 4,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter web typecheck",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-02-19T18:47:00Z",
+      "duration_ms": 8000
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run forgot-password reset-email reset-token (159 tests)",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-02-19T18:48:00Z",
+      "duration_ms": 6600
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter web lint",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-02-19T18:49:00Z",
+      "duration_ms": 15000
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter web build",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-02-19T18:50:00Z",
+      "duration_ms": 45000
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "plan-checkboxes",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-19T18:55:00Z"
+    },
+    {
+      "gate_id": "artifact-verification",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-19T18:55:00Z"
+    },
+    {
+      "gate_id": "csv-reconciliation",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-19T18:55:00Z"
+    },
+    {
+      "gate_id": "build-validation",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-19T18:55:00Z"
+    },
+    {
+      "gate_id": "stoa-pass",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-19T18:55:00Z"
+    },
+    {
+      "gate_id": "container-registration",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-19T18:55:00Z"
+    },
+    {
+      "gate_id": "coverage-measurement",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-19T18:55:00Z"
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Page coverage",
+      "target": ">85%",
+      "actual": "100% stmts, 100% branch, 100% funcs, 100% lines",
+      "met": true
+    },
+    {
+      "kpi": "Component coverage",
+      "target": ">90%",
+      "actual": "96.42% stmts, 91.66% branch, 100% funcs, 98.07% lines",
+      "met": true
+    },
+    {
+      "kpi": "Utils coverage",
+      "target": ">90%",
+      "actual": "93.33% stmts, 91.89% branch, 100% funcs, 93.33% lines",
+      "met": true
+    },
+    {
+      "kpi": "All tests passing",
+      "target": "159/159",
+      "actual": "159/159 passed, 0 failed",
+      "met": true
+    }
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Page-level integration tests (>85% coverage)",
+      "met": true,
+      "evidence": "25 tests in page.test.tsx, 100% coverage on page.tsx"
+    },
+    {
+      "criterion": "Component rendering tests created",
+      "met": true,
+      "evidence": "26 tests in reset-email.render.test.tsx, 96.42% coverage on reset-email.tsx"
+    },
+    {
+      "criterion": "Reset initiated, email sent, link working verified by tests",
+      "met": true,
+      "evidence": "Submit, resend, rate limiting, error handling, countdown timer all tested"
+    },
+    {
+      "criterion": "XSS escaping in email template",
+      "met": true,
+      "evidence": "buildResetEmailPayload XSS test verifies script tags escaped"
+    },
+    {
+      "criterion": "ARIA accessibility attributes",
+      "met": true,
+      "evidence": "EmailInput tests verify aria-invalid and aria-describedby"
+    }
+  ],
+  "dependencies_verified": [
+    "PG-015",
+    "IFC-006"
+  ],
+  "context_acknowledgment": {
+    "acknowledged_at": "2026-02-19T18:40:00Z",
+    "files_read": [
+      {
+        "path": "apps/web/src/app/(public)/forgot-password/page.tsx",
+        "sha256": "77ea59f38a58d14c662c38cab12296849936b8bb1c790b84737678da3dc882c0"
+      },
+      {
+        "path": "apps/web/src/components/shared/reset-email.tsx",
+        "sha256": "39b1dd120b45dd345f2d28df441935ba69e8bdb38c5943e88fd6007a811d2e7f"
+      },
+      {
+        "path": "apps/web/src/lib/shared/reset-token.ts",
+        "sha256": "1b3dc97187234812312f5ae7533edfb2fd613d7fcb3cc143a46d67332cb82294"
+      },
+      {
+        "path": ".specify/sprints/sprint-13/specifications/PG-019-spec.md",
+        "sha256": "7d0b3d4d1b5e31b92991828fe4546eaa646b25ff89f88bec0c48932d0efbdafa"
+      },
+      {
+        "path": ".specify/sprints/sprint-13/planning/PG-019-plan.md",
+        "sha256": "cc2b05423234beda68b639a2fb4c30bdec826ccf2c3462258ee1c51f75f82072"
+      }
+    ],
+    "invariants_acknowledged": [
+      "Implementation already existed — enhanced tests and fixed countdown timer bug",
+      "Added useEffect countdown timer to page.tsx to fix AC5 (resend cooldown)",
+      "External mock variable + wrapper pattern for vi.mock() factories",
+      "vi.useFakeTimers() required for countdown and resend flow tests",
+      "Uses happy-dom vitest environment for component testing"
+    ]
+  },
+  "artifact_hashes": {
+    "apps/web/src/app/(public)/forgot-password/page.tsx": "77ea59f38a58d14c662c38cab12296849936b8bb1c790b84737678da3dc882c0",
+    "apps/web/src/app/(public)/forgot-password/__tests__/page.test.tsx": "3450126b6c77cc5652c6ccd1b8a5dd9cf0203c1e12b11384b3fa6f658d198608",
+    "apps/web/src/components/shared/reset-email.tsx": "39b1dd120b45dd345f2d28df441935ba69e8bdb38c5943e88fd6007a811d2e7f",
+    "apps/web/src/components/shared/__tests__/reset-email.render.test.tsx": "7fc7cf47704f42d1a26cd4e255facc2f8077f6baf336774138884908d5551a5e",
+    "apps/web/src/lib/shared/reset-token.ts": "1b3dc97187234812312f5ae7533edfb2fd613d7fcb3cc143a46d67332cb82294"
+  },
+  "environment": {
+    "os": "Windows 11 Pro 10.0.26200",
+    "node_version": "v25.2.1",
+    "git_commit": "ef39039b",
+    "branch": "sprint0/codex-run"
+  },
+  "notes": "Re-execution of PG-019. Previous attempt (2026-02-16) had Build/Lint FAILED and page.tsx coverage at 67.3%. Fixed: (1) Added missing useEffect countdown timer to page.tsx — resendCooldown was never decremented, making handleResend unreachable (AC5 bug). (2) Added 8 new page tests: countdown timer (2), resend flow (4), help link (1), non-Error throw (1). Total: 25 page tests (was 17), 159 total tests. Coverage: page.tsx 100%, reset-email.tsx 96.42%, reset-token.ts 93.33%. All 4 validations PASS. All gates PASS (binary)."
+}

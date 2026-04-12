@@ -1,0 +1,76 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-020",
+  "run_id": "sprint6-audit-20260302T215741-ex8v6u",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:57:48.973Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 3,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "docs/ai-architecture.md": "37001666bf3b9c0f74c3193b0f9b86d7b7671a405b21c89f324b3caf9e7b8e2c",
+    "docs/architecture/diagrams/langchain-flow-diagram.mermaid": "90af434206223ce270aa38b4b83f4a24515582be622d7528aa4eaabef537b087",
+    ".specify/sprints/sprint-6/attestations/IFC-020/context_ack.json": "c3a09353202e710a518cb67dd35d732da05971e66d2f72872b791994f9e34c47"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-020",
+      "command": "pnpm typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 90000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [],
+  "definition_of_done_items": [
+    {
+      "criterion": "Modular AI pipeline with memory (Zep)",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "tools defined",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "artifacts: ai-architecture.md",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "langchain-flow-diagram.mermaid",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "context_ack.json",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "RetrievalService must return actual pgvector search results",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "not null fallback to FTS",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "7 DoD criteria unverified"
+}

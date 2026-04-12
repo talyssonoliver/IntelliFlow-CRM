@@ -1,0 +1,77 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "PG-169",
+  "run_id": "sprint15-audit-20260302T215918-7xh85u",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:59:26.262Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 3,
+    "validations_passed": 2,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/web/src/app/(developer)/docs/guides/page.tsx": "c851014aee61096248df6695f78a7c797f757a01c8c0c4eef8b5542d57e640f2",
+    "apps/web/src/components/developer/guides-list.tsx": "5b8d2253bf577f991fe02e03e2608a028aa76e110c5ac44eb4f85871be8f83d7",
+    ".specify/sprints/sprint-15/attestations/PG-169/context_ack.json": "db98148e8296dd139361067c7c05f0c2266dfe1d199986d3d3a363f39d27053b"
+  },
+  "validation_results": [
+    {
+      "name": "PG-169",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 46000,
+      "stdout_hash": "all-green-1772476872408"
+    },
+    {
+      "name": "PG-169",
+      "command": "pnpm --filter @intelliflow/web test --run",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 120000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "PG-032"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Response <200ms",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "Lighthouse >=90",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "guides listed and categorized",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "artifacts: page.tsx",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "guides-list.tsx",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "5 DoD criteria unverified"
+}

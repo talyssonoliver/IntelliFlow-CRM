@@ -111,6 +111,35 @@ function findAllTaskJsons(dir: string): string[] {
   return results;
 }
 
+/**
+ * Also discover task evidence from .specify/sprints/sprint-N/attestations/.
+ * Each subdirectory is a task ID; we prefer attestation-latest.json over attestation.json.
+ * This prevents false "missing JSON" failures for tasks whose canonical evidence
+ * lives in .specify rather than the metrics tree.
+ */
+function findAttestationJsons(specifyRoot: string, targetSprint: string): string[] {
+  const attestationDir = join(specifyRoot, 'sprints', `sprint-${targetSprint}`, 'attestations');
+  if (!existsSync(attestationDir)) return [];
+
+  const results: string[] = [];
+  try {
+    const entries = readdirSync(attestationDir, { withFileTypes: true });
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue;
+      const latestPath = join(attestationDir, entry.name, 'attestation-latest.json');
+      const basicPath = join(attestationDir, entry.name, 'attestation.json');
+      if (existsSync(latestPath)) {
+        results.push(latestPath);
+      } else if (existsSync(basicPath)) {
+        results.push(basicPath);
+      }
+    }
+  } catch {
+    // Ignore read errors
+  }
+  return results;
+}
+
 function mapCsvToJsonStatus(csvStatus: string): string {
   const map: Record<string, string> = {
     Done: 'DONE',
@@ -166,7 +195,11 @@ function indexTaskJsonFiles(taskJsonFiles: string[]): {
 
       byId.set(taskId, {
         taskId,
-        status: normalizeText(data?.status).toUpperCase(),
+        // Metrics JSONs use "status"; attestation JSONs use "verdict" (COMPLETE → DONE)
+        status: normalizeText(
+          data?.status ||
+          (data?.verdict === 'COMPLETE' ? 'DONE' : data?.verdict)
+        ).toUpperCase(),
         description: normalizeText(data?.description),
         filePath: jsonFile,
         repoRelativePath: repoRelativePath || jsonFile,
@@ -349,9 +382,35 @@ function validateJsonFiles(
   const results: GateResult[] = [];
 
   const sprintDir = join(metricsDir, `sprint-${targetSprint}`);
-  const taskJsonFiles = findAllTaskJsons(sprintDir);
+  const specifyRoot = join(repoRoot, '.specify');
+  // Metrics JSONs take precedence; attestation JSONs fill the gap for tasks
+  // that have evidence in .specify but no file in the metrics tree.
+  const metricsJsonFiles = findAllTaskJsons(sprintDir);
+  const attestationJsonFiles = findAttestationJsons(specifyRoot, targetSprint);
+
+  // Build set of task IDs already covered by metrics files (fast pre-scan)
+  const metricsTaskIds = new Set<string>();
+  for (const f of metricsJsonFiles) {
+    try {
+      const data = JSON.parse(readFileSync(f, 'utf-8'));
+      const tid = data?.task_id ?? data?.taskId;
+      if (typeof tid === 'string' && tid.trim()) metricsTaskIds.add(tid.trim());
+    } catch { /* ignore */ }
+  }
+
   const sprintTasks = tasks.filter((t) => String(t['Target Sprint']) === targetSprint);
   const csvTaskIds = new Set(sprintTasks.map((t) => t['Task ID']));
+
+  // Only include attestation files for tasks NOT already in metrics AND in the CSV
+  const filteredAttestations = attestationJsonFiles.filter((f) => {
+    try {
+      const data = JSON.parse(readFileSync(f, 'utf-8'));
+      const tid = data?.task_id ?? data?.taskId;
+      return typeof tid === 'string' && tid.trim() && !metricsTaskIds.has(tid.trim()) && csvTaskIds.has(tid.trim());
+    } catch { return false; }
+  });
+
+  const taskJsonFiles = [...metricsJsonFiles, ...filteredAttestations];
 
   log(`   Found ${taskJsonFiles.length} task JSON files`, 'gray');
 

@@ -1,0 +1,86 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-154",
+  "run_id": "sprint6-audit-20260302T215741-ex8v6u",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:57:49.101Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 3,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "artifacts/benchmarks/ocr-quality-benchmarks.csv": "16ec2e5151d49febd8c1de4c1e2dd7b931d9080143484cce2d72c575e26dfdf6",
+    "artifacts/misc/extracted-text-schema.json": "1b0d0701e3743e9de40568abdb00fe5fd6eee2567497f54d546c00d5ab770678",
+    ".specify/sprints/sprint-6/attestations/IFC-154/context_ack.json": "44009eadaa3361a263da18e09ae000b1b2378c6b0f04738309d595f23edee747"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-154",
+      "command": "pnpm test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 180000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [],
+  "definition_of_done_items": [
+    {
+      "criterion": "OCR worker processes supported formats",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "stores extracted text with provenance",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "handles retries",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "quality metrics recorded",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "tests",
+      "met": true,
+      "evidence": "All 1 validations passed"
+    },
+    {
+      "criterion": "artifacts: ocr-quality-benchmarks.csv",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "extracted-text-schema.json",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "context_ack.json",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "targets: >=1%",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "8 DoD criteria unverified"
+}

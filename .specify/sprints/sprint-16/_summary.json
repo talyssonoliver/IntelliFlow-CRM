@@ -1,0 +1,1631 @@
+{
+  "sprint": "sprint-16",
+  "name": "Sprint 16",
+  "generated_at": "2026-04-11T16:48:01.958Z",
+  "summary_source": "specify",
+  "task_summary": {
+    "total": 43,
+    "completed": 43,
+    "backlog": 0,
+    "blocked": 0,
+    "attested_completed": 43
+  },
+  "context": "Primary focus areas: Core CRM (22), Support Pages (6), AI Foundation (2).",
+  "section_summary": [
+    {
+      "section": "Core CRM",
+      "total": 22,
+      "completed": 22,
+      "open": 0
+    },
+    {
+      "section": "Support Pages",
+      "total": 6,
+      "completed": 6,
+      "open": 0
+    },
+    {
+      "section": "AI Foundation",
+      "total": 2,
+      "completed": 2,
+      "open": 0
+    },
+    {
+      "section": "AI Intelligence",
+      "total": 2,
+      "completed": 2,
+      "open": 0
+    },
+    {
+      "section": "Automation",
+      "total": 2,
+      "completed": 2,
+      "open": 0
+    },
+    {
+      "section": "Analytics",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Architecture",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Auth Pages",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Billing Pages",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Governance",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Infrastructure",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Notifications",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Settings",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Support",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    }
+  ],
+  "notable_completed": [
+    {
+      "taskId": "IFC-029",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "Automation",
+      "title": "PHASE-005: Auto-Response with Approval Gate",
+      "description": "PHASE-005: Auto-Response with Approval Gate",
+      "summary": "IFC-029 Auto-Response with Approval Gate - DOMAIN LAYER COMPLETE. Features: AutoResponseDraft aggregate with 8-state machine (DRAFT, PENDING_APPROVAL, APPROVED, REJECTED, INVALIDATED, SENT, FAILED, ESCALATED), 9 domain events, tenant isolat......",
+      "definitionOfDone": "AI-generated responses with human approval workflow; artifacts: approval-workflow.bpmn, response-quality-metrics.json, context_ack.json; targets: <1s; All phases completed: Domain(1)+AI Chain(4)+Infrastructure(2)+Application(3)+Integration(5)",
+      "definitionOfDoneSnapshot": "AI-generated responses with human approval workflow; Response generation must call real LLM chain",
+      "dependencies": [
+        "IFC-028"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/IFC-029/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-01-30T23:05:00.000Z",
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-220",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "AI Foundation",
+      "title": "AI Insight Null-State UX (Contact) - Add Run AI Analysis button when aiInsight is null on Contact detail page. Lead detail already done 2026-03-04. Pattern: amber dashed-border banner + button wired to scoreWithAI mutation. Invalidate query on success. Follows IFC-095 (Pattern 2 - scope oversight). Resolves WIRE-IFC-095-001.",
+      "description": "AI Insight Null-State UX (Contact) - Add Run AI Analysis button when aiInsight is null on Contact detail page. Lead detail already done 2026-03-04. Pattern: amber dashed-border banner + button wired to scoreWithAI mutation. Invalidate query on success. Follows IFC-095 (Pattern 2 - scope oversight). Resolves WIRE-IFC-095-001.",
+      "summary": "IFC-220: AI Insight Null-State UX (Contact). Added scoreWithAI tRPC mutation to contact.router.ts using deriveContactInsights() + Prisma upsert + fire-and-forget BullMQ enrichment.... Contact detail shows Run AI Analysis when no insight; triggers mutation;...",
+      "definitionOfDone": "Contact detail shows Run AI Analysis when no insight; triggers mutation; refreshes; matches Lead pattern; tests >=90%",
+      "definitionOfDoneSnapshot": "Contact detail shows Run AI Analysis when no insight; triggers mutation; refreshes; matches Lead pattern; tests >=90%",
+      "dependencies": [
+        "IFC-095"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/IFC-220/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": null,
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 5,
+        "met": 5,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-254",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Contact Router Data Integrity Fixes. (1) Raw SQL in getTimeline has no tenant filter and .catch(() => []) swallows errors (R-09). (2) sortBy accepts arbitrary strings — enum whitelist needed (R-10). (3) filterOptions ignores status input (R-12). (4) contactListResponseSchema uses 'data' key but router returns 'contacts' (D-03). (5) phone non-nullable in response schema but mapper returns null (D-08/R-14). Audit: docs/audit/contact-detail-wiring-audit.md §15,§18.",
+      "description": "Contact Router Data Integrity Fixes. (1) Raw SQL in getTimeline has no tenant filter and .catch(() => []) swallows errors (R-09). (2) sortBy accepts arbitrary strings — enum whitelist needed (R-10). (3) filterOptions ignores status input (R-12). (4) contactListResponseSchema uses 'data' key but router returns 'contacts' (D-03). (5) phone non-nullable in response schema but mapper returns null (D-08/R-14). Audit: docs/audit/contact-detail-wiring-audit.md §15,§18.",
+      "summary": "Repair agent: attestation directory was missing after exec session. Code verified correct (5 bug fixes: R-09 table name + error logging + tenantId, R-10 sortBy enum, R-12 filterOptions status, D-03 list key, D-08 phone nullable).......",
+      "definitionOfDone": "getTimeline has tenant filter and proper error handling; sortBy uses enum whitelist; filterOptions respects input; schema keys match router response; phone schema nullable; tests >=90%",
+      "definitionOfDoneSnapshot": "getTimeline has tenant filter and proper error handling; sortBy uses enum whitelist; filterOptions respects input; schema keys match router response; phone schema nullable; tests >=90%",
+      "dependencies": [],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/IFC-254/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-16T20:30:10Z",
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 5,
+        "met": 5,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-043",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "Support Pages",
+      "title": "Help Center Index",
+      "description": "Help Center Index",
+      "summary": "Frontend-only task implementing Help Center Index page at /help-center/. 13 files created, 9 files modified. 42 tests (4 test files) all passing. Scoped V8 coverage: 100% statements, 92.85% branches, 100% functions, 100% lines.......",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, help searchable; artifacts: page.tsx, help-categories.tsx, help-search.tsx",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, help searchable",
+      "dependencies": [
+        "IFC-076"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/PG-043/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-28T14:02:00Z",
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-162",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "AI Insights from ML model - LangChain chain for generating daily insights with caching confidence scores and action recommendations Cross-entity scope: null-state UX - when AI insight is null on entity detail pages show Run AI Analysis button. Lead detail already done (2026-03-04) apply same pattern to Contact detail. Ensure fallback values visually distinct from real AI data.",
+      "description": "AI Insights from ML model - LangChain chain for generating daily insights with caching confidence scores and action recommendations Cross-entity scope: null-state UX - when AI insight is null on entity detail pages show Run AI Analysis button. Lead detail already done (2026-03-04) apply same pattern to Contact detail. Ensure fallback values visually distinct from real AI data.",
+      "summary": "PG-129 and IFC-095 dependencies verified complete; No fabricated AI data — null-state UX shows honest pending state; source: 'ai' | 'heuristic' provenance field required on all insight responses LangChain chain generates daily insights per user; cached 1h TTL;...",
+      "definitionOfDone": "LangChain chain generates daily insights per user; cached 1h TTL; confidence scores; 4 insight types; home.getAIInsights reads from cache; tests with mocked LLM; Null-state indicator on Contact detail; fallback data visually distinguished from real AI output",
+      "definitionOfDoneSnapshot": "LangChain chain generates daily insights per user; cached 1h TTL; confidence scores; 4 insight types; home.getAIInsights reads from cache; tests with mocked LLM; Null-state indicator on Contact detail;...",
+      "dependencies": [
+        "PG-129",
+        "IFC-095"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/PG-162/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-10T21:00:00.000Z",
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    }
+  ],
+  "open_tasks": [],
+  "tasks": [
+    {
+      "taskId": "IFC-028",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "Automation",
+      "title": "PHASE-005: Workflow Engine with LangGraph",
+      "description": "PHASE-005: Workflow Engine with LangGraph",
+      "summary": "Task completed and verified Visual workflow engine with conditional logic",
+      "definitionOfDone": "Visual workflow engine with conditional logic; artifacts: state-machine-tests.ts, IFC-028-delivery.md, context_ack.json",
+      "definitionOfDoneSnapshot": "Visual workflow engine with conditional logic",
+      "dependencies": [
+        "IFC-027"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/IFC-028/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T19:33:21.791Z",
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-029",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "Automation",
+      "title": "PHASE-005: Auto-Response with Approval Gate",
+      "description": "PHASE-005: Auto-Response with Approval Gate",
+      "summary": "IFC-029 Auto-Response with Approval Gate - DOMAIN LAYER COMPLETE. Features: AutoResponseDraft aggregate with 8-state machine (DRAFT, PENDING_APPROVAL, APPROVED, REJECTED, INVALIDATED, SENT, FAILED, ESCALATED), 9 domain events, tenant isolat......",
+      "definitionOfDone": "AI-generated responses with human approval workflow; artifacts: approval-workflow.bpmn, response-quality-metrics.json, context_ack.json; targets: <1s; All phases completed: Domain(1)+AI Chain(4)+Infrastructure(2)+Application(3)+Integration(5)",
+      "definitionOfDoneSnapshot": "AI-generated responses with human approval workflow; Response generation must call real LLM chain",
+      "dependencies": [
+        "IFC-028"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/IFC-029/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-01-30T23:05:00.000Z",
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-043",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "Support Pages",
+      "title": "Help Center Index",
+      "description": "Help Center Index",
+      "summary": "Frontend-only task implementing Help Center Index page at /help-center/. 13 files created, 9 files modified. 42 tests (4 test files) all passing. Scoped V8 coverage: 100% statements, 92.85% branches, 100% functions, 100% lines.......",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, help searchable; artifacts: page.tsx, help-categories.tsx, help-search.tsx",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, help searchable",
+      "dependencies": [
+        "IFC-076"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/PG-043/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-28T14:02:00Z",
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-044",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "Support Pages",
+      "title": "Help Search",
+      "description": "Help Search",
+      "summary": "PG-044 Help Search page implemented with TDD. Pure function search algorithm with weighted scoring, URL-driven state management, SearchFilters component, sidebar navigation entry, and a11y fixes for unconditional live region and aria-hidden......",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, results relevant; artifacts: page.tsx, search-algorithm.tsx; uses shared SearchFilterBar (DRY)",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, results relevant; uses shared SearchFilterBar (DRY)",
+      "dependencies": [
+        "PG-043"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/PG-044/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": null,
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-045",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "Support Pages",
+      "title": "Help Article",
+      "description": "Help Article",
+      "summary": "PG-045 Help Article page fully implemented with TDD. TypeScript and Build validations show pre-existing failures in unrelated files (DealsCharts.tsx, SentimentDistributionChart.tsx JSX comment syntax;... response under 200ms, Lighthouse 90, articles displayed",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, articles displayed; artifacts: page.tsx, article-renderer.tsx, feedback-widget.tsx",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, articles displayed",
+      "dependencies": [
+        "PG-043"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/PG-045/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-08T12:15:00Z",
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 2,
+        "failed": 2,
+        "failingNames": [
+          "TypeScript",
+          "Build"
+        ]
+      },
+      "kpiSummary": {
+        "total": 6,
+        "met": 6,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-046",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "Support Pages",
+      "title": "Support Tickets",
+      "description": "Support Tickets",
+      "summary": "Reuse-first approach: no new backend code. Reuses 16 existing tRPC procedures, useTicketFilters hook, mapTicketListItems mapper, and TicketList component. SLADisplay created and unit-tested for PG-048 consumption....",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, tickets listed; artifacts: page.tsx, ticket-list.tsx, sla-display.tsx",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, tickets listed",
+      "dependencies": [
+        "IFC-093"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/PG-046/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-02T23:30:00Z",
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-047",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "Support Pages",
+      "title": "New Ticket",
+      "description": "New Ticket",
+      "summary": "TypeScript and Build failures are pre-existing (ai-worker toSorted, TaskDetail.test onStart, login-security node:crypto). PG-047 files compile and lint cleanly. All 25 new tests + 215 regression tests pass (240/240).......",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, tickets created; artifacts: page.tsx, ticket-form.tsx, file-uploader.tsx",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, tickets created",
+      "dependencies": [
+        "PG-046"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/PG-047/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-08T12:20:00Z",
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 2,
+        "failed": 2,
+        "failingNames": [
+          "TypeScript",
+          "Build"
+        ]
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-048",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "Support Pages",
+      "title": "Ticket Detail",
+      "description": "Ticket Detail",
+      "summary": "Reuse-first architecture: support detail page reuses TicketDetail (~1400 lines) with listHref/detailUrlPrefix prop overrides. StatusUpdater and TicketThread created as standalone components for future TicketDetail refactor....",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, details shown; artifacts: page.tsx, ticket-thread.tsx, status-updater.tsx",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, details shown",
+      "dependencies": [
+        "PG-046"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/PG-048/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-08T15:50:00Z",
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-125",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "Auth Pages",
+      "title": "Add MFA using TOTP or SMS and allow users to enable/disable from security settings",
+      "description": "Add MFA using TOTP or SMS and allow users to enable/disable from security settings",
+      "summary": "MFA management dashboard with disable/regenerate flows. Setup wizard moved to /mfa/setup sub-route. verifyTotpTimingSafe replaces timing-unsafe verifyTotp. Rate limiting at 3 attempts per 15 minutes. MFA enrollment, challenge, backup codes implemented",
+      "definitionOfDone": "MFA enrollment, challenge, backup codes implemented; targets: >=50%; verified by: pnpm test, pnpm test:e2e",
+      "definitionOfDoneSnapshot": "MFA enrollment, challenge, backup codes implemented",
+      "dependencies": [
+        "PG-021",
+        "PG-022",
+        "IFC-006"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/PG-125/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-08T15:43:00Z",
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-193",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "Infrastructure",
+      "title": "Activity Feed Type Registry - Enum-based mapping from AuditLogEntry.eventType to ActivityFeedType with metadata",
+      "description": "Activity Feed Type Registry - Enum-based mapping from AuditLogEntry.eventType to ActivityFeedType with metadata",
+      "summary": "IFC-193 creates ActivityTypeRegistry mapping ~135 domain event types to ActivityFeedType with UI metadata. Pure domain constant — zero infrastructure dependencies. 100% test coverage. All 9 test cases pass.......",
+      "definitionOfDone": "ACTIVITY_TYPE_REGISTRY constant maps all AuditLogEntry.eventType values to ActivityFeedType with icon/label/color metadata; router uses registry instead of string includes(); new event types require only registry entry; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "ACTIVITY_TYPE_REGISTRY constant maps all AuditLogEntry.eventType values to ActivityFeedType with icon/label/color metadata; router uses registry instead of string includes(); new event types require only registry entry",
+      "dependencies": [
+        "IFC-182"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/IFC-193/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-08T17:48:00Z",
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-194",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "Architecture",
+      "title": "Router Middleware Standardization - Migrate all routers from manual getTenantId to tenantProcedure",
+      "description": "Router Middleware Standardization - Migrate all routers from manual getTenantId to tenantProcedure",
+      "summary": "Repair pass 2026-04-09: rewrote prior attestation to be schema-compliant (prior verdict was 'PASS' not in enum; missing required schema_version/attestor/attestation_timestamp; had disallowed additional fields).......",
+      "definitionOfDone": "All tenant-scoped routers use tenantProcedure from trpc.ts; manual getTenantId/getUserId helpers removed; consistent ctx.tenantId access pattern across all routers; architecture test enforces tenantProcedure usage; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "All tenant-scoped routers use tenantProcedure from trpc.ts; manual getTenantId/getUserId helpers removed; consistent ctx.tenantId access pattern across all routers; architecture test enforces tenantProcedure usage",
+      "dependencies": [
+        "IFC-182",
+        "IFC-003"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/IFC-194/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-04-09T20:07:38Z",
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-202",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Activity Feed Stats Endpoint - getStats aggregation with counts by type source and entity over time windows",
+      "description": "Activity Feed Stats Endpoint - getStats aggregation with counts by type source and entity over time windows",
+      "summary": "activityFeed.getStats endpoint returning aggregate counts by type, source, entity type, and configurable time windows (24h, 7d, 30d); repository port extended with getStats method; Prisma adapter implements COUNT queries;...",
+      "definitionOfDone": "activityFeed.getStats endpoint returning aggregate counts by type, source, entity type, and configurable time windows (24h, 7d, 30d); repository port extended with getStats method; Prisma adapter implements COUNT queries; unit and router tests; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "activityFeed.getStats endpoint returning aggregate counts by type, source, entity type, and configurable time windows (24h, 7d, 30d); repository port extended with getStats method; Prisma adapter implements COUNT queries;...",
+      "dependencies": [
+        "IFC-069"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/IFC-202/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-10T03:05:00Z",
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-203",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Activity Feed Full-Text Search",
+      "description": "Activity Feed Full-Text Search - search endpoint with text query across titles descriptions and actor names",
+      "summary": "Added activityFeed.search tRPC endpoint with ILIKE search across 7 activity source tables. 32 new tests (13 adapter + 9 service + 10 router), 95 regression tests passing. Coverage: ActivityFeedService.ts 100%/95%/100%/100%.......",
+      "definitionOfDone": "activityFeed.search endpoint accepting text query with cursor pagination; repository uses Prisma full-text search (or ILIKE fallback) across activity titles, descriptions, and actor names; tenant-scoped; results ranked by relevance then timestamp; unit and router tests; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "activityFeed.search endpoint accepting text query with cursor pagination; repository uses Prisma full-text search (or ILIKE fallback) across activity titles, descriptions, and actor names; tenant-scoped;...",
+      "dependencies": [
+        "IFC-069",
+        "IFC-155"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/IFC-203/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-10T23:30:00Z",
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-161",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Notifications integration on home page - bell icon header badge count IFC-183 Prisma model and notification router",
+      "description": "Notifications integration on home page - bell icon header badge count IFC-183 Prisma model and notification router",
+      "summary": "Pre-existing AuthenticatedHomePage test failure (missing ActivityFeedStatsBar mock from IFC-202) was also fixed in a11y, analytics, and QuickActionHrefs test files. Bell icon in home header; unread count badge; dropdown with recent notifications; mark-as-read;...",
+      "definitionOfDone": "Bell icon in home header; unread count badge; dropdown with recent notifications; mark-as-read; Notification model + router; tests cover bell and badge",
+      "definitionOfDoneSnapshot": "Bell icon in home header; unread count badge; dropdown with recent notifications; mark-as-read; Notification model + router; tests cover bell and badge",
+      "dependencies": [
+        "PG-129",
+        "IFC-183"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/PG-161/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-11T20:33:00Z",
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-162",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "AI Insights from ML model - LangChain chain for generating daily insights with caching confidence scores and action recommendations Cross-entity scope: null-state UX - when AI insight is null on entity detail pages show Run AI Analysis button. Lead detail already done (2026-03-04) apply same pattern to Contact detail. Ensure fallback values visually distinct from real AI data.",
+      "description": "AI Insights from ML model - LangChain chain for generating daily insights with caching confidence scores and action recommendations Cross-entity scope: null-state UX - when AI insight is null on entity detail pages show Run AI Analysis button. Lead detail already done (2026-03-04) apply same pattern to Contact detail. Ensure fallback values visually distinct from real AI data.",
+      "summary": "PG-129 and IFC-095 dependencies verified complete; No fabricated AI data — null-state UX shows honest pending state; source: 'ai' | 'heuristic' provenance field required on all insight responses LangChain chain generates daily insights per user; cached 1h TTL;...",
+      "definitionOfDone": "LangChain chain generates daily insights per user; cached 1h TTL; confidence scores; 4 insight types; home.getAIInsights reads from cache; tests with mocked LLM; Null-state indicator on Contact detail; fallback data visually distinguished from real AI output",
+      "definitionOfDoneSnapshot": "LangChain chain generates daily insights per user; cached 1h TTL; confidence scores; 4 insight types; home.getAIInsights reads from cache; tests with mocked LLM; Null-state indicator on Contact detail;...",
+      "dependencies": [
+        "PG-129",
+        "IFC-095"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/PG-162/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-10T21:00:00.000Z",
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-167",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Analytics tracking plan for home page - define and implement business metrics events for section interactions",
+      "description": "Analytics tracking plan for home page - define and implement business metrics events for section interactions",
+      "summary": "PG-167: Implemented typed analytics tracking for all 6 authenticated home page sections. Created analytics.ts module with 17-member HomeAnalyticsEvent type union and 15 typed convenience functions wrapping trackEvent().... AC-001:...",
+      "definitionOfDone": "Analytics events for quick action clicks, insight interactions, feed scrolls, pin/unpin, goal views; tracking utility integrated; event schema documented",
+      "definitionOfDoneSnapshot": "AC-001: All 6 home page sections emit analytics events; AC-002: Typed analytics module with HomeAnalyticsEvent union type; AC-003: Typed convenience functions for each event",
+      "dependencies": [
+        "PG-129"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/PG-167/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-11T20:27:00Z",
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-172",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "Billing Pages",
+      "title": "Billing Ghost Pages - Usage Plans Upgrade Cancel and Settings",
+      "description": "Billing Ghost Pages - Usage Plans Upgrade Cancel and Settings",
+      "summary": "PG-172: Created 5 billing ghost pages (usage, plans, upgrade, cancel, settings) with 6 new components, 5 page shells, 5 test files (58 tests), shared utility extraction, sidebar updates, and documentation updates.......",
+      "definitionOfDone": "Pages at /billing/usage (usage metrics vs plan limits with progress bars) /billing/plans (3-tier comparison grid Starter/Professional/Enterprise) /billing/upgrade (proration preview and confirmation) /billing/cancel (retention offer reason selection period-end behaviour) /billing/settings (billing address contact tax fields); all sidebar and billing-portal.tsx in-page links resolve; Lighthouse >=90; tests passing; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Pages at /billing/usage (usage metrics vs plan limits with progress bars) /billing/plans (3-tier comparison grid Starter/Professional/Enterprise) /billing/upgrade (proration preview and confirmation) /billing/cancel (retention offer reason...",
+      "dependencies": [
+        "PG-025",
+        "PG-030"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/PG-172/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-10T21:15:00Z",
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 6,
+        "met": 6,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-173",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "Support",
+      "title": "Ticket Configuration Pages - SLA Policies Types and Automations",
+      "description": "Ticket Configuration Pages - SLA Policies Types and Automations",
+      "summary": "Ticket Configuration Pages: 3 pages (SLA Policies, Types, Automations) with full CRUD, backend tRPC router, Zod validators. 96 total tests (57 frontend + 16 backend + 23 validators). All 4 validations pass: TypeScript, Tests, Lint, Build....",
+      "definitionOfDone": "Pages at /tickets/sla-policies (SLA rule list with priority and time targets CRUD) /tickets/types (ticket category list with custom field definitions) /tickets/automations (trigger-condition-action rule builder for auto-assignment and status transitions); sidebar Configuration section links resolve; Lighthouse >=90; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Pages at /tickets/sla-policies (SLA rule list with priority and time targets CRUD) /tickets/types (ticket category list with custom field definitions) /tickets/automations (trigger-condition-action rule builder for auto-assignment and statu...",
+      "dependencies": [
+        "PG-137",
+        "IFC-189",
+        "IFC-093"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/PG-173/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-10T23:45:00Z",
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-174",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "Notifications",
+      "title": "Notification Configuration Pages - Channels and Quiet Hours",
+      "description": "Notification Configuration Pages - Channels and Quiet Hours",
+      "summary": "Functions coverage at 86% (below 90% target) — remaining uncovered functions are inline JSX callbacks in Radix UI Select components that cannot be exercised in jsdom without complex primitive mocking. All other thresholds met.......",
+      "definitionOfDone": "Pages at /notifications/channels (delivery channel list with enable/disable toggles and per-channel config for email SMS push webhook) and /notifications/quiet-hours (weekly schedule grid with time-range pickers and day selectors for suppression windows); sidebar Configuration links resolve; Lighthouse >=90; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Pages at /notifications/channels (delivery channel list with enable/disable toggles and per-channel config for email SMS push webhook) and /notifications/quiet-hours (weekly schedule grid with time-range pickers and day selectors for suppre...",
+      "dependencies": [
+        "IFC-157"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/PG-174/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-11T23:32:00Z",
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 5,
+        "met": 4,
+        "missed": 1
+      }
+    },
+    {
+      "taskId": "PG-175",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Deals Trash Page - Soft-deleted deals list with restore and permanent delete",
+      "description": "Deals Trash Page - Soft-deleted deals list with restore and permanent delete",
+      "summary": "Deals Trash Page implementing soft-delete pattern with restore and permanent delete. All 17 ACs verified, 4 NFRs verified.... Page at /deals/trash showing soft-deleted deals list with deal name value stage-at-deletion date;...",
+      "definitionOfDone": "Page at /deals/trash showing soft-deleted deals list with deal name value stage-at-deletion date; restore action (reverts deletedAt) and permanent delete with confirmation dialog; follows /deals data-table pattern; sidebar trash link resolves; Lighthouse >=90; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Page at /deals/trash showing soft-deleted deals list with deal name value stage-at-deletion date; restore action (reverts deletedAt) and permanent delete with confirmation dialog; follows /deals data-table pattern;...",
+      "dependencies": [
+        "PG-135"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/PG-175/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": null,
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-176",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "Governance",
+      "title": "Governance Quality Report Sub-Pages - Lighthouse Coverage and Performance views",
+      "description": "Governance Quality Report Sub-Pages - Lighthouse Coverage and Performance views",
+      "summary": "Pre-existing lint errors (6) in unrelated files. Sitemap reconciliation TC-25 updated from 143→193 (pre-existing page count drift). All new files lint-clean....",
+      "definitionOfDone": "Pages at /governance/quality-reports/lighthouse (Lighthouse scores by URL with category breakdown and historical trend) /governance/quality-reports/coverage (test coverage by package with statements branches functions lines) /governance/quality-reports/performance (API response time and load test results); each renders focused report type with back-link to quality-reports list; sidebar Quality links resolve; Lighthouse >=90; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Pages at /governance/quality-reports/lighthouse (Lighthouse scores by URL with category breakdown and historical trend) /governance/quality-reports/coverage (test coverage by package with statements branches functions lines) /governance/qua...",
+      "dependencies": [
+        "PG-015"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/PG-176/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": null,
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-177",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "Analytics",
+      "title": "Analytics Saved Report Pages - Weekly Monthly and Quarterly views",
+      "description": "Analytics Saved Report Pages - Weekly Monthly and Quarterly views",
+      "summary": "Monthly 'revenue by product/region' substituted with getSalesMetrics + trafficSources (no product/region endpoint exists). Export reportType mapped: weekly→overview, monthly→sales, quarterly→timeseries.... Pages at /analytics/saved/weekly (last 7 days metrics:...",
+      "definitionOfDone": "Pages at /analytics/saved/weekly (last 7 days metrics: revenue leads tickets closed with trend indicators) /analytics/saved/monthly (last 30 days revenue breakdown by product and region) /analytics/saved/quarterly (Q4 performance summary with YoY comparison); sidebar Saved Reports links resolve; Lighthouse >=90; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Pages at /analytics/saved/weekly (last 7 days metrics: revenue leads tickets closed with trend indicators) /analytics/saved/monthly (last 30 days revenue breakdown by product and region) /analytics/saved/quarterly (Q4 performance summary wi...",
+      "dependencies": [
+        "IFC-068"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/PG-177/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": null,
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-178",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "Settings",
+      "title": "Module Settings Pages - 11 per-module configuration pages at /settings/[module]",
+      "description": "Module Settings Pages - 11 per-module configuration pages at /settings/[module]",
+      "summary": "Pages at /settings/leads (scoring thresholds assignment auto-qual) /settings/contacts (duplicate detection required fields tags) /settings/accounts (hierarchy industry custom fields) /settings/deals (pipeline stages win-loss reasons scoring...",
+      "definitionOfDone": "Pages at /settings/leads (scoring thresholds assignment auto-qual) /settings/contacts (duplicate detection required fields tags) /settings/accounts (hierarchy industry custom fields) /settings/deals (pipeline stages win-loss reasons scoring) /settings/tickets (default SLA auto-close notification triggers) /settings/documents (file types size limits antivirus retention) /settings/reports (default range currency scheduled delivery) /settings/billing (billing address tax ID invoice contact) /settings/appointments (duration buffer calendar integration) /settings/cases (case prefix default priority auto-assign) /settings/tasks (due-date offset reminder templates); all settingsHref and ModulePaywall links resolve; follows settings/account pattern; Lighthouse >=90; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Pages at /settings/leads (scoring thresholds assignment auto-qual) /settings/contacts (duplicate detection required fields tags) /settings/accounts (hierarchy industry custom fields) /settings/deals (pipeline stages win-loss reasons scoring...",
+      "dependencies": [
+        "PG-104",
+        "IFC-076"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/PG-178/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-11T22:53:06Z",
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-220",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "AI Foundation",
+      "title": "AI Insight Null-State UX (Contact) - Add Run AI Analysis button when aiInsight is null on Contact detail page. Lead detail already done 2026-03-04. Pattern: amber dashed-border banner + button wired to scoreWithAI mutation. Invalidate query on success. Follows IFC-095 (Pattern 2 - scope oversight). Resolves WIRE-IFC-095-001.",
+      "description": "AI Insight Null-State UX (Contact) - Add Run AI Analysis button when aiInsight is null on Contact detail page. Lead detail already done 2026-03-04. Pattern: amber dashed-border banner + button wired to scoreWithAI mutation. Invalidate query on success. Follows IFC-095 (Pattern 2 - scope oversight). Resolves WIRE-IFC-095-001.",
+      "summary": "IFC-220: AI Insight Null-State UX (Contact). Added scoreWithAI tRPC mutation to contact.router.ts using deriveContactInsights() + Prisma upsert + fire-and-forget BullMQ enrichment.... Contact detail shows Run AI Analysis when no insight; triggers mutation;...",
+      "definitionOfDone": "Contact detail shows Run AI Analysis when no insight; triggers mutation; refreshes; matches Lead pattern; tests >=90%",
+      "definitionOfDoneSnapshot": "Contact detail shows Run AI Analysis when no insight; triggers mutation; refreshes; matches Lead pattern; tests >=90%",
+      "dependencies": [
+        "IFC-095"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/IFC-220/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": null,
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 5,
+        "met": 5,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-225",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Convert Lead UX Fix - Backend requires QUALIFIED status but Convert button always visible. Fix: (1) Disable/hide button for non-QUALIFIED leads with guidance tooltip. (2) Add confirmation dialog before conversion. (3) Add createAccount option to conversion flow. (4) Handle conversion errors gracefully. Page: leads/[id]/page.tsx line 1169.",
+      "description": "Convert Lead UX Fix - Backend requires QUALIFIED status but Convert button always visible. Fix: (1) Disable/hide button for non-QUALIFIED leads with guidance tooltip. (2) Add confirmation dialog before conversion. (3) Add createAccount option to conversion flow. (4) Handle conversion errors gracefully. Page: leads/[id]/page.tsx line 1169.",
+      "summary": "Convert Lead UX fix: (1) Button disabled for non-QUALIFIED with tooltip guidance, (2) Button hidden for CONVERTED, (3) Confirmation dialog with createAccount checkbox and accountName input, (4) Mutation params include createAccount/accountN......",
+      "definitionOfDone": "Convert button hidden/disabled for non-QUALIFIED leads; confirmation dialog shown; createAccount option available; error handling for failed conversions; tests >=90%",
+      "definitionOfDoneSnapshot": "Convert button hidden/disabled for non-QUALIFIED leads; confirmation dialog shown; createAccount option available; error handling for failed conversions; tests >=90%",
+      "dependencies": [],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/IFC-225/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-12T21:05:00Z",
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 1,
+        "met": 1,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-226",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Lead Detail Null-State UX - Fix engagement/churn/sentiment showing raw 'Unknown' string when aiInsight is null. Replace with styled 'Not analyzed' state with visual distinction from real AI data. Page: leads/[id]/page.tsx lines 588, 2258.",
+      "description": "Lead Detail Null-State UX - Fix engagement/churn/sentiment showing raw 'Unknown' string when aiInsight is null. Replace with styled 'Not analyzed' state with visual distinction from real AI data. Page: leads/[id]/page.tsx lines 588, 2258.",
+      "summary": "Frontend-only UX fix. Replaced 3 raw 'Unknown' strings with 'Not analyzed' in aiInsights useMemo fallback. Added hasAiInsight boolean for conditional styling.... Engagement/churn/sentiment show styled 'Not analyzed' state (not raw 'Unknown');...",
+      "definitionOfDone": "Engagement/churn/sentiment show styled 'Not analyzed' state (not raw 'Unknown'); visual distinction between fallback and real AI data; tests >=90%",
+      "definitionOfDoneSnapshot": "Engagement/churn/sentiment show styled 'Not analyzed' state (not raw 'Unknown'); visual distinction between fallback and real AI data; tests >=90%",
+      "dependencies": [],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/IFC-226/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-16T00:00:00.000Z",
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-232",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Sidebar Broken Links Cleanup - 1 remaining broken navigation link: /deals/trash has no page.tsx (sidebar config deals.ts links to it but route 404s). Original 17 broken nav links and 6 settings links resolved by PG-025/PG-045/PG-174 and other sprint work. Fix: create trash/deleted-deals page at apps/web/src/app/deals/trash/page.tsx OR remove the sidebar item from deals.ts if soft-delete is not yet supported.",
+      "description": "Sidebar Broken Links Cleanup - 1 remaining broken navigation link: /deals/trash has no page.tsx (sidebar config deals.ts links to it but route 404s). Original 17 broken nav links and 6 settings links resolved by PG-025/PG-045/PG-174 and other sprint work. Fix: create trash/deleted-deals page at apps/web/src/app/deals/trash/page.tsx OR remove the sidebar item from deals.ts if soft-delete is not yet supported.",
+      "summary": "Verification-only task. All acceptance criteria met by PG-175 (Completed, Sprint 16). No code changes required — only validation and attestation. /deals/trash route resolves to a valid page (placeholder or functional); zero 404 errors from sidebar navigation;...",
+      "definitionOfDone": "/deals/trash route resolves to a valid page (placeholder or functional); zero 404 errors from sidebar navigation; tests >=90%",
+      "definitionOfDoneSnapshot": "/deals/trash route resolves to a valid page (placeholder or functional); zero 404 errors from sidebar navigation; tests >=90%",
+      "dependencies": [],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/IFC-232/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": null,
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-236",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Recent Activity Empty State CTA - Overview tab shows generic 'No activities yet' with no call to action. Add 'Log your first activity' CTA button linking to Activity tab textarea. Apply same pattern to Contact detail page. Page: leads/[id]/page.tsx line 1600.",
+      "description": "Recent Activity Empty State CTA - Overview tab shows generic 'No activities yet' with no call to action. Add 'Log your first activity' CTA button linking to Activity tab textarea. Apply same pattern to Contact detail page. Page: leads/[id]/page.tsx line 1600.",
+      "summary": "Pure UI enhancement — added 'Log your first activity' CTA button to empty state on lead and contact detail Overview tabs. CTA navigates to Activity tab via setActiveTab('activity').... Recent Activity empty state has 'Log your first activity' CTA;...",
+      "definitionOfDone": "Recent Activity empty state has 'Log your first activity' CTA; CTA navigates to Activity tab; applied to Contact detail; tests >=90%",
+      "definitionOfDoneSnapshot": "Recent Activity empty state has 'Log your first activity' CTA; CTA navigates to Activity tab; applied to Contact detail; tests >=90%",
+      "dependencies": [],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/IFC-236/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-12T20:55:00Z",
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 1,
+        "met": 1,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-237",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Lead Router Security - Tenant Isolation & Domain Bypass. Fix 4 CRITICAL/MEDIUM security issues: (1) scoreWithAI fire-and-forget uses raw ctx.prisma instead of prismaWithTenant - cross-tenant data leak risk [S2]. (2) logActivity $transaction uses raw ctx.prisma - may bypass tenant middleware [S3]. (3) bulkUpdateStatus uses direct Prisma updateMany bypassing Lead.changeStatus() domain validation - skips status transition rules and domain events [S4]. (4) getHotLeads/getReadyForQualification pass userId as ownerId without explicit tenantId [S9]. Fix: Replace ctx.prisma with prismaWithTenant in all cases. Route bulkUpdateStatus through domain model. Add explicit tenantId to hot/ready queries.",
+      "description": "Lead Router Security - Tenant Isolation & Domain Bypass. Fix 4 CRITICAL/MEDIUM security issues: (1) scoreWithAI fire-and-forget uses raw ctx.prisma instead of prismaWithTenant - cross-tenant data leak risk [S2]. (2) logActivity $transaction uses raw ctx.prisma - may bypass tenant middleware [S3]. (3) bulkUpdateStatus uses direct Prisma updateMany bypassing Lead.changeStatus() domain validation - skips status transition rules and domain events [S4]. (4) getHotLeads/getReadyForQualification pass userId as ownerId without explicit tenantId [S9]. Fix: Replace ctx.prisma with prismaWithTenant in all cases. Route bulkUpdateStatus through domain model. Add explicit tenantId to hot/ready queries.",
+      "summary": "Fixed 4 CRITICAL/MEDIUM security vulnerabilities (S2, S3, S4, S9) plus auxiliary ctx.prisma usages in lead.router.ts. All operations now use prismaWithTenant for tenant isolation.... All lead router procedures use prismaWithTenant;...",
+      "definitionOfDone": "All lead router procedures use prismaWithTenant; bulkUpdateStatus routes through Lead.changeStatus(); getHotLeads has explicit tenantId; tenant isolation integration tests pass; no raw ctx.prisma in lead router",
+      "definitionOfDoneSnapshot": "All lead router procedures use prismaWithTenant; bulkUpdateStatus routes through Lead.changeStatus(); getHotLeads has explicit tenantId; tenant isolation integration tests pass; no raw ctx.prisma in lead router",
+      "dependencies": [],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/IFC-237/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-12T23:51:00Z",
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-238",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Lead Detail Status Type Fix + Auth Guard. Fix 2 CRITICAL issues: (1) LeadStatus type union at leads/[id]/page.tsx line 139 omits NEGOTIATING - runtime crash when lead has this status [S1]. (2) leads/(list)/new/page.tsx missing useRequireAuth() hook - unauthenticated users can access create lead form [F1]. Also fix trpc vs api import inconsistency in create page [F8]. Fix: Add NEGOTIATING to LeadStatus type, add useRequireAuth() to create page, standardize import.",
+      "description": "Lead Detail Status Type Fix + Auth Guard. Fix 2 CRITICAL issues: (1) LeadStatus type union at leads/[id]/page.tsx line 139 omits NEGOTIATING - runtime crash when lead has this status [S1]. (2) leads/(list)/new/page.tsx missing useRequireAuth() hook - unauthenticated users can access create lead form [F1]. Also fix trpc vs api import inconsistency in create page [F8]. Fix: Add NEGOTIATING to LeadStatus type, add useRequireAuth() to create page, standardize import.",
+      "summary": "IFC-238 v2 — fixed after deliverable verification. Auth guard now gates on BOTH authLoading AND !isAuthenticated (was missing !isAuthenticated check). Tests strengthened:... LeadStatus includes all Prisma LeadStatusEnum values; create page has auth guard;...",
+      "definitionOfDone": "LeadStatus includes all Prisma LeadStatusEnum values; create page has auth guard; no runtime crash for NEGOTIATING leads; trpc import standardized to api; tests >=90%",
+      "definitionOfDoneSnapshot": "LeadStatus includes all Prisma LeadStatusEnum values; create page has auth guard; no runtime crash for NEGOTIATING leads; trpc import standardized to api; tests >=90%",
+      "dependencies": [],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/IFC-238/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-19T00:35:00Z",
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 2,
+        "failed": 2,
+        "failingNames": [
+          "TypeScript",
+          "Build"
+        ]
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-239",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Lead Router Data Integrity Fixes. Fix 5 HIGH issues: (1) update procedure ambiguous status field handling - may silently drop or bypass domain validation [S5]. (2) Score tier thresholds inconsistent - domain LeadScore uses 80/50 but router stats query uses 70/40 [S6]. (3) sortBy accepts arbitrary strings with no enum validation - Prisma orderBy injection risk [S7]. (4) leadListResponseSchema expects 'data' key but router returns 'leads' [W4]. (5) leadResponseSchema missing Lead 360 fields (aiInsight, activities, notes, files, tasks) [D5]. Fix: Explicitly handle status in update, unify thresholds, add sortBy enum, fix schema keys.",
+      "description": "Lead Router Data Integrity Fixes. Fix 5 HIGH issues: (1) update procedure ambiguous status field handling - may silently drop or bypass domain validation [S5]. (2) Score tier thresholds inconsistent - domain LeadScore uses 80/50 but router stats query uses 70/40 [S6]. (3) sortBy accepts arbitrary strings with no enum validation - Prisma orderBy injection risk [S7]. (4) leadListResponseSchema expects 'data' key but router returns 'leads' [W4]. (5) leadResponseSchema missing Lead 360 fields (aiInsight, activities, notes, files, tasks) [D5]. Fix: Explicitly handle status in update, unify thresholds, add sortBy enum, fix schema keys.",
+      "summary": "Fixed 5 HIGH-severity data integrity issues in lead router: S5 (status drop), S6 (threshold mismatch), S7 (sortBy injection), W4 (schema key mismatch), D5 (missing Lead 360 fields). All changes scoped to lead entity.......",
+      "definitionOfDone": "update procedure explicitly handles status via domain model; score thresholds unified (single source of truth); sortBy validated against enum; response schemas match actual API output; tests >=90%",
+      "definitionOfDoneSnapshot": "update procedure explicitly handles status via domain model; score thresholds unified (single source of truth); sortBy validated against enum; response schemas match actual API output; tests >=90%",
+      "dependencies": [],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/IFC-239/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-04-06T22:45:00Z",
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-252",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Contact Router Security — Tenant Isolation Fixes. CRITICAL: (1) search procedure has no createTenantWhereClause — cross-tenant search by name/email (R-02). (2) logActivity transaction uses raw ctx.prisma with no tenantId in WHERE — cross-tenant update (R-03). (3) bulkEmail/bulkExport no tenant filter — email exfiltration via guessed UUIDs (R-04). (4) stats ignores typedCtx tenant — no tenantId boundary (R-05). (5) getById/getByEmail double-fetch through unscoped domain repo (R-06). Cross-ref: R-01 (prismaWithTenant raw) is cross-cutting and shared with IFC-237. Audit: docs/audit/contact-detail-wiring-audit.md §15.",
+      "description": "Contact Router Security — Tenant Isolation Fixes. CRITICAL: (1) search procedure has no createTenantWhereClause — cross-tenant search by name/email (R-02). (2) logActivity transaction uses raw ctx.prisma with no tenantId in WHERE — cross-tenant update (R-03). (3) bulkEmail/bulkExport no tenant filter — email exfiltration via guessed UUIDs (R-04). (4) stats ignores typedCtx tenant — no tenantId boundary (R-05). (5) getById/getByEmail double-fetch through unscoped domain repo (R-06). Cross-ref: R-01 (prismaWithTenant raw) is cross-cutting and shared with IFC-237. Audit: docs/audit/contact-detail-wiring-audit.md §15.",
+      "summary": "Fixed 5 tenant isolation vulnerabilities in contact.router.ts. All procedures now use createTenantWhereClause + prismaWithTenant consistently.... All contact router procedures use createTenantWhereClause; logActivity transaction uses prismaWithTenant;...",
+      "definitionOfDone": "All contact router procedures use createTenantWhereClause; logActivity transaction uses prismaWithTenant; search/bulkEmail/bulkExport tenant-scoped; getById/getByEmail cross-check tenantId; tests >=90%",
+      "definitionOfDoneSnapshot": "All contact router procedures use createTenantWhereClause; logActivity transaction uses prismaWithTenant; search/bulkEmail/bulkExport tenant-scoped; getById/getByEmail cross-check tenantId; tests >=90%",
+      "dependencies": [],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/IFC-252/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": null,
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-253",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Contact Detail NaN Fix + Auth Guard + Status Enum. CRITICAL: (1) NaN% division by zero — emailsOpened/emailsSent at line 1319 renders 'NaN%' when emailsSent=0 (F-01). (2) Create contact page missing useRequireAuth() — unauthenticated access (F-07). (3) Status enum truncated to 3 values in ContactList/ContactCard (ACTIVE/INACTIVE/ARCHIVED) but create form allows 6 values — unknown status crashes detail page statusConfig (F-08). Audit: docs/audit/contact-detail-wiring-audit.md §16.",
+      "description": "Contact Detail NaN Fix + Auth Guard + Status Enum. CRITICAL: (1) NaN% division by zero — emailsOpened/emailsSent at line 1319 renders 'NaN%' when emailsSent=0 (F-01). (2) Create contact page missing useRequireAuth() — unauthenticated access (F-07). (3) Status enum truncated to 3 values in ContactList/ContactCard (ACTIVE/INACTIVE/ARCHIVED) but create form allows 6 values — unknown status crashes detail page statusConfig (F-08). Audit: docs/audit/contact-detail-wiring-audit.md §16.",
+      "summary": "IFC-253 resolves 3 wiring audit findings: F-01 NaN division fix, F-07 auth guard, F-08 status enum alignment. All 7 ACs validated.... Open Rate handles 0/0 gracefully; create page has useRequireAuth;...",
+      "definitionOfDone": "Open Rate handles 0/0 gracefully; create page has useRequireAuth; ContactStatusBadge handles all 5 domain statuses with fallback; tests >=90%",
+      "definitionOfDoneSnapshot": "Open Rate handles 0/0 gracefully; create page has useRequireAuth; ContactStatusBadge handles all 5 domain statuses with fallback; tests >=90%",
+      "dependencies": [],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/IFC-253/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": null,
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-254",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Contact Router Data Integrity Fixes. (1) Raw SQL in getTimeline has no tenant filter and .catch(() => []) swallows errors (R-09). (2) sortBy accepts arbitrary strings — enum whitelist needed (R-10). (3) filterOptions ignores status input (R-12). (4) contactListResponseSchema uses 'data' key but router returns 'contacts' (D-03). (5) phone non-nullable in response schema but mapper returns null (D-08/R-14). Audit: docs/audit/contact-detail-wiring-audit.md §15,§18.",
+      "description": "Contact Router Data Integrity Fixes. (1) Raw SQL in getTimeline has no tenant filter and .catch(() => []) swallows errors (R-09). (2) sortBy accepts arbitrary strings — enum whitelist needed (R-10). (3) filterOptions ignores status input (R-12). (4) contactListResponseSchema uses 'data' key but router returns 'contacts' (D-03). (5) phone non-nullable in response schema but mapper returns null (D-08/R-14). Audit: docs/audit/contact-detail-wiring-audit.md §15,§18.",
+      "summary": "Repair agent: attestation directory was missing after exec session. Code verified correct (5 bug fixes: R-09 table name + error logging + tenantId, R-10 sortBy enum, R-12 filterOptions status, D-03 list key, D-08 phone nullable).......",
+      "definitionOfDone": "getTimeline has tenant filter and proper error handling; sortBy uses enum whitelist; filterOptions respects input; schema keys match router response; phone schema nullable; tests >=90%",
+      "definitionOfDoneSnapshot": "getTimeline has tenant filter and proper error handling; sortBy uses enum whitelist; filterOptions respects input; schema keys match router response; phone schema nullable; tests >=90%",
+      "dependencies": [],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/IFC-254/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-16T20:30:10Z",
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 5,
+        "met": 5,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-267",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Account Detail No-Op Action Buttons. Wire 6 non-functional buttons: (1) Create Deal button no onClick (F-05, AccountDetail.tsx:229). (2) Add Contact button no onClick in overview (F-06, AccountDetail.tsx:233). (3-4) Add Contact buttons no onClick in contacts tab header and empty state (F-07/F-08, AccountContactsList.tsx:61,85). (5-6) Create Opportunity buttons no onClick in opportunities tab header and empty state (F-10/F-11, AccountOpportunitiesList.tsx:68,116). Each button should open the appropriate create form or association dialog with accountId pre-filled. Audit: docs/audit/account-detail-wiring-audit.md sections 3-5.",
+      "description": "Account Detail No-Op Action Buttons. Wire 6 non-functional buttons: (1) Create Deal button no onClick (F-05, AccountDetail.tsx:229). (2) Add Contact button no onClick in overview (F-06, AccountDetail.tsx:233). (3-4) Add Contact buttons no onClick in contacts tab header and empty state (F-07/F-08, AccountContactsList.tsx:61,85). (5-6) Create Opportunity buttons no onClick in opportunities tab header and empty state (F-10/F-11, AccountOpportunitiesList.tsx:68,116). Each button should open the appropriate create form or association dialog with accountId pre-filled. Audit: docs/audit/account-detail-wiring-audit.md sections 3-5.",
+      "summary": "IFC-267: Wired 6 no-op buttons in Account Detail page. Created OpportunityCreateSheet and ContactAddSheet components with full tRPC mutation support, form validation, cache invalidation, and account-deleted FK error handling.......",
+      "definitionOfDone": "All 6 buttons navigate to create form or open association dialog with accountId pre-filled; Create Deal opens deal create with account pre-selected; Add Contact opens contact association or create sheet; Create Opportunity opens opportunity create with account; tests >=90%",
+      "definitionOfDoneSnapshot": "All 6 buttons navigate to create form or open association dialog with accountId pre-filled; Create Deal opens deal create with account pre-selected; Add Contact opens contact association or create sheet;...",
+      "dependencies": [],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/IFC-267/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": null,
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-268",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Account Owner Display & Assignment. (1) Owner card shows literal 'Owner Assigned' and 'Account Manager' text instead of actual owner name/title — ownerId exists but owner relation not included in getById (F-01). (2) No owner assignment UI or mutation (F-02). Fix: include owner relation in getById query; display real owner name and role; add owner assignment combobox or dialog with user search mutation. Audit: docs/audit/account-detail-wiring-audit.md section 2.",
+      "description": "Account Owner Display & Assignment. (1) Owner card shows literal 'Owner Assigned' and 'Account Manager' text instead of actual owner name/title — ownerId exists but owner relation not included in getById (F-01). (2) No owner assignment UI or mutation (F-02). Fix: include owner relation in getById query; display real owner name and role; add owner assignment combobox or dialog with user search mutation. Audit: docs/audit/account-detail-wiring-audit.md section 2.",
+      "summary": "IFC-268: Account Owner Display & Assignment. Fixed F-01 (hardcoded owner text) by enriching getById with owner relation. Fixed F-02 (no assignment UI) by adding assignOwner mutation, assignees query, and AssignSheet integration. Domain:......",
+      "definitionOfDone": "Owner card displays real owner name and role from API; owner assignment UI with user search; account.update supports ownerId change; tests >=90%",
+      "definitionOfDoneSnapshot": "Owner card displays real owner name and role from API; owner assignment UI with user search; account.update supports ownerId change; tests >=90%",
+      "dependencies": [],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/IFC-268/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": null,
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-269",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Account Backend Tenant Isolation & Security. (1) CRITICAL: filterOptions uses raw ctx.prisma instead of prismaWithTenant for user lookup — tenant data leak (B-01, account.router.ts:445). (2) PrismaAccountRepository has NO tenantId filter on any method — single-layer defense (B-02). (3) existsByName blocks same name across all tenants — should be per-tenant (B-03). (4) sortBy parameter unsanitized — potential Prisma orderBy injection (B-04). (5) TOCTOU window in update/delete without transaction (B-05). (6) Zero audit logging on all account mutations (B-07). Audit: docs/audit/account-detail-wiring-audit.md sections 11-12.",
+      "description": "Account Backend Tenant Isolation & Security. (1) CRITICAL: filterOptions uses raw ctx.prisma instead of prismaWithTenant for user lookup — tenant data leak (B-01, account.router.ts:445). (2) PrismaAccountRepository has NO tenantId filter on any method — single-layer defense (B-02). (3) existsByName blocks same name across all tenants — should be per-tenant (B-03). (4) sortBy parameter unsanitized — potential Prisma orderBy injection (B-04). (5) TOCTOU window in update/delete without transaction (B-05). (6) Zero audit logging on all account mutations (B-07). Audit: docs/audit/account-detail-wiring-audit.md sections 11-12.",
+      "summary": "IFC-269: Fixed 5 security bugs (B-02, B-03, B-04, B-05, B-07) in Account module. B-01 was already fixed. Added tenantId to all AccountRepository read/delete methods for defense-in-depth tenant isolation. Added ACCOUNT_SORT_FIELDS allowlist.......",
+      "definitionOfDone": "filterOptions uses prismaWithTenant; repository methods include tenantId filter; existsByName scoped per-tenant; sortBy validated against allowlist; update/delete wrapped in transaction; auditLogger.log on create/update/delete/setParent; tests >=90%",
+      "definitionOfDoneSnapshot": "filterOptions uses prismaWithTenant; repository methods include tenantId filter; existsByName scoped per-tenant; sortBy validated against allowlist; update/delete wrapped in transaction; auditLogger.log on create/update/delete/setParent;...",
+      "dependencies": [],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/IFC-269/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": null,
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-278",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Deal Detail Page — Replace SAMPLE_DEAL with Real API Data. CRITICAL: Entire deal detail page (deals/[id]/page.tsx 792 lines) is 100% hardcoded with SAMPLE_DEAL constant (lines 116-150) — zero API calls. The dealId from useParams() is captured but never used for data fetch (line 684). Must: (1) Replace SAMPLE_DEAL with trpc.opportunity.getById query using dealId param. (2) Add useRequireAuth() guard (F-03 — detail page is the only unguarded page). (3) Fix STAGES constant to match domain 7-stage enum (F-04 — uses CLOSED instead of CLOSED_WON/CLOSED_LOST, omits NEEDS_ANALYSIS). (4) Fix StageProgress to use deal prop instead of SAMPLE_DEAL.value directly (F-05). (5) Remove _SAMPLE_ACTIVITIES dead code (F-06). (6) Add clickable links to account/contact detail pages (F-07). (7) Wire real owner data from getById relation include. Router getById exists (IFC-186). Cross-entity patterns from Lead 360 wiring (2026-03-04) should be followed. Audit: docs/audit/deal-detail-wiring-audit.md section 1.",
+      "description": "Deal Detail Page — Replace SAMPLE_DEAL with Real API Data. CRITICAL: Entire deal detail page (deals/[id]/page.tsx 792 lines) is 100% hardcoded with SAMPLE_DEAL constant (lines 116-150) — zero API calls. The dealId from useParams() is captured but never used for data fetch (line 684). Must: (1) Replace SAMPLE_DEAL with trpc.opportunity.getById query using dealId param. (2) Add useRequireAuth() guard (F-03 — detail page is the only unguarded page). (3) Fix STAGES constant to match domain 7-stage enum (F-04 — uses CLOSED instead of CLOSED_WON/CLOSED_LOST, omits NEEDS_ANALYSIS). (4) Fix StageProgress to use deal prop instead of SAMPLE_DEAL.value directly (F-05). (5) Remove _SAMPLE_ACTIVITIES dead code (F-06). (6) Add clickable links to account/contact detail pages (F-07). (7) Wire real owner data from getById relation include. Router getById exists (IFC-186). Cross-entity patterns from Lead 360 wiring (2026-03-04) should be followed. Audit: docs/audit/deal-detail-wiring-audit.md section 1.",
+      "summary": "Deal detail page fully wired to real API data. SAMPLE_DEAL and all dead code removed. Router getById enriched with owner/account/contact Prisma includes. Post-audit remediation:... Deal detail loads real API data via trpc.opportunity.getById;...",
+      "definitionOfDone": "Deal detail loads real API data via trpc.opportunity.getById; auth guard present; STAGES matches domain enum; StageProgress uses deal prop; dead code removed; account/contact linked; owner from API; loading/error states; tests >=90%",
+      "definitionOfDoneSnapshot": "Deal detail loads real API data via trpc.opportunity.getById; auth guard present; STAGES matches domain enum; StageProgress uses deal prop; dead code removed; account/contact linked; owner from API; loading/error states; tests >=90%",
+      "dependencies": [],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/IFC-278/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": null,
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-279",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Deal Create Form + /deals/new Route. No deal creation form exists — both 'New Deal' buttons (deals/(list)/page.tsx lines 454 and 492) link to /deals/new which is a 404 (F-02). Must: (1) Create page at apps/web/src/app/deals/new/page.tsx or deals/(list)/new/page.tsx. (2) Form fields: name, value (money input), stage (default PROSPECTING), probability, expectedCloseDate (date picker), accountId (account search combobox), contactId (contact search combobox). (3) Wire to trpc.opportunity.create mutation. (4) Add useRequireAuth(). (5) Validate with createOpportunitySchema. (6) Success: navigate to /deals/[newId]. Audit: docs/audit/deal-detail-wiring-audit.md section 1 F-02.",
+      "description": "Deal Create Form + /deals/new Route. No deal creation form exists — both 'New Deal' buttons (deals/(list)/page.tsx lines 454 and 492) link to /deals/new which is a 404 (F-02). Must: (1) Create page at apps/web/src/app/deals/new/page.tsx or deals/(list)/new/page.tsx. (2) Form fields: name, value (money input), stage (default PROSPECTING), probability, expectedCloseDate (date picker), accountId (account search combobox), contactId (contact search combobox). (3) Wire to trpc.opportunity.create mutation. (4) Add useRequireAuth(). (5) Validate with createOpportunitySchema. (6) Success: navigate to /deals/[newId]. Audit: docs/audit/deal-detail-wiring-audit.md section 1 F-02.",
+      "summary": "IFC-279: Deal Create Form + /deals/new Route. Created DealForm component and new page wired to trpc.opportunity.create. Extended EntitySearchField to support account entity type.... Deal create form page exists; all fields validated;...",
+      "definitionOfDone": "Deal create form page exists; all fields validated; submits via trpc.opportunity.create; success navigates to deal detail; auth guard present; error handling; tests >=90%",
+      "definitionOfDoneSnapshot": "Deal create form page exists; all fields validated; submits via trpc.opportunity.create; success navigates to deal detail; auth guard present; error handling; tests >=90%",
+      "dependencies": [],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/IFC-279/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-17T00:00:00Z",
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-281",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Deal Backend Tenant Isolation & Audit Logging. (1) CRITICAL: PrismaOpportunityRepository.findById() (line 82) has NO tenantId WHERE clause — cross-tenant read/write/delete possible via getById/update/delete/moveStage/dealForecast (B-01). Fix: add tenantId to findById() and findByOwnerId() WHERE clauses. (2) CRITICAL: Zero auditLogger.log() calls across all 16 opportunity + pipeline-config procedures (B-02). Add audit logging to create/update/delete/moveStage (especially CLOSED_WON/CLOSED_LOST) and pipeline config changes. (3) Create notification in create procedure uses raw ctx.prisma instead of prismaWithTenant (B-03). Audit: docs/audit/deal-detail-wiring-audit.md sections 5-6.",
+      "description": "Deal Backend Tenant Isolation & Audit Logging. (1) CRITICAL: PrismaOpportunityRepository.findById() (line 82) has NO tenantId WHERE clause — cross-tenant read/write/delete possible via getById/update/delete/moveStage/dealForecast (B-01). Fix: add tenantId to findById() and findByOwnerId() WHERE clauses. (2) CRITICAL: Zero auditLogger.log() calls across all 16 opportunity + pipeline-config procedures (B-02). Add audit logging to create/update/delete/moveStage (especially CLOSED_WON/CLOSED_LOST) and pipeline config changes. (3) Create notification in create procedure uses raw ctx.prisma instead of prismaWithTenant (B-03). Audit: docs/audit/deal-detail-wiring-audit.md sections 5-6.",
+      "summary": "Deal Backend Tenant Isolation & Audit Logging. B-01 fixed: repository findById/delete enforce tenantId, threaded through OpportunityService, CloseDealWon/LostUseCase, TaskService.validateOpportunityAssignment. B-02 fixed:......",
+      "definitionOfDone": "Repository findById/findByOwnerId include tenantId; auditLogger.log on all mutations; notification uses prismaWithTenant; cross-tenant access tests; tests >=90%",
+      "definitionOfDoneSnapshot": "Repository findById/findByOwnerId include tenantId; auditLogger.log on all mutations; notification uses prismaWithTenant; cross-tenant access tests; tests >=90%",
+      "dependencies": [],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/IFC-281/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": null,
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 3,
+        "failed": 1,
+        "failingNames": [
+          "Build"
+        ]
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-297",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "AI Foundation",
+      "title": "AI Monitoring Data Persistence — Replace in-memory singleton monitoring data (driftDetector, latencyMonitor, hallucinationChecker, roiTracker) with DB-backed persistence via new AIMonitoringEvent model. Add ai-worker flush service to write metrics to DB periodically. Rewrite monitoring router to query DB instead of in-process singletons. Enables multi-process deployments to share monitoring data.",
+      "description": "AI Monitoring Data Persistence — Replace in-memory singleton monitoring data (driftDetector, latencyMonitor, hallucinationChecker, roiTracker) with DB-backed persistence via new AIMonitoringEvent model. Add ai-worker flush service to write metrics to DB periodically. Rewrite monitoring router to query DB instead of in-process singletons. Enables multi-process deployments to share monitoring data.",
+      "summary": "Cross-package backend task: Prisma model AIMonitoringEvent added to schema with 8 indexes, MonitoringFlushService drains singletons to DB every 60s, AIMonitoringService queries DB, router rewritten from singleton imports to service calls, c......",
+      "definitionOfDone": "AIMonitoringEvent Prisma model created with migration; ai-worker flushes metrics to DB every 60s; monitoring router queries DB; drift/latency/ROI dashboards show real data in multi-process mode; targets: flush latency <100ms, coverage >90%; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "AIMonitoringEvent Prisma model created with migration; ai-worker flushes metrics to DB every 60s; monitoring router queries DB; drift/latency/ROI dashboards show real data in multi-process mode",
+      "dependencies": [
+        "IFC-015",
+        "IFC-025"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/IFC-297/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-16T18:14:00.000Z",
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-192",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "AI Intelligence",
+      "title": "Fix missing /agent-approvals/logs page — PG-152 regression; AgentLogsViewer component exists at apps/web/src/components/ai-monitoring/AgentLogsViewer.tsx but page.tsx is absent causing 404 on route",
+      "description": "Fix missing /agent-approvals/logs page — PG-152 regression; AgentLogsViewer component exists at apps/web/src/components/ai-monitoring/AgentLogsViewer.tsx but page.tsx is absent causing 404 on route",
+      "summary": "Verification-only task — page already existed from PG-152 (attested 2026-02-17). Fixed missing useFailedJobs mock in test file (pre-existing gap) and added 7 queue failures view tests to bring coverage above 90% thresholds.......",
+      "definitionOfDone": "page.tsx created at apps/web/src/app/agent-approvals/logs/page.tsx; route /agent-approvals/logs renders AgentLogsViewer with auth guard and Suspense boundary; matches PG-151/PG-150 shell pattern; Lighthouse >=90; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "page.tsx created at apps/web/src/app/agent-approvals/logs/page.tsx; route /agent-approvals/logs renders AgentLogsViewer with auth guard and Suspense boundary; matches PG-151/PG-150 shell pattern; Lighthouse >=90",
+      "dependencies": [
+        "PG-152"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/PG-192/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-17T07:35:00Z",
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-193",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "AI Intelligence",
+      "title": "Workflow Step Progress Panel — Add real-time N/N step progress tracker to /agent-approvals/agents and /agent-approvals/logs; reads WorkflowExecution.currentStep + stepResults from tRPC; shows named steps with status icons (pending/running/completed/failed) and a % progress bar matching the AEO workflow progress UI pattern",
+      "description": "Workflow Step Progress Panel — Add real-time N/N step progress tracker to /agent-approvals/agents and /agent-approvals/logs; reads WorkflowExecution.currentStep + stepResults from tRPC; shows named steps with status icons (pending/running/completed/failed) and a % progress bar matching the AEO workflow progress UI pattern",
+      "summary": "PG-193 implemented cleanly via TDD. 44 new WorkflowProgressPanel tests + 18 workflow-types tests + 15 workflow-hooks tests (77 total new). Scoped Istanbul coverage: 98.82/96.84/100/100, all above thresholds.... WorkflowProgressPanel component created;...",
+      "definitionOfDone": "WorkflowProgressPanel component created; integrated into ActiveAgentsDashboard agent detail expand and AgentLogsViewer log detail view; reads currentStep and stepResults from WorkflowExecution via tRPC; renders progress bar + per-step status with checkmarks; WCAG AA accessible; Lighthouse >=90; verified by: pnpm test. NOTE: 3 follow-ups for whoever touches workflow next — (1) workflow.getExecution procedure has no production caller yet (wire a deep-link page or remove); (2) KNOWN_ENTITY_TYPES in workflow.router.ts is hardcoded (update when adding new entity kinds or derive from @intelliflow/domain); (3) entityId-only fallback returns most-recent workflow per entity which is ambiguous for multi-workflow entities (long-term: add workflowExecutionId FK on ConversationRecord). See memory/project_pg193_follow_ups.md",
+      "definitionOfDoneSnapshot": "WorkflowProgressPanel component created; integrated into ActiveAgentsDashboard agent detail expand and AgentLogsViewer log detail view; reads currentStep and stepResults from WorkflowExecution via tRPC;...",
+      "dependencies": [
+        "PG-151",
+        "PG-192"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/PG-193/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": null,
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    }
+  ]
+}

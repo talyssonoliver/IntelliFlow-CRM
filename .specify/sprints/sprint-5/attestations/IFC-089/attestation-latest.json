@@ -1,0 +1,65 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-089",
+  "run_id": "sprint5-audit-20260302T215731-kvz563",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:57:39.307Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 4,
+    "validations_passed": 2,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/api/src/modules/contact/contact.router.ts": "3296da3fce71ad183459762b00006933c9ff429f100743079972b6972dd49b57",
+    ".specify/sprints/sprint-5/attestations/IFC-089/context_ack.json": "a2d620d9e364cb1270f3931d6834d814a692caf29b483d7dedaba550a66b8786",
+    "docs/planning/adr/ADR-019-core-crm-foundation.md": "95b48bd4fbff6a06f870be0ad248847d51b354705f6d89ea8d5ea1e2b27821fb",
+    "docs/planning/prd-core-crm.md": "7b7dff301febbb7adfd0a53ba0a9cbf36c70da93758d9c77acb62a31a118c219"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-089",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 46000,
+      "stdout_hash": "all-green-1772476872408"
+    },
+    {
+      "name": "IFC-089",
+      "command": "pnpm --filter @intelliflow/web test --run",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 120000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-002",
+    "IFC-004",
+    "IFC-102"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Contacts CRUD working",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "search <200ms",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "2 DoD criteria unverified"
+}

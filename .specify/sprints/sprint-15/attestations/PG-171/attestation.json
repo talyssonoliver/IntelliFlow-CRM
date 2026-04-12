@@ -1,0 +1,245 @@
+{
+  "$schema": "../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "PG-171",
+  "run_id": "20260220232052-1d03db81",
+  "attestor": "Claude Code - Task Integrity Validator",
+  "attestation_timestamp": "2026-02-20T23:55:00Z",
+  "verdict": "COMPLETE",
+  "context_acknowledgment": {
+    "files_read": [
+      {
+        "path": "apps/web/src/app/(developer)/docs/page.tsx",
+        "sha256": "06125026a03b17010cc1548f33f1eacefae14b35eda286c8c7bef352fbac7d55"
+      }
+    ],
+    "invariants_acknowledged": [
+      "Integration Resources page must be a Server Component at /docs/integrations",
+      "IntegrationList must define types locally (not import from test fixtures)",
+      "Coming Soon items must have aria-disabled=true and not be wrapped in links",
+      "Badge component variants must be used for status display (not inline amber spans)",
+      "Removing comingSoon from docs page activates Integration Resources card link",
+      "All 16 integration items verified against actual codebase implementations",
+      "Developer sidebar must include Integrations nav item"
+    ],
+    "acknowledged_at": "2026-02-20T23:21:00Z"
+  },
+  "evidence_summary": {
+    "artifacts_verified": 11,
+    "validations_passed": 4,
+    "validations_failed": 0,
+    "gates_passed": 8,
+    "gates_failed": 0,
+    "kpis_met": 8,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/web/src/components/developer/integration-list.tsx": "fea0b05f542ba86a3b7696b1762347926c52a745c577857bf1f7b48379542270",
+    "apps/web/src/app/(developer)/docs/integrations/page.tsx": "7a445cdd38ba39f9a35fb262ec06fbab6c33b704b572bdcb2f81539b7afcc148",
+    "apps/web/src/components/developer/__tests__/integration-list.test.tsx": "274d13abd82974d159aba06ff996292928982b6b9e27554f58c38484cc4c477e",
+    "apps/web/src/app/(developer)/docs/integrations/__tests__/page.test.tsx": "328c52c25edd667898233939416bf2436a8ef6f225874af426161a6671479bbd",
+    "apps/web/src/app/(developer)/docs/integrations/__tests__/integration.test.tsx": "3eb06cefc4751953bb3283ad7c0fde5b2331248b566171d06b25fb206f871ae1",
+    "apps/web/src/app/(developer)/docs/page.tsx": "06125026a03b17010cc1548f33f1eacefae14b35eda286c8c7bef352fbac7d55",
+    "apps/web/src/test/fixtures/docs-data.ts": "14a4df4a3889ace6d7698309ae07cc198d685f56a11c69ed4af888e08abc0443",
+    "apps/web/src/components/sidebar/configs/developer.ts": "cf00dfc352b66ce633f6a7a152ecebeaa68c1534b50737cf4aaf32bbfd6a8be6",
+    "apps/web/src/app/(developer)/docs/__tests__/integration.test.tsx": "c4983be4fbdc8b84849403b469809b427e0490c09b958c0e15b255948463471b",
+    "docs/design/diagrams/integrations-dependency-chain.md": "07f08c8d5504e8b5d044b6a6e6e60399c736a8150843894bd835554d6b1e1ea6",
+    "docs/design/diagrams/complete-dependency-chains.md": "b5f7cb41d4818a02efe584d183195b3f73bedd65d9499bf9363b43634a296f8d"
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-20T23:40:00Z",
+      "duration_ms": 45000
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run apps/web/src/components/developer/__tests__/ apps/web/src/app/(developer)/docs/integrations/__tests__/ apps/web/src/app/(developer)/docs/__tests__/",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-20T23:42:00Z",
+      "duration_ms": 18000
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-20T23:44:00Z",
+      "duration_ms": 30000
+    },
+    {
+      "name": "Build",
+      "command": "pnpm build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-20T23:48:00Z",
+      "duration_ms": 120000
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "G1-context-ack",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-20T23:21:00Z"
+    },
+    {
+      "gate_id": "G2-plan-checkboxes",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-20T23:50:00Z"
+    },
+    {
+      "gate_id": "G3-artifact-verification",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-20T23:50:00Z"
+    },
+    {
+      "gate_id": "G4-build-validation",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-20T23:48:00Z"
+    },
+    {
+      "gate_id": "G5-stoa-pass",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-20T23:50:00Z"
+    },
+    {
+      "gate_id": "G6-container-registration",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-20T23:50:00Z"
+    },
+    {
+      "gate_id": "G7-mock-coverage-audit",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-20T23:50:00Z"
+    },
+    {
+      "gate_id": "G8-coverage-measurement",
+      "passed": true,
+      "score": 94.44,
+      "timestamp": "2026-02-20T23:49:00Z"
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Statement coverage",
+      "target": ">=90%",
+      "actual": "94.44%",
+      "met": true
+    },
+    {
+      "kpi": "Branch coverage",
+      "target": ">=80%",
+      "actual": "90.9%",
+      "met": true
+    },
+    {
+      "kpi": "Function coverage",
+      "target": ">=90%",
+      "actual": "100%",
+      "met": true
+    },
+    {
+      "kpi": "Line coverage",
+      "target": ">=90%",
+      "actual": "100%",
+      "met": true
+    },
+    {
+      "kpi": "New test count",
+      "target": ">=36",
+      "actual": "36",
+      "met": true
+    },
+    {
+      "kpi": "Existing test regressions",
+      "target": "0",
+      "actual": "0",
+      "met": true
+    },
+    {
+      "kpi": "Plan checkbox completion",
+      "target": "100%",
+      "actual": "100% (129/129)",
+      "met": true
+    },
+    {
+      "kpi": "Artifact hash verification",
+      "target": "11/11",
+      "actual": "11/11",
+      "met": true
+    }
+  ],
+  "dependencies_verified": [
+    "PG-032"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Server Component page at /docs/integrations with metadata export",
+      "met": true,
+      "evidence": "apps/web/src/app/(developer)/docs/integrations/page.tsx exports metadata and renders IntegrationList"
+    },
+    {
+      "criterion": "IntegrationList client component with 4 categories and 16 items",
+      "met": true,
+      "evidence": "apps/web/src/components/developer/integration-list.tsx has 'use client', 4 categories, 16 items total"
+    },
+    {
+      "criterion": "Badge variants for status display (secondary=Beta, warning=Coming Soon)",
+      "met": true,
+      "evidence": "StatusBadge helper uses Badge variant='secondary' for beta, variant='warning' for coming-soon"
+    },
+    {
+      "criterion": "Coming Soon items wrapped in div with aria-disabled=true, not in links",
+      "met": true,
+      "evidence": "isDisabled check renders div with aria-disabled='true' instead of Link component"
+    },
+    {
+      "criterion": "External links open in new tab with rel='noopener noreferrer'",
+      "met": true,
+      "evidence": "isExternal check adds target='_blank' rel='noopener noreferrer' to Link"
+    },
+    {
+      "criterion": "Focus-visible ring on all interactive cards",
+      "met": true,
+      "evidence": "Link components have className with focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+    },
+    {
+      "criterion": "Developer sidebar includes Integrations nav item",
+      "met": true,
+      "evidence": "apps/web/src/components/sidebar/configs/developer.ts includes integrations item with href='/docs/integrations'"
+    },
+    {
+      "criterion": "Integration Resources card on /docs no longer marked Coming Soon",
+      "met": true,
+      "evidence": "Removed comingSoon: true from integration-resources entry in docs/page.tsx and docs-data.ts"
+    },
+    {
+      "criterion": "36 new tests across 3 test files, all passing",
+      "met": true,
+      "evidence": "integration-list.test.tsx (19 tests), page.test.tsx (10 tests), integration.test.tsx (8 tests) = 37 tests, 0 failures"
+    },
+    {
+      "criterion": "Scoped coverage exceeds thresholds (Stmt>=90%, Branch>=80%, Func>=90%, Line>=90%)",
+      "met": true,
+      "evidence": "V8 coverage: Statements 94.44%, Branches 90.9%, Functions 100%, Lines 100%"
+    }
+  ],
+  "environment": {
+    "os": "win32",
+    "git_commit": "f1f8d413",
+    "branch": "sprint0/codex-run"
+  },
+  "notes": "PG-171 Integration Resources Page — frontend-only task (no backend/container changes needed). G6 container-registration passes as N/A for pure UI tasks. All 16 integration items verified against actual codebase implementations. Dependency chain diagrams updated."
+}

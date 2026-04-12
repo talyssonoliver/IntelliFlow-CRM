@@ -1,0 +1,72 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-117",
+  "run_id": "sprint6-audit-20260302T215741-ex8v6u",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:57:49.034Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 6,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "artifacts/metrics/ai-metrics.json": "6522d2dc827b5df9b0e454d0639ae740aeb48f83481bd72f85b2e3a6eb530659",
+    "artifacts/misc/drift-dashboard.md": "aa94ae721ef95e36a40a8244cd47d387ce371ef2ce2c02d95edc1608eae81727",
+    "artifacts/misc/alerts-config.yaml": "3c71a7fc91b06f8a06a932b6ed5cd8aaa373fc0833b7abbe32aad9225978507b",
+    "infra/monitoring/ai-grafana-dashboard.json": "1be7f919fd55f8432df33cfc079c2376b581306049d35553bbeb8a146cfb2c5c",
+    "infra/monitoring/ai-prometheus-rules.yaml": "45736bf2762fd4456ff741c8850f2f0fcf8e483fe8491f003eeba9595604c714",
+    ".specify/sprints/sprint-6/attestations/IFC-117/context_ack.json": "d3771375e58d271844219427a65c286503b4b31bc5caf0d89d12b527be3dc43a"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-117",
+      "command": "pnpm typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 90000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-005",
+    "AUTOMATION-002"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Metrics collected for AI models",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "dashboards show drift/hallucination",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "alerts configured",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "targets: >=5%",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "AI metrics must be collected by actual code paths and pushed to dashboards",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "5 DoD criteria unverified"
+}

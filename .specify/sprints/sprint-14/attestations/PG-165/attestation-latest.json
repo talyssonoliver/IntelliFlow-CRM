@@ -1,0 +1,70 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "PG-165",
+  "run_id": "sprint14-audit-20260302T215859-6dbfyi",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:59:16.717Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 1,
+    "validations_passed": 2,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "docs/planning/prd-home-page.md": "f9d2090dbc45f355f99802528dd429a51d8cbdabd9a3f52ded99b7491120d6c0"
+  },
+  "validation_results": [
+    {
+      "name": "PG-165",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 46000,
+      "stdout_hash": "all-green-1772476872408"
+    },
+    {
+      "name": "PG-165",
+      "command": "pnpm --filter @intelliflow/web test --run",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 120000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "PG-129"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "All 51 PRD checkboxes reviewed",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "38 completed items marked [x]",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "13 deferred items annotated with task references (PG-156 to PG-164)",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "PRD reflects implementation state",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "4 DoD criteria unverified"
+}

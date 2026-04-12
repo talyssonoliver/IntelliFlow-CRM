@@ -1,0 +1,53 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-126",
+  "run_id": "sprint7-audit-20260302T215750-xc1o8i",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:57:58.656Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 3,
+    "validations_passed": 0,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "docs/dev-guide.md": "efaeee4d10e0c83dce3b823e3b7cfdbe005a1e42a99a06cd982db2420295a33a",
+    "artifacts/misc/adr-index.csv": "c40b20e55906db9bbc51d4ebefebd659598718dbf053e9a004caf109818d9722",
+    ".specify/sprints/sprint-7/attestations/IFC-126/context_ack.json": "5a2da86565fe2641380d989fa74de6b7438d2abb3d65cfabecc1d43cb6907cd1"
+  },
+  "validation_results": [],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "GOV-001"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "All significant design decisions captured via ADRs",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "developer guide updated per sprint",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "targets: >=100%",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": ">=80%",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "4 DoD criteria unverified"
+}

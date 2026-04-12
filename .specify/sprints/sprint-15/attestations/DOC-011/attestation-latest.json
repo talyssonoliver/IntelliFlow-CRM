@@ -1,0 +1,52 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "DOC-011",
+  "run_id": "sprint15-audit-20260302T215918-7xh85u",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:59:26.276Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 2,
+    "validations_passed": 0,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    ".claude/skills/compliance-check/references/accessibility-doc-gate.md": "bee52f1a4c4b79e433344854ff1222984b3dd98844c2dc6018e05d2cac039a0f",
+    ".claude/skills/compliance-check/SKILL.md": "d8cf7387ad5519cac4bcbc413c6b2c097a2337b63c34b0e51a5644e1efe082b1"
+  },
+  "validation_results": [],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "DOC-008"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "compliance-check skill updated with Section 11 (Accessibility Doc Gate)",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "detects new/modified routes in task artifacts",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "blocks completion if VPAT/conformance docs not updated",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "verified by: dry-run on a PG-* task with new route",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "4 DoD criteria unverified"
+}

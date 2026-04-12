@@ -1,0 +1,66 @@
+{
+  "task_id": "IFC-237",
+  "sprint": 16,
+  "verdict": "COMPLETE",
+  "timestamp": "2026-03-12T23:51:00Z",
+  "artifact_hashes": {
+    "apps/api/src/modules/lead/lead.router.ts": "c30ec6365e01dd719bdf975f2e55c2ae91fc7900f7192230bed6595929f1deec",
+    "apps/api/src/modules/lead/__tests__/lead.router.security.test.ts": "2cbcd2c8c4d4d416ca553988f985903c7ba36e88f5517a0d2fda87172e0bd44b"
+  },
+  "dependencies_verified": true,
+  "notes": "Fixed 4 CRITICAL/MEDIUM security vulnerabilities (S2, S3, S4, S9) plus auxiliary ctx.prisma usages in lead.router.ts. All operations now use prismaWithTenant for tenant isolation. bulkUpdateStatus now validates through Lead.changeStatus() domain model. getHotLeads/getReadyForQualification use direct tenant-scoped queries with explicit tenantId.",
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/api typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-12T23:48:00Z"
+    },
+    {
+      "name": "Tests",
+      "command": "pnpm --filter @intelliflow/api exec vitest run src/modules/lead",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-12T23:48:41Z"
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter @intelliflow/api lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-12T23:49:00Z"
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/api build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-12T23:50:00Z"
+    }
+  ],
+  "evidence_summary": {
+    "tests_total": 136,
+    "tests_passed": 136,
+    "tests_failed": 0,
+    "new_tests": 11,
+    "coverage": {
+      "statements": 95.63,
+      "branches": 81.18,
+      "functions": 96.87,
+      "lines": 96.19
+    }
+  },
+  "gate_results": {
+    "plan_checkboxes": "PASS",
+    "artifact_verification": "PASS",
+    "build_validation": "PASS",
+    "coverage_measurement": "PASS"
+  },
+  "kpi_results": {
+    "statements_pct": 95.63,
+    "branches_pct": 81.18,
+    "functions_pct": 96.87,
+    "lines_pct": 96.19
+  }
+}

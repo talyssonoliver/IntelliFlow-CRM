@@ -1,0 +1,64 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "ENV-014-AI",
+  "run_id": "sprint0-audit-20260302T215641-7da797",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:56:50.014Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 4,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "artifacts/misc/profiling-results.json": "e0881b9877b9fbfada06840f48fef6da0e1bf8c918a6462dbf92f57eb06f0604",
+    "artifacts/misc/cache-config.yaml": "d218c6bf0a47f4dbaef11a8b014c82e4b3a124a983f4af9f451aa8495336494a",
+    "artifacts/misc/security-baseline.json": "07f5ce0eb39f1b0ebf05c3385546e62578e9f78531a6ddf38457a5f6339ad393",
+    ".specify/sprints/sprint-0/attestations/ENV-014-AI/context_ack.json": "b460f660dc5e286668796ea70e18fb1fe06b544c288d7508964af14a9984ac0f"
+  },
+  "validation_results": [
+    {
+      "name": "ENV-014-AI",
+      "command": "pnpm typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 90000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "ENV-009-AI"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Performance AI-profiled",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "optimizations AI-applied",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "predictive scaling configured",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "targets: >=40%",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "4 DoD criteria unverified"
+}

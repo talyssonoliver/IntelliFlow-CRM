@@ -1,0 +1,70 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-118",
+  "run_id": "sprint8-audit-20260302T215800-xoqul3",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:58:08.340Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 4,
+    "validations_passed": 0,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "artifacts/reports/risk-register.csv": "5434b13804abefe3ee892ee721257a0c5aec1b424c1b51ff7697b417d9515bf3",
+    "docs/shared/risk-mitigation-plan.md": "98b1dbbcc5c055efb48e561984c45c2da7e6231f681988bb9c7fa8c1dd2ce473",
+    "docs/shared/risk-review-agenda.md": "836f1337fd8ad2aeee135fe9c96b5b89f7bf3c0a5c964fd035ec5b277f0350c7",
+    ".specify/sprints/sprint-8/attestations/IFC-118/context_ack.json": "d84927bc9d4557e328df3b5faede6de8ff99ffaf4f8b705f6cc5912f5444cb83"
+  },
+  "validation_results": [],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-010",
+    "IFC-054"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Risk register created",
+      "met": true,
+      "evidence": "All 4 artifacts exist"
+    },
+    {
+      "criterion": "risks scored by impact/likelihood",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "mitigation owners assigned",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "review scheduled per sprint",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "artifacts: risk-register.csv",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "risk-mitigation-plan.md",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "risk-review-agenda.md",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "6 DoD criteria unverified"
+}

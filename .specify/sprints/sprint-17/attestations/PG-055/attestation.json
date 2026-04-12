@@ -1,0 +1,102 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "PG-055",
+  "run_id": "run-20260310T213000Z",
+  "attestor": "Claude Code - Task Completion Repair Agent",
+  "attestation_timestamp": "2026-03-10T21:30:00Z",
+  "verdict": "COMPLETE",
+  "artifact_hashes": {
+    "apps/web/src/app/404/page.tsx": "ec0e771ddeb8718275b7d7830fba294d9bb75282c0144c5434d5667e32a18ac2",
+    "apps/web/src/app/404/__tests__/page.test.tsx": "781db0e8856ce45e18e967ec166e418be77aa8e2debe6d51bc08d50b54a928fc",
+    "apps/web/src/components/status/search-suggestions.tsx": "dd9203edbf5f6cb492a0d57436cc3790e8d0a0951b43e0462fe68b9113d6c340",
+    "apps/web/src/components/status/__tests__/search-suggestions.test.tsx": "9aeee59f69db6ccc91978bd1d5f755ed6d2a9c2a3c44bd73fc63d1bcd543465f",
+    "apps/web/src/lib/status/error-analytics.ts": "32ccfa2943c0a3b9b13f3da2128d5c8e5228409a3d29980c706349a46568def5",
+    "apps/web/src/lib/status/__tests__/error-analytics.test.ts": "9aaded580a9f99d27eb16b5dc3c2a3317effb585916142e4ad9381253d21cba8",
+    "apps/web/src/components/status/not-found-analytics.tsx": "cd3e0c041ec87118dfb3c6174e6da0de669524754747913ba97c2214ee86fbf8",
+    "apps/web/src/app/not-found.tsx": "f0a821421d078d2e063e5e529055e4b18281d443d48ef15f314a80cb18a44213",
+    "apps/web/src/app/__tests__/sitemap-reconciliation.test.ts": "c35e25517e47e278a530ad1d75bd8cae4874f45b1dbba0b62b7075e4b6736e15",
+    "docs/design/PAGE_MAP_AND_FLOWS.md": "2f6c2840d970029a2e3b93b4af8b7e8d73cf58421322725efdcb9c60981a62bd",
+    "docs/design/page-registry.md": "ceec0aadc4c0058722fa53ad6374c2ae25ef46a93f3a79cc1611ff458a046237",
+    "docs/design/sitemap.md": "cb4129cdb6412ab218c3003dc1cad8a3f2e3efca65a6809b0fb552026c62754a"
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-10T21:22:00Z"
+    },
+    {
+      "name": "Tests",
+      "command": "pnpm --filter @intelliflow/web exec vitest run src/app/404/__tests__/page.test.tsx src/components/status/__tests__/search-suggestions.test.tsx src/lib/status/__tests__/error-analytics.test.ts src/app/__tests__/sitemap-reconciliation.test.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-10T21:28:00Z"
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter @intelliflow/web lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-10T21:23:00Z"
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-10T21:25:00Z"
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "plan-checkboxes",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-03-10T21:29:00Z"
+    },
+    {
+      "gate_id": "artifact-verification",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-03-10T21:29:00Z"
+    },
+    {
+      "gate_id": "typecheck",
+      "passed": true,
+      "timestamp": "2026-03-10T21:22:00Z"
+    },
+    {
+      "gate_id": "lint",
+      "passed": true,
+      "timestamp": "2026-03-10T21:23:00Z"
+    },
+    {
+      "gate_id": "build",
+      "passed": true,
+      "timestamp": "2026-03-10T21:25:00Z"
+    },
+    {
+      "gate_id": "focused-tests",
+      "passed": true,
+      "timestamp": "2026-03-10T21:28:00Z"
+    }
+  ],
+  "dependencies_verified": ["IFC-076"],
+  "evidence_summary": {
+    "artifacts_verified": 12,
+    "validations_passed": 4,
+    "validations_failed": 0,
+    "gates_passed": 6,
+    "gates_failed": 0,
+    "placeholders_found": 0
+  },
+  "environment": {
+    "os": "Windows 11 Pro 10.0.26200",
+    "node_version": "v22",
+    "git_commit": "df535440057f33a55169396d3e67cc61a3e3c4b8",
+    "branch": "sprint0/codex-run"
+  },
+  "notes": "PG-055 implementation was complete from run-20260310T021046Z but blocked by pre-existing web-package validation failures (TypeScript errors in contacts/leads pages, 23 failing test files). Repair session resolved: (1) pre-existing TS errors now fixed upstream, (2) pre-existing lint error in billing-portal.tsx fixed (unused Skeleton import), (3) route inventory docs updated from 132 to 137 pages to account for 5 pages added by other tasks since original run, (4) sitemap-reconciliation regression guard updated 132→137, (5) all 17 plan checkboxes verified and checked. Full web test suite still has 23 pre-existing failing files (261 tests) unrelated to PG-055."
+}

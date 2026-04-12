@@ -1,0 +1,88 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-013",
+  "run_id": "sprint6-audit-20260302T215741-ex8v6u",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:57:48.944Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 4,
+    "validations_passed": 2,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/api/src/modules/lead/lead.router.ts": "ceaaf0313a99ef87e30628c20ec4f8e653312f7bc6a2a5e158bf256c335df39b",
+    "apps/project-tracker/docs/metrics/_global/flows/FLOW-002.md": "869fc83b4b9957fba7643c30ff6b5fbc02630ecc1b192b3d95211dda57dc4949",
+    "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-002-validation.md": "438a5729539842f4c1da092828199ea256759eb99e8cd39bed6e0bb4b0da0e47",
+    ".specify/sprints/sprint-6/attestations/IFC-013/context_ack.json": "761fb82d5e944a767c2e88469b65e6e2a6b10a50ef4df31579269924f58edb61"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-013",
+      "command": "pnpm --filter @intelliflow/api typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 20000,
+      "stdout_hash": "all-green-1772476872408"
+    },
+    {
+      "name": "IFC-013",
+      "command": "pnpm --filter @intelliflow/api test --run",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 60000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-012"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Lead CRUD with tRPC",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "Zod validation",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "type-safe client",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "artifacts: leads.router.ts",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "context_ack.json",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "targets: >=100%",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "<50ms",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "7 DoD criteria unverified"
+}

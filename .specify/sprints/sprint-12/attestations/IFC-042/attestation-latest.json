@@ -1,0 +1,80 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-042",
+  "run_id": "sprint12-audit-20260302T215839-2r9dal",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:58:47.684Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 6,
+    "validations_passed": 2,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "packages/sdk/README.md": "aa5515b9664904ba61b7f469c533049dee40ac62640e0dbc1ee01bd86570e8bf",
+    "artifacts/misc/npm-publish-log.txt": "61a317c4682d2a5998f13d8c2de37ca08f1bbee528319524873160234174d133",
+    "artifacts/misc/autocomplete-demo.gif": "e49bcc91ad6fe5bc5b0a9c9c00c8b0a6fdd04085ecfa8450aea2cea1dd3df6e3",
+    "apps/project-tracker/docs/metrics/_global/flows/FLOW-002.md": "869fc83b4b9957fba7643c30ff6b5fbc02630ecc1b192b3d95211dda57dc4949",
+    "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-002-validation.md": "438a5729539842f4c1da092828199ea256759eb99e8cd39bed6e0bb4b0da0e47",
+    ".specify/sprints/sprint-12/attestations/IFC-042/context_ack.json": "9c54ddf8618293664fc306ac40b48f3514cfe1213ae615b9a878071833b6dc8a"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-042",
+      "command": "pnpm --filter @intelliflow/api typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 20000,
+      "stdout_hash": "all-green-1772476872408"
+    },
+    {
+      "name": "IFC-042",
+      "command": "pnpm --filter @intelliflow/api test --run",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 60000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-013"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "NPM package docs",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "TypeScript examples",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "artifacts: README.md",
+      "met": true,
+      "evidence": "Documentation found: packages/sdk/README.md, apps/project-tracker/docs/metrics/_global/flows/FLOW-002.md, apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-002-validation.md"
+    },
+    {
+      "criterion": "npm-publish-log.txt",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "autocomplete-demo.gif",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "4 DoD criteria unverified"
+}

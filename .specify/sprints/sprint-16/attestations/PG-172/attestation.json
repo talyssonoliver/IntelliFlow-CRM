@@ -1,0 +1,127 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "PG-172",
+  "run_id": "20260310204812-838ad6b8",
+  "attestor": "Claude Code - Task Integrity Validator",
+  "attestation_timestamp": "2026-03-10T21:15:00Z",
+  "verdict": "COMPLETE",
+  "artifact_hashes": {
+    "apps/web/src/components/billing/usage-dashboard.tsx": "de539c46cd1c0060084c23e194d9e6f890a4318e0c82b3b09fdb4588f0dce23f",
+    "apps/web/src/components/billing/plan-comparison.tsx": "2e2c23dbd6b48a22b84709b885b2d2aa014e9e4dbdbaa949af3c0e555e9878e5",
+    "apps/web/src/components/billing/upgrade-flow.tsx": "bb49fb3609d3a02fba2fb163545883091155abd85d709dd7181e361d362073c4",
+    "apps/web/src/components/billing/cancel-flow.tsx": "29af4ddbaf6e130bb6857da6160627d554b1ff1aeb8c540cbb660464217c9052",
+    "apps/web/src/components/billing/billing-settings.tsx": "42eb0a72fb2da40103226c7105a85fead218fc5dad8afa64e70680dc25e5a895",
+    "apps/web/src/components/billing/billing-shared.tsx": "1ce13205f58683603be6d05f9ab0fad060364776993fb9dd5d1db5c485174334"
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm run typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-10T21:05:00Z"
+    },
+    {
+      "name": "Tests",
+      "command": "pnpm --filter @intelliflow/web exec vitest run src/components/billing/__tests__/ --reporter=verbose",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-10T21:06:00Z"
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm run lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-10T21:07:00Z"
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-10T21:08:00Z"
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "plan-checkboxes",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-03-10T21:06:00Z"
+    },
+    {
+      "gate_id": "artifact-verification",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-03-10T21:06:00Z"
+    },
+    {
+      "gate_id": "coverage-measurement",
+      "passed": true,
+      "score": 95.36,
+      "timestamp": "2026-03-10T21:09:00Z"
+    },
+    {
+      "gate_id": "build-validation",
+      "passed": true,
+      "timestamp": "2026-03-10T21:08:00Z"
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Statement coverage",
+      "target": ">=90%",
+      "actual": "95.36%",
+      "met": true
+    },
+    {
+      "kpi": "Branch coverage",
+      "target": ">=80%",
+      "actual": "84.83%",
+      "met": true
+    },
+    {
+      "kpi": "Function coverage",
+      "target": ">=90%",
+      "actual": "92.68%",
+      "met": true
+    },
+    {
+      "kpi": "Line coverage",
+      "target": ">=90%",
+      "actual": "97.91%",
+      "met": true
+    },
+    {
+      "kpi": "New tests",
+      "target": ">=40",
+      "actual": "58",
+      "met": true
+    },
+    {
+      "kpi": "Regression tests passing",
+      "target": "302",
+      "actual": "302",
+      "met": true
+    }
+  ],
+  "evidence_summary": {
+    "artifacts_verified": 16,
+    "validations_passed": 4,
+    "validations_failed": 0,
+    "gates_passed": 4,
+    "gates_failed": 0,
+    "kpis_met": 6,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "dependencies_verified": ["PG-025", "PG-030"],
+  "environment": {
+    "os": "Windows 11 Pro",
+    "node_version": "v22",
+    "git_commit": "cdb1550469fa9e7efc0280cd3f3edc5974af096e",
+    "branch": "sprint0/codex-run"
+  },
+  "notes": "PG-172: Created 5 billing ghost pages (usage, plans, upgrade, cancel, settings) with 6 new components, 5 page shells, 5 test files (58 tests), shared utility extraction, sidebar updates, and documentation updates. All 360 billing tests pass (58 new + 302 regression). Coverage: 95.36% stmts, 84.83% branches, 92.68% functions, 97.91% lines."
+}

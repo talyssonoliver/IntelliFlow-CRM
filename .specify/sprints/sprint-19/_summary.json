@@ -1,0 +1,631 @@
+{
+  "sprint": "sprint-19",
+  "name": "Sprint 19",
+  "generated_at": "2026-04-11T16:48:01.958Z",
+  "summary_source": "specify",
+  "task_summary": {
+    "total": 12,
+    "completed": 1,
+    "backlog": 11,
+    "blocked": 0,
+    "attested_completed": 1
+  },
+  "context": "Primary focus areas: Core CRM (8), Automation (1), Compliance (1).",
+  "section_summary": [
+    {
+      "section": "Core CRM",
+      "total": 8,
+      "completed": 1,
+      "open": 7
+    },
+    {
+      "section": "Automation",
+      "total": 1,
+      "completed": 0,
+      "open": 1
+    },
+    {
+      "section": "Compliance",
+      "total": 1,
+      "completed": 0,
+      "open": 1
+    },
+    {
+      "section": "Investment Gate",
+      "total": 1,
+      "completed": 0,
+      "open": 1
+    },
+    {
+      "section": "Support",
+      "total": 1,
+      "completed": 0,
+      "open": 1
+    }
+  ],
+  "notable_completed": [
+    {
+      "taskId": "PG-166",
+      "sprint": 19,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Lighthouse audit on authenticated home page - verify NFR targets TTI <1s Performance >=90 Accessibility >=90",
+      "description": "Lighthouse audit on authenticated home page - verify NFR targets TTI <1s Performance >=90 Accessibility >=90",
+      "summary": "All implementation code, tests, configs, and documentation are complete. 3 test regressions fixed this session (SVG role='img', heading text, EmptyState refactor). Pre-existing build blocker fixed (unused @ts-expect-error).... Lighthouse CI audit on / route;...",
+      "definitionOfDone": "Lighthouse CI audit on / route; Performance >=90, Accessibility >=90, TTI <1s; results saved to artifacts; ADR-027 verification confirmed",
+      "definitionOfDoneSnapshot": "Lighthouse CI audit on / route; Performance >=90, Accessibility >=90, TTI under 1s; results saved to artifacts; ADR-027 verification confirmed",
+      "dependencies": [
+        "PG-129"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-19/attestations/PG-166/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-04-11T17:00:00.000Z",
+        "sprintFolder": 19
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 1,
+        "met": 0,
+        "missed": 0
+      }
+    }
+  ],
+  "open_tasks": [
+    {
+      "taskId": "IFC-033",
+      "sprint": 19,
+      "status": "Backlog",
+      "section": "Automation",
+      "title": "PHASE-005: Load Testing with k6",
+      "description": "PHASE-005: Load Testing with k6",
+      "summary": "System handles 5000 leads/hour with automation; load-test-report.html must show actual k6 execution output with real timestamps, not template report",
+      "definitionOfDone": "System handles 5000 leads/hour with automation; artifacts: load-test-report.html, bottleneck-analysis.md, grafana-load-test.png; load-test-report.html must show actual k6 execution output with real timestamps, not template report",
+      "definitionOfDoneSnapshot": "System handles 5000 leads/hour with automation; load-test-report.html must show actual k6 execution output with real timestamps, not template report",
+      "dependencies": [
+        "IFC-030",
+        "IFC-032"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-034",
+      "sprint": 19,
+      "status": "Backlog",
+      "section": "Investment Gate",
+      "title": "PHASE-001: Gate 3 Review - £3000 Investment",
+      "description": "PHASE-001: Gate 3 Review - £3000 Investment",
+      "summary": "Scale decision with modern stack validated",
+      "definitionOfDone": "Scale decision with modern stack validated; artifacts: automation-roi-analysis.xlsx, stability-report.pdf, scale-plan.pptx",
+      "definitionOfDoneSnapshot": "Scale decision with modern stack validated",
+      "dependencies": [
+        "IFC-033"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-064",
+      "sprint": 19,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Contacts List",
+      "description": "Contacts List",
+      "summary": "response under 200ms, Lighthouse 90, search fast",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, search fast; artifacts: page.tsx, contact-list.tsx, contact-search.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, search fast",
+      "dependencies": [
+        "IFC-089"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-065",
+      "sprint": 19,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Contact 360",
+      "description": "Contact 360",
+      "summary": "response under 200ms, Lighthouse 90, data complete",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, data complete; artifacts: page.tsx, contact-360.tsx, contact-insights.tsx",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, data complete",
+      "dependencies": [
+        "IFC-090"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-066",
+      "sprint": 19,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Edit Contact",
+      "description": "Edit Contact",
+      "summary": "response under 200ms, Lighthouse 90, edits saved",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, edits saved; artifacts: page.tsx, contact-editor.tsx, duplicate-detector.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, edits saved",
+      "dependencies": [
+        "PG-065"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "taskId": "IFC-033",
+      "sprint": 19,
+      "status": "Backlog",
+      "section": "Automation",
+      "title": "PHASE-005: Load Testing with k6",
+      "description": "PHASE-005: Load Testing with k6",
+      "summary": "System handles 5000 leads/hour with automation; load-test-report.html must show actual k6 execution output with real timestamps, not template report",
+      "definitionOfDone": "System handles 5000 leads/hour with automation; artifacts: load-test-report.html, bottleneck-analysis.md, grafana-load-test.png; load-test-report.html must show actual k6 execution output with real timestamps, not template report",
+      "definitionOfDoneSnapshot": "System handles 5000 leads/hour with automation; load-test-report.html must show actual k6 execution output with real timestamps, not template report",
+      "dependencies": [
+        "IFC-030",
+        "IFC-032"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-034",
+      "sprint": 19,
+      "status": "Backlog",
+      "section": "Investment Gate",
+      "title": "PHASE-001: Gate 3 Review - £3000 Investment",
+      "description": "PHASE-001: Gate 3 Review - £3000 Investment",
+      "summary": "Scale decision with modern stack validated",
+      "definitionOfDone": "Scale decision with modern stack validated; artifacts: automation-roi-analysis.xlsx, stability-report.pdf, scale-plan.pptx",
+      "definitionOfDoneSnapshot": "Scale decision with modern stack validated",
+      "dependencies": [
+        "IFC-033"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-064",
+      "sprint": 19,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Contacts List",
+      "description": "Contacts List",
+      "summary": "response under 200ms, Lighthouse 90, search fast",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, search fast; artifacts: page.tsx, contact-list.tsx, contact-search.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, search fast",
+      "dependencies": [
+        "IFC-089"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-065",
+      "sprint": 19,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Contact 360",
+      "description": "Contact 360",
+      "summary": "response under 200ms, Lighthouse 90, data complete",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, data complete; artifacts: page.tsx, contact-360.tsx, contact-insights.tsx",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, data complete",
+      "dependencies": [
+        "IFC-090"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-066",
+      "sprint": 19,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Edit Contact",
+      "description": "Edit Contact",
+      "summary": "response under 200ms, Lighthouse 90, edits saved",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, edits saved; artifacts: page.tsx, contact-editor.tsx, duplicate-detector.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, edits saved",
+      "dependencies": [
+        "PG-065"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-067",
+      "sprint": 19,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Import Contacts",
+      "description": "Import Contacts",
+      "summary": "response under 200ms, Lighthouse 90, imports clean",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, imports clean; artifacts: page.tsx, contact-importer.tsx, deduplicator.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, imports clean",
+      "dependencies": [
+        "PG-064"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-068",
+      "sprint": 19,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Merge Contacts",
+      "description": "Merge Contacts",
+      "summary": "response under 200ms, Lighthouse 90, merges completed",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, merges completed; artifacts: page.tsx, merge-wizard.tsx, conflict-resolver.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, merges completed",
+      "dependencies": [
+        "PG-064"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-069",
+      "sprint": 19,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Accounts List",
+      "description": "Accounts List",
+      "summary": "response under 200ms, Lighthouse 90, hierarchy shown",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, hierarchy shown; artifacts: page.tsx, account-list.tsx, hierarchy-view.tsx",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, hierarchy shown",
+      "dependencies": [
+        "IFC-089"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-166",
+      "sprint": 19,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Lighthouse audit on authenticated home page - verify NFR targets TTI <1s Performance >=90 Accessibility >=90",
+      "description": "Lighthouse audit on authenticated home page - verify NFR targets TTI <1s Performance >=90 Accessibility >=90",
+      "summary": "All implementation code, tests, configs, and documentation are complete. 3 test regressions fixed this session (SVG role='img', heading text, EmptyState refactor). Pre-existing build blocker fixed (unused @ts-expect-error).... Lighthouse CI audit on / route;...",
+      "definitionOfDone": "Lighthouse CI audit on / route; Performance >=90, Accessibility >=90, TTI <1s; results saved to artifacts; ADR-027 verification confirmed",
+      "definitionOfDoneSnapshot": "Lighthouse CI audit on / route; Performance >=90, Accessibility >=90, TTI under 1s; results saved to artifacts; ADR-027 verification confirmed",
+      "dependencies": [
+        "PG-129"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-19/attestations/PG-166/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-04-11T17:00:00.000Z",
+        "sprintFolder": 19
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 1,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-304",
+      "sprint": 19,
+      "status": "Backlog",
+      "section": "Support",
+      "title": "Article Analytics Dashboard",
+      "description": "Article Analytics Dashboard",
+      "summary": "Analytics in help article admin; views, feedback stats, most/least helpful, search terms; helpArticle.getAnalytics tRPC; coverage >=90%",
+      "definitionOfDone": "Analytics in help article admin; views, feedback stats, most/least helpful, search terms; helpArticle.getAnalytics tRPC; coverage >=90%; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Analytics in help article admin; views, feedback stats, most/least helpful, search terms; helpArticle.getAnalytics tRPC; coverage >=90%",
+      "dependencies": [
+        "IFC-303",
+        "PG-180"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-305",
+      "sprint": 19,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Componentize CRM entity detail pages (Leads, Contacts) — extract shared SOLID-compliant components from 5284 lines of duplicated god-files; wire bypassed shared components (EntityHeader, SearchFilterBar, ActivityFeed); create cross-entity reusable components (EntityProfileCard, ActivityFilterBar, AiInsightMetricsGrid, ai-insight-transforms utility, EntityErrorState, EntityDetailSkeleton, ConfirmationDialog); reduce page files from 2691/2593 to ~200 lines each",
+      "description": "Componentize CRM entity detail pages (Leads, Contacts) — extract shared SOLID-compliant components from 5284 lines of duplicated god-files; wire bypassed shared components (EntityHeader, SearchFilterBar, ActivityFeed); create cross-entity reusable components (EntityProfileCard, ActivityFilterBar, AiInsightMetricsGrid, ai-insight-transforms utility, EntityErrorState, EntityDetailSkeleton, ConfirmationDialog); reduce page files from 2691/2593 to ~200 lines each",
+      "summary": "Entity detail pages reduced to <300 lines each; shared components extracted and reused across leads/contacts; EntityHeader/SearchFilterBar/ActivityFeed wired; AI insight transforms deduplicated into shared utility;...",
+      "definitionOfDone": "Entity detail pages reduced to <300 lines each; shared components extracted and reused across leads/contacts; EntityHeader/SearchFilterBar/ActivityFeed wired; AI insight transforms deduplicated into shared utility; each component independently testable >=90% coverage; zero functional regression; verified by: pnpm typecheck + test + lint + build",
+      "definitionOfDoneSnapshot": "Entity detail pages reduced to <300 lines each; shared components extracted and reused across leads/contacts; EntityHeader/SearchFilterBar/ActivityFeed wired; AI insight transforms deduplicated into shared utility;...",
+      "dependencies": [
+        "IFC-226"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-306",
+      "sprint": 19,
+      "status": "Backlog",
+      "section": "Compliance",
+      "title": "Fix Compliance Calendar Seed Data — replace fabricated/stale events in compliance-calendar.json with realistic SaaS CRM compliance milestones; remove irrelevant ISO 14001 events; update 6 past events still marked scheduled to completed; extend date range through 2026-12 covering GDPR quarterly reviews, SOC 2 audit cycle, ISO 27001 surveillance, ISO 42001 certification path, OWASP assessments; update metadata version and lastUpdated",
+      "description": "Fix Compliance Calendar Seed Data — replace fabricated/stale events in compliance-calendar.json with realistic SaaS CRM compliance milestones; remove irrelevant ISO 14001 events; update 6 past events still marked scheduled to completed; extend date range through 2026-12 covering GDPR quarterly reviews, SOC 2 audit cycle, ISO 27001 surveillance, ISO 42001 certification path, OWASP assessments; update metadata version and lastUpdated",
+      "summary": "compliance-calendar.json has 22 events covering 4 standards (GDPR, SOC 2, ISO 27001, ISO 42001, OWASP); no ISO 14001; all past events status=completed; all future events status=scheduled; date range Oct 2025–Dec 2026;...",
+      "definitionOfDone": "compliance-calendar.json has 22 events covering 4 standards (GDPR, SOC 2, ISO 27001, ISO 42001, OWASP); no ISO 14001; all past events status=completed; all future events status=scheduled; date range Oct 2025–Dec 2026; timeline API serves updated data; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "compliance-calendar.json has 22 events covering 4 standards (GDPR, SOC 2, ISO 27001, ISO 42001, OWASP); no ISO 14001; all past events status=completed; all future events status=scheduled; date range Oct 2025–Dec 2026;...",
+      "dependencies": [
+        "IFC-073"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    }
+  ]
+}

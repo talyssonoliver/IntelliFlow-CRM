@@ -1,0 +1,66 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "DOC-003",
+  "run_id": "sprint14-audit-20260302T215859-6dbfyi",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:59:16.723Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 1,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "docs/design/PAGE_MAP_AND_FLOWS.md": "f78cca87d39e3a378b7a4b84a197bb2106cad0b0626767d8ba3f8a7dabfbe6a1"
+  },
+  "validation_results": [
+    {
+      "name": "DOC-003",
+      "command": "pnpm lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 15000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "DOC-002"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "PAGE_MAP_AND_FLOWS.md updated to 103 pages",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "flow table current",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "auth diagrams verified",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "integration checklist reflects actual state",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "verified by: manual review + TC-31 automated parity test",
+      "met": true,
+      "evidence": "All 1 validations passed"
+    }
+  ],
+  "notes": "4 DoD criteria unverified"
+}

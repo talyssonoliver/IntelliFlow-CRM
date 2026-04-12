@@ -1,0 +1,925 @@
+{
+  "sprint": "sprint-22",
+  "name": "Sprint 22",
+  "generated_at": "2026-04-11T16:48:01.958Z",
+  "summary_source": "specify",
+  "task_summary": {
+    "total": 22,
+    "completed": 0,
+    "backlog": 22,
+    "blocked": 0,
+    "attested_completed": 0
+  },
+  "context": "Primary focus areas: Core CRM (17), AI & Intelligence (1), Documentation (1).",
+  "section_summary": [
+    {
+      "section": "Core CRM",
+      "total": 17,
+      "completed": 0,
+      "open": 17
+    },
+    {
+      "section": "AI & Intelligence",
+      "total": 1,
+      "completed": 0,
+      "open": 1
+    },
+    {
+      "section": "Documentation",
+      "total": 1,
+      "completed": 0,
+      "open": 1
+    },
+    {
+      "section": "Enhancement",
+      "total": 1,
+      "completed": 0,
+      "open": 1
+    },
+    {
+      "section": "Support Pages",
+      "total": 1,
+      "completed": 0,
+      "open": 1
+    },
+    {
+      "section": "Testing",
+      "total": 1,
+      "completed": 0,
+      "open": 1
+    }
+  ],
+  "notable_completed": [],
+  "open_tasks": [
+    {
+      "taskId": "IFC-038",
+      "sprint": 22,
+      "status": "Backlog",
+      "section": "Enhancement",
+      "title": "Analytics Implementation",
+      "description": "Analytics Implementation",
+      "summary": "Interactive dashboard with Supabase real-time; Dashboard must display real database data, not hardcoded chart values",
+      "definitionOfDone": "Interactive dashboard with Supabase real-time; artifacts: real-time-test-video.mp4, context_ack.json; targets: <1s; Dashboard must display real database data, not hardcoded chart values",
+      "definitionOfDoneSnapshot": "Interactive dashboard with Supabase real-time; Dashboard must display real database data, not hardcoded chart values",
+      "dependencies": [
+        "IFC-037",
+        "ANALYTICS-001",
+        "IFC-190"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-041",
+      "sprint": 22,
+      "status": "Backlog",
+      "section": "Documentation",
+      "title": "User Manual with Interactive Examples",
+      "description": "User Manual with Interactive Examples",
+      "summary": "Comprehensive guide with CodeSandbox examples",
+      "definitionOfDone": "Comprehensive guide with CodeSandbox examples; targets: >=100%; gates: coverage-gte-90",
+      "definitionOfDoneSnapshot": "Comprehensive guide with CodeSandbox examples",
+      "dependencies": [
+        "IFC-018",
+        "IFC-026",
+        "IFC-033"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-047",
+      "sprint": 22,
+      "status": "Backlog",
+      "section": "Testing",
+      "title": "Performance Tests (k6 + Lighthouse)",
+      "description": "Performance Tests (k6 + Lighthouse)",
+      "summary": "Automated performance regression prevention",
+      "definitionOfDone": "Automated performance regression prevention; artifacts: .lighthouserc.js, performance-budgets.json, regression-alerts.yaml; targets: <100ms; gates: p99-latency-check",
+      "definitionOfDoneSnapshot": "Automated performance regression prevention",
+      "dependencies": [
+        "IFC-007"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-049",
+      "sprint": 22,
+      "status": "Backlog",
+      "section": "Support Pages",
+      "title": "Support Chat",
+      "description": "Support Chat",
+      "summary": "response under 200ms, Lighthouse 90, chat functional",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, chat functional; artifacts: page.tsx, chat-widget.tsx, agent-router.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, chat functional",
+      "dependencies": [
+        "IFC-036"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-082",
+      "sprint": 22,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Task Detail",
+      "description": "Task Detail",
+      "summary": "response under 200ms, Lighthouse 90, collaboration enabled",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, collaboration enabled; artifacts: page.tsx, task-detail.tsx, task-comments.tsx",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, collaboration enabled",
+      "dependencies": [
+        "PG-081"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "taskId": "IFC-038",
+      "sprint": 22,
+      "status": "Backlog",
+      "section": "Enhancement",
+      "title": "Analytics Implementation",
+      "description": "Analytics Implementation",
+      "summary": "Interactive dashboard with Supabase real-time; Dashboard must display real database data, not hardcoded chart values",
+      "definitionOfDone": "Interactive dashboard with Supabase real-time; artifacts: real-time-test-video.mp4, context_ack.json; targets: <1s; Dashboard must display real database data, not hardcoded chart values",
+      "definitionOfDoneSnapshot": "Interactive dashboard with Supabase real-time; Dashboard must display real database data, not hardcoded chart values",
+      "dependencies": [
+        "IFC-037",
+        "ANALYTICS-001",
+        "IFC-190"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-041",
+      "sprint": 22,
+      "status": "Backlog",
+      "section": "Documentation",
+      "title": "User Manual with Interactive Examples",
+      "description": "User Manual with Interactive Examples",
+      "summary": "Comprehensive guide with CodeSandbox examples",
+      "definitionOfDone": "Comprehensive guide with CodeSandbox examples; targets: >=100%; gates: coverage-gte-90",
+      "definitionOfDoneSnapshot": "Comprehensive guide with CodeSandbox examples",
+      "dependencies": [
+        "IFC-018",
+        "IFC-026",
+        "IFC-033"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-047",
+      "sprint": 22,
+      "status": "Backlog",
+      "section": "Testing",
+      "title": "Performance Tests (k6 + Lighthouse)",
+      "description": "Performance Tests (k6 + Lighthouse)",
+      "summary": "Automated performance regression prevention",
+      "definitionOfDone": "Automated performance regression prevention; artifacts: .lighthouserc.js, performance-budgets.json, regression-alerts.yaml; targets: <100ms; gates: p99-latency-check",
+      "definitionOfDoneSnapshot": "Automated performance regression prevention",
+      "dependencies": [
+        "IFC-007"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-049",
+      "sprint": 22,
+      "status": "Backlog",
+      "section": "Support Pages",
+      "title": "Support Chat",
+      "description": "Support Chat",
+      "summary": "response under 200ms, Lighthouse 90, chat functional",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, chat functional; artifacts: page.tsx, chat-widget.tsx, agent-router.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, chat functional",
+      "dependencies": [
+        "IFC-036"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-082",
+      "sprint": 22,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Task Detail",
+      "description": "Task Detail",
+      "summary": "response under 200ms, Lighthouse 90, collaboration enabled",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, collaboration enabled; artifacts: page.tsx, task-detail.tsx, task-comments.tsx",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, collaboration enabled",
+      "dependencies": [
+        "PG-081"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-083",
+      "sprint": 22,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Calendar",
+      "description": "Calendar",
+      "summary": "response under 200ms, Lighthouse 90, events synced",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, events synced; artifacts: page.tsx, calendar-view.tsx, event-scheduler.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, events synced",
+      "dependencies": [
+        "PG-080"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-084",
+      "sprint": 22,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Emails Cross-entity scope: wire EmailCompose component (from PG-141) into Lead and Contact detail page Compose buttons. Pre-fill recipient with entity email. Replace activity-derived email list with real email integration data.",
+      "description": "Emails Cross-entity scope: wire EmailCompose component (from PG-141) into Lead and Contact detail page Compose buttons. Pre-fill recipient with entity email. Replace activity-derived email list with real email integration data.",
+      "summary": "response under 200ms, Lighthouse 90, emails organized; Compose buttons on Lead/Contact detail pages open EmailCompose sheet; email list sourced from real integration",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, emails organized; artifacts: page.tsx, email-client.tsx, email-tracker.ts; Compose buttons on Lead/Contact detail pages open EmailCompose sheet; email list sourced from real integration",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, emails organized; Compose buttons on Lead/Contact detail pages open EmailCompose sheet; email list sourced from real integration",
+      "dependencies": [
+        "IFC-099",
+        "IFC-144"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-085",
+      "sprint": 22,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Email Templates",
+      "description": "Email Templates",
+      "summary": "response under 200ms, Lighthouse 90, templates saved",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, templates saved",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, templates saved",
+      "dependencies": [
+        "PG-084",
+        "IFC-144"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-086",
+      "sprint": 22,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "SMS Templates",
+      "description": "SMS Templates",
+      "summary": "response under 200ms, Lighthouse 90, SMS ready",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, SMS ready; artifacts: page.tsx, sms-builder.tsx, compliance-checker.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, SMS ready",
+      "dependencies": [
+        "PG-085",
+        "IFC-144"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-087",
+      "sprint": 22,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Calls",
+      "description": "Calls",
+      "summary": "response under 200ms, Lighthouse 90, calls tracked",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, calls tracked; artifacts: page.tsx, call-logger.tsx, recording-player.tsx",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, calls tracked",
+      "dependencies": [
+        "IFC-099",
+        "IFC-144"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-217",
+      "sprint": 22,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Entity Detail Email Compose Wiring - Wire existing EmailCompose component into Compose buttons on Lead and Contact detail pages. Pre-fill recipient. Open as Sheet overlay. Connect to email send API via EmailServiceAdapter. Follows IFC-144 and PG-141 (Pattern 1 + Pattern 2). Resolves WIRE-IFC-144-001 and WIRE-PG-141-001.",
+      "description": "Entity Detail Email Compose Wiring - Wire existing EmailCompose component into Compose buttons on Lead and Contact detail pages. Pre-fill recipient. Open as Sheet overlay. Connect to email send API via EmailServiceAdapter. Follows IFC-144 and PG-141 (Pattern 1 + Pattern 2). Resolves WIRE-IFC-144-001 and WIRE-PG-141-001.",
+      "summary": "Compose button opens EmailCompose on Lead + Contact detail; sends via API; success toast; tests >=90%",
+      "definitionOfDone": "Compose button opens EmailCompose on Lead + Contact detail; sends via API; success toast; tests >=90%",
+      "definitionOfDoneSnapshot": "Compose button opens EmailCompose on Lead + Contact detail; sends via API; success toast; tests >=90%",
+      "dependencies": [
+        "IFC-144",
+        "PG-141"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-221",
+      "sprint": 22,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Email Open Tracking Integration - Real email open/click tracking. Backend: tracking pixel endpoint recording opens; click-through URL wrapper; EmailTracking model. Frontend: replace activity-derived open rate with real data on Lead and Contact detail. Inject pixel + wrap links on outbound send. Follows IFC-144 and IFC-099 (Pattern 1 - infra-only). Resolves WIRE-IFC-099-001.",
+      "description": "Email Open Tracking Integration - Real email open/click tracking. Backend: tracking pixel endpoint recording opens; click-through URL wrapper; EmailTracking model. Frontend: replace activity-derived open rate with real data on Lead and Contact detail. Inject pixel + wrap links on outbound send. Follows IFC-144 and IFC-099 (Pattern 1 - infra-only). Resolves WIRE-IFC-099-001.",
+      "summary": "Tracking pixel injected; opens recorded; click-through tracked; real open rate on entity detail; privacy-compliant; tests >=90%",
+      "definitionOfDone": "Tracking pixel injected; opens recorded; click-through tracked; real open rate on entity detail; privacy-compliant; tests >=90%",
+      "definitionOfDoneSnapshot": "Tracking pixel injected; opens recorded; click-through tracked; real open rate on entity detail; privacy-compliant; tests >=90%",
+      "dependencies": [
+        "IFC-144",
+        "IFC-099"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-231",
+      "sprint": 22,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Lead List Saved Views and Filter Persistence - Sidebar view params (?view=my, ?view=starred, ?segment=hot) are completely ignored by LeadsPageClient (no useSearchParams call). Fix: (1) Wire URL params to filter state, (2) Add saved views CRUD (name, filters, columns, sort), (3) Column visibility picker UI exposing DataTable VisibilityState, (4) Persist filter/sort/view selection in localStorage or user preferences.",
+      "description": "Lead List Saved Views and Filter Persistence - Sidebar view params (?view=my, ?view=starred, ?segment=hot) are completely ignored by LeadsPageClient (no useSearchParams call). Fix: (1) Wire URL params to filter state, (2) Add saved views CRUD (name, filters, columns, sort), (3) Column visibility picker UI exposing DataTable VisibilityState, (4) Persist filter/sort/view selection in localStorage or user preferences.",
+      "summary": "URL params filter lead list correctly; saved views can be created/edited/deleted; column picker toggles visibility; filter/sort state persists across navigation; tests >=90%",
+      "definitionOfDone": "URL params filter lead list correctly; saved views can be created/edited/deleted; column picker toggles visibility; filter/sort state persists across navigation; tests >=90%",
+      "definitionOfDoneSnapshot": "URL params filter lead list correctly; saved views can be created/edited/deleted; column picker toggles visibility; filter/sort state persists across navigation; tests >=90%",
+      "dependencies": [],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-235",
+      "sprint": 22,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Lead Detail AI Chat Panel - Add AI chat panel to Lead detail page for entity-scoped conversations. Backend: conversation.router.ts is fully built with 13 endpoints but NOT registered in router.ts - register it. Frontend: build LeadChatPanel component using conversation API with contextType=LEAD, contextId=leadId. Similar to dashboard TeamChatWidget but with real API calls (TeamChatWidget is decorative with hardcoded messages). ConversationRecord/MessageRecord Prisma models exist.",
+      "description": "Lead Detail AI Chat Panel - Add AI chat panel to Lead detail page for entity-scoped conversations. Backend: conversation.router.ts is fully built with 13 endpoints but NOT registered in router.ts - register it. Frontend: build LeadChatPanel component using conversation API with contextType=LEAD, contextId=leadId. Similar to dashboard TeamChatWidget but with real API calls (TeamChatWidget is decorative with hardcoded messages). ConversationRecord/MessageRecord Prisma models exist.",
+      "summary": "conversation router registered in router.ts; LeadChatPanel component sends/receives messages via API; entity-scoped to current lead; message history persisted; streaming responses; tests >=90%",
+      "definitionOfDone": "conversation router registered in router.ts; LeadChatPanel component sends/receives messages via API; entity-scoped to current lead; message history persisted; streaming responses; tests >=90%",
+      "definitionOfDoneSnapshot": "conversation router registered in router.ts; LeadChatPanel component sends/receives messages via API; entity-scoped to current lead; message history persisted; streaming responses; tests >=90%",
+      "dependencies": [
+        "IFC-069"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-250",
+      "sprint": 22,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Lead Event Pipeline - Persistent Outbox + Webhooks. Fix HIGH/LOW issues: (1) InMemoryEventBus loses all events on server restart - no persistent outbox pattern [W3]. (2) No webhook handlers for lead events - external systems cannot subscribe [W9]. Fix: Implement transactional outbox pattern for lead domain events (LeadCreatedEvent, LeadQualifiedEvent, etc.). Add webhook dispatch for lead events. Ensure event ordering and at-least-once delivery.",
+      "description": "Lead Event Pipeline - Persistent Outbox + Webhooks. Fix HIGH/LOW issues: (1) InMemoryEventBus loses all events on server restart - no persistent outbox pattern [W3]. (2) No webhook handlers for lead events - external systems cannot subscribe [W9]. Fix: Implement transactional outbox pattern for lead domain events (LeadCreatedEvent, LeadQualifiedEvent, etc.). Add webhook dispatch for lead events. Ensure event ordering and at-least-once delivery.",
+      "summary": "Lead events persisted to outbox table; outbox processor dispatches to webhook subscribers; events survive server restart; at-least-once delivery guaranteed; webhook payload schema documented; tests >=90%",
+      "definitionOfDone": "Lead events persisted to outbox table; outbox processor dispatches to webhook subscribers; events survive server restart; at-least-once delivery guaranteed; webhook payload schema documented; tests >=90%",
+      "definitionOfDoneSnapshot": "Lead events persisted to outbox table; outbox processor dispatches to webhook subscribers; events survive server restart; at-least-once delivery guaranteed; webhook payload schema documented; tests >=90%",
+      "dependencies": [],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-261",
+      "sprint": 22,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Contact Event Pipeline — Worker Handlers + Event Types. (1) Zero contact event handlers in events worker (W-02). (2) Only 2/8 contact event types in DOMAIN_EVENT_TYPES — missing deleted, account_associated, account_disassociated, converted_from_lead, linked_to_lead, interacted (W-04). (3) No webhook routing for contact events (W-05). (4) No notifications for contact events (W-11). Cross-ref: W-01 (InMemoryEventBus) shared with IFC-250. Audit: docs/audit/contact-detail-wiring-audit.md §17.",
+      "description": "Contact Event Pipeline — Worker Handlers + Event Types. (1) Zero contact event handlers in events worker (W-02). (2) Only 2/8 contact event types in DOMAIN_EVENT_TYPES — missing deleted, account_associated, account_disassociated, converted_from_lead, linked_to_lead, interacted (W-04). (3) No webhook routing for contact events (W-05). (4) No notifications for contact events (W-11). Cross-ref: W-01 (InMemoryEventBus) shared with IFC-250. Audit: docs/audit/contact-detail-wiring-audit.md §17.",
+      "summary": "Events worker has handlers for all 8 contact event types; DOMAIN_EVENT_TYPES updated; webhook routing for contact events; notification handlers for key events; tests >=90%",
+      "definitionOfDone": "Events worker has handlers for all 8 contact event types; DOMAIN_EVENT_TYPES updated; webhook routing for contact events; notification handlers for key events; tests >=90%",
+      "definitionOfDoneSnapshot": "Events worker has handlers for all 8 contact event types; DOMAIN_EVENT_TYPES updated; webhook routing for contact events; notification handlers for key events; tests >=90%",
+      "dependencies": [],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-262",
+      "sprint": 22,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Contact Merge & Duplicate Detection Wiring. (1) mergeContacts deletes secondary without re-parenting all child records — orphaned opportunities/tasks (W-03). (2) findPotentialDuplicates exists in service but no tRPC procedure exposes it (W-09). (3) mergeContacts exists but no router procedure wraps it (W-10). (4) mergeContacts no cross-tenant check between primary and secondary (W-12). (5) associateWithAccount inside mergeContacts causes double-save and potential double event emission (W-13). Audit: docs/audit/contact-detail-wiring-audit.md §17.",
+      "description": "Contact Merge & Duplicate Detection Wiring. (1) mergeContacts deletes secondary without re-parenting all child records — orphaned opportunities/tasks (W-03). (2) findPotentialDuplicates exists in service but no tRPC procedure exposes it (W-09). (3) mergeContacts exists but no router procedure wraps it (W-10). (4) mergeContacts no cross-tenant check between primary and secondary (W-12). (5) associateWithAccount inside mergeContacts causes double-save and potential double event emission (W-13). Audit: docs/audit/contact-detail-wiring-audit.md §17.",
+      "summary": "Merge re-parents all child records before deleting secondary; tRPC procedures for findDuplicates and mergeContacts; cross-tenant check; no double-save; UI merge workflow; tests >=90%",
+      "definitionOfDone": "Merge re-parents all child records before deleting secondary; tRPC procedures for findDuplicates and mergeContacts; cross-tenant check; no double-save; UI merge workflow; tests >=90%",
+      "definitionOfDoneSnapshot": "Merge re-parents all child records before deleting secondary; tRPC procedures for findDuplicates and mergeContacts; cross-tenant check; no double-save; UI merge workflow; tests >=90%",
+      "dependencies": [],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-263",
+      "sprint": 22,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Contact Email & AI Integration. (1) No email-to-contact matching — inbound emails not linked to contacts by sender address (W-06). (2) No automated AI insight triggering — contact create/update doesn't trigger scoring like lead does (W-07). (3) No contact routing rules — leads have routing but contacts don't (W-14). Audit: docs/audit/contact-detail-wiring-audit.md §17.",
+      "description": "Contact Email & AI Integration. (1) No email-to-contact matching — inbound emails not linked to contacts by sender address (W-06). (2) No automated AI insight triggering — contact create/update doesn't trigger scoring like lead does (W-07). (3) No contact routing rules — leads have routing but contacts don't (W-14). Audit: docs/audit/contact-detail-wiring-audit.md §17.",
+      "summary": "Inbound emails matched to contacts by sender address; contact mutations trigger AI scoring; basic contact routing rules; tests >=90%",
+      "definitionOfDone": "Inbound emails matched to contacts by sender address; contact mutations trigger AI scoring; basic contact routing rules; tests >=90%",
+      "definitionOfDoneSnapshot": "Inbound emails matched to contacts by sender address; contact mutations trigger AI scoring; basic contact routing rules; tests >=90%",
+      "dependencies": [],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-272",
+      "sprint": 22,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Account Event Pipeline — Worker Handlers + Event Types. (1) Zero account event handlers in events worker (W-01). (2) Zero account event types in DOMAIN_EVENT_TYPES map (W-02). (3) Audit handler has 3 account event mappings (Created/Updated/Deleted) but events never reach it because worker has no handlers and dispatcher has no types (W-03). Add event handlers for AccountCreated, AccountUpdated, AccountDeleted (requires IFC-271), AccountRevenueUpdated, AccountHierarchyUpdated, AccountIndustryCategorized to events worker. Register all types in DOMAIN_EVENT_TYPES. Cross-ref: W-01/W-02 pattern shared with Contact (IFC-261). Audit: docs/audit/account-detail-wiring-audit.md section 14.",
+      "description": "Account Event Pipeline — Worker Handlers + Event Types. (1) Zero account event handlers in events worker (W-01). (2) Zero account event types in DOMAIN_EVENT_TYPES map (W-02). (3) Audit handler has 3 account event mappings (Created/Updated/Deleted) but events never reach it because worker has no handlers and dispatcher has no types (W-03). Add event handlers for AccountCreated, AccountUpdated, AccountDeleted (requires IFC-271), AccountRevenueUpdated, AccountHierarchyUpdated, AccountIndustryCategorized to events worker. Register all types in DOMAIN_EVENT_TYPES. Cross-ref: W-01/W-02 pattern shared with Contact (IFC-261). Audit: docs/audit/account-detail-wiring-audit.md section 14.",
+      "summary": "Events worker has handlers for all 6 account event types; DOMAIN_EVENT_TYPES updated; audit handler receives events; tests >=90%",
+      "definitionOfDone": "Events worker has handlers for all 6 account event types; DOMAIN_EVENT_TYPES updated; audit handler receives events; tests >=90%",
+      "definitionOfDoneSnapshot": "Events worker has handlers for all 6 account event types; DOMAIN_EVENT_TYPES updated; audit handler receives events; tests >=90%",
+      "dependencies": [
+        "IFC-271"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-283",
+      "sprint": 22,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Deal Event Pipeline — Worker Handlers. (1) Only opportunity.won has a handler in events worker; opportunity.created, opportunity.stage_changed, and opportunity.lost are defined in DOMAIN_EVENT_TYPES but have NO registered handlers (W-01). (2) No OpportunityDescriptionUpdatedEvent defined — description changes emit no event (W-02). Add handlers for the 3 missing event types. Add OpportunityDescriptionUpdatedEvent to domain. Cross-ref: same pattern as Account (IFC-272) and Contact (IFC-261). Audit: docs/audit/deal-detail-wiring-audit.md section 7.",
+      "description": "Deal Event Pipeline — Worker Handlers. (1) Only opportunity.won has a handler in events worker; opportunity.created, opportunity.stage_changed, and opportunity.lost are defined in DOMAIN_EVENT_TYPES but have NO registered handlers (W-01). (2) No OpportunityDescriptionUpdatedEvent defined — description changes emit no event (W-02). Add handlers for the 3 missing event types. Add OpportunityDescriptionUpdatedEvent to domain. Cross-ref: same pattern as Account (IFC-272) and Contact (IFC-261). Audit: docs/audit/deal-detail-wiring-audit.md section 7.",
+      "summary": "Events worker has handlers for opportunity.created/stage_changed/lost; OpportunityDescriptionUpdatedEvent added to domain; all 5 event types handled; tests >=90%",
+      "definitionOfDone": "Events worker has handlers for opportunity.created/stage_changed/lost; OpportunityDescriptionUpdatedEvent added to domain; all 5 event types handled; tests >=90%",
+      "definitionOfDoneSnapshot": "Events worker has handlers for opportunity.created/stage_changed/lost; OpportunityDescriptionUpdatedEvent added to domain; all 5 event types handled; tests >=90%",
+      "dependencies": [],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-289",
+      "sprint": 22,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Agent/Conversation Router Frontend Wiring. 17 dead endpoints (13 conversation.* + 4 agent.*) with zero frontend callers. Frontend uses autoResponse/aiReview/aiMonitoring routers that query the same DB tables directly bypassing the canonical conversation router. Fix: wire all endpoints to proper frontend consumers — chat panel, agent-approvals, AI Search, admin dashboard — and refactor aiMonitoring to delegate to conversation router instead of duplicating DB queries. Audit: artifacts/reports/dead-endpoints-audit.csv rows 4-18.",
+      "description": "Agent/Conversation Router Frontend Wiring. 17 dead endpoints (13 conversation.* + 4 agent.*) with zero frontend callers. Frontend uses autoResponse/aiReview/aiMonitoring routers that query the same DB tables directly bypassing the canonical conversation router. Fix: wire all endpoints to proper frontend consumers — chat panel, agent-approvals, AI Search, admin dashboard — and refactor aiMonitoring to delegate to conversation router instead of duplicating DB queries. Audit: artifacts/reports/dead-endpoints-audit.csv rows 4-18.",
+      "summary": "All 17 endpoints wired to frontend callers; aiMonitoring delegates to conversation router (no duplicate Prisma queries); agent-approvals uses conversation.approveToolCall/escalate/getPendingApprovals; AI Search wires conversation.search;...",
+      "definitionOfDone": "All 17 endpoints wired to frontend callers; aiMonitoring delegates to conversation router (no duplicate Prisma queries); agent-approvals uses conversation.approveToolCall/escalate/getPendingApprovals; AI Search wires conversation.search; admin dashboard wires getAnalytics/archiveOld; zero dead endpoints in Knip; tests >=90%",
+      "definitionOfDoneSnapshot": "All 17 endpoints wired to frontend callers; aiMonitoring delegates to conversation router (no duplicate Prisma queries); agent-approvals uses conversation.approveToolCall/escalate/getPendingApprovals; AI Search wires conversation.search;...",
+      "dependencies": [
+        "IFC-139",
+        "IFC-148"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-307",
+      "sprint": 22,
+      "status": "Backlog",
+      "section": "AI & Intelligence",
+      "title": "Contact Enrichment Pipeline — Automated background job that periodically enriches contact/lead data from external providers (Clearbit, Apollo). Includes: BullMQ queue intelliflow-contact-enrichment, enrichment adapter with rate limiting, on-create trigger in contact.router.ts, periodic cron sweep for stale profiles (>30 days), cost tracking via CostTracker, field updates (company, title, social profiles, industry)",
+      "description": "Contact Enrichment Pipeline — Automated background job that periodically enriches contact/lead data from external providers (Clearbit, Apollo). Includes: BullMQ queue intelliflow-contact-enrichment, enrichment adapter with rate limiting, on-create trigger in contact.router.ts, periodic cron sweep for stale profiles (>30 days), cost tracking via CostTracker, field updates (company, title, social profiles, industry)",
+      "summary": "External enrichment provider adapter with rate limiting; BullMQ queue intelliflow-contact-enrichment wired with producer on contact create; periodic cron sweep for stale profiles; cost tracking per call via CostTracker;...",
+      "definitionOfDone": "External enrichment provider adapter with rate limiting; BullMQ queue intelliflow-contact-enrichment wired with producer on contact create; periodic cron sweep for stale profiles; cost tracking per call via CostTracker; contact fields updated: company, title, social profiles, industry; >=90% test coverage; all 4 validations pass",
+      "definitionOfDoneSnapshot": "External enrichment provider adapter with rate limiting; BullMQ queue intelliflow-contact-enrichment wired with producer on contact create; periodic cron sweep for stale profiles; cost tracking per call via CostTracker;...",
+      "dependencies": [
+        "IFC-168",
+        "IFC-131"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    }
+  ]
+}

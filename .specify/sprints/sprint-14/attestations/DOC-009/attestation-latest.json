@@ -1,0 +1,78 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "DOC-009",
+  "run_id": "sprint14-audit-20260302T215859-6dbfyi",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:59:16.747Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 2,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "docs/design/content-audit.md": "b9a186692c76bd3de0479243330cca8be0e799056fe55c635bfeb31c92270bbb",
+    "artifacts/reports/content-audit-results.json": "4d1f5fce07b84770e3846f0de282e6fdae8493244c6a514225dd7e0bf25fd406"
+  },
+  "validation_results": [
+    {
+      "name": "DOC-009",
+      "command": "pnpm lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 15000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "DOC-002",
+    "DOC-005"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Content audit framework created",
+      "met": true,
+      "evidence": "All 2 artifacts exist"
+    },
+    {
+      "criterion": "initial audit covering all 103 routes",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "quantitative metrics captured",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "qualitative review for each page",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "SEO audit for public pages",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "stale content identified",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "verified by: manual review",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "6 DoD criteria unverified"
+}

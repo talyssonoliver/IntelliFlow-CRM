@@ -1,0 +1,91 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "GOV-001",
+  "run_id": "sprint1-audit-20260302T215651-arwnsz",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:56:59.902Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 6,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "docs/architecture/adr/000-template.md": "965dc4f944d0596145a57bd9491bc480566bc71944ad5b10136cdb54a41a60f6",
+    "docs/architecture/arp/000-template.md": "ef7b3b7534fb0c12cc530011d336b47f915c86ce908d0a459447912330139ad5",
+    "docs/architecture/decision-workflow.md": "7ff0185d87183cf8bcf8fd83b7d9f307384b556002757c53f785a576d4bde3d7",
+    "docs/architecture/diagrams/README.md": "f1ed1757a14728904ae732524960022aec3de27d604e4a36284636da55a2f564",
+    "docs/architecture/flowcharts/README.md": "b92985143ec86eb4b49e9803c7e52431aaec0dc508a894e7612b8dbd31daaa3d",
+    ".specify/sprints/sprint-1/attestations/GOV-001/context_ack.json": "9037214aa2331ff7e9c2dfa33e8b8f158c8d93a0975dcef3c12579df09954172"
+  },
+  "validation_results": [
+    {
+      "name": "GOV-001",
+      "command": "pnpm lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 15000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "ENG-OPS-001"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Created ADR template",
+      "met": true,
+      "evidence": "All 6 artifacts exist"
+    },
+    {
+      "criterion": "ARP template",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "decision workflow",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "and diagram/flowchart conventions",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "includes folder structure",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "naming",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "and example ADR/ARP",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "defines when decisions are required and how to approve",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "verified by: pnpm lint",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "8 DoD criteria unverified"
+}

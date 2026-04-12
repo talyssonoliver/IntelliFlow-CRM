@@ -1,0 +1,86 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-074",
+  "run_id": "sprint1-audit-20260302T215651-arwnsz",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:56:59.877Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 11,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "artifacts/misc/sentry-project-config.json": "9566f434b6a36ff95a95e4eae2e7d75c605e4cd82efa6afa6d43f57d061571e3",
+    "artifacts/misc/correlation-test.csv": "c7d87bcf960f98c0ade84ce66dad5ac8e053d83870fcf859707842556f34bbc1",
+    "artifacts/misc/mttr-baseline.json": "b5e1dcf0c2390b274c792a79332db082e860cc3704a41ed6ffeaa6f62aefcf14",
+    "packages/observability/package.json": "fda3969caf854f7d7e2e227f3820ee06301c18321d4dd3989e59fc1c5d471017",
+    "packages/observability/tsconfig.json": "0b17921b67a2a6bbb1a37af61694b09aa4fbcafee4f5c5f0c488d95c3e4c721e",
+    "packages/observability/src/index.ts": "d170560912a7e4c8d3731bd6265ea89120e6f837cafb47ec00745a8a06ef4a6b",
+    "packages/observability/src/tracing.ts": "e51e30a91be4294940e7bf2dadee2608cb2099efca862db7b484bfdf1d6fe39c",
+    "packages/observability/src/metrics.ts": "26abc7e5422b81b4ceb047693d8dff7990fa491a08686391668f74b1f76ddab7",
+    "packages/observability/src/logging.ts": "a0859bb52a22d1c8c2bc1d14d3b5803c344375884530a0b4ddd83f85af6a6c9f",
+    "packages/observability/src/tracer.ts": "e6a6e78aa39fbad06fe1f06bf4106da004431856368269044ffa449e223fb770",
+    ".specify/sprints/sprint-1/attestations/IFC-074/context_ack.json": "740b66518249ca553a1710bb9bf05bd70a2b0e76c9e4d5d6a7ab1dfed938ffc8"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-074",
+      "command": "pnpm typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 90000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-003"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Traces",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "metrics",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "logs unified with context",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "artifacts: sentry-project-config.json",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "correlation-test.csv",
+      "met": true,
+      "evidence": "All 1 validations passed"
+    },
+    {
+      "criterion": "mttr-baseline.json",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "targets: <2min",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "6 DoD criteria unverified"
+}

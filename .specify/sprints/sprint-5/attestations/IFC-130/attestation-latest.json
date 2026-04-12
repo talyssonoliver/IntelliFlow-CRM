@@ -1,0 +1,67 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-130",
+  "run_id": "sprint5-audit-20260302T215731-kvz563",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:57:39.344Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 6,
+    "validations_passed": 0,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "docs/release/promotion-policy.md": "bb4bcfb8a338d2251d90c3038357cbd0d2afda1b8607e97cd29ef0a24f5806c7",
+    ".github/workflows/release.yml": "63a2e8fe1ab2c3003a5864081e1e870d72f5d56ea7602c08a14e511a00d5f0b1",
+    "docs/operations/runbooks/release-checklist.md": "63985d1e97f675f941ba456e00cbc4297e8c4859e6758275e7479352da008c06",
+    ".specify/sprints/sprint-5/attestations/IFC-130/context_ack.json": "099cd0ed41248666625beed6aad981dfd389a6f92f3a87c567ef642c300775ee",
+    "docs/planning/adr/ADR-021-governance-ops-release.md": "626cf1c9c9b1ade20c318491fa1502f28f98416897ad101c60030cd72f0d0c00",
+    "docs/planning/prd-release-governance.md": "cd511206b991a249c6b5f2cae07efa2bccb453a7f7970a74c1cec1206e9741ef"
+  },
+  "validation_results": [],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "ENV-005-AI",
+    "IFC-111"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Promotion workflow documented",
+      "met": true,
+      "evidence": "Documentation found: docs/release/promotion-policy.md, docs/operations/runbooks/release-checklist.md, docs/planning/adr/ADR-021-governance-ops-release.md, docs/planning/prd-release-governance.md"
+    },
+    {
+      "criterion": "staging deploy automated",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "prod promotion requires gate pass + approval",
+      "met": true,
+      "evidence": "All 0 validations passed"
+    },
+    {
+      "criterion": "rollback playbook defined",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "release checklist template in repo",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "targets: >=95%",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "4 DoD criteria unverified"
+}

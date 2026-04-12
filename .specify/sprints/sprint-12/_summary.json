@@ -1,0 +1,647 @@
+{
+  "sprint": "sprint-12",
+  "name": "Public Pages & Documentation",
+  "generated_at": "2026-04-11T16:48:01.958Z",
+  "summary_source": "specify",
+  "task_summary": {
+    "total": 13,
+    "completed": 13,
+    "backlog": 0,
+    "blocked": 0,
+    "attested_completed": 13
+  },
+  "context": "Primary focus areas: Public Pages (5), Documentation (2), Infrastructure (2).",
+  "section_summary": [
+    {
+      "section": "Public Pages",
+      "total": 5,
+      "completed": 5,
+      "open": 0
+    },
+    {
+      "section": "Documentation",
+      "total": 2,
+      "completed": 2,
+      "open": 0
+    },
+    {
+      "section": "Infrastructure",
+      "total": 2,
+      "completed": 2,
+      "open": 0
+    },
+    {
+      "section": "Notifications",
+      "total": 2,
+      "completed": 2,
+      "open": 0
+    },
+    {
+      "section": "Marketing Pages",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Security",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    }
+  ],
+  "notable_completed": [
+    {
+      "taskId": "PG-012",
+      "sprint": 12,
+      "status": "Completed",
+      "section": "Public Pages",
+      "title": "Career Detail",
+      "description": "Career Detail",
+      "summary": "Career detail page implementation complete with full job listing template, apply button with save/share functionality, application form integration, and SEO metadata. Unit tests added covering ApplyButton (35 tests:... Career detail page with dynamic routing;...",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, apply button working; artifacts: page.tsx, job-detail-template.tsx, apply-button.tsx",
+      "definitionOfDoneSnapshot": "Career detail page with dynamic routing; Job detail template component; Apply button components",
+      "dependencies": [
+        "PG-011",
+        "GTM-002",
+        "BRAND-001"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-12/attestations/PG-012/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-01-04T14:35:00.000Z",
+        "sprintFolder": 12
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 7,
+        "met": 7,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-169",
+      "sprint": 12,
+      "status": "Completed",
+      "section": "Security",
+      "title": "Require Supabase env vars - Follow-up to IFC-006",
+      "description": "Require Supabase env vars - Follow-up to IFC-006",
+      "summary": "Validation and remediation of IFC-169. Added 7 new tests: 5 production-mode throw tests, 1 dev-mode warn test, 1 verifyToken mock-key rejection test. Removed 2 stale eslint-disable directives. Created spec and plan files retroactively. Plan:......",
+      "definitionOfDone": "Remove mock key fallback; fail fast if SUPABASE_URL or SUPABASE_ANON_KEY missing; startup validation added; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Remove mock key fallback; Fail fast if SUPABASE_URL or SUPABASE_ANON_KEY missing; Startup validation added",
+      "dependencies": [
+        "IFC-006"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-12/attestations/IFC-169/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-09T14:29:00.000Z",
+        "sprintFolder": 12
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "EXP-PLATFORM-001",
+      "sprint": 12,
+      "status": "Completed",
+      "section": "Infrastructure",
+      "title": "Platform utilities package - feature flags, resilience patterns, job queues, workflow orchestration",
+      "description": "Platform utilities package - feature flags, resilience patterns, job queues, workflow orchestration",
+      "summary": "Platform utilities package completed with feature flags, resilience patterns, job queues, and workflow orchestration. Feature flags implemented; Resilience patterns implemented; Job queue implemented",
+      "definitionOfDone": "Package implemented with feature flags module, resilience patterns (retry, circuit breaker), BullMQ job queues, workflow orchestration; 100% test coverage; documented",
+      "definitionOfDoneSnapshot": "Feature flags implemented; Resilience patterns implemented; Job queue implemented",
+      "dependencies": [
+        "ENV-001-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-12/attestations/EXP-PLATFORM-001/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-31T22:30:00Z",
+        "sprintFolder": 12
+      },
+      "validationSummary": {
+        "total": 7,
+        "passed": 7,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-042",
+      "sprint": 12,
+      "status": "Completed",
+      "section": "Documentation",
+      "title": "tRPC API Client SDK Docs",
+      "description": "tRPC API Client SDK Docs",
+      "summary": "SDK package wraps @intelliflow/api-client with additional utilities. Documentation includes migration guides from REST and GraphQL. Type declarations added to work around missing .d.ts in api-client. NPM package docs created; TypeScript examples provided;...",
+      "definitionOfDone": "NPM package docs, TypeScript examples; artifacts: README.md, npm-publish-log.txt, autocomplete-demo.gif",
+      "definitionOfDoneSnapshot": "NPM package docs created; TypeScript examples provided; README.md artifact created",
+      "dependencies": [
+        "IFC-013"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-12/attestations/IFC-042/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-31T03:55:00Z",
+        "sprintFolder": 12
+      },
+      "validationSummary": {
+        "total": 7,
+        "passed": 7,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-081",
+      "sprint": 12,
+      "status": "Completed",
+      "section": "Documentation",
+      "title": "API Documentation (tRPC + OpenAPI)",
+      "description": "API Documentation (tRPC + OpenAPI)",
+      "summary": "API documentation completed with OpenAPI 3.0.3 spec and Postman collection for testing. OpenAPI specification created; Postman collection created; Examples included",
+      "definitionOfDone": "Auto-generated API docs, Postman collection; artifacts: openapi.json, postman-collection.json, context_ack.json; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "OpenAPI specification created; Postman collection created; Examples included",
+      "dependencies": [
+        "IFC-013"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-12/attestations/IFC-081/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-31T22:30:00Z",
+        "sprintFolder": 12
+      },
+      "validationSummary": {
+        "total": 6,
+        "passed": 6,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    }
+  ],
+  "open_tasks": [],
+  "tasks": [
+    {
+      "taskId": "IFC-042",
+      "sprint": 12,
+      "status": "Completed",
+      "section": "Documentation",
+      "title": "tRPC API Client SDK Docs",
+      "description": "tRPC API Client SDK Docs",
+      "summary": "SDK package wraps @intelliflow/api-client with additional utilities. Documentation includes migration guides from REST and GraphQL. Type declarations added to work around missing .d.ts in api-client. NPM package docs created; TypeScript examples provided;...",
+      "definitionOfDone": "NPM package docs, TypeScript examples; artifacts: README.md, npm-publish-log.txt, autocomplete-demo.gif",
+      "definitionOfDoneSnapshot": "NPM package docs created; TypeScript examples provided; README.md artifact created",
+      "dependencies": [
+        "IFC-013"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-12/attestations/IFC-042/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-31T03:55:00Z",
+        "sprintFolder": 12
+      },
+      "validationSummary": {
+        "total": 7,
+        "passed": 7,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-081",
+      "sprint": 12,
+      "status": "Completed",
+      "section": "Documentation",
+      "title": "API Documentation (tRPC + OpenAPI)",
+      "description": "API Documentation (tRPC + OpenAPI)",
+      "summary": "API documentation completed with OpenAPI 3.0.3 spec and Postman collection for testing. OpenAPI specification created; Postman collection created; Examples included",
+      "definitionOfDone": "Auto-generated API docs, Postman collection; artifacts: openapi.json, postman-collection.json, context_ack.json; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "OpenAPI specification created; Postman collection created; Examples included",
+      "dependencies": [
+        "IFC-013"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-12/attestations/IFC-081/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-31T22:30:00Z",
+        "sprintFolder": 12
+      },
+      "validationSummary": {
+        "total": 6,
+        "passed": 6,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-009",
+      "sprint": 12,
+      "status": "Completed",
+      "section": "Public Pages",
+      "title": "Blog Index",
+      "description": "Blog Index",
+      "summary": "Blog index page completed with category filtering, pagination, 6 sample posts, and newsletter CTA. Blog index page created; Pagination component created; Category filtering implemented",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, pagination working; artifacts: page.tsx, blog-pagination.tsx, blog-categories.json",
+      "definitionOfDoneSnapshot": "Blog index page created; Pagination component created; Category filtering implemented",
+      "dependencies": [
+        "PG-001",
+        "GTM-002",
+        "BRAND-001"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-12/attestations/PG-009/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-31T22:30:00Z",
+        "sprintFolder": 12
+      },
+      "validationSummary": {
+        "total": 6,
+        "passed": 6,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-010",
+      "sprint": 12,
+      "status": "Completed",
+      "section": "Public Pages",
+      "title": "Blog Post",
+      "description": "Blog Post",
+      "summary": "Blog post detail page implementation complete with full markdown rendering, interactive comments widget, table of contents, reading progress indicator, SEO metadata, and comprehensive unit tests. Uses sample data for demo purposes.......",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, comments enabled; artifacts: page.tsx, markdown-renderer.tsx, comments-widget.tsx",
+      "definitionOfDoneSnapshot": "Blog post detail page with dynamic routing; Markdown rendering component; Comments widget component",
+      "dependencies": [
+        "PG-009",
+        "GTM-002",
+        "BRAND-001"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-12/attestations/PG-010/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-01-04T14:05:00.000Z",
+        "sprintFolder": 12
+      },
+      "validationSummary": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 5,
+        "met": 5,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-011",
+      "sprint": 12,
+      "status": "Completed",
+      "section": "Public Pages",
+      "title": "Careers Page",
+      "description": "Careers Page",
+      "summary": "Careers page completed with 5 job listings, application form, benefits, and company values. Careers page created; Job listings displayed; Application form created",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, applications working; artifacts: page.tsx, job-listings.json, application-form.tsx",
+      "definitionOfDoneSnapshot": "Careers page created; Job listings displayed; Application form created",
+      "dependencies": [
+        "PG-001",
+        "GTM-002",
+        "BRAND-001"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-12/attestations/PG-011/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-31T22:30:00Z",
+        "sprintFolder": 12
+      },
+      "validationSummary": {
+        "total": 6,
+        "passed": 6,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-012",
+      "sprint": 12,
+      "status": "Completed",
+      "section": "Public Pages",
+      "title": "Career Detail",
+      "description": "Career Detail",
+      "summary": "Career detail page implementation complete with full job listing template, apply button with save/share functionality, application form integration, and SEO metadata. Unit tests added covering ApplyButton (35 tests:... Career detail page with dynamic routing;...",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, apply button working; artifacts: page.tsx, job-detail-template.tsx, apply-button.tsx",
+      "definitionOfDoneSnapshot": "Career detail page with dynamic routing; Job detail template component; Apply button components",
+      "dependencies": [
+        "PG-011",
+        "GTM-002",
+        "BRAND-001"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-12/attestations/PG-012/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-01-04T14:35:00.000Z",
+        "sprintFolder": 12
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 7,
+        "met": 7,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-013",
+      "sprint": 12,
+      "status": "Completed",
+      "section": "Marketing Pages",
+      "title": "Landing Page Template",
+      "description": "Landing Page Template",
+      "summary": "Created complete landing page system with composable builder, A/B testing framework, and 3 sample landing pages. Builder supports 8 section types (hero, features, testimonials, stats, pricing, faq, cta, logo-cloud).......",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, conversions tracked; artifacts: page.tsx, landing-builder.tsx, ab-test-framework.ts; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, conversions tracked",
+      "dependencies": [
+        "PG-001",
+        "GTM-002",
+        "BRAND-001"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-12/attestations/PG-013/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-31T12:30:00Z",
+        "sprintFolder": 12
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-014",
+      "sprint": 12,
+      "status": "Completed",
+      "section": "Public Pages",
+      "title": "Status Page",
+      "description": "Status Page",
+      "summary": "Status page completed with 8 services monitored, 90-day uptime history, 30s refresh interval, and incident tracking. Status page created; Real-time status monitoring; Incident timeline displayed",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, real-time updates; artifacts: page.tsx, status-monitor.tsx, incident-tracker.ts",
+      "definitionOfDoneSnapshot": "Status page created; Real-time status monitoring; Incident timeline displayed",
+      "dependencies": [
+        "PG-001",
+        "GTM-002",
+        "BRAND-001"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-12/attestations/PG-014/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-31T22:30:00Z",
+        "sprintFolder": 12
+      },
+      "validationSummary": {
+        "total": 6,
+        "passed": 6,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "EXP-PLATFORM-001",
+      "sprint": 12,
+      "status": "Completed",
+      "section": "Infrastructure",
+      "title": "Platform utilities package - feature flags, resilience patterns, job queues, workflow orchestration",
+      "description": "Platform utilities package - feature flags, resilience patterns, job queues, workflow orchestration",
+      "summary": "Platform utilities package completed with feature flags, resilience patterns, job queues, and workflow orchestration. Feature flags implemented; Resilience patterns implemented; Job queue implemented",
+      "definitionOfDone": "Package implemented with feature flags module, resilience patterns (retry, circuit breaker), BullMQ job queues, workflow orchestration; 100% test coverage; documented",
+      "definitionOfDoneSnapshot": "Feature flags implemented; Resilience patterns implemented; Job queue implemented",
+      "dependencies": [
+        "ENV-001-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-12/attestations/EXP-PLATFORM-001/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-31T22:30:00Z",
+        "sprintFolder": 12
+      },
+      "validationSummary": {
+        "total": 7,
+        "passed": 7,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "EXP-SCRIPTS-001",
+      "sprint": 12,
+      "status": "Completed",
+      "section": "Infrastructure",
+      "title": "Utility scripts - task data cleanup, schema fixes, dev monitoring",
+      "description": "Utility scripts - task data cleanup, schema fixes, dev monitoring",
+      "summary": "Utility scripts package completed with task data cleanup, schema fixes, and development monitoring capabilities. Cleanup script created; Schema fix script created; Dev monitoring script created",
+      "definitionOfDone": "Utility scripts for task data maintenance, JSON schema fixes, development monitoring; all scripts documented and functional",
+      "definitionOfDoneSnapshot": "Cleanup script created; Schema fix script created; Dev monitoring script created",
+      "dependencies": [
+        "EXC-INIT-001"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-12/attestations/EXP-SCRIPTS-001/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-31T22:30:00Z",
+        "sprintFolder": 12
+      },
+      "validationSummary": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-169",
+      "sprint": 12,
+      "status": "Completed",
+      "section": "Security",
+      "title": "Require Supabase env vars - Follow-up to IFC-006",
+      "description": "Require Supabase env vars - Follow-up to IFC-006",
+      "summary": "Validation and remediation of IFC-169. Added 7 new tests: 5 production-mode throw tests, 1 dev-mode warn test, 1 verifyToken mock-key rejection test. Removed 2 stale eslint-disable directives. Created spec and plan files retroactively. Plan:......",
+      "definitionOfDone": "Remove mock key fallback; fail fast if SUPABASE_URL or SUPABASE_ANON_KEY missing; startup validation added; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Remove mock key fallback; Fail fast if SUPABASE_URL or SUPABASE_ANON_KEY missing; Startup validation added",
+      "dependencies": [
+        "IFC-006"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-12/attestations/IFC-169/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-09T14:29:00.000Z",
+        "sprintFolder": 12
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-170",
+      "sprint": 12,
+      "status": "Completed",
+      "section": "Notifications",
+      "title": "Implement Twilio SMS channel - Follow-up to IFC-157",
+      "description": "Implement Twilio SMS channel - Follow-up to IFC-157",
+      "summary": "Task completed and verified Uncomment Twilio SDK calls; implement real SMS delivery; add delivery status tracking; rate limiting",
+      "definitionOfDone": "Uncomment Twilio SDK calls; implement real SMS delivery; add delivery status tracking; rate limiting; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Uncomment Twilio SDK calls; implement real SMS delivery; add delivery status tracking; rate limiting",
+      "dependencies": [
+        "IFC-157"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-12/attestations/IFC-170/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T19:33:21.865Z",
+        "sprintFolder": 12
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-171",
+      "sprint": 12,
+      "status": "Completed",
+      "section": "Notifications",
+      "title": "Implement webhook notification channel - Follow-up to IFC-157",
+      "description": "Implement webhook notification channel - Follow-up to IFC-157",
+      "summary": "Task completed and verified Implement HTTP POST delivery; add HMAC signature for outbound webhooks; retry with exponential backoff; DLQ handling",
+      "definitionOfDone": "Implement HTTP POST delivery; add HMAC signature for outbound webhooks; retry with exponential backoff; DLQ handling; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Implement HTTP POST delivery; add HMAC signature for outbound webhooks; retry with exponential backoff; DLQ handling",
+      "dependencies": [
+        "IFC-157"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-12/attestations/IFC-171/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T19:33:21.866Z",
+        "sprintFolder": 12
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    }
+  ]
+}

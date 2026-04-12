@@ -1,0 +1,85 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "ENV-018-AI",
+  "run_id": "sprint1-audit-20260302T215651-arwnsz",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:56:59.845Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 5,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "artifacts/misc/velocity-prediction.json": "e9095156599b092e7fdb566a10d39391b2aec78455973e55374bec84b9141a27",
+    "artifacts/misc/capacity-model.csv": "24de1b8bf3abfc55c05bb7b46fbfa188c8c9f3d1d25a438360045cd181e551d2",
+    "artifacts/reports/risk-matrix.md": "874dce2fb90f99e52b378add9206437019020e06849b59c71948b71699105830",
+    "artifacts/misc/sprint-planning/README.md": "1ac01974b54d1086e058531470fe25f1f5bc9729156a9370de823c8353863bc9",
+    ".specify/sprints/sprint-1/attestations/ENV-018-AI/context_ack.json": "4d1abd4677601ff2a1d490a47098fbeee715b43b34048a3e895b9f3d52549d16"
+  },
+  "validation_results": [
+    {
+      "name": "ENV-018-AI",
+      "command": "pnpm typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 90000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "ENV-017-AI"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Backlog AI-prioritized",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "velocity AI-predicted",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "capacity AI-optimized",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "risks AI-identified",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "artifacts: velocity-prediction.json",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "capacity-model.csv",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "risk-matrix.md",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "targets: >=20%",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "8 DoD criteria unverified"
+}

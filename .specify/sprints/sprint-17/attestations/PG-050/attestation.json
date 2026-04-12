@@ -1,0 +1,112 @@
+{
+  "$schema": "../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "PG-050",
+  "run_id": "run-20260310T205400Z",
+  "attestor": "Claude Code - Task Completion Repair",
+  "attestation_timestamp": "2026-03-10T20:54:00Z",
+  "verdict": "COMPLETE",
+  "artifact_hashes": {
+    "apps/web/src/app/(public)/privacy/page.tsx": "b044b298c3435eeebdd1414c1d0919365f9bd7808d14f7bcdd6c358885f75a9e",
+    "apps/web/src/app/(public)/privacy/__tests__/page.test.tsx": "df600b830b607c18563e68523e8ecd935e9e9a563c2029cde91e2c774fe09494",
+    "apps/web/src/lib/legal/consent-tracker.ts": "7b307eeb780cc814c0ca766138515c3ab7073e6fa7398d72da34f9a3b40ef742",
+    "docs/shared/privacy-content.md": "a0b38def02d542ca29f1f15aac23c9f534e854103625c73106ac77dd5220c041",
+    "artifacts/reports/content-audit-results.json": "c5de703b94b237cd530d115ad8b34de020b5ffa1b7547358db4465cf24f56aeb"
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-10T20:53:10Z"
+    },
+    {
+      "name": "Tests",
+      "command": "pnpm --filter @intelliflow/web exec vitest run \"src/app/(public)/privacy/__tests__/page.test.tsx\" \"src/app/(public)/signup/__tests__/page.test.tsx\" \"src/components/shared/__tests__/registration-form.test.tsx\" \"src/components/home/__tests__/AuthenticatedHomePage.test.tsx\" \"src/app/__tests__/sitemap-reconciliation.test.ts\" \"src/__tests__/content-audit-schema.test.ts\"",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-10T20:54:17Z"
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter @intelliflow/web lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-10T20:53:15Z"
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-10T20:54:30Z"
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "plan_checkboxes",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-03-10T20:54:00Z"
+    },
+    {
+      "gate_id": "artifact_verification",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-03-10T20:54:00Z"
+    },
+    {
+      "gate_id": "scoped_coverage",
+      "passed": true,
+      "score": 82.6,
+      "timestamp": "2026-03-10T20:52:47Z"
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Scoped branch coverage",
+      "target": ">=80%",
+      "actual": "82.6%",
+      "met": true
+    },
+    {
+      "kpi": "Scoped statement coverage",
+      "target": ">=90%",
+      "actual": "94.23%",
+      "met": true
+    },
+    {
+      "kpi": "Scoped function coverage",
+      "target": ">=90%",
+      "actual": "100%",
+      "met": true
+    },
+    {
+      "kpi": "Scoped line coverage",
+      "target": ">=90%",
+      "actual": "94.11%",
+      "met": true
+    }
+  ],
+  "dependencies_verified": [
+    "IFC-058"
+  ],
+  "evidence_summary": {
+    "artifacts_verified": 5,
+    "validations_passed": 4,
+    "validations_failed": 0,
+    "gates_passed": 3,
+    "gates_failed": 0,
+    "kpis_met": 4,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "environment": {
+    "os": "Windows 11 Pro 10.0.26200",
+    "node_version": "v25.2.1",
+    "git_commit": "cdb1550469fa9e7efc0280cd3f3edc5974af096e",
+    "branch": "sprint0/codex-run"
+  },
+  "notes": "PG-050 repair: Fixed content-audit-results.json (added missing /404 route, updated counts 131→132/14→15). Fixed branch coverage 78.26%→82.6% by adding consent-tracker unit tests. Fixed 5 pre-existing lint errors (unused imports in billing components and privacy test). All 4 mandatory validations pass. Plan checkboxes 20/20."
+}

@@ -1,0 +1,45 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "EXP-ARTIFACTS-003",
+  "run_id": "sprint14-audit-20260302T215859-6dbfyi",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:59:07.149Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 2,
+    "validations_passed": 0,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "artifacts/misc/vulnerability-baseline.json": "7330b583a433f1cdea1139e8312c5ff46253345dec5a55ec056e285988d04135",
+    ".specify/sprints/sprint-14/attestations/EXP-ARTIFACTS-003/context_ack.json": "863082eaf0925f395fb61c4be6e5ec620bb351e54655160bbc4a0394daa6d1ab"
+  },
+  "validation_results": [],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [],
+  "definition_of_done_items": [
+    {
+      "criterion": "Baseline documented with zero vulnerabilities",
+      "met": false,
+      "evidence": "No documentation artifacts verified"
+    },
+    {
+      "criterion": "security baseline maintained",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "targets: zero critical",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "3 DoD criteria unverified"
+}

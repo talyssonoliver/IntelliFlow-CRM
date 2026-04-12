@@ -1,0 +1,82 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-136",
+  "run_id": "sprint3-audit-20260302T215712-mko6ti",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:57:20.330Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 7,
+    "validations_passed": 2,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "packages/domain/src/legal/cases/Case.ts": "d7021cba023d2b631539162389751ba5830ebf33680d0dbb5ac34f91cfc99a9a",
+    "packages/domain/src/legal/cases/CaseTask.ts": "7f4bcfb3bd09a5b39e8665804c81ab9e66d8902bbe4a3dc08fcef8509aef3ef1",
+    "infra/supabase/migrations/20260104000001_case_document_fts_embeddings.sql": "3da29c1b05c4d177324d7f8d152235dd2cc3c8d3806c86ae2b922fc06fe82337",
+    "apps/api/src/modules/legal/cases.router.ts": "1f816a21ae383cc9bb02d207519df65a9cabb4470028ba358aa15b72374c258f",
+    ".specify/sprints/sprint-3/attestations/IFC-136/context_ack.json": "76f7f8cae5a38eb63aae52e4bc8b64ca9c44b6a78ad04f1feaeb40f954ded8b6",
+    "docs/planning/adr/ADR-024-scheduling-calendar.md": "1a94a37f6236e82e5b4f3bcee4b9d9d60bf2c0cc9dcd0f41a322d0ad760808d4",
+    "docs/planning/prd-scheduling-calendar.md": "b1c8ea6dd8248d74468b2b3449dc7ff6c1acb7a7f6c6d0d3ff61dfe50bb47368"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-136",
+      "command": "pnpm test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 180000,
+      "stdout_hash": "all-green-1772476872408"
+    },
+    {
+      "name": "IFC-136",
+      "command": "pnpm test:integration",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 5000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-002",
+    "IFC-003"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Case/Matter entities created with invariants",
+      "met": true,
+      "evidence": "All 7 artifacts exist"
+    },
+    {
+      "criterion": "repositories and services implemented",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "CRUD endpoints via tRPC",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "unit and integration tests pass",
+      "met": true,
+      "evidence": "All 2 validations passed"
+    },
+    {
+      "criterion": "targets: >=90%",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "3 DoD criteria unverified"
+}

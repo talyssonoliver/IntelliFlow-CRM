@@ -1,0 +1,121 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "PG-036",
+  "run_id": "PG-036-validation-20260224-221500",
+  "attestor": "Claude Code",
+  "attestation_timestamp": "2026-02-24T22:15:00Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 3,
+    "validations_passed": 4,
+    "validations_failed": 0,
+    "gates_passed": 8,
+    "gates_failed": 0,
+    "kpis_met": 3,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-02-24T22:09:00Z",
+      "duration_ms": 8000
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run apps/web/src/app/(developer)/docs/sdk/ apps/web/src/components/developer/__tests__/sdk-guides.test.tsx apps/web/src/lib/developer/__tests__/sdk-downloads.test.ts --reporter=verbose",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-02-24T22:09:39Z",
+      "duration_ms": 2710
+    },
+    {
+      "name": "Lint",
+      "command": "npx eslint apps/web/src/app/(developer)/docs/sdk/ apps/web/src/components/developer/sdk-guides.tsx apps/web/src/lib/developer/sdk-downloads.ts --max-warnings=0",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-02-24T22:09:30Z",
+      "duration_ms": 3000
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/web build",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-02-24T22:10:30Z",
+      "duration_ms": 21700
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Test coverage >=90%",
+      "target": "Stmts >=90%, Branches >=80%, Functions >=90%, Lines >=90%",
+      "actual": "96.77% stmts, 95.23% branches, 94.44% functions, 100% lines",
+      "met": true
+    },
+    {
+      "kpi": "SDKs documented",
+      "target": "SDK registry with install commands, quickstart examples",
+      "actual": "5 SDKs in registry, 3 package managers, React + Vanilla quickstart",
+      "met": true
+    },
+    {
+      "kpi": "Lighthouse config updated",
+      "target": "/docs/sdk URL in lighthouserc.js",
+      "actual": "URL added to lighthouserc.js collect.url array",
+      "met": true
+    }
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "SDKs documented",
+      "met": true,
+      "evidence": "SDK_REGISTRY with 5 entries (TypeScript SDK, React Hooks, Python, Go, CLI)"
+    },
+    {
+      "criterion": "Quickstarts clear",
+      "met": true,
+      "evidence": "Quickstart tab with React Provider + Hooks and Vanilla tRPC client examples"
+    },
+    {
+      "criterion": "Downloads available",
+      "met": true,
+      "evidence": "Downloads tab shows all SDK packages with version, status badge, install commands"
+    }
+  ],
+  "dependencies_verified": ["PG-032"],
+  "context_acknowledgment": {
+    "acknowledged_at": "2026-02-24T22:00:00Z",
+    "files_read": [
+      {
+        "path": ".specify/sprints/sprint-15/specifications/PG-036-spec.md",
+        "sha256": "c4a994df82ed20a77b604ad0afc36c73631817d2db082270ac0187266249d188"
+      },
+      {
+        "path": ".specify/sprints/sprint-15/planning/PG-036-plan.md",
+        "sha256": "f92029e14a9478d19554c71f7a82de2f043666155e3fb059af8c7950a4b078f5"
+      }
+    ],
+    "invariants_acknowledged": [
+      "Pure UI task — no domain/infrastructure dependencies",
+      "Hexagonal architecture: UI layer only",
+      "Anti-fabrication: SDK data from static registry, not mocked APIs"
+    ]
+  },
+  "artifact_hashes": {
+    "apps/web/src/app/(developer)/docs/sdk/page.tsx": "35f909ba4e8e599c4c9c60c0dcf6b9b41f72e370d02cda39123a9633ba3402fa",
+    "apps/web/src/components/developer/sdk-guides.tsx": "5e9aa03dae5c8d191a32655c69ddcb6ef517f65c59559e3b059f8fb15adcc1c1",
+    "apps/web/src/lib/developer/sdk-downloads.ts": "ce23adb6168a006a4df566b0c023cc9b9c8b76a542f665d17c75c1c1cc949054"
+  },
+  "environment": {
+    "os": "Windows 11 Pro",
+    "node_version": "v25.2.1",
+    "git_commit": "5998bc1afbff8a3ec6d1325799bb3595903a591b",
+    "branch": "sprint0/codex-run"
+  },
+  "notes": "PG-036 SDK Guides page: Server Component page at /docs/sdk with SdkGuides client component featuring 4 tabs (Overview, Installation, Quickstart, Downloads). SDK_REGISTRY utility with 5 SDK entries. Sidebar and integration-list updated to link to /docs/sdk. 46 tests across 4 files (7 utility + 21 component + 10 page + 8 integration). Coverage: 96.77% stmts, 95.23% branches, 94.44% functions, 100% lines. Documentation updated: dependency chains, PAGE_MAP_AND_FLOWS, page-registry, lighthouserc.js, sitemap-reconciliation test."
+}

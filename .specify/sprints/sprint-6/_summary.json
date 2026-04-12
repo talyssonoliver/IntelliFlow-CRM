@@ -1,0 +1,1572 @@
+{
+  "sprint": "sprint-6",
+  "name": "Sprint 6",
+  "generated_at": "2026-04-11T16:48:01.958Z",
+  "summary_source": "specify",
+  "task_summary": {
+    "total": 39,
+    "completed": 39,
+    "backlog": 0,
+    "blocked": 0,
+    "attested_completed": 39
+  },
+  "context": "Primary focus areas: Core CRM (8), MVP Week 1 (7), Intelligence (5).",
+  "section_summary": [
+    {
+      "section": "Core CRM",
+      "total": 8,
+      "completed": 8,
+      "open": 0
+    },
+    {
+      "section": "MVP Week 1",
+      "total": 7,
+      "completed": 7,
+      "open": 0
+    },
+    {
+      "section": "Intelligence",
+      "total": 5,
+      "completed": 5,
+      "open": 0
+    },
+    {
+      "section": "AI Assistant",
+      "total": 3,
+      "completed": 3,
+      "open": 0
+    },
+    {
+      "section": "Case Docs",
+      "total": 3,
+      "completed": 3,
+      "open": 0
+    },
+    {
+      "section": "AI Foundation",
+      "total": 2,
+      "completed": 2,
+      "open": 0
+    },
+    {
+      "section": "AI Insights",
+      "total": 2,
+      "completed": 2,
+      "open": 0
+    },
+    {
+      "section": "Decision Gate",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Enhancement",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Governance",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Integration",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Investment Gate",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Platform",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Search/AI",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Security",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Testing",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    }
+  ],
+  "notable_completed": [
+    {
+      "taskId": "IFC-014",
+      "sprint": 6,
+      "status": "Completed",
+      "section": "MVP Week 1",
+      "title": "PHASE-002: Next.js 16.0.10 App Router UI",
+      "description": "PHASE-002: Next.js 16.0.10 App Router UI",
+      "summary": "Implemented Next.js 16.0.10 App Router UI with lead list and create form matching design mockups. All accessibility requirements met with WCAG AA compliance. Lead management UI with RSC, optimistic updates; Core Web Vitals green; Accessibility 100%",
+      "definitionOfDone": "Lead management UI with RSC, optimistic updates; Next.js 16.0.10 App Router uses Turbopack FS caching and Cache Components; proxy replaces middleware where required; targets: >=100%",
+      "definitionOfDoneSnapshot": "Lead management UI with RSC, optimistic updates; Core Web Vitals green; Accessibility 100%",
+      "dependencies": [
+        "IFC-013"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-6/attestations/IFC-014/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-28T12:00:00.000Z",
+        "sprintFolder": 6
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 5,
+        "met": 5,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-117",
+      "sprint": 6,
+      "status": "Completed",
+      "section": "AI Insights",
+      "title": "Monitor AI models for drift, latency, hallucination and ROI",
+      "description": "Monitor AI models for drift, latency, hallucination and ROI",
+      "summary": "AI model monitoring for drift, latency, hallucination, ROI; ChainMonitor wraps scoring.chain.ts via withMonitoring(); Prometheus /metrics endpoint requires Bearer token auth Metrics collected for AI models; dashboards show drift/hallucination;...",
+      "definitionOfDone": "Metrics collected for AI models; dashboards show drift/hallucination; alerts configured; targets: >=5%; AI metrics must be collected by actual code paths and pushed to dashboards",
+      "definitionOfDoneSnapshot": "Metrics collected for AI models; dashboards show drift/hallucination; alerts configured; AI metrics must be collected by actual code paths and pushed to dashboards",
+      "dependencies": [
+        "IFC-005",
+        "AUTOMATION-002"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-6/attestations/IFC-117/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-19T21:23:00.000Z",
+        "sprintFolder": 6
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 6,
+        "met": 6,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-151",
+      "sprint": 6,
+      "status": "Completed",
+      "section": "Platform",
+      "title": "Event consumers framework: retries + DLQ + backoff + observability; standard webhook/idempotency utilities",
+      "description": "Event consumers framework: retries + DLQ + backoff + observability; standard webhook/idempotency utilities",
+      "summary": "{\"framework\":{\"type\":\"DLQ Triage and Monitoring\",\"scope\":\"Complete operational framework for event consumer failures\",\"coverage\":[\"Real-time monitoring via Prometheus metrics\",\"Alert configuration for DLQ depth, drain success, retry success......",
+      "definitionOfDone": "Consumer SDK supports retries/backoff; DLQ storage/triage workflow; idempotent handlers; poison-message handling; metrics and alerts; chaos tests; artifacts: dlq-triage.md, context_ack.json; targets: >=95%, >=90%, <30 min",
+      "definitionOfDoneSnapshot": "Consumer SDK supports retries/backoff; DLQ storage/triage workflow; idempotent handlers; poison-message handling; metrics and alerts; chaos tests",
+      "dependencies": [
+        "IFC-150",
+        "ENV-008-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-6/attestations/IFC-151/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-29T09:15:00Z",
+        "sprintFolder": 6
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 5,
+        "met": 5,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-155",
+      "sprint": 6,
+      "status": "Completed",
+      "section": "Search/AI",
+      "title": "Permissioned indexing for case documents and notes: full-text + embeddings with tenant/case ACL filters",
+      "description": "Permissioned indexing for case documents and notes: full-text + embeddings with tenant/case ACL filters",
+      "summary": "IFC-155 exec session: Fixed 3 issues from spec review. (1) Removed SQL injection risk - deleted unused _caseFilter string interpolation in retrieval-service.ts:696-697.... FTS index and vector embeddings built; Retrieval APIs enforce tenant/case ACL;...",
+      "definitionOfDone": "FTS index and vector embeddings built; retrieval APIs enforce tenant/case ACL; re-index job; purge on DSAR rules; tests; targets: >=80%, <200ms, zero errors; gates: latency-check; generateEmbedding() must return real embeddings from embedding chain, not null placeholder",
+      "definitionOfDoneSnapshot": "FTS index and vector embeddings built; Retrieval APIs enforce tenant/case ACL; Re-index job with progress tracking",
+      "dependencies": [
+        "IFC-154",
+        "IFC-127",
+        "ENV-004-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-6/attestations/IFC-155/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-06T23:35:00.000Z",
+        "sprintFolder": 6
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-137",
+      "sprint": 6,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Ticket Management Page - List detail SLA indicators escalation customer portal view",
+      "description": "Ticket Management Page - List detail SLA indicators escalation customer portal view",
+      "summary": "PG-137 Ticket Management Page: 8 components (TicketList, TicketDetail, TicketCard, SLAIndicator, EscalationAlert, TicketForm, CustomerPortalView, TicketAssignSidebar), 3 route pages, useTicketFilters hook, sla-service utility, ticket-test-u......",
+      "definitionOfDone": "Response <500ms, Lighthouse >=90; TicketList, TicketCard, TicketDetail, SLAIndicator, EscalationAlert, TicketForm, CustomerPortalView components; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "TicketList with filtering, sorting, pagination; TicketDetail with full ticket view; SLAIndicator with countdown timer",
+      "dependencies": [
+        "IFC-189"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-6/attestations/PG-137/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T18:00:00.000Z",
+        "sprintFolder": 6
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    }
+  ],
+  "open_tasks": [],
+  "tasks": [
+    {
+      "taskId": "IFC-010",
+      "sprint": 6,
+      "status": "Completed",
+      "section": "Decision Gate",
+      "title": "PHASE-001: Phase 1 Go/No-Go Decision",
+      "description": "PHASE-001: Phase 1 Go/No-Go Decision",
+      "summary": "Decision made: proceed with modern stack or pivot",
+      "definitionOfDone": "Decision made: proceed with modern stack or pivot; artifacts: decision-gate-1.md, risk-assessment.csv, go-decision-minutes.md",
+      "definitionOfDoneSnapshot": "Decision made: proceed with modern stack or pivot",
+      "dependencies": [
+        "IFC-001",
+        "IFC-002",
+        "IFC-003",
+        "IFC-004",
+        "IFC-005",
+        "IFC-006",
+        "IFC-007",
+        "IFC-008",
+        "IFC-009",
+        "IFC-089",
+        "IFC-098",
+        "IFC-112"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-6/attestations/IFC-010/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-28T23:59:57.974Z",
+        "sprintFolder": 6
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-012",
+      "sprint": 6,
+      "status": "Completed",
+      "section": "MVP Week 1",
+      "title": "PHASE-002: Turborepo Monorepo Setup",
+      "description": "PHASE-002: Turborepo Monorepo Setup",
+      "summary": "Monorepo with apps/, packages/, shared configs",
+      "definitionOfDone": "Monorepo with apps/, packages/, shared configs; targets: <3min; verified by: pnpm build",
+      "definitionOfDoneSnapshot": "Monorepo with apps/, packages/, shared configs",
+      "dependencies": [
+        "IFC-010"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-6/attestations/IFC-012/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-28T23:59:57.997Z",
+        "sprintFolder": 6
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 1,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-013",
+      "sprint": 6,
+      "status": "Completed",
+      "section": "MVP Week 1",
+      "title": "PHASE-002: tRPC Router Implementation",
+      "description": "PHASE-002: tRPC Router Implementation",
+      "summary": "Lead CRUD with tRPC, Zod validation, type-safe client",
+      "definitionOfDone": "Lead CRUD with tRPC, Zod validation, type-safe client; artifacts: leads.router.ts, context_ack.json; targets: >=100%, <50ms",
+      "definitionOfDoneSnapshot": "Lead CRUD with tRPC, Zod validation, type-safe client",
+      "dependencies": [
+        "IFC-012"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-6/attestations/IFC-013/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-28T23:59:58.028Z",
+        "sprintFolder": 6
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-014",
+      "sprint": 6,
+      "status": "Completed",
+      "section": "MVP Week 1",
+      "title": "PHASE-002: Next.js 16.0.10 App Router UI",
+      "description": "PHASE-002: Next.js 16.0.10 App Router UI",
+      "summary": "Implemented Next.js 16.0.10 App Router UI with lead list and create form matching design mockups. All accessibility requirements met with WCAG AA compliance. Lead management UI with RSC, optimistic updates; Core Web Vitals green; Accessibility 100%",
+      "definitionOfDone": "Lead management UI with RSC, optimistic updates; Next.js 16.0.10 App Router uses Turbopack FS caching and Cache Components; proxy replaces middleware where required; targets: >=100%",
+      "definitionOfDoneSnapshot": "Lead management UI with RSC, optimistic updates; Core Web Vitals green; Accessibility 100%",
+      "dependencies": [
+        "IFC-013"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-6/attestations/IFC-014/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-28T12:00:00.000Z",
+        "sprintFolder": 6
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 5,
+        "met": 5,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-015",
+      "sprint": 6,
+      "status": "Completed",
+      "section": "MVP Week 1",
+      "title": "PHASE-002: BullMQ Job Queue Setup",
+      "description": "PHASE-002: BullMQ Job Queue Setup",
+      "summary": "BullMQ job queue implementation complete with 47 tests passing. Includes retry strategy with exponential backoff, metrics collection, and Bull Board dashboard. Async job processing for AI scoring; Retry logic implemented; Bull Board dashboard",
+      "definitionOfDone": "Async job processing for AI scoring, retry logic; artifacts: bull-board-screenshot.png, job-metrics.json, context_ack.json; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Async job processing for AI scoring; Retry logic implemented; Bull Board dashboard",
+      "dependencies": [
+        "IFC-013"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-6/attestations/IFC-015/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-28T12:00:00.000Z",
+        "sprintFolder": 6
+      },
+      "validationSummary": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-016",
+      "sprint": 6,
+      "status": "Completed",
+      "section": "MVP Week 1",
+      "title": "PHASE-002: Real-time Subscriptions",
+      "description": "PHASE-002: Real-time Subscriptions",
+      "summary": "Real-time subscription implementation using Supabase Realtime with full latency monitoring, metrics tracking, and specialized hooks for lead scores and activities. 27 tests passing with P95 latency of 60ms (target <100ms)....",
+      "definitionOfDone": "Live updates for lead scores and activities; P95 latency 60ms; 27 tests passing; artifacts: use-subscription.ts, websocket-test-results.json; verified by: pnpm test; gates: latency-check PASSED",
+      "definitionOfDoneSnapshot": "Live updates for lead scores and activities; use-subscription.ts created; websocket-test-results.json created",
+      "dependencies": [
+        "IFC-014"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-6/attestations/IFC-016/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-28T14:42:22.000Z",
+        "sprintFolder": 6
+      },
+      "validationSummary": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-017",
+      "sprint": 6,
+      "status": "Completed",
+      "section": "MVP Week 1",
+      "title": "PHASE-002: Prisma + Supabase Data Layer",
+      "description": "PHASE-002: Prisma + Supabase Data Layer",
+      "summary": "Type-safe database queries, pgvector configured",
+      "definitionOfDone": "Type-safe database queries, pgvector configured; targets: <20ms, zero errors",
+      "definitionOfDoneSnapshot": "Type-safe database queries, pgvector configured",
+      "dependencies": [
+        "IFC-012",
+        "IFC-013"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-6/attestations/IFC-017/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-28T23:59:58.032Z",
+        "sprintFolder": 6
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-018",
+      "sprint": 6,
+      "status": "Completed",
+      "section": "MVP Week 1",
+      "title": "PHASE-002: Vitest Testing Suite",
+      "description": "PHASE-002: Vitest Testing Suite",
+      "summary": "Vitest Testing Suite fully operational with 4711 tests across 157 files. Coverage thresholds configured at 90%/80% with CI enforcement. Test framework includes jsdom for UI tests, v8 coverage provider, and comprehensive reporters.... Unit + integration tests;...",
+      "definitionOfDone": "157 test files, 4711 tests passing; coverage thresholds: 90% statements, 80% branches; gates: coverage-gte-80 PASSED, coverage-gte-90 PASSED",
+      "definitionOfDoneSnapshot": "Unit + integration tests; >80% coverage configuration; vitest.config.ts artifact",
+      "dependencies": [
+        "IFC-014",
+        "IFC-015",
+        "IFC-016"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-6/attestations/IFC-018/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-28T14:57:06.000Z",
+        "sprintFolder": 6
+      },
+      "validationSummary": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-019",
+      "sprint": 6,
+      "status": "Completed",
+      "section": "Investment Gate",
+      "title": "PHASE-001: Gate 1 Review - £500 Investment",
+      "description": "PHASE-001: Gate 1 Review - £500 Investment",
+      "summary": "Week 1 metrics collected; POC results analyzed Continue/pivot decision based on MVP success; Investment deck created; Week 1 metrics documented",
+      "definitionOfDone": "Continue/pivot decision based on MVP success; artifacts: investment-gate-1-deck.md, week-1-metrics.csv, roi-projection.md, cfo-approval.md",
+      "definitionOfDoneSnapshot": "Continue/pivot decision based on MVP success; Investment deck created; Week 1 metrics documented",
+      "dependencies": [
+        "IFC-018"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-6/attestations/IFC-019/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-28T22:30:00Z",
+        "sprintFolder": 6
+      },
+      "validationSummary": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-020",
+      "sprint": 6,
+      "status": "Completed",
+      "section": "Intelligence",
+      "title": "PHASE-011: LangChain Pipeline Design",
+      "description": "PHASE-011: LangChain Pipeline Design",
+      "summary": "LangChain pipeline design completed with modular architecture supporting lead scoring, email generation, and conversation memory via Zep integration. LangChain pipeline architecture designed; Extensible chain pattern implemented; Cost tracking integrated",
+      "definitionOfDone": "Modular AI pipeline with memory (Zep), tools defined; artifacts: ai-architecture.md, langchain-flow-diagram.mermaid, context_ack.json; RetrievalService must return actual pgvector search results, not null fallback to FTS",
+      "definitionOfDoneSnapshot": "LangChain pipeline architecture designed; Extensible chain pattern implemented; Cost tracking integrated",
+      "dependencies": [
+        "IFC-019"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-6/attestations/IFC-020/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-31T22:30:00Z",
+        "sprintFolder": 6
+      },
+      "validationSummary": {
+        "total": 6,
+        "passed": 6,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-021",
+      "sprint": 6,
+      "status": "Completed",
+      "section": "Intelligence",
+      "title": "PHASE-011: CrewAI Agent Framework",
+      "description": "PHASE-011: CrewAI Agent Framework",
+      "summary": "Lead qualifier, email writer, follow-up agents",
+      "definitionOfDone": "Lead qualifier, email writer, follow-up agents; artifacts: crew-config.yaml, agent-interaction-logs.json, orchestration.test.ts; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Lead qualifier, email writer, follow-up agents",
+      "dependencies": [
+        "IFC-020"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-6/attestations/IFC-021/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-01-01T02:00:00Z",
+        "sprintFolder": 6
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-022",
+      "sprint": 6,
+      "status": "Completed",
+      "section": "Intelligence",
+      "title": "PHASE-011: Structured AI Output Implementation",
+      "description": "PHASE-011: Structured AI Output Implementation",
+      "summary": "Task completed and verified AI responses validated, confidence scores included",
+      "definitionOfDone": "AI responses validated, confidence scores included; artifacts: output-validation.test.ts, confidence-calibration.json, context_ack.json; targets: >=100%",
+      "definitionOfDoneSnapshot": "AI responses validated, confidence scores included",
+      "dependencies": [
+        "IFC-021"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-6/attestations/IFC-022/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T19:33:21.787Z",
+        "sprintFolder": 6
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-023",
+      "sprint": 6,
+      "status": "Completed",
+      "section": "Intelligence",
+      "title": "PHASE-011: AI Explainability UI",
+      "description": "PHASE-011: AI Explainability UI",
+      "summary": "Task completed and verified Score explanations visible, factors breakdown shown",
+      "definitionOfDone": "Score explanations visible, factors breakdown shown; artifacts: user-test-results.pdf, context_ack.json",
+      "definitionOfDoneSnapshot": "Score explanations visible, factors breakdown shown",
+      "dependencies": [
+        "IFC-022"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-6/attestations/IFC-023/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T19:33:21.788Z",
+        "sprintFolder": 6
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-025",
+      "sprint": 6,
+      "status": "Completed",
+      "section": "Intelligence",
+      "title": "PHASE-011: A/B Testing Framework",
+      "description": "PHASE-011: A/B Testing Framework",
+      "summary": "Hexagonal architecture: domain constants -> validators -> application service -> API router -> UI; All experiment schemas derive from domain EXPERIMENT_STATUSES/TYPES constants; Statistical methods:... AI vs manual scoring comparison; Statistical analysis;...",
+      "definitionOfDone": "AI vs manual scoring comparison, statistical analysis; artifacts: ab-test-config.json, statistical-analysis.ipynb, experiment-dashboard.png",
+      "definitionOfDoneSnapshot": "AI vs manual scoring comparison; Statistical analysis; ab-test-config.json artifact",
+      "dependencies": [
+        "IFC-022"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-6/attestations/IFC-025/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-22T20:26:00.000Z",
+        "sprintFolder": 6
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-039",
+      "sprint": 6,
+      "status": "Completed",
+      "section": "Enhancement",
+      "title": "Advanced AI Features (RAG)",
+      "description": "Advanced AI Features (RAG)",
+      "summary": "RAG integration with pgvector for context-aware AI responses; Sentiment analysis pipeline with accuracy tracking via CSV; Next Best Action (NBA) system with documented demo scenarios RAG for context, sentiment analysis, next best action",
+      "definitionOfDone": "RAG for context, sentiment analysis, next best action; artifacts: embeddings-quality-test.json, sentiment-accuracy.csv, nba-demo.md",
+      "definitionOfDoneSnapshot": "RAG for context, sentiment analysis, next best action",
+      "dependencies": [
+        "IFC-025"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-6/attestations/IFC-039/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T20:00:00.000Z",
+        "sprintFolder": 6
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 1,
+        "met": 1,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-090",
+      "sprint": 6,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Contact 360 Page - Full Detail View",
+      "description": "Contact 360 Page - Full Detail View",
+      "summary": "360 page functional with >90 Lighthouse score matching design mockup",
+      "definitionOfDone": "360 page functional with >90 Lighthouse score matching design mockup; artifacts: lighthouse-360-report.html, context_ack.json; gates: lighthouse-gte-90",
+      "definitionOfDoneSnapshot": "360 page functional with >90 Lighthouse score matching design mockup",
+      "dependencies": [
+        "IFC-089"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-6/attestations/IFC-090/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-28T23:59:58.044Z",
+        "sprintFolder": 6
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-091",
+      "sprint": 6,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Deals Pipeline - Kanban Board",
+      "description": "Deals Pipeline - Kanban Board",
+      "summary": "Updated deals page to navigate to detail page instead of inline modal. Created /deals/[id]/page.tsx matching the deals-detail.html mockup with three-column layout:... Kanban board working matching design mockup; Stage changes persist <300ms",
+      "definitionOfDone": "Kanban board working matching design mockup, stage changes persist <300ms; artifacts: deals.router.ts, context_ack.json",
+      "definitionOfDoneSnapshot": "Kanban board working matching design mockup; Stage changes persist <300ms",
+      "dependencies": [
+        "IFC-002",
+        "IFC-004",
+        "IFC-104"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-6/attestations/IFC-091/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-28T12:00:00Z",
+        "sprintFolder": 6
+      },
+      "validationSummary": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-095",
+      "sprint": 6,
+      "status": "Completed",
+      "section": "AI Insights",
+      "title": "Churn Risk & Next Best Action",
+      "description": "Churn Risk & Next Best Action",
+      "summary": "Churn risk AI chain processes predictions in <2s with >80% accuracy; Next Best Action agent generates contextual recommendations; Intelligence router exposes AI prediction endpoints via tRPC AI predictions <2s, accuracy >80%;...",
+      "definitionOfDone": "AI predictions <2s, accuracy >80%; artifacts: model-evaluation.ipynb, context_ack.json; processChurnRisk/processNextBestAction/processQualification must call real AI chains, not return hardcoded mock values",
+      "definitionOfDoneSnapshot": "AI predictions <2s, accuracy >80%; processChurnRisk/processNextBestAction/processQualification must call real AI chains, not return hardcoded mock values",
+      "dependencies": [
+        "IFC-005",
+        "IFC-090",
+        "IFC-108"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-6/attestations/IFC-095/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T20:40:00.000Z",
+        "sprintFolder": 6
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-100",
+      "sprint": 6,
+      "status": "Completed",
+      "section": "Governance",
+      "title": "ADR Registry & Compliance Reporting",
+      "description": "ADR Registry & Compliance Reporting",
+      "summary": "ADR template already existed at docs/architecture/adr/000-template.md Existing ADRs were inventoried and registered in the index Compliance checklists aligned with existing GDPR checklist format ISO 42001 checklist builds on existing gap an......",
+      "definitionOfDone": "ADR repo active, compliance docs ready; artifacts: adr-index.md, compliance-dashboard-mockup.md, context_ack.json",
+      "definitionOfDoneSnapshot": "ADR repo active, compliance docs ready",
+      "dependencies": [
+        "IFC-008",
+        "GOV-001"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-6/attestations/IFC-100/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-29T10:30:00.000Z",
+        "sprintFolder": 6
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-117",
+      "sprint": 6,
+      "status": "Completed",
+      "section": "AI Insights",
+      "title": "Monitor AI models for drift, latency, hallucination and ROI",
+      "description": "Monitor AI models for drift, latency, hallucination and ROI",
+      "summary": "AI model monitoring for drift, latency, hallucination, ROI; ChainMonitor wraps scoring.chain.ts via withMonitoring(); Prometheus /metrics endpoint requires Bearer token auth Metrics collected for AI models; dashboards show drift/hallucination;...",
+      "definitionOfDone": "Metrics collected for AI models; dashboards show drift/hallucination; alerts configured; targets: >=5%; AI metrics must be collected by actual code paths and pushed to dashboards",
+      "definitionOfDoneSnapshot": "Metrics collected for AI models; dashboards show drift/hallucination; alerts configured; AI metrics must be collected by actual code paths and pushed to dashboards",
+      "dependencies": [
+        "IFC-005",
+        "AUTOMATION-002"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-6/attestations/IFC-117/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-19T21:23:00.000Z",
+        "sprintFolder": 6
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 6,
+        "met": 6,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-125",
+      "sprint": 6,
+      "status": "Completed",
+      "section": "AI Foundation",
+      "title": "Implement guardrails for prompt injection, data leakage, and monitor AI bias",
+      "description": "Implement guardrails for prompt injection, data leakage, and monitor AI bias",
+      "summary": "Domain layer cannot import from adapters or apps; AuditLogPort is a mandatory dependency (not optional); Cross-tenant access must throw CrossTenantViolationError Prompt sanitization implemented; Output redaction implemented; Bias detection metrics collected",
+      "definitionOfDone": "Prompt sanitization, output redaction, bias detection metrics; incidents logged; artifacts: prompt-sanitizer.ts, bias-metrics.csv, ai-guardrails-report.md; targets: zero errors; verified by: pnpm test; GuardrailsAIService must have audit logger integration completed, not deferred with TODO",
+      "definitionOfDoneSnapshot": "Prompt sanitization implemented; Output redaction implemented; Bias detection metrics collected",
+      "dependencies": [
+        "IFC-005",
+        "IFC-008"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-6/attestations/IFC-125/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-08T12:21:00.000Z",
+        "sprintFolder": 6
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-129",
+      "sprint": 6,
+      "status": "Completed",
+      "section": "Testing",
+      "title": "Write UI and contract tests for core pages and tRPC endpoints",
+      "description": "Write UI and contract tests for core pages and tRPC endpoints",
+      "summary": "Playwright/Cypress tests cover navigation, forms, interactive components; contract tests validate tRPC endpoints",
+      "definitionOfDone": "Playwright/Cypress tests cover navigation, forms, interactive components; contract tests validate tRPC endpoints; artifacts: ui-coverage.html, context_ack.json; targets: >=90%, <5min; gates: coverage-gte-90",
+      "definitionOfDoneSnapshot": "Playwright/Cypress tests cover navigation, forms, interactive components; contract tests validate tRPC endpoints",
+      "dependencies": [
+        "IFC-110"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-6/attestations/IFC-129/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-28T23:59:58.057Z",
+        "sprintFolder": 6
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-132",
+      "sprint": 6,
+      "status": "Completed",
+      "section": "Security",
+      "title": "Supply chain security: dependency pinning + SBOM generation in CI (npm/pnpm + container)",
+      "description": "Supply chain security: dependency pinning + SBOM generation in CI (npm/pnpm + container)",
+      "summary": "Dependencies pinned/locked; SBOM generated per build; SBOM stored as artifact; baseline policy documented",
+      "definitionOfDone": "Dependencies pinned/locked; SBOM generated per build; SBOM stored as artifact; baseline policy documented; targets: >=100%",
+      "definitionOfDoneSnapshot": "Dependencies pinned/locked; SBOM generated per build; SBOM stored as artifact; baseline policy documented",
+      "dependencies": [
+        "ENV-005-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-6/attestations/IFC-132/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-28T23:59:58.142Z",
+        "sprintFolder": 6
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-139",
+      "sprint": 6,
+      "status": "Completed",
+      "section": "AI Assistant",
+      "title": "Expose application services as agent tools and implement human approval flows with preview and rollback for high-risk actions",
+      "description": "Expose application services as agent tools and implement human approval flows with preview and rollback for high-risk actions",
+      "summary": "Agent tools for search; create; update case and appointments and draft messages; approval UI with diff preview; rollback mechanism; authorization checks; logging; tests",
+      "definitionOfDone": "Agent tools for search; create; update case and appointments and draft messages; approval UI with diff preview; rollback mechanism; authorization checks; logging; tests; artifacts: agent-actions.log, context_ack.json; targets: >=100%, <30s, zero errors",
+      "definitionOfDoneSnapshot": "Agent tools for search; create; update case and appointments and draft messages; approval UI with diff preview; rollback mechanism; authorization checks; logging; tests",
+      "dependencies": [
+        "IFC-136",
+        "IFC-137",
+        "IFC-003",
+        "IFC-128"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-6/attestations/IFC-139/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-28T23:59:58.198Z",
+        "sprintFolder": 6
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-144",
+      "sprint": 6,
+      "status": "Completed",
+      "section": "Integration",
+      "title": "Design and implement inbound/outbound email flows: SPF/DKIM/DMARC; inbound parsing; attachments; implement general webhook handling with idempotency and retries; publish public API specification (OpenAPI) with versioning; baseline inbound email feature delivered",
+      "description": "Design and implement inbound/outbound email flows: SPF/DKIM/DMARC; inbound parsing; attachments; implement general webhook handling with idempotency and retries; publish public API specification (OpenAPI) with versioning; baseline inbound email feature delivered",
+      "summary": "Email infrastructure for inbound/outbound flows; Inbound router handles incoming email processing; Tests verify email routing and processing logic Outbound emails signed with SPF/DKIM/DMARC configured; inbound email parser implemented with attachments handling;...",
+      "definitionOfDone": "Outbound emails signed with SPF/DKIM/DMARC configured; inbound email parser implemented with attachments handling; webhooks infrastructure with idempotency and retries; OpenAPI spec version 1 published covering major endpoints; baseline email send/receive tested; targets: >=95%, >=99%, >=100%; Inbound email endpoint must be exposed via API route with E2E test",
+      "definitionOfDoneSnapshot": "Outbound emails signed with SPF/DKIM/DMARC configured; inbound email parser implemented with attachments handling; webhooks infrastructure with idempotency and retries; OpenAPI spec version 1 published covering major endpoints;...",
+      "dependencies": [
+        "IFC-137",
+        "IFC-003",
+        "IFC-150",
+        "IFC-151",
+        "IFC-106"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-6/attestations/IFC-144/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T21:53:00.000Z",
+        "sprintFolder": 6
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 1,
+        "met": 1,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-149",
+      "sprint": 6,
+      "status": "Completed",
+      "section": "AI Assistant",
+      "title": "Implement action preview and rollback UI for agent-initiated changes; integrated with approval flows",
+      "description": "Implement action preview and rollback UI for agent-initiated changes; integrated with approval flows",
+      "summary": "Enhanced agent approvals preview page to accept actionId URL parameter for direct navigation from deal/case timeline.... Approval page displays proposed changes with diff; Users can approve, modify, or reject; Rollback resets state and logs actions",
+      "definitionOfDone": "Approval page displays proposed changes with diff; users can approve; modify; or reject; rollback resets state and logs actions; E2E tests; analytics track approvals; artifacts: preview.tsx, rollback-service.ts, approvals-metrics.csv; targets: >=100%, zero errors",
+      "definitionOfDoneSnapshot": "Approval page displays proposed changes with diff; Users can approve, modify, or reject; Rollback resets state and logs actions",
+      "dependencies": [
+        "IFC-139",
+        "IFC-147"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-6/attestations/IFC-149/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-28T12:00:00Z",
+        "sprintFolder": 6
+      },
+      "validationSummary": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-151",
+      "sprint": 6,
+      "status": "Completed",
+      "section": "Platform",
+      "title": "Event consumers framework: retries + DLQ + backoff + observability; standard webhook/idempotency utilities",
+      "description": "Event consumers framework: retries + DLQ + backoff + observability; standard webhook/idempotency utilities",
+      "summary": "{\"framework\":{\"type\":\"DLQ Triage and Monitoring\",\"scope\":\"Complete operational framework for event consumer failures\",\"coverage\":[\"Real-time monitoring via Prometheus metrics\",\"Alert configuration for DLQ depth, drain success, retry success......",
+      "definitionOfDone": "Consumer SDK supports retries/backoff; DLQ storage/triage workflow; idempotent handlers; poison-message handling; metrics and alerts; chaos tests; artifacts: dlq-triage.md, context_ack.json; targets: >=95%, >=90%, <30 min",
+      "definitionOfDoneSnapshot": "Consumer SDK supports retries/backoff; DLQ storage/triage workflow; idempotent handlers; poison-message handling; metrics and alerts; chaos tests",
+      "dependencies": [
+        "IFC-150",
+        "ENV-008-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-6/attestations/IFC-151/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-29T09:15:00Z",
+        "sprintFolder": 6
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 5,
+        "met": 5,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-152",
+      "sprint": 6,
+      "status": "Completed",
+      "section": "Case Docs",
+      "title": "Case document model: storage metadata, versioning, ACL mapping (tenant + case + role), and audit hooks",
+      "description": "Case document model: storage metadata, versioning, ACL mapping (tenant + case + role), and audit hooks",
+      "summary": "Legal document management with case association; Documents router for CRUD operations; Case-document relationship in domain model CaseDocument aggregate and repository implemented; ACL mapping rules defined; versioning semantics; audit events on read/write;...",
+      "definitionOfDone": "CaseDocument aggregate and repository implemented; ACL mapping rules defined; versioning semantics; audit events on read/write; tests; targets: >=100%, >=100%, <50ms",
+      "definitionOfDoneSnapshot": "CaseDocument aggregate and repository implemented; ACL mapping rules defined; versioning semantics; audit events on read/write; tests",
+      "dependencies": [
+        "IFC-136",
+        "IFC-127"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-6/attestations/IFC-152/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T22:01:00.000Z",
+        "sprintFolder": 6
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 1,
+        "met": 1,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-153",
+      "sprint": 6,
+      "status": "Completed",
+      "section": "Case Docs",
+      "title": "Ingestion pipeline for case files: upload/email attachment intake, antivirus scan, metadata extraction, storage, and indexing triggers",
+      "description": "Ingestion pipeline for case files: upload/email attachment intake, antivirus scan, metadata extraction, storage, and indexing triggers",
+      "summary": "Design artifacts completed: context pack, context acknowledgment, operational runbook Implementation follows hexagonal architecture with clear ports and adapters TDD approach:... Upload + inbound email attachments land in storage; AV scan gate;...",
+      "definitionOfDone": "Upload + inbound email attachments land in storage; AV scan gate; metadata extracted; ingestion events emitted; failure handling + retries; integration tests; targets: >=99%, >=100%, >=1%",
+      "definitionOfDoneSnapshot": "Upload + inbound email attachments land in storage; AV scan gate; metadata extracted; ingestion events emitted; failure handling + retries; integration tests",
+      "dependencies": [
+        "IFC-152",
+        "IFC-144",
+        "IFC-151",
+        "IFC-106"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-6/attestations/IFC-153/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": null,
+        "sprintFolder": 6
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-154",
+      "sprint": 6,
+      "status": "Completed",
+      "section": "Case Docs",
+      "title": "OCR + text extraction worker for scanned PDFs/images; normalized text artifacts stored for search and RAG",
+      "description": "OCR + text extraction worker for scanned PDFs/images; normalized text artifacts stored for search and RAG",
+      "summary": "OCR worker completed supporting PDF, PNG, JPG, TIFF, WEBP formats with 4 OCR engines, retry logic, quality metrics, and provenance tracking. OCR worker created; Quality benchmarks created; Extracted text schema defined",
+      "definitionOfDone": "OCR worker processes supported formats; stores extracted text with provenance; handles retries; quality metrics recorded; tests; artifacts: ocr-quality-benchmarks.csv, extracted-text-schema.json, context_ack.json; targets: >=1%",
+      "definitionOfDoneSnapshot": "OCR worker created; Quality benchmarks created; Extracted text schema defined",
+      "dependencies": [
+        "IFC-153"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-6/attestations/IFC-154/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-31T22:30:00Z",
+        "sprintFolder": 6
+      },
+      "validationSummary": {
+        "total": 7,
+        "passed": 7,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-155",
+      "sprint": 6,
+      "status": "Completed",
+      "section": "Search/AI",
+      "title": "Permissioned indexing for case documents and notes: full-text + embeddings with tenant/case ACL filters",
+      "description": "Permissioned indexing for case documents and notes: full-text + embeddings with tenant/case ACL filters",
+      "summary": "IFC-155 exec session: Fixed 3 issues from spec review. (1) Removed SQL injection risk - deleted unused _caseFilter string interpolation in retrieval-service.ts:696-697.... FTS index and vector embeddings built; Retrieval APIs enforce tenant/case ACL;...",
+      "definitionOfDone": "FTS index and vector embeddings built; retrieval APIs enforce tenant/case ACL; re-index job; purge on DSAR rules; tests; targets: >=80%, <200ms, zero errors; gates: latency-check; generateEmbedding() must return real embeddings from embedding chain, not null placeholder",
+      "definitionOfDoneSnapshot": "FTS index and vector embeddings built; Retrieval APIs enforce tenant/case ACL; Re-index job with progress tracking",
+      "dependencies": [
+        "IFC-154",
+        "IFC-127",
+        "ENV-004-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-6/attestations/IFC-155/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-06T23:35:00.000Z",
+        "sprintFolder": 6
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-156",
+      "sprint": 6,
+      "status": "Completed",
+      "section": "AI Assistant",
+      "title": "Case RAG tool: agent retrieval tool constrained by tenant/case permissions; citations + source trace; prompt-injection hardening for retrieved content",
+      "description": "Case RAG tool: agent retrieval tool constrained by tenant/case permissions; citations + source trace; prompt-injection hardening for retrieved content",
+      "summary": "Agent tool implemented (retrieve_case_context); responses include source references; injection defenses applied; approval needed for external send; tests",
+      "definitionOfDone": "Agent tool implemented (retrieve_case_context); responses include source references; injection defenses applied; approval needed for external send; tests; artifacts: retrieve-case-context.ts, case-rag.md, context_ack.json; targets: <2s",
+      "definitionOfDoneSnapshot": "Agent tool implemented (retrieve_case_context); responses include source references; injection defenses applied; approval needed for external send; tests",
+      "dependencies": [
+        "IFC-155",
+        "IFC-139",
+        "IFC-125"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-6/attestations/IFC-156/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-01-01T06:55:00.000Z",
+        "sprintFolder": 6
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-181",
+      "sprint": 6,
+      "status": "Completed",
+      "section": "AI Foundation",
+      "title": "AI Output Review - Frontend UI (review queue page)",
+      "description": "AI Output Review - Frontend UI (review queue page)",
+      "summary": "Task completed and verified Review queue page with filters (status/confidence/chain type); claim/approve/reject actions; confidence score visualization; SLA countdown; follows design system (AppHeader+AppSidebar pattern aligned 2026-02-03); Lighthouse >=90",
+      "definitionOfDone": "Review queue page with filters (status/confidence/chain type); claim/approve/reject actions; confidence score visualization; SLA countdown; follows design system (AppHeader+AppSidebar pattern aligned 2026-02-03); Lighthouse >=90; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Review queue page with filters (status/confidence/chain type); claim/approve/reject actions; confidence score visualization; SLA countdown; follows design system (AppHeader+AppSidebar pattern aligned 2026-02-03); Lighthouse >=90",
+      "dependencies": [
+        "IFC-180",
+        "IFC-149"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-6/attestations/IFC-181/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T19:33:21.868Z",
+        "sprintFolder": 6
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-135",
+      "sprint": 6,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Deal Pipeline Page - Kanban board drag-drop stages value totals filtering",
+      "description": "Deal Pipeline Page - Kanban board drag-drop stages value totals filtering",
+      "summary": "PG-135 Deal Pipeline Page: Extracted 775-line monolithic page into 6 modular React components with barrel exports. Page reduced to 417 lines (267-line main component). Added CSS stage color variables (light+dark mode).......",
+      "definitionOfDone": "Response <500ms, Lighthouse >=90; PipelineBoard, StageColumn, DealCard, DealFilters, ValueSummary, DealQuickView components; drag-drop stage changes; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "PipelineBoard component with DnD, stage transition validation, accessible announcements; StageColumn component with droppable area, ARIA structure; DealCard component with keyboard navigation and drag handle",
+      "dependencies": [
+        "IFC-186"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-6/attestations/PG-135/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-15T19:35:00Z",
+        "sprintFolder": 6
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 3,
+        "failed": 1,
+        "failingNames": [
+          "Build"
+        ]
+      },
+      "kpiSummary": {
+        "total": 5,
+        "met": 5,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-136",
+      "sprint": 6,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Task Management Page — List, Calendar View, Assignments, Reminders, Entity Linking",
+      "description": "Task Management Page - List calendar view assignments reminders entity linking",
+      "summary": "All 10 implementation artifacts verified present. 148 tests passing across 9 test files. TypeScript: 0 errors in PG-136 files. 30 pre-existing errors in non-task files (zod v4 compat, cases page, contact-form, ReviewHistory)......",
+      "definitionOfDone": "Response <500ms, Lighthouse >=90; TaskList, TaskCard, TaskCalendar, TaskDetail, TaskForm, ReminderConfig components; calendar and list views; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "response under 500ms, Lighthouse >=90; TaskList, TaskCard, TaskCalendar, TaskDetail, TaskForm, ReminderConfig components; calendar and list views",
+      "dependencies": [
+        "IFC-187"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-6/attestations/PG-136/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-18T12:00:00Z",
+        "sprintFolder": 6
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 3,
+        "failed": 1,
+        "failingNames": [
+          "Build"
+        ]
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-137",
+      "sprint": 6,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Ticket Management Page - List detail SLA indicators escalation customer portal view",
+      "description": "Ticket Management Page - List detail SLA indicators escalation customer portal view",
+      "summary": "PG-137 Ticket Management Page: 8 components (TicketList, TicketDetail, TicketCard, SLAIndicator, EscalationAlert, TicketForm, CustomerPortalView, TicketAssignSidebar), 3 route pages, useTicketFilters hook, sla-service utility, ticket-test-u......",
+      "definitionOfDone": "Response <500ms, Lighthouse >=90; TicketList, TicketCard, TicketDetail, SLAIndicator, EscalationAlert, TicketForm, CustomerPortalView components; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "TicketList with filtering, sorting, pagination; TicketDetail with full ticket view; SLAIndicator with countdown timer",
+      "dependencies": [
+        "IFC-189"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-6/attestations/PG-137/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T18:00:00.000Z",
+        "sprintFolder": 6
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-205",
+      "sprint": 6,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Ticket Full-Text Search - add search parameter to ticketQuerySchema and TicketService for subject ticketNumber contactName searching",
+      "description": "Ticket Full-Text Search - add search parameter to ticketQuerySchema and TicketService for subject ticketNumber contactName searching",
+      "summary": "IFC-205: Ticket Full-Text Search. Re-validated 2026-02-15. Added case-insensitive partial-match search across subject, ticketNumber, and contactName fields using Prisma contains+insensitive (PostgreSQL ILIKE).......",
+      "definitionOfDone": "search param added to ticketQuerySchema; TicketService filters by subject ticketNumber contactName using ILIKE; search response <500ms; test coverage >=90%; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "ticketQuerySchema accepts optional search string (max 200 chars); TicketService.findMany builds OR clause for subject/ticketNumber/contactName; ticket.router.ts list endpoint extracts search and passes to service",
+      "dependencies": [
+        "IFC-189"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-6/attestations/IFC-205/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-15T19:42:00.000Z",
+        "sprintFolder": 6
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-206",
+      "sprint": 6,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Ticket Stats Enhancement - add SLA status breakdown time window filtering and sortBy sortOrder to ticket query schema",
+      "description": "Ticket Stats Enhancement - add SLA status breakdown time window filtering and sortBy sortOrder to ticket query schema",
+      "summary": "IFC-206 implements 3 enhancements to the ticket module: (1) SLA status breakdown in getStats with zero-fill for all 5 statuses, (2) time window filtering (24h/7d/30d/all) for stats, (3) sortBy/sortOrder params for ticket list query.......",
+      "definitionOfDone": "ticket.stats returns SLA status breakdown counts; ticketQuerySchema supports sortBy and sortOrder params; time window filtering for stats (24h 7d 30d); test coverage >=90%; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "SLA status breakdown in ticket stats with all 5 statuses; Time window filtering for stats (24h, 7d, 30d, all); Sort parameters (sortBy + sortOrder) for ticket list",
+      "dependencies": [
+        "IFC-189"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-6/attestations/IFC-206/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-15T20:45:00.000Z",
+        "sprintFolder": 6
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-207",
+      "sprint": 6,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Ticket Query Performance Tracking - add queryDurationMs to ticket list and stats endpoints using performance.now pattern from timeline router",
+      "description": "Ticket Query Performance Tracking - add queryDurationMs to ticket list and stats endpoints using performance.now pattern from timeline router",
+      "summary": "Simple additive change following established performance.now() pattern from timeline.router.ts. Added timing to ticket list and stats endpoints. 9 new tests in dedicated ticket-perf.test.ts. All 47 ticket tests pass (9 new + 38 existing).......",
+      "definitionOfDone": "queryDurationMs field added to ticket list and stats responses; measured via performance.now() wrapping Prisma queries; p95 overhead <5ms; unit tests verify timing field present; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "queryDurationMs field added to ticket list responses; queryDurationMs field added to ticket stats responses; Measured via performance.now() wrapping Prisma queries",
+      "dependencies": [
+        "IFC-189"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-6/attestations/IFC-207/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-14T22:43:00Z",
+        "sprintFolder": 6
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    }
+  ]
+}

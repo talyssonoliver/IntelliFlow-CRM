@@ -1,0 +1,61 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-002",
+  "run_id": "sprint1-audit-20260302T215651-arwnsz",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:56:59.863Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 6,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "packages/db/prisma/schema.prisma": "7dc678a3675eddd03f0d507da5fc22e8612294aeadfe37ebd69e5aca6dc59f5b",
+    "docs/planning/DDD-context-map.puml": "c3d80f60dfe3ae6d5a2f3ecea5c74c954ca78083e48ea75f33c7d4859027e938",
+    "apps/project-tracker/docs/metrics/_global/flows/FLOW-001.md": "33cdb7801eb479cd028b460206464339d6ffea7bfbfdcf8e9577c4a3fc6692ea",
+    "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-001-validation.md": "e386bc479303ec76016975fd626e64b3818d00899a370b187e64450f3b7cdc7b",
+    "artifacts/reports/ifc-000-completion-manifest.json": "1d50a98b85859703af9a63146081b329b83e425b7fec3bb9d1dcfbeeaf261a32",
+    ".specify/sprints/sprint-1/attestations/IFC-002/context_ack.json": "dd6ef4211783f5489582c041a6ad4716156e8440a447f7c9843ae52e8a7245bf"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-002",
+      "command": "pnpm typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 90000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-000"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "DDD model complete",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "Prisma schema created",
+      "met": true,
+      "evidence": "All 6 artifacts exist"
+    },
+    {
+      "criterion": "Zod validators defined",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "2 DoD criteria unverified"
+}

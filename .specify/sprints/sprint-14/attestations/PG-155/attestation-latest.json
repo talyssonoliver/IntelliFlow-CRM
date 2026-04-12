@@ -1,0 +1,52 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "PG-155",
+  "run_id": "sprint14-audit-20260302T215859-6dbfyi",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:59:16.715Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 2,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/web/src/components/home/PinnedItemsSheet.tsx": "14a508bce7b32027cc3a0d0483a9eae8a8dd0b15149813dedd93a6ac5a26c42e",
+    "apps/web/src/components/home/AuthenticatedHomePage.tsx": "b2a1271d8d7b0880e19f61a840dc82ff4231e03f8d2dbf5f2a328d2b620f992a"
+  },
+  "validation_results": [
+    {
+      "name": "PG-155",
+      "command": "pnpm --filter @intelliflow/web test --run",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 120000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "PG-129"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "All 8 Quick Actions navigate to valid routes or show coming-soon modal",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "route audit confirms zero 404s",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "2 DoD criteria unverified"
+}

@@ -1,0 +1,53 @@
+{
+  "task_id": "PG-125",
+  "verdict": "COMPLETE",
+  "sprint": 16,
+  "run_id": "20260308151313-b5314586",
+  "completed_at": "2026-03-08T15:43:00Z",
+  "dependencies_verified": ["PG-021", "PG-022", "IFC-006"],
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-08T15:25:00Z"
+    },
+    {
+      "name": "Build",
+      "command": "pnpm build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-08T15:39:00Z"
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter @intelliflow/api lint && pnpm --filter @intelliflow/web lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-08T15:41:00Z"
+    },
+    {
+      "name": "Tests",
+      "command": "pnpm --filter @intelliflow/api exec vitest run src/services/__tests__/mfa.service.management.test.ts src/modules/auth/__tests__/mfa-management.router.test.ts src/modules/auth/__tests__/auth.router.test.ts src/modules/auth/__tests__/auth.router.additional.test.ts && pnpm --filter @intelliflow/web exec vitest run src/app/settings/security/mfa/__tests__/management.test.tsx src/app/settings/security/mfa/__tests__/page.test.tsx",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-08T15:41:30Z"
+    }
+  ],
+  "evidence_summary": {
+    "new_tests": 43,
+    "regression_tests": 175,
+    "coverage": {
+      "management_page": {
+        "statements": 97.29,
+        "branches": 85.96,
+        "functions": 92.30,
+        "lines": 97.22
+      }
+    },
+    "files_created": 9,
+    "files_modified": 15
+  },
+  "notes": "MFA management dashboard with disable/regenerate flows. Setup wizard moved to /mfa/setup sub-route. verifyTotpTimingSafe replaces timing-unsafe verifyTotp. Rate limiting at 3 attempts per 15 minutes."
+}

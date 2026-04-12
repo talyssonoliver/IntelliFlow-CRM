@@ -1,0 +1,64 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-066",
+  "run_id": "sprint14-audit-20260302T215859-6dbfyi",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:59:07.060Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 3,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "packages/application/src/usecases/deals/CloseDealLostUseCase.ts": "590c83963f219c91cd5081571548b76bbbe65976b303f85e231736809584e054",
+    "apps/web/src/components/deals/LossReasonModal.tsx": "a9ecace16bfced506b894aa8391342a2898707598617a4fd1f5894cc3f24a3ef",
+    ".specify/sprints/sprint-14/attestations/IFC-066/context_ack.json": "395cc0d5fa163d88628cd8b42c0c594a751294442e9c2be10a8106b53fe51437"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-066",
+      "command": "pnpm test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 180000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-091",
+    "IFC-092"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Deal marked as Lost triggers: loss reason capture",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "analytics update",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "follow-up scheduling",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "targets: <500ms",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "4 DoD criteria unverified"
+}

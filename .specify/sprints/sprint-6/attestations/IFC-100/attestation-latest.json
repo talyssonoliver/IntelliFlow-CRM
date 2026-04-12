@@ -1,0 +1,69 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-100",
+  "run_id": "sprint6-audit-20260302T215741-ex8v6u",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:57:49.027Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 3,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "docs/shared/adr-index.md": "751830453605b7dc987b72314b135405bda7cf8cbd2f2497866b7fae17a9fb72",
+    "artifacts/misc/compliance-dashboard-mockup.md": "cb1572dd552542d9d9ff3ccff5a8e7e26a4aa497c9769e6c4add2d40c3168f44",
+    ".specify/sprints/sprint-6/attestations/IFC-100/context_ack.json": "d4bef2f22896518bccc2cde061be826e499cd2f58e8303b0039afc73e5538356"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-100",
+      "command": "pnpm typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 90000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-008",
+    "GOV-001"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "ADR repo active",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "compliance docs ready",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "artifacts: adr-index.md",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "compliance-dashboard-mockup.md",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "context_ack.json",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "5 DoD criteria unverified"
+}

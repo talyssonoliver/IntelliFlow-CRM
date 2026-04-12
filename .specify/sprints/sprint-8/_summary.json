@@ -1,0 +1,505 @@
+{
+  "sprint": "sprint-8",
+  "name": "Sprint 8 - Risk Management",
+  "generated_at": "2026-04-11T16:48:01.958Z",
+  "summary_source": "specify",
+  "task_summary": {
+    "total": 9,
+    "completed": 9,
+    "backlog": 0,
+    "blocked": 0,
+    "attested_completed": 9
+  },
+  "context": "Primary focus areas: AI Intelligence (4), Risk Mgmt (2), Core CRM (1).",
+  "section_summary": [
+    {
+      "section": "AI Intelligence",
+      "total": 4,
+      "completed": 4,
+      "open": 0
+    },
+    {
+      "section": "Risk Mgmt",
+      "total": 2,
+      "completed": 2,
+      "open": 0
+    },
+    {
+      "section": "Core CRM",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Operations",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Security",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    }
+  ],
+  "notable_completed": [
+    {
+      "taskId": "PG-151",
+      "sprint": 8,
+      "status": "Completed",
+      "section": "AI Intelligence",
+      "title": "Active Agents Dashboard at /agent-approvals/agents - Agent status monitoring active sessions task assignments health indicators",
+      "description": "Active Agents Dashboard at /agent-approvals/agents - Agent status monitoring active sessions task assignments health indicators",
+      "summary": "Active Agents Dashboard implemented with TDD. 6 files created: page shell with auth guard, main dashboard component (StatCard + AgentCard sub-components), comprehensive test suite (43 tests), tRPC polling hooks, utility functions, and TypeS......",
+      "definitionOfDone": "Page renders at /agent-approvals/agents; active agent list with health status; current task assignments; session history; agent type breakdown (qualification email followup NBA); health indicators; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Page renders at /agent-approvals/agents; Active agent list with health status; Current task assignments",
+      "dependencies": [
+        "IFC-021",
+        "IFC-139",
+        "IFC-197"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-8/attestations/PG-151/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-18T18:14:00.000Z",
+        "sprintFolder": 8
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-055",
+      "sprint": 8,
+      "status": "Completed",
+      "section": "Risk Mgmt",
+      "title": "Budget Tracking with FinOps",
+      "description": "Budget Tracking with FinOps",
+      "summary": "Cost monitoring for Vercel/Railway/OpenAI setup Weekly spend review with projections and alerts; Investment deck/cost report created; Usage alerts configured",
+      "definitionOfDone": "Weekly spend review with projections and alerts; artifacts: weekly-cost-report.csv, usage-alerts-config.yaml, cost-optimization-actions.md, invoice-tracker.csv; variance -66.3%",
+      "definitionOfDoneSnapshot": "Weekly spend review with projections and alerts; Investment deck/cost report created; Usage alerts configured",
+      "dependencies": [],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-8/attestations/IFC-055/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-28T22:55:00Z",
+        "sprintFolder": 8
+      },
+      "validationSummary": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-077",
+      "sprint": 8,
+      "status": "Completed",
+      "section": "Security",
+      "title": "PHASE-035: API Rate Limiting (tRPC + Upstash)",
+      "description": "PHASE-035: API Rate Limiting (tRPC + Upstash)",
+      "summary": "Rate limiting on all public endpoints; rate-limit.ts artifact created; rate-limit-config.yaml artifact created",
+      "definitionOfDone": "Rate limiting on all public endpoints; artifacts: rate-limit.ts, rate-limit-config.yaml, load-test-with-limits.json",
+      "definitionOfDoneSnapshot": "Rate limiting on all public endpoints; rate-limit.ts artifact created; rate-limit-config.yaml artifact created",
+      "dependencies": [
+        "IFC-013"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-8/attestations/IFC-077/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T19:20:00.000Z",
+        "sprintFolder": 8
+      },
+      "validationSummary": {
+        "total": 6,
+        "passed": 6,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-142",
+      "sprint": 8,
+      "status": "Completed",
+      "section": "Operations",
+      "title": "Define SLOs/SLIs and alerting; establish on-call and incident management process; conduct restore drills; create capacity and cost budgets for AI inference and search",
+      "description": "Define SLOs/SLIs and alerting; establish on-call and incident management process; conduct restore drills; create capacity and cost budgets for AI inference and search",
+      "summary": "Task completed and verified SLOs and SLIs defined for core services; alert rules configured; on-call rota established with escalation policies; incident runbook prepared; restore drill executed successfully; budgets defined and monitored",
+      "definitionOfDone": "SLOs and SLIs defined for core services; alert rules configured; on-call rota established with escalation policies; incident runbook prepared; restore drill executed successfully; budgets defined and monitored; targets: >=10%, >=99%, <15 min",
+      "definitionOfDoneSnapshot": "SLOs and SLIs defined for core services; alert rules configured; on-call rota established with escalation policies; incident runbook prepared; restore drill executed successfully; budgets defined and monitored",
+      "dependencies": [
+        "ENV-008-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-8/attestations/IFC-142/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T19:33:21.847Z",
+        "sprintFolder": 8
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-118",
+      "sprint": 8,
+      "status": "Completed",
+      "section": "Risk Mgmt",
+      "title": "Establish and maintain a risk register with mitigation actions",
+      "description": "Establish and maintain a risk register with mitigation actions",
+      "summary": "Task completed and verified Risk register created, risks scored by impact/likelihood, mitigation owners assigned; review scheduled per sprint",
+      "definitionOfDone": "Risk register created, risks scored by impact/likelihood, mitigation owners assigned; review scheduled per sprint; artifacts: risk-register.csv, risk-mitigation-plan.md, risk-review-agenda.md",
+      "definitionOfDoneSnapshot": "Risk register created, risks scored by impact/likelihood, mitigation owners assigned; review scheduled per sprint",
+      "dependencies": [
+        "IFC-010",
+        "IFC-054"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-8/attestations/IFC-118/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T19:33:21.834Z",
+        "sprintFolder": 8
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    }
+  ],
+  "open_tasks": [],
+  "tasks": [
+    {
+      "taskId": "IFC-055",
+      "sprint": 8,
+      "status": "Completed",
+      "section": "Risk Mgmt",
+      "title": "Budget Tracking with FinOps",
+      "description": "Budget Tracking with FinOps",
+      "summary": "Cost monitoring for Vercel/Railway/OpenAI setup Weekly spend review with projections and alerts; Investment deck/cost report created; Usage alerts configured",
+      "definitionOfDone": "Weekly spend review with projections and alerts; artifacts: weekly-cost-report.csv, usage-alerts-config.yaml, cost-optimization-actions.md, invoice-tracker.csv; variance -66.3%",
+      "definitionOfDoneSnapshot": "Weekly spend review with projections and alerts; Investment deck/cost report created; Usage alerts configured",
+      "dependencies": [],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-8/attestations/IFC-055/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-28T22:55:00Z",
+        "sprintFolder": 8
+      },
+      "validationSummary": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-077",
+      "sprint": 8,
+      "status": "Completed",
+      "section": "Security",
+      "title": "PHASE-035: API Rate Limiting (tRPC + Upstash)",
+      "description": "PHASE-035: API Rate Limiting (tRPC + Upstash)",
+      "summary": "Rate limiting on all public endpoints; rate-limit.ts artifact created; rate-limit-config.yaml artifact created",
+      "definitionOfDone": "Rate limiting on all public endpoints; artifacts: rate-limit.ts, rate-limit-config.yaml, load-test-with-limits.json",
+      "definitionOfDoneSnapshot": "Rate limiting on all public endpoints; rate-limit.ts artifact created; rate-limit-config.yaml artifact created",
+      "dependencies": [
+        "IFC-013"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-8/attestations/IFC-077/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T19:20:00.000Z",
+        "sprintFolder": 8
+      },
+      "validationSummary": {
+        "total": 6,
+        "passed": 6,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-094",
+      "sprint": 8,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Documents Management - Upload & Sign",
+      "description": "Documents Management - Upload & Sign",
+      "summary": "Task completed and verified Contracts signed electronically, preview inline",
+      "definitionOfDone": "Contracts signed electronically, preview inline; artifacts: e-signature-test.pdf, context_ack.json",
+      "definitionOfDoneSnapshot": "Contracts signed electronically, preview inline",
+      "dependencies": [
+        "IFC-090",
+        "IFC-106"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-8/attestations/IFC-094/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T19:33:21.811Z",
+        "sprintFolder": 8
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-118",
+      "sprint": 8,
+      "status": "Completed",
+      "section": "Risk Mgmt",
+      "title": "Establish and maintain a risk register with mitigation actions",
+      "description": "Establish and maintain a risk register with mitigation actions",
+      "summary": "Task completed and verified Risk register created, risks scored by impact/likelihood, mitigation owners assigned; review scheduled per sprint",
+      "definitionOfDone": "Risk register created, risks scored by impact/likelihood, mitigation owners assigned; review scheduled per sprint; artifacts: risk-register.csv, risk-mitigation-plan.md, risk-review-agenda.md",
+      "definitionOfDoneSnapshot": "Risk register created, risks scored by impact/likelihood, mitigation owners assigned; review scheduled per sprint",
+      "dependencies": [
+        "IFC-010",
+        "IFC-054"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-8/attestations/IFC-118/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T19:33:21.834Z",
+        "sprintFolder": 8
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-142",
+      "sprint": 8,
+      "status": "Completed",
+      "section": "Operations",
+      "title": "Define SLOs/SLIs and alerting; establish on-call and incident management process; conduct restore drills; create capacity and cost budgets for AI inference and search",
+      "description": "Define SLOs/SLIs and alerting; establish on-call and incident management process; conduct restore drills; create capacity and cost budgets for AI inference and search",
+      "summary": "Task completed and verified SLOs and SLIs defined for core services; alert rules configured; on-call rota established with escalation policies; incident runbook prepared; restore drill executed successfully; budgets defined and monitored",
+      "definitionOfDone": "SLOs and SLIs defined for core services; alert rules configured; on-call rota established with escalation policies; incident runbook prepared; restore drill executed successfully; budgets defined and monitored; targets: >=10%, >=99%, <15 min",
+      "definitionOfDoneSnapshot": "SLOs and SLIs defined for core services; alert rules configured; on-call rota established with escalation policies; incident runbook prepared; restore drill executed successfully; budgets defined and monitored",
+      "dependencies": [
+        "ENV-008-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-8/attestations/IFC-142/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T19:33:21.847Z",
+        "sprintFolder": 8
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-146",
+      "sprint": 8,
+      "status": "Completed",
+      "section": "AI Intelligence",
+      "title": "Drift Detection Dashboard at /agent-approvals/drift - Model performance drift alerts cost tracking error rates",
+      "description": "Drift Detection Dashboard at /agent-approvals/drift - Model performance drift alerts cost tracking error rates",
+      "summary": "Frontend-only UI task. 9 implementation files + 3 test files (98 tests total). Re-validated 2026-02-18: Build verified (npx next build --webpack exit 0, 105/105 pages generated including /agent-approvals/drift). Coverage measured:......",
+      "definitionOfDone": "Page renders at /agent-approvals/drift; DriftDashboard with ModelPerformanceChart DriftAlerts CostTracker ErrorRateGauge; real-time drift status; Lighthouse >=90; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Page renders at /agent-approvals/drift; DriftDashboard with ModelPerformanceChart DriftAlerts CostTracker ErrorRateGauge; Real-time drift status",
+      "dependencies": [
+        "IFC-117",
+        "IFC-197"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-8/attestations/PG-146/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-18T01:15:00.000Z",
+        "sprintFolder": 8
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 5,
+        "met": 4,
+        "missed": 1
+      }
+    },
+    {
+      "taskId": "PG-151",
+      "sprint": 8,
+      "status": "Completed",
+      "section": "AI Intelligence",
+      "title": "Active Agents Dashboard at /agent-approvals/agents - Agent status monitoring active sessions task assignments health indicators",
+      "description": "Active Agents Dashboard at /agent-approvals/agents - Agent status monitoring active sessions task assignments health indicators",
+      "summary": "Active Agents Dashboard implemented with TDD. 6 files created: page shell with auth guard, main dashboard component (StatCard + AgentCard sub-components), comprehensive test suite (43 tests), tRPC polling hooks, utility functions, and TypeS......",
+      "definitionOfDone": "Page renders at /agent-approvals/agents; active agent list with health status; current task assignments; session history; agent type breakdown (qualification email followup NBA); health indicators; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Page renders at /agent-approvals/agents; Active agent list with health status; Current task assignments",
+      "dependencies": [
+        "IFC-021",
+        "IFC-139",
+        "IFC-197"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-8/attestations/PG-151/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-18T18:14:00.000Z",
+        "sprintFolder": 8
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-152",
+      "sprint": 8,
+      "status": "Completed",
+      "section": "AI Intelligence",
+      "title": "Agent Logs Viewer at /agent-approvals/logs - Conversation transcripts tool call records searchable log timeline",
+      "description": "Agent Logs Viewer at /agent-approvals/logs - Conversation transcripts tool call records searchable log timeline",
+      "summary": "44 tests (42 originally planned + 2 extra coverage tests). All 4 validation gates pass. Scoped coverage exceeds all thresholds. Component implements all 12 acceptance criteria from spec. Page renders at /agent-approvals/logs; conversation transcript viewer;...",
+      "definitionOfDone": "Page renders at /agent-approvals/logs; conversation transcript viewer; tool call records with inputs/outputs; searchable log timeline; log level and date range filtering; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Page renders at /agent-approvals/logs; conversation transcript viewer; tool call records with inputs/outputs; searchable log timeline; log level and date range filtering",
+      "dependencies": [
+        "IFC-148",
+        "IFC-197"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-8/attestations/PG-152/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T23:08:00Z",
+        "sprintFolder": 8
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-153",
+      "sprint": 8,
+      "status": "Completed",
+      "section": "AI Intelligence",
+      "title": "Latency Monitor Dashboard at /agent-approvals/latency - SLO compliance latency percentiles chain performance phase-level monitoring",
+      "description": "Latency Monitor Dashboard at /agent-approvals/latency - SLO compliance latency percentiles chain performance phase-level monitoring",
+      "summary": "86 new tests across 4 test files. All 236 ai-monitoring tests pass. Original exec used 'npx next build' which hit a pre-existing Turbopack NftJsonAsset Windows panic (exit_code 1), but 'pnpm run build' (standard monorepo build) passes......",
+      "definitionOfDone": "Page renders at /agent-approvals/latency; SLO compliance gauges (p50 p95 p99); latency percentile charts per chain; phase-level breakdown; historical trends; alert thresholds; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Page renders at /agent-approvals/latency; SLO compliance gauges (p50 p95 p99); latency percentile charts per chain; phase-level breakdown; historical trends; alert thresholds",
+      "dependencies": [
+        "IFC-117",
+        "IFC-197"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-8/attestations/PG-153/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-18T00:00:00Z",
+        "sprintFolder": 8
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    }
+  ]
+}

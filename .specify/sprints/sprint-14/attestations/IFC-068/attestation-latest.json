@@ -1,0 +1,69 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-068",
+  "run_id": "sprint14-audit-20260302T215859-6dbfyi",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:59:07.069Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 3,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/web/src/app/analytics/(list)/feedback/page.tsx": "9e55a9c7391544f4d89d5a0b9861aa488628340dbd1ac0c0982bb2eadfeeae0c",
+    "apps/api/src/modules/feedback/feedbackSurvey.router.ts": "2ba94caa96e08eadf14b5e04b382c60bbdd9682deef26dca8c8ec6b31de8f654",
+    ".specify/sprints/sprint-14/attestations/IFC-068/attestation.json": "b2f4958e7fb8398caebfd9b5a096f4b4dac594a300bc36570681e5f459fb4660"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-068",
+      "command": "pnpm test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 180000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-090",
+    "IFC-096"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Dashboard showing NPS",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "CSAT",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "feedback trends",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "sentiment analysis",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "targets: <2s load",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "5 DoD criteria unverified"
+}

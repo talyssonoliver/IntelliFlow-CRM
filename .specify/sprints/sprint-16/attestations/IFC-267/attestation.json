@@ -1,0 +1,65 @@
+{
+  "verdict": "COMPLETE",
+  "artifact_hashes": {
+    "apps/web/src/components/accounts/OpportunityCreateSheet.tsx": "7b1acfa08eecc3aa7596af3d79036eb3cf08a261cd7b73f8de7de70bef6fec6f",
+    "apps/web/src/components/accounts/ContactAddSheet.tsx": "0f8f640c636229ac1d714463d82f0c11cc22aa0bcc7da2cc570ea1cef0170f64",
+    "apps/web/src/components/accounts/AccountDetail.tsx": "02fda43d736c84a7abd13a583aa13bcab30df505065afb5dedf625564e3fab9b",
+    "apps/web/src/components/accounts/AccountContactsList.tsx": "fa2fb0f986555cd83b47c7888c83c4e835632b1a31dab9c4f764be0b8b915a0a",
+    "apps/web/src/components/accounts/AccountOpportunitiesList.tsx": "ddb5541160106fff580c91531a13827c6cb51f4237832d818f77ce5827ab6d7f",
+    "apps/web/src/components/accounts/__tests__/OpportunityCreateSheet.test.tsx": "bdcff2cbe6113cabb1ede40cbb35ed9bb540f2367daa9653303c9375490508c8",
+    "apps/web/src/components/accounts/__tests__/ContactAddSheet.test.tsx": "5e63e8ed761ec0a7b9beb89e81cf76010d02b4e997046431d48f148a6d6faddd",
+    "apps/web/src/components/accounts/__tests__/AccountDetail.test.tsx": "cf84b4139660b7ab18ba4df1d22f3295d94f13e4aa31d24863e79e110e526b01",
+    "apps/web/src/components/accounts/__tests__/AccountContactsList.test.tsx": "9a713e7d8971be75848f9a83f8236a1db2e0a855856f8c3872cc45458a577e9c",
+    "apps/web/src/components/accounts/__tests__/AccountOpportunitiesList.test.tsx": "337e14096906a8bff90e7c570a9c1c0b86287e9e57eb29a07a2a856a4c6ab591"
+  },
+  "dependencies_verified": true,
+  "notes": "IFC-267: Wired 6 no-op buttons in Account Detail page. Created OpportunityCreateSheet and ContactAddSheet components with full tRPC mutation support, form validation, cache invalidation, and account-deleted FK error handling. Added callback props (onAddContact, onCreateOpportunity) to list components. 109 tests passing across 8 test files. Coverage: ContactAddSheet 100/97/100/100%, OpportunityCreateSheet 100/93/100/100%.",
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/web exec tsc --noEmit --project tsconfig.json",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-12T22:48:30Z"
+    },
+    {
+      "name": "Tests",
+      "command": "pnpm --filter @intelliflow/web exec vitest run src/components/accounts/__tests__ --reporter=verbose",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-12T22:48:40Z"
+    },
+    {
+      "name": "Lint",
+      "command": "npx eslint src/components/accounts/OpportunityCreateSheet.tsx src/components/accounts/ContactAddSheet.tsx src/components/accounts/AccountDetail.tsx src/components/accounts/AccountContactsList.tsx src/components/accounts/AccountOpportunitiesList.tsx",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-12T22:49:10Z"
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-12T22:49:50Z"
+    }
+  ],
+  "evidence_summary": "4 files created (OpportunityCreateSheet.tsx, ContactAddSheet.tsx, 2 test files), 6 files modified (AccountDetail.tsx, AccountContactsList.tsx, AccountOpportunitiesList.tsx, 3 existing test files), 1 docs file updated (complete-dependency-chains.md). Plan checkboxes: 100% checked.",
+  "kpi_results": [
+    {
+      "target": "6/6 buttons functional",
+      "actual": "6/6 buttons wired to open sheet components with accountId pre-filled",
+      "met": true
+    },
+    {
+      "target": "Coverage >=90% statements",
+      "actual": "ContactAddSheet: 100% stmts, 97% branches, 100% funcs, 100% lines. OpportunityCreateSheet: 100% stmts, 93% branches, 100% funcs, 100% lines.",
+      "met": true
+    },
+    {
+      "target": "109 tests passing",
+      "actual": "109/109 tests passing across 8 test files (19 OpportunityCreateSheet + 17 ContactAddSheet + 21 AccountDetail + 10 AccountContactsList + 10 AccountOpportunitiesList + 32 others)",
+      "met": true
+    }
+  ]
+}

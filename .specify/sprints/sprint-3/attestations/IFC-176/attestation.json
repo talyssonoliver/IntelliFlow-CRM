@@ -1,0 +1,120 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-176",
+  "run_id": "IFC-176-validation-20260217-223000",
+  "attestor": "Claude Code — Task Completion Repair",
+  "attestation_timestamp": "2026-02-17T22:30:00.000Z",
+  "verdict": "COMPLETE",
+  "context_acknowledgment": {
+    "acknowledged_at": "2026-02-03T11:00:00.000Z",
+    "files_read": [
+      { "path": "packages/validators/src/ai-review.ts", "sha256": "57aba80fc72dced10fbcb29e44e6d7078aec2b81a30b9b9e5c7e5818de78d256" },
+      { "path": "packages/validators/src/__tests__/ai-review.test.ts", "sha256": "3d9900d270d9d025880c33b5ae65dcc0acfba3e1a6a1185dde66ed3d585cb703" }
+    ],
+    "invariants_acknowledged": [
+      "Single Source of Truth pattern - enums derived from domain constants",
+      "Validators layer derives from Domain layer, never duplicates",
+      "All enum types follow z.enum(DOMAIN_CONSTANT) pattern",
+      "Type exports use z.infer<typeof schema>"
+    ]
+  },
+  "evidence_summary": {
+    "artifacts_verified": 2,
+    "validations_passed": 4,
+    "validations_failed": 0,
+    "gates_passed": 4,
+    "gates_failed": 0,
+    "kpis_met": 3,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/validators exec tsc --noEmit",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-02-03T20:52:00.000Z",
+      "duration_ms": 3500
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run packages/validators/src/__tests__/ai-review.test.ts",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-02-03T20:52:11.000Z",
+      "duration_ms": 410
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter @intelliflow/validators lint",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-02-03T20:52:30.000Z",
+      "duration_ms": 2500
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/validators build",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-02-03T20:53:00.000Z",
+      "duration_ms": 2490
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Schema coverage",
+      "target": "100% - All domain types have validators",
+      "actual": "100% - All 4 enum schemas, 3 input schemas, 1 batch schema, 2 response schemas, 1 audit schema",
+      "met": true
+    },
+    {
+      "kpi": "Test coverage",
+      "target": ">90% (180-200 tests)",
+      "actual": "234 tests passing (exceeds target)",
+      "met": true
+    },
+    {
+      "kpi": "Type inference",
+      "target": "Correct - z.infer<> matches domain types",
+      "actual": "Verified - TypeScript compiles with strict mode, types match domain constants",
+      "met": true
+    }
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Zod schemas derived from domain constants",
+      "met": true,
+      "evidence": "All enum schemas use z.enum(DOMAIN_CONSTANT) pattern"
+    },
+    {
+      "criterion": "CreateReviewInputSchema defined",
+      "met": true,
+      "evidence": "packages/validators/src/ai-review.ts with tenantId, outputType, outputPayload, confidence, slaHours"
+    },
+    {
+      "criterion": "ReviewDecisionInputSchema defined",
+      "met": true,
+      "evidence": "packages/validators/src/ai-review.ts with refine for notes required on rejections"
+    },
+    {
+      "criterion": "234 tests passing",
+      "met": true,
+      "evidence": "npx vitest run - 234 tests passed"
+    }
+  ],
+  "dependencies_verified": ["IFC-128"],
+  "artifact_hashes": {
+    "packages/validators/src/ai-review.ts": "57aba80fc72dced10fbcb29e44e6d7078aec2b81a30b9b9e5c7e5818de78d256",
+    "packages/validators/src/__tests__/ai-review.test.ts": "3d9900d270d9d025880c33b5ae65dcc0acfba3e1a6a1185dde66ed3d585cb703"
+  },
+  "environment": {
+    "os": "win32",
+    "node_version": "20.x",
+    "git_commit": "72dd095cb91b061f5cd6111a0208fe19605ad697",
+    "branch": "sprint0/codex-run"
+  },
+  "notes": "IFC-176 validators layer complete. Zod schemas derived from domain constants for AI Output Review. 234 tests passing. Rewritten to remove non-schema fields (files_created, files_modified, schedule_metrics, tdd_metrics, details) and fix context_acknowledgment hash key."
+}

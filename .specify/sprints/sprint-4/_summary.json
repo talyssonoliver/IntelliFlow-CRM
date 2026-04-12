@@ -1,0 +1,555 @@
+{
+  "sprint": "sprint-4",
+  "name": "Sprint 4",
+  "generated_at": "2026-04-11T16:48:01.958Z",
+  "summary_source": "specify",
+  "task_summary": {
+    "total": 10,
+    "completed": 10,
+    "backlog": 0,
+    "blocked": 0,
+    "attested_completed": 10
+  },
+  "context": "Primary focus areas: Core CRM (3), AI Foundation (2), Validation (2).",
+  "section_summary": [
+    {
+      "section": "Core CRM",
+      "total": 3,
+      "completed": 3,
+      "open": 0
+    },
+    {
+      "section": "AI Foundation",
+      "total": 2,
+      "completed": 2,
+      "open": 0
+    },
+    {
+      "section": "Validation",
+      "total": 2,
+      "completed": 2,
+      "open": 0
+    },
+    {
+      "section": "Foundation Setup",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Scheduling",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Testing",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    }
+  ],
+  "notable_completed": [
+    {
+      "taskId": "IFC-177",
+      "sprint": 4,
+      "status": "Completed",
+      "section": "AI Foundation",
+      "title": "AI Output Review - Application Layer (use cases and ports)",
+      "description": "AI Output Review - Application Layer (use cases and ports)",
+      "summary": "IFC-177 Application Layer completed following TDD methodology. All 6 use cases (Create, Claim, Approve, Reject, Release, Escalate) implemented with proper hexagonal architecture separation.... Repository interface defined in domain layer;...",
+      "definitionOfDone": "CreateReviewUseCase, ClaimReviewUseCase, ApproveReviewUseCase, RejectReviewUseCase, ReleaseReviewUseCase, EscalateReviewUseCase; IAIOutputReviewRepository port; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Repository interface defined in domain layer; All 6 use cases implemented following TDD; 54+ tests passing with >90% coverage",
+      "dependencies": [
+        "IFC-176",
+        "IFC-128"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-4/attestations/IFC-177/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-05T21:00:00.000Z",
+        "sprintFolder": 4
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-185",
+      "sprint": 4,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Account tRPC Router - CRUD hierarchy contacts opportunities activity feed",
+      "description": "Account tRPC Router - CRUD hierarchy contacts opportunities activity feed",
+      "summary": "IFC-185 Account tRPC Router implementation complete. Added 3 new endpoints (getContacts, getOpportunities, getActivity) with cursor-based pagination, filtering, tenant isolation, and 30+ new tests.... account.getContacts endpoint implemented;...",
+      "definitionOfDone": "account.list, account.get, account.create, account.update, account.delete, account.getContacts, account.getOpportunities, account.getHierarchy, account.getActivity endpoints; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "account.getContacts endpoint implemented; account.getOpportunities endpoint implemented; account.getActivity endpoint implemented",
+      "dependencies": [
+        "IFC-103",
+        "IFC-107",
+        "IFC-003"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-4/attestations/IFC-185/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-05T21:25:00.000Z",
+        "sprintFolder": 4
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-131",
+      "sprint": 4,
+      "status": "Completed",
+      "section": "Foundation Setup",
+      "title": "Architecture boundary enforcement: domain/infrastructure dependency rules + architecture tests in CI",
+      "description": "Architecture boundary enforcement: domain/infrastructure dependency rules + architecture tests in CI",
+      "summary": "Module boundaries enforced (domain cannot import from adapters/infrastructure); Forbidden dependency rules added to build/lint config; Architecture tests run in CI",
+      "definitionOfDone": "Module boundaries enforced; forbidden dependency rules added; architecture tests run in CI; documentation + ADR added",
+      "definitionOfDoneSnapshot": "Module boundaries enforced (domain cannot import from adapters/infrastructure); Forbidden dependency rules added to build/lint config; Architecture tests run in CI",
+      "dependencies": [
+        "IFC-106"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-4/attestations/IFC-131/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-26T12:00:00.000Z",
+        "sprintFolder": 4
+      },
+      "validationSummary": {
+        "total": 7,
+        "passed": 7,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-137",
+      "sprint": 4,
+      "status": "Completed",
+      "section": "Scheduling",
+      "title": "Develop Appointment aggregate with conflict detection; buffers; recurrence; linkage to cases and calendars",
+      "description": "Develop Appointment aggregate with conflict detection; buffers; recurrence; linkage to cases and calendars",
+      "summary": "Appointment aggregate, services and repositories implemented; conflict detection logic with unit tests; recurrence rules; APIs via tRPC; scheduling integrated with case management",
+      "definitionOfDone": "Appointment aggregate, services and repositories implemented; conflict detection logic with unit tests; recurrence rules; APIs via tRPC; scheduling integrated with case management; targets: >=95%, >=90%",
+      "definitionOfDoneSnapshot": "Appointment aggregate, services and repositories implemented; conflict detection logic with unit tests; recurrence rules; APIs via tRPC; scheduling integrated with case management",
+      "dependencies": [
+        "IFC-136",
+        "IFC-003"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-4/attestations/IFC-137/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2024-12-26T22:45:00.000Z",
+        "sprintFolder": 4
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-184",
+      "sprint": 4,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Contact tRPC Router - CRUD search relationship linking timeline integration",
+      "description": "Contact tRPC Router - CRUD search relationship linking timeline integration",
+      "summary": "Task completed and verified contact.list, contact.get, contact.create, contact.update, contact.delete, contact.search, contact.linkToAccount, contact.linkToLead, contact.getTimeline endpoints",
+      "definitionOfDone": "contact.list, contact.get, contact.create, contact.update, contact.delete, contact.search, contact.linkToAccount, contact.linkToLead, contact.getTimeline endpoints; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "contact.list, contact.get, contact.create, contact.update, contact.delete, contact.search, contact.linkToAccount, contact.linkToLead, contact.getTimeline endpoints",
+      "dependencies": [
+        "IFC-102",
+        "IFC-107",
+        "IFC-003"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-4/attestations/IFC-184/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T19:33:21.869Z",
+        "sprintFolder": 4
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    }
+  ],
+  "open_tasks": [],
+  "tasks": [
+    {
+      "taskId": "IFC-009",
+      "sprint": 4,
+      "status": "Completed",
+      "section": "Validation",
+      "title": "PHASE-002: Team Capability Assessment - Modern Stack (Next.js 16.0.10 App Router, Turbopack FS caching, Cache Components, proxy replacing middleware)",
+      "description": "PHASE-002: Team Capability Assessment - Modern Stack (Next.js 16.0.10 App Router, Turbopack FS caching, Cache Components, proxy replacing middleware)",
+      "summary": "Team readiness evaluated, training plan created",
+      "definitionOfDone": "Team readiness evaluated, training plan created; artifacts: team-skills-matrix.csv, training-plan.md, competency-test-results.csv; targets: >=80%",
+      "definitionOfDoneSnapshot": "Team readiness evaluated, training plan created",
+      "dependencies": [
+        "IFC-001",
+        "IFC-005"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-4/attestations/IFC-009/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-26T23:51:04.296Z",
+        "sprintFolder": 4
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-108",
+      "sprint": 4,
+      "status": "Completed",
+      "section": "Validation",
+      "title": "Implement Domain Services & Business Logic",
+      "description": "Implement Domain Services & Business Logic",
+      "summary": "Domain services implemented for leads, contacts, accounts, opportunities, tasks",
+      "definitionOfDone": "Domain services implemented for leads, contacts, accounts, opportunities, tasks; artifacts: context_ack.json; targets: >=90%; verified by: pnpm test, pnpm test:integration",
+      "definitionOfDoneSnapshot": "Domain services implemented for leads, contacts, accounts, opportunities, tasks",
+      "dependencies": [
+        "IFC-107"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-4/attestations/IFC-108/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-26T23:17:00Z",
+        "sprintFolder": 4
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-110",
+      "sprint": 4,
+      "status": "Completed",
+      "section": "Testing",
+      "title": "Write Unit & Integration Tests for Domain Entities",
+      "description": "Write Unit & Integration Tests for Domain Entities",
+      "summary": "All domain entities have unit and integration tests covering business logic and repository operations",
+      "definitionOfDone": "All domain entities have unit and integration tests covering business logic and repository operations; artifacts: context_ack.json; targets: >=90%; gates: coverage-gte-90",
+      "definitionOfDoneSnapshot": "All domain entities have unit and integration tests covering business logic and repository operations",
+      "dependencies": [
+        "IFC-101",
+        "IFC-102",
+        "IFC-103",
+        "IFC-104",
+        "IFC-105"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-4/attestations/IFC-110/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-26T23:51:04.356Z",
+        "sprintFolder": 4
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-131",
+      "sprint": 4,
+      "status": "Completed",
+      "section": "Foundation Setup",
+      "title": "Architecture boundary enforcement: domain/infrastructure dependency rules + architecture tests in CI",
+      "description": "Architecture boundary enforcement: domain/infrastructure dependency rules + architecture tests in CI",
+      "summary": "Module boundaries enforced (domain cannot import from adapters/infrastructure); Forbidden dependency rules added to build/lint config; Architecture tests run in CI",
+      "definitionOfDone": "Module boundaries enforced; forbidden dependency rules added; architecture tests run in CI; documentation + ADR added",
+      "definitionOfDoneSnapshot": "Module boundaries enforced (domain cannot import from adapters/infrastructure); Forbidden dependency rules added to build/lint config; Architecture tests run in CI",
+      "dependencies": [
+        "IFC-106"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-4/attestations/IFC-131/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-26T12:00:00.000Z",
+        "sprintFolder": 4
+      },
+      "validationSummary": {
+        "total": 7,
+        "passed": 7,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-137",
+      "sprint": 4,
+      "status": "Completed",
+      "section": "Scheduling",
+      "title": "Develop Appointment aggregate with conflict detection; buffers; recurrence; linkage to cases and calendars",
+      "description": "Develop Appointment aggregate with conflict detection; buffers; recurrence; linkage to cases and calendars",
+      "summary": "Appointment aggregate, services and repositories implemented; conflict detection logic with unit tests; recurrence rules; APIs via tRPC; scheduling integrated with case management",
+      "definitionOfDone": "Appointment aggregate, services and repositories implemented; conflict detection logic with unit tests; recurrence rules; APIs via tRPC; scheduling integrated with case management; targets: >=95%, >=90%",
+      "definitionOfDoneSnapshot": "Appointment aggregate, services and repositories implemented; conflict detection logic with unit tests; recurrence rules; APIs via tRPC; scheduling integrated with case management",
+      "dependencies": [
+        "IFC-136",
+        "IFC-003"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-4/attestations/IFC-137/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2024-12-26T22:45:00.000Z",
+        "sprintFolder": 4
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-177",
+      "sprint": 4,
+      "status": "Completed",
+      "section": "AI Foundation",
+      "title": "AI Output Review - Application Layer (use cases and ports)",
+      "description": "AI Output Review - Application Layer (use cases and ports)",
+      "summary": "IFC-177 Application Layer completed following TDD methodology. All 6 use cases (Create, Claim, Approve, Reject, Release, Escalate) implemented with proper hexagonal architecture separation.... Repository interface defined in domain layer;...",
+      "definitionOfDone": "CreateReviewUseCase, ClaimReviewUseCase, ApproveReviewUseCase, RejectReviewUseCase, ReleaseReviewUseCase, EscalateReviewUseCase; IAIOutputReviewRepository port; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Repository interface defined in domain layer; All 6 use cases implemented following TDD; 54+ tests passing with >90% coverage",
+      "dependencies": [
+        "IFC-176",
+        "IFC-128"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-4/attestations/IFC-177/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-05T21:00:00.000Z",
+        "sprintFolder": 4
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-178",
+      "sprint": 4,
+      "status": "Completed",
+      "section": "AI Foundation",
+      "title": "AI Output Review - Database Schema (Prisma models)",
+      "description": "AI Output Review - Database Schema (Prisma models)",
+      "summary": "IFC-178 AI Output Review Database Schema fully implemented and deployed. 3 Prisma enums (AIOutputType, ReviewStatus, ReviewDecision) and 2 models (AIOutputReview, AIOutputReviewAudit) added. All 37 tests pass.... AIOutputReview table with tenant isolation;...",
+      "definitionOfDone": "AIOutputReview table with tenant isolation; ReviewAuditLog table; indexes for status/tenant queries; migration script; verified by: pnpm db:migrate",
+      "definitionOfDoneSnapshot": "AIOutputReview table with tenant isolation; ReviewAuditLog table (AIOutputReviewAudit); Indexes for status/tenant queries",
+      "dependencies": [
+        "IFC-128"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-4/attestations/IFC-178/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-04T19:56:00.000Z",
+        "sprintFolder": 4
+      },
+      "validationSummary": {
+        "total": 8,
+        "passed": 8,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-184",
+      "sprint": 4,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Contact tRPC Router - CRUD search relationship linking timeline integration",
+      "description": "Contact tRPC Router - CRUD search relationship linking timeline integration",
+      "summary": "Task completed and verified contact.list, contact.get, contact.create, contact.update, contact.delete, contact.search, contact.linkToAccount, contact.linkToLead, contact.getTimeline endpoints",
+      "definitionOfDone": "contact.list, contact.get, contact.create, contact.update, contact.delete, contact.search, contact.linkToAccount, contact.linkToLead, contact.getTimeline endpoints; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "contact.list, contact.get, contact.create, contact.update, contact.delete, contact.search, contact.linkToAccount, contact.linkToLead, contact.getTimeline endpoints",
+      "dependencies": [
+        "IFC-102",
+        "IFC-107",
+        "IFC-003"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-4/attestations/IFC-184/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T19:33:21.869Z",
+        "sprintFolder": 4
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-185",
+      "sprint": 4,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Account tRPC Router - CRUD hierarchy contacts opportunities activity feed",
+      "description": "Account tRPC Router - CRUD hierarchy contacts opportunities activity feed",
+      "summary": "IFC-185 Account tRPC Router implementation complete. Added 3 new endpoints (getContacts, getOpportunities, getActivity) with cursor-based pagination, filtering, tenant isolation, and 30+ new tests.... account.getContacts endpoint implemented;...",
+      "definitionOfDone": "account.list, account.get, account.create, account.update, account.delete, account.getContacts, account.getOpportunities, account.getHierarchy, account.getActivity endpoints; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "account.getContacts endpoint implemented; account.getOpportunities endpoint implemented; account.getActivity endpoint implemented",
+      "dependencies": [
+        "IFC-103",
+        "IFC-107",
+        "IFC-003"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-4/attestations/IFC-185/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-05T21:25:00.000Z",
+        "sprintFolder": 4
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-188",
+      "sprint": 4,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Ticket Domain Entity - Aggregate with SLA priority escalation categories customer linking",
+      "description": "Ticket Domain Entity - Aggregate with SLA priority escalation categories customer linking",
+      "summary": "Task completed and verified Ticket aggregate with TicketId VO, TicketStatus enum, TicketPriority enum, SLAStatus, Category, Assignee, Customer link; Zod validators; repository interface",
+      "definitionOfDone": "Ticket aggregate with TicketId VO, TicketStatus enum, TicketPriority enum, SLAStatus, Category, Assignee, Customer link; Zod validators; repository interface; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Ticket aggregate with TicketId VO, TicketStatus enum, TicketPriority enum, SLAStatus, Category, Assignee, Customer link; Zod validators; repository interface",
+      "dependencies": [
+        "IFC-002",
+        "IFC-003"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-4/attestations/IFC-188/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T19:33:21.869Z",
+        "sprintFolder": 4
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    }
+  ]
+}

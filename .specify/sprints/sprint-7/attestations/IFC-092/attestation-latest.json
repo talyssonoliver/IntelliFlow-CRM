@@ -1,0 +1,74 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-092",
+  "run_id": "sprint7-audit-20260302T215750-xc1o8i",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:57:58.628Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 5,
+    "validations_passed": 2,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/api/src/shared/forecast-algorithm.test.ts": "c747e8ef0ddbbe842e91c589c520248052ba51af0dc14330444519011997c9e0",
+    "artifacts/metrics/accuracy-backtest.csv": "a51367a1af46a7691f35fbc44b03ca489f34ecf12a2cd169730e8e123ceac830",
+    ".specify/sprints/sprint-7/attestations/IFC-092/context_ack.json": "c1a597758760a97d8c44b0b08b9a4c0b3656c9cd785cf8212aff7556c60b33e9",
+    "docs/planning/adr/ADR-019-core-crm-foundation.md": "95b48bd4fbff6a06f870be0ad248847d51b354705f6d89ea8d5ea1e2b27821fb",
+    "docs/planning/prd-core-crm.md": "7b7dff301febbb7adfd0a53ba0a9cbf36c70da93758d9c77acb62a31a118c219"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-092",
+      "command": "pnpm --filter @intelliflow/api typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 20000,
+      "stdout_hash": "all-green-1772476872408"
+    },
+    {
+      "name": "IFC-092",
+      "command": "pnpm --filter @intelliflow/api test --run",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 60000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-091"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Forecast accuracy ≥85%",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "artifacts: forecast-algorithm.test.ts",
+      "met": true,
+      "evidence": "All 2 validations passed"
+    },
+    {
+      "criterion": "accuracy-backtest.csv",
+      "met": true,
+      "evidence": "All 2 validations passed"
+    },
+    {
+      "criterion": "context_ack.json",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "2 DoD criteria unverified"
+}

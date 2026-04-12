@@ -1,0 +1,54 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-090",
+  "run_id": "sprint6-audit-20260302T215741-ex8v6u",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:57:49.007Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 4,
+    "validations_passed": 0,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "artifacts/lighthouse/lighthouse-360-report.html": "de36c8cea6cea7e6fa5c431da3a95346930986c87024d8c0e4f4639f783b0b28",
+    ".specify/sprints/sprint-6/attestations/IFC-090/context_ack.json": "da4289e52db7efe93636a0d85ba5b8519c13b37c9578e3ec4a225ba82e8d3210",
+    "docs/planning/adr/ADR-019-core-crm-foundation.md": "95b48bd4fbff6a06f870be0ad248847d51b354705f6d89ea8d5ea1e2b27821fb",
+    "docs/planning/prd-core-crm.md": "7b7dff301febbb7adfd0a53ba0a9cbf36c70da93758d9c77acb62a31a118c219"
+  },
+  "validation_results": [],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-089"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "360 page functional with >90 Lighthouse score matching design mockup",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "artifacts: lighthouse-360-report.html",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "context_ack.json",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "gates: lighthouse-gte-90",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "4 DoD criteria unverified"
+}

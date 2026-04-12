@@ -1,0 +1,73 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-176",
+  "run_id": "sprint3-audit-20260302T215712-mko6ti",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:57:20.337Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 3,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "packages/validators/src/ai-review.ts": "afe699d690b554953c8e048348c3fbaaafc448df2bd94ccfa6a3ca5ffd1ce7bf",
+    "packages/validators/src/__tests__/ai-review.test.ts": "3d9900d270d9d025880c33b5ae65dcc0acfba3e1a6a1185dde66ed3d585cb703",
+    ".specify/sprints/sprint-3/attestations/IFC-176/attestation.json": "227193165dc4d94d694ecbfdc301cb71d8d509d6630b2ab3f4d71808e9a032f0"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-176",
+      "command": "pnpm test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 180000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-128"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Zod schemas derived from domain constants",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "CreateReviewInput",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "ReviewDecisionInput",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "ReviewListFilter schemas",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "exports match domain types",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "verified by: pnpm test",
+      "met": true,
+      "evidence": "All 1 validations passed"
+    }
+  ],
+  "notes": "5 DoD criteria unverified"
+}

@@ -1,0 +1,66 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-119",
+  "run_id": "sprint1-audit-20260302T215651-arwnsz",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:56:59.911Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 8,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "artifacts/misc/ceremony-calendar.ics": "61ff42e383b45db5732beaa18ce8dc3579bc1cb8326c85584b0dcaf0f3eede4c",
+    "artifacts/reports/retro-action-items.md": "55160d83f0efe7cc3cc5b75ef450aa2d825cbc63f4860dc78ab73566b90d0e87",
+    "artifacts/misc/templates/backlog-refinement.md": "972e4f760f1524b8b4f8aa79ce8d138f1b811617910805ca42c9a871e777e0a1",
+    "artifacts/misc/templates/daily-standup.md": "d7c2623794b4247a605f77b547b86a2917b76e817a8b7e68cb678e7c72e95efd",
+    "artifacts/misc/templates/sprint-planning.md": "62366ee010f5dfc4a1cf1c3b32a91217ccc5acbd9744896603e4cfe68cb19290",
+    "artifacts/misc/templates/sprint-retrospective.md": "5b7384af9331a3bba020eac28ca24beab3b1c100800ed83874a8916d89d7690e",
+    "artifacts/misc/templates/sprint-review.md": "0c5f0d37b6c6053599547a94fe0ad6a3010d785b09f1100c806d1e2dec2a1541",
+    ".specify/sprints/sprint-1/attestations/IFC-119/context_ack.json": "b4438100740c27001d87cfc5dd6473a3d0ce004e857a87334fb4cb52b80c6715"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-119",
+      "command": "pnpm typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 90000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [],
+  "definition_of_done_items": [
+    {
+      "criterion": "Ceremony schedule published",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "agendas and templates created",
+      "met": true,
+      "evidence": "All 8 artifacts exist"
+    },
+    {
+      "criterion": "meeting outcomes documented",
+      "met": true,
+      "evidence": "Documentation found: artifacts/reports/retro-action-items.md, artifacts/misc/templates/backlog-refinement.md, artifacts/misc/templates/daily-standup.md, artifacts/misc/templates/sprint-planning.md, artifacts/misc/templates/sprint-retrospective.md, artifacts/misc/templates/sprint-review.md"
+    },
+    {
+      "criterion": "targets: >=100%",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "2 DoD criteria unverified"
+}

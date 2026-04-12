@@ -1,0 +1,58 @@
+{
+  "task_id": "PG-038",
+  "verdict": "COMPLETE",
+  "sprint": 15,
+  "run_id": "20260225220845-e7a87f0b",
+  "timestamp": "2026-02-25T22:45:00Z",
+  "artifact_hashes": {
+    "apps/web/src/app/(developer)/docs/auth/page.tsx": "21e6d7d379b5128a300052a44d0901dec172ecd20d221a40e9b8c085d6d04539",
+    "apps/web/src/components/developer/auth-guides.tsx": "9a5cea34584aeb9dacc5f808e0d3a7d0491a849729b0266ece598a3d1b03066e",
+    "apps/web/src/components/developer/auth-examples.tsx": "3d7f6749d4e35014611ccd8364d61211e0a76da07fd42a250c522c87e940d84c",
+    "apps/web/src/app/(developer)/docs/auth/__tests__/page.test.tsx": "e411d454f08cba2db54dbf03ca694c23fd634abacb459aa3621ad6e03ef7c218",
+    "apps/web/src/components/developer/__tests__/auth-guides.test.tsx": "8d16e13d4e209e279f48242a627e057bdd83c8dac4befcfb9789c07611fd492c",
+    "apps/web/src/components/developer/__tests__/auth-examples.test.tsx": "9c0196b9698aa05931e248f39bf72dfc85242056e9ac724cb4632cb89fa91e3a",
+    "apps/web/src/app/(developer)/docs/auth/__tests__/integration.test.tsx": "e9ff4d4590808a7e33430acfbcbcfb359fb3411e9c466f96df62e3af5351e38c"
+  },
+  "dependencies_verified": {
+    "PG-032": "Completed"
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-25T22:28:00Z",
+      "duration_ms": 30000,
+      "stdout_hash": "typecheck-exit0"
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run (4 test files, 54 tests)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-25T22:36:21Z",
+      "duration_ms": 2780,
+      "stdout_hash": "54-pass-0-fail"
+    },
+    {
+      "name": "Lint",
+      "command": "npx eslint apps/web/src/app/(developer)/docs/auth/ apps/web/src/components/developer/auth-guides.tsx apps/web/src/components/developer/auth-examples.tsx apps/web/src/components/sidebar/configs/developer.ts apps/web/src/components/developer/integration-list.tsx",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-25T22:22:49Z",
+      "duration_ms": 5000,
+      "stdout_hash": "lint-0-warnings"
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-25T22:30:00Z",
+      "duration_ms": 60000,
+      "stdout_hash": "build-exit0-docs-auth-route"
+    }
+  ],
+  "notes": "Auth Guides page at /docs/auth with 5 tabbed sections and 4-language code examples. 54 tests across 4 files. V8 coverage: Stmts 93.54%, Branches 83.33%, Functions 94.73%, Lines 96.55%. STOA Foundation PASS. All 8 completion gates PASS. Ancillary fix: settings/account/page.tsx type coercion for defaultValue props."
+}

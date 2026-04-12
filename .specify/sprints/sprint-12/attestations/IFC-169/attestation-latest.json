@@ -1,0 +1,63 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-169",
+  "run_id": "sprint12-audit-20260302T215839-2r9dal",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:58:47.760Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 3,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/api/src/lib/supabase.ts": "4cf216fc73e3223ee5676565f0b39a9e8dbfe29d162ec001dac3f274700ecb9c",
+    "docs/operations/env-requirements.md": "a014f3e2e773fb0e2a8058a655abdeeef7371bbbc5bb86581c1bc64cc91b13a2",
+    ".specify/sprints/sprint-12/attestations/IFC-169/context_ack.json": "f8edf5f2027ee0fd79ff3ef362530b853c7204cb9a0b5ab80788d0c8bf9bbb7e"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-169",
+      "command": "pnpm test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 180000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-006"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Remove mock key fallback",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "fail fast if SUPABASE_URL or SUPABASE_ANON_KEY missing",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "startup validation added",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "verified by: pnpm test",
+      "met": true,
+      "evidence": "All 1 validations passed"
+    }
+  ],
+  "notes": "3 DoD criteria unverified"
+}

@@ -1,0 +1,62 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-024",
+  "run_id": "sprint14-audit-20260302T215859-6dbfyi",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:59:07.006Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 2,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "artifacts/misc/feedback-analytics.json": "48341850a27b968b485b02a38057e014808cf1d1071eb80e575b75d1c9b1f55c",
+    ".specify/sprints/sprint-14/attestations/IFC-024/context_ack.json": "f35d41f3d97d1d2d30b058eb7e97249125979d5d2d892417eefa8b766f320a8c"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-024",
+      "command": "pnpm typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 90000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-023"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Score adjustments tracked",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "model improvement loop",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "artifacts: feedback-analytics.json",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "context_ack.json",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "4 DoD criteria unverified"
+}

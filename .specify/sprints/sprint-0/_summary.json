@@ -1,0 +1,1339 @@
+{
+  "sprint": "sprint-0",
+  "name": "Foundation & AI Setup",
+  "generated_at": "2026-04-11T16:48:01.958Z",
+  "summary_source": "specify",
+  "task_summary": {
+    "total": 34,
+    "completed": 34,
+    "backlog": 0,
+    "blocked": 0,
+    "attested_completed": 34
+  },
+  "context": "Primary focus areas: Foundation Setup (17), AI Foundation (7), Go-to-Market (2).",
+  "section_summary": [
+    {
+      "section": "Foundation Setup",
+      "total": 17,
+      "completed": 17,
+      "open": 0
+    },
+    {
+      "section": "AI Foundation",
+      "total": 7,
+      "completed": 7,
+      "open": 0
+    },
+    {
+      "section": "Go-to-Market",
+      "total": 2,
+      "completed": 2,
+      "open": 0
+    },
+    {
+      "section": "Planning",
+      "total": 2,
+      "completed": 2,
+      "open": 0
+    },
+    {
+      "section": "Analytics & Segmentation",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Brand & Design",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Engineering Operations",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Project Operations",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Strategy & Documentation",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Testing",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    }
+  ],
+  "notable_completed": [
+    {
+      "taskId": "EP-001-AI",
+      "sprint": 0,
+      "status": "Completed",
+      "section": "Foundation Setup",
+      "title": "EasyPanel Internal Tools Deployment (Push-based OTLP Pipeline)",
+      "description": "EasyPanel Internal Tools Deployment (Push-based OTLP Pipeline)",
+      "summary": "OTel Collector + Prometheus + Grafana deployed; Loki + Tempo deployed with trace-to-log correlation; All configs git-versioned",
+      "definitionOfDone": "Week 1: OTel Collector + Prometheus + Grafana deployed behind access control; Week 2: Loki + Tempo deployed with trace-to-log correlation; Week 3: SonarQube deployed with GitHub Actions integration; All configs git-versioned and shared between local Docker and EasyPanel; targets: >=100%, <30 min, zero errors",
+      "definitionOfDoneSnapshot": "OTel Collector + Prometheus + Grafana deployed; Loki + Tempo deployed with trace-to-log correlation; All configs git-versioned",
+      "dependencies": [
+        "ENV-003-AI",
+        "ENV-008-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-0/attestations/EP-001-AI/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 0
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 5,
+        "met": 5,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "EXC-INIT-001",
+      "sprint": 0,
+      "status": "Completed",
+      "section": "AI Foundation",
+      "title": "Sprint 0 - Environment Setup with Agent Ecosystem",
+      "description": "Sprint 0 - Environment Setup with Agent Ecosystem",
+      "summary": "Complete AI-enhanced environment with automation pipelines operational; Artifacts: setup-complete-checklist.md, automation-metrics.json, pipeline-status.yaml; Targets: >=80%, zero errors",
+      "definitionOfDone": "Complete AI-enhanced environment with automation pipelines operational; artifacts: setup-complete-checklist.md, automation-metrics.json, pipeline-status.yaml; targets: >=80%, zero errors; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Complete AI-enhanced environment with automation pipelines operational",
+      "dependencies": [],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-0/attestations/EXC-INIT-001/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 0
+      },
+      "validationSummary": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "ENG-OPS-001",
+      "sprint": 0,
+      "status": "Completed",
+      "section": "Engineering Operations",
+      "title": "Engineering Playbook (SDLC, PR rules, quality gates, release/rollback)",
+      "description": "Engineering Playbook (SDLC, PR rules, quality gates, release/rollback)",
+      "summary": "Engineering operations established; Incident response defined",
+      "definitionOfDone": "Engineering handbook written: branching strategy, PR checklist, code review standards, required gates (audit-matrix Tier 1), release flow, rollback steps, incident basics, and docs conventions; includes strict vs local\" policy for WARN/FAIL\"; verified by: pnpm lint",
+      "definitionOfDoneSnapshot": "Engineering operations established; Incident response defined",
+      "dependencies": [
+        "ENV-002-AI",
+        "ENV-005-AI",
+        "ENV-010-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-0/attestations/ENG-OPS-001/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 0
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "ENV-005-AI",
+      "sprint": 0,
+      "status": "Completed",
+      "section": "Foundation Setup",
+      "title": "CI/CD Pipeline with Predictive Optimization",
+      "description": "CI/CD Pipeline with Predictive Optimization",
+      "summary": "Pipeline AI-generated; Predictive caching; Security gates automated",
+      "definitionOfDone": "Pipeline AI-generated, predictive caching, self-optimizing workflows, security gates automated; artifacts: ci.yml, cd.yml, context_ack.json; targets: >=95%, <5 min",
+      "definitionOfDoneSnapshot": "Pipeline AI-generated; Predictive caching; Security gates automated",
+      "dependencies": [
+        "ENV-002-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-0/attestations/ENV-005-AI/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 0
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "ENV-006-AI",
+      "sprint": 0,
+      "status": "Completed",
+      "section": "Foundation Setup",
+      "title": "Prisma Schema with Generated Optimizations",
+      "description": "Prisma Schema with Generated Optimizations",
+      "summary": "Schema AI-optimized; Migrations AI-tested; Seed data AI-generated",
+      "definitionOfDone": "Schema AI-optimized, migrations AI-tested, seed data AI-generated, performance validated; targets: >=100%, <15s",
+      "definitionOfDoneSnapshot": "Schema AI-optimized; Migrations AI-tested; Seed data AI-generated",
+      "dependencies": [
+        "ENV-004-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-0/attestations/ENV-006-AI/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 0
+      },
+      "validationSummary": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    }
+  ],
+  "open_tasks": [],
+  "tasks": [
+    {
+      "taskId": "EXC-INIT-001",
+      "sprint": 0,
+      "status": "Completed",
+      "section": "AI Foundation",
+      "title": "Sprint 0 - Environment Setup with Agent Ecosystem",
+      "description": "Sprint 0 - Environment Setup with Agent Ecosystem",
+      "summary": "Complete AI-enhanced environment with automation pipelines operational; Artifacts: setup-complete-checklist.md, automation-metrics.json, pipeline-status.yaml; Targets: >=80%, zero errors",
+      "definitionOfDone": "Complete AI-enhanced environment with automation pipelines operational; artifacts: setup-complete-checklist.md, automation-metrics.json, pipeline-status.yaml; targets: >=80%, zero errors; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Complete AI-enhanced environment with automation pipelines operational",
+      "dependencies": [],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-0/attestations/EXC-INIT-001/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 0
+      },
+      "validationSummary": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "AI-SETUP-001",
+      "sprint": 0,
+      "status": "Completed",
+      "section": "AI Foundation",
+      "title": "Configure Claude Code with Custom Commands and Hooks",
+      "description": "Configure Claude Code with Custom Commands and Hooks",
+      "summary": ".claude/commands configured; Hooks system active; Slash commands tested",
+      "definitionOfDone": ".claude/commands configured, hooks system active, slash commands tested; targets: >=100%, <100ms",
+      "definitionOfDoneSnapshot": ".claude/commands configured; Hooks system active; Slash commands tested",
+      "dependencies": [
+        "EXC-INIT-001"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-0/attestations/AI-SETUP-001/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 0
+      },
+      "validationSummary": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "AI-SETUP-002",
+      "sprint": 0,
+      "status": "Completed",
+      "section": "AI Foundation",
+      "title": "GitHub Copilot Enterprise Automation Setup",
+      "description": "GitHub Copilot Enterprise Automation Setup",
+      "summary": "copilot-instructions.md created; copilot-setup-steps.yml automated; Coding agent enabled",
+      "definitionOfDone": "copilot-instructions.md created, copilot-setup-steps.yml automated, coding agent enabled; targets: >=100%, <2s",
+      "definitionOfDoneSnapshot": "copilot-instructions.md created; copilot-setup-steps.yml automated; Coding agent enabled",
+      "dependencies": [
+        "AI-SETUP-001"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-0/attestations/AI-SETUP-002/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 0
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "AI-SETUP-003",
+      "sprint": 0,
+      "status": "Completed",
+      "section": "AI Foundation",
+      "title": "External AI Tools Integration (Codex, Jules)",
+      "description": "External AI Tools Integration (Codex, Jules)",
+      "summary": "Codex CLI configured; Jules connected; Security sandboxing verified",
+      "definitionOfDone": "Codex CLI configured, Jules connected, security sandboxing verified, automation triggers set; targets: <5s; verified by: pnpm test, pnpm test:integration; gates: security-scan-pass",
+      "definitionOfDoneSnapshot": "Codex CLI configured; Jules connected; Security sandboxing verified",
+      "dependencies": [
+        "AI-SETUP-001"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-0/attestations/AI-SETUP-003/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 0
+      },
+      "validationSummary": {
+        "total": 6,
+        "passed": 6,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 1,
+        "met": 1,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "ENV-001-AI",
+      "sprint": 0,
+      "status": "Completed",
+      "section": "Foundation Setup",
+      "title": "Automated Monorepo Creation",
+      "description": "Automated Monorepo Creation",
+      "summary": "Monorepo generated via Claude slash command; Structure validated; AI-optimized configuration",
+      "definitionOfDone": "Monorepo generated via Claude slash command, structure validated, AI-optimized configuration; targets: >=100%, <10 min, zero errors; verified by: pnpm build",
+      "definitionOfDoneSnapshot": "Monorepo generated via Claude slash command; Structure validated; AI-optimized configuration",
+      "dependencies": [
+        "AI-SETUP-001"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-0/attestations/ENV-001-AI/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 0
+      },
+      "validationSummary": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "ENV-002-AI",
+      "sprint": 0,
+      "status": "Completed",
+      "section": "Foundation Setup",
+      "title": "Automated Development Tools Configuration",
+      "description": "Automated Development Tools Configuration",
+      "summary": "ESLint/Prettier AI-configured; Husky hooks with AI validation; Conventional commits automated",
+      "definitionOfDone": "ESLint/Prettier AI-configured, Husky hooks with AI validation, conventional commits automated; targets: <5 min, zero errors; verified by: pnpm lint",
+      "definitionOfDoneSnapshot": "ESLint/Prettier AI-configured; Husky hooks with AI validation; Conventional commits automated",
+      "dependencies": [
+        "ENV-001-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-0/attestations/ENV-002-AI/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 0
+      },
+      "validationSummary": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "ENV-003-AI",
+      "sprint": 0,
+      "status": "Completed",
+      "section": "Foundation Setup",
+      "title": "Docker Environment with Optimized Configuration",
+      "description": "Docker Environment with Optimized Configuration",
+      "summary": "Docker Compose AI-generated; Resource optimization applied; Auto-scaling configured",
+      "definitionOfDone": "Docker Compose AI-generated, resource optimization applied, auto-scaling configured; targets: <2 min",
+      "definitionOfDoneSnapshot": "Docker Compose AI-generated; Resource optimization applied; Auto-scaling configured",
+      "dependencies": [
+        "ENV-001-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-0/attestations/ENV-003-AI/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 0
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "ENV-004-AI",
+      "sprint": 0,
+      "status": "Completed",
+      "section": "Foundation Setup",
+      "title": "Supabase Integration with Automated Schema Design",
+      "description": "Supabase Integration with Automated Schema Design",
+      "summary": "Connection established; pgvector optimized by AI; Schema AI-validated for performance",
+      "definitionOfDone": "Connection established, pgvector optimized by AI, schema AI-validated for performance; targets: >=100%, <30ms",
+      "definitionOfDoneSnapshot": "Connection established; pgvector optimized by AI; Schema AI-validated for performance",
+      "dependencies": [
+        "ENV-003-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-0/attestations/ENV-004-AI/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 0
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "ENV-005-AI",
+      "sprint": 0,
+      "status": "Completed",
+      "section": "Foundation Setup",
+      "title": "CI/CD Pipeline with Predictive Optimization",
+      "description": "CI/CD Pipeline with Predictive Optimization",
+      "summary": "Pipeline AI-generated; Predictive caching; Security gates automated",
+      "definitionOfDone": "Pipeline AI-generated, predictive caching, self-optimizing workflows, security gates automated; artifacts: ci.yml, cd.yml, context_ack.json; targets: >=95%, <5 min",
+      "definitionOfDoneSnapshot": "Pipeline AI-generated; Predictive caching; Security gates automated",
+      "dependencies": [
+        "ENV-002-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-0/attestations/ENV-005-AI/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 0
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "ENV-006-AI",
+      "sprint": 0,
+      "status": "Completed",
+      "section": "Foundation Setup",
+      "title": "Prisma Schema with Generated Optimizations",
+      "description": "Prisma Schema with Generated Optimizations",
+      "summary": "Schema AI-optimized; Migrations AI-tested; Seed data AI-generated",
+      "definitionOfDone": "Schema AI-optimized, migrations AI-tested, seed data AI-generated, performance validated; targets: >=100%, <15s",
+      "definitionOfDoneSnapshot": "Schema AI-optimized; Migrations AI-tested; Seed data AI-generated",
+      "dependencies": [
+        "ENV-004-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-0/attestations/ENV-006-AI/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 0
+      },
+      "validationSummary": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "ENV-007-AI",
+      "sprint": 0,
+      "status": "Completed",
+      "section": "Foundation Setup",
+      "title": "tRPC Setup with Automated Type Generation",
+      "description": "tRPC Setup with Automated Type Generation",
+      "summary": "tRPC AI-configured; Routers auto-generated; Error handling automated",
+      "definitionOfDone": "tRPC AI-configured, routers auto-generated, type safety AI-verified, error handling automated; targets: <30s, zero errors",
+      "definitionOfDoneSnapshot": "tRPC AI-configured; Routers auto-generated; Error handling automated",
+      "dependencies": [
+        "ENV-006-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-0/attestations/ENV-007-AI/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 0
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "ENV-008-AI",
+      "sprint": 0,
+      "status": "Completed",
+      "section": "Foundation Setup",
+      "title": "Automated Observability with Predictive Monitoring",
+      "description": "Automated Observability with Predictive Monitoring",
+      "summary": "OpenTelemetry AI-configured; Predictive alerts set; Self-healing enabled",
+      "definitionOfDone": "OpenTelemetry AI-configured, predictive alerts set, anomaly detection active, self-healing enabled; targets: >=100%",
+      "definitionOfDoneSnapshot": "OpenTelemetry AI-configured; Predictive alerts set; Self-healing enabled",
+      "dependencies": [
+        "ENV-005-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-0/attestations/ENV-008-AI/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 0
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 1,
+        "met": 1,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "ENV-009-AI",
+      "sprint": 0,
+      "status": "Completed",
+      "section": "Foundation Setup",
+      "title": "Frontend with Generated Components and Optimization",
+      "description": "Frontend with Generated Components and Optimization",
+      "summary": "Next.js 16.0.10 App Router baseline; Turbopack FS caching enabled; shadcn components AI-selected",
+      "definitionOfDone": "Next.js 16.0.10 App Router baseline, Turbopack FS caching enabled, Cache Components used where appropriate, proxy replaces middleware where required; shadcn components AI-selected, performance AI-tuned, accessibility verified; targets: <1s; gates: lighthouse-gte-90",
+      "definitionOfDoneSnapshot": "Next.js 16.0.10 App Router baseline; Turbopack FS caching enabled; shadcn components AI-selected",
+      "dependencies": [
+        "ENV-001-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-0/attestations/ENV-009-AI/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 0
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "ENV-010-AI",
+      "sprint": 0,
+      "status": "Completed",
+      "section": "Foundation Setup",
+      "title": "Automated Test Generation and Automation",
+      "description": "Automated Test Generation and Automation",
+      "summary": "Tests AI-generated; Coverage AI-optimized; E2E scenarios AI-created",
+      "definitionOfDone": "Tests AI-generated, coverage AI-optimized, E2E scenarios AI-created, continuous validation; artifacts: index.html, context_ack.json; targets: >=90%, <1 min; gates: coverage-gte-90",
+      "definitionOfDoneSnapshot": "Tests AI-generated; Coverage AI-optimized; E2E scenarios AI-created",
+      "dependencies": [
+        "ENV-007-AI",
+        "ENV-009-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-0/attestations/ENV-010-AI/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 0
+      },
+      "validationSummary": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "ENV-011-AI",
+      "sprint": 0,
+      "status": "Completed",
+      "section": "Foundation Setup",
+      "title": "LangChain Integration with Optimized Chains",
+      "description": "LangChain Integration with Optimized Chains",
+      "summary": "LangChain AI-configured; Chains AI-optimized; Rate limiting AI-managed",
+      "definitionOfDone": "LangChain AI-configured, chains AI-optimized, rate limiting AI-managed, cost prediction active",
+      "definitionOfDoneSnapshot": "LangChain AI-configured; Chains AI-optimized; Rate limiting AI-managed",
+      "dependencies": [
+        "ENV-007-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-0/attestations/ENV-011-AI/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 0
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "ENV-012-AI",
+      "sprint": 0,
+      "status": "Completed",
+      "section": "Foundation Setup",
+      "title": "Documentation with Auto-Generation",
+      "description": "Documentation with Auto-Generation",
+      "summary": "Docs AI-generated; LLM-optimized structure; Auto-updating enabled",
+      "definitionOfDone": "Docs AI-generated, LLM-optimized structure, auto-updating enabled, multi-language support; artifacts: docusaurus.config.js, context_ack.json; targets: >=100%, <30s; gates: coverage-gte-90",
+      "definitionOfDoneSnapshot": "Docs AI-generated; LLM-optimized structure; Auto-updating enabled",
+      "dependencies": [
+        "ENV-001-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-0/attestations/ENV-012-AI/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 0
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "ENV-013-AI",
+      "sprint": 0,
+      "status": "Completed",
+      "section": "Foundation Setup",
+      "title": "Automated Security Implementation",
+      "description": "Automated Security Implementation",
+      "summary": "Security AI-audited; Vulnerabilities AI-detected; Compliance verified",
+      "definitionOfDone": "Security AI-audited, vulnerabilities AI-detected, patches AI-applied, compliance verified; artifacts: security-scan-results.json, compliance-report.md, patch-log.csv; targets: >=100%, zero errors",
+      "definitionOfDoneSnapshot": "Security AI-audited; Vulnerabilities AI-detected; Compliance verified",
+      "dependencies": [
+        "ENV-005-AI",
+        "ENV-007-AI",
+        "ENV-009-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-0/attestations/ENV-013-AI/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 0
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "ENV-014-AI",
+      "sprint": 0,
+      "status": "Completed",
+      "section": "Foundation Setup",
+      "title": "Performance Optimization with AI Profiling",
+      "description": "Performance Optimization with AI Profiling",
+      "summary": "Performance AI-profiled; Optimizations AI-applied; Predictive scaling configured",
+      "definitionOfDone": "Performance AI-profiled, optimizations AI-applied, predictive scaling configured; targets: >=40%",
+      "definitionOfDoneSnapshot": "Performance AI-profiled; Optimizations AI-applied; Predictive scaling configured",
+      "dependencies": [
+        "ENV-009-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-0/attestations/ENV-014-AI/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 0
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 1,
+        "met": 1,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "ENV-015-AI",
+      "sprint": 0,
+      "status": "Completed",
+      "section": "Foundation Setup",
+      "title": "AI-Managed Feature Flags with Predictive Rollout",
+      "description": "AI-Managed Feature Flags with Predictive Rollout",
+      "summary": "Flags AI-managed; Rollout AI-optimized; A/B tests AI-designed",
+      "definitionOfDone": "Flags AI-managed, rollout AI-optimized, A/B tests AI-designed, results AI-analyzed; artifacts: rollout-config.json, ab-test-results.csv, prediction-accuracy.json; targets: >=90%, <30s",
+      "definitionOfDoneSnapshot": "Flags AI-managed; Rollout AI-optimized; A/B tests AI-designed",
+      "dependencies": [
+        "ENV-007-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-0/attestations/ENV-015-AI/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 0
+      },
+      "validationSummary": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "ENV-016-AI",
+      "sprint": 0,
+      "status": "Completed",
+      "section": "Foundation Setup",
+      "title": "Privacy-First Analytics with AI Insights",
+      "description": "Privacy-First Analytics with AI Insights",
+      "summary": "Analytics AI-configured; Insights AI-generated; Privacy AI-verified",
+      "definitionOfDone": "Analytics AI-configured, insights AI-generated, privacy AI-verified, predictions active",
+      "definitionOfDoneSnapshot": "Analytics AI-configured; Insights AI-generated; Privacy AI-verified",
+      "dependencies": [
+        "ENV-009-AI",
+        "ANALYTICS-001"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-0/attestations/ENV-016-AI/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 0
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "EP-001-AI",
+      "sprint": 0,
+      "status": "Completed",
+      "section": "Foundation Setup",
+      "title": "EasyPanel Internal Tools Deployment (Push-based OTLP Pipeline)",
+      "description": "EasyPanel Internal Tools Deployment (Push-based OTLP Pipeline)",
+      "summary": "OTel Collector + Prometheus + Grafana deployed; Loki + Tempo deployed with trace-to-log correlation; All configs git-versioned",
+      "definitionOfDone": "Week 1: OTel Collector + Prometheus + Grafana deployed behind access control; Week 2: Loki + Tempo deployed with trace-to-log correlation; Week 3: SonarQube deployed with GitHub Actions integration; All configs git-versioned and shared between local Docker and EasyPanel; targets: >=100%, <30 min, zero errors",
+      "definitionOfDoneSnapshot": "OTel Collector + Prometheus + Grafana deployed; Loki + Tempo deployed with trace-to-log correlation; All configs git-versioned",
+      "dependencies": [
+        "ENV-003-AI",
+        "ENV-008-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-0/attestations/EP-001-AI/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 0
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 5,
+        "met": 5,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "AUTOMATION-001",
+      "sprint": 0,
+      "status": "Completed",
+      "section": "AI Foundation",
+      "title": "Continuous AI Agent Coordination System",
+      "description": "Continuous AI Agent Coordination System",
+      "summary": "Multi-agent orchestration active; Task handoffs automated; Quality gates AI-enforced",
+      "definitionOfDone": "Multi-agent orchestration active, task handoffs automated, quality gates AI-enforced; artifacts: orchestration-config.yaml, handoff-metrics.json, quality-gates.log",
+      "definitionOfDoneSnapshot": "Multi-agent orchestration active; Task handoffs automated; Quality gates AI-enforced",
+      "dependencies": [
+        "AI-SETUP-001",
+        "AI-SETUP-002",
+        "ENV-005-AI",
+        "ENV-008-AI",
+        "ENV-010-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-0/attestations/AUTOMATION-001/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-02T21:56:50.035Z",
+        "sprintFolder": 0
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "AUTOMATION-002",
+      "sprint": 0,
+      "status": "Completed",
+      "section": "AI Foundation",
+      "title": "AI Performance Dashboard and Optimization Loop",
+      "description": "AI Performance Dashboard and Optimization Loop",
+      "summary": "Dashboard showing AI impact; Optimization suggestions implemented; ROI tracked",
+      "definitionOfDone": "Dashboard showing AI impact, optimization suggestions implemented, ROI tracked; artifacts: optimization-loop.yaml, roi-tracking.csv, metrics-realtime.json",
+      "definitionOfDoneSnapshot": "Dashboard showing AI impact; Optimization suggestions implemented; ROI tracked",
+      "dependencies": [
+        "AUTOMATION-001"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-0/attestations/AUTOMATION-002/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 0
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-000",
+      "sprint": 0,
+      "status": "Completed",
+      "section": "Planning",
+      "title": "IntelliFlow CRM Feasibility Assessment",
+      "description": "IntelliFlow CRM Feasibility Assessment",
+      "summary": "Go/No-Go decision documented with clear rationale",
+      "definitionOfDone": "Go/No-Go decision documented with clear rationale; targets: >=80%",
+      "definitionOfDoneSnapshot": "Go/No-Go decision documented with clear rationale",
+      "dependencies": [],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-0/attestations/IFC-000/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 0
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-044",
+      "sprint": 0,
+      "status": "Completed",
+      "section": "Testing",
+      "title": "Unit Tests (Vitest + TDD)",
+      "description": "Unit Tests (Vitest + TDD)",
+      "summary": "90%+ coverage; All business logic tested",
+      "definitionOfDone": "90%+ coverage, all business logic tested; artifacts: lcov.info, test-execution-time.log, tdd-compliance.csv; gates: coverage-gte-90",
+      "definitionOfDoneSnapshot": "90%+ coverage; All business logic tested",
+      "dependencies": [
+        "ENV-010-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-0/attestations/IFC-044/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 0
+      },
+      "validationSummary": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "DOC-001",
+      "sprint": 0,
+      "status": "Completed",
+      "section": "Strategy & Documentation",
+      "title": "Company & Product Master Brief (single source of truth)",
+      "description": "Company & Product Master Brief (single source of truth)",
+      "summary": "Review process documentation complete",
+      "definitionOfDone": "Master brief created and reviewed covering: product definition, vision, target customers (ICP), personas, positioning, value proposition, differentiation, success metrics, scope/out-of-scope, tone of voice, and visual identity direction; published as tracked docs and referenced from CLAUDE.md/README as grounding source; targets: >=100%; verified by: pnpm lint",
+      "definitionOfDoneSnapshot": "Review process documentation complete",
+      "dependencies": [],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-0/attestations/DOC-001/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 0
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "BRAND-001",
+      "sprint": 0,
+      "status": "Completed",
+      "section": "Brand & Design",
+      "title": "Visual Identity System (palette, typography, spacing, logo usage)",
+      "description": "Visual Identity System (palette, typography, spacing, logo usage)",
+      "summary": "Brand foundation established; Logo suite created",
+      "definitionOfDone": "Defined palette (primary/secondary/neutral), typography scale, spacing system, iconography guidance, and basic component styling principles; includes do/don’t examples; exported as machine-readable tokens (JSON) and documented usage guidance; verified by: pnpm lint",
+      "definitionOfDoneSnapshot": "Brand foundation established; Logo suite created",
+      "dependencies": [
+        "DOC-001"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-0/attestations/BRAND-001/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 0
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "GTM-001",
+      "sprint": 0,
+      "status": "Completed",
+      "section": "Go-to-Market",
+      "title": "ICP & Personas Pack (target customers, job stories, objections)",
+      "description": "ICP & Personas Pack (target customers, job stories, objections)",
+      "summary": "Go-to-market strategy defined; Competitive analysis complete",
+      "definitionOfDone": "ICP definition (firmographics/technographics/constraints), 2–4 personas with job stories, triggers, pains, gains, buying process, and objections; includes “not ICP” exclusions; stored as tracked docs; verified by: pnpm lint; output: icp.md, personas.md, objections.md validated",
+      "definitionOfDoneSnapshot": "Go-to-market strategy defined; Competitive analysis complete",
+      "dependencies": [
+        "DOC-001"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-0/attestations/GTM-001/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 0
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "GTM-002",
+      "sprint": 0,
+      "status": "Completed",
+      "section": "Go-to-Market",
+      "title": "Messaging Framework (positioning, value props, copy blocks)",
+      "description": "Messaging Framework (positioning, value props, copy blocks)",
+      "summary": "Voice and tone defined; Messaging examples created",
+      "definitionOfDone": "Positioning statement, elevator pitch, key messages by persona, CTA library, website copy blocks (hero, features, pricing, security), and tone-of-voice rules; includes examples for consistent writing; verified by: pnpm lint; output: positioning.md, value-props.md, copy-blocks.md validated",
+      "definitionOfDoneSnapshot": "Voice and tone defined; Messaging examples created",
+      "dependencies": [
+        "GTM-001",
+        "BRAND-001"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-0/attestations/GTM-002/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 0
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PM-OPS-001",
+      "sprint": 0,
+      "status": "Completed",
+      "section": "Project Operations",
+      "title": "Project Operating Model & Delivery Playbook (cadence, WIP, ticket sizing, ABC)",
+      "description": "Project Operating Model & Delivery Playbook (cadence, WIP, ticket sizing, ABC)",
+      "summary": "PM operations established; Delivery metrics tracked",
+      "definitionOfDone": "Documented end-to-end delivery model: stages, sequencing, WIP policy, ticket sizing guidance, ABC classification of work, acceptance criteria rules, and escalation path; includes RACI for Sprint 0–2; referenced by tracker UI/help pages; targets: >=100%; verified by: pnpm lint",
+      "definitionOfDoneSnapshot": "PM operations established; Delivery metrics tracked",
+      "dependencies": [
+        "AUTOMATION-001",
+        "ENV-005-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-0/attestations/PM-OPS-001/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 0
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "ENG-OPS-001",
+      "sprint": 0,
+      "status": "Completed",
+      "section": "Engineering Operations",
+      "title": "Engineering Playbook (SDLC, PR rules, quality gates, release/rollback)",
+      "description": "Engineering Playbook (SDLC, PR rules, quality gates, release/rollback)",
+      "summary": "Engineering operations established; Incident response defined",
+      "definitionOfDone": "Engineering handbook written: branching strategy, PR checklist, code review standards, required gates (audit-matrix Tier 1), release flow, rollback steps, incident basics, and docs conventions; includes strict vs local\" policy for WARN/FAIL\"; verified by: pnpm lint",
+      "definitionOfDoneSnapshot": "Engineering operations established; Incident response defined",
+      "dependencies": [
+        "ENV-002-AI",
+        "ENV-005-AI",
+        "ENV-010-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-0/attestations/ENG-OPS-001/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 0
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "ANALYTICS-001",
+      "sprint": 0,
+      "status": "Completed",
+      "section": "Analytics & Segmentation",
+      "title": "Customer Segmentation Spec (RFM + ABC) + Event Taxonomy",
+      "description": "Customer Segmentation Spec (RFM + ABC) + Event Taxonomy",
+      "summary": "Analytics foundation established; KPIs defined and tracked",
+      "definitionOfDone": "Defines RFM inputs/outputs, ABC curve methodology, segmentation thresholds, and event taxonomy; specifies dashboards, KPIs, and minimal instrumentation requirements to support CRM prioritization; includes data privacy notes and open questions log; artifacts: rfm-abc-spec.md, event-taxonomy.md, dashboards-requirements.md; verified by: pnpm lint",
+      "definitionOfDoneSnapshot": "Analytics foundation established; KPIs defined and tracked",
+      "dependencies": [
+        "DOC-001",
+        "GTM-001"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-0/attestations/ANALYTICS-001/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 0
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "EXC-SEC-001",
+      "sprint": 0,
+      "status": "Completed",
+      "section": "AI Foundation",
+      "title": "Implement Secrets Management (e.g., HashiCorp Vault) for API Keys (OpenAI, etc.).",
+      "description": "Implement Secrets Management (e.g., HashiCorp Vault) for API Keys (OpenAI, etc.).",
+      "summary": "HashiCorp Vault running; Secret rotation automated; Zero secrets in codebase",
+      "definitionOfDone": "All API keys are stored in a secure vault, access is restricted via IAM/RBAC, and agents retrieve secrets programmatically.; artifacts: vault-config.yaml, context_ack.json; targets: >=100%, zero errors",
+      "definitionOfDoneSnapshot": "HashiCorp Vault running; Secret rotation automated; Zero secrets in codebase",
+      "dependencies": [
+        "ENV-013-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-0/attestations/EXC-SEC-001/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 0
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-160",
+      "sprint": 0,
+      "status": "Completed",
+      "section": "Planning",
+      "title": "Artifact path conventions + CI lint to prevent repo drift",
+      "description": "Artifact path conventions + CI lint to prevent repo drift",
+      "summary": "artifacts/* path conventions defined; CI linter checks paths",
+      "definitionOfDone": "Repo artifact conventions documented; artifact-path linter added; CI blocks non-canonical artifact paths; move-map template provided; targets: >=100%, <60s; verified by: pnpm lint",
+      "definitionOfDoneSnapshot": "artifacts/* path conventions defined; CI linter checks paths",
+      "dependencies": [
+        "ENV-001-AI",
+        "ENV-002-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-0/attestations/IFC-160/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 0
+      },
+      "validationSummary": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    }
+  ]
+}

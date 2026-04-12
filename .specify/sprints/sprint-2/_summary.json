@@ -1,0 +1,611 @@
+{
+  "sprint": "sprint-2",
+  "name": "Core Domain & Documentation",
+  "generated_at": "2026-04-11T16:48:01.958Z",
+  "summary_source": "specify",
+  "task_summary": {
+    "total": 12,
+    "completed": 12,
+    "backlog": 0,
+    "blocked": 0,
+    "attested_completed": 12
+  },
+  "context": "Primary focus areas: Validation (6), AI/ML (1), Commercial Assets (1).",
+  "section_summary": [
+    {
+      "section": "Validation",
+      "total": 6,
+      "completed": 6,
+      "open": 0
+    },
+    {
+      "section": "AI/ML",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Commercial Assets",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Compliance",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Planning",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Security",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Testing",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    }
+  ],
+  "notable_completed": [
+    {
+      "taskId": "IFC-085",
+      "sprint": 2,
+      "status": "Completed",
+      "section": "AI/ML",
+      "title": "PHASE-040: Ollama Local Development",
+      "description": "PHASE-040: Ollama Local Development",
+      "summary": "Ollama provider fully implemented for local development. Tests use mocks for CI; live benchmarks require running Ollama instance. Follow-up tasks IFC-164 and IFC-174 scheduled for accuracy benchmarks. Ollama provider integrated into scoring chain;...",
+      "definitionOfDone": "Local LLM for dev/test, cost savings; artifacts: ollama-setup.sh, model-comparison.csv, cost-savings-report.json; targets: >=90%; accuracy-benchmarks.json must contain real Ollama execution timestamps and non-mock model versions",
+      "definitionOfDoneSnapshot": "Ollama provider integrated into scoring chain; Unit tests for Ollama provider; All existing tests passing",
+      "dependencies": [
+        "IFC-005"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-2/attestations/IFC-085/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-01-26T23:27:00.000Z",
+        "sprintFolder": 2
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-072",
+      "sprint": 2,
+      "status": "Completed",
+      "section": "Security",
+      "title": "PHASE-040: Zero Trust Security Model",
+      "description": "PHASE-040: Zero Trust Security Model",
+      "summary": "Fixed nodemailer security vulnerabilities (6.10.1 -> 7.0.12). Created vitest configs for apps/api and apps/workers/*. Zero trust security principles applied; No security vulnerabilities in dependencies; Tests passing",
+      "definitionOfDone": "Zero trust with RLS, API authentication, mTLS; artifacts: zero-trust-design.md, pentest-summary.md, context_ack.json; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Zero trust security principles applied; No security vulnerabilities in dependencies; Tests passing",
+      "dependencies": [
+        "IFC-001",
+        "IFC-008"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-2/attestations/IFC-072/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-01-27T12:00:00.000Z",
+        "sprintFolder": 2
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-004",
+      "sprint": 2,
+      "status": "Completed",
+      "section": "Validation",
+      "title": "PHASE-002: Next.js 16.0.10 Lead Capture UI",
+      "description": "PHASE-002: Next.js 16.0.10 Lead Capture UI",
+      "summary": "Lead form with tRPC integration; Mobile responsive",
+      "definitionOfDone": "Lead form with tRPC integration, mobile responsive; Next.js 16.0.10 App Router uses Turbopack FS caching and Cache Components; proxy replaces middleware where required; targets: <1s; verified by: pnpm test; gates: lighthouse-gte-90",
+      "definitionOfDoneSnapshot": "Mobile responsive",
+      "dependencies": [
+        "IFC-003"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-2/attestations/IFC-004/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 2
+      },
+      "validationSummary": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-005",
+      "sprint": 2,
+      "status": "Completed",
+      "section": "Validation",
+      "title": "FLOW-002, FLOW-011: LangChain AI Scoring Prototype",
+      "description": "FLOW-002, FLOW-011: LangChain AI Scoring Prototype",
+      "summary": "AI scoring pipeline with structured output; Confidence scores included",
+      "definitionOfDone": "AI scoring pipeline with structured output, confidence scores; targets: <2s; output: scoring.chain.ts, output-schema.zod.ts validated",
+      "definitionOfDoneSnapshot": "AI scoring pipeline with structured output; Confidence scores included",
+      "dependencies": [
+        "IFC-004"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-2/attestations/IFC-005/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 2
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-008",
+      "sprint": 2,
+      "status": "Completed",
+      "section": "Validation",
+      "title": "PHASE-003: Security Assessment - OWASP + ISO 42001 Prep",
+      "description": "PHASE-003: Security Assessment - OWASP + ISO 42001 Prep",
+      "summary": "Security review with AI governance considerations",
+      "definitionOfDone": "Security review with AI governance considerations; artifacts: compliance-report.md, owasp-checklist.md, iso42001-gap-analysis.md; gates: security-scan-pass; 0 critical vulnerabilities, all controls verified",
+      "definitionOfDoneSnapshot": "Security review with AI governance considerations",
+      "dependencies": [
+        "IFC-001"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-2/attestations/IFC-008/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 2
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    }
+  ],
+  "open_tasks": [],
+  "tasks": [
+    {
+      "taskId": "IFC-004",
+      "sprint": 2,
+      "status": "Completed",
+      "section": "Validation",
+      "title": "PHASE-002: Next.js 16.0.10 Lead Capture UI",
+      "description": "PHASE-002: Next.js 16.0.10 Lead Capture UI",
+      "summary": "Lead form with tRPC integration; Mobile responsive",
+      "definitionOfDone": "Lead form with tRPC integration, mobile responsive; Next.js 16.0.10 App Router uses Turbopack FS caching and Cache Components; proxy replaces middleware where required; targets: <1s; verified by: pnpm test; gates: lighthouse-gte-90",
+      "definitionOfDoneSnapshot": "Mobile responsive",
+      "dependencies": [
+        "IFC-003"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-2/attestations/IFC-004/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 2
+      },
+      "validationSummary": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-005",
+      "sprint": 2,
+      "status": "Completed",
+      "section": "Validation",
+      "title": "FLOW-002, FLOW-011: LangChain AI Scoring Prototype",
+      "description": "FLOW-002, FLOW-011: LangChain AI Scoring Prototype",
+      "summary": "AI scoring pipeline with structured output; Confidence scores included",
+      "definitionOfDone": "AI scoring pipeline with structured output, confidence scores; targets: <2s; output: scoring.chain.ts, output-schema.zod.ts validated",
+      "definitionOfDoneSnapshot": "AI scoring pipeline with structured output; Confidence scores included",
+      "dependencies": [
+        "IFC-004"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-2/attestations/IFC-005/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 2
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-008",
+      "sprint": 2,
+      "status": "Completed",
+      "section": "Validation",
+      "title": "PHASE-003: Security Assessment - OWASP + ISO 42001 Prep",
+      "description": "PHASE-003: Security Assessment - OWASP + ISO 42001 Prep",
+      "summary": "Security review with AI governance considerations",
+      "definitionOfDone": "Security review with AI governance considerations; artifacts: compliance-report.md, owasp-checklist.md, iso42001-gap-analysis.md; gates: security-scan-pass; 0 critical vulnerabilities, all controls verified",
+      "definitionOfDoneSnapshot": "Security review with AI governance considerations",
+      "dependencies": [
+        "IFC-001"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-2/attestations/IFC-008/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 2
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-072",
+      "sprint": 2,
+      "status": "Completed",
+      "section": "Security",
+      "title": "PHASE-040: Zero Trust Security Model",
+      "description": "PHASE-040: Zero Trust Security Model",
+      "summary": "Fixed nodemailer security vulnerabilities (6.10.1 -> 7.0.12). Created vitest configs for apps/api and apps/workers/*. Zero trust security principles applied; No security vulnerabilities in dependencies; Tests passing",
+      "definitionOfDone": "Zero trust with RLS, API authentication, mTLS; artifacts: zero-trust-design.md, pentest-summary.md, context_ack.json; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Zero trust security principles applied; No security vulnerabilities in dependencies; Tests passing",
+      "dependencies": [
+        "IFC-001",
+        "IFC-008"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-2/attestations/IFC-072/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-01-27T12:00:00.000Z",
+        "sprintFolder": 2
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-073",
+      "sprint": 2,
+      "status": "Completed",
+      "section": "Compliance",
+      "title": "PHASE-040: Privacy Impact Assessment",
+      "description": "PHASE-040: Privacy Impact Assessment",
+      "summary": "DPIA complete for AI processing and data storage; Risk matrix documented",
+      "definitionOfDone": "DPIA complete for AI processing and data storage; output: dpia.md, risk-matrix.md; all risks documented, verified and mitigated",
+      "definitionOfDoneSnapshot": "DPIA complete for AI processing and data storage; Risk matrix documented",
+      "dependencies": [
+        "IFC-072"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-2/attestations/IFC-073/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 2
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-085",
+      "sprint": 2,
+      "status": "Completed",
+      "section": "AI/ML",
+      "title": "PHASE-040: Ollama Local Development",
+      "description": "PHASE-040: Ollama Local Development",
+      "summary": "Ollama provider fully implemented for local development. Tests use mocks for CI; live benchmarks require running Ollama instance. Follow-up tasks IFC-164 and IFC-174 scheduled for accuracy benchmarks. Ollama provider integrated into scoring chain;...",
+      "definitionOfDone": "Local LLM for dev/test, cost savings; artifacts: ollama-setup.sh, model-comparison.csv, cost-savings-report.json; targets: >=90%; accuracy-benchmarks.json must contain real Ollama execution timestamps and non-mock model versions",
+      "definitionOfDoneSnapshot": "Ollama provider integrated into scoring chain; Unit tests for Ollama provider; All existing tests passing",
+      "dependencies": [
+        "IFC-005"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-2/attestations/IFC-085/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-01-26T23:27:00.000Z",
+        "sprintFolder": 2
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "SALES-002",
+      "sprint": 2,
+      "status": "Completed",
+      "section": "Commercial Assets",
+      "title": "Sales Motion Playbook (outreach sequences, discovery + demo scripts)",
+      "description": "Sales Motion Playbook (outreach sequences, discovery + demo scripts)",
+      "summary": "Demo toolkit created; Objection handling guide complete",
+      "definitionOfDone": "Defined sales motion: lead sources, qualification steps, discovery script, demo script, objection handling, follow-up cadence; includes at least 2 outreach sequences (email + LinkedIn) and a handoff policy to implementation/support; artifacts: sales-motion-playbook.md, discovery-script.md, demo-script.md; verified by: pnpm lint",
+      "definitionOfDoneSnapshot": "Demo toolkit created; Objection handling guide complete",
+      "dependencies": [
+        "SALES-001",
+        "GTM-002"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-2/attestations/SALES-002/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 2
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-101",
+      "sprint": 2,
+      "status": "Completed",
+      "section": "Validation",
+      "title": "PHASE-039: Lead Aggregate and Value Objects",
+      "description": "PHASE-039: Lead Aggregate and Value Objects",
+      "summary": "Lead aggregate implemented; 95%+ test coverage",
+      "definitionOfDone": "Lead aggregate, value objects, repository interfaces and domain services implemented; artifacts: PrismaLeadRepository.ts, context_ack.json; targets: >=90%; verified by: pnpm test, pnpm test:integration",
+      "definitionOfDoneSnapshot": "Lead aggregate implemented; 95%+ test coverage",
+      "dependencies": [
+        "IFC-002"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-2/attestations/IFC-101/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 2
+      },
+      "validationSummary": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-102",
+      "sprint": 2,
+      "status": "Completed",
+      "section": "Validation",
+      "title": "PHASE-039: Contact Aggregate and Value Objects",
+      "description": "PHASE-039: Contact Aggregate and Value Objects",
+      "summary": "Contact aggregate implemented; 95%+ test coverage",
+      "definitionOfDone": "Contact aggregate implemented with value objects, repository, domain services; artifacts: PrismaContactRepository.ts, context_ack.json; targets: >=90%; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Contact aggregate implemented; 95%+ test coverage",
+      "dependencies": [
+        "IFC-002"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-2/attestations/IFC-102/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 2
+      },
+      "validationSummary": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-103",
+      "sprint": 2,
+      "status": "Completed",
+      "section": "Validation",
+      "title": "PHASE-039: Account Aggregate and Value Objects",
+      "description": "PHASE-039: Account Aggregate and Value Objects",
+      "summary": "Account aggregate implemented; 95%+ test coverage",
+      "definitionOfDone": "Account aggregate implemented with value objects, repository, domain services; artifacts: PrismaAccountRepository.ts, context_ack.json; targets: >=90%; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Account aggregate implemented; 95%+ test coverage",
+      "dependencies": [
+        "IFC-002"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-2/attestations/IFC-103/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 2
+      },
+      "validationSummary": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-109",
+      "sprint": 2,
+      "status": "Completed",
+      "section": "Testing",
+      "title": "Define TDD Process, Coverage & Review Checklist",
+      "description": "Define TDD Process, Coverage & Review Checklist",
+      "summary": "Transactional outbox implemented; Events guaranteed delivery",
+      "definitionOfDone": "TDD guidelines documented, coverage threshold 90% enforced via CI, code review checklist established; gates: coverage-gte-90",
+      "definitionOfDoneSnapshot": "Transactional outbox implemented; Events guaranteed delivery",
+      "dependencies": [
+        "IFC-002"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-2/attestations/IFC-109/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 2
+      },
+      "validationSummary": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-146",
+      "sprint": 2,
+      "status": "Completed",
+      "section": "Planning",
+      "title": "Define PRD and user journey templates; create Definition of Ready criteria; develop traceability matrix linking capabilities to domain services; APIs; UIs; and tests",
+      "description": "Define PRD and user journey templates; create Definition of Ready criteria; develop traceability matrix linking capabilities to domain services; APIs; UIs; and tests",
+      "summary": "UAT plan created; E2E tests passing",
+      "definitionOfDone": "PRD templates available and used; user journey mapping methodology defined; DoR criteria documented and adopted; traceability matrix tool or document created and applied to backlog; backlog items updated; targets: >=100%, >=90%",
+      "definitionOfDoneSnapshot": "UAT plan created; E2E tests passing",
+      "dependencies": [
+        "IFC-000",
+        "ENV-018-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-2/attestations/IFC-146/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 2
+      },
+      "validationSummary": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    }
+  ]
+}

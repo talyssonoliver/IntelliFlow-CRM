@@ -1,0 +1,69 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-012",
+  "run_id": "sprint6-audit-20260302T215741-ex8v6u",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:57:48.939Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 4,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "turbo.json": "64bbd3cfb225761afb498e0de355cbe7401a6aae02fa4cef9215de0bc7a31ce8",
+    ".github/workflows/ci.yml": "6f92e79e6f0487e181bffbceca390f8f9bb72952bf14b7d7b8d69f25241ae4e4",
+    "artifacts/misc/pnpm-workspace.yaml": "39f4b553d3f0f7cae19dd03ba7accebdecea4b920585730b760ff726549ed2df",
+    ".specify/sprints/sprint-6/attestations/IFC-012/context_ack.json": "0aa77a7eb0038ca00dd1c7f47e5219e2dbfcce91c738c31cc3738226e2041fe8"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-012",
+      "command": "pnpm build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 182000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-010"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Monorepo with apps/",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "packages/",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "shared configs",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "targets: <3min",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "verified by: pnpm build",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "5 DoD criteria unverified"
+}

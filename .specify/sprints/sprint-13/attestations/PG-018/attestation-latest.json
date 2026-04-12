@@ -1,0 +1,91 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "PG-018",
+  "run_id": "sprint13-audit-20260302T215849-ygkkim",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:58:57.319Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 11,
+    "validations_passed": 2,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/web/src/app/(public)/logout/page.tsx": "2c0881d70ca1c54cec9f62afe403faaa22c471688222a767ea1cb8908484e493",
+    "apps/web/src/lib/shared/session-cleanup.ts": "1b7ac0468e00ccfa0dddded6b181cefbb903d75178fa109927f3e773ad760a9b",
+    "apps/web/src/lib/shared/logout-redirect.ts": "17d45d1e182c73fb8d46fd4053e1b4e4ddd074ce1bc7fc86da070c4863ddb895",
+    "apps/web/src/hooks/useLogout.ts": "0d306518e5334d2beb91e570a2cb3f592108ff24f0ecff97d993f4c2586b5afb",
+    "apps/web/src/hooks/useUnsavedChanges.tsx": "e371b466c6a26645625321aae6dc15d2dfec3396767835d2bff693362a172d2e",
+    "apps/web/src/lib/broadcast.ts": "9885e134e385870cfb6a7be30f1e311a11c0bcb8a43923a004f1cc9cbee60816",
+    "apps/web/src/components/auth/logout-button.tsx": "c1b57e13f7237b415501e9b09cada25f96117e321e73e25040149f8b74c70454",
+    "apps/web/src/components/auth/unsaved-work-modal.tsx": "a897b5d784e96db3fc9f17ca362e1ab85359c9658be1255da6defffcb8ad0e96",
+    ".specify/sprints/sprint-13/execution/PG-018/20260126-000000/PG-018-delivery.md": "ea255df33de30275e81d249d7ced34dd386ac46b0161a6410bbfe87550b79ded",
+    "docs/planning/adr/ADR-020-public-site-auth.md": "bb5cb864b162207db2656abcba4637eb189ed515134f3b0e0d6c5d12212e9c27",
+    "docs/planning/prd-public-site-auth.md": "a858df0521ee9c76415a5fa3b40ab462f383bbd45ef6ae846cd18edec444bead"
+  },
+  "validation_results": [
+    {
+      "name": "PG-018",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 46000,
+      "stdout_hash": "all-green-1772476872408"
+    },
+    {
+      "name": "PG-018",
+      "command": "pnpm --filter @intelliflow/web test --run",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 120000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "PG-015",
+    "IFC-006"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Response <200ms",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "Lighthouse ≥90",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "session cleared",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "artifacts: page.tsx",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "session-cleanup.ts",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "logout-redirect.ts",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "6 DoD criteria unverified"
+}

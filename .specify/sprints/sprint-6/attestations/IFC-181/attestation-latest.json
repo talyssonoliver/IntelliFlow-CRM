@@ -1,0 +1,84 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-181",
+  "run_id": "sprint6-audit-20260302T215741-ex8v6u",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:57:49.129Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 8,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/web/src/app/agent-approvals/ai-review/page.tsx": "1e098ec49aff0397f3a56d7710c16004b430adabd148fdce8648cda3902d800c",
+    "apps/web/src/app/agent-approvals/ai-review/[id]/page.tsx": "8f18a945ef4760b8e3d04d6ace20e4efb2bec8ca5514114d064df56cf80ba41e",
+    "apps/web/src/components/ai-review/ReviewQueue.tsx": "f9440b565033c5618119dba7c065ca2430dc4c73868e389f0a36fbb1ae0ee370",
+    "apps/web/src/components/ai-review/ReviewCard.tsx": "d6eb64b52c2d729f3f2ae27c402b7618d02e5b1f6720ff169e4e96a95a5e24a6",
+    "apps/web/src/components/ai-review/index.ts": "d37acbbbc13cf02c7358481cd43c326d1db93fa9218a31a5d8881b66950b7ca8",
+    "apps/web/src/lib/ai-review/hooks.ts": "eee10d6b8212f605e09169dd931f45126789e90cf8894070a3a26112e070c1b1",
+    "apps/web/src/lib/shared/date-utils.ts": "db97ab02b7b552190cf555c964bd880a915c7fabb211690ad8084b326cb014c8",
+    ".specify/sprints/sprint-6/attestations/IFC-181/context_ack.json": "4d881235b6c0ca708ee6583777f28413bb4c9ff136ff30f7f697da2972fb43f5"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-181",
+      "command": "pnpm test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 180000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-180",
+    "IFC-149"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Review queue page with filters (status/confidence/chain type)",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "claim/approve/reject actions",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "confidence score visualization",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "SLA countdown",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "follows design system (AppHeader+AppSidebar pattern aligned 2026-02-03)",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "Lighthouse >=90",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "verified by: pnpm test",
+      "met": true,
+      "evidence": "All 1 validations passed"
+    }
+  ],
+  "notes": "6 DoD criteria unverified"
+}

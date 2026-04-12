@@ -1,0 +1,496 @@
+{
+  "sprint": "sprint-28",
+  "name": "Sprint 28",
+  "generated_at": "2026-04-11T16:48:01.958Z",
+  "summary_source": "specify",
+  "task_summary": {
+    "total": 9,
+    "completed": 0,
+    "backlog": 9,
+    "blocked": 0,
+    "attested_completed": 0
+  },
+  "context": "Primary focus areas: Settings (6), Launch (1), Platform (1).",
+  "section_summary": [
+    {
+      "section": "Settings",
+      "total": 6,
+      "completed": 0,
+      "open": 6
+    },
+    {
+      "section": "Launch",
+      "total": 1,
+      "completed": 0,
+      "open": 1
+    },
+    {
+      "section": "Platform",
+      "total": 1,
+      "completed": 0,
+      "open": 1
+    },
+    {
+      "section": "Success",
+      "total": 1,
+      "completed": 0,
+      "open": 1
+    }
+  ],
+  "notable_completed": [],
+  "open_tasks": [
+    {
+      "taskId": "IFC-053",
+      "sprint": 28,
+      "status": "Backlog",
+      "section": "Launch",
+      "title": "Hypercare Period",
+      "description": "Hypercare Period",
+      "summary": "24/7 support for 2 weeks, then business hours",
+      "definitionOfDone": "24/7 support for 2 weeks, then business hours; artifacts: hypercare-schedule.xlsx, incident-log.csv, response-time-report.pdf; gates: response-time-check",
+      "definitionOfDoneSnapshot": "24/7 support for 2 weeks, then business hours",
+      "dependencies": [
+        "IFC-052"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-060",
+      "sprint": 28,
+      "status": "Backlog",
+      "section": "Success",
+      "title": "Success Metrics Review",
+      "description": "Success Metrics Review",
+      "summary": "Modern stack ROI validated, future roadmap",
+      "definitionOfDone": "Modern stack ROI validated, future roadmap; artifacts: success-metrics-dashboard.pdf, roi-calculation.xlsx, phase-2-proposal.pptx",
+      "definitionOfDoneSnapshot": "Modern stack ROI validated, future roadmap",
+      "dependencies": [
+        "IFC-052"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-118",
+      "sprint": 28,
+      "status": "Backlog",
+      "section": "Settings",
+      "title": "Data Retention",
+      "description": "Data Retention",
+      "summary": "response under 200ms, Lighthouse 90, policies enforced",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, policies enforced; artifacts: page.tsx, retention-policy.tsx, data-purger.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, policies enforced",
+      "dependencies": [
+        "IFC-058"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-119",
+      "sprint": 28,
+      "status": "Backlog",
+      "section": "Settings",
+      "title": "Compliance",
+      "description": "Compliance",
+      "summary": "response under 200ms, Lighthouse 90, compliance tracked",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, compliance tracked; artifacts: page.tsx, compliance-dashboard.tsx, audit-reporter.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, compliance tracked",
+      "dependencies": [
+        "IFC-058"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-120",
+      "sprint": 28,
+      "status": "Backlog",
+      "section": "Settings",
+      "title": "Security",
+      "description": "Security",
+      "summary": "response under 200ms, Lighthouse 90, security enforced",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, security enforced; artifacts: page.tsx, security-config.tsx, 2fa-manager.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, security enforced",
+      "dependencies": [
+        "IFC-072",
+        "IFC-201"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "taskId": "IFC-053",
+      "sprint": 28,
+      "status": "Backlog",
+      "section": "Launch",
+      "title": "Hypercare Period",
+      "description": "Hypercare Period",
+      "summary": "24/7 support for 2 weeks, then business hours",
+      "definitionOfDone": "24/7 support for 2 weeks, then business hours; artifacts: hypercare-schedule.xlsx, incident-log.csv, response-time-report.pdf; gates: response-time-check",
+      "definitionOfDoneSnapshot": "24/7 support for 2 weeks, then business hours",
+      "dependencies": [
+        "IFC-052"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-060",
+      "sprint": 28,
+      "status": "Backlog",
+      "section": "Success",
+      "title": "Success Metrics Review",
+      "description": "Success Metrics Review",
+      "summary": "Modern stack ROI validated, future roadmap",
+      "definitionOfDone": "Modern stack ROI validated, future roadmap; artifacts: success-metrics-dashboard.pdf, roi-calculation.xlsx, phase-2-proposal.pptx",
+      "definitionOfDoneSnapshot": "Modern stack ROI validated, future roadmap",
+      "dependencies": [
+        "IFC-052"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-118",
+      "sprint": 28,
+      "status": "Backlog",
+      "section": "Settings",
+      "title": "Data Retention",
+      "description": "Data Retention",
+      "summary": "response under 200ms, Lighthouse 90, policies enforced",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, policies enforced; artifacts: page.tsx, retention-policy.tsx, data-purger.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, policies enforced",
+      "dependencies": [
+        "IFC-058"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-119",
+      "sprint": 28,
+      "status": "Backlog",
+      "section": "Settings",
+      "title": "Compliance",
+      "description": "Compliance",
+      "summary": "response under 200ms, Lighthouse 90, compliance tracked",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, compliance tracked; artifacts: page.tsx, compliance-dashboard.tsx, audit-reporter.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, compliance tracked",
+      "dependencies": [
+        "IFC-058"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-120",
+      "sprint": 28,
+      "status": "Backlog",
+      "section": "Settings",
+      "title": "Security",
+      "description": "Security",
+      "summary": "response under 200ms, Lighthouse 90, security enforced",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, security enforced; artifacts: page.tsx, security-config.tsx, 2fa-manager.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, security enforced",
+      "dependencies": [
+        "IFC-072",
+        "IFC-201"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-121",
+      "sprint": 28,
+      "status": "Backlog",
+      "section": "Settings",
+      "title": "Import/Export",
+      "description": "Import/Export",
+      "summary": "response under 200ms, Lighthouse 90, transfers working",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, transfers working; artifacts: page.tsx, data-importer.tsx, data-exporter.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, transfers working",
+      "dependencies": [
+        "IFC-070"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-122",
+      "sprint": 28,
+      "status": "Backlog",
+      "section": "Settings",
+      "title": "Privacy Export",
+      "description": "Privacy Export",
+      "summary": "response under 200ms, Lighthouse 90, exports compliant",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, exports compliant; artifacts: page.tsx, privacy-exporter.tsx, gdpr-packager.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, exports compliant",
+      "dependencies": [
+        "IFC-058"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-123",
+      "sprint": 28,
+      "status": "Backlog",
+      "section": "Settings",
+      "title": "Privacy Delete",
+      "description": "Privacy Delete",
+      "summary": "response under 200ms, Lighthouse 90, deletion complete",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, deletion complete; artifacts: page.tsx, data-eraser.tsx, deletion-audit.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, deletion complete",
+      "dependencies": [
+        "IFC-058"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-147",
+      "sprint": 28,
+      "status": "Backlog",
+      "section": "Platform",
+      "title": "Workflow List & Status UI - Active workflows execution status step visualization logs",
+      "description": "Workflow List & Status UI - Active workflows execution status step visualization logs",
+      "summary": "response under 500ms, Lighthouse >=90; WorkflowList, WorkflowDetail, StepVisualization, ExecutionLogs, StatusBadges, WorkflowTriggers components",
+      "definitionOfDone": "Response <500ms, Lighthouse >=90; WorkflowList, WorkflowDetail, StepVisualization, ExecutionLogs, StatusBadges, WorkflowTriggers components; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "response under 500ms, Lighthouse >=90; WorkflowList, WorkflowDetail, StepVisualization, ExecutionLogs, StatusBadges, WorkflowTriggers components",
+      "dependencies": [
+        "IFC-028",
+        "IFC-141"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    }
+  ]
+}

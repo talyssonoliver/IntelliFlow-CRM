@@ -1,0 +1,88 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "PG-011",
+  "run_id": "sprint12-audit-20260302T215839-2r9dal",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:58:47.715Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 7,
+    "validations_passed": 2,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/web/src/app/(public)/careers/page.tsx": "722864ad97999c9e2495244b06a3b5c3a884a0ba6e747a667db510f4d1c5ebf6",
+    "apps/web/src/app/(public)/careers/[id]/page.tsx": "f58203dbd71f1ae67f6710da0c2389c74e6eb86ecb637edd65d2cabeca9f3f70",
+    "artifacts/misc/job-listings.json": "46c5b371d079dff109221d99c9df73f59f949965eb6f3dd9ba1a114784c57b51",
+    "apps/web/src/components/shared/application-form.tsx": "c100472c75ce1250bd5538d33941fd7df247288c18b1569069d83fa30e3d920d",
+    ".specify/sprints/sprint-12/attestations/PG-011/context_ack.json": "cd1ffee6e8e16ab563e09813cfa465901e010d6e67ad6e8eabf861e02653998e",
+    "docs/planning/adr/ADR-020-public-site-auth.md": "bb5cb864b162207db2656abcba4637eb189ed515134f3b0e0d6c5d12212e9c27",
+    "docs/planning/prd-public-site-auth.md": "a858df0521ee9c76415a5fa3b40ab462f383bbd45ef6ae846cd18edec444bead"
+  },
+  "validation_results": [
+    {
+      "name": "PG-011",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 46000,
+      "stdout_hash": "all-green-1772476872408"
+    },
+    {
+      "name": "PG-011",
+      "command": "pnpm --filter @intelliflow/web test --run",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 120000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "PG-001",
+    "GTM-002",
+    "BRAND-001"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Response <200ms",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "Lighthouse ≥90",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "applications working",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "artifacts: page.tsx",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "job-listings.json",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "application-form.tsx",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "6 DoD criteria unverified"
+}

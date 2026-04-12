@@ -1,0 +1,161 @@
+{
+  "$schema": "../../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "PG-020",
+  "run_id": "20260228-232040-pg020-reexec",
+  "attestor": "Claude Code - PG-020 Reset Password Re-execution",
+  "attestation_timestamp": "2026-03-01T00:15:00Z",
+  "verdict": "COMPLETE",
+  "artifact_hashes": {
+    "apps/web/src/app/(public)/reset-password/[token]/page.tsx": "2e5b8516a80a1e30eb98a65fc02e463672871a0ee2508b7c47ea4781a98c605a",
+    "apps/web/src/app/(public)/reset-password/[token]/ResetPasswordClient.tsx": "0fd42b33ab2b1b662d08e79481928231c01bc722e9bf0d045a5cf3778f69a0d2",
+    "apps/web/src/components/shared/password-reset.tsx": "c7acbd81e4b5e54985041a807665f9fb78aa9854ef5d2e336bbb7f3e998e35e5",
+    "apps/web/src/lib/shared/password-validation.ts": "eee777b7f28389207a0a3fd62f40cb52267a2ddfac4e4c407b8230b370346024",
+    "apps/web/src/app/(public)/reset-password/__tests__/page.test.tsx": "3d1ea5e215b789ddf139889ee54f934b162db917923868da6059c89ce89804d0",
+    "apps/web/src/app/(public)/reset-password/callback/page.tsx": "b25b4528f78c3ed45ab12c128848df921de825e01b43eba989a0b0a1b79f7012",
+    "apps/web/src/app/(public)/reset-password/callback/__tests__/page.test.tsx": "7f1e74c63f5b87c1a1c38a8c7094ef179bc30784a0c0fd5e383eba3714511d88"
+  },
+  "dependencies_verified": [
+    "PG-019"
+  ],
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-28T23:21:30Z",
+      "duration_ms": 12000,
+      "stdout_hash": "tsc --noEmit exit 0"
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run apps/web/src/app/(public)/reset-password apps/web/src/components/shared/__tests__/password-reset.supplementary.test.tsx apps/web/src/lib/shared/__tests__/password-validation.test.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-28T23:21:46Z",
+      "duration_ms": 5980,
+      "stdout_hash": "4 files, 100 tests passing (24 page + 33 component + 43 validation)"
+    },
+    {
+      "name": "Lint",
+      "command": "npx eslint apps/web/src/app/(public)/reset-password/ apps/web/src/components/shared/password-reset.tsx apps/web/src/lib/shared/password-validation.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-28T23:22:30Z",
+      "duration_ms": 8000,
+      "stdout_hash": "0 errors 0 warnings for PG-020 scoped files; global lint has 7 pre-existing errors in other files"
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-01T00:05:00Z",
+      "duration_ms": 37100,
+      "stdout_hash": "Compiled with warnings in 37.1s (OpenTelemetry dep warnings only); all routes generated including /reset-password/callback"
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "plan-checkboxes",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-28T23:45:00Z"
+    },
+    {
+      "gate_id": "artifact-hashes",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-28T23:46:00Z"
+    },
+    {
+      "gate_id": "scoped-coverage",
+      "passed": true,
+      "score": 97.94,
+      "timestamp": "2026-02-28T23:43:21Z"
+    },
+    {
+      "gate_id": "build-validation",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-03-01T00:05:00Z"
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Page-level integration tests",
+      "target": ">=18 page-level test cases",
+      "actual": "24 page-level tests (8 legacy + 16 callback)",
+      "met": true
+    },
+    {
+      "kpi": "Total test count (all PG-020 related)",
+      "target": ">=90 total tests",
+      "actual": "100 tests passing (24 page + 33 component + 43 validation)",
+      "met": true
+    },
+    {
+      "kpi": "Scoped coverage - Statements",
+      "target": ">=90%",
+      "actual": "Statements 97.94%, Branches 95.52%, Functions 97.67%, Lines 97.70% (100 tests)",
+      "met": true
+    },
+    {
+      "kpi": "password-reset.tsx coverage",
+      "target": ">=90% statements",
+      "actual": "Statements 96.59%, Branches 92.30%, Functions 95.83%, Lines 96.15%",
+      "met": true
+    },
+    {
+      "kpi": "password-validation.ts coverage",
+      "target": ">=90% statements",
+      "actual": "Statements 100%, Branches 100%, Functions 100%, Lines 100%",
+      "met": true
+    }
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Page-level integration tests cover all state machine states",
+      "met": true,
+      "evidence": "Legacy route: 8 tests covering always-invalid behavior. Callback route: 16 tests covering invalid/form/success states."
+    },
+    {
+      "criterion": "All acceptance criteria verified (AC-001 through AC-008)",
+      "met": true,
+      "evidence": "AC-001/006: callback tests #8-12; AC-002: legacy tests #4-5, callback tests #2-6; AC-003/004/005/007: component tests; AC-008: both routes test useRedirectIfAuthenticated"
+    },
+    {
+      "criterion": "No regression in existing tests",
+      "met": true,
+      "evidence": "76 existing tests pass (33 password-reset.supplementary + 43 password-validation)"
+    },
+    {
+      "criterion": "TypeScript compilation passes",
+      "met": true,
+      "evidence": "pnpm --filter web typecheck exits 0"
+    },
+    {
+      "criterion": "Scoped coverage meets thresholds",
+      "met": true,
+      "evidence": "Statements 97.94%, Branches 95.52%, Functions 97.67%, Lines 97.70%"
+    }
+  ],
+  "evidence_summary": {
+    "artifacts_verified": 7,
+    "validations_passed": 4,
+    "validations_failed": 0,
+    "gates_passed": 4,
+    "gates_failed": 0,
+    "kpis_met": 5,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "environment": {
+    "os": "win32",
+    "node_version": "v25.2.1",
+    "git_commit": "a43fd0f0ee3788f27536d966e7cbf450fb7b60dc",
+    "branch": "sprint0/codex-run"
+  },
+  "notes": "Re-execution of PG-020 on 2026-03-01. Architecture evolved: [token]/page.tsx is now a 12-line redirect (legacy), ResetPasswordClient.tsx always shows invalid state, callback/page.tsx is the real reset flow using Supabase access_token. All 4 validations pass (TypeScript exit 0, 100 tests exit 0, Lint 0 errors on PG-020 files, Build exit 0 in 37.1s). Coverage exceeds thresholds (97.94% stmts). Initial build attempts failed due to corrupted .next cache (stale lock file + missing webpack pack files); resolved by rm -rf .next and clean rebuild. Previous attestation had: schema violations (non-allowed fields, wrong types), incorrect coverage claim (84% vs actual 96%), wrong tsc command, build falsely marked as pre-existing failure — all corrected."
+}

@@ -1,0 +1,58 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-082",
+  "run_id": "sprint7-audit-20260302T215750-xc1o8i",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:57:58.623Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 3,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "artifacts/misc/knowledge-graph.json": "5bb1cb1086e0bdc9f26cfccab8c9f828054487a67e8ac60a9d17a7437fa5f1e0",
+    "docs/shared/context-map.puml": "e7e0149103bcd94ae62aba56d3531c9846d77edf9df08de292c68a1e11020dfa",
+    ".specify/sprints/sprint-7/attestations/IFC-082/context_ack.json": "372b7d261bd0180bcbc0ae2dbc8b48ab5456b160914b8fe5c7c5540152d19f98"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-082",
+      "command": "pnpm lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 15000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-080"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Bounded contexts",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "aggregates",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "workflows documented",
+      "met": true,
+      "evidence": "Documentation found: docs/shared/context-map.puml"
+    }
+  ],
+  "notes": "2 DoD criteria unverified"
+}

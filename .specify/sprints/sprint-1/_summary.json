@@ -1,0 +1,661 @@
+{
+  "sprint": "sprint-1",
+  "name": "Sprint 1 - Validation & Architecture",
+  "generated_at": "2026-04-11T16:48:01.958Z",
+  "summary_source": "specify",
+  "task_summary": {
+    "total": 13,
+    "completed": 13,
+    "backlog": 0,
+    "blocked": 0,
+    "attested_completed": 13
+  },
+  "context": "Primary focus areas: Validation (3), Architecture (2), Foundation Setup (2).",
+  "section_summary": [
+    {
+      "section": "Validation",
+      "total": 3,
+      "completed": 3,
+      "open": 0
+    },
+    {
+      "section": "Architecture",
+      "total": 2,
+      "completed": 2,
+      "open": 0
+    },
+    {
+      "section": "Foundation Setup",
+      "total": 2,
+      "completed": 2,
+      "open": 0
+    },
+    {
+      "section": "Architecture Governance",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Commercial Assets",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Design System",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Infrastructure",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Observability",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Planning",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    }
+  ],
+  "notable_completed": [
+    {
+      "taskId": "IFC-001",
+      "sprint": 1,
+      "status": "Completed",
+      "section": "Validation",
+      "title": "PHASE-001: Technical Architecture Spike - Modern Stack",
+      "description": "PHASE-001: Technical Architecture Spike - Modern Stack",
+      "summary": "Modern stack feasibility proven; ADRs documented; FLOW-001 architecture spike validated",
+      "definitionOfDone": "Modern stack feasibility proven, ADRs documented; targets: <50ms",
+      "definitionOfDoneSnapshot": "Modern stack feasibility proven; ADRs documented",
+      "dependencies": [
+        "IFC-000"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-1/attestations/IFC-001/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 1
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "ENV-017-AI",
+      "sprint": 1,
+      "status": "Completed",
+      "section": "Foundation Setup",
+      "title": "Automated Integration Testing",
+      "description": "Automated Integration Testing",
+      "summary": "System AI-tested; Issues AI-detected and fixed; Metrics AI-verified",
+      "definitionOfDone": "System AI-tested, issues AI-detected and fixed, demo AI-prepared, metrics AI-verified; artifacts: test-orchestration.json, bug-fixes.log, confidence-metrics.csv; targets: zero errors",
+      "definitionOfDoneSnapshot": "System AI-tested; Issues AI-detected and fixed; Metrics AI-verified",
+      "dependencies": [
+        "ENV-001-AI",
+        "ENV-003-AI",
+        "ENV-005-AI",
+        "ENV-010-AI",
+        "IFC-001"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-1/attestations/ENV-017-AI/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 1
+      },
+      "validationSummary": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "BRAND-002",
+      "sprint": 1,
+      "status": "Completed",
+      "section": "Design System",
+      "title": "Design Tokens Integration Plan (Tailwind/shadcn theme mapping)",
+      "description": "Design Tokens Integration Plan (Tailwind/shadcn theme mapping)",
+      "summary": "UI kit created; Component library built",
+      "definitionOfDone": "Mapping document from brand tokens to Tailwind/shadcn variables created; includes light/dark theme rules, semantic color tokens, component states, and migration guidelines; produces a minimal theme reference\" page spec\"; targets: >=90%, zero errors; verified by: pnpm lint",
+      "definitionOfDoneSnapshot": "UI kit created; Component library built",
+      "dependencies": [
+        "BRAND-001",
+        "ENV-002-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-1/attestations/BRAND-002/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 1
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "ENV-018-AI",
+      "sprint": 1,
+      "status": "Completed",
+      "section": "Foundation Setup",
+      "title": "Sprint Planning and Velocity Prediction",
+      "description": "Sprint Planning and Velocity Prediction",
+      "summary": "Backlog AI-prioritized; Velocity AI-predicted; Risks AI-identified",
+      "definitionOfDone": "Backlog AI-prioritized, velocity AI-predicted, capacity AI-optimized, risks AI-identified; artifacts: velocity-prediction.json, capacity-model.csv, risk-matrix.md; targets: >=20%",
+      "definitionOfDoneSnapshot": "Backlog AI-prioritized; Velocity AI-predicted; Risks AI-identified",
+      "dependencies": [
+        "ENV-017-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-1/attestations/ENV-018-AI/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 1
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "GOV-001",
+      "sprint": 1,
+      "status": "Completed",
+      "section": "Architecture Governance",
+      "title": "Architecture Governance Pack (ADR + ARP templates, decision workflow, flowcharts)",
+      "description": "Architecture Governance Pack (ADR + ARP templates, decision workflow, flowcharts)",
+      "summary": "Architecture governance process defined; Audit logging ADR complete",
+      "definitionOfDone": "Created ADR template, ARP template, decision workflow, and diagram/flowchart conventions; includes folder structure, naming, and example ADR/ARP; defines when decisions are required and how to approve; verified by: pnpm lint",
+      "definitionOfDoneSnapshot": "Architecture governance process defined; Audit logging ADR complete",
+      "dependencies": [
+        "ENG-OPS-001"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-1/attestations/GOV-001/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 1
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    }
+  ],
+  "open_tasks": [],
+  "tasks": [
+    {
+      "taskId": "ENV-017-AI",
+      "sprint": 1,
+      "status": "Completed",
+      "section": "Foundation Setup",
+      "title": "Automated Integration Testing",
+      "description": "Automated Integration Testing",
+      "summary": "System AI-tested; Issues AI-detected and fixed; Metrics AI-verified",
+      "definitionOfDone": "System AI-tested, issues AI-detected and fixed, demo AI-prepared, metrics AI-verified; artifacts: test-orchestration.json, bug-fixes.log, confidence-metrics.csv; targets: zero errors",
+      "definitionOfDoneSnapshot": "System AI-tested; Issues AI-detected and fixed; Metrics AI-verified",
+      "dependencies": [
+        "ENV-001-AI",
+        "ENV-003-AI",
+        "ENV-005-AI",
+        "ENV-010-AI",
+        "IFC-001"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-1/attestations/ENV-017-AI/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 1
+      },
+      "validationSummary": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "ENV-018-AI",
+      "sprint": 1,
+      "status": "Completed",
+      "section": "Foundation Setup",
+      "title": "Sprint Planning and Velocity Prediction",
+      "description": "Sprint Planning and Velocity Prediction",
+      "summary": "Backlog AI-prioritized; Velocity AI-predicted; Risks AI-identified",
+      "definitionOfDone": "Backlog AI-prioritized, velocity AI-predicted, capacity AI-optimized, risks AI-identified; artifacts: velocity-prediction.json, capacity-model.csv, risk-matrix.md; targets: >=20%",
+      "definitionOfDoneSnapshot": "Backlog AI-prioritized; Velocity AI-predicted; Risks AI-identified",
+      "dependencies": [
+        "ENV-017-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-1/attestations/ENV-018-AI/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 1
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-001",
+      "sprint": 1,
+      "status": "Completed",
+      "section": "Validation",
+      "title": "PHASE-001: Technical Architecture Spike - Modern Stack",
+      "description": "PHASE-001: Technical Architecture Spike - Modern Stack",
+      "summary": "Modern stack feasibility proven; ADRs documented; FLOW-001 architecture spike validated",
+      "definitionOfDone": "Modern stack feasibility proven, ADRs documented; targets: <50ms",
+      "definitionOfDoneSnapshot": "Modern stack feasibility proven; ADRs documented",
+      "dependencies": [
+        "IFC-000"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-1/attestations/IFC-001/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 1
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-002",
+      "sprint": 1,
+      "status": "Completed",
+      "section": "Validation",
+      "title": "PHASE-001: Domain Model Design (DDD)",
+      "description": "PHASE-001: Domain Model Design (DDD)",
+      "summary": "DDD model complete; Prisma schema created; Zod validators defined",
+      "definitionOfDone": "DDD model complete, Prisma schema created, Zod validators defined",
+      "definitionOfDoneSnapshot": "DDD model complete; Prisma schema created; Zod validators defined",
+      "dependencies": [
+        "IFC-000"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-1/attestations/IFC-002/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 1
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-003",
+      "sprint": 1,
+      "status": "Completed",
+      "section": "Validation",
+      "title": "PHASE-001: tRPC API Foundation",
+      "description": "PHASE-001: tRPC API Foundation",
+      "summary": "tRPC router setup; Type-safe endpoints; Real-time subscriptions tested",
+      "definitionOfDone": "tRPC router setup, type-safe endpoints, real-time subscriptions tested; targets: <50ms; output: trpc.ts, router.ts validated",
+      "definitionOfDoneSnapshot": "tRPC router setup; Type-safe endpoints; Real-time subscriptions tested",
+      "dependencies": [
+        "IFC-002"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-1/attestations/IFC-003/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 1
+      },
+      "validationSummary": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-074",
+      "sprint": 1,
+      "status": "Completed",
+      "section": "Observability",
+      "title": "PHASE-040: Full Stack Observability",
+      "description": "PHASE-040: Full Stack Observability",
+      "summary": "Traces, metrics, logs unified with context; Root cause identifiable",
+      "definitionOfDone": "Traces, metrics, logs unified with context; artifacts: sentry-project-config.json, correlation-test.csv, mttr-baseline.json; targets: <2min",
+      "definitionOfDoneSnapshot": "Traces, metrics, logs unified with context; Root cause identifiable",
+      "dependencies": [
+        "IFC-003"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-1/attestations/IFC-074/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 1
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 1,
+        "met": 1,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-075",
+      "sprint": 1,
+      "status": "Completed",
+      "section": "Infrastructure",
+      "title": "IaC with Terraform",
+      "description": "IaC with Terraform",
+      "summary": "Supabase + Vercel + Railway provisioned via code; Drift detection active",
+      "definitionOfDone": "Supabase + Vercel + Railway provisioned via code; artifacts: main.tf, drift-detection-config.yaml, destroy-rebuild-test.log; targets: >=100%",
+      "definitionOfDoneSnapshot": "Supabase + Vercel + Railway provisioned via code; Drift detection active",
+      "dependencies": [
+        "IFC-001"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-1/attestations/IFC-075/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 1
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 1,
+        "met": 1,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "BRAND-002",
+      "sprint": 1,
+      "status": "Completed",
+      "section": "Design System",
+      "title": "Design Tokens Integration Plan (Tailwind/shadcn theme mapping)",
+      "description": "Design Tokens Integration Plan (Tailwind/shadcn theme mapping)",
+      "summary": "UI kit created; Component library built",
+      "definitionOfDone": "Mapping document from brand tokens to Tailwind/shadcn variables created; includes light/dark theme rules, semantic color tokens, component states, and migration guidelines; produces a minimal theme reference\" page spec\"; targets: >=90%, zero errors; verified by: pnpm lint",
+      "definitionOfDoneSnapshot": "UI kit created; Component library built",
+      "dependencies": [
+        "BRAND-001",
+        "ENV-002-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-1/attestations/BRAND-002/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 1
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "SALES-001",
+      "sprint": 1,
+      "status": "Completed",
+      "section": "Commercial Assets",
+      "title": "Commercial Narrative + Pitch Deck Outline + One-Pager",
+      "description": "Commercial Narrative + Pitch Deck Outline + One-Pager",
+      "summary": "Sales motion defined; Team enablement complete",
+      "definitionOfDone": "Deck outline (10–12 slides) with story arc, slide-by-slide content, and visual guidelines; plus one-pager (problem → solution → proof → CTA); includes a single canonical link to design source (Figma/Canva); verified by: pnpm lint",
+      "definitionOfDoneSnapshot": "Sales motion defined; Team enablement complete",
+      "dependencies": [
+        "GTM-002",
+        "BRAND-001"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-1/attestations/SALES-001/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 1
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "GOV-001",
+      "sprint": 1,
+      "status": "Completed",
+      "section": "Architecture Governance",
+      "title": "Architecture Governance Pack (ADR + ARP templates, decision workflow, flowcharts)",
+      "description": "Architecture Governance Pack (ADR + ARP templates, decision workflow, flowcharts)",
+      "summary": "Architecture governance process defined; Audit logging ADR complete",
+      "definitionOfDone": "Created ADR template, ARP template, decision workflow, and diagram/flowchart conventions; includes folder structure, naming, and example ADR/ARP; defines when decisions are required and how to approve; verified by: pnpm lint",
+      "definitionOfDoneSnapshot": "Architecture governance process defined; Audit logging ADR complete",
+      "dependencies": [
+        "ENG-OPS-001"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-1/attestations/GOV-001/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 1
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-106",
+      "sprint": 1,
+      "status": "Completed",
+      "section": "Architecture",
+      "title": "PHASE-039: Define Hexagonal module boundaries + create canonical packages/application + packages/adapters skeleton",
+      "description": "PHASE-039: Define Hexagonal module boundaries + create canonical packages/application + packages/adapters skeleton",
+      "summary": "Hexagonal module boundaries defined; Architecture tests passing",
+      "definitionOfDone": "Application layer created (ports + use-cases); adapters layer created; module boundary rules enforced in CI; architecture tests passing; ADR updated; artifacts: hex-boundaries.md, repo-layout.md, context_ack.json; targets: >=100%",
+      "definitionOfDoneSnapshot": "Hexagonal module boundaries defined; Architecture tests passing",
+      "dependencies": [
+        "IFC-002"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-1/attestations/IFC-106/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 1
+      },
+      "validationSummary": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-119",
+      "sprint": 1,
+      "status": "Completed",
+      "section": "Planning",
+      "title": "Define recurring backlog refinement, sprint planning, review and retrospective ceremonies",
+      "description": "Define recurring backlog refinement, sprint planning, review and retrospective ceremonies",
+      "summary": "Load testing framework established; Baseline metrics recorded",
+      "definitionOfDone": "Ceremony schedule published; agendas and templates created; meeting outcomes documented; targets: >=100%",
+      "definitionOfDoneSnapshot": "Load testing framework established; Baseline metrics recorded",
+      "dependencies": [],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-1/attestations/IFC-119/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 1
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-135",
+      "sprint": 1,
+      "status": "Completed",
+      "section": "Architecture",
+      "title": "Create ADR pack for multi-tenancy; workflow engine choice; agent tool-calling; data classification & retention; audit logging",
+      "description": "Create ADR pack for multi-tenancy; workflow engine choice; agent tool-calling; data classification & retention; audit logging",
+      "summary": "Accessibility audit complete; WCAG compliance verified",
+      "definitionOfDone": "ADRs drafted for multi-tenancy; workflow engine; tool-calling model; data classification/retention; audit logging; reviewed and approved; artifacts: ADR-004-multi-tenancy.md, ADR-005-workflow-engine.md, ADR-006-agent-tools.md; targets: >=100%",
+      "definitionOfDoneSnapshot": "Accessibility audit complete; WCAG compliance verified",
+      "dependencies": [
+        "IFC-002",
+        "GOV-001"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-1/attestations/IFC-135/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 1
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    }
+  ]
+}

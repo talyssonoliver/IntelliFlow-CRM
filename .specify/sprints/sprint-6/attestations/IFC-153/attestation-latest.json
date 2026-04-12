@@ -1,0 +1,88 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-153",
+  "run_id": "sprint6-audit-20260302T215741-ex8v6u",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:57:49.097Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 3,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "docs/operations/runbooks/ingestion.md": "16ec141fc67e552d15edd2eacf52e2ebc259ec4b1831b92954fc8f91e02d8389",
+    ".specify/sprints/sprint-12/attestations/IFC-153/context_ack.json": "059fd4fc1f0e106e284ad7f631e2685f92ff274650042337b6f4898b78c64910",
+    ".specify/sprints/sprint-12/attestations/IFC-153/attestation.json": "4552923810798022d43f7b0401d19e3b4033a17d26ef4781027b43cbcd74ad5f"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-153",
+      "command": "pnpm test:integration",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 5000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-106"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Upload + inbound email attachments land in storage",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "AV scan gate",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "metadata extracted",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "ingestion events emitted",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "failure handling + retries",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "integration tests",
+      "met": true,
+      "evidence": "All 1 validations passed"
+    },
+    {
+      "criterion": "targets: >=99%",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": ">=100%",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": ">=1%",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "8 DoD criteria unverified"
+}

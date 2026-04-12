@@ -1,0 +1,114 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "DOC-001",
+  "run_id": "sprint0-audit-20260302T215641-7da797",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:56:50.062Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 6,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "docs/company/master-brief.md": "65ff9d089d12a06b1b047b0b6f783b1356a17662d7d05252e326cb23d29e35d1",
+    "docs/company/product/product-vision.md": "24bf6fd630b5485533af5bab3ab049b431d2ef693bc4819f10a65bcb81a33224",
+    "docs/company/go-to-market/icp-personas.md": "8b4e4fd26aae24b3472475eeeec06598d7299c5af14b0ca98bd300590ee4f2c8",
+    "docs/company/messaging/tone-of-voice.md": "a0b1dc8f646210275ef1c107b3a665c795316f2a0654bd251902a321089a57ff",
+    "docs/company/brand/visual-identity.md": "8488a5f10a62c69a10025def8b4080a58e8c03bc26f437a25c51ef847e4f10c3",
+    ".specify/sprints/sprint-0/attestations/DOC-001/context_ack.json": "2d89903e5fec341f3ff27f5477f08f997e1a5c8188f3ea958e3dfa0df372a777"
+  },
+  "validation_results": [
+    {
+      "name": "DOC-001",
+      "command": "pnpm lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 15000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [],
+  "definition_of_done_items": [
+    {
+      "criterion": "Master brief created and reviewed covering: product definition",
+      "met": true,
+      "evidence": "All 6 artifacts exist"
+    },
+    {
+      "criterion": "vision",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "target customers (ICP)",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "personas",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "positioning",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "value proposition",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "differentiation",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "success metrics",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "scope/out-of-scope",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "tone of voice",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "and visual identity direction",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "published as tracked docs and referenced from CLAUDE.md/README as grounding source",
+      "met": true,
+      "evidence": "Documentation found: docs/company/master-brief.md, docs/company/product/product-vision.md, docs/company/go-to-market/icp-personas.md, docs/company/messaging/tone-of-voice.md, docs/company/brand/visual-identity.md"
+    },
+    {
+      "criterion": "targets: >=100%",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "verified by: pnpm lint",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "12 DoD criteria unverified"
+}

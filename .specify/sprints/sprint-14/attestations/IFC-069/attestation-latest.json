@@ -1,0 +1,77 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-069",
+  "run_id": "sprint14-audit-20260302T215859-6dbfyi",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:59:07.075Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 4,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/api/src/modules/misc/activity-feed.router.ts": "0bb6b337c4e2b10dce21b736d27b62f1bb4f36d15508a1283651381bc39d6f12",
+    "apps/web/src/components/shared/activity-feed/ActivityFeed.tsx": "1640381f1f72b9c0f93c4f2bfdb1e60b22ffc1c2559a2e0b50f517c3e69876cb",
+    "packages/application/src/services/ActivityFeedService.ts": "ff001dff041e747a41a7851ac777cd386b27b95a2ad77aa6a48327d7d851d571",
+    ".specify/sprints/sprint-14/attestations/IFC-069/attestation.json": "b70b4e5ae8991636dcdcec4266eafcd08c16563212b7ff2953a757db6cd082cc"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-069",
+      "command": "pnpm test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 180000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-089",
+    "IFC-091",
+    "IFC-093",
+    "IFC-109"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Unified timeline showing all entity activities (leads",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "contacts",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "deals",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "tickets)",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "targets: <500ms load",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "real-time",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "6 DoD criteria unverified"
+}

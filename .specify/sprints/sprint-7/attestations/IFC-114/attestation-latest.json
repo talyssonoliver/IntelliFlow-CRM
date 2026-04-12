@@ -1,0 +1,60 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-114",
+  "run_id": "sprint7-audit-20260302T215750-xc1o8i",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:57:58.643Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 4,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/api/src/middleware/rate-limit.ts": "005b5a6f4d25668d1b40ff03579ce402df0c3883dd89d8bfc2882141c3c8a6b3",
+    "artifacts/misc/waf-config.json": "05aa5c8aa11744802012729f430f784502b3fa6059af3ca735fc449293f42d63",
+    "artifacts/misc/ddos-test-report.txt": "daf3357504df75d0d475ab74cc876a3b5eb497750d949c759e254c3f9784b790",
+    ".specify/sprints/sprint-7/attestations/IFC-114/context_ack.json": "81f6db6c9974f9f587afb622368132533e30ef9c4eb96cc05ab7d39c4cf67d03"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-114",
+      "command": "pnpm test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 180000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-003",
+    "IFC-072"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Rate limiting middleware in API",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "WAF configured for DDoS",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "tests for request bursts",
+      "met": true,
+      "evidence": "All 1 validations passed"
+    }
+  ],
+  "notes": "2 DoD criteria unverified"
+}

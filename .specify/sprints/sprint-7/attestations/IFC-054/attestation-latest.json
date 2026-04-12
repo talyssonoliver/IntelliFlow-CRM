@@ -1,0 +1,67 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-054",
+  "run_id": "sprint7-audit-20260302T215750-xc1o8i",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:57:58.610Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 4,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "artifacts/metrics/complexity-metrics.json": "53951f4cc23b4f24a33f37fa5c52e0725389aa486786890f81c60878d04cb1b8",
+    "docs/shared/refactoring-backlog.md": "2a89d18bbb6088f215700b8989f8333b270632cd23cd4d63a42db430db81ccc6",
+    "artifacts/misc/team-velocity.csv": "7dfae2f1c37958d37519c80af9bb6999884f274347c505cddba857541ed05593",
+    ".specify/sprints/sprint-7/attestations/IFC-054/context_ack.json": "328c5e67c5a5cf145a3637e49628addcd7a5cae4952e90184084b7572a2cac47"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-054",
+      "command": "pnpm typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 90000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [],
+  "definition_of_done_items": [
+    {
+      "criterion": "Weekly assessment of technical debt and complexity",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "artifacts: sonarqube-debt-report.html",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "complexity-metrics.json",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "refactoring-backlog.md",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "targets: >=10%",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "5 DoD criteria unverified"
+}

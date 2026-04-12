@@ -1,0 +1,74 @@
+{
+  "$schema": "../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "DOC-009",
+  "run_id": "20260224211828-8b392652",
+  "attestor": "Claude Code - Task Integrity Validator",
+  "attestation_timestamp": "2026-02-24T22:00:00Z",
+  "verdict": "COMPLETE",
+  "artifact_hashes": {
+    "apps/web/src/__tests__/content-audit-schema.test.ts": "1ad38dc38a33eaf0724a7963b3349cd7706b51d66d1174668766a4c0562c66fd",
+    "docs/design/content-audit.md": "4ad9a7afe5cb27c6620d402ee724c983836001d6dea2ae343ea43de0b05ff1d0",
+    "artifacts/reports/content-audit-results.json": "826abcaa248c8de8cd3f3f52221575f03451fbb99e570418061be5d6008f531a"
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-24T21:48:00Z"
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run apps/web/src/__tests__/content-audit-schema.test.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-24T21:48:12Z",
+      "duration_ms": 947
+    },
+    {
+      "name": "Lint",
+      "command": "npx eslint apps/web/src/__tests__/content-audit-schema.test.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-24T21:49:00Z"
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-24T21:50:00Z"
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "plan-checkboxes",
+      "passed": true,
+      "score": 100
+    },
+    {
+      "gate_id": "artifact-hashes",
+      "passed": true,
+      "score": 100
+    },
+    {
+      "gate_id": "build-validation",
+      "passed": true,
+      "score": 100
+    }
+  ],
+  "evidence_summary": {
+    "artifacts_verified": 3,
+    "validations_passed": 4,
+    "validations_failed": 0,
+    "gates_passed": 3,
+    "gates_failed": 0,
+    "kpis_met": 3,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "dependencies_verified": ["DOC-002", "DOC-005"],
+  "notes": "DOC-009 content audit completed. 104 routes audited (25 public, 6 developer, 73 auth-gated). Route count is 104 at execution time (was 103 at spec time due to new developers/apps/[id] route). All 14 test cases pass. Coverage N/A for artifact validation test (no source files to instrument). 2 pre-existing lint errors in other files do not affect this task."
+}

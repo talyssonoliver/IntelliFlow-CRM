@@ -1,0 +1,71 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "PG-160",
+  "run_id": "sprint15-audit-20260302T215918-7xh85u",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:59:26.255Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 2,
+    "validations_passed": 2,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/web/src/app/insights/page.tsx": "5e1186166ab387bc9abcf00cf795e89778eae37777169585710bbf19e0b21d9d",
+    "apps/web/src/components/insights/InsightsListPage.tsx": "a43f3fa63e9d4ca31f677002e46ccb0ab26dfe2bc55a937eb757b8ca60e78d8a"
+  },
+  "validation_results": [
+    {
+      "name": "PG-160",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 46000,
+      "stdout_hash": "all-green-1772476872408"
+    },
+    {
+      "name": "PG-160",
+      "command": "pnpm --filter @intelliflow/web test --run",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 120000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "PG-129"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "/insights page with paginated list",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "getAllInsights endpoint with type filter",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "View All link navigates correctly",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "loading/empty states",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "4 DoD criteria unverified"
+}

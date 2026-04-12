@@ -1,0 +1,63 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "TRACK-003",
+  "run_id": "sprint14-audit-20260302T215859-6dbfyi",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:59:13.316Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 3,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/project-tracker/components/tracking/RiskRegister.tsx": "c0a0ffa3851c55c3aa3df0f165da1f3d569c6fcb8f329b5727869eecf0ae5d01",
+    "apps/project-tracker/app/api/tracking/risks/route.ts": "a715da91f8e3f2962106b6535ed4f510fbce7288bd0cd4d59f1696681fb884e0",
+    ".specify/sprints/sprint-14/attestations/TRACK-003/context_ack.json": "df882900822caf6613053b6f32ab092d962c07762d0c42f4c2e8b67971008fff"
+  },
+  "validation_results": [
+    {
+      "name": "TRACK-003",
+      "command": "pnpm --filter project-tracker typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T21:59:10.228Z",
+      "duration_ms": 3087,
+      "stdout_hash": "98fdeb9ae64bcab109ef35b0cfcdd4b559cdf3db9593c0fe33f952688eb27376"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-118"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Risk register displayed in table",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "add/edit risk modal",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "mitigation status tracking",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "export capability",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "4 DoD criteria unverified"
+}

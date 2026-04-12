@@ -1,0 +1,1303 @@
+{
+  "sprint": "sprint-20",
+  "name": "Sprint 20",
+  "generated_at": "2026-04-11T16:48:01.958Z",
+  "summary_source": "specify",
+  "task_summary": {
+    "total": 34,
+    "completed": 0,
+    "backlog": 34,
+    "blocked": 0,
+    "attested_completed": 0
+  },
+  "context": "Primary focus areas: Core CRM (25), AI Foundation (2), Performance (2).",
+  "section_summary": [
+    {
+      "section": "Core CRM",
+      "total": 25,
+      "completed": 0,
+      "open": 25
+    },
+    {
+      "section": "AI Foundation",
+      "total": 2,
+      "completed": 0,
+      "open": 2
+    },
+    {
+      "section": "Performance",
+      "total": 2,
+      "completed": 0,
+      "open": 2
+    },
+    {
+      "section": "AI/ML",
+      "total": 1,
+      "completed": 0,
+      "open": 1
+    },
+    {
+      "section": "Documentation",
+      "total": 1,
+      "completed": 0,
+      "open": 1
+    },
+    {
+      "section": "Enhancement",
+      "total": 1,
+      "completed": 0,
+      "open": 1
+    },
+    {
+      "section": "Governance Pages",
+      "total": 1,
+      "completed": 0,
+      "open": 1
+    },
+    {
+      "section": "Public Pages",
+      "total": 1,
+      "completed": 0,
+      "open": 1
+    }
+  ],
+  "notable_completed": [],
+  "open_tasks": [
+    {
+      "taskId": "IFC-035",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Enhancement",
+      "title": "PHASE-006: WhatsApp Business API Research",
+      "description": "PHASE-006: WhatsApp Business API Research",
+      "summary": "Integration approach with Supabase webhooks validated",
+      "definitionOfDone": "Integration approach with Supabase webhooks validated; artifacts: whatsapp-api-research.md, integration-design.puml, cost-analysis.xlsx",
+      "definitionOfDoneSnapshot": "Integration approach with Supabase webhooks validated",
+      "dependencies": [
+        "IFC-034"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-087",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Performance",
+      "title": "Edge Functions Optimization",
+      "description": "Edge Functions Optimization",
+      "summary": "Critical paths on edge, <50ms response globally",
+      "definitionOfDone": "Critical paths on edge, <50ms response globally; artifacts: edge-performance-map.json, cost-analysis-edge.xlsx, global-latency.csv",
+      "definitionOfDoneSnapshot": "Critical paths on edge, <50ms response globally",
+      "dependencies": [
+        "IFC-014"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-070",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Account Detail",
+      "description": "Account Detail",
+      "summary": "response under 200ms, Lighthouse 90, complete view",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, complete view; artifacts: page.tsx, account-detail.tsx, subsidiary-list.tsx",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, complete view",
+      "dependencies": [
+        "PG-069"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-071",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Edit Account",
+      "description": "Edit Account",
+      "summary": "response under 200ms, Lighthouse 90, updates saved",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, updates saved; artifacts: page.tsx, account-editor.tsx, parent-selector.tsx",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, updates saved",
+      "dependencies": [
+        "PG-070"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-072",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Import Accounts",
+      "description": "Import Accounts",
+      "summary": "response under 200ms, Lighthouse 90, imports structured",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, imports structured; artifacts: page.tsx, account-importer.tsx, hierarchy-mapper.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, imports structured",
+      "dependencies": [
+        "PG-069"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "taskId": "IFC-035",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Enhancement",
+      "title": "PHASE-006: WhatsApp Business API Research",
+      "description": "PHASE-006: WhatsApp Business API Research",
+      "summary": "Integration approach with Supabase webhooks validated",
+      "definitionOfDone": "Integration approach with Supabase webhooks validated; artifacts: whatsapp-api-research.md, integration-design.puml, cost-analysis.xlsx",
+      "definitionOfDoneSnapshot": "Integration approach with Supabase webhooks validated",
+      "dependencies": [
+        "IFC-034"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-087",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Performance",
+      "title": "Edge Functions Optimization",
+      "description": "Edge Functions Optimization",
+      "summary": "Critical paths on edge, <50ms response globally",
+      "definitionOfDone": "Critical paths on edge, <50ms response globally; artifacts: edge-performance-map.json, cost-analysis-edge.xlsx, global-latency.csv",
+      "definitionOfDoneSnapshot": "Critical paths on edge, <50ms response globally",
+      "dependencies": [
+        "IFC-014"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-070",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Account Detail",
+      "description": "Account Detail",
+      "summary": "response under 200ms, Lighthouse 90, complete view",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, complete view; artifacts: page.tsx, account-detail.tsx, subsidiary-list.tsx",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, complete view",
+      "dependencies": [
+        "PG-069"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-071",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Edit Account",
+      "description": "Edit Account",
+      "summary": "response under 200ms, Lighthouse 90, updates saved",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, updates saved; artifacts: page.tsx, account-editor.tsx, parent-selector.tsx",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, updates saved",
+      "dependencies": [
+        "PG-070"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-072",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Import Accounts",
+      "description": "Import Accounts",
+      "summary": "response under 200ms, Lighthouse 90, imports structured",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, imports structured; artifacts: page.tsx, account-importer.tsx, hierarchy-mapper.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, imports structured",
+      "dependencies": [
+        "PG-069"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-073",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Opportunities List",
+      "description": "Opportunities List",
+      "summary": "response under 200ms, Lighthouse 90, pipeline visible",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, pipeline visible; artifacts: page.tsx, opportunity-list.tsx, pipeline-view.tsx",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, pipeline visible",
+      "dependencies": [
+        "IFC-091"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-074",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Opportunity Detail CRITICAL: Current page is fully hardcoded with SAMPLE_DEAL and SAMPLE_ACTIVITIES constants - zero API calls. Must: (1) Replace with api.opportunity.getById query (IFC-186 router already built with moveStage getHistory getProducts getPipeline endpoints). (2) Wire all 6 action buttons: Won/Lost to updateStage mutations with stage dialog Edit to navigate to edit form Clone to duplicate mutation Archive to set archived Delete to AlertDialog + delete mutation. (3) Add real activity timeline via ActivityFeed component (IFC-069). (4) Wire file section to real data. (5) Remove hardcoded SAMPLE_* constants. Cross-entity patterns from Lead 360 wiring (2026-03-04) should be followed.",
+      "description": "Opportunity Detail CRITICAL: Current page is fully hardcoded with SAMPLE_DEAL and SAMPLE_ACTIVITIES constants - zero API calls. Must: (1) Replace with api.opportunity.getById query (IFC-186 router already built with moveStage getHistory getProducts getPipeline endpoints). (2) Wire all 6 action buttons: Won/Lost to updateStage mutations with stage dialog Edit to navigate to edit form Clone to duplicate mutation Archive to set archived Delete to AlertDialog + delete mutation. (3) Add real activity timeline via ActivityFeed component (IFC-069). (4) Wire file section to real data. (5) Remove hardcoded SAMPLE_* constants. Cross-entity patterns from Lead 360 wiring (2026-03-04) should be followed.",
+      "summary": "response under 200ms, Lighthouse 90, details complete; Deal detail loads real API data; all 6 action buttons functional with confirmation dialogs; activity timeline shows real events; file section wired;...",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, details complete; artifacts: page.tsx, opportunity-detail.tsx, product-list.tsx; Deal detail loads real API data; all 6 action buttons functional with confirmation dialogs; activity timeline shows real events; file section wired; no hardcoded SAMPLE_* constants remain; Lighthouse >=90; tests >=90%",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, details complete; Deal detail loads real API data; all 6 action buttons functional with confirmation dialogs; activity timeline shows real events; file section wired;...",
+      "dependencies": [
+        "PG-073"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-075",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Edit Opportunity",
+      "description": "Edit Opportunity",
+      "summary": "response under 200ms, Lighthouse 90, calculations accurate",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, calculations accurate; artifacts: page.tsx, opportunity-editor.tsx, probability-calc.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, calculations accurate",
+      "dependencies": [
+        "PG-074"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-127",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Public Pages",
+      "title": "Partner Application Workflow - Dedicated partner application form with specialized fields, routing, and onboarding process",
+      "description": "Partner Application Workflow - Dedicated partner application form with specialized fields, routing, and onboarding process",
+      "summary": "Dedicated partner application form; specialized fields (company size, integration type, use case); separate routing/CRM tagging; partner-specific auto-response",
+      "definitionOfDone": "Dedicated partner application form; specialized fields (company size, integration type, use case); separate routing/CRM tagging; partner-specific auto-response; artifacts: page.tsx, partner-application.ts, application-handler.ts; targets: Response <200ms, Lighthouse >=90, >=90% coverage; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Dedicated partner application form; specialized fields (company size, integration type, use case); separate routing/CRM tagging; partner-specific auto-response",
+      "dependencies": [
+        "PG-006",
+        "PG-005",
+        "GTM-002"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-164",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "AI/ML",
+      "title": "Ollama Local Development - Real Integration & Benchmarks",
+      "description": "Ollama Local Development - Real Integration & Benchmarks",
+      "summary": "Complete Ollama integration with REAL benchmarks: (1) Implement ChatOllama in scoring.chain.ts, (2) Run real accuracy benchmarks against test leads, (3) Validate cost savings with actual metrics, (4) Update accuracy-benchmarks.json with rea...",
+      "definitionOfDone": "Complete Ollama integration with REAL benchmarks: (1) Implement ChatOllama in scoring.chain.ts, (2) Run real accuracy benchmarks against test leads, (3) Validate cost savings with actual metrics, (4) Update accuracy-benchmarks.json with real data; Follow-up to IFC-085 which only added config but never tested",
+      "definitionOfDoneSnapshot": "Complete Ollama integration with REAL benchmarks: (1) Implement ChatOllama in scoring.chain.ts, (2) Run real accuracy benchmarks against test leads, (3) Validate cost savings with actual metrics, (4) Update accuracy-benchmarks.json with rea...",
+      "dependencies": [
+        "IFC-005",
+        "IFC-086",
+        "IFC-095"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-165",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Performance",
+      "title": "Performance Baseline - Real Benchmarks with Live Infrastructure",
+      "description": "Performance Baseline - Real Benchmarks with Live Infrastructure",
+      "summary": "Run REAL performance benchmarks: (1) Start API server and database, (2) Execute artifacts/benchmarks/run-baseline-benchmark.ts, (3) Capture actual API p95/p99 latencies, (4) Capture actual DB query times, (5) Update baseline.json with measu...",
+      "definitionOfDone": "Run REAL performance benchmarks: (1) Start API server and database, (2) Execute artifacts/benchmarks/run-baseline-benchmark.ts, (3) Capture actual API p95/p99 latencies, (4) Capture actual DB query times, (5) Update baseline.json with measured data; Follow-up to ENV-015-AI which created config but had simulated data",
+      "definitionOfDoneSnapshot": "Run REAL performance benchmarks: (1) Start API server and database, (2) Execute artifacts/benchmarks/run-baseline-benchmark.ts, (3) Capture actual API p95/p99 latencies, (4) Capture actual DB query times, (5) Update baseline.json with measu...",
+      "dependencies": [
+        "ENV-015-AI",
+        "IFC-003",
+        "ENV-005-AI"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-204",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Activity Feed Performance Observability - queryDurationMs tracking structured logging and latency alerting",
+      "description": "Activity Feed Performance Observability - queryDurationMs tracking structured logging and latency alerting",
+      "summary": "queryDurationMs field added to feed response; repository measures query execution time via performance.now(); structured JSON logging for all feed queries (tenant, duration, source count, cache hit/miss); alert threshold at p95 >500ms;...",
+      "definitionOfDone": "queryDurationMs field added to feed response; repository measures query execution time via performance.now(); structured JSON logging for all feed queries (tenant, duration, source count, cache hit/miss); alert threshold at p95 >500ms; Grafana dashboard panel; unit tests for timing; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "queryDurationMs field added to feed response; repository measures query execution time via performance.now(); structured JSON logging for all feed queries (tenant, duration, source count, cache hit/miss); alert threshold at p95 >500ms;...",
+      "dependencies": [
+        "IFC-069"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-168",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Monitoring and Sentry error tracking for home route - error boundaries breadcrumbs performance spans",
+      "description": "Monitoring and Sentry error tracking for home route - error boundaries breadcrumbs performance spans",
+      "summary": "Sentry error boundary wrapping home sections; breadcrumbs for section loads; performance spans for each tRPC query; error alerts configured",
+      "definitionOfDone": "Sentry error boundary wrapping home sections; breadcrumbs for section loads; performance spans for each tRPC query; error alerts configured",
+      "definitionOfDoneSnapshot": "Sentry error boundary wrapping home sections; breadcrumbs for section loads; performance spans for each tRPC query; error alerts configured",
+      "dependencies": [
+        "PG-129"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "A11Y-REVIEW-001",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Documentation",
+      "title": "Execute first quarterly accessibility documentation review using template",
+      "description": "Execute first quarterly accessibility documentation review using template",
+      "summary": "All 5 review sections completed with evidence; sign-off block filled; conformance statement updated if needed; review archived at docs/compliance/quarterly-a11y-reviews/sprint-20-review.md",
+      "definitionOfDone": "All 5 review sections completed with evidence; sign-off block filled; conformance statement updated if needed; review archived at docs/compliance/quarterly-a11y-reviews/sprint-20-review.md; verified by: template completeness review",
+      "definitionOfDoneSnapshot": "All 5 review sections completed with evidence; sign-off block filled; conformance statement updated if needed; review archived at docs/compliance/quarterly-a11y-reviews/sprint-20-review.md",
+      "dependencies": [
+        "DOC-012"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-218",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "AI Foundation",
+      "title": "Similar Entity API (pgvector) - Build lead.getSimilar and contact.getSimilar tRPC queries using pgvector embedding similarity. Top 5 matches exclude self tenant-isolated. Wire to Lead detail sidebar (replace empty state) and Contact detail sidebar. Follows IFC-039 (Pattern 1 - infra-only). Resolves WIRE-IFC-039-001.",
+      "description": "Similar Entity API (pgvector) - Build lead.getSimilar and contact.getSimilar tRPC queries using pgvector embedding similarity. Top 5 matches exclude self tenant-isolated. Wire to Lead detail sidebar (replace empty state) and Contact detail sidebar. Follows IFC-039 (Pattern 1 - infra-only). Resolves WIRE-IFC-039-001.",
+      "summary": "getSimilar returns top 5 with name/company/score; wired to 2 detail sidebars; tenant-isolated; tests >=90%",
+      "definitionOfDone": "getSimilar returns top 5 with name/company/score; wired to 2 detail sidebars; tenant-isolated; tests >=90%",
+      "definitionOfDoneSnapshot": "getSimilar returns top 5 with name/company/score; wired to 2 detail sidebars; tenant-isolated; tests >=90%",
+      "dependencies": [
+        "IFC-039"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-219",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Activity Feed Interactions (Reactions + Comments) - Add ActivityReaction and ActivityComment models to Prisma schema. tRPC mutations: addReaction removeReaction addComment. Wire into Lead and Contact detail activity action buttons. Remove hardcoded [] arrays. Follows IFC-069 (Pattern 2 - scope oversight). Resolves WIRE-IFC-069-001.",
+      "description": "Activity Feed Interactions (Reactions + Comments) - Add ActivityReaction and ActivityComment models to Prisma schema. tRPC mutations: addReaction removeReaction addComment. Wire into Lead and Contact detail activity action buttons. Remove hardcoded [] arrays. Follows IFC-069 (Pattern 2 - scope oversight). Resolves WIRE-IFC-069-001.",
+      "summary": "Reactions + comments persisted; action buttons functional on Lead + Contact; Prisma migration; real-time via WS; tests >=90%",
+      "definitionOfDone": "Reactions + comments persisted; action buttons functional on Lead + Contact; Prisma migration; real-time via WS; tests >=90%",
+      "definitionOfDoneSnapshot": "Reactions + comments persisted; action buttons functional on Lead + Contact; Prisma migration; real-time via WS; tests >=90%",
+      "dependencies": [
+        "IFC-069"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-228",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Lead Owner Reassignment UI - Owner card on Lead detail (lines 1468-1487) is read-only. Add reassignment capability for MANAGER/ADMIN roles: user picker dropdown, reassign mutation via lead.update, audit trail entry. Apply RBAC check to show/hide reassign button. Extend to Contact and Account detail pages.",
+      "description": "Lead Owner Reassignment UI - Owner card on Lead detail (lines 1468-1487) is read-only. Add reassignment capability for MANAGER/ADMIN roles: user picker dropdown, reassign mutation via lead.update, audit trail entry. Apply RBAC check to show/hide reassign button. Extend to Contact and Account detail pages.",
+      "summary": "MANAGER/ADMIN can reassign lead owner via user picker; reassignment creates audit entry; RBAC enforced; regular users see read-only; tests >=90%",
+      "definitionOfDone": "MANAGER/ADMIN can reassign lead owner via user picker; reassignment creates audit entry; RBAC enforced; regular users see read-only; tests >=90%",
+      "definitionOfDoneSnapshot": "MANAGER/ADMIN can reassign lead owner via user picker; reassignment creates audit entry; RBAC enforced; regular users see read-only; tests >=90%",
+      "dependencies": [
+        "IFC-095"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-229",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Lead Detail Map View - Current map section (lines 1453-1465) is a gradient placeholder with non-functional 'View Map' button. Options: (A) Integrate Mapbox/Leaflet with geocoded address, (B) Link to Google Maps in new tab, (C) Remove placeholder entirely if map not in MVP scope. Needs product decision.",
+      "description": "Lead Detail Map View - Current map section (lines 1453-1465) is a gradient placeholder with non-functional 'View Map' button. Options: (A) Integrate Mapbox/Leaflet with geocoded address, (B) Link to Google Maps in new tab, (C) Remove placeholder entirely if map not in MVP scope. Needs product decision.",
+      "summary": "Map section either shows real map from geocoded address OR links to external map OR placeholder removed; no non-functional UI elements remain; tests >=90%",
+      "definitionOfDone": "Map section either shows real map from geocoded address OR links to external map OR placeholder removed; no non-functional UI elements remain; tests >=90%",
+      "definitionOfDoneSnapshot": "Map section either shows real map from geocoded address OR links to external map OR placeholder removed; no non-functional UI elements remain; tests >=90%",
+      "dependencies": [],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-233",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Wire Unused Backend tRPC Endpoints - ~20 built but unused tRPC procedures. Lead: convertToDeal, getHotLeads, getReadyForQualification, bulkScore. Contact: getByEmail, linkToAccount, unlinkFromAccount, search, linkToLead, unlinkFromLead, getTimeline, logActivity. Opportunity: create, getById, getHistory, getProducts, getPipeline, stats. Account: create, update. Task: stats, assign, reschedule. Wire each to appropriate frontend UI or remove if not needed.",
+      "description": "Wire Unused Backend tRPC Endpoints - ~20 built but unused tRPC procedures. Lead: convertToDeal, getHotLeads, getReadyForQualification, bulkScore. Contact: getByEmail, linkToAccount, unlinkFromAccount, search, linkToLead, unlinkFromLead, getTimeline, logActivity. Opportunity: create, getById, getHistory, getProducts, getPipeline, stats. Account: create, update. Task: stats, assign, reschedule. Wire each to appropriate frontend UI or remove if not needed.",
+      "summary": "All listed tRPC procedures either wired to frontend UI or explicitly removed with justification; no dead backend code; tests >=90%",
+      "definitionOfDone": "All listed tRPC procedures either wired to frontend UI or explicitly removed with justification; no dead backend code; tests >=90%",
+      "definitionOfDoneSnapshot": "All listed tRPC procedures either wired to frontend UI or explicitly removed with justification; no dead backend code; tests >=90%",
+      "dependencies": [],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-241",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Lead Router Dead Code & Missing Events Cleanup. Fix 4 MEDIUM/LOW issues: (1) scoreWithAI notification variables at lines 517-527 set but never referenced - dead code [S10]. (2) LeadRoutedEvent defined in domain but never published by any procedure or service [S11]. (3) Only 3 of ~10 lead event types trigger notifications [W10]. (4) Lead notifications processed synchronously, not queued via BullMQ [W11]. Fix: Remove dead notification code, publish LeadRoutedEvent from routing logic, add notification handlers for remaining event types, enqueue via BullMQ.",
+      "description": "Lead Router Dead Code & Missing Events Cleanup. Fix 4 MEDIUM/LOW issues: (1) scoreWithAI notification variables at lines 517-527 set but never referenced - dead code [S10]. (2) LeadRoutedEvent defined in domain but never published by any procedure or service [S11]. (3) Only 3 of ~10 lead event types trigger notifications [W10]. (4) Lead notifications processed synchronously, not queued via BullMQ [W11]. Fix: Remove dead notification code, publish LeadRoutedEvent from routing logic, add notification handlers for remaining event types, enqueue via BullMQ.",
+      "summary": "Dead code removed; LeadRoutedEvent published when lead routing occurs; >=8 event types have notification handlers; notifications enqueued via BullMQ; tests >=90%",
+      "definitionOfDone": "Dead code removed; LeadRoutedEvent published when lead routing occurs; >=8 event types have notification handlers; notifications enqueued via BullMQ; tests >=90%",
+      "definitionOfDoneSnapshot": "Dead code removed; LeadRoutedEvent published when lead routing occurs; >=8 event types have notification handlers; notifications enqueued via BullMQ; tests >=90%",
+      "dependencies": [],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-243",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Lead Frontend Consistency - StatusBadge, Toast, window.prompt. Fix 3 MEDIUM issues: (1) window.prompt() used for note input at line 1951 - blocks UI, no multi-line, poor UX [F5]. Replace with Dialog/Sheet component. (2) Two different StatusBadge implementations - inline LeadStatusBadge vs shared component with different color schemes [F6]. Consolidate to shared component. (3) Two Toast patterns - sonner toast.success() vs shadcn useToast() used inconsistently across lead pages [F7]. Standardize to one pattern.",
+      "description": "Lead Frontend Consistency - StatusBadge, Toast, window.prompt. Fix 3 MEDIUM issues: (1) window.prompt() used for note input at line 1951 - blocks UI, no multi-line, poor UX [F5]. Replace with Dialog/Sheet component. (2) Two different StatusBadge implementations - inline LeadStatusBadge vs shared component with different color schemes [F6]. Consolidate to shared component. (3) Two Toast patterns - sonner toast.success() vs shadcn useToast() used inconsistently across lead pages [F7]. Standardize to one pattern.",
+      "summary": "Note input uses Dialog component with textarea; single StatusBadge component shared across lead pages; single Toast pattern across all lead pages; tests >=90%",
+      "definitionOfDone": "Note input uses Dialog component with textarea; single StatusBadge component shared across lead pages; single Toast pattern across all lead pages; tests >=90%",
+      "definitionOfDoneSnapshot": "Note input uses Dialog component with textarea; single StatusBadge component shared across lead pages; single Toast pattern across all lead pages; tests >=90%",
+      "dependencies": [],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-244",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Dashboard Widget Real Data - ActiveLeads, TotalLeads, Analytics. Fix 3 HIGH/MEDIUM issues: (1) ActiveLeadsWidget fully hardcoded with static '1,240' and 'vs 1,100 last month' [F2]. (2) TotalLeadsWidget shows hardcoded '+12%' trend [W6]. (3) Analytics page for leads uses sample data arrays, no API queries [W7]. Fix: Wire ActiveLeadsWidget to lead.stats API, compute real trend from monthly comparison, wire Analytics page to real lead data endpoints.",
+      "description": "Dashboard Widget Real Data - ActiveLeads, TotalLeads, Analytics. Fix 3 HIGH/MEDIUM issues: (1) ActiveLeadsWidget fully hardcoded with static '1,240' and 'vs 1,100 last month' [F2]. (2) TotalLeadsWidget shows hardcoded '+12%' trend [W6]. (3) Analytics page for leads uses sample data arrays, no API queries [W7]. Fix: Wire ActiveLeadsWidget to lead.stats API, compute real trend from monthly comparison, wire Analytics page to real lead data endpoints.",
+      "summary": "ActiveLeadsWidget shows real count from API; TotalLeadsWidget trend computed from actual monthly data; Analytics page queries real lead data; no hardcoded numeric values; tests >=90%",
+      "definitionOfDone": "ActiveLeadsWidget shows real count from API; TotalLeadsWidget trend computed from actual monthly data; Analytics page queries real lead data; no hardcoded numeric values; tests >=90%",
+      "definitionOfDoneSnapshot": "ActiveLeadsWidget shows real count from API; TotalLeadsWidget trend computed from actual monthly data; Analytics page queries real lead data; no hardcoded numeric values; tests >=90%",
+      "dependencies": [],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-245",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Lead Activity Timeline Unification. Fix HIGH issue: logActivity creates LeadActivity records but these are NOT fed into the unified TimelineEvent system (IFC-069). Lead activities exist in a parallel silo [W1]. Also fix: No email-to-lead association - inbound emails not linked to leads by sender address [W2]. Fix: Create TimelineEvent adapter for LeadActivity, add email-to-lead matching in inbound parser, ensure lead detail 'All Sources' toggle shows unified data.",
+      "description": "Lead Activity Timeline Unification. Fix HIGH issue: logActivity creates LeadActivity records but these are NOT fed into the unified TimelineEvent system (IFC-069). Lead activities exist in a parallel silo [W1]. Also fix: No email-to-lead association - inbound emails not linked to leads by sender address [W2]. Fix: Create TimelineEvent adapter for LeadActivity, add email-to-lead matching in inbound parser, ensure lead detail 'All Sources' toggle shows unified data.",
+      "summary": "LeadActivity records appear in unified timeline; inbound emails matched to leads by sender; lead detail All Sources view shows real unified data; tests >=90%",
+      "definitionOfDone": "LeadActivity records appear in unified timeline; inbound emails matched to leads by sender; lead detail All Sources view shows real unified data; tests >=90%",
+      "definitionOfDoneSnapshot": "LeadActivity records appear in unified timeline; inbound emails matched to leads by sender; lead detail All Sources view shows real unified data; tests >=90%",
+      "dependencies": [
+        "IFC-069"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-246",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "AI Foundation",
+      "title": "Domain Model Lead 360 Alignment. Fix 4 HIGH issues: (1) Lead.toJSON() omits aiInsight, activities, notes, files, tasks relations - domain events carry incomplete snapshots [D1]. (2) qualify() only allows from NEW/CONTACTED but UI doesn't reflect this constraint [D2]. (3) LeadScoringChain throws unhandled error for unknown AI_PROVIDER [D3]. (4) AI scoring prompt only receives basic lead data, ignores activity count, engagement history, note count [D4]. Fix: Extend toJSON, expose allowed transitions, add provider fallback, enrich scoring prompt.",
+      "description": "Domain Model Lead 360 Alignment. Fix 4 HIGH issues: (1) Lead.toJSON() omits aiInsight, activities, notes, files, tasks relations - domain events carry incomplete snapshots [D1]. (2) qualify() only allows from NEW/CONTACTED but UI doesn't reflect this constraint [D2]. (3) LeadScoringChain throws unhandled error for unknown AI_PROVIDER [D3]. (4) AI scoring prompt only receives basic lead data, ignores activity count, engagement history, note count [D4]. Fix: Extend toJSON, expose allowed transitions, add provider fallback, enrich scoring prompt.",
+      "summary": "Lead.toJSON() includes 360 fields; qualify() exposes valid-from-status list; LeadScoringChain gracefully handles unknown providers; scoring prompt includes 360 context; tests >=90%",
+      "definitionOfDone": "Lead.toJSON() includes 360 fields; qualify() exposes valid-from-status list; LeadScoringChain gracefully handles unknown providers; scoring prompt includes 360 context; tests >=90%",
+      "definitionOfDoneSnapshot": "Lead.toJSON() includes 360 fields; qualify() exposes valid-from-status list; LeadScoringChain gracefully handles unknown providers; scoring prompt includes 360 context; tests >=90%",
+      "dependencies": [],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-249",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Lead Edit Page Tests + E2E. Fix remaining test gaps: (1) Edit page onSuccess/onError callbacks untested, as any cast hides type errors [T9]. (2) No E2E tests for complete lead CRUD flow (create -> view -> edit -> delete) [T6]. Write: (1) Edit page component tests with mutation mocking. (2) Playwright E2E test for full lead lifecycle. E2E should cover: create lead with required fields, view on detail page, edit fields, archive/delete.",
+      "description": "Lead Edit Page Tests + E2E. Fix remaining test gaps: (1) Edit page onSuccess/onError callbacks untested, as any cast hides type errors [T9]. (2) No E2E tests for complete lead CRUD flow (create -> view -> edit -> delete) [T6]. Write: (1) Edit page component tests with mutation mocking. (2) Playwright E2E test for full lead lifecycle. E2E should cover: create lead with required fields, view on detail page, edit fields, archive/delete.",
+      "summary": "Edit page test file with >=8 cases; Playwright E2E test for lead CRUD lifecycle; edit page mutation callbacks covered; coverage >=90%",
+      "definitionOfDone": "Edit page test file with >=8 cases; Playwright E2E test for lead CRUD lifecycle; edit page mutation callbacks covered; coverage >=90%",
+      "definitionOfDoneSnapshot": "Edit page test file with >=8 cases; Playwright E2E test for lead CRUD lifecycle; edit page mutation callbacks covered; coverage >=90%",
+      "dependencies": [],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-258",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Contact Frontend Consistency — Avatars, Owner Title, Confidence. (1) Default avatars are Unsplash stranger photos — replace with initials-based generated avatar (F-09). (2) Owner title hardcoded 'Account Executive' — map from owner.role like lead detail (F-16). (3) Confidence hardcoded 0.85 for churnRisk and nextBestAction — use API data (F-17). (4) quietPeriodAlert always null (F-22). (5) ContactForm duplicated between create and edit (F-24). Audit: docs/audit/contact-detail-wiring-audit.md §16.",
+      "description": "Contact Frontend Consistency — Avatars, Owner Title, Confidence. (1) Default avatars are Unsplash stranger photos — replace with initials-based generated avatar (F-09). (2) Owner title hardcoded 'Account Executive' — map from owner.role like lead detail (F-16). (3) Confidence hardcoded 0.85 for churnRisk and nextBestAction — use API data (F-17). (4) quietPeriodAlert always null (F-22). (5) ContactForm duplicated between create and edit (F-24). Audit: docs/audit/contact-detail-wiring-audit.md §16.",
+      "summary": "Avatar uses initials fallback; owner title from role; confidence from API; shared ContactForm component; tests >=90%",
+      "definitionOfDone": "Avatar uses initials fallback; owner title from role; confidence from API; shared ContactForm component; tests >=90%",
+      "definitionOfDoneSnapshot": "Avatar uses initials fallback; owner title from role; confidence from API; shared ContactForm component; tests >=90%",
+      "dependencies": [],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-259",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Contact Dead UI Fields & Unused Components. (1) location/timezone always empty (F-10). (2) isOnline/isVIP always false — dead badges (F-11). (3) tags always empty array (F-12). (4) ContactDetail.tsx component unused by page — 597 lines with tests but never imported (F-14). (5) ContactCard.tsx unused by list page (F-28). (6) emailsOpened always 0 (F-20). Decision needed: wire to real data, show placeholder states, or remove dead UI. Audit: docs/audit/contact-detail-wiring-audit.md §16.",
+      "description": "Contact Dead UI Fields & Unused Components. (1) location/timezone always empty (F-10). (2) isOnline/isVIP always false — dead badges (F-11). (3) tags always empty array (F-12). (4) ContactDetail.tsx component unused by page — 597 lines with tests but never imported (F-14). (5) ContactCard.tsx unused by list page (F-28). (6) emailsOpened always 0 (F-20). Decision needed: wire to real data, show placeholder states, or remove dead UI. Audit: docs/audit/contact-detail-wiring-audit.md §16.",
+      "summary": "Dead UI fields either wired to real data or removed with proper empty states; unused components either integrated or deleted; tests >=90%",
+      "definitionOfDone": "Dead UI fields either wired to real data or removed with proper empty states; unused components either integrated or deleted; tests >=90%",
+      "definitionOfDoneSnapshot": "Dead UI fields either wired to real data or removed with proper empty states; unused components either integrated or deleted; tests >=90%",
+      "dependencies": [],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-260",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Contact Domain Model Fixes. (1) reconstitute() silently substitutes unknown@unknown.com for invalid emails — should Result.fail or throw (D-01). (2) mergeContacts no cross-tenant check — linkToLead correctly checks but merge doesn't (D-02). (3) No ContactDeletedEvent — deleteContact publishes no events, audit handler has mapping but event never emitted (D-04). (4) No ContactEmailChangedEvent — old email not captured in generic ContactUpdatedEvent (D-05). (5) Tags update always emits event without deep equality check (D-07). Audit: docs/audit/contact-detail-wiring-audit.md §18.",
+      "description": "Contact Domain Model Fixes. (1) reconstitute() silently substitutes unknown@unknown.com for invalid emails — should Result.fail or throw (D-01). (2) mergeContacts no cross-tenant check — linkToLead correctly checks but merge doesn't (D-02). (3) No ContactDeletedEvent — deleteContact publishes no events, audit handler has mapping but event never emitted (D-04). (4) No ContactEmailChangedEvent — old email not captured in generic ContactUpdatedEvent (D-05). (5) Tags update always emits event without deep equality check (D-07). Audit: docs/audit/contact-detail-wiring-audit.md §18.",
+      "summary": "reconstitute throws on invalid email; mergeContacts checks tenantId; ContactDeletedEvent and ContactEmailChangedEvent added; tags uses deep equality; tests >=90%",
+      "definitionOfDone": "reconstitute throws on invalid email; mergeContacts checks tenantId; ContactDeletedEvent and ContactEmailChangedEvent added; tags uses deep equality; tests >=90%",
+      "definitionOfDoneSnapshot": "reconstitute throws on invalid email; mergeContacts checks tenantId; ContactDeletedEvent and ContactEmailChangedEvent added; tags uses deep equality; tests >=90%",
+      "dependencies": [],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-274",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Account Activity Timeline — Replace Stub Data. AccountService.getAccountActivity() (lines 748-785) returns synthetic/stub activities with hardcoded descriptions and broken cursor pagination — not real Activity model records (F-13). Replace with real activity feed from ActivityFeed component or Activity model queries. Should use same pattern as Lead/Contact activity tabs. Audit: docs/audit/account-detail-wiring-audit.md section 6.",
+      "description": "Account Activity Timeline — Replace Stub Data. AccountService.getAccountActivity() (lines 748-785) returns synthetic/stub activities with hardcoded descriptions and broken cursor pagination — not real Activity model records (F-13). Replace with real activity feed from ActivityFeed component or Activity model queries. Should use same pattern as Lead/Contact activity tabs. Audit: docs/audit/account-detail-wiring-audit.md section 6.",
+      "summary": "Account activity tab shows real Activity model records; pagination works correctly; no synthetic data; matches Lead/Contact activity pattern; tests >=90%",
+      "definitionOfDone": "Account activity tab shows real Activity model records; pagination works correctly; no synthetic data; matches Lead/Contact activity pattern; tests >=90%",
+      "definitionOfDoneSnapshot": "Account activity tab shows real Activity model records; pagination works correctly; no synthetic data; matches Lead/Contact activity pattern; tests >=90%",
+      "dependencies": [],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-275",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Account Create & Edit Forms. (1) No account create form page — router has create procedure but no frontend consumer (F-16). Create page at accounts/(list)/new/page.tsx with form for all account fields. (2) No account edit form — Edit button navigates but lands on 404 (F-17). Create edit form page or inline edit mode using router update procedure. Both forms should validate with accountSchema. Audit: docs/audit/account-detail-wiring-audit.md section 10.",
+      "description": "Account Create & Edit Forms. (1) No account create form page — router has create procedure but no frontend consumer (F-16). Create page at accounts/(list)/new/page.tsx with form for all account fields. (2) No account edit form — Edit button navigates but lands on 404 (F-17). Create edit form page or inline edit mode using router update procedure. Both forms should validate with accountSchema. Audit: docs/audit/account-detail-wiring-audit.md section 10.",
+      "summary": "Account create form page at accounts/(list)/new/page.tsx; edit form accessible from detail page; both forms validate and submit via tRPC mutations; success navigation and error handling; auth guard on both pages; tests >=90%",
+      "definitionOfDone": "Account create form page at accounts/(list)/new/page.tsx; edit form accessible from detail page; both forms validate and submit via tRPC mutations; success navigation and error handling; auth guard on both pages; tests >=90%",
+      "definitionOfDoneSnapshot": "Account create form page at accounts/(list)/new/page.tsx; edit form accessible from detail page; both forms validate and submit via tRPC mutations; success navigation and error handling; auth guard on both pages; tests >=90%",
+      "dependencies": [
+        "IFC-270"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-276",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Account Contract Test + Test Gaps. (1) Accounts is the ONLY entity without a contract test file (T-01). (2) No-op buttons untested — 6 CRITICAL no-op buttons have no click behavior tests (T-02). (3) Tenant isolation untested in router tests (T-03). (4) No E2E Playwright tests for account CRUD flow (T-04). (5) Owner display untested — tests don't verify owner name/title rendering (T-05). Audit: docs/audit/account-detail-wiring-audit.md section 19.",
+      "description": "Account Contract Test + Test Gaps. (1) Accounts is the ONLY entity without a contract test file (T-01). (2) No-op buttons untested — 6 CRITICAL no-op buttons have no click behavior tests (T-02). (3) Tenant isolation untested in router tests (T-03). (4) No E2E Playwright tests for account CRUD flow (T-04). (5) Owner display untested — tests don't verify owner name/title rendering (T-05). Audit: docs/audit/account-detail-wiring-audit.md section 19.",
+      "summary": "Account contract test file created; button click tests verify navigation/dialog; router tests verify tenant isolation; E2E create-view-edit-delete flow; owner rendering tests; coverage >=90%",
+      "definitionOfDone": "Account contract test file created; button click tests verify navigation/dialog; router tests verify tenant isolation; E2E create-view-edit-delete flow; owner rendering tests; coverage >=90%",
+      "definitionOfDoneSnapshot": "Account contract test file created; button click tests verify navigation/dialog; router tests verify tenant isolation; E2E create-view-edit-delete flow; owner rendering tests; coverage >=90%",
+      "dependencies": [
+        "IFC-267",
+        "IFC-268"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-284",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Deal Forecast Algorithm Fixes. (1) buildWinRateTrend hardcodes months ['May','Jun','Jul','Aug','Sep','Oct'] regardless of current date — semantically incorrect data (B-06, forecast-algorithm.ts:283). Fix to derive from actual 6-month window. (2) DEFAULT_STAGE_PROBABILITIES diverge: validators has NEEDS_ANALYSIS=30/PROPOSAL=70 while domain/service/router/forecast-algorithm uses 40/60 (B-08). Unify to single source of truth. (3) buildMonthlyRevenue uses locale-dependent toLocaleString for month names — breaks on non-en-US servers (B-15, forecast-algorithm.ts:269). (4) Forecast trend values hardcoded as 12 and 5 in forecast page (F-16, deals/forecast/page.tsx:709-710). Compute from API data. Audit: docs/audit/deal-detail-wiring-audit.md sections 4, 6.",
+      "description": "Deal Forecast Algorithm Fixes. (1) buildWinRateTrend hardcodes months ['May','Jun','Jul','Aug','Sep','Oct'] regardless of current date — semantically incorrect data (B-06, forecast-algorithm.ts:283). Fix to derive from actual 6-month window. (2) DEFAULT_STAGE_PROBABILITIES diverge: validators has NEEDS_ANALYSIS=30/PROPOSAL=70 while domain/service/router/forecast-algorithm uses 40/60 (B-08). Unify to single source of truth. (3) buildMonthlyRevenue uses locale-dependent toLocaleString for month names — breaks on non-en-US servers (B-15, forecast-algorithm.ts:269). (4) Forecast trend values hardcoded as 12 and 5 in forecast page (F-16, deals/forecast/page.tsx:709-710). Compute from API data. Audit: docs/audit/deal-detail-wiring-audit.md sections 4, 6.",
+      "summary": "Win rate trend months derived from current date; stage probabilities unified to single source; month names locale-independent; forecast trends computed from data; tests >=90%",
+      "definitionOfDone": "Win rate trend months derived from current date; stage probabilities unified to single source; month names locale-independent; forecast trends computed from data; tests >=90%",
+      "definitionOfDoneSnapshot": "Win rate trend months derived from current date; stage probabilities unified to single source; month names locale-independent; forecast trends computed from data; tests >=90%",
+      "dependencies": [],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-286",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Deal Detail Page Tests + E2E. (1) Deal detail page (792 lines) has ZERO test coverage (T-01). (2) No E2E Playwright tests for /deals, /deals/[id], or /deals/forecast — only pipeline-settings has E2E (T-02). (3) No cross-tenant access attempt test in router tests (T-03). (4) Contract test missing NEEDS_ANALYSIS stage in test data (T-04). Depends on IFC-278 (real data) and IFC-280 (wired buttons). Audit: docs/audit/deal-detail-wiring-audit.md section 10.",
+      "description": "Deal Detail Page Tests + E2E. (1) Deal detail page (792 lines) has ZERO test coverage (T-01). (2) No E2E Playwright tests for /deals, /deals/[id], or /deals/forecast — only pipeline-settings has E2E (T-02). (3) No cross-tenant access attempt test in router tests (T-03). (4) Contract test missing NEEDS_ANALYSIS stage in test data (T-04). Depends on IFC-278 (real data) and IFC-280 (wired buttons). Audit: docs/audit/deal-detail-wiring-audit.md section 10.",
+      "summary": "Deal detail page test file with >=20 tests; E2E create-view-edit-delete flow; router tests for cross-tenant access; contract test includes NEEDS_ANALYSIS; coverage >=90%",
+      "definitionOfDone": "Deal detail page test file with >=20 tests; E2E create-view-edit-delete flow; router tests for cross-tenant access; contract test includes NEEDS_ANALYSIS; coverage >=90%",
+      "definitionOfDoneSnapshot": "Deal detail page test file with >=20 tests; E2E create-view-edit-delete flow; router tests for cross-tenant access; contract test includes NEEDS_ANALYSIS; coverage >=90%",
+      "dependencies": [
+        "IFC-278",
+        "IFC-280"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-194",
+      "sprint": 20,
+      "status": "Backlog",
+      "section": "Governance Pages",
+      "title": "Governance Compliance Dashboard — register and wire existing /governance/compliance page; replace 5 hardcoded ComplianceCard scores (ISO 27001 92%, ISO 42001 45%, ISO 14001 78%, GDPR 98%, ADR 60%) with real compliance API data; remove hardcoded overall score 74.6 and '16 Total' action items; remove ISO 14001 card (irrelevant to SaaS); connect ComplianceTimeline and RiskHeatMap to live API endpoints; ensure ComplianceDetailPanel drilldown shows real control data; tests >=90%",
+      "description": "Governance Compliance Dashboard — register and wire existing /governance/compliance page; replace 5 hardcoded ComplianceCard scores (ISO 27001 92%, ISO 42001 45%, ISO 14001 78%, GDPR 98%, ADR 60%) with real compliance API data; remove hardcoded overall score 74.6 and '16 Total' action items; remove ISO 14001 card (irrelevant to SaaS); connect ComplianceTimeline and RiskHeatMap to live API endpoints; ensure ComplianceDetailPanel drilldown shows real control data; tests >=90%",
+      "summary": "ComplianceCards load scores from API not hardcoded; overall score computed from live data; ISO 14001 card removed; ComplianceTimeline renders events from compliance-calendar.json; RiskHeatMap fetches from /api/compliance/risks;...",
+      "definitionOfDone": "ComplianceCards load scores from API not hardcoded; overall score computed from live data; ISO 14001 card removed; ComplianceTimeline renders events from compliance-calendar.json; RiskHeatMap fetches from /api/compliance/risks; ComplianceDetailPanel shows real controls; Lighthouse >=90; test coverage >=90%; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "ComplianceCards load scores from API not hardcoded; overall score computed from live data; ISO 14001 card removed; ComplianceTimeline renders events from compliance-calendar.json; RiskHeatMap fetches from /api/compliance/risks;...",
+      "dependencies": [
+        "IFC-073",
+        "IFC-100",
+        "IFC-306"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    }
+  ]
+}

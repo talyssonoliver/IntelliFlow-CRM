@@ -1,0 +1,184 @@
+{
+  "$schema": "../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "DOC-006",
+  "run_id": "20260224T211357Z",
+  "attestor": "Claude Code - Task Integrity Validator",
+  "attestation_timestamp": "2026-02-24T21:25:00Z",
+  "verdict": "COMPLETE",
+  "context_acknowledgment": {
+    "files_read": [
+      {
+        "path": ".specify/sprints/sprint-14/specifications/DOC-006-spec.md",
+        "sha256": "1916eea5a25dcfcd6a2acdf70a11e43dd41c2603396ca79d4dafe4f3c6f03085"
+      },
+      {
+        "path": ".specify/sprints/sprint-14/planning/DOC-006-plan.md",
+        "sha256": "f91109f5700aa6600feb7d6f0d58f9829b8d2c3390dfa29422b7b6d7ca8167a6"
+      },
+      {
+        "path": "docs/design/navigation-reachability-audit.md",
+        "sha256": "b1b7a775c98845ec9dbccd642824c0d68f35dcb547db93a2ae8fef7be5670570"
+      },
+      {
+        "path": "docs/design/ui-flow-mapping.md",
+        "sha256": "2605feee283b86f0f4943d1ac52dde25dc091acc1ac740eb691af5d28ef32ff6"
+      },
+      {
+        "path": "docs/design/PAGE_MAP_AND_FLOWS.md",
+        "sha256": "93d5432b6c06b7a39ec494a14e53979a32106a629a6507263b22a3f05a6792f0"
+      },
+      {
+        "path": "docs/design/page-registry.md",
+        "sha256": "18b5c0fe2618ecf3663a02c3ad22a22ed099050c5a13565eef42e4c5b6e7ebe5"
+      }
+    ],
+    "invariants_acknowledged": [
+      "103 page.tsx files on filesystem",
+      "39 routers / 366 procedures in router.ts",
+      "48 FLOW-*.md files on disk",
+      "28 ghost links identified in navigation-reachability-audit.md",
+      "5 conflict resolutions (CR-01 through CR-05)"
+    ],
+    "acknowledged_at": "2026-02-24T21:14:00Z"
+  },
+  "evidence_summary": {
+    "artifacts_verified": 3,
+    "validations_passed": 4,
+    "validations_failed": 0,
+    "gates_passed": 8,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "docs/design/information-architecture.md": "7641a244a69c23ea29d4c3f5b8b9b727ca153619112d3ca54ced0915111ccc41",
+    "apps/web/src/app/__tests__/ia-reconciliation.test.ts": "ad3ae2ddcbe61bbab68846b341ae2c75061fbe68e6e6fc9074a05b20cf10488f",
+    "apps/web/src/app/__tests__/test-helpers/ia-fs-helpers.ts": "80401c2a797a6b790d3d4aef7fb692db29c47c268043e67a2ad316c512fa971c"
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-24T21:21:00Z",
+      "duration_ms": 8000
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run src/app/__tests__/",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-24T21:21:30Z",
+      "duration_ms": 1790
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter @intelliflow/web lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-24T21:21:45Z",
+      "duration_ms": 5000
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-24T21:22:00Z",
+      "duration_ms": 30000
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "plan-checkboxes",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-24T21:22:00Z"
+    },
+    {
+      "gate_id": "artifact-verification",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-24T21:22:00Z"
+    },
+    {
+      "gate_id": "csv-reconcile",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-24T21:22:00Z"
+    },
+    {
+      "gate_id": "build-validation",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-24T21:22:00Z"
+    },
+    {
+      "gate_id": "stoa-pass",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-24T21:22:00Z"
+    },
+    {
+      "gate_id": "container-registration",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-24T21:22:00Z"
+    },
+    {
+      "gate_id": "mock-coverage-audit",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-24T21:22:00Z"
+    },
+    {
+      "gate_id": "coverage-measurement",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-24T21:22:00Z"
+    }
+  ],
+  "dependencies_verified": [
+    "DOC-002",
+    "DOC-003",
+    "DOC-004",
+    "DOC-005"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Unified IA reference doc created combining route inventory with user journey context",
+      "met": true,
+      "evidence": "docs/design/information-architecture.md — 671 lines, 103 routes in 20 module sections"
+    },
+    {
+      "criterion": "Links routes to flows to components to APIs to nav layers",
+      "met": true,
+      "evidence": "8-column tables: Route, File Path, Task ID, Flow ID, API Router, Nav Layers, Status, Ghost?"
+    },
+    {
+      "criterion": "Cross-references all 4 source documents",
+      "met": true,
+      "evidence": "§1.3 Document Ecosystem + §11 Data Sources reference all 5 source docs"
+    },
+    {
+      "criterion": "Single reference covering 103 routes with journey context",
+      "met": true,
+      "evidence": "TC-IA-01 passes: Total Pages = 103 = filesystem count"
+    },
+    {
+      "criterion": "No conflicting data across source docs",
+      "met": true,
+      "evidence": "§1.4 Conflict Resolution Log documents 5 resolved conflicts (CR-01 to CR-05)"
+    }
+  ],
+  "environment": {
+    "os": "Windows 11 Pro 10.0.26200",
+    "node_version": "v25.2.1",
+    "git_commit": "5998bc1afbff8a3ec6d1325799bb3595903a591b",
+    "branch": "sprint0/codex-run"
+  },
+  "notes": "Documentation-only task. Created unified IA reference (671 lines) with 103 routes across 20 module sections, 28 ghost links register, 5 conflict resolutions, 4 layout patterns, 19 API endpoints, and maintenance protocol. 4 new reconciliation tests (TC-IA-01/03/04/05) all pass. Shared test helper extracted from 2 existing files. Pre-existing typecheck error in apps/api opportunity.router.ts is unrelated to this task."
+}

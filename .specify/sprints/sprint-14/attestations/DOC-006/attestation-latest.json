@@ -1,0 +1,64 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "DOC-006",
+  "run_id": "sprint14-audit-20260302T215859-6dbfyi",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:59:16.732Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 1,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "docs/design/information-architecture.md": "6963751a2fbb2015a290e8504da474b6e94b59c2cf8eafc2927e408f1f73fc2d"
+  },
+  "validation_results": [
+    {
+      "name": "DOC-006",
+      "command": "pnpm lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 15000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "DOC-002",
+    "DOC-003",
+    "DOC-004",
+    "DOC-005"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Unified IA reference doc created combining route inventory with user journey context",
+      "met": true,
+      "evidence": "All 1 artifacts exist"
+    },
+    {
+      "criterion": "links routes to flows to components to APIs to nav layers",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "cross-references all 4 source documents",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "verified by: manual review",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "3 DoD criteria unverified"
+}

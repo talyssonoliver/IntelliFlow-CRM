@@ -1,0 +1,45 @@
+{
+  "task_id": "IFC-297",
+  "verdict": "COMPLETE",
+  "completed_at": "2026-03-16T18:14:00.000Z",
+  "artifact_hashes": {
+    "apps/ai-worker/src/monitoring/monitoring-flush.service.ts": "7596c2b44cefce378323a431ace4c19c48dd6e4403898eb05cafd7993ec1e949",
+    "apps/api/src/services/AIMonitoringService.ts": "5ee1d464fbcadcb88bbab547c56695e6dbd6fb5383b7fc63d772fe93673bb265",
+    "apps/api/src/modules/ai-monitoring/ai-monitoring.router.ts": "26b99f8f30df62e02b8b04e1b3a60640ba27fe0730d9f31e66ca56b1ffcec1b6",
+    "apps/api/src/services/__tests__/AIMonitoringService.test.ts": "e286f6ce3657a79ef13147b7e37a42de89ef8b7d82d7d08d545225ce17c1bab7",
+    "packages/db/prisma/migrations/20260316000000_ai_monitoring_events/migration.sql": "73dcd72b1704b809c20cce57b7a7bf0824b2f937d82e64950afdf65e214475d1"
+  },
+  "dependencies_verified": true,
+  "notes": "Cross-package backend task: Prisma model AIMonitoringEvent added to schema with 8 indexes, MonitoringFlushService drains singletons to DB every 60s, AIMonitoringService queries DB, router rewritten from singleton imports to service calls, container wired. loadAIMonitoringModule and AI_WORKER_COLOCATED retired. Response shapes match frontend MonitoringHealthStatus type. Retention cleanup (30d) built in. Migration SQL created. 48 tests passing (11 flush + 14 service + 23 router).",
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/api exec tsc --noEmit && pnpm --filter @intelliflow/ai-worker exec tsc --noEmit",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-16T18:13:30.000Z"
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run apps/ai-worker/src/monitoring/__tests__/monitoring-flush.service.test.ts && npx vitest run apps/api/src/services/__tests__/AIMonitoringService.test.ts && npx vitest run apps/api/src/modules/ai-monitoring/__tests__",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-16T18:13:40.000Z"
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-16T18:14:00.000Z",
+      "stdout_hash": "pre-existing-errors-only"
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-16T00:20:00.000Z"
+    }
+  ]
+}

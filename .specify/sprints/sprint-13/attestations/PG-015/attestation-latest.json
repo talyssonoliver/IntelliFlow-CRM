@@ -1,0 +1,83 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "PG-015",
+  "run_id": "sprint13-audit-20260302T215849-ygkkim",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:58:57.299Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 6,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/web/src/app/(public)/login/page.tsx": "13705e34eb891e7c34985ab15b58d33a9aa8dbf33a29ec464b4191e10f2b6a39",
+    "apps/web/src/components/shared/auth-providers.tsx": "aa97bacbc4ce72faa566dcf298d294766503e12671f6d3395a100bc7ec2d7ab4",
+    "apps/web/src/lib/shared/login-security.ts": "d399d5566aca3c498c22d16fdbee047336e7061345d6672e51fd2ca19bc82872",
+    ".specify/sprints/sprint-13/execution/PG-015/20260125-173318/PG-015-delivery.md": "ecb13ace244f3489d55091b0506530ddaa781346628cd2f10f29cf10f78309ae",
+    "docs/planning/adr/ADR-020-public-site-auth.md": "bb5cb864b162207db2656abcba4637eb189ed515134f3b0e0d6c5d12212e9c27",
+    "docs/planning/prd-public-site-auth.md": "a858df0521ee9c76415a5fa3b40ab462f383bbd45ef6ae846cd18edec444bead"
+  },
+  "validation_results": [
+    {
+      "name": "PG-015",
+      "command": "pnpm test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 180000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-006",
+    "IFC-076",
+    "IFC-098"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Response <200ms",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "Lighthouse ≥90",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "auth working",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "artifacts: page.tsx",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "auth-providers.tsx",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "login-security.ts",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "verified by: pnpm test",
+      "met": true,
+      "evidence": "All 1 validations passed"
+    }
+  ],
+  "notes": "6 DoD criteria unverified"
+}

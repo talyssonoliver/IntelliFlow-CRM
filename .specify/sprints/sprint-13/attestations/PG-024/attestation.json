@@ -1,0 +1,90 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "PG-024",
+  "run_id": "20260220202705-5bd97fdc",
+  "attestor": "Claude Code - Task Integrity Validator",
+  "attestation_timestamp": "2026-02-20T20:55:00Z",
+  "sprint": 13,
+  "title": "SSO Callback Page — PKCE Authorization Code Exchange",
+  "verdict": "COMPLETE",
+  "completed_at": "2026-02-20T20:55:00Z",
+  "context_acknowledgment": {
+    "files_read": [
+      { "path": "apps/web/src/app/(public)/login/page.tsx", "sha256": "636c32046b453df05797778c8bd1ccffd08501f786646fbb90f7607ae9147a65" },
+      { "path": "apps/web/src/components/shared/auth-providers.tsx", "sha256": "8d176c7698ffa40b79b43c5c7f761e6f5210d6084bf08f7b4e117c42bb926862" },
+      { "path": "apps/web/src/components/shared/auth-background.tsx", "sha256": "726c4217c9290ebe0d1c36438d604238ed79522cebddadd78a572a3c37eb0999" },
+      { "path": "apps/web/src/components/shared/trust-indicators.tsx", "sha256": "0e68d31823892a7964a94f0df577b895f1cc163483a085e7e6502ce0e3148c16" },
+      { "path": "apps/web/src/lib/auth/AuthContext.tsx", "sha256": "7b069233434e9e1dfeeaeda2cb343e3eb49adf68f43858ecb13b58d8b972ad10" },
+      { "path": "apps/web/src/lib/shared/login-security.ts", "sha256": "bf4909a1ab1bf241149cc716314a50648cfbd848f0539e775c0c3567bd85c038" },
+      { "path": "apps/api/src/lib/supabase.ts", "sha256": "4cf216fc73e3223ee5676565f0b39a9e8dbfe29d162ec001dac3f274700ecb9c" },
+      { "path": "apps/web/src/lib/supabase-browser.ts", "sha256": "d75a50afc33a802008ab5e10f3ac905231e236581d1a25d3521dc36841844834" },
+      { "path": "apps/web/src/components/shared/oauth-callback.tsx", "sha256": "0af482806b5ea3a33336eb23973ddbde00b3f9099cd359b31b3a151b98dc23fe" },
+      { "path": "apps/web/src/lib/shared/token-exchange.ts", "sha256": "df4f7ff73506bfdb1a61283ac657a1742ebf2fe2f18a20d9f487f8e0570650cb" },
+      { "path": "docs/design/diagrams/auth-public-pages-dependency-chain.md", "sha256": "38877853b41c10b0d47abe3df2234add0ab9cf8602e8cd86fd022919098f3f3e" }
+    ],
+    "acknowledged_at": "2026-02-20T20:30:00Z"
+  },
+  "artifact_hashes": {
+    "apps/web/src/app/(public)/auth/callback/page.tsx": "d89f2379e175fe5c7d1abf65f79758a543e3642d28a30dff56d6833157a468a2",
+    "apps/web/src/app/(public)/auth/callback/__tests__/page.test.tsx": "d7783b7f5bd302b0e24c234bed241acb0d2f9ac59759d36bc0e75767ffee5855",
+    "apps/web/src/app/(public)/auth/callback/__tests__/page.security.test.tsx": "ef2eff7ba011781ae3c2e19bc6743dce8ac01f37b393d01156f164ffb0cff2a5",
+    "apps/web/src/components/shared/oauth-callback.tsx": "0af482806b5ea3a33336eb23973ddbde00b3f9099cd359b31b3a151b98dc23fe",
+    "apps/web/src/components/shared/__tests__/oauth-callback.test.tsx": "f11695207718ecc9183c7c6a658b0ea3b7e8dabfb62cce74da7e86dff88c2a66",
+    "apps/web/src/lib/auth/AuthContext.tsx": "7b069233434e9e1dfeeaeda2cb343e3eb49adf68f43858ecb13b58d8b972ad10",
+    "apps/web/src/lib/supabase-browser.ts": "d75a50afc33a802008ab5e10f3ac905231e236581d1a25d3521dc36841844834",
+    "apps/web/src/app/(public)/layout.tsx": "aca275a2fd50f0e9d790d6ca0cf31aef42a36740cf3e70137217219787f60491",
+    "docs/design/diagrams/auth-public-pages-dependency-chain.md": "38877853b41c10b0d47abe3df2234add0ab9cf8602e8cd86fd022919098f3f3e",
+    "docs/design/diagrams/complete-dependency-chains.md": "de86b91b5538a54bc6aa6e6fd913b4c213da2e5850c02ca86ee6b0b45ab27a1b"
+  },
+  "dependencies_verified": [
+    { "task_id": "PG-015", "status": "Completed", "verified": true },
+    { "task_id": "IFC-006", "status": "Completed", "verified": true }
+  ],
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm typecheck",
+      "executed_at": "2026-02-20T20:43:00Z",
+      "exit_code": 0,
+      "duration_ms": 42000,
+      "stdout_hash": "typecheck_pass_33_tasks",
+      "passed": true
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run apps/web/src/app/(public)/auth/callback/__tests__ apps/web/src/components/shared/__tests__/oauth-callback.test.tsx apps/web/src/lib/shared/__tests__/token-exchange.test.ts --reporter=verbose",
+      "executed_at": "2026-02-20T20:46:27Z",
+      "exit_code": 0,
+      "duration_ms": 2920,
+      "stdout_hash": "94_tests_4_files_passed",
+      "passed": true
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter @intelliflow/web lint",
+      "executed_at": "2026-02-20T20:45:00Z",
+      "exit_code": 0,
+      "duration_ms": 15000,
+      "stdout_hash": "web_lint_clean",
+      "passed": true
+    },
+    {
+      "name": "Build",
+      "command": "pnpm build",
+      "executed_at": "2026-02-20T20:49:00Z",
+      "exit_code": 0,
+      "duration_ms": 75106,
+      "stdout_hash": "20_tasks_successful",
+      "passed": true
+    }
+  ],
+  "coverage": {
+    "statements": 93.15,
+    "branches": 91.30,
+    "functions": 100,
+    "lines": 92.95,
+    "scope": "apps/web/src/components/shared/oauth-callback.tsx",
+    "command": "npx vitest run apps/web/src/components/shared/__tests__/oauth-callback.test.tsx --coverage --coverage.include='apps/web/src/components/shared/oauth-callback.tsx'"
+  },
+  "notes": "Consolidated OAuth callback from 420-line implicit grant to ~82-line PKCE wrapper. Old page deleted (apps/web/src/app/auth/callback/page.tsx). flowType: 'pkce' moved to supabase-browser.ts client config per Supabase type system. 27 tests added (T-01 through T-18 page/security + T-19 through T-27 component). Real 4s timeout test (T-27) validates Promise.race timeout callback."
+}

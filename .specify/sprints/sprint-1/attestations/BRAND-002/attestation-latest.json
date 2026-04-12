@@ -1,0 +1,90 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "BRAND-002",
+  "run_id": "sprint1-audit-20260302T215651-arwnsz",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:56:59.890Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 4,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "docs/design/token-mapping.md": "e17d7b48a7da84682d5ed031ca392ad61262c4b4554f9aca8b9c53e2119068eb",
+    "docs/design/theme-reference-spec.md": "0c87a6ee41c75148945ee9a5aeac5dd300e702aab1c8e2520bd6432f30f8e141",
+    "docs/design/token-naming.md": "4b4ef42f78e81a6d74a26bfda353e005e628dcbad1b1f275b24ebd27e0ee5102",
+    ".specify/sprints/sprint-1/attestations/BRAND-002/context_ack.json": "d83d33c64efcec04406919bdc12db5e9c948140713940a5cc328ec39eef7e025"
+  },
+  "validation_results": [
+    {
+      "name": "BRAND-002",
+      "command": "pnpm lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 15000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "BRAND-001",
+    "ENV-002-AI"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Mapping document from brand tokens to Tailwind/shadcn variables created",
+      "met": true,
+      "evidence": "All 4 artifacts exist"
+    },
+    {
+      "criterion": "includes light/dark theme rules",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "semantic color tokens",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "component states",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "and migration guidelines",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "produces a minimal theme reference\" page spec\"",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "targets: >=90%",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "zero errors",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "verified by: pnpm lint",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "8 DoD criteria unverified"
+}

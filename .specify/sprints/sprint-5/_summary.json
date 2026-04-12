@@ -1,0 +1,765 @@
+{
+  "sprint": "sprint-5",
+  "name": "Sprint 5",
+  "generated_at": "2026-04-11T16:48:01.958Z",
+  "summary_source": "specify",
+  "task_summary": {
+    "total": 16,
+    "completed": 16,
+    "backlog": 0,
+    "blocked": 0,
+    "attested_completed": 16
+  },
+  "context": "Primary focus areas: Core CRM (6), AI Foundation (2), Security (2).",
+  "section_summary": [
+    {
+      "section": "Core CRM",
+      "total": 6,
+      "completed": 6,
+      "open": 0
+    },
+    {
+      "section": "AI Foundation",
+      "total": 2,
+      "completed": 2,
+      "open": 0
+    },
+    {
+      "section": "Security",
+      "total": 2,
+      "completed": 2,
+      "open": 0
+    },
+    {
+      "section": "Infrastructure",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Integration",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Platform",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Quality",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "UI/Domain",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Validation",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    }
+  ],
+  "notable_completed": [
+    {
+      "taskId": "PG-134",
+      "sprint": 5,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Account List & Detail Pages - Hierarchy view contacts opportunities revenue charts",
+      "description": "Account List & Detail Pages - Hierarchy view contacts opportunities revenue charts",
+      "summary": "Full-stack Account List & Detail Pages implementation. Backend: domain hierarchy (setParent, removeParent, cycle detection), AccountService (getHierarchy, setParent with depth 5 limit), InMemoryAccountRepository hierarchy methods. Frontend:......",
+      "definitionOfDone": "Response <500ms, Lighthouse >=90; AccountList, AccountCard, AccountDetail, AccountHierarchy, RevenueChart, ContactsList, OpportunitiesList components; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Account list renders with tenant accounts, search, filter, pagination; Account detail page with 6-tab navigation and lazy loading; Account hierarchy tree with ARIA keyboard navigation",
+      "dependencies": [
+        "IFC-185"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-5/attestations/PG-134/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-09T22:51:00.000Z",
+        "sprintFolder": 5
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-147",
+      "sprint": 5,
+      "status": "Completed",
+      "section": "UI/Domain",
+      "title": "Develop Case timeline UI with deadline engine: display tasks; deadlines; events; implement deadline engine to compute legal deadlines and reminders; integrate with scheduling",
+      "description": "Develop Case timeline UI with deadline engine: display tasks; deadlines; events; implement deadline engine to compute legal deadlines and reminders; integrate with scheduling",
+      "summary": "Full-featured case timeline with stats summary, filter panel, priority visualization, overdue alerts, and agent action integration. Includes CaseTimeline reusable component exported for use in other pages. Case timeline page implemented;...",
+      "definitionOfDone": "Case timeline page implemented; tasks and deadlines displayed chronologically; deadline engine computes due dates; reminders triggered; E2E tests; accessibility compliance; targets: >=95%, >=90%, <1s",
+      "definitionOfDoneSnapshot": "Case timeline page implemented; Tasks and deadlines displayed chronologically; Agent actions with Review & Approve link",
+      "dependencies": [
+        "IFC-136",
+        "IFC-137"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-5/attestations/IFC-147/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-28T12:00:00Z",
+        "sprintFolder": 5
+      },
+      "validationSummary": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-180",
+      "sprint": 5,
+      "status": "Completed",
+      "section": "AI Foundation",
+      "title": "AI Output Review - tRPC Router (API endpoints)",
+      "description": "AI Output Review - tRPC Router (API endpoints)",
+      "summary": "IFC-180 implements 7 tRPC endpoints for AI Output Review. 76 tests across 9 describe blocks. Lazy dynamic imports used to work around TypeScript 5.9 + tsup DTS resolution bug. review.list endpoint; review.get endpoint; review.claim endpoint",
+      "definitionOfDone": "review.list, review.get, review.claim, review.approve, review.reject, review.escalate, review.stats endpoints; authentication/authorization; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "review.list endpoint; review.get endpoint; review.claim endpoint",
+      "dependencies": [
+        "IFC-179"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-5/attestations/IFC-180/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-05T22:57:00.000Z",
+        "sprintFolder": 5
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-189",
+      "sprint": 5,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Ticket tRPC Router - CRUD SLA tracking escalation assignment customer portal",
+      "description": "Ticket tRPC Router - CRUD SLA tracking escalation assignment customer portal",
+      "summary": "IFC-189: Added 5 new tRPC endpoints to ticket router (close, escalate, assign, getSLAStatus, getByCustomer) with 5 Zod validator schemas, 22 validator tests, and 19 router tests.... close endpoint - close ticket with status transition guard;...",
+      "definitionOfDone": "ticket.list, ticket.get, ticket.create, ticket.update, ticket.close, ticket.escalate, ticket.assign, ticket.getSLAStatus, ticket.getByCustomer endpoints; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "close endpoint - close ticket with status transition guard; escalate endpoint - escalate priority to CRITICAL with guards; assign endpoint - assign/reassign ticket to agent",
+      "dependencies": [
+        "IFC-188",
+        "IFC-107",
+        "IFC-003"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-5/attestations/IFC-189/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-07T18:10:00Z",
+        "sprintFolder": 5
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-133",
+      "sprint": 5,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Contact List & Detail Pages - Search filters relationship view activity timeline",
+      "description": "Contact List & Detail Pages - Search filters relationship view activity timeline",
+      "summary": "PG-133 Contact List & Detail Pages: Created 6 React components (ContactCard, ContactList, ContactDetail, ContactForm, ActivityTimeline, RelationshipGraph) with full WCAG 2.1 AA accessibility. ContactDetail uses Radix UI Tabs (BLOCKER fix).......",
+      "definitionOfDone": "Response <500ms, Lighthouse >=90; ContactList, ContactCard, ContactDetail, ContactForm, RelationshipGraph, ActivityTimeline components; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "ContactCard component with avatar, status badge, actions; ContactList component with DataTable, sorting, bulk actions; ContactDetail component with Radix UI Tabs",
+      "dependencies": [
+        "IFC-184"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-5/attestations/PG-133/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-07T15:00:00.000Z",
+        "sprintFolder": 5
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    }
+  ],
+  "open_tasks": [],
+  "tasks": [
+    {
+      "taskId": "IFC-089",
+      "sprint": 5,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "FLOW-005-A, FLOW-006, FLOW-014, FLOW-010-A: Contacts Module - Create/Edit/Search",
+      "description": "FLOW-005-A, FLOW-006, FLOW-014, FLOW-010-A: Contacts Module - Create/Edit/Search",
+      "summary": "Contacts CRUD working, search <200ms",
+      "definitionOfDone": "Contacts CRUD working, search <200ms",
+      "definitionOfDoneSnapshot": "Contacts CRUD working, search <200ms",
+      "dependencies": [
+        "IFC-002",
+        "IFC-004",
+        "IFC-102"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-5/attestations/IFC-089/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-28T23:59:58.042Z",
+        "sprintFolder": 5
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-098",
+      "sprint": 5,
+      "status": "Completed",
+      "section": "Security",
+      "title": "RBAC/ABAC & Audit Trail",
+      "description": "RBAC/ABAC & Audit Trail",
+      "summary": "IFC-098 Phase 2 COMPLETE. All RBAC models successfully merged into main schema. RBAC service has full database integration with hybrid approach (DEFAULT_PERMISSIONS + database queries + user overrides).... Audit logging schema created;...",
+      "definitionOfDone": "100% actions logged, RBAC functional; artifacts: schema-audit.prisma, audit-coverage.test.ts, context_ack.json; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Audit logging schema created; RBAC permission model created; Security event logging implemented",
+      "dependencies": [
+        "IFC-008"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-5/attestations/IFC-098/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-29T16:00:00.000Z",
+        "sprintFolder": 5
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-111",
+      "sprint": 5,
+      "status": "Completed",
+      "section": "Quality",
+      "title": "Set up SonarQube and integrate static analysis into CI/CD",
+      "description": "Set up SonarQube and integrate static analysis into CI/CD",
+      "summary": "SonarQube server running, CI pipeline pushes analysis, quality gates defined with OWASP and Clean Code rules",
+      "definitionOfDone": "SonarQube server running, CI pipeline pushes analysis, quality gates defined with OWASP and Clean Code rules; artifacts: sonar-project.properties, ci-sonar.yml, sonar-dashboard.md; targets: zero errors",
+      "definitionOfDoneSnapshot": "SonarQube server running, CI pipeline pushes analysis, quality gates defined with OWASP and Clean Code rules",
+      "dependencies": [
+        "ENV-005-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-5/attestations/IFC-111/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-28T23:59:58.050Z",
+        "sprintFolder": 5
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-112",
+      "sprint": 5,
+      "status": "Completed",
+      "section": "Infrastructure",
+      "title": "Implement blue/green deployment and rollback strategy",
+      "description": "Implement blue/green deployment and rollback strategy",
+      "summary": "Blue/green deployment pipeline configured, automated health checks, rollback scripts ready",
+      "definitionOfDone": "Blue/green deployment pipeline configured, automated health checks, rollback scripts ready; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Blue/green deployment pipeline configured, automated health checks, rollback scripts ready",
+      "dependencies": [
+        "ENV-005-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-5/attestations/IFC-112/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-28T23:59:58.052Z",
+        "sprintFolder": 5
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-127",
+      "sprint": 5,
+      "status": "Completed",
+      "section": "Security",
+      "title": "Implement tenant isolation at database and application layers",
+      "description": "Implement tenant isolation at database and application layers",
+      "summary": "Row‑level security policies applied; tenant context enforced in services; per‑tenant resource limits",
+      "definitionOfDone": "Row‑level security policies applied; tenant context enforced in services; per‑tenant resource limits; artifacts: rls-policies.sql, tenant-context.ts, context_ack.json; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Row‑level security policies applied; tenant context enforced in services; per‑tenant resource limits",
+      "dependencies": [
+        "IFC-098",
+        "IFC-072"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-5/attestations/IFC-127/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-29T10:30:00.000Z",
+        "sprintFolder": 5
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-130",
+      "sprint": 5,
+      "status": "Completed",
+      "section": "Validation",
+      "title": "Release governance: staging auto-deploy, promotion policy, quality/security gates, rollback criteria",
+      "description": "Release governance: staging auto-deploy, promotion policy, quality/security gates, rollback criteria",
+      "summary": "Promotion workflow documented; staging deploy automated; prod promotion requires gate pass + approval; rollback playbook defined; release checklist template in repo",
+      "definitionOfDone": "Promotion workflow documented; staging deploy automated; prod promotion requires gate pass + approval; rollback playbook defined; release checklist template in repo; targets: >=95%",
+      "definitionOfDoneSnapshot": "Promotion workflow documented; staging deploy automated; prod promotion requires gate pass + approval; rollback playbook defined; release checklist template in repo",
+      "dependencies": [
+        "ENV-005-AI",
+        "IFC-111"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-5/attestations/IFC-130/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-28T23:59:58.139Z",
+        "sprintFolder": 5
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-138",
+      "sprint": 5,
+      "status": "Completed",
+      "section": "Integration",
+      "title": "Integrate external calendar providers (Google/Microsoft) with bidirectional sync; webhook handling; idempotency; reconciliation",
+      "description": "Integrate external calendar providers (Google/Microsoft) with bidirectional sync; webhook handling; idempotency; reconciliation",
+      "summary": "Google and Microsoft calendar integrations implemented; event sync both directions with idempotency keys; reconcilers handle conflicts; error handling and retries; integration tests;...",
+      "definitionOfDone": "Google and Microsoft calendar integrations implemented; event sync both directions with idempotency keys; reconcilers handle conflicts; error handling and retries; integration tests; artifacts: client.ts, client.ts, webhooks-config.yaml; targets: >=99%, >=1%, <30s; MicrosoftCalendarAdapter.test.ts must exist matching GoogleCalendarAdapter.test.ts patterns",
+      "definitionOfDoneSnapshot": "Google and Microsoft calendar integrations implemented; event sync both directions with idempotency keys; reconcilers handle conflicts; error handling and retries; integration tests;...",
+      "dependencies": [
+        "IFC-137",
+        "IFC-106"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-5/attestations/IFC-138/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-28T23:59:58.196Z",
+        "sprintFolder": 5
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-147",
+      "sprint": 5,
+      "status": "Completed",
+      "section": "UI/Domain",
+      "title": "Develop Case timeline UI with deadline engine: display tasks; deadlines; events; implement deadline engine to compute legal deadlines and reminders; integrate with scheduling",
+      "description": "Develop Case timeline UI with deadline engine: display tasks; deadlines; events; implement deadline engine to compute legal deadlines and reminders; integrate with scheduling",
+      "summary": "Full-featured case timeline with stats summary, filter panel, priority visualization, overdue alerts, and agent action integration. Includes CaseTimeline reusable component exported for use in other pages. Case timeline page implemented;...",
+      "definitionOfDone": "Case timeline page implemented; tasks and deadlines displayed chronologically; deadline engine computes due dates; reminders triggered; E2E tests; accessibility compliance; targets: >=95%, >=90%, <1s",
+      "definitionOfDoneSnapshot": "Case timeline page implemented; Tasks and deadlines displayed chronologically; Agent actions with Review & Approve link",
+      "dependencies": [
+        "IFC-136",
+        "IFC-137"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-5/attestations/IFC-147/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-28T12:00:00Z",
+        "sprintFolder": 5
+      },
+      "validationSummary": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-150",
+      "sprint": 5,
+      "status": "Completed",
+      "section": "Platform",
+      "title": "Domain events infrastructure: event contracts + versioning + outbox pattern + idempotent publishing",
+      "description": "Domain events infrastructure: event contracts + versioning + outbox pattern + idempotent publishing",
+      "summary": "Domain events infrastructure with outbox pattern; InMemoryEventBus for testing and development; OutboxEventBusAdapter for reliable event delivery Event contract catalogue created (schema + versioning); transactional outbox implemented;...",
+      "definitionOfDone": "Event contract catalogue created (schema + versioning); transactional outbox implemented; idempotency keys enforced; publisher emits metrics/traces; unit/integration tests; targets: >=100%, <200ms; performance-benchmark.json must contain real execution data, not 'simulated' entries",
+      "definitionOfDoneSnapshot": "Event contract catalogue created (schema + versioning); transactional outbox implemented; idempotency keys enforced; publisher emits metrics/traces; unit/integration tests;...",
+      "dependencies": [
+        "IFC-002",
+        "IFC-106",
+        "IFC-098"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-5/attestations/IFC-150/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T22:00:00.000Z",
+        "sprintFolder": 5
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 1,
+        "met": 1,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-179",
+      "sprint": 5,
+      "status": "Completed",
+      "section": "AI Foundation",
+      "title": "AI Output Review - Adapters Layer (repository implementation)",
+      "description": "AI Output Review - Adapters Layer (repository implementation)",
+      "summary": "TDD execution completed. PrismaAIOutputReviewRepository with 7 methods (findById, findByIdForUpdate, save, saveWithOptimisticLock, findPending, countPending, findWithExpiredLocks). 37 tests. 45min vs 260min PERT estimate....",
+      "definitionOfDone": "PrismaAIOutputReviewRepository implements port; CRUD operations; query filters for status/tenant/SLA; event publishing; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "PrismaAIOutputReviewRepository implements port; CRUD operations; Query filters for status/tenant/SLA",
+      "dependencies": [
+        "IFC-177",
+        "IFC-178"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-5/attestations/IFC-179/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-04T22:45:00.000Z",
+        "sprintFolder": 5
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-180",
+      "sprint": 5,
+      "status": "Completed",
+      "section": "AI Foundation",
+      "title": "AI Output Review - tRPC Router (API endpoints)",
+      "description": "AI Output Review - tRPC Router (API endpoints)",
+      "summary": "IFC-180 implements 7 tRPC endpoints for AI Output Review. 76 tests across 9 describe blocks. Lazy dynamic imports used to work around TypeScript 5.9 + tsup DTS resolution bug. review.list endpoint; review.get endpoint; review.claim endpoint",
+      "definitionOfDone": "review.list, review.get, review.claim, review.approve, review.reject, review.escalate, review.stats endpoints; authentication/authorization; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "review.list endpoint; review.get endpoint; review.claim endpoint",
+      "dependencies": [
+        "IFC-179"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-5/attestations/IFC-180/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-05T22:57:00.000Z",
+        "sprintFolder": 5
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-186",
+      "sprint": 5,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Deal/Opportunity tRPC Router - CRUD pipeline stages probability history products",
+      "description": "Deal/Opportunity tRPC Router - CRUD pipeline stages probability history products",
+      "summary": "Added 4 new endpoints (moveStage, getHistory, getProducts, getPipeline) to the existing opportunity router. Modified 3 files, created 0 new files. All validation gates pass. Coverage: 90.41% lines for opportunity module. Schedule:......",
+      "definitionOfDone": "deal.list, deal.get, deal.create, deal.update, deal.delete, deal.moveStage, deal.getHistory, deal.getProducts, deal.getPipeline, deal.getForecast endpoints; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "moveStage transitions opportunity through valid stages per transition rules; getHistory returns ActivityEvent records with cursor pagination; getProducts returns DealProduct records with calculated totalValue",
+      "dependencies": [
+        "IFC-104",
+        "IFC-107",
+        "IFC-003"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-5/attestations/IFC-186/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-05T23:16:00.000Z",
+        "sprintFolder": 5
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-187",
+      "sprint": 5,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Task tRPC Router - CRUD assignment scheduling reminders timeline integration",
+      "description": "Task tRPC Router - CRUD assignment scheduling reminders timeline integration",
+      "summary": "Added 4 new tRPC procedures (assign, reschedule, getReminders, getByEntity) and 4 Zod schemas to complete the Task Router's 10 DoD endpoints. All 63 tests pass. No new files created — only modifications to 3 existing files. task.list endpoint;...",
+      "definitionOfDone": "task.list, task.get, task.create, task.update, task.delete, task.assign, task.complete, task.reschedule, task.getReminders, task.getByEntity endpoints; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "task.list endpoint; task.get endpoint; task.create endpoint",
+      "dependencies": [
+        "IFC-105",
+        "IFC-107",
+        "IFC-003"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-5/attestations/IFC-187/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-07T18:15:00.000Z",
+        "sprintFolder": 5
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-189",
+      "sprint": 5,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Ticket tRPC Router - CRUD SLA tracking escalation assignment customer portal",
+      "description": "Ticket tRPC Router - CRUD SLA tracking escalation assignment customer portal",
+      "summary": "IFC-189: Added 5 new tRPC endpoints to ticket router (close, escalate, assign, getSLAStatus, getByCustomer) with 5 Zod validator schemas, 22 validator tests, and 19 router tests.... close endpoint - close ticket with status transition guard;...",
+      "definitionOfDone": "ticket.list, ticket.get, ticket.create, ticket.update, ticket.close, ticket.escalate, ticket.assign, ticket.getSLAStatus, ticket.getByCustomer endpoints; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "close endpoint - close ticket with status transition guard; escalate endpoint - escalate priority to CRITICAL with guards; assign endpoint - assign/reassign ticket to agent",
+      "dependencies": [
+        "IFC-188",
+        "IFC-107",
+        "IFC-003"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-5/attestations/IFC-189/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-07T18:10:00Z",
+        "sprintFolder": 5
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-133",
+      "sprint": 5,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Contact List & Detail Pages - Search filters relationship view activity timeline",
+      "description": "Contact List & Detail Pages - Search filters relationship view activity timeline",
+      "summary": "PG-133 Contact List & Detail Pages: Created 6 React components (ContactCard, ContactList, ContactDetail, ContactForm, ActivityTimeline, RelationshipGraph) with full WCAG 2.1 AA accessibility. ContactDetail uses Radix UI Tabs (BLOCKER fix).......",
+      "definitionOfDone": "Response <500ms, Lighthouse >=90; ContactList, ContactCard, ContactDetail, ContactForm, RelationshipGraph, ActivityTimeline components; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "ContactCard component with avatar, status badge, actions; ContactList component with DataTable, sorting, bulk actions; ContactDetail component with Radix UI Tabs",
+      "dependencies": [
+        "IFC-184"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-5/attestations/PG-133/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-07T15:00:00.000Z",
+        "sprintFolder": 5
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-134",
+      "sprint": 5,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Account List & Detail Pages - Hierarchy view contacts opportunities revenue charts",
+      "description": "Account List & Detail Pages - Hierarchy view contacts opportunities revenue charts",
+      "summary": "Full-stack Account List & Detail Pages implementation. Backend: domain hierarchy (setParent, removeParent, cycle detection), AccountService (getHierarchy, setParent with depth 5 limit), InMemoryAccountRepository hierarchy methods. Frontend:......",
+      "definitionOfDone": "Response <500ms, Lighthouse >=90; AccountList, AccountCard, AccountDetail, AccountHierarchy, RevenueChart, ContactsList, OpportunitiesList components; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Account list renders with tenant accounts, search, filter, pagination; Account detail page with 6-tab navigation and lazy loading; Account hierarchy tree with ARIA keyboard navigation",
+      "dependencies": [
+        "IFC-185"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-5/attestations/PG-134/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-09T22:51:00.000Z",
+        "sprintFolder": 5
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    }
+  ]
+}

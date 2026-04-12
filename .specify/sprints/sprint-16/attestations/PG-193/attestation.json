@@ -1,0 +1,86 @@
+{
+  "task_id": "PG-193",
+  "run_id": "20260409195310-160f0e8b",
+  "verdict": "COMPLETE",
+  "created_at": "2026-04-09T20:53:10Z",
+  "artifact_hashes": {
+    "apps/web/src/components/ai-monitoring/WorkflowProgressPanel.tsx": "8cb65fab53b3432ed2ad9d8db6b3519caed3270279cdd7d6f169ed22bd839ee6",
+    "apps/web/src/components/ai-monitoring/__tests__/WorkflowProgressPanel.test.tsx": "6032805273fb06c0729d1ee22ee760ea18215ccab87a1e7976e3174d2af39e2b",
+    "apps/web/src/lib/ai-monitoring/workflow-types.ts": "3dbbfa7cabb8f8270542cafb371b6d74a88613718c7b73572e13385296bdb105",
+    "apps/web/src/lib/ai-monitoring/workflow-hooks.ts": "c0fd5ccf33546ab49331b36c535062a7d02f3cdde00673e0c2cca05173bb7769",
+    "apps/api/src/modules/workflow/workflow.router.ts": "b753a06fa6af151fb8126a0939dd0e8bf56587b78cf7ad3c6d67f736691acb2d",
+    "apps/api/src/modules/ai-monitoring/ai-monitoring.router.ts": "bb4bac24c7602beccb8c485b6bb84d6ef58d82543ac48a3ded2470607f08329c"
+  },
+  "dependencies_verified": [
+    {
+      "task_id": "PG-151",
+      "description": "Active Agents Dashboard",
+      "verified_at": "2026-04-09T20:50:00Z",
+      "method": "Read src file (430 lines); AgentCard component present; integrated WorkflowProgressPanel into its expanded section"
+    },
+    {
+      "task_id": "PG-192",
+      "description": "Fix Agent Logs",
+      "verified_at": "2026-04-09T20:50:00Z",
+      "method": "Read src file (660+ lines); LogEntryCard expand/collapse state present; integrated WorkflowProgressPanel after ToolCallList"
+    }
+  ],
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/web typecheck && pnpm --filter @intelliflow/api typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-04-09T21:05:00Z"
+    },
+    {
+      "name": "Tests",
+      "command": "pnpm --filter @intelliflow/web exec vitest run src/components/ai-monitoring/__tests__/WorkflowProgressPanel.test.tsx src/lib/ai-monitoring/__tests__/workflow-types.test.ts src/lib/ai-monitoring/__tests__/workflow-hooks.test.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-04-09T21:13:50Z"
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter @intelliflow/web lint && pnpm --filter @intelliflow/api lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-04-09T21:07:00Z"
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/web build && pnpm --filter @intelliflow/api build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-04-09T21:09:30Z"
+    }
+  ],
+  "kpi_results": {
+    "coverage_statements": "98.82%",
+    "coverage_branches": "96.84%",
+    "coverage_functions": "100%",
+    "coverage_lines": "100%",
+    "coverage_threshold": "Statements >=90, Branches >=80, Functions >=90, Lines >=90",
+    "coverage_passed": true,
+    "new_tests_added": 81,
+    "new_tests_passing": 81,
+    "baseline_regressions_introduced": 0,
+    "baseline_preexisting_failures": 7,
+    "baseline_preexisting_failures_note": "4 in ActiveAgentsDashboard.test.tsx + 3 in AgentLogsViewer.test.tsx; unchanged by PG-193 (verified in preflight)"
+  },
+  "gate_results": {
+    "plan_checkboxes": "PASS",
+    "artifact_hashes": "PASS",
+    "build_validation": "PASS",
+    "scoped_coverage": "PASS",
+    "container_registration": "N/A (frontend task, new tRPC procedures registered via existing router export)",
+    "dead_code_check": "PASS — every new surface has a real production consumer"
+  },
+  "evidence_summary": {
+    "delivery_report": ".specify/sprints/sprint-16/execution/PG-193/20260409195310-160f0e8b/PG-193-delivery.md",
+    "plan": ".specify/sprints/sprint-16/planning/PG-193-plan.md",
+    "spec": ".specify/sprints/sprint-16/specifications/PG-193-spec.md",
+    "dependency_chain_update": "docs/design/diagrams/complete-dependency-chains.md"
+  },
+  "notes": "PG-193 implemented cleanly via TDD. 44 new WorkflowProgressPanel tests + 18 workflow-types tests + 15 workflow-hooks tests (77 total new). Scoped Istanbul coverage: 98.82/96.84/100/100, all above thresholds. No new regressions in ActiveAgentsDashboard/AgentLogsViewer suites (7 pre-existing failures recorded in preflight, unchanged). All 4 mandatory validations pass. workflow.router.ts migrated from protectedProcedure to tenantProcedure; ai-monitoring responses extended with contextType/contextId for the sibling join to WorkflowExecution."
+}

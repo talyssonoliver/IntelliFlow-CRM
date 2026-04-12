@@ -1,0 +1,64 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-065",
+  "run_id": "sprint14-audit-20260302T215859-6dbfyi",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:59:07.055Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 3,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "packages/application/src/usecases/deals/CloseDealWonUseCase.ts": "2b28a0751a96e840a5f5adfb779923c241de8f043f80299fef0c7389b93dc3bc",
+    "packages/domain/src/crm/opportunity/OpportunityEvents.ts": "922cba7126f4e88918c9aef04d1fbd9f5baa2ec41867be6333f5d11161ab96fb",
+    ".specify/sprints/sprint-14/attestations/IFC-065/context_ack.json": "5b98c82fcaadb3139580b191e06a01e5c86c04192822e8118a80f587a9a2e3b2"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-065",
+      "command": "pnpm test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 180000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-091",
+    "IFC-092"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Deal marked as Won triggers: revenue recognition",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "notifications",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "success metrics",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "targets: <500ms workflow",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "4 DoD criteria unverified"
+}

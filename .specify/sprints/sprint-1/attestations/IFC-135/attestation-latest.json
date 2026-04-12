@@ -1,0 +1,88 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-135",
+  "run_id": "sprint1-audit-20260302T215651-arwnsz",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:56:59.917Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 7,
+    "validations_passed": 0,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "docs/planning/adr/ADR-004-multi-tenancy.md": "0b15251ae07322c5716988cb07dcce5e967f38704dcbf07f38ddae4df1526ce9",
+    "docs/planning/adr/ADR-005-workflow-engine.md": "9b3e7b5c26623bf2cfb45c115c7aa36d7dc09ca26d105c8356446c6cb3afe783",
+    "docs/planning/adr/ADR-006-agent-tools.md": "eef733beb5d1cd95362276fddda6d18809af141375da3b463e831cf42dddf4dd",
+    "docs/planning/adr/ADR-007-data-governance.md": "42f7274805f6e8a7e14486ea7e18847db1a86b72cc1a6a76296ec55440c22c8f",
+    "docs/planning/adr/ADR-008-audit-logging.md": "a3bea933e137687a5a4dbebb69fb17ea9118a4c1ca7ab2e70a614222d7059a06",
+    "artifacts/misc/adr-index.csv": "c40b20e55906db9bbc51d4ebefebd659598718dbf053e9a004caf109818d9722",
+    ".specify/sprints/sprint-1/attestations/IFC-135/context_ack.json": "e6d95b8715ae2686b5dadc2da74f29807dc1997cc3831a3e3a0a39c56cd1072a"
+  },
+  "validation_results": [],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-002",
+    "GOV-001"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "ADRs drafted for multi-tenancy",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "workflow engine",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "tool-calling model",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "data classification/retention",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "audit logging",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "reviewed and approved",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "artifacts: ADR-004-multi-tenancy.md",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "ADR-005-workflow-engine.md",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "ADR-006-agent-tools.md",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "targets: >=100%",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "10 DoD criteria unverified"
+}

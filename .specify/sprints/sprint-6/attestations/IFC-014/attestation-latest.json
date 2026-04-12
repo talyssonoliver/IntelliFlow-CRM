@@ -1,0 +1,79 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-014",
+  "run_id": "sprint6-audit-20260302T215741-ex8v6u",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:57:48.948Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 5,
+    "validations_passed": 2,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "artifacts/reports/web-vitals-report.json": "03a398a460f8dab4c8544d1bef7b7432991494e313c644664fed4b22aebb5864",
+    "artifacts/misc/axe-audit-results.json": "83ceff321e56fb14944d43d45932c8ee0977910b3a28eeb2bbb33cc9773ecdce",
+    "apps/project-tracker/docs/metrics/_global/flows/FLOW-002.md": "869fc83b4b9957fba7643c30ff6b5fbc02630ecc1b192b3d95211dda57dc4949",
+    "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-002-validation.md": "438a5729539842f4c1da092828199ea256759eb99e8cd39bed6e0bb4b0da0e47",
+    ".specify/sprints/sprint-6/attestations/IFC-014/context_ack.json": "c6294c6db22505ad2f2e753125a1e900250847d2e3121131bf588f98019b7cb8"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-014",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 46000,
+      "stdout_hash": "all-green-1772476872408"
+    },
+    {
+      "name": "IFC-014",
+      "command": "pnpm --filter @intelliflow/web test --run",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 120000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-013"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Lead management UI with RSC",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "optimistic updates",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "Next.js 16.0.10 App Router uses Turbopack FS caching and Cache Components",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "proxy replaces middleware where required",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "targets: >=100%",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "5 DoD criteria unverified"
+}

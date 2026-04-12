@@ -1,0 +1,169 @@
+{
+  "$schema": "../../schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "PG-037",
+  "run_id": "20260225-220900",
+  "attestor": "Claude Code - Task Integrity Validator",
+  "attestation_timestamp": "2026-02-25T22:20:00Z",
+  "verdict": "COMPLETE",
+  "context_acknowledgment": {
+    "files_read": [
+      {
+        "path": ".specify/memory/Framework.md",
+        "sha256": "58d6d8ba1603cf0825e5496203e1006af75be84a5bbfc24c04587749bb75a872"
+      },
+      {
+        "path": "audit-matrix.yml",
+        "sha256": "bc525e75983a4351b993fb240d80db728beaf5a7c0e1fd6db8c46975421dbb78"
+      },
+      {
+        "path": "apps/web/src/app/(developer)/docs/page.tsx",
+        "sha256": "7017a3169cc116ce7fcf946ba4b083c5a22bb965659f7de8fab455631bde37b4"
+      }
+    ],
+    "invariants_acknowledged": [
+      "CLI commands sourced from docs/claude-refs/dev-commands.md",
+      "installation guide patterns from sdk-guides.tsx"
+    ],
+    "acknowledged_at": "2026-02-25T22:09:00Z"
+  },
+  "evidence_summary": {
+    "artifacts_verified": 4,
+    "validations_passed": 4,
+    "validations_failed": 0,
+    "gates_passed": 8,
+    "gates_failed": 0,
+    "kpis_met": 3,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/web/src/app/(developer)/docs/cli/page.tsx": "50f7d288c69efffec772b80c5079cb73131d7987132dc5b292b138dd7cdc3852",
+    "apps/web/src/components/developer/cli-docs.tsx": "e6bcf0d4b307569d9dc9f5af4411cbb865b3de5143b6d63d4d2a0e1ad2e1deba",
+    "apps/web/src/components/developer/cli-examples.tsx": "0feab62f8ae71dcd9d90362bd23885b35006c46e82f211f97de3904ad8ca33dc",
+    "apps/web/src/lib/developer/cli-commands.ts": "49e4197bfb4ddbf42b63f153144ff323207ce731885802187355fc5ea6dc306c"
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-25T22:11:00Z",
+      "duration_ms": 12000
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run apps/web/src/app/(developer)/docs/cli/__tests__ apps/web/src/components/developer/__tests__/cli-docs.test.tsx apps/web/src/components/developer/__tests__/cli-examples.test.tsx apps/web/src/lib/developer/__tests__/cli-commands.test.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-25T22:17:00Z",
+      "duration_ms": 3200
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter web lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-25T22:11:00Z",
+      "duration_ms": 3200
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-25T22:12:00Z",
+      "duration_ms": 45000
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "context-ack",
+      "passed": true,
+      "timestamp": "2026-02-25T22:09:00Z"
+    },
+    {
+      "gate_id": "plan-checkboxes",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-25T22:18:00Z"
+    },
+    {
+      "gate_id": "artifact-verification",
+      "passed": true,
+      "timestamp": "2026-02-25T22:18:00Z"
+    },
+    {
+      "gate_id": "build-validation",
+      "passed": true,
+      "timestamp": "2026-02-25T22:12:00Z"
+    },
+    {
+      "gate_id": "coverage-measurement",
+      "passed": true,
+      "score": 97.22,
+      "timestamp": "2026-02-25T22:17:00Z"
+    },
+    {
+      "gate_id": "stoa-foundation",
+      "passed": true,
+      "timestamp": "2026-02-25T22:18:00Z"
+    },
+    {
+      "gate_id": "csv-reconcile",
+      "passed": true,
+      "timestamp": "2026-02-25T22:18:00Z"
+    },
+    {
+      "gate_id": "mock-coverage-audit",
+      "passed": true,
+      "timestamp": "2026-02-25T22:18:00Z"
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "CLI documented",
+      "target": "All 35 commands across 8 groups",
+      "actual": "35 commands across 8 groups documented",
+      "met": true
+    },
+    {
+      "kpi": "Commands listed",
+      "target": "All commands in interactive tabs",
+      "actual": "5 tabs: Overview, Setup & Dev, Testing & Quality, Database, Examples",
+      "met": true
+    },
+    {
+      "kpi": "Coverage",
+      "target": "Stmts>=90%, Branch>=80%, Func>=90%, Lines>=90%",
+      "actual": "Stmts=97.22%, Branch=86.36%, Func=94.73%, Lines=100%",
+      "met": true
+    }
+  ],
+  "dependencies_verified": ["PG-032"],
+  "definition_of_done_items": [
+    {
+      "criterion": "CLI documented",
+      "met": true,
+      "evidence": "35 commands from dev-commands.md documented across 8 groups in 5-tab interface"
+    },
+    {
+      "criterion": "Commands listed",
+      "met": true,
+      "evidence": "CommandTable component renders all commands with descriptions"
+    },
+    {
+      "criterion": "Examples shown",
+      "met": true,
+      "evidence": "CliExamples component shows 4 workflow examples: Initial Setup, TDD, DB Migration, AI Dev"
+    }
+  ],
+  "environment": {
+    "os": "Windows 11 Pro 10.0.26200",
+    "node_version": "v22.x",
+    "git_commit": "5998bc1afbff8a3ec6d1325799bb3595903a591b",
+    "branch": "sprint0/codex-run"
+  },
+  "notes": "Frontend-only task. 58 tests across 5 files. Coverage: Stmts 97.22%, Branch 86.36%, Func 94.73%, Lines 100%. All 4 CSV artifacts created. Sidebar entry added. Integration list updated from coming-soon to available. PRD verified. Dependency chain, PAGE_MAP_AND_FLOWS, and sitemap updated."
+}

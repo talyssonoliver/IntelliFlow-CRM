@@ -1,0 +1,77 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-003",
+  "run_id": "sprint1-audit-20260302T215651-arwnsz",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:56:59.870Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 7,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/api/src/trpc.ts": "adb4dee0f29898222ebbc2e20729f613248dc239c32df245867a18993b93f7f1",
+    "apps/api/src/shared/e2e-type-safety-test.ts": "c0a791b103b108785e5272d0da19ac6e2892199a7a812a1183cb1da0a54fcf15",
+    "apps/api/src/shared/subscription-demo.ts": "ef9fff72b855af088310fdc8a62f421e4315a7601294855328dbdee2a310bbce",
+    "apps/api/README.md": "619d35c095814b6750a4a7324fcedab53b8e6d201fdd9ce5baf5466c610a1200",
+    "apps/project-tracker/docs/metrics/_global/flows/FLOW-001.md": "33cdb7801eb479cd028b460206464339d6ffea7bfbfdcf8e9577c4a3fc6692ea",
+    "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-001-validation.md": "e386bc479303ec76016975fd626e64b3818d00899a370b187e64450f3b7cdc7b",
+    ".specify/sprints/sprint-1/attestations/IFC-003/context_ack.json": "69ba6094c34db1677d07253b05f7ddb690747ddc870f97dc6eb52d86fd2aa154"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-003",
+      "command": "pnpm test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 180000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-002"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "tRPC router setup",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "type-safe endpoints",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "real-time subscriptions tested",
+      "met": true,
+      "evidence": "All 1 validations passed"
+    },
+    {
+      "criterion": "targets: <50ms",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "output: trpc.ts",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "router.ts validated",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "5 DoD criteria unverified"
+}

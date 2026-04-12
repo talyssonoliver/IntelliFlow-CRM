@@ -1,0 +1,76 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "PG-158",
+  "run_id": "sprint15-audit-20260302T215918-7xh85u",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:59:26.249Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 2,
+    "validations_passed": 2,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/web/src/components/home/PinnedItemsSheet.tsx": "14a508bce7b32027cc3a0d0483a9eae8a8dd0b15149813dedd93a6ac5a26c42e",
+    "apps/web/src/components/home/DraggablePinnedItem.tsx": "6f69e48bc5cd9914563b660abfff9d29e3c8ddec864ffba68cb00a462a145e56"
+  },
+  "validation_results": [
+    {
+      "name": "PG-158",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 46000,
+      "stdout_hash": "all-green-1772476872408"
+    },
+    {
+      "name": "PG-158",
+      "command": "pnpm --filter @intelliflow/web test --run",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 120000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "PG-129"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "@dnd-kit installed",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "PinnedSection supports drag-and-drop reorder",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "calls home.reorderPinnedItems on drop",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "touch support",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "tests cover reorder",
+      "met": true,
+      "evidence": "All 2 validations passed"
+    }
+  ],
+  "notes": "4 DoD criteria unverified"
+}

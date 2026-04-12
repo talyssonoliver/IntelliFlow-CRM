@@ -1,0 +1,90 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "IFC-254",
+  "run_id": "IFC-254-validation-20260316-203010",
+  "attestor": "Claude Code — Task Completion Repair",
+  "attestation_timestamp": "2026-03-16T20:30:10Z",
+  "verdict": "COMPLETE",
+  "artifact_hashes": {
+    "apps/api/src/modules/contact/contact.router.ts": "a730ad66d2fa1f998e52facbc09d54e6263b660baac42f9f0f50d9e787bbc362",
+    "packages/validators/src/contact.ts": "bb3724a5dbe4a21fc247061375a1d77514dacc0b2e90c2292d5deadd586aa442"
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm turbo typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-16T20:28:00Z",
+      "duration_ms": 1905
+    },
+    {
+      "name": "Tests",
+      "command": "pnpm --filter @intelliflow/api exec vitest run src/modules/contact",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-16T20:28:05Z",
+      "duration_ms": 4705
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter @intelliflow/api exec eslint src/modules/contact/contact.router.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-16T20:28:10Z",
+      "duration_ms": 3260
+    },
+    {
+      "name": "Build",
+      "command": "pnpm build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-16T20:28:15Z",
+      "duration_ms": 30589
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Contact module coverage (statements)",
+      "target": ">=90%",
+      "actual": "95.73%",
+      "met": true
+    },
+    {
+      "kpi": "Contact module coverage (branches)",
+      "target": ">=80%",
+      "actual": "84.16%",
+      "met": true
+    },
+    {
+      "kpi": "Contact module coverage (functions)",
+      "target": ">=90%",
+      "actual": "94.64%",
+      "met": true
+    },
+    {
+      "kpi": "Contact module coverage (lines)",
+      "target": ">=90%",
+      "actual": "95.53%",
+      "met": true
+    },
+    {
+      "kpi": "Zero data integrity issues in contact router",
+      "target": "0 issues",
+      "actual": "0 issues (5 bugs fixed: R-09, R-10, R-12, D-03, D-08)",
+      "met": true
+    }
+  ],
+  "evidence_summary": {
+    "artifacts_verified": 2,
+    "validations_passed": 4,
+    "validations_failed": 0,
+    "gates_passed": 4,
+    "gates_failed": 0,
+    "kpis_met": 5,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "dependencies_verified": [],
+  "notes": "Repair agent: attestation directory was missing after exec session. Code verified correct (5 bug fixes: R-09 table name + error logging + tenantId, R-10 sortBy enum, R-12 filterOptions status, D-03 list key, D-08 phone nullable). All 4 validations re-run and passed. 152 tests (18 new + 134 existing). Coverage: 95.73%/84.16%/94.64%/95.53%."
+}

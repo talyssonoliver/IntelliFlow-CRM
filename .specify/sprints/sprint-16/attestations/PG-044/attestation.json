@@ -1,0 +1,62 @@
+{
+  "task_id": "PG-044",
+  "verdict": "COMPLETE",
+  "run_id": "20260307162444-c7f8ee35",
+  "artifact_hashes": {
+    "apps/web/src/app/help-center/search/page.tsx": "79fd8ad2c1e548003580bae58718f77a597d5a37490cfc767c477bdaaa02011a",
+    "apps/web/src/components/support/search-algorithm.tsx": "6166982354dc0a05b2608a453c621a85556967658b2f5246512bb61a2b89690d",
+    "apps/web/src/components/support/search-filters.tsx": "48c41bdcd4bd4d76103ab4e385ae8a67d8a5ebcdffb7bcafb3fda8cd8088ac12"
+  },
+  "dependencies_verified": {
+    "required": ["PG-043"],
+    "all_satisfied": true,
+    "verified_at": "2026-03-07T16:24:44Z"
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/web exec tsc --noEmit",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-07T17:01:00Z"
+    },
+    {
+      "name": "Tests",
+      "command": "cd apps/web && npx vitest run src/components/support/__tests__ src/app/help-center/__tests__ src/app/help-center/search/__tests__ --reporter=verbose",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-07T17:03:21Z"
+    },
+    {
+      "name": "Lint",
+      "command": "cd apps/web && npx eslint src/components/support/ src/app/help-center/ src/components/sidebar/configs/help-center.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-07T16:33:00Z"
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-07T17:01:30Z"
+    }
+  ],
+  "evidence_summary": {
+    "tests_passed": 122,
+    "test_files": 8,
+    "new_tests": 80,
+    "regression_tests": 42,
+    "coverage": {
+      "statements": 98.21,
+      "branches": 92.75,
+      "functions": 93.54,
+      "lines": 98.07
+    },
+    "acceptance_criteria_met": 14,
+    "acceptance_criteria_total": 14,
+    "files_created": 8,
+    "files_modified": 7
+  },
+  "notes": "PG-044 Help Search page implemented with TDD. Pure function search algorithm with weighted scoring, URL-driven state management, SearchFilters component, sidebar navigation entry, and a11y fixes for unconditional live region and aria-hidden on decorative icons. Pre-existing LeadScoringDashboard.tsx syntax error fixed to unblock build. Coverage: 98.21%/92.75%/93.54%/98.07%."
+}

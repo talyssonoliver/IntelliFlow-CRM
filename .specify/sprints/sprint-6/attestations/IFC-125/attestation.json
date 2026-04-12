@@ -1,0 +1,188 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-125",
+  "run_id": "IFC-125-validation-20260208-121600",
+  "attestor": "Claude Code",
+  "attestation_timestamp": "2026-02-08T12:21:00.000Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 12,
+    "validations_passed": 4,
+    "validations_failed": 0,
+    "gates_passed": 4,
+    "gates_failed": 0,
+    "kpis_met": 3,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/domain typecheck && pnpm --filter @intelliflow/application typecheck && pnpm --filter @intelliflow/adapters typecheck",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-02-08T12:19:55.000Z",
+      "duration_ms": 15000
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run packages/domain/src/security/__tests__/AISecurityEventTypes.test.ts packages/adapters/src/audit/__tests__/DurableAuditLogAdapter.test.ts packages/adapters/src/external/__tests__/GuardrailsAIService.audit.test.ts packages/adapters/src/audit/__tests__/errors.b11.test.ts",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-02-08T12:19:55.000Z",
+      "duration_ms": 475
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter @intelliflow/domain lint && pnpm --filter @intelliflow/adapters lint",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-02-08T12:20:00.000Z",
+      "duration_ms": 5000
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/domain build && pnpm --filter @intelliflow/adapters build",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-02-08T12:20:05.000Z",
+      "duration_ms": 8000
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "plan-checkboxes",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-08T12:19:50.000Z"
+    },
+    {
+      "gate_id": "artifact-existence",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-08T12:19:52.000Z"
+    },
+    {
+      "gate_id": "build-validation",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-08T12:20:10.000Z"
+    },
+    {
+      "gate_id": "no-deferred-audit-logging",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-08T12:20:12.000Z"
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "prompt_injection_incidents",
+      "target": "0",
+      "actual": "0",
+      "met": true
+    },
+    {
+      "kpi": "bias_score_threshold",
+      "target": "<0.1 variance",
+      "actual": "0.075 variance",
+      "met": true
+    },
+    {
+      "kpi": "audit_logger_integration",
+      "target": "true (TODO removed, AuditLogPort required, tests passing)",
+      "actual": "true (GuardrailsAIService requires AuditLogPort in constructor, DurableAuditLogAdapter wired in container.ts, 78 tests pass, zero deferred TODOs)",
+      "met": true
+    }
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Prompt sanitization implemented",
+      "met": true,
+      "evidence": "apps/api/src/shared/prompt-sanitizer.ts exists with comprehensive patterns"
+    },
+    {
+      "criterion": "Output redaction implemented",
+      "met": true,
+      "evidence": "GuardrailsAIService.sanitizeOutput() redacts PII from AI outputs"
+    },
+    {
+      "criterion": "Bias detection metrics collected",
+      "met": true,
+      "evidence": "artifacts/metrics/bias-metrics.csv exists, analyzeBiasMetrics() method implemented"
+    },
+    {
+      "criterion": "Incidents logged to audit trail (not console)",
+      "met": true,
+      "evidence": "logSecurityEvent() calls AuditLogPort.logSecurityEvent() persisting to SecurityEvent and AuditLogEntry tables"
+    },
+    {
+      "criterion": "GuardrailsAIService audit logger integration completed, not deferred with TODO",
+      "met": true,
+      "evidence": "No TODO comments about audit logging remain. AuditLogPort is mandatory constructor parameter (line 150-156). DurableAuditLogAdapter wired in container.ts (lines 102-117)"
+    },
+    {
+      "criterion": "Zero test errors (pnpm test)",
+      "met": true,
+      "evidence": "78/78 tests pass: 21 AISecurityEventTypes + 18 DurableAuditLogAdapter + 20 GuardrailsAIService.audit + 19 errors"
+    },
+    {
+      "criterion": "Required artifacts created",
+      "met": true,
+      "evidence": "12/12 artifacts exist on disk"
+    }
+  ],
+  "dependencies_verified": [
+    "IFC-005",
+    "IFC-008"
+  ],
+  "context_acknowledgment": {
+    "acknowledged_at": "2026-02-08T12:15:00.000Z",
+    "files_read": [
+      {
+        "path": "packages/adapters/src/external/GuardrailsAIService.ts",
+        "sha256": "4978463b32ba0ffc41ffb5454143a8c36bf64e1e71ea993678e48255156e39a2"
+      },
+      {
+        "path": "packages/adapters/src/audit/DurableAuditLogAdapter.ts",
+        "sha256": "7bb905e3d373161a6c9292e97a0a6081681da28d3af503a346c473331dd8bb9b"
+      },
+      {
+        "path": "packages/domain/src/security/AISecurityEventTypes.ts",
+        "sha256": "36069eb196365d0325a8b14d2ad2a2fa02f7c3f648ccfbf6b0415d198b92a367"
+      },
+      {
+        "path": "packages/application/src/ports/output/AuditLogPort.ts",
+        "sha256": "c17da4f0fe974cf22a8bf4098710f238bd43eeb9bde9002885d3e9bca6b33917"
+      },
+      {
+        "path": "apps/api/src/container.ts",
+        "sha256": "d2a585b5e88c1f139672d5c8ee494907f939558bca200ed8ef66244b7e68ad76"
+      }
+    ],
+    "invariants_acknowledged": [
+      "Domain layer cannot import from adapters or apps",
+      "AuditLogPort is a mandatory dependency (not optional)",
+      "Cross-tenant access must throw CrossTenantViolationError",
+      "All PII fields must be encrypted before persistence",
+      "Hash chain integrity with HMAC-SHA256"
+    ]
+  },
+  "artifact_hashes": {
+    "packages/domain/src/security/AISecurityEventTypes.ts": "36069eb196365d0325a8b14d2ad2a2fa02f7c3f648ccfbf6b0415d198b92a367",
+    "packages/application/src/ports/output/AuditLogPort.ts": "c17da4f0fe974cf22a8bf4098710f238bd43eeb9bde9002885d3e9bca6b33917",
+    "packages/adapters/src/audit/DurableAuditLogAdapter.ts": "7bb905e3d373161a6c9292e97a0a6081681da28d3af503a346c473331dd8bb9b",
+    "packages/adapters/src/audit/errors.ts": "fb7cb27e12f1a685f0d226042a43c7d5028655de61b2240998f925ccb01b9290",
+    "packages/adapters/src/external/GuardrailsAIService.ts": "4978463b32ba0ffc41ffb5454143a8c36bf64e1e71ea993678e48255156e39a2",
+    "apps/api/src/container.ts": "d2a585b5e88c1f139672d5c8ee494907f939558bca200ed8ef66244b7e68ad76",
+    "apps/api/src/shared/prompt-sanitizer.ts": "626e2139f20d1ec5c5ed5d424e54192c62f14908b6bae6bb794dd38bbe21c62f"
+  },
+  "environment": {
+    "os": "win32",
+    "node_version": "v25.2.1",
+    "git_commit": "a418698877ec8fc1b968205eaf3bd54bc9c7f801",
+    "branch": "sprint0/codex-run"
+  },
+  "notes": "Re-validation of IFC-125 audit logger integration. The implementation was completed but execution was never formally closed (execution.completed_at was null). This attestation verifies: (1) GuardrailsAIService requires AuditLogPort as mandatory constructor dependency, (2) DurableAuditLogAdapter implements AuditLogPort with HMAC-SHA256 hash chain, cross-tenant isolation, GDPR retention, and PII encryption, (3) container.ts wires DurableAuditLogAdapter into GuardrailsAIService, (4) 78 tests pass across 4 test files, (5) Zero deferred TODO comments about audit logging remain in codebase."
+}

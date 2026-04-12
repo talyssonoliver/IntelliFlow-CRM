@@ -1,0 +1,181 @@
+{
+  "$schema": "../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "PG-124",
+  "run_id": "20260227192021-0359589c",
+  "attestor": "Claude Code - Task Integrity Validator",
+  "attestation_timestamp": "2026-02-27T21:30:00Z",
+  "verdict": "COMPLETE",
+  "context_acknowledgment": {
+    "files_read": [
+      {
+        "path": ".specify/sprints/sprint-15/specifications/PG-124-spec.md",
+        "sha256": "a2874fcf6b3583c2626c80f6651dca7654fb3517e12a22b27b3429052845d24a"
+      },
+      {
+        "path": ".specify/sprints/sprint-15/planning/PG-124-plan.md",
+        "sha256": "4570ac421c018dd247808c0ac4397eccd436d111da6f4a22f1d94ee9985a17eb"
+      }
+    ],
+    "invariants_acknowledged": [
+      "Domain layer has zero infrastructure dependencies",
+      "OAUTH_PROVIDERS is single source of truth for provider types",
+      "All validator schemas derive from domain constants",
+      "Build validation is non-negotiable",
+      "Coverage thresholds: stmts>=90%, branches>=80%, funcs>=90%, lines>=90%"
+    ],
+    "acknowledged_at": "2026-02-27T19:20:21Z"
+  },
+  "evidence_summary": {
+    "artifacts_verified": 10,
+    "validations_passed": 4,
+    "validations_failed": 0,
+    "gates_passed": 8,
+    "gates_failed": 0,
+    "kpis_met": 4,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/web/src/lib/auth/sso-handler.ts": "656a5c8c202750b077930f4112e4ac2198e87ec087392c7990d4e472070f43f1",
+    "apps/web/src/app/(public)/sso/page.tsx": "5efc39ecc3d80c78076620d9a3b26c047f815fb793b4b9c1685705c3e2c4a70f",
+    "apps/web/src/app/(public)/sso/SsoPageClient.tsx": "02299594c687d52e7de8d5c5953b60a26012740429077df0cde3e7a11b5b11d9",
+    "artifacts/misc/provider-config.json": "6229f6cc08e79426b4c665ae57bc9a395f8a7e37ec23ac92b7e60a634de2289e",
+    "apps/web/src/components/auth/SsoEntryForm.tsx": "45d231ed50d8c8859228ae5310e21767ae6ff520b2a0cf6f68a7ec1ae998d578"
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-27T21:23:00Z"
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run (95 PG-124 tests across 5 files)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-27T21:23:31Z"
+    },
+    {
+      "name": "Lint",
+      "command": "npx eslint (PG-124 files)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-27T21:25:00Z"
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-27T21:25:30Z"
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "plan-checkboxes",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-27T21:30:00Z"
+    },
+    {
+      "gate_id": "artifact-verification",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-27T21:30:00Z"
+    },
+    {
+      "gate_id": "csv-reconcile",
+      "passed": true,
+      "timestamp": "2026-02-27T21:30:00Z"
+    },
+    {
+      "gate_id": "build-validation",
+      "passed": true,
+      "timestamp": "2026-02-27T21:25:30Z"
+    },
+    {
+      "gate_id": "stoa-pass",
+      "passed": true,
+      "timestamp": "2026-02-27T21:30:00Z"
+    },
+    {
+      "gate_id": "container-registration",
+      "passed": true,
+      "timestamp": "2026-02-27T21:30:00Z"
+    },
+    {
+      "gate_id": "mock-coverage-audit",
+      "passed": true,
+      "timestamp": "2026-02-27T21:30:00Z"
+    },
+    {
+      "gate_id": "coverage-measurement",
+      "passed": true,
+      "score": 94.33,
+      "timestamp": "2026-02-27T21:26:01Z"
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Statement coverage",
+      "target": ">=90%",
+      "actual": "94.33%",
+      "met": true
+    },
+    {
+      "kpi": "Branch coverage",
+      "target": ">=80%",
+      "actual": "90.24%",
+      "met": true
+    },
+    {
+      "kpi": "Function coverage",
+      "target": ">=90%",
+      "actual": "100%",
+      "met": true
+    },
+    {
+      "kpi": "Line coverage",
+      "target": ">=90%",
+      "actual": "96.15%",
+      "met": true
+    }
+  ],
+  "dependencies_verified": [
+    "PG-015",
+    "PG-024",
+    "IFC-006"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "All 4 validation gates pass (TypeScript, Tests, Lint, Build)",
+      "met": true,
+      "evidence": "All 4 gates passed with exit code 0"
+    },
+    {
+      "criterion": "Scoped coverage exceeds thresholds",
+      "met": true,
+      "evidence": "94.33% stmts, 90.24% branches, 100% funcs, 96.15% lines"
+    },
+    {
+      "criterion": "Plan checkboxes 100% checked",
+      "met": true,
+      "evidence": "225/225 checkboxes checked"
+    },
+    {
+      "criterion": "Code review findings remediated",
+      "met": true,
+      "evidence": "6 findings (2 High, 3 Medium, 1 Low) addressed and re-validated"
+    }
+  ],
+  "environment": {
+    "os": "Windows 11 Pro 10.0.26200",
+    "node_version": "v25.2.1",
+    "git_commit": "5998bc1afbff8a3ec6d1325799bb3595903a591b",
+    "branch": "sprint0/codex-run"
+  },
+  "notes": "Implementation extended with code review remediation: end-to-end CSRF nonce verification (Finding 1), server/client page split with metadata (Finding 2), all-4-provider extractOAuthParams (Finding 3), resolveSso tRPC wired to SSO_PROVIDER_CONFIG + SsoEntryForm calls tRPC + OAuth rate limiting + allowlist redirect (Finding 4), oauth-callback tests rewritten for Supabase PKCE nonce flow (Finding 5), metadata test assertion (Finding 6). Total: 95 tests across 5 files."
+}

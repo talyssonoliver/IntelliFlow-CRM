@@ -1,0 +1,58 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-094",
+  "run_id": "sprint8-audit-20260302T215800-xoqul3",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:58:08.336Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 7,
+    "validations_passed": 0,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    ".specify/sprints/sprint-8/specifications/IFC-094-spec.md": "9d6ac08eff2fe230df0346559f17d705e21b0acd16fad0b6104ac6b7a3b50c5e",
+    ".specify/sprints/sprint-8/planning/IFC-094-plan.md": "0f08af1c70f4cfb95b9eaf167abc6f1db99a69758124cd34e8b9a65f11c49db4",
+    ".specify/sprints/sprint-8/attestations/IFC-094/context_pack.md": "8304ae97cb553ffd7c80c6eaa1317d4c9c4de7370a6de66b6fb12656ab311383",
+    ".specify/sprints/sprint-8/attestations/IFC-094/context_ack.json": "09218b875cd7b76822e942c3cb6ee9c8ede7af1bdab0820192c74681cca08334",
+    "artifacts/reports/e-signature-test.pdf": "328d49e7b18ebf8574109bcbac10fe93ba022f99c1834cdafca673ac514f838a",
+    "docs/planning/adr/ADR-019-core-crm-foundation.md": "95b48bd4fbff6a06f870be0ad248847d51b354705f6d89ea8d5ea1e2b27821fb",
+    "docs/planning/prd-core-crm.md": "7b7dff301febbb7adfd0a53ba0a9cbf36c70da93758d9c77acb62a31a118c219"
+  },
+  "validation_results": [],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-090",
+    "IFC-106"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Contracts signed electronically",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "preview inline",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "artifacts: e-signature-test.pdf",
+      "met": true,
+      "evidence": "All 0 validations passed"
+    },
+    {
+      "criterion": "context_ack.json",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "3 DoD criteria unverified"
+}

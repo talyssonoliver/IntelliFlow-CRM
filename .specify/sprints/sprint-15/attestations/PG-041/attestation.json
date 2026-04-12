@@ -1,0 +1,109 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "PG-041",
+  "run_id": "PG-041-validation-20260224-220800",
+  "attestor": "Claude Code",
+  "attestation_timestamp": "2026-02-24T22:08:00Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 10,
+    "validations_passed": 4,
+    "validations_failed": 0,
+    "gates_passed": 8,
+    "gates_failed": 0,
+    "kpis_met": 5,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-02-24T21:56:00Z",
+      "duration_ms": 13541
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run apps/web/src/app/(developer)/developers/apps/[id]/__tests__ apps/web/src/components/developer/__tests__/app-dashboard.test.tsx apps/web/src/components/developer/__tests__/app-metrics.test.tsx --reporter=verbose",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-02-24T22:08:11Z",
+      "duration_ms": 2450
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter @intelliflow/web run lint",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-02-24T21:57:00Z",
+      "duration_ms": 8000
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/web run build",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-02-24T21:57:00Z",
+      "duration_ms": 45000
+    }
+  ],
+  "kpi_results": [
+    { "kpi": "Test coverage >=90%", "target": ">=90% stmts, >=80% branch, >=90% funcs, >=90% lines", "actual": "98.52% stmts, 95.08% branch, 96.29% funcs, 100% lines", "met": true },
+    { "kpi": "TypeScript zero errors", "target": "0 errors", "actual": "0 errors (web package)", "met": true },
+    { "kpi": "Lint zero errors", "target": "0 errors", "actual": "0 errors (8 pre-existing warnings in unrelated files)", "met": true },
+    { "kpi": "Build successful", "target": "exit 0", "actual": "exit 0", "met": true },
+    { "kpi": "64 tests passing", "target": ">=59 tests", "actual": "64 tests passing (4 test files)", "met": true }
+  ],
+  "definition_of_done_items": [
+    { "criterion": "AC-001: Route /developers/apps/[id] renders app name as h1", "met": true, "evidence": "Tests P-001, D-001, I-001, I-002" },
+    { "criterion": "AC-002: Unknown id shows App Not Found with back link", "met": true, "evidence": "Tests P-005, P-006, D-024" },
+    { "criterion": "AC-003: Overview shows clientId, keys, webhook, scopes", "met": true, "evidence": "Tests D-002-D-006, D-013-D-014, D-017-D-018, I-008" },
+    { "criterion": "AC-004: Pre-existing keys never shown in full", "met": true, "evidence": "Tests D-015, I-003" },
+    { "criterion": "AC-005: Generate API Key with one-time reveal", "met": true, "evidence": "Test D-016" },
+    { "criterion": "AC-006: Metrics tab shows stat cards and charts", "met": true, "evidence": "Tests M-001-M-007, M-010, M-013, M-014" },
+    { "criterion": "AC-007: Metrics empty state for inactive apps", "met": true, "evidence": "Tests M-008, M-009" },
+    { "criterion": "AC-008: Logs tab renders entries for active apps", "met": true, "evidence": "Test D-010" },
+    { "criterion": "AC-009: Logs tab shows empty state for pending apps", "met": true, "evidence": "Test D-010 (empty state path)" },
+    { "criterion": "AC-010: Breadcrumb with aria-current", "met": true, "evidence": "Test D-019" },
+    { "criterion": "AC-011: Tab switching works", "met": true, "evidence": "Tests D-008-D-012, I-005" },
+    { "criterion": "AC-012: generateMetadata returns app name", "met": true, "evidence": "Tests P-008, P-009, P-011, P-012" },
+    { "criterion": "AC-013: Edit App link to correct URL", "met": true, "evidence": "Test D-020" },
+    { "criterion": "AC-014: lastUsed timestamp per API key", "met": true, "evidence": "Test D-021" }
+  ],
+  "dependencies_verified": ["PG-039"],
+  "context_acknowledgment": {
+    "acknowledged_at": "2026-02-24T21:50:00Z",
+    "files_read": [
+      { "path": ".specify/sprints/sprint-15/specifications/PG-041-spec.md", "sha256": "ea0927a2b8f340f9eaa8b5b1728de3a232efa0d120691df36d99afd4f83413bb" },
+      { "path": ".specify/sprints/sprint-15/planning/PG-041-plan.md", "sha256": "5284e3d109a9b42256a07dc05d649e244934ecd58db41e0d51b9aa9c7a856c26" },
+      { "path": ".specify/sprints/sprint-15/context/PG-041/PG-041-hydrated-context.json", "sha256": "8dfa738ec2a472dd8ab38dbe61c18fcc8a90db5424ec7f070ee3c904421fd13d" }
+    ],
+    "invariants_acknowledged": [
+      "Hexagonal architecture: UI cannot depend on infrastructure",
+      "Demo data only — no real API calls",
+      "PG-039 regression tests must pass (42/42 confirmed)"
+    ]
+  },
+  "artifact_hashes": {
+    "apps/web/src/lib/developer/demo-data.ts": "dcbda553a1935a07d84405d2dab617c666f54939c914f7a4c7ec297daa465372",
+    "apps/web/src/app/(developer)/developers/apps/[id]/page.tsx": "9796c03ea7a864f1f46ba4a6394905cee2e435517e748b47b36c74aff50f7c31",
+    "apps/web/src/components/developer/app-dashboard.tsx": "4add88c95c75bad8eaef4036453d8dffdb00a6fb807cb866e1783a4e4072f815",
+    "apps/web/src/components/developer/app-metrics.tsx": "c7072ba8a4702b8984d921162bb85cb30c49c18235a04bde941891e0b52932e6",
+    "apps/web/src/app/(developer)/developers/apps/[id]/__tests__/page.test.tsx": "c2afea5ad71f944914edc31ddc05a4a059e9adb89df2d602fef64d922ffbe288",
+    "apps/web/src/app/(developer)/developers/apps/[id]/__tests__/integration.test.tsx": "d467c1454b373e8133545653760e065b055bfb24da8b55c740c7531b1a8f365f",
+    "apps/web/src/components/developer/__tests__/app-dashboard.test.tsx": "2f7584d5947cac61e77c3bfa7dfc11d653cfc4719e1850ba53a13fc6acd8ed3a",
+    "apps/web/src/components/developer/__tests__/app-metrics.test.tsx": "966b7b674d0a12a41b6ecbd3f916b022624fb58dc09bbb1197b7aa42de950958",
+    "apps/web/src/components/developer/app-list.tsx": "ce5a8587153c78a7486479af8ff6c95e4f2feb46555322b2834719fde6716652",
+    "apps/web/src/test/fixtures/developer-data.ts": "0b3cbac8eb93ea46d4070dcf39bcfaf34cc222f92d9157f074326e034fea4bd8"
+  },
+  "environment": {
+    "os": "win32 (Windows 11 Pro 10.0.26200)",
+    "node_version": "v25.2.1",
+    "git_commit": "5998bc1a",
+    "branch": "sprint0/codex-run"
+  },
+  "notes": "PG-041: Developer App Detail page at /developers/apps/[id]. Implements tabbed dashboard (Overview, Metrics, Logs) with CSS-only charts, API key management with dual-gate reveal, breadcrumb navigation, and comprehensive accessibility. 64 tests across 4 files (12 page + 30 dashboard + 14 metrics + 8 integration). Coverage: 98.52% stmts, 100% lines. PG-039 regression: 42/42 pass. Docs updated: dependency-chains, PAGE_MAP, sitemap, page-registry, sitemap-reconciliation test."
+}

@@ -1,0 +1,907 @@
+{
+  "sprint": "sprint-13",
+  "name": "Sprint 13 - UI Pages & Lead Intelligence",
+  "generated_at": "2026-04-11T16:48:01.958Z",
+  "summary_source": "specify",
+  "task_summary": {
+    "total": 20,
+    "completed": 20,
+    "backlog": 0,
+    "blocked": 0,
+    "attested_completed": 20
+  },
+  "context": "Primary focus areas: Auth Pages (10), Infrastructure (2), Integration (2).",
+  "section_summary": [
+    {
+      "section": "Auth Pages",
+      "total": 10,
+      "completed": 10,
+      "open": 0
+    },
+    {
+      "section": "Infrastructure",
+      "total": 2,
+      "completed": 2,
+      "open": 0
+    },
+    {
+      "section": "Integration",
+      "total": 2,
+      "completed": 2,
+      "open": 0
+    },
+    {
+      "section": "Analytics",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Billing Pages",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Legal",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Platform",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Settings",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "UI/Domain",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    }
+  ],
+  "notable_completed": [
+    {
+      "taskId": "IFC-198",
+      "sprint": 13,
+      "status": "Completed",
+      "section": "Billing Pages",
+      "title": "Billing Domain Core - Invoice/Receipt aggregates, payment state machine, tax/refund rules",
+      "description": "Billing Domain Core - Invoice/Receipt aggregates, payment state machine, tax/refund rules",
+      "summary": "Billing Domain Core implementation: Invoice aggregate with full state machine (DRAFT->OPEN->PAID/VOID/UNCOLLECTIBLE), Receipt immutable aggregate, 12 value objects (InvoiceId, ReceiptId, LineItem, TaxRate, PaymentTerms, plus constants/error......",
+      "definitionOfDone": "Invoice and receipt domain models implemented with invariant checks, payment/refund lifecycle rules exposed via application services; artifacts: Invoice.ts, Receipt.ts, BillingDomainService.ts; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Invoice and receipt domain models implemented with invariant checks; Payment/refund lifecycle rules exposed via application services; 100% billing state transitions validated",
+      "dependencies": [
+        "IFC-099",
+        "IFC-107"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-13/attestations/IFC-198/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-09T18:30:00.000Z",
+        "sprintFolder": 13
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 5,
+        "met": 5,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-021",
+      "sprint": 13,
+      "status": "Completed",
+      "section": "Auth Pages",
+      "title": "MFA Setup",
+      "description": "MFA Setup",
+      "summary": "PG-021 exec session created 41 page-level integration tests for the MFA Setup page. Tests cover all 5 wizard states, 3 MFA methods (TOTP/SMS/Email), tRPC mutation mocking, error handling, loading states, phone validation, and accessibility.......",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, MFA enabled; artifacts: page.tsx, mfa-qr-generator.tsx, backup-codes.ts",
+      "definitionOfDoneSnapshot": "Page-level integration tests created; Coverage >85%; All 14 acceptance criteria tested",
+      "dependencies": [
+        "PG-015",
+        "IFC-006",
+        "IFC-098"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-13/attestations/PG-021/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-15T16:28:00Z",
+        "sprintFolder": 13
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-159",
+      "sprint": 13,
+      "status": "Completed",
+      "section": "UI/Domain",
+      "title": "Case timeline enrichment: include documents/versions, communications (email/WhatsApp), and agent actions/approvals as timeline events",
+      "description": "Case timeline enrichment: include documents/versions, communications (email/WhatsApp), and agent actions/approvals as timeline events",
+      "summary": "Full implementation of IFC-159 Timeline Enrichment. Created unified timeline API (timeline.router.ts) that aggregates events from Tasks, Appointments, AuditLogs, and DomainEvents (agent actions).......",
+      "definitionOfDone": "Timeline shows unified chronological events (tasks/deadlines/docs/comms/agent actions); filters; permissions enforced; E2E tests; targets: <1s",
+      "definitionOfDoneSnapshot": "Timeline shows unified chronological events (tasks/deadlines/docs/comms/agent actions); Agent actions with Review & Approve navigation; View All link from deal detail to full timeline",
+      "dependencies": [
+        "IFC-147",
+        "IFC-153",
+        "IFC-144",
+        "IFC-149",
+        "IFC-148"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-13/attestations/IFC-159/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-28T15:32:00Z",
+        "sprintFolder": 13
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-183",
+      "sprint": 13,
+      "status": "Completed",
+      "section": "Infrastructure",
+      "title": "Notifications tRPC Router - List mark read preferences real-time subscription",
+      "description": "Notifications tRPC Router - List mark read preferences real-time subscription",
+      "summary": "Notifications router fully rewritten from DomainEvent to Notification table per IFC-157 migration. 10 endpoints with tenant isolation, real-time subscription via EventEmitter, and NotificationPreference table.... All endpoints <200ms; real-time latency <100ms;...",
+      "definitionOfDone": "notifications.list, notifications.getUnreadCount, notifications.markAsRead, notifications.markAllAsRead, notifications.delete, notifications.getPreferences, notifications.updatePreferences, notifications.onNew subscription; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "All endpoints <200ms; real-time latency <100ms; test coverage >=90%",
+      "dependencies": [
+        "IFC-003",
+        "IFC-157"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-13/attestations/IFC-183/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-18T00:00:00Z",
+        "sprintFolder": 13
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-200",
+      "sprint": 13,
+      "status": "Completed",
+      "section": "Analytics",
+      "title": "Analytics Adapter Layer - query builders and export pipeline for metrics router",
+      "description": "Analytics Adapter Layer - query builders and export pipeline for metrics router",
+      "summary": "IFC-200 replaces architecture-violating AnalyticsService (direct PrismaClient) with hexagonal-compliant AnalyticsAggregationService. Key fixes: N+1 query → Promise.all, broken normalization removed, YoY off-by-one fixed.......",
+      "definitionOfDone": "Analytics repository adapters and export pipeline implemented, metrics router uses real data sources; artifacts: PrismaAnalyticsRepository.ts, AnalyticsAggregationService.ts, analytics.router.ts; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Analytics repository adapters and export pipeline implemented; Metrics router uses real data sources; Verified by pnpm test",
+      "dependencies": [
+        "IFC-096",
+        "IFC-106"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-13/attestations/IFC-200/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-19T20:30:00Z",
+        "sprintFolder": 13
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    }
+  ],
+  "open_tasks": [],
+  "tasks": [
+    {
+      "taskId": "PG-015",
+      "sprint": 13,
+      "status": "Completed",
+      "section": "Auth Pages",
+      "title": "Sign In",
+      "description": "Sign In",
+      "summary": "Task completed and verified response under 200ms, Lighthouse 90, auth working",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, auth working; artifacts: page.tsx, auth-providers.tsx, login-security.ts; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, auth working",
+      "dependencies": [
+        "IFC-006",
+        "IFC-076",
+        "IFC-098"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-13/attestations/PG-015/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T19:33:21.817Z",
+        "sprintFolder": 13
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-016",
+      "sprint": 13,
+      "status": "Completed",
+      "section": "Auth Pages",
+      "title": "Sign Up",
+      "description": "Sign Up",
+      "summary": "Sign up page with OAuth, email/password, security measures; Password breach check via HaveIBeenPwned API; Auth mocks for testing authentication flows response under 200ms, Lighthouse 90, registration working",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, registration working; artifacts: page.tsx, registration-form.tsx, welcome-email.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, registration working",
+      "dependencies": [
+        "PG-015",
+        "IFC-006"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-13/attestations/PG-016/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T21:45:00.000Z",
+        "sprintFolder": 13
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 1,
+        "met": 1,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-017",
+      "sprint": 13,
+      "status": "Completed",
+      "section": "Auth Pages",
+      "title": "Sign Up Success Page",
+      "description": "Sign Up Success",
+      "summary": "Frontend-only task. ErrorBoundary, prefers-reduced-motion, live region, resend tRPC wiring, dead link guards, focus styles, contrast fixes. 16 new page tests + 21 existing onboarding-flow tests (role fix applied). No backend changes.......",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, onboarding started; artifacts: page.tsx, onboarding-flow.tsx, tracking-pixel.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, onboarding started",
+      "dependencies": [
+        "PG-016"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-13/attestations/PG-017/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-20T20:35:00Z",
+        "sprintFolder": 13
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-018",
+      "sprint": 13,
+      "status": "Completed",
+      "section": "Auth Pages",
+      "title": "Logout",
+      "description": "Logout",
+      "summary": "Logout page with session cleanup and redirect; useUnsavedChanges hook for unsaved work detection; useLogout hook for logout flow orchestration response under 200ms, Lighthouse 90, session cleared",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, session cleared; artifacts: page.tsx, session-cleanup.ts, logout-redirect.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, session cleared",
+      "dependencies": [
+        "PG-015",
+        "IFC-006"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-13/attestations/PG-018/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T21:46:00.000Z",
+        "sprintFolder": 13
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 1,
+        "met": 1,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-019",
+      "sprint": 13,
+      "status": "Completed",
+      "section": "Auth Pages",
+      "title": "Forgot Password",
+      "description": "Forgot Password",
+      "summary": "Previous attempt (2026-02-16) had Build/Lint FAILED and page.tsx coverage at 67.3%. Fixed: (1) Added missing useEffect countdown timer to page.tsx — resendCooldown was never decremented, making handleResend unreachable (AC5 bug).......",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, reset email sent; artifacts: page.tsx, reset-email.tsx, reset-token.ts",
+      "definitionOfDoneSnapshot": "Page-level integration tests (>85% coverage); Component rendering tests created; Reset initiated, email sent, link working verified by tests",
+      "dependencies": [
+        "PG-015",
+        "IFC-006"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-13/attestations/PG-019/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-19T18:55:00Z",
+        "sprintFolder": 13
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-020",
+      "sprint": 13,
+      "status": "Completed",
+      "section": "Auth Pages",
+      "title": "Reset Password",
+      "description": "Reset Password",
+      "summary": "on 2026-03-01. Architecture evolved: [token]/page.tsx is now a 12-line redirect (legacy), ResetPasswordClient.tsx always shows invalid state, callback/page.tsx is the real reset flow using Supabase access_token.......",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, password updated; artifacts: page.tsx, password-reset.tsx, password-validation.ts",
+      "definitionOfDoneSnapshot": "Page-level integration tests cover all state machine states; All acceptance criteria verified (AC-001 through AC-008); No regression in existing tests",
+      "dependencies": [
+        "PG-019"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-13/attestations/PG-020/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-01T00:15:00Z",
+        "sprintFolder": 13
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 5,
+        "met": 5,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-021",
+      "sprint": 13,
+      "status": "Completed",
+      "section": "Auth Pages",
+      "title": "MFA Setup",
+      "description": "MFA Setup",
+      "summary": "PG-021 exec session created 41 page-level integration tests for the MFA Setup page. Tests cover all 5 wizard states, 3 MFA methods (TOTP/SMS/Email), tRPC mutation mocking, error handling, loading states, phone validation, and accessibility.......",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, MFA enabled; artifacts: page.tsx, mfa-qr-generator.tsx, backup-codes.ts",
+      "definitionOfDoneSnapshot": "Page-level integration tests created; Coverage >85%; All 14 acceptance criteria tested",
+      "dependencies": [
+        "PG-015",
+        "IFC-006",
+        "IFC-098"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-13/attestations/PG-021/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-15T16:28:00Z",
+        "sprintFolder": 13
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-022",
+      "sprint": 13,
+      "status": "Completed",
+      "section": "Auth Pages",
+      "title": "MFA Verify",
+      "description": "MFA Verify",
+      "summary": "PG-022 MFA Verify Page implemented via TDD. 22 tests, 6 files (3 create + 3 modify). MfaVerifyLoading extracted to separate file due to Next.js App Router named export constraint. STOA-Foundation PASS (build override:......",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, verification working; artifacts: page.tsx, mfa-verification.tsx, code-validator.ts",
+      "definitionOfDoneSnapshot": "MFA Verify page at /mfa/verify with Suspense boundary; URL parameter extraction (challenge, redirect, method, email); Redirect URL validation (open redirect prevention)",
+      "dependencies": [
+        "PG-021",
+        "PG-015"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-13/attestations/PG-022/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-18T01:15:00.000Z",
+        "sprintFolder": 13
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-023",
+      "sprint": 13,
+      "status": "Completed",
+      "section": "Auth Pages",
+      "title": "Email Verification",
+      "description": "Email Verification",
+      "summary": "PG-023 Email Verification Page. Created new page at /(public)/verify-email/[token] with AuthCard pattern. Fixed buildVerificationUrl path from /auth/verify-email/ to /verify-email/. Removed window.location.origin fallback.......",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, email verified; artifacts: page.tsx, email-verification.tsx, account-activation.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, email verified",
+      "dependencies": [
+        "PG-016",
+        "IFC-006"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-13/attestations/PG-023/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-19T23:15:00.000Z",
+        "sprintFolder": 13
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-024",
+      "sprint": 13,
+      "status": "Completed",
+      "section": "Auth Pages",
+      "title": "SSO Callback Page — PKCE Authorization Code Exchange",
+      "description": "SSO Callback",
+      "summary": "Consolidated OAuth callback from 420-line implicit grant to ~82-line PKCE wrapper. Old page deleted (apps/web/src/app/auth/callback/page.tsx). flowType: 'pkce' moved to supabase-browser.ts client config per Supabase type system.......",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, SSO complete; artifacts: page.tsx, oauth-callback.tsx, token-exchange.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, SSO complete",
+      "dependencies": [
+        "PG-015",
+        "IFC-006"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-13/attestations/PG-024/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-20T20:55:00Z",
+        "sprintFolder": 13
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-104",
+      "sprint": 13,
+      "status": "Completed",
+      "section": "Settings",
+      "title": "Settings Home",
+      "description": "Settings Home",
+      "summary": "Settings page is client-side only — no API calls for navigation; Route group mismatch: CSV says (settings)/settings/ but code uses settings/;...",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, navigation clear; artifacts: page.tsx, settings-nav.tsx, settings-search.ts",
+      "definitionOfDoneSnapshot": "Settings page renders heading, 7 cards, 4 categories; Client-side search with weighted scoring filters items; ARIA attributes, keyboard nav, semantic HTML",
+      "dependencies": [
+        "IFC-076"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-13/attestations/PG-104/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-19T18:42:00.000Z",
+        "sprintFolder": 13
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-159",
+      "sprint": 13,
+      "status": "Completed",
+      "section": "UI/Domain",
+      "title": "Case timeline enrichment: include documents/versions, communications (email/WhatsApp), and agent actions/approvals as timeline events",
+      "description": "Case timeline enrichment: include documents/versions, communications (email/WhatsApp), and agent actions/approvals as timeline events",
+      "summary": "Full implementation of IFC-159 Timeline Enrichment. Created unified timeline API (timeline.router.ts) that aggregates events from Tasks, Appointments, AuditLogs, and DomainEvents (agent actions).......",
+      "definitionOfDone": "Timeline shows unified chronological events (tasks/deadlines/docs/comms/agent actions); filters; permissions enforced; E2E tests; targets: <1s",
+      "definitionOfDoneSnapshot": "Timeline shows unified chronological events (tasks/deadlines/docs/comms/agent actions); Agent actions with Review & Approve navigation; View All link from deal detail to full timeline",
+      "dependencies": [
+        "IFC-147",
+        "IFC-153",
+        "IFC-144",
+        "IFC-149",
+        "IFC-148"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-13/attestations/IFC-159/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-28T15:32:00Z",
+        "sprintFolder": 13
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-163",
+      "sprint": 13,
+      "status": "Completed",
+      "section": "Platform",
+      "title": "Standardize worker runtime under apps/workers (events, ingestion, notifications) with shared job framework, metrics, and deployment packaging",
+      "description": "Standardize worker runtime under apps/workers (events, ingestion, notifications) with shared job framework, metrics, and deployment packaging",
+      "summary": "Task completed and verified apps/workers structure created; workers run with shared configuration and telemetry; queues configured; health checks and dashboards added; deployment artifacts produced; restore/replay procedures documented;...",
+      "definitionOfDone": "apps/workers structure created; workers run with shared configuration and telemetry; queues configured; health checks and dashboards added; deployment artifacts produced; restore/replay procedures documented; targets: >=99%, >=100%, <30s; verified by: pnpm test; Each worker package must have dev/start scripts that work with pnpm --filter",
+      "definitionOfDoneSnapshot": "apps/workers structure created; workers run with shared configuration and telemetry; queues configured; health checks and dashboards added; deployment artifacts produced; restore/replay procedures documented;...",
+      "dependencies": [
+        "IFC-150",
+        "IFC-151",
+        "IFC-153",
+        "IFC-157",
+        "IFC-106"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-13/attestations/IFC-163/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T19:33:21.856Z",
+        "sprintFolder": 13
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-172",
+      "sprint": 13,
+      "status": "Completed",
+      "section": "Integration",
+      "title": "Complete Microsoft Calendar integration - Follow-up to IFC-138",
+      "description": "Complete Microsoft Calendar integration - Follow-up to IFC-138",
+      "summary": "Task completed and verified Implement Microsoft Graph API calls for calendar CRUD; OAuth2 with refresh tokens; bidirectional sync; webhook subscriptions; conflict resolution",
+      "definitionOfDone": "Implement Microsoft Graph API calls for calendar CRUD; OAuth2 with refresh tokens; bidirectional sync; webhook subscriptions; conflict resolution; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Implement Microsoft Graph API calls for calendar CRUD; OAuth2 with refresh tokens; bidirectional sync; webhook subscriptions; conflict resolution",
+      "dependencies": [
+        "IFC-138"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-13/attestations/IFC-172/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T19:33:21.866Z",
+        "sprintFolder": 13
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-173",
+      "sprint": 13,
+      "status": "Completed",
+      "section": "Integration",
+      "title": "Complete inbound email parsing endpoint - Follow-up to IFC-144",
+      "description": "Complete inbound email parsing endpoint - Follow-up to IFC-144",
+      "summary": "Task completed and verified Implement inbound email webhook endpoint; parse email headers and body; extract attachments; create case/conversation records",
+      "definitionOfDone": "Implement inbound email webhook endpoint; parse email headers and body; extract attachments; create case/conversation records; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Implement inbound email webhook endpoint; parse email headers and body; extract attachments; create case/conversation records",
+      "dependencies": [
+        "IFC-144"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-13/attestations/IFC-173/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T19:33:21.867Z",
+        "sprintFolder": 13
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-182",
+      "sprint": 13,
+      "status": "Completed",
+      "section": "Infrastructure",
+      "title": "Home Page tRPC Router - Welcome summary activity feed AI insights pinned items daily goals",
+      "description": "Home Page tRPC Router - Welcome summary activity feed AI insights pinned items daily goals",
+      "summary": "Fixed types filter bug in getActivityFeed (Spec §5.1), extracted DEAL_RISK_DAYS and HOT_LEAD_SCORE constants, added JSDoc for getDailyGoal revenue-only limitation. Added 18 new unit tests (41→59), 5 new integration tests.......",
+      "definitionOfDone": "home.getWelcomeSummary, home.getAIInsights, home.getActivityFeed, home.getDailyGoal, home.getPinnedItems, home.pinItem, home.unpinItem, home.reorderPinnedItems; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "home.getWelcomeSummary procedure implemented; home.getAIInsights procedure implemented; home.getActivityFeed procedure implemented with types filter",
+      "dependencies": [
+        "IFC-003",
+        "IFC-089"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-13/attestations/IFC-182/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-06T21:07:00.000Z",
+        "sprintFolder": 13
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-183",
+      "sprint": 13,
+      "status": "Completed",
+      "section": "Infrastructure",
+      "title": "Notifications tRPC Router - List mark read preferences real-time subscription",
+      "description": "Notifications tRPC Router - List mark read preferences real-time subscription",
+      "summary": "Notifications router fully rewritten from DomainEvent to Notification table per IFC-157 migration. 10 endpoints with tenant isolation, real-time subscription via EventEmitter, and NotificationPreference table.... All endpoints <200ms; real-time latency <100ms;...",
+      "definitionOfDone": "notifications.list, notifications.getUnreadCount, notifications.markAsRead, notifications.markAllAsRead, notifications.delete, notifications.getPreferences, notifications.updatePreferences, notifications.onNew subscription; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "All endpoints <200ms; real-time latency <100ms; test coverage >=90%",
+      "dependencies": [
+        "IFC-003",
+        "IFC-157"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-13/attestations/IFC-183/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-18T00:00:00Z",
+        "sprintFolder": 13
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-140",
+      "sprint": 13,
+      "status": "Completed",
+      "section": "Legal",
+      "title": "Document Manager Page - Upload viewer version history ACL management search",
+      "description": "Document Manager Page - Upload viewer version history ACL management search",
+      "summary": "PG-140 Document Manager Page: Created 9 components (DocumentList, DocumentUpload, DocumentViewer, VersionHistory, ACLManager, DocumentSearch, types, document-utils, barrel index) with 298 tests across 7 test files.......",
+      "definitionOfDone": "Response <500ms, Lighthouse >=90; DocumentList, DocumentUpload, DocumentViewer, VersionHistory, ACLManager, DocumentSearch components; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "DocumentList renders paginated table with status badges, icons, sizes; Bulk actions work with confirmation dialogs; Drag-and-drop upload with progress indication",
+      "dependencies": [
+        "IFC-152",
+        "IFC-153"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-13/attestations/PG-140/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-19T20:15:00Z",
+        "sprintFolder": 13
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 5,
+        "met": 5,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-198",
+      "sprint": 13,
+      "status": "Completed",
+      "section": "Billing Pages",
+      "title": "Billing Domain Core - Invoice/Receipt aggregates, payment state machine, tax/refund rules",
+      "description": "Billing Domain Core - Invoice/Receipt aggregates, payment state machine, tax/refund rules",
+      "summary": "Billing Domain Core implementation: Invoice aggregate with full state machine (DRAFT->OPEN->PAID/VOID/UNCOLLECTIBLE), Receipt immutable aggregate, 12 value objects (InvoiceId, ReceiptId, LineItem, TaxRate, PaymentTerms, plus constants/error......",
+      "definitionOfDone": "Invoice and receipt domain models implemented with invariant checks, payment/refund lifecycle rules exposed via application services; artifacts: Invoice.ts, Receipt.ts, BillingDomainService.ts; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Invoice and receipt domain models implemented with invariant checks; Payment/refund lifecycle rules exposed via application services; 100% billing state transitions validated",
+      "dependencies": [
+        "IFC-099",
+        "IFC-107"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-13/attestations/IFC-198/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-09T18:30:00.000Z",
+        "sprintFolder": 13
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 5,
+        "met": 5,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-200",
+      "sprint": 13,
+      "status": "Completed",
+      "section": "Analytics",
+      "title": "Analytics Adapter Layer - query builders and export pipeline for metrics router",
+      "description": "Analytics Adapter Layer - query builders and export pipeline for metrics router",
+      "summary": "IFC-200 replaces architecture-violating AnalyticsService (direct PrismaClient) with hexagonal-compliant AnalyticsAggregationService. Key fixes: N+1 query → Promise.all, broken normalization removed, YoY off-by-one fixed.......",
+      "definitionOfDone": "Analytics repository adapters and export pipeline implemented, metrics router uses real data sources; artifacts: PrismaAnalyticsRepository.ts, AnalyticsAggregationService.ts, analytics.router.ts; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Analytics repository adapters and export pipeline implemented; Metrics router uses real data sources; Verified by pnpm test",
+      "dependencies": [
+        "IFC-096",
+        "IFC-106"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-13/attestations/IFC-200/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-19T20:30:00Z",
+        "sprintFolder": 13
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    }
+  ]
+}

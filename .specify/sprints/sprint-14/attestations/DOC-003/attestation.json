@@ -1,0 +1,56 @@
+{
+  "task_id": "DOC-003",
+  "sprint": 14,
+  "run_id": "20260224000228-e50780e6",
+  "stoa": "Foundation",
+  "verdict": "PASS",
+  "completed_at": "2026-02-24T00:20:00Z",
+  "artifact_hashes": {
+    "docs/design/PAGE_MAP_AND_FLOWS.md": "93d5432b6c06b7a39ec494a14e53979a32106a629a6507263b22a3f05a6792f0",
+    "apps/web/src/app/__tests__/sitemap-reconciliation.test.ts": "0aa8799977f3092da869b93adacca9f49041b9c9f485da5caab8b446c050ae3e",
+    "docs/design/navigation-reachability-audit.md": "b1b7a775c98845ec9dbccd642824c0d68f35dcb547db93a2ae8fef7be5670570",
+    "docs/design/sitemap.md": "888406274c93baa99ee599f22b82cffd00c9f878cbc005cbfb83259c9b0841c3"
+  },
+  "dependencies_verified": [
+    "DOC-002"
+  ],
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "executed_at": "2026-02-24T00:12:00Z",
+      "exit_code": 0,
+      "duration_ms": 48000,
+      "stdout_hash": "N/A",
+      "passed": true
+    },
+    {
+      "name": "Tests",
+      "command": "pnpm vitest run apps/web/src/app/__tests__/sitemap-reconciliation.test.ts",
+      "executed_at": "2026-02-24T00:12:10Z",
+      "exit_code": 0,
+      "duration_ms": 771,
+      "stdout_hash": "N/A",
+      "passed": true
+    },
+    {
+      "name": "Lint",
+      "command": "npx eslint apps/web/src/app/__tests__/sitemap-reconciliation.test.ts",
+      "executed_at": "2026-02-24T00:14:00Z",
+      "exit_code": 0,
+      "duration_ms": 1000,
+      "stdout_hash": "N/A",
+      "passed": true
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/web build",
+      "executed_at": "2026-02-24T00:14:30Z",
+      "exit_code": 0,
+      "duration_ms": 60000,
+      "stdout_hash": "N/A",
+      "passed": true
+    }
+  ],
+  "notes": "Documentation task: Updated PAGE_MAP_AND_FLOWS.md from 68 to 103 pages. Added TC-31 regression guard. Cross-doc reconciliation with sitemap.md and navigation-reachability-audit.md. Compliance check: PASS (1 non-blocking WARN for co-change CSV tracking)."
+}

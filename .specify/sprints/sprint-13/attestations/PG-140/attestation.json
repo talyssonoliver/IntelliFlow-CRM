@@ -1,0 +1,258 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "PG-140",
+  "run_id": "20260219193000-48abe1f9",
+  "attestor": "Claude Code - Task Integrity Validator",
+  "attestation_timestamp": "2026-02-19T20:15:00Z",
+  "verdict": "COMPLETE",
+  "context_acknowledgment": {
+    "files_read": [
+      {
+        "path": "apps/api/src/modules/legal/documents.router.ts",
+        "sha256": "3b32eff8778d455069b86970ff5167bc3c87c851eaf11d98c76778224de73710"
+      },
+      {
+        "path": "docs/company/brand/visual-identity.md",
+        "sha256": "fb933a886a047e0c58908a5df60936775d0c0533f534a7812ce945f80229c252"
+      },
+      {
+        "path": "docs/company/brand/style-guide.md",
+        "sha256": "f3b280fa213e98fc7501fa69f6463961413739d01aebb5ec5645fc94fe268828"
+      },
+      {
+        "path": "docs/design/UI_DEVELOPMENT_PROMPT.md",
+        "sha256": "221f43770a33a958b194b43bad6c1ffee39d534a950fd1fb8f21e3d96ee3f624"
+      }
+    ],
+    "invariants_acknowledged": [
+      "CaseDocument status lifecycle: DRAFT → UNDER_REVIEW → APPROVED → SIGNED → ARCHIVED (with SUPERSEDED branch)",
+      "ACL hierarchy: NONE < VIEW < COMMENT < EDIT < ADMIN — only ADMIN can modify ACL entries",
+      "Legal holds freeze document modifications — UI must respect isLegalHold flag and disable ACL controls",
+      "DocumentViewer must use sandbox attribute on all iframes to prevent XSS from untrusted document content",
+      "No client-generated storage keys — server must generate storage paths to prevent path traversal attacks",
+      "All shared helpers (formatFileSize, formatDate, getStatusConfig) must be imported from document-utils.ts, never duplicated",
+      "useRequireAuth() guard is mandatory on all document pages to prevent unauthorized access"
+    ],
+    "acknowledged_at": "2026-02-19T19:30:00Z"
+  },
+  "evidence_summary": {
+    "artifacts_verified": 21,
+    "validations_passed": 4,
+    "validations_failed": 0,
+    "gates_passed": 8,
+    "gates_failed": 0,
+    "kpis_met": 5,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/web/src/components/documents/types.ts": "c9084e018a0f0350ff3c838102eaf81c678c50fd3f1cd63030397be3d1d9b510",
+    "apps/web/src/components/documents/document-utils.ts": "b13c1b4291ac11b9ae7ea6b45a899f83b64f6d78ec12051749f1e520feca9396",
+    "apps/web/src/components/documents/index.ts": "cd90f52522706ebe50283991048bed5c1f8ced0d0dc7da265ac731f41dbc1690",
+    "apps/web/src/components/documents/DocumentList.tsx": "f64d4767c047ba263a96f3d08caadc745bae7df604f4505183076ba47b4db118",
+    "apps/web/src/components/documents/DocumentUpload.tsx": "360a33577884840ed5a764b4b6d2510b8999f960eb0a2216fc79544350510c8a",
+    "apps/web/src/components/documents/DocumentViewer.tsx": "0ebe9fc138570867c372e43e84f38e6a3be45a042194c5e18b070b77b8e6b646",
+    "apps/web/src/components/documents/VersionHistory.tsx": "361ce8cf24b04042dfbcbb9fccce1698ff0dbf9f638c867d6b880de793583e1c",
+    "apps/web/src/components/documents/ACLManager.tsx": "0d62d3273cf1615b74c3c42900bcbce005f20b11b16a547c32444af9bdb4bce6",
+    "apps/web/src/components/documents/DocumentSearch.tsx": "912da57fbea2eff1abe6cd9262842085e6a08476f978abadfd88b56329db82ce",
+    "apps/web/src/app/documents/(list)/page.tsx": "b3ba5ea37fca83dc4a457035def2173d18c4b697675539ca3d14073a47119f08",
+    "apps/web/src/app/documents/[id]/page.tsx": "c8d64da23009bd636bd1ead4b7c2aaec164b1489de9a0cd6e55cf22df74b0a03",
+    "apps/web/src/app/documents/(list)/new/page.tsx": "7258c466593bae155d986100fd941fb729c92de02aeb49ff6673391e60c59aab"
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-19T20:10:00Z",
+      "duration_ms": 15000
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run apps/web/src/components/documents/__tests__/ --reporter=verbose",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-19T20:10:30Z",
+      "duration_ms": 2370
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter @intelliflow/web lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-19T20:11:00Z",
+      "duration_ms": 8000
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-19T20:12:00Z",
+      "duration_ms": 45000
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "plan-checkboxes",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-19T20:13:00Z"
+    },
+    {
+      "gate_id": "artifact-verification",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-19T20:13:00Z"
+    },
+    {
+      "gate_id": "csv-reconcile",
+      "passed": true,
+      "timestamp": "2026-02-19T20:13:00Z"
+    },
+    {
+      "gate_id": "build-validation",
+      "passed": true,
+      "timestamp": "2026-02-19T20:12:00Z"
+    },
+    {
+      "gate_id": "container-registration",
+      "passed": true,
+      "timestamp": "2026-02-19T20:13:00Z"
+    },
+    {
+      "gate_id": "mock-coverage-audit",
+      "passed": true,
+      "timestamp": "2026-02-19T20:13:00Z"
+    },
+    {
+      "gate_id": "coverage-measurement",
+      "passed": true,
+      "score": 95.75,
+      "timestamp": "2026-02-19T20:13:00Z"
+    },
+    {
+      "gate_id": "compliance-check",
+      "passed": true,
+      "timestamp": "2026-02-19T20:15:00Z"
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Statement Coverage",
+      "target": ">=90%",
+      "actual": "95.75%",
+      "met": true
+    },
+    {
+      "kpi": "Branch Coverage",
+      "target": ">=80%",
+      "actual": "85.9%",
+      "met": true
+    },
+    {
+      "kpi": "Function Coverage",
+      "target": ">=90%",
+      "actual": "97.33%",
+      "met": true
+    },
+    {
+      "kpi": "Line Coverage",
+      "target": ">=90%",
+      "actual": "96.5%",
+      "met": true
+    },
+    {
+      "kpi": "Test Count",
+      "target": ">=185",
+      "actual": "298",
+      "met": true
+    }
+  ],
+  "dependencies_verified": ["IFC-152", "IFC-153"],
+  "definition_of_done_items": [
+    {
+      "criterion": "DocumentList renders paginated table with status badges, icons, sizes",
+      "met": true,
+      "evidence": "DocumentList.test.tsx: 43 tests covering table rendering, pagination, sorting"
+    },
+    {
+      "criterion": "Bulk actions work with confirmation dialogs",
+      "met": true,
+      "evidence": "DocumentList.test.tsx: bulk delete/archive/download with ConfirmationDialog"
+    },
+    {
+      "criterion": "Drag-and-drop upload with progress indication",
+      "met": true,
+      "evidence": "DocumentUpload.test.tsx: 58 tests covering drag-drop, progress, validation"
+    },
+    {
+      "criterion": "File type and size validation",
+      "met": true,
+      "evidence": "DocumentUpload.test.tsx: type whitelist + 50MB size limit tests"
+    },
+    {
+      "criterion": "SHA-256 hash computation",
+      "met": true,
+      "evidence": "DocumentUpload.tsx: crypto.subtle.digest('SHA-256', buffer)"
+    },
+    {
+      "criterion": "PDF rendering in sandboxed iframe",
+      "met": true,
+      "evidence": "DocumentViewer.test.tsx: 46 tests covering PDF/image/text/HTML rendering"
+    },
+    {
+      "criterion": "Download fallback for unsupported types",
+      "met": true,
+      "evidence": "DocumentViewer.test.tsx: non-previewable types show download link"
+    },
+    {
+      "criterion": "Version timeline with semantic versions",
+      "met": true,
+      "evidence": "VersionHistory.test.tsx: timeline rendering, version selection, restore"
+    },
+    {
+      "criterion": "ACL entries in shadcn Table with grant/revoke",
+      "met": true,
+      "evidence": "ACLManager.test.tsx: CRUD operations, legal hold, role-based controls"
+    },
+    {
+      "criterion": "Legal hold disables ACL modifications",
+      "met": true,
+      "evidence": "ACLManager.test.tsx: isLegalHold=true disables grant/revoke buttons"
+    },
+    {
+      "criterion": "Debounced search with filter dropdowns",
+      "met": true,
+      "evidence": "DocumentSearch.test.tsx: 300ms debounce, status/classification/fileType filters"
+    },
+    {
+      "criterion": "Shared helpers from document-utils.ts",
+      "met": true,
+      "evidence": "document-utils.ts: formatFileSize, formatDate, getStatusConfig, sanitizeFileName"
+    },
+    {
+      "criterion": "Pages import extracted components",
+      "met": true,
+      "evidence": "All 3 pages refactored to import from @/components/documents"
+    },
+    {
+      "criterion": "useRequireAuth() added to list page (SR-01)",
+      "met": true,
+      "evidence": "apps/web/src/app/documents/(list)/page.tsx imports useRequireAuth"
+    },
+    {
+      "criterion": "Iframe sandbox attribute present (SR-03)",
+      "met": true,
+      "evidence": "DocumentViewer.tsx: all iframes have sandbox attribute"
+    }
+  ],
+  "environment": {
+    "os": "Windows 11 Pro 10.0.26200",
+    "node_version": "v25.2.1",
+    "git_commit": "f1f8d413",
+    "branch": "sprint0/codex-run"
+  },
+  "notes": "PG-140 Document Manager Page: Created 9 components (DocumentList, DocumentUpload, DocumentViewer, VersionHistory, ACLManager, DocumentSearch, types, document-utils, barrel index) with 298 tests across 7 test files. Refactored 3 existing pages to use extracted components. Coverage: 95.75% stmts, 85.9% branches, 97.33% funcs, 96.5% lines."
+}

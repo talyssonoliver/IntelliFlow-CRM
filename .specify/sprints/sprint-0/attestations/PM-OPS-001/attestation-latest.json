@@ -1,0 +1,102 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "PM-OPS-001",
+  "run_id": "sprint0-audit-20260302T215641-7da797",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:56:50.090Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 6,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "docs/operations/project-playbook.md": "64dbd40286ae843da3bb21c66a2e04a84165cacfb759a8e70297529dcc6f67ba",
+    "docs/operations/wip-policy.md": "15e9b9e81f4e58b01dbdfc92375d12d02e086ff374bc7e701fbf806685d5923a",
+    "docs/operations/ticket-sizing.md": "22f4a0c6d19aa24ab74eeac8fc8c4ab7d4366ff1b2f4d60e89d70d4f1a7db582",
+    "docs/operations/abc-classification.md": "3db033dc9bd9cc3a55c70563d7c272ce03a8fd69a31d03ade896325a13f8b44e",
+    "docs/operations/raci.md": "2b42721174285b911a4324713f29d4144b0c47b9ab26faf9fbbc25f93aa0783c",
+    ".specify/sprints/sprint-0/attestations/PM-OPS-001/context_ack.json": "314c87205e084f787b94a54b0f6a3d4ccf20a79f36a8043d30436958265b4e1b"
+  },
+  "validation_results": [
+    {
+      "name": "PM-OPS-001",
+      "command": "pnpm lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 15000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "AUTOMATION-001",
+    "ENV-005-AI"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Documented end-to-end delivery model: stages",
+      "met": true,
+      "evidence": "Documentation found: docs/operations/project-playbook.md, docs/operations/wip-policy.md, docs/operations/ticket-sizing.md, docs/operations/abc-classification.md, docs/operations/raci.md"
+    },
+    {
+      "criterion": "sequencing",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "WIP policy",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "ticket sizing guidance",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "ABC classification of work",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "acceptance criteria rules",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "and escalation path",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "includes RACI for Sprint 0–2",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "referenced by tracker UI/help pages",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "targets: >=100%",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "verified by: pnpm lint",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "10 DoD criteria unverified"
+}

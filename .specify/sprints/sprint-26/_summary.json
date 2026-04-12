@@ -1,0 +1,498 @@
+{
+  "sprint": "sprint-26",
+  "name": "Sprint 26",
+  "generated_at": "2026-04-11T16:48:01.958Z",
+  "summary_source": "specify",
+  "task_summary": {
+    "total": 9,
+    "completed": 0,
+    "backlog": 9,
+    "blocked": 0,
+    "attested_completed": 0
+  },
+  "context": "Primary focus areas: Settings (6), AI Intelligence (1), Investment Gate (1).",
+  "section_summary": [
+    {
+      "section": "Settings",
+      "total": 6,
+      "completed": 0,
+      "open": 6
+    },
+    {
+      "section": "AI Intelligence",
+      "total": 1,
+      "completed": 0,
+      "open": 1
+    },
+    {
+      "section": "Investment Gate",
+      "total": 1,
+      "completed": 0,
+      "open": 1
+    },
+    {
+      "section": "Launch",
+      "total": 1,
+      "completed": 0,
+      "open": 1
+    }
+  ],
+  "notable_completed": [],
+  "open_tasks": [
+    {
+      "taskId": "IFC-049",
+      "sprint": 26,
+      "status": "Backlog",
+      "section": "Investment Gate",
+      "title": "Gate 4 Review - £5000 Investment",
+      "description": "Gate 4 Review - £5000 Investment",
+      "summary": "Decision on productization and scale",
+      "definitionOfDone": "Decision on productization and scale; artifacts: final-investment-review.pptx, market-validation.pdf, product-roadmap-2025.xlsx",
+      "definitionOfDoneSnapshot": "Decision on productization and scale",
+      "dependencies": [
+        "IFC-048"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-050",
+      "sprint": 26,
+      "status": "Backlog",
+      "section": "Launch",
+      "title": "Internal Launch Preparation",
+      "description": "Internal Launch Preparation",
+      "summary": "Team onboarded to modern stack and features",
+      "definitionOfDone": "Team onboarded to modern stack and features; artifacts: team-quiz-results.csv, onboarding-checklist.md, launch-readiness.pdf; targets: >=100%",
+      "definitionOfDoneSnapshot": "Team onboarded to modern stack and features",
+      "dependencies": [
+        "IFC-048"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-106",
+      "sprint": 26,
+      "status": "Backlog",
+      "section": "Settings",
+      "title": "Account Settings",
+      "description": "Account Settings",
+      "summary": "response under 200ms, Lighthouse 90, account managed",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, account managed; artifacts: page.tsx, account-manager.tsx, account-export.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, account managed",
+      "dependencies": [
+        "PG-104"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-107",
+      "sprint": 26,
+      "status": "Backlog",
+      "section": "Settings",
+      "title": "Organization Settings",
+      "description": "Organization Settings",
+      "summary": "response under 200ms, Lighthouse 90, org configured",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, org configured",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, org configured",
+      "dependencies": [
+        "PG-104"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-108",
+      "sprint": 26,
+      "status": "Backlog",
+      "section": "Settings",
+      "title": "Users",
+      "description": "Users",
+      "summary": "response under 200ms, Lighthouse 90, users managed",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, users managed; artifacts: page.tsx, user-manager.tsx, invite-sender.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, users managed",
+      "dependencies": [
+        "IFC-098",
+        "IFC-201"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "taskId": "IFC-049",
+      "sprint": 26,
+      "status": "Backlog",
+      "section": "Investment Gate",
+      "title": "Gate 4 Review - £5000 Investment",
+      "description": "Gate 4 Review - £5000 Investment",
+      "summary": "Decision on productization and scale",
+      "definitionOfDone": "Decision on productization and scale; artifacts: final-investment-review.pptx, market-validation.pdf, product-roadmap-2025.xlsx",
+      "definitionOfDoneSnapshot": "Decision on productization and scale",
+      "dependencies": [
+        "IFC-048"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-050",
+      "sprint": 26,
+      "status": "Backlog",
+      "section": "Launch",
+      "title": "Internal Launch Preparation",
+      "description": "Internal Launch Preparation",
+      "summary": "Team onboarded to modern stack and features",
+      "definitionOfDone": "Team onboarded to modern stack and features; artifacts: team-quiz-results.csv, onboarding-checklist.md, launch-readiness.pdf; targets: >=100%",
+      "definitionOfDoneSnapshot": "Team onboarded to modern stack and features",
+      "dependencies": [
+        "IFC-048"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-106",
+      "sprint": 26,
+      "status": "Backlog",
+      "section": "Settings",
+      "title": "Account Settings",
+      "description": "Account Settings",
+      "summary": "response under 200ms, Lighthouse 90, account managed",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, account managed; artifacts: page.tsx, account-manager.tsx, account-export.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, account managed",
+      "dependencies": [
+        "PG-104"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-107",
+      "sprint": 26,
+      "status": "Backlog",
+      "section": "Settings",
+      "title": "Organization Settings",
+      "description": "Organization Settings",
+      "summary": "response under 200ms, Lighthouse 90, org configured",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, org configured",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, org configured",
+      "dependencies": [
+        "PG-104"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-108",
+      "sprint": 26,
+      "status": "Backlog",
+      "section": "Settings",
+      "title": "Users",
+      "description": "Users",
+      "summary": "response under 200ms, Lighthouse 90, users managed",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, users managed; artifacts: page.tsx, user-manager.tsx, invite-sender.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, users managed",
+      "dependencies": [
+        "IFC-098",
+        "IFC-201"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-109",
+      "sprint": 26,
+      "status": "Backlog",
+      "section": "Settings",
+      "title": "Roles",
+      "description": "Roles",
+      "summary": "response under 200ms, Lighthouse 90, roles configured",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, roles configured",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, roles configured",
+      "dependencies": [
+        "IFC-098",
+        "IFC-201"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-110",
+      "sprint": 26,
+      "status": "Backlog",
+      "section": "Settings",
+      "title": "Permissions",
+      "description": "Permissions",
+      "summary": "response under 200ms, Lighthouse 90, permissions enforced",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, permissions enforced; artifacts: page.tsx, permission-matrix.tsx, permission-tester.ts; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, permissions enforced",
+      "dependencies": [
+        "PG-109",
+        "IFC-201"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-111",
+      "sprint": 26,
+      "status": "Backlog",
+      "section": "Settings",
+      "title": "Teams",
+      "description": "Teams",
+      "summary": "response under 200ms, Lighthouse 90, teams organized",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, teams organized; artifacts: page.tsx, team-manager.tsx, hierarchy-builder.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, teams organized",
+      "dependencies": [
+        "PG-108",
+        "IFC-201"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-145",
+      "sprint": 26,
+      "status": "Backlog",
+      "section": "AI Intelligence",
+      "title": "Next Best Action Dashboard - NBA recommendations deal insights action cards success metrics Cross-entity scope: refine NextBestAction impact scoring from coarse 3-tier (HIGH/MEDIUM/LOW) to multi-factor model incorporating engagement score sentiment trend and activity recency. Apply refined scoring to NextBestActionCard on Lead and Contact detail pages.",
+      "description": "Next Best Action Dashboard - NBA recommendations deal insights action cards success metrics Cross-entity scope: refine NextBestAction impact scoring from coarse 3-tier (HIGH/MEDIUM/LOW) to multi-factor model incorporating engagement score sentiment trend and activity recency. Apply refined scoring to NextBestActionCard on Lead and Contact detail pages.",
+      "summary": "response under 500ms, Lighthouse >=90; NBADashboard, RecommendationCard, ActionPriority, SuccessMetrics, DealInsights, NBATimeline components; Impact scoring uses multi-factor model;...",
+      "definitionOfDone": "Response <500ms, Lighthouse >=90; NBADashboard, RecommendationCard, ActionPriority, SuccessMetrics, DealInsights, NBATimeline components; verified by: pnpm test; Impact scoring uses multi-factor model; entity detail page NextBestActionCards updated with refined scoring",
+      "definitionOfDoneSnapshot": "response under 500ms, Lighthouse >=90; NBADashboard, RecommendationCard, ActionPriority, SuccessMetrics, DealInsights, NBATimeline components; Impact scoring uses multi-factor model;...",
+      "dependencies": [
+        "IFC-095"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    }
+  ]
+}

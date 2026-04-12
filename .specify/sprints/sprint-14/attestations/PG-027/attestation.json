@@ -1,0 +1,187 @@
+{
+  "$schema": "../../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "PG-027",
+  "run_id": "20260220234448-1ffa6853",
+  "attestor": "Claude Code - Task Integrity Validator",
+  "attestation_timestamp": "2026-02-20T23:55:00Z",
+  "verdict": "COMPLETE",
+  "context_acknowledgment": {
+    "files_read": [
+      {
+        "path": ".specify/sprints/sprint-14/specifications/PG-027-spec.md",
+        "sha256": "b5a5c9ae7e8f632bfaf34da73246c36e3165006ec75dfcd596cf0891fa097602"
+      },
+      {
+        "path": ".specify/sprints/sprint-14/planning/PG-027-plan.md",
+        "sha256": "fea2d426c5be6da629bce1080c71a6fb02f196119e89f22804c42276e73838de"
+      }
+    ],
+    "invariants_acknowledged": [
+      "Hexagonal architecture: UI layer cannot depend on infrastructure directly",
+      "All data from tRPC typed client — no raw API calls",
+      "shadcn/ui components from @intelliflow/ui package",
+      "Stripe lowercase status convention (not domain UPPERCASE)",
+      "amountDue is Stripe canonical invoice total (not amountPaid)",
+      "Coverage thresholds: Stmts>=90%, Branch>=80%, Func>=90%, Lines>=90%",
+      "All 4 validations mandatory: TypeScript, Tests, Lint, Build"
+    ],
+    "acknowledged_at": "2026-02-20T23:44:48Z"
+  },
+  "artifact_hashes": {
+    "apps/web/src/components/billing/invoice-list.tsx": "894d034ac43c5d79bd89640c74d89c3a23ec5551125366e3134a65fa698d8b4b",
+    "apps/web/src/app/billing/invoices/page.tsx": "7515bc58f8c309ee36f64107c0b6536aaa66d5bfb1dc45e72c3ef21fdb33cda6",
+    "apps/web/src/lib/billing/pdf-generator.ts": "55837deb9205c89395b7306621bc2ee0ae185a0bbed02806ed0c7f4a7cafc016",
+    "apps/web/src/app/billing/invoices/__tests__/page.test.tsx": "751b75bb141c75041f15b8c2181994508bc0eb712239928f9f449451198eb79d",
+    "apps/web/src/components/billing/__tests__/invoice-list.test.tsx": "70960a514220d767de46710a8420a187f4d307df11b1244106eac79465f53865",
+    "apps/api/src/modules/billing/billing.router.ts": "1cddc8bd41b0959c0d5fc51237c115ed025a01b24b910c89a70413d870050cc9"
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-20T23:50:00Z",
+      "duration_ms": 45000
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run apps/web/src/components/billing/__tests__/invoice-list.test.tsx apps/web/src/app/billing/invoices/__tests__/page.test.tsx apps/web/src/lib/billing/__tests__/pdf-generator.additional.test.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-20T23:51:00Z",
+      "duration_ms": 12000
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter web lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-20T23:52:00Z",
+      "duration_ms": 8000
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-20T23:53:00Z",
+      "duration_ms": 90000
+    }
+  ],
+  "evidence_summary": {
+    "artifacts_verified": 6,
+    "validations_passed": 4,
+    "validations_failed": 0,
+    "gates_passed": 8,
+    "gates_failed": 0,
+    "kpis_met": 4,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "gate_results": [
+    {
+      "gate_id": "plan-checkboxes",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-20T23:54:00Z"
+    },
+    {
+      "gate_id": "artifact-verification",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-20T23:54:00Z"
+    },
+    {
+      "gate_id": "csv-reconcile",
+      "passed": true,
+      "timestamp": "2026-02-20T23:54:00Z"
+    },
+    {
+      "gate_id": "build-validation",
+      "passed": true,
+      "timestamp": "2026-02-20T23:54:00Z"
+    },
+    {
+      "gate_id": "stoa-pass",
+      "passed": true,
+      "timestamp": "2026-02-20T23:54:00Z"
+    },
+    {
+      "gate_id": "container-registration",
+      "passed": true,
+      "timestamp": "2026-02-20T23:54:00Z"
+    },
+    {
+      "gate_id": "mock-coverage-audit",
+      "passed": true,
+      "timestamp": "2026-02-20T23:54:00Z"
+    },
+    {
+      "gate_id": "coverage-measurement",
+      "passed": true,
+      "score": 98.55,
+      "timestamp": "2026-02-20T23:54:00Z"
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Statement Coverage",
+      "target": ">=90%",
+      "actual": "98.55%",
+      "met": true
+    },
+    {
+      "kpi": "Branch Coverage",
+      "target": ">=80%",
+      "actual": "93.61%",
+      "met": true
+    },
+    {
+      "kpi": "Function Coverage",
+      "target": ">=90%",
+      "actual": "100%",
+      "met": true
+    },
+    {
+      "kpi": "Line Coverage",
+      "target": ">=90%",
+      "actual": "100%",
+      "met": true
+    }
+  ],
+  "dependencies_verified": [
+    "PG-025",
+    "IFC-198"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "All acceptance criteria (AC-001 through AC-011) verified",
+      "met": true,
+      "evidence": "69 tests passing across 3 test files covering all ACs"
+    },
+    {
+      "criterion": "Non-functional requirements (NF-001 through NF-004) met",
+      "met": true,
+      "evidence": "Coverage >=90% all metrics, accessibility aria attributes added, build passes"
+    },
+    {
+      "criterion": "4 mandatory validations pass (TypeScript, Tests, Lint, Build)",
+      "met": true,
+      "evidence": "All 4 validations exit code 0"
+    },
+    {
+      "criterion": "Scoped coverage meets thresholds",
+      "met": true,
+      "evidence": "Stmts 98.55%, Branch 93.61%, Func 100%, Lines 100%"
+    }
+  ],
+  "environment": {
+    "os": "Windows 11 Pro 10.0.26200",
+    "node_version": "v25.2.1",
+    "git_commit": "f1f8d413",
+    "branch": "sprint0/codex-run"
+  },
+  "notes": "PG-027 Invoices page: Fixed amount display (amountDue instead of amountPaid||amountDue), added 9 accessibility attributes (aria-hidden, aria-label, aria-busy, aria-live), created 8 page-level tests, added 8 component test branches (T-002 through T-009), documented R-003 pagination limitation. Total: 69 tests (8 page + 34 component + 27 pdf-generator)."
+}

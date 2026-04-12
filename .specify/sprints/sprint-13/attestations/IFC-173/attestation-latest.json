@@ -1,0 +1,68 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-173",
+  "run_id": "sprint13-audit-20260302T215849-ygkkim",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:58:57.388Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 5,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "packages/adapters/src/messaging/email/inbound.ts": "9739778e3a69cdea304b86120ea7c291abb6ab161c7c5ee90bfbc8f59a76607c",
+    "apps/api/src/modules/email/inbound.router.ts": "f9bf635662b6cc8bab3f1c63b4b1efc0885a8231f8986f14a70f26e04aecbe4e",
+    ".specify/sprints/sprint-13/attestations/IFC-173/context_ack.json": "220212c3e7a6009e1d2c1ff7c377a6dbff06a4a0e6fcdea1df9301d1a25a84d4",
+    "docs/planning/adr/ADR-023-communications-inbox.md": "d1e7c9d7d10b2cc48ca9a118aab23d573db28628503a4ae13b6b33dc1ae8d67a",
+    "docs/planning/prd-communications-inbox.md": "a84daec917f9ff17c37e84f73cb87aa83eab79c6c4cf2317538ee48049e56e52"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-173",
+      "command": "pnpm test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 180000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [],
+  "definition_of_done_items": [
+    {
+      "criterion": "Implement inbound email webhook endpoint",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "parse email headers and body",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "extract attachments",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "create case/conversation records",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "verified by: pnpm test",
+      "met": true,
+      "evidence": "All 1 validations passed"
+    }
+  ],
+  "notes": "4 DoD criteria unverified"
+}

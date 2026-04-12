@@ -1,0 +1,708 @@
+{
+  "sprint": "sprint-25",
+  "name": "Sprint 25",
+  "generated_at": "2026-04-11T16:48:01.958Z",
+  "summary_source": "specify",
+  "task_summary": {
+    "total": 14,
+    "completed": 0,
+    "backlog": 14,
+    "blocked": 0,
+    "attested_completed": 0
+  },
+  "context": "Primary focus areas: Core CRM (6), Resilience (2), Settings (2).",
+  "section_summary": [
+    {
+      "section": "Core CRM",
+      "total": 6,
+      "completed": 0,
+      "open": 6
+    },
+    {
+      "section": "Resilience",
+      "total": 2,
+      "completed": 0,
+      "open": 2
+    },
+    {
+      "section": "Settings",
+      "total": 2,
+      "completed": 0,
+      "open": 2
+    },
+    {
+      "section": "Compliance",
+      "total": 1,
+      "completed": 0,
+      "open": 1
+    },
+    {
+      "section": "Documentation",
+      "total": 1,
+      "completed": 0,
+      "open": 1
+    },
+    {
+      "section": "Enhancement",
+      "total": 1,
+      "completed": 0,
+      "open": 1
+    },
+    {
+      "section": "Testing",
+      "total": 1,
+      "completed": 0,
+      "open": 1
+    }
+  ],
+  "notable_completed": [],
+  "open_tasks": [
+    {
+      "taskId": "IFC-040",
+      "sprint": 25,
+      "status": "Backlog",
+      "section": "Enhancement",
+      "title": "Production hardening incl. HttpOnly auth sessions and release security gates",
+      "description": "Production hardening incl. HttpOnly auth sessions and release security gates",
+      "summary": "Railway production config, Vercel optimized, monitoring active, and browser auth migrated from localStorage/JS-readable bearer cookies to HttpOnly secure cookies or a server-managed Supabase session",
+      "definitionOfDone": "Railway production config, Vercel optimized, monitoring active, and browser auth migrated from localStorage/JS-readable bearer cookies to HttpOnly secure cookies or a server-managed Supabase session; artifacts: production-checklist.md, security-scan-final.pdf, AuthContext.tsx, session-cleanup.ts, session.ts, proxy.ts; targets: 99.9% uptime, zero JS-readable bearer tokens in production, zero critical vulnerabilities; verified by: pnpm typecheck, pnpm test, pnpm lint, pnpm build, security review",
+      "definitionOfDoneSnapshot": "Railway production config, Vercel optimized, monitoring active, and browser auth migrated from localStorage/JS-readable bearer cookies to HttpOnly secure cookies or a server-managed Supabase session",
+      "dependencies": [
+        "IFC-046",
+        "IFC-111",
+        "IFC-112",
+        "IFC-113",
+        "IFC-115",
+        "IFC-122",
+        "IFC-127",
+        "IFC-043",
+        "IFC-033",
+        "IFC-130",
+        "IFC-132",
+        "IFC-133",
+        "IFC-134",
+        "IFC-169"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-043",
+      "sprint": 25,
+      "status": "Backlog",
+      "section": "Documentation",
+      "title": "Operational runbooks (deploy, rollback, incident response, backup/restore, access requests)",
+      "description": "Operational runbooks (deploy, rollback, incident response, backup/restore, access requests)",
+      "summary": "Incident response, deployment, rollback procedures",
+      "definitionOfDone": "Incident response, deployment, rollback procedures; artifacts: incident-response-flowchart.svg, deployment-checklist.md, rollback-test.log; targets: <30min; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Incident response, deployment, rollback procedures",
+      "dependencies": [
+        "ENV-008-AI",
+        "IFC-112",
+        "IFC-113",
+        "IFC-115",
+        "IFC-130"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-048",
+      "sprint": 25,
+      "status": "Backlog",
+      "section": "Testing",
+      "title": "User Acceptance Testing",
+      "description": "User Acceptance Testing",
+      "summary": "Real users validate workflows and AI accuracy",
+      "definitionOfDone": "Real users validate workflows and AI accuracy; artifacts: uat-test-scenarios.xlsx, uat-results.csv, feedback-action-items.md; targets: >=90%",
+      "definitionOfDoneSnapshot": "Real users validate workflows and AI accuracy",
+      "dependencies": [
+        "IFC-039"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-059",
+      "sprint": 25,
+      "status": "Backlog",
+      "section": "Compliance",
+      "title": "ISO 42001 Readiness Assessment",
+      "description": "ISO 42001 Readiness Assessment",
+      "summary": "AI system compliance evaluated, roadmap created",
+      "definitionOfDone": "AI system compliance evaluated, roadmap created; artifacts: iso42001-assessment.pdf, ai-governance-framework.md, certification-roadmap.gantt; targets: >=70%",
+      "definitionOfDoneSnapshot": "AI system compliance evaluated, roadmap created",
+      "dependencies": [
+        "IFC-040"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-071",
+      "sprint": 25,
+      "status": "Backlog",
+      "section": "Resilience",
+      "title": "Multi-Region Setup",
+      "description": "Multi-Region Setup",
+      "summary": "Multi-region database replication active",
+      "definitionOfDone": "Multi-region database replication active; artifacts: multi-region-architecture.puml, replication-lag-metrics.json, cost-comparison.xlsx; targets: <5min, <30min; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Multi-region database replication active",
+      "dependencies": [
+        "IFC-040"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "taskId": "IFC-040",
+      "sprint": 25,
+      "status": "Backlog",
+      "section": "Enhancement",
+      "title": "Production hardening incl. HttpOnly auth sessions and release security gates",
+      "description": "Production hardening incl. HttpOnly auth sessions and release security gates",
+      "summary": "Railway production config, Vercel optimized, monitoring active, and browser auth migrated from localStorage/JS-readable bearer cookies to HttpOnly secure cookies or a server-managed Supabase session",
+      "definitionOfDone": "Railway production config, Vercel optimized, monitoring active, and browser auth migrated from localStorage/JS-readable bearer cookies to HttpOnly secure cookies or a server-managed Supabase session; artifacts: production-checklist.md, security-scan-final.pdf, AuthContext.tsx, session-cleanup.ts, session.ts, proxy.ts; targets: 99.9% uptime, zero JS-readable bearer tokens in production, zero critical vulnerabilities; verified by: pnpm typecheck, pnpm test, pnpm lint, pnpm build, security review",
+      "definitionOfDoneSnapshot": "Railway production config, Vercel optimized, monitoring active, and browser auth migrated from localStorage/JS-readable bearer cookies to HttpOnly secure cookies or a server-managed Supabase session",
+      "dependencies": [
+        "IFC-046",
+        "IFC-111",
+        "IFC-112",
+        "IFC-113",
+        "IFC-115",
+        "IFC-122",
+        "IFC-127",
+        "IFC-043",
+        "IFC-033",
+        "IFC-130",
+        "IFC-132",
+        "IFC-133",
+        "IFC-134",
+        "IFC-169"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-043",
+      "sprint": 25,
+      "status": "Backlog",
+      "section": "Documentation",
+      "title": "Operational runbooks (deploy, rollback, incident response, backup/restore, access requests)",
+      "description": "Operational runbooks (deploy, rollback, incident response, backup/restore, access requests)",
+      "summary": "Incident response, deployment, rollback procedures",
+      "definitionOfDone": "Incident response, deployment, rollback procedures; artifacts: incident-response-flowchart.svg, deployment-checklist.md, rollback-test.log; targets: <30min; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Incident response, deployment, rollback procedures",
+      "dependencies": [
+        "ENV-008-AI",
+        "IFC-112",
+        "IFC-113",
+        "IFC-115",
+        "IFC-130"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-048",
+      "sprint": 25,
+      "status": "Backlog",
+      "section": "Testing",
+      "title": "User Acceptance Testing",
+      "description": "User Acceptance Testing",
+      "summary": "Real users validate workflows and AI accuracy",
+      "definitionOfDone": "Real users validate workflows and AI accuracy; artifacts: uat-test-scenarios.xlsx, uat-results.csv, feedback-action-items.md; targets: >=90%",
+      "definitionOfDoneSnapshot": "Real users validate workflows and AI accuracy",
+      "dependencies": [
+        "IFC-039"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-059",
+      "sprint": 25,
+      "status": "Backlog",
+      "section": "Compliance",
+      "title": "ISO 42001 Readiness Assessment",
+      "description": "ISO 42001 Readiness Assessment",
+      "summary": "AI system compliance evaluated, roadmap created",
+      "definitionOfDone": "AI system compliance evaluated, roadmap created; artifacts: iso42001-assessment.pdf, ai-governance-framework.md, certification-roadmap.gantt; targets: >=70%",
+      "definitionOfDoneSnapshot": "AI system compliance evaluated, roadmap created",
+      "dependencies": [
+        "IFC-040"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-071",
+      "sprint": 25,
+      "status": "Backlog",
+      "section": "Resilience",
+      "title": "Multi-Region Setup",
+      "description": "Multi-Region Setup",
+      "summary": "Multi-region database replication active",
+      "definitionOfDone": "Multi-region database replication active; artifacts: multi-region-architecture.puml, replication-lag-metrics.json, cost-comparison.xlsx; targets: <5min, <30min; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Multi-region database replication active",
+      "dependencies": [
+        "IFC-040"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-100",
+      "sprint": 25,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Order Detail",
+      "description": "Order Detail",
+      "summary": "response under 200ms, Lighthouse 90, tracking live",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, tracking live; artifacts: page.tsx, order-detail.tsx, shipment-tracker.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, tracking live",
+      "dependencies": [
+        "PG-099"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-101",
+      "sprint": 25,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Reports",
+      "description": "Reports",
+      "summary": "response under 200ms, Lighthouse 90, reports accessible",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, reports accessible",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, reports accessible",
+      "dependencies": [
+        "IFC-096"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-102",
+      "sprint": 25,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Custom Reports",
+      "description": "Custom Reports",
+      "summary": "response under 200ms, Lighthouse 90, builder intuitive",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, builder intuitive; artifacts: page.tsx, report-builder.tsx, visualization-engine.ts; verified by: pnpm build",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, builder intuitive",
+      "dependencies": [
+        "IFC-096"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-103",
+      "sprint": 25,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Report Schedules",
+      "description": "Report Schedules",
+      "summary": "response under 200ms, Lighthouse 90, schedules running",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, schedules running; artifacts: page.tsx, schedule-manager.tsx, distribution-engine.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, schedules running",
+      "dependencies": [
+        "PG-102"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-105",
+      "sprint": 25,
+      "status": "Backlog",
+      "section": "Settings",
+      "title": "Profile Settings",
+      "description": "Profile Settings",
+      "summary": "response under 200ms, Lighthouse 90, profile updated",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, profile updated",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, profile updated",
+      "dependencies": [
+        "PG-104"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-115",
+      "sprint": 25,
+      "status": "Backlog",
+      "section": "Resilience",
+      "title": "Setup backups and disaster recovery plan",
+      "description": "Setup backups and disaster recovery plan",
+      "summary": "Automated backups scheduled, restore scripts tested, DR documentation prepared",
+      "definitionOfDone": "Automated backups scheduled, restore scripts tested, DR documentation prepared; targets: >=100%",
+      "definitionOfDoneSnapshot": "Automated backups scheduled, restore scripts tested, DR documentation prepared",
+      "dependencies": [
+        "IFC-071"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-201",
+      "sprint": 25,
+      "status": "Backlog",
+      "section": "Settings",
+      "title": "Settings Control Plane Foundations - domain models, adapters, and router for users/teams/roles/permissions/audit/integrations/webhooks/security",
+      "description": "Settings Control Plane Foundations - domain models, adapters, and router for users/teams/roles/permissions/audit/integrations/webhooks/security",
+      "summary": "Settings domain policies and APIs implemented for IAM, audit, integrations and security controls",
+      "definitionOfDone": "Settings domain policies and APIs implemented for IAM, audit, integrations and security controls; artifacts: settings.router.ts, settings-policy.ts, PrismaSettingsRepository.ts; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Settings domain policies and APIs implemented for IAM, audit, integrations and security controls",
+      "dependencies": [
+        "IFC-072",
+        "IFC-098",
+        "IFC-099",
+        "IFC-106",
+        "IFC-124"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-294",
+      "sprint": 25,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Experiment + Intelligence + AI Monitoring Wiring. Wire 7 dead endpoints: experiment.assignVariant, experiment.recordConversion, experiment.recordScore, intelligence.getInsightsSummary, intelligence.triggerPrediction, intelligence.updateContactInsights, ai-monitoring.getHallucinationReport. Backend built (IFC-025, IFC-095, IFC-117), zero web callers. Decision: wire to experiment dashboard (IFC-181) and AI monitoring page. Audit: artifacts/reports/dead-endpoints-audit.csv rows 19, 52-54, 66-69.",
+      "description": "Experiment + Intelligence + AI Monitoring Wiring. Wire 7 dead endpoints: experiment.assignVariant, experiment.recordConversion, experiment.recordScore, intelligence.getInsightsSummary, intelligence.triggerPrediction, intelligence.updateContactInsights, ai-monitoring.getHallucinationReport. Backend built (IFC-025, IFC-095, IFC-117), zero web callers. Decision: wire to experiment dashboard (IFC-181) and AI monitoring page. Audit: artifacts/reports/dead-endpoints-audit.csv rows 19, 52-54, 66-69.",
+      "summary": "All 7 experiment/intelligence/AI-monitoring endpoints wired to dashboards; zero dead endpoints in these routers; tests >=90%",
+      "definitionOfDone": "All 7 experiment/intelligence/AI-monitoring endpoints wired to dashboards; zero dead endpoints in these routers; tests >=90%",
+      "definitionOfDoneSnapshot": "All 7 experiment/intelligence/AI-monitoring endpoints wired to dashboards; zero dead endpoints in these routers; tests >=90%",
+      "dependencies": [
+        "IFC-025",
+        "IFC-095"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-295",
+      "sprint": 25,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Billing/Auth/Subscription/Admin Miscellaneous Wiring. Wire 8 dead endpoints: billing.ensureCustomer, billing.getUsageMetrics, billing.updateBillingInformation, auth.getSessions, subscription.getPlans, subscription.toggleModule, autoresponse.submitForApproval, admin.queues.getByName. Backend built across IFC-006/IFC-014/IFC-028/IFC-099, zero web callers. admin.queues.getByName is completely phantom (no tests, no matrix entry) � needs queue inspector or admin tools UI. Audit: artifacts/reports/dead-endpoints-audit.csv rows 2, 29, 33-37, 104-105.",
+      "description": "Billing/Auth/Subscription/Admin Miscellaneous Wiring. Wire 8 dead endpoints: billing.ensureCustomer, billing.getUsageMetrics, billing.updateBillingInformation, auth.getSessions, subscription.getPlans, subscription.toggleModule, autoresponse.submitForApproval, admin.queues.getByName. Backend built across IFC-006/IFC-014/IFC-028/IFC-099, zero web callers. admin.queues.getByName is completely phantom (no tests, no matrix entry) � needs queue inspector or admin tools UI. Audit: artifacts/reports/dead-endpoints-audit.csv rows 2, 29, 33-37, 104-105.",
+      "summary": "All 8 miscellaneous endpoints wired to appropriate UI pages; zero dead endpoints in billing/auth/subscription/autoresponse/admin routers; tests >=90%",
+      "definitionOfDone": "All 8 miscellaneous endpoints wired to appropriate UI pages; zero dead endpoints in billing/auth/subscription/autoresponse/admin routers; tests >=90%",
+      "definitionOfDoneSnapshot": "All 8 miscellaneous endpoints wired to appropriate UI pages; zero dead endpoints in billing/auth/subscription/autoresponse/admin routers; tests >=90%",
+      "dependencies": [],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    }
+  ]
+}

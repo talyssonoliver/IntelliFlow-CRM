@@ -1,0 +1,76 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "ENV-002-AI",
+  "run_id": "sprint0-audit-20260302T215641-7da797",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:56:49.912Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 6,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "eslint.config.mjs": "af7b1c6eb6ffc7865009737f19ac130bfb4a39b0a56ccd9fb5b85fffaea03a37",
+    ".prettierrc": "2d50e10ea5c2153397bf64231ed54c18e769d7292d238884a9cf533d81708811",
+    "artifacts/misc/commitlint.config.js": "e3d8554ece219d160578ac8df4f3c5940bd6db1084f2d8fcb4cbd06616d10071",
+    "artifacts/misc/lint-results.json": "8df7b99c1a17526ce3d48d0a7f1250d583217af7c5a8c8d0655fd68e5cd82a5a",
+    "artifacts/misc/env-validation-results.json": "a3f7a78bbb7600866b0e2b36cc2ded56547a185e29a12d2b3a6e282bd8aba7de",
+    ".specify/sprints/sprint-0/attestations/ENV-002-AI/context_ack.json": "43ce45d4082c03c7e98e6af78e3a653aec18740021240add3b14e28ba642eadb"
+  },
+  "validation_results": [
+    {
+      "name": "ENV-002-AI",
+      "command": "pnpm lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 15000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "ENV-001-AI"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "ESLint/Prettier AI-configured",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "Husky hooks with AI validation",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "conventional commits automated",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "targets: <5 min",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "zero errors",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "verified by: pnpm lint",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "6 DoD criteria unverified"
+}

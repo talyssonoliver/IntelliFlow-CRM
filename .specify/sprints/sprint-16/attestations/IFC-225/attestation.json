@@ -1,0 +1,84 @@
+{
+  "task_id": "IFC-225",
+  "sprint": 16,
+  "verdict": "COMPLETE",
+  "completed_at": "2026-03-12T21:05:00Z",
+  "artifact_hashes": {
+    "apps/web/src/app/leads/[id]/__tests__/convert-lead.test.tsx": "0d61d16aa1fdee204c01cfa502682f17f6c50ba6b8c115b567c8a12810f9a21a",
+    "apps/web/src/app/leads/[id]/page.tsx": "308afa5663ac27641e267bef6eef97c4fa9759f03c6b280c5d849bc09003e4e3",
+    "apps/web/src/app/leads/[id]/__tests__/page.test.tsx": "967216b48c9c8ca6a29d23a0a38c991786e0e77d85f8ea37f1df68d71d2cb2c6"
+  },
+  "dependencies_verified": true,
+  "notes": "Convert Lead UX fix: (1) Button disabled for non-QUALIFIED with tooltip guidance, (2) Button hidden for CONVERTED, (3) Confirmation dialog with createAccount checkbox and accountName input, (4) Mutation params include createAccount/accountName, (5) Error messages mapped to user-friendly descriptions, (6) NEGOTIATING added to LeadStatus type and statusConfig. 14 tests passing, 70+ regression tests clean.",
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-12T21:01:00Z"
+    },
+    {
+      "name": "Tests",
+      "command": "pnpm --filter web exec vitest run \"src/app/leads/[id]/__tests__/convert-lead.test.tsx\"",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-12T21:00:13Z"
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter web lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-12T21:02:00Z"
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-12T21:03:00Z"
+    }
+  ],
+  "evidence_summary": {
+    "tests_added": 14,
+    "regression_tests": 75,
+    "files_created": 1,
+    "files_modified": 2,
+    "acceptance_criteria_met": "AC-001 through AC-009 plus NF-001, NF-002, NF-003"
+  },
+  "gate_results": [
+    {
+      "gate_id": "plan-checkboxes",
+      "passed": true,
+      "timestamp": "2026-03-12T21:04:00Z"
+    },
+    {
+      "gate_id": "artifact-verification",
+      "passed": true,
+      "timestamp": "2026-03-12T21:04:30Z"
+    },
+    {
+      "gate_id": "build-validation",
+      "passed": true,
+      "timestamp": "2026-03-12T21:03:00Z"
+    },
+    {
+      "gate_id": "stoa-quality",
+      "passed": true,
+      "timestamp": "2026-03-12T21:04:45Z"
+    },
+    {
+      "gate_id": "compliance-check",
+      "passed": true,
+      "timestamp": "2026-03-12T21:05:00Z"
+    }
+  ],
+  "kpi_results": [
+    {
+      "target": ">=90% modified code path coverage",
+      "actual": "100% modified code paths covered (14 tests, all AC verified)",
+      "met": true
+    }
+  ]
+}

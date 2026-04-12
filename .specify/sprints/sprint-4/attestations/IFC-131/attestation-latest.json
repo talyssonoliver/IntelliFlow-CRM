@@ -1,0 +1,63 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-131",
+  "run_id": "sprint4-audit-20260302T215722-8m0gaz",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:57:29.806Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 3,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "docs/architecture/hex-boundaries.md": "11591f47f559317ef8d55d52e0ae94ac87c75973608980860d5abfa96e7d2e77",
+    "docs/planning/adr/ADR-010-architecture-boundary-enforcement.md": "365807a9d24d53ce5ecd1333bdd426cbfd1e68d26eb375b00d03cd2ae5cdefdd",
+    ".specify/sprints/sprint-4/attestations/IFC-131/context_ack.json": "2865b0a670c08afd890ba08ee53054cfa4a69deb66d72184796f5810fc508d54"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-131",
+      "command": "pnpm test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 180000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-106"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Module boundaries enforced",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "forbidden dependency rules added",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "architecture tests run in CI",
+      "met": true,
+      "evidence": "All 1 validations passed"
+    },
+    {
+      "criterion": "documentation + ADR added",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "3 DoD criteria unverified"
+}

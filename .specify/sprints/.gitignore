@@ -1,0 +1,19 @@
+# Keep ONLY canonical attestation files and sprint summaries; ignore everything else.
+# 
+# CI validator reads: attestation.json, attestation-latest.json per task
+# Dashboard reads: _summary.json per sprint
+
+# Ignore non-attestation subdirectories entirely
+sprint-*/execution/
+sprint-*/planning/
+sprint-*/reports/
+sprint-*/specifications/
+sprint-*/context/
+sprint-*/follow-ups/
+sprint-*/proposals/
+
+# Inside attestations/: ignore everything inside task dirs, then whitelist canonical files
+sprint-*/attestations/**
+!sprint-*/attestations/*/
+!sprint-*/attestations/*/attestation.json
+!sprint-*/attestations/*/attestation-latest.json

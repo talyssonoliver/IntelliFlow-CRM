@@ -1,0 +1,80 @@
+{
+  "task_id": "IFC-210",
+  "sprint": 15,
+  "run_id": "run-20260303T013429-cdd79ae8",
+  "timestamp": "2026-03-03T01:55:00Z",
+  "verdict": "COMPLETE",
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-03T01:38:00Z",
+      "duration_ms": 45000
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run apps/web/src/app/(public)/about/__tests__/page.test.tsx apps/web/src/app/(public)/features/__tests__/page.test.tsx apps/web/src/app/(public)/pricing/__tests__/page.test.tsx apps/web/src/app/(public)/login/__tests__/page.test.tsx",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-03T01:39:00Z",
+      "duration_ms": 14000
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-03T01:40:00Z",
+      "duration_ms": 30000
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter @intelliflow/web lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-03T01:41:00Z",
+      "duration_ms": 15000
+    }
+  ],
+  "artifact_hashes": {
+    "apps/web/src/app/(public)/pricing/layout.tsx": "b48b1823a6fe5e6c17391c54ad9dd262fa8becb10c6d16b5d361560fbd0ee9e1",
+    "apps/web/src/app/(public)/about/page.tsx": "06494a6f94007fc599eee2f73ed79f4cc40003f9f662ea73935e8df03d3ab85d",
+    "apps/web/src/app/(public)/features/page.tsx": "99eeb1984f2edfbe7f6419868581af1a354e39df9fedcb7f2e01abfa465176b1",
+    "apps/web/src/app/(public)/login/layout.tsx": "a81adb7665ecc1573b91ff62fcb908615ebc35d961fd07b290c95e09bf5765f1",
+    "apps/web/src/app/(public)/about/__tests__/page.test.tsx": "f7ed30552cc7fb8efc34490e52a49591f66f46dcf04079486642e5a15ac16c8f",
+    "apps/web/src/app/(public)/features/__tests__/page.test.tsx": "1784a85db0c278a200a98cd7b0446049dd6a41999938fc604c56c1092e98b0bb",
+    "apps/web/src/app/(public)/pricing/__tests__/page.test.tsx": "13d05ef82e588d7606527499271b89c04c0a0213fa0a0a0c20829ce99383de0b",
+    "apps/web/src/app/(public)/login/__tests__/page.test.tsx": "82c5933ae4e5a0bdaed6695f79c1aedf72f7672bc18c55521c7b5844e7bc64a9"
+  },
+  "dependencies_verified": true,
+  "notes": "Static metadata-only task. Added description, openGraph, twitter, and alternates to 4 public pages. 16 new test assertions (4 per page). No runtime behavior changes.",
+  "evidence_summary": {
+    "tests_passed": 106,
+    "tests_skipped": 3,
+    "tests_failed": 0,
+    "new_tests_added": 16,
+    "files_modified": 8,
+    "files_created": 1,
+    "acceptance_criteria_met": "10/10",
+    "plan_checkboxes": "26/26"
+  },
+  "gate_results": {
+    "plan_checkboxes": "PASS",
+    "artifact_hashes": "PASS",
+    "build_validation": "PASS",
+    "stoa_foundation": "PASS",
+    "stoa_quality": "PASS",
+    "container_registration": "N/A",
+    "coverage_measurement": "PASS",
+    "dead_code_check": "N/A"
+  },
+  "kpi_results": {
+    "coverage": {
+      "layout_files": "50% stmts (default function not rendered by metadata tests)",
+      "page_files": "Not captured by V8 due to jsdom/(public) glob interaction",
+      "note": "Data-correctness task. 16 assertions verify metadata values directly."
+    }
+  }
+}

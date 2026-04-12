@@ -1,0 +1,43 @@
+{
+  "task_id": "IFC-268",
+  "verdict": "COMPLETE",
+  "artifact_hashes": {
+    "apps/web/src/components/accounts/AccountDetail.tsx": "6d8887cfb9e9c504ac31b9caa7f3091798a41eb8ddcb13fb222431fc4cbdf32a",
+    "apps/api/src/modules/account/account.router.ts": "036733a5788eb77bfd42417b51af06029450326378307be4d7b0ca7fbd81cea7",
+    "packages/domain/src/crm/account/Account.ts": "567d70ff21e9affa22133c46a718c3cdb9f23f2f77c5101bae4da3222eeda179",
+    "packages/domain/src/crm/account/AccountEvents.ts": "8c4226d29eebeee52a94e8038c9bb91d08b8f5da70cfe6b6e94e64cdc30916eb",
+    "packages/validators/src/account.ts": "8ff5eedb59383568e8a76756d65bf9fe997454ab992df41ec766830afc16015c"
+  },
+  "dependencies_verified": [],
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/domain typecheck && pnpm --filter @intelliflow/api typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-19T18:53:00Z"
+    },
+    {
+      "name": "Tests",
+      "command": "pnpm --filter @intelliflow/domain exec vitest run src/crm/account/__tests__/Account.test.ts && pnpm --filter @intelliflow/api exec vitest run src/modules/account/__tests__/account.router.test.ts && pnpm --filter @intelliflow/web exec vitest run src/components/accounts/__tests__/AccountDetail.test.tsx",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-19T18:53:30Z"
+    },
+    {
+      "name": "Lint",
+      "command": "npx eslint apps/web/src/components/accounts/AccountDetail.tsx",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-19T18:54:00Z"
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/domain build && pnpm --filter @intelliflow/validators build && pnpm --filter @intelliflow/api build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-19T18:54:30Z"
+    }
+  ],
+  "notes": "IFC-268: Account Owner Display & Assignment. Fixed F-01 (hardcoded owner text) by enriching getById with owner relation. Fixed F-02 (no assignment UI) by adding assignOwner mutation, assignees query, and AssignSheet integration. Domain: added Account.assignOwner method + AccountOwnerAssignedEvent + SameOwnerError. Tests: 39 domain + 76 backend + 29 frontend = 144 total passing."
+}

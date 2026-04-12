@@ -1,0 +1,109 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-222",
+  "run_id": "IFC-222-validation-20260306-221500",
+  "attestor": "Claude Code",
+  "attestation_timestamp": "2026-03-06T22:15:00Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 4,
+    "validations_passed": 4,
+    "validations_failed": 0,
+    "gates_passed": 10,
+    "gates_failed": 0,
+    "kpis_met": 3,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/notifications-worker exec tsc --noEmit",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-03-06T22:07:30Z",
+      "duration_ms": 4500
+    },
+    {
+      "name": "Tests",
+      "command": "pnpm --filter @intelliflow/notifications-worker exec vitest run",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-03-06T22:07:10Z",
+      "duration_ms": 732
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter @intelliflow/notifications-worker lint",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-03-06T22:07:35Z",
+      "duration_ms": 2000
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/notifications-worker build",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-03-06T22:07:40Z",
+      "duration_ms": 1962
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "All 14 integration tests pass",
+      "target": "14/14",
+      "actual": "14/14 pass",
+      "met": true
+    },
+    {
+      "kpi": "All 89 worker tests pass (regression)",
+      "target": "89/89",
+      "actual": "89/89 pass across 4 test files",
+      "met": true
+    },
+    {
+      "kpi": "Scoped coverage on modified files",
+      "target": "SMS-specific code paths covered",
+      "actual": "Statements 54.11%, Branches 49.12%, Functions 64.7%, Lines 53.74% (full main.ts+sms.ts; SMS-specific paths fully covered, uncovered lines are out-of-scope webhook/push/email methods)",
+      "met": true
+    }
+  ],
+  "definition_of_done_items": [
+    { "criterion": "AC-001: SMS jobs delivered via Twilio when ENABLE_SMS=true", "met": true, "evidence": "Integration test: should call smsChannel.deliver with correct SMSPayload on success" },
+    { "criterion": "AC-002: SMS not consumed when ENABLE_SMS=false", "met": true, "evidence": "Integration test: should NOT include SMS queue when enableSMS is false/unset" },
+    { "criterion": "AC-003: Graceful degradation on init failure", "met": true, "evidence": "Integration test: should degrade gracefully if SMS initialize() throws" },
+    { "criterion": "AC-004: getDependencyHealth reports circuit state", "met": true, "evidence": "Integration test: should report circuit state from smsChannel.getStats() when enabled" },
+    { "criterion": "AC-005: Correct payload mapping with tenantId forwarding", "met": true, "evidence": "Integration test: should call smsChannel.deliver with correct SMSPayload on success" },
+    { "criterion": "AC-006: onStop closes SMS channel", "met": true, "evidence": "Integration test: should close smsChannel if initialized" },
+    { "criterion": "AC-007: .env.example documents SMS env vars", "met": true, "evidence": ".env.example updated with SMS_PROVIDER, SMS_FROM, ENABLE_SMS, SMS_STATUS_CALLBACK_URL" }
+  ],
+  "dependencies_verified": ["IFC-170"],
+  "context_acknowledgment": {
+    "acknowledged_at": "2026-03-06T22:10:00Z",
+    "files_read": [
+      { "path": "apps/workers/notifications-worker/src/channels/sms.ts", "sha256": "5c50a73f2f9d7911c654ad659f8e35fa48bea07bf1a87e1dbb56c919edb1c3d1" }
+    ],
+    "invariants_acknowledged": [
+      "SMSChannel class exists with deliver(), initialize(), close(), getStats() methods",
+      "createSMSChannel() factory function exported from channels/sms.ts",
+      "SMSPayload type requires 'to' and 'body' fields",
+      "SimpleCircuitBreaker pattern: 5 failures -> OPEN for 60s",
+      "SMSDeliveryResult has success boolean, messageId, status, deliveryTimeMs fields"
+    ]
+  },
+  "artifact_hashes": {
+    "apps/workers/notifications-worker/src/__tests__/worker-sms-integration.test.ts": "3e2af5b4c52f097328948d3234d835f95fc3e27194c740a88c6f421c3d7e78ca",
+    "apps/workers/notifications-worker/src/main.ts": "f52fa0a9ba114153ddf27c9ef39559af0dc0c7eaa566518a04f121022fbda982",
+    ".env.example": "eb6933ca50bb2cb67a2302222df72b90b2c02f6f8fea1ec0077a96334b5a6fac",
+    "docs/design/diagrams/complete-dependency-chains.md": "7e5f74d59863a099bd696ddc9f7e9dbbc657dccf8b381c6f81e2e1c0cbe277f3"
+  },
+  "environment": {
+    "os": "win32",
+    "node_version": "v25.2.1",
+    "git_commit": "43ebd8c6d8efcc59417b6d53ec2d234430a8e647",
+    "branch": "sprint0/codex-run"
+  },
+  "notes": "Pure wiring task: connected existing SMSChannel (IFC-170) to NotificationsWorker. 6 edits to main.ts: import, field, onStart init with graceful degradation, onStop cleanup, getDependencyHealth circuit state, deliverSMS real dispatch replacing hardcoded stub. 14 new integration tests, 89 total worker tests passing."
+}

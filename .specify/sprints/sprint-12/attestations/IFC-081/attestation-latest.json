@@ -1,0 +1,75 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-081",
+  "run_id": "sprint12-audit-20260302T215839-2r9dal",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:58:47.694Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 5,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/api/openapi.json": "c11dd1b4f77616e8f04c8f711a17c6a50e9b9b002cc4ff7aab536b7dd4858d91",
+    "artifacts/misc/postman-collection.json": "7ef7cbc23110f8fea0f966f85f45bca7add0aea01bcdbae72402a018f1509b03",
+    "apps/project-tracker/docs/metrics/_global/flows/FLOW-002.md": "869fc83b4b9957fba7643c30ff6b5fbc02630ecc1b192b3d95211dda57dc4949",
+    "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-002-validation.md": "438a5729539842f4c1da092828199ea256759eb99e8cd39bed6e0bb4b0da0e47",
+    ".specify/sprints/sprint-12/attestations/IFC-081/context_ack.json": "237b0aac6b87b3bb52838cc495fdda5b0998a25440d054b7b267ea94e271e36f"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-081",
+      "command": "pnpm test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 180000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-013"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Auto-generated API docs",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "Postman collection",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "artifacts: openapi.json",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "postman-collection.json",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "context_ack.json",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "verified by: pnpm test",
+      "met": true,
+      "evidence": "All 1 validations passed"
+    }
+  ],
+  "notes": "5 DoD criteria unverified"
+}

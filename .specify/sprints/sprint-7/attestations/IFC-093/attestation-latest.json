@@ -1,0 +1,77 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-093",
+  "run_id": "sprint7-audit-20260302T215750-xc1o8i",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:57:58.636Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 6,
+    "validations_passed": 2,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/web/lib/tickets/sla-service.ts": "c65c5a791feaa92cf48bb66521790888f9b528247b42eeac6e8819fd4cd0f9fd",
+    "apps/web/lib/tickets/sla-notifications.ts": "bcddb03135805e9327718ea205c2e7efbdf9a6be0f9ab3133fd7c15f18268ce0",
+    "apps/web/lib/tickets/sla-notifications.test.ts": "d84310ed741dbdf63414d1c2855056a7d946b48bfc4c5ee0cf028ae193257eaa",
+    ".specify/sprints/sprint-7/attestations/IFC-093/context_ack.json": "ea82023332e1a259b8d934306e7b57cf093f11d1fa13b83af6918c1cb621a04c",
+    "docs/planning/adr/ADR-019-core-crm-foundation.md": "95b48bd4fbff6a06f870be0ad248847d51b354705f6d89ea8d5ea1e2b27821fb",
+    "docs/planning/prd-core-crm.md": "7b7dff301febbb7adfd0a53ba0a9cbf36c70da93758d9c77acb62a31a118c219"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-093",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 46000,
+      "stdout_hash": "all-green-1772476872408"
+    },
+    {
+      "name": "IFC-093",
+      "command": "pnpm --filter @intelliflow/web test --run",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 120000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-002",
+    "IFC-004",
+    "IFC-188"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Tickets visible",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "SLA breach alerts in <1m",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "artifacts: sla-notification.test.ts",
+      "met": true,
+      "evidence": "All 2 validations passed"
+    },
+    {
+      "criterion": "context_ack.json",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "3 DoD criteria unverified"
+}

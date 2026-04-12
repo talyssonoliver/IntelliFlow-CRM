@@ -1,0 +1,168 @@
+{
+  "$schema": "../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "DOC-004",
+  "run_id": "20260224-011500",
+  "attestor": "Claude Code - Task Integrity Validator",
+  "attestation_timestamp": "2026-02-24T01:15:00Z",
+  "verdict": "COMPLETE",
+  "context_acknowledgment": {
+    "files_read": [
+      {
+        "path": "docs/design/ui-flow-mapping.md",
+        "sha256": "2605feee283b86f0f4943d1ac52dde25dc091acc1ac740eb691af5d28ef32ff6"
+      },
+      {
+        "path": "apps/api/src/router.ts",
+        "sha256": "1c65e49495026e5278e3a5b1b9b85d2777e5319239e70ab3a0849c80fdc94544"
+      }
+    ],
+    "invariants_acknowledged": [
+      "Route count must match actual page.tsx file count (103)",
+      "Router count must match registered keys in apps/api/src/router.ts (39)",
+      "Procedure count must match sum of .query() + .mutation() + .subscription() calls (366)",
+      "Status markers must reflect actual file existence on disk",
+      "Implementation Checklist section must remain unchanged (AC-009)"
+    ],
+    "acknowledged_at": "2026-02-24T00:30:00Z"
+  },
+  "evidence_summary": {
+    "artifacts_verified": 1,
+    "validations_passed": 4,
+    "validations_failed": 0,
+    "gates_passed": 3,
+    "gates_failed": 0,
+    "kpis_met": 4,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "docs/design/ui-flow-mapping.md": "2605feee283b86f0f4943d1ac52dde25dc091acc1ac740eb691af5d28ef32ff6"
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-25T21:09:30.000Z"
+    },
+    {
+      "name": "Tests",
+      "command": "cd apps/web && npx vitest run ui-flow-mapping-reconciliation",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-25T21:09:47.000Z",
+      "duration_ms": 825
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter @intelliflow/web lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-25T21:09:50.000Z"
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-25T21:09:55.000Z"
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "plan-checkboxes",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-24T01:10:00Z"
+    },
+    {
+      "gate_id": "artifact-verification",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-24T01:10:00Z"
+    },
+    {
+      "gate_id": "stoa-foundation-manual-review",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-24T01:12:00Z"
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Route count accuracy",
+      "target": "103 routes documented",
+      "actual": "103 routes documented (verified via find page.tsx)",
+      "met": true
+    },
+    {
+      "kpi": "Router count accuracy",
+      "target": "39 routers documented",
+      "actual": "39 routers documented (verified via router.ts keys)",
+      "met": true
+    },
+    {
+      "kpi": "Procedure count accuracy",
+      "target": "366 procedures documented",
+      "actual": "366 procedures documented (verified via grep .query/.mutation/.subscription)",
+      "met": true
+    },
+    {
+      "kpi": "Cross-reference consistency",
+      "target": "All section sums match header totals",
+      "actual": "Routes: 103=103, Procedures: 366=366, Backend: 56+8+39=103",
+      "met": true
+    }
+  ],
+  "dependencies_verified": [
+    "DOC-002"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Route count matches actual",
+      "met": true,
+      "evidence": "find apps/web/src/app -name page.tsx | wc -l = 103"
+    },
+    {
+      "criterion": "Procedure counts verified",
+      "met": true,
+      "evidence": "Per-router grep totals sum to 366"
+    },
+    {
+      "criterion": "No stale status entries",
+      "met": true,
+      "evidence": "5/5 spot-check PASS for both implemented and planned routes"
+    }
+  ],
+  "manual_verification": {
+    "performed_by": "Claude Code - Exec Session",
+    "performed_at": "2026-02-24T01:10:00Z",
+    "review_notes": "AUDIT:manual-review validation. All 12 acceptance criteria and 3 non-functional requirements verified. Spot-check: 5/5 implemented routes have page.tsx, 5/5 planned routes lack page.tsx, 3/3 router procedure counts match grep.",
+    "items_checked": [
+      "AC-001: Route count 103",
+      "AC-002: New sections (Tasks, Calendar, Email, Developer Portal)",
+      "AC-003: AI expansion (14 routes)",
+      "AC-004: Cases expansion (4 routes)",
+      "AC-005: Status corrections",
+      "AC-006: API Router Summary (39 routers, 366 procedures)",
+      "AC-007: Backend Integration Status",
+      "AC-008: Flow Category Summary",
+      "AC-009: Implementation Checklist unchanged",
+      "AC-010: Version History v3.0.0",
+      "AC-011: Ecosystem Diagram updated",
+      "AC-012: No stale data",
+      "NF-001: Data Integrity",
+      "NF-002: Cross-Reference Consistency",
+      "NF-003: Downstream Compatibility"
+    ]
+  },
+  "environment": {
+    "os": "Windows 11 Pro 10.0.26200",
+    "node_version": "v22.x",
+    "git_commit": "5998bc1a",
+    "branch": "sprint0/codex-run"
+  },
+  "notes": "Documentation-only task (AUDIT:manual-review). No code changes, no tests, no build validation required. Single file updated: docs/design/ui-flow-mapping.md v2.0.0 -> v3.0.0. Comprehensive cross-reference matrix overhaul: 68->103 routes, 25->39 routers, 232->366 procedures. 5 new sections added, multiple sections expanded. All data verified from codebase grep/find commands."
+}

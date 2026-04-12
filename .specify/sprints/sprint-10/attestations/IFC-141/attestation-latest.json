@@ -1,0 +1,104 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-141",
+  "run_id": "sprint10-audit-20260302T215820-nq217o",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:58:28.774Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 7,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    ".specify/sprints/sprint-10/specifications/IFC-141-spec.md": "7dd5b399d9314ae5a5a4893fc3d1dfa54041de00235bd493402283e1658be2fd",
+    ".specify/sprints/sprint-10/planning/IFC-141-plan.md": "91d099a58284ecac90b58706027c63ec60d21bac723d05a157a474596df3c960",
+    "artifacts/misc/workflow-comparison-matrix.md": "5b16c860519d4a1b8c494a4d470185abbcf7823ae013b5f9c43b296edab7f62c",
+    ".specify/sprints/sprint-10/attestations/IFC-141/context_pack.md": "f37140421ff08fcd21b4a3098ac67006e5538890ef29b596a4438365848f0757",
+    ".specify/sprints/sprint-10/attestations/IFC-141/context_ack.json": "5fff6e71ba18ff62c271b9c16c785f868da7ba70e4422e431cdf8700feaaa0d5",
+    "docs/planning/adr/ADR-014-workflow-engine-decision.md": "af099805318857999e880cb12525ae8c88f5555b5a491cce62405d4ca18d2250",
+    "artifacts/misc/events-spec.yaml": "7e4626a2650f1c92e33215d83d003693b8d4beab62f04e169aadd88589b55e62"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-141",
+      "command": "pnpm test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 180000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-136",
+    "IFC-137",
+    "IFC-135"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Comparative analysis of workflow options",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "ADR published",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "POC implemented",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "events published for case status changes",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "selected engine integrated to process simple workflows",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "training delivered",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "artifacts: adr-workflow-decision.md",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "events-spec.yaml",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "context_ack.json",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "targets: >=95%",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "verified by: pnpm test",
+      "met": true,
+      "evidence": "All 1 validations passed"
+    }
+  ],
+  "notes": "10 DoD criteria unverified"
+}

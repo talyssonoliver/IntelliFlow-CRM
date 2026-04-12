@@ -1,0 +1,79 @@
+{
+  "task_id": "IFC-030",
+  "sprint": 17,
+  "run_id": "run-20260303T002401",
+  "verdict": "COMPLETE",
+  "timestamp": "2026-03-03T01:00:00Z",
+  "stoa": "Domain",
+  "artifact_hashes": {
+    "apps/api/src/services/LeadRoutingService.ts": "3b91c15ad260c01f72f67fa2a2a8271bee78e2c88d71d2ee33ccab01b4a95a61",
+    "apps/api/src/services/__tests__/LeadRoutingService.test.ts": "0ca6186f9d64edf28d8d5dc81b17987721efe3f403daf499e4ef94dec3062632",
+    "apps/api/src/modules/routing/routing.router.ts": "fc6dd86b64986ba92b3331b24a1bd66da0b4d038fdacfb68ddb8a2ce20dadb3c",
+    "apps/api/src/modules/routing/__tests__/routing.router.test.ts": "7098a35ad14c830b005d605cb9ee2e878117122a7a977770ee0c5e4d66c65d54",
+    "packages/validators/src/routing.ts": "4c635494a3a64223844f490eee148eff4997cc3e1acb40bde0ad7ff767ac5f59",
+    "packages/domain/src/crm/lead/LeadEvents.ts": "55ef9bab9a2c4ff28069ff6d7d2ca1434507eaaf9968ccb375deff47f2ffec7a",
+    "apps/api/src/container.ts": "e79af7d9f8733ea364afb13c86bc024ffb3b2e438f19be3627bafd8806b5c541",
+    "apps/api/src/context.ts": "d88c7a9da5b2ddf61f73a04d845ce2da317c9c8abd7a8f9ce16d9aebc1d948f4",
+    "tools/scripts/run-routing-simulation.ts": "e3c50ea5877efcc7a12f95bd3570910f1391faa49ac07256d1d6dcdb538101f2",
+    "artifacts/misc/routing-rules-config.yaml": "260f960cbdddf9320ed0a7314be1dc4b2679bb8b5e0b5845fc1aa25183117aff",
+    "artifacts/misc/routing-simulation-results.csv": "94c649c833993bd07c0d5876522398f14957be02ccae5118d792d3e3882f5b46",
+    "artifacts/reports/sla-compliance.md": "e2573fb4ae190d70d9015b6b8ee5922f65f9b2b61ef015779e4d438d34ed1111"
+  },
+  "dependencies_verified": ["IFC-029"],
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-03T00:57:00Z",
+      "duration_ms": 27700
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run apps/api/src/services/__tests__/LeadRoutingService.test.ts apps/api/src/modules/routing/__tests__/routing.router.test.ts apps/api/src/__tests__/container.test.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-03T00:57:23Z",
+      "duration_ms": 1770
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm eslint apps/api/src/services/LeadRoutingService.ts apps/api/src/modules/routing/routing.router.ts packages/validators/src/routing.ts packages/domain/src/crm/lead/LeadEvents.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-03T00:57:25Z",
+      "duration_ms": 3000
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/api build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-03T00:57:28Z",
+      "duration_ms": 8636
+    }
+  ],
+  "evidence_summary": {
+    "tests_passed": 110,
+    "tests_total": 110,
+    "coverage": {
+      "statements": 98.77,
+      "branches": 80.86,
+      "functions": 100,
+      "lines": 100
+    },
+    "acceptance_criteria_met": 11,
+    "acceptance_criteria_total": 11,
+    "nf_requirements_met": 5,
+    "nf_requirements_total": 5,
+    "container_verified": true,
+    "simulation_results": {
+      "leads_processed": 8,
+      "rule_matches": 4,
+      "skill_matches": 0,
+      "load_balanced": 4
+    }
+  },
+  "notes": "LeadRoutingService implements 3-strategy cascade (rule→skill→load_balance). CRITICAL: writes only schema-valid fields to RoutingAudit (no phantom-field bug). 62 service tests + 33 router tests + 15 container tests = 110 total. Coverage: Stmts 98.77%, Branches 80.86%, Funcs 100%, Lines 100%."
+}

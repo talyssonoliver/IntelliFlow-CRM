@@ -1,0 +1,71 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "DOC-005",
+  "run_id": "sprint14-audit-20260302T215859-6dbfyi",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:59:16.729Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 1,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "docs/design/page-registry.md": "f472a06e44eb8b5da4d59004b6289799fddf631aae9bf5be8b1dd155174e88db"
+  },
+  "validation_results": [
+    {
+      "name": "DOC-005",
+      "command": "pnpm lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 15000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "DOC-002"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "page-registry.md covers all 101 routes",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "status reflects verified state",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "KPI targets for each page",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "RACI assignments updated",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "component breakdowns current",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "verified by: manual review",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "6 DoD criteria unverified"
+}

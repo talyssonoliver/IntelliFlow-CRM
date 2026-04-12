@@ -1,0 +1,93 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "PG-129",
+  "run_id": "sprint14-audit-20260302T215859-6dbfyi",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:59:16.693Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 7,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/web/src/app/(public)/page.tsx": "66f0a39abcba8063f2a7dfca56f37ddfd0fc09f1a9607590be4b777e2394044d",
+    "apps/web/src/components/home/AuthenticatedHomePage.tsx": "b2a1271d8d7b0880e19f61a840dc82ff4231e03f8d2dbf5f2a328d2b620f992a",
+    "apps/web/src/components/home/PublicHomePage.tsx": "9c70e202bf3f921e4d2ddfee715dd82a01231f51139f846379e8cf5651d9607e",
+    "apps/web/src/components/home/HomePageContent.tsx": "ed5c8906883fbb8a065d79a480eec87707a86f35e76175ad9b260d3ba72dc7b5",
+    "docs/planning/prd-home-page.md": "f9d2090dbc45f355f99802528dd429a51d8cbdabd9a3f52ded99b7491120d6c0",
+    "docs/specs/HOME-PAGE-SPEC.md": "6d9a466095112d2edf916bc0e37c9178e89bc105e0f6d0bbceac0637b1f869ee",
+    ".specify/sprints/sprint-14/attestations/PG-129/context_ack.json": "57a7a6f0f4e7c15a7ad58bff8c95346b4a7cc59d02c2f3519ca7de1247d0de3d"
+  },
+  "validation_results": [
+    {
+      "name": "PG-129",
+      "command": "pnpm test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 180000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-182",
+    "IFC-069"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Response <500ms",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "Lighthouse >=90",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "real-time feed working",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "InsightsSection",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "FeedSection",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "GoalSection",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "PinnedSection",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "QuickActions components",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "verified by: pnpm test",
+      "met": true,
+      "evidence": "All 1 validations passed"
+    }
+  ],
+  "notes": "8 DoD criteria unverified"
+}

@@ -1,0 +1,49 @@
+{
+  "task_id": "PG-177",
+  "run_id": "20260316185348-72a0ee3d",
+  "verdict": "COMPLETE",
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/web run typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-16T19:14:00Z"
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run src/components/analytics/__tests__/SavedReportView.test.tsx src/app/analytics/__tests__/saved-report-pages.test.tsx src/app/analytics/__tests__/saved-report-export.test.tsx src/app/analytics/__tests__/feedback-page.test.tsx",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-16T19:14:20Z"
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter @intelliflow/web exec eslint src/components/analytics/SavedReportView.tsx src/app/analytics/(list)/saved/weekly/page.tsx src/app/analytics/(list)/saved/monthly/page.tsx src/app/analytics/(list)/saved/quarterly/page.tsx",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-16T19:15:00Z"
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/web run build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-16T19:16:00Z"
+    }
+  ],
+  "artifact_hashes": {
+    "apps/web/src/components/analytics/SavedReportView.tsx": "32f48c37b3b858a3a5fb7b4a02b36f559ee82fc00f9011617aba7f168ed54a87",
+    "apps/web/src/components/analytics/__tests__/SavedReportView.test.tsx": "9b02264168ab6101e1b95e7841b8dee279f1b9fe4b6ae74f8846bc1e26b7444a",
+    "apps/web/src/app/analytics/(list)/saved/weekly/page.tsx": "746f8e954cb05abc431f77b00a01a90e33d352cca3619e4bceccfc27b6f17e50",
+    "apps/web/src/app/analytics/(list)/saved/monthly/page.tsx": "b60fba38b2619194815e15c91f4a148bc1b130517c3d3b8dff96f3e6802ba3a7",
+    "apps/web/src/app/analytics/(list)/saved/quarterly/page.tsx": "359926c1366025f86a60c4cbd09889250a0fe1f713b91cb7b9ca1355decf46b9",
+    "apps/web/src/app/analytics/__tests__/saved-report-pages.test.tsx": "fef000abaa154ad81db2cdb89ad3e1cbf8665a301d554b65d0c85f2dc56fdf12",
+    "apps/web/src/app/analytics/__tests__/saved-report-export.test.tsx": "bc172f7e0d9a9bf1dda1382f77b2ced56a6c1aaff2fe625965cf1921e999b746",
+    "packages/ui/src/components/index.ts": "bc58a33d8f2c82464e5b70749d9a092c87584d8abbe4d4b31e2e2c5613ee22a2"
+  },
+  "dependencies_verified": {
+    "IFC-068": true
+  },
+  "notes": "Monthly 'revenue by product/region' substituted with getSalesMetrics + trafficSources (no product/region endpoint exists). Export reportType mapped: weekly→overview, monthly→sales, quarterly→timeseries. 65 tests total (34 component + 12 page + 11 export + 8 regression)."
+}

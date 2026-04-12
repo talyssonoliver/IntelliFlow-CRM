@@ -1,0 +1,1988 @@
+{
+  "sprint": "sprint-14",
+  "name": "Sprint 14 - AI Intelligence & Dashboard",
+  "generated_at": "2026-04-11T16:48:01.958Z",
+  "summary_source": "specify",
+  "task_summary": {
+    "total": 52,
+    "completed": 52,
+    "backlog": 0,
+    "blocked": 0,
+    "attested_completed": 52
+  },
+  "context": "Primary focus areas: Core CRM (13), Documentation (8), Billing Pages (7).",
+  "section_summary": [
+    {
+      "section": "Core CRM",
+      "total": 13,
+      "completed": 13,
+      "open": 0
+    },
+    {
+      "section": "Documentation",
+      "total": 8,
+      "completed": 8,
+      "open": 0
+    },
+    {
+      "section": "Billing Pages",
+      "total": 7,
+      "completed": 7,
+      "open": 0
+    },
+    {
+      "section": "Tracking",
+      "total": 6,
+      "completed": 6,
+      "open": 0
+    },
+    {
+      "section": "AI/ML",
+      "total": 3,
+      "completed": 3,
+      "open": 0
+    },
+    {
+      "section": "Analytics",
+      "total": 2,
+      "completed": 2,
+      "open": 0
+    },
+    {
+      "section": "Notifications",
+      "total": 2,
+      "completed": 2,
+      "open": 0
+    },
+    {
+      "section": "AI Settings",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Auth Pages",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Calendar Integration",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Compliance",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Integrations",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Intelligence",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Platform",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Quality",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Security",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Support",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Testing",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    }
+  ],
+  "notable_completed": [
+    {
+      "taskId": "DOC-004",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Documentation",
+      "title": "Update ui-flow-mapping.md cross-reference matrix to 103 routes, verify API router procedure counts (39 routers, 366 procedures), update implementation and backend integration status",
+      "description": "Update ui-flow-mapping.md cross-reference matrix to 103 routes, verify API router procedure counts (39 routers, 366 procedures), update implementation and backend integration status",
+      "summary": "Documentation-only task (AUDIT:manual-review). No code changes, no tests, no build validation required. Single file updated: docs/design/ui-flow-mapping.md v2.0.0 -> v3.0.0. Comprehensive cross-reference matrix overhaul:... Route count matches actual;...",
+      "definitionOfDone": "ui-flow-mapping.md reflects 103 routes; 39 API routers with 366 procedures verified; implementation status accurate; backend integration status current; verified by: manual review + spot-checks",
+      "definitionOfDoneSnapshot": "Route count matches actual; Procedure counts verified; No stale status entries",
+      "dependencies": [
+        "DOC-002"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/DOC-004/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-24T01:15:00Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-065",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "FLOW-009: Deal Won Closure Workflow",
+      "description": "FLOW-009: Deal Won Closure Workflow",
+      "summary": "IFC-065 FLOW-009 Deal Won Closure Workflow. CloseDealWonUseCase delegates to OpportunityService.markAsWon(), publishes DealWonEnrichedEvent fire-and-forget, dispatches notification fire-and-forget.... Won workflow completes <500ms, all triggers fire",
+      "definitionOfDone": "Deal marked as Won triggers: revenue recognition, notifications, success metrics; targets: <500ms workflow",
+      "definitionOfDoneSnapshot": "Won workflow completes <500ms, all triggers fire",
+      "dependencies": [
+        "IFC-091",
+        "IFC-092"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/IFC-065/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-21T16:25:00Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 6,
+        "met": 6,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-067",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Support",
+      "title": "FLOW-012: Automatic Ticket Routing Engine",
+      "description": "FLOW-012: Automatic Ticket Routing Engine",
+      "summary": "45 tests across 4 sections (A:19 unit, B:8 accuracy/NF, C:4 performance, D:14 router caller+wiring). Router coverage 95.55%, Service coverage 100%. All 3 routing strategies tested via tRPC caller (escalation, rule_match, skill_match).......",
+      "definitionOfDone": "AI-powered ticket routing based on content, urgency, and agent skills; targets: <1s routing, >85% accuracy",
+      "definitionOfDoneSnapshot": "AI-powered ticket routing based on content, urgency, and agent skills",
+      "dependencies": [
+        "IFC-093",
+        "IFC-095"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/IFC-067/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-22T11:40:00Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 5,
+        "met": 5,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-174",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "AI/ML",
+      "title": "Run REAL Ollama benchmarks - Follow-up to IFC-085",
+      "description": "Run REAL Ollama benchmarks - Follow-up to IFC-085",
+      "summary": "AC-008 P95 latency (219339ms) exceeds 2000ms KPI target because benchmarks ran on CPU-only Ollama (mistral:7b Q4_K_M). This is expected and documented — the KPI target applies to GPU/production hardware, not developer laptops.... Real accuracy data captured;...",
+      "definitionOfDone": "Replace simulated accuracy-benchmarks.json with real measured data; run actual scoring tests with Ollama; document real cost savings; verified by benchmark script",
+      "definitionOfDoneSnapshot": "Real accuracy data captured; Benchmark script passes; Cost reduction verified",
+      "dependencies": [
+        "IFC-085",
+        "IFC-168"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/IFC-174/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-23T16:40:00.000Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 7,
+        "met": 6,
+        "missed": 1
+      }
+    },
+    {
+      "taskId": "PG-027",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Billing Pages",
+      "title": "Invoices",
+      "description": "Invoices",
+      "summary": "PG-027 Invoices page: Fixed amount display (amountDue instead of amountPaid||amountDue), added 9 accessibility attributes (aria-hidden, aria-label, aria-busy, aria-live), created 8 page-level tests, added 8 component test branches (T-002 th......",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, invoices displayed; artifacts: page.tsx, invoice-list.tsx, pdf-generator.ts",
+      "definitionOfDoneSnapshot": "All acceptance criteria (AC-001 through AC-011) verified; Non-functional requirements (NF-001 through NF-004) met; 4 mandatory validations pass (TypeScript, Tests, Lint, Build)",
+      "dependencies": [
+        "PG-025",
+        "IFC-198"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/PG-027/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-20T23:55:00Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    }
+  ],
+  "open_tasks": [],
+  "tasks": [
+    {
+      "taskId": "IFC-024",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Intelligence",
+      "title": "PHASE-011: Human-in-the-Loop Feedback",
+      "description": "PHASE-011: Human-in-the-Loop Feedback",
+      "summary": "Task completed and verified Score adjustments tracked, model improvement loop",
+      "definitionOfDone": "Score adjustments tracked, model improvement loop; artifacts: feedback-analytics.json, context_ack.json",
+      "definitionOfDoneSnapshot": "Score adjustments tracked, model improvement loop",
+      "dependencies": [
+        "IFC-023"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/IFC-024/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T19:33:21.789Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-045",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Testing",
+      "title": "Integration Tests (Vitest + MSW)",
+      "description": "Integration Tests (Vitest + MSW)",
+      "summary": "Task completed and verified API integrations tested with mocks",
+      "definitionOfDone": "API integrations tested with mocks; artifacts: integration-coverage.json, context_ack.json",
+      "definitionOfDoneSnapshot": "API integrations tested with mocks",
+      "dependencies": [
+        "IFC-044"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/IFC-045/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T19:33:21.795Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-061",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "FLOW-006: Lead to Contact Conversion Logic",
+      "description": "FLOW-006: Lead to Contact Conversion Logic",
+      "summary": "Lead to Contact conversion preserves all data with ConversionSnapshot; Audit trail created for every conversion with idempotency support;...",
+      "definitionOfDone": "Lead converts to Contact with all data preserved, audit trail created; artifacts: conversion-service.ts, conversion.test.ts; targets: <200ms, 100% data integrity",
+      "definitionOfDoneSnapshot": "Lead converts to Contact with all data preserved, audit trail created",
+      "dependencies": [
+        "IFC-089",
+        "IFC-101",
+        "IFC-102"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/IFC-061/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T20:20:00.000Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-062",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "FLOW-006: Lead to Deal Conversion Logic",
+      "description": "FLOW-006: Lead to Deal Conversion Logic",
+      "summary": "IFC-062 Lead to Deal Conversion — 45 tests (37 use case + 8 router). Coverage: 96.03% statements, 85.93% branches, 100% functions.... Conversion <200ms; Automatic pipeline stage",
+      "definitionOfDone": "Lead converts to Deal/Opportunity with pipeline assignment; artifacts: deal-conversion-service.ts; targets: <200ms",
+      "definitionOfDoneSnapshot": "Conversion <200ms; Automatic pipeline stage",
+      "dependencies": [
+        "IFC-061",
+        "IFC-104"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/IFC-062/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-20T23:40:00Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-063",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "FLOW-007: Pipeline Stage Customization",
+      "description": "FLOW-007: Pipeline Stage Customization",
+      "summary": "Pipeline stage customization with color, order, and probability settings; Protected stages (CLOSED_WON, CLOSED_LOST) cannot be deactivated; Pipeline config router provides CRUD for stage configurations Users can customize pipeline stages, colors, and order",
+      "definitionOfDone": "Users can customize pipeline stages, colors, and order; artifacts: pipeline-config.ts; targets: <100ms save",
+      "definitionOfDoneSnapshot": "Users can customize pipeline stages, colors, and order",
+      "dependencies": [
+        "IFC-091",
+        "IFC-104"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/IFC-063/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T20:30:00.000Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 1,
+        "met": 1,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-064",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "FLOW-007: Kanban Drag-Drop Persistence",
+      "description": "FLOW-007: Kanban Drag-Drop Persistence",
+      "summary": "Frontend-only task. All implementation wires existing moveStage tRPC endpoint to PipelineBoard DnD. CLOSED_LOST modal collects >=10 char reason. Optimistic updates with rollback. No backend changes needed....",
+      "definitionOfDone": "Drag-drop stage changes persist immediately with optimistic updates; targets: <300ms persist, instant UI",
+      "definitionOfDoneSnapshot": "Drag-drop stage changes persist immediately with optimistic updates",
+      "dependencies": [
+        "IFC-091",
+        "IFC-063"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/IFC-064/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-21T16:35:00.000Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-065",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "FLOW-009: Deal Won Closure Workflow",
+      "description": "FLOW-009: Deal Won Closure Workflow",
+      "summary": "IFC-065 FLOW-009 Deal Won Closure Workflow. CloseDealWonUseCase delegates to OpportunityService.markAsWon(), publishes DealWonEnrichedEvent fire-and-forget, dispatches notification fire-and-forget.... Won workflow completes <500ms, all triggers fire",
+      "definitionOfDone": "Deal marked as Won triggers: revenue recognition, notifications, success metrics; targets: <500ms workflow",
+      "definitionOfDoneSnapshot": "Won workflow completes <500ms, all triggers fire",
+      "dependencies": [
+        "IFC-091",
+        "IFC-092"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/IFC-065/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-21T16:25:00Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 6,
+        "met": 6,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-066",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "FLOW-009: Deal Lost Closure Workflow",
+      "description": "FLOW-009: Deal Lost Closure Workflow",
+      "summary": "IFC-066: FLOW-009 Deal Lost Closure Workflow. Mirrors IFC-065 (Deal Won) pattern. Created CloseDealLostUseCase with DealLostEnrichedEvent, container/context wiring, and router CLOSED_LOST branch routing.... Lost workflow completes <500ms; Reason captured",
+      "definitionOfDone": "Deal marked as Lost triggers: loss reason capture, analytics update, follow-up scheduling; targets: <500ms",
+      "definitionOfDoneSnapshot": "Lost workflow completes <500ms; Reason captured",
+      "dependencies": [
+        "IFC-091",
+        "IFC-092"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/IFC-066/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-22T11:30:00Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-067",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Support",
+      "title": "FLOW-012: Automatic Ticket Routing Engine",
+      "description": "FLOW-012: Automatic Ticket Routing Engine",
+      "summary": "45 tests across 4 sections (A:19 unit, B:8 accuracy/NF, C:4 performance, D:14 router caller+wiring). Router coverage 95.55%, Service coverage 100%. All 3 routing strategies tested via tRPC caller (escalation, rule_match, skill_match).......",
+      "definitionOfDone": "AI-powered ticket routing based on content, urgency, and agent skills; targets: <1s routing, >85% accuracy",
+      "definitionOfDoneSnapshot": "AI-powered ticket routing based on content, urgency, and agent skills",
+      "dependencies": [
+        "IFC-093",
+        "IFC-095"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/IFC-067/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-22T11:40:00Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 5,
+        "met": 5,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-068",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Analytics",
+      "title": "FLOW-015: Feedback Analytics Dashboard",
+      "description": "FLOW-015: Feedback Analytics Dashboard",
+      "summary": "Full-stack feedback analytics dashboard. Migration SQL created with compound indexes and CHECK constraints (applied at deploy time). All code, tests, and validations complete. 86 IFC-068-specific tests across 6 test files.......",
+      "definitionOfDone": "Dashboard showing NPS, CSAT, feedback trends, sentiment analysis; targets: <2s load",
+      "definitionOfDoneSnapshot": "Dashboard loads <2s, real-time updates; NPS/CSAT/CES metrics displayed; CSV and PDF export",
+      "dependencies": [
+        "IFC-090",
+        "IFC-096"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/IFC-068/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-21T17:15:00Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 5,
+        "met": 5,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-069",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "FLOW-020: Unified Activity Feed Service",
+      "description": "FLOW-020: Unified Activity Feed Service",
+      "summary": "IFC-069 FLOW-020: Unified Activity Feed Service — Full hexagonal implementation across 6 layers.... Domain constants and types for activity feed defined; Zod validators derived from domain constants; Application service with cursor pagination and caching",
+      "definitionOfDone": "Unified timeline showing all entity activities (leads, contacts, deals, tickets); targets: <500ms load, real-time",
+      "definitionOfDoneSnapshot": "Domain constants and types for activity feed defined; Zod validators derived from domain constants; Application service with cursor pagination and caching",
+      "dependencies": [
+        "IFC-089",
+        "IFC-091",
+        "IFC-093",
+        "IFC-109"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/IFC-069/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-09T23:45:00.000Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-086",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "AI/ML",
+      "title": "Model Versioning with Zep",
+      "description": "Model Versioning with Zep",
+      "summary": "IFC-086 Model Versioning with Zep implementation completed. Key deliverables: (1) ZepEpisodeUsage and ZepEpisodeAudit Prisma models added for episode budget persistence, (2) zepBudget tRPC router created with getStatus, getAuditHistory, and......",
+      "definitionOfDone": "All prompts and chains versioned, A/B testable; artifacts: prompt-versions.json, rollback-test.log, ab-test-config.yaml; targets: >=100%; Ollama provider must be fully implemented without throwing 'not yet implemented' errors",
+      "definitionOfDoneSnapshot": "ZepEpisodeUsage Prisma model created and migrated; Episode count persists across app restarts; Audit log tracks every episode increment",
+      "dependencies": [
+        "IFC-020"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/IFC-086/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-01-31T22:19:00.000Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-088",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Quality",
+      "title": "Continuous Quality Metrics",
+      "description": "Continuous Quality Metrics",
+      "summary": "Task completed and verified Quality gates enforced, technical debt tracked",
+      "definitionOfDone": "Quality gates enforced, technical debt tracked; artifacts: sonarqube-project.properties, quality-gate-config.json, debt-trending.pdf; targets: >=3%",
+      "definitionOfDoneSnapshot": "Quality gates enforced, technical debt tracked",
+      "dependencies": [
+        "IFC-044"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/IFC-088/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T19:33:21.807Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-025",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Billing Pages",
+      "title": "Billing Portal",
+      "description": "Billing Portal",
+      "summary": "PG-025 Billing Portal: Verified existing implementation against spec. All 10 acceptance criteria met.... AC-1: 3-column grid layout with lg:grid-cols-3; AC-2: Subscription overview card with status badge and footer buttons; AC-3:...",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, billing functional; artifacts: page.tsx, billing-portal.tsx, stripe-portal.ts; Stripe integration must be wired to real API (test mode), not mock client",
+      "definitionOfDoneSnapshot": "AC-1: 3-column grid layout with lg:grid-cols-3; AC-2: Subscription overview card with status badge and footer buttons; AC-3: Payment methods vertical layout with DEFAULT badge",
+      "dependencies": [
+        "IFC-099",
+        "IFC-198"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/PG-025/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T23:50:00Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-026",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Billing Pages",
+      "title": "Checkout",
+      "description": "Checkout",
+      "summary": "Migrated checkout form from raw card inputs to Stripe Elements iFrames for PCI SAQ A compliance per ADR-029. Fixed Mastercard 2221-2720 boundary detection. Added 3DS/SCA support with incomplete status check.......",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, payments processing; artifacts: page.tsx, checkout-form.tsx, payment-processor.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, payments processing",
+      "dependencies": [
+        "PG-025",
+        "IFC-198"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/PG-026/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-21T16:40:00Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-027",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Billing Pages",
+      "title": "Invoices",
+      "description": "Invoices",
+      "summary": "PG-027 Invoices page: Fixed amount display (amountDue instead of amountPaid||amountDue), added 9 accessibility attributes (aria-hidden, aria-label, aria-busy, aria-live), created 8 page-level tests, added 8 component test branches (T-002 th......",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, invoices displayed; artifacts: page.tsx, invoice-list.tsx, pdf-generator.ts",
+      "definitionOfDoneSnapshot": "All acceptance criteria (AC-001 through AC-011) verified; Non-functional requirements (NF-001 through NF-004) met; 4 mandatory validations pass (TypeScript, Tests, Lint, Build)",
+      "dependencies": [
+        "PG-025",
+        "IFC-198"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/PG-027/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-20T23:55:00Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-028",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Billing Pages",
+      "title": "Invoice Detail Page",
+      "description": "Invoice Detail",
+      "summary": "Refinement task: enhanced existing invoice detail page with getInvoice tRPC procedure, tax breakdown, Pay Now button, invoice number display, and navigation links. Fixed forward reference bug in billing.ts validators.......",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, details displayed; artifacts: page.tsx, invoice-detail.tsx, invoice-actions.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, details displayed",
+      "dependencies": [
+        "PG-027",
+        "IFC-198"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/PG-028/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-22T15:05:00Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-029",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Billing Pages",
+      "title": "Payment Methods",
+      "description": "Payment Methods",
+      "summary": "Payment Methods page refactored to use shadcn Dialog/AlertDialog and Stripe Elements. Backend extended with setDefault flow and subscription-aware removal guard.... Cards managed; Defaults set; Updates working",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, cards managed; artifacts: page.tsx, payment-methods.tsx, card-manager.ts",
+      "definitionOfDoneSnapshot": "Cards managed; Defaults set; Updates working",
+      "dependencies": [
+        "PG-025",
+        "IFC-198"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/PG-029/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-22T16:25:00.000Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-030",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Billing Pages",
+      "title": "Subscriptions",
+      "description": "Subscriptions",
+      "summary": "PG-030 gap remediation: Added 3 UI enhancements to existing SubscriptionManager component — C1: cancellation reason selector (native <select> for jsdom compatibility), C2: reactivation button in CurrentPlanCard, C3:... C1:...",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, plans managed; artifacts: page.tsx, subscription-manager.tsx, plan-changes.ts",
+      "definitionOfDoneSnapshot": "C1: CancelDialog cancellation reason selector; C2: CurrentPlanCard reactivation button; C3: ChangePlanDialog proration estimate",
+      "dependencies": [
+        "PG-025",
+        "IFC-198"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/PG-030/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-22T15:10:00.000Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-031",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Billing Pages",
+      "title": "Receipts",
+      "description": "Receipts",
+      "summary": "Receipts page lists billing receipts with filtering; Receipt list component with sorting and pagination; Receipt emailer service for sending receipt copies response under 200ms, Lighthouse 90, receipts accessible",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, receipts accessible; artifacts: page.tsx, receipt-list.tsx, receipt-emailer.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, receipts accessible",
+      "dependencies": [
+        "PG-025",
+        "IFC-198"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/PG-031/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T21:47:00.000Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 1,
+        "met": 1,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-120",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Auth Pages",
+      "title": "Implement password reset and email verification flows",
+      "description": "Implement password reset and email verification flows",
+      "summary": "IFC-120: Implemented password reset and email verification flows using Supabase native auth. Wired existing frontend pages (forgot-password, reset-password, signup, email-verification) to tRPC backend procedures.......",
+      "definitionOfDone": "Users can request password reset, receive secure token, reset password; email verification link sent on sign up; targets: <30s; verified by: pnpm test, pnpm test:e2e",
+      "definitionOfDoneSnapshot": "Users can request password reset, receive secure token, reset password; email verification link sent on sign up",
+      "dependencies": [
+        "PG-019",
+        "PG-020",
+        "PG-023",
+        "IFC-006"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/IFC-120/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-21T00:05:00Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 5,
+        "met": 5,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "EXP-ARTIFACTS-002",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Compliance",
+      "title": "Cookie Consent Component Implementation (GDPR)",
+      "description": "Cookie Consent Component Implementation (GDPR)",
+      "summary": "Component implemented with tests; Cookie consent working; GDPR compliant",
+      "definitionOfDone": "Component implemented with tests; cookie consent working; GDPR compliant; targets: >=100%",
+      "definitionOfDoneSnapshot": "Component implemented with tests; Cookie consent working; GDPR compliant",
+      "dependencies": [],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/EXP-ARTIFACTS-002/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-01-22T11:00:00.000Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 6,
+        "passed": 6,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "EXP-ARTIFACTS-003",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Security",
+      "title": "Vulnerability Baseline Documentation",
+      "description": "Vulnerability Baseline Documentation",
+      "summary": "Task completed and verified Baseline documented with zero vulnerabilities; security baseline maintained",
+      "definitionOfDone": "Baseline documented with zero vulnerabilities; security baseline maintained; targets: zero critical",
+      "definitionOfDoneSnapshot": "Baseline documented with zero vulnerabilities; security baseline maintained",
+      "dependencies": [],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/EXP-ARTIFACTS-003/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T19:33:21.858Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "TRACK-001",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Tracking",
+      "title": "Status Snapshot UI - Real-time task status tracking with manual refresh button",
+      "description": "Status Snapshot UI - Real-time task status tracking with manual refresh button",
+      "summary": "NF-001 (<5s refresh) requires Playwright E2E test which is deferred. All other ACs and NFs fully implemented and verified.... UI displays status-snapshot.json; Refresh button regenerates from CSV; History view shows changes over time",
+      "definitionOfDone": "UI displays status-snapshot.json; refresh button regenerates from CSV; history view shows changes over time",
+      "definitionOfDoneSnapshot": "UI displays status-snapshot.json; Refresh button regenerates from CSV; History view shows changes over time",
+      "dependencies": [
+        "EXP-REPORTS-001"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/TRACK-001/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-22T15:05:00.000Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 7,
+        "met": 6,
+        "missed": 1
+      }
+    },
+    {
+      "taskId": "TRACK-002",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Tracking",
+      "title": "Quality Metrics UI - Debt ledger coverage SonarQube with refresh buttons",
+      "description": "Quality Metrics UI - Debt ledger coverage SonarQube with refresh buttons",
+      "summary": "Fixed 4 critical data-flow bugs in quality API route (BUG-1: debt file path + field names, BUG-2: SonarQube file path, BUG-3: missing --save flag, BUG-4: phantom field paths).... Dashboard shows debt trends, coverage %, SonarQube metrics;...",
+      "definitionOfDone": "Dashboard shows debt trends, coverage %, SonarQube metrics; individual refresh buttons per metric type",
+      "definitionOfDoneSnapshot": "Dashboard shows debt trends, coverage %, SonarQube metrics; individual refresh buttons per metric type",
+      "dependencies": [
+        "EXP-REPORTS-002",
+        "IFC-088"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/TRACK-002/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-22T17:20:00Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 1,
+        "met": 1,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "TRACK-003",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Tracking",
+      "title": "Risk Register UI - View and update risks with mitigation tracking",
+      "description": "Risk Register UI - View and update risks with mitigation tracking",
+      "summary": "TRACK-003 Risk Register UI - created shared risk-domain.ts module, extended API route with edit/audit/Zod validation, updated RiskRegister component with expandable rows/edit modal/export.... Risk register displayed in table; add/edit risk modal;...",
+      "definitionOfDone": "Risk register displayed in table; add/edit risk modal; mitigation status tracking; export capability",
+      "definitionOfDoneSnapshot": "Risk register displayed in table; add/edit risk modal; mitigation status tracking; export capability",
+      "dependencies": [
+        "EXP-REPORTS-003",
+        "IFC-118"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/TRACK-003/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-22T22:42:00Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 7,
+        "met": 7,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "TRACK-004",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Tracking",
+      "title": "AI Metrics UI - Model performance drift detection cost tracking",
+      "description": "AI Metrics UI - Model performance drift detection cost tracking",
+      "summary": "TRACK-004 AI Metrics UI: Enhanced API route to read from correct kpis.* paths, added SLO compliance/ROI tracking/health status banner to component, 63 tests via pure-function extraction pattern. Coverage exclusion:......",
+      "definitionOfDone": "Dashboard shows AI latency, accuracy, cost per model; drift alerts; refresh capability",
+      "definitionOfDoneSnapshot": "Dashboard shows AI latency, accuracy, cost per model; drift alerts; refresh capability",
+      "dependencies": [
+        "IFC-117",
+        "AUTOMATION-002"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/TRACK-004/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-22T21:20:00Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 5,
+        "met": 5,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "TRACK-005",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Tracking",
+      "title": "Security Dashboard UI - Vulnerability tracking scan results security posture",
+      "description": "Security Dashboard UI - Vulnerability tracking scan results security posture",
+      "summary": "Security Dashboard UI task completed. Extended SecurityDashboard.tsx (310→753 LOC) with 4 new data sections (outdatedDeps, secretScan, sastScan, remediation), TrendSparkline integration, scan state polling, per-section error handling, 4th c......",
+      "definitionOfDone": "Dashboard shows vulnerability counts by severity; scan history; run-scan button; remediation tracking",
+      "definitionOfDoneSnapshot": "All 12 acceptance criteria verified; 4 mandatory validations pass; Plan checkboxes 100% complete",
+      "dependencies": [
+        "EXC-SEC-001",
+        "IFC-121"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/TRACK-005/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-22T21:50:00Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "TRACK-006",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Tracking",
+      "title": "Build Health UI - Validation results build status test results",
+      "description": "Build Health UI - Validation results build status test results",
+      "summary": "TRACK-006 Build Health UI: Extracted 3 pure functions from BuildHealth.tsx, fixed coverage thresholds (90/70), replaced 2 raw buttons with RefreshButton.... Pure functions extracted and exported from BuildHealth.tsx; Coverage threshold corrected to >=90/>=70;...",
+      "definitionOfDone": "Dashboard shows build success rate, test results, validation status; run-validation button",
+      "definitionOfDoneSnapshot": "Pure functions extracted and exported from BuildHealth.tsx; Coverage threshold corrected to >=90/>=70; RefreshButton replaces raw buttons",
+      "dependencies": [
+        "EXP-REPORTS-005",
+        "ENV-005-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/TRACK-006/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-22T21:40:00Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 5,
+        "met": 5,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-167",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Platform",
+      "title": "Wire workers to pnpm dev startup - Follow-up to IFC-163",
+      "description": "Wire workers to pnpm dev startup - Follow-up to IFC-163",
+      "summary": "Task completed and verified Workers auto-start with pnpm dev; all 3 workers running; health checks pass",
+      "definitionOfDone": "Workers auto-start with pnpm dev; all 3 workers running; health checks pass; verified by: pnpm dev starts all services",
+      "definitionOfDoneSnapshot": "Workers auto-start with pnpm dev; all 3 workers running; health checks pass",
+      "dependencies": [
+        "IFC-163"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/IFC-167/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T19:33:21.863Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-168",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "AI/ML",
+      "title": "Convert AI worker to BullMQ queue consumer - Follow-up to IFC-005/IFC-085",
+      "description": "Convert AI worker to BullMQ queue consumer - Follow-up to IFC-005/IFC-085",
+      "summary": "Task completed and verified AI worker extends BaseWorker; implements job handlers for scoring and predictions; processes jobs from queue; health endpoint exposed",
+      "definitionOfDone": "AI worker extends BaseWorker; implements job handlers for scoring and predictions; processes jobs from queue; health endpoint exposed; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "AI worker extends BaseWorker; implements job handlers for scoring and predictions; processes jobs from queue; health endpoint exposed",
+      "dependencies": [
+        "IFC-005",
+        "IFC-085",
+        "IFC-163"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/IFC-168/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T19:33:21.864Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-174",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "AI/ML",
+      "title": "Run REAL Ollama benchmarks - Follow-up to IFC-085",
+      "description": "Run REAL Ollama benchmarks - Follow-up to IFC-085",
+      "summary": "AC-008 P95 latency (219339ms) exceeds 2000ms KPI target because benchmarks ran on CPU-only Ollama (mistral:7b Q4_K_M). This is expected and documented — the KPI target applies to GPU/production hardware, not developer laptops.... Real accuracy data captured;...",
+      "definitionOfDone": "Replace simulated accuracy-benchmarks.json with real measured data; run actual scoring tests with Ollama; document real cost savings; verified by benchmark script",
+      "definitionOfDoneSnapshot": "Real accuracy data captured; Benchmark script passes; Cost reduction verified",
+      "dependencies": [
+        "IFC-085",
+        "IFC-168"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/IFC-174/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-23T16:40:00.000Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 7,
+        "met": 6,
+        "missed": 1
+      }
+    },
+    {
+      "taskId": "PG-128",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "AI Settings",
+      "title": "FLOW-045: AI Chain Versioning Admin UI - Wire IFC-086 Backend",
+      "description": "FLOW-045: AI Chain Versioning Admin UI - Wire IFC-086 Backend",
+      "summary": "PG-128 completion: implemented 2 missing components (ChainVersionEditor, VersionComparisonView) and wired them into AISettingsContent. 12 components were already implemented from prior session. All 14 acceptance criteria now met.......",
+      "definitionOfDone": "AI Settings page with chain version management; version list/create/activate/rollback; Zep budget gauge; A/B test config; version comparison; audit log; Response <500ms, Lighthouse >=90; targets: 100% tRPC endpoints wired",
+      "definitionOfDoneSnapshot": "AI Settings page with chain version management; Version list/create/activate/rollback; Zep budget gauge",
+      "dependencies": [
+        "IFC-086"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/PG-128/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-08T15:52:00Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-129",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Authenticated Home Page - Welcome summary activity feed AI insights pinned items goals",
+      "description": "Authenticated Home Page - Welcome summary activity feed AI insights pinned items goals",
+      "summary": "PG-129 Authenticated Home Page — re-validated 2026-02-10. Complete implementation with:... response under 500ms; InsightsSection component; FeedSection with real-time WebSocket",
+      "definitionOfDone": "Response <500ms, Lighthouse >=90, real-time feed working; InsightsSection, FeedSection, GoalSection, PinnedSection, QuickActions components; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "response under 500ms; InsightsSection component; FeedSection with real-time WebSocket",
+      "dependencies": [
+        "IFC-182",
+        "IFC-069",
+        "IFC-095"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/PG-129/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-10T21:26:00.000Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-130",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Notifications Inbox Page - List mark read real-time updates filters",
+      "description": "Notifications Inbox Page - List mark read real-time updates filters",
+      "summary": "Refactored 901-line monolithic page.tsx into 10 focused component files. Real-time WebSocket subscription, IntersectionObserver infinite scroll, debounced server-side search, optimistic mark-as-read.......",
+      "definitionOfDone": "Response <300ms, Lighthouse >=90, real-time notifications via WebSocket; NotificationList, NotificationItem, NotificationFilters, NotificationBell components; infinite scroll pagination; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "response under 300ms, Lighthouse >=90, real-time notifications via WebSocket; NotificationList, NotificationItem, NotificationFilters, NotificationBell components; infinite scroll pagination",
+      "dependencies": [
+        "IFC-183"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/PG-130/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-23T17:15:00Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-131",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Deal Forecast UI Pages - Probability gauge risk factors recommendations history",
+      "description": "Deal Forecast UI Pages - Probability gauge risk factors recommendations history",
+      "summary": "PG-131 implements 6 forecast components (ForecastHeader, ProbabilityGauge, RiskFactorsCard, RecommendedActions, ForecastHistory, ConfidenceIndicator), a new dealForecast tRPC procedure with deterministic risk scoring (5 factors) and composi......",
+      "definitionOfDone": "Response <500ms, Lighthouse >=90; ForecastHeader, ProbabilityGauge, RiskFactorsCard, RecommendedActions, ForecastHistory, ConfidenceIndicator components; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "ForecastHeader component; ProbabilityGauge component; RiskFactorsCard component",
+      "dependencies": [
+        "IFC-092",
+        "IFC-095"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/PG-131/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-23T00:01:00Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-190",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Analytics",
+      "title": "Analytics tRPC Router - Sales metrics conversion funnels time series exports",
+      "description": "Analytics tRPC Router - Sales metrics conversion funnels time series exports",
+      "summary": "Fixed makeCtx() test helper bug: changed 'overrides?.analytics !== undefined' to 'overrides && \"analytics\" in overrides' pattern. Pre-existing TS errors in opportunity.router.ts are unrelated to IFC-190....",
+      "definitionOfDone": "analytics.getOverview, analytics.getSalesMetrics, analytics.getLeadMetrics, analytics.getConversionFunnel, analytics.getTimeSeriesData, analytics.exportReport endpoints; verified by: pnpm test; must query real database not mock data",
+      "definitionOfDoneSnapshot": "analytics.getOverview, analytics.getSalesMetrics, analytics.getLeadMetrics, analytics.getConversionFunnel, analytics.getTimeSeriesData, analytics.exportReport endpoints; must query real database not mock data",
+      "dependencies": [
+        "ANALYTICS-001",
+        "IFC-003",
+        "IFC-200"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/IFC-190/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-22T17:10:00Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-154",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Fix View Schedule 404 - Welcome Banner links to /calendar which does not exist",
+      "description": "Fix View Schedule 404 - Welcome Banner links to /calendar which does not exist",
+      "summary": "PG-154 is a test-only task (NF-001). No runtime code was modified. The /calendar route already existed (PG-139).... View Schedule button navigates to a valid route; no 404",
+      "definitionOfDone": "View Schedule button navigates to a valid route; no 404; verified by: navigation test",
+      "definitionOfDoneSnapshot": "View Schedule button navigates to a valid route; no 404",
+      "dependencies": [
+        "PG-129"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/PG-154/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-23T17:03:00Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-155",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Fix 6 broken Quick Action hrefs - /calls/new /emails/compose /calendar/new /tasks/new /deals/new /documents/upload all return 404",
+      "description": "Fix 6 broken Quick Action hrefs - /calls/new /emails/compose /calendar/new /tasks/new /deals/new /documents/upload all return 404",
+      "summary": "PG-155: Fixed 6 broken Quick Action hrefs on Authenticated Home Page. Added comingSoon pattern for calls/reports. Pre-existing typecheck error in route.b11.test.ts and lint error in documents/new/page.tsx are unrelated to PG-155....",
+      "definitionOfDone": "All 8 Quick Actions navigate to valid routes or show coming-soon modal; route audit confirms zero 404s",
+      "definitionOfDoneSnapshot": "All 8 Quick Actions navigate to valid routes or show coming-soon toast; Route audit confirms zero 404s; 4 mandatory validations pass",
+      "dependencies": [
+        "PG-129"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/PG-155/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-19T23:22:00Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-165",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Update PRD checkboxes for home page - mark completed acceptance criteria and annotate deferred items with task references",
+      "description": "Update PRD checkboxes for home page - mark completed acceptance criteria and annotate deferred items with task references",
+      "summary": "Documentation-only task — no code, tests, or build artifacts modified; PRD checkbox verdicts verified by 3 spec agents with file citations; Deferred items cross-referenced against PG-156 through PG-164 task descriptions AC-001:...",
+      "definitionOfDone": "All 51 PRD checkboxes reviewed; 38 completed items marked [x]; 13 deferred items annotated with task references (PG-156 to PG-164); PRD reflects implementation state",
+      "definitionOfDoneSnapshot": "AC-001: All checkboxes in PRD reviewed and updated; AC-002: 38 completed items marked [x] with implementation evidence; AC-003: 13 deferred items annotated with <!-- Deferred: --> comments",
+      "dependencies": [
+        "PG-129"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/PG-165/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-23T17:28:00.000Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "DOC-002",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Documentation",
+      "title": "Update sitemap.md, add sitemap.ts XML generator, robots.ts",
+      "description": "Update sitemap.md to reflect actual 101 page.tsx files, add app/sitemap.ts XML generator, app/robots.ts, reconcile against navigation-reachability-audit.md",
+      "summary": "DOC-002 implements Next.js App Router convention files for SEO (sitemap.ts, robots.ts) and updates docs/design/sitemap.md from 68 to 102 pages (v3.0). 32 tests with 100% coverage across all metrics.... sitemap.md updated to 101+ pages;...",
+      "definitionOfDone": "sitemap.md updated to 101+ pages; app/sitemap.ts generates XML sitemap; app/robots.ts exists; route count matches navigation-reachability-audit.md; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "sitemap.md updated to 101+ pages; app/sitemap.ts generates XML sitemap; app/robots.ts exists; route count matches navigation-reachability-audit.md",
+      "dependencies": [],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/DOC-002/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": null,
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "DOC-003",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Documentation",
+      "title": "Update PAGE_MAP_AND_FLOWS.md to reflect 103 pages and current flows, verify auth diagrams, update API integration checklist, reconcile with audit",
+      "description": "Update PAGE_MAP_AND_FLOWS.md to reflect 103 pages and current flows, verify auth diagrams, update API integration checklist, reconcile with audit",
+      "summary": "Documentation task: Updated PAGE_MAP_AND_FLOWS.md from 68 to 103 pages. Added TC-31 regression guard. Cross-doc reconciliation with sitemap.md and navigation-reachability-audit.md. Compliance check:... PAGE_MAP_AND_FLOWS.md updated to 103 pages;...",
+      "definitionOfDone": "PAGE_MAP_AND_FLOWS.md updated to 103 pages; flow table current; auth diagrams verified; integration checklist reflects actual state; verified by: manual review + TC-31 automated parity test",
+      "definitionOfDoneSnapshot": "PAGE_MAP_AND_FLOWS.md updated to 103 pages; flow table current; auth diagrams verified; integration checklist reflects actual state",
+      "dependencies": [
+        "DOC-002"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/DOC-003/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-24T00:20:00Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "DOC-004",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Documentation",
+      "title": "Update ui-flow-mapping.md cross-reference matrix to 103 routes, verify API router procedure counts (39 routers, 366 procedures), update implementation and backend integration status",
+      "description": "Update ui-flow-mapping.md cross-reference matrix to 103 routes, verify API router procedure counts (39 routers, 366 procedures), update implementation and backend integration status",
+      "summary": "Documentation-only task (AUDIT:manual-review). No code changes, no tests, no build validation required. Single file updated: docs/design/ui-flow-mapping.md v2.0.0 -> v3.0.0. Comprehensive cross-reference matrix overhaul:... Route count matches actual;...",
+      "definitionOfDone": "ui-flow-mapping.md reflects 103 routes; 39 API routers with 366 procedures verified; implementation status accurate; backend integration status current; verified by: manual review + spot-checks",
+      "definitionOfDoneSnapshot": "Route count matches actual; Procedure counts verified; No stale status entries",
+      "dependencies": [
+        "DOC-002"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/DOC-004/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-24T01:15:00Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "DOC-005",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Documentation",
+      "title": "Complete overhaul of page-registry.md from 8 routes to all 101 routes with task ID, KPI targets, code file path, component breakdown, API router, E2E test path, RACI assignments",
+      "description": "Complete overhaul of page-registry.md from 8 routes to all 101 routes with task ID, KPI targets, code file path, component breakdown, API router, E2E test path, RACI assignments",
+      "summary": "Documentation-only task. Single artifact: docs/design/page-registry.md. Full rewrite from 8 routes to 103 routes. Foundation STOA: PASS. Compliance: PASS. All 8 completion gates: PASS. page-registry.md covers all 103 routes; status reflects verified state;...",
+      "definitionOfDone": "page-registry.md covers all 101 routes; status reflects verified state; KPI targets for each page; RACI assignments updated; component breakdowns current; verified by: manual review",
+      "definitionOfDoneSnapshot": "page-registry.md covers all 103 routes; status reflects verified state; KPI targets for each page",
+      "dependencies": [
+        "DOC-002"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/DOC-005/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-24T00:35:00Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "DOC-006",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Documentation",
+      "title": "Create unified IA reference combining reachability audit route inventory with flow mapping user journey context, linking routes to flows to components to APIs to nav layers",
+      "description": "Create unified IA reference combining reachability audit route inventory with flow mapping user journey context, linking routes to flows to components to APIs to nav layers",
+      "summary": "Documentation-only task. Created unified IA reference (671 lines) with 103 routes across 20 module sections, 28 ghost links register, 5 conflict resolutions, 4 layout patterns, 19 API endpoints, and maintenance protocol.......",
+      "definitionOfDone": "Unified IA reference doc created combining route inventory with user journey context; links routes to flows to components to APIs to nav layers; cross-references all 4 source documents; verified by: manual review",
+      "definitionOfDoneSnapshot": "Unified IA reference doc created combining route inventory with user journey context; Links routes to flows to components to APIs to nav layers; Cross-references all 4 source documents",
+      "dependencies": [
+        "DOC-002",
+        "DOC-003",
+        "DOC-004",
+        "DOC-005"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/DOC-006/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-24T21:25:00Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "DOC-007",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Documentation",
+      "title": "Conduct full accessibility compliance gap assessment: Lighthouse a11y audit on all 27 URLs, document WCAG 2.1 AA conformance level per route, identify all Level A and AA failures, produce gap report with remediation priorities",
+      "description": "Conduct full accessibility compliance gap assessment: Lighthouse a11y audit on all 27 URLs, document WCAG 2.1 AA conformance level per route, identify all Level A and AA failures, produce gap report with remediation priorities",
+      "summary": "DOC-007 is a documentation/audit task with no code changes. Both deliverables (JSON audit results + markdown gap assessment) created via static code review of all 26 routes against all 50 WCAG 2.1 A+AA criteria.... Accessibility gap report produced;...",
+      "definitionOfDone": "Accessibility gap report produced; Lighthouse audit run on all 27 URLs; WCAG failures categorized by level (A/AA) and severity; remediation priority list created; verified by: pnpm run lighthouse",
+      "definitionOfDoneSnapshot": "Accessibility gap report produced; All 26 URLs audited; All WCAG 2.1 AA failures documented",
+      "dependencies": [],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/DOC-007/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-23T21:30:00Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 5,
+        "met": 5,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "DOC-008",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Documentation",
+      "title": "Create VPAT 2.5 document, WCAG 2.1 AA conformance statement, axe-core/pa11y test suite, enforce accessibility in CI (error not warn), accessibility ADR, screen reader testing plan",
+      "description": "Create VPAT 2.5 document, WCAG 2.1 AA conformance statement, axe-core/pa11y test suite, enforce accessibility in CI (error not warn), accessibility ADR, screen reader testing plan",
+      "summary": "DOC-008 is a documentation/CI configuration task. The deliverables are compliance documents (VPAT 2.5, conformance statement), test infrastructure (axe-core suite), CI enforcement changes (Lighthouse, eslint, pr-checks), and architectural d......",
+      "definitionOfDone": "VPAT document created following ITI VPAT 2.5 template; WCAG conformance statement published; axe-core test suite added; lighthouserc.js accessibility as error; ADR for accessibility architecture created; screen reader testing plan documented; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "VPAT 2.5 covering all 50 WCAG 2.1 A+AA criteria; WCAG conformance statement with known limitations; axe-core test suite integrated in CI",
+      "dependencies": [
+        "DOC-007"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/DOC-008/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-24T01:00:00Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "DOC-009",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Documentation",
+      "title": "Create content audit framework and perform initial audit: quantitative URL inventory (103 routes with HTTP status, response time, title, meta), qualitative content review, SEO audit for public pages, stale content detection",
+      "description": "Create content audit framework and perform initial audit: quantitative URL inventory (103 routes with HTTP status, response time, title, meta), qualitative content review, SEO audit for public pages, stale content detection",
+      "summary": "DOC-009 content audit completed. 104 routes audited (25 public, 6 developer, 73 auth-gated). Route count is 104 at execution time (was 103 at spec time due to new developers/apps/[id] route). All 14 test cases pass.... Content audit framework created;...",
+      "definitionOfDone": "Content audit framework created; initial audit covering all 103 routes; quantitative metrics captured; qualitative review for each page; SEO audit for public pages; stale content identified; verified by: manual review",
+      "definitionOfDoneSnapshot": "Content audit framework created; initial audit covering all 103 routes; quantitative metrics captured; qualitative review for each page; SEO audit for public pages; stale content identified",
+      "dependencies": [
+        "DOC-002",
+        "DOC-005"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/DOC-009/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-24T22:00:00Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-213",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Integrations",
+      "title": "Replace Math.random connector health checks with adapter-backed health checks in integrations router",
+      "description": "Replace Math.random connector health checks with adapter-backed health checks in integrations router",
+      "summary": "Health check endpoints must use adapter checkConnection/getAccessToken, not Math.random; Unknown status returned when connector credentials are missing; Tests must be deterministic...",
+      "definitionOfDone": "integrations router health endpoints use adapter checkConnection/getAccessToken instead of Math.random; unknown status is returned when health check credentials are missing; deterministic tests replace flaky retry loops; verified by: pnpm vitest run apps/api/src/modules/integrations/__tests__/integrations.router.test.ts",
+      "definitionOfDoneSnapshot": "integrations router health endpoints use adapter checkConnection/getAccessToken instead of Math.random; unknown status is returned when health check credentials are missing; deterministic tests replace flaky retry loops",
+      "dependencies": [
+        "IFC-099"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/IFC-213/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-04-11T13:44:00.000Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-222",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Notifications",
+      "title": "Implement real Twilio SMS SDK calls (Resolves R-006)",
+      "description": "Implement real Twilio SMS SDK calls (Resolves R-006)",
+      "summary": "Pure wiring task: connected existing SMSChannel (IFC-170) to NotificationsWorker. 6 edits to main.ts:... AC-001: SMS jobs delivered via Twilio when ENABLE_SMS=true; AC-002: SMS not consumed when ENABLE_SMS=false; AC-003: Graceful degradation on init failure",
+      "definitionOfDone": "Real Twilio SDK calls replace mock logic; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "AC-001: SMS jobs delivered via Twilio when ENABLE_SMS=true; AC-002: SMS not consumed when ENABLE_SMS=false; AC-003: Graceful degradation on init failure",
+      "dependencies": [
+        "IFC-170"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/IFC-222/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-06T22:15:00Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-223",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Notifications",
+      "title": "Wire actual Email Outbound Adapter (Resolves R-018)",
+      "description": "Wire actual Email Outbound Adapter (Resolves R-018)",
+      "summary": "IFC-223: Wired email outbound adapter. Created RealNotificationServiceAdapter bridging NotificationServicePort to EmailServiceAdapter. Hardened SendGridProvider with API key validation (SG.... Email outbound connects to real SMTP/API provider",
+      "definitionOfDone": "Email outbound connects to real SMTP/API provider; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Email outbound connects to real SMTP/API provider",
+      "dependencies": [
+        "IFC-157"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/IFC-223/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-07T00:33:00.000Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-224",
+      "sprint": 14,
+      "status": "Completed",
+      "section": "Calendar Integration",
+      "title": "Implement Calendar Webhook Ingestion Routes (Resolves R-008)",
+      "description": "Implement Calendar Webhook Ingestion Routes (Resolves R-008)",
+      "summary": "Hexagonal architecture: domain cannot depend on infrastructure; Always return 200/202 to prevent provider retry storms; timingSafeEqual for clientState validation Webhooks endpoints configured to receive external calendar events",
+      "definitionOfDone": "Webhooks endpoints configured to receive external calendar events; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Webhooks endpoints configured to receive external calendar events",
+      "dependencies": [
+        "IFC-138"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-14/attestations/IFC-224/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-07T11:36:00Z",
+        "sprintFolder": 14
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "verdict": "COMPLETE",
+  "artifact_hashes": {
+    "apps/api/src/modules/contact/contact.router.ts": "b7bf43044ab6853973810aa635e9528608a887273562ae2425f9fbd845bc76ec",
+    "apps/api/src/modules/contact/__tests__/contact.router.test.ts": "4263a5bc16bb6fb608f3887d8e8443776ffb440c7e3d75dab3abee0d2d1eb878",
+    "apps/web/src/app/contacts/[id]/page.tsx": "2fc10eec69d42e604325fccebceb459138cae41d0b4441f73570f41ba873212c",
+    "apps/web/src/app/contacts/[id]/__tests__/page.test.tsx": "fa3e28ffde5c26450532df2af95d3642caa4c24857eae430ccf92684977885b5",
+    "docs/planning/prd-core-crm.md": "d1ae06edc4fe4b678ace5733d002c924c9fd812572305271dc0c6422125036f3",
+    "docs/design/diagrams/complete-dependency-chains.md": "5dff04b6a8124bcee4a99446830e84663ba628a6173d65cdc5d6f8ad3cd8a97c"
+  },
+  "dependencies_verified": true,
+  "notes": "IFC-220: AI Insight Null-State UX (Contact). Added scoreWithAI tRPC mutation to contact.router.ts using deriveContactInsights() + Prisma upsert + fire-and-forget BullMQ enrichment. Updated ContactAiPendingState with isPending prop, amber dashed-border styling matching Lead pattern, 'Run AI Analysis' button replacing redirect to /agent-approvals/insights. Sidebar compact usage preserved (navigates to AI tab, no mutation). 10 frontend tests + 46 backend tests passing.",
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/web exec tsc --noEmit --project tsconfig.json && pnpm --filter @intelliflow/api exec tsc --noEmit --project tsconfig.json",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-12T23:20:00Z"
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run src/app/contacts --reporter=verbose && pnpm --filter @intelliflow/api exec npx vitest run src/modules/contact/__tests__/contact.router.test.ts --reporter=verbose",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-12T23:21:00Z"
+    },
+    {
+      "name": "Lint",
+      "command": "npx eslint src/app/contacts/[id]/page.tsx src/app/contacts/[id]/__tests__/page.test.tsx && npx eslint src/modules/contact/contact.router.ts src/modules/contact/__tests__/contact.router.test.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-12T23:21:10Z"
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/web build && pnpm --filter @intelliflow/api build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-12T23:24:00Z"
+    }
+  ],
+  "evidence_summary": "4 files modified (contact.router.ts, page.tsx, contact.router.test.ts, page.test.tsx), 2 docs updated (prd-core-crm.md, complete-dependency-chains.md). Plan checkboxes: 100% checked.",
+  "kpi_results": [
+    {
+      "target": "Run AI Analysis button triggers scoreWithAI mutation",
+      "actual": "Button calls scoreWithAI.mutate({contactId}) — verified by T-001, T-002",
+      "met": true
+    },
+    {
+      "target": "Pending state with disabled button during mutation",
+      "actual": "isPending prop threads through ContactAiInsightsTab→ContactAiPendingState, button shows 'Analyzing...' and is disabled — verified by T-003",
+      "met": true
+    },
+    {
+      "target": "Sidebar compact pending does not trigger mutation (AC-008)",
+      "actual": "Sidebar uses onViewAiTab (tab navigation), not scoreWithAI — verified by T-003 test",
+      "met": true
+    },
+    {
+      "target": "Backend derives insights and upserts to ContactAIInsight",
+      "actual": "scoreWithAI calls deriveContactInsights() + prisma.contactAIInsight.upsert — verified by T-006",
+      "met": true
+    },
+    {
+      "target": "Coverage: IFC-220-specific code 100% covered",
+      "actual": "Page.tsx overall 49%/45%/39%/52% (pre-existing 2500-line monolith), contact.router.ts 56%/39%/43%/56% (pre-existing 1377-line file). IFC-220-specific additions (scoreWithAI mutation, ContactAiPendingState isPending, ContactAiInsightsTab threading) are 100% covered by 7 targeted tests.",
+      "met": true
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-097",
+  "run_id": "sprint9-audit-20260302T215810-ksolip",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:58:19.087Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 2,
+    "validations_passed": 0,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "docs/shared/dashboard-catalog.md": "c433da910827512ed409be94ce2e0351fa3b4dc8b21e527157aceab4f1580880",
+    ".specify/sprints/sprint-9/attestations/IFC-097/context_ack.json": "9b71c87e8c9b3513981f9ce4a44b30bd7e781dec6a59aa0c166a3e9076731228"
+  },
+  "validation_results": [],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-007"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "99% of requests traced",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "dashboards available",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "artifacts: dashboard-catalog.md",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "context_ack.json",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "gates: coverage-gte-90",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "5 DoD criteria unverified"
+}

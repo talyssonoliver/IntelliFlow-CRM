@@ -1,0 +1,75 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "PG-179",
+  "run_id": "sprint15-audit-20260302T215918-7xh85u",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:59:26.296Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 5,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/web/src/app/(public)/press/[id]/page.tsx": "065f9b648124101e2eb9c5309b5329282e56aee4a53659a34afe57b354f5f7dc",
+    "apps/web/src/components/press/PressReleaseDetail.tsx": "e0d49a9d9f615de5b161c1d74ef114b93fba2bf85b6a243551664be52c687c30",
+    "apps/web/src/components/press/__tests__/PressReleaseDetail.test.tsx": "d3f3f410eb90a7bc0e0a8a78e153dca7731beccb567d461bbeea3dcb3ffdb923",
+    ".specify/sprints/sprint-15/specifications/PG-179-spec.md": "3291ed0abb9e1645cbcb5354cc4e3fcc1b3808962107324215048ba4873c140b",
+    ".specify/sprints/sprint-15/planning/PG-179-plan.md": "5a7e4a2b7543165397718b39d0a1f8724075f4b6a29be36b7c1773265dfd6c94"
+  },
+  "validation_results": [
+    {
+      "name": "PG-179",
+      "command": "pnpm test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 180000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "PG-007"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Page at /press/[id] renders individual press release with title date body and back-link to /press index",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "generateMetadata for SEO",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "OG tags for social sharing",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "Lighthouse >=90",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "/press index links resolve without 404",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "verified by: pnpm test",
+      "met": true,
+      "evidence": "All 1 validations passed"
+    }
+  ],
+  "notes": "5 DoD criteria unverified"
+}

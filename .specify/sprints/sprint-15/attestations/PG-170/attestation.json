@@ -1,0 +1,63 @@
+{
+  "task_id": "PG-170",
+  "run_id": "20260301190957-3242b7f0",
+  "sprint": 15,
+  "verdict": "PASS",
+  "completed_at": "2026-03-01T19:30:00Z",
+  "artifact_hashes": {
+    "apps/web/src/components/developer/adr-list.tsx": "977226426b6b70ab1f7f0a4983d268e104424c17ff297a9b0c2565c3c66231af",
+    "apps/web/src/app/(developer)/docs/architecture/page.tsx": "27de29650235a1cb865ae64f309c83fc93ca8a74d5d985e9427db50425fa419b",
+    "apps/web/src/components/developer/__tests__/adr-list.test.tsx": "31e1afb86280dc4e33097afbad9cb17bb8f8b1db7921bf8b821d00dfe2c68a15",
+    "apps/web/src/app/(developer)/docs/architecture/__tests__/page.test.tsx": "d04e3001f4fd2d3e3c7e0ed78d0c4a68c443480fb05da0dca9a4a67f2d51563c"
+  },
+  "dependencies_verified": ["PG-032"],
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-01T19:26:00Z"
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run apps/web/src/components/developer/__tests__/adr-list.test.tsx apps/web/src/app/(developer)/docs/architecture/__tests__/page.test.tsx apps/web/src/app/(developer)/docs/__tests__/integration.test.tsx apps/web/src/components/developer/__tests__/guides-list.test.tsx apps/web/src/components/sidebar/__tests__/AppSidebar.test.tsx --run",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-01T19:27:00Z"
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-01T19:26:30Z"
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-01T19:28:00Z"
+    }
+  ],
+  "evidence_summary": {
+    "tests_passed": 70,
+    "tests_failed": 0,
+    "tests_skipped": 2,
+    "coverage": {
+      "statements": 98.11,
+      "branches": 86.84,
+      "functions": 100,
+      "lines": 100
+    },
+    "new_files": 4,
+    "modified_files": 8,
+    "acceptance_criteria": {
+      "total": 14,
+      "passed": 14,
+      "failed": 0
+    }
+  },
+  "notes": "Architecture Docs page at /docs/architecture. 43 ADRs across 6 categories with search, filter, DDD context map. All AC-001 to AC-010 and NF-001 to NF-005 verified."
+}

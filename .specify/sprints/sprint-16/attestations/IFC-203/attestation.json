@@ -1,0 +1,56 @@
+{
+  "task_id": "IFC-203",
+  "title": "Activity Feed Full-Text Search",
+  "sprint": 16,
+  "verdict": "COMPLETE",
+  "completed_at": "2026-03-10T23:30:00Z",
+  "artifact_hashes": {
+    "packages/adapters/src/repositories/PrismaActivityFeedRepository.ts": "509bb83645388674253327603ec095d97df2233546e94eece3c9177bda4caae3",
+    "packages/application/src/services/ActivityFeedService.ts": "ccf4c7ae2d70954b851ecd0046ba11f8f1b6285c725f4fd62b0d61093af855aa",
+    "apps/api/src/modules/misc/activity-feed.router.ts": "48f07daa5f0caed932a2d5e5e76f44922ecb50fc74819e464f247967949d407c"
+  },
+  "dependencies_verified": {
+    "required": ["IFC-069", "IFC-155"],
+    "all_satisfied": true,
+    "verified_at": "2026-03-10T23:00:00Z"
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-10T23:08:00Z"
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run packages/adapters/src/repositories/__tests__/PrismaActivityFeedRepository.search.test.ts packages/application/src/services/__tests__/ActivityFeedService.search.test.ts apps/api/src/modules/misc/__tests__/activity-feed-search.router.test.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-10T23:08:35Z"
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-10T23:09:00Z"
+    },
+    {
+      "name": "Build",
+      "command": "pnpm build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-10T23:15:00Z"
+    }
+  ],
+  "evidence_summary": {
+    "tests_created": 3,
+    "tests_total": 32,
+    "regression_tests": 95,
+    "all_passing": true,
+    "acceptance_criteria_met": 8,
+    "acceptance_criteria_total": 8
+  },
+  "notes": "Added activityFeed.search tRPC endpoint with ILIKE search across 7 activity source tables. 32 new tests (13 adapter + 9 service + 10 router), 95 regression tests passing. Coverage: ActivityFeedService.ts 100%/95%/100%/100%. Pre-existing ticket-config.router.test.ts typecheck error is unrelated (missing vi import)."
+}

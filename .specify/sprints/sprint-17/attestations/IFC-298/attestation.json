@@ -1,0 +1,94 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "IFC-298",
+  "run_id": "run-20260310T210000Z",
+  "attestor": "Claude Code - Task Completion Repair Agent",
+  "attestation_timestamp": "2026-03-10T21:54:00Z",
+  "verdict": "COMPLETE",
+  "artifact_hashes": {
+    "packages/db/prisma/schema.prisma": "00f8e351703b15c23ed251eef588f8c1ce46ef0d65e4901eb9170eccdbf17c7e",
+    "packages/db/prisma/migrations/20260311000000_add_help_article_models/migration.sql": "bc7d6c524d9ca1ee8e3d5cf52496bdc9a20fa7fe986139ec78c6939ddfbb1c86",
+    "packages/db/src/__tests__/help-article-schema.test.ts": "d5fc453221ed5e70ed18bb4079862834d4a9cf48448c2691d1daecff55a92d1b",
+    "packages/db/src/index.ts": "235806e5e4ca5cd0e3b2531e087d915e3b004c5d5a7102fa7915a089c1ff3c3d",
+    "docs/design/diagrams/complete-dependency-chains.md": "5649696dddea74004645d327a5a8d3023f18a6060a1938e40c9a709598a57d22",
+    "docs/planning/prd-support-help-center.md": "4ecfc3b3b42e07ec2e3c0890177852bf0e4543c8ff0e3fa7d6db92c503eade74"
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/db typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-10T20:55:00Z",
+      "duration_ms": 8000
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run packages/db/src/__tests__/help-article-schema.test.ts --run",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-10T21:53:00Z",
+      "duration_ms": 565
+    },
+    {
+      "name": "Lint",
+      "command": "npx eslint packages/db/src/__tests__/help-article-schema.test.ts packages/db/src/index.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-10T20:55:00Z",
+      "duration_ms": 3000
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/db build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-10T20:55:00Z",
+      "duration_ms": 22000
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "plan-checkboxes",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-03-10T21:54:00Z"
+    },
+    {
+      "gate_id": "artifact-verification",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-03-10T21:54:00Z"
+    },
+    {
+      "gate_id": "typecheck",
+      "passed": true,
+      "timestamp": "2026-03-10T20:55:00Z"
+    },
+    {
+      "gate_id": "lint",
+      "passed": true,
+      "timestamp": "2026-03-10T20:55:00Z"
+    },
+    {
+      "gate_id": "build",
+      "passed": true,
+      "timestamp": "2026-03-10T20:55:00Z"
+    },
+    {
+      "gate_id": "focused-tests",
+      "passed": true,
+      "timestamp": "2026-03-10T21:53:00Z"
+    }
+  ],
+  "dependencies_verified": ["PG-045"],
+  "evidence_summary": {
+    "artifacts_verified": 6,
+    "validations_passed": 4,
+    "validations_failed": 0,
+    "gates_passed": 6,
+    "gates_failed": 0,
+    "placeholders_found": 0
+  },
+  "notes": "Schema-only task — 3 models (HelpArticle, ArticleSection, ArticleFeedback) + 1 enum (ArticleStatus) + migration. No runtime behavior changes. IFC-299/300/303 consume these models downstream. Migration SQL manually created (no live DB for prisma migrate dev). All 6 plan deliverables verified on disk with matching hashes. 14 tests pass, all 4 mandatory validations pass. Repair: rewrote attestation from non-compliant format (missing schema_version/attestor/attestation_timestamp, used 'status' instead of 'verdict', gate_results as object instead of array)."
+}

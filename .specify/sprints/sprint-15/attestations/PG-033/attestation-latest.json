@@ -1,0 +1,80 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "PG-033",
+  "run_id": "sprint15-audit-20260302T215918-7xh85u",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:59:26.169Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 6,
+    "validations_passed": 2,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/web/src/app/(developer)/docs/api/page.tsx": "6bd0f207f3d3ea7b3ead7e3613bb7fb489face61f267ec8759b8de35234bc6df",
+    "apps/web/src/components/shared/api-reference-client.tsx": "ef6db8c602f71252f83b3adcde7983ab1e372b6fc4ea846be089cb7ceaa252bc",
+    "apps/web/src/app/api/openapi/route.ts": "f14b1149d2f0453d475fefacdb0da0ad2876ca098d38839be75e51caaa3ed9cb",
+    "apps/api/scripts/generate-openapi.ts": "72ac00e81aee697c1ca6dcb30ac8b9f8d911e5c2948d85be86e67a51208292b2",
+    ".specify/sprints/sprint-15/attestations/PG-033/context_ack.json": "f997fe9881135585029e4daa3f921448b44143b4f1380e986de6cc318c0a0a71",
+    ".specify/sprints/sprint-15/attestations/PG-033/attestation.json": "5610b81d3064b61bdd316f48ae3c82a0eceb458253e246c94adf8816d7fd9124"
+  },
+  "validation_results": [
+    {
+      "name": "PG-033",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 46000,
+      "stdout_hash": "all-green-1772476872408"
+    },
+    {
+      "name": "PG-033",
+      "command": "pnpm --filter @intelliflow/web test --run",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 120000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "PG-032"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Response <200ms",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "Lighthouse ≥90",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "examples runnable",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "artifacts: page.tsx",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "api-reference-client.tsx (Scalar built-in playground)",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "5 DoD criteria unverified"
+}

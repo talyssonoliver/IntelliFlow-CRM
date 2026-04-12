@@ -1,0 +1,93 @@
+{
+  "sprint": "sprint-29",
+  "name": "Sprint 29",
+  "generated_at": "2026-04-11T16:48:01.958Z",
+  "summary_source": "specify",
+  "task_summary": {
+    "total": 1,
+    "completed": 0,
+    "backlog": 1,
+    "blocked": 0,
+    "attested_completed": 0
+  },
+  "context": "Primary focus areas: Core CRM (1).",
+  "section_summary": [
+    {
+      "section": "Core CRM",
+      "total": 1,
+      "completed": 0,
+      "open": 1
+    }
+  ],
+  "notable_completed": [],
+  "open_tasks": [
+    {
+      "taskId": "IFC-199",
+      "sprint": 29,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Document Domain Core - lifecycle, signature state machine, ACL and retention invariants",
+      "description": "Document Domain Core - lifecycle, signature state machine, ACL and retention invariants",
+      "summary": "Document aggregate and signature lifecycle rules implemented with ACL/retention validation, wired through application services",
+      "definitionOfDone": "Document aggregate and signature lifecycle rules implemented with ACL/retention validation, wired through application services; artifacts: Document.ts, DocumentLifecycle.ts, DocumentDomainService.ts; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Document aggregate and signature lifecycle rules implemented with ACL/retention validation, wired through application services",
+      "dependencies": [
+        "IFC-106",
+        "IFC-127"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "taskId": "IFC-199",
+      "sprint": 29,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Document Domain Core - lifecycle, signature state machine, ACL and retention invariants",
+      "description": "Document Domain Core - lifecycle, signature state machine, ACL and retention invariants",
+      "summary": "Document aggregate and signature lifecycle rules implemented with ACL/retention validation, wired through application services",
+      "definitionOfDone": "Document aggregate and signature lifecycle rules implemented with ACL/retention validation, wired through application services; artifacts: Document.ts, DocumentLifecycle.ts, DocumentDomainService.ts; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Document aggregate and signature lifecycle rules implemented with ACL/retention validation, wired through application services",
+      "dependencies": [
+        "IFC-106",
+        "IFC-127"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    }
+  ]
+}

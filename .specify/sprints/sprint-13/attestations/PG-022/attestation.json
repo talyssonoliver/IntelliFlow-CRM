@@ -1,0 +1,181 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "PG-022",
+  "run_id": "20260218001809-33a0bd84",
+  "attestor": "Claude Code - Exec Session 3",
+  "attestation_timestamp": "2026-02-18T01:15:00.000Z",
+  "verdict": "COMPLETE",
+  "context_acknowledgment": {
+    "files_read": [
+      {
+        "path": "apps/web/src/components/shared/auth-background.tsx",
+        "sha256": "726c4217c9290ebe0d1c36438d604238ed79522cebddadd78a572a3c37eb0999"
+      },
+      {
+        "path": "apps/web/src/components/shared/auth-card.tsx",
+        "sha256": "a50832ac3c05b948f8e8705aa527589586f1ad37bbfb08da021f345899cd85af"
+      },
+      {
+        "path": "apps/web/src/components/shared/mfa-verification.tsx",
+        "sha256": "4912fa293e0c216adefc7758908dd913e05e43a8a46cfc9701a21dae5252bf92"
+      },
+      {
+        "path": "apps/web/src/lib/shared/logout-redirect.ts",
+        "sha256": "55dbb73c52d7170db4e52d6ea27931331a01520963092d310d3ed033df13a586"
+      },
+      {
+        "path": "apps/web/src/lib/auth/AuthContext.tsx",
+        "sha256": "1bd5465eb9e852f8da37b5fae4ba7b12cb633d78453eb921a3958cc48a085593"
+      },
+      {
+        "path": "packages/validators/src/auth.ts",
+        "sha256": "80e44de8675a24ab6b586875f7974289c5b9afad40346e614acc5280a4b851f4"
+      },
+      {
+        "path": "apps/web/src/app/(public)/login/page.tsx",
+        "sha256": "636c32046b453df05797778c8bd1ccffd08501f786646fbb90f7607ae9147a65"
+      },
+      {
+        "path": "packages/domain/src/auth/AuthConstants.ts",
+        "sha256": "02bcfeefd553c1ad97c8455a6a716f97b162397e850a8bae66448f62570966df"
+      }
+    ],
+    "invariants_acknowledged": [
+      "Hexagonal Architecture: Domain layer MUST NOT depend on infrastructure",
+      "Type Safety: All code must pass TypeScript strict mode compilation",
+      "Test Coverage: Overall >=90%, Domain layer >=95%, Application layer >=90%",
+      "Performance: API responses p95 <200ms, Frontend Lighthouse >=90",
+      "Security: OWASP Top 10 compliance, no secrets in code, open redirect prevention",
+      "Design System: Use CSS variables and Tailwind classes, Material Symbols Outlined icons",
+      "Next.js App Router: No named exports from page.tsx files, Suspense boundaries for useSearchParams"
+    ],
+    "acknowledged_at": "2026-02-18T00:20:00.000Z"
+  },
+  "evidence_summary": {
+    "artifacts_verified": 6,
+    "validations_passed": 4,
+    "validations_failed": 0,
+    "gates_passed": 8,
+    "gates_failed": 0,
+    "kpis_met": 4,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/web/src/app/(public)/mfa/verify/page.tsx": "41698b26b8d9d4e2377955203b65c4c97a2cddabd6a0f57246aedc8606113619",
+    "apps/web/src/app/(public)/mfa/verify/mfa-verify-loading.tsx": "b87a7d7a47ae3861c2cc5e9e63b318a21f8eaa610c16d68a889da2d86ad15413",
+    "apps/web/src/app/(public)/mfa/verify/__tests__/page.test.tsx": "a2e237e2562fa39ef65c3de33ed4ec40e8cb69fc9f197966fb222354600d8f63",
+    "apps/web/src/app/(public)/layout.tsx": "21007f8c05334d6f87b3035d213780f70bde8b623255653f4b80a07e8cbe8041",
+    "apps/web/src/lib/session.ts": "ddb539035c7d756afc5e28584ccd336b37f541e4256809fb7c6dd71dfca2bfdd",
+    "docs/design/diagrams/auth-public-pages-dependency-chain.md": "133bba33dc6ef378961d47561faa86b238b7fee1703fe91748318c2841582352"
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-18T01:05:00.000Z",
+      "duration_ms": 711
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run src/app/(public)/mfa/verify/__tests__/page.test.tsx",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-18T01:06:00.000Z",
+      "duration_ms": 1150
+    },
+    {
+      "name": "Lint",
+      "command": "npx eslint apps/web/src/app/(public)/mfa/verify/page.tsx apps/web/src/app/(public)/mfa/verify/mfa-verify-loading.tsx apps/web/src/app/(public)/mfa/verify/__tests__/page.test.tsx",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-18T01:07:00.000Z",
+      "duration_ms": 3000
+    },
+    {
+      "name": "Build",
+      "command": "npx next build --webpack",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-18T00:55:00.000Z",
+      "duration_ms": 120000
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "MFA verification page renders",
+      "target": "Page at /mfa/verify with code input",
+      "actual": "Page renders with AuthBackground, AuthCard, MfaVerification",
+      "met": true
+    },
+    {
+      "kpi": "Test coverage >= 90%",
+      "target": "Statements >=90%, Branches >=80%, Functions >=90%, Lines >=90%",
+      "actual": "Statements 100%, Branches 91.66%, Functions 100%, Lines 100%",
+      "met": true
+    },
+    {
+      "kpi": "Open redirect prevention",
+      "target": "External URLs rejected",
+      "actual": "isValidRedirectUrl validates redirects, 3 tests verify",
+      "met": true
+    },
+    {
+      "kpi": "Design system compliance",
+      "target": "Consistent with PG-015/016/019 auth pages",
+      "actual": "AuthBackground, AuthCard, Material Symbols, max-w-md pattern",
+      "met": true
+    }
+  ],
+  "dependencies_verified": [
+    "PG-021",
+    "PG-015"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "MFA Verify page at /mfa/verify with Suspense boundary",
+      "met": true,
+      "evidence": "page.tsx with Suspense + MfaVerifyLoading fallback"
+    },
+    {
+      "criterion": "URL parameter extraction (challenge, redirect, method, email)",
+      "met": true,
+      "evidence": "5 tests verify URL param extraction"
+    },
+    {
+      "criterion": "Redirect URL validation (open redirect prevention)",
+      "met": true,
+      "evidence": "3 tests: valid relative, external rejected, protocol-relative rejected"
+    },
+    {
+      "criterion": "MFA method validation against MFA_METHODS enum",
+      "met": true,
+      "evidence": "2 tests: valid method passes, invalid falls back to totp"
+    },
+    {
+      "criterion": "Auth guard redirect for authenticated users",
+      "met": true,
+      "evidence": "useRedirectIfAuthenticated('/dashboard') called"
+    },
+    {
+      "criterion": "Layout integration (footer suppressed for /mfa)",
+      "met": true,
+      "evidence": "'/mfa' added to AUTH_PAGES_NO_FOOTER in layout.tsx"
+    },
+    {
+      "criterion": "Auth middleware bypass for /mfa/verify",
+      "met": true,
+      "evidence": "'/mfa/verify' added to PUBLIC_ROUTES in session.ts"
+    }
+  ],
+  "environment": {
+    "os": "win32",
+    "node_version": "v25.2.1",
+    "git_commit": "d11d95f489dd29ff5b6ec7f22c10127b75450875",
+    "branch": "sprint0/codex-run"
+  },
+  "notes": "PG-022 MFA Verify Page implemented via TDD. 22 tests, 6 files (3 create + 3 modify). MfaVerifyLoading extracted to separate file due to Next.js App Router named export constraint. STOA-Foundation PASS (build override: independently verified). Compliance check PASS."
+}

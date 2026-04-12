@@ -1,0 +1,679 @@
+{
+  "sprint": "sprint-24",
+  "name": "Sprint 24",
+  "generated_at": "2026-04-11T16:48:01.958Z",
+  "summary_source": "specify",
+  "task_summary": {
+    "total": 15,
+    "completed": 0,
+    "backlog": 15,
+    "blocked": 0,
+    "attested_completed": 0
+  },
+  "context": "Primary focus areas: Core CRM (12), AI & Intelligence (1), Documentation (1).",
+  "section_summary": [
+    {
+      "section": "Core CRM",
+      "total": 12,
+      "completed": 0,
+      "open": 12
+    },
+    {
+      "section": "AI & Intelligence",
+      "total": 1,
+      "completed": 0,
+      "open": 1
+    },
+    {
+      "section": "Documentation",
+      "total": 1,
+      "completed": 0,
+      "open": 1
+    },
+    {
+      "section": "Validation",
+      "total": 1,
+      "completed": 0,
+      "open": 1
+    }
+  ],
+  "notable_completed": [],
+  "open_tasks": [
+    {
+      "taskId": "PG-094",
+      "sprint": 24,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Price Book Detail",
+      "description": "Price Book Detail",
+      "summary": "response under 200ms, Lighthouse 90, prices current",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, prices current; artifacts: page.tsx, price-book-detail.tsx, price-history.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, prices current",
+      "dependencies": [
+        "PG-093"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-095",
+      "sprint": 24,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Quotes",
+      "description": "Quotes",
+      "summary": "response under 200ms, Lighthouse 90, quotes generated",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, quotes generated; artifacts: page.tsx, quote-list.tsx, quote-generator.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, quotes generated",
+      "dependencies": [
+        "PG-093"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-096",
+      "sprint": 24,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "New Quote",
+      "description": "New Quote",
+      "summary": "response under 200ms, Lighthouse 90, calculations accurate",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, calculations accurate; artifacts: page.tsx, quote-builder.tsx, quote-calculator.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, calculations accurate",
+      "dependencies": [
+        "PG-095"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-097",
+      "sprint": 24,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Quote Detail",
+      "description": "Quote Detail",
+      "summary": "response under 200ms, Lighthouse 90, versions tracked",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, versions tracked; artifacts: page.tsx, quote-detail.tsx, quote-versions.tsx",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, versions tracked",
+      "dependencies": [
+        "PG-095"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-098",
+      "sprint": 24,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Edit Quote",
+      "description": "Edit Quote",
+      "summary": "response under 200ms, Lighthouse 90, updates saved",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, updates saved; artifacts: page.tsx, quote-editor.tsx, recalculator.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, updates saved",
+      "dependencies": [
+        "PG-097"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "taskId": "PG-094",
+      "sprint": 24,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Price Book Detail",
+      "description": "Price Book Detail",
+      "summary": "response under 200ms, Lighthouse 90, prices current",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, prices current; artifacts: page.tsx, price-book-detail.tsx, price-history.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, prices current",
+      "dependencies": [
+        "PG-093"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-095",
+      "sprint": 24,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Quotes",
+      "description": "Quotes",
+      "summary": "response under 200ms, Lighthouse 90, quotes generated",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, quotes generated; artifacts: page.tsx, quote-list.tsx, quote-generator.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, quotes generated",
+      "dependencies": [
+        "PG-093"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-096",
+      "sprint": 24,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "New Quote",
+      "description": "New Quote",
+      "summary": "response under 200ms, Lighthouse 90, calculations accurate",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, calculations accurate; artifacts: page.tsx, quote-builder.tsx, quote-calculator.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, calculations accurate",
+      "dependencies": [
+        "PG-095"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-097",
+      "sprint": 24,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Quote Detail",
+      "description": "Quote Detail",
+      "summary": "response under 200ms, Lighthouse 90, versions tracked",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, versions tracked; artifacts: page.tsx, quote-detail.tsx, quote-versions.tsx",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, versions tracked",
+      "dependencies": [
+        "PG-095"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-098",
+      "sprint": 24,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Edit Quote",
+      "description": "Edit Quote",
+      "summary": "response under 200ms, Lighthouse 90, updates saved",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, updates saved; artifacts: page.tsx, quote-editor.tsx, recalculator.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, updates saved",
+      "dependencies": [
+        "PG-097"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-099",
+      "sprint": 24,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Orders",
+      "description": "Orders",
+      "summary": "response under 200ms, Lighthouse 90, orders tracked",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, orders tracked; artifacts: page.tsx, order-list.tsx, fulfillment-tracker.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, orders tracked",
+      "dependencies": [
+        "PG-095"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-166",
+      "sprint": 24,
+      "status": "Backlog",
+      "section": "Documentation",
+      "title": "NBA Demo Video Recording",
+      "description": "NBA Demo Video Recording",
+      "summary": "Record actual nba-demo.mp4 video demonstrating Next Best Action feature with real AI responses; Follow-up from IFC-039",
+      "definitionOfDone": "Record actual nba-demo.mp4 video demonstrating Next Best Action feature with real AI responses; Follow-up from IFC-039",
+      "definitionOfDoneSnapshot": "Record actual nba-demo.mp4 video demonstrating Next Best Action feature with real AI responses; Follow-up from IFC-039",
+      "dependencies": [
+        "IFC-039"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-175",
+      "sprint": 24,
+      "status": "Backlog",
+      "section": "Validation",
+      "title": "RAG Production Validation - Follow-up to IFC-039",
+      "description": "RAG Production Validation - Follow-up to IFC-039",
+      "summary": "Validate RAG chain works with real pgvector in production; test RetrievalService integration with live Supabase; verify ACL permissions; test with indexed documents; Follow-up from IFC-039",
+      "definitionOfDone": "Validate RAG chain works with real pgvector in production; test RetrievalService integration with live Supabase; verify ACL permissions; test with indexed documents; Follow-up from IFC-039",
+      "definitionOfDoneSnapshot": "Validate RAG chain works with real pgvector in production; test RetrievalService integration with live Supabase; verify ACL permissions; test with indexed documents; Follow-up from IFC-039",
+      "dependencies": [
+        "IFC-039"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-251",
+      "sprint": 24,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Lead CSV Import/Export. Add bulk import and export for leads [W8]. Import: CSV upload with validation, duplicate detection, field mapping UI, error report. Export: CSV and JSON formats, filtered export (current view), all-fields export. Common CRM feature needed for data migration and reporting. Also cleanup: Prisma schema backslash comments to standard // format [S12].",
+      "description": "Lead CSV Import/Export. Add bulk import and export for leads [W8]. Import: CSV upload with validation, duplicate detection, field mapping UI, error report. Export: CSV and JSON formats, filtered export (current view), all-fields export. Common CRM feature needed for data migration and reporting. Also cleanup: Prisma schema backslash comments to standard // format [S12].",
+      "summary": "CSV import with validation UI and error report; CSV/JSON export with filter support; Prisma comments standardized; import handles duplicates gracefully; tests >=90%",
+      "definitionOfDone": "CSV import with validation UI and error report; CSV/JSON export with filter support; Prisma comments standardized; import handles duplicates gracefully; tests >=90%",
+      "definitionOfDoneSnapshot": "CSV import with validation UI and error report; CSV/JSON export with filter support; Prisma comments standardized; import handles duplicates gracefully; tests >=90%",
+      "dependencies": [],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-264",
+      "sprint": 24,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Contact Bulk Import & Service Layer Fixes. (1) No CSV upload or bulk create for contacts (W-08). (2) listContacts service returns empty array as default when no ownerId/accountId — latent bug for future callers (W-15). (3) getContactStatistics returns empty for undefined ownerId (W-16). Audit: docs/audit/contact-detail-wiring-audit.md §17.",
+      "description": "Contact Bulk Import & Service Layer Fixes. (1) No CSV upload or bulk create for contacts (W-08). (2) listContacts service returns empty array as default when no ownerId/accountId — latent bug for future callers (W-15). (3) getContactStatistics returns empty for undefined ownerId (W-16). Audit: docs/audit/contact-detail-wiring-audit.md §17.",
+      "summary": "CSV import endpoint for contacts; listContacts supports findAll with pagination; getContactStatistics handles ADMIN role; tests >=90%",
+      "definitionOfDone": "CSV import endpoint for contacts; listContacts supports findAll with pagination; getContactStatistics handles ADMIN role; tests >=90%",
+      "definitionOfDoneSnapshot": "CSV import endpoint for contacts; listContacts supports findAll with pagination; getContactStatistics handles ADMIN role; tests >=90%",
+      "dependencies": [],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-277",
+      "sprint": 24,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Account Service Dead Code & Minor Fixes. (1) calculateAccountHealth() unreachable from router — decide: wire (D-02). (2) getAccountWithContext() unreachable from router — decide: wire (D-03). (3) Revenue NaN risk — Number(revenue) on non-numeric string renders '$NaNM' (F-14). (4) Health bar arbitrary scale — no documented max value (F-15). (5) Contact firstName[0] undefined risk in AccountContactsList (F-18). (6) findAncestors N+1 query pattern (B-14). (7) Merge/Archive toast stubs referencing IFC-044 (F-03/F-04). Audit: docs/audit/account-detail-wiring-audit.md sections 9, 13, 16-17.",
+      "description": "Account Service Dead Code & Minor Fixes. (1) calculateAccountHealth() unreachable from router — decide: wire (D-02). (2) getAccountWithContext() unreachable from router — decide: wire (D-03). (3) Revenue NaN risk — Number(revenue) on non-numeric string renders '$NaNM' (F-14). (4) Health bar arbitrary scale — no documented max value (F-15). (5) Contact firstName[0] undefined risk in AccountContactsList (F-18). (6) findAncestors N+1 query pattern (B-14). (7) Merge/Archive toast stubs referencing IFC-044 (F-03/F-04). Audit: docs/audit/account-detail-wiring-audit.md sections 9, 13, 16-17.",
+      "summary": "Dead code either wired to router procedures or removed; revenue NaN guarded with fallback; health bar has documented max; firstName fallback for empty string; findAncestors uses recursive CTE; tests >=90%",
+      "definitionOfDone": "Dead code either wired to router procedures or removed; revenue NaN guarded with fallback; health bar has documented max; firstName fallback for empty string; findAncestors uses recursive CTE; tests >=90%",
+      "definitionOfDoneSnapshot": "Dead code either wired to router procedures or removed; revenue NaN guarded with fallback; health bar has documented max; firstName fallback for empty string; findAncestors uses recursive CTE; tests >=90%",
+      "dependencies": [],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-285",
+      "sprint": 24,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Deal Service Dead Code & Minor Fixes. (1) 11 dead service methods unreachable from router: listOpportunities, advanceStage, updateValue, updateProbability, updateExpectedCloseDate, reopenOpportunity, getPipelineForecast, getOpportunitiesClosingSoon, getHighValueOpportunities, getOpportunitiesByAccount, getOpportunitiesByContact, getWinRateStatistics (B-13). Decide: wire to router or remove. (2) toMoney/toPercentage silent zero fallback on DB corruption (B-14). (3) TOCTOU in stage transitions — no optimistic locking (B-16). (4) Event publish failure swallowed with console.error only (B-17). (5) DealQuickView is a 49-line stub not used anywhere (F-13). (6) RecommendedActions.onActionClick not wired at forecast page level (F-18). (7) Sidebar deals config settingsHref points to /settings/deals instead of /settings/pipeline (W-03). Audit: docs/audit/deal-detail-wiring-audit.md sections 6-7.",
+      "description": "Deal Service Dead Code & Minor Fixes. (1) 11 dead service methods unreachable from router: listOpportunities, advanceStage, updateValue, updateProbability, updateExpectedCloseDate, reopenOpportunity, getPipelineForecast, getOpportunitiesClosingSoon, getHighValueOpportunities, getOpportunitiesByAccount, getOpportunitiesByContact, getWinRateStatistics (B-13). Decide: wire to router or remove. (2) toMoney/toPercentage silent zero fallback on DB corruption (B-14). (3) TOCTOU in stage transitions — no optimistic locking (B-16). (4) Event publish failure swallowed with console.error only (B-17). (5) DealQuickView is a 49-line stub not used anywhere (F-13). (6) RecommendedActions.onActionClick not wired at forecast page level (F-18). (7) Sidebar deals config settingsHref points to /settings/deals instead of /settings/pipeline (W-03). Audit: docs/audit/deal-detail-wiring-audit.md sections 6-7.",
+      "summary": "Dead code either wired to router or removed; toMoney/toPercentage propagate errors; event publish has retry; DealQuickView wired or removed; sidebar settingsHref fixed; tests >=90%",
+      "definitionOfDone": "Dead code either wired to router or removed; toMoney/toPercentage propagate errors; event publish has retry; DealQuickView wired or removed; sidebar settingsHref fixed; tests >=90%",
+      "definitionOfDoneSnapshot": "Dead code either wired to router or removed; toMoney/toPercentage propagate errors; event publish has retry; DealQuickView wired or removed; sidebar settingsHref fixed; tests >=90%",
+      "dependencies": [],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-292",
+      "sprint": 24,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Legal Document Management UI Wiring. Wire 6 dead legal router endpoints: appointments.findNextSlot, documents.grantAccess, documents.placeLegalHold, documents.releaseLegalHold, documents.revokeAccess, documents.submitForReview. Backend built (IFC-137, IFC-140, IFC-152), zero web callers. Decision: build legal management UIs to consume these. Audit: artifacts/reports/dead-endpoints-audit.csv rows 78-83.",
+      "description": "Legal Document Management UI Wiring. Wire 6 dead legal router endpoints: appointments.findNextSlot, documents.grantAccess, documents.placeLegalHold, documents.releaseLegalHold, documents.revokeAccess, documents.submitForReview. Backend built (IFC-137, IFC-140, IFC-152), zero web callers. Decision: build legal management UIs to consume these. Audit: artifacts/reports/dead-endpoints-audit.csv rows 78-83.",
+      "summary": "All 6 legal endpoints wired to management UI; zero dead endpoints in legal router; tests >=90%",
+      "definitionOfDone": "All 6 legal endpoints wired to management UI; zero dead endpoints in legal router; tests >=90%",
+      "definitionOfDoneSnapshot": "All 6 legal endpoints wired to management UI; zero dead endpoints in legal router; tests >=90%",
+      "dependencies": [
+        "IFC-140",
+        "IFC-152"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-293",
+      "sprint": 24,
+      "status": "Backlog",
+      "section": "Core CRM",
+      "title": "Security Admin + Notifications Settings Wiring. Wire 6 dead endpoints: security.audit.getByResource, security.audit.getMyActivity, security.audit.getSecurityEvents, notifications.batchAction, notifications.getPreferences, notifications.updatePreferences. Backend built (IFC-098, IFC-072, IFC-046, IFC-157), zero web callers. Decision: build admin security page + notification settings page (PG-116). Audit: artifacts/reports/dead-endpoints-audit.csv rows 93-95, 101-103.",
+      "description": "Security Admin + Notifications Settings Wiring. Wire 6 dead endpoints: security.audit.getByResource, security.audit.getMyActivity, security.audit.getSecurityEvents, notifications.batchAction, notifications.getPreferences, notifications.updatePreferences. Backend built (IFC-098, IFC-072, IFC-046, IFC-157), zero web callers. Decision: build admin security page + notification settings page (PG-116). Audit: artifacts/reports/dead-endpoints-audit.csv rows 93-95, 101-103.",
+      "summary": "All 6 security/notification endpoints wired to admin pages; zero dead endpoints in security.audit and notifications routers; tests >=90%",
+      "definitionOfDone": "All 6 security/notification endpoints wired to admin pages; zero dead endpoints in security.audit and notifications routers; tests >=90%",
+      "definitionOfDoneSnapshot": "All 6 security/notification endpoints wired to admin pages; zero dead endpoints in security.audit and notifications routers; tests >=90%",
+      "dependencies": [
+        "IFC-157"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-308",
+      "sprint": 24,
+      "status": "Backlog",
+      "section": "AI & Intelligence",
+      "title": "Scheduled Report Generation — BullMQ cron job that generates daily/weekly analytics snapshots and emails summary reports to team leads. Includes: report template system (pipeline summary, lead conversion, revenue trends, SLA compliance), PDF/HTML report rendering, email delivery via notifications worker, configurable schedule per tenant, report archive storage",
+      "description": "Scheduled Report Generation — BullMQ cron job that generates daily/weekly analytics snapshots and emails summary reports to team leads. Includes: report template system (pipeline summary, lead conversion, revenue trends, SLA compliance), PDF/HTML report rendering, email delivery via notifications worker, configurable schedule per tenant, report archive storage",
+      "summary": "4+ report templates (pipeline, leads, revenue, SLA); PDF/HTML rendering; email delivery via notifications worker; configurable schedule per tenant; report archive in storage; >=90% test coverage; all 4 validations pass",
+      "definitionOfDone": "4+ report templates (pipeline, leads, revenue, SLA); PDF/HTML rendering; email delivery via notifications worker; configurable schedule per tenant; report archive in storage; >=90% test coverage; all 4 validations pass",
+      "definitionOfDoneSnapshot": "4+ report templates (pipeline, leads, revenue, SLA); PDF/HTML rendering; email delivery via notifications worker; configurable schedule per tenant; report archive in storage; >=90% test coverage; all 4 validations pass",
+      "dependencies": [
+        "IFC-168",
+        "IFC-024"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    }
+  ]
+}

@@ -114,6 +114,14 @@ export default defineConfig({
         find: /^@intelliflow\/api$/,
         replacement: path.resolve(__dirname, './src/test/__mocks__/empty.ts'),
       },
+      // Stub @intelliflow/api subpath imports used by trpc-server.ts.
+      // The api package has no "exports" subpath map, so Vite's import-analysis
+      // plugin cannot resolve these at transform time. Stubbing prevents the
+      // transform failure when trpc-server.ts is loaded transitively in tests.
+      {
+        find: /^@intelliflow\/api\/.+$/,
+        replacement: path.resolve(__dirname, './src/test/__mocks__/empty.ts'),
+      },
       {
         find: /^@intelliflow\/api-client$/,
         replacement: path.resolve(__dirname, './src/test/__mocks__/empty.ts'),

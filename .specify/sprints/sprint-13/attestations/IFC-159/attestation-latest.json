@@ -1,0 +1,78 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-159",
+  "run_id": "sprint13-audit-20260302T215849-ygkkim",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:58:57.365Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 3,
+    "validations_passed": 2,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/api/src/modules/misc/timeline.ts": "cfe1d913ec30d6b5c2d187e60ef14f5c4580bcbb5be6f1114fd29d08b0a62204",
+    "apps/web/lib/documents/timeline-event-model.ts": "942f2f914c7f8ea45f8490d312e3b322db15d4c1334cba9aaa07af7ff08036cc",
+    ".specify/sprints/sprint-13/attestations/IFC-159/context_ack.json": "df82f9badfd16eb365a6a270706d611d25c278b75fcc37a9cc8258dfa33b52cd"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-159",
+      "command": "pnpm test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 180000,
+      "stdout_hash": "all-green-1772476872408"
+    },
+    {
+      "name": "IFC-159",
+      "command": "pnpm --filter @intelliflow/api test --run",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 60000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-147",
+    "IFC-149"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Timeline shows unified chronological events (tasks/deadlines/docs/comms/agent actions)",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "filters",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "permissions enforced",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "E2E tests",
+      "met": true,
+      "evidence": "All 2 validations passed"
+    },
+    {
+      "criterion": "targets: <1s",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "4 DoD criteria unverified"
+}

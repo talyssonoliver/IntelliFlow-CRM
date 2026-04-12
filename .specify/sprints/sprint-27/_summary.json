@@ -1,0 +1,497 @@
+{
+  "sprint": "sprint-27",
+  "name": "Sprint 27",
+  "generated_at": "2026-04-11T16:48:01.958Z",
+  "summary_source": "specify",
+  "task_summary": {
+    "total": 9,
+    "completed": 0,
+    "backlog": 9,
+    "blocked": 0,
+    "attested_completed": 0
+  },
+  "context": "Primary focus areas: Settings (6), Launch (2), Documentation (1).",
+  "section_summary": [
+    {
+      "section": "Settings",
+      "total": 6,
+      "completed": 0,
+      "open": 6
+    },
+    {
+      "section": "Launch",
+      "total": 2,
+      "completed": 0,
+      "open": 2
+    },
+    {
+      "section": "Documentation",
+      "total": 1,
+      "completed": 0,
+      "open": 1
+    }
+  ],
+  "notable_completed": [],
+  "open_tasks": [
+    {
+      "taskId": "IFC-051",
+      "sprint": 27,
+      "status": "Backlog",
+      "section": "Launch",
+      "title": "Pilot Customer Selection",
+      "description": "Pilot Customer Selection",
+      "summary": "2-3 pilot customers for beta testing",
+      "definitionOfDone": "2-3 pilot customers for beta testing; artifacts: pilot-customer-criteria.md, expectations-matrix.xlsx, context_ack.json",
+      "definitionOfDoneSnapshot": "2-3 pilot customers for beta testing",
+      "dependencies": [
+        "IFC-049"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-052",
+      "sprint": 27,
+      "status": "Backlog",
+      "section": "Launch",
+      "title": "Production Deployment",
+      "description": "Production Deployment",
+      "summary": "Zero-downtime deployment with feature flags",
+      "definitionOfDone": "Zero-downtime deployment with feature flags; artifacts: deployment-log.txt, feature-flags-config.json, monitoring-dashboard.url; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Zero-downtime deployment with feature flags",
+      "dependencies": [
+        "IFC-040",
+        "IFC-050"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-084",
+      "sprint": 27,
+      "status": "Backlog",
+      "section": "Documentation",
+      "title": "Video Tutorials & Demos",
+      "description": "Video Tutorials & Demos",
+      "summary": "Loom videos for key features, embedded in docs",
+      "definitionOfDone": "Loom videos for key features, embedded in docs; artifacts: video-links.json, viewer-analytics.csv, feedback-summary.md; targets: >=80%",
+      "definitionOfDoneSnapshot": "Loom videos for key features, embedded in docs",
+      "dependencies": [
+        "IFC-050",
+        "SALES-002"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-112",
+      "sprint": 27,
+      "status": "Backlog",
+      "section": "Settings",
+      "title": "Audit Log",
+      "description": "Audit Log",
+      "summary": "response under 200ms, Lighthouse 90, logs searchable",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, logs searchable; artifacts: page.tsx, audit-viewer.tsx, log-exporter.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, logs searchable",
+      "dependencies": [
+        "IFC-098",
+        "IFC-124",
+        "IFC-201"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-113",
+      "sprint": 27,
+      "status": "Backlog",
+      "section": "Settings",
+      "title": "API Keys",
+      "description": "API Keys",
+      "summary": "response under 200ms, Lighthouse 90, keys secure",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, keys secure; artifacts: page.tsx, key-generator.tsx, scope-manager.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, keys secure",
+      "dependencies": [
+        "PG-104"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "taskId": "IFC-051",
+      "sprint": 27,
+      "status": "Backlog",
+      "section": "Launch",
+      "title": "Pilot Customer Selection",
+      "description": "Pilot Customer Selection",
+      "summary": "2-3 pilot customers for beta testing",
+      "definitionOfDone": "2-3 pilot customers for beta testing; artifacts: pilot-customer-criteria.md, expectations-matrix.xlsx, context_ack.json",
+      "definitionOfDoneSnapshot": "2-3 pilot customers for beta testing",
+      "dependencies": [
+        "IFC-049"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-052",
+      "sprint": 27,
+      "status": "Backlog",
+      "section": "Launch",
+      "title": "Production Deployment",
+      "description": "Production Deployment",
+      "summary": "Zero-downtime deployment with feature flags",
+      "definitionOfDone": "Zero-downtime deployment with feature flags; artifacts: deployment-log.txt, feature-flags-config.json, monitoring-dashboard.url; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Zero-downtime deployment with feature flags",
+      "dependencies": [
+        "IFC-040",
+        "IFC-050"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-084",
+      "sprint": 27,
+      "status": "Backlog",
+      "section": "Documentation",
+      "title": "Video Tutorials & Demos",
+      "description": "Video Tutorials & Demos",
+      "summary": "Loom videos for key features, embedded in docs",
+      "definitionOfDone": "Loom videos for key features, embedded in docs; artifacts: video-links.json, viewer-analytics.csv, feedback-summary.md; targets: >=80%",
+      "definitionOfDoneSnapshot": "Loom videos for key features, embedded in docs",
+      "dependencies": [
+        "IFC-050",
+        "SALES-002"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-112",
+      "sprint": 27,
+      "status": "Backlog",
+      "section": "Settings",
+      "title": "Audit Log",
+      "description": "Audit Log",
+      "summary": "response under 200ms, Lighthouse 90, logs searchable",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, logs searchable; artifacts: page.tsx, audit-viewer.tsx, log-exporter.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, logs searchable",
+      "dependencies": [
+        "IFC-098",
+        "IFC-124",
+        "IFC-201"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-113",
+      "sprint": 27,
+      "status": "Backlog",
+      "section": "Settings",
+      "title": "API Keys",
+      "description": "API Keys",
+      "summary": "response under 200ms, Lighthouse 90, keys secure",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, keys secure; artifacts: page.tsx, key-generator.tsx, scope-manager.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, keys secure",
+      "dependencies": [
+        "PG-104"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-114",
+      "sprint": 27,
+      "status": "Backlog",
+      "section": "Settings",
+      "title": "Webhooks",
+      "description": "Webhooks",
+      "summary": "response under 200ms, Lighthouse 90, webhooks firing",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, webhooks firing; artifacts: page.tsx, webhook-config.tsx, webhook-tester.ts; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, webhooks firing",
+      "dependencies": [
+        "IFC-099",
+        "IFC-201"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-115",
+      "sprint": 27,
+      "status": "Backlog",
+      "section": "Settings",
+      "title": "Integrations",
+      "description": "Integrations",
+      "summary": "response under 200ms, Lighthouse 90, integrations connected",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, integrations connected; artifacts: page.tsx, integration-catalog.tsx, oauth-handler.ts; verified by: pnpm test:integration",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, integrations connected",
+      "dependencies": [
+        "IFC-099",
+        "IFC-201"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-116",
+      "sprint": 27,
+      "status": "Backlog",
+      "section": "Settings",
+      "title": "Notifications",
+      "description": "Notifications",
+      "summary": "response under 200ms, Lighthouse 90, preferences saved",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, preferences saved; artifacts: page.tsx, notification-prefs.tsx, channel-config.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, preferences saved",
+      "dependencies": [
+        "PG-104"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-117",
+      "sprint": 27,
+      "status": "Backlog",
+      "section": "Settings",
+      "title": "Localization",
+      "description": "Localization",
+      "summary": "response under 200ms, Lighthouse 90, languages switched",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, languages switched; artifacts: page.tsx, language-selector.tsx, translation-manager.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, languages switched",
+      "dependencies": [
+        "PG-104"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    }
+  ]
+}

@@ -1,0 +1,101 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "SALES-002",
+  "run_id": "sprint2-audit-20260302T215701-sei6sy",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:57:09.873Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 5,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "docs/sales/sales-motion-playbook.md": "8860ba19f040bf4cfaf8ef83aa2a451041b8403798cda98c3f455185eec85829",
+    "docs/sales/discovery-script.md": "6d8731f231d401cebb928aeb55a455e2986ab0bd5427723fb215e9532f060bc2",
+    "docs/sales/demo-script.md": "930b36cc8075fbbdca245e926cfc591a5514a36bb76f7ea9a8191ce922036b68",
+    "docs/sales/outreach-sequences.md": "e053f1e25f3b3d2b3c4dedb942972b2a2843844f78e0773f6bb1a9477ef20cd2",
+    ".specify/sprints/sprint-2/attestations/SALES-002/context_ack.json": "f8ee46a517ac0ee8aadc84fdc858f8f757b7a3239c6c7fcd36d60dba92079a26"
+  },
+  "validation_results": [
+    {
+      "name": "SALES-002",
+      "command": "pnpm lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 15000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "SALES-001",
+    "GTM-002"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Defined sales motion: lead sources",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "qualification steps",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "discovery script",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "demo script",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "objection handling",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "follow-up cadence",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "includes at least 2 outreach sequences (email + LinkedIn) and a handoff policy to implementation/support",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "artifacts: sales-motion-playbook.md",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "discovery-script.md",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "demo-script.md",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "verified by: pnpm lint",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "11 DoD criteria unverified"
+}

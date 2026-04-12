@@ -1,0 +1,68 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-073",
+  "run_id": "sprint2-audit-20260302T215701-sei6sy",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:57:09.851Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 3,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "artifacts/reports/gdpr-compliance.md": "aafdf6e7aa1a0fab458f702dce89c05a6ff3a72719a53db3a87f5439f7a0300d",
+    "artifacts/reports/risk-matrix.md": "874dce2fb90f99e52b378add9206437019020e06849b59c71948b71699105830",
+    ".specify/sprints/sprint-2/attestations/IFC-073/context_ack.json": "354d8cf30704aaabb84e644a0b82fdcaeb0063c2dd39acfb6dc4275701be980b"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-073",
+      "command": "pnpm typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 90000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-072"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "DPIA complete for AI processing and data storage",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "output: dpia.md",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "risk-matrix.md",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "all risks documented",
+      "met": true,
+      "evidence": "Documentation found: artifacts/reports/gdpr-compliance.md, artifacts/reports/risk-matrix.md"
+    },
+    {
+      "criterion": "verified and mitigated",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "4 DoD criteria unverified"
+}

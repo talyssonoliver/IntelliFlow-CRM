@@ -1,0 +1,67 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "ENV-004-AI",
+  "run_id": "sprint0-audit-20260302T215641-7da797",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:56:49.930Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 2,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "infra/supabase/config.toml": "32adbbe238c8335338722e42580efe81d1d04ee34833da9742b44734a280a8ff",
+    ".specify/sprints/sprint-0/attestations/ENV-004-AI/context_ack.json": "676ed4b1a8e569c8019211cd0fc40e4234224113075fc8cdce5a71bfb6034828"
+  },
+  "validation_results": [
+    {
+      "name": "ENV-004-AI",
+      "command": "pnpm typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 90000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "ENV-003-AI"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Connection established",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "pgvector optimized by AI",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "schema AI-validated for performance",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "targets: >=100%",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "<30ms",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "5 DoD criteria unverified"
+}

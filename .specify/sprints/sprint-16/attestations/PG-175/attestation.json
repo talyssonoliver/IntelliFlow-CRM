@@ -1,0 +1,52 @@
+{
+  "task_id": "PG-175",
+  "run_id": "20260406201300-pg175exec",
+  "verdict": "COMPLETE",
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-04-06T20:24:00Z",
+      "duration_ms": 38585
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run apps/web/src/components/deals/__tests__/TrashList.test.tsx apps/api/src/modules/opportunity/__tests__/ packages/domain/src/crm/opportunity/__tests__/ --reporter=verbose",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-04-06T20:21:00Z",
+      "duration_ms": 7500
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-04-06T20:25:00Z",
+      "duration_ms": 13726
+    },
+    {
+      "name": "Build",
+      "command": "pnpm build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-04-06T20:28:00Z",
+      "duration_ms": 154540
+    }
+  ],
+  "artifact_hashes": {
+    "apps/web/src/app/deals/(list)/trash/page.tsx": "2f8f0ebb2c0ece4c0999bc9af9de102f1551ec5e3f66cfd98373e6a958780649",
+    "apps/web/src/components/deals/TrashList.tsx": "7e214492acfc0bdd0cde3b2887c86a5b59742d2367ee52468da8e4f04f557ee7",
+    "apps/web/src/components/deals/__tests__/TrashList.test.tsx": "6307c275cb0d464292bfae1c2206b25bd998907302d8d934f41113a961764b61",
+    "packages/db/prisma/migrations/20260319000000_add_opportunity_deleted_at/migration.sql": "8e54bd375cbdc220b8fee73156c9d30808f51f732d8fe6f091a6fe62a529915f"
+  },
+  "dependencies_verified": ["PG-135"],
+  "notes": "Deals Trash Page implementing soft-delete pattern with restore and permanent delete. All 17 ACs verified, 4 NFRs verified. 75 TrashList tests + 24 API additional tests + 56 domain tests + 42 API regression tests + 22 deals list page tests passing. Scoped coverage: Stmts 95.71%, Branch 84%, Funcs 97.87%, Lines 100%. 1 pre-existing test failure in deals/[id] (Products display AC-011 - unrelated to PG-175).",
+  "kpi_results": {
+    "coverage": "Statements 95.71%, Branches 84%, Functions 97.87%, Lines 100% (75 TrashList tests)",
+    "test_count": "219 tests across 5 suites",
+    "build_status": "PASS (20/20 tasks)"
+  }
+}

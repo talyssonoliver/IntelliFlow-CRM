@@ -1,0 +1,75 @@
+{
+  "task_id": "IFC-195",
+  "sprint": 15,
+  "run_id": "20260228000301-e22f0a58",
+  "verdict": "COMPLETE",
+  "completed_at": "2026-02-28T00:26:00Z",
+  "artifact_hashes": {
+    "packages/validators/src/home.ts": "e2294c6cc8ee5011cd7d8385ce4141eec00202119fc44f175dac315799c95f86",
+    "apps/api/src/modules/home/home.router.ts": "5c8a0cffe4cbc2181e2d5e9da5edc67e7c6f241fe0b865ab44e68e843467e80f",
+    "apps/web/src/components/home/GoalSettingsModal.tsx": "eca2dc670addec1632b1090be2f0c7a43d12e1e5ccb4f2cbecbc93bf6c9f9cb9",
+    "apps/web/src/components/home/AuthenticatedHomePage.tsx": "b5e8ea2cca83f3aff5f27b29295b8607a86dbc89d956cddc67a496884c6ec1c4"
+  },
+  "dependencies_verified": true,
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm run typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-28T00:20:00Z",
+      "duration_ms": 61268
+    },
+    {
+      "name": "Tests",
+      "command": "pnpm --filter api exec vitest run home.router.test --run && pnpm --filter @intelliflow/validators exec vitest run home.test --run && pnpm --filter web exec vitest run GoalSettingsModal.test --run && pnpm --filter web exec vitest run AuthenticatedHomePage.test --run",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-28T00:22:00Z",
+      "duration_ms": 7600
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm run lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-28T00:22:30Z",
+      "duration_ms": 16536
+    },
+    {
+      "name": "Build",
+      "command": "pnpm run build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-28T00:22:00Z",
+      "duration_ms": 97233
+    }
+  ],
+  "evidence_summary": {
+    "total_new_tests": 57,
+    "test_counts": {
+      "validators": 74,
+      "backend_router": 79,
+      "goal_settings_modal": 14,
+      "authenticated_home_page": 67
+    },
+    "coverage": {
+      "home_router": { "stmts": 96.02, "branch": 90.09, "funcs": 100, "lines": 95.95 },
+      "goal_settings_modal": { "stmts": 100, "branch": 91.3, "funcs": 100, "lines": 100 },
+      "authenticated_home_page": { "stmts": 96.55, "branch": 84.7, "funcs": 90.47, "lines": 96.29 }
+    },
+    "acceptance_criteria": {
+      "AC-001": "PASS",
+      "AC-002": "PASS",
+      "AC-003": "PASS",
+      "AC-004": "PASS",
+      "AC-005": "PASS",
+      "AC-006": "PASS",
+      "AC-007": "PASS",
+      "AC-008": "PASS"
+    },
+    "files_created": 2,
+    "files_modified": 7
+  },
+  "notes": "IFC-195 Customizable Daily Goals: Multi-type goal support (revenue/calls/meetings/tasks/custom) with GoalSettingsModal UI, updateDailyGoal mutation, and dynamic GoalSection display."
+}

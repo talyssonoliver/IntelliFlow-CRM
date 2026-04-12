@@ -1,0 +1,102 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "IFC-120",
+  "run_id": "20260220220000-a3f7",
+  "attestor": "Claude Code - Task Integrity Validator",
+  "attestation_timestamp": "2026-02-21T00:05:00Z",
+  "verdict": "COMPLETE",
+  "artifact_hashes": {
+    "apps/api/src/modules/auth/auth.router.ts": "ce1f9f0b3f7a8cea7bc00510c7cf82aace92c651f7667b2b870f788878ab724d",
+    "packages/validators/src/auth.ts": "9fe1b280dc1882c2c359366388ca6231fe354a0a2eeb8dbe5bd36be18c7d4cd7",
+    "apps/api/src/lib/supabase.ts": "4cf216fc73e3223ee5676565f0b39a9e8dbfe29d162ec001dac3f274700ecb9c"
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm run typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-21T00:00:00Z",
+      "duration_ms": 71964
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run apps/api/src/modules/auth/__tests__/ apps/web/src/app/(public)/ apps/web/src/components/shared/__tests__/",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-21T00:00:00Z",
+      "duration_ms": 21070
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm run lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-21T00:00:00Z",
+      "duration_ms": 47741
+    },
+    {
+      "name": "Build",
+      "command": "pnpm run build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-21T00:00:00Z",
+      "duration_ms": 78471
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Backend Statements Coverage",
+      "target": ">=90%",
+      "actual": "97.73%",
+      "met": true
+    },
+    {
+      "kpi": "Backend Branch Coverage",
+      "target": ">=80%",
+      "actual": "80.66%",
+      "met": true
+    },
+    {
+      "kpi": "Frontend Statements Coverage",
+      "target": ">=90%",
+      "actual": "93.8%",
+      "met": true
+    },
+    {
+      "kpi": "Frontend Branch Coverage",
+      "target": ">=80%",
+      "actual": "86.45%",
+      "met": true
+    },
+    {
+      "kpi": "Test Count",
+      "target": ">=100",
+      "actual": "201 (66 backend + 135 frontend)",
+      "met": true
+    }
+  ],
+  "evidence_summary": {
+    "artifacts_verified": 3,
+    "validations_passed": 4,
+    "validations_failed": 0,
+    "gates_passed": 4,
+    "gates_failed": 0,
+    "kpis_met": 5,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "dependencies_verified": [
+    "PG-019",
+    "PG-020",
+    "PG-023",
+    "IFC-006"
+  ],
+  "environment": {
+    "os": "Windows 11 Pro 10.0.26200",
+    "node_version": "v22.x",
+    "git_commit": "f1f8d413f93fdfe669cf006a3ddec980f3651aae",
+    "branch": "sprint0/codex-run"
+  },
+  "notes": "IFC-120: Implemented password reset and email verification flows using Supabase native auth. Wired existing frontend pages (forgot-password, reset-password, signup, email-verification) to tRPC backend procedures. Added callback routes for Supabase redirect flow. Deprecated in-memory token stores. 201 tests, all 4 validations pass, coverage above thresholds."
+}

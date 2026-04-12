@@ -1,0 +1,70 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-019",
+  "run_id": "sprint6-audit-20260302T215741-ex8v6u",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:57:48.968Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 7,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    ".specify/sprints/sprint-6/specifications/IFC-019-spec.md": "76b75b7edecfdee909b2f2d04a3a6e46f3610cf92c8f75e39f7940279e4ca443",
+    ".specify/sprints/sprint-6/planning/IFC-019-plan.md": "810bdda734ac9c399a4a848fcbba648746f8917ad5e9943fa7a809b99809ba99",
+    "artifacts/misc/investment-gate-1-deck.md": "3a086d9ee9b4c2d7692e7d21d6cb367359dddf03a2c8c1bc129e9bed84951792",
+    "artifacts/metrics/week-1-metrics.csv": "1abd2a8a5e82bc4380488d71baeefaf9410ebfbd1926468ff114653f1bd157a5",
+    "artifacts/reports/roi-projection.md": "caaee6d10eca294babfabbf6095e560143b04641d4b1d330de831a1b1893fcd1",
+    "artifacts/misc/cfo-approval.md": "f1fd6c30c71549ee66109b95f71eb78c33bd7c7a239f3563182c14aeda106df9",
+    ".specify/sprints/sprint-6/attestations/IFC-019/context_ack.json": "4feb3f71f2ff0e61b0afe344a3b8307db9032c739986138b5b7badf26da35ad7"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-019",
+      "command": "pnpm lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 15000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [],
+  "definition_of_done_items": [
+    {
+      "criterion": "Continue/pivot decision based on MVP success",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "artifacts: investment-gate-1-deck.md",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "week-1-metrics.csv",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "roi-projection.md",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "cfo-approval.md",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "5 DoD criteria unverified"
+}

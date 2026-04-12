@@ -1,0 +1,116 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "GTM-002",
+  "run_id": "sprint0-audit-20260302T215641-7da797",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:56:50.081Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 5,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "docs/company/messaging/positioning.md": "0a8584f861ed71d58f1214cc051905433471be3569d543aaf5714e3f5dbb6b80",
+    "docs/company/messaging/value-props.md": "87663ffce827d005cfd6a01a39374888eb4bf69d117e8872e7e68c51501edc0c",
+    "docs/company/messaging/copy-blocks.md": "98d85cd1c15367febd71d947a34248a9707c1e38deb451c6ebdaa3da45813493",
+    "docs/company/messaging/cta-library.md": "d371b9219ffcf8f0ae9b7f0dfa6a657972dc36a6b3fe7c87e546e69dda4cf955",
+    ".specify/sprints/sprint-0/attestations/GTM-002/context_ack.json": "42538bd024491377da937345e817c03d4eddcf706ac2d5edb129d4b895c3af5f"
+  },
+  "validation_results": [
+    {
+      "name": "GTM-002",
+      "command": "pnpm lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 15000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "GTM-001",
+    "BRAND-001"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Positioning statement",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "elevator pitch",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "key messages by persona",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "CTA library",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "website copy blocks (hero",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "features",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "pricing",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "security)",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "and tone-of-voice rules",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "includes examples for consistent writing",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "verified by: pnpm lint",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "output: positioning.md",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "value-props.md",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "copy-blocks.md validated",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "14 DoD criteria unverified"
+}

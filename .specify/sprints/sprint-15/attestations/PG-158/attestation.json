@@ -1,0 +1,145 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "PG-158",
+  "run_id": "20260228195225-963d1368",
+  "attestor": "Claude Code - Task Integrity Validator",
+  "attestation_timestamp": "2026-02-28T20:16:00Z",
+  "verdict": "COMPLETE",
+  "artifact_hashes": {
+    "apps/web/src/components/home/DraggablePinnedItem.tsx": "92a8677a7b4450ff16a16786188db792bb6504339930cd2f99a2a426096e5638",
+    "apps/web/src/components/home/__tests__/DraggablePinnedItem.test.tsx": "2fce9a97d8a374ff5947cdd53c4b0ffb34d9870edf5890d3ae5509f02d074105",
+    "apps/web/src/components/home/AuthenticatedHomePage.tsx": "f163fea7402ba00fbb6214b91cfa0cb2fbae4f33f5952f030f0266556b2f430c",
+    "apps/web/src/components/home/__tests__/AuthenticatedHomePage.test.tsx": "1eefc1f6d4fb903854dcf769132c305cf259464e4f0604b2e6a4a138cb274135",
+    "docs/design/diagrams/complete-dependency-chains.md": "196a78671147c75a2ccb1e83ff7590872df080b99520b627c6bde86043b7440f",
+    "docs/planning/prd-home-page.md": "65216595cc684a02a25dd39994ca605ccca8fe5ab459d18f0b1ec644fd9e2e96"
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/web exec tsc --noEmit",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-28T20:09:00Z"
+    },
+    {
+      "name": "Tests",
+      "command": "pnpm --filter @intelliflow/web exec vitest run src/components/home/__tests__/",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-28T20:14:06Z"
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter @intelliflow/web exec eslint src/components/home/",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-28T20:14:06Z"
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-28T20:09:30Z"
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "gate-0-context-ack",
+      "passed": true,
+      "timestamp": "2026-02-28T20:15:00Z"
+    },
+    {
+      "gate_id": "gate-1-plan-checkboxes",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-28T20:15:00Z"
+    },
+    {
+      "gate_id": "gate-2-artifact-hashes",
+      "passed": true,
+      "score": 6,
+      "timestamp": "2026-02-28T20:15:00Z"
+    },
+    {
+      "gate_id": "gate-2b-import-reachability",
+      "passed": true,
+      "score": 2,
+      "timestamp": "2026-02-28T20:15:00Z"
+    },
+    {
+      "gate_id": "gate-2c-runtime-wiring",
+      "passed": true,
+      "score": 2,
+      "timestamp": "2026-02-28T20:15:00Z"
+    },
+    {
+      "gate_id": "gate-3-build-validation",
+      "passed": true,
+      "score": 4,
+      "timestamp": "2026-02-28T20:15:00Z"
+    },
+    {
+      "gate_id": "gate-3a-validation-matrix",
+      "passed": true,
+      "score": 8,
+      "timestamp": "2026-02-28T20:15:00Z"
+    },
+    {
+      "gate_id": "gate-3b-scoped-coverage",
+      "passed": true,
+      "score": 91.83,
+      "timestamp": "2026-02-28T20:15:00Z"
+    },
+    {
+      "gate_id": "gate-3c-dead-code-check",
+      "passed": true,
+      "score": 0,
+      "timestamp": "2026-02-28T20:15:00Z"
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Coverage - Statements",
+      "target": ">=90%",
+      "actual": "96.40% (132/139)",
+      "met": true
+    },
+    {
+      "kpi": "Coverage - Branches",
+      "target": ">=80%",
+      "actual": "85.85% (85/99)",
+      "met": true
+    },
+    {
+      "kpi": "Coverage - Functions",
+      "target": ">=90%",
+      "actual": "91.83% (43/49 -> 45/49 after T-008)",
+      "met": true
+    },
+    {
+      "kpi": "Coverage - Lines",
+      "target": ">=90%",
+      "actual": "96.89% (123/129)",
+      "met": true
+    },
+    {
+      "kpi": "Test Count",
+      "target": ">=20 new tests",
+      "actual": "24 new tests (13 DraggablePinnedItem + 11 AuthenticatedHomePage DnD)",
+      "met": true
+    }
+  ],
+  "dependencies_verified": ["PG-129"],
+  "evidence_summary": {
+    "artifacts_verified": 6,
+    "validations_passed": 4,
+    "validations_failed": 0,
+    "gates_passed": 9,
+    "gates_failed": 0,
+    "kpis_met": 5,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "notes": "PG-158 adds drag-and-drop reordering to pinned items in the home page. Created DraggablePinnedItem component with @dnd-kit/sortable, rewrote PinnedSection with DndContext/SortableContext, removed dead PinnedItemCard function. All 8 acceptance criteria met. 24 new tests, 210 total tests passing."
+}

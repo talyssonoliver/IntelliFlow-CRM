@@ -1,0 +1,87 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-142",
+  "run_id": "sprint8-audit-20260302T215800-xoqul3",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:58:08.352Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 12,
+    "validations_passed": 0,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "docs/operations/slo-definitions.md": "0463410ddcfe07713144bc18701ad2ba58704e434f1ba6ede263a0ce9ff6e37a",
+    "artifacts/misc/alerts-config.yaml": "3c71a7fc91b06f8a06a932b6ed5cd8aaa373fc0833b7abbe32aad9225978507b",
+    "artifacts/misc/oncall-schedule.json": "8d59cc3dcef19a6348f45037cac82f4888d3e3e1361502544d67d29b27870e8f",
+    "docs/operations/incident-runbook.md": "c1e1e9862f8a86965fb20353004b1f2a1de3a184c278699f140c57a23fb7f6da",
+    "docs/operations/restore-drill-report.md": "c8cccf1c66eec1f402ed2e7c400b7dd6a2f7bf37523157846f73e979f37c2992",
+    "artifacts/reports/cost-budget.csv": "cfe40425a2fee72bb12853dbdf4377879f552d816c433a186665b5d70309ea24",
+    "artifacts/misc/otel-implementation/correlation-patterns.md": "b0f83fc0248d0c006fb9b1c4af59e949c6ea3892e819ff13a47afe8621d63cbc",
+    "artifacts/misc/otel-implementation/implementation-guide.md": "b8a58653d586645b54e943386172c35849597395afdd9430b3c9a25e26abc84a",
+    "artifacts/misc/otel-implementation/instrumentation-checklist.md": "c64edaa8a0974da03ea9640f54ffeee043cc33f84d6cabb92c326b92566908fd",
+    ".specify/sprints/sprint-8/attestations/IFC-142/context_ack.json": "961772427c0a7a63d9e5c15e37a7dfb2d90c7b0eb7c037044438d226d4956eaf",
+    "docs/planning/adr/ADR-021-governance-ops-release.md": "626cf1c9c9b1ade20c318491fa1502f28f98416897ad101c60030cd72f0d0c00",
+    "docs/planning/prd-release-governance.md": "cd511206b991a249c6b5f2cae07efa2bccb453a7f7970a74c1cec1206e9741ef"
+  },
+  "validation_results": [],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "ENV-008-AI"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "SLOs and SLIs defined for core services",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "alert rules configured",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "on-call rota established with escalation policies",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "incident runbook prepared",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "restore drill executed successfully",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "budgets defined and monitored",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "targets: >=10%",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": ">=99%",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "<15 min",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "9 DoD criteria unverified"
+}

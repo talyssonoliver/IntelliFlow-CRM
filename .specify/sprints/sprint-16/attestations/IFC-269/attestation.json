@@ -1,0 +1,43 @@
+{
+  "task_id": "IFC-269",
+  "verdict": "COMPLETE",
+  "artifact_hashes": {
+    "apps/api/src/modules/account/account.router.ts": "31b18bf0892b7c84495d222eda94205f17c9210522323af4d0c0868841da0c48",
+    "packages/adapters/src/repositories/PrismaAccountRepository.ts": "09cce85a35c656edebd665866f0f22d8699afc6d9ab8520ab2288a58fdbc1eca",
+    "packages/domain/src/crm/account/AccountRepository.ts": "ecce3cdf5a9c21079b98568c4f6407791a68539d5a1bf182b5dfb11f9b8af3fe",
+    "packages/application/src/services/AccountService.ts": "0b09c9e9df8c25138f81f644a9b77e83531e17aa211d94c367983e7181b1002f",
+    "packages/validators/src/account.ts": "17f8916852c91078c0525ad85e6278e5445d8a4783e62df498eb9fdebe13612c"
+  },
+  "dependencies_verified": true,
+  "notes": "IFC-269: Fixed 5 security bugs (B-02, B-03, B-04, B-05, B-07) in Account module. B-01 was already fixed. Added tenantId to all AccountRepository read/delete methods for defense-in-depth tenant isolation. Added ACCOUNT_SORT_FIELDS allowlist. Added audit logging to all 5 mutations with logPermissionDenied on cross-tenant denials (AC-007). Implemented $transaction wrapping on assignOwner (B-05). Fixed save() tenant-blind upsert (split to updateMany+create). Fixed getById enrichment and assignOwner persist to use tenant-scoped WHERE. Added existsByName Prisma tests and sortBy rejection tests. Propagated interface changes to AccountService, OpportunityService, ContactService, LeadService, and lead conversion use cases.",
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-04-06T22:27:00Z"
+    },
+    {
+      "name": "Tests",
+      "command": "pnpm --filter @intelliflow/api exec vitest run src/modules/account && pnpm --filter @intelliflow/adapters exec vitest run __tests__/PrismaAccountRepository src/repositories/__tests__/PrismaAccountRepository && pnpm --filter @intelliflow/validators exec vitest run __tests__/account",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-04-06T22:27:30Z"
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-04-06T22:27:45Z"
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/domain build && pnpm --filter @intelliflow/adapters build && pnpm --filter @intelliflow/validators build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-04-06T22:28:00Z"
+    }
+  ]
+}

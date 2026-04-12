@@ -1,0 +1,66 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "DOC-004",
+  "run_id": "sprint14-audit-20260302T215859-6dbfyi",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:59:16.726Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 1,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "docs/design/ui-flow-mapping.md": "a3fee911c72c194ba5eb9620edd4e5edc4cc76706dff59ff447dd06ce5b0516f"
+  },
+  "validation_results": [
+    {
+      "name": "DOC-004",
+      "command": "pnpm lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 15000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "DOC-002"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "ui-flow-mapping.md reflects 103 routes",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "39 API routers with 366 procedures verified",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "implementation status accurate",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "backend integration status current",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "verified by: manual review + spot-checks",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "5 DoD criteria unverified"
+}

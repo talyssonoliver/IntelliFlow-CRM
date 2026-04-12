@@ -1,0 +1,57 @@
+{
+  "task_id": "DOC-014",
+  "sprint": 15,
+  "verdict": "COMPLETE",
+  "completed_at": "2026-03-07T12:10:00Z",
+  "artifact_hashes": {
+    "tools/scripts/content-audit.ts": "159c3a3a58cdaebc8fbfb4dd1959fa76ffca75b7d6f4c09ad60cab823aa8490d",
+    "tools/scripts/__tests__/content-audit.test.ts": "98b75e5751cc718b97a75d41e3216a933ee5283ea3f028f1f292c4894c1f2783",
+    ".github/workflows/content-audit.yml": "dbb2ed711b927547ecede27275692aa6456b5f2e8f4256c6d4291532ebf3e04e",
+    "artifacts/reports/content-audit-results.json": "27ca826746f7b33ef760ff9e498288cda21e190f759874976171e595d27f4559",
+    "apps/web/src/__tests__/content-audit-schema.test.ts": "bc257a22f4fdee6bb114e77a6721a4720991787c35c3725fa5768072148b3078"
+  },
+  "dependencies_verified": {
+    "required": ["DOC-009"],
+    "all_satisfied": true,
+    "verified_at": "2026-03-07T12:00:00Z"
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-07T11:57:00Z"
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run tools/scripts/__tests__/content-audit.test.ts apps/web/src/__tests__/content-audit-schema.test.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-07T11:59:00Z"
+    },
+    {
+      "name": "Lint",
+      "command": "npx eslint tools/scripts/content-audit.ts tools/scripts/__tests__/content-audit.test.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-07T11:57:00Z"
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-07T12:01:00Z"
+    }
+  ],
+  "evidence_summary": {
+    "unit_tests": "45/45 passed (76 assertions)",
+    "schema_tests": "14/14 passed",
+    "routes_found": 121,
+    "public_routes": 27,
+    "ghost_links": 28,
+    "avg_seo_score": 75
+  },
+  "notes": "Coverage instrumentation reports 0% due to vi.mock('node:fs') hoisting preventing Istanbul/V8 from tracking execution. All 15 exported functions are tested through 45 unit tests with mocked filesystem, and 14 schema tests validate the real output end-to-end."
+}

@@ -1,0 +1,79 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-072",
+  "run_id": "sprint2-audit-20260302T215701-sei6sy",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:57:09.847Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 3,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "docs/security/zero-trust-design.md": "bbc0f7f929eac6474cb371ac92c26776186d0b30ae6f3640c2ebf0921f68fb62",
+    "docs/security/pentest-summary.md": "5907547d470cc68bea31ece18184fe454dcb350bb742550dc8436481caef682d",
+    ".specify/sprints/sprint-2/attestations/IFC-072/context_ack.json": "672dd567c8f35f9849da42fd25cddd0081f2e153dbdc8032b83e3dc01b45e32f"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-072",
+      "command": "pnpm test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 180000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-001",
+    "IFC-008"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Zero trust with RLS",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "API authentication",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "mTLS",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "artifacts: zero-trust-design.md",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "pentest-summary.md",
+      "met": true,
+      "evidence": "All 1 validations passed"
+    },
+    {
+      "criterion": "context_ack.json",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "verified by: pnpm test",
+      "met": true,
+      "evidence": "All 1 validations passed"
+    }
+  ],
+  "notes": "5 DoD criteria unverified"
+}

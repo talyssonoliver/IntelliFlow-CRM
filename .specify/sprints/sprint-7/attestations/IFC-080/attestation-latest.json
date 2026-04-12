@@ -1,0 +1,64 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-080",
+  "run_id": "sprint7-audit-20260302T215750-xc1o8i",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:57:58.619Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 4,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "docs/glossary.md": "c473f4cb4a545971eed6750e7cc7b9f928351495e5e11b4c7f57dfc63cb2657d",
+    "docs/templates/chunking-strategy.md": "5ad6266b322729e4f5b519a250469e9d5bbb22d255d48159fd855309c03bad0a",
+    "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-041-validation.md": "b1c6a3bf42213703d7eb47e6d0b0b1b36a9b4a6c3a9c53e3cb258672eb4629b2",
+    ".specify/sprints/sprint-7/attestations/IFC-080/context_ack.json": "1a91767cbcd60d616225cdb2fd77ec0ace26a2238e5b48139a03c2e7fdf357ed"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-080",
+      "command": "pnpm lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 15000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-079"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Templates with metadata",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "semantic structure",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "glossary",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "targets: >=100%",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "4 DoD criteria unverified"
+}

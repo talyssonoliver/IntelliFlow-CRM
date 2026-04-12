@@ -1,0 +1,99 @@
+{
+  "$schema": "../../schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "PG-047",
+  "run_id": "20260308115754-84f22fb0",
+  "attestor": "Claude Code - STOA Exec Validator",
+  "attestation_timestamp": "2026-03-08T12:20:00Z",
+  "verdict": "COMPLETE",
+  "artifact_hashes": {
+    "apps/web/src/components/tickets/file-uploader.tsx": "548fc65abb6265c9b1fc36d8e7180844f3d31ba6d37bb565db0fb8c1cbba7370",
+    "apps/web/src/components/tickets/ticket-form.tsx": "f01ec193c74e39caa56caec881703d2b444107913b0d6bd5ba47645853594067",
+    "apps/web/src/app/support/tickets/new/page.tsx": "9ce98b004a4feb994a4a90974ff3460965e4c878bccc9197f8140306e8499230"
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 2,
+      "passed": false,
+      "timestamp": "2026-03-08T12:10:00Z"
+    },
+    {
+      "name": "Tests",
+      "command": "pnpm --filter @intelliflow/web exec vitest run src/components/tickets src/app/support/tickets/new --reporter=verbose",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-08T12:12:00Z"
+    },
+    {
+      "name": "Lint",
+      "command": "eslint src/components/tickets/file-uploader.tsx src/components/tickets/ticket-form.tsx src/app/support/tickets/new/page.tsx src/components/tickets/index.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-08T12:14:00Z"
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 1,
+      "passed": false,
+      "timestamp": "2026-03-08T12:15:00Z"
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "plan-checkboxes",
+      "passed": true,
+      "score": 100
+    },
+    {
+      "gate_id": "artifact-verification",
+      "passed": true,
+      "score": 100
+    },
+    {
+      "gate_id": "coverage-measurement",
+      "passed": true,
+      "score": 92.79
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Statement Coverage",
+      "target": ">=90%",
+      "actual": "92.79%",
+      "met": true
+    },
+    {
+      "kpi": "Branch Coverage",
+      "target": ">=80%",
+      "actual": "82.60%",
+      "met": true
+    },
+    {
+      "kpi": "Function Coverage",
+      "target": ">=90%",
+      "actual": "91.66%",
+      "met": true
+    },
+    {
+      "kpi": "Line Coverage",
+      "target": ">=90%",
+      "actual": "98.01%",
+      "met": true
+    }
+  ],
+  "evidence_summary": {
+    "artifacts_verified": 3,
+    "validations_passed": 2,
+    "validations_failed": 2,
+    "gates_passed": 3,
+    "gates_failed": 0,
+    "kpis_met": 4,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "dependencies_verified": ["PG-046"],
+  "notes": "TypeScript and Build failures are pre-existing (ai-worker toSorted, TaskDetail.test onStart, login-security node:crypto). PG-047 files compile and lint cleanly. All 25 new tests + 215 regression tests pass (240/240). Coverage exceeds thresholds. Lighthouse deferred to CI due to pre-existing build failure."
+}

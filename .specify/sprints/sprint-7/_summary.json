@@ -1,0 +1,920 @@
+{
+  "sprint": "sprint-7",
+  "name": "Sprint 7",
+  "generated_at": "2026-04-11T16:48:01.958Z",
+  "summary_source": "specify",
+  "task_summary": {
+    "total": 21,
+    "completed": 21,
+    "backlog": 0,
+    "blocked": 0,
+    "attested_completed": 21
+  },
+  "context": "Primary focus areas: AI Intelligence (7), Documentation (4), Security (3).",
+  "section_summary": [
+    {
+      "section": "AI Intelligence",
+      "total": 7,
+      "completed": 7,
+      "open": 0
+    },
+    {
+      "section": "Documentation",
+      "total": 4,
+      "completed": 4,
+      "open": 0
+    },
+    {
+      "section": "Security",
+      "total": 3,
+      "completed": 3,
+      "open": 0
+    },
+    {
+      "section": "Core CRM",
+      "total": 2,
+      "completed": 2,
+      "open": 0
+    },
+    {
+      "section": "Legal",
+      "total": 2,
+      "completed": 2,
+      "open": 0
+    },
+    {
+      "section": "AI Assistant",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Resilience",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Risk Mgmt",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    }
+  ],
+  "notable_completed": [
+    {
+      "taskId": "IFC-148",
+      "sprint": 7,
+      "status": "Completed",
+      "section": "AI Assistant",
+      "title": "Implement conversation record entity: store chat transcripts; tool calls; actions per case; enable search and retrieval; integrate audit logging and data retention policies",
+      "description": "Implement conversation record entity: store chat transcripts; tool calls; actions per case; enable search and retrieval; integrate audit logging and data retention policies",
+      "summary": "Conversation Record Entity implemented with full Prisma schema and tRPC router. Includes ConversationRecord, MessageRecord, and ToolCallRecord models with multi-tenant isolation, audit logging, and human-in-the-loop approval workflow for se......",
+      "definitionOfDone": "Database schema created; conversation records stored with metadata (case ID; timestamps; user/agent ID; tool calls); search API implemented; access control enforced; retention and DSAR compliance built-in; tests covering privacy controls; targets: >=100%",
+      "definitionOfDoneSnapshot": "Prisma schema for ConversationRecord; tRPC router for conversations; Router registered in main app router",
+      "dependencies": [
+        "IFC-139",
+        "IFC-126"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-7/attestations/IFC-148/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-31T07:02:00.000Z",
+        "sprintFolder": 7
+      },
+      "validationSummary": {
+        "total": 6,
+        "passed": 6,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 6,
+        "met": 6,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-197",
+      "sprint": 7,
+      "status": "Completed",
+      "section": "AI Intelligence",
+      "title": "AI Monitoring tRPC Router - Expose drift detection latency metrics hallucination checks ROI tracking and agent status via tRPC endpoints",
+      "description": "AI Monitoring tRPC Router - Expose drift detection latency metrics hallucination checks ROI tracking and agent status via tRPC endpoints",
+      "summary": "IFC-197 creates the AI Monitoring tRPC Router exposing 7 endpoints for drift detection, latency metrics, hallucination checks, ROI tracking, and agent status. Uses direct singleton imports from @intelliflow/ai-worker (not DI).... tRPC router with 7 endpoints;...",
+      "definitionOfDone": "tRPC router with endpoints: getDriftMetrics getLatencyMetrics getHallucinationReport getROIMetrics getMonitoringStatus getActiveAgents getAgentLogs; all endpoints tenant-isolated; response <200ms; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "tRPC router with 7 endpoints; All endpoints tenant-isolated; response under 200ms",
+      "dependencies": [
+        "IFC-117",
+        "IFC-125"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-7/attestations/IFC-197/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-10T22:20:00Z",
+        "sprintFolder": 7
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-138",
+      "sprint": 7,
+      "status": "Completed",
+      "section": "Legal",
+      "title": "Case List & Detail Pages - Party management deadline tracking document links timeline",
+      "description": "Case List & Detail Pages - Party management deadline tracking document links timeline",
+      "summary": "PG-138 Case List & Detail Pages — Full implementation with party management, deadline tracking, document links (placeholder), timeline. 62 tests total (34 component + 15 router + 13 adapter). All MATOP gates PASS. Architecture compliant:......",
+      "definitionOfDone": "Response <500ms, Lighthouse >=90; CaseList, CaseCard, CaseDetail, PartyManager, DeadlineTracker, DocumentLinks, CaseTimeline components; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Case list page with pagination, search, filters; Case detail page with tabs (Overview, Tasks, Documents, Timeline, Parties); Party management (add, edit, remove)",
+      "dependencies": [
+        "IFC-136"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-7/attestations/PG-138/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-13T22:19:00.000Z",
+        "sprintFolder": 7
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-139",
+      "sprint": 7,
+      "status": "Completed",
+      "section": "Legal",
+      "title": "Appointment Scheduling Page - Calendar view conflict detection case linking reminders",
+      "description": "Appointment Scheduling Page - Calendar view conflict detection case linking reminders",
+      "summary": "PG-139 Appointment Scheduling Page - UI-only task. All 14 component/utility/page files created. 153 tests pass across 8 test files.... Appointment list page with filtering, search, and pagination; Appointment detail page with tabs (Overview, Attendees, Cases);...",
+      "definitionOfDone": "Response <500ms, Lighthouse >=90; AppointmentCalendar, AppointmentForm, ConflictWarning, CaseLinkSelector, ReminderConfig, RecurrenceEditor components; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Appointment list page with filtering, search, and pagination; Appointment detail page with tabs (Overview, Attendees, Cases); Calendar view with month/week/day modes",
+      "dependencies": [
+        "IFC-137"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-7/attestations/PG-139/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-15T12:00:00.000Z",
+        "sprintFolder": 7
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-142",
+      "sprint": 7,
+      "status": "Completed",
+      "section": "AI Intelligence",
+      "title": "Sentiment Analysis Dashboard at /agent-approvals/sentiment - Timeline badges trend visualization email sentiment preview",
+      "description": "Sentiment Analysis Dashboard at /agent-approvals/sentiment - Timeline badges trend visualization email sentiment preview",
+      "summary": "PG-142 Sentiment Analysis Dashboard. Implementation includes: page shell with auth guard, SentimentDashboard component with 5 stat cards, SearchFilterBar (entity/sentiment/urgency filters + quick chips + sort), lazy-loaded SentimentTrend ch......",
+      "definitionOfDone": "Page renders at /agent-approvals/sentiment; SentimentDashboard with timeline badges trend charts emotion indicators urgency labels topic tags; reuses SearchFilterBar; Lighthouse >=90; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Page renders at /agent-approvals/sentiment; SentimentDashboard with timeline badges trend charts emotion indicators urgency labels topic tags; Reuses SearchFilterBar",
+      "dependencies": [
+        "IFC-039",
+        "IFC-181"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-7/attestations/PG-142/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-15T22:30:00.000Z",
+        "sprintFolder": 7
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 7,
+        "met": 6,
+        "missed": 1
+      }
+    }
+  ],
+  "open_tasks": [],
+  "tasks": [
+    {
+      "taskId": "IFC-054",
+      "sprint": 7,
+      "status": "Completed",
+      "section": "Risk Mgmt",
+      "title": "Technical Complexity Monitoring",
+      "description": "Technical Complexity Monitoring",
+      "summary": "Technical complexity monitoring established with metrics tracking and refactoring backlog documentation. Weekly assessment of technical debt and complexity; Refactoring backlog maintained",
+      "definitionOfDone": "Weekly assessment of technical debt and complexity; artifacts: sonarqube-debt-report.html, complexity-metrics.json, refactoring-backlog.md; targets: >=10%",
+      "definitionOfDoneSnapshot": "Weekly assessment of technical debt and complexity; Refactoring backlog maintained",
+      "dependencies": [],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-7/attestations/IFC-054/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-28T12:00:00.000Z",
+        "sprintFolder": 7
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-079",
+      "sprint": 7,
+      "status": "Completed",
+      "section": "Documentation",
+      "title": "PHASE-041: Docusaurus Setup",
+      "description": "PHASE-041: Docusaurus Setup",
+      "summary": "Docusaurus site with LLM-friendly structure; Site deployed",
+      "definitionOfDone": "Docusaurus site with LLM-friendly structure; output: docusaurus.config.js, sidebars.js; site deployed and functional",
+      "definitionOfDoneSnapshot": "Docusaurus site with LLM-friendly structure; Site deployed",
+      "dependencies": [
+        "IFC-012"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-7/attestations/IFC-079/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 7
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-080",
+      "sprint": 7,
+      "status": "Completed",
+      "section": "Documentation",
+      "title": "PHASE-041: LLM-Friendly Documentation Templates",
+      "description": "PHASE-041: LLM-Friendly Documentation Templates",
+      "summary": "Templates with metadata, semantic structure, glossary",
+      "definitionOfDone": "Templates with metadata, semantic structure, glossary; targets: >=100%",
+      "definitionOfDoneSnapshot": "Templates with metadata, semantic structure, glossary",
+      "dependencies": [
+        "IFC-079"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-7/attestations/IFC-080/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 7
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 1,
+        "met": 1,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-082",
+      "sprint": 7,
+      "status": "Completed",
+      "section": "Documentation",
+      "title": "Domain Knowledge Base",
+      "description": "Domain Knowledge Base",
+      "summary": "Domain knowledge base established with knowledge graph and context map for DDD-based architecture. Bounded contexts, aggregates, workflows documented",
+      "definitionOfDone": "Bounded contexts, aggregates, workflows documented",
+      "definitionOfDoneSnapshot": "Bounded contexts, aggregates, workflows documented",
+      "dependencies": [
+        "IFC-080"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-7/attestations/IFC-082/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-28T12:00:00.000Z",
+        "sprintFolder": 7
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 1,
+        "met": 1,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-092",
+      "sprint": 7,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Deal Forecasting & Reporting",
+      "description": "Deal Forecasting & Reporting",
+      "summary": "Deal forecasting implementation with 96.2% accuracy, exceeding the 85% target. Includes weighted pipeline forecasting, win rate calculations, and accuracy backtesting. Forecast accuracy >= 85%",
+      "definitionOfDone": "Forecast accuracy ≥85%; artifacts: forecast-algorithm.test.ts, accuracy-backtest.csv, context_ack.json",
+      "definitionOfDoneSnapshot": "Forecast accuracy >= 85%",
+      "dependencies": [
+        "IFC-091"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-7/attestations/IFC-092/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-28T12:00:00.000Z",
+        "sprintFolder": 7
+      },
+      "validationSummary": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 1,
+        "met": 1,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-093",
+      "sprint": 7,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Tickets Module - SLA Tracking",
+      "description": "Tickets Module - SLA Tracking",
+      "summary": "Tickets SLA module implemented with service layer, visual badges, and notification system for breach alerts. Tickets visible, SLA breach alerts in <1m",
+      "definitionOfDone": "Tickets visible, SLA breach alerts in <1m; artifacts: sla-notification.test.ts, context_ack.json",
+      "definitionOfDoneSnapshot": "Tickets visible, SLA breach alerts in <1m",
+      "dependencies": [
+        "IFC-002",
+        "IFC-004",
+        "IFC-188"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-7/attestations/IFC-093/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-28T12:00:00.000Z",
+        "sprintFolder": 7
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 1,
+        "met": 1,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-114",
+      "sprint": 7,
+      "status": "Completed",
+      "section": "Security",
+      "title": "Implement API rate limiting and DDoS protection",
+      "description": "Implement API rate limiting and DDoS protection",
+      "summary": "API rate limiting and DDoS protection implemented with tiered limits, WAF configuration, and comprehensive test coverage (44 tests passing). Rate limiting middleware in API; WAF configured for DDoS; Tests for request bursts",
+      "definitionOfDone": "Rate limiting middleware in API, WAF configured for DDoS, tests for request bursts",
+      "definitionOfDoneSnapshot": "Rate limiting middleware in API; WAF configured for DDoS; Tests for request bursts",
+      "dependencies": [
+        "IFC-003",
+        "IFC-072"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-7/attestations/IFC-114/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-28T12:00:00.000Z",
+        "sprintFolder": 7
+      },
+      "validationSummary": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-122",
+      "sprint": 7,
+      "status": "Completed",
+      "section": "Resilience",
+      "title": "Implement circuit breaker and retry policies for external service calls",
+      "description": "Implement circuit breaker and retry policies for external service calls",
+      "summary": "Circuit breaker and retry policy implementation complete with 61 tests passing. Includes state transitions (CLOSED/OPEN/HALF_OPEN), exponential backoff with jitter, and integration tests. Circuit breaker library integrated; Retries with exponential backoff;...",
+      "definitionOfDone": "Circuit breaker library integrated; retries with exponential backoff; fallback strategies defined; artifacts: circuit-breaker.ts, retry-policy.ts, circuit-breaker.spec.ts; targets: >=50%; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Circuit breaker library integrated; Retries with exponential backoff; Fallback strategies defined",
+      "dependencies": [
+        "IFC-106",
+        "IFC-107"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-7/attestations/IFC-122/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-28T12:00:00.000Z",
+        "sprintFolder": 7
+      },
+      "validationSummary": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-126",
+      "sprint": 7,
+      "status": "Completed",
+      "section": "Documentation",
+      "title": "Continuously maintain ADR registry and developer guide updates",
+      "description": "Continuously maintain ADR registry and developer guide updates",
+      "summary": "ADR registry and developer guide continuously maintained with 12 ADRs documented across 8 categories. ADR registry updated; Developer guide created; Categories covered",
+      "definitionOfDone": "All significant design decisions captured via ADRs; developer guide updated per sprint; targets: >=100%, >=80%",
+      "definitionOfDoneSnapshot": "ADR registry updated; Developer guide created; Categories covered",
+      "dependencies": [
+        "IFC-100",
+        "GOV-001"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-7/attestations/IFC-126/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-31T22:30:00Z",
+        "sprintFolder": 7
+      },
+      "validationSummary": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-133",
+      "sprint": 7,
+      "status": "Completed",
+      "section": "Security",
+      "title": "Supply chain security: artifact signing + provenance for build outputs (images + releases)",
+      "description": "Supply chain security: artifact signing + provenance for build outputs (images + releases)",
+      "summary": "Artifacts signed with Sigstore cosign; SLSA provenance attestations; Verification enforced in deployment Artifacts signed; Verification step added; Provenance attached",
+      "definitionOfDone": "Artifacts signed; verification step added; provenance attached; docs updated; targets: >=100%; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Artifacts signed; Verification step added; Provenance attached",
+      "dependencies": [
+        "IFC-132"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-7/attestations/IFC-133/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-28T12:00:00.000Z",
+        "sprintFolder": 7
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-134",
+      "sprint": 7,
+      "status": "Completed",
+      "section": "Security",
+      "title": "Container/image scanning in CI and registry with fail-on-critical policy",
+      "description": "Container/image scanning in CI and registry with fail-on-critical policy",
+      "summary": "Container image scanning implementation using Trivy with fail-on-critical policy. Includes nightly monitoring scans and comprehensive documentation for exception handling. Image scan runs on every build; Policy blocks critical vulns;...",
+      "definitionOfDone": "Image scan runs on every build; policy blocks critical vulns; exceptions process documented; targets: >=100%",
+      "definitionOfDoneSnapshot": "Image scan runs on every build; Policy blocks critical vulns; Exceptions process documented",
+      "dependencies": [
+        "ENV-003-AI",
+        "ENV-005-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-7/attestations/IFC-134/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-28T12:00:00.000Z",
+        "sprintFolder": 7
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-148",
+      "sprint": 7,
+      "status": "Completed",
+      "section": "AI Assistant",
+      "title": "Implement conversation record entity: store chat transcripts; tool calls; actions per case; enable search and retrieval; integrate audit logging and data retention policies",
+      "description": "Implement conversation record entity: store chat transcripts; tool calls; actions per case; enable search and retrieval; integrate audit logging and data retention policies",
+      "summary": "Conversation Record Entity implemented with full Prisma schema and tRPC router. Includes ConversationRecord, MessageRecord, and ToolCallRecord models with multi-tenant isolation, audit logging, and human-in-the-loop approval workflow for se......",
+      "definitionOfDone": "Database schema created; conversation records stored with metadata (case ID; timestamps; user/agent ID; tool calls); search API implemented; access control enforced; retention and DSAR compliance built-in; tests covering privacy controls; targets: >=100%",
+      "definitionOfDoneSnapshot": "Prisma schema for ConversationRecord; tRPC router for conversations; Router registered in main app router",
+      "dependencies": [
+        "IFC-139",
+        "IFC-126"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-7/attestations/IFC-148/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-31T07:02:00.000Z",
+        "sprintFolder": 7
+      },
+      "validationSummary": {
+        "total": 6,
+        "passed": 6,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 6,
+        "met": 6,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-138",
+      "sprint": 7,
+      "status": "Completed",
+      "section": "Legal",
+      "title": "Case List & Detail Pages - Party management deadline tracking document links timeline",
+      "description": "Case List & Detail Pages - Party management deadline tracking document links timeline",
+      "summary": "PG-138 Case List & Detail Pages — Full implementation with party management, deadline tracking, document links (placeholder), timeline. 62 tests total (34 component + 15 router + 13 adapter). All MATOP gates PASS. Architecture compliant:......",
+      "definitionOfDone": "Response <500ms, Lighthouse >=90; CaseList, CaseCard, CaseDetail, PartyManager, DeadlineTracker, DocumentLinks, CaseTimeline components; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Case list page with pagination, search, filters; Case detail page with tabs (Overview, Tasks, Documents, Timeline, Parties); Party management (add, edit, remove)",
+      "dependencies": [
+        "IFC-136"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-7/attestations/PG-138/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-13T22:19:00.000Z",
+        "sprintFolder": 7
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-139",
+      "sprint": 7,
+      "status": "Completed",
+      "section": "Legal",
+      "title": "Appointment Scheduling Page - Calendar view conflict detection case linking reminders",
+      "description": "Appointment Scheduling Page - Calendar view conflict detection case linking reminders",
+      "summary": "PG-139 Appointment Scheduling Page - UI-only task. All 14 component/utility/page files created. 153 tests pass across 8 test files.... Appointment list page with filtering, search, and pagination; Appointment detail page with tabs (Overview, Attendees, Cases);...",
+      "definitionOfDone": "Response <500ms, Lighthouse >=90; AppointmentCalendar, AppointmentForm, ConflictWarning, CaseLinkSelector, ReminderConfig, RecurrenceEditor components; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Appointment list page with filtering, search, and pagination; Appointment detail page with tabs (Overview, Attendees, Cases); Calendar view with month/week/day modes",
+      "dependencies": [
+        "IFC-137"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-7/attestations/PG-139/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-15T12:00:00.000Z",
+        "sprintFolder": 7
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-142",
+      "sprint": 7,
+      "status": "Completed",
+      "section": "AI Intelligence",
+      "title": "Sentiment Analysis Dashboard at /agent-approvals/sentiment - Timeline badges trend visualization email sentiment preview",
+      "description": "Sentiment Analysis Dashboard at /agent-approvals/sentiment - Timeline badges trend visualization email sentiment preview",
+      "summary": "PG-142 Sentiment Analysis Dashboard. Implementation includes: page shell with auth guard, SentimentDashboard component with 5 stat cards, SearchFilterBar (entity/sentiment/urgency filters + quick chips + sort), lazy-loaded SentimentTrend ch......",
+      "definitionOfDone": "Page renders at /agent-approvals/sentiment; SentimentDashboard with timeline badges trend charts emotion indicators urgency labels topic tags; reuses SearchFilterBar; Lighthouse >=90; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Page renders at /agent-approvals/sentiment; SentimentDashboard with timeline badges trend charts emotion indicators urgency labels topic tags; Reuses SearchFilterBar",
+      "dependencies": [
+        "IFC-039",
+        "IFC-181"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-7/attestations/PG-142/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-15T22:30:00.000Z",
+        "sprintFolder": 7
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 7,
+        "met": 6,
+        "missed": 1
+      }
+    },
+    {
+      "taskId": "PG-143",
+      "sprint": 7,
+      "status": "Completed",
+      "section": "AI Intelligence",
+      "title": "Churn Risk Dashboard at /agent-approvals/churn-risk - Health scores risk indicators intervention triggers trend charts",
+      "description": "Churn Risk Dashboard at /agent-approvals/churn-risk - Health scores risk indicators intervention triggers trend charts",
+      "summary": "PG-143 Churn Risk Dashboard implemented following PG-142 Sentiment Dashboard pattern. All 12 files created/modified. 28 tests passing. No regressions in web (4865 tests) or API (40 intelligence tests).... Page renders at /agent-approvals/churn-risk;...",
+      "definitionOfDone": "Page renders at /agent-approvals/churn-risk; ChurnDashboard with HealthScoreGauge RiskIndicators InterventionAlerts ChurnTrendChart AtRiskCustomerList; Lighthouse >=90; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Page renders at /agent-approvals/churn-risk; ChurnDashboard with HealthScoreGauge RiskIndicators InterventionAlerts ChurnTrendChart AtRiskCustomerList; 28 tests passing in ChurnDashboard.test.tsx",
+      "dependencies": [
+        "IFC-095",
+        "IFC-181"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-7/attestations/PG-143/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-14T23:40:00Z",
+        "sprintFolder": 7
+      },
+      "validationSummary": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 5,
+        "met": 4,
+        "missed": 1
+      }
+    },
+    {
+      "taskId": "PG-144",
+      "sprint": 7,
+      "status": "Completed",
+      "section": "AI Intelligence",
+      "title": "AI Search (RAG) Page at /agent-approvals/ai-search - Universal search bar AI-powered results citations source highlighting",
+      "description": "AI Search (RAG) Page at /agent-approvals/ai-search - Universal search bar AI-powered results citations source highlighting",
+      "summary": "AI Search RAG page at /agent-approvals/ai-search; AISearchPage component with citation display; RAG infrastructure integration Page renders at /agent-approvals/ai-search;...",
+      "definitionOfDone": "Page renders at /agent-approvals/ai-search; GlobalSearchBar with AI-powered results CitationDisplay SourceHighlight SearchFilters RelevanceScore; response <1s; Lighthouse >=90; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Page renders at /agent-approvals/ai-search; GlobalSearchBar with AI-powered results CitationDisplay SourceHighlight SearchFilters RelevanceScore; response under 1s; Lighthouse >=90",
+      "dependencies": [
+        "IFC-156",
+        "IFC-155",
+        "IFC-181"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-7/attestations/PG-144/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T22:30:00.000Z",
+        "sprintFolder": 7
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 1,
+        "met": 1,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-197",
+      "sprint": 7,
+      "status": "Completed",
+      "section": "AI Intelligence",
+      "title": "AI Monitoring tRPC Router - Expose drift detection latency metrics hallucination checks ROI tracking and agent status via tRPC endpoints",
+      "description": "AI Monitoring tRPC Router - Expose drift detection latency metrics hallucination checks ROI tracking and agent status via tRPC endpoints",
+      "summary": "IFC-197 creates the AI Monitoring tRPC Router exposing 7 endpoints for drift detection, latency metrics, hallucination checks, ROI tracking, and agent status. Uses direct singleton imports from @intelliflow/ai-worker (not DI).... tRPC router with 7 endpoints;...",
+      "definitionOfDone": "tRPC router with endpoints: getDriftMetrics getLatencyMetrics getHallucinationReport getROIMetrics getMonitoringStatus getActiveAgents getAgentLogs; all endpoints tenant-isolated; response <200ms; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "tRPC router with 7 endpoints; All endpoints tenant-isolated; response under 200ms",
+      "dependencies": [
+        "IFC-117",
+        "IFC-125"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-7/attestations/IFC-197/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-10T22:20:00Z",
+        "sprintFolder": 7
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-148",
+      "sprint": 7,
+      "status": "Completed",
+      "section": "AI Intelligence",
+      "title": "Lead Scoring Dashboard at /agent-approvals/lead-scoring - Score distributions model accuracy top leads factor breakdown",
+      "description": "Lead Scoring Dashboard at /agent-approvals/lead-scoring - Score distributions model accuracy top leads factor breakdown",
+      "summary": "PG-148 Lead Scoring Dashboard: Full implementation with 10 new files + 1 modified. Backend tRPC endpoint (getLeadScoringDashboard) queries AIScore model with tenant isolation, computes stats/trends/distribution.... Page renders at /agent-approvals/lead-scoring;...",
+      "definitionOfDone": "Page renders at /agent-approvals/lead-scoring; score distribution chart; model accuracy metrics; top-scored leads list; factor breakdown per lead; reuses ConfidenceIndicator and ScoreCard components; Lighthouse >=90; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Page renders at /agent-approvals/lead-scoring; Score distribution chart; Model accuracy metrics",
+      "dependencies": [
+        "IFC-005",
+        "IFC-023",
+        "IFC-181"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-7/attestations/PG-148/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-16T18:00:00Z",
+        "sprintFolder": 7
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 5,
+        "met": 5,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-149",
+      "sprint": 7,
+      "status": "Completed",
+      "section": "AI Intelligence",
+      "title": "Experiments Dashboard at /agent-approvals/experiments - A/B test management experiment results statistical analysis variant comparison",
+      "description": "Experiments Dashboard at /agent-approvals/experiments - A/B test management experiment results statistical analysis variant comparison",
+      "summary": "PG-149 Experiments Dashboard — UI-only task. 11 artifacts (7 source + 4 additional test files for coverage). 82 tests across 5 files. V8 coverage: 97.81% stmts / 96% branch / 94.44% funcs / 98.38% lines.... Page renders at /agent-approvals/experiments;...",
+      "definitionOfDone": "Page renders at /agent-approvals/experiments; experiment list with status filters; create/start/stop/complete actions; statistical significance display; variant comparison charts; confidence intervals; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Page renders at /agent-approvals/experiments; Experiment list with status badges, type labels, progress bars; Filter by status, search by name/hypothesis, sort",
+      "dependencies": [
+        "IFC-025",
+        "IFC-181"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-7/attestations/PG-149/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-18T13:15:00.000Z",
+        "sprintFolder": 7
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 3,
+        "failed": 1,
+        "failingNames": [
+          "Build"
+        ]
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-150",
+      "sprint": 7,
+      "status": "Completed",
+      "section": "AI Intelligence",
+      "title": "AI Review History at /agent-approvals/history - Filterable history of all AI output reviews with timeline and audit trail",
+      "description": "AI Review History at /agent-approvals/history - Filterable history of all AI output reviews with timeline and audit trail",
+      "summary": "Frontend-only task. No backend/API changes needed. useReviewHistory hook added to existing hooks.ts file. ReviewCard already handles completed status natively (shows only View button). Page renders at /agent-approvals/history;...",
+      "definitionOfDone": "Page renders at /agent-approvals/history; full review history with date range status and output type filters; timeline visualization; audit trail per review; reuses ReviewCard component; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Page renders at /agent-approvals/history; Full review history with date range, status and output type filters; Timeline visualization",
+      "dependencies": [
+        "IFC-181",
+        "IFC-180"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-7/attestations/PG-150/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-16T20:45:00Z",
+        "sprintFolder": 7
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    }
+  ]
+}

@@ -1,0 +1,96 @@
+{
+  "task_id": "PG-166",
+  "sprint": 15,
+  "run_id": "20260410194734-9c191810",
+  "verdict": "COMPLETE",
+  "timestamp": "2026-04-11T17:00:00.000Z",
+  "dependencies_verified": true,
+  "blocker": null,
+  "artifact_hashes": {
+    "tools/lighthouse/lhci-auth.js": "9651ce3f40104446563c490c676cb80db404f81f3a9f9d7f005d2d19c03cfd73",
+    "lighthouserc.authenticated.js": "bea532f74a69c138d4817fbd88898d69b574043a95b7c487ac8b121bbd36b555",
+    "tools/lighthouse/extract-lhci-report.ts": "e9c1276532b68ed61d6a0388c283d7f68bbd84d36a93880f1697e4f0343c2753",
+    "apps/web/src/components/home/__tests__/AuthenticatedHomePage.a11y.test.tsx": "7b9a7fcb19746a056203da1467dc0bf496e55237b084f8ee3596984a0138bbb0",
+    "apps/web/src/components/home/__tests__/HomePageContent.codesplit.test.tsx": "2ecc7646751edae30c47f9bbbc6ee4f8e1d84bf3d46a6dd16632110e437e0da9",
+    "tools/lighthouse/__tests__/extract-lhci-report.test.ts": "eaf2d87b965ce6bb1169cf9640da8dc65de645d252705b4dbdfa8ef23ec04437",
+    "apps/web/src/components/home/AuthenticatedHomePage.tsx": "a7b859231e37decd3e2d958b68a6f7b73b6164c38fb5f3042ecad7b3e698d78f",
+    "apps/web/src/components/home/HomePageContent.tsx": "fdd4cb725af5e59df1a9731c1a3dd715ef4908c0651f5f807af0beac5467325e",
+    "apps/web/src/components/home/DraggablePinnedItem.tsx": "1014cd5528b56e40f1d5125ca382f75f4d9e6cc550fe51c780706f06f20f30f3",
+    "apps/web/src/app/loading.tsx": "bcaaf1833dab4d670035d98d58dbceded1ea560707824323f9ed8f79b1249e54",
+    "infra/monitoring/performance-budgets.json": "818682f2caeeb9fed74d21285d5147207251ddac82c158dd581421cb0f725ed3",
+    "lighthouserc.js": "496144c0b6c368c984fe25acd88d5ed4abd9feefd0176ddb318b346ed77949b9",
+    "apps/web/src/components/home/__tests__/AuthenticatedHomePage.test.tsx": "35c2f74fcf8b0a0fa4410739509a10c76a362ea1015cdbb7bab39a9fe5b52cfd"
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-04-10T19:35:00Z",
+      "duration_ms": 15000
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run src/components/home/__tests__/ tools/lighthouse/__tests__/extract-lhci-report.test.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-04-10T19:37:00Z",
+      "duration_ms": 6000
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter @intelliflow/web lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-04-10T19:38:00Z",
+      "duration_ms": 12000
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-04-10T19:40:00Z",
+      "duration_ms": 85000
+    }
+  ],
+  "evidence_summary": {
+    "tests_passing": 268,
+    "regression_tests_passing": 262,
+    "files_created": 6,
+    "files_modified": 12,
+    "completed_acceptance_criteria": ["AC-001", "AC-002", "AC-003", "AC-004", "AC-005", "AC-006", "AC-008", "AC-009", "AC-010", "AC-011", "AC-012", "AC-013", "AC-014", "AC-015", "NF-005"],
+    "blocked_acceptance_criteria": []
+  },
+  "kpi_results": {
+    "coverage_statements": 96.02,
+    "coverage_branches": 91.76,
+    "coverage_functions": 90.74,
+    "coverage_lines": 96.37,
+    "thresholds": {
+      "statements": 90,
+      "branches": 80,
+      "functions": 90,
+      "lines": 90
+    },
+    "all_thresholds_met": true
+  },
+  "gate_results": {
+    "plan_checkboxes": {
+      "total": 137,
+      "checked": 137,
+      "remaining": 0,
+      "percentage": 100,
+      "verdict": "PASS",
+      "note": "Supabase blocker resolved 2026-04-11; all LHCI items now complete"
+    },
+    "artifact_verification": "PASS",
+    "import_reachability": "PASS",
+    "runtime_wiring": "PASS",
+    "build_validation": "PASS",
+    "coverage_measurement": "PASS",
+    "lhci_artifact": "PASS"
+  },
+  "notes": "All implementation code, tests, configs, and documentation are complete. 3 test regressions fixed this session (SVG role='img', heading text, EmptyState refactor). Pre-existing build blocker fixed (unused @ts-expect-error). Supabase connectivity blocker resolved 2026-04-11; LHCI authenticated audit completed and all acceptance criteria (AC-001-005, NF-005) verified."
+}

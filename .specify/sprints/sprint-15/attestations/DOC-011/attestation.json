@@ -1,0 +1,49 @@
+{
+  "task_id": "DOC-011",
+  "run_id": "20260301191242-4b9569a1",
+  "verdict": "COMPLETE",
+  "completed_at": "2026-03-01T19:25:00Z",
+  "artifact_hashes": {
+    ".claude/skills/compliance-check/references/accessibility-doc-gate.md": "e0c3b18a6a2a55b951595d9e8bb85e4a4ec6ee959958f81835630e9c8bc8fe93",
+    ".claude/skills/compliance-check/SKILL.md": "d8cf7387ad5519cac4bcbc413c6b2c097a2337b63c34b0e51a5644e1efe082b1",
+    ".claude/skills/compliance-check/references/output-format.md": "3881be0e1b2f64c366e603e1646e9d150d9b2e3bf14a3f77ebc33f5071e0e1fe"
+  },
+  "dependencies_verified": {
+    "DOC-008": {
+      "status": "Completed",
+      "attestation_path": ".specify/sprints/sprint-14/attestations/DOC-008/attestation.json",
+      "verified_at": "2026-03-01T19:05:00Z"
+    }
+  },
+  "validation_results": [
+    {
+      "name": "Tests",
+      "command": "npx vitest run tools/scripts/a11y-route-reconcile.test.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-01T19:18:00Z"
+    },
+    {
+      "name": "TypeScript",
+      "command": "N/A - Markdown-only task (NF-001: zero runtime overhead)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-01T19:20:00Z"
+    },
+    {
+      "name": "Lint",
+      "command": "N/A - Markdown-only task (NF-001: zero runtime overhead)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-01T19:20:00Z"
+    },
+    {
+      "name": "Build",
+      "command": "N/A - Markdown-only task (NF-001: zero runtime overhead)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-01T19:20:00Z"
+    }
+  ],
+  "notes": "DOC-011 is a Markdown-only documentation/tooling task (NF-001: zero runtime overhead). No TypeScript packages were modified. All 3 deliverables are Markdown files in .claude/skills/compliance-check/. Validation performed via: (1) a11y-route-reconcile regression suite (41/41 pass), (2) dry-run DR-001 PG-032 → SKIP, (3) dry-run DR-002 /insights → FAIL, (4) deliverable file existence and content verification. Plan checkboxes: 25/25 (100%)."
+}

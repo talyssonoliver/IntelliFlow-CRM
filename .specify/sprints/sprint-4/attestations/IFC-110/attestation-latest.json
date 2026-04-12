@@ -1,0 +1,67 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-110",
+  "run_id": "sprint4-audit-20260302T215722-8m0gaz",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:57:29.803Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 3,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    ".specify/sprints/sprint-4/attestations/IFC-110/context_ack.json": "cf3e30d470a0d642a622453e5fa20e1f5037250e8fe2709dbdf8760eab1bf5c6",
+    "docs/planning/adr/ADR-019-core-crm-foundation.md": "95b48bd4fbff6a06f870be0ad248847d51b354705f6d89ea8d5ea1e2b27821fb",
+    "docs/planning/prd-core-crm.md": "7b7dff301febbb7adfd0a53ba0a9cbf36c70da93758d9c77acb62a31a118c219"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-110",
+      "command": "pnpm test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 180000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-101",
+    "IFC-102",
+    "IFC-103",
+    "IFC-104",
+    "IFC-105"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "All domain entities have unit and integration tests covering business logic and repository operations",
+      "met": true,
+      "evidence": "All 1 validations passed"
+    },
+    {
+      "criterion": "artifacts: context_ack.json",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "targets: >=90%",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "gates: coverage-gte-90",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "3 DoD criteria unverified"
+}

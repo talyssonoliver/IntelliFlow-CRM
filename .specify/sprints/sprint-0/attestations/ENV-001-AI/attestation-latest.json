@@ -1,0 +1,106 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "ENV-001-AI",
+  "run_id": "sprint0-audit-20260302T215641-7da797",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:56:49.904Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 31,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "turbo.json": "64bbd3cfb225761afb498e0de355cbe7401a6aae02fa4cef9215de0bc7a31ce8",
+    "pnpm-workspace.yaml": "59db7aa3290f4dff4930b80da76d74b2159d830a04ce22129573990b51e64dcf",
+    "apps/ai-worker/package.json": "62aa6a1d9ec3ecc1ee208f31816ba0a91357afb5940e6b524336e7619ca3db3d",
+    "apps/ai-worker/tsconfig.json": "24194867da3674284523859ceb5876202da09dc32ac8d357886adf034a6e67b3",
+    "vitest.config.ts": "c77f4bffce89f5c9bc0ab9368773e26ef49c7f7bcf224dfe72eefb118144db1f",
+    "apps/ai-worker/.env.example": "f84e99c7d0f82a41d0f83e7ba6321f14b67f6e54baf4684feddb5dc887273a9b",
+    "eslint.config.mjs": "af7b1c6eb6ffc7865009737f19ac130bfb4a39b0a56ccd9fb5b85fffaea03a37",
+    "apps/ai-worker/.gitignore": "e3a240ebeb95df2bdd3aa32c5882ece01bdb81d6af8a7fff542ece1027e52073",
+    "apps/api/package.json": "9e6e6dc7042aa34ad20b232e03db76377f5ca2708c1da762aa3edf03baf5a50c",
+    "apps/api/src/index.ts": "34c9e0cf4735a058ad9b9cb6ae21f8bc96ecd627fe653b9defb8700ea0af02ad",
+    "apps/api/src/context.ts": "d4090f9abdbf741207599368ba0bc947e8bf9ed3a3706c662ce58c0d7feb2541",
+    "packages/domain/package.json": "faaadd4f3cbe4d1a342ce7d487f27e6a603024cd089f5f52f1e35f568b7ca8bb",
+    "packages/domain/tsconfig.json": "3694768136ca88d7c3d3b0c0c7c0318d9614053b72096741e80fd8f9824d2448",
+    "packages/application/package.json": "a70079cf89641c30ba5940c08c4b4717430f6bfd1bfc0d8e7f4adfdbad9f8c46",
+    "packages/application/tsconfig.json": "ea0154c9ba2d1c402f9006f4be5e6c5e1c534cac9caf9716dc890c2137e09ad9",
+    "packages/adapters/package.json": "c7c50de7b8ec58e19bdfb4e1c34337bc7b7cb0fee3e9a875a9d9b6e047f4b10e",
+    "packages/adapters/tsconfig.json": "ea0154c9ba2d1c402f9006f4be5e6c5e1c534cac9caf9716dc890c2137e09ad9",
+    "packages/validators/package.json": "af435d29d7cc9992f07b0ec05820aa89826cb6644134acf79aaa7f0e56410c70",
+    "packages/validators/tsconfig.json": "bbbd0e04460f521384e1b70ca7763a115436729bd0fdf316486d152356a32b84",
+    "packages/db/package.json": "a72b77f8617ff836c63a418a70a25178076ae62254ea652d615843ada25bb30b",
+    "packages/db/tsconfig.json": "1178749e96674a1203045d708734e1082de0cd03c689f002e91d3785adcf5da0",
+    "packages/ui/package.json": "2c6867ee7d23456eeaefc788cee272318f6e3a5f38640c7935145799f48052a8",
+    "packages/ui/tsconfig.json": "82cf433b95ff2052adb034404956aef334c385311029cb3aeb79872fbc043404",
+    "packages/api-client/package.json": "2b7523595db9af2f5cf4506516b8eb28456234b9d0907a93fe1cf12323cd2fe4",
+    "packages/api-client/tsconfig.json": "8cddd146a8c909e0712b7384f2c04c37b09d30bf3b0ab5ff606d32b2a52324b1",
+    "packages/typescript-config/package.json": "0a028d00e4cbae9a0e302d1cceba91f7b12db0a59a8ec74299b82751d2a054f8",
+    "packages/typescript-config/base.json": "c0cb4389070f0b6604072845281c2c4c049efc2e0b55d28ef747af95186183d7",
+    "packages/typescript-config/nextjs.json": "c6e130340598a2da61572d136f5acf8e44473820514fb1c0883e4578973d1768",
+    "packages/typescript-config/react.json": "ee4622a5d1fc4f2da48df64c12bb687d792ab88963b2c3a1533f7e030edfc1d1",
+    "packages/typescript-config/react-library.json": "120b9ef5071ac622ea40c9709ad2fc1c50df5cdf52dc81ce89c2b6ae8667f82a",
+    ".specify/sprints/sprint-0/attestations/ENV-001-AI/context_ack.json": "b42f8c24ceb62afcc1068c517ed61420507a8f9b1df914a918ecafe9e5e8558f"
+  },
+  "validation_results": [
+    {
+      "name": "ENV-001-AI",
+      "command": "pnpm build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 182000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "AI-SETUP-001"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Monorepo generated via Claude slash command",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "structure validated",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "AI-optimized configuration",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "targets: >=100%",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "<10 min",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "zero errors",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "verified by: pnpm build",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "7 DoD criteria unverified"
+}

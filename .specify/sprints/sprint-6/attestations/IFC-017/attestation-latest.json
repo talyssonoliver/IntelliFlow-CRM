@@ -1,0 +1,76 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-017",
+  "run_id": "sprint6-audit-20260302T215741-ex8v6u",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:57:48.960Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 6,
+    "validations_passed": 2,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "packages/db/src/client.ts": "0113fe04c0d6b7cc2850a9b5edb76fbeced2f1877028030ce132a94d107376fd",
+    "artifacts/benchmarks/query-performance.csv": "4e25d39b13eb3dfa90cd9e1bc79066d1494ad8097615984589087e8e6aae4e5d",
+    "artifacts/misc/pgvector-test.sql": "f337c5c6302e9b86126335d6af1d34a151d9c0f2ac52ca43cdb6d9df454fbb24",
+    "apps/project-tracker/docs/metrics/_global/flows/FLOW-002.md": "869fc83b4b9957fba7643c30ff6b5fbc02630ecc1b192b3d95211dda57dc4949",
+    "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-002-validation.md": "438a5729539842f4c1da092828199ea256759eb99e8cd39bed6e0bb4b0da0e47",
+    ".specify/sprints/sprint-6/attestations/IFC-017/context_ack.json": "b2b362e6eb9a087344965b516aadc8deac2451c8cdc7b8a3d253c0b079ac010b"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-017",
+      "command": "pnpm --filter @intelliflow/api typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 20000,
+      "stdout_hash": "all-green-1772476872408"
+    },
+    {
+      "name": "IFC-017",
+      "command": "pnpm --filter @intelliflow/api test --run",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 60000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-012",
+    "IFC-013"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Type-safe database queries",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "pgvector configured",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "targets: <20ms",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "zero errors",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "4 DoD criteria unverified"
+}

@@ -1,0 +1,54 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "TRACK-005",
+  "run_id": "sprint14-audit-20260302T215859-6dbfyi",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:59:16.664Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 3,
+    "validations_passed": 0,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/project-tracker/components/tracking/SecurityDashboard.tsx": "9c77af147d1d58ccb46805749637997a0e892cab95364449652afbda06ba4f9d",
+    "apps/project-tracker/app/api/tracking/security/route.ts": "7549557ccff58242f71ce7e601cc9cd5ebed33ff36ff7179ca19e4437d8d6fab",
+    ".specify/sprints/sprint-14/attestations/TRACK-005/context_ack.json": "0b118db8b04ab80f6528463b78ea69d55e86821be3886735364fc1139934c09b"
+  },
+  "validation_results": [],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "EXC-SEC-001",
+    "IFC-121"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Dashboard shows vulnerability counts by severity",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "scan history",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "run-scan button",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "remediation tracking",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "4 DoD criteria unverified"
+}

@@ -1,0 +1,68 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "TRACK-004",
+  "run_id": "sprint14-audit-20260302T215859-6dbfyi",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:59:16.659Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 3,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/project-tracker/components/tracking/AIMetrics.tsx": "c6bcff0378a84a3674ca069a48ef9cc4bba313f4cf5f724d626c99b3dc9ef061",
+    "apps/project-tracker/app/api/tracking/ai/route.ts": "948478fea1969f1c28a477876b2b3d23df6f9ebe5714a2162527494d156a6a79",
+    ".specify/sprints/sprint-14/attestations/TRACK-004/context_ack.json": "f3a88170e2a452e6d00b985b31f47ed0406878da96145a29439461c32d7983a1"
+  },
+  "validation_results": [
+    {
+      "name": "TRACK-004",
+      "command": "pnpm --filter project-tracker typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T21:59:13.320Z",
+      "duration_ms": 3337,
+      "stdout_hash": "98fdeb9ae64bcab109ef35b0cfcdd4b559cdf3db9593c0fe33f952688eb27376"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "AUTOMATION-002"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Dashboard shows AI latency",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "accuracy",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "cost per model",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "drift alerts",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "refresh capability",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "5 DoD criteria unverified"
+}

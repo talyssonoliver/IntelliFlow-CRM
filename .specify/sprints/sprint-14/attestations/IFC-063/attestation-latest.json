@@ -1,0 +1,71 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-063",
+  "run_id": "sprint14-audit-20260302T215859-6dbfyi",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:59:07.042Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 5,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/api/src/modules/opportunity/pipeline-config.router.ts": "17fb173fa7f60ea712e9c3b6b9b3cd4cae7a972564691a6e2773cb6c74254a35",
+    "apps/web/src/app/settings/pipeline/page.tsx": "9724440d84323d3fc0214219382c41fb7b0f5a6b8ca1f275ce16c483d1c59020",
+    ".specify/sprints/sprint-14/attestations/IFC-063/context_ack.json": "53ceade741d8622dc1fa624e93f52b568fae70839241512044cfdb24f1a754ce",
+    "docs/planning/adr/ADR-019-core-crm-foundation.md": "95b48bd4fbff6a06f870be0ad248847d51b354705f6d89ea8d5ea1e2b27821fb",
+    "docs/planning/prd-core-crm.md": "7b7dff301febbb7adfd0a53ba0a9cbf36c70da93758d9c77acb62a31a118c219"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-063",
+      "command": "pnpm test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 180000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-091",
+    "IFC-104"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Users can customize pipeline stages",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "colors",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "and order",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "artifacts: pipeline-config.ts",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "targets: <100ms save",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "5 DoD criteria unverified"
+}

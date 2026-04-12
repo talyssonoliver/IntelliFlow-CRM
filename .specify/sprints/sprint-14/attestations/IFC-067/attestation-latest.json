@@ -1,0 +1,68 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-067",
+  "run_id": "sprint14-audit-20260302T215859-6dbfyi",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:59:07.066Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 3,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/ai-worker/src/chains/ticket-routing.chain.ts": "9c48fe0ff21fc673fcf7b6548ab0c299ff04139a010f933ce107638d68106b7b",
+    "apps/api/src/modules/ticket/__tests__/routing.test.ts": "1da10f92b1cd4a4ac6198c73e9d62659f7043ed17a43e40848449f66ceba5314",
+    ".specify/sprints/sprint-14/attestations/IFC-067/context_ack.json": "0784c08ccb406969c7619d2538f5f90b1e4e0926ff82b6507a26ee0ecaf0f7be"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-067",
+      "command": "pnpm test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 180000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-093"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "AI-powered ticket routing based on content",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "urgency",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "and agent skills",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "targets: <1s routing",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": ">85% accuracy",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "5 DoD criteria unverified"
+}

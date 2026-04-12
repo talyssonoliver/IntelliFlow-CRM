@@ -1,0 +1,131 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "PG-163",
+  "run_id": "20260301190626-e5172a33",
+  "attestor": "Claude Code - Task Integrity Validator",
+  "attestation_timestamp": "2026-03-01T19:18:00Z",
+  "verdict": "COMPLETE",
+  "context_acknowledgment": {
+    "files_read": [
+      {
+        "path": "apps/api/src/modules/home/home.router.ts",
+        "sha256": "f807a632cb3bd1b218d6c15c05bd5d0e29dbd90e0dac95fd70770d7768dc07c0"
+      }
+    ],
+    "invariants_acknowledged": [
+      "All 9 home router endpoints use protectedProcedure requiring auth",
+      "BullMQ is fire-and-forget for insight generation",
+      "Coverage thresholds: Stmt >=90%, Branch >=80%, Fn >=90%, Lines >=90%",
+      "No production code changes — QA testing task only",
+      "Existing regression suites must not break"
+    ],
+    "acknowledged_at": "2026-03-01T19:06:00Z"
+  },
+  "evidence_summary": {
+    "artifacts_verified": 1,
+    "validations_passed": 4,
+    "validations_failed": 0,
+    "gates_passed": 10,
+    "gates_failed": 0,
+    "kpis_met": 3,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/api/src/modules/home/__tests__/home.router.coverage.test.ts": "51d93fad4afed1fa1037f763b48868fe79b11f30c6170d8f922fe1123feeb88d"
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/api typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-01T19:13:00Z"
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run apps/api/src/modules/home/__tests__/",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-01T19:12:41Z",
+      "duration_ms": 2360
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter @intelliflow/api lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-01T19:13:10Z"
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/api build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-01T19:13:30Z",
+      "duration_ms": 15000
+    }
+  ],
+  "gate_results": [
+    { "gate_id": "gate-0-context-ack", "passed": true, "timestamp": "2026-03-01T19:17:00Z" },
+    { "gate_id": "gate-1-plan-checkboxes", "passed": true, "score": 100, "timestamp": "2026-03-01T19:17:00Z" },
+    { "gate_id": "gate-2-artifact-hashes", "passed": true, "timestamp": "2026-03-01T19:17:00Z" },
+    { "gate_id": "gate-2b-import-reachability", "passed": true, "timestamp": "2026-03-01T19:17:00Z" },
+    { "gate_id": "gate-2c-runtime-wiring", "passed": true, "timestamp": "2026-03-01T19:17:00Z" },
+    { "gate_id": "gate-3-build-validation", "passed": true, "timestamp": "2026-03-01T19:17:00Z" },
+    { "gate_id": "gate-3a-validation-matrix", "passed": true, "timestamp": "2026-03-01T19:17:00Z" },
+    { "gate_id": "gate-3b-scoped-coverage", "passed": true, "score": 96.59, "timestamp": "2026-03-01T19:17:00Z" },
+    { "gate_id": "gate-3c-dead-code", "passed": true, "timestamp": "2026-03-01T19:17:00Z" },
+    { "gate_id": "gate-4-stoa", "passed": true, "timestamp": "2026-03-01T19:17:00Z" }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Coverage on home.router.ts",
+      "target": "Statements >=90%, Branches >=80%, Functions >=90%, Lines >=90%",
+      "actual": "Statements 96.59%, Branches 87.95%, Functions 100%, Lines 96.51% (166 tests)",
+      "met": true
+    },
+    {
+      "kpi": "All 9 endpoints tested",
+      "target": "9 endpoints with auth + functional tests",
+      "actual": "9 endpoints tested: getWelcomeSummary, getAIInsights, getDailyGoal, updateDailyGoal, getPinnedItems, pinItem, unpinItem, reorderPinnedItems, getAllInsights",
+      "met": true
+    },
+    {
+      "kpi": "Suite execution time",
+      "target": "<30s",
+      "actual": "2.36s",
+      "met": true
+    }
+  ],
+  "dependencies_verified": ["PG-129"],
+  "definition_of_done_items": [
+    {
+      "criterion": "Integration tests for all 9 home router endpoints",
+      "met": true,
+      "evidence": "58 new tests covering all 9 endpoints in home.router.coverage.test.ts"
+    },
+    {
+      "criterion": "Mock-based with full middleware chain",
+      "met": true,
+      "evidence": "Tests use createCaller with full protectedProcedure middleware chain"
+    },
+    {
+      "criterion": "Covers auth, pagination, error cases",
+      "met": true,
+      "evidence": "9 auth rejection tests, 5 pagination tests, error/edge case tests throughout"
+    },
+    {
+      "criterion": ">90% coverage on home.router.ts",
+      "met": true,
+      "evidence": "Statements 96.59%, Branches 87.95%, Functions 100%, Lines 96.51%"
+    }
+  ],
+  "environment": {
+    "os": "Windows 11 Pro 10.0.26200",
+    "node_version": "v25.2.1",
+    "git_commit": "a43fd0f0",
+    "branch": "sprint0/codex-run"
+  },
+  "notes": "QA testing task. 58 new tests added in home.router.coverage.test.ts covering all 9 home router endpoints. No production code changes. All existing regression suites (91 + 17 tests) continue to pass. Coverage exceeds all thresholds."
+}

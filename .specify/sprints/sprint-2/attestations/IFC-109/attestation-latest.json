@@ -1,0 +1,66 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-109",
+  "run_id": "sprint2-audit-20260302T215701-sei6sy",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:57:09.899Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 6,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "docs/tdd-guidelines.md": "4387ed3cf456f17a7510a44ad10ba933d15cbba90f2292e481779b4c1af41473",
+    "artifacts/misc/ci-coverage-config.yml": "178921ba3fde882335a197c3b341ab2b2b86b9d6f0a5b60f13ca1bb66c77d51f",
+    "docs/shared/review-checklist.md": "7f42ba091d6782d0fb518a02830b69aa6f8137225bd3933feb8a021ca7594920",
+    ".specify/sprints/sprint-2/attestations/IFC-109/context_ack.json": "d6797ae06a0df2add3ba1d54f155036fea93c11529647457ed3f86c8f464d93c",
+    "docs/planning/adr/ADR-019-core-crm-foundation.md": "95b48bd4fbff6a06f870be0ad248847d51b354705f6d89ea8d5ea1e2b27821fb",
+    "docs/planning/prd-core-crm.md": "7b7dff301febbb7adfd0a53ba0a9cbf36c70da93758d9c77acb62a31a118c219"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-109",
+      "command": "pnpm test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 180000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-002"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "TDD guidelines documented",
+      "met": true,
+      "evidence": "Documentation found: docs/tdd-guidelines.md, docs/shared/review-checklist.md, docs/planning/adr/ADR-019-core-crm-foundation.md, docs/planning/prd-core-crm.md"
+    },
+    {
+      "criterion": "coverage threshold 90% enforced via CI",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "code review checklist established",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "gates: coverage-gte-90",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "3 DoD criteria unverified"
+}

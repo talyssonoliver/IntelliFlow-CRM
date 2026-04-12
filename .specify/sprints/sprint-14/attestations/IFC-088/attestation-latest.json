@@ -1,0 +1,85 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-088",
+  "run_id": "sprint14-audit-20260302T215859-6dbfyi",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:59:07.093Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 15,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "artifacts/misc/sonar-project.properties": "f50254e1266c72662bc60efd59e1b6ce4a55854f6bbf9b7d796d829ff4f2ee7d",
+    "artifacts/misc/quality-gate-config.json": "ace8d93d9887caea60865ebe6f247c0d78dacc5c75bc17c82b16a89e0474cc9d",
+    "artifacts/reports/sonarqube-debt-report.html": "3861a4e806ccdfd5589bfd3d18cb12815d3bf7aaa652154a7c215953ec38bef9",
+    "docs/shared/refactoring-backlog.md": "2a89d18bbb6088f215700b8989f8333b270632cd23cd4d63a42db430db81ccc6",
+    "scripts/sonar-iterative.js": "d3720d1999ecfedb25e7009122299932ae33b2b9f39ced91183fbd2dd85f229c",
+    "scripts/sonar-new-issues.js": "295d2d3dca7bda0f85eceec2d86dfddde378b6a61ac1dff954b91129c54bc5b7",
+    "scripts/sonar-report-generator.js": "a943fd3b765945b4efd48bf2f96c4ab3fbd3d3fa4bef543dc173de99e755afda",
+    "scripts/sonar-scan.js": "8382e0bed5a39d6d8b89899bfcbaedf7c15246cc291a2ca165b7907e29edb80a",
+    "scripts/sonar-set-new-code-baseline.js": "003c794245da33e90a4a9bc1ec10f2de381da826c0e769a19a8bcc3e9373444c",
+    "scripts/sonar-status.js": "03f385b5cc13f78f99c84369fff5f74a739752f4732ea36b6bc97f72b5adaeff",
+    "scripts/sonar-tracker.js": "6161be41fcd10effb0b8dfe2a007b889f7acb13a0bade521cb21544b7cba49b9",
+    "scripts/sonarqube-helper.js": "5df49f0f8fa672b0b05dc2f4524e62c27344c57b8ccfe7028d3de304f15fe272",
+    "scripts/setup-quality-tools.sh": "aeea2ce077e222e11846614b80faf0708521bbd9d03a0e1b8109aa3acfb3b264",
+    "scripts/pnpm-audit-report.js": "983a162443e77204429f3cc486e88506e220ab7156ba61164767855854321399",
+    ".specify/sprints/sprint-14/attestations/IFC-088/context_ack.json": "95cca96edc37b153c8034a24ab5fdad3a2c5006d8777d0cc9685dffb98159d1f"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-088",
+      "command": "pnpm typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 90000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-044"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Quality gates enforced",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "technical debt tracked",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "artifacts: sonarqube-project.properties",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "quality-gate-config.json",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "debt-trending.pdf",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "targets: >=3%",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "6 DoD criteria unverified"
+}

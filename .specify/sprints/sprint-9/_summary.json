@@ -1,0 +1,445 @@
+{
+  "sprint": "sprint-9",
+  "name": "Sprint 9 - Risk Management",
+  "generated_at": "2026-04-11T16:48:01.958Z",
+  "summary_source": "specify",
+  "task_summary": {
+    "total": 7,
+    "completed": 7,
+    "backlog": 0,
+    "blocked": 0,
+    "attested_completed": 7
+  },
+  "context": "Primary focus areas: Risk Mgmt (2), Compliance (1), Migration (1).",
+  "section_summary": [
+    {
+      "section": "Risk Mgmt",
+      "total": 2,
+      "completed": 2,
+      "open": 0
+    },
+    {
+      "section": "Compliance",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Migration",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Observability",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Ops & Observability",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Reports",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    }
+  ],
+  "notable_completed": [
+    {
+      "taskId": "IFC-056",
+      "sprint": 9,
+      "status": "Completed",
+      "section": "Risk Mgmt",
+      "title": "Team Upskilling Program - Create training/upskilling documentation and artifacts",
+      "description": "Team Upskilling Program",
+      "summary": "Team upskilling program documentation complete. 8-person team assessed across 6 core technology areas. Skill assessment shows distributed expertise: 3 high-performers (4.6+ average), 3 mid-level (3.4-3.6), 2 requiring intervention (2.6-2.8).......",
+      "definitionOfDone": "Continuous learning: tRPC, Next.js 16.0.10 (Turbopack FS caching, Cache Components, proxy replacing middleware), LangChain",
+      "definitionOfDoneSnapshot": "Continuous learning: tRPC, Next.js 16.0.10 (Turbopack FS caching, Cache Components, proxy replacing middleware), LangChain",
+      "dependencies": [
+        "IFC-009"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-9/attestations/IFC-056/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-29T14:35:00Z",
+        "sprintFolder": 9
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 7,
+        "met": 5,
+        "missed": 2
+      }
+    },
+    {
+      "taskId": "IFC-145",
+      "sprint": 9,
+      "status": "Completed",
+      "section": "Migration",
+      "title": "Plan and execute legacy system migration: discover and map data; assess data quality; design migration scripts; run rehearsals and reconciliation reporting; finalize cutover with rollback plan",
+      "description": "Plan and execute legacy system migration: discover and map data; assess data quality; design migration scripts; run rehearsals and reconciliation reporting; finalize cutover with rollback plan",
+      "summary": "IFC-145 Legacy System Migration - Migration planning documents and scripts created successfully. All required artifacts generated with comprehensive coverage:......",
+      "definitionOfDone": "Data mapping documents created; migration scripts developed and tested; rehearsal migration executed with reconciliation reports; cutover plan created with rollback procedure; final migration executed with acceptance of accuracy and completeness; targets: >=99%",
+      "definitionOfDoneSnapshot": "Create mapping.csv with Source_Table, Source_Column, Target_Table, Target_Column, Transform columns; Create rehearsal-report.md documenting test migration results; Create cutover-plan.md with phases, rollback triggers, and recovery steps",
+      "dependencies": [
+        "IFC-002",
+        "IFC-136"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-9/attestations/IFC-145/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-29T15:23:30Z",
+        "sprintFolder": 9
+      },
+      "validationSummary": {
+        "total": 7,
+        "passed": 7,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-097",
+      "sprint": 9,
+      "status": "Completed",
+      "section": "Ops & Observability",
+      "title": "Distributed Tracing & Logging",
+      "description": "Distributed Tracing & Logging",
+      "summary": "99% of requests traced via OpenTelemetry middleware; All 34 API endpoints have distributed tracing enabled; Correlation IDs propagate across service boundaries 99% of requests traced; Dashboards available; Trace coverage report created",
+      "definitionOfDone": "99% of requests traced, dashboards available; artifacts: dashboard-catalog.md, context_ack.json; gates: coverage-gte-90",
+      "definitionOfDoneSnapshot": "99% of requests traced; Dashboards available; Trace coverage report created",
+      "dependencies": [
+        "IFC-007"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-9/attestations/IFC-097/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-29T00:00:00.000Z",
+        "sprintFolder": 9
+      },
+      "validationSummary": {
+        "total": 9,
+        "passed": 9,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-124",
+      "sprint": 9,
+      "status": "Completed",
+      "section": "Compliance",
+      "title": "Audit Logs Encryption & Compliance",
+      "description": "Encrypt and aggregate audit logs; automate compliance reporting",
+      "summary": "Task must create three required artifacts; Encryption module must support AES-256-GCM with key rotation; Retention policy must document compliance requirements Create audit-encryption-module.ts with AES-256-GCM encryption;...",
+      "definitionOfDone": "Audit logs encrypted and stored centrally; scheduled exports for compliance frameworks; data minimization applied; artifacts: encryption.ts, audit-logger.ts, retention-policy.md, compliance-report.md",
+      "definitionOfDoneSnapshot": "Create audit-encryption-module.ts with AES-256-GCM encryption; Create retention-policy.md documenting retention periods, compliance, and purge schedules; Create attestation.json with verdict: COMPLETE",
+      "dependencies": [
+        "IFC-098"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-9/attestations/IFC-124/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-29T03:15:32.000Z",
+        "sprintFolder": 9
+      },
+      "validationSummary": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-116",
+      "sprint": 9,
+      "status": "Completed",
+      "section": "Observability",
+      "title": "Create OpenTelemetry config and observability documentation",
+      "description": "Instrument application with OpenTelemetry, unify logs, metrics and traces",
+      "summary": "OpenTelemetry instrumentation fully configured and documented. All services can push traces, metrics, and logs.... All services emit structured logs, traces and metrics; dashboards and alerts created; SLOs defined",
+      "definitionOfDone": "All services emit structured logs, traces and metrics; dashboards and alerts created; SLOs defined; targets: >=100%, <2min",
+      "definitionOfDoneSnapshot": "All services emit structured logs, traces and metrics; dashboards and alerts created; SLOs defined",
+      "dependencies": [
+        "IFC-074"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-9/attestations/IFC-116/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": null,
+        "sprintFolder": 9
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    }
+  ],
+  "open_tasks": [],
+  "tasks": [
+    {
+      "taskId": "IFC-056",
+      "sprint": 9,
+      "status": "Completed",
+      "section": "Risk Mgmt",
+      "title": "Team Upskilling Program - Create training/upskilling documentation and artifacts",
+      "description": "Team Upskilling Program",
+      "summary": "Team upskilling program documentation complete. 8-person team assessed across 6 core technology areas. Skill assessment shows distributed expertise: 3 high-performers (4.6+ average), 3 mid-level (3.4-3.6), 2 requiring intervention (2.6-2.8).......",
+      "definitionOfDone": "Continuous learning: tRPC, Next.js 16.0.10 (Turbopack FS caching, Cache Components, proxy replacing middleware), LangChain",
+      "definitionOfDoneSnapshot": "Continuous learning: tRPC, Next.js 16.0.10 (Turbopack FS caching, Cache Components, proxy replacing middleware), LangChain",
+      "dependencies": [
+        "IFC-009"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-9/attestations/IFC-056/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-29T14:35:00Z",
+        "sprintFolder": 9
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 7,
+        "met": 5,
+        "missed": 2
+      }
+    },
+    {
+      "taskId": "IFC-057",
+      "sprint": 9,
+      "status": "Completed",
+      "section": "Risk Mgmt",
+      "title": "Create vendor abstraction documentation and migration test plan",
+      "description": "Vendor Lock-in Mitigation",
+      "summary": "Can migrate from Supabase/Vercel if needed",
+      "definitionOfDone": "Can migrate from Supabase/Vercel if needed; artifacts: vendor-abstraction-layers.md, migration-test-plan.yaml, portability-test.log",
+      "definitionOfDoneSnapshot": "Can migrate from Supabase/Vercel if needed",
+      "dependencies": [
+        "IFC-011"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-9/attestations/IFC-057/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": null,
+        "sprintFolder": 9
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-096",
+      "sprint": 9,
+      "status": "Completed",
+      "section": "Reports",
+      "title": "Custom dashboards created with export functionality (CSV/PDF) in apps/web",
+      "description": "Custom Reports & Dashboards",
+      "summary": "Custom dashboards created, export functional",
+      "definitionOfDone": "Custom dashboards created, export functional; artifacts: context_ack.json; verified by: pnpm build",
+      "definitionOfDoneSnapshot": "Custom dashboards created, export functional",
+      "dependencies": [
+        "IFC-091",
+        "IFC-092",
+        "IFC-108"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-9/attestations/IFC-096/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": null,
+        "sprintFolder": 9
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-097",
+      "sprint": 9,
+      "status": "Completed",
+      "section": "Ops & Observability",
+      "title": "Distributed Tracing & Logging",
+      "description": "Distributed Tracing & Logging",
+      "summary": "99% of requests traced via OpenTelemetry middleware; All 34 API endpoints have distributed tracing enabled; Correlation IDs propagate across service boundaries 99% of requests traced; Dashboards available; Trace coverage report created",
+      "definitionOfDone": "99% of requests traced, dashboards available; artifacts: dashboard-catalog.md, context_ack.json; gates: coverage-gte-90",
+      "definitionOfDoneSnapshot": "99% of requests traced; Dashboards available; Trace coverage report created",
+      "dependencies": [
+        "IFC-007"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-9/attestations/IFC-097/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-29T00:00:00.000Z",
+        "sprintFolder": 9
+      },
+      "validationSummary": {
+        "total": 9,
+        "passed": 9,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-116",
+      "sprint": 9,
+      "status": "Completed",
+      "section": "Observability",
+      "title": "Create OpenTelemetry config and observability documentation",
+      "description": "Instrument application with OpenTelemetry, unify logs, metrics and traces",
+      "summary": "OpenTelemetry instrumentation fully configured and documented. All services can push traces, metrics, and logs.... All services emit structured logs, traces and metrics; dashboards and alerts created; SLOs defined",
+      "definitionOfDone": "All services emit structured logs, traces and metrics; dashboards and alerts created; SLOs defined; targets: >=100%, <2min",
+      "definitionOfDoneSnapshot": "All services emit structured logs, traces and metrics; dashboards and alerts created; SLOs defined",
+      "dependencies": [
+        "IFC-074"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-9/attestations/IFC-116/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": null,
+        "sprintFolder": 9
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-124",
+      "sprint": 9,
+      "status": "Completed",
+      "section": "Compliance",
+      "title": "Audit Logs Encryption & Compliance",
+      "description": "Encrypt and aggregate audit logs; automate compliance reporting",
+      "summary": "Task must create three required artifacts; Encryption module must support AES-256-GCM with key rotation; Retention policy must document compliance requirements Create audit-encryption-module.ts with AES-256-GCM encryption;...",
+      "definitionOfDone": "Audit logs encrypted and stored centrally; scheduled exports for compliance frameworks; data minimization applied; artifacts: encryption.ts, audit-logger.ts, retention-policy.md, compliance-report.md",
+      "definitionOfDoneSnapshot": "Create audit-encryption-module.ts with AES-256-GCM encryption; Create retention-policy.md documenting retention periods, compliance, and purge schedules; Create attestation.json with verdict: COMPLETE",
+      "dependencies": [
+        "IFC-098"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-9/attestations/IFC-124/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-29T03:15:32.000Z",
+        "sprintFolder": 9
+      },
+      "validationSummary": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-145",
+      "sprint": 9,
+      "status": "Completed",
+      "section": "Migration",
+      "title": "Plan and execute legacy system migration: discover and map data; assess data quality; design migration scripts; run rehearsals and reconciliation reporting; finalize cutover with rollback plan",
+      "description": "Plan and execute legacy system migration: discover and map data; assess data quality; design migration scripts; run rehearsals and reconciliation reporting; finalize cutover with rollback plan",
+      "summary": "IFC-145 Legacy System Migration - Migration planning documents and scripts created successfully. All required artifacts generated with comprehensive coverage:......",
+      "definitionOfDone": "Data mapping documents created; migration scripts developed and tested; rehearsal migration executed with reconciliation reports; cutover plan created with rollback procedure; final migration executed with acceptance of accuracy and completeness; targets: >=99%",
+      "definitionOfDoneSnapshot": "Create mapping.csv with Source_Table, Source_Column, Target_Table, Target_Column, Transform columns; Create rehearsal-report.md documenting test migration results; Create cutover-plan.md with phases, rollback triggers, and recovery steps",
+      "dependencies": [
+        "IFC-002",
+        "IFC-136"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-9/attestations/IFC-145/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-29T15:23:30Z",
+        "sprintFolder": 9
+      },
+      "validationSummary": {
+        "total": 7,
+        "passed": 7,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "SALES-001",
+  "run_id": "sprint1-audit-20260302T215651-arwnsz",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:56:59.897Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 6,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "docs/sales/pitch-deck-outline.md": "2820e21f60c72c657719fdd950702127fca49a420b47ba469fec1342a37cfde7",
+    "docs/sales/one-pager.md": "e7a0936552bb5f781577d061c65fa8184d8eefa11a43b960ef14fb5337f41662",
+    "artifacts/misc/sales/pitch-deck-source-link.txt": "01c558fa9ba9b39e71055ecb65ca81f2b95f0a24569c81ff06fdae47b416d03f",
+    "artifacts/reports/SALES-001-quick-reference.md": "0411c6eb66254005c910d255016301318f67d214c475644aad70e627fbefd17b",
+    "artifacts/reports/SALES-001-validation-report.md": "8be768fdc42661d025660cf8c39c274e60c1fa48173d3e9422657d692e887233",
+    ".specify/sprints/sprint-1/attestations/SALES-001/context_ack.json": "d30aa649be8e9354bbcc6d2f0da8fee672913de04984b2c8616f44dcaf906186"
+  },
+  "validation_results": [
+    {
+      "name": "SALES-001",
+      "command": "pnpm lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 15000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "GTM-002",
+    "BRAND-001"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Deck outline (10–12 slides) with story arc",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "slide-by-slide content",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "and visual guidelines",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "plus one-pager (problem → solution → proof → CTA)",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "includes a single canonical link to design source (Figma/Canva)",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "verified by: pnpm lint",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "6 DoD criteria unverified"
+}

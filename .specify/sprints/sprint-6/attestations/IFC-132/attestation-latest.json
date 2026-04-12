@@ -1,0 +1,60 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-132",
+  "run_id": "sprint6-audit-20260302T215741-ex8v6u",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:57:49.052Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 5,
+    "validations_passed": 0,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    ".github/workflows/security-sbom.yml": "76a76ea032877232a548c7137ca8ad0eaa9f2411f2678b0514162240ada978d8",
+    "docs/security/supply-chain.md": "3f8762069865c3f3439b89c9e58214fffbacf2524c4f0d1968502b6cbc7f4ed9",
+    ".specify/sprints/sprint-6/attestations/IFC-132/context_ack.json": "5715dabee9c74160fe59b9f7c95519440e408b9947399b1026c9cd02aa181c26",
+    "docs/planning/adr/ADR-021-governance-ops-release.md": "626cf1c9c9b1ade20c318491fa1502f28f98416897ad101c60030cd72f0d0c00",
+    "docs/planning/prd-release-governance.md": "cd511206b991a249c6b5f2cae07efa2bccb453a7f7970a74c1cec1206e9741ef"
+  },
+  "validation_results": [],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "ENV-005-AI"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Dependencies pinned/locked",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "SBOM generated per build",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "SBOM stored as artifact",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "baseline policy documented",
+      "met": true,
+      "evidence": "Documentation found: docs/security/supply-chain.md, docs/planning/adr/ADR-021-governance-ops-release.md, docs/planning/prd-release-governance.md"
+    },
+    {
+      "criterion": "targets: >=100%",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "4 DoD criteria unverified"
+}

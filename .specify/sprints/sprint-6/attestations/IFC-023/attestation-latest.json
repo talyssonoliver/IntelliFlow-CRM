@@ -1,0 +1,77 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-023",
+  "run_id": "sprint6-audit-20260302T215741-ex8v6u",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:57:48.984Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 8,
+    "validations_passed": 2,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "packages/ui/src/components/score/ScoreCard.tsx": "94a74d4a1dfed733caf476cdf2bf3df3306a28f35ee2ddd9d58b862a2c392ace",
+    "packages/ui/src/components/score/ScoreFactorList.tsx": "add270a2360f23d199c2d91b2c6ff438ac988e7282d485f1bf14c723e4741a44",
+    "packages/ui/src/components/score/ScoreFactor.tsx": "6bcefddd54133017cb705bf41d3b6da8231d4d7d6e9c0928bdf9c0a963634ffd",
+    "packages/ui/src/components/score/ConfidenceIndicator.tsx": "368a7a498e2de5c8c8b5579c3fc7e5f9aeed3ac344f664d865a95a05f8362701",
+    "packages/ui/src/components/score/ModelInfo.tsx": "36677ab7ec7453575bd23cad78c88ecc120cb8d579c73a80d84b55f54d1373ce",
+    "packages/ui/src/components/score/ScoreBadge.tsx": "2bbbaca727282ce495802311f274372069da4ca95a2e89fc0df59f747e1b17ca",
+    "packages/ui/__tests__/score-card.test.tsx": "b68f187387dc5bdea1077f93139d482447fa99232dc0526b548d3a0e637f944e",
+    ".specify/sprints/sprint-13/attestations/IFC-023/context_ack.json": "37e76c04a37467de0cbb82dc26e3bb48cee882fa84a049edda369ce8930807d5"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-023",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 46000,
+      "stdout_hash": "all-green-1772476872408"
+    },
+    {
+      "name": "IFC-023",
+      "command": "pnpm --filter @intelliflow/web test --run",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 120000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-022"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Score explanations visible",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "factors breakdown shown",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "artifacts: user-test-results.pdf",
+      "met": true,
+      "evidence": "All 2 validations passed"
+    },
+    {
+      "criterion": "context_ack.json",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "3 DoD criteria unverified"
+}

@@ -1,0 +1,379 @@
+{
+  "sprint": "sprint-10",
+  "name": "Sprint 10",
+  "generated_at": "2026-04-11T16:48:01.958Z",
+  "summary_source": "specify",
+  "task_summary": {
+    "total": 5,
+    "completed": 5,
+    "backlog": 0,
+    "blocked": 0,
+    "attested_completed": 5
+  },
+  "context": "Primary focus areas: Security (2), Integrations (1), Quality (1).",
+  "section_summary": [
+    {
+      "section": "Security",
+      "total": 2,
+      "completed": 2,
+      "open": 0
+    },
+    {
+      "section": "Integrations",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Quality",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Workflow",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    }
+  ],
+  "notable_completed": [
+    {
+      "taskId": "IFC-076",
+      "sprint": 10,
+      "status": "Completed",
+      "section": "Quality",
+      "title": "Component Library (shadcn/ui)",
+      "description": "Component Library (shadcn/ui)",
+      "summary": "All 24 components built on Radix UI primitives for accessibility Storybook configured with @storybook/addon-a11y for continuous accessibility testing Components follow shadcn/ui patterns with class-variance-authority for variants Full test......",
+      "definitionOfDone": "Reusable components with Storybook docs; artifacts: accessibility-audit.json, component-usage.csv, context_ack.json; targets: >=100%",
+      "definitionOfDoneSnapshot": "Reusable components with Storybook docs",
+      "dependencies": [
+        "IFC-014",
+        "BRAND-002"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-10/attestations/IFC-076/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-29T10:45:00Z",
+        "sprintFolder": 10
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-099",
+      "sprint": 10,
+      "status": "Completed",
+      "section": "Integrations",
+      "title": "ERP/Payment/Email Connectors",
+      "description": "ERP/Payment/Email Connectors",
+      "summary": "All adapters follow hexagonal architecture (ports and adapters pattern); Result pattern used for error handling; OAuth2 flows implemented where applicable SAP ERP adapter created; Stripe payment adapter created; PayPal payment adapter created",
+      "definitionOfDone": "ERP sync functional, payments processed, emails sent; artifacts: connector-status-dashboard.json, context_ack.json; verified by: pnpm test; Each adapter must have integration test AND be wired to an API router",
+      "definitionOfDoneSnapshot": "SAP ERP adapter created; Stripe payment adapter created; PayPal payment adapter created",
+      "dependencies": [
+        "IFC-006",
+        "IFC-106"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-10/attestations/IFC-099/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-29T12:00:00.000Z",
+        "sprintFolder": 10
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-141",
+      "sprint": 10,
+      "status": "Completed",
+      "section": "Workflow",
+      "title": "Workflow Engine Evaluation & Implementation",
+      "description": "Evaluate n8n; custom engine; and Temporal; document decision via ADR; build event-driven minimal rules engine and integrate selected workflow engine",
+      "summary": "Temporal recommended for reliability in mission-critical workflows Hybrid architecture provides right tool for each workflow type Rules engine provides low-latency synchronous rule evaluation All 26 integration tests passing with 100% succe......",
+      "definitionOfDone": "Comparative analysis of workflow options; ADR published; POC implemented; events published for case status changes; selected engine integrated to process simple workflows; training delivered; artifacts: adr-workflow-decision.md, events-spec.yaml, context_ack.json; targets: >=95%; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Comparative analysis of workflow options; ADR published; POC implemented; events published for case status changes; selected engine integrated to process simple workflows; training delivered",
+      "dependencies": [
+        "IFC-136",
+        "IFC-137",
+        "IFC-135",
+        "IFC-150",
+        "IFC-151"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-10/attestations/IFC-141/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-29T10:24:00.000Z",
+        "sprintFolder": 10
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-113",
+      "sprint": 10,
+      "status": "Completed",
+      "section": "Security",
+      "title": "Secrets Management & Encryption",
+      "description": "Implement secrets management and encryption at rest and in transit",
+      "summary": "Secrets stored in vault, encrypted connections (TLS/mTLS), data encryption implemented",
+      "definitionOfDone": "Secrets stored in vault, encrypted connections (TLS/mTLS), data encryption implemented; artifacts: vault-config.yaml, encryption.ts, key-rotation.ts, encryption-tests.md; targets: >=100%",
+      "definitionOfDoneSnapshot": "Secrets stored in vault, encrypted connections (TLS/mTLS), data encryption implemented",
+      "dependencies": [
+        "IFC-072",
+        "IFC-098"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-10/attestations/IFC-113/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-29T10:32:16.610Z",
+        "sprintFolder": 10
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-121",
+      "sprint": 10,
+      "status": "Completed",
+      "section": "Security",
+      "title": "Schedule periodic secret rotation and dependency vulnerability updates",
+      "description": "Schedule periodic secret rotation and dependency vulnerability updates",
+      "summary": "Rotation schedule uses production-appropriate intervals (90-365 days) Emergency rotation procedure documented with audit logging CVE response playbook includes escalation matrix and communication templates Dependency scanning integrated int......",
+      "definitionOfDone": "Rotations automated via CI; dependencies scanned weekly; patches applied; artifacts: rotation-schedule.yaml, dependency-scan-report.md, dependency-scan.yml",
+      "definitionOfDoneSnapshot": "Secret rotation schedule created; Weekly dependency scans configured; Automated patching workflow implemented",
+      "dependencies": [
+        "IFC-113"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-10/attestations/IFC-121/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-29T21:15:00.000Z",
+        "sprintFolder": 10
+      },
+      "validationSummary": {
+        "total": 6,
+        "passed": 6,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    }
+  ],
+  "open_tasks": [],
+  "tasks": [
+    {
+      "taskId": "IFC-076",
+      "sprint": 10,
+      "status": "Completed",
+      "section": "Quality",
+      "title": "Component Library (shadcn/ui)",
+      "description": "Component Library (shadcn/ui)",
+      "summary": "All 24 components built on Radix UI primitives for accessibility Storybook configured with @storybook/addon-a11y for continuous accessibility testing Components follow shadcn/ui patterns with class-variance-authority for variants Full test......",
+      "definitionOfDone": "Reusable components with Storybook docs; artifacts: accessibility-audit.json, component-usage.csv, context_ack.json; targets: >=100%",
+      "definitionOfDoneSnapshot": "Reusable components with Storybook docs",
+      "dependencies": [
+        "IFC-014",
+        "BRAND-002"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-10/attestations/IFC-076/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-29T10:45:00Z",
+        "sprintFolder": 10
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-099",
+      "sprint": 10,
+      "status": "Completed",
+      "section": "Integrations",
+      "title": "ERP/Payment/Email Connectors",
+      "description": "ERP/Payment/Email Connectors",
+      "summary": "All adapters follow hexagonal architecture (ports and adapters pattern); Result pattern used for error handling; OAuth2 flows implemented where applicable SAP ERP adapter created; Stripe payment adapter created; PayPal payment adapter created",
+      "definitionOfDone": "ERP sync functional, payments processed, emails sent; artifacts: connector-status-dashboard.json, context_ack.json; verified by: pnpm test; Each adapter must have integration test AND be wired to an API router",
+      "definitionOfDoneSnapshot": "SAP ERP adapter created; Stripe payment adapter created; PayPal payment adapter created",
+      "dependencies": [
+        "IFC-006",
+        "IFC-106"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-10/attestations/IFC-099/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-29T12:00:00.000Z",
+        "sprintFolder": 10
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-113",
+      "sprint": 10,
+      "status": "Completed",
+      "section": "Security",
+      "title": "Secrets Management & Encryption",
+      "description": "Implement secrets management and encryption at rest and in transit",
+      "summary": "Secrets stored in vault, encrypted connections (TLS/mTLS), data encryption implemented",
+      "definitionOfDone": "Secrets stored in vault, encrypted connections (TLS/mTLS), data encryption implemented; artifacts: vault-config.yaml, encryption.ts, key-rotation.ts, encryption-tests.md; targets: >=100%",
+      "definitionOfDoneSnapshot": "Secrets stored in vault, encrypted connections (TLS/mTLS), data encryption implemented",
+      "dependencies": [
+        "IFC-072",
+        "IFC-098"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-10/attestations/IFC-113/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-29T10:32:16.610Z",
+        "sprintFolder": 10
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-121",
+      "sprint": 10,
+      "status": "Completed",
+      "section": "Security",
+      "title": "Schedule periodic secret rotation and dependency vulnerability updates",
+      "description": "Schedule periodic secret rotation and dependency vulnerability updates",
+      "summary": "Rotation schedule uses production-appropriate intervals (90-365 days) Emergency rotation procedure documented with audit logging CVE response playbook includes escalation matrix and communication templates Dependency scanning integrated int......",
+      "definitionOfDone": "Rotations automated via CI; dependencies scanned weekly; patches applied; artifacts: rotation-schedule.yaml, dependency-scan-report.md, dependency-scan.yml",
+      "definitionOfDoneSnapshot": "Secret rotation schedule created; Weekly dependency scans configured; Automated patching workflow implemented",
+      "dependencies": [
+        "IFC-113"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-10/attestations/IFC-121/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-29T21:15:00.000Z",
+        "sprintFolder": 10
+      },
+      "validationSummary": {
+        "total": 6,
+        "passed": 6,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-141",
+      "sprint": 10,
+      "status": "Completed",
+      "section": "Workflow",
+      "title": "Workflow Engine Evaluation & Implementation",
+      "description": "Evaluate n8n; custom engine; and Temporal; document decision via ADR; build event-driven minimal rules engine and integrate selected workflow engine",
+      "summary": "Temporal recommended for reliability in mission-critical workflows Hybrid architecture provides right tool for each workflow type Rules engine provides low-latency synchronous rule evaluation All 26 integration tests passing with 100% succe......",
+      "definitionOfDone": "Comparative analysis of workflow options; ADR published; POC implemented; events published for case status changes; selected engine integrated to process simple workflows; training delivered; artifacts: adr-workflow-decision.md, events-spec.yaml, context_ack.json; targets: >=95%; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Comparative analysis of workflow options; ADR published; POC implemented; events published for case status changes; selected engine integrated to process simple workflows; training delivered",
+      "dependencies": [
+        "IFC-136",
+        "IFC-137",
+        "IFC-135",
+        "IFC-150",
+        "IFC-151"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-10/attestations/IFC-141/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-29T10:24:00.000Z",
+        "sprintFolder": 10
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 3,
+        "missed": 0
+      }
+    }
+  ]
+}

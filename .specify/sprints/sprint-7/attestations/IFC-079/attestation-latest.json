@@ -1,0 +1,66 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-079",
+  "run_id": "sprint7-audit-20260302T215750-xc1o8i",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:57:58.616Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 6,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "docs/docusaurus.config.js": "f310444fe9d185909567c8d7ca0475a8954e6da6d0103f112ce9367fdc155573",
+    "docs/sidebars.js": "cb34ea30beab7d7e2d4a4921c4457d8af5d96a3d24139d65180ffc1842291750",
+    ".github/workflows/ci.yml": "6f92e79e6f0487e181bffbceca390f8f9bb72952bf14b7d7b8d69f25241ae4e4",
+    "docs/search-index.json": "33efd284ecedd06fb4abb625fa0eab723ff3557a5de04360c1b3f942c505737a",
+    "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-041-validation.md": "b1c6a3bf42213703d7eb47e6d0b0b1b36a9b4a6c3a9c53e3cb258672eb4629b2",
+    ".specify/sprints/sprint-7/attestations/IFC-079/context_ack.json": "966cc7b0d4504bdf379ffe7a07d6dcb7b66c9c8d0f4d9f24ae9951ddd0068a0f"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-079",
+      "command": "pnpm lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 15000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-012"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Docusaurus site with LLM-friendly structure",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "output: docusaurus.config.js",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "sidebars.js",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "site deployed and functional",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "4 DoD criteria unverified"
+}

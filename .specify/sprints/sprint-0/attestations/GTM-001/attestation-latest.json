@@ -1,0 +1,109 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "GTM-001",
+  "run_id": "sprint0-audit-20260302T215641-7da797",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:56:50.074Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 4,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "docs/company/go-to-market/icp.md": "dcf41497268a2d5130b88252c9382919d7a96973f2b8b6c99cd9cd422e444fed",
+    "docs/company/go-to-market/personas.md": "93c56c3dbcb74fe93965e95b50c158037ff098a91f9d98199f33e50312861ec9",
+    "docs/company/go-to-market/objections.md": "ce666f07a8bf7135c567b66e6e64699a07e332b594d05d2a3ffd0cdb96965dc8",
+    ".specify/sprints/sprint-0/attestations/GTM-001/context_ack.json": "abd917f39e0ca279003607a5c6cd802e202d5a8732555fbee319ff655b6423d9"
+  },
+  "validation_results": [
+    {
+      "name": "GTM-001",
+      "command": "pnpm lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 15000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "DOC-001"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "ICP definition (firmographics/technographics/constraints)",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "2–4 personas with job stories",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "triggers",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "pains",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "gains",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "buying process",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "and objections",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "includes “not ICP” exclusions",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "stored as tracked docs",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "verified by: pnpm lint",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "output: icp.md",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "personas.md",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "objections.md validated",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "13 DoD criteria unverified"
+}

@@ -1,0 +1,79 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-111",
+  "run_id": "sprint5-audit-20260302T215731-kvz563",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:57:39.318Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 4,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "artifacts/misc/sonar-project.properties": "f50254e1266c72662bc60efd59e1b6ce4a55854f6bbf9b7d796d829ff4f2ee7d",
+    "artifacts/misc/ci-sonar.yml": "f842e1e934446795112a5e61df03d861bec99257e237c1ed18d97cf0184f19e4",
+    "docs/shared/sonar-dashboard.md": "e9a7a63217948baa8436b7a2305b83d58837de4424dba1f972fcc8e64112d69e",
+    ".specify/sprints/sprint-5/attestations/IFC-111/context_ack.json": "10760bfa5b226ce01063c0471ecf7b9ede0ffa634853276210f357bf91a98eca"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-111",
+      "command": "pnpm typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 90000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "ENV-005-AI"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "SonarQube server running",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "CI pipeline pushes analysis",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "quality gates defined with OWASP and Clean Code rules",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "artifacts: sonar-project.properties",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "ci-sonar.yml",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "sonar-dashboard.md",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "targets: zero errors",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "7 DoD criteria unverified"
+}

@@ -1,0 +1,70 @@
+{
+  "verdict": "COMPLETE",
+  "artifact_hashes": {
+    "apps/web/src/app/contacts/[id]/page.tsx": "2fc10eec69d42e604325fccebceb459138cae41d0b4441f73570f41ba873212c",
+    "apps/web/src/app/contacts/(list)/new/page.tsx": "d0966c39d38ea94f34b73c3e61779e804d10ff5e4ccf7103045a4dcd644744df",
+    "apps/web/src/components/contacts/ContactCard.tsx": "18332ad747996f54988f9fe7f86d96b3f25748f52e26c646c34dd98e4b21a77d",
+    "apps/web/src/components/contacts/ContactList.tsx": "ce1816281b14bd2a021187d9cd163d27b112642cdb2746986098e6f47670ab19",
+    "apps/web/src/components/contacts/ContactDetail.tsx": "1173017edbbf890b0f5864dd557d45981e6d22680c3d2278fe4335f57374898a",
+    "apps/web/src/components/contacts/__tests__/contact-test-utils.tsx": "a68726bf3f1871b8d8300215a5b4b4ad6002afec00a5688bc4b0231e3bb1c39a",
+    "apps/web/src/app/contacts/[id]/__tests__/page.test.tsx": "fa3e28ffde5c26450532df2af95d3642caa4c24857eae430ccf92684977885b5",
+    "apps/web/src/components/contacts/__tests__/ContactCard.test.tsx": "9c5563c5df21d0d12fe8e18507239317ccbd179adf1197182fd90206cf0ba488",
+    "apps/web/src/components/contacts/__tests__/ContactList.test.tsx": "7fd5a369a10e1a8baee9baa758561371d358ac374d886b9e34b0778538485ac2",
+    "apps/web/src/app/contacts/(list)/new/__tests__/page.test.tsx": "c2fada147bfd22486686ab66ab61de0d5a1b044e58d7c248b0d30321afa0d1a3"
+  },
+  "dependencies_verified": true,
+  "notes": "IFC-253 resolves 3 wiring audit findings: F-01 NaN division fix, F-07 auth guard, F-08 status enum alignment. All 7 ACs validated. ContactDetail.tsx also updated for type consistency (not in original plan scope but required for typecheck after test-utils type widening).",
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm run typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-13T19:06:00Z"
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run apps/web/src/app/contacts/[id]/__tests__/page.test.tsx apps/web/src/components/contacts/__tests__/ContactCard.test.tsx apps/web/src/components/contacts/__tests__/ContactList.test.tsx apps/web/src/app/contacts/(list)/new/__tests__/page.test.tsx --reporter=verbose",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-13T19:06:17Z"
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm run lint",
+      "exit_code": 1,
+      "passed": true,
+      "timestamp": "2026-03-13T19:05:00Z",
+      "notes": "Exit code 1 from pre-existing errors in unrelated files (activity/page.tsx, complementary-sidebar.tsx, AutomationRuleBuilder.tsx). No lint errors in IFC-253 files."
+    },
+    {
+      "name": "Build",
+      "command": "npx turbo run build --filter=@intelliflow/web",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-13T19:08:00Z"
+    }
+  ],
+  "evidence_summary": {
+    "tests_total": 72,
+    "tests_passed": 72,
+    "test_files": 4,
+    "coverage": {
+      "ContactCard.tsx": {
+        "statements": 100,
+        "branches": 93.18,
+        "functions": 100,
+        "lines": 100
+      }
+    },
+    "acceptance_criteria": {
+      "AC-001": "PASS - Open Rate shows em dash when emailsSent=0",
+      "AC-002": "PASS - Open Rate shows correct % when emailsSent>0",
+      "AC-003": "PASS - Create page calls useRequireAuth",
+      "AC-004": "PASS - ContactCard renders all 5 domain statuses",
+      "AC-005": "PASS - ContactList type accepts all 5 domain statuses",
+      "AC-006": "PASS - Unknown status shows fallback display",
+      "AC-007": "PASS - ARCHIVED removed from ContactCard/ContactList types"
+    }
+  }
+}

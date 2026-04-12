@@ -1,0 +1,697 @@
+{
+  "sprint": "sprint-11",
+  "name": "Sprint 11",
+  "generated_at": "2026-04-11T16:48:01.958Z",
+  "summary_source": "specify",
+  "task_summary": {
+    "total": 14,
+    "completed": 14,
+    "backlog": 0,
+    "blocked": 0,
+    "attested_completed": 14
+  },
+  "context": "Primary focus areas: Public Pages (8), Compliance (2), Communications (1).",
+  "section_summary": [
+    {
+      "section": "Public Pages",
+      "total": 8,
+      "completed": 8,
+      "open": 0
+    },
+    {
+      "section": "Compliance",
+      "total": 2,
+      "completed": 2,
+      "open": 0
+    },
+    {
+      "section": "Communications",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Notifications",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Scheduling",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Security",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    }
+  ],
+  "notable_completed": [
+    {
+      "taskId": "PG-141",
+      "sprint": 11,
+      "status": "Completed",
+      "section": "Communications",
+      "title": "Email Compose & History Page - Thread view compose attachments templates",
+      "description": "Email Compose & History Page - Thread view compose attachments templates",
+      "summary": "Email Compose & History Page (PG-141): 3-column email client with FolderSidebar (w-56), EmailList (w-80), and EmailThread/Compose (flex-1). 11 components created, 10 test files with 154 tests. Coverage:......",
+      "definitionOfDone": "Response <500ms, Lighthouse >=90; EmailList, EmailThread, EmailCompose, AttachmentManager, TemplateSelector, RecipientPicker components; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "EmailList component renders email list with search and folder filtering; EmailThread component renders threaded view with expand/collapse; EmailCompose with To/CC/BCC, subject, rich body, send/save draft",
+      "dependencies": [
+        "IFC-144"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-11/attestations/PG-141/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-16T23:56:00.000Z",
+        "sprintFolder": 11
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 7,
+        "met": 7,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-157",
+      "sprint": 11,
+      "status": "Completed",
+      "section": "Notifications",
+      "title": "Notification service MVP: unified delivery (in-app + email) with preference model (backend), templates, and audit logging",
+      "description": "Notification service MVP: unified delivery (in-app + email) with preference model (backend), templates, and audit logging",
+      "summary": "Notification domain model with lifecycle management; Unified delivery service (in-app + email); User notification preferences with defaults Notification domain + templates implemented; delivery adapters; preference defaults stored; audit entries; retries/DLQ;...",
+      "definitionOfDone": "Notification domain + templates implemented; delivery adapters; preference defaults stored; audit entries; retries/DLQ; tests; targets: >=99%, >=100%; All four channels (email, SMS, webhook, push) must have real implementations, not placeholder returns",
+      "definitionOfDoneSnapshot": "Notification domain + templates implemented; delivery adapters; preference defaults stored; audit entries; retries/DLQ; tests; All four channels (email, SMS, webhook, push) must have real implementations, not placeholder returns",
+      "dependencies": [
+        "IFC-144",
+        "IFC-098",
+        "IFC-151"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-11/attestations/IFC-157/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T22:30:00.000Z",
+        "sprintFolder": 11
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-058",
+      "sprint": 11,
+      "status": "Completed",
+      "section": "Compliance",
+      "title": "GDPR baseline controls: Supabase RLS policies, data minimisation, retention hooks",
+      "description": "GDPR baseline controls: Supabase RLS policies, data minimisation, retention hooks",
+      "summary": "GDPR baseline controls implemented with Supabase RLS policies; Data minimisation and retention hooks configured at database level; GDPR compliance checklist covers 35 controls with evidence mapping Row Level Security implemented, privacy by design",
+      "definitionOfDone": "Row Level Security implemented, privacy by design; artifacts: gdpr-compliance-checklist.xlsx, audit-trail-test.json, context_ack.json",
+      "definitionOfDoneSnapshot": "Row Level Security implemented, privacy by design",
+      "dependencies": [
+        "IFC-017",
+        "IFC-127",
+        "IFC-008"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-11/attestations/IFC-058/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T20:10:00.000Z",
+        "sprintFolder": 11
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 1,
+        "met": 1,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-140",
+      "sprint": 11,
+      "status": "Completed",
+      "section": "Compliance",
+      "title": "Implement data governance workflows: DSAR requests; retention & legal hold policies; tenant-specific encryption key management; data residency compliance",
+      "description": "Implement data governance workflows: DSAR requests; retention & legal hold policies; tenant-specific encryption key management; data residency compliance",
+      "summary": "DSAR workflow for data subject access requests; Retention and legal hold policies documented; Tenant-specific encryption key management configured DSAR workflow implemented with identity verification; retention schedules enforced per entity;...",
+      "definitionOfDone": "DSAR workflow implemented with identity verification; retention schedules enforced per entity; legal hold exceptions; per-tenant key management with rotation; residency controls and subprocessor registry; documentation and tests; targets: >=100%",
+      "definitionOfDoneSnapshot": "DSAR workflow implemented with identity verification; retention schedules enforced per entity; legal hold exceptions; per-tenant key management with rotation; residency controls and subprocessor registry; documentation and tests",
+      "dependencies": [
+        "IFC-098",
+        "IFC-127"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-11/attestations/IFC-140/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T21:51:00.000Z",
+        "sprintFolder": 11
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 1,
+        "met": 1,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-158",
+      "sprint": 11,
+      "status": "Completed",
+      "section": "Scheduling",
+      "title": "Scheduling communications: ICS invites, reschedule/cancel flows, reminders; integrated with notification service and calendar sync",
+      "description": "Scheduling communications: ICS invites, reschedule/cancel flows, reminders; integrated with notification service and calendar sync",
+      "summary": "Google Calendar API integration via adapter pattern; Conflict resolution for scheduling; Retry handling with idempotency ICS generation and delivery implemented; reschedule/cancel semantics correct; reminders scheduled; audit trail; integration tests",
+      "definitionOfDone": "ICS generation and delivery implemented; reschedule/cancel semantics correct; reminders scheduled; audit trail; integration tests; artifacts: context_ack.json; targets: >=95%, >=99%, zero errors",
+      "definitionOfDoneSnapshot": "ICS generation and delivery implemented; reschedule/cancel semantics correct; reminders scheduled; audit trail; integration tests",
+      "dependencies": [
+        "IFC-138",
+        "IFC-157",
+        "IFC-137"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-11/attestations/IFC-158/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T22:30:00.000Z",
+        "sprintFolder": 11
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 1,
+        "met": 1,
+        "missed": 0
+      }
+    }
+  ],
+  "open_tasks": [],
+  "tasks": [
+    {
+      "taskId": "IFC-058",
+      "sprint": 11,
+      "status": "Completed",
+      "section": "Compliance",
+      "title": "GDPR baseline controls: Supabase RLS policies, data minimisation, retention hooks",
+      "description": "GDPR baseline controls: Supabase RLS policies, data minimisation, retention hooks",
+      "summary": "GDPR baseline controls implemented with Supabase RLS policies; Data minimisation and retention hooks configured at database level; GDPR compliance checklist covers 35 controls with evidence mapping Row Level Security implemented, privacy by design",
+      "definitionOfDone": "Row Level Security implemented, privacy by design; artifacts: gdpr-compliance-checklist.xlsx, audit-trail-test.json, context_ack.json",
+      "definitionOfDoneSnapshot": "Row Level Security implemented, privacy by design",
+      "dependencies": [
+        "IFC-017",
+        "IFC-127",
+        "IFC-008"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-11/attestations/IFC-058/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T20:10:00.000Z",
+        "sprintFolder": 11
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 1,
+        "met": 1,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-001",
+      "sprint": 11,
+      "status": "Completed",
+      "section": "Public Pages",
+      "title": "Home Page (Public)",
+      "description": "Home Page (Public)",
+      "summary": "Home page renders at / route with public layout; Loading and error states handled with dedicated components; SEO metadata configured via seo-meta.json response under 200ms, Lighthouse 90, SEO optimized",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, SEO optimized; artifacts: page.tsx, PublicHomePage.tsx, loading.tsx, error.tsx; gates: lighthouse-gte-90",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, SEO optimized",
+      "dependencies": [
+        "IFC-076",
+        "GTM-002",
+        "BRAND-001"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-11/attestations/PG-001/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T21:00:00.000Z",
+        "sprintFolder": 11
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 1,
+        "met": 1,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-002",
+      "sprint": 11,
+      "status": "Completed",
+      "section": "Public Pages",
+      "title": "Features Page",
+      "description": "Features Page",
+      "summary": "Features page showcases CRM capabilities with CTA buttons; Feature content managed via features-content.json; Conversion tracking via conversion-tracking.js response under 200ms, Lighthouse 90, conversion optimized",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, conversion optimized; artifacts: page.tsx, features-content.json, conversion-tracking.js",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, conversion optimized",
+      "dependencies": [
+        "PG-001",
+        "GTM-002",
+        "BRAND-001"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-11/attestations/PG-002/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T21:01:00.000Z",
+        "sprintFolder": 11
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 1,
+        "met": 1,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-003",
+      "sprint": 11,
+      "status": "Completed",
+      "section": "Public Pages",
+      "title": "Pricing Page",
+      "description": "Pricing Page",
+      "summary": "Pricing page displays tiers with monthly/annual toggle; Pricing calculator component handles user count and tier selection; Stripe integration module for payment processing response under 200ms, Lighthouse 90, calculator functional",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, calculator functional; artifacts: page.tsx, pricing-calculator.tsx, stripe-integration.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, calculator functional",
+      "dependencies": [
+        "PG-001",
+        "GTM-002",
+        "BRAND-001"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-11/attestations/PG-003/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T21:02:00.000Z",
+        "sprintFolder": 11
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 1,
+        "met": 1,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-004",
+      "sprint": 11,
+      "status": "Completed",
+      "section": "Public Pages",
+      "title": "About Page",
+      "description": "About Page",
+      "summary": "About page tells company story and showcases team; Team data managed via team-data.json; About content in about-content.md response under 200ms, Lighthouse 90, team displayed",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, team displayed; artifacts: page.tsx, team-data.json, about-content.md",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, team displayed",
+      "dependencies": [
+        "PG-001",
+        "GTM-002",
+        "BRAND-001"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-11/attestations/PG-004/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T21:10:00.000Z",
+        "sprintFolder": 11
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 1,
+        "met": 1,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-005",
+      "sprint": 11,
+      "status": "Completed",
+      "section": "Public Pages",
+      "title": "Contact Page",
+      "description": "Contact Page",
+      "summary": "Contact page with form submission and validation; Shared contact-form component reusable across pages; Email handler for form submission processing response under 200ms, Lighthouse 90, form working",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, form working; artifacts: page.tsx, contact-form.tsx, email-handler.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, form working",
+      "dependencies": [
+        "PG-001",
+        "GTM-002",
+        "BRAND-001"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-11/attestations/PG-005/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T21:11:00.000Z",
+        "sprintFolder": 11
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 1,
+        "met": 1,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-006",
+      "sprint": 11,
+      "status": "Completed",
+      "section": "Public Pages",
+      "title": "Partners Page",
+      "description": "Partners Page",
+      "summary": "Partners page showcases integration partners with benefits; Partner benefits managed via partner-benefits.json; CTAs working for partner onboarding response under 200ms, Lighthouse 90, logos displayed",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, logos displayed; artifacts: page.tsx, partner-benefits.json, context_ack.json",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, logos displayed",
+      "dependencies": [
+        "PG-001",
+        "GTM-002",
+        "BRAND-001"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-11/attestations/PG-006/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T21:12:00.000Z",
+        "sprintFolder": 11
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 1,
+        "met": 1,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-007",
+      "sprint": 11,
+      "status": "Completed",
+      "section": "Public Pages",
+      "title": "Press Page",
+      "description": "Press Page",
+      "summary": "Press page displays press releases and media kit; Press releases managed via press-releases.json; Media kit downloadable from press page response under 200ms, Lighthouse 90, downloads working",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, downloads working; artifacts: page.tsx, media-kit.zip, context_ack.json",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, downloads working",
+      "dependencies": [
+        "PG-001",
+        "GTM-002",
+        "BRAND-001"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-11/attestations/PG-007/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T21:13:00.000Z",
+        "sprintFolder": 11
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 1,
+        "met": 1,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-008",
+      "sprint": 11,
+      "status": "Completed",
+      "section": "Public Pages",
+      "title": "Security Page",
+      "description": "Security Page",
+      "summary": "Security page explains security practices and displays trust badges; Security features managed via security-features.json; Trust signals visible for customer confidence response under 200ms, Lighthouse 90, trust signals",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, trust signals; artifacts: page.tsx, security-features.json, context_ack.json",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, trust signals",
+      "dependencies": [
+        "PG-001",
+        "GTM-002",
+        "BRAND-001"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-11/attestations/PG-008/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T21:14:00.000Z",
+        "sprintFolder": 11
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 1,
+        "met": 1,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-140",
+      "sprint": 11,
+      "status": "Completed",
+      "section": "Compliance",
+      "title": "Implement data governance workflows: DSAR requests; retention & legal hold policies; tenant-specific encryption key management; data residency compliance",
+      "description": "Implement data governance workflows: DSAR requests; retention & legal hold policies; tenant-specific encryption key management; data residency compliance",
+      "summary": "DSAR workflow for data subject access requests; Retention and legal hold policies documented; Tenant-specific encryption key management configured DSAR workflow implemented with identity verification; retention schedules enforced per entity;...",
+      "definitionOfDone": "DSAR workflow implemented with identity verification; retention schedules enforced per entity; legal hold exceptions; per-tenant key management with rotation; residency controls and subprocessor registry; documentation and tests; targets: >=100%",
+      "definitionOfDoneSnapshot": "DSAR workflow implemented with identity verification; retention schedules enforced per entity; legal hold exceptions; per-tenant key management with rotation; residency controls and subprocessor registry; documentation and tests",
+      "dependencies": [
+        "IFC-098",
+        "IFC-127"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-11/attestations/IFC-140/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T21:51:00.000Z",
+        "sprintFolder": 11
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 1,
+        "met": 1,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-143",
+      "sprint": 11,
+      "status": "Completed",
+      "section": "Security",
+      "title": "Perform threat modeling and abuse-case analysis for multi-tenancy and agent tool-calling; design mitigations; schedule penetration test; implement cookie consent mechanism",
+      "description": "Perform threat modeling and abuse-case analysis for multi-tenancy and agent tool-calling; design mitigations; schedule penetration test; implement cookie consent mechanism",
+      "summary": "Threat modeling and abuse-case analysis for multi-tenancy; Agent tool-calling security mitigations designed; Penetration test scheduled and scoped Threat model documented; abuse cases enumerated; mitigation tasks created;...",
+      "definitionOfDone": "Threat model documented; abuse cases enumerated; mitigation tasks created; penetration test executed and findings triaged; cookie consent banner implemented; compliance checks passed",
+      "definitionOfDoneSnapshot": "Threat model documented; abuse cases enumerated; mitigation tasks created; penetration test executed and findings triaged; cookie consent banner implemented; compliance checks passed",
+      "dependencies": [
+        "IFC-125",
+        "IFC-136",
+        "IFC-139"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-11/attestations/IFC-143/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T21:52:00.000Z",
+        "sprintFolder": 11
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 1,
+        "met": 1,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-157",
+      "sprint": 11,
+      "status": "Completed",
+      "section": "Notifications",
+      "title": "Notification service MVP: unified delivery (in-app + email) with preference model (backend), templates, and audit logging",
+      "description": "Notification service MVP: unified delivery (in-app + email) with preference model (backend), templates, and audit logging",
+      "summary": "Notification domain model with lifecycle management; Unified delivery service (in-app + email); User notification preferences with defaults Notification domain + templates implemented; delivery adapters; preference defaults stored; audit entries; retries/DLQ;...",
+      "definitionOfDone": "Notification domain + templates implemented; delivery adapters; preference defaults stored; audit entries; retries/DLQ; tests; targets: >=99%, >=100%; All four channels (email, SMS, webhook, push) must have real implementations, not placeholder returns",
+      "definitionOfDoneSnapshot": "Notification domain + templates implemented; delivery adapters; preference defaults stored; audit entries; retries/DLQ; tests; All four channels (email, SMS, webhook, push) must have real implementations, not placeholder returns",
+      "dependencies": [
+        "IFC-144",
+        "IFC-098",
+        "IFC-151"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-11/attestations/IFC-157/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T22:30:00.000Z",
+        "sprintFolder": 11
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-158",
+      "sprint": 11,
+      "status": "Completed",
+      "section": "Scheduling",
+      "title": "Scheduling communications: ICS invites, reschedule/cancel flows, reminders; integrated with notification service and calendar sync",
+      "description": "Scheduling communications: ICS invites, reschedule/cancel flows, reminders; integrated with notification service and calendar sync",
+      "summary": "Google Calendar API integration via adapter pattern; Conflict resolution for scheduling; Retry handling with idempotency ICS generation and delivery implemented; reschedule/cancel semantics correct; reminders scheduled; audit trail; integration tests",
+      "definitionOfDone": "ICS generation and delivery implemented; reschedule/cancel semantics correct; reminders scheduled; audit trail; integration tests; artifacts: context_ack.json; targets: >=95%, >=99%, zero errors",
+      "definitionOfDoneSnapshot": "ICS generation and delivery implemented; reschedule/cancel semantics correct; reminders scheduled; audit trail; integration tests",
+      "dependencies": [
+        "IFC-138",
+        "IFC-157",
+        "IFC-137"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-11/attestations/IFC-158/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T22:30:00.000Z",
+        "sprintFolder": 11
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 1,
+        "met": 1,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-141",
+      "sprint": 11,
+      "status": "Completed",
+      "section": "Communications",
+      "title": "Email Compose & History Page - Thread view compose attachments templates",
+      "description": "Email Compose & History Page - Thread view compose attachments templates",
+      "summary": "Email Compose & History Page (PG-141): 3-column email client with FolderSidebar (w-56), EmailList (w-80), and EmailThread/Compose (flex-1). 11 components created, 10 test files with 154 tests. Coverage:......",
+      "definitionOfDone": "Response <500ms, Lighthouse >=90; EmailList, EmailThread, EmailCompose, AttachmentManager, TemplateSelector, RecipientPicker components; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "EmailList component renders email list with search and folder filtering; EmailThread component renders threaded view with expand/collapse; EmailCompose with To/CC/BCC, subject, rich body, send/save draft",
+      "dependencies": [
+        "IFC-144"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-11/attestations/PG-141/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-16T23:56:00.000Z",
+        "sprintFolder": 11
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 7,
+        "met": 7,
+        "missed": 0
+      }
+    }
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "task_id": "IFC-236",
+  "sprint": 16,
+  "verdict": "COMPLETE",
+  "completed_at": "2026-03-12T20:55:00Z",
+  "artifact_hashes": {
+    "apps/web/src/app/leads/[id]/__tests__/page.test.tsx": "9d032b7476e6837df07ee8376fd674aa71d33cc6a037b771e422b8fbe6539b6c",
+    "apps/web/src/app/leads/[id]/page.tsx": "a8f13dbbab7f6df88651b6542337a2f84b180bd198695e266ae01956686f2beb",
+    "apps/web/src/app/contacts/[id]/page.tsx": "2036cf8aad6fe48296ce90716f1349e98b0f1ccc99f011ec1dd535c651c45466",
+    "apps/web/src/app/contacts/[id]/__tests__/page.test.tsx": "f7e070966f48fd34731ef75d0c38e1b14a23e92c01c72e9fd461c2b2ac39dc90"
+  },
+  "dependencies_verified": true,
+  "notes": "Pure UI enhancement — added 'Log your first activity' CTA button to empty state on lead and contact detail Overview tabs. CTA navigates to Activity tab via setActiveTab('activity'). 9 tests (4 lead + 5 contact), 42 regression tests pass, typecheck/lint/build clean.",
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-12T20:47:30Z"
+    },
+    {
+      "name": "Tests",
+      "command": "pnpm --filter web exec vitest run \"src/app/leads/[id]/__tests__/page.test.tsx\" \"src/app/contacts/[id]/__tests__/page.test.tsx\"",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-12T20:51:12Z"
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter web lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-12T20:49:00Z"
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-12T20:49:30Z"
+    }
+  ],
+  "evidence_summary": {
+    "tests_added": 8,
+    "tests_total": 9,
+    "regression_tests": 42,
+    "files_created": 1,
+    "files_modified": 3,
+    "acceptance_criteria_met": "AC-001 through AC-008 plus NF-001, NF-002, NF-003"
+  },
+  "gate_results": [
+    {
+      "gate_id": "plan-checkboxes",
+      "passed": true,
+      "timestamp": "2026-03-12T20:51:00Z"
+    },
+    {
+      "gate_id": "artifact-verification",
+      "passed": true,
+      "timestamp": "2026-03-12T20:52:00Z"
+    },
+    {
+      "gate_id": "build-validation",
+      "passed": true,
+      "timestamp": "2026-03-12T20:49:30Z"
+    },
+    {
+      "gate_id": "stoa-quality",
+      "passed": true,
+      "timestamp": "2026-03-12T20:53:00Z"
+    },
+    {
+      "gate_id": "compliance-check",
+      "passed": true,
+      "timestamp": "2026-03-12T20:54:00Z"
+    }
+  ],
+  "kpi_results": [
+    {
+      "target": ">=90% modified code path coverage",
+      "actual": "100% modified code paths covered (file-level 40% due to 2000+ line pages)",
+      "met": true
+    }
+  ]
+}

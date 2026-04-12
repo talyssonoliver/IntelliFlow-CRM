@@ -1,0 +1,75 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-133",
+  "run_id": "sprint7-audit-20260302T215750-xc1o8i",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:57:58.662Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 5,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "docs/security/signing.md": "83863fea82e48e085c2978886e4fb710a441c4d5def42c3561da1bfe9923b476",
+    ".github/workflows/signing.yml": "c341846fcec62fb436d0b9f0516a1371b0396d14ea16fe18fb6dbd5ca965dc4e",
+    ".specify/sprints/sprint-7/attestations/IFC-133/context_ack.json": "1ddeae43300c215a79db8fa0b1c2bc274fc2118b177fff60465d7861bff74138",
+    "docs/planning/adr/ADR-021-governance-ops-release.md": "626cf1c9c9b1ade20c318491fa1502f28f98416897ad101c60030cd72f0d0c00",
+    "docs/planning/prd-release-governance.md": "cd511206b991a249c6b5f2cae07efa2bccb453a7f7970a74c1cec1206e9741ef"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-133",
+      "command": "pnpm test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 180000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-132"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Artifacts signed",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "verification step added",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "provenance attached",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "docs updated",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "targets: >=100%",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "verified by: pnpm test",
+      "met": true,
+      "evidence": "All 1 validations passed"
+    }
+  ],
+  "notes": "5 DoD criteria unverified"
+}

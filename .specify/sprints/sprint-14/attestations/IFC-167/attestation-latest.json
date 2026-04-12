@@ -1,0 +1,63 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-167",
+  "run_id": "sprint14-audit-20260302T215859-6dbfyi",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:59:16.672Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 3,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "package.json": "e5149053d8f514aece5acde6fb9ce432234fbcdf96ffcdb278e83ddac21c8c56",
+    "turbo.json": "64bbd3cfb225761afb498e0de355cbe7401a6aae02fa4cef9215de0bc7a31ce8",
+    ".specify/sprints/sprint-14/attestations/IFC-167/context_ack.json": "9978c630e45ac29e402ae89d72c07964a86c1977e20f2a76e0a51781b9724016"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-167",
+      "command": "pnpm typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 90000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-163"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Workers auto-start with pnpm dev",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "all 3 workers running",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "health checks pass",
+      "met": true,
+      "evidence": "All 1 validations passed"
+    },
+    {
+      "criterion": "verified by: pnpm dev starts all services",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "3 DoD criteria unverified"
+}

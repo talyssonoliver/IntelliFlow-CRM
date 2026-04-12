@@ -1,0 +1,85 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "BRAND-001",
+  "run_id": "sprint0-audit-20260302T215641-7da797",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:56:50.067Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 5,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "docs/company/brand/visual-identity.md": "8488a5f10a62c69a10025def8b4080a58e8c03bc26f437a25c51ef847e4f10c3",
+    "docs/company/brand/palette.tokens.json": "e28fd51b34d24ef9df0a683daf64aad823c5f10a68cb50b04e0845cdbe8de368",
+    "docs/company/brand/typography.tokens.json": "5b6dd70df2d322fa0cd749d94da4f41e1930a3a87e201cabe0b864c8e387dd2b",
+    "docs/company/brand/spacing.tokens.json": "d3849eb1e27c58c09ff5762e9b3dfbe6d539f83780493cdb95a990bba52ee926",
+    ".specify/sprints/sprint-0/attestations/BRAND-001/context_ack.json": "0a1b51b6613e6f94b7750104f466ea2673814f1d9fb5996a4e239eca5670abb3"
+  },
+  "validation_results": [
+    {
+      "name": "BRAND-001",
+      "command": "pnpm lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 15000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "DOC-001"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Defined palette (primary/secondary/neutral)",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "typography scale",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "spacing system",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "iconography guidance",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "and basic component styling principles",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "includes do/don’t examples",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "exported as machine-readable tokens (JSON) and documented usage guidance",
+      "met": true,
+      "evidence": "Documentation found: docs/company/brand/visual-identity.md, docs/company/brand/palette.tokens.json, docs/company/brand/typography.tokens.json, docs/company/brand/spacing.tokens.json"
+    },
+    {
+      "criterion": "verified by: pnpm lint",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "7 DoD criteria unverified"
+}

@@ -1,0 +1,63 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "PG-035",
+  "run_id": "20260224215646-eb0e0ec9",
+  "verdict": "COMPLETE",
+  "timestamp": "2026-02-24T22:12:00Z",
+  "artifact_hashes": {
+    "apps/web/src/app/(developer)/docs/changelog/page.tsx": "bd0a433c5193ea9e14f1c3cb4835ab2fa6b71021bbed8f6becb472202b7a462d",
+    "apps/web/src/components/developer/changelog-display.tsx": "51d00fc017c3490a2a1f7eb4b5e2c594252554c7195487da0b6d4e1e2d5394c3",
+    "apps/web/src/lib/developer/rss-feed.ts": "2fb5b83aa4c4380331293e3d63682375b1ce09a073377b8402282e4b0b3faa1e",
+    "apps/web/src/app/api/developer/changelog-rss/route.ts": "d6aa2ceffe9f3eea22671aafe4ec2f5ff7df21cebeb0bb88e4b0ffb20795981f",
+    "apps/web/src/app/(developer)/docs/changelog/__tests__/page.test.tsx": "f335c0a8d088ca098f4b800870446d81e0747671fec1379f5a0923d5de50e680",
+    "apps/web/src/app/(developer)/docs/changelog/__tests__/integration.test.tsx": "c9075c0eddccab421e086f4ccf9005aed0adae2116c016ef7213392bf56d9cfd",
+    "apps/web/src/components/developer/__tests__/changelog-display.test.tsx": "307cc5145b64ec4f5b7d450e2421135e360c0cb14342d86e405d69adeb3f53c1",
+    "apps/web/src/lib/developer/__tests__/rss-feed.test.ts": "f02319d5ad7ccfb08bbca2e9d4e77633cf6ad33a117f1a64df66c7c80ca9b3df",
+    "apps/web/src/components/sidebar/configs/developer.ts": "a0ea31fb3a960bcb24696e078e39c62aea0c0024d8fd528fa36bb7f04822907d",
+    "apps/web/src/app/(developer)/docs/page.tsx": "7017a3169cc116ce7fcf946ba4b083c5a22bb965659f7de8fab455631bde37b4",
+    "apps/web/src/test/fixtures/docs-data.ts": "5e2b487a29404d705defac7f1f5ea9ad6ca6ee60cd1b1626d5e7b2eb69d99d09",
+    "apps/web/src/app/(developer)/docs/__tests__/integration.test.tsx": "8db7a2bb1d44fd77d48b1f0092a67e8d72c3de2cfb4619de4a0bbe332815adf4"
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-25T21:30:09Z",
+      "duration_ms": 8580
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run apps/web/src/lib/developer/__tests__/rss-feed.test.ts apps/web/src/components/developer/__tests__/changelog-display.test.tsx apps/web/src/app/(developer)/docs/changelog/__tests__/page.test.tsx apps/web/src/app/(developer)/docs/changelog/__tests__/integration.test.tsx apps/web/src/app/(developer)/docs/__tests__/integration.test.tsx",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-25T21:30:22Z",
+      "duration_ms": 6770
+    },
+    {
+      "name": "Lint",
+      "command": "npx eslint apps/web/src/lib/developer/rss-feed.ts apps/web/src/components/developer/changelog-display.tsx apps/web/src/app/(developer)/docs/changelog/page.tsx apps/web/src/app/api/developer/changelog-rss/route.ts apps/web/src/components/sidebar/configs/developer.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-25T21:30:33Z",
+      "duration_ms": 1993
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-02-25T21:30:39Z",
+      "duration_ms": 66440
+    }
+  ],
+  "dependencies_verified": {
+    "PG-032": {
+      "status": "COMPLETE",
+      "attestation_path": ".specify/sprints/sprint-15/attestations/PG-032/attestation.json"
+    }
+  },
+  "notes": "PG-035 Developer Pages: Changelog — 8 files created, 10 files modified, 60 new tests (18 RSS + 25 component + 10 page + 7 integration), 100% scoped coverage. All 4 validations pass (TypeScript, Tests, Lint, Build). RSS 2.0 feed at /api/developer/changelog-rss with XML escaping, RFC 822 dates, [BREAKING] prefixes. Sidebar entry added to documentation section. comingSoon removed from docs index. 5 design docs updated with page counts."
+}

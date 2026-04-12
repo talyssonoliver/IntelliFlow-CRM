@@ -1,0 +1,147 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "IFC-213",
+  "attestor": "Claude Code - Task Integrity Validator",
+  "attestation_timestamp": "2026-04-11T13:44:00.000Z",
+  "verdict": "COMPLETE",
+  "context_acknowledgment": {
+    "files_read": [
+      {
+        "path": "apps/api/src/modules/integrations/integrations.router.ts",
+        "sha256": "81fb14fc194f762882d0e6064b4f338d5715bcf128cd889a0b19695d11c3d0d4"
+      },
+      {
+        "path": "packages/adapters/src/index.ts",
+        "sha256": "6f07a6561c1d828bb8f43d2e95cd50e975120f72820d26e6670b12358aacfe72"
+      },
+      {
+        "path": "apps/api/src/modules/integrations/__tests__/integrations.router.test.ts",
+        "sha256": "a5a6cd470a9e34aab8ca990dbdcfadd351d536f314ac523f55eeaff68622a074"
+      }
+    ],
+    "invariants_acknowledged": [
+      "Health check endpoints must use adapter checkConnection/getAccessToken, not Math.random",
+      "Unknown status returned when connector credentials are missing",
+      "Tests must be deterministic — no flaky retry loops"
+    ],
+    "acknowledged_at": "2026-04-11T13:43:59.000Z"
+  },
+  "evidence_summary": {
+    "artifacts_verified": 2,
+    "validations_passed": 4,
+    "validations_failed": 0,
+    "gates_passed": 4,
+    "gates_failed": 0,
+    "kpis_met": 3,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/api/src/modules/integrations/integrations.router.ts": "81fb14fc194f762882d0e6064b4f338d5715bcf128cd889a0b19695d11c3d0d4",
+    "apps/api/src/modules/integrations/__tests__/integrations.router.test.ts": "a5a6cd470a9e34aab8ca990dbdcfadd351d536f314ac523f55eeaff68622a074"
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter api exec tsc --noEmit --project tsconfig.json",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-04-11T13:42:00.000Z"
+    },
+    {
+      "name": "Tests",
+      "command": "pnpm vitest run apps/api/src/modules/integrations/__tests__/integrations.router.test.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-04-11T13:42:05.000Z"
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter api exec eslint src/modules/integrations/integrations.router.ts src/modules/integrations/__tests__/integrations.router.test.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-04-11T13:42:10.000Z"
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter api build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-04-11T13:42:30.000Z"
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "typecheck",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-04-11T13:42:00.000Z"
+    },
+    {
+      "gate_id": "tests",
+      "passed": true,
+      "exit_code": 0,
+      "score": 19,
+      "timestamp": "2026-04-11T13:42:05.000Z"
+    },
+    {
+      "gate_id": "lint",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-04-11T13:42:10.000Z"
+    },
+    {
+      "gate_id": "build",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-04-11T13:42:30.000Z"
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "0 random health checks in integrations router",
+      "target": "0 Math.random calls in health check functions",
+      "actual": "0 Math.random calls in health checks (checkSapHealth, checkStripeHealth, checkPayPalHealth, checkGmailHealth, checkOutlookHealth, checkSlackHealth, checkTeamsHealth). All 7 use adapter checkConnection/getAccessToken.",
+      "met": true
+    },
+    {
+      "kpi": "Deterministic integration router tests",
+      "target": "All tests deterministic via fixture injection",
+      "actual": "19 tests pass deterministically using setConnectorHealthProviderForTests with fixed HEALTH_CHECK_FIXTURES. No retry loops or flaky assertions.",
+      "met": true
+    },
+    {
+      "kpi": "Health summary includes unknown status for unconfigured connectors",
+      "target": "Unknown status returned when credentials missing",
+      "actual": "unknownHealth() returns status:'unknown' with descriptive error when missingRequiredEnv detects absent env vars. Test 'should count unknown statuses in summary' and 'should report unknown health checks as unavailable' verify this.",
+      "met": true
+    }
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "integrations router health endpoints use adapter checkConnection/getAccessToken instead of Math.random",
+      "met": true,
+      "evidence": "7 per-connector health check functions (lines 218-399) all use adapter.checkConnection() or adapter.getAccessToken() via loadAdapters(). Zero Math.random in health code paths."
+    },
+    {
+      "criterion": "unknown status is returned when health check credentials are missing",
+      "met": true,
+      "evidence": "missingRequiredEnv() check at top of each health function returns unknownHealth('Health check not configured: missing ...') when env vars absent (e.g., line 228-229)."
+    },
+    {
+      "criterion": "deterministic tests replace flaky retry loops",
+      "met": true,
+      "evidence": "setConnectorHealthProviderForTests() (line 402-406) allows tests to inject fixed HEALTH_CHECK_FIXTURES. All 19 tests use this deterministic provider. No setTimeout retries or random-dependent assertions."
+    }
+  ],
+  "dependencies_verified": [
+    "IFC-099"
+  ],
+  "environment": {
+    "os": "Windows 11 Pro 10.0.26200",
+    "node_version": "v25.2.1",
+    "git_commit": "508ddf4f3f4eca232d1c0a784866ad12be8a1111",
+    "branch": "claude/add-context-continuation-U99P9"
+  },
+  "notes": "Category 4 repair: legacy completed task with no plan file. Code was fully implemented and working. This attestation validates the existing implementation with real validation runs. Math.random remaining in triggerSync (lines 494-496) is for sync simulation, not health checks — out of scope for IFC-213."
+}

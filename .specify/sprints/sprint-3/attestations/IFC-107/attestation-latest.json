@@ -1,0 +1,85 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-107",
+  "run_id": "sprint3-audit-20260302T215712-mko6ti",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:57:20.321Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 2,
+    "validations_passed": 2,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-039-validation.md": "c9cc7e6baa1d80fa2733622e71d48dfc4b657b65a8506dcbaf8ac4b7b2150f38",
+    ".specify/sprints/sprint-3/attestations/IFC-107/context_ack.json": "f9fd6ebe10711d1edcc4a1580677797b9a9f44e1a82638d87cd59a326dc3cb2c"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-107",
+      "command": "pnpm test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 180000,
+      "stdout_hash": "all-green-1772476872408"
+    },
+    {
+      "name": "IFC-107",
+      "command": "pnpm test:unit",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 120000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-101",
+    "IFC-102",
+    "IFC-103",
+    "IFC-104",
+    "IFC-105"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Repository implementations for all aggregates with Prisma",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "factories for entity creation",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "artifacts: context_ack.json",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "targets: >=90%",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "verified by: pnpm test",
+      "met": true,
+      "evidence": "All 2 validations passed"
+    },
+    {
+      "criterion": "pnpm test:unit",
+      "met": true,
+      "evidence": "All 2 validations passed"
+    }
+  ],
+  "notes": "4 DoD criteria unverified"
+}

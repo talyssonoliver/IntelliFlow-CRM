@@ -1,0 +1,1407 @@
+{
+  "sprint": "sprint-15",
+  "name": "Sprint 15",
+  "generated_at": "2026-04-11T16:48:01.958Z",
+  "summary_source": "specify",
+  "task_summary": {
+    "total": 36,
+    "completed": 36,
+    "backlog": 0,
+    "blocked": 0,
+    "attested_completed": 36
+  },
+  "context": "Primary focus areas: Developer Pages (14), Core CRM (9), Documentation (5).",
+  "section_summary": [
+    {
+      "section": "Developer Pages",
+      "total": 14,
+      "completed": 14,
+      "open": 0
+    },
+    {
+      "section": "Core CRM",
+      "total": 9,
+      "completed": 9,
+      "open": 0
+    },
+    {
+      "section": "Documentation",
+      "total": 5,
+      "completed": 5,
+      "open": 0
+    },
+    {
+      "section": "SEO",
+      "total": 2,
+      "completed": 2,
+      "open": 0
+    },
+    {
+      "section": "AI Foundation",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Auth Pages",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Intelligence",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Investment Gate",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Platform",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Public Pages",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    }
+  ],
+  "notable_completed": [
+    {
+      "taskId": "IFC-192",
+      "sprint": 15,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Contact Activity Tracking - Add lastContactedAt field to Contact model with auto-update on interactions",
+      "description": "Contact Activity Tracking - Add lastContactedAt field to Contact model with auto-update on interactions",
+      "summary": "IFC-192 cross-cutting implementation across 6 hexagonal layers. Pre-existing findUnique bug in PrismaContactRepository.findByEmail fixed (composite unique key requires findFirst). 32 new tests, 309/309 total passing. lastContactedAt updates on interactions;...",
+      "definitionOfDone": "Contact.lastContactedAt field added to Prisma schema; migration applied; field auto-updated on call/email/meeting events via domain event handler; home.getAIInsights generates stale contact warnings (30+ days no contact with open opportunities); verified by: pnpm test",
+      "definitionOfDoneSnapshot": "lastContactedAt updates on interactions; stale contact insight works; migration reversible",
+      "dependencies": [
+        "IFC-182",
+        "IFC-184"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-15/attestations/IFC-192/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-28T00:15:00.000Z",
+        "sprintFolder": 15
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 5,
+        "met": 5,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-040",
+      "sprint": 15,
+      "status": "Completed",
+      "section": "Developer Pages",
+      "title": "New Dev App",
+      "description": "New Dev App",
+      "summary": "PG-040 re-execution after external review findings. Fixed 5 findings: (1) AC-009 one-time secret display with dismiss/mask transition, (2) AC-015 clipboard failure feedback via 'Copy failed' message, (3) AC-014 scope checkbox aria-described......",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, apps created; artifacts: page.tsx, app-creator.tsx, oauth-setup.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, apps created",
+      "dependencies": [
+        "PG-039"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-15/attestations/PG-040/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-27T21:15:00Z",
+        "sprintFolder": 15
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 5,
+        "met": 5,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-124",
+      "sprint": 15,
+      "status": "Completed",
+      "section": "Auth Pages",
+      "title": "Implement SSO (SAML/OAuth) and social login providers",
+      "description": "Implement SSO (SAML/OAuth) and social login providers",
+      "summary": "Implementation extended with code review remediation: end-to-end CSRF nonce verification (Finding 1), server/client page split with metadata (Finding 2), all-4-provider extractOAuthParams (Finding 3), resolveSso tRPC wired to SSO_PROVIDER_C......",
+      "definitionOfDone": "Users can sign in via Google, Microsoft, etc.; SAML integration with enterprise providers; artifacts: page.tsx, sso-handler.ts, provider-config.json; targets: >=1%, <2s; verified by: pnpm test, pnpm test:e2e",
+      "definitionOfDoneSnapshot": "All 4 validation gates pass (TypeScript, Tests, Lint, Build); Scoped coverage exceeds thresholds; Plan checkboxes 100% checked",
+      "dependencies": [
+        "PG-015",
+        "PG-024",
+        "IFC-006"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-15/attestations/PG-124/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-27T21:30:00Z",
+        "sprintFolder": 15
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-158",
+      "sprint": 15,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Drag and drop pinned items reorder - backend API exists (home.reorderPinnedItems) needs @dnd-kit frontend integration",
+      "description": "Drag and drop pinned items reorder - backend API exists (home.reorderPinnedItems) needs @dnd-kit frontend integration",
+      "summary": "PG-158 adds drag-and-drop reordering to pinned items in the home page. Created DraggablePinnedItem component with @dnd-kit/sortable, rewrote PinnedSection with DndContext/SortableContext, removed dead PinnedItemCard function.... @dnd-kit installed;...",
+      "definitionOfDone": "@dnd-kit installed; PinnedSection supports drag-and-drop reorder; calls home.reorderPinnedItems on drop; touch support; tests cover reorder",
+      "definitionOfDoneSnapshot": "@dnd-kit installed; PinnedSection supports drag-and-drop reorder; calls home.reorderPinnedItems on drop; touch support; tests cover reorder",
+      "dependencies": [
+        "PG-129"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-15/attestations/PG-158/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-28T20:16:00Z",
+        "sprintFolder": 15
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 5,
+        "met": 5,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-159",
+      "sprint": 15,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Stale pin handling - deleted or inaccessible pinned entities should show Item unavailable with unpin option",
+      "description": "Stale pin handling - deleted or inaccessible pinned entities should show Item unavailable with unpin option",
+      "summary": "PG-159 implements stale pin handling per ADR-027. Backend: ENTITY_MODEL_MAP + checkEntityExists helper with parallel Promise.all lookups. Frontend: DraggablePinnedItem conditional rendering for unavailable items with inline unpin button.......",
+      "definitionOfDone": "getPinnedItems checks entity existence; missing entities return stub with unavailable flag; UI shows badge with unpin button; ADR-027 requirement verified",
+      "definitionOfDoneSnapshot": "getPinnedItems checks entity existence; missing entities return stub with unavailable flag; UI shows badge with unpin button; ADR-027 requirement verified",
+      "dependencies": [
+        "PG-129"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-15/attestations/PG-159/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-01T00:15:00Z",
+        "sprintFolder": 15
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    }
+  ],
+  "open_tasks": [],
+  "tasks": [
+    {
+      "taskId": "IFC-026",
+      "sprint": 15,
+      "status": "Completed",
+      "section": "Intelligence",
+      "title": "PHASE-011: Playwright E2E Testing",
+      "description": "PHASE-011: Playwright E2E Testing",
+      "summary": "Playwright E2E tests cover AI scoring, approvals, predictions, and visual regression; Mock data fixtures provide deterministic test data for all AI feature edge cases;... E2E tests for AI features, visual regression",
+      "definitionOfDone": "E2E tests for AI features, visual regression; artifacts: index.html, context_ack.json",
+      "definitionOfDoneSnapshot": "E2E tests for AI features, visual regression",
+      "dependencies": [
+        "IFC-022",
+        "IFC-024"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-15/attestations/IFC-026/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T19:00:00.000Z",
+        "sprintFolder": 15
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-027",
+      "sprint": 15,
+      "status": "Completed",
+      "section": "Investment Gate",
+      "title": "PHASE-001: Gate 2 Review - £2000 Investment",
+      "description": "PHASE-001: Gate 2 Review - £2000 Investment",
+      "summary": "Investment Gate task — T1 tranche approved (£500), T2/T3 pending remediation milestones; Validation scripts created for typecheck, coverage, and benchmark automated checks;... Expand/maintain decision on AI features",
+      "definitionOfDone": "Expand/maintain decision on AI features; artifacts: investment-gate-2-analysis.md, ai-roi-report.md, customer-feedback.md",
+      "definitionOfDoneSnapshot": "Expand/maintain decision on AI features",
+      "dependencies": [
+        "IFC-026"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-15/attestations/IFC-027/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T19:20:00.000Z",
+        "sprintFolder": 15
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-032",
+      "sprint": 15,
+      "status": "Completed",
+      "section": "Developer Pages",
+      "title": "Docs Index",
+      "description": "Docs Index",
+      "summary": "PG-032 Docs Index — Developer Documentation Portal entry point. Created (developer) route group with sidebar layout, docs index page with 6 hardcoded categories, client-side search with 300ms debounce, responsive card grid (1/2/3 columns),......",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, docs searchable; artifacts: page.tsx, docs-search.tsx, docs-navigation.tsx",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse >=90, docs searchable; 46 tests passing across 4 test files",
+      "dependencies": [
+        "IFC-079"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-15/attestations/PG-032/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-10T23:30:00.000Z",
+        "sprintFolder": 15
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-033",
+      "sprint": 15,
+      "status": "Completed",
+      "section": "Developer Pages",
+      "title": "API Docs",
+      "description": "API Docs",
+      "summary": "PG-033: API Docs — Scalar Interactive API Explorer. Created 9 files (4 test files, 1 test fixture, 4 implementation files) and modified 6 files (docs index page, sidebar config, test fixture, openapi.json, 2 dependency chain docs).......",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, examples runnable; artifacts: page.tsx, api-reference-client.tsx (Scalar built-in playground)",
+      "definitionOfDoneSnapshot": "Page renders at /docs/api with Scalar interactive explorer; OpenAPI spec auto-generated from Zod validators covering all 25 routers; Interactive playground with code generation for 7+ languages",
+      "dependencies": [
+        "PG-032"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-15/attestations/PG-033/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-12T23:00:00.000Z",
+        "sprintFolder": 15
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-034",
+      "sprint": 15,
+      "status": "Completed",
+      "section": "Developer Pages",
+      "title": "Webhooks Docs",
+      "description": "Webhooks Docs",
+      "summary": "Pure frontend documentation page. 45 tests (10 page + 12 docs + 16 tester + 7 integration). Coverage scoped to component files (route handler excluded — server-side proxy tested indirectly via component fetch mocks).......",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, webhooks documented; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Webhooks documented, examples clear, testing enabled; response under 200ms; Lighthouse >=90",
+      "dependencies": [
+        "PG-032"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-15/attestations/PG-034/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-23T22:28:00Z",
+        "sprintFolder": 15
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-035",
+      "sprint": 15,
+      "status": "Completed",
+      "section": "Developer Pages",
+      "title": "Changelog",
+      "description": "Changelog",
+      "summary": "PG-035 Developer Pages: Changelog — 8 files created, 10 files modified, 60 new tests (18 RSS + 25 component + 10 page + 7 integration), 100% scoped coverage. All 4 validations pass (TypeScript, Tests, Lint, Build).......",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, changelog displayed; artifacts: page.tsx, changelog-display.tsx, rss-feed.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, changelog displayed",
+      "dependencies": [
+        "PG-032"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-15/attestations/PG-035/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-24T22:12:00Z",
+        "sprintFolder": 15
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-036",
+      "sprint": 15,
+      "status": "Completed",
+      "section": "Developer Pages",
+      "title": "SDK Guides",
+      "description": "SDK Guides",
+      "summary": "PG-036 SDK Guides page: Server Component page at /docs/sdk with SdkGuides client component featuring 4 tabs (Overview, Installation, Quickstart, Downloads). SDK_REGISTRY utility with 5 SDK entries.... SDKs documented; Quickstarts clear; Downloads available",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, SDKs documented",
+      "definitionOfDoneSnapshot": "SDKs documented; Quickstarts clear; Downloads available",
+      "dependencies": [
+        "PG-032"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-15/attestations/PG-036/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-24T22:15:00Z",
+        "sprintFolder": 15
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-037",
+      "sprint": 15,
+      "status": "Completed",
+      "section": "Developer Pages",
+      "title": "CLI Docs",
+      "description": "CLI Docs",
+      "summary": "Frontend-only task. 58 tests across 5 files. Coverage: Stmts 97.22%, Branch 86.36%, Func 94.73%, Lines 100%. All 4 CSV artifacts created. Sidebar entry added. Integration list updated from coming-soon to available. PRD verified.... CLI documented;...",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, CLI documented",
+      "definitionOfDoneSnapshot": "CLI documented; Commands listed; Examples shown",
+      "dependencies": [
+        "PG-032"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-15/attestations/PG-037/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-25T22:20:00Z",
+        "sprintFolder": 15
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-038",
+      "sprint": 15,
+      "status": "Completed",
+      "section": "Developer Pages",
+      "title": "Auth Guides",
+      "description": "Auth Guides",
+      "summary": "Auth Guides page at /docs/auth with 5 tabbed sections and 4-language code examples. 54 tests across 4 files. V8 coverage: Stmts 93.54%, Branches 83.33%, Functions 94.73%, Lines 96.55%. STOA Foundation PASS. All 8 completion gates PASS.......",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, auth explained; artifacts: page.tsx, auth-guides.tsx, auth-examples.tsx",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, auth explained",
+      "dependencies": [
+        "PG-032"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-15/attestations/PG-038/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-25T22:45:00Z",
+        "sprintFolder": 15
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-039",
+      "sprint": 15,
+      "status": "Completed",
+      "section": "Developer Pages",
+      "title": "Dev Apps",
+      "description": "Dev Apps",
+      "summary": "Developer Apps page implemented at /developers/apps with 62 tests across 4 files. Coverage meets all thresholds. Pre-existing lint error in ForecastHistory.test.tsx and API typecheck error are unrelated to PG-039....",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, apps managed; artifacts: page.tsx, app-list.tsx, api-key-generator.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, apps managed",
+      "dependencies": [
+        "PG-032"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-15/attestations/PG-039/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-23T21:05:00Z",
+        "sprintFolder": 15
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-040",
+      "sprint": 15,
+      "status": "Completed",
+      "section": "Developer Pages",
+      "title": "New Dev App",
+      "description": "New Dev App",
+      "summary": "PG-040 re-execution after external review findings. Fixed 5 findings: (1) AC-009 one-time secret display with dismiss/mask transition, (2) AC-015 clipboard failure feedback via 'Copy failed' message, (3) AC-014 scope checkbox aria-described......",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, apps created; artifacts: page.tsx, app-creator.tsx, oauth-setup.ts",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, apps created",
+      "dependencies": [
+        "PG-039"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-15/attestations/PG-040/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-27T21:15:00Z",
+        "sprintFolder": 15
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 5,
+        "met": 5,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-041",
+      "sprint": 15,
+      "status": "Completed",
+      "section": "Developer Pages",
+      "title": "Dev App Detail",
+      "description": "Dev App Detail",
+      "summary": "PG-041: Developer App Detail page at /developers/apps/[id]. Implements tabbed dashboard (Overview, Metrics, Logs) with CSS-only charts, API key management with dual-gate reveal, breadcrumb navigation, and comprehensive accessibility.... AC-001:...",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, metrics displayed; artifacts: page.tsx, app-dashboard.tsx, app-metrics.tsx",
+      "definitionOfDoneSnapshot": "AC-001: Route /developers/apps/[id] renders app name as h1; AC-002: Unknown id shows App Not Found with back link; AC-003: Overview shows clientId, keys, webhook, scopes",
+      "dependencies": [
+        "PG-039"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-15/attestations/PG-041/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-24T22:08:00Z",
+        "sprintFolder": 15
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 5,
+        "met": 5,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-042",
+      "sprint": 15,
+      "status": "Completed",
+      "section": "Developer Pages",
+      "title": "Dev App Edit",
+      "description": "Dev App Edit",
+      "summary": "Frontend-only task (PG-042). No container.ts/context.ts wiring needed. SCOPE_OPTIONS exported from app-creator.tsx for cross-component sharing. CopyButton pattern matches existing app-dashboard.tsx. One uncovered line:......",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, settings updated; artifacts: page.tsx, app-editor.tsx, webhook-config.tsx",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, settings updated",
+      "dependencies": [
+        "PG-041"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-15/attestations/PG-042/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-27T21:30:00Z",
+        "sprintFolder": 15
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-124",
+      "sprint": 15,
+      "status": "Completed",
+      "section": "Auth Pages",
+      "title": "Implement SSO (SAML/OAuth) and social login providers",
+      "description": "Implement SSO (SAML/OAuth) and social login providers",
+      "summary": "Implementation extended with code review remediation: end-to-end CSRF nonce verification (Finding 1), server/client page split with metadata (Finding 2), all-4-provider extractOAuthParams (Finding 3), resolveSso tRPC wired to SSO_PROVIDER_C......",
+      "definitionOfDone": "Users can sign in via Google, Microsoft, etc.; SAML integration with enterprise providers; artifacts: page.tsx, sso-handler.ts, provider-config.json; targets: >=1%, <2s; verified by: pnpm test, pnpm test:e2e",
+      "definitionOfDoneSnapshot": "All 4 validation gates pass (TypeScript, Tests, Lint, Build); Scoped coverage exceeds thresholds; Plan checkboxes 100% checked",
+      "dependencies": [
+        "PG-015",
+        "PG-024",
+        "IFC-006"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-15/attestations/PG-124/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-27T21:30:00Z",
+        "sprintFolder": 15
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-191",
+      "sprint": 15,
+      "status": "Completed",
+      "section": "Platform",
+      "title": "User Timezone Support - Add timezone field to User model with preference UI and timezone-aware greeting",
+      "description": "User Timezone Support - Add timezone field to User model with preference UI and timezone-aware greeting",
+      "summary": "IFC-191 User Timezone Support. 17 files (8 new + 9 modified). 86 tests across 5 test files (all pass). Coverage: user.router 100%/90%/100%/100%, home.router 95%/87%/100%/95%, TimezoneSelector 100%/93.75%/100%/100%. Build passes.......",
+      "definitionOfDone": "User.timezone field added to Prisma schema; migration created; home.getWelcomeSummary greeting uses user timezone via Intl.DateTimeFormat; TimezoneSelector on /settings/account with tRPC persistence; fallback chain: user timezone → UTC; 74 tests passing; user router 100% coverage",
+      "definitionOfDoneSnapshot": "User.timezone field added to Prisma schema; migration created; home.getWelcomeSummary greeting uses user timezone via Intl.DateTimeFormat; TimezoneSelector on /settings/account with tRPC persistence; fallback chain: user timezone → UTC;...",
+      "dependencies": [
+        "IFC-182"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-15/attestations/IFC-191/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-27T19:20:00Z",
+        "sprintFolder": 15
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-192",
+      "sprint": 15,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Contact Activity Tracking - Add lastContactedAt field to Contact model with auto-update on interactions",
+      "description": "Contact Activity Tracking - Add lastContactedAt field to Contact model with auto-update on interactions",
+      "summary": "IFC-192 cross-cutting implementation across 6 hexagonal layers. Pre-existing findUnique bug in PrismaContactRepository.findByEmail fixed (composite unique key requires findFirst). 32 new tests, 309/309 total passing. lastContactedAt updates on interactions;...",
+      "definitionOfDone": "Contact.lastContactedAt field added to Prisma schema; migration applied; field auto-updated on call/email/meeting events via domain event handler; home.getAIInsights generates stale contact warnings (30+ days no contact with open opportunities); verified by: pnpm test",
+      "definitionOfDoneSnapshot": "lastContactedAt updates on interactions; stale contact insight works; migration reversible",
+      "dependencies": [
+        "IFC-182",
+        "IFC-184"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-15/attestations/IFC-192/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-28T00:15:00.000Z",
+        "sprintFolder": 15
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 5,
+        "met": 5,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-195",
+      "sprint": 15,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Customizable Daily Goals - Multi-type goal support (revenue calls meetings tasks custom) with user preferences",
+      "description": "Customizable Daily Goals - Multi-type goal support (revenue calls meetings tasks custom) with user preferences",
+      "summary": "IFC-195 Customizable Daily Goals: Multi-type goal support (revenue/calls/meetings/tasks/custom) with GoalSettingsModal UI, updateDailyGoal mutation, and dynamic GoalSection display....",
+      "definitionOfDone": "home.getDailyGoal calculates progress for all 5 goal types (revenue/calls/meetings/tasks/custom); home.updateDailyGoal mutation saves goal preferences; user can select goal type and target from settings modal; default remains $5000 revenue; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "home.getDailyGoal calculates progress for all 5 goal types (revenue/calls/meetings/tasks/custom); home.updateDailyGoal mutation saves goal preferences; user can select goal type and target from settings modal; default remains $5000 revenue",
+      "dependencies": [
+        "IFC-182"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-15/attestations/IFC-195/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-28T00:26:00Z",
+        "sprintFolder": 15
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-156",
+      "sprint": 15,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Customizable Daily Goals - settings UI + home.updateDailyGoal mutation + read from User.preferences instead of hardcoded targetValue=5000",
+      "description": "Customizable Daily Goals - settings UI + home.updateDailyGoal mutation + read from User.preferences instead of hardcoded targetValue=5000",
+      "summary": "PG-156 was pre-implemented by IFC-195 (Completed 2026-02-28). Validation-only execution confirmed all 4 acceptance criteria met. All coverage thresholds exceeded:... Users can set daily goal type (revenue/calls/meetings/tasks) and target;...",
+      "definitionOfDone": "Users can set daily goal type (revenue/calls/meetings/tasks) and target; goal persists in User.preferences; getDailyGoal reads from preferences; tests cover CRUD",
+      "definitionOfDoneSnapshot": "Users can set daily goal type (revenue/calls/meetings/tasks) and target; Goal persists in User.preferences; getDailyGoal reads from preferences",
+      "dependencies": [
+        "PG-129"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-15/attestations/PG-156/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-28T23:40:00Z",
+        "sprintFolder": 15
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-157",
+      "sprint": 15,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Visible Pin to Home buttons on entity list items and detail page headers - not just hidden in 3-dot MoreActionsButton sheet",
+      "description": "Visible Pin to Home buttons on entity list items and detail page headers - not just hidden in 3-dot MoreActionsButton sheet",
+      "summary": "PinButton component created and integrated into 5 entity detail pages (deals, contacts, leads, tickets, accounts). Uses existing useEntityPin hook. 100% test coverage.... Pin/Unpin icon button visible on entity detail headers; uses useEntityPin hook;...",
+      "definitionOfDone": "Pin/Unpin icon button visible on entity detail headers; uses useEntityPin hook; aria-label for a11y; tests cover pin toggle",
+      "definitionOfDoneSnapshot": "Pin/Unpin icon button visible on entity detail headers; uses useEntityPin hook; aria-label for a11y; tests cover pin toggle",
+      "dependencies": [
+        "PG-129"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-15/attestations/PG-157/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-28T00:55:00Z",
+        "sprintFolder": 15
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-158",
+      "sprint": 15,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Drag and drop pinned items reorder - backend API exists (home.reorderPinnedItems) needs @dnd-kit frontend integration",
+      "description": "Drag and drop pinned items reorder - backend API exists (home.reorderPinnedItems) needs @dnd-kit frontend integration",
+      "summary": "PG-158 adds drag-and-drop reordering to pinned items in the home page. Created DraggablePinnedItem component with @dnd-kit/sortable, rewrote PinnedSection with DndContext/SortableContext, removed dead PinnedItemCard function.... @dnd-kit installed;...",
+      "definitionOfDone": "@dnd-kit installed; PinnedSection supports drag-and-drop reorder; calls home.reorderPinnedItems on drop; touch support; tests cover reorder",
+      "definitionOfDoneSnapshot": "@dnd-kit installed; PinnedSection supports drag-and-drop reorder; calls home.reorderPinnedItems on drop; touch support; tests cover reorder",
+      "dependencies": [
+        "PG-129"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-15/attestations/PG-158/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-28T20:16:00Z",
+        "sprintFolder": 15
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 5,
+        "met": 5,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-159",
+      "sprint": 15,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Stale pin handling - deleted or inaccessible pinned entities should show Item unavailable with unpin option",
+      "description": "Stale pin handling - deleted or inaccessible pinned entities should show Item unavailable with unpin option",
+      "summary": "PG-159 implements stale pin handling per ADR-027. Backend: ENTITY_MODEL_MAP + checkEntityExists helper with parallel Promise.all lookups. Frontend: DraggablePinnedItem conditional rendering for unavailable items with inline unpin button.......",
+      "definitionOfDone": "getPinnedItems checks entity existence; missing entities return stub with unavailable flag; UI shows badge with unpin button; ADR-027 requirement verified",
+      "definitionOfDoneSnapshot": "getPinnedItems checks entity existence; missing entities return stub with unavailable flag; UI shows badge with unpin button; ADR-027 requirement verified",
+      "dependencies": [
+        "PG-129"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-15/attestations/PG-159/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-01T00:15:00Z",
+        "sprintFolder": 15
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-160",
+      "sprint": 15,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "View All AI Insights page - /insights route with getAllInsights endpoint pagination and filtering by insight type",
+      "description": "View All AI Insights page - /insights route with getAllInsights endpoint pagination and filtering by insight type",
+      "summary": "PG-160 View All AI Insights page. Created /insights route with InsightsListPage, InsightCard, InsightTypeBadge, sidebar config. Backend getAllInsights endpoint with cursor pagination and type filtering (17 tests).... AC-001:...",
+      "definitionOfDone": "/insights page with paginated list; getAllInsights endpoint with type filter; View All link navigates correctly; loading/empty states",
+      "definitionOfDoneSnapshot": "AC-001: Page loads with paginated list of AI insights; AC-002: Filter by 4 insight types via chips; AC-003: getAllInsights endpoint with cursor pagination",
+      "dependencies": [
+        "PG-129"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-15/attestations/PG-160/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-01T18:15:00Z",
+        "sprintFolder": 15
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 8,
+        "met": 8,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-163",
+      "sprint": 15,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Home page integration tests - test home.router endpoints against real database with seed data",
+      "description": "Home page integration tests - test home.router endpoints against real database with seed data",
+      "summary": "QA testing task. 58 new tests added in home.router.coverage.test.ts covering all 9 home router endpoints. No production code changes. All existing regression suites (91 + 17 tests) continue to pass. Coverage exceeds all thresholds....",
+      "definitionOfDone": "Integration tests for all 9 home router endpoints; mock-based with full middleware chain; covers auth, pagination, error cases; >90% coverage on home.router.ts",
+      "definitionOfDoneSnapshot": "Integration tests for all 9 home router endpoints; Mock-based with full middleware chain; Covers auth, pagination, error cases",
+      "dependencies": [
+        "PG-129"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-15/attestations/PG-163/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-01T19:18:00Z",
+        "sprintFolder": 15
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-164",
+      "sprint": 15,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Home page E2E tests - 5 Playwright scenarios: public page auth redirect insight click quick action pin/unpin flow",
+      "description": "Home page E2E tests - 5 Playwright scenarios: public page auth redirect insight click quick action pin/unpin flow",
+      "summary": "Test-only task: created 1 E2E test file with 9 individual Playwright tests across 5 scenarios. Fixed strict mode violation (main#main-content).... AC-001: Public Home Page Rendering; AC-002: Auth Redirect for Protected Routes; AC-003:...",
+      "definitionOfDone": "5 Playwright E2E scenarios passing; covers auth, navigation, interactions; CI integrated; screenshots on failure; <60s total",
+      "definitionOfDoneSnapshot": "AC-001: Public Home Page Rendering; AC-002: Auth Redirect for Protected Routes; AC-003: Insight Card Click Navigation",
+      "dependencies": [
+        "PG-129",
+        "PG-155"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-15/attestations/PG-164/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-08T00:15:00Z",
+        "sprintFolder": 15
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-169",
+      "sprint": 15,
+      "status": "Completed",
+      "section": "Developer Pages",
+      "title": "Developer Guides Page",
+      "description": "Developer Guides Page",
+      "summary": "response under 200ms, Lighthouse >=90, guides listed and categorized",
+      "definitionOfDone": "Response <200ms, Lighthouse >=90, guides listed and categorized; artifacts: page.tsx, guides-list.tsx",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse >=90, guides listed and categorized",
+      "dependencies": [
+        "PG-032"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-15/attestations/PG-169/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-01T16:25:00Z",
+        "sprintFolder": 15
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 3,
+        "failed": 1,
+        "failingNames": [
+          "Build"
+        ]
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-170",
+      "sprint": 15,
+      "status": "Completed",
+      "section": "Developer Pages",
+      "title": "Architecture Docs Page",
+      "description": "Architecture Docs Page",
+      "summary": "Architecture Docs page at /docs/architecture. 43 ADRs across 6 categories with search, filter, DDD context map. All AC-001 to AC-010 and NF-001 to NF-005 verified. response under 200ms, Lighthouse >=90, ADRs listed and searchable",
+      "definitionOfDone": "Response <200ms, Lighthouse >=90, ADRs listed and searchable; artifacts: page.tsx, adr-list.tsx",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse >=90, ADRs listed and searchable",
+      "dependencies": [
+        "PG-032"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-15/attestations/PG-170/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-01T19:30:00Z",
+        "sprintFolder": 15
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-171",
+      "sprint": 15,
+      "status": "Completed",
+      "section": "Developer Pages",
+      "title": "Integration Resources Page",
+      "description": "Integration Resources Page",
+      "summary": "PG-171 Integration Resources Page — frontend-only task (no backend/container changes needed). G6 container-registration passes as N/A for pure UI tasks. All 16 integration items verified against actual codebase implementations.......",
+      "definitionOfDone": "Response <200ms, Lighthouse >=90, integrations documented; artifacts: page.tsx, integration-list.tsx",
+      "definitionOfDoneSnapshot": "Server Component page at /docs/integrations with metadata export; IntegrationList client component with 4 categories and 16 items; Badge variants for status display (secondary=Beta, warning=Coming Soon)",
+      "dependencies": [
+        "PG-032",
+        "PG-034"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-15/attestations/PG-171/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-20T23:55:00Z",
+        "sprintFolder": 15
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 8,
+        "met": 8,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "DOC-010",
+      "sprint": 15,
+      "status": "Completed",
+      "section": "Documentation",
+      "title": "Create route reconciliation script comparing conformance-statement.md routes against apps/web/src/app/ directory tree",
+      "description": "Create route reconciliation script comparing conformance-statement.md routes against apps/web/src/app/ directory tree",
+      "summary": "DOC-010: A11y route reconciliation script. Parses WCAG conformance statement routes, compares against filesystem page.tsx files, reports drift with 5-gate validation. 41 tests, 93%+ coverage. CI wired in pr-checks.yml.......",
+      "definitionOfDone": "Route reconciliation TypeScript script created; scans conformance-statement.md route list vs actual app router directories; reports added/removed/missing routes; exits non-zero on drift; integrated as CI check; verified by: script execution with intentional drift",
+      "definitionOfDoneSnapshot": "Route reconciliation TypeScript script created; scans conformance-statement.md route list vs actual app router directories; reports added/removed/missing routes; exits non-zero on drift; integrated as CI check",
+      "dependencies": [
+        "DOC-008"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-15/attestations/DOC-010/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-28T01:01:04Z",
+        "sprintFolder": 15
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 6,
+        "met": 6,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "DOC-011",
+      "sprint": 15,
+      "status": "Completed",
+      "section": "Documentation",
+      "title": "Add compliance-check Section 11 requiring VPAT/conformance review when PG-*/IFC-* UI tasks add or modify routes",
+      "description": "Add compliance-check Section 11 requiring VPAT/conformance review when PG-*/IFC-* UI tasks add or modify routes",
+      "summary": "DOC-011 is a Markdown-only documentation/tooling task (NF-001: zero runtime overhead). No TypeScript packages were modified. All 3 deliverables are Markdown files in .claude/skills/compliance-check/. Validation performed via:......",
+      "definitionOfDone": "compliance-check skill updated with Section 11 (Accessibility Doc Gate); detects new/modified routes in task artifacts; blocks completion if VPAT/conformance docs not updated; verified by: dry-run on a PG-* task with new route",
+      "definitionOfDoneSnapshot": "compliance-check skill updated with Section 11 (Accessibility Doc Gate); detects new/modified routes in task artifacts; blocks completion if VPAT/conformance docs not updated",
+      "dependencies": [
+        "DOC-008"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-15/attestations/DOC-011/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-01T19:25:00Z",
+        "sprintFolder": 15
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "DOC-012",
+      "sprint": 15,
+      "status": "Completed",
+      "section": "Documentation",
+      "title": "Establish quarterly accessibility documentation review cadence with recurring sprint task template",
+      "description": "Establish quarterly accessibility documentation review cadence with recurring sprint task template",
+      "summary": "Documentation-only task: created quarterly accessibility review template, added A11Y-REVIEW-001 CSV row for Sprint 20, updated conformance statement line 6, updated dependency chain. No runtime code changes....",
+      "definitionOfDone": "Review template created with checklist (VPAT accuracy, conformance scope, route coverage, known limitations, AT testing schedule); first quarterly review scheduled in Sprint_plan.csv; cadence documented in project governance; verified by: template completeness review",
+      "definitionOfDoneSnapshot": "Review template created with checklist (VPAT accuracy, conformance scope, route coverage, known limitations, AT testing schedule); first quarterly review scheduled in Sprint_plan.csv; cadence documented in project governance",
+      "dependencies": [
+        "DOC-008"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-15/attestations/DOC-012/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-01T23:10:00Z",
+        "sprintFolder": 15
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "DOC-013",
+      "sprint": 15,
+      "status": "Completed",
+      "section": "Documentation",
+      "title": "Amend ADR-038 with Documentation Maintenance section mandating accessibility doc updates when scope changes",
+      "description": "Amend ADR-038 with Documentation Maintenance section mandating accessibility doc updates when scope changes",
+      "summary": "Documentation-only task. Added Documentation Maintenance section to ADR-038 with 5 subsections: Update Triggers (4 categories), Enforcement Mechanisms (DOC-010/011/012), Responsibility (RACI), Review Cadence, Update Verification Process.......",
+      "definitionOfDone": "ADR-038 amended with Documentation Maintenance section defining: triggers for updates (new routes, component changes, WCAG scope changes), responsible party, review frequency, update verification process; linked to DOC-010/011/012 as enforcement mechanisms; verified by: ADR review",
+      "definitionOfDoneSnapshot": "ADR-038 amended with Documentation Maintenance section defining: triggers for updates (new routes, component changes, WCAG scope changes), responsible party, review frequency, update verification process;...",
+      "dependencies": [
+        "DOC-008"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-15/attestations/DOC-013/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-02T23:17:00Z",
+        "sprintFolder": 15
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-179",
+      "sprint": 15,
+      "status": "Completed",
+      "section": "Public Pages",
+      "title": "Press Release Detail Page - dynamic /press/[id] route for individual press releases linked from /press index page (content audit finding F-004)",
+      "description": "Press Release Detail Page - dynamic /press/[id] route for individual press releases linked from /press index page (content audit finding F-004)",
+      "summary": "PG-179 Press Release Detail Page — dynamic /press/[id] route with SSG. 3 files created, 6 modified. 44 tests, 100/90/100/100 coverage. Full TDD: RED (39 fail) → GREEN (44 pass) → REFACTOR → VALIDATION. All 10 completion gates passed.......",
+      "definitionOfDone": "Page at /press/[id] renders individual press release with title date body and back-link to /press index; generateMetadata for SEO; OG tags for social sharing; Lighthouse >=90; /press index links resolve without 404; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Page at /press/[id] renders individual press release with title, date, body, and back-link to /press index; generateMetadata for SEO; OG tags for social sharing",
+      "dependencies": [
+        "PG-007"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-15/attestations/PG-179/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-01T20:52:00Z",
+        "sprintFolder": 15
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-209",
+      "sprint": 15,
+      "status": "Completed",
+      "section": "SEO",
+      "title": "Fix sitemap.ts defects - replace new Date() lastModified with actual file modification timestamps, add all 6 blog post slugs, add dynamic route entries for /careers/[id] and /lp/[slug] (content audit findings F-007 F-008 F-009)",
+      "description": "Fix sitemap.ts defects - replace new Date() lastModified with actual file modification timestamps, add all 6 blog post slugs, add dynamic route entries for /careers/[id] and /lp/[slug] (content audit findings F-007 F-008 F-009)",
+      "summary": "sitemap.ts uses statSync or build-time timestamps for lastModified instead of new Date(); all 6 blog post slugs included in sitemap; dynamic routes /careers/[id] and /lp/[slug] generate sitemap entries from data source",
+      "definitionOfDone": "sitemap.ts uses statSync or build-time timestamps for lastModified instead of new Date(); all 6 blog post slugs included in sitemap; dynamic routes /careers/[id] and /lp/[slug] generate sitemap entries from data source; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "sitemap.ts uses statSync or build-time timestamps for lastModified instead of new Date(); all 6 blog post slugs included in sitemap; dynamic routes /careers/[id] and /lp/[slug] generate sitemap entries from data source",
+      "dependencies": [
+        "DOC-002",
+        "DOC-009"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-15/attestations/IFC-209/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-03T00:35:00Z",
+        "sprintFolder": 15
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-210",
+      "sprint": 15,
+      "status": "Completed",
+      "section": "SEO",
+      "title": "Fill SEO metadata gaps on public pages - add description OG and Twitter tags to /pricing, complete OG tags on /about and /features, add layout-level metadata for auth-flow pages (content audit findings F-010 F-011 F-012)",
+      "description": "Fill SEO metadata gaps on public pages - add description OG and Twitter tags to /pricing, complete OG tags on /about and /features, add layout-level metadata for auth-flow pages (content audit findings F-010 F-011 F-012)",
+      "summary": "Static metadata-only task. Added description, openGraph, twitter, and alternates to 4 public pages. 16 new test assertions (4 per page). No runtime behavior changes. /pricing has description OG and Twitter card metadata;...",
+      "definitionOfDone": "/pricing has description OG and Twitter card metadata; /about and /features have complete og:description og:url and twitter:title twitter:description; auth-flow layout provides base metadata for login signup and reset pages; all public page SEO scores >=75; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "/pricing has description OG and Twitter card metadata; /about and /features have complete og:description og:url and twitter:title twitter:description; auth-flow layout provides base metadata for login signup and reset pages;...",
+      "dependencies": [
+        "DOC-009"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-15/attestations/IFC-210/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-03T01:55:00Z",
+        "sprintFolder": 15
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 1,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "DOC-014",
+      "sprint": 15,
+      "status": "Completed",
+      "section": "Documentation",
+      "title": "Automated content audit script - TypeScript CLI that scans page.tsx files, resolves metadata chains, calculates SEO scores, detects ghost links, and regenerates content-audit-results.json; integrates as CI check on PR modifying app routes",
+      "description": "Automated content audit script - TypeScript CLI that scans page.tsx files, resolves metadata chains, calculates SEO scores, detects ghost links, and regenerates content-audit-results.json; integrates as CI check on PR modifying app routes",
+      "summary": "Coverage instrumentation reports 0% due to vi.mock('node:fs') hoisting preventing Istanbul/V8 from tracking execution.......",
+      "definitionOfDone": "Script at tools/scripts/content-audit.ts scans all page.tsx files enumerates routes resolves metadata chain calculates SEO scores per rubric in content-audit.md detects ghost links against navigation-reachability-audit.md and regenerates content-audit-results.json; output passes all 14 existing test cases; exits non-zero if route count drifts or new findings detected; CI workflow triggers on PR modifying apps/web/src/app/**/page.tsx or layout.tsx; verified by: npx tsx tools/scripts/content-audit.ts && pnpm test",
+      "definitionOfDoneSnapshot": "Script at tools/scripts/content-audit.ts scans all page.tsx files enumerates routes resolves metadata chain calculates SEO scores per rubric in content-audit.md detects ghost links against navigation-reachability-audit.md and regenerates co...",
+      "dependencies": [
+        "DOC-009"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-15/attestations/DOC-014/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-07T12:10:00Z",
+        "sprintFolder": 15
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-296",
+      "sprint": 15,
+      "status": "Completed",
+      "section": "AI Foundation",
+      "title": "Queue Scheduler Administration — Implement queuesAdmin tRPC router with live BullMQ stats and scheduler CRUD (list/pause/resume/retry/delete), wire to /agent-approvals/agents page. Replace stub router with live Redis/BullMQ data. Add queue health panel to ActiveAgentsDashboard showing scheduler cron patterns, queue counts, and action buttons.",
+      "description": "Queue Scheduler Administration — Implement queuesAdmin tRPC router with live BullMQ stats and scheduler CRUD (list/pause/resume/retry/delete), wire to /agent-approvals/agents page. Replace stub router with live Redis/BullMQ data. Add queue health panel to ActiveAgentsDashboard showing scheduler cron patterns, queue counts, and action buttons.",
+      "summary": "Queue Scheduler Administration fully implemented. Backend: queuesAdmin tRPC router with 6 procedures (list, getByName, pause, resume, retryFailed, deleteScheduler). Frontend:... queuesAdmin router returns live queue stats from Redis;...",
+      "definitionOfDone": "queuesAdmin router returns live queue stats from Redis; scheduler list/pause/resume/retry/delete endpoints functional; ActiveAgentsDashboard displays queue health panel with cron patterns and action buttons; stub router fully replaced; artifacts: queues.router.ts, QueueSchedulerPanel.tsx; targets: response <200ms, coverage >90%; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "queuesAdmin router returns live queue stats from Redis; scheduler list/pause/resume/retry/delete endpoints functional; ActiveAgentsDashboard displays queue health panel with cron patterns and action buttons; stub router fully replaced",
+      "dependencies": [
+        "IFC-015",
+        "IFC-197",
+        "PG-151"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-15/attestations/IFC-296/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-08T13:27:00Z",
+        "sprintFolder": 15
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 7,
+        "met": 7,
+        "missed": 0
+      }
+    }
+  ]
+}

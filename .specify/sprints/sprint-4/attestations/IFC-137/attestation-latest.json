@@ -1,0 +1,87 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-137",
+  "run_id": "sprint4-audit-20260302T215722-8m0gaz",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:57:29.812Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 6,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "packages/domain/src/legal/appointments/Appointment.ts": "ab124125137e06a9a7502c4ee4e8997567fd517c77fb7e768f4c7d18325012f3",
+    "packages/application/src/usecases/scheduling/index.ts": "a44a4f83719d34a0a4ba7859196faf74901269d2b4c5a5531c9c92f89dec89c1",
+    "apps/api/src/modules/legal/appointments.router.ts": "20249369501c1f311e4ec364d48ce3b410853e3c28dc67337f43b01ac0dcc0c0",
+    ".specify/sprints/sprint-4/attestations/IFC-137/context_ack.json": "39212e366722a71d197d6c57a091ffe2e0b11013e6f778390607a3d30acb38fd",
+    "docs/planning/adr/ADR-024-scheduling-calendar.md": "1a94a37f6236e82e5b4f3bcee4b9d9d60bf2c0cc9dcd0f41a322d0ad760808d4",
+    "docs/planning/prd-scheduling-calendar.md": "b1c8ea6dd8248d74468b2b3449dc7ff6c1acb7a7f6c6d0d3ff61dfe50bb47368"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-137",
+      "command": "pnpm test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 180000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-136",
+    "IFC-003"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Appointment aggregate",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "services and repositories implemented",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "conflict detection logic with unit tests",
+      "met": true,
+      "evidence": "All 1 validations passed"
+    },
+    {
+      "criterion": "recurrence rules",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "APIs via tRPC",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "scheduling integrated with case management",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "targets: >=95%",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": ">=90%",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "7 DoD criteria unverified"
+}

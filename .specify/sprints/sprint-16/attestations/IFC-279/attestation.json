@@ -1,0 +1,44 @@
+{
+  "task_id": "IFC-279",
+  "verdict": "COMPLETE",
+  "run_id": "20260317000000-715bc205",
+  "completed_at": "2026-03-17T00:00:00Z",
+  "artifact_hashes": {
+    "apps/web/src/app/deals/(list)/new/page.tsx": "4318a2ab08e0c5e172df971c3f8082ee3496f55b0e885080094b584f7348db27",
+    "apps/web/src/components/deals/DealForm.tsx": "e9ca70c1e81d26a2088ad1f11d5a1a219fb3dc134e11634e251c9faf5cf9b6a8",
+    "apps/web/src/components/deals/__tests__/DealForm.test.tsx": "36917b334b41a2ad754ba034396ff1cf855b8570b60e8238d845158f6030ff8b",
+    "apps/web/src/app/deals/(list)/new/__tests__/page.test.tsx": "839b39ae718b47270c291b956f0b5641dc71a82a47ef1f56004940d386ea9158"
+  },
+  "dependencies_verified": true,
+  "notes": "IFC-279: Deal Create Form + /deals/new Route. Created DealForm component and new page wired to trpc.opportunity.create. Extended EntitySearchField to support account entity type. Updated sitemap test count (193→194), PAGE_MAP_AND_FLOWS.md, and dependency chains.",
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-17T00:00:00Z"
+    },
+    {
+      "name": "Tests",
+      "command": "pnpm --filter @intelliflow/web exec vitest run src/components/deals/__tests__/DealForm src/app/deals/(list)/new --reporter=verbose",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-17T00:00:00Z"
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-17T00:00:00Z"
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-17T00:00:00Z"
+    }
+  ]
+}

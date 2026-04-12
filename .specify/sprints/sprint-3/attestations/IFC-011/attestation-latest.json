@@ -1,0 +1,58 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-011",
+  "run_id": "sprint3-audit-20260302T215712-mko6ti",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:57:20.310Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 8,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "artifacts/reports/supabase-usage-report.json": "2be721a3368f30f94ade85fe4d02381cb25aacee864529c33a344ca97498cde5",
+    "artifacts/reports/cost-projection.json": "85849b520429874d1997c78ca20b651e8843e46b601687068e44e8dc98d321e1",
+    "docs/shared/optimization-guide.md": "ba0956c23cd75782be405df33437dc8cbb1970d8b3ecef345bb363a1462dcb07",
+    "artifacts/misc/upgrade-triggers.yaml": "b5eb0a3fb9140d986bdb044f607c8e29706c04c97b1483f63d4b60d20e9dcf98",
+    "apps/project-tracker/docs/metrics/_global/flows/FLOW-002.md": "869fc83b4b9957fba7643c30ff6b5fbc02630ecc1b192b3d95211dda57dc4949",
+    "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-002-validation.md": "438a5729539842f4c1da092828199ea256759eb99e8cd39bed6e0bb4b0da0e47",
+    "artifacts/reports/ifc-000-completion-manifest.json": "1d50a98b85859703af9a63146081b329b83e425b7fec3bb9d1dcfbeeaf261a32",
+    ".specify/sprints/sprint-3/attestations/IFC-011/context_ack.json": "5384fb01151b8b823567f17f81905e1922a04b9b0506e33181fe2a41bc724132"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-011",
+      "command": "pnpm typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 90000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-000"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Free tier maximized",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "upgrade path documented",
+      "met": true,
+      "evidence": "Documentation found: docs/shared/optimization-guide.md, apps/project-tracker/docs/metrics/_global/flows/FLOW-002.md, apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-002-validation.md"
+    }
+  ],
+  "notes": "1 DoD criteria unverified"
+}

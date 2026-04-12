@@ -1,0 +1,76 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-010",
+  "run_id": "sprint6-audit-20260302T215741-ex8v6u",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:57:48.934Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 5,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "artifacts/misc/decision-gate-1.md": "0112bf7e5451af3518c3193f78545cdbdc5808f0fb213594be80e2d991305fa9",
+    "artifacts/reports/risk-assessment.csv": "1155b3a895aa28c0ba68270d0d0a679d996eb9bc2e1ec1310325fc039d8c14f5",
+    "artifacts/reports/go-decision-minutes.md": "ce4dc5cbab7a9c2657a10fcf1f144d7d3b44f642dd040ebe7af8c076788ed287",
+    "artifacts/reports/budget-approval.md": "92ea3777f9a2b229e7adfbfce23e6c8066ae4d2b5f775a13b7517550777c7830",
+    ".specify/sprints/sprint-6/attestations/IFC-010/context_ack.json": "a8a91a58f7ecede34c4fd824a14b9504016cc7382b5f3602a3a3f228d366ca0b"
+  },
+  "validation_results": [
+    {
+      "name": "IFC-010",
+      "command": "pnpm lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 15000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-001",
+    "IFC-002",
+    "IFC-003",
+    "IFC-004",
+    "IFC-005",
+    "IFC-006",
+    "IFC-007",
+    "IFC-008",
+    "IFC-009",
+    "IFC-089",
+    "IFC-098",
+    "IFC-112"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Decision made: proceed with modern stack or pivot",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "artifacts: decision-gate-1.md",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "risk-assessment.csv",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "go-decision-minutes.md",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "4 DoD criteria unverified"
+}

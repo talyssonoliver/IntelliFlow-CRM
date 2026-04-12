@@ -1,0 +1,63 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "TRACK-002",
+  "run_id": "sprint14-audit-20260302T215859-6dbfyi",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:59:10.224Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 3,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/project-tracker/components/tracking/QualityDashboard.tsx": "0fdf1acc8a86c2d82de9e77f962457530b9c0df7b0cbd30196ca251b28c5379f",
+    "apps/project-tracker/app/api/tracking/quality/route.ts": "e88ec9f4d059427146687e02491784bc9d438a3f09914429e8a1593d1d31758f",
+    ".specify/sprints/sprint-14/attestations/TRACK-002/context_ack.json": "78d616d682b11923e1466bef7e358ffa7ece06f4941122e6d7118e5f7b4a7dd4"
+  },
+  "validation_results": [
+    {
+      "name": "TRACK-002",
+      "command": "pnpm --filter project-tracker typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T21:59:07.157Z",
+      "duration_ms": 3066,
+      "stdout_hash": "98fdeb9ae64bcab109ef35b0cfcdd4b559cdf3db9593c0fe33f952688eb27376"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [
+    "IFC-088"
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Dashboard shows debt trends",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "coverage %",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "SonarQube metrics",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "individual refresh buttons per metric type",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "4 DoD criteria unverified"
+}

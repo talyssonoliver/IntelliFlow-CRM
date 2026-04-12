@@ -1,0 +1,121 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "PG-030",
+  "run_id": "PG-030-validation-20260222-151000",
+  "attestor": "Claude Code",
+  "attestation_timestamp": "2026-02-22T15:10:00.000Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 7,
+    "validations_passed": 4,
+    "validations_failed": 0,
+    "gates_passed": 8,
+    "gates_failed": 0,
+    "kpis_met": 4,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-02-22T15:06:00.000Z",
+      "duration_ms": 15714
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run apps/web/src/components/billing/__tests__/subscription-manager.supplementary.test.tsx apps/web/src/lib/billing/__tests__/plan-changes.test.ts",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-02-22T15:06:20.000Z",
+      "duration_ms": 7045
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter @intelliflow/web lint",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-02-22T15:06:30.000Z",
+      "duration_ms": 6484
+    },
+    {
+      "name": "Build",
+      "command": "pnpm run build",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-02-22T15:06:40.000Z",
+      "duration_ms": 29609
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Statement coverage >=90%",
+      "target": ">=90%",
+      "actual": "96.8% statements (subscription-manager.tsx)",
+      "met": true
+    },
+    {
+      "kpi": "Line coverage >=90%",
+      "target": ">=90%",
+      "actual": "98.83% lines (subscription-manager.tsx)",
+      "met": true
+    },
+    {
+      "kpi": "Branch coverage >=80%",
+      "target": ">=80%",
+      "actual": "92.17% branches (subscription-manager.tsx)",
+      "met": true
+    },
+    {
+      "kpi": "Function coverage >=90%",
+      "target": ">=90%",
+      "actual": "97.05% functions (subscription-manager.tsx)",
+      "met": true
+    }
+  ],
+  "definition_of_done_items": [
+    { "criterion": "C1: CancelDialog cancellation reason selector", "met": true, "evidence": "Native <select> with CANCELLATION_REASONS enum, aria-label for a11y" },
+    { "criterion": "C2: CurrentPlanCard reactivation button", "met": true, "evidence": "Reactivate Subscription button calls updateSubscription.mutate({ cancelAtPeriodEnd: false })" },
+    { "criterion": "C3: ChangePlanDialog proration estimate", "met": true, "evidence": "estimateProration() displays estimated charge with remaining days for upgrades" },
+    { "criterion": "C4: Test coverage expansion", "met": true, "evidence": "37 supplementary tests (up from 20), 102 total. Coverage: 96.8% stmts, 98.83% lines" },
+    { "criterion": "cancelAtPeriodEnd schema update", "met": true, "evidence": "Added to updateSubscriptionInputSchema in billing.ts validator" },
+    { "criterion": "Router passthrough", "met": true, "evidence": "billing.router.ts passes cancelAtPeriodEnd to stripe adapter" },
+    { "criterion": "CANCELLATION_REASONS constant", "met": true, "evidence": "Typed const array with CANCELLATION_REASON_LABELS map in plan-changes.ts" },
+    { "criterion": "Dependency chain updated", "met": true, "evidence": "PG-030 added to billing portal chain in complete-dependency-chains.md" }
+  ],
+  "dependencies_verified": ["PG-025", "IFC-198"],
+  "context_acknowledgment": {
+    "acknowledged_at": "2026-02-22T14:30:00.000Z",
+    "files_read": [
+      { "path": ".specify/sprints/sprint-14/specifications/PG-030-spec.md", "sha256": "366d2ac53a3b3c14a217c448aded7e5b13068911a26242ad45d7f5e1aab7f0a1" },
+      { "path": ".specify/sprints/sprint-14/planning/PG-030-plan.md", "sha256": "d534a5608ec77c7b3608954dffc25a0b80c6c25c790c28cc2c2f082c13033663" },
+      { "path": "docs/planning/prd-billing-portal.md", "sha256": "9a0a80bfe8c649248010e808b42c9d2fb8c225d4d4e8a72baa943e51bd485852" },
+      { "path": "docs/planning/adr/ADR-029-billing-architecture.md", "sha256": "0cc043b4074044930dd6a217397e3947c4d126a7b0838d0084879078f1d2656f" }
+    ],
+    "invariants_acknowledged": [
+      "Hexagonal architecture: domain has zero infra deps",
+      "Validators derive from domain constants",
+      "All API inputs validated with Zod schemas",
+      "Coverage thresholds: Stmts >=90%, Lines >=90%"
+    ]
+  },
+  "artifact_hashes": {
+    "apps/web/src/components/billing/subscription-manager.tsx": "7153a6ccbdb69bad0d323fe6b96eb9c4ac2fcfa081fe91f8e1e904b84c939ff9",
+    "apps/web/src/components/billing/__tests__/subscription-manager.supplementary.test.tsx": "beba4acc7e75ea17bb8e4bf696012992468b744210f1ddebe07d90458c5e188a",
+    "apps/web/src/lib/billing/plan-changes.ts": "849711e1908cb4fb593066c0d58a8a0d3f5a9c66000a32bf798d334dbbb27b08",
+    "apps/web/src/lib/billing/__tests__/plan-changes.test.ts": "0cb554fde6c6c926b68f64fd66458b4e5bf6515f84d702cf17d7f9cd7fdc458f",
+    "packages/validators/src/billing.ts": "dae28cc280d46349261960d5df3c77a1880f30755b8828caab05ddbb5a28346e",
+    "apps/api/src/modules/billing/billing.router.ts": "e8094caa4410f589f3411341ec85bde07192ccc1015235dea0377c06610f6a80",
+    "docs/design/diagrams/complete-dependency-chains.md": "98ce02221b823d530e07110afb20056b8c1b097ce39f72458edea537f177dae1"
+  },
+  "environment": {
+    "os": "win32 (Windows 11 Pro 10.0.26200)",
+    "node_version": "v25.2.1",
+    "git_commit": "3e571e72d02b439b6199c90c56980c9e6702edbb",
+    "branch": "sprint0/codex-run"
+  },
+  "notes": "PG-030 gap remediation: Added 3 UI enhancements to existing SubscriptionManager component — C1: cancellation reason selector (native <select> for jsdom compatibility), C2: reactivation button in CurrentPlanCard, C3: proration estimate in ChangePlanDialog. Backend support: cancelAtPeriodEnd in validator schema and router passthrough. Coverage increased from ~55-65% to 96.8% statements with 17 new supplementary tests (37 total supplementary, 102 total billing tests)."
+}

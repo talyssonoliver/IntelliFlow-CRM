@@ -1,0 +1,61 @@
+{
+  "$schema": "attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "TRACK-001",
+  "run_id": "sprint14-audit-20260302T215859-6dbfyi",
+  "attestor": "sprint-completion-auditor",
+  "attestation_timestamp": "2026-03-02T21:59:07.154Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 8,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 0,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/project-tracker/components/tracking/StatusTracker.tsx": "8adb28d786de5fbbc0953a73b5fa40cae79be4099d1b37d5abd00a124bb16d16",
+    "apps/project-tracker/app/api/tracking/status/route.ts": "c66220b2a7445fcb363dee10f32f26c0e9762724886c592fcbb76644a9ef54fd",
+    "apps/project-tracker/components/tracking/shared/StaleIndicator.tsx": "2630977fa58f2fb5bc87d18d44b64af2c7f66d1f4a0adefd58f4bd53aa8e4d71",
+    "apps/project-tracker/components/tracking/shared/RefreshButton.tsx": "2335ba756818149bae9213160de4c2d7d738312bd6cbeefc2007181216e21fc9",
+    "apps/project-tracker/components/TrackingView.tsx": "6f63c67ac182a40c951cb73220b0965ccaf2f4ec194c642d4e3dbc038fe07336",
+    "apps/project-tracker/components/tracking/StatusHistory.tsx": "0fbd1da9d99b8f802d351f79073e593259bdec191844539c505d268db2b638d0",
+    "apps/project-tracker/components/tracking/index.ts": "4f60f2e916c173355c374e048410d433e07ac41ab1ac60cd5ffa62dbb6c14beb",
+    ".specify/sprints/sprint-14/attestations/TRACK-001/context_ack.json": "1535bdfff0a023c5c02fee8f21f4ca1cf0bd7df0c8b551c3bf09aceb4531e8a4"
+  },
+  "validation_results": [
+    {
+      "name": "TRACK-001",
+      "command": "pnpm test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-03-02T18:41:12.407Z",
+      "duration_ms": 180000,
+      "stdout_hash": "all-green-1772476872408"
+    }
+  ],
+  "gate_results": [],
+  "kpi_results": [],
+  "dependencies_verified": [],
+  "definition_of_done_items": [
+    {
+      "criterion": "UI displays status-snapshot.json",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "refresh button regenerates from CSV",
+      "met": false,
+      "evidence": "Requires manual verification"
+    },
+    {
+      "criterion": "history view shows changes over time",
+      "met": false,
+      "evidence": "Requires manual verification"
+    }
+  ],
+  "notes": "3 DoD criteria unverified"
+}
