@@ -80,8 +80,6 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
-        with:
-
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -127,8 +125,6 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
-        with:
-
       - name: Run pnpm audit
         run: |
           pnpm audit --json > artifacts/reports/pnpm-audit-${{ github.run_number }}.json || true
