@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Card, Progress, Button } from '@intelliflow/ui';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import { PageHeader } from '@/components/shared';
-import { getScoreColor, getScoreBgColor, getProgressColor, parseDurationMs } from './quality-report-utils';
+import { getScoreColor, getProgressColor, parseDurationMs } from './quality-report-utils';
 
 // ============================================================================
 // Types — matches performance-summary.json via /api/quality-reports
@@ -80,6 +80,12 @@ function PassFailPill({ passing }: { passing: boolean }) {
   );
 }
 
+function getValueColor(passing: boolean, ms: number | null, targetMs: number): string {
+  if (passing) return 'text-emerald-500';
+  if (ms !== null && ms <= targetMs * 1.5) return 'text-amber-500';
+  return 'text-red-500';
+}
+
 function MetricCard({
   label,
   value,
@@ -107,7 +113,7 @@ function MetricCard({
         </div>
         <PassFailPill passing={passing} />
       </div>
-      <p className={`text-3xl font-bold mb-2 ${passing ? 'text-emerald-500' : ms !== null && ms <= targetMs * 1.5 ? 'text-amber-500' : 'text-red-500'}`}>
+      <p className={`text-3xl font-bold mb-2 ${getValueColor(passing, ms, targetMs)}`}>
         {value}
       </p>
       <Progress
@@ -323,8 +329,7 @@ function FullReportSection({ htmlPath }: { htmlPath?: string }) {
           </Button>
           <Button variant="outline" size="sm" asChild>
             <a href={htmlPath} target="_blank" rel="noopener noreferrer">
-              <span className="material-symbols-outlined text-sm mr-1">open_in_new</span>
-              Open in Tab
+              <span className="material-symbols-outlined text-sm mr-1">open_in_new</span>Open in Tab
             </a>
           </Button>
         </div>

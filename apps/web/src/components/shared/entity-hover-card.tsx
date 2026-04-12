@@ -129,15 +129,23 @@ export function EntityHoverCard({
   const currentSearchParams = useSearchParams();
   const [shouldFetch, setShouldFetch] = useState(false);
   const [isHoverOpen, setIsHoverOpen] = useState(false);
+  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
   const [isTaskSheetOpen, setIsTaskSheetOpen] = useState(false);
 
   // Cache entity data so TaskCreateSheet can use it after hover card closes
   const entityCacheRef = useRef<{ type?: string; id?: string; name: string }>({ name: '' });
 
-  const handleHoverOpenChange = useCallback((open: boolean) => {
-    setIsHoverOpen(open);
-    if (open) setShouldFetch(true);
-  }, []);
+  const handleHoverOpenChange = useCallback(
+    (open: boolean) => {
+      // Don't let HoverCard close while the DropdownMenu is open — its
+      // portal content lives outside the card, so pointer-leave would
+      // otherwise unmount the trigger mid-click.
+      if (!open && isMoreMenuOpen) return;
+      setIsHoverOpen(open);
+      if (open) setShouldFetch(true);
+    },
+    [isMoreMenuOpen]
+  );
 
   // Close hover card first, then open task sheet — fully decoupled
   const handleOpenTaskSheet = useCallback(() => {
@@ -277,7 +285,7 @@ export function EntityHoverCard({
               <div className="flex items-center gap-1.5 px-4 pb-3">
                 <a
                   href={`/email/compose?to=${encodeURIComponent(cardEmail)}`}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white text-xs font-medium rounded hover:bg-[#0e6ac7] transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white text-xs font-medium rounded hover:bg-ds-primary-hover transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                 >
                   <span className="material-symbols-outlined text-[16px]" aria-hidden="true">
                     mail
@@ -343,7 +351,7 @@ export function EntityHoverCard({
                       Schedule meeting
                     </TooltipContent>
                   </Tooltip>
-                  <DropdownMenu>
+                  <DropdownMenu open={isMoreMenuOpen} onOpenChange={setIsMoreMenuOpen}>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <DropdownMenuTrigger asChild>
@@ -372,7 +380,7 @@ export function EntityHoverCard({
                             className="material-symbols-outlined text-[16px] mr-2"
                             aria-hidden="true"
                           >
-                            {isPinned ? 'push_pin' : 'push_pin'}
+                            {isPinned ? 'keep_off' : 'push_pin'}
                           </span>
                           {isPinned ? 'Unpin from Home' : 'Pin to Home'}
                         </DropdownMenuItem>

@@ -377,7 +377,21 @@ function PinnedSection({
 // Main Component
 // =============================================================================
 
-export function AuthenticatedHomePage() {
+interface AuthenticatedHomePageProps {
+  /**
+   * Welcome summary prefetched server-side by `(public)/page.tsx` and passed
+   * through the RSC → client boundary. Used as `initialData` for the React
+   * Query cache so the greeting, user name, and stats are in the initial SSR
+   * HTML — no client-side hydration flash for authenticated users.
+   *
+   * `unknown` because the server sends the payload as a JSON-serialised blob
+   * (Date → string roundtrip at the RSC boundary); the tRPC client infers the
+   * real shape from the query itself.
+   */
+  initialWelcomeData?: unknown;
+}
+
+export function AuthenticatedHomePage({ initialWelcomeData }: AuthenticatedHomePageProps = {}) {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const hour = new Date().getUTCHours();
   const greetingIcon = getGreetingIcon(hour);
@@ -390,13 +404,21 @@ export function AuthenticatedHomePage() {
   const [pinnedGroupIds, setPinnedGroupIds] = useState<Set<string>>(() => loadPinnedGroups());
   const [isGoalSettingsOpen, setIsGoalSettingsOpen] = useState(false);
 
-  // Only fetch data when authenticated
+  // Only fetch data when authenticated. Server-side prefetch means the query
+  // cache is already populated with initialWelcomeData, but the enabled flag
+  // stays true so stale data refetches in the background.
   const queryEnabled = isAuthenticated && !authLoading;
 
-  // Fetch data from tRPC
+  // Fetch data from tRPC. `initialData` comes from the RSC server-render when
+  // available, eliminating the empty-greeting flash on first paint.
   const { data: welcomeData, isLoading: welcomeLoading } = trpc.home.getWelcomeSummary.useQuery(
     undefined,
-    { enabled: queryEnabled }
+    {
+      enabled: queryEnabled,
+      ...(initialWelcomeData !== undefined && initialWelcomeData !== null
+        ? { initialData: initialWelcomeData as never }
+        : {}),
+    }
   );
   const { data: insightsData, isLoading: insightsLoading } = trpc.home.getAIInsights.useQuery(
     undefined,
