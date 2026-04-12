@@ -29,9 +29,9 @@ beforeAll(async () => {
 
 describe('Sitemap Reconciliation', () => {
   // TC-25
-  it('total page.tsx count equals 193 (regression guard)', () => {
+  it('total page.tsx count equals 197 (regression guard, bumped by PG-056 /500)', () => {
     const pageFiles = findPageFiles(APP_DIR);
-    expect(pageFiles.length).toBe(194);
+    expect(pageFiles.length).toBe(197);
   });
 
   // TC-26
@@ -157,12 +157,12 @@ describe('Sitemap Reconciliation', () => {
       const details = [
         `PAGE_MAP_AND_FLOWS.md says ${documentedCount} pages, filesystem has ${filesystemCount}.`,
         missingFromDoc.length > 0
-          ? `\n  Pages in filesystem but NOT in doc (add these to PAGE_MAP_AND_FLOWS.md):\n${missingFromDoc.map((r) => `    - ${r}`).join('\n')}`
+          ? `\n  Pages in filesystem but NOT in doc (add these to PAGE_MAP_AND_FLOWS.md):\n${missingFromDoc.map((r) => '    - ' + r).join('\n')}`
           : '',
         newFromDoc.length > 0
           ? `\n  Routes in doc but NOT in filesystem (remove or verify these):\n${newFromDoc
               .slice(0, 10)
-              .map((r) => `    - ${r}`)
+              .map((r) => '    - ' + r)
               .join('\n')}`
           : '',
         `\n  Fix: Update docs/design/PAGE_MAP_AND_FLOWS.md Summary Statistics table and add/remove route entries.`,

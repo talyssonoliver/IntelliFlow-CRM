@@ -111,10 +111,10 @@ describe('IFC-209: sitemap defect fixes', () => {
     }
   });
 
-  // TC-NEW-05: Total entry count is 28
-  it('total sitemap entry count is exactly 28', () => {
-    // 14 static + 2 blog + 5 careers + 3 LP + 4 press = 28
-    expect(sitemapEntries.length).toBe(28);
+  // TC-NEW-05: Total entry count is 29
+  it('total sitemap entry count is exactly 29', () => {
+    // 15 static + 2 blog + 5 careers + 3 LP + 4 press = 29
+    expect(sitemapEntries.length).toBe(29);
   });
 
   // TC-NEW-06: No dynamic/static URL overlap

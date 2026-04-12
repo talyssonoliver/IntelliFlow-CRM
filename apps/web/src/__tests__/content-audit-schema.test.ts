@@ -194,10 +194,10 @@ describe('Content Audit Results Schema Validation', () => {
     }
   });
 
-  // TC-04: All 28 public routes have seo_score as integer 0-100 (AC-003)
+  // TC-04: All 30 public routes have seo_score as integer 0-100 (AC-003; bumped by PG-051 /terms + PG-052 /cookies)
   it('TC-04: all public routes have integer seo_score 0-100', () => {
     const publicRoutes = auditData.routes.filter((r) => r.access_tier === 'public');
-    expect(publicRoutes.length).toBe(28);
+    expect(publicRoutes.length).toBe(30);
 
     for (const route of publicRoutes) {
       expect(typeof route.seo_score).toBe('number');
@@ -212,17 +212,17 @@ describe('Content Audit Results Schema Validation', () => {
     const nonPublicRoutes = auditData.routes.filter(
       (r) => r.access_tier === 'auth-gated' || r.access_tier === 'developer'
     );
-    expect(nonPublicRoutes.length).toBe(auditData.routes.length - 28);
+    expect(nonPublicRoutes.length).toBe(auditData.routes.length - 30);
 
     for (const route of nonPublicRoutes) {
       expect(route.seo_score).toBeNull();
     }
   });
 
-  // TC-06: findings contains exactly 28 ghost link references (AC-004, TR-005)
-  it('TC-06: findings contains exactly 28 ghost links with required fields', () => {
-    expect(auditData.findings.ghost_links.length).toBe(28);
-    expect(auditData.summary.ghost_link_count).toBe(28);
+  // TC-06: findings contains the current count of ghost-link references (AC-004, TR-005; many targets now exist after PG-050/051/052)
+  it('TC-06: findings contains the current ghost links with required fields', () => {
+    expect(auditData.findings.ghost_links.length).toBe(4);
+    expect(auditData.summary.ghost_link_count).toBe(4);
 
     for (const gl of auditData.findings.ghost_links) {
       expect(gl).toHaveProperty('ghost_link_id');
@@ -234,13 +234,12 @@ describe('Content Audit Results Schema Validation', () => {
     }
   });
 
-  // TC-07: summary.legal_pages_missing contains terms and cookies after /privacy ships (AC-005)
-  it('TC-07: summary.legal_pages_missing contains required pages', () => {
-    expect(auditData.summary.legal_pages_missing).toEqual(
-      expect.arrayContaining(['terms', 'cookies'])
-    );
+  // TC-07: summary.legal_pages_missing is empty after /privacy, /terms, and /cookies all exist on disk (PG-052 update)
+  it('TC-07: summary.legal_pages_missing is empty once all legal pages exist', () => {
     expect(auditData.summary.legal_pages_missing).not.toContain('privacy');
-    expect(auditData.summary.legal_pages_missing.length).toBe(2);
+    expect(auditData.summary.legal_pages_missing).not.toContain('terms');
+    expect(auditData.summary.legal_pages_missing).not.toContain('cookies');
+    expect(auditData.summary.legal_pages_missing.length).toBe(0);
   });
 
   // TC-08: findings.critical no longer flags /privacy once PG-050 is implemented (AC-005, TR-004)

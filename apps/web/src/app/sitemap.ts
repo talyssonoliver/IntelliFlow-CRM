@@ -7,7 +7,7 @@ import pressData from '@/data/press-releases.json';
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://intelliflow-crm.com';
 
 // Update this date whenever static page content changes materially
-const STATIC_LAST_MODIFIED = '2025-12-28';
+const STATIC_LAST_MODIFIED = '2026-04-12';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const staticRoutes: MetadataRoute.Sitemap = [
@@ -85,6 +85,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     {
       url: `${BASE_URL}/privacy`,
+      lastModified: STATIC_LAST_MODIFIED,
+      changeFrequency: 'monthly',
+      priority: 0.5,
+    },
+    {
+      url: `${BASE_URL}/cookies`,
       lastModified: STATIC_LAST_MODIFIED,
       changeFrequency: 'monthly',
       priority: 0.5,
