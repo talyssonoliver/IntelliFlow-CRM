@@ -47,6 +47,7 @@ const footerSections: FooterSection[] = [
       { label: 'Terms of Service', href: '/terms' },
       { label: 'Cookie Policy', href: '/cookies' },
       { label: 'GDPR', href: '/gdpr' },
+      { label: 'Data Processing Addendum', href: '/dpa' },
     ],
   },
 ];

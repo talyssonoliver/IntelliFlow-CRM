@@ -9,7 +9,7 @@
 | **Status** | Draft |
 | **Target Sprint** | Sprint 17 |
 | **Created Date** | 2026-03-08 |
-| **Last Updated** | 2026-04-10 |
+| **Last Updated** | 2026-04-12 |
 | **Related Tasks** | PG-050, PG-051, PG-052, PG-053, PG-054 |
 
 ## Problem Statement
@@ -63,6 +63,19 @@ IntelliFlow CRM exposes privacy, terms, and cookie-policy links from public rout
 - Keep policy metadata logic in `apps/web/src/lib/legal/consent-tracker.ts` (Privacy) and `apps/web/src/lib/legal/acceptance-tracker.ts` (Terms) so later legal tasks can build on the same helpers.
 - Acceptance tracking uses `localStorage` only (no backend dependency for MVP).
 
+### PG-054 — Acceptable Use Policy
+
+- A public `/aup` route exists and is reachable from the public footer Legal section and bottom bar.
+- The page renders AUP sections derived from `docs/shared/aup-content.md` (YAML frontmatter + markdown, same pattern as privacy/terms).
+- The page displays policy version metadata, effective date, and legal contact details.
+- A `violation-tracker.ts` server-side utility is created in `apps/web/src/lib/legal/` following the pattern of `acceptance-tracker.ts` and `consent-tracker.ts`.
+- The violation tracker exports: typed `AupViolationRecord`, `AupAcknowledgmentRecord`, `getAcceptableUsePolicy()`, `buildAupAcknowledgmentRecord()`, `buildViolationRecord()`.
+- The implementation reuses `loadLegalContent()` and `parseLegalSections()` from `legal-content-parser.ts`.
+- The route is covered by unit tests (`__tests__/page.test.tsx` and `__tests__/violation-tracker.test.ts`).
+- `PublicFooter.tsx` Legal section is updated to include an "Acceptable Use Policy" link to `/aup`.
+- `PAGE_MAP_AND_FLOWS.md` and `sitemap-reconciliation.test.ts` TC-25 count are updated.
+- `lighthouserc.js` URL list includes `/aup` for Lighthouse ≥ 90 gate.
+
 ## Status
 
-This PRD was created during `PG-050` specification and updated during `PG-051` to include terms-specific acceptance criteria. Covers legal page delivery for PG-050 through PG-054.
+This PRD was created during `PG-050` specification and updated during `PG-051` to include terms-specific acceptance criteria, and updated during `PG-054` to add AUP acceptance criteria. Covers legal page delivery for PG-050 through PG-054.
