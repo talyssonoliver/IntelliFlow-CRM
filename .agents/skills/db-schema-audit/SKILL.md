@@ -1,16 +1,21 @@
 ---
 name: db-schema-audit
-description: Audit and compare database schemas using Supabase snapshot SQL plus Prisma schemas. Use deterministic drift checks first, then multi-agent LLM analysis with structured findings and human approval gates.
+description:
+  Audit and compare database schemas using Supabase snapshot SQL plus Prisma
+  schemas. Use deterministic drift checks first, then multi-agent LLM analysis
+  with structured findings and human approval gates.
 user-invocable: true
 ---
 
 # DB Schema Audit
 
-Use this skill when the user asks to audit schema quality, detect drift, prepare a DB review pack for other LLMs, or run a multi-agent schema analysis workflow.
+Use this skill when the user asks to audit schema quality, detect drift, prepare
+a DB review pack for other LLMs, or run a multi-agent schema analysis workflow.
 
 ## Inputs
 
 Primary inputs in this repo:
+
 - Supabase snapshot SQL: `infra/supabase/schema-snapshots/*.sql`
 - App Prisma schema: `packages/db/prisma/schema.prisma`
 - Audit Prisma schema: `packages/db/prisma/schema-audit.prisma`
@@ -35,7 +40,8 @@ Primary inputs in this repo:
    - Chunk by domain to reduce token cost.
 
 4. **Run multi-agent audit**
-   - Assign specialized auditors (drift, security, tenancy, performance, consistency).
+   - Assign specialized auditors (drift, security, tenancy, performance,
+     consistency).
    - Require structured outputs for every finding.
 
 5. **Human approval gate**
@@ -48,6 +54,7 @@ Primary inputs in this repo:
 ## Output Contract (required)
 
 Every finding must include:
+
 - `id`
 - `category`
 - `severity` (`low|medium|high|critical`)
@@ -58,6 +65,7 @@ Every finding must include:
 - `migration_risk`
 
 Use the exact templates in:
+
 - `references/workflow.md`
 - `references/subagent-prompts.md`
 - `references/output-schema.md`

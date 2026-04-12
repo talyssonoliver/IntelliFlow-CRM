@@ -3,21 +3,25 @@
 ## Architecture Constraints (CRITICAL — Must maintain)
 
 ### 1. Hexagonal Architecture
+
 - Domain layer CANNOT depend on infrastructure
 - No adapters/infrastructure imports in `packages/domain/`
 - Use ports/interfaces for external dependencies
 
 ### 2. Type Safety
+
 - No `any` types (except well-justified cases)
 - Strict null checks enforced
 - Zod schemas for runtime validation
 
 ### 3. DDD Principles
+
 - Entities, Value Objects, Aggregates maintained
 - No anemic domain models
 - Business logic in domain, not services
 
 ### 4. Test Coverage
+
 - Domain: >95%
 - Application: >90%
 - Overall: >90%
@@ -72,6 +76,7 @@ Use TodoWrite to track sub-agent tasks:
 ```
 
 Spawn agents in parallel where possible:
+
 ```
 Task tool with subagent_type='stoa-quality' for code quality
 Task tool with subagent_type='stoa-security' for security

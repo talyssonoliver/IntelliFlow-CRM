@@ -1,50 +1,57 @@
 ---
 name: create-task
-description: Create new tasks in the IntelliFlow CRM sprint plan. Generates Sprint_plan.csv rows, task JSON files, task-registry entries, and dependency-graph nodes with PRD/ADR governance. Use when the user says "add a task", "create a new task", "register a feature", "new sprint item", "add to sprint plan", or asks to track a new piece of work.
+description:
+  Create new tasks in the IntelliFlow CRM sprint plan. Generates Sprint_plan.csv
+  rows, task JSON files, task-registry entries, and dependency-graph nodes with
+  PRD/ADR governance. Use when the user says "add a task", "create a new task",
+  "register a feature", "new sprint item", "add to sprint plan", or asks to
+  track a new piece of work.
 ---
 
 # Create Task
 
-Automate end-to-end task creation across Sprint_plan.csv, task JSON, task-registry.json, and dependency-graph.json. All data is sourced from the real codebase — never fabricated.
+Automate end-to-end task creation across Sprint_plan.csv, task JSON,
+task-registry.json, and dependency-graph.json. All data is sourced from the real
+codebase — never fabricated.
 
 ## Task Prefix → STOA Owner Mapping
 
-| Prefix | Domain | STOA Owner |
-|--------|--------|------------|
-| IFC-* (domain/API) | Core features, integrations | STOA-Domain |
-| IFC-* (security) | Security features | STOA-Security |
-| PG-* | Pages, UI components | STOA-Quality |
-| ENV-*-AI | Environment, infrastructure | STOA-Foundation |
-| AI-SETUP-*, AUTOMATION-* | AI tooling, agent coordination | STOA-Intelligence |
-| EXC-* | Exception/special tasks | STOA-Foundation |
-| GOV-*, DOC-*, PM-OPS-* | Governance, docs, PM ops | STOA-Automation |
-| ANALYTICS-* | Analytics features | STOA-Domain |
-| BRAND-*, GTM-*, SALES-* | Brand, go-to-market, sales | STOA-Quality |
-| ENG-OPS-*, EP-* | Engineering ops, process | STOA-Foundation |
-| EXP-* | Experimental/exploration | STOA-Intelligence |
+| Prefix                   | Domain                         | STOA Owner        |
+| ------------------------ | ------------------------------ | ----------------- |
+| IFC-\* (domain/API)      | Core features, integrations    | STOA-Domain       |
+| IFC-\* (security)        | Security features              | STOA-Security     |
+| PG-\*                    | Pages, UI components           | STOA-Quality      |
+| ENV-\*-AI                | Environment, infrastructure    | STOA-Foundation   |
+| AI-SETUP-_, AUTOMATION-_ | AI tooling, agent coordination | STOA-Intelligence |
+| EXC-\*                   | Exception/special tasks        | STOA-Foundation   |
+| GOV-_, DOC-_, PM-OPS-\*  | Governance, docs, PM ops       | STOA-Automation   |
+| ANALYTICS-\*             | Analytics features             | STOA-Domain       |
+| BRAND-_, GTM-_, SALES-\* | Brand, go-to-market, sales     | STOA-Quality      |
+| ENG-OPS-_, EP-_          | Engineering ops, process       | STOA-Foundation   |
+| EXP-\*                   | Experimental/exploration       | STOA-Intelligence |
 
 ## Hexagonal Layer → Owner Mapping
 
-| Layer | Package | Typical Prefix |
-|-------|---------|----------------|
-| Domain | `packages/domain/` | IFC-* |
-| Application (Ports/Use Cases) | `packages/application/` | IFC-* |
-| Adapters (Repositories) | `packages/adapters/` | IFC-* |
-| Validators | `packages/validators/` | IFC-* |
-| API (tRPC Routers) | `apps/api/` | IFC-* |
-| Frontend (Pages/Components) | `apps/web/` | PG-* |
-| AI Worker | `apps/ai-worker/` | AI-SETUP-*, IFC-* |
-| Infrastructure | Docker, CI, configs | ENV-*-AI |
+| Layer                         | Package                 | Typical Prefix    |
+| ----------------------------- | ----------------------- | ----------------- |
+| Domain                        | `packages/domain/`      | IFC-\*            |
+| Application (Ports/Use Cases) | `packages/application/` | IFC-\*            |
+| Adapters (Repositories)       | `packages/adapters/`    | IFC-\*            |
+| Validators                    | `packages/validators/`  | IFC-\*            |
+| API (tRPC Routers)            | `apps/api/`             | IFC-\*            |
+| Frontend (Pages/Components)   | `apps/web/`             | PG-\*             |
+| AI Worker                     | `apps/ai-worker/`       | AI-SETUP-_, IFC-_ |
+| Infrastructure                | Docker, CI, configs     | ENV-\*-AI         |
 
 ## Phase Overview
 
-| Phase | Name | Key Actions | Reference |
-|-------|------|-------------|-----------|
-| 1 | Context Gathering | Determine prefix, scan IDs, search codebase | `references/id-generation.md` |
-| 2 | Task Specification | Generate 17 CSV columns, display draft | `references/csv-columns-guide.md` |
-| 3 | File Creation | Write JSON, append CSV, update registry + graph | `references/json-file-authoring.md`, `references/dependency-graph-update.md` |
-| 4 | PRD/ADR Governance | Create stubs if needed | `references/prd-adr-governance.md` |
-| 5 | Verification | 10-gate checklist | `references/verification-checklist.md` |
+| Phase | Name               | Key Actions                                     | Reference                                                                    |
+| ----- | ------------------ | ----------------------------------------------- | ---------------------------------------------------------------------------- |
+| 1     | Context Gathering  | Determine prefix, scan IDs, search codebase     | `references/id-generation.md`                                                |
+| 2     | Task Specification | Generate 17 CSV columns, display draft          | `references/csv-columns-guide.md`                                            |
+| 3     | File Creation      | Write JSON, append CSV, update registry + graph | `references/json-file-authoring.md`, `references/dependency-graph-update.md` |
+| 4     | PRD/ADR Governance | Create stubs if needed                          | `references/prd-adr-governance.md`                                           |
+| 5     | Verification       | 10-gate checklist                               | `references/verification-checklist.md`                                       |
 
 ---
 
@@ -52,11 +59,13 @@ Automate end-to-end task creation across Sprint_plan.csv, task JSON, task-regist
 
 ### 1.1 Determine Task Prefix
 
-From the user's description, infer which prefix to use (see mapping tables above). If ambiguous, ask the user.
+From the user's description, infer which prefix to use (see mapping tables
+above). If ambiguous, ask the user.
 
 ### 1.2 Allocate Task ID
 
 Read `references/id-generation.md` for the full procedure:
+
 1. Read `apps/project-tracker/docs/metrics/_global/task-registry.json`
 2. Extract all IDs for the prefix across all status arrays
 3. Allocate MAX + 1
@@ -67,6 +76,7 @@ Read `references/id-generation.md` for the full procedure:
 Gather real data to inform the task specification:
 
 **Related code** — Grep for relevant domain entities, services, components:
+
 ```
 Grep pattern="<keyword>" in packages/domain/src/
 Grep pattern="<keyword>" in apps/web/src/
@@ -74,32 +84,41 @@ Grep pattern="<keyword>" in apps/api/src/modules/
 ```
 
 **Related PRDs** — Search for existing requirements:
+
 ```
 Glob pattern="docs/planning/prd-*.md"
 ```
+
 Read titles to find related documents.
 
 **Related ADRs** — Search for architectural decisions:
+
 ```
 Read docs/planning/adr/README.md
 ```
+
 Scan the index for related ADRs.
 
 **Dependency chains** — Find where this task fits:
+
 ```
 Read docs/design/diagrams/complete-dependency-chains.md
 ```
+
 Search for related entity names.
 
 **Similar completed tasks** — Calibrate estimates:
+
 ```
 Grep pattern="<similar-section>" in Sprint_plan split files
 ```
+
 Read completed task JSONs to get `actual_duration_minutes`.
 
 ### 1.4 Identify Dependencies
 
 From the codebase search, determine:
+
 - Which existing tasks must complete before this one (direct dependencies)
 - Which sprint those dependencies are in (to determine target sprint)
 - What files/policies are pre-requisites
@@ -158,14 +177,15 @@ After user approval, create files in this order:
 Read `references/json-file-authoring.md` for the full template and field rules.
 
 Write the JSON file to:
+
 ```
 apps/project-tracker/docs/metrics/sprint-{N}/{TASK-ID}.json
 ```
 
 ### 3.2 Append to Sprint_plan.csv
 
-Read the current end of `Sprint_plan.csv` to find the insertion point.
-Append one new row with all 17 columns.
+Read the current end of `Sprint_plan.csv` to find the insertion point. Append
+one new row with all 17 columns.
 
 **CSV escaping**: Wrap any field containing commas in double quotes.
 
@@ -173,9 +193,11 @@ Append one new row with all 17 columns.
 
 Read `apps/project-tracker/docs/metrics/_global/task-registry.json`.
 
-Add the new task ID to the appropriate status array (add to a `BACKLOG` array — create it if it doesn't exist in `tasks_by_status`).
+Add the new task ID to the appropriate status array (add to a `BACKLOG` array —
+create it if it doesn't exist in `tasks_by_status`).
 
 Update:
+
 - `total_tasks` — increment by 1
 - `sprints.sprint-{N}` — increment `backlog` count (create sprint entry if new)
 - `last_updated` — current ISO timestamp

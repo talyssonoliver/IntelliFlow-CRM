@@ -7,115 +7,113 @@ After running all checks, output:
 ```markdown
 ## Compliance Check Results
 
-**Task**: {{TASK_ID}}
-**Checked At**: {{ISO_TIMESTAMP}}
+**Task**: {{TASK_ID}} **Checked At**: {{ISO_TIMESTAMP}}
 
 ### Design Compliance
-{{#if ui_task}}
-| Check | Status | Notes |
-|-------|--------|-------|
-| Brand Colors | {{status}} | {{notes}} |
-| Typography | {{status}} | {{notes}} |
-| Components | {{status}} | {{notes}} |
-| Responsive | {{status}} | {{notes}} |
-| Accessibility | {{status}} | {{notes}} |
-{{else}}
-N/A - Not a UI task
-{{/if}}
+
+{{#if ui_task}} | Check | Status | Notes | |-------|--------|-------| | Brand
+Colors | {{status}} | {{notes}} | | Typography | {{status}} | {{notes}} | |
+Components | {{status}} | {{notes}} | | Responsive | {{status}} | {{notes}} | |
+Accessibility | {{status}} | {{notes}} | {{else}} N/A - Not a UI task {{/if}}
 
 ### Source of Truth
-| Check | Status | Details |
-|-------|--------|---------|
+
+| Check           | Status     | Details            |
+| --------------- | ---------- | ------------------ |
 | Sprint_plan.csv | {{status}} | {{current_status}} |
 
 ### Plan Deliverables
-| Check | Status | Details |
-|-------|--------|---------|
+
+| Check                        | Status     | Details                            |
+| ---------------------------- | ---------- | ---------------------------------- |
 | Files exist at planned paths | {{status}} | {{verified_count}}/{{total_count}} |
 | Attestation covers all files | {{status}} | {{attested_count}}/{{total_count}} |
-| No path deviations | {{status}} | {{deviation_details}} |
+| No path deviations           | {{status}} | {{deviation_details}}              |
 
 ### Context Acknowledgement
-| Check | Status | Details |
-|-------|--------|---------|
-| Required | {{yes_no}} | EVIDENCE:context_ack in CSV Artifacts To Track |
-| File exists | {{status}} | .specify/sprints/sprint-{N}/attestations/{{task_id}}/context_ack.json |
-| Structure valid | {{status}} | task_id, files_read, invariants (>=5) |
-| No fake hashes | {{status}} | {{fake_hash_count}} all-zero hashes found |
-| FILE: prereqs covered | {{status}} | {{covered_count}}/{{total_prereqs}} |
+
+| Check                 | Status     | Details                                                               |
+| --------------------- | ---------- | --------------------------------------------------------------------- |
+| Required              | {{yes_no}} | EVIDENCE:context_ack in CSV Artifacts To Track                        |
+| File exists           | {{status}} | .specify/sprints/sprint-{N}/attestations/{{task_id}}/context_ack.json |
+| Structure valid       | {{status}} | task_id, files_read, invariants (>=5)                                 |
+| No fake hashes        | {{status}} | {{fake_hash_count}} all-zero hashes found                             |
+| FILE: prereqs covered | {{status}} | {{covered_count}}/{{total_prereqs}}                                   |
 
 ### CSV vs Plan Artifact Tracking
-| Check | Status | Details |
-|-------|--------|---------|
-| Plan files tracked in CSV | {{status}} | {{tracked_count}}/{{plan_total}} |
-| Untracked + missing from disk | {{status}} | {{untracked_missing_count}} files |
-| Untracked + exists on disk | {{status}} | {{untracked_exists_count}} files (WARN) |
+
+| Check                         | Status     | Details                                 |
+| ----------------------------- | ---------- | --------------------------------------- |
+| Plan files tracked in CSV     | {{status}} | {{tracked_count}}/{{plan_total}}        |
+| Untracked + missing from disk | {{status}} | {{untracked_missing_count}} files       |
+| Untracked + exists on disk    | {{status}} | {{untracked_exists_count}} files (WARN) |
 
 ### Validation Summary
-| Check | Status | Details |
-|-------|--------|---------|
-| Tests | {{status}} | {{test_results}} |
-| Typecheck | {{status}} | {{typecheck_results}} |
-| Linter | {{status}} | {{lint_results}} |
-| Validators Build | {{status}} | {{build_results}} |
+
+| Check            | Status     | Details               |
+| ---------------- | ---------- | --------------------- |
+| Tests            | {{status}} | {{test_results}}      |
+| Typecheck        | {{status}} | {{typecheck_results}} |
+| Linter           | {{status}} | {{lint_results}}      |
+| Validators Build | {{status}} | {{build_results}}     |
 
 ### Key Objectives
-| Objective | Status | Notes |
-|-----------|--------|-------|
-| Code Quality | {{status}} | {{notes}} |
-| Integration | {{status}} | {{notes}} |
-| Security | {{status}} | {{notes}} |
-| Performance | {{status}} | {{notes}} |
-| Availability | {{status}} | {{notes}} |
+
+| Objective       | Status     | Notes     |
+| --------------- | ---------- | --------- |
+| Code Quality    | {{status}} | {{notes}} |
+| Integration     | {{status}} | {{notes}} |
+| Security        | {{status}} | {{notes}} |
+| Performance     | {{status}} | {{notes}} |
+| Availability    | {{status}} | {{notes}} |
 | Maintainability | {{status}} | {{notes}} |
-| Documentation | {{status}} | {{notes}} |
+| Documentation   | {{status}} | {{notes}} |
 
 ### Architecture Compliance
-| Layer Modified | Compliant | Notes |
-|----------------|-----------|-------|
-| Domain | {{status}} | {{notes}} |
-| Validators | {{status}} | {{notes}} |
-| Application | {{status}} | {{notes}} |
-| Adapters | {{status}} | {{notes}} |
-| API | {{status}} | {{notes}} |
-| Frontend | {{status}} | {{notes}} |
+
+| Layer Modified | Compliant  | Notes     |
+| -------------- | ---------- | --------- |
+| Domain         | {{status}} | {{notes}} |
+| Validators     | {{status}} | {{notes}} |
+| Application    | {{status}} | {{notes}} |
+| Adapters       | {{status}} | {{notes}} |
+| API            | {{status}} | {{notes}} |
+| Frontend       | {{status}} | {{notes}} |
 
 ### Accessibility Doc Gate
-{{#if route_task}}
-| Check | Status | Details |
-|-------|--------|---------|
-| Applicability | {{status}} | {{route_count}} route(s) detected |
-| Conformance Statement Scope | {{status}} | {{scope_details}} |
-| Conformance Statement Metrics | {{status}} | {{metrics_details}} |
-| VPAT Route Count | {{status}} | {{vpat_details}} |
-| Document Control (Conformance) | {{status}} | {{conformance_dc}} |
-| Document Control (VPAT) | {{status}} | {{vpat_dc}} |
-| Route Reconciliation | {{status}} | {{reconciliation_info}} |
-{{else}}
-N/A - Task does not add or modify routes
-{{/if}}
+
+{{#if route_task}} | Check | Status | Details | |-------|--------|---------| |
+Applicability | {{status}} | {{route_count}} route(s) detected | | Conformance
+Statement Scope | {{status}} | {{scope_details}} | | Conformance Statement
+Metrics | {{status}} | {{metrics_details}} | | VPAT Route Count | {{status}} |
+{{vpat_details}} | | Document Control (Conformance) | {{status}} |
+{{conformance_dc}} | | Document Control (VPAT) | {{status}} | {{vpat_dc}} | |
+Route Reconciliation | {{status}} | {{reconciliation_info}} | {{else}} N/A -
+Task does not add or modify routes {{/if}}
 
 ---
 
 **Overall Verdict**: {{PASS | FAIL | WARN}}
 
 {{#if verdict == 'FAIL'}}
-### Blocking Issues
-{{#each blocking_issues}}
-- {{this}}
-{{/each}}
 
-**Task CANNOT be marked as Completed until issues are resolved.**
-{{/if}}
+### Blocking Issues
+
+{{#each blocking_issues}}
+
+- {{this}} {{/each}}
+
+**Task CANNOT be marked as Completed until issues are resolved.** {{/if}}
 
 {{#if verdict == 'WARN'}}
-### Warnings
-{{#each warnings}}
-- {{this}}
-{{/each}}
 
-**Task can be marked Completed, but warnings should be addressed.**
-{{/if}}
+### Warnings
+
+{{#each warnings}}
+
+- {{this}} {{/each}}
+
+**Task can be marked Completed, but warnings should be addressed.** {{/if}}
 ```
 
 ## Decision Tree

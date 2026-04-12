@@ -2,7 +2,8 @@
 
 ## Overview
 
-A comprehensive intelligent agent specialized in resolving SonarQube code quality issues with deep analysis, web research, and automated fixes.
+A comprehensive intelligent agent specialized in resolving SonarQube code
+quality issues with deep analysis, web research, and automated fixes.
 
 ## Created Files
 
@@ -157,27 +158,32 @@ All with graceful fallbacks to built-in tools.
 ## Workflow Phases
 
 ### Phase 1: Discovery & Analysis
+
 - Fetch SonarQube issues (MCP or local reports)
 - Categorize by severity, type, complexity
 - Prioritize (critical bugs → security → code smells)
 
 ### Phase 2: Research
+
 - Official documentation (SonarQube, TypeScript, OWASP)
 - Web search for solutions
 - Codebase pattern matching
 - ADR review for architectural guidance
 
 ### Phase 3: Sub-Agent Orchestration
+
 - Quality Agent for code smells
 - Security Agent for vulnerabilities
 - Automation Agent for simple fixes
 - Parallel execution where possible
 
 ### Phase 4: Implementation
+
 - **Recommendation Mode**: Show fixes, wait for approval
 - **Auto-Fix Mode**: Apply fixes, validate, rollback on failure
 
 ### Phase 5: Validation
+
 - TypeScript compilation
 - Linting (ESLint)
 - Unit tests
@@ -186,6 +192,7 @@ All with graceful fallbacks to built-in tools.
 - Full build
 
 ### Phase 6: Reporting
+
 - Detailed fix reports
 - Metrics tracking
 - Success/failure summary
@@ -278,17 +285,18 @@ All with graceful fallbacks to built-in tools.
 
 ### OWASP Top 10 Coverage
 
-| Risk | Rules Handled | Remediation |
-|------|--------------|-------------|
-| A01: Broken Access Control | S5122, S4426 | RLS, RBAC, tenant isolation |
+| Risk                        | Rules Handled       | Remediation                         |
+| --------------------------- | ------------------- | ----------------------------------- |
+| A01: Broken Access Control  | S5122, S4426        | RLS, RBAC, tenant isolation         |
 | A02: Cryptographic Failures | S5247, S4790, S2245 | bcrypt, crypto.randomBytes, AES-256 |
-| A03: Injection | S2077, S5131, S5146 | Parameterized queries, sanitization |
-| A07: Auth Failures | S5247, S2245 | MFA, strong passwords, JWT |
-| A09: Logging Failures | S6275 | Structured logging, no PII |
+| A03: Injection              | S2077, S5131, S5146 | Parameterized queries, sanitization |
+| A07: Auth Failures          | S5247, S2245        | MFA, strong passwords, JWT          |
+| A09: Logging Failures       | S6275               | Structured logging, no PII          |
 
 ### Defense in Depth
 
 For each vulnerability fix:
+
 1. Input validation (Zod)
 2. Safe APIs (Prisma, DOMPurify)
 3. Output encoding
@@ -299,24 +307,28 @@ For each vulnerability fix:
 ## Example Scenarios
 
 ### Scenario 1: Cognitive Complexity (25 → 4)
+
 - Extract method pattern
 - Guard clauses
 - Single responsibility
 - Test coverage maintained
 
 ### Scenario 2: SQL Injection
+
 - Prisma parameterization
 - Input validation
 - Security tests
 - OWASP compliance
 
 ### Scenario 3: Batch Processing (12 fixes)
+
 - 100% automation rate
 - Zero rollbacks
 - All validations passing
 - 6.3 seconds total
 
 ### Scenario 4: ReDoS Vulnerability
+
 - Deep research (5 sources)
 - Defense in depth
 - Performance: 200,000% improvement
@@ -327,12 +339,14 @@ For each vulnerability fix:
 ### When to Use Auto-Fix
 
 ✅ **Safe**:
+
 - Unused variables/imports
 - Formatting issues
 - Simple refactors
 - Magic number extraction
 
 ❌ **Manual Review**:
+
 - Complex business logic
 - Security vulnerabilities (verify)
 - Cross-layer changes
@@ -395,16 +409,13 @@ For each vulnerability fix:
 
 The SonarQube Fix Agent is a production-ready solution for:
 
-✅ Automated code quality improvements
-✅ Security vulnerability remediation
-✅ Deep analysis with web research
-✅ Multi-agent orchestration (STOA)
-✅ MCP integration with fallbacks
-✅ Comprehensive validation and testing
-✅ Architecture compliance (hexagonal, DDD)
-✅ Detailed metrics and reporting
+✅ Automated code quality improvements ✅ Security vulnerability remediation ✅
+Deep analysis with web research ✅ Multi-agent orchestration (STOA) ✅ MCP
+integration with fallbacks ✅ Comprehensive validation and testing ✅
+Architecture compliance (hexagonal, DDD) ✅ Detailed metrics and reporting
 
-**Remember: Quality and security are not negotiable. When in doubt, request human review.**
+**Remember: Quality and security are not negotiable. When in doubt, request
+human review.**
 
 ---
 

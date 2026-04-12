@@ -1,16 +1,17 @@
 # Task Context
 
-Use the workflow artifacts to understand what the task intended to change, but always treat the codebase as ground truth.
+Use the workflow artifacts to understand what the task intended to change, but
+always treat the codebase as ground truth.
 
 ## Artifact Roles
 
-| Artifact | Canonical path | Use it for | Do not treat it as |
-|----------|----------------|------------|--------------------|
-| Task row | `apps/project-tracker/docs/metrics/_global/Sprint_plan_*.csv` | Sprint number, description, dependencies, artifacts, validation method | Proof that the code is correct |
-| Spec | `.specify/sprints/sprint-{N}/specifications/{TASK_ID}-spec.md` | Acceptance criteria, invariants, runtime intent, negative paths, integration points | Proof that the implementation matches intent |
-| Plan | `.specify/sprints/sprint-{N}/planning/{TASK_ID}-plan.md` | Exact files, RED/GREEN steps, expected runtime wiring, affected regressions | Proof that every checkbox reflects real code |
-| Exec delivery | `.specify/sprints/sprint-{N}/execution/{TASK_ID}/{RUN_ID}/{TASK_ID}-delivery.md` | Claimed implementation summary, files touched, claimed validations | Proof that the code really behaves that way |
-| Attestation | `.specify/sprints/sprint-{N}/attestations/{TASK_ID}/attestation.json` | Supporting evidence, context pack, run metadata | A substitute for reading the code |
+| Artifact      | Canonical path                                                                   | Use it for                                                                          | Do not treat it as                           |
+| ------------- | -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | -------------------------------------------- |
+| Task row      | `apps/project-tracker/docs/metrics/_global/Sprint_plan_*.csv`                    | Sprint number, description, dependencies, artifacts, validation method              | Proof that the code is correct               |
+| Spec          | `.specify/sprints/sprint-{N}/specifications/{TASK_ID}-spec.md`                   | Acceptance criteria, invariants, runtime intent, negative paths, integration points | Proof that the implementation matches intent |
+| Plan          | `.specify/sprints/sprint-{N}/planning/{TASK_ID}-plan.md`                         | Exact files, RED/GREEN steps, expected runtime wiring, affected regressions         | Proof that every checkbox reflects real code |
+| Exec delivery | `.specify/sprints/sprint-{N}/execution/{TASK_ID}/{RUN_ID}/{TASK_ID}-delivery.md` | Claimed implementation summary, files touched, claimed validations                  | Proof that the code really behaves that way  |
+| Attestation   | `.specify/sprints/sprint-{N}/attestations/{TASK_ID}/attestation.json`            | Supporting evidence, context pack, run metadata                                     | A substitute for reading the code            |
 
 ## Resolve the Task Row
 
@@ -39,7 +40,8 @@ Extract at least:
 5. Attestation or context pack, if present
 6. Real implementation and related tests
 
-If spec or plan is missing, continue with a code-first audit and state the missing context as a limitation.
+If spec or plan is missing, continue with a code-first audit and state the
+missing context as a limitation.
 
 ## What to Extract
 
@@ -71,11 +73,14 @@ Start with plan and delivery paths, then expand to:
 
 - Direct callers and callees
 - Zod validators and DTO schemas
-- Domain entities, application services, adapters, or Prisma queries touched by the feature
+- Domain entities, application services, adapters, or Prisma queries touched by
+  the feature
 - Router, server action, or page/component entrypoints that expose the behavior
 - Related tests that should fail if the behavior regresses
 
-Prefer real runtime wiring over isolated helpers. If a task claims a new route, service, or component but the production caller still bypasses it, treat that as a likely defect.
+Prefer real runtime wiring over isolated helpers. If a task claims a new route,
+service, or component but the production caller still bypasses it, treat that as
+a likely defect.
 
 ## Conflict Resolution
 

@@ -17,74 +17,92 @@
 └─────────────────────────────────────────────────────┘
 ```
 
-**Key principle**: Baseline gates are NOT part of any STOA. They run once as a prerequisite. STOAs only run their domain-specific gates. No duplication.
+**Key principle**: Baseline gates are NOT part of any STOA. They run once as a
+prerequisite. STOAs only run their domain-specific gates. No duplication.
 
 ## Agent Mode Detection
 
-| Mode | When Used | MATOP Behavior |
-|------|-----------|----------------|
-| **Subagent** (default) | Teams disabled or <2 STOAs | STOAs run gates independently, no peer sharing |
-| **Agent Team** | `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` AND ≥2 STOAs | STOAs share findings after gates complete |
+| Mode                   | When Used                                             | MATOP Behavior                                 |
+| ---------------------- | ----------------------------------------------------- | ---------------------------------------------- |
+| **Subagent** (default) | Teams disabled or <2 STOAs                            | STOAs run gates independently, no peer sharing |
+| **Agent Team**         | `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` AND ≥2 STOAs | STOAs share findings after gates complete      |
 
 **Detection logic** (from `tools/scripts/lib/stoa/agent-mode.ts`):
+
 1. Check `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` env var
-2. Check `CLAUDE_CODE_IS_TEAMMATE` — if already a teammate, fall back to subagent (no nested teams)
+2. Check `CLAUDE_CODE_IS_TEAMMATE` — if already a teammate, fall back to
+   subagent (no nested teams)
 3. For exec/matop sessions: require ≥2 STOAs for team mode
 
 **Token cost warning**: Agent team mode uses ~4x tokens per STOA.
 
 ## Primary STOA Assignment (by Task ID Prefix)
 
-**Primary** = listed first in reports, runs first. Does NOT have more authority than other STOAs — all block equally.
+**Primary** = listed first in reports, runs first. Does NOT have more authority
+than other STOAs — all block equally.
 
-| Prefix | Primary STOA |
-|--------|--------------|
-| `ENV-*`, `EP-*` | Foundation |
-| `IFC-*` | Domain |
-| `PG-*` | Quality |
-| `EXC-SEC-*`, `SEC-*` | Security |
-| `AI-*`, `AI-SETUP-*` | Intelligence |
-| `AUTOMATION-*` | Automation |
-| (no match) | Domain (default fallback) |
+| Prefix               | Primary STOA              |
+| -------------------- | ------------------------- |
+| `ENV-*`, `EP-*`      | Foundation                |
+| `IFC-*`              | Domain                    |
+| `PG-*`               | Quality                   |
+| `EXC-SEC-*`, `SEC-*` | Security                  |
+| `AI-*`, `AI-SETUP-*` | Intelligence              |
+| `AUTOMATION-*`       | Automation                |
+| (no match)           | Domain (default fallback) |
 
 ## Supporting STOA Triggers
 
 ### By Keywords
 
-- **Foundation**: docker, ci, deployment, github actions, environment, infra, observability, monitoring, logging, otel
-- **Security**: auth, jwt, token, session, rbac, permissions, secret, vault, rate-limit, csrf, xss, injection
-- **Quality**: coverage, e2e, test, vitest, playwright, mutation, quality gate, sonarqube, lighthouse
-- **Intelligence**: prompt, agent, chain, embedding, vector, scoring, llm, ollama, openai, langchain, crewai
-- **Domain**: trpc, api, prisma, database, schema, entity, aggregate, domain, use case, repository, migration
-- **Automation**: orchestrator, swarm, tracker, validation, artifact, audit, sprint, metrics, registry
+- **Foundation**: docker, ci, deployment, github actions, environment, infra,
+  observability, monitoring, logging, otel
+- **Security**: auth, jwt, token, session, rbac, permissions, secret, vault,
+  rate-limit, csrf, xss, injection
+- **Quality**: coverage, e2e, test, vitest, playwright, mutation, quality gate,
+  sonarqube, lighthouse
+- **Intelligence**: prompt, agent, chain, embedding, vector, scoring, llm,
+  ollama, openai, langchain, crewai
+- **Domain**: trpc, api, prisma, database, schema, entity, aggregate, domain,
+  use case, repository, migration
+- **Automation**: orchestrator, swarm, tracker, validation, artifact, audit,
+  sprint, metrics, registry
 
 ### By Path Impact
 
-- **Foundation**: `infra/`, `docker*`, `.github/`, `ci/`, `deployment*`, `monitoring*`
+- **Foundation**: `infra/`, `docker*`, `.github/`, `ci/`, `deployment*`,
+  `monitoring*`
 - **Security**: `*auth*`, `*security*`, `.env*`, `*vault*`, `*secrets*`
-- **Quality**: `tests/`, `*.test.*`, `*.spec.*`, `*coverage*`, `*vitest*`, `*playwright*`
-- **Intelligence**: `apps/ai-worker/**`, `**/prompts/**`, `**/chains/**`, `**/embeddings/**`
-- **Domain**: `apps/api/**`, `packages/domain/**`, `packages/application/**`, `packages/db/**`, `**/prisma/**`
+- **Quality**: `tests/`, `*.test.*`, `*.spec.*`, `*coverage*`, `*vitest*`,
+  `*playwright*`
+- **Intelligence**: `apps/ai-worker/**`, `**/prompts/**`, `**/chains/**`,
+  `**/embeddings/**`
+- **Domain**: `apps/api/**`, `packages/domain/**`, `packages/application/**`,
+  `packages/db/**`, `**/prisma/**`
 - **Automation**: `tools/scripts/**`, `tools/lint/**`, `apps/project-tracker/**`
 
 ### Always Added
 
-**Foundation** is always included as a supporting STOA (for its unique gates: artifact-lint, dependency-cruiser, docker config). Its baseline gates (typecheck, build, lint, format) have already run in Phase 2.5.
+**Foundation** is always included as a supporting STOA (for its unique gates:
+artifact-lint, dependency-cruiser, docker config). Its baseline gates
+(typecheck, build, lint, format) have already run in Phase 2.5.
 
 ## What Each STOA Runs (Unique Gates Only)
 
-After baseline has already run typecheck + build + lint + format, each STOA runs ONLY its unique gates:
+After baseline has already run typecheck + build + lint + format, each STOA runs
+ONLY its unique gates:
 
-| STOA | Unique Gates (not covered by baseline) |
-|------|----------------------------------------|
-| **Foundation** | Artifact-path lint, Docker config, Dependency architecture (depcruise) |
-| **Domain** | Domain unit tests (>95%), Integration tests, Prisma schema, Migration status, Architecture boundaries (domain-scoped depcruise) |
-| **Quality** | Test coverage (90% threshold), Integration tests, E2E tests, Mutation testing, SonarQube, Lighthouse CI |
-| **Security** | Gitleaks, pnpm audit, Snyk, Semgrep SAST, Trivy scans |
-| **Intelligence** | AI worker tests, Chain evaluation, Prompt validation, Ollama model check, Safety guardrails |
-| **Automation** | Sprint validation, Sprint data validation, Artifact-path lint, Registry consistency, CSV uniqueness, Metrics sync |
+| STOA             | Unique Gates (not covered by baseline)                                                                                          |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| **Foundation**   | Artifact-path lint, Docker config, Dependency architecture (depcruise)                                                          |
+| **Domain**       | Domain unit tests (>95%), Integration tests, Prisma schema, Migration status, Architecture boundaries (domain-scoped depcruise) |
+| **Quality**      | Test coverage (90% threshold), Integration tests, E2E tests, Mutation testing, SonarQube, Lighthouse CI                         |
+| **Security**     | Gitleaks, pnpm audit, Snyk, Semgrep SAST, Trivy scans                                                                           |
+| **Intelligence** | AI worker tests, Chain evaluation, Prompt validation, Ollama model check, Safety guardrails                                     |
+| **Automation**   | Sprint validation, Sprint data validation, Artifact-path lint, Registry consistency, CSV uniqueness, Metrics sync               |
 
-**No STOA re-runs typecheck, build, or lint.** Those are already verified by baseline.
+**No STOA re-runs typecheck, build, or lint.** Those are already verified by
+baseline.
 
 ## Spawning Code
 
@@ -108,6 +126,7 @@ Task({
 ```
 
 STOA commands:
+
 - `/stoa-foundation` — Foundation STOA (unique gates only)
 - `/stoa-security` — Security STOA
 - `/stoa-quality` — Quality STOA
@@ -119,11 +138,12 @@ STOA commands:
 
 When agent teams enabled and ≥2 STOAs:
 
-**Phase A: Parallel Gate Execution**
-All STOAs run their unique gates in parallel as teammates.
+**Phase A: Parallel Gate Execution** All STOAs run their unique gates in
+parallel as teammates.
 
-**Phase B: Cross-STOA Findings Broadcast**
-After gates complete, each STOA broadcasts key findings to all other STOAs. Other STOAs can amend verdicts based on peer findings.
+**Phase B: Cross-STOA Findings Broadcast** After gates complete, each STOA
+broadcasts key findings to all other STOAs. Other STOAs can amend verdicts based
+on peer findings.
 
 ```
 Cross-STOA interaction examples:
@@ -133,7 +153,8 @@ Cross-STOA interaction examples:
 - Foundation → Domain: "Depcruise clean. No boundary violations."
 ```
 
-Each STOA can upgrade severity (PASS→FAIL) based on peer findings, but cannot downgrade (FAIL stays FAIL).
+Each STOA can upgrade severity (PASS→FAIL) based on peer findings, but cannot
+downgrade (FAIL stays FAIL).
 
 **Fallback**: If team creation fails, log error and run as subagents.
 

@@ -1,10 +1,12 @@
 # SonarQube Fix Agent
 
-An intelligent agent specialized in analyzing and resolving SonarQube code quality issues with deep analysis, web research, and automated fixes.
+An intelligent agent specialized in analyzing and resolving SonarQube code
+quality issues with deep analysis, web research, and automated fixes.
 
 ## Overview
 
-The SonarQube Fix Agent is a comprehensive solution for handling SonarQube linter errors and warnings. It combines:
+The SonarQube Fix Agent is a comprehensive solution for handling SonarQube
+linter errors and warnings. It combines:
 
 - **Deep Code Analysis**: Extended thinking mode for complex issues
 - **Web Research**: Automatic searching for best practices and solutions
@@ -17,7 +19,8 @@ The SonarQube Fix Agent is a comprehensive solution for handling SonarQube linte
 
 ### STOA Sub-Agents
 
-The agent follows the STOA (Security, Testing, Optimization, Architecture) pattern with specialized sub-agents:
+The agent follows the STOA (Security, Testing, Optimization, Architecture)
+pattern with specialized sub-agents:
 
 1. **Quality Agent** ([quality-agent.md](./agents/quality-agent.md))
    - Focus: Code smells, complexity, maintainability
@@ -36,7 +39,8 @@ The agent follows the STOA (Security, Testing, Optimization, Architecture) patte
 
 ### MCP Integration
 
-The agent integrates with multiple MCP servers ([mcp-config.json](./mcp-config.json)):
+The agent integrates with multiple MCP servers
+([mcp-config.json](./mcp-config.json)):
 
 - **SonarQube MCP**: Direct API access to SonarQube server
 - **Web Search MCP**: Brave/Google search for research
@@ -63,11 +67,13 @@ All MCP servers are optional with graceful fallbacks to built-in tools.
 ### Setup
 
 1. **Install the skill**:
+
    ```bash
    cd .claude/skills/sonarqube-fix
    ```
 
 2. **Configure environment variables** (`.env`):
+
    ```bash
    # SonarQube Configuration (optional)
    SONARQUBE_URL=https://sonarqube.example.com
@@ -82,6 +88,7 @@ All MCP servers are optional with graceful fallbacks to built-in tools.
    ```
 
 3. **Install MCP servers** (optional):
+
    ```bash
    # SonarQube MCP
    npx @modelcontextprotocol/server-sonarqube
@@ -193,12 +200,14 @@ Issues are distributed to specialized agents:
 Depending on the mode:
 
 **Recommendation Mode** (default):
+
 - Generate fix recommendations
 - Show before/after code
 - Explain rationale with research
 - Wait for user approval
 
 **Auto-Fix Mode** (`--auto-fix`):
+
 - Apply fixes automatically
 - Run comprehensive validation
 - Rollback on failure
@@ -223,23 +232,28 @@ Generate comprehensive reports:
 # SonarQube Fix Report
 
 ## Summary
+
 - Total Issues: 45
 - Fixed: 38 (84%)
 - Remaining: 7
 - Time: 15 minutes
 
 ## Metrics
+
 - Automation Rate: 84%
 - Test Coverage: 91.2%
 - Quality Gate: ✅ PASSED
 
 ## Fixed Issues
+
 [Detailed breakdown by severity and type]
 
 ## Remaining Issues
+
 [What couldn't be fixed and why]
 
 ## Next Steps
+
 [Recommendations for manual fixes]
 ```
 
@@ -251,11 +265,11 @@ Edit [skill.yaml](./skill.yaml):
 
 ```yaml
 config:
-  max_concurrent_agents: 3      # Parallel sub-agents
-  enable_deep_thinking: true     # Extended analysis
-  enable_web_search: true        # Web research
-  auto_fix_enabled: false        # Require explicit --auto-fix
-  require_test_validation: true  # Always validate
+  max_concurrent_agents: 3 # Parallel sub-agents
+  enable_deep_thinking: true # Extended analysis
+  enable_web_search: true # Web research
+  auto_fix_enabled: false # Require explicit --auto-fix
+  require_test_validation: true # Always validate
 ```
 
 ### MCP Configuration
@@ -368,6 +382,7 @@ $ /sonarqube-fix --type vulnerability,security_hotspot --report
 ### When to Use Auto-Fix
 
 ✅ **Safe for auto-fix**:
+
 - Unused variables/imports
 - Formatting issues
 - Simple refactors (collapse if, remove duplicates)
@@ -375,6 +390,7 @@ $ /sonarqube-fix --type vulnerability,security_hotspot --report
 - Type annotations
 
 ❌ **Require manual review**:
+
 - Complex business logic
 - Cross-layer changes
 - Security vulnerabilities (verify fix)
@@ -384,6 +400,7 @@ $ /sonarqube-fix --type vulnerability,security_hotspot --report
 ### Deep Thinking Mode
 
 Enable `--deep-think` when:
+
 - Issue is complex or novel
 - Multiple solutions exist
 - Architecture impact unclear
@@ -393,6 +410,7 @@ Enable `--deep-think` when:
 ### Research Strategies
 
 The agent prioritizes:
+
 1. **Official Docs** (SonarQube, TypeScript, OWASP)
 2. **Project Patterns** (search codebase for existing solutions)
 3. **Community** (Stack Overflow, GitHub)
@@ -436,6 +454,7 @@ Metrics saved to: `artifacts/metrics/sonarqube-fixes.json`
 ### MCP Servers Not Available
 
 The agent gracefully falls back to built-in tools:
+
 - SonarQube MCP → Parse local reports
 - Web Search MCP → Use built-in WebSearch tool
 - Code Search MCP → Use built-in Grep tool
@@ -444,6 +463,7 @@ The agent gracefully falls back to built-in tools:
 ### Validation Failures
 
 If validation fails:
+
 1. Changes are automatically rolled back
 2. Issue logged for manual review
 3. Next issue processed
@@ -452,6 +472,7 @@ If validation fails:
 ### Coverage Drops
 
 If test coverage decreases:
+
 1. Fix is rejected
 2. Changes rolled back
 3. Agent requests additional tests
@@ -462,6 +483,7 @@ If test coverage decreases:
 ### Hexagonal Architecture
 
 The agent respects architecture boundaries:
+
 - Domain layer: No infrastructure dependencies
 - Application layer: Use cases and ports
 - Adapters layer: Infrastructure implementations
@@ -471,6 +493,7 @@ Architecture tests (`packages/architecture-tests/`) enforce boundaries.
 ### DDD Principles
 
 Fixes maintain DDD patterns:
+
 - Rich domain models (not anemic)
 - Business logic in domain
 - Value objects for validations
@@ -479,6 +502,7 @@ Fixes maintain DDD patterns:
 ### Type Safety
 
 All fixes maintain strict TypeScript:
+
 - No `any` types
 - Null safety enforced
 - Zod schemas for validation
@@ -521,4 +545,5 @@ This skill is part of the IntelliFlow CRM project.
 
 ---
 
-**Remember**: Quality and security are not negotiable. When in doubt, request human review.
+**Remember**: Quality and security are not negotiable. When in doubt, request
+human review.

@@ -1,8 +1,8 @@
 # Validation Commands — Bash Reference
 
-This file provides helper command examples only.
-Always follow the gate contract in `.claude/skills/exec/references/phase4-completion-gates.md`
-first. If the canonical gate file requires additional checks (for example runtime wiring or
+This file provides helper command examples only. Always follow the gate contract
+in `.claude/skills/exec/references/phase4-completion-gates.md` first. If the
+canonical gate file requires additional checks (for example runtime wiring or
 validation-matrix verification), this helper reference does not override it.
 
 ## Hash Calculation

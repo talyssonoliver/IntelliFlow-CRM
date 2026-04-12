@@ -9,16 +9,18 @@ All 4 gates are BLOCKING. A FAIL on any gate sets the final verdict to FAIL.
 Before returning a PASS verdict, verify all plan checkboxes are complete.
 
 **Verification Steps:**
+
 1. Read plan file: `.specify/sprints/sprint-{N}/planning/<TASK_ID>-plan.md`
 2. Parse all checkbox patterns: `- [ ]` and `- [x]`
 3. Calculate completion percentage
 
-| Completion % | Verdict Impact |
-|---|---|
-| 100% | No impact — can proceed to PASS |
-| <100% | Force verdict to FAIL |
+| Completion % | Verdict Impact                  |
+| ------------ | ------------------------------- |
+| 100%         | No impact — can proceed to PASS |
+| <100%        | Force verdict to FAIL           |
 
 **Required Output:**
+
 ```
 [MATOP Gate: Plan Checkboxes]
 Plan: .specify/sprints/sprint-2/planning/IFC-085-plan.md
@@ -36,20 +38,24 @@ Impact: Verdict set to FAIL (incomplete plan checkboxes — 100% required)
 All artifacts mentioned in plan MUST exist and have recorded hashes.
 
 **Verification Steps:**
-1. Parse plan for file paths under `**Files to Create:**` and `**Files to Modify:**`
+
+1. Parse plan for file paths under `**Files to Create:**` and
+   `**Files to Modify:**`
 2. Verify each file exists on disk
 3. Calculate SHA256 hash for each file
 4. Record in evidence bundle
 
-| Condition | Verdict Impact |
-|---|---|
-| All files exist with valid hashes | No impact |
-| Any file missing | Force verdict to FAIL |
-| Hash cannot be calculated | Force verdict to FAIL |
+| Condition                         | Verdict Impact        |
+| --------------------------------- | --------------------- |
+| All files exist with valid hashes | No impact             |
+| Any file missing                  | Force verdict to FAIL |
+| Hash cannot be calculated         | Force verdict to FAIL |
 
-**CRITICAL**: Must verify ALL plan files exhaustively — count must match plan total.
+**CRITICAL**: Must verify ALL plan files exhaustively — count must match plan
+total.
 
 **Required Output:**
+
 ```
 [MATOP Gate: Artifact Hashes]
 | File | Exists | SHA256 |
@@ -64,9 +70,11 @@ Impact: Verdict set to FAIL (missing artifact)
 
 ## Gate 3: Mandatory Baseline Validation (BLOCKING)
 
-Verifies that MATOP Phase 2.5 mandatory baseline actually executed with real exit codes. These run ONCE before any STOA agent spawns.
+Verifies that MATOP Phase 2.5 mandatory baseline actually executed with real
+exit codes. These run ONCE before any STOA agent spawns.
 
 **Required Commands (MUST run, not simulate):**
+
 ```bash
 pnpm run typecheck    # Capture real exit code
 pnpm run build        # Capture real exit code
@@ -74,13 +82,14 @@ pnpm run lint         # Capture real exit code
 pnpm run format:check # Capture real exit code
 ```
 
-| Command Result | Verdict Impact |
-|---|---|
-| All exit 0 | No impact |
-| Any non-zero exit | Force verdict to FAIL |
+| Command Result       | Verdict Impact        |
+| -------------------- | --------------------- |
+| All exit 0           | No impact             |
+| Any non-zero exit    | Force verdict to FAIL |
 | Command not executed | Force verdict to FAIL |
 
 **Required Output:**
+
 ```
 [MATOP Gate: Build Validation]
 | Command | Exit Code | Duration | Status |
@@ -99,6 +108,7 @@ Impact: Verdict set to FAIL (lint failed)
 Final consensus MUST accurately reflect individual STOA results.
 
 **Aggregation Rules (NO WARN — binary only):**
+
 ```
 IF any STOA verdict == FAIL:
   consensus = FAIL
@@ -111,6 +121,7 @@ ELSE:
 CRITICAL: Do NOT override FAIL verdicts. Do NOT claim PASS when gates failed.
 
 **Required Output:**
+
 ```
 [MATOP Gate: STOA Aggregation]
 | STOA | Verdict | Failed Gates |
@@ -159,7 +170,10 @@ Every MATOP summary MUST include:
       "verified": 5,
       "missing": 0,
       "items": [
-        { "path": "apps/ai-worker/src/chains/scoring.chain.ts", "status": "exists" }
+        {
+          "path": "apps/ai-worker/src/chains/scoring.chain.ts",
+          "status": "exists"
+        }
       ]
     },
     "checkboxes": {
@@ -167,7 +181,11 @@ Every MATOP summary MUST include:
       "checked": 10,
       "unchecked": 2,
       "items": [
-        { "text": "Write failing test for Ollama provider", "checked": true, "phase": "Phase 1: RED" }
+        {
+          "text": "Write failing test for Ollama provider",
+          "checked": true,
+          "phase": "Phase 1: RED"
+        }
       ]
     },
     "overall_status": "partial",
@@ -176,15 +194,15 @@ Every MATOP summary MUST include:
 }
 ```
 
-| Completion % | Verdict Impact |
-|---|---|
-| 100% | No impact |
-| <100% | FAIL — 100% required |
+| Completion % | Verdict Impact       |
+| ------------ | -------------------- |
+| 100%         | No impact            |
+| <100%        | FAIL — 100% required |
 
 ## Package Mapping for Coverage
 
-| Task Pattern | Package |
-|---|---|
+| Task Pattern                                  | Package          |
+| --------------------------------------------- | ---------------- |
 | `IFC-085`, `IFC-005`, `IFC-155`, `AI-SETUP-*` | `apps/ai-worker` |
-| `IFC-003`, `IFC-004` | `apps/api` |
-| `PG-*`, `IFC-090`, `IFC-091` | `apps/web` |
+| `IFC-003`, `IFC-004`                          | `apps/api`       |
+| `PG-*`, `IFC-090`, `IFC-091`                  | `apps/web`       |

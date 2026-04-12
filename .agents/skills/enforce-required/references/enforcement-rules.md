@@ -14,8 +14,7 @@
   - Sprint 3: 8 tasks total - 2 Completed (IFC-104, IFC-105), 6 Backlog
     (IFC-006, IFC-007, IFC-011, IFC-107, IFC-128, IFC-136)
   - Sprint 3 is the current active sprint.
-- Existing Framework: Framework.md v4.3 FINAL at
-  `artifacts/sprint0/codex-run/Framework.md`
+- Existing Framework: Framework.md v5.0 at `.specify/memory/Framework.md`
 - Canonical Sprint Plan:
   `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv`
 - Audit Matrix: `audit-matrix.yml` (repo root, full path:
@@ -35,16 +34,19 @@ Define a strict grammar for tags inside Pre-requisites / Artifacts To Track /
 Validation Method.
 
 Tags (mandatory):
+
 - Pre-requisites: `FILE:`, `DIR:`, `ENV:`, `POLICY:`
 - Artifacts To Track: `EVIDENCE:`
 - Validation Method: `VALIDATE:`, `AUDIT:`, `GATE:`
 
 Define "NOELLIPSIS" rule: if any contract field contains literal "..." it is
 invalid:
+
 - local default => WARN
 - strict/CI => FAIL
 
 DoD:
+
 - A doc section added to Framework.md or tools/docs explaining the grammar
   (short and unambiguous).
 - A parser implementation spec (TypeScript) with examples.
@@ -52,6 +54,7 @@ DoD:
 ## Agent B — Context Pack Builder Agent
 
 Implement a generator: `build_context_pack(task_id, run_id)`
+
 - Reads the task row from Sprint_plan.csv (canonical location:
   `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv`)
 - Extracts FILE: prerequisites and embeds bounded excerpts into
@@ -60,13 +63,15 @@ Implement a generator: `build_context_pack(task_id, run_id)`
   file)
 
 Bounded size rules (hardcoded, not configurable):
+
 - Excerpt limit: 120 lines per file maximum
-- If file exceeds 120 lines: include first 60 lines + last 60 lines with
-  "[... N lines omitted ...]" marker
+- If file exceeds 120 lines: include first 60 lines + last 60 lines with "[... N
+  lines omitted ...]" marker
 - Total context pack size: 50KB max (warn if exceeded, truncate oldest files
   first)
 
 DoD:
+
 - Context pack generation works for at least one Sprint 3 Backlog task (IFC-006
   or IFC-007).
 - Artifacts written under `artifacts/context/...` only.
@@ -74,11 +79,13 @@ DoD:
 ## Agent C — Context Ack Gatekeeper Agent
 
 Require agents to produce `context_ack.json` BEFORE code changes are accepted:
+
 - `task_id`, `run_id`
 - `files_read[]` with sha256
 - `invariants_acknowledged[]` (at least 5 items)
 
 Enforce:
+
 - If row's Artifacts To Track contains `EVIDENCE:context_ack` => missing/invalid
   ack => FAIL
 - Ack must include all FILE: prerequisites; hashes must match manifest
@@ -86,6 +93,7 @@ Enforce:
   validation scripts used in CI
 
 DoD:
+
 - A run fails deterministically when ack is missing or does not include required
   FILE: items.
 - In strict mode, this gate is blocking.
@@ -93,25 +101,31 @@ DoD:
 ## Agent D — Validation/Audit Integration Agent
 
 Update validators to:
+
 1. Parse the contract tags from CSV
-2. Detect ellipsis placeholders "..." in contract fields and apply NOELLIPSIS rule
+2. Detect ellipsis placeholders "..." in contract fields and apply NOELLIPSIS
+   rule
 3. Produce a transcript artifact per run:
    `artifacts/reports/contract/<run_id>/<task_id>/contract_transcript.json`
 
 Validate "required reading" can be proven:
+
 - For tasks executed (or marked In Progress), context_pack + ack must exist
 
 DoD:
+
 - CI strict job fails if contract is invalid or evidence is missing
 - Output includes explicit FAIL/WARN reasons with task IDs
 
 ## Agent E — Column Deprecation Agent (no file change yet; produce plan + generator)
 
 Implement a deterministic derivation:
+
 - `derived.cross_quarter_deps` computed in generated registry JSON, based on
   Target Sprint values
 
 Convert CleanDependencies into generated-only:
+
 - treat Dependencies as authoring field
 - generate CleanDependencies automatically during registry build; warn if CSV
   CleanDependencies diverges
@@ -119,6 +133,7 @@ Convert CleanDependencies into generated-only:
 Do NOT remove columns yet; produce a migration plan and warnings.
 
 DoD:
+
 - `artifacts/reports/deprecation/<run_id>/csv-deprecation-plan.md` created with
   a three-step timeline:
   - Step 1: warn-only (current sprint)
@@ -154,6 +169,7 @@ Current validation status (Sprint 0): PASS 35, WARN 0, FAIL 0
 ## Tests Required
 
 Add Vitest unit tests for:
+
 - Tag parsing
 - Ellipsis detection
 - Ack verification
@@ -164,7 +180,8 @@ Add Vitest unit tests for:
 - Agents cannot pass a task run that requires EVIDENCE:context_ack without
   producing a valid context_ack.json
 - Any task row containing "..." in contract fields fails in CI strict mode
-- Validation/audit transcripts are produced under `artifacts/reports/contract/...`
+- Validation/audit transcripts are produced under
+  `artifacts/reports/contract/...`
 - Deprecation plan exists and CleanDependencies normalization is owned by
   generator, not manual edits
 
@@ -189,7 +206,7 @@ IFC-007,"FILE:apps/api/src/modules/**/router.ts;FILE:vitest.config.ts;DIR:tests/
 1. Canonical paths:
    - Sprint_plan.csv:
      `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv`
-   - Framework.md: `artifacts/sprint0/codex-run/Framework.md`
+   - Framework.md: `.specify/memory/Framework.md`
    - Audit Matrix: `C:\taly\intelliFlow-CRM\audit-matrix.yml`
    - Use the canonical Sprint_plan.csv path used by the tracker; enforce
      uniqueness (multiple copies => FAIL always)

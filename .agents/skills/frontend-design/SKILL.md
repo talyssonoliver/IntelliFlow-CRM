@@ -1,15 +1,23 @@
 ---
 name: frontend-design
-description: Create distinctive, production-grade frontend interfaces for IntelliFlow CRM with high design quality. Use this skill when building CRM components, dashboards, lead management UIs, pipeline views, or any IntelliFlow web interface. Generates polished React/Next.js code using shadcn/ui and Tailwind CSS.
+description:
+  Create distinctive, production-grade frontend interfaces for IntelliFlow CRM
+  with high design quality. Use this skill when building CRM components,
+  dashboards, lead management UIs, pipeline views, or any IntelliFlow web
+  interface. Generates polished React/Next.js code using shadcn/ui and Tailwind
+  CSS.
 license: Complete terms in LICENSE.txt
 ---
 
-This skill guides creation of production-grade frontend interfaces for IntelliFlow CRM following the established design system.
+This skill guides creation of production-grade frontend interfaces for
+IntelliFlow CRM following the established design system.
 
 ## Tech Stack
 
-- **Framework**: Next.js 16.0.10 (App Router), React 19, TypeScript (strict mode)
-- **UI Library**: Radix UI primitives + shadcn/ui patterns (encapsulated in `@intelliflow/ui`)
+- **Framework**: Next.js 16.0.10 (App Router), React 19, TypeScript (strict
+  mode)
+- **UI Library**: Radix UI primitives + shadcn/ui patterns (encapsulated in
+  `@intelliflow/ui`)
 - **Styling**: Tailwind CSS 3.4.17 + CSS variables for theming
 - **Forms**: React Hook Form + Zod validation
 - **Icons**: Material Symbols Outlined (MANDATORY - NOT Lucide React)
@@ -18,21 +26,24 @@ This skill guides creation of production-grade frontend interfaces for IntelliFl
 ## MANDATORY Component Import Pattern
 
 **CORRECT:**
+
 ```tsx
 import { Card, Button, Input, Toast } from '@intelliflow/ui';
 import { cn } from '@intelliflow/ui';
 ```
 
 **NEVER:**
+
 ```tsx
-import { Dialog } from '@radix-ui/react-dialog';  // Bypass encapsulation
-import { Button } from '@/components/ui/button';  // Wrong path
-import { CheckCircle } from 'lucide-react';       // Wrong icon system
+import { Dialog } from '@radix-ui/react-dialog'; // Bypass encapsulation
+import { Button } from '@/components/ui/button'; // Wrong path
+import { CheckCircle } from 'lucide-react'; // Wrong icon system
 ```
 
 ## Two Color Approaches (MANDATORY)
 
 ### Approach 1: CSS Variables (Semantic Colors)
+
 ```tsx
 <div className="text-primary">                    // Brand blue (#137fec)
 <div className="bg-primary text-primary-foreground">  // Primary buttons
@@ -42,6 +53,7 @@ import { CheckCircle } from 'lucide-react';       // Wrong icon system
 ```
 
 ### Approach 2: Explicit Slate Colors (Visual Hierarchy)
+
 ```tsx
 // Container backgrounds
 <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
@@ -59,17 +71,19 @@ import { CheckCircle } from 'lucide-react';       // Wrong icon system
 ```
 
 ### When to Use Each
-| Use Case | Approach | Example |
-|----------|----------|---------|
-| Buttons (brand) | CSS Variables | `bg-primary text-primary-foreground` |
-| Error states | CSS Variables | `text-destructive border-destructive` |
-| Card backgrounds | Explicit Slate | `bg-white dark:bg-slate-800` |
-| Filter bar | Explicit Slate | `bg-slate-50 dark:bg-slate-800/50` |
-| Borders | Explicit Slate | `border-slate-200 dark:border-slate-700` |
+
+| Use Case         | Approach       | Example                                  |
+| ---------------- | -------------- | ---------------------------------------- |
+| Buttons (brand)  | CSS Variables  | `bg-primary text-primary-foreground`     |
+| Error states     | CSS Variables  | `text-destructive border-destructive`    |
+| Card backgrounds | Explicit Slate | `bg-white dark:bg-slate-800`             |
+| Filter bar       | Explicit Slate | `bg-slate-50 dark:bg-slate-800/50`       |
+| Borders          | Explicit Slate | `border-slate-200 dark:border-slate-700` |
 
 ## MANDATORY Patterns
 
 ### Icon Pattern (Material Symbols)
+
 ```tsx
 <span className="material-symbols-outlined text-xl" aria-hidden="true">
   check_circle
@@ -77,6 +91,7 @@ import { CheckCircle } from 'lucide-react';       // Wrong icon system
 ```
 
 ### AppSidebar Pattern (MANDATORY for all modules)
+
 ```tsx
 import {
   SidebarProvider,
@@ -86,7 +101,11 @@ import {
   leadsSidebarConfig,
 } from '@/components/sidebar';
 
-export default function LeadsLayout({ children }: { children: React.ReactNode }) {
+export default function LeadsLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <SidebarProvider>
       <div className="flex min-h-[calc(100vh-4rem)]">
@@ -103,6 +122,7 @@ export default function LeadsLayout({ children }: { children: React.ReactNode })
 ```
 
 ### PageHeader Pattern (MANDATORY for all pages)
+
 ```tsx
 import { PageHeader } from '@/components/shared';
 
@@ -110,14 +130,16 @@ export default function LeadsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        breadcrumbs={[
-          { label: 'Home', href: '/' },
-          { label: 'Leads' },
-        ]}
+        breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Leads' }]}
         title="All Leads"
         description="Manage and track your sales leads"
         actions={[
-          { label: 'Add Lead', icon: 'add', variant: 'primary', href: '/leads/new' },
+          {
+            label: 'Add Lead',
+            icon: 'add',
+            variant: 'primary',
+            href: '/leads/new',
+          },
         ]}
       />
       {/* Page content */}

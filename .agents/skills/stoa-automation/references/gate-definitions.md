@@ -47,15 +47,16 @@ pnpm run sync:metrics --check 2>&1 | tee "artifacts/reports/system-audit/$RUN_ID
 
 ### Canonical File Locations
 
-| File | Expected Location | Check |
-|---|---|---|
-| Sprint_plan.csv | `apps/project-tracker/docs/metrics/_global/` | Uniqueness |
-| task-registry.json | `apps/project-tracker/docs/metrics/_global/` | Derived from CSV |
-| Task JSON files | `apps/project-tracker/docs/metrics/sprint-0/phase-*/` | Schema valid |
+| File               | Expected Location                                     | Check            |
+| ------------------ | ----------------------------------------------------- | ---------------- |
+| Sprint_plan.csv    | `apps/project-tracker/docs/metrics/_global/`          | Uniqueness       |
+| task-registry.json | `apps/project-tracker/docs/metrics/_global/`          | Derived from CSV |
+| Task JSON files    | `apps/project-tracker/docs/metrics/sprint-0/phase-*/` | Schema valid     |
 
 ### Forbidden Locations
 
 Runtime artifacts MUST NOT exist in:
+
 - `apps/project-tracker/docs/metrics/.locks/**`
 - `apps/project-tracker/docs/metrics/logs/**`
 - `apps/project-tracker/docs/artifacts/**`
@@ -64,6 +65,7 @@ Runtime artifacts MUST NOT exist in:
 ### Evidence Bundle Requirements
 
 Every MATOP run MUST produce:
+
 - `summary.json` with resolved canonical paths
 - `evidence-hashes.txt` with SHA256 for all artifacts
 - `gate-selection.json` with execute/waiverRequired/skipped
@@ -95,13 +97,13 @@ for (const module of stoaModules) {
 
 ## Verdict Logic
 
-| Condition | Verdict |
-|---|---|
-| All validation scripts pass, artifacts in correct locations | PASS |
-| Sprint validation fails | FAIL |
-| Artifact in forbidden location | FAIL |
-| Multiple Sprint_plan.csv copies | FAIL |
-| Registry inconsistent with CSV | FAIL |
+| Condition                                                   | Verdict |
+| ----------------------------------------------------------- | ------- |
+| All validation scripts pass, artifacts in correct locations | PASS    |
+| Sprint validation fails                                     | FAIL    |
+| Artifact in forbidden location                              | FAIL    |
+| Multiple Sprint_plan.csv copies                             | FAIL    |
+| Registry inconsistent with CSV                              | FAIL    |
 
 ## Verdict JSON Schema
 
@@ -111,8 +113,16 @@ for (const module of stoaModules) {
   "taskId": "<TASK_ID>",
   "verdict": "PASS|FAIL|NEEDS_HUMAN",
   "rationale": "All validation scripts passed, artifacts correctly placed",
-  "toolIdsSelected": ["artifact-paths-lint", "sprint-validation", "sprint-data-validation"],
-  "toolIdsExecuted": ["artifact-paths-lint", "sprint-validation", "sprint-data-validation"],
+  "toolIdsSelected": [
+    "artifact-paths-lint",
+    "sprint-validation",
+    "sprint-data-validation"
+  ],
+  "toolIdsExecuted": [
+    "artifact-paths-lint",
+    "sprint-validation",
+    "sprint-data-validation"
+  ],
   "waiversProposed": [],
   "findings": [],
   "automationMetrics": {
@@ -128,14 +138,17 @@ for (const module of stoaModules) {
 ## When to Trigger
 
 ### By Task Prefix (Primary)
+
 - `AUTOMATION-*` tasks
 
 ### By Keywords (Supporting STOA)
+
 - `orchestrator`, `swarm`, `tracker`
 - `validation`, `artifact`, `audit`
 - `sprint`, `metrics`, `registry`
 
 ### By Path Impact
+
 - `tools/scripts/**`
 - `tools/lint/**`
 - `tools/audit/**`

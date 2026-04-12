@@ -3,9 +3,13 @@
 ## Test Categories
 
 ### 1. Unit Tests (Agent Logic)
+
 ### 2. Integration Tests (MCP Servers)
+
 ### 3. End-to-End Tests (Full Workflow)
+
 ### 4. Security Tests (Vulnerability Fixes)
+
 ### 5. Performance Tests (Batch Processing)
 
 ---
@@ -15,6 +19,7 @@
 ### Test Suite: Quality Agent
 
 #### Test: Extract Method Pattern
+
 ```typescript
 describe('Quality Agent - Extract Method', () => {
   it('should identify high cognitive complexity', () => {
@@ -40,12 +45,13 @@ describe('Quality Agent - Extract Method', () => {
 
     expect(result.mainFunction.complexity).toBeLessThan(5);
     expect(result.extractedMethods.length).toBeGreaterThan(0);
-    expect(result.extractedMethods.every(m => m.complexity < 15)).toBe(true);
+    expect(result.extractedMethods.every((m) => m.complexity < 15)).toBe(true);
   });
 });
 ```
 
 #### Test: Magic Number Extraction
+
 ```typescript
 describe('Quality Agent - Magic Numbers', () => {
   it('should detect magic numbers', () => {
@@ -67,6 +73,7 @@ describe('Quality Agent - Magic Numbers', () => {
 ### Test Suite: Security Agent
 
 #### Test: SQL Injection Detection
+
 ```typescript
 describe('Security Agent - SQL Injection', () => {
   it('should detect SQL injection vulnerability', () => {
@@ -94,6 +101,7 @@ describe('Security Agent - SQL Injection', () => {
 ```
 
 #### Test: XSS Detection
+
 ```typescript
 describe('Security Agent - XSS', () => {
   it('should detect XSS vulnerability', () => {
@@ -120,6 +128,7 @@ describe('Security Agent - XSS', () => {
 ### Test Suite: Automation Agent
 
 #### Test: Unused Variable Removal
+
 ```typescript
 describe('Automation Agent - Unused Variables', () => {
   it('should detect unused variables', () => {
@@ -138,12 +147,13 @@ describe('Automation Agent - Unused Variables', () => {
     const fix = automationAgent.fix(code, 'UNUSED_VARIABLE');
 
     expect(fix).not.toContain('const unused');
-    expect(fix).toContain('return \'bar\'');
+    expect(fix).toContain("return 'bar'");
   });
 });
 ```
 
 #### Test: Collapsible If
+
 ```typescript
 describe('Automation Agent - Collapsible If', () => {
   it('should detect collapsible if statements', () => {
@@ -175,6 +185,7 @@ describe('Automation Agent - Collapsible If', () => {
 ### Test Suite: SonarQube MCP Server
 
 #### Test: Fetch Issues
+
 ```typescript
 describe('SonarQube MCP Integration', () => {
   it('should fetch issues from SonarQube API', async () => {
@@ -184,7 +195,7 @@ describe('SonarQube MCP Integration', () => {
     });
 
     expect(issues).toBeInstanceOf(Array);
-    expect(issues.every(i => i.severity === 'CRITICAL')).toBe(true);
+    expect(issues.every((i) => i.severity === 'CRITICAL')).toBe(true);
   });
 
   it('should fallback to local reports if MCP unavailable', async () => {
@@ -201,6 +212,7 @@ describe('SonarQube MCP Integration', () => {
 ```
 
 #### Test: Get Rule Details
+
 ```typescript
 describe('SonarQube MCP - Rule Details', () => {
   it('should fetch rule documentation', async () => {
@@ -218,6 +230,7 @@ describe('SonarQube MCP - Rule Details', () => {
 ### Test Suite: Web Search MCP
 
 #### Test: Research Best Practices
+
 ```typescript
 describe('Web Search MCP Integration', () => {
   it('should search for solutions', async () => {
@@ -246,6 +259,7 @@ describe('Web Search MCP Integration', () => {
 ### Test Suite: Code Search MCP
 
 #### Test: Find Patterns
+
 ```typescript
 describe('Code Search MCP Integration', () => {
   it('should find similar patterns in codebase', async () => {
@@ -256,7 +270,7 @@ describe('Code Search MCP Integration', () => {
     });
 
     expect(results).toBeInstanceOf(Array);
-    expect(results.every(r => r.match)).toBe(true);
+    expect(results.every((r) => r.match)).toBe(true);
   });
 });
 ```
@@ -268,6 +282,7 @@ describe('Code Search MCP Integration', () => {
 ### Test Suite: Full Workflow
 
 #### Test: Critical Bug Fix (E2E)
+
 ```typescript
 describe('E2E - Critical Bug Fix', () => {
   it('should fix critical complexity issue end-to-end', async () => {
@@ -301,6 +316,7 @@ describe('E2E - Critical Bug Fix', () => {
 ```
 
 #### Test: Security Vulnerability Fix (E2E)
+
 ```typescript
 describe('E2E - Security Fix', () => {
   it('should fix SQL injection vulnerability', async () => {
@@ -327,6 +343,7 @@ describe('E2E - Security Fix', () => {
 ```
 
 #### Test: Batch Processing (E2E)
+
 ```typescript
 describe('E2E - Batch Processing', () => {
   it('should fix multiple issues in same file', async () => {
@@ -352,6 +369,7 @@ describe('E2E - Batch Processing', () => {
 ```
 
 #### Test: Rollback on Failure (E2E)
+
 ```typescript
 describe('E2E - Rollback', () => {
   it('should rollback if validation fails', async () => {
@@ -383,6 +401,7 @@ describe('E2E - Rollback', () => {
 ### Test Suite: OWASP Top 10 Coverage
 
 #### Test: A03 - Injection Prevention
+
 ```typescript
 describe('Security - Injection Prevention', () => {
   const injectionPayloads = [
@@ -390,10 +409,10 @@ describe('Security - Injection Prevention', () => {
     "1' OR '1'='1",
     "<script>alert('xss')</script>",
     "admin'--",
-    "1; DELETE FROM users",
+    '1; DELETE FROM users',
   ];
 
-  injectionPayloads.forEach(payload => {
+  injectionPayloads.forEach((payload) => {
     it(`should prevent injection: ${payload}`, async () => {
       const result = await testSecurityFix(SQL_INJECTION_CODE);
 
@@ -407,6 +426,7 @@ describe('Security - Injection Prevention', () => {
 ```
 
 #### Test: A02 - Cryptographic Failures
+
 ```typescript
 describe('Security - Cryptographic Failures', () => {
   it('should replace weak random with crypto.randomBytes', async () => {
@@ -430,6 +450,7 @@ describe('Security - Cryptographic Failures', () => {
 ```
 
 #### Test: A07 - Authentication Failures
+
 ```typescript
 describe('Security - Authentication', () => {
   it('should add JWT expiration', async () => {
@@ -459,6 +480,7 @@ describe('Security - Authentication', () => {
 ### Test Suite: Batch Processing Performance
 
 #### Test: Large File Handling
+
 ```typescript
 describe('Performance - Large Files', () => {
   it('should handle files with 100+ issues efficiently', async () => {
@@ -481,6 +503,7 @@ describe('Performance - Large Files', () => {
 ```
 
 #### Test: Parallel Agent Execution
+
 ```typescript
 describe('Performance - Parallel Agents', () => {
   it('should execute sub-agents in parallel', async () => {
@@ -502,6 +525,7 @@ describe('Performance - Parallel Agents', () => {
 ```
 
 #### Test: Research Caching
+
 ```typescript
 describe('Performance - Research Caching', () => {
   it('should cache web search results', async () => {
@@ -528,6 +552,7 @@ describe('Performance - Research Caching', () => {
 ### Test Suite: No Breaking Changes
 
 #### Test: Type Safety Maintained
+
 ```typescript
 describe('Regression - Type Safety', () => {
   it('should maintain strict TypeScript compilation', async () => {
@@ -542,6 +567,7 @@ describe('Regression - Type Safety', () => {
 ```
 
 #### Test: Test Coverage Maintained
+
 ```typescript
 describe('Regression - Test Coverage', () => {
   it('should not decrease test coverage', async () => {
@@ -551,7 +577,9 @@ describe('Regression - Test Coverage', () => {
 
     const coverageAfter = await getCoverage();
 
-    expect(coverageAfter.overall).toBeGreaterThanOrEqual(coverageBefore.overall);
+    expect(coverageAfter.overall).toBeGreaterThanOrEqual(
+      coverageBefore.overall
+    );
     expect(coverageAfter.domain).toBeGreaterThanOrEqual(0.95);
     expect(coverageAfter.application).toBeGreaterThanOrEqual(0.9);
   });
@@ -559,6 +587,7 @@ describe('Regression - Test Coverage', () => {
 ```
 
 #### Test: No Test Failures
+
 ```typescript
 describe('Regression - Tests', () => {
   it('should not break any existing tests', async () => {
@@ -702,19 +731,17 @@ function example() {
 
 All tests must pass before the agent can be considered production-ready:
 
-✅ Unit tests: 100% passing
-✅ Integration tests: 100% passing
-✅ E2E tests: 100% passing
-✅ Security tests: 100% passing
-✅ Performance tests: Meet benchmarks
-✅ Regression tests: Zero breaking changes
-✅ Coverage: >90% overall, >95% for agents
+✅ Unit tests: 100% passing ✅ Integration tests: 100% passing ✅ E2E tests:
+100% passing ✅ Security tests: 100% passing ✅ Performance tests: Meet
+benchmarks ✅ Regression tests: Zero breaking changes ✅ Coverage: >90%
+overall, >95% for agents
 
 ---
 
 ## Continuous Testing
 
 ### Pre-commit Hook
+
 ```bash
 #!/bin/bash
 # Run quick tests before commit
@@ -723,6 +750,7 @@ pnpm run typecheck
 ```
 
 ### Pre-push Hook
+
 ```bash
 #!/bin/bash
 # Run full test suite before push
@@ -731,6 +759,7 @@ pnpm test:coverage
 ```
 
 ### Nightly Tests
+
 ```bash
 # Run comprehensive tests including performance
 pnpm test:all
@@ -739,4 +768,5 @@ pnpm test:security
 pnpm test:integration
 ```
 
-This comprehensive test plan ensures the SonarQube Fix Agent is reliable, secure, and production-ready.
+This comprehensive test plan ensures the SonarQube Fix Agent is reliable,
+secure, and production-ready.

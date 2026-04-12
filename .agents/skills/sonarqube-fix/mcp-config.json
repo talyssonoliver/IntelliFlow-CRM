@@ -29,7 +29,12 @@
               "type": "array",
               "items": {
                 "type": "string",
-                "enum": ["BUG", "VULNERABILITY", "CODE_SMELL", "SECURITY_HOTSPOT"]
+                "enum": [
+                  "BUG",
+                  "VULNERABILITY",
+                  "CODE_SMELL",
+                  "SECURITY_HOTSPOT"
+                ]
               }
             },
             "resolved": {

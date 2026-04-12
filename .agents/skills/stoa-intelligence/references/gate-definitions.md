@@ -45,17 +45,20 @@ fi
 ## AI-Specific Validations
 
 ### Chain Correctness
+
 - Verify LangChain chains produce expected output format
 - Check embedding dimensions match vector store config
 - Validate scoring chains return values in expected range (0-100)
 
 ### Prompt Quality
+
 - All prompts have system message defined
 - No hardcoded PII in prompts
 - Temperature and max_tokens within bounds
 - Output format explicitly specified (JSON where applicable)
 
 ### Safety Guardrails
+
 - Rate limiting configured for AI endpoints
 - Token budgets enforced
 - Hallucination detection hooks present (when applicable)
@@ -63,15 +66,16 @@ fi
 
 ## Verdict Logic
 
-There is **NO WARN verdict**. All verdicts are binary: PASS, FAIL, or NEEDS_HUMAN.
+There is **NO WARN verdict**. All verdicts are binary: PASS, FAIL, or
+NEEDS_HUMAN.
 
-| Condition | Verdict |
-|---|---|
-| AI tests pass, prompts valid, models configured | PASS |
-| AI tests fail | FAIL |
-| Chain produces invalid output format | FAIL |
-| Safety guardrail missing for high-risk operation | FAIL |
-| Model not available (dev environment) | NEEDS_HUMAN |
+| Condition                                        | Verdict     |
+| ------------------------------------------------ | ----------- |
+| AI tests pass, prompts valid, models configured  | PASS        |
+| AI tests fail                                    | FAIL        |
+| Chain produces invalid output format             | FAIL        |
+| Safety guardrail missing for high-risk operation | FAIL        |
+| Model not available (dev environment)            | NEEDS_HUMAN |
 
 ## Verdict JSON Schema
 
@@ -98,16 +102,19 @@ There is **NO WARN verdict**. All verdicts are binary: PASS, FAIL, or NEEDS_HUMA
 ## When to Trigger
 
 ### By Task Prefix (Primary)
+
 - `AI-*` tasks
 - `AI-SETUP-*` tasks
 
 ### By Keywords (Supporting STOA)
+
 - `prompt`, `agent`, `chain`, `embedding`
 - `vector`, `scoring`, `llm`, `ollama`
 - `openai`, `langchain`, `crewai`
 - `model`, `eval`
 
 ### By Path Impact
+
 - `apps/ai-worker/**`
 - `**/prompts/**`
 - `**/chains/**`

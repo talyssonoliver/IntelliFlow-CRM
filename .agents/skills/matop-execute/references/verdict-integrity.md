@@ -27,6 +27,7 @@ REQUIRED: Record actual timestamps
 ## Rule 3: Evidence Must Be Verifiable
 
 For every gate result:
+
 - Command actually executed (timestamped)
 - Exit code from actual execution
 - Output captured for audit
@@ -48,4 +49,5 @@ IF any automated gate = FAIL:
 3. **Attestation rejected** — Compliance audit fails
 4. **Human review triggered** — Task flagged for manual inspection
 
-**The system is designed to catch invalid validations. Agents cannot bypass these checks.**
+**The system is designed to catch invalid validations. Agents cannot bypass
+these checks.**

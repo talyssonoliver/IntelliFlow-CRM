@@ -15,6 +15,7 @@ pnpm --filter @intelliflow/ai-worker test -- --coverage
 ```
 
 **Display:**
+
 ```
 [Coverage BEFORE] Package: apps/ai-worker (34 files)
 | Metric    | Covered | Total | %      | Target (80%) |
@@ -38,6 +39,7 @@ pnpm --filter @intelliflow/ai-worker test -- --coverage
 ```
 
 **Display:**
+
 ```
 [Coverage AFTER] Package: apps/ai-worker (35 files)
 | Metric    | Before  | After   | Delta   | Status |
@@ -53,18 +55,19 @@ Coverage Impact: IMPROVED (+0.74% average)
 
 ## Coverage Impact Rules
 
-| Delta | Status | Action |
-|---|---|---|
-| Positive | GOOD | Coverage improved, proceed |
-| Zero | OK | No regression, proceed |
-| Negative | WARN | Coverage decreased, document reason |
-| Large negative (>5%) | BLOCK | Significant regression, fix before completing |
+| Delta                | Status | Action                                        |
+| -------------------- | ------ | --------------------------------------------- |
+| Positive             | GOOD   | Coverage improved, proceed                    |
+| Zero                 | OK     | No regression, proceed                        |
+| Negative             | WARN   | Coverage decreased, document reason           |
+| Large negative (>5%) | BLOCK  | Significant regression, fix before completing |
 
 ---
 
 ## Parsing coverage-summary.json
 
-The file is at `artifacts/coverage/coverage-summary.json` and has this structure:
+The file is at `artifacts/coverage/coverage-summary.json` and has this
+structure:
 
 ```json
 {
@@ -102,13 +105,15 @@ pnpm --filter @intelliflow/ai-worker test -- --coverage
 
 ## API Support
 
-The validation summary API at `/api/tasks/validation-summary/[taskId]` returns package-specific coverage automatically:
+The validation summary API at `/api/tasks/validation-summary/[taskId]` returns
+package-specific coverage automatically:
 
 ```bash
 curl http://localhost:3002/api/tasks/validation-summary/<TASK_ID>
 ```
 
 The API:
+
 1. Maps the task ID to a package using `TASK_PACKAGE_MAP`
 2. Reads `artifacts/coverage/coverage-summary.json`
 3. Filters to files in that package
@@ -121,15 +126,20 @@ To update mappings, edit `TASK_PACKAGE_MAP` in:
 
 ## Important: Attestation Note
 
-`coverage_metrics` is NOT a valid field in `attestation.json` (additionalProperties: false in schema).
+`coverage_metrics` is NOT a valid field in `attestation.json`
+(additionalProperties: false in schema).
 
-Coverage data is loaded separately by the validation-summary API from `artifacts/coverage/coverage-summary.json`.
+Coverage data is loaded separately by the validation-summary API from
+`artifacts/coverage/coverage-summary.json`.
 
-**What to do instead**: Include coverage highlights in the attestation `notes` field:
+**What to do instead**: Include coverage highlights in the attestation `notes`
+field:
+
 ```json
 {
   "notes": "Login page implemented. Package coverage: lines 48.32% (+0.32% from baseline), functions 44.28%."
 }
 ```
 
-The actual percentage numbers for KPIs must come from Gate 7 (scoped coverage run), not from the package-wide before/after tracking.
+The actual percentage numbers for KPIs must come from Gate 7 (scoped coverage
+run), not from the package-wide before/after tracking.

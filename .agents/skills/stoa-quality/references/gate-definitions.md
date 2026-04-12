@@ -45,12 +45,12 @@ fi
 
 From `vitest.config.ts` (enforced):
 
-| Metric | Threshold | Action if Below |
-|---|---|---|
-| Statements | 90% | FAIL |
-| Branches | 90% | FAIL |
-| Functions | 90% | FAIL |
-| Lines | 90% | FAIL |
+| Metric     | Threshold | Action if Below |
+| ---------- | --------- | --------------- |
+| Statements | 90%       | FAIL            |
+| Branches   | 90%       | FAIL            |
+| Functions  | 90%       | FAIL            |
+| Lines      | 90%       | FAIL            |
 
 **Critical Configuration Check:**
 
@@ -71,14 +71,15 @@ If `thresholdAutoUpdate: true`, the gate is ineffective — report as NEEDS_HUMA
 
 ## Verdict Logic
 
-There is **NO WARN verdict**. All verdicts are binary: PASS, FAIL, or NEEDS_HUMAN.
+There is **NO WARN verdict**. All verdicts are binary: PASS, FAIL, or
+NEEDS_HUMAN.
 
-| Condition | Verdict |
-|---|---|
-| Coverage >= 90%, all tests pass, no lint errors | PASS |
-| Coverage below 90% | FAIL |
-| Tests fail | FAIL |
-| Coverage enforcement not configured | NEEDS_HUMAN |
+| Condition                                       | Verdict     |
+| ----------------------------------------------- | ----------- |
+| Coverage >= 90%, all tests pass, no lint errors | PASS        |
+| Coverage below 90%                              | FAIL        |
+| Tests fail                                      | FAIL        |
+| Coverage enforcement not configured             | NEEDS_HUMAN |
 
 ## Execution Code (TypeScript)
 

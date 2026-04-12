@@ -15,7 +15,10 @@ export function VideoBackground({
   opacity?: number;
 }) {
   return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+    <div
+      className="pointer-events-none absolute inset-0 overflow-hidden"
+      aria-hidden="true"
+    >
       <video
         autoPlay
         muted
@@ -37,7 +40,7 @@ export function VideoBackground({
 
 ```tsx
 // app/not-found.tsx
-import { VideoBackground } from "@/components/effects/VideoBackground";
+import { VideoBackground } from '@/components/effects/VideoBackground';
 
 export default function NotFound() {
   return (
@@ -63,22 +66,24 @@ For maximum browser compatibility, provide both WebM and MP4:
 </video>
 ```
 
-Browser picks the first supported format. WebM (VP9) is smaller, MP4 (H.264) is the fallback.
+Browser picks the first supported format. WebM (VP9) is smaller, MP4 (H.264) is
+the fallback.
 
 ## Reduced motion support
 
-Respect `prefers-reduced-motion` to pause video for users who prefer less motion:
+Respect `prefers-reduced-motion` to pause video for users who prefer less
+motion:
 
 ```tsx
-"use client";
+'use client';
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef } from 'react';
 
 export function VideoBackground({ src }: { src: string }) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
     if (mq.matches && videoRef.current) {
       videoRef.current.pause();
     }
@@ -86,12 +91,15 @@ export function VideoBackground({ src }: { src: string }) {
       if (e.matches) videoRef.current?.pause();
       else videoRef.current?.play();
     };
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
   }, []);
 
   return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+    <div
+      className="pointer-events-none absolute inset-0 overflow-hidden"
+      aria-hidden="true"
+    >
       <video
         ref={videoRef}
         autoPlay
@@ -111,16 +119,24 @@ export function VideoBackground({ src }: { src: string }) {
 
 ## Mobile bandwidth optimization
 
-Hide video on small screens to save bandwidth. Use a static gradient or image instead:
+Hide video on small screens to save bandwidth. Use a static gradient or image
+instead:
 
 ```tsx
-<div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+<div
+  className="pointer-events-none absolute inset-0 overflow-hidden"
+  aria-hidden="true"
+>
   {/* Static fallback for mobile */}
   <div className="absolute inset-0 bg-gradient-to-br from-dark via-darksurface to-dark md:hidden" />
 
   {/* Video only on tablet+ */}
   <video
-    autoPlay muted loop playsInline preload="auto"
+    autoPlay
+    muted
+    loop
+    playsInline
+    preload="auto"
     className="absolute left-1/2 top-1/2 hidden min-h-full min-w-full -translate-x-1/2 -translate-y-1/2 object-cover opacity-40 md:block"
   >
     <source src="/videos/bg.webm" type="video/webm" />

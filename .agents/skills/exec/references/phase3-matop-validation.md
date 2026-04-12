@@ -2,7 +2,8 @@
 
 ## Step 1: Run Mandatory Baseline
 
-These commands run ONCE before any STOA agent spawns. If any fails, MATOP = FAIL immediately.
+These commands run ONCE before any STOA agent spawns. If any fails, MATOP = FAIL
+immediately.
 
 ```bash
 pnpm run typecheck    # TypeScript compilation (all packages via turbo)
@@ -15,51 +16,58 @@ pnpm run format:check # Prettier formatting
 
 ## Step 2: STOA Selection
 
-Analyze task characteristics and assign STOAs. The canonical selection table lives in `matop-execute/references/stoa-selection.md`.
+Analyze task characteristics and assign STOAs. The canonical selection table
+lives in `matop-execute/references/stoa-selection.md`.
 
 ### Primary STOA (by task ID prefix)
 
-| Prefix | Primary STOA |
-|--------|--------------|
-| `ENV-*`, `EP-*` | Foundation |
-| `IFC-*` | Domain |
-| `PG-*` | Quality |
-| `EXC-SEC-*`, `SEC-*` | Security |
-| `AI-*`, `AI-SETUP-*` | Intelligence |
-| `AUTOMATION-*` | Automation |
-| (no match) | Domain (default) |
+| Prefix               | Primary STOA     |
+| -------------------- | ---------------- |
+| `ENV-*`, `EP-*`      | Foundation       |
+| `IFC-*`              | Domain           |
+| `PG-*`               | Quality          |
+| `EXC-SEC-*`, `SEC-*` | Security         |
+| `AI-*`, `AI-SETUP-*` | Intelligence     |
+| `AUTOMATION-*`       | Automation       |
+| (no match)           | Domain (default) |
 
-**Primary** = listed first in reports, runs first. All STOAs block equally — Primary has no extra authority.
+**Primary** = listed first in reports, runs first. All STOAs block equally —
+Primary has no extra authority.
 
 ### Supporting STOAs (by keywords in spec/plan)
 
-| Keywords | STOA |
-|----------|------|
-| auth, jwt, token, session, rbac, permissions, secret | Security |
-| coverage, e2e, test, vitest, playwright, mutation | Quality |
-| prompt, agent, chain, embedding, llm, langchain, crewai | Intelligence |
-| docker, ci, deployment, infra, observability | Foundation |
-| trpc, api, prisma, database, schema, entity, domain | Domain |
-| orchestrator, swarm, tracker, validation, sprint, metrics | Automation |
+| Keywords                                                  | STOA         |
+| --------------------------------------------------------- | ------------ |
+| auth, jwt, token, session, rbac, permissions, secret      | Security     |
+| coverage, e2e, test, vitest, playwright, mutation         | Quality      |
+| prompt, agent, chain, embedding, llm, langchain, crewai   | Intelligence |
+| docker, ci, deployment, infra, observability              | Foundation   |
+| trpc, api, prisma, database, schema, entity, domain       | Domain       |
+| orchestrator, swarm, tracker, validation, sprint, metrics | Automation   |
 
 **Foundation is always added** as supporting (for its unique gates).
 
 ## Step 3: Plan-Defined Regression Matrix (MANDATORY)
 
-Before spawning STOA agents, read the plan's `## Validation Matrix` section and execute every listed command.
+Before spawning STOA agents, read the plan's `## Validation Matrix` section and
+execute every listed command.
 
 Rules:
+
 - Every command in the matrix must be executed, logged, and must exit 0
 - The matrix must cover new tests and touched existing regression suites
-- Do not replace a failing broad run with a smaller passing subset; broaden or fix until the matrix is green
+- Do not replace a failing broad run with a smaller passing subset; broaden or
+  fix until the matrix is green
 
 Save logs alongside the other validation artifacts.
 
 ## Step 4: Spawn STOA Sub-Agents
 
-Each STOA runs ONLY its unique gates (baseline already handled typecheck/build/lint/format).
+Each STOA runs ONLY its unique gates (baseline already handled
+typecheck/build/lint/format).
 
-STOA agents defined in `.claude/agents/stoa-*.md`. Use Task tool with `subagent_type: "general-purpose"` **in parallel**:
+STOA agents defined in `.claude/agents/stoa-*.md`. Use Task tool with
+`subagent_type: "general-purpose"` **in parallel**:
 
 ```
 Task(
@@ -71,14 +79,14 @@ Task(
 
 ### What each STOA runs (unique gates only)
 
-| STOA | Unique Gates |
-|------|-------------|
-| Foundation | Artifact-path lint, Docker config, Dependency architecture |
-| Domain | Domain tests (>95%), Integration tests, Prisma schema, Migration status, Architecture boundaries |
-| Quality | Test coverage (90%), Integration tests, E2E, Mutation testing, SonarQube, Lighthouse |
-| Security | Gitleaks, pnpm audit, Snyk, Semgrep, Trivy |
-| Intelligence | AI worker tests, Chain evaluation, Prompt validation, Model availability |
-| Automation | Sprint validation, Sprint data, Artifact-path lint, Registry, CSV uniqueness, Metrics sync |
+| STOA         | Unique Gates                                                                                     |
+| ------------ | ------------------------------------------------------------------------------------------------ |
+| Foundation   | Artifact-path lint, Docker config, Dependency architecture                                       |
+| Domain       | Domain tests (>95%), Integration tests, Prisma schema, Migration status, Architecture boundaries |
+| Quality      | Test coverage (90%), Integration tests, E2E, Mutation testing, SonarQube, Lighthouse             |
+| Security     | Gitleaks, pnpm audit, Snyk, Semgrep, Trivy                                                       |
+| Intelligence | AI worker tests, Chain evaluation, Prompt validation, Model availability                         |
+| Automation   | Sprint validation, Sprint data, Artifact-path lint, Registry, CSV uniqueness, Metrics sync       |
 
 ## Step 5: Aggregate Verdicts
 

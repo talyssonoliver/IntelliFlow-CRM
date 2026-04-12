@@ -2,11 +2,14 @@
 
 ## CRITICAL: How to Spawn the Plan Reviewer
 
-The Plan-Reviewer agent is defined at `.claude/agents/plan-reviewer.md`. It MUST be spawned for ANY task — not just "complex" tasks. Previous plans (PG-032, PG-137) had 12+ gaps each that only surfaced during /exec.
+The Plan-Reviewer agent is defined at `.claude/agents/plan-reviewer.md`. It MUST
+be spawned for ANY task — not just "complex" tasks. Previous plans (PG-032,
+PG-137) had 12+ gaps each that only surfaced during /exec.
 
 ### When to Spawn (ALWAYS)
 
-After generating the draft plan and BEFORE writing the final version, spawn the reviewer:
+After generating the draft plan and BEFORE writing the final version, spawn the
+reviewer:
 
 ```
 Task(
@@ -40,6 +43,7 @@ Task(
 ### Handling REVISE Verdict
 
 If the reviewer returns REVISE:
+
 1. Apply ALL fixes from the reviewer's issue table
 2. Re-write the plan file
 3. Re-spawn the reviewer to verify fixes
@@ -48,6 +52,7 @@ If the reviewer returns REVISE:
 ### Handling APPROVE Verdict
 
 If the reviewer returns APPROVE:
+
 1. Write the final plan file
 2. Proceed with CSV status update and metrics recording
 
@@ -65,7 +70,7 @@ If the reviewer returns APPROVE:
 - **CSV artifact alignment** — plan files match CSV "Artifacts To Track"
 - **Effort estimate accuracy** — file counts match actual lists
 - **Design mockup verification** — UI tasks have design comparison step
-- **Non-functional requirements** — NF-* items in validation checklist
+- **Non-functional requirements** — NF-\* items in validation checklist
 - **Dependency chain update** — step to update chain docs
 - **Backend API prerequisites** — formalized dependency section
 - **Shared component references** — plan uses shared components from spec
@@ -74,14 +79,22 @@ If the reviewer returns APPROVE:
 - **Integration checkpoints** — validation after each phase
 - **Plan structure** — plural block format, standard checkboxes
 - **Coverage targets** — per-component targets from spec
-- **Duplicate detection across monorepo** — search for same-named files before creating new ones
-- **Cross-step import chain verification** — every created file has a planned consumer
-- **Wiring verification for runtime code** — server actions called, handlers mounted, services registered
-- **Direct consumer wiring** — new server routes/procedures/helpers are actually consumed by production code, not just created
-- **Legacy bypass removal** — the plan names and retires any older path that would otherwise keep handling the behavior
-- **Validation matrix completeness** — every step has exact commands, and final validation reruns touched existing suites
-- **No vague validation placeholders** — reject `pnpm run test`, `run build`, or "verify manually" without scope when a scoped command is possible
-- **Security failure-path coverage** — mismatch, denial, timeout, and fallback paths are represented when security logic changes
+- **Duplicate detection across monorepo** — search for same-named files before
+  creating new ones
+- **Cross-step import chain verification** — every created file has a planned
+  consumer
+- **Wiring verification for runtime code** — server actions called, handlers
+  mounted, services registered
+- **Direct consumer wiring** — new server routes/procedures/helpers are actually
+  consumed by production code, not just created
+- **Legacy bypass removal** — the plan names and retires any older path that
+  would otherwise keep handling the behavior
+- **Validation matrix completeness** — every step has exact commands, and final
+  validation reruns touched existing suites
+- **No vague validation placeholders** — reject `pnpm run test`, `run build`, or
+  "verify manually" without scope when a scoped command is possible
+- **Security failure-path coverage** — mismatch, denial, timeout, and fallback
+  paths are represented when security logic changes
 
 ### Optional Plan Review (Agent Team Mode only)
 
@@ -91,7 +104,8 @@ When agent teams are enabled AND the task meets the complexity threshold:
 2. Send the draft plan to the reviewer via direct message
 3. Reviewer critiques the plan against the specification:
    - **Completeness**: Are all spec acceptance criteria covered by TDD steps?
-   - **Layer order**: Does the plan follow hexagonal architecture (Domain → Validators → Application → ...)?
+   - **Layer order**: Does the plan follow hexagonal architecture (Domain →
+     Validators → Application → ...)?
    - **Coverage**: Are there test steps for every implementation step?
    - **Effort**: Are estimates realistic given task complexity?
    - **Integration checkpoints**: Are there enough verification gates?
@@ -99,4 +113,6 @@ When agent teams are enabled AND the task meets the complexity threshold:
 5. Lead incorporates feedback and writes the final plan
 6. Reviewer shuts down (30s timeout)
 
-If teams are disabled or the task is simple (≤3 TDD phases, ≤5 files, single package): this optional extra review path is skipped. The standard Plan-Reviewer pass above is still mandatory.
+If teams are disabled or the task is simple (≤3 TDD phases, ≤5 files, single
+package): this optional extra review path is skipped. The standard Plan-Reviewer
+pass above is still mandatory.

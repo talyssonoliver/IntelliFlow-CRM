@@ -12,11 +12,11 @@ After all sub-agents/teammates complete:
 
 ## Consensus Rules
 
-| Condition | Final Verdict |
-|---|---|
-| Any STOA returns FAIL | FAIL |
-| Any STOA returns NEEDS_HUMAN | NEEDS_HUMAN |
-| All STOAs return PASS | PASS |
+| Condition                    | Final Verdict |
+| ---------------------------- | ------------- |
+| Any STOA returns FAIL        | FAIL          |
+| Any STOA returns NEEDS_HUMAN | NEEDS_HUMAN   |
+| All STOAs return PASS        | PASS          |
 
 ```
 IF any STOA verdict == FAIL:
@@ -27,7 +27,8 @@ ELSE:
   consensus = PASS
 ```
 
-**Note**: There is NO WARN verdict. All STOA verdicts are binary (PASS/FAIL/NEEDS_HUMAN only).
+**Note**: There is NO WARN verdict. All STOA verdicts are binary
+(PASS/FAIL/NEEDS_HUMAN only).
 
 ## CSV Patch Proposal (PASS only)
 
@@ -37,7 +38,8 @@ When consensus = PASS, propose a status change in Sprint_plan.csv:
 [MATOP] CSV Patch: Proposed status change Planned → Completed (requires human approval)
 ```
 
-The patch is a PROPOSAL only. Human must approve before the CSV is actually updated.
+The patch is a PROPOSAL only. Human must approve before the CSV is actually
+updated.
 
 ## Subagent Mode Example
 
@@ -70,9 +72,9 @@ Claude Code (MATOP Lead):
 
 ## Coverage Delta Assessment
 
-| Delta | Verdict Impact |
-|---|---|
-| Positive (↑) | No impact on MATOP verdict |
-| Zero (→) | No impact on MATOP verdict |
-| Small negative (↓ <5%) | May contribute to FAIL |
-| Large negative (↓ ≥5%) | FAIL |
+| Delta                  | Verdict Impact             |
+| ---------------------- | -------------------------- |
+| Positive (↑)           | No impact on MATOP verdict |
+| Zero (→)               | No impact on MATOP verdict |
+| Small negative (↓ <5%) | May contribute to FAIL     |
+| Large negative (↓ ≥5%) | FAIL                       |

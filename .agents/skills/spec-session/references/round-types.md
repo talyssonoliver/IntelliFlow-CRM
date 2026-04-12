@@ -2,7 +2,8 @@
 
 ## CRITICAL: All Rounds Require File Citations
 
-All rounds MUST include file citations. Analysis without file references is INVALID.
+All rounds MUST include file citations. Analysis without file references is
+INVALID.
 
 ## Round 1: ANALYSIS
 
@@ -22,7 +23,8 @@ Technical approach (referencing actual code patterns):
 - **Files**: Files to create/modify (with rationale)
 - **Interfaces**: Contracts or APIs (citing similar interfaces)
 - **Integration**: How work connects to others
-- **Runtime Consumer**: Which existing production path will call the new code, and which legacy path (if any) must be replaced or retired
+- **Runtime Consumer**: Which existing production path will call the new code,
+  and which legacy path (if any) must be replaced or retired
 
 ## Round 3: CHALLENGE
 
@@ -31,8 +33,13 @@ Risks and edge cases (from code review evidence):
 - **Challenges**: What could go wrong (with code evidence)
 - **Edge Cases**: Unhandled scenarios (from code review)
 - **Integration Issues**: Potential conflicts (citing both files)
-- **Dead-On-Arrival Risk**: Could any proposed file, endpoint, or procedure exist on disk but remain unused in the real runtime path?
-- **UI Reachability** (UI tasks only): Is the page/route discoverable from the app shell? Check sidebar configs at `apps/web/src/components/sidebar/configs/`, parent page links, and layout breadcrumbs. A page reachable only by direct URL is an integration issue that MUST be resolved before consensus.
+- **Dead-On-Arrival Risk**: Could any proposed file, endpoint, or procedure
+  exist on disk but remain unused in the real runtime path?
+- **UI Reachability** (UI tasks only): Is the page/route discoverable from the
+  app shell? Check sidebar configs at
+  `apps/web/src/components/sidebar/configs/`, parent page links, and layout
+  breadcrumbs. A page reachable only by direct URL is an integration issue that
+  MUST be resolved before consensus.
 - **Suggestions**: Fixes for identified issues
 
 ## Round 4: CONSENSUS
@@ -45,8 +52,9 @@ Unified agreement (invoke `/spec-consensus <TASK_ID>` for consensus detection):
 - **Final Notes**: Remaining concerns
 - **Files Verified**: Confirmation of files read during session
 
-> For consensus detection and team debate mechanics, invoke `/spec-consensus <TASK_ID>`.
-> See `/spec-consensus` for approval thresholds, team mode debate, and recovery.
+> For consensus detection and team debate mechanics, invoke
+> `/spec-consensus <TASK_ID>`. See `/spec-consensus` for approval thresholds,
+> team mode debate, and recovery.
 
 ## Example Session
 
@@ -67,6 +75,8 @@ User: /spec-session IFC-101
 
 ## Validation Indicators
 
-**Valid indicators**: Exploration agents used tools, each read 2+ files, all analysis has file:line citations.
+**Valid indicators**: Exploration agents used tools, each read 2+ files, all
+analysis has file:line citations.
 
-**INVALID (reject)**: No tool calls, analysis without citations, "Based on context provided..." without verification.
+**INVALID (reject)**: No tool calls, analysis without citations, "Based on
+context provided..." without verification.

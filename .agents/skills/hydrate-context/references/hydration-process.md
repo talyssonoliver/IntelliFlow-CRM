@@ -3,6 +3,7 @@
 ## §1 Extract Task Metadata
 
 Read from `Sprint_plan.csv` (use split files A-E based on task range):
+
 - Task ID, section, description
 - Status, target sprint
 - Dependencies, definition of done
@@ -11,14 +12,17 @@ Read from `Sprint_plan.csv` (use split files A-E based on task range):
 ## §2 Resolve Dependency Artifacts
 
 For each task listed in the Dependencies column:
-- Find specifications: `.specify/sprints/sprint-{N}/specifications/{DEP_ID}-spec.md`
+
+- Find specifications:
+  `.specify/sprints/sprint-{N}/specifications/{DEP_ID}-spec.md`
 - Find execution plans: `.specify/sprints/sprint-{N}/planning/{DEP_ID}-plan.md`
 - Find attestation records: `.specify/sprints/sprint-{N}/attestations/{DEP_ID}/`
 - Identify code files and interfaces created by that task
 
 ## §3 Scan Codebase Patterns
 
-- Search for relevant code by task keywords (task title words, section name, entity names)
+- Search for relevant code by task keywords (task title words, section name,
+  entity names)
 - Extract code snippets with surrounding context (5–10 lines)
 - Score patterns by relevance to the task
 - Limit to most relevant patterns (max 20)
@@ -35,13 +39,14 @@ For each task listed in the Dependencies column:
 
 For the task being hydrated, identify the **most relevant** PRD and ADR:
 
-1. **PRD resolution**: Search `docs/planning/prd-*.md` for PRDs whose `Related Tasks`
-   field or feature area matches the task's section/description. Store the path in
-   `relatedPrd` (or `null` if no match).
+1. **PRD resolution**: Search `docs/planning/prd-*.md` for PRDs whose
+   `Related Tasks` field or feature area matches the task's section/description.
+   Store the path in `relatedPrd` (or `null` if no match).
 2. **ADR resolution**: Search `docs/planning/adr/ADR-*.md` for ADRs whose
    `Technical Story` field references the task ID or related task IDs. Store in
    `relatedAdrs[]`.
-3. Include both in the hydrated context output so downstream skills can reference them.
+3. Include both in the hydrated context output so downstream skills can
+   reference them.
 
 ## §5 Generate Context Hash
 
@@ -60,9 +65,10 @@ spec/ADR can reference them:
 - **Leis** — legal constraints
 
 **Flag gaps**:
+
 - If no ADR exists for the decision area, note `"adr_required": true` so
   spec-session can open an ADR stub.
-- If the task is user-facing (PG-*, or IFC-* with UI components) and no PRD
+- If the task is user-facing (PG-_, or IFC-_ with UI components) and no PRD
   covers the feature area, note `"prd_required": true` so spec-session can
   create one.
 

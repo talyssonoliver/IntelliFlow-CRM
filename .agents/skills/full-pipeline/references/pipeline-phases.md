@@ -2,7 +2,8 @@
 
 ## Pipeline Flow (Full)
 
-**CRITICAL**: Each invocation runs the FULL pipeline — all remaining phases in sequence. Do NOT stop after one phase. Only stop if a phase FAILS.
+**CRITICAL**: Each invocation runs the FULL pipeline — all remaining phases in
+sequence. Do NOT stop after one phase. Only stop if a phase FAILS.
 
 ```
 TASK_ID = $ARGUMENTS (first word only)
@@ -61,14 +62,17 @@ npx tsx tools/scripts/detect-phantom-completions.ts
 ```
 
 Then check the output for the current TASK_ID:
-- If the task appears in `phantom_completions` → **FAIL** (fix missing artifacts before continuing)
+
+- If the task appears in `phantom_completions` → **FAIL** (fix missing artifacts
+  before continuing)
 - If the task appears in `verified_tasks` → proceed to manual checks below
 - If the script errors → fix the error, do not skip this step
 
-**Why this exists**: LLM agents skip manual file-existence checks under context pressure.
-This script is deterministic — it cannot be skipped, summarized, or reasoned away.
-IFC-220 was declared PIPELINE COMPLETE with missing context_ack.json because the agent
-skipped manual verification steps. This script would have caught it.
+**Why this exists**: LLM agents skip manual file-existence checks under context
+pressure. This script is deterministic — it cannot be skipped, summarized, or
+reasoned away. IFC-220 was declared PIPELINE COMPLETE with missing
+context_ack.json because the agent skipped manual verification steps. This
+script would have caught it.
 
 ### Steps 1-8: Manual Verification (after script passes)
 
@@ -102,42 +106,54 @@ IF blocking follow-up is open → FAIL
 **Why this exists**: A previous exec session may have created all components but
 missed a deliverable (e.g., file at wrong path, evidence file not created,
 attestation hash omissions). Static checks (typecheck, tests) pass but the
-deliverable tracker shows incomplete. Without this verification, the loop
-exits prematurely with a false completion promise.
+deliverable tracker shows incomplete. Without this verification, the loop exits
+prematurely with a false completion promise.
 
 ---
 
 ## Phase 1: Specification
 
-1. Invoke the `/spec-session` skill with TASK_ID: use the Skill tool with `skill: "spec-session", args: "{TASK_ID}"`
-2. Follow ALL spec-session instructions (context hydration, agent selection, STOA consensus)
+1. Invoke the `/spec-session` skill with TASK_ID: use the Skill tool with
+   `skill: "spec-session", args: "{TASK_ID}"`
+2. Follow ALL spec-session instructions (context hydration, agent selection,
+   STOA consensus)
 3. On SUCCESS: **continue immediately to Phase 2** — do NOT stop
-4. On FAILURE (STOA rejection, missing deps): fix the issue and STOP — Ralph will retry the full pipeline
+4. On FAILURE (STOA rejection, missing deps): fix the issue and STOP — Ralph
+   will retry the full pipeline
 
-**Success indicator**: `{TASK_ID}-spec.md` exists and CSV status is "Spec Complete"
+**Success indicator**: `{TASK_ID}-spec.md` exists and CSV status is "Spec
+Complete"
 
 ---
 
 ## Phase 2: Planning
 
-1. Invoke the `/plan-session` skill with TASK_ID: use the Skill tool with `skill: "plan-session", args: "{TASK_ID}"`
-2. Follow ALL plan-session instructions (TDD decomposition, plan review, hexagonal layer order)
+1. Invoke the `/plan-session` skill with TASK_ID: use the Skill tool with
+   `skill: "plan-session", args: "{TASK_ID}"`
+2. Follow ALL plan-session instructions (TDD decomposition, plan review,
+   hexagonal layer order)
 3. On SUCCESS: **continue immediately to Phase 3** — do NOT stop
-4. On FAILURE (plan reviewer rejects): revise the plan and STOP — Ralph will retry the full pipeline
+4. On FAILURE (plan reviewer rejects): revise the plan and STOP — Ralph will
+   retry the full pipeline
 
-**Success indicator**: `{TASK_ID}-plan.md` exists and CSV status is "Plan Complete"
+**Success indicator**: `{TASK_ID}-plan.md` exists and CSV status is "Plan
+Complete"
 
 ---
 
 ## Phase 3: Execution
 
-1. Invoke the `/exec` skill with TASK_ID: use the Skill tool with `skill: "exec", args: "{TASK_ID}"`
-2. Follow ALL exec instructions (TDD implementation, MATOP validation, compliance check)
-3. On SUCCESS (PASS verdict): **continue immediately to Deliverable Verification** — do NOT stop
+1. Invoke the `/exec` skill with TASK_ID: use the Skill tool with
+   `skill: "exec", args: "{TASK_ID}"`
+2. Follow ALL exec instructions (TDD implementation, MATOP validation,
+   compliance check)
+3. On SUCCESS (PASS verdict): **continue immediately to Deliverable
+   Verification** — do NOT stop
 4. On FAILURE (MATOP fails or compliance check fails):
    - Read failure details from STOA verdicts
    - Fix the issues identified
-   - STOP — Ralph will retry the full pipeline (re-runs /exec which re-validates)
+   - STOP — Ralph will retry the full pipeline (re-runs /exec which
+     re-validates)
 
 **Success indicator**: CSV status is "Completed" and delivery report exists
 
@@ -146,34 +162,42 @@ exits prematurely with a false completion promise.
 ## Phase 4: Completion
 
 When all three phases are complete:
-1. Verify final state: spec exists, plan exists, delivery exists, CSV status is "Completed"
-2. Run **Deliverable Verification** (see above) — check ALL plan files exist at exact paths
-3. Verify ALL CSV `Artifacts To Track` entries exist on disk (both ARTIFACT: and EVIDENCE: prefixed)
-4. ONLY if ALL checks pass → Output exactly: `<promise>PIPELINE COMPLETE</promise>`
-5. If ANY check fails → Do NOT output promise. Set status to "In Progress" and re-run /exec
+
+1. Verify final state: spec exists, plan exists, delivery exists, CSV status is
+   "Completed"
+2. Run **Deliverable Verification** (see above) — check ALL plan files exist at
+   exact paths
+3. Verify ALL CSV `Artifacts To Track` entries exist on disk (both ARTIFACT: and
+   EVIDENCE: prefixed)
+4. ONLY if ALL checks pass → Output exactly:
+   `<promise>PIPELINE COMPLETE</promise>`
+5. If ANY check fails → Do NOT output promise. Set status to "In Progress" and
+   re-run /exec
 
 ---
 
 ## Error Recovery Table
 
-Each invocation runs the full pipeline. Ralph retries the entire pipeline on failure:
+Each invocation runs the full pipeline. Ralph retries the entire pipeline on
+failure:
 
-| Failure | What Happens | Recovery |
-|---------|--------------|----------|
-| Spec STOA rejection | Spec file not created or marked invalid | Pipeline stops. Next Ralph iteration retries from spec |
-| Plan review rejection | Plan file not created | Pipeline stops. Next iteration resumes from plan (spec already exists) |
-| Exec test failures | Status stays "In Progress" | Pipeline stops. Next iteration resumes from exec (spec+plan exist) |
-| Exec MATOP FAIL | Status set to "Failed" | Pipeline stops. Next iteration resumes from exec |
-| Compliance check FAIL | Status stays "In Progress" | Pipeline stops. Next iteration resumes from exec |
-| Blocking follow-up open | Cannot complete | Fix blocking task first, then re-run pipeline |
-| Out-of-scope bug found | Follow-up created | Non-blocking: pipeline continues. Blocking: pipeline pauses |
-| Max iterations hit | Ralph stops | Human reviews partial progress, runs manually |
+| Failure                 | What Happens                            | Recovery                                                               |
+| ----------------------- | --------------------------------------- | ---------------------------------------------------------------------- |
+| Spec STOA rejection     | Spec file not created or marked invalid | Pipeline stops. Next Ralph iteration retries from spec                 |
+| Plan review rejection   | Plan file not created                   | Pipeline stops. Next iteration resumes from plan (spec already exists) |
+| Exec test failures      | Status stays "In Progress"              | Pipeline stops. Next iteration resumes from exec (spec+plan exist)     |
+| Exec MATOP FAIL         | Status set to "Failed"                  | Pipeline stops. Next iteration resumes from exec                       |
+| Compliance check FAIL   | Status stays "In Progress"              | Pipeline stops. Next iteration resumes from exec                       |
+| Blocking follow-up open | Cannot complete                         | Fix blocking task first, then re-run pipeline                          |
+| Out-of-scope bug found  | Follow-up created                       | Non-blocking: pipeline continues. Blocking: pipeline pauses            |
+| Max iterations hit      | Ralph stops                             | Human reviews partial progress, runs manually                          |
 
 ---
 
 ## Resumability
 
 If Ralph is cancelled mid-pipeline or hits max-iterations:
+
 - All completed phases are preserved (spec, plan, partial implementation)
 - Re-running `/full-pipeline TASK_ID` resumes from where it left off
 - No work is lost — artifacts on disk determine the phase
@@ -182,25 +206,42 @@ If Ralph is cancelled mid-pipeline or hits max-iterations:
 
 ## Iteration Budget Details
 
-Since each iteration now runs the full pipeline (not just one phase), fewer iterations are needed. Each Ralph iteration = one full spec→plan→exec attempt:
+Since each iteration now runs the full pipeline (not just one phase), fewer
+iterations are needed. Each Ralph iteration = one full spec→plan→exec attempt:
 
-| Task Type | Expected full-pipeline runs | Recommended --max-iterations |
-|-----------|----------------------------|------------------------------|
-| Simple page (404, legal) | 1-2 | 3 |
-| Settings page (CRUD form) | 1-3 | 5 |
-| CRM page (list+detail) | 2-5 | 7 |
-| Complex feature (AI, workflow) | 3-7 | 10 |
+| Task Type                      | Expected full-pipeline runs | Recommended --max-iterations |
+| ------------------------------ | --------------------------- | ---------------------------- |
+| Simple page (404, legal)       | 1-2                         | 3                            |
+| Settings page (CRUD form)      | 1-3                         | 5                            |
+| CRM page (list+detail)         | 2-5                         | 7                            |
+| Complex feature (AI, workflow) | 3-7                         | 10                           |
 
 ---
 
 ## Important Notes
 
-1. **Full pipeline per invocation** — Run ALL remaining phases (spec → plan → exec) in one invocation. Only stop on phase failure.
-2. **Trust the state machine** — Always detect phase from artifacts, never assume. Resume from the first missing artifact.
-3. **Stop on failure only** — If a phase fails, STOP the pipeline. Ralph will retry from the failed phase (earlier phases' artifacts are preserved).
-4. **Skill invocation** — Use the Skill tool to invoke /spec-session, /plan-session, /exec
-5. **No shortcuts** — Each phase must fully complete before advancing to the next
+1. **Full pipeline per invocation** — Run ALL remaining phases (spec → plan →
+   exec) in one invocation. Only stop on phase failure.
+2. **Trust the state machine** — Always detect phase from artifacts, never
+   assume. Resume from the first missing artifact.
+3. **Stop on failure only** — If a phase fails, STOP the pipeline. Ralph will
+   retry from the failed phase (earlier phases' artifacts are preserved).
+4. **Skill invocation** — Use the Skill tool to invoke /spec-session,
+   /plan-session, /exec
+5. **No shortcuts** — Each phase must fully complete before advancing to the
+   next
 6. **Failed status** — If CSV shows "Failed", exec will attempt remediation
-7. **NEVER output promise without verification** — Even if CSV says "Completed" and delivery exists, ALWAYS run Deliverable Verification first. A previous session may have left incomplete artifacts (missing evidence files, files at wrong paths, attestation hash omissions). False promises break the loop prematurely.
-8. **Do NOT manually set CSV to "Completed"** — Only /exec Phase 5 should set this status after all gates pass. If you find a "Backlog" task with existing delivery artifacts, re-run /exec to properly validate.
-9. **NEVER check Ralph loop status** — Do NOT read `.claude/ralph-loops/` state files or check if the Ralph loop is active/deactivated/cancelled. Ralph is ONLY for retries on failure — the pipeline runs ALL phases regardless of Ralph status. Even if Ralph was cancelled, you MUST continue to the next phase after each success. The phrase "the Ralph loop was deactivated" is NEVER a valid reason to stop.
+7. **NEVER output promise without verification** — Even if CSV says "Completed"
+   and delivery exists, ALWAYS run Deliverable Verification first. A previous
+   session may have left incomplete artifacts (missing evidence files, files at
+   wrong paths, attestation hash omissions). False promises break the loop
+   prematurely.
+8. **Do NOT manually set CSV to "Completed"** — Only /exec Phase 5 should set
+   this status after all gates pass. If you find a "Backlog" task with existing
+   delivery artifacts, re-run /exec to properly validate.
+9. **NEVER check Ralph loop status** — Do NOT read `.claude/ralph-loops/` state
+   files or check if the Ralph loop is active/deactivated/cancelled. Ralph is
+   ONLY for retries on failure — the pipeline runs ALL phases regardless of
+   Ralph status. Even if Ralph was cancelled, you MUST continue to the next
+   phase after each success. The phrase "the Ralph loop was deactivated" is
+   NEVER a valid reason to stop.

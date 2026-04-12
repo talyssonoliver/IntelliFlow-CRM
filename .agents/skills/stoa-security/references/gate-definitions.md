@@ -40,29 +40,32 @@ fi
 
 ## Verdict Logic
 
-| Condition | Verdict |
-|---|---|
-| All gates exit 0, no findings at any severity | PASS |
-| Any gate exits non-zero | FAIL |
-| HIGH/CRITICAL findings detected | FAIL |
-| MEDIUM findings detected | FAIL |
-| Secret leak detected | FAIL (immediate) |
-| Tool misconfiguration or ambiguous results | NEEDS_HUMAN |
+| Condition                                     | Verdict          |
+| --------------------------------------------- | ---------------- |
+| All gates exit 0, no findings at any severity | PASS             |
+| Any gate exits non-zero                       | FAIL             |
+| HIGH/CRITICAL findings detected               | FAIL             |
+| MEDIUM findings detected                      | FAIL             |
+| Secret leak detected                          | FAIL (immediate) |
+| Tool misconfiguration or ambiguous results    | NEEDS_HUMAN      |
 
-**Note**: There is NO WARN verdict. All findings at any severity result in FAIL. This aligns with the binary gate policy (PASS/FAIL/NEEDS_HUMAN only).
+**Note**: There is NO WARN verdict. All findings at any severity result in FAIL.
+This aligns with the binary gate policy (PASS/FAIL/NEEDS_HUMAN only).
 
 ## Security Finding Severity
 
-| Severity | Action |
-|---|---|
-| CRITICAL | Immediate FAIL, block merge |
-| HIGH | FAIL, requires fix before completion |
-| MEDIUM | FAIL, requires fix before completion |
-| LOW | FAIL, log finding and require fix |
+| Severity | Action                               |
+| -------- | ------------------------------------ |
+| CRITICAL | Immediate FAIL, block merge          |
+| HIGH     | FAIL, requires fix before completion |
+| MEDIUM   | FAIL, requires fix before completion |
+| LOW      | FAIL, log finding and require fix    |
 
 ## Unavailable Tools
 
-Many security tools require external setup. When required but unavailable, document the gap — no waiver system. The tool absence is noted in findings but does not contribute to a PASS.
+Many security tools require external setup. When required but unavailable,
+document the gap — no waiver system. The tool absence is noted in findings but
+does not contribute to a PASS.
 
 ## Execution Code (TypeScript)
 
@@ -112,7 +115,12 @@ writeStoaVerdict(evidenceDir, verdict);
   "taskId": "<TASK_ID>",
   "verdict": "PASS|FAIL|NEEDS_HUMAN",
   "rationale": "All security gates passed with no findings",
-  "toolIdsSelected": ["gitleaks", "pnpm-audit-high", "snyk", "semgrep-security-audit"],
+  "toolIdsSelected": [
+    "gitleaks",
+    "pnpm-audit-high",
+    "snyk",
+    "semgrep-security-audit"
+  ],
   "toolIdsExecuted": ["gitleaks", "pnpm-audit-high"],
   "findings": [],
   "timestamp": "2025-12-20T14:30:00.000Z"

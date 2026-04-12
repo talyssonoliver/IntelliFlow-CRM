@@ -1,4 +1,4 @@
 interface:
-  display_name: "Task Code Audit"
-  short_description: "Audit task code against spec and plan"
-  default_prompt: "Use $task-code-audit to review a TASK-ID implementation for logic, safety, architecture, and performance issues."
+  display_name: 'Task Code Audit'
+  short_description: 'Audit task code against spec and plan'
+  default_prompt: 'Use $task-code-audit to review a TASK-ID implementation for logic, safety, architecture, and performance issues.'

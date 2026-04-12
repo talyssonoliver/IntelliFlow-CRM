@@ -35,20 +35,20 @@
 
 ## Sub-Agents
 
-| Agent | Focus | Rules | Use Case |
-|-------|-------|-------|----------|
-| **Quality** | Code smells, complexity | S1541, S3358, S109 | Refactoring, maintainability |
-| **Security** | Vulnerabilities, OWASP | S2077, S5131, S5247 | Security fixes, hardening |
-| **Automation** | Pattern fixes, batch | S1481, S1066, S103 | Automated cleanup |
+| Agent          | Focus                   | Rules               | Use Case                     |
+| -------------- | ----------------------- | ------------------- | ---------------------------- |
+| **Quality**    | Code smells, complexity | S1541, S3358, S109  | Refactoring, maintainability |
+| **Security**   | Vulnerabilities, OWASP  | S2077, S5131, S5247 | Security fixes, hardening    |
+| **Automation** | Pattern fixes, batch    | S1481, S1066, S103  | Automated cleanup            |
 
 ## MCP Servers
 
-| Server | Purpose | Fallback |
-|--------|---------|----------|
-| **sonarqube** | Fetch issues from SonarQube API | Parse local reports |
-| **web-search** | Research best practices | Built-in WebSearch |
-| **code-search** | Find patterns in codebase | Built-in Grep |
-| **docs-fetch** | Get external documentation | Built-in WebFetch |
+| Server          | Purpose                         | Fallback            |
+| --------------- | ------------------------------- | ------------------- |
+| **sonarqube**   | Fetch issues from SonarQube API | Parse local reports |
+| **web-search**  | Research best practices         | Built-in WebSearch  |
+| **code-search** | Find patterns in codebase       | Built-in Grep       |
+| **docs-fetch**  | Get external documentation      | Built-in WebFetch   |
 
 ## Workflow Phases
 
@@ -83,28 +83,29 @@ Success → Commit | Failure → Rollback
 
 ### Quality (Code Smells)
 
-| Rule | Issue | Auto-Fix |
-|------|-------|----------|
+| Rule  | Issue                         | Auto-Fix  |
+| ----- | ----------------------------- | --------- |
 | S1541 | Cognitive complexity too high | ⚠️ Manual |
-| S3358 | Nested ternary operators | ✅ Yes |
-| S109 | Magic numbers | ✅ Yes |
-| S1481 | Unused variables | ✅ Yes |
-| S1066 | Collapsible if statements | ✅ Yes |
-| S4143 | Duplicate conditions | ✅ Yes |
+| S3358 | Nested ternary operators      | ✅ Yes    |
+| S109  | Magic numbers                 | ✅ Yes    |
+| S1481 | Unused variables              | ✅ Yes    |
+| S1066 | Collapsible if statements     | ✅ Yes    |
+| S4143 | Duplicate conditions          | ✅ Yes    |
 
 ### Security (Vulnerabilities)
 
-| Rule | Issue | Auto-Fix |
-|------|-------|----------|
-| S2077 | SQL injection | ⚠️ Verify |
-| S5131 | XSS vulnerability | ⚠️ Verify |
-| S2245 | Weak random | ✅ Yes |
-| S5247 | Weak cryptography | ⚠️ Verify |
+| Rule  | Issue               | Auto-Fix  |
+| ----- | ------------------- | --------- |
+| S2077 | SQL injection       | ⚠️ Verify |
+| S5131 | XSS vulnerability   | ⚠️ Verify |
+| S2245 | Weak random         | ✅ Yes    |
+| S5247 | Weak cryptography   | ⚠️ Verify |
 | S2631 | ReDoS vulnerability | ⚠️ Manual |
 
 ## Architecture Constraints
 
 ✅ **Maintain**:
+
 - Hexagonal architecture boundaries
 - DDD principles (rich domain models)
 - Type safety (strict TypeScript)
@@ -112,6 +113,7 @@ Success → Commit | Failure → Rollback
 - No breaking changes
 
 ❌ **Avoid**:
+
 - Domain depending on infrastructure
 - `any` types
 - Suppressing warnings without justification
@@ -147,16 +149,17 @@ artifacts/
 
 ## OWASP Top 10 Coverage
 
-| Risk | Rules | Fix Pattern |
-|------|-------|-------------|
-| A03: Injection | S2077, S5131, S5146 | Parameterized queries, sanitization |
-| A02: Crypto Failures | S5247, S4790 | bcrypt, crypto.randomBytes |
-| A07: Auth Failures | S2245 | Strong passwords, JWT, MFA |
-| A01: Access Control | S5122 | RLS, RBAC, tenant isolation |
+| Risk                 | Rules               | Fix Pattern                         |
+| -------------------- | ------------------- | ----------------------------------- |
+| A03: Injection       | S2077, S5131, S5146 | Parameterized queries, sanitization |
+| A02: Crypto Failures | S5247, S4790        | bcrypt, crypto.randomBytes          |
+| A07: Auth Failures   | S2245               | Strong passwords, JWT, MFA          |
+| A01: Access Control  | S5122               | RLS, RBAC, tenant isolation         |
 
 ## When to Use
 
 ### Auto-Fix (✅)
+
 - Unused variables/imports
 - Formatting issues
 - Simple refactors
@@ -164,6 +167,7 @@ artifacts/
 - Duplicate code removal
 
 ### Manual Review (⚠️)
+
 - Complex business logic
 - Security vulnerabilities (verify fix)
 - Cross-layer changes
@@ -171,6 +175,7 @@ artifacts/
 - Performance optimizations
 
 ### Deep Think (🧠)
+
 - Complex/novel issues
 - Multiple solution approaches
 - Architecture implications
@@ -179,12 +184,12 @@ artifacts/
 
 ## Quick Troubleshooting
 
-| Issue | Solution |
-|-------|----------|
-| MCP unavailable | Auto-fallback to built-in tools |
+| Issue            | Solution                         |
+| ---------------- | -------------------------------- |
+| MCP unavailable  | Auto-fallback to built-in tools  |
 | Validation fails | Auto-rollback, logged for review |
-| Coverage drops | Fix rejected, tests requested |
-| Complex issue | Escalated to human review |
+| Coverage drops   | Fix rejected, tests requested    |
+| Complex issue    | Escalated to human review        |
 
 ## Example Commands by Scenario
 
@@ -217,14 +222,10 @@ artifacts/
 
 ## Success Criteria
 
-✅ Issues analyzed
-✅ Fixes applied (if auto-fix)
-✅ All tests passing
-✅ TypeScript compilation successful
-✅ Coverage maintained (>90%)
-✅ No architecture violations
-✅ SonarQube quality gate passes
-✅ Report generated (if requested)
+✅ Issues analyzed ✅ Fixes applied (if auto-fix) ✅ All tests passing ✅
+TypeScript compilation successful ✅ Coverage maintained (>90%) ✅ No
+architecture violations ✅ SonarQube quality gate passes ✅ Report generated (if
+requested)
 
 ## Environment Variables
 

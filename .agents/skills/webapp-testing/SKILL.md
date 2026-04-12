@@ -1,12 +1,17 @@
 ---
 name: webapp-testing
-description: Toolkit for testing IntelliFlow CRM web applications using Playwright. Supports verifying frontend functionality, debugging UI behavior, capturing browser screenshots, running E2E tests, and viewing browser logs. Configured for the IntelliFlow monorepo structure.
+description:
+  Toolkit for testing IntelliFlow CRM web applications using Playwright.
+  Supports verifying frontend functionality, debugging UI behavior, capturing
+  browser screenshots, running E2E tests, and viewing browser logs. Configured
+  for the IntelliFlow monorepo structure.
 license: Complete terms in LICENSE.txt
 ---
 
 # IntelliFlow CRM Web Application Testing
 
-To test IntelliFlow CRM web applications, use Playwright with the project's existing test infrastructure.
+To test IntelliFlow CRM web applications, use Playwright with the project's
+existing test infrastructure.
 
 ## IntelliFlow Test Infrastructure
 
@@ -28,21 +33,25 @@ intelliFlow-CRM/
 ### Running Tests
 
 **Run all E2E tests:**
+
 ```bash
 pnpm run test:e2e
 ```
 
 **Run specific test file:**
+
 ```bash
 pnpm exec playwright test tests/e2e/login.spec.ts
 ```
 
 **Run with UI mode:**
+
 ```bash
 pnpm exec playwright test --ui
 ```
 
 **Run in headed mode (see browser):**
+
 ```bash
 pnpm exec playwright test --headed
 ```
@@ -66,6 +75,7 @@ Task → Which app are you testing?
 ### Test File Location
 
 Place tests in `tests/e2e/` following the naming convention:
+
 - `login.spec.ts` - Authentication tests
 - `leads.spec.ts` - Lead management tests
 - `dashboard.spec.ts` - Dashboard tests
@@ -117,7 +127,7 @@ test.describe('Authenticated Tests', () => {
 ```typescript
 await page.screenshot({
   path: 'artifacts/playwright-output/debug.png',
-  fullPage: true
+  fullPage: true,
 });
 ```
 
@@ -131,15 +141,15 @@ page.on('console', (msg) => {
 
 ## Common Selectors for IntelliFlow
 
-| Element | Selector |
-|---------|----------|
-| Lead table | `[data-testid="leads-table"]` |
-| Contact card | `[data-testid="contact-card"]` |
+| Element       | Selector                         |
+| ------------- | -------------------------------- |
+| Lead table    | `[data-testid="leads-table"]`    |
+| Contact card  | `[data-testid="contact-card"]`   |
 | Deal pipeline | `[data-testid="pipeline-board"]` |
-| Navigation | `nav` or `[role="navigation"]` |
-| Modal | `[role="dialog"]` |
-| Toast | `.toast` or `[role="alert"]` |
-| Form submit | `[type="submit"]` |
+| Navigation    | `nav` or `[role="navigation"]`   |
+| Modal         | `[role="dialog"]`                |
+| Toast         | `.toast` or `[role="alert"]`     |
+| Form submit   | `[type="submit"]`                |
 
 ## Best Practices
 

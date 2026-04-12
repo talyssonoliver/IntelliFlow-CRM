@@ -19,6 +19,7 @@ After processing all tasks, display:
 ```
 
 For tasks that could not be fixed, log why:
+
 ```
 BLOCKED tasks:
   IFC-039: Dependencies IFC-037, IFC-038 not completed
@@ -45,7 +46,8 @@ DRY RUN RESULTS:
 
 ## Related Skills
 
-- `/exec` — Full task execution protocol (spec → plan → implement → validate → attest)
+- `/exec` — Full task execution protocol (spec → plan → implement → validate →
+  attest)
 - `/exec-gates` — Standalone gate verification (7 gates)
 - `/exec-attestation` — Attestation creation structure
 - `/compliance-check` — Final compliance validation

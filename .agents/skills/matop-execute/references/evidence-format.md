@@ -20,7 +20,8 @@
 └── summary.json              # Machine-readable summary
 ```
 
-The delivery report (`<TASK_ID>-delivery.md`) is in the parent `execution/<RUN_ID>/` folder.
+The delivery report (`<TASK_ID>-delivery.md`) is in the parent
+`execution/<RUN_ID>/` folder.
 
 ### When called standalone
 
@@ -33,7 +34,8 @@ artifacts/reports/system-audit/<RUN_ID>/
 └── summary.md
 ```
 
-**Note**: Use `/exec` for full implementation + validation. Use `/matop-execute` standalone for re-validation only (when code already exists).
+**Note**: Use `/exec` for full implementation + validation. Use `/matop-execute`
+standalone for re-validation only (when code already exists).
 
 ## Coverage Metrics in Summary
 
@@ -46,7 +48,7 @@ Every MATOP summary MUST include before/after coverage:
     "threshold": 80,
     "before": {
       "file_count": 34,
-      "lines": { "pct": 48.00, "covered": 1200, "total": 2500 },
+      "lines": { "pct": 48.0, "covered": 1200, "total": 2500 },
       "captured_at": "2026-01-27T19:00:00.000Z"
     },
     "after": {
@@ -76,9 +78,11 @@ Every MATOP run MUST produce:
 The MATOP orchestrator uses:
 
 - `audit-matrix.yml` — Gate definitions and thresholds
-- `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv` — Task source of truth
+- `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv` — Task source of
+  truth
 - `tools/scripts/lib/stoa/` — STOA library implementation
-- `apps/project-tracker/app/api/tasks/validation-summary/[taskId]/route.ts` — Task-to-package mapping
+- `apps/project-tracker/app/api/tasks/validation-summary/[taskId]/route.ts` —
+  Task-to-package mapping
 
 ## Consequences of Invalid Validation
 
@@ -87,4 +91,5 @@ The MATOP orchestrator uses:
 3. **Attestation rejected** — Compliance audit fails
 4. **Human review triggered** — Task flagged for manual inspection
 
-The system is designed to catch invalid validations. Agents cannot bypass these checks.
+The system is designed to catch invalid validations. Agents cannot bypass these
+checks.

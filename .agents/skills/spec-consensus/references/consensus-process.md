@@ -5,8 +5,9 @@
 ### Subagent Mode
 
 Consensus is reached when:
+
 - Round type is CONSENSUS
-- >= 66% of agents have "approved" in their response
+- > = 66% of agents have "approved" in their response
 - No critical unresolved issues
 
 If consensus isn't reached after 3 CONSENSUS rounds, session fails.
@@ -14,25 +15,30 @@ If consensus isn't reached after 3 CONSENSUS rounds, session fails.
 ### Agent Team Mode
 
 In team mode, consensus uses direct messages from teammates to the lead:
+
 - Each teammate sends: `APPROVED` or `REJECTED: <reason>`
 - Lead collects responses and checks >= 66% threshold
 - If teammate doesn't respond within 60 seconds, lead nudges them
 - If still no response after 30 more seconds, treat as abstention
 
 ```typescript
-const verdicts = teammateMessages.map(msg => ({
+const verdicts = teammateMessages.map((msg) => ({
   agent: msg.from,
   approved: msg.content.startsWith('APPROVED'),
-  reason: msg.content.startsWith('REJECTED') ? msg.content.slice(10) : undefined,
+  reason: msg.content.startsWith('REJECTED')
+    ? msg.content.slice(10)
+    : undefined,
 }));
 
-const approvalRate = verdicts.filter(v => v.approved).length / verdicts.length;
+const approvalRate =
+  verdicts.filter((v) => v.approved).length / verdicts.length;
 const consensusReached = approvalRate >= 0.66;
 ```
 
 ## Team Mode CHALLENGE Round
 
-The CHALLENGE round is where team mode adds the most value — real inter-agent debate:
+The CHALLENGE round is where team mode adds the most value — real inter-agent
+debate:
 
 ```
 Security-Lead → Backend-Architect: "Your endpoint at lead.router.ts:145
@@ -72,7 +78,9 @@ If team creation fails at any point:
 try {
   // Attempt team creation...
 } catch (error) {
-  console.warn(`[Agent Team] Creation failed, falling back to subagents: ${error}`);
+  console.warn(
+    `[Agent Team] Creation failed, falling back to subagents: ${error}`
+  );
   session.agentMode = 'subagent';
   // Continue with subagent spawning
 }
@@ -81,6 +89,7 @@ try {
 ## CONSENSUS Round Output
 
 Each agent provides:
+
 - **Agreement**: Which proposals they support
 - **Modifications**: Suggested changes
 - **Sign-off**: Ready to approve specification
@@ -90,6 +99,7 @@ Each agent provides:
 ## Self-Check Questions
 
 Before finalising spec, verify:
+
 1. Did each agent actually call Read tool? (Check tool use blocks)
 2. Are file paths and line numbers cited in analysis?
 3. Were discrepancies between summary and actual code noted?

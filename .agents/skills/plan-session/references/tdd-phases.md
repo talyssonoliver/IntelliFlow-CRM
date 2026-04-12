@@ -3,6 +3,7 @@
 ## TDD Phase Structure
 
 Every plan step must specify:
+
 - Exact file paths
 - Exact validation commands for that step
 - The real runtime consumer for any new surface
@@ -11,19 +12,24 @@ Every plan step must specify:
 ### Phase 1: RED (Write Failing Tests)
 
 For each component in the specification:
+
 1. Create test file at `{dir}/__tests__/{component}.test.ts`
 2. Write tests for acceptance criteria
 3. Verify tests fail (implementation doesn't exist)
-4. Identify existing test files that cover adjacent behavior and must be rerun later
+4. Identify existing test files that cover adjacent behavior and must be rerun
+   later
 
 ### Phase 2: GREEN (Make Tests Pass)
 
 For each component:
+
 1. Create/modify implementation file
 2. Implement minimum code to pass tests
 3. Run tests to verify green
-4. Wire new behavior into the real production caller (component, route, handler, service, command, etc.)
-5. If replacing an existing path, remove or bypass the old implementation path in the same plan
+4. Wire new behavior into the real production caller (component, route, handler,
+   service, command, etc.)
+5. If replacing an existing path, remove or bypass the old implementation path
+   in the same plan
 
 ### Phase 3: REFACTOR (Clean Up)
 
@@ -44,8 +50,10 @@ For each component:
 
 - Generic validation commands with no file or package scope
 - Plans that create a server-side API but never route the UI/runtime through it
-- Plans that leave the legacy implementation path active while claiming the new path replaces it
-- Validation sections that only mention new tests while skipping touched existing suites
+- Plans that leave the legacy implementation path active while claiming the new
+  path replaces it
+- Validation sections that only mention new tests while skipping touched
+  existing suites
 - Security work without explicit negative-path validation
 
 ## Example Plan Output
@@ -54,72 +62,82 @@ For each component:
 # Execution Plan: IFC-101
 
 ## Preflight Checks
+
 1. Verify dependencies installed
 2. TypeScript compilation passes
 3. Existing tests pass
 
 ## Estimated Effort
-| Phase | Estimate |
-|-------|----------|
-| Tests | ~2 file(s) - 30-60 minutes |
+
+| Phase          | Estimate                    |
+| -------------- | --------------------------- |
+| Tests          | ~2 file(s) - 30-60 minutes  |
 | Implementation | ~3 file(s) - 60-135 minutes |
-| Integration | ~3 file(s) - 30-60 minutes |
-| **Total** | **2-4 hours** |
+| Integration    | ~3 file(s) - 30-60 minutes  |
+| **Total**      | **2-4 hours**               |
 
 ## Execution Steps
 
 ### Phase 1: RED - Write Failing Tests
 
 #### Step 1: Write failing tests for LeadEntity
-**Type:** test
-**Files to Create:**
+
+**Type:** test **Files to Create:**
+
 - `packages/domain/src/crm/lead/__tests__/Lead.test.ts`
 
 **Acceptance Criteria Addressed:**
+
 - Lead entity validates required fields
 - Lead score calculation works correctly
 
 **Validation:**
+
 - [ ] Tests should fail initially
 - [ ] Verify test structure follows project patterns
 
 ### Phase 2: GREEN - Make Tests Pass
 
 #### Step 2: Implement LeadEntity
-**Type:** implementation
-**Files to Create:**
+
+**Type:** implementation **Files to Create:**
+
 - `packages/domain/src/crm/lead/Lead.ts`
 
 **Validation:**
+
 - [ ] TypeScript compiles
 - [ ] Related tests pass
 
-> **Checkpoint:** All tests pass
-> `pnpm run test`
+> **Checkpoint:** All tests pass `pnpm run test`
 
 ### Phase 3: REFACTOR - Clean Up
 
 #### Step 4: Refactor and optimize
-**Type:** implementation
-**Files to Modify:**
+
+**Type:** implementation **Files to Modify:**
+
 - All implementation files
 
 **Validation:**
+
 - [ ] Lint passes
 - [ ] All tests still pass
 
 ## Final Validation
+
 1. Run full test suite
 2. Verify coverage ≥90%
 3. Build project
 4. Check all acceptance criteria
 
 ## Integration Checkpoints Summary
-| After Step | Verification | Command |
-|------------|--------------|---------|
-| 1 | Test files compile | `pnpm run typecheck` |
-| 3 | All tests pass | `pnpm run test` |
-| 4 | Code quality passes | `pnpm run lint` |
+
+| After Step | Verification        | Command              |
+| ---------- | ------------------- | -------------------- |
+| 1          | Test files compile  | `pnpm run typecheck` |
+| 3          | All tests pass      | `pnpm run test`      |
+| 4          | Code quality passes | `pnpm run lint`      |
 ```
 
 ## Example Session Output

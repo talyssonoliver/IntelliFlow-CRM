@@ -1,8 +1,10 @@
 # Compliance Check — Section 5: Context Acknowledgement Verification (BLOCKING)
 
-**CRITICAL**: If the task's `Artifacts To Track` in Sprint_plan.csv contains `EVIDENCE:...context_ack.json`,
-then `context_ack.json` MUST exist and be valid. This catches tasks that skip the context acknowledgement
-phase entirely — a gap that previously allowed PG-150 to be marked complete without this required evidence file.
+**CRITICAL**: If the task's `Artifacts To Track` in Sprint_plan.csv contains
+`EVIDENCE:...context_ack.json`, then `context_ack.json` MUST exist and be valid.
+This catches tasks that skip the context acknowledgement phase entirely — a gap
+that previously allowed PG-150 to be marked complete without this required
+evidence file.
 
 **How to validate:**
 
@@ -27,35 +29,44 @@ phase entirely — a gap that previously allowed PG-150 to be marked complete wi
       - Report any FILE: prereqs missing from context_ack
 ```
 
-**Validation reference**: `tools/scripts/lib/context-ack-gatekeeper.ts` contains the
-`runContextAckGate()` function with full programmatic validation. The checks above mirror
-its logic for manual compliance verification.
+**Validation reference**: `tools/scripts/lib/context-ack-gatekeeper.ts` contains
+the `runContextAckGate()` function with full programmatic validation. The checks
+above mirror its logic for manual compliance verification.
 
-| Check | Requirement |
-|-------|-------------|
-| File exists | context_ack.json present at expected attestation path |
-| Structure valid | task_id, files_read[], invariants (>=5), created_at |
-| No fake hashes | Zero sha256 values that are all-zeros |
-| Prerequisites covered | All FILE: prereqs from CSV appear in files_read[] |
+| Check                 | Requirement                                           |
+| --------------------- | ----------------------------------------------------- |
+| File exists           | context_ack.json present at expected attestation path |
+| Structure valid       | task_id, files_read[], invariants (>=5), created_at   |
+| No fake hashes        | Zero sha256 values that are all-zeros                 |
+| Prerequisites covered | All FILE: prereqs from CSV appear in files_read[]     |
 
 **PATH RECONCILIATION** (when file not found at expected path):
 
-If `context_ack.json` is NOT found at `.specify/sprints/sprint-{N}/attestations/{{task_id}}/context_ack.json`:
+If `context_ack.json` is NOT found at
+`.specify/sprints/sprint-{N}/attestations/{{task_id}}/context_ack.json`:
 
-1. **Check for prefixed filename**: Look for `{{task_id}}-context_ack.json` in the same directory.
-   - If found → report: "Wrong filename: found `{{task_id}}-context_ack.json`, expected plain `context_ack.json`"
+1. **Check for prefixed filename**: Look for `{{task_id}}-context_ack.json` in
+   the same directory.
+   - If found → report: "Wrong filename: found `{{task_id}}-context_ack.json`,
+     expected plain `context_ack.json`"
    - **FAIL** — the file must be renamed
-2. **Check for wrong sprint path**: Search all sprint directories for `context_ack.json` under `attestations/{{task_id}}/`:
+2. **Check for wrong sprint path**: Search all sprint directories for
+   `context_ack.json` under `attestations/{{task_id}}/`:
    - `find .specify/sprints -path "*{{task_id}}*context_ack*" 2>/dev/null`
-   - If found at a different sprint → report: "Sprint path mismatch: file at sprint-X but Target Sprint is {N}"
+   - If found at a different sprint → report: "Sprint path mismatch: file at
+     sprint-X but Target Sprint is {N}"
    - **FAIL** — the file or CSV path must be corrected
-3. **Check for embedded context_ack**: Read the attestation.json in the same directory.
-   - If it contains a `context_acknowledgment` block → report: "context_ack embedded in attestation.json, not extracted to standalone file"
+3. **Check for embedded context_ack**: Read the attestation.json in the same
+   directory.
+   - If it contains a `context_acknowledgment` block → report: "context_ack
+     embedded in attestation.json, not extracted to standalone file"
    - **FAIL** — the block must be extracted to a separate file
 
-This reconciliation prevents the three known failure modes (sprint mismatch, filename drift, embedded-vs-standalone).
+This reconciliation prevents the three known failure modes (sprint mismatch,
+filename drift, embedded-vs-standalone).
 
 **BLOCKING RULE:**
+
 - context_ack.json missing when required → **FAIL**
 - Fake (all-zero) hashes detected → **FAIL**
 - Fewer than 5 invariants → **FAIL**

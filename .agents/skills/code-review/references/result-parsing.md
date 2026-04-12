@@ -19,9 +19,11 @@ How to parse and interpret code review output files.
 
 Run metadata and timing information.
 
-**Location**: `.specify/sprints/sprint-{N}/reports/code-review/latest/summary.json`
+**Location**:
+`.specify/sprints/sprint-{N}/reports/code-review/latest/summary.json`
 
 **Structure**:
+
 ```json
 {
   "runId": "20260125-143022-abc12345",
@@ -43,6 +45,7 @@ Run metadata and timing information.
 ```
 
 **Extract with PowerShell**:
+
 ```powershell
 $summary = Get-Content ".specify/sprints/sprint-0/reports/code-review/latest/summary.json" | ConvertFrom-Json
 Write-Host "Run: $($summary.runId), Duration: $($summary.duration.typecheck + $summary.duration.lint)s"
@@ -52,11 +55,13 @@ Write-Host "Run: $($summary.runId), Duration: $($summary.duration.typecheck + $s
 
 ## TypeScript Errors (typecheck.txt)
 
-**Location**: `.specify/sprints/sprint-{N}/reports/code-review/latest/typecheck.txt`
+**Location**:
+`.specify/sprints/sprint-{N}/reports/code-review/latest/typecheck.txt`
 
 **Format**: Turbo output with TypeScript compiler errors
 
 **Pattern to extract errors**:
+
 ```powershell
 $errors = Select-String -Path ".specify/sprints/sprint-0/reports/code-review/latest/typecheck.txt" -Pattern "error TS\d+"
 $errorCount = $errors.Count
@@ -65,16 +70,13 @@ $uniqueErrors = $errors | ForEach-Object {
 } | Sort-Object -Unique
 ```
 
-**Common error codes**:
-| Code | Meaning |
-|------|---------|
-| TS2305 | Module has no exported member |
-| TS2339 | Property does not exist on type |
-| TS2345 | Argument type mismatch |
-| TS2322 | Type not assignable |
-| TS7006 | Parameter implicitly has 'any' type |
+**Common error codes**: | Code | Meaning | |------|---------| | TS2305 | Module
+has no exported member | | TS2339 | Property does not exist on type | | TS2345 |
+Argument type mismatch | | TS2322 | Type not assignable | | TS7006 | Parameter
+implicitly has 'any' type |
 
 **Extract file locations**:
+
 ```powershell
 # Pattern: apps/api/src/file.ts(line,col): error TSxxxx
 $fileErrors = Select-String -Path "typecheck.txt" -Pattern "^[^:]+:\d+:\d+.*error TS"
@@ -90,6 +92,7 @@ $affectedFiles = $fileErrors | ForEach-Object {
 **Location**: `.specify/sprints/sprint-{N}/reports/code-review/latest/lint.txt`
 
 **Count errors and warnings**:
+
 ```powershell
 $lintContent = Get-Content ".specify/sprints/sprint-0/reports/code-review/latest/lint.txt" -Raw
 $errorCount = ([regex]::Matches($lintContent, "\d+ error")).Count
@@ -97,6 +100,7 @@ $warningCount = ([regex]::Matches($lintContent, "\d+ warning")).Count
 ```
 
 **Extract problem files**:
+
 ```powershell
 # Files with issues have format: /path/to/file.ts
 $problemFiles = Select-String -Path "lint.txt" -Pattern "^\s*\d+:\d+\s+(error|warning)" -Context 0,0
@@ -106,9 +110,11 @@ $problemFiles = Select-String -Path "lint.txt" -Pattern "^\s*\d+:\d+\s+(error|wa
 
 ## Complexity Metrics (complexity.json)
 
-**Location**: `.specify/sprints/sprint-{N}/reports/code-review/latest/complexity.json`
+**Location**:
+`.specify/sprints/sprint-{N}/reports/code-review/latest/complexity.json`
 
 **Structure**:
+
 ```json
 {
   "timestamp": "2026-01-25T14:32:45.000Z",
@@ -130,6 +136,7 @@ $problemFiles = Select-String -Path "lint.txt" -Pattern "^\s*\d+:\d+\s+(error|wa
 ```
 
 **Parse high complexity files**:
+
 ```powershell
 $complexity = Get-Content ".specify/sprints/sprint-0/reports/code-review/latest/complexity.json" | ConvertFrom-Json
 
@@ -142,21 +149,20 @@ $critical = $complexity.packages | Where-Object { $_.complexity -gt 30 } | Sort-
 $critical | Select-Object -First 10 | Format-Table file, complexity, lines
 ```
 
-**Thresholds**:
-| Complexity | Status | Action |
-|------------|--------|--------|
-| 1-10 | Good | None |
-| 11-20 | Acceptable | Monitor |
-| 21-30 | High | Refactor when touched |
-| >30 | Critical | Prioritize refactoring |
+**Thresholds**: | Complexity | Status | Action |
+|------------|--------|--------| | 1-10 | Good | None | | 11-20 | Acceptable |
+Monitor | | 21-30 | High | Refactor when touched | | >30 | Critical | Prioritize
+refactoring |
 
 ---
 
 ## Coverage Data (coverage-summary.json)
 
-**Location**: `.specify/sprints/sprint-{N}/reports/code-review/latest/coverage-summary.json`
+**Location**:
+`.specify/sprints/sprint-{N}/reports/code-review/latest/coverage-summary.json`
 
 **Structure**:
+
 ```json
 {
   "total": {
@@ -172,6 +178,7 @@ $critical | Select-Object -First 10 | Format-Table file, complexity, lines
 ```
 
 **Parse overall coverage**:
+
 ```powershell
 $coverage = Get-Content ".specify/sprints/sprint-0/reports/code-review/latest/coverage-summary.json" | ConvertFrom-Json
 Write-Host "Line coverage: $($coverage.total.lines.pct)%"
@@ -179,6 +186,7 @@ Write-Host "Branch coverage: $($coverage.total.branches.pct)%"
 ```
 
 **Find low coverage packages**:
+
 ```powershell
 $lowCoverage = $coverage.PSObject.Properties |
   Where-Object { $_.Name -ne "total" -and $_.Value.lines.pct -lt 60 } |
@@ -190,24 +198,23 @@ $lowCoverage = $coverage.PSObject.Properties |
 
 ## Dead Code (deadcode.json)
 
-**Location**: `.specify/sprints/sprint-{N}/reports/code-review/latest/deadcode.json`
+**Location**:
+`.specify/sprints/sprint-{N}/reports/code-review/latest/deadcode.json`
 
 **Structure** (Knip output):
+
 ```json
 {
   "files": ["src/unused-file.ts"],
   "dependencies": ["unused-package"],
   "devDependencies": ["unused-dev-package"],
-  "exports": [
-    { "name": "unusedExport", "file": "src/utils.ts", "line": 42 }
-  ],
-  "types": [
-    { "name": "UnusedType", "file": "src/types.ts" }
-  ]
+  "exports": [{ "name": "unusedExport", "file": "src/utils.ts", "line": 42 }],
+  "types": [{ "name": "UnusedType", "file": "src/types.ts" }]
 }
 ```
 
 **Parse results**:
+
 ```powershell
 $deadcode = Get-Content ".specify/sprints/sprint-0/reports/code-review/latest/deadcode.json" | ConvertFrom-Json
 
@@ -220,9 +227,11 @@ Write-Host "Unused exports: $($deadcode.exports.Count)"
 
 ## Package Priorities (package-analysis.json)
 
-**Location**: `.specify/sprints/sprint-{N}/reports/code-review/package-review/package-analysis.json`
+**Location**:
+`.specify/sprints/sprint-{N}/reports/code-review/package-review/package-analysis.json`
 
 **Structure**:
+
 ```json
 {
   "timestamp": "2026-01-25T14:35:00.000Z",
@@ -257,6 +266,7 @@ Write-Host "Unused exports: $($deadcode.exports.Count)"
 ```
 
 **Parse priorities**:
+
 ```powershell
 $analysis = Get-Content ".specify/sprints/sprint-0/reports/code-review/package-review/package-analysis.json" | ConvertFrom-Json
 
@@ -268,47 +278,35 @@ $critical = $analysis.packages | Where-Object { $_.priority -eq "CRITICAL" }
 $critical | Select-Object name, score, @{N='Risks';E={$_.risks -join "; "}} | Format-Table
 ```
 
-**Priority scoring**:
-| Factor | Points |
-|--------|--------|
-| >20 dependencies | +10 |
-| No test script | +20 |
-| No typecheck script | +10 |
-| >50 source files | +15 |
-| >5000 LOC | +15 |
-| Coverage <50% | +25 |
-| Coverage <70% | +10 |
-| No coverage data | +15 |
-| Critical package | +20 |
-| >10 TODO comments | +10 |
+**Priority scoring**: | Factor | Points | |--------|--------| | >20 dependencies
+| +10 | | No test script | +20 | | No typecheck script | +10 | | >50 source
+files | +15 | | >5000 LOC | +15 | | Coverage <50% | +25 | | Coverage <70% | +10
+| | No coverage data | +15 | | Critical package | +20 | | >10 TODO comments |
++10 |
 
-**Priority thresholds**:
-| Score | Priority |
-|-------|----------|
-| >=60 | CRITICAL |
-| 40-59 | HIGH |
-| 20-39 | MEDIUM |
-| <20 | LOW |
+**Priority thresholds**: | Score | Priority | |-------|----------| | >=60 |
+CRITICAL | | 40-59 | HIGH | | 20-39 | MEDIUM | | <20 | LOW |
 
 ---
 
 ## Circular Dependencies (circular-deps.json)
 
-**Location**: `.specify/sprints/sprint-{N}/reports/code-review/latest/circular-deps.json`
+**Location**:
+`.specify/sprints/sprint-{N}/reports/code-review/latest/circular-deps.json`
 
 **Structure**:
+
 ```json
 [
   {
     "package": "apps/api/src",
-    "circular": [
-      ["moduleA.ts", "moduleB.ts", "moduleC.ts", "moduleA.ts"]
-    ]
+    "circular": [["moduleA.ts", "moduleB.ts", "moduleC.ts", "moduleA.ts"]]
   }
 ]
 ```
 
 **Or if skipped**:
+
 ```json
 {
   "skipped": true,
@@ -317,6 +315,7 @@ $critical | Select-Object name, score, @{N='Risks';E={$_.risks -join "; "}} | Fo
 ```
 
 **Parse results**:
+
 ```powershell
 $circular = Get-Content ".specify/sprints/sprint-0/reports/code-review/latest/circular-deps.json" | ConvertFrom-Json
 

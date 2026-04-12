@@ -19,6 +19,7 @@ Actionable fix patterns for common code review findings.
 **Symptom**: `error TS2305: Module has no exported member`
 
 **Common causes**:
+
 - Missing export in source package
 - Import of non-existent member
 - Package not rebuilt after changes
@@ -26,18 +27,21 @@ Actionable fix patterns for common code review findings.
 **Fix patterns**:
 
 ### Option A: Add missing export
+
 ```typescript
 // packages/adapters/src/index.ts
 export { MissingService } from './services/missing.service';
 ```
 
 ### Option B: Remove unused import
+
 ```typescript
 // If the import isn't actually needed, remove it
 // import { UnusedService } from '@intelliflow/adapters';
 ```
 
 ### Verification
+
 ```bash
 cd <affected-package>
 pnpm typecheck
@@ -55,26 +59,30 @@ pnpm typecheck
 **Refactoring strategy**:
 
 ### Extract smaller functions
+
 ```typescript
 // BEFORE: One function with complexity 73
 export function analyzeStatistics(data: Data): Result {
   // 774 lines of nested logic
   if (condition1) {
-    if (condition2) { /* deep nesting */ }
+    if (condition2) {
+      /* deep nesting */
+    }
   }
 }
 
 // AFTER: Multiple focused functions
 export function analyzeStatistics(data: Data): Result {
-  const cleaned = cleanData(data);              // complexity: 5
-  const validated = validateData(cleaned);      // complexity: 4
+  const cleaned = cleanData(data); // complexity: 5
+  const validated = validateData(cleaned); // complexity: 4
   const transformed = transformData(validated); // complexity: 6
   const calculated = calculateMetrics(transformed); // complexity: 7
-  return formatResults(calculated);             // complexity: 3
+  return formatResults(calculated); // complexity: 3
 }
 ```
 
 ### Reduce nesting with early returns
+
 ```typescript
 // BEFORE
 function process(input: Input): Output {
@@ -94,11 +102,14 @@ function process(input: Input): Output {
 ```
 
 ### Replace switch with strategy pattern
+
 ```typescript
 // BEFORE: Large switch statement
 switch (type) {
-  case 'A': /* 50 lines */ break;
-  case 'B': /* 50 lines */ break;
+  case 'A':
+    /* 50 lines */ break;
+  case 'B':
+    /* 50 lines */ break;
   // ...
 }
 
@@ -119,19 +130,20 @@ return strategies[type].execute(data);
 **Categories**:
 
 ### Unused exports
+
 ```json
 {
   "files": [],
   "dependencies": [],
-  "exports": [
-    { "name": "unusedFunction", "file": "src/utils.ts" }
-  ]
+  "exports": [{ "name": "unusedFunction", "file": "src/utils.ts" }]
 }
 ```
 
-**Fix**: Remove export or add `// knip-ignore` if intentionally unused (e.g., public API)
+**Fix**: Remove export or add `// knip-ignore` if intentionally unused (e.g.,
+public API)
 
 ### Unused dependencies
+
 ```json
 {
   "dependencies": ["lodash", "moment"]
@@ -139,11 +151,13 @@ return strategies[type].execute(data);
 ```
 
 **Fix**:
+
 ```bash
 pnpm remove lodash moment
 ```
 
 ### Unused files
+
 ```json
 {
   "files": ["src/legacy/old-module.ts"]
@@ -159,6 +173,7 @@ pnpm remove lodash moment
 **Symptom**: Import cycles in `circular-deps.json`
 
 **Example**:
+
 ```json
 [
   {
@@ -171,6 +186,7 @@ pnpm remove lodash moment
 **Fix patterns**:
 
 ### Extract shared types
+
 ```typescript
 // BEFORE: A imports B, B imports A for types
 // moduleA.ts
@@ -178,13 +194,16 @@ import { TypeFromB } from './moduleB';
 
 // AFTER: Shared types in separate file
 // types.ts (new)
-export interface SharedType { /* ... */ }
+export interface SharedType {
+  /* ... */
+}
 
 // moduleA.ts
 import { SharedType } from './types';
 ```
 
 ### Dependency inversion
+
 ```typescript
 // BEFORE: Direct dependency
 // serviceA.ts
@@ -200,6 +219,7 @@ constructor(private serviceB: ServiceBPort) {}
 ```
 
 ### Install and run madge
+
 ```bash
 pnpm add -g madge
 madge --circular apps/api/src
@@ -212,12 +232,14 @@ madge --circular apps/api/src
 **Symptom**: Coverage <70% in `coverage-summary.json`
 
 **Targets**:
+
 - Domain layer: >95%
 - Application layer: >90%
 - Critical packages (api, domain, application): >80%
 - All packages: >60%
 
 **Identify gaps**:
+
 ```powershell
 $coverage = Get-Content ".specify/sprints/sprint-0/reports/code-review/latest/coverage-summary.json" | ConvertFrom-Json
 $coverage.PSObject.Properties |
@@ -227,6 +249,7 @@ $coverage.PSObject.Properties |
 ```
 
 **Fix approach**:
+
 1. Identify uncovered files: `artifacts/coverage/index.html`
 2. Prioritize critical paths (auth, payments, data access)
 3. Add unit tests for edge cases
@@ -237,6 +260,7 @@ $coverage.PSObject.Properties |
 ## Missing Tools
 
 ### madge (circular dependency detection)
+
 ```bash
 pnpm add -g madge
 # or locally
@@ -244,12 +268,15 @@ pnpm add -D madge
 ```
 
 ### depcheck (unused dependencies)
+
 ```bash
 pnpm add -D depcheck
 ```
 
 ### knip (dead code)
+
 Already in devDependencies. If failing:
+
 ```bash
 # Correct syntax (was fixed in script)
 pnpm knip --exclude=unlisted --exclude=unresolved --reporter json
@@ -262,6 +289,7 @@ pnpm knip --exclude=unlisted --exclude=unresolved --reporter json
 **Symptom**: Plan linter errors for Tier A tasks
 
 **Example errors**:
+
 ```
 [TIER_A_GATES_REQUIRED] Tier A task IFC-093 missing gate_profile
 [TIER_A_OWNER_REQUIRED] Tier A task IFC-093 missing acceptance_owner
@@ -270,10 +298,10 @@ pnpm knip --exclude=unlisted --exclude=unresolved --reporter json
 
 **Fix**: Update Sprint_plan.csv with required governance fields:
 
-| Field | Required For | Example |
-|-------|--------------|---------|
-| `gate_profile` | Tier A tasks | `standard`, `security`, `performance` |
-| `acceptance_owner` | Tier A tasks | `Tech Lead`, `QA Lead` |
-| `evidence_required` | Tier A tasks | `test-coverage`, `security-scan` |
+| Field               | Required For | Example                               |
+| ------------------- | ------------ | ------------------------------------- |
+| `gate_profile`      | Tier A tasks | `standard`, `security`, `performance` |
+| `acceptance_owner`  | Tier A tasks | `Tech Lead`, `QA Lead`                |
+| `evidence_required` | Tier A tasks | `test-coverage`, `security-scan`      |
 
 **Location**: `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv`

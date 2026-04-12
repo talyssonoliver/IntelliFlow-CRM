@@ -1,14 +1,15 @@
 # Compliance Check — Task-Specific Coverage with Before/After Comparison
 
-**CRITICAL**: Compliance checks MUST show coverage BEFORE and AFTER to demonstrate task impact.
+**CRITICAL**: Compliance checks MUST show coverage BEFORE and AFTER to
+demonstrate task impact.
 
 ## Package Mapping
 
-| Task Pattern | Package |
-|--------------|---------|
+| Task Pattern                                  | Package          |
+| --------------------------------------------- | ---------------- |
 | `IFC-085`, `IFC-005`, `IFC-155`, `AI-SETUP-*` | `apps/ai-worker` |
-| `IFC-003`, `IFC-004` | `apps/api` |
-| `PG-*`, `IFC-090`, `IFC-091` | `apps/web` |
+| `IFC-003`, `IFC-004`                          | `apps/api`       |
+| `PG-*`, `IFC-090`, `IFC-091`                  | `apps/web`       |
 
 ## Coverage Comparison Output
 
@@ -28,12 +29,12 @@ Coverage Impact: IMPROVED (+0.74% average)
 
 ## Coverage Impact Rules
 
-| Delta | Compliance Status |
-|-------|-------------------|
-| Positive (↑) | PASS - Coverage improved |
-| Zero (→) | PASS - No regression |
+| Delta                  | Compliance Status                        |
+| ---------------------- | ---------------------------------------- |
+| Positive (↑)           | PASS - Coverage improved                 |
+| Zero (→)               | PASS - No regression                     |
 | Small negative (↓ <2%) | WARN - Minor regression, document reason |
-| Large negative (↓ ≥2%) | FAIL - Significant regression, must fix |
+| Large negative (↓ ≥2%) | FAIL - Significant regression, must fix  |
 
 ## Why Before/After?
 

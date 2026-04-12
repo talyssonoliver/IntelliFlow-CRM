@@ -2,7 +2,9 @@
 
 ## Baseline Gates — NOT Part of This STOA
 
-TypeScript compilation (`pnpm run typecheck`) runs in MATOP Phase 2.5 (mandatory baseline) and covers ALL packages including `@intelliflow/domain` and `@intelliflow/api` via turbo. Do NOT re-run typecheck here.
+TypeScript compilation (`pnpm run typecheck`) runs in MATOP Phase 2.5 (mandatory
+baseline) and covers ALL packages including `@intelliflow/domain` and
+`@intelliflow/api` via turbo. Do NOT re-run typecheck here.
 
 ## Domain-Specific Gates
 
@@ -25,11 +27,11 @@ pnpm exec depcruise --config .dependency-cruiser.cjs packages/domain packages/ap
 
 ## Coverage Thresholds (Enforced)
 
-| Layer | Required Coverage |
-|---|---|
-| Domain (`packages/domain/`) | >95% |
-| Application (`packages/application/`) | >90% |
-| API Routes | >85% |
+| Layer                                 | Required Coverage |
+| ------------------------------------- | ----------------- |
+| Domain (`packages/domain/`)           | >95%              |
+| Application (`packages/application/`) | >90%              |
+| API Routes                            | >85%              |
 
 ## Hexagonal Architecture Rules
 
@@ -50,16 +52,17 @@ Adapters CAN depend on:
 
 ## Verdict Logic
 
-There is **NO WARN verdict**. All verdicts are binary: PASS, FAIL, or NEEDS_HUMAN.
+There is **NO WARN verdict**. All verdicts are binary: PASS, FAIL, or
+NEEDS_HUMAN.
 
-| Condition | Verdict |
-|---|---|
-| All domain tests pass, types valid, no boundary violations | PASS |
-| Domain tests fail | FAIL |
-| Type errors (not warnings — actual errors) | FAIL |
-| Architecture boundary violation | FAIL |
-| Pending migrations not applied | FAIL |
-| Business rule violation detected | FAIL |
+| Condition                                                  | Verdict |
+| ---------------------------------------------------------- | ------- |
+| All domain tests pass, types valid, no boundary violations | PASS    |
+| Domain tests fail                                          | FAIL    |
+| Type errors (not warnings — actual errors)                 | FAIL    |
+| Architecture boundary violation                            | FAIL    |
+| Pending migrations not applied                             | FAIL    |
+| Business rule violation detected                           | FAIL    |
 
 ## Verdict JSON Schema
 
@@ -86,15 +89,19 @@ There is **NO WARN verdict**. All verdicts are binary: PASS, FAIL, or NEEDS_HUMA
 ## When to Trigger
 
 ### By Task Prefix (Primary)
-- `IFC-*` tasks (default for product features, also default fallback for unrecognized prefixes)
+
+- `IFC-*` tasks (default for product features, also default fallback for
+  unrecognized prefixes)
 
 ### By Keywords (Supporting STOA)
+
 - `trpc`, `api`, `prisma`, `database`
 - `schema`, `entity`, `aggregate`
 - `domain`, `use case`, `repository`
 - `migration`
 
 ### By Path Impact
+
 - `apps/api/**`
 - `packages/domain/**`
 - `packages/application/**`

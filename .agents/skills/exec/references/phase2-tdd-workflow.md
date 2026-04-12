@@ -3,7 +3,12 @@
 ## Generate Run ID
 
 ```javascript
-const runId = new Date().toISOString().replace(/[:\-T]/g, '').slice(0,14) + '-' +
+const runId =
+  new Date()
+    .toISOString()
+    .replace(/[:\-T]/g, '')
+    .slice(0, 14) +
+  '-' +
   require('crypto').randomBytes(4).toString('hex');
 // Example: 20260123201500-a1b2c3d4
 ```
@@ -25,6 +30,7 @@ Update Sprint_plan.csv: Status → "In Progress"
 ## TDD Workflow (for each plan step)
 
 ### RED Phase — Write Failing Test First
+
 - Read step description from plan
 - Identify test file to create
 - Write test that fails (Vitest patterns)
@@ -34,15 +40,20 @@ Update Sprint_plan.csv: Status → "In Progress"
   ```
 
 ### GREEN Phase — Implement Minimal Code
+
 - Read implementation requirements
 - Use Write/Edit tools to create/modify files
 - Implement minimal code to pass the test
 - Run test to verify green
-- Wire the new/changed behavior into the real production caller before moving to the next step
-- If the plan says this change replaces an older path, update the old path now so it no longer bypasses the new logic
-- Re-run any directly touched existing test files named in the plan's Validation Matrix
+- Wire the new/changed behavior into the real production caller before moving to
+  the next step
+- If the plan says this change replaces an older path, update the old path now
+  so it no longer bypasses the new logic
+- Re-run any directly touched existing test files named in the plan's Validation
+  Matrix
 
 ### REFACTOR Phase — Clean Up
+
 - Apply project patterns from hydrated context
 - Remove duplication, improve readability
 - Verify tests still pass
@@ -50,15 +61,18 @@ Update Sprint_plan.csv: Status → "In Progress"
 
 ### MANDATORY: Update Plan Checkboxes After Each Step
 
-After completing each plan step (RED/GREEN/REFACTOR cycle), **immediately** use the Edit tool to check off the corresponding checkboxes in the plan file:
+After completing each plan step (RED/GREEN/REFACTOR cycle), **immediately** use
+the Edit tool to check off the corresponding checkboxes in the plan file:
 
 ```
 Edit plan file: `- [ ]` → `- [x]` for each completed item
 ```
 
 **Rules:**
+
 - Check off items **incrementally** as you complete them, NOT in bulk at the end
-- This is critical for context-loss resilience: if the session runs out of context, the next session can see exactly which steps are done
+- This is critical for context-loss resilience: if the session runs out of
+  context, the next session can see exactly which steps are done
 - Gate 1 (Plan Checkbox Verification) will BLOCK if any unchecked items remain
 - If a step is partially complete, leave its checkbox unchecked until fully done
 
@@ -87,6 +101,7 @@ Edit plan file: `- [ ]` → `- [x]` for each completed item
 ```
 
 ## Run Required Commands
+
 - Database migrations (if needed)
 - Package installations (if needed)
 - Build to verify (if needed)

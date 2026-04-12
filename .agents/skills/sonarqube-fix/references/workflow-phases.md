@@ -27,17 +27,14 @@ For each issue category:
    - Find TypeScript/JavaScript best practices
    - Check MDN, TypeScript handbook
 
-2. **Community Solutions**
-   {{#if deep_think}}
+2. **Community Solutions** {{#if deep_think}}
    - Enable extended thinking mode
    - Search Stack Overflow (use WebSearch tool)
    - Check GitHub issues/discussions
    - Find real-world examples
-   - Analyze multiple approaches
-   {{else}}
+   - Analyze multiple approaches {{else}}
    - Quick search for common solutions
-   - Use cached knowledge
-   {{/if}}
+   - Use cached knowledge {{/if}}
 
 3. **Project Context**
    - Search codebase for similar patterns (use Grep/Glob)
@@ -50,6 +47,7 @@ For each issue category:
 Spawn sub-agents based on issue type:
 
 **Quality Agent** (stoa-quality):
+
 ```
 Issues: Code smells, complexity, duplication
 Focus: Maintainability, readability, SOLID principles
@@ -57,6 +55,7 @@ Actions: Refactoring strategies, extract methods, simplify logic
 ```
 
 **Security Agent** (stoa-security):
+
 ```
 Issues: Vulnerabilities, security hotspots, injection risks
 Focus: OWASP Top 10, input validation, authentication
@@ -64,6 +63,7 @@ Actions: Sanitization, encryption, secure patterns
 ```
 
 **Automation Agent** (stoa-automation):
+
 ```
 Issues: Low-complexity, pattern-based fixes
 Focus: Automated refactoring, linting, formatting
@@ -71,6 +71,7 @@ Actions: Apply ESLint fixes, Prettier formatting, safe refactors
 ```
 
 For each issue, create a fix strategy:
+
 ```json
 {
   "issue_id": "AX...",
@@ -99,8 +100,7 @@ For each issue, create a fix strategy:
 
 ## Phase 4: Implementation
 
-{{#if auto_fix}}
-**AUTO-FIX MODE ENABLED**
+{{#if auto_fix}} **AUTO-FIX MODE ENABLED**
 
 For each issue in priority order:
 
@@ -124,40 +124,44 @@ For each issue in priority order:
    - Record in `artifacts/metrics/sonarqube-fixes.json`
    - Update progress in todo list
 
-{{else}}
-**RECOMMENDATION MODE**
+{{else}} **RECOMMENDATION MODE**
 
 For each issue:
+
 1. Generate fix recommendation
 2. Show before/after code snippets
 3. Explain rationale with research links
 4. Estimate impact and risk
-5. Wait for user approval before applying
-{{/if}}
+5. Wait for user approval before applying {{/if}}
 
 ## Phase 5: Validation
 
 After applying fixes:
 
 1. **Run Full Test Suite**
+
    ```bash
    pnpm run test
    ```
 
 2. **Type Checking**
+
    ```bash
    pnpm run typecheck
    ```
 
 3. **Linting**
+
    ```bash
    pnpm run lint
    ```
 
 4. **Coverage Check**
+
    ```bash
    pnpm run test:coverage
    ```
+
    - Verify: Overall >90%, Domain >95%
 
 5. **SonarQube Re-scan** (if available)
@@ -167,24 +171,25 @@ After applying fixes:
 
 ## Phase 6: Reporting
 
-{{#if report}}
-Generate comprehensive report in `artifacts/reports/sonarqube-fix-{timestamp}.md`.
-**See `references/report-template.md`** for the full report format.
-{{else}}
-Generate summary in chat:
+{{#if report}} Generate comprehensive report in
+`artifacts/reports/sonarqube-fix-{timestamp}.md`. **See
+`references/report-template.md`** for the full report format. {{else}} Generate
+summary in chat:
+
 - List fixed issues
 - Show key metrics
-- Highlight any blockers
-{{/if}}
+- Highlight any blockers {{/if}}
 
 ## Deep Thinking Guidelines
 
-{{#if deep_think}}
-When analyzing complex issues, use extended thinking:
+{{#if deep_think}} When analyzing complex issues, use extended thinking:
 
 1. **Break down the problem** — Root cause? Why flagged? Trade-offs?
-2. **Consider multiple solutions** — 3-5 approaches with pros/cons, project alignment
-3. **Research thoroughly** — Official guidance, real-world examples, project patterns (Grep)
-4. **Validate assumptions** — Hexagonal architecture? Domain purity? Performance? Coverage?
+2. **Consider multiple solutions** — 3-5 approaches with pros/cons, project
+   alignment
+3. **Research thoroughly** — Official guidance, real-world examples, project
+   patterns (Grep)
+4. **Validate assumptions** — Hexagonal architecture? Domain purity?
+   Performance? Coverage?
 5. **Think about edge cases** — What could go wrong? Security? Entity types?
-{{/if}}
+   {{/if}}

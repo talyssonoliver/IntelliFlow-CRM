@@ -56,5 +56,5 @@ Phase 2:   Plan Session    ← THIS COMMAND
 Phase 3:   Gate Execution
 ```
 
-When running `/matop-execute`, plan session runs automatically after spec session.
-Use this command for standalone plan generation.
+When running `/matop-execute`, plan session runs automatically after spec
+session. Use this command for standalone plan generation.

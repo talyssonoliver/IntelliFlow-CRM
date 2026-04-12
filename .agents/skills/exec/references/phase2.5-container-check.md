@@ -4,7 +4,10 @@
 
 ## Why This Exists
 
-IFC-086 attestation falsely claimed "service wired in container" — static checks (typecheck, mocked tests, lint, build) all passed while service was never instantiated. 4 broken services found: ChainVersion, Experiment, Feedback, ConversationSearch.
+IFC-086 attestation falsely claimed "service wired in container" — static checks
+(typecheck, mocked tests, lint, build) all passed while service was never
+instantiated. 4 broken services found: ChainVersion, Experiment, Feedback,
+ConversationSearch.
 
 ## Check Steps
 

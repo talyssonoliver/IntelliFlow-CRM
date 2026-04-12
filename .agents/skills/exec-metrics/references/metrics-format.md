@@ -46,7 +46,11 @@
   "completed_at": "2026-01-29T16:30:00.000Z",
   "actual_duration_minutes": 450,
   "status_history": [
-    { "status": "Completed", "at": "2026-01-29T16:30:00.000Z", "note": "exec completed — MATOP PASS" }
+    {
+      "status": "Completed",
+      "at": "2026-01-29T16:30:00.000Z",
+      "note": "exec completed — MATOP PASS"
+    }
   ],
   "execution": {
     "started_at": "2026-01-29T14:00:00.000Z",
@@ -103,7 +107,12 @@
     }
   ],
   "kpis": {
-    "test_coverage": { "target": 80, "actual": 85.3, "met": true, "unit": "percent" },
+    "test_coverage": {
+      "target": 80,
+      "actual": 85.3,
+      "met": true,
+      "unit": "percent"
+    },
     "response_time": { "target": 200, "actual": 145, "met": true, "unit": "ms" }
   },
   "blockers": [],
@@ -136,7 +145,11 @@
   "status": "Failed",
   "completed_at": "2026-01-29T16:30:00.000Z",
   "status_history": [
-    { "status": "Failed", "at": "2026-01-29T16:30:00.000Z", "note": "exec failed — Security gate failed" }
+    {
+      "status": "Failed",
+      "at": "2026-01-29T16:30:00.000Z",
+      "note": "exec failed — Security gate failed"
+    }
   ],
   "execution": {
     "started_at": "2026-01-29T14:00:00.000Z",
@@ -168,38 +181,38 @@ sha256sum path/to/file.ts | cut -d' ' -f1
 
 ### Session Start Fields
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `status` | string | Set to "In Progress" |
-| `started_at` | ISO 8601 | When session began |
-| `status_history[]` | array | Add entry: `{ status, at, note }` |
-| `execution.started_at` | ISO 8601 | Implementation start time |
-| `execution.executor` | string | "Claude Code /exec" |
-| `execution.agents` | string[] | STOA names selected for this task |
+| Field                  | Type     | Description                       |
+| ---------------------- | -------- | --------------------------------- |
+| `status`               | string   | Set to "In Progress"              |
+| `started_at`           | ISO 8601 | When session began                |
+| `status_history[]`     | array    | Add entry: `{ status, at, note }` |
+| `execution.started_at` | ISO 8601 | Implementation start time         |
+| `execution.executor`   | string   | "Claude Code /exec"               |
+| `execution.agents`     | string[] | STOA names selected for this task |
 
 ### Session End Fields
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `status` | string | "Completed", "Failed", or "Needs Human" |
-| `completed_at` | ISO 8601 | When session ended |
-| `actual_duration_minutes` | number | Total minutes from started_at to completed_at |
-| `execution.completed_at` | ISO 8601 | Execution end time |
-| `execution.duration_minutes` | number | Execution-only duration |
-| `execution.last_error` | string\|null | Error message if failed, null if success |
-| `artifacts.created[]` | array | `{ path, sha256, created_at }` for each file |
-| `artifacts.missing[]` | array | Paths of expected files not created |
-| `validations[]` | array | All 4 commands: `{ name, command, executed_at, exit_code, duration_ms, passed }` |
-| `kpis{}` | object | `{ target, actual, met, unit }` per KPI |
-| `blockers[]` | array | Any remaining blockers |
-| `notes` | string | Summary of implementation |
+| Field                        | Type         | Description                                                                      |
+| ---------------------------- | ------------ | -------------------------------------------------------------------------------- |
+| `status`                     | string       | "Completed", "Failed", or "Needs Human"                                          |
+| `completed_at`               | ISO 8601     | When session ended                                                               |
+| `actual_duration_minutes`    | number       | Total minutes from started_at to completed_at                                    |
+| `execution.completed_at`     | ISO 8601     | Execution end time                                                               |
+| `execution.duration_minutes` | number       | Execution-only duration                                                          |
+| `execution.last_error`       | string\|null | Error message if failed, null if success                                         |
+| `artifacts.created[]`        | array        | `{ path, sha256, created_at }` for each file                                     |
+| `artifacts.missing[]`        | array        | Paths of expected files not created                                              |
+| `validations[]`              | array        | All 4 commands: `{ name, command, executed_at, exit_code, duration_ms, passed }` |
+| `kpis{}`                     | object       | `{ target, actual, met, unit }` per KPI                                          |
+| `blockers[]`                 | array        | Any remaining blockers                                                           |
+| `notes`                      | string       | Summary of implementation                                                        |
 
 ---
 
 ## Package Mapping (for validations field)
 
-| Task Pattern | Package Filter |
-|---|---|
-| `PG-*`, `IFC-090`, `IFC-091` | `@intelliflow/web` |
-| `IFC-085`, `AI-SETUP-*` | `@intelliflow/ai-worker` |
-| `IFC-003`, `IFC-004` | `@intelliflow/api` |
+| Task Pattern                 | Package Filter           |
+| ---------------------------- | ------------------------ |
+| `PG-*`, `IFC-090`, `IFC-091` | `@intelliflow/web`       |
+| `IFC-085`, `AI-SETUP-*`      | `@intelliflow/ai-worker` |
+| `IFC-003`, `IFC-004`         | `@intelliflow/api`       |

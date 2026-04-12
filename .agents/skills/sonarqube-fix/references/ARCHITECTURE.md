@@ -589,4 +589,5 @@ The SonarQube Fix Agent is a sophisticated multi-agent system that:
 6. **Tracks** detailed metrics for continuous improvement
 7. **Escalates** complex issues to human review when needed
 
-All while ensuring zero compromise on quality, security, or architecture principles.
+All while ensuring zero compromise on quality, security, or architecture
+principles.

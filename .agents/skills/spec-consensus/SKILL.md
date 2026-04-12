@@ -1,22 +1,26 @@
 ---
 name: spec-consensus
-description: Sub-skill of /spec-session. Handles Round 4+ consensus detection and team mode debate. Reaches agreement across agents before finalising the specification.
+description:
+  Sub-skill of /spec-session. Handles Round 4+ consensus detection and team mode
+  debate. Reaches agreement across agents before finalising the specification.
 ---
 
 # Spec Consensus Skill
 
-Handles consensus detection after the CHALLENGE round. Can run standalone to re-run consensus if initial attempt failed.
+Handles consensus detection after the CHALLENGE round. Can run standalone to
+re-run consensus if initial attempt failed.
 
-**Called by**: `/spec-session` Round 4+ (after CHALLENGE round)
-**Can also run standalone**: Yes — to re-run consensus if initial attempt failed
+**Called by**: `/spec-session` Round 4+ (after CHALLENGE round) **Can also run
+standalone**: Yes — to re-run consensus if initial attempt failed
 
 ## Consensus Rules
 
 ### Subagent Mode
 
 Consensus is reached when:
+
 - Round type is CONSENSUS
-- >= 66% of agents have "approved" in their response
+- > = 66% of agents have "approved" in their response
 - No critical unresolved issues
 
 If consensus isn't reached after 3 CONSENSUS rounds, session fails.
@@ -28,11 +32,13 @@ If consensus isn't reached after 3 CONSENSUS rounds, session fails.
 - Teammate non-response within 60s: lead nudges
 - Still no response after 30s: treat as abstention
 
-**See references/consensus-process.md** for full details, TypeScript snippet, team lifecycle, fallback logic, and CONSENSUS round output format.
+**See references/consensus-process.md** for full details, TypeScript snippet,
+team lifecycle, fallback logic, and CONSENSUS round output format.
 
 ## Self-Check Questions
 
 Before finalising spec, verify:
+
 1. Did each agent actually call Read tool? (Check tool use blocks)
 2. Are file paths and line numbers cited in analysis?
 3. Were discrepancies between summary and actual code noted?

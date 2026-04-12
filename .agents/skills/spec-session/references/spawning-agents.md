@@ -2,7 +2,8 @@
 
 ## How to Spawn Agents
 
-Agents are defined in `.claude/agents/`. You MUST use the **Task tool** to spawn them.
+Agents are defined in `.claude/agents/`. You MUST use the **Task tool** to spawn
+them.
 
 ## Subagent Mode (default)
 
@@ -27,7 +28,8 @@ Task(
 )
 ```
 
-Spawn agents **in parallel** for each round (they are independent within a round):
+Spawn agents **in parallel** for each round (they are independent within a
+round):
 
 ```
 # Round 1: ANALYSIS — spawn all agents in parallel
@@ -57,5 +59,6 @@ Use TeamCreate + Task with team_name:
 4. After consensus: shutdown all teammates, TeamDelete
 ```
 
-**Detection**: `resolveAgentMode('spec', agents.length)` from `tools/scripts/lib/stoa/agent-mode.ts`
-**Fallback**: If team creation fails, log error and continue with subagent mode.
+**Detection**: `resolveAgentMode('spec', agents.length)` from
+`tools/scripts/lib/stoa/agent-mode.ts` **Fallback**: If team creation fails, log
+error and continue with subagent mode.

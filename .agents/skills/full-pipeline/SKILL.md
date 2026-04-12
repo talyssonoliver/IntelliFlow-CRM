@@ -1,11 +1,19 @@
 ---
 name: full-pipeline
-description: Autonomous state-machine that chains spec-session → plan-session → exec for a task. Runs the FULL pipeline (spec → plan → exec) in a single invocation. With Ralph, each iteration is a complete pipeline attempt — Ralph handles retries on failure.
+description:
+  Autonomous state-machine that chains spec-session → plan-session → exec for a
+  task. Runs the FULL pipeline (spec → plan → exec) in a single invocation. With
+  Ralph, each iteration is a complete pipeline attempt — Ralph handles retries
+  on failure.
 ---
 
 # Full Pipeline Command (Ralph-Compatible)
 
-**CRITICAL**: This command runs the FULL pipeline (all phases) in a single invocation. Do NOT stop after one phase — chain spec → plan → exec sequentially until the task is complete or a phase fails. **NEVER check Ralph loop status or use it as a reason to stop** — Ralph is only for retries, the pipeline runs independently.
+**CRITICAL**: This command runs the FULL pipeline (all phases) in a single
+invocation. Do NOT stop after one phase — chain spec → plan → exec sequentially
+until the task is complete or a phase fails. **NEVER check Ralph loop status or
+use it as a reason to stop** — Ralph is only for retries, the pipeline runs
+independently.
 
 ## Usage
 
@@ -49,18 +57,21 @@ After all phases succeed → Run Deliverable Verification → if PASS output pro
 
 Since each iteration now runs the full pipeline, fewer iterations are needed:
 
-| Task Type | Recommended --max-iterations |
-|-----------|------------------------------|
-| Simple page (404, legal) | 3 |
-| Settings page (CRUD form) | 5 |
-| CRM page (list+detail) | 7 |
-| Complex feature (AI, workflow) | 10 |
+| Task Type                      | Recommended --max-iterations |
+| ------------------------------ | ---------------------------- |
+| Simple page (404, legal)       | 3                            |
+| Settings page (CRUD form)      | 5                            |
+| CRM page (list+detail)         | 7                            |
+| Complex feature (AI, workflow) | 10                           |
 
-**See references/pipeline-phases.md** for: full phase instructions, deliverable verification algorithm, error recovery table, resumability details, and important notes.
+**See references/pipeline-phases.md** for: full phase instructions, deliverable
+verification algorithm, error recovery table, resumability details, and
+important notes.
 
 ## Completion Promise
 
 Only output the promise after Deliverable Verification PASSES:
+
 ```
 <promise>PIPELINE COMPLETE</promise>
 ```
@@ -68,15 +79,19 @@ Only output the promise after Deliverable Verification PASSES:
 **NEVER output the promise without running Deliverable Verification first.**
 
 **MANDATORY pre-promise script** (IFC-220 lesson — agent skipped manual checks):
+
 ```bash
 npx tsx tools/scripts/detect-phantom-completions.ts
 ```
-If the task appears in `phantom_completions` → DO NOT output promise. Fix missing artifacts first.
-This is deterministic enforcement — the script checks every EVIDENCE/ARTIFACT path against disk.
+
+If the task appears in `phantom_completions` → DO NOT output promise. Fix
+missing artifacts first. This is deterministic enforcement — the script checks
+every EVIDENCE/ARTIFACT path against disk.
 
 ## Follow-Up Tasks
 
 When spec, plan, or exec discovers issues outside the current task's scope:
+
 1. See `references/follow-up-task-protocol.md` for the full protocol
 2. Blocking follow-ups pause the pipeline until resolved
 3. Non-blocking follow-ups are tracked but don't pause the pipeline
@@ -85,13 +100,20 @@ When spec, plan, or exec discovers issues outside the current task's scope:
 
 ## Non-Negotiable Rules
 
-1. Full pipeline per invocation — run ALL remaining phases (spec → plan → exec) sequentially in one invocation
-2. Stop on failure only — if a phase fails, STOP and let Ralph retry the full pipeline
+1. Full pipeline per invocation — run ALL remaining phases (spec → plan → exec)
+   sequentially in one invocation
+2. Stop on failure only — if a phase fails, STOP and let Ralph retry the full
+   pipeline
 3. Trust the state machine — always detect phase from artifacts, never assume
-4. Resume from where you left off — if spec already exists, skip to plan; if plan exists, skip to exec
+4. Resume from where you left off — if spec already exists, skip to plan; if
+   plan exists, skip to exec
 5. Use the Skill tool to invoke /spec-session, /plan-session, /exec
 6. NEVER manually set CSV to "Completed" — only /exec Phase 5 should do this
-7. **NEVER check Ralph loop status** — Do NOT read `.claude/ralph-loops/` state files. Do NOT check if the Ralph loop is active, cancelled, or deactivated. Ralph is ONLY for retries on failure — the pipeline itself runs ALL phases regardless of Ralph status. Even if Ralph was cancelled or never started, you MUST continue to the next phase after each success.
+7. **NEVER check Ralph loop status** — Do NOT read `.claude/ralph-loops/` state
+   files. Do NOT check if the Ralph loop is active, cancelled, or deactivated.
+   Ralph is ONLY for retries on failure — the pipeline itself runs ALL phases
+   regardless of Ralph status. Even if Ralph was cancelled or never started, you
+   MUST continue to the next phase after each success.
 
 ## Related Skills
 

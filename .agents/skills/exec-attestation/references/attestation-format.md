@@ -1,7 +1,8 @@
 # Attestation Format — Full JSON Template & Field Rules
 
-> **SCHEMA COMPLIANCE**: Only use fields defined in `apps/project-tracker/docs/metrics/schemas/attestation.schema.json`.
-> Adding extra fields will FAIL validation (`additionalProperties: false`).
+> **SCHEMA COMPLIANCE**: Only use fields defined in
+> `apps/project-tracker/docs/metrics/schemas/attestation.schema.json`. Adding
+> extra fields will FAIL validation (`additionalProperties: false`).
 
 ## Full JSON Template
 
@@ -67,9 +68,7 @@
   "dependencies_verified": ["<dependency task IDs>"],
   "context_acknowledgment": {
     "acknowledged_at": "<ISO 8601>",
-    "files_read": [
-      { "path": "<file>", "sha256": "<64-char hex>" }
-    ],
+    "files_read": [{ "path": "<file>", "sha256": "<64-char hex>" }],
     "invariants_acknowledged": ["<invariants>"]
   },
   "artifact_hashes": {
@@ -92,6 +91,7 @@
 ### `validation_results` — MUST have exactly 4 entries
 
 The dashboard API matches by `name`. Use EXACTLY these names:
+
 - `"TypeScript"`
 - `"Tests"`
 - `"Lint"`
@@ -99,8 +99,9 @@ The dashboard API matches by `name`. Use EXACTLY these names:
 
 Without `name`, UI shows all validations as "pending" even though they passed.
 
-Allowed fields per entry: `name`, `command`, `passed`, `exit_code`, `timestamp`, `duration_ms`
-**NOT allowed**: `details`, `stdout`, `stderr`, `output` — additionalProperties is false
+Allowed fields per entry: `name`, `command`, `passed`, `exit_code`, `timestamp`,
+`duration_ms` **NOT allowed**: `details`, `stdout`, `stderr`, `output` —
+additionalProperties is false
 
 ### `context_acknowledgment.files_read` — sha256 key (NOT hash)
 
@@ -109,29 +110,40 @@ Allowed fields per entry: `name`, `command`, `passed`, `exit_code`, `timestamp`,
 ```
 
 Hash calculation:
+
 - Windows: `certutil -hashfile <path> SHA256`
 - Linux/Mac: `sha256sum <path> | cut -d' ' -f1`
 
 ### `verdict` Field
 
-| Value | Meaning | Can Complete? |
-|---|---|---|
-| `"COMPLETE"` | All work finished, all gates passed | YES |
-| `"INCOMPLETE"` | Major work remaining | NO |
-| `"PARTIAL"` | Some work deferred | NO |
-| `"BLOCKED"` | Blocking issues | NO |
-| `"NEEDS_HUMAN"` | Human intervention required | NO |
+| Value           | Meaning                             | Can Complete? |
+| --------------- | ----------------------------------- | ------------- |
+| `"COMPLETE"`    | All work finished, all gates passed | YES           |
+| `"INCOMPLETE"`  | Major work remaining                | NO            |
+| `"PARTIAL"`     | Some work deferred                  | NO            |
+| `"BLOCKED"`     | Blocking issues                     | NO            |
+| `"NEEDS_HUMAN"` | Human intervention required         | NO            |
 
 ### `kpi_results` — Must use measured percentages
 
 **CORRECT** (measured):
+
 ```json
-{ "kpi": "Test coverage >=90%", "actual": "95.27% stmts, 96.21% lines, 100% functions", "met": true }
+{
+  "kpi": "Test coverage >=90%",
+  "actual": "95.27% stmts, 96.21% lines, 100% functions",
+  "met": true
+}
 ```
 
 **WRONG** (qualitative count):
+
 ```json
-{ "kpi": "Test coverage >=90%", "actual": "25/25 tests passing, all components covered", "met": true }
+{
+  "kpi": "Test coverage >=90%",
+  "actual": "25/25 tests passing, all components covered",
+  "met": true
+}
 ```
 
 ---
@@ -140,15 +152,15 @@ Hash calculation:
 
 These fields will cause schema validation to FAIL:
 
-| Forbidden Field | Use Instead |
-|---|---|
-| ~~`files_created`~~ | `artifact_hashes` |
-| ~~`files_modified`~~ | `artifact_hashes` |
-| ~~`schedule_metrics`~~ | Put in task-status JSON |
-| ~~`completion_status`~~ | `verdict` |
-| ~~`coverage_metrics`~~ | Put in task-status JSON |
-| ~~`plan_deliverables`~~ | Parsed from plan file by dashboard API |
-| ~~`details`~~ (in validation_results) | Not allowed |
+| Forbidden Field                       | Use Instead                            |
+| ------------------------------------- | -------------------------------------- |
+| ~~`files_created`~~                   | `artifact_hashes`                      |
+| ~~`files_modified`~~                  | `artifact_hashes`                      |
+| ~~`schedule_metrics`~~                | Put in task-status JSON                |
+| ~~`completion_status`~~               | `verdict`                              |
+| ~~`coverage_metrics`~~                | Put in task-status JSON                |
+| ~~`plan_deliverables`~~               | Parsed from plan file by dashboard API |
+| ~~`details`~~ (in validation_results) | Not allowed                            |
 
 ---
 
@@ -163,11 +175,13 @@ sha256sum path/to/file.ts | cut -d' ' -f1
 ```
 
 Output from certutil looks like:
+
 ```
 SHA256 hash of path/to/file.ts:
 a1b2c3d4e5f6789012345678901234567890123456789012345678901234abcd
 CertUtil: -hashfile command completed successfully.
 ```
+
 Take only the second line (64 hex characters).
 
 ---
@@ -181,6 +195,7 @@ curl http://localhost:3002/api/tasks/validation-summary/<TASK_ID>
 ```
 
 Expected response when correct:
+
 ```json
 {
   "completionGates": {
@@ -197,6 +212,9 @@ Expected response when correct:
 ```
 
 If `canComplete` is false or any validation shows "pending", check:
-1. `validation_results[].name` uses exact strings ("TypeScript", "Tests", "Lint", "Build")
+
+1. `validation_results[].name` uses exact strings ("TypeScript", "Tests",
+   "Lint", "Build")
 2. `verdict` is exactly `"COMPLETE"`
-3. File is at the correct path: `.specify/sprints/sprint-{N}/attestations/<TASK_ID>/attestation.json`
+3. File is at the correct path:
+   `.specify/sprints/sprint-{N}/attestations/<TASK_ID>/attestation.json`
