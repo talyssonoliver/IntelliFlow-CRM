@@ -338,8 +338,7 @@ function NextBestActionCard({
               onClick={onActionTaken}
               className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
             >
-              <span className="material-symbols-outlined text-sm">check</span>{' '}
-              Mark Done
+              <span className="material-symbols-outlined text-sm">check</span> Mark Done
             </button>
           )}
           {onDismiss && (
@@ -348,8 +347,7 @@ function NextBestActionCard({
               onClick={onDismiss}
               className="flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium border border-border hover:bg-muted transition-colors"
             >
-              <span className="material-symbols-outlined text-sm">close</span>{' '}
-              Dismiss
+              <span className="material-symbols-outlined text-sm">close</span> Dismiss
             </button>
           )}
         </div>

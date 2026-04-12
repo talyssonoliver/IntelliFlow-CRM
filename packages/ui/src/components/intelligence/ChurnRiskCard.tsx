@@ -306,7 +306,9 @@ function ChurnRiskCard({
           <h4 className="text-sm font-medium text-foreground mb-2">Top Risk Factors</h4>
           <ul className="space-y-2">
             {data.factors.slice(0, 3).map((factor, index) => (
-              <li key={index} className="flex items-center justify-between text-sm"> {/* NOSONAR typescript:S6479 */}
+              <li key={index} className="flex items-center justify-between text-sm">
+                {' '}
+                {/* NOSONAR typescript:S6479 */}
                 <span className="text-foreground">{factor.factor}</span>
                 <div className="flex items-center gap-2">
                   {factor.value !== undefined && (

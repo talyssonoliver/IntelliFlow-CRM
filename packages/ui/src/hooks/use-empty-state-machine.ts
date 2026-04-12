@@ -6,11 +6,7 @@ import { useCallback, useRef, useState } from 'react';
 // Types
 // ============================================
 
-export type EmptyStatePhase =
-  | 'passive'
-  | 'soft-cta'
-  | 'inline-composer'
-  | 'smart-suggestions';
+export type EmptyStatePhase = 'passive' | 'soft-cta' | 'inline-composer' | 'smart-suggestions';
 
 export interface EmptyStateMachine {
   /** Current phase of the empty-state lifecycle */

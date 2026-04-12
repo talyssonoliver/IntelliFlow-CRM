@@ -11,10 +11,7 @@ import {
   type EmptyStateVariant,
 } from './entity-empty-state-config';
 import { ENTITY_ILLUSTRATIONS } from './empty-state-illustrations';
-import {
-  useEmptyStateMachine,
-  type EmptyStatePhase,
-} from '../hooks/use-empty-state-machine';
+import { useEmptyStateMachine, type EmptyStatePhase } from '../hooks/use-empty-state-machine';
 
 // ============================================
 // Types
@@ -212,14 +209,19 @@ function InlineComposer({
         />
       )}
       <div className="flex items-center justify-end gap-2">
-        <Button variant="ghost" size="sm" onClick={onCancel}>Cancel</Button>
+        <Button variant="ghost" size="sm" onClick={onCancel}>
+          Cancel
+        </Button>
         <Button size="sm" onClick={handleSubmit} disabled={!value.trim()}>
-          <span className="material-symbols-outlined text-base mr-1" aria-hidden="true">add</span>
+          <span className="material-symbols-outlined text-base mr-1" aria-hidden="true">
+            add
+          </span>
           Create
         </Button>
       </div>
       <p className="text-xs text-muted-foreground text-center">
-        <kbd className="px-1 py-0.5 rounded bg-muted text-xs font-mono">Ctrl+Enter</kbd> submit{' · '}
+        <kbd className="px-1 py-0.5 rounded bg-muted text-xs font-mono">Ctrl+Enter</kbd> submit
+        {' · '}
         <kbd className="px-1 py-0.5 rounded bg-muted text-xs font-mono">Esc</kbd> cancel
       </p>
     </div>
@@ -254,7 +256,9 @@ function SuggestionChips({
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
           )}
         >
-          <span className="material-symbols-outlined text-sm" aria-hidden="true">add_circle</span>
+          <span className="material-symbols-outlined text-sm" aria-hidden="true">
+            add_circle
+          </span>
           {suggestion}
         </button>
       ))}
@@ -362,11 +366,20 @@ const EmptyState = React.forwardRef<HTMLDivElement, EmptyStateProps>(
       const suggestions = suggestionsProp ?? defaults.suggestions;
       const composerPlaceholder = placeholderProp ?? defaults.composerPlaceholder;
 
-      const handleMouseEnter = () => { if (phase === 'passive') setPhase('soft-cta'); };
-      const handleMouseLeave = () => { if (phase === 'soft-cta') setPhase('passive'); };
-      const handleFocus = () => { if (phase === 'passive') setPhase('soft-cta'); };
+      const handleMouseEnter = () => {
+        if (phase === 'passive') setPhase('soft-cta');
+      };
+      const handleMouseLeave = () => {
+        if (phase === 'soft-cta') setPhase('passive');
+      };
+      const handleFocus = () => {
+        if (phase === 'passive') setPhase('soft-cta');
+      };
       const handleCtaClick = () => setPhase('inline-composer');
-      const handleComposerSubmit = (v: string) => { onCreate?.(v); setPhase('smart-suggestions'); };
+      const handleComposerSubmit = (v: string) => {
+        onCreate?.(v);
+        setPhase('smart-suggestions');
+      };
       const handleComposerCancel = () => setPhase('soft-cta');
 
       const showIllustration = phase !== 'smart-suggestions';
@@ -398,19 +411,23 @@ const EmptyState = React.forwardRef<HTMLDivElement, EmptyStateProps>(
           {...props}
         >
           {showIllustration && (
-            <div className={cn(
-              'transition-all duration-300 ease-out',
-              phase === 'soft-cta' && 'opacity-80',
-              phase === 'inline-composer' && 'scale-75 opacity-60'
-            )}>
+            <div
+              className={cn(
+                'transition-all duration-300 ease-out',
+                phase === 'soft-cta' && 'opacity-80',
+                phase === 'inline-composer' && 'scale-75 opacity-60'
+              )}
+            >
               <EntityIllustration entity={entity} phase={phase} custom={illustration} />
             </div>
           )}
 
-          <h3 className={cn(
-            'text-lg font-semibold text-foreground transition-all duration-200',
-            (showComposer || showSuggestions) && 'text-base'
-          )}>
+          <h3
+            className={cn(
+              'text-lg font-semibold text-foreground transition-all duration-200',
+              (showComposer || showSuggestions) && 'text-base'
+            )}
+          >
             {showSuggestions ? 'Great start!' : title}
           </h3>
 
@@ -421,22 +438,37 @@ const EmptyState = React.forwardRef<HTMLDivElement, EmptyStateProps>(
           {showCta && (
             <div className="animate-fade-in">
               <Button onClick={handleCtaClick} size="sm">
-                <span className="material-symbols-outlined text-base mr-1.5" aria-hidden="true">add</span>
+                <span className="material-symbols-outlined text-base mr-1.5" aria-hidden="true">
+                  add
+                </span>
                 {ctaLabel}
               </Button>
               {defaults.hotkey && (
                 <p className="text-xs text-muted-foreground mt-2">
-                  or press <kbd className="px-1.5 py-0.5 rounded bg-muted text-xs font-mono font-medium">{defaults.hotkey}</kbd>
+                  or press{' '}
+                  <kbd className="px-1.5 py-0.5 rounded bg-muted text-xs font-mono font-medium">
+                    {defaults.hotkey}
+                  </kbd>
                 </p>
               )}
             </div>
           )}
 
-          {showComposer && (
-            renderComposer
-              ? renderComposer({ onSubmit: handleComposerSubmit, onCancel: handleComposerCancel, placeholder: composerPlaceholder })
-              : <InlineComposer entity={entity} placeholder={composerPlaceholder} onSubmit={handleComposerSubmit} onCancel={handleComposerCancel} />
-          )}
+          {showComposer &&
+            (renderComposer ? (
+              renderComposer({
+                onSubmit: handleComposerSubmit,
+                onCancel: handleComposerCancel,
+                placeholder: composerPlaceholder,
+              })
+            ) : (
+              <InlineComposer
+                entity={entity}
+                placeholder={composerPlaceholder}
+                onSubmit={handleComposerSubmit}
+                onCancel={handleComposerCancel}
+              />
+            ))}
 
           {showSuggestions && suggestions.length > 0 && (
             <SuggestionChips suggestions={suggestions} onSuggestionClick={onSuggestionClick} />
@@ -461,8 +493,17 @@ const EmptyState = React.forwardRef<HTMLDivElement, EmptyStateProps>(
         )}
         {...props}
       >
-        <div className={cn('rounded-full flex items-center justify-center', config.iconWrapper, iconBgClass)}>
-          <span className={cn('material-symbols-outlined', config.icon, iconColorClass)} aria-hidden="true">
+        <div
+          className={cn(
+            'rounded-full flex items-center justify-center',
+            config.iconWrapper,
+            iconBgClass
+          )}
+        >
+          <span
+            className={cn('material-symbols-outlined', config.icon, iconColorClass)}
+            aria-hidden="true"
+          >
             {icon}
           </span>
         </div>
@@ -470,7 +511,9 @@ const EmptyState = React.forwardRef<HTMLDivElement, EmptyStateProps>(
         <div className={cn('flex flex-col', config.gap)}>
           <h3 className={cn(config.title, 'text-foreground')}>{titleProp}</h3>
           {descriptionProp && (
-            <p className={cn(config.description, 'text-muted-foreground max-w-sm')}>{descriptionProp}</p>
+            <p className={cn(config.description, 'text-muted-foreground max-w-sm')}>
+              {descriptionProp}
+            </p>
           )}
         </div>
 

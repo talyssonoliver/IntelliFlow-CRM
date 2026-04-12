@@ -89,8 +89,14 @@ export const ENTITY_EMPTY_STATE_CONFIG: Record<EmptyStateEntity, EntityEmptyStat
     suggestions: ['Add a due date', 'Assign to someone', 'Set priority'],
     composerPlaceholder: 'What needs to be done?',
     variants: {
-      filtered: { title: 'No tasks found', description: 'Try adjusting your filters or create a new task.' },
-      selection: { title: 'No task selected', description: 'Select a task from the list to view details.' },
+      filtered: {
+        title: 'No tasks found',
+        description: 'Try adjusting your filters or create a new task.',
+      },
+      selection: {
+        title: 'No task selected',
+        description: 'Select a task from the list to view details.',
+      },
     },
   },
   chats: {
@@ -102,7 +108,10 @@ export const ENTITY_EMPTY_STATE_CONFIG: Record<EmptyStateEntity, EntityEmptyStat
     suggestions: ['Mention a teammate', 'Attach a file', 'Add an emoji'],
     composerPlaceholder: 'Type a message...',
     variants: {
-      selection: { title: 'No conversation selected', description: 'Select a conversation to view messages.' },
+      selection: {
+        title: 'No conversation selected',
+        description: 'Select a conversation to view messages.',
+      },
     },
   },
   appointments: {
@@ -114,7 +123,10 @@ export const ENTITY_EMPTY_STATE_CONFIG: Record<EmptyStateEntity, EntityEmptyStat
     suggestions: ['Set a reminder', 'Invite attendees', 'Add location'],
     composerPlaceholder: 'Appointment title...',
     variants: {
-      filtered: { title: 'No appointments found', description: 'Try adjusting your date range or filters.' },
+      filtered: {
+        title: 'No appointments found',
+        description: 'Try adjusting your date range or filters.',
+      },
     },
   },
   files: {
@@ -134,8 +146,14 @@ export const ENTITY_EMPTY_STATE_CONFIG: Record<EmptyStateEntity, EntityEmptyStat
     suggestions: ['Use a template', 'Schedule send', 'Add CC/BCC'],
     composerPlaceholder: 'Subject line...',
     variants: {
-      selection: { title: 'No email selected', description: 'Select an email from the list to view its thread.' },
-      folder: { title: 'No emails in this folder', description: 'Emails you send and receive will appear here.' },
+      selection: {
+        title: 'No email selected',
+        description: 'Select an email from the list to view its thread.',
+      },
+      folder: {
+        title: 'No emails in this folder',
+        description: 'Emails you send and receive will appear here.',
+      },
       filtered: { title: 'No results found', description: 'Try a different search term.' },
     },
   },
@@ -167,8 +185,14 @@ export const ENTITY_EMPTY_STATE_CONFIG: Record<EmptyStateEntity, EntityEmptyStat
     suggestions: ['Use a template', 'Request signature', 'Share externally'],
     composerPlaceholder: 'Document title...',
     variants: {
-      selection: { title: 'No document selected', description: 'Select a document from the list to view details.' },
-      filtered: { title: 'No documents found', description: 'Try a different search term or filter.' },
+      selection: {
+        title: 'No document selected',
+        description: 'Select a document from the list to view details.',
+      },
+      filtered: {
+        title: 'No documents found',
+        description: 'Try a different search term or filter.',
+      },
     },
   },
   leads: {
@@ -179,7 +203,10 @@ export const ENTITY_EMPTY_STATE_CONFIG: Record<EmptyStateEntity, EntityEmptyStat
     suggestions: ['Import from CSV', 'Add manually', 'Connect a form'],
     composerPlaceholder: 'Lead name...',
     variants: {
-      selection: { title: 'No lead selected', description: 'Select a lead from the list to view details.' },
+      selection: {
+        title: 'No lead selected',
+        description: 'Select a lead from the list to view details.',
+      },
       filtered: { title: 'No leads found', description: 'Try adjusting your search or filters.' },
     },
   },
@@ -191,8 +218,14 @@ export const ENTITY_EMPTY_STATE_CONFIG: Record<EmptyStateEntity, EntityEmptyStat
     suggestions: ['Import contacts', 'Sync from email', 'Add manually'],
     composerPlaceholder: 'Contact name...',
     variants: {
-      selection: { title: 'No contact selected', description: 'Select a contact from the list to view details.' },
-      filtered: { title: 'No contacts found', description: 'No contacts match your search criteria.' },
+      selection: {
+        title: 'No contact selected',
+        description: 'Select a contact from the list to view details.',
+      },
+      filtered: {
+        title: 'No contacts found',
+        description: 'No contacts match your search criteria.',
+      },
     },
   },
   accounts: {
@@ -203,7 +236,10 @@ export const ENTITY_EMPTY_STATE_CONFIG: Record<EmptyStateEntity, EntityEmptyStat
     suggestions: ['Add contacts', 'Link opportunities', 'Set account tier'],
     composerPlaceholder: 'Company name...',
     variants: {
-      filtered: { title: 'No accounts found', description: 'Try adjusting your search or filters.' },
+      filtered: {
+        title: 'No accounts found',
+        description: 'Try adjusting your search or filters.',
+      },
     },
   },
   deals: {
@@ -214,7 +250,10 @@ export const ENTITY_EMPTY_STATE_CONFIG: Record<EmptyStateEntity, EntityEmptyStat
     suggestions: ['Set expected close date', 'Add products', 'Assign owner'],
     composerPlaceholder: 'Deal name...',
     variants: {
-      selection: { title: 'No deal selected', description: 'Select a deal from the list to view details.' },
+      selection: {
+        title: 'No deal selected',
+        description: 'Select a deal from the list to view details.',
+      },
       filtered: { title: 'No deals found', description: 'Try adjusting your search or filters.' },
     },
   },
@@ -226,7 +265,10 @@ export const ENTITY_EMPTY_STATE_CONFIG: Record<EmptyStateEntity, EntityEmptyStat
     suggestions: ['Set priority', 'Assign agent', 'Add SLA policy'],
     composerPlaceholder: 'Ticket subject...',
     variants: {
-      selection: { title: 'No ticket selected', description: 'Select a ticket from the list to view details.' },
+      selection: {
+        title: 'No ticket selected',
+        description: 'Select a ticket from the list to view details.',
+      },
       filtered: { title: 'No tickets found', description: 'No tickets match your filters.' },
     },
   },
@@ -238,7 +280,10 @@ export const ENTITY_EMPTY_STATE_CONFIG: Record<EmptyStateEntity, EntityEmptyStat
     suggestions: ['Attach evidence', 'Set deadlines', 'Add stakeholders'],
     composerPlaceholder: 'Case title...',
     variants: {
-      selection: { title: 'No case selected', description: 'Select a case from the list to view details.' },
+      selection: {
+        title: 'No case selected',
+        description: 'Select a case from the list to view details.',
+      },
       filtered: { title: 'No cases found', description: 'No cases match your search criteria.' },
     },
   },
@@ -258,7 +303,10 @@ export const ENTITY_EMPTY_STATE_CONFIG: Record<EmptyStateEntity, EntityEmptyStat
     suggestions: ['Check lead scores', 'View churn risks', 'See recommendations'],
     composerPlaceholder: 'Search insights...',
     variants: {
-      filtered: { title: 'No insights found', description: 'No insights match your current filter. Try a different one.' },
+      filtered: {
+        title: 'No insights found',
+        description: 'No insights match your current filter. Try a different one.',
+      },
     },
   },
   notifications: {
@@ -269,7 +317,10 @@ export const ENTITY_EMPTY_STATE_CONFIG: Record<EmptyStateEntity, EntityEmptyStat
     suggestions: ['Check notification preferences', 'Enable push notifications'],
     composerPlaceholder: '',
     variants: {
-      filtered: { title: 'No notifications found', description: 'No notifications match your filters.' },
+      filtered: {
+        title: 'No notifications found',
+        description: 'No notifications match your filters.',
+      },
     },
   },
   comments: {

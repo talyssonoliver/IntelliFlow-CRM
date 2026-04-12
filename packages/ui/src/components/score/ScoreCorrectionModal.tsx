@@ -208,7 +208,7 @@ export function ScoreCorrectionModal({
           {/* Optional Reason */}
           <div className="space-y-2">
             <Label htmlFor="reason-text">
-              Additional details{' '}<span className="text-muted-foreground">(optional)</span>
+              Additional details <span className="text-muted-foreground">(optional)</span>
             </Label>
             <Textarea
               id="reason-text"

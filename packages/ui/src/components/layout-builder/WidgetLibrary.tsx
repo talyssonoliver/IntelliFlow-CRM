@@ -108,19 +108,25 @@ export function WidgetLibrary({
         {filteredTemplates.length === 0 ? (
           <div className="text-center py-8 text-slate-400">
             {(() => {
-              if (searchQuery) return (
-                <>
-                  <span className="material-symbols-outlined text-4xl mb-2 block">search_off</span>
-                  <p className="text-sm">No widgets match your search</p>
-                </>
-              );
-              if (availableTemplates.length === 0) return (
-                <>
-                  <span className="material-symbols-outlined text-4xl mb-2 block">check_circle</span>
-                  <p className="text-sm">All widgets added!</p>
-                  <p className="text-xs mt-1 text-slate-500">Remove a widget to add it again</p>
-                </>
-              );
+              if (searchQuery)
+                return (
+                  <>
+                    <span className="material-symbols-outlined text-4xl mb-2 block">
+                      search_off
+                    </span>
+                    <p className="text-sm">No widgets match your search</p>
+                  </>
+                );
+              if (availableTemplates.length === 0)
+                return (
+                  <>
+                    <span className="material-symbols-outlined text-4xl mb-2 block">
+                      check_circle
+                    </span>
+                    <p className="text-sm">All widgets added!</p>
+                    <p className="text-xs mt-1 text-slate-500">Remove a widget to add it again</p>
+                  </>
+                );
               return (
                 <>
                   <span className="material-symbols-outlined text-4xl mb-2 block">widgets</span>

@@ -173,14 +173,15 @@ const EntityAvatar = React.forwardRef<HTMLDivElement, EntityAvatarProps>(
         {...props}
       >
         {(() => {
-          if (showImage) return (
-            <img
-              src={imageUrl}
-              alt={alt || name}
-              className="h-full w-full object-cover"
-              onError={() => setImageError(true)}
-            />
-          );
+          if (showImage)
+            return (
+              <img
+                src={imageUrl}
+                alt={alt || name}
+                className="h-full w-full object-cover"
+                onError={() => setImageError(true)}
+              />
+            );
           if (fallback) return fallback;
           return <span aria-hidden="true">{initials}</span>;
         })()}
