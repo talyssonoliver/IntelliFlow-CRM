@@ -10,13 +10,16 @@
  * way to pin the exact logic that the frontend is not positioned to test.
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 
+import { createTestContext, prismaMock, TEST_UUIDS } from '../../../test/setup';
 import {
   mergeSteps,
+  normalizeEntityType,
   parseStepDefinitions,
   parseStepResults,
   stepTypeToName,
+  workflowRouter,
 } from '../workflow.router';
 
 // ---------------------------------------------------------------------------
@@ -59,6 +62,29 @@ describe('parseStepDefinitions', () => {
   it('defaults config to empty object when omitted', () => {
     const result = parseStepDefinitions([{ id: 1, type: 'score' }]);
     expect(result[0].config).toEqual({});
+  });
+
+  it('unwraps { nodes, edges } envelope format (IFC-031)', () => {
+    const envelope = {
+      nodes: [
+        { id: 1, type: 'start', config: {} },
+        { id: 2, type: 'action', config: { actionType: 'send_notification' } },
+        { id: 3, type: 'end', config: {} },
+      ],
+      edges: [
+        { id: 'e1', source: 'node-1', target: 'node-2' },
+        { id: 'e2', source: 'node-2', target: 'node-3' },
+      ],
+    };
+    const result = parseStepDefinitions(envelope);
+    expect(result).toHaveLength(3);
+    expect(result.map((r) => r.type)).toEqual(['start', 'action', 'end']);
+    expect(result[1].config).toEqual({ actionType: 'send_notification' });
+  });
+
+  it('returns [] for envelope with non-array nodes', () => {
+    expect(parseStepDefinitions({ nodes: 'not-an-array' })).toEqual([]);
+    expect(parseStepDefinitions({ nodes: null })).toEqual([]);
   });
 });
 
@@ -140,6 +166,52 @@ describe('stepTypeToName', () => {
 
   it('title-cases unknown single-word types', () => {
     expect(stepTypeToName('webhook')).toBe('Webhook');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// normalizeEntityType — PG-193 wiring fix
+// ---------------------------------------------------------------------------
+
+describe('normalizeEntityType', () => {
+  it('passes through canonical entity kinds unchanged', () => {
+    expect(normalizeEntityType('lead')).toBe('lead');
+    expect(normalizeEntityType('deal')).toBe('deal');
+    expect(normalizeEntityType('ticket')).toBe('ticket');
+    expect(normalizeEntityType('contact')).toBe('contact');
+    expect(normalizeEntityType('opportunity')).toBe('opportunity');
+    expect(normalizeEntityType('case')).toBe('case');
+    expect(normalizeEntityType('account')).toBe('account');
+  });
+
+  it('maps action-qualified lead values to "lead"', () => {
+    expect(normalizeEntityType('lead_qualification')).toBe('lead');
+    expect(normalizeEntityType('lead_scoring')).toBe('lead');
+    expect(normalizeEntityType('lead_update')).toBe('lead');
+    expect(normalizeEntityType('lead_converted')).toBe('lead');
+  });
+
+  it('maps action-qualified deal values to "deal"', () => {
+    expect(normalizeEntityType('deal_stage_changed')).toBe('deal');
+    expect(normalizeEntityType('deal_approved')).toBe('deal');
+    expect(normalizeEntityType('deal_won')).toBe('deal');
+  });
+
+  it('maps action-qualified ticket values to "ticket"', () => {
+    expect(normalizeEntityType('ticket_created')).toBe('ticket');
+    expect(normalizeEntityType('ticket_escalated')).toBe('ticket');
+  });
+
+  it('is case-insensitive on prefix match', () => {
+    expect(normalizeEntityType('Lead_Qualification')).toBe('lead');
+    expect(normalizeEntityType('DEAL_APPROVED')).toBe('deal');
+  });
+
+  it('returns the raw value when no prefix matches', () => {
+    // e.g., 'email_generation' — not tied to any workflow entity kind
+    expect(normalizeEntityType('email_generation')).toBe('email_generation');
+    expect(normalizeEntityType('job')).toBe('job');
+    expect(normalizeEntityType('workflow_trigger')).toBe('workflow_trigger');
   });
 });
 
@@ -234,9 +306,7 @@ describe('mergeSteps', () => {
 
   it('returns an empty array when there are no definitions', () => {
     expect(mergeSteps([], [], 'RUNNING')).toEqual([]);
-    expect(
-      mergeSteps([], [{ step: 1, status: 'completed' }], 'COMPLETED'),
-    ).toEqual([]);
+    expect(mergeSteps([], [{ step: 1, status: 'completed' }], 'COMPLETED')).toEqual([]);
   });
 
   it('silently drops results that reference a non-existent step id', () => {
@@ -259,7 +329,7 @@ describe('mergeSteps', () => {
         { id: 9, type: 'send_email', config: {} },
       ],
       [],
-      'RUNNING',
+      'RUNNING'
     );
     expect(merged[0].stepNumber).toBe(1);
     expect(merged[0].stepId).toBe(7);
@@ -281,5 +351,161 @@ describe('mergeSteps', () => {
     const merged = mergeSteps([{ id: 1, type: 'score', config: {} }], results, 'RUNNING');
     expect(merged[0].startedAt).toBe('2026-02-17T10:00:00Z');
     expect(merged[0].completedAt).toBe('2026-02-17T10:00:05Z');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// getExecutionsByEntity procedure — PG-193 wiring integration tests
+// ---------------------------------------------------------------------------
+
+describe('workflowRouter.getExecutionsByEntity — wiring resolution', () => {
+  const fakeExecution = {
+    id: 'exec-1',
+    workflowId: 'wf-1',
+    status: 'RUNNING' as const,
+    currentStep: 2,
+    stepResults: [
+      { step: 1, status: 'completed', result: { ok: true } },
+      { step: 2, status: 'pending', result: null },
+    ],
+    error: null,
+    startedAt: new Date('2026-02-17T10:00:00Z'),
+    completedAt: null,
+    entityType: 'lead',
+    entityId: 'lead-sarah-miller',
+    workflow: {
+      name: 'Lead Qualification Workflow',
+      category: 'sales',
+      steps: [
+        { id: 1, type: 'score', config: {} },
+        { id: 2, type: 'condition', config: {} },
+        { id: 3, type: 'assign', config: {} },
+        { id: 4, type: 'notify', config: {} },
+      ],
+    },
+  };
+
+  beforeEach(() => {
+    // Reset the Prisma mock between tests — the shared prismaMock accumulates
+    // call state across tests otherwise.
+    (prismaMock.workflowExecution.findFirst as any).mockReset();
+  });
+
+  it('resolves a prefix-qualified contextType against a canonical entityType (lead_qualification → lead)', async () => {
+    // Simulates the seeded `qualificationAgent` whose
+    // ConversationRecord.contextType='lead_qualification' and contextId
+    // points at a real lead. The prefix-normaliser rewrites the entityType
+    // lookup to 'lead' and the existing WorkflowExecution for that lead
+    // is returned.
+    (prismaMock.workflowExecution.findFirst as any).mockResolvedValueOnce(fakeExecution);
+
+    const caller = workflowRouter.createCaller(createTestContext());
+    const result = await caller.getExecutionsByEntity({
+      entityType: 'lead_qualification',
+      entityId: 'lead-sarah-miller',
+    });
+
+    expect(result).not.toBeNull();
+    expect(result?.id).toBe('exec-1');
+    expect(result?.workflowName).toBe('Lead Qualification Workflow');
+
+    const firstCall = (prismaMock.workflowExecution.findFirst as any).mock.calls[0][0];
+    expect(firstCall.where.tenantId).toBe(TEST_UUIDS.tenant);
+    expect(firstCall.where.entityType).toEqual({ in: ['lead', 'lead_qualification'] });
+    expect(firstCall.where.entityId).toBe('lead-sarah-miller');
+  });
+
+  it('resolves a task-kind contextType via entityId-only fallback (email_generation → lead via id)', async () => {
+    // Simulates the seeded `emailAgent` whose
+    // ConversationRecord.contextType='email_generation' cannot be mapped to
+    // a known entity kind by prefix. The first pass returns null; the
+    // second pass drops the entityType filter and finds the lead's workflow
+    // execution by id alone.
+    (prismaMock.workflowExecution.findFirst as any)
+      .mockResolvedValueOnce(null) // Pass 1: no match on email_generation
+      .mockResolvedValueOnce(fakeExecution); // Pass 2: entityId-only match
+
+    const caller = workflowRouter.createCaller(createTestContext());
+    const result = await caller.getExecutionsByEntity({
+      entityType: 'email_generation',
+      entityId: 'lead-sarah-miller',
+    });
+
+    expect(result).not.toBeNull();
+    expect(result?.id).toBe('exec-1');
+
+    // Pass 1: entityType filter present
+    const firstCall = (prismaMock.workflowExecution.findFirst as any).mock.calls[0][0];
+    expect(firstCall.where.entityType).toEqual({ in: ['email_generation'] });
+
+    // Pass 2: entityType filter absent (entityId-only fallback), tenantId preserved
+    const secondCall = (prismaMock.workflowExecution.findFirst as any).mock.calls[1][0];
+    expect(secondCall.where.tenantId).toBe(TEST_UUIDS.tenant);
+    expect(secondCall.where.entityType).toBeUndefined();
+    expect(secondCall.where.entityId).toBe('lead-sarah-miller');
+  });
+
+  it('resolves a canonical entityType directly without fallback', async () => {
+    // Caller already passed a known entity kind ('lead'). Single query,
+    // no fallback needed.
+    (prismaMock.workflowExecution.findFirst as any).mockResolvedValueOnce(fakeExecution);
+
+    const caller = workflowRouter.createCaller(createTestContext());
+    const result = await caller.getExecutionsByEntity({
+      entityType: 'lead',
+      entityId: 'lead-sarah-miller',
+    });
+
+    expect(result).not.toBeNull();
+    expect((prismaMock.workflowExecution.findFirst as any).mock.calls).toHaveLength(1);
+    const call = (prismaMock.workflowExecution.findFirst as any).mock.calls[0][0];
+    expect(call.where.tenantId).toBe(TEST_UUIDS.tenant);
+    expect(call.where.entityType).toEqual({ in: ['lead'] });
+  });
+
+  it('returns null when neither pass finds a match', async () => {
+    (prismaMock.workflowExecution.findFirst as any)
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(null);
+
+    const caller = workflowRouter.createCaller(createTestContext());
+    const result = await caller.getExecutionsByEntity({
+      entityType: 'email_generation',
+      entityId: 'nonexistent-id',
+    });
+
+    expect(result).toBeNull();
+    expect((prismaMock.workflowExecution.findFirst as any).mock.calls).toHaveLength(2);
+  });
+
+  it('does NOT run the entityId-only fallback when the normaliser matched a prefix', async () => {
+    // 'lead_qualification' normalises to 'lead', so we consider the
+    // normaliser to have "recognised" the type. If pass 1 returns null,
+    // we trust that the caller's entityType intent was valid and do NOT
+    // widen the search — it would be unsafe to return an execution that
+    // doesn't match the claimed entity kind.
+    (prismaMock.workflowExecution.findFirst as any).mockResolvedValueOnce(null);
+
+    const caller = workflowRouter.createCaller(createTestContext());
+    const result = await caller.getExecutionsByEntity({
+      entityType: 'lead_qualification',
+      entityId: 'lead-sarah-miller',
+    });
+
+    expect(result).toBeNull();
+    expect((prismaMock.workflowExecution.findFirst as any).mock.calls).toHaveLength(1);
+  });
+
+  it('does NOT run the fallback for canonical entity kinds either', async () => {
+    (prismaMock.workflowExecution.findFirst as any).mockResolvedValueOnce(null);
+
+    const caller = workflowRouter.createCaller(createTestContext());
+    const result = await caller.getExecutionsByEntity({
+      entityType: 'lead',
+      entityId: 'lead-sarah-miller',
+    });
+
+    expect(result).toBeNull();
+    expect((prismaMock.workflowExecution.findFirst as any).mock.calls).toHaveLength(1);
   });
 });

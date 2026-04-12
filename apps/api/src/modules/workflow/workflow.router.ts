@@ -16,6 +16,7 @@
 
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
+import { Prisma } from '@intelliflow/db';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
 
 // ---------------------------------------------------------------------------
@@ -25,7 +26,15 @@ import { createTRPCRouter, tenantProcedure } from '../../trpc';
 const workflowStepDefSchema = z.object({
   id: z.number().int().positive(),
   type: z.string(),
-  config: z.record(z.string(), z.unknown()).optional().default({}),
+  config: z.record(z.string(), z.unknown()).default({}),
+  position: z.object({ x: z.number(), y: z.number() }).optional(),
+});
+
+const workflowEdgeSchema = z.object({
+  id: z.string(),
+  source: z.string(),
+  target: z.string(),
+  label: z.string().optional(),
 });
 
 const workflowStepResultSchema = z.object({
@@ -76,6 +85,50 @@ export function stepTypeToName(type: string): string {
 }
 
 // ---------------------------------------------------------------------------
+// Entity type normalisation (PG-193 wiring fix)
+// ---------------------------------------------------------------------------
+
+/**
+ * Canonical `WorkflowExecution.entityType` values accepted by the workflow
+ * engine. Mirrors the domain vocabulary used by seed data at
+ * `packages/db/prisma/seed.ts:8090-8128` and the Prisma schema comment on
+ * `WorkflowExecution.entityType`.
+ */
+const KNOWN_ENTITY_TYPES: ReadonlySet<string> = new Set([
+  'lead',
+  'deal',
+  'ticket',
+  'contact',
+  'opportunity',
+  'case',
+  'account',
+]);
+
+/**
+ * Normalise a `ConversationRecord.contextType` value into a candidate
+ * `WorkflowExecution.entityType` value. Real data is action-qualified
+ * (`'lead_qualification'`, `'deal_approved'`, `'email_generation'`) while
+ * the workflow engine's `entityType` uses plain entity kinds (`'lead'`,
+ * `'deal'`). The panel join would never resolve without this mapping.
+ *
+ * Rules, in order:
+ * 1. If `raw` is already a known entity kind, return it unchanged.
+ * 2. Otherwise, walk through the known entity kinds and return the first
+ *    one whose snake_case prefix matches (`lead_qualification` → `lead`,
+ *    `deal_stage_changed` → `deal`).
+ * 3. Otherwise, return `raw` unchanged (best effort — the caller will
+ *    still query it, and a null result is a legal return shape).
+ */
+export function normalizeEntityType(raw: string): string {
+  if (KNOWN_ENTITY_TYPES.has(raw)) return raw;
+  const lower = raw.toLowerCase();
+  for (const kind of KNOWN_ENTITY_TYPES) {
+    if (lower === kind || lower.startsWith(`${kind}_`)) return kind;
+  }
+  return raw;
+}
+
+// ---------------------------------------------------------------------------
 // JSON parsers with safe fallback
 // ---------------------------------------------------------------------------
 
@@ -83,10 +136,23 @@ export function stepTypeToName(type: string): string {
  * Parse the JSON step definition array stored on WorkflowDefinition.steps.
  * Valid entries are kept, invalid entries are silently dropped. A single
  * malformed row must NOT discard the rest of the workflow definition.
+ *
+ * Supports two storage formats:
+ *   - Legacy flat array: `[{id, type, config}, ...]`
+ *   - Envelope (IFC-031): `{ nodes: [{id, type, config}, ...], edges: [...] }`
  */
 export function parseStepDefinitions(raw: unknown): WorkflowStepDef[] {
-  if (!Array.isArray(raw)) return [];
-  return raw.flatMap((item) => {
+  // Unwrap envelope format: { nodes: [...], edges: [...] }
+  let items: unknown;
+  if (Array.isArray(raw)) {
+    items = raw; // legacy flat array
+  } else if (raw && typeof raw === 'object' && 'nodes' in raw) {
+    items = (raw as Record<string, unknown>).nodes;
+  } else {
+    return [];
+  }
+  if (!Array.isArray(items)) return [];
+  return items.flatMap((item) => {
     const parsed = workflowStepDefSchema.safeParse(item);
     return parsed.success ? [parsed.data] : [];
   });
@@ -105,12 +171,7 @@ export function parseStepResults(raw: unknown): WorkflowStepResult[] {
   });
 }
 
-export type WorkflowExecutionStatus =
-  | 'RUNNING'
-  | 'PAUSED'
-  | 'COMPLETED'
-  | 'FAILED'
-  | 'CANCELLED';
+export type WorkflowExecutionStatus = 'RUNNING' | 'PAUSED' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
 
 /**
  * Merge workflow step definitions with execution results into a single
@@ -227,11 +288,290 @@ function toExecutionDetail(execution: ExecutionWithWorkflow) {
 }
 
 // ---------------------------------------------------------------------------
+// Input schemas for CRUD procedures (IFC-031)
+// ---------------------------------------------------------------------------
+
+const workflowCreateInput = z.object({
+  name: z.string().min(1).max(255),
+  description: z.string().optional(),
+  category: z.string().min(1),
+  triggerType: z.string().min(1),
+  triggerConfig: z.record(z.string(), z.unknown()).default({}),
+  steps: z.array(workflowStepDefSchema).min(1),
+  edges: z.array(workflowEdgeSchema).default([]),
+});
+
+const workflowUpdateInput = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1).max(255).optional(),
+  description: z.string().optional(),
+  category: z.string().optional(),
+  triggerType: z.string().optional(),
+  triggerConfig: z.record(z.string(), z.unknown()).optional(),
+  steps: z.array(workflowStepDefSchema).min(1).optional(),
+  edges: z.array(workflowEdgeSchema).optional(),
+});
+
+// ---------------------------------------------------------------------------
+// Server-side topology validation (mirrors client-side validation.ts rules)
+// ---------------------------------------------------------------------------
+
+interface GraphInput {
+  steps: Array<{ id: number; type: string }>;
+  edges: Array<{ source: string; target: string }>;
+}
+
+function validateWorkflowGraph(graph: GraphInput): string[] {
+  const errors: string[] = [];
+  const { steps, edges } = graph;
+
+  // Rule 1: exactly one start node
+  const startCount = steps.filter((s) => s.type === 'start').length;
+  if (startCount !== 1) errors.push('Workflow must have exactly one Start node');
+
+  // Rule 2: exactly one end node
+  const endCount = steps.filter((s) => s.type === 'end').length;
+  if (endCount !== 1) errors.push('Workflow must have exactly one End node');
+
+  // Build adjacency for connectivity + cycle checks
+  const nodeIds = new Set(steps.map((s) => `node-${s.id}`));
+  const outgoing = new Map<string, string[]>();
+  const inDegree = new Map<string, number>();
+  for (const id of nodeIds) {
+    outgoing.set(id, []);
+    inDegree.set(id, 0);
+  }
+  for (const e of edges) {
+    if (nodeIds.has(e.source) && nodeIds.has(e.target)) {
+      outgoing.get(e.source)!.push(e.target);
+      inDegree.set(e.target, (inDegree.get(e.target) ?? 0) + 1);
+    }
+  }
+
+  // Rule 3: all nodes reachable from start via BFS (catches disconnected subgraphs)
+  if (steps.length > 1 && startCount === 1) {
+    const startNode = steps.find((s) => s.type === 'start')!;
+    const startId = `node-${startNode.id}`;
+    const visited = new Set<string>();
+    const bfsQueue = [startId];
+    visited.add(startId);
+    while (bfsQueue.length > 0) {
+      const current = bfsQueue.shift()!;
+      for (const neighbor of outgoing.get(current) ?? []) {
+        if (!visited.has(neighbor)) {
+          visited.add(neighbor);
+          bfsQueue.push(neighbor);
+        }
+      }
+    }
+    if (visited.size < nodeIds.size) {
+      errors.push('All nodes must be connected');
+    }
+  } else if (steps.length > 1) {
+    // Fallback when start node is missing: check for fully isolated nodes
+    for (const s of steps) {
+      const nid = `node-${s.id}`;
+      const out = outgoing.get(nid)?.length ?? 0;
+      const inc = inDegree.get(nid) ?? 0;
+      if (out === 0 && inc === 0) {
+        errors.push('All nodes must be connected');
+        break;
+      }
+    }
+  }
+
+  // Rule 4: decision nodes need ≥2 outgoing edges
+  for (const s of steps) {
+    if (s.type === 'decision') {
+      const out = outgoing.get(`node-${s.id}`)?.length ?? 0;
+      if (out < 2) {
+        errors.push(`Decision nodes must have at least 2 outgoing connections (node ${s.id} has ${out})`);
+      }
+    }
+  }
+
+  // Rule 5: cycle detection via Kahn's algorithm
+  const degCopy = new Map(inDegree);
+  const queue: string[] = [];
+  for (const [id, d] of degCopy) if (d === 0) queue.push(id);
+  let processed = 0;
+  while (queue.length > 0) {
+    const cur = queue.shift()!;
+    processed++;
+    for (const nb of outgoing.get(cur) ?? []) {
+      const nd = (degCopy.get(nb) ?? 1) - 1;
+      degCopy.set(nb, nd);
+      if (nd === 0) queue.push(nb);
+    }
+  }
+  if (processed < nodeIds.size) errors.push('Workflow must not have cycles');
+
+  return errors;
+}
+
+// ---------------------------------------------------------------------------
 // Router
 // ---------------------------------------------------------------------------
 
 export const workflowRouter = createTRPCRouter({
-  /** List workflow definitions (stub — tenant-scoped). */
+  // -------------------------------------------------------------------------
+  // CRUD procedures — IFC-031
+  // -------------------------------------------------------------------------
+
+  /** Create a new workflow definition. */
+  create: tenantProcedure
+    .input(workflowCreateInput)
+    .mutation(async ({ ctx, input }) => {
+      try {
+        // Server-side topology validation (AC-008)
+        const topologyErrors = validateWorkflowGraph({
+          steps: input.steps,
+          edges: input.edges ?? [],
+        });
+        if (topologyErrors.length > 0) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: `Topology validation failed: ${topologyErrors.join('; ')}`,
+          });
+        }
+
+        const tenantId = ctx.tenant.tenantId;
+        const createdBy = ctx.user!.userId;
+        // Store both nodes and edges in the `steps` JSON column as an envelope
+        const graphPayload = {
+          nodes: input.steps,
+          edges: input.edges ?? [],
+        };
+        return await ctx.prismaWithTenant.workflowDefinition.create({
+          data: {
+            name: input.name,
+            description: input.description,
+            category: input.category,
+            triggerType: input.triggerType,
+            triggerConfig: input.triggerConfig as Prisma.InputJsonValue,
+            steps: graphPayload as unknown as Prisma.InputJsonValue,
+            tenantId,
+            createdBy,
+          },
+        });
+      } catch (error: unknown) {
+        // Re-throw TRPCErrors (e.g. BAD_REQUEST from topology validation) as-is
+        if (error instanceof TRPCError) throw error;
+        if ((error as { code?: string }).code === 'P2002') {
+          throw new TRPCError({
+            code: 'CONFLICT',
+            message: 'A workflow with this name already exists in this tenant',
+          });
+        }
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to create workflow',
+          cause: error,
+        });
+      }
+    }),
+
+  /** Update an existing workflow definition (increments version). */
+  update: tenantProcedure
+    .input(workflowUpdateInput)
+    .mutation(async ({ ctx, input }) => {
+      const tenantId = ctx.tenant.tenantId;
+      const { id, ...data } = input;
+
+      const existing = await ctx.prismaWithTenant.workflowDefinition.findFirst({
+        where: { id, tenantId, deletedAt: null },
+      });
+      if (!existing) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Workflow not found' });
+      }
+
+      // Server-side topology validation when steps or edges change (AC-008)
+      if (data.steps || data.edges) {
+        const prevGraph = existing.steps as Record<string, unknown> | unknown[];
+        const prevNodes = Array.isArray(prevGraph)
+          ? prevGraph as Array<{ id: number; type: string }>
+          : ((prevGraph as Record<string, unknown>)?.nodes ?? []) as Array<{ id: number; type: string }>;
+        const prevEdges = Array.isArray(prevGraph)
+          ? []
+          : ((prevGraph as Record<string, unknown>)?.edges ?? []) as Array<{ source: string; target: string }>;
+        const topologyErrors = validateWorkflowGraph({
+          steps: data.steps ?? prevNodes,
+          edges: (data.edges ?? prevEdges) as Array<{ source: string; target: string }>,
+        });
+        if (topologyErrors.length > 0) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: `Topology validation failed: ${topologyErrors.join('; ')}`,
+          });
+        }
+      }
+
+      return ctx.prismaWithTenant.workflowDefinition.update({
+        where: { id },
+        data: {
+          ...(data.name !== undefined && { name: data.name }),
+          ...(data.description !== undefined && { description: data.description }),
+          ...(data.category !== undefined && { category: data.category }),
+          ...(data.triggerType !== undefined && { triggerType: data.triggerType }),
+          ...(data.triggerConfig !== undefined && {
+            triggerConfig: data.triggerConfig as Prisma.InputJsonValue,
+          }),
+          ...((data.steps !== undefined || data.edges !== undefined) && {
+            steps: (() => {
+              // Merge nodes + edges into the graph envelope
+              const prevGraph = existing.steps as Record<string, unknown> | unknown[] | null;
+              const prevNodes = Array.isArray(prevGraph) ? prevGraph : (prevGraph as Record<string, unknown>)?.nodes ?? [];
+              const prevEdges = Array.isArray(prevGraph) ? [] : ((prevGraph as Record<string, unknown>)?.edges ?? []);
+              return {
+                nodes: data.steps ?? prevNodes,
+                edges: data.edges ?? prevEdges,
+              } as unknown as Prisma.InputJsonValue;
+            })(),
+          }),
+          version: existing.version + 1,
+        },
+      });
+    }),
+
+  /** Soft-delete a workflow definition (sets deletedAt, does not remove). */
+  delete: tenantProcedure
+    .input(z.object({ id: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      const tenantId = ctx.tenant.tenantId;
+
+      const existing = await ctx.prismaWithTenant.workflowDefinition.findFirst({
+        where: { id: input.id, tenantId, deletedAt: null },
+      });
+      if (!existing) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Workflow not found' });
+      }
+
+      return ctx.prismaWithTenant.workflowDefinition.update({
+        where: { id: input.id },
+        data: { deletedAt: new Date() },
+      });
+    }),
+
+  /** Toggle the isActive flag on a workflow definition. */
+  setActive: tenantProcedure
+    .input(z.object({ id: z.string().min(1), isActive: z.boolean() }))
+    .mutation(async ({ ctx, input }) => {
+      const tenantId = ctx.tenant.tenantId;
+
+      const existing = await ctx.prismaWithTenant.workflowDefinition.findFirst({
+        where: { id: input.id, tenantId, deletedAt: null },
+      });
+      if (!existing) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Workflow not found' });
+      }
+
+      return ctx.prismaWithTenant.workflowDefinition.update({
+        where: { id: input.id },
+        data: { isActive: input.isActive },
+      });
+    }),
+
+  /** List workflow definitions with cursor pagination (excludes soft-deleted). */
   list: tenantProcedure
     .input(
       z.object({
@@ -239,23 +579,35 @@ export const workflowRouter = createTRPCRouter({
         limit: z.number().min(1).max(100).default(20),
       }),
     )
-    .query(async () => {
+    .query(async ({ ctx, input }) => {
+      const tenantId = ctx.tenant.tenantId;
+      const { limit, cursor } = input;
+
+      const items = await ctx.prismaWithTenant.workflowDefinition.findMany({
+        where: { tenantId, deletedAt: null },
+        take: limit + 1,
+        ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+        orderBy: { createdAt: 'desc' },
+      });
+
+      const hasMore = items.length > limit;
+      const results = hasMore ? items.slice(0, limit) : items;
+
       return {
-        items: [] as Array<{
-          id: string;
-          name: string;
-          status: string;
-          createdAt: string;
-        }>,
-        nextCursor: null as string | null,
+        items: results,
+        nextCursor: hasMore ? (results[results.length - 1]?.id ?? null) : null,
       };
     }),
 
-  /** Get a single workflow definition by ID (stub — tenant-scoped). */
+  /** Get a single workflow definition by ID (excludes soft-deleted). */
   getById: tenantProcedure
     .input(z.object({ id: z.string() }))
-    .query(async () => {
-      return null;
+    .query(async ({ ctx, input }) => {
+      const tenantId = ctx.tenant.tenantId;
+      const workflow = await ctx.prismaWithTenant.workflowDefinition.findFirst({
+        where: { id: input.id, tenantId, deletedAt: null },
+      });
+      return workflow ?? null;
     }),
 
   /**
@@ -303,10 +655,35 @@ export const workflowRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       try {
         const tenantId = ctx.tenant.tenantId;
-        const execution = await ctx.prismaWithTenant.workflowExecution.findFirst({
+        const normalized = normalizeEntityType(input.entityType);
+
+        // Real data writes `ConversationRecord.contextType` with a mix of
+        // vocabularies:
+        //   - canonical entity kinds     ('lead', 'deal')
+        //   - action-qualified prefixes  ('lead_qualification', 'deal_approved')
+        //   - pure task kinds            ('email_generation', 'followup_management')
+        //   - infrastructure tokens      ('job')
+        //
+        // The workflow engine always writes `entityType` as a plain entity
+        // kind. Resolve the join in two passes so the panel lights up against
+        // every one of those shapes:
+        //
+        //   Pass 1. Query `entityType IN [normalized, raw]` with the exact
+        //           `entityId`. Handles canonical + prefix cases.
+        //   Pass 2. If pass 1 returns null AND the normaliser didn't recognise
+        //           a prefix (i.e. the task-kind vocabulary), query by
+        //           `entityId` alone. cuid IDs are effectively globally unique
+        //           across entity kinds, so an entityId-only match is a safe
+        //           best-effort link for tasks like 'email_generation' that
+        //           clearly operate on a specific entity but don't spell it
+        //           out in the type string.
+        const candidateTypes =
+          normalized === input.entityType ? [input.entityType] : [normalized, input.entityType];
+
+        let execution = await ctx.prismaWithTenant.workflowExecution.findFirst({
           where: {
             tenantId,
-            entityType: input.entityType,
+            entityType: { in: candidateTypes },
             entityId: input.entityId,
           },
           orderBy: { startedAt: 'desc' },
@@ -316,6 +693,26 @@ export const workflowRouter = createTRPCRouter({
             },
           },
         });
+
+        // Pass 2: entityId-only fallback when the normaliser couldn't derive
+        // an entity kind (the raw value passed through unchanged AND is not
+        // already a canonical kind).
+        const normaliserMatched =
+          normalized !== input.entityType || KNOWN_ENTITY_TYPES.has(input.entityType);
+        if (!execution && !normaliserMatched) {
+          execution = await ctx.prismaWithTenant.workflowExecution.findFirst({
+            where: {
+              tenantId,
+              entityId: input.entityId,
+            },
+            orderBy: { startedAt: 'desc' },
+            include: {
+              workflow: {
+                select: { name: true, category: true, steps: true },
+              },
+            },
+          });
+        }
 
         if (!execution) return null;
         return toExecutionDetail(execution);
