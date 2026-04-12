@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "last_updated": "2025-12-14T21:00:00Z",
   "description": "Standardized KPI definitions for consistent measurement across all sprints",
-  
+
   "categories": {
     "performance": {
       "name": "Performance Metrics",
@@ -274,12 +274,29 @@
       }
     }
   },
-  
+
   "measurement_schedule": {
-    "continuous": ["test_coverage", "type_safety", "lint_violations", "build_time"],
-    "per_task": ["automation_percentage", "manual_interventions", "blockers_resolved"],
-    "per_sprint": ["sprint_completion_rate", "tasks_completed", "average_task_duration"],
+    "continuous": [
+      "test_coverage",
+      "type_safety",
+      "lint_violations",
+      "build_time"
+    ],
+    "per_task": [
+      "automation_percentage",
+      "manual_interventions",
+      "blockers_resolved"
+    ],
+    "per_sprint": [
+      "sprint_completion_rate",
+      "tasks_completed",
+      "average_task_duration"
+    ],
     "weekly": ["dependency_vulnerabilities", "secrets_in_code"],
-    "on_demand": ["api_response_time", "first_contentful_paint", "ai_scoring_latency"]
+    "on_demand": [
+      "api_response_time",
+      "first_contentful_paint",
+      "ai_scoring_latency"
+    ]
   }
 }

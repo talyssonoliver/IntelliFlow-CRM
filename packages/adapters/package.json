@@ -1,0 +1,64 @@
+{
+  "name": "@intelliflow/adapters",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Infrastructure adapters for IntelliFlow CRM - Repository implementations and external services",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./repositories/*": {
+      "types": "./dist/repositories/*.d.ts",
+      "import": "./dist/repositories/*.mjs",
+      "require": "./dist/repositories/*.js"
+    },
+    "./external/*": {
+      "types": "./dist/external/*.d.ts",
+      "import": "./dist/external/*.mjs",
+      "require": "./dist/external/*.js"
+    },
+    "./messaging/email/inbound": {
+      "types": "./dist/messaging/email/inbound.d.ts",
+      "import": "./dist/messaging/email/inbound.mjs",
+      "require": "./dist/messaging/email/inbound.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --experimental-dts",
+    "dev": "tsup src/index.ts --format cjs,esm --experimental-dts --watch",
+    "clean": "rm -rf dist .turbo",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint \"src/**/*.ts\"",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@intelliflow/application": "workspace:*",
+    "@intelliflow/db": "workspace:*",
+    "@intelliflow/domain": "workspace:*",
+    "@intelliflow/platform": "workspace:*",
+    "@intelliflow/webhooks": "workspace:*",
+    "@langchain/core": "^1.1.29",
+    "@langchain/ollama": "^1.2.5",
+    "@prisma/client": "^7.4.2",
+    "@supabase/supabase-js": "^2.98.0",
+    "clamscan": "^2.2.1",
+    "ics": "^3.8.1",
+    "twilio": "^5.12.2",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@intelliflow/typescript-config": "workspace:*",
+    "@types/node": "^25.3.2",
+    "@vitest/coverage-v8": "^4.0.16",
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.0",
+    "vitest": "^4.0.16"
+  }
+}

@@ -1,0 +1,367 @@
+{
+  "version": "1.0",
+  "created_at": "2025-12-29T15:30:45Z",
+  "dashboards": [
+    {
+      "id": "overview",
+      "title": "IntelliFlow CRM - Overview",
+      "description": "System-wide health and performance metrics",
+      "tags": ["system", "production"],
+      "refresh": "30s",
+      "panels": [
+        {
+          "id": "request-rate",
+          "title": "Request Rate",
+          "type": "graph",
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "rate(http_requests_total[5m])",
+              "legendFormat": "{{service}} {{method}} {{path}}"
+            }
+          ],
+          "unit": "reqps",
+          "gridPos": { "x": 0, "y": 0, "w": 8, "h": 8 }
+        },
+        {
+          "id": "error-rate",
+          "title": "Error Rate",
+          "type": "graph",
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "rate(http_requests_total{status=~\"5..\"}[5m])",
+              "legendFormat": "{{service}}"
+            }
+          ],
+          "unit": "percentunit",
+          "alert": {
+            "threshold": 0.01,
+            "operator": "gt",
+            "severity": "warning"
+          },
+          "gridPos": { "x": 8, "y": 0, "w": 8, "h": 8 }
+        },
+        {
+          "id": "latency-p95",
+          "title": "API Latency p95",
+          "type": "graph",
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))",
+              "legendFormat": "{{service}}"
+            }
+          ],
+          "unit": "ms",
+          "thresholds": [
+            { "value": 100, "color": "green" },
+            { "value": 200, "color": "yellow" },
+            { "value": 500, "color": "red" }
+          ],
+          "gridPos": { "x": 16, "y": 0, "w": 8, "h": 8 }
+        },
+        {
+          "id": "active-services",
+          "title": "Active Services",
+          "type": "stat",
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "count(up{job=~\"intelliflow.*\"} == 1)"
+            }
+          ],
+          "gridPos": { "x": 0, "y": 8, "w": 6, "h": 6 }
+        },
+        {
+          "id": "cpu-usage",
+          "title": "CPU Usage",
+          "type": "gauge",
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "rate(process_cpu_seconds_total[1m]) * 100",
+              "legendFormat": "{{service}}"
+            }
+          ],
+          "unit": "percent",
+          "gridPos": { "x": 6, "y": 8, "w": 6, "h": 6 }
+        },
+        {
+          "id": "memory-usage",
+          "title": "Memory Usage",
+          "type": "gauge",
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "process_resident_memory_bytes / 1024 / 1024",
+              "legendFormat": "{{service}}"
+            }
+          ],
+          "unit": "MB",
+          "gridPos": { "x": 12, "y": 8, "w": 6, "h": 6 }
+        },
+        {
+          "id": "db-connections",
+          "title": "DB Connection Pool",
+          "type": "stat",
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "pg_stat_activity_count",
+              "legendFormat": "{{state}}"
+            }
+          ],
+          "gridPos": { "x": 18, "y": 8, "w": 6, "h": 6 }
+        }
+      ]
+    },
+    {
+      "id": "api-performance",
+      "title": "API Performance",
+      "description": "Detailed API endpoint metrics and SLO tracking",
+      "tags": ["api", "performance"],
+      "refresh": "1m",
+      "panels": [
+        {
+          "id": "endpoint-latencies",
+          "title": "Endpoint Latencies",
+          "type": "heatmap",
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "http_request_duration_seconds_bucket",
+              "legendFormat": "{{method}} {{path}}"
+            }
+          ],
+          "unit": "s",
+          "gridPos": { "x": 0, "y": 0, "w": 12, "h": 10 }
+        },
+        {
+          "id": "slo-compliance",
+          "title": "SLO Compliance",
+          "type": "stat",
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "(count(http_request_duration_seconds_bucket{le=\"0.1\"}) / count(http_request_duration_seconds_bucket)) * 100",
+              "legendFormat": "p95 < 100ms"
+            }
+          ],
+          "unit": "percent",
+          "thresholds": [
+            { "value": 99, "color": "green" },
+            { "value": 95, "color": "yellow" },
+            { "value": 0, "color": "red" }
+          ],
+          "gridPos": { "x": 12, "y": 0, "w": 12, "h": 10 }
+        },
+        {
+          "id": "throughput-by-endpoint",
+          "title": "Throughput by Endpoint",
+          "type": "bargauge",
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "topk(10, rate(http_requests_total[5m]))",
+              "legendFormat": "{{method}} {{path}}"
+            }
+          ],
+          "unit": "reqps",
+          "gridPos": { "x": 0, "y": 10, "w": 24, "h": 8 }
+        }
+      ]
+    },
+    {
+      "id": "logs-dashboard",
+      "title": "Logs & Events",
+      "description": "Log volume, error analysis, and event tracking",
+      "tags": ["logs", "diagnostics"],
+      "refresh": "30s",
+      "panels": [
+        {
+          "id": "log-volume",
+          "title": "Log Volume",
+          "type": "graph",
+          "datasource": "Loki",
+          "targets": [
+            {
+              "expr": "sum by (service) (rate({job=~\"intelliflow.*\"} [5m]))",
+              "legendFormat": "{{service}}"
+            }
+          ],
+          "unit": "logps",
+          "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 }
+        },
+        {
+          "id": "error-log-rate",
+          "title": "Error Log Rate",
+          "type": "graph",
+          "datasource": "Loki",
+          "targets": [
+            {
+              "expr": "sum by (service) (rate({level=\"error\"} [5m]))",
+              "legendFormat": "{{service}}"
+            }
+          ],
+          "unit": "logps",
+          "alert": {
+            "threshold": 1,
+            "operator": "gt",
+            "severity": "critical"
+          },
+          "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 }
+        },
+        {
+          "id": "recent-errors",
+          "title": "Recent Errors",
+          "type": "logs",
+          "datasource": "Loki",
+          "targets": [
+            {
+              "expr": "{level=\"error\"} | json",
+              "refId": "A"
+            }
+          ],
+          "gridPos": { "x": 0, "y": 8, "w": 24, "h": 12 }
+        }
+      ]
+    },
+    {
+      "id": "ai-performance",
+      "title": "AI & Intelligence Metrics",
+      "description": "AI scoring, model performance, and inference metrics",
+      "tags": ["ai", "intelligence"],
+      "refresh": "1m",
+      "panels": [
+        {
+          "id": "scoring-latency",
+          "title": "Lead Scoring Latency",
+          "type": "histogram",
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.95, rate(lead_scoring_duration_seconds_bucket[5m]))",
+              "legendFormat": "p95"
+            },
+            {
+              "expr": "histogram_quantile(0.99, rate(lead_scoring_duration_seconds_bucket[5m]))",
+              "legendFormat": "p99"
+            }
+          ],
+          "unit": "s",
+          "thresholds": [
+            { "value": 2, "color": "green" },
+            { "value": 5, "color": "yellow" },
+            { "value": 10, "color": "red" }
+          ],
+          "gridPos": { "x": 0, "y": 0, "w": 8, "h": 8 }
+        },
+        {
+          "id": "model-accuracy",
+          "title": "Model Accuracy",
+          "type": "gauge",
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "ai_model_accuracy * 100",
+              "legendFormat": "{{model_name}}"
+            }
+          ],
+          "unit": "percent",
+          "gridPos": { "x": 8, "y": 0, "w": 8, "h": 8 }
+        },
+        {
+          "id": "inference-tokens",
+          "title": "LLM Token Usage",
+          "type": "bargauge",
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "rate(llm_tokens_used_total[1h])",
+              "legendFormat": "{{model}}"
+            }
+          ],
+          "unit": "short",
+          "gridPos": { "x": 16, "y": 0, "w": 8, "h": 8 }
+        },
+        {
+          "id": "ai-cost-tracking",
+          "title": "AI Cost (hourly)",
+          "type": "stat",
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "rate(ai_cost_usd_total[1h])",
+              "legendFormat": "Cost/hour"
+            }
+          ],
+          "unit": "USD",
+          "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 }
+        },
+        {
+          "id": "cache-hit-rate",
+          "title": "Cache Hit Rate",
+          "type": "gauge",
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "rate(cache_hits_total[5m]) / (rate(cache_hits_total[5m]) + rate(cache_misses_total[5m]))",
+              "legendFormat": "{{cache_type}}"
+            }
+          ],
+          "unit": "percentunit",
+          "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 }
+        }
+      ]
+    },
+    {
+      "id": "trace-analysis",
+      "title": "Distributed Traces",
+      "description": "Trace analysis and service dependency visualization",
+      "tags": ["traces", "observability"],
+      "refresh": "30s",
+      "panels": [
+        {
+          "id": "service-map",
+          "title": "Service Dependency Map",
+          "type": "nodegraph",
+          "datasource": "Tempo",
+          "targets": [
+            {
+              "expr": "service_graph_edges"
+            }
+          ],
+          "gridPos": { "x": 0, "y": 0, "w": 12, "h": 12 }
+        },
+        {
+          "id": "trace-search",
+          "title": "Trace Search",
+          "type": "tracing",
+          "datasource": "Tempo",
+          "gridPos": { "x": 12, "y": 0, "w": 12, "h": 12 }
+        }
+      ]
+    }
+  ],
+  "alerts": [
+    {
+      "name": "HighErrorRate",
+      "condition": "error_rate > 0.01",
+      "duration": "5m",
+      "severity": "warning"
+    },
+    {
+      "name": "HighLatency",
+      "condition": "latency_p95 > 200",
+      "duration": "10m",
+      "severity": "warning"
+    },
+    {
+      "name": "ServiceDown",
+      "condition": "up == 0",
+      "duration": "2m",
+      "severity": "critical"
+    }
+  ]
+}

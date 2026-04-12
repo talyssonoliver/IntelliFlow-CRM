@@ -1,0 +1,4 @@
+experiment_id,task_id,variant,exposures,conversions,conversion_rate,notes
+ai.worker.enabled,ENV-015-AI,control,0,0,0.0,"Placeholder row. Populate after wiring experiment exposure/conversion tracking."
+ai.worker.enabled,ENV-015-AI,treatment,0,0,0.0,"Placeholder row. Populate after wiring experiment exposure/conversion tracking."
+

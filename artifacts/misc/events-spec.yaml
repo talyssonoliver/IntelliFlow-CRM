@@ -1,0 +1,361 @@
+# Domain Events Specification - IntelliFlow CRM
+# Task: IFC-141 - Workflow Engine Evaluation and Integration
+# Created: 2025-12-29
+
+openapi: 3.0.3
+info:
+  title: IntelliFlow CRM Domain Events
+  description: Specification for domain events used in workflow automation
+  version: 1.0.0
+
+components:
+  schemas:
+    # Base Event Schema
+    DomainEvent:
+      type: object
+      required:
+        - eventId
+        - eventType
+        - aggregateId
+        - aggregateType
+        - timestamp
+        - version
+      properties:
+        eventId:
+          type: string
+          format: uuid
+          description: Unique identifier for this event
+        eventType:
+          type: string
+          description: Type of the domain event
+        aggregateId:
+          type: string
+          description: ID of the aggregate that produced this event
+        aggregateType:
+          type: string
+          description: Type of aggregate (Lead, Contact, Account, etc.)
+        timestamp:
+          type: string
+          format: date-time
+          description: When the event occurred
+        version:
+          type: integer
+          description: Event schema version
+        correlationId:
+          type: string
+          format: uuid
+          description: Correlation ID for tracing
+        causationId:
+          type: string
+          format: uuid
+          description: ID of event that caused this event
+        metadata:
+          type: object
+          description: Additional event metadata
+
+    # Lead Events
+    LeadCreated:
+      allOf:
+        - $ref: "#/components/schemas/DomainEvent"
+        - type: object
+          properties:
+            eventType:
+              const: lead.created
+            payload:
+              type: object
+              properties:
+                leadId:
+                  type: string
+                  format: uuid
+                email:
+                  type: string
+                  format: email
+                source:
+                  type: string
+                ownerId:
+                  type: string
+                  format: uuid
+
+    LeadQualified:
+      allOf:
+        - $ref: "#/components/schemas/DomainEvent"
+        - type: object
+          properties:
+            eventType:
+              const: lead.qualified
+            payload:
+              type: object
+              properties:
+                leadId:
+                  type: string
+                  format: uuid
+                qualificationScore:
+                  type: number
+                qualifiedBy:
+                  type: string
+                  enum: [AI, HUMAN]
+                qualificationCriteria:
+                  type: object
+
+    LeadScored:
+      allOf:
+        - $ref: "#/components/schemas/DomainEvent"
+        - type: object
+          properties:
+            eventType:
+              const: lead.scored
+            payload:
+              type: object
+              properties:
+                leadId:
+                  type: string
+                  format: uuid
+                previousScore:
+                  type: number
+                newScore:
+                  type: number
+                scoringModel:
+                  type: string
+                confidence:
+                  type: number
+
+    LeadConverted:
+      allOf:
+        - $ref: "#/components/schemas/DomainEvent"
+        - type: object
+          properties:
+            eventType:
+              const: lead.converted
+            payload:
+              type: object
+              properties:
+                leadId:
+                  type: string
+                  format: uuid
+                contactId:
+                  type: string
+                  format: uuid
+                accountId:
+                  type: string
+                  format: uuid
+                opportunityId:
+                  type: string
+                  format: uuid
+
+    # Case Events (for workflow)
+    CaseCreated:
+      allOf:
+        - $ref: "#/components/schemas/DomainEvent"
+        - type: object
+          properties:
+            eventType:
+              const: case.created
+            payload:
+              type: object
+              properties:
+                caseId:
+                  type: string
+                  format: uuid
+                caseType:
+                  type: string
+                priority:
+                  type: string
+                  enum: [LOW, MEDIUM, HIGH, URGENT]
+
+    CaseStatusChanged:
+      allOf:
+        - $ref: "#/components/schemas/DomainEvent"
+        - type: object
+          properties:
+            eventType:
+              const: case.status_changed
+            payload:
+              type: object
+              properties:
+                caseId:
+                  type: string
+                  format: uuid
+                previousStatus:
+                  type: string
+                newStatus:
+                  type: string
+                changedBy:
+                  type: string
+                  format: uuid
+                reason:
+                  type: string
+
+    CaseClosed:
+      allOf:
+        - $ref: "#/components/schemas/DomainEvent"
+        - type: object
+          properties:
+            eventType:
+              const: case.closed
+            payload:
+              type: object
+              properties:
+                caseId:
+                  type: string
+                  format: uuid
+                resolution:
+                  type: string
+                closedBy:
+                  type: string
+                  format: uuid
+                satisfactionRating:
+                  type: number
+
+    # Opportunity Events
+    OpportunityCreated:
+      allOf:
+        - $ref: "#/components/schemas/DomainEvent"
+        - type: object
+          properties:
+            eventType:
+              const: opportunity.created
+            payload:
+              type: object
+              properties:
+                opportunityId:
+                  type: string
+                  format: uuid
+                accountId:
+                  type: string
+                  format: uuid
+                expectedValue:
+                  type: number
+                expectedCloseDate:
+                  type: string
+                  format: date
+
+    OpportunityStageChanged:
+      allOf:
+        - $ref: "#/components/schemas/DomainEvent"
+        - type: object
+          properties:
+            eventType:
+              const: opportunity.stage_changed
+            payload:
+              type: object
+              properties:
+                opportunityId:
+                  type: string
+                  format: uuid
+                previousStage:
+                  type: string
+                newStage:
+                  type: string
+                probability:
+                  type: number
+
+    OpportunityWon:
+      allOf:
+        - $ref: "#/components/schemas/DomainEvent"
+        - type: object
+          properties:
+            eventType:
+              const: opportunity.won
+            payload:
+              type: object
+              properties:
+                opportunityId:
+                  type: string
+                  format: uuid
+                actualValue:
+                  type: number
+                closeDate:
+                  type: string
+                  format: date
+
+    OpportunityLost:
+      allOf:
+        - $ref: "#/components/schemas/DomainEvent"
+        - type: object
+          properties:
+            eventType:
+              const: opportunity.lost
+            payload:
+              type: object
+              properties:
+                opportunityId:
+                  type: string
+                  format: uuid
+                lostReason:
+                  type: string
+                competitor:
+                  type: string
+
+    # AI Events
+    AIScoreGenerated:
+      allOf:
+        - $ref: "#/components/schemas/DomainEvent"
+        - type: object
+          properties:
+            eventType:
+              const: ai.score_generated
+            payload:
+              type: object
+              properties:
+                entityType:
+                  type: string
+                entityId:
+                  type: string
+                  format: uuid
+                scoreType:
+                  type: string
+                score:
+                  type: number
+                model:
+                  type: string
+                latencyMs:
+                  type: integer
+                costUsd:
+                  type: number
+
+# Event Routing Configuration
+x-event-routing:
+  lead.created:
+    handlers:
+      - name: lead-enrichment
+        type: langgraph
+        timeout: 30s
+      - name: welcome-email
+        type: bullmq
+        delay: 5m
+
+  lead.qualified:
+    handlers:
+      - name: sales-notification
+        type: bullmq
+      - name: crm-sync
+        type: temporal
+
+  case.status_changed:
+    handlers:
+      - name: case-workflow
+        type: temporal
+        workflow: CaseLifecycleWorkflow
+      - name: notification-dispatch
+        type: bullmq
+
+  opportunity.stage_changed:
+    handlers:
+      - name: forecast-update
+        type: bullmq
+      - name: manager-alert
+        type: bullmq
+        condition: "payload.newStage == negotiation"
+
+# Event Store Configuration
+x-event-store:
+  backend: postgresql
+  table: domain_events
+  partitioning:
+    strategy: monthly
+    retention: 7 years
+  indexes:
+    - aggregateId
+    - eventType
+    - timestamp
+    - correlationId

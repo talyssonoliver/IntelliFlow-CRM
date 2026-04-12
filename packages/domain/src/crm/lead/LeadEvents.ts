@@ -43,6 +43,10 @@ export class LeadScoredEvent extends DomainEvent {
     super();
   }
 
+  get newScore(): LeadScore {
+    return this.score;
+  }
+
   toPayload(): Record<string, unknown> {
     return {
       leadId: this.leadId.value,
@@ -111,7 +115,7 @@ export class LeadConvertedEvent extends DomainEvent {
 
   constructor(
     public readonly leadId: LeadId,
-    public readonly contactId: string,
+    public readonly contactId: string | null,
     public readonly accountId: string | null,
     public readonly convertedBy: string
   ) {
@@ -124,6 +128,33 @@ export class LeadConvertedEvent extends DomainEvent {
       contactId: this.contactId,
       accountId: this.accountId,
       convertedBy: this.convertedBy,
+    };
+  }
+}
+
+/**
+ * Event: Lead was routed to an agent (IFC-030)
+ */
+export class LeadRoutedEvent extends DomainEvent {
+  readonly eventType = 'lead.routed';
+
+  constructor(
+    public readonly leadId: LeadId,
+    public readonly assigneeId: string,
+    public readonly routingMethod: string,
+    public readonly ruleId: string | null,
+    public readonly reason: string
+  ) {
+    super();
+  }
+
+  toPayload(): Record<string, unknown> {
+    return {
+      leadId: this.leadId.value,
+      assigneeId: this.assigneeId,
+      routingMethod: this.routingMethod,
+      ruleId: this.ruleId,
+      reason: this.reason,
     };
   }
 }

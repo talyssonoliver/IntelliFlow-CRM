@@ -1,0 +1,64 @@
+# NPM Publish Log for @intelliflow/sdk
+# ====================================
+#
+# This file will contain the npm publish output when the SDK package
+# is published to npm registry.
+#
+# PUBLISHING CHECKLIST:
+# ---------------------
+# 1. Ensure all tests pass: pnpm test
+# 2. Update version in package.json following semver
+# 3. Build the package: pnpm build
+# 4. Run npm pack to test the package locally
+# 5. Publish: npm publish --access public (or restricted for private)
+#
+# PREREQUISITES:
+# --------------
+# - npm account configured with npm login
+# - Package name available or scoped (@intelliflow/sdk)
+# - package.json configured with correct metadata:
+#   - name, version, description
+#   - main, module, types entry points
+#   - files array specifying included files
+#   - repository, homepage, bugs URLs
+#   - keywords for discoverability
+#   - engines specifying Node.js version requirements
+#
+# EXAMPLE PUBLISH COMMAND:
+# ------------------------
+# cd packages/sdk
+# npm version patch  # or minor/major
+# npm publish --access public
+#
+# EXPECTED OUTPUT FORMAT:
+# -----------------------
+# npm notice
+# npm notice package: @intelliflow/sdk@x.x.x
+# npm notice === Tarball Contents ===
+# npm notice xxxB   package.json
+# npm notice xxxKB  dist/index.js
+# npm notice xxxKB  dist/index.mjs
+# npm notice xxxKB  dist/index.d.ts
+# npm notice xxxKB  README.md
+# npm notice === Tarball Details ===
+# npm notice name:          @intelliflow/sdk
+# npm notice version:       x.x.x
+# npm notice filename:      intelliflow-sdk-x.x.x.tgz
+# npm notice package size:  xx.x kB
+# npm notice unpacked size: xx.x kB
+# npm notice shasum:        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+# npm notice integrity:     sha512-xxxxx...
+# npm notice total files:   x
+# npm notice
+# + @intelliflow/sdk@x.x.x
+#
+# PUBLISH HISTORY:
+# ----------------
+# (No packages published yet - SDK is part of monorepo)
+#
+# Note: The IntelliFlow SDK is currently a private workspace package
+# within the monorepo. It can be published as a public npm package
+# when ready for external distribution.
+#
+# STATUS: Pending first publish
+# LAST UPDATED: 2025-12-31

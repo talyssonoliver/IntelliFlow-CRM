@@ -20,8 +20,7 @@ const t = initTRPC.context<Context>().create({
       ...shape,
       data: {
         ...shape.data,
-        zodError:
-          error.cause instanceof ZodError ? error.cause.flatten() : null,
+        zodError: error.cause instanceof ZodError ? error.cause.flatten() : null,
       },
     };
   },
@@ -81,7 +80,7 @@ export const loggedProcedure = t.procedure.use(loggingMiddleware);
  * Admin-only procedure
  */
 const isAdmin = t.middleware(({ ctx, next }) => {
-  if (!ctx.user || ctx.user.role !== 'ADMIN') {
+  if (ctx.user?.role !== 'ADMIN') {
     throw new TRPCError({
       code: 'FORBIDDEN',
       message: 'Admin access required',

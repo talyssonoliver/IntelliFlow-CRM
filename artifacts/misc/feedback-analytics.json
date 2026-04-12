@@ -1,0 +1,49 @@
+{
+  "generatedAt": "2026-01-03T00:00:00.000Z",
+  "period": {
+    "start": "2025-12-04T00:00:00.000Z",
+    "end": "2026-01-03T00:00:00.000Z",
+    "days": 30
+  },
+  "summary": {
+    "total": 0,
+    "thumbsUp": 0,
+    "thumbsDown": 0,
+    "corrections": 0,
+    "positiveRatio": 0,
+    "negativeRatio": 0,
+    "correctionRatio": 0
+  },
+  "corrections": {
+    "minor": 0,
+    "moderate": 0,
+    "major": 0,
+    "severe": 0,
+    "averageMagnitude": 0,
+    "medianMagnitude": 0,
+    "averageDirection": "neutral"
+  },
+  "categoryAnalysis": [],
+  "modelPerformance": [],
+  "retrainingStatus": {
+    "needed": false,
+    "urgency": "none",
+    "reasons": ["Insufficient feedback (0/100 required)"],
+    "metrics": {
+      "feedbackCount": 0,
+      "negativeRatio": 0,
+      "averageCorrection": 0,
+      "windowDays": 7
+    },
+    "modelVersion": "unknown",
+    "recommendation": "Continue collecting feedback data."
+  },
+  "trends": {
+    "dailyFeedbackCounts": [],
+    "weeklyAverageCorrection": []
+  },
+  "recommendations": [
+    "Consider prompting users for feedback more frequently to improve data quality.",
+    "Model performance is within acceptable parameters. Continue monitoring."
+  ]
+}

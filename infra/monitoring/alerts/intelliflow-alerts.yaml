@@ -1,0 +1,65 @@
+# IntelliFlow CRM - Baseline alert rules (Sprint 0)
+#
+# Notes
+# - This repo does not ship a full Prometheus/Alertmanager stack in Sprint 0.
+# - These rules provide a starting point for operators to wire into their chosen
+#   alerting backend (Prometheus, Grafana Mimir, etc).
+# - Advanced predictive alerts / anomaly detection are tracked as tech debt
+#   (see artifacts/debt-ledger.* origin_task=ENV-008-AI).
+#
+# Format: Prometheus alerting rules file.
+
+groups:
+  - name: intelliflow.sprint0.baseline
+    interval: 30s
+    rules:
+      - alert: IntelliFlowServiceDown
+        expr: up{job=~"intelliflow-.*"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          sprint: '0'
+          service: '{{ $labels.job }}'
+        annotations:
+          summary: 'Service down ({{ $labels.job }})'
+          description: 'No scrape targets are up for {{ $labels.job }} for >2m.'
+
+      - alert: IntelliFlowHighErrorRate
+        expr: |
+          (
+            sum(rate(http_requests_total{job=~"intelliflow-.*",status=~"5.."}[5m]))
+            /
+            sum(rate(http_requests_total{job=~"intelliflow-.*"}[5m]))
+          ) > 0.02
+        for: 10m
+        labels:
+          severity: high
+          sprint: '0'
+        annotations:
+          summary: 'High 5xx error rate (>2%)'
+          description: 'HTTP 5xx rate exceeded 2% for 10m across IntelliFlow services.'
+
+      - alert: IntelliFlowP99LatencyBudgetExceeded
+        expr: |
+          histogram_quantile(
+            0.99,
+            sum by (le) (rate(http_request_duration_seconds_bucket{job=~"intelliflow-.*"}[5m]))
+          ) > 0.2
+        for: 10m
+        labels:
+          severity: high
+          sprint: '0'
+        annotations:
+          summary: 'p99 latency budget exceeded (>200ms)'
+          description: 'p99 request latency exceeded 200ms for 10m (Sprint 0 budget).'
+
+      - alert: IntelliFlowHighCPU
+        expr: |
+          avg by (instance) (rate(process_cpu_seconds_total{job=~"intelliflow-.*"}[5m])) > 0.80
+        for: 15m
+        labels:
+          severity: medium
+          sprint: '0'
+        annotations:
+          summary: 'High CPU (>80%)'
+          description: 'Process CPU usage above 80% for 15m on {{ $labels.instance }}.'

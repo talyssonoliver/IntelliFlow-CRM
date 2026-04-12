@@ -1,0 +1,4388 @@
+schema_version: 1.0.0
+last_updated: 2026-03-06
+maintainer: Tech Lead
+items:
+  FAIL-IFC-105-001:
+    origin_task: IFC-105
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T01:55:39.180Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-155-001:
+    origin_task: IFC-155
+    owner: Backend Dev
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T01:55:44.283Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-ENG-OPS-001-001:
+    origin_task: ENG-OPS-001
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm lint (exit code: 124)'
+    created_at: 2026-02-28T01:55:46.176Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm lint" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-151-001:
+    origin_task: IFC-151
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T01:55:55.690Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-120-001:
+    origin_task: IFC-120
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T01:56:04.959Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-120-002:
+    origin_task: IFC-120
+    owner: Tech Lead
+    severity: medium
+    description: 2 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T01:56:04.959Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-ANALYTICS-001-001:
+    origin_task: ANALYTICS-001
+    owner: PM + DA
+    severity: critical
+    description: 'Validation failed: pnpm lint (exit code: 1)'
+    created_at: 2026-02-28T01:56:25.927Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm lint" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-156-001:
+    origin_task: IFC-156
+    owner: Backend Dev
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T01:56:46.337Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-156-002:
+    origin_task: IFC-156
+    owner: Backend Dev
+    severity: medium
+    description: 4 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T01:56:46.337Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-152-001:
+    origin_task: IFC-152
+    owner: Backend Dev
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T01:56:59.580Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-EXP-ARTIFACTS-002-001:
+    origin_task: EXP-ARTIFACTS-002
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/ui test (exit code: 124)'
+    created_at: 2026-02-28T01:57:07.738Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/ui test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-160-001:
+    origin_task: IFC-160
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm lint (exit code: 1)'
+    created_at: 2026-02-28T01:57:12.852Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm lint" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-160-002:
+    origin_task: IFC-160
+    owner: Tech Lead
+    severity: medium
+    description: 2 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T01:57:12.852Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-026-001:
+    origin_task: IFC-026
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test:e2e (exit code: 124)'
+    created_at: 2026-02-28T01:57:38.136Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test:e2e" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-032-001:
+    origin_task: PG-032
+    owner: Frontend Dev
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T01:57:38.769Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-107-001:
+    origin_task: IFC-107
+    owner: Backend Dev
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T01:57:40.981Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-045-001:
+    origin_task: IFC-045
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T01:57:45.652Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-181-001:
+    origin_task: IFC-181
+    owner: Frontend Dev
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T01:57:47.318Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-181-002:
+    origin_task: IFC-181
+    owner: Frontend Dev
+    severity: medium
+    description: 4 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T01:57:47.318Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-153-001:
+    origin_task: IFC-153
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test:e2e (exit code: 124)'
+    created_at: 2026-02-28T01:58:03.428Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test:e2e" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-TRACK-001-001:
+    origin_task: TRACK-001
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T01:58:10.674Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-TRACK-003-001:
+    origin_task: TRACK-003
+    owner: Tech Lead
+    severity: medium
+    description: 6 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T01:58:11.278Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-034-001:
+    origin_task: PG-034
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T01:58:40.792Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-034-002:
+    origin_task: PG-034
+    owner: Tech Lead
+    severity: medium
+    description: 4 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T01:58:40.792Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-040-001:
+    origin_task: PG-040
+    owner: Tech Lead
+    severity: medium
+    description: 3 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T01:58:40.840Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-042-001:
+    origin_task: PG-042
+    owner: Tech Lead
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T01:58:40.868Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-128-001:
+    origin_task: IFC-128
+    owner: QA Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T01:58:42.529Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-061-001:
+    origin_task: IFC-061
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T01:58:47.485Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-135-001:
+    origin_task: PG-135
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T01:58:48.390Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-154-001:
+    origin_task: IFC-154
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T01:59:05.030Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-TRACK-006-001:
+    origin_task: TRACK-006
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T01:59:13.294Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-124-001:
+    origin_task: PG-124
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T01:59:43.028Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-062-001:
+    origin_task: IFC-062
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T01:59:49.547Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-136-001:
+    origin_task: PG-136
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T01:59:50.230Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-136-002:
+    origin_task: PG-136
+    owner: Tech Lead
+    severity: medium
+    description: 2 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T01:59:50.230Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-167-001:
+    origin_task: IFC-167
+    owner: DevOps
+    severity: critical
+    description: 'Validation failed: pnpm dev (exit code: 124)'
+    created_at: 2026-02-28T02:00:15.352Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm dev" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-136-001:
+    origin_task: IFC-136
+    owner: Backend Dev
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T02:00:44.643Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-136-002:
+    origin_task: IFC-136
+    owner: Backend Dev
+    severity: medium
+    description: 3 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T02:00:44.643Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-063-001:
+    origin_task: IFC-063
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T02:00:50.679Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-063-002:
+    origin_task: IFC-063
+    owner: Tech Lead
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T02:00:50.679Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-137-001:
+    origin_task: PG-137
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T02:00:51.573Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-137-002:
+    origin_task: PG-137
+    owner: Tech Lead
+    severity: medium
+    description: 22 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T02:00:51.573Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-168-001:
+    origin_task: IFC-168
+    owner: AI Specialist
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T02:01:17.435Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-168-002:
+    origin_task: IFC-168
+    owner: AI Specialist
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T02:01:17.435Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-191-001:
+    origin_task: IFC-191
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T02:01:44.778Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-191-002:
+    origin_task: IFC-191
+    owner: Tech Lead
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T02:01:44.778Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-176-001:
+    origin_task: IFC-176
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T02:01:46.727Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-064-001:
+    origin_task: IFC-064
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T02:01:51.945Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-064-002:
+    origin_task: IFC-064
+    owner: Tech Lead
+    severity: medium
+    description: 2 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T02:01:51.945Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-174-001:
+    origin_task: IFC-174
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T02:02:18.902Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-174-002:
+    origin_task: IFC-174
+    owner: Tech Lead
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T02:02:18.902Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-205-001:
+    origin_task: IFC-205
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T02:02:52.824Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-065-001:
+    origin_task: IFC-065
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T02:02:53.151Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-128-001:
+    origin_task: PG-128
+    owner: Frontend Dev + AI Specialist
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T02:03:20.672Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-128-002:
+    origin_task: PG-128
+    owner: Frontend Dev + AI Specialist
+    severity: medium
+    description: 8 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T02:03:20.672Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-192-001:
+    origin_task: IFC-192
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T02:03:46.554Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-066-001:
+    origin_task: IFC-066
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T02:03:55.080Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-066-002:
+    origin_task: IFC-066
+    owner: Tech Lead
+    severity: medium
+    description: 2 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T02:03:55.080Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-129-001:
+    origin_task: PG-129
+    owner: Frontend Dev
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T02:04:22.755Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-206-001:
+    origin_task: IFC-206
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T02:04:54.911Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-206-002:
+    origin_task: IFC-206
+    owner: Tech Lead
+    severity: medium
+    description: 3 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T02:04:54.911Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-067-001:
+    origin_task: IFC-067
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T02:04:56.900Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-130-001:
+    origin_task: PG-130
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T02:05:24.898Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-195-001:
+    origin_task: IFC-195
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T02:05:48.809Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-195-002:
+    origin_task: IFC-195
+    owner: Tech Lead
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T02:05:48.809Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-068-001:
+    origin_task: IFC-068
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T02:05:58.985Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-131-001:
+    origin_task: PG-131
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T02:06:26.879Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-131-002:
+    origin_task: PG-131
+    owner: Tech Lead
+    severity: medium
+    description: 6 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T02:06:26.879Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-207-001:
+    origin_task: IFC-207
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T02:06:36.042Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-207-002:
+    origin_task: IFC-207
+    owner: Tech Lead
+    severity: medium
+    description: 3 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T02:06:36.042Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-157-001:
+    origin_task: PG-157
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web typecheck (exit code: 124)'
+    created_at: 2026-02-28T02:06:50.299Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web typecheck" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-069-001:
+    origin_task: IFC-069
+    owner: Backend Dev
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T02:07:00.400Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-069-002:
+    origin_task: IFC-069
+    owner: Backend Dev
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T02:07:00.400Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-086-001:
+    origin_task: IFC-086
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T02:08:01.220Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-190-001:
+    origin_task: IFC-190
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T02:08:27.808Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-154-001:
+    origin_task: PG-154
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-02-28T02:08:29.652Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-154-002:
+    origin_task: PG-154
+    owner: Tech Lead
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T02:08:29.652Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-155-001:
+    origin_task: PG-155
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-02-28T02:08:31.122Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-025-001:
+    origin_task: PG-025
+    owner: Frontend Dev
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T02:09:02.811Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-026-001:
+    origin_task: PG-026
+    owner: Tech Lead
+    severity: medium
+    description: 3 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T02:09:02.848Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-028-001:
+    origin_task: PG-028
+    owner: Tech Lead
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T02:09:02.979Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-029-001:
+    origin_task: PG-029
+    owner: Tech Lead
+    severity: medium
+    description: 5 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T02:09:03.360Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-031-001:
+    origin_task: PG-031
+    owner: Tech Lead
+    severity: medium
+    description: 2 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T02:09:03.681Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-DOC-002-001:
+    origin_task: DOC-002
+    owner: DevRel Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T02:09:32.619Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-DOC-007-001:
+    origin_task: DOC-007
+    owner: QA Lead
+    severity: critical
+    description: 'Validation failed: pnpm run lighthouse (exit code: 1)'
+    created_at: 2026-02-28T02:10:27.510Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm run lighthouse" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-DOC-008-001:
+    origin_task: DOC-008
+    owner: QA Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T02:11:28.792Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-DOC-008-002:
+    origin_task: DOC-008
+    owner: QA Lead
+    severity: medium
+    description: 5 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T02:11:28.792Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-093-001:
+    origin_task: IFC-093
+    owner: Backend Dev
+    severity: medium
+    description: 4 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T02:11:46.294Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-114-001:
+    origin_task: IFC-114
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T02:12:46.904Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-114-002:
+    origin_task: IFC-114
+    owner: Tech Lead
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T02:12:46.904Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-122-001:
+    origin_task: IFC-122
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T02:13:47.467Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-133-001:
+    origin_task: IFC-133
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T02:14:48.021Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-148-001:
+    origin_task: IFC-148
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T02:15:48.559Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-148-002:
+    origin_task: IFC-148
+    owner: Tech Lead
+    severity: medium
+    description: 2 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T02:15:48.559Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-138-001:
+    origin_task: PG-138
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T02:16:49.069Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-138-002:
+    origin_task: PG-138
+    owner: Tech Lead
+    severity: medium
+    description: 15 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T02:16:49.069Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-139-001:
+    origin_task: PG-139
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T02:17:49.636Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-139-002:
+    origin_task: PG-139
+    owner: Tech Lead
+    severity: medium
+    description: 19 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T02:17:49.636Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-142-001:
+    origin_task: PG-142
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T02:19:50.227Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-143-001:
+    origin_task: PG-143
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T02:21:51.285Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-143-002:
+    origin_task: PG-143
+    owner: Tech Lead
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T02:21:51.285Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-144-001:
+    origin_task: PG-144
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T02:23:52.472Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-144-002:
+    origin_task: PG-144
+    owner: Tech Lead
+    severity: medium
+    description: 2 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T02:23:52.472Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-197-001:
+    origin_task: IFC-197
+    owner: Backend Dev
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T02:25:54.625Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-148-001:
+    origin_task: PG-148
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T02:27:56.574Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-148-002:
+    origin_task: PG-148
+    owner: Tech Lead
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T02:27:56.574Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-149-001:
+    origin_task: PG-149
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T02:29:58.714Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-150-001:
+    origin_task: PG-150
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T02:32:01.077Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-150-002:
+    origin_task: PG-150
+    owner: Tech Lead
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T02:32:01.077Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-063-001:
+    origin_task: IFC-063
+    owner: Tech Lead
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T14:07:20.738Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-064-001:
+    origin_task: IFC-064
+    owner: Tech Lead
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T14:07:20.786Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-066-001:
+    origin_task: IFC-066
+    owner: Tech Lead
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T14:07:20.824Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-069-001:
+    origin_task: IFC-069
+    owner: Backend Dev
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T14:07:20.869Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-076-001:
+    origin_task: IFC-076
+    owner: Security Engineer
+    severity: medium
+    description: 45 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T14:10:18.871Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-099-001:
+    origin_task: IFC-099
+    owner: AI Specialist
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T14:10:19.029Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-099-002:
+    origin_task: IFC-099
+    owner: AI Specialist
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T14:10:19.029Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-113-001:
+    origin_task: IFC-113
+    owner: AI Specialist
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T14:10:19.120Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-141-001:
+    origin_task: IFC-141
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T14:10:19.278Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-081-001:
+    origin_task: IFC-081
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T16:32:06.253Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-009-001:
+    origin_task: PG-009
+    owner: Tech Lead
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T16:32:06.397Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-010-001:
+    origin_task: PG-010
+    owner: Tech Lead
+    severity: medium
+    description: 2 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T16:32:06.513Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-011-001:
+    origin_task: PG-011
+    owner: Tech Lead
+    severity: medium
+    description: 7 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T16:32:06.600Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-013-001:
+    origin_task: PG-013
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T16:32:06.698Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-014-001:
+    origin_task: PG-014
+    owner: Tech Lead
+    severity: medium
+    description: 2 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T16:32:06.808Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-169-001:
+    origin_task: IFC-169
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T16:32:07.606Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-170-001:
+    origin_task: IFC-170
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T16:32:07.819Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-170-002:
+    origin_task: IFC-170
+    owner: Tech Lead
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T16:32:07.819Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-171-001:
+    origin_task: IFC-171
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T16:32:07.912Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-108-001:
+    origin_task: IFC-108
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T16:33:49.161Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-110-001:
+    origin_task: IFC-110
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T16:33:49.644Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-131-001:
+    origin_task: IFC-131
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T16:33:49.778Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-004-001:
+    origin_task: IFC-004
+    owner: Backend Dev
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T16:34:08.543Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-004-002:
+    origin_task: IFC-004
+    owner: Backend Dev
+    severity: medium
+    description: 13 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T16:34:08.543Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-005-001:
+    origin_task: IFC-005
+    owner: Backend Dev
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T16:34:08.732Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-072-001:
+    origin_task: IFC-072
+    owner: Security Engineer
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T16:34:08.936Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-085-001:
+    origin_task: IFC-085
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T16:34:09.066Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-SALES-002-001:
+    origin_task: SALES-002
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm lint (exit code: 1)'
+    created_at: 2026-02-28T16:34:09.179Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm lint" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-101-001:
+    origin_task: IFC-101
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T16:34:09.378Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-102-001:
+    origin_task: IFC-102
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T16:34:09.468Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-103-001:
+    origin_task: IFC-103
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T16:34:09.586Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-109-001:
+    origin_task: IFC-109
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T16:34:09.822Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-EXC-INIT-001-001:
+    origin_task: EXC-INIT-001
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T16:34:21.817Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-AI-SETUP-001-001:
+    origin_task: AI-SETUP-001
+    owner: AI Specialist
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T16:34:22.436Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-AI-SETUP-003-001:
+    origin_task: AI-SETUP-003
+    owner: AI Specialist
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T16:34:23.075Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-ENV-001-AI-001:
+    origin_task: ENV-001-AI
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm build (exit code: 1)'
+    created_at: 2026-02-28T16:34:23.185Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm build" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-ENV-001-AI-002:
+    origin_task: ENV-001-AI
+    owner: Tech Lead
+    severity: medium
+    description: 9 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T16:34:23.185Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-ENV-002-AI-001:
+    origin_task: ENV-002-AI
+    owner: DevOps Engineer
+    severity: critical
+    description: 'Validation failed: pnpm lint (exit code: 1)'
+    created_at: 2026-02-28T16:34:23.847Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm lint" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-ENV-006-AI-001:
+    origin_task: ENV-006-AI
+    owner: Backend Dev
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T16:34:24.041Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-170-001:
+    origin_task: IFC-170
+    owner: Tech Lead
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T16:51:58.249Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-015-001:
+    origin_task: PG-015
+    owner: Frontend Dev
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T16:52:53.316Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-016-001:
+    origin_task: PG-016
+    owner: Frontend Dev
+    severity: medium
+    description: 2 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T16:52:54.244Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-018-001:
+    origin_task: PG-018
+    owner: Tech Lead
+    severity: medium
+    description: 2 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T16:52:55.446Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-019-001:
+    origin_task: PG-019
+    owner: Tech Lead
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T16:52:55.995Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-021-001:
+    origin_task: PG-021
+    owner: Tech Lead
+    severity: medium
+    description: 2 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T16:52:57.178Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-022-001:
+    origin_task: PG-022
+    owner: Tech Lead
+    severity: medium
+    description: 2 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T16:52:57.245Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-163-001:
+    origin_task: IFC-163
+    owner: Tech Lead
+    severity: medium
+    description: 9 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T16:52:59.181Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-172-001:
+    origin_task: IFC-172
+    owner: Tech Lead
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T16:52:59.640Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-173-001:
+    origin_task: IFC-173
+    owner: Tech Lead
+    severity: medium
+    description: 6 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T16:53:00.648Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-182-001:
+    origin_task: IFC-182
+    owner: Backend Dev
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T16:53:01.229Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-183-001:
+    origin_task: IFC-183
+    owner: Tech Lead
+    severity: medium
+    description: 7 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T16:53:01.565Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-140-001:
+    origin_task: PG-140
+    owner: Tech Lead
+    severity: medium
+    description: 7 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T16:53:02.002Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-146-001:
+    origin_task: PG-146
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T17:14:42.079Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-137-001:
+    origin_task: IFC-137
+    owner: Backend Dev
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T17:16:20.825Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-177-001:
+    origin_task: IFC-177
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T17:16:22.967Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-005-001:
+    origin_task: PG-005
+    owner: Tech Lead
+    severity: medium
+    description: 6 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T17:25:19.245Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-140-001:
+    origin_task: IFC-140
+    owner: AI Specialist
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T17:25:21.044Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-140-002:
+    origin_task: IFC-140
+    owner: AI Specialist
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T17:25:21.044Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-143-001:
+    origin_task: IFC-143
+    owner: Backend Dev
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T17:25:21.776Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-157-001:
+    origin_task: IFC-157
+    owner: AI Specialist
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T17:25:22.719Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-158-001:
+    origin_task: IFC-158
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test:e2e (exit code: 124)'
+    created_at: 2026-02-28T17:25:23.266Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test:e2e" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-141-001:
+    origin_task: PG-141
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T17:25:25.564Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-141-002:
+    origin_task: PG-141
+    owner: Tech Lead
+    severity: medium
+    description: 3 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T17:25:25.564Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-ENV-017-AI-001:
+    origin_task: ENV-017-AI
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T17:25:58.978Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-003-001:
+    origin_task: IFC-003
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T17:25:59.836Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-BRAND-002-001:
+    origin_task: BRAND-002
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm lint (exit code: 1)'
+    created_at: 2026-02-28T17:26:01.832Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm lint" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-SALES-001-001:
+    origin_task: SALES-001
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm lint (exit code: 1)'
+    created_at: 2026-02-28T17:26:02.528Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm lint" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-GOV-001-001:
+    origin_task: GOV-001
+    owner: Security Engineer + Legal
+    severity: critical
+    description: 'Validation failed: pnpm lint (exit code: 1)'
+    created_at: 2026-02-28T17:26:03.735Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm lint" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-106-001:
+    origin_task: IFC-106
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T17:26:03.802Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-151-001:
+    origin_task: PG-151
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T17:31:22.883Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-012-001:
+    origin_task: IFC-012
+    owner: Backend Dev
+    severity: critical
+    description: 'Validation failed: pnpm build (exit code: 124)'
+    created_at: 2026-02-28T17:31:29.170Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm build" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-013-001:
+    origin_task: IFC-013
+    owner: AI Specialist
+    severity: medium
+    description: 3 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T17:31:29.605Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-015-001:
+    origin_task: IFC-015
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T17:31:31.637Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-016-001:
+    origin_task: IFC-016
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T17:31:33.086Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-016-002:
+    origin_task: IFC-016
+    owner: Tech Lead
+    severity: medium
+    description: 5 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T17:31:33.086Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-018-001:
+    origin_task: IFC-018
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T17:31:34.852Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-018-002:
+    origin_task: IFC-018
+    owner: Tech Lead
+    severity: medium
+    description: 9 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T17:31:34.852Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-021-001:
+    origin_task: IFC-021
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T17:31:35.290Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-023-001:
+    origin_task: IFC-023
+    owner: Tech Lead
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T17:31:35.938Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-125-001:
+    origin_task: IFC-125
+    owner: Security Engineer
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T17:31:37.042Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-129-001:
+    origin_task: IFC-129
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T17:31:37.592Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-139-001:
+    origin_task: IFC-139
+    owner: Backend Dev
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T17:31:38.285Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-139-002:
+    origin_task: IFC-139
+    owner: Backend Dev
+    severity: medium
+    description: 8 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T17:31:38.285Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-144-001:
+    origin_task: IFC-144
+    owner: AI Specialist
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T17:31:38.538Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-144-002:
+    origin_task: IFC-144
+    owner: AI Specialist
+    severity: medium
+    description: 4 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T17:31:38.538Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-149-001:
+    origin_task: IFC-149
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T17:31:39.146Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-149-002:
+    origin_task: IFC-149
+    owner: Tech Lead
+    severity: medium
+    description: 4 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T17:31:39.146Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-184-001:
+    origin_task: IFC-184
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T17:33:04.165Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-184-002:
+    origin_task: IFC-184
+    owner: Tech Lead
+    severity: medium
+    description: 3 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T17:33:04.165Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-006-001:
+    origin_task: IFC-006
+    owner: Backend Dev
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T17:44:55.880Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-007-001:
+    origin_task: IFC-007
+    owner: Backend Dev
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T17:44:56.966Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-104-001:
+    origin_task: IFC-104
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T17:44:57.642Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-096-001:
+    origin_task: IFC-096
+    owner: Frontend Dev + Data Eng
+    severity: critical
+    description: 'Validation failed: pnpm build (exit code: 1)'
+    created_at: 2026-02-28T17:47:00.171Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm build" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-124-001:
+    origin_task: IFC-124
+    owner: Frontend Dev
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T17:47:02.841Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-145-001:
+    origin_task: IFC-145
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T17:47:03.570Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-152-001:
+    origin_task: PG-152
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T17:48:04.113Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-152-002:
+    origin_task: PG-152
+    owner: Tech Lead
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T17:48:04.113Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-178-001:
+    origin_task: IFC-178
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm db:migrate (exit code: 1)'
+    created_at: 2026-02-28T17:49:33.461Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm db:migrate" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-185-001:
+    origin_task: IFC-185
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T17:49:44.664Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-185-002:
+    origin_task: IFC-185
+    owner: Tech Lead
+    severity: medium
+    description: 3 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T17:49:44.664Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-188-001:
+    origin_task: IFC-188
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T17:49:45.292Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-098-001:
+    origin_task: IFC-098
+    owner: AI Specialist
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T17:51:22.602Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-112-001:
+    origin_task: IFC-112
+    owner: DevOps Engineer
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T17:51:23.581Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-127-001:
+    origin_task: IFC-127
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T17:51:23.937Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-138-001:
+    origin_task: IFC-138
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T17:51:25.622Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-153-001:
+    origin_task: PG-153
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T18:04:48.753Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-147-001:
+    origin_task: IFC-147
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T18:08:06.634Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-150-001:
+    origin_task: IFC-150
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T18:08:07.483Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-179-001:
+    origin_task: IFC-179
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T18:08:07.739Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-180-001:
+    origin_task: IFC-180
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T18:08:08.049Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-180-002:
+    origin_task: IFC-180
+    owner: Tech Lead
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T18:08:08.049Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-186-001:
+    origin_task: IFC-186
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T18:09:48.733Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-186-002:
+    origin_task: IFC-186
+    owner: Tech Lead
+    severity: medium
+    description: 3 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T18:09:48.733Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-187-001:
+    origin_task: IFC-187
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T18:26:29.038Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-187-002:
+    origin_task: IFC-187
+    owner: Tech Lead
+    severity: medium
+    description: 6 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T18:26:29.038Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-189-001:
+    origin_task: IFC-189
+    owner: Backend Dev
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T18:26:30.764Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-189-002:
+    origin_task: IFC-189
+    owner: Backend Dev
+    severity: medium
+    description: 4 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T18:26:30.764Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-133-001:
+    origin_task: PG-133
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T18:26:32.107Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-133-002:
+    origin_task: PG-133
+    owner: Tech Lead
+    severity: medium
+    description: 11 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T18:26:32.107Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-134-001:
+    origin_task: PG-134
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T18:26:32.357Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-134-002:
+    origin_task: PG-134
+    owner: Tech Lead
+    severity: medium
+    description: 6 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T18:26:32.357Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-ENV-010-AI-001:
+    origin_task: ENV-010-AI
+    owner: QA Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T20:02:36.142Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-ENV-010-AI-002:
+    origin_task: ENV-010-AI
+    owner: QA Lead
+    severity: medium
+    description: 9 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T20:02:36.142Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-ENV-015-AI-001:
+    origin_task: ENV-015-AI
+    owner: Backend Dev
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T20:02:36.244Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-044-001:
+    origin_task: IFC-044
+    owner: Backend Dev
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T20:10:53.882Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  KPI-IFC-044-002:
+    origin_task: IFC-044
+    owner: Backend Dev
+    severity: high
+    description: 'KPI not met: Coverage >90% (target: > 90%, actual: 83.36%)'
+    created_at: 2026-02-28T20:10:53.882Z
+    expiry_date: 2026-03-30
+    remediation_plan: 'Improve implementation to meet KPI target: > 90%'
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-044-003:
+    origin_task: IFC-044
+    owner: Backend Dev
+    severity: medium
+    description: 9 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T20:10:53.882Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-DOC-001-001:
+    origin_task: DOC-001
+    owner: CEO + All Leads
+    severity: critical
+    description: 'Validation failed: pnpm lint (exit code: 1)'
+    created_at: 2026-02-28T20:10:53.950Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm lint" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-BRAND-001-001:
+    origin_task: BRAND-001
+    owner: UX Designer + Frontend Dev
+    severity: critical
+    description: 'Validation failed: pnpm lint (exit code: 1)'
+    created_at: 2026-02-28T20:10:54.006Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm lint" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-GTM-001-001:
+    origin_task: GTM-001
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm lint (exit code: 1)'
+    created_at: 2026-02-28T20:10:54.055Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm lint" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-GTM-002-001:
+    origin_task: GTM-002
+    owner: PM + Marketing
+    severity: critical
+    description: 'Validation failed: pnpm lint (exit code: 1)'
+    created_at: 2026-02-28T20:10:54.108Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm lint" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PM-OPS-001-001:
+    origin_task: PM-OPS-001
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm lint (exit code: 1)'
+    created_at: 2026-02-28T20:10:54.159Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm lint" to fail
+    remediation_sprint: 0
+    status: open
+  KPI-IFC-146-001:
+    origin_task: IFC-146
+    owner: Tech Lead
+    severity: high
+    description: 'KPI not met: traceability coverage >=90% (target: >= 90%, actual: 83.36%)'
+    created_at: 2026-02-28T20:18:44.759Z
+    expiry_date: 2026-03-30
+    remediation_plan: 'Improve implementation to meet KPI target: >= 90%'
+    remediation_sprint: 0
+    status: open
+  PLCH-ENV-001-AI-001:
+    origin_task: ENV-001-AI
+    owner: Tech Lead
+    severity: medium
+    description: 9 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T20:22:17.540Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-044-002:
+    origin_task: IFC-044
+    owner: Backend Dev
+    severity: medium
+    description: 9 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T20:22:17.848Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-015-001:
+    origin_task: PG-015
+    owner: Frontend Dev
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T20:23:46.805Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-015-002:
+    origin_task: PG-015
+    owner: Frontend Dev
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T20:23:46.805Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-159-001:
+    origin_task: IFC-159
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T20:23:47.138Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-163-001:
+    origin_task: IFC-163
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T20:23:47.184Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-163-002:
+    origin_task: IFC-163
+    owner: Tech Lead
+    severity: medium
+    description: 9 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T20:23:47.184Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-172-001:
+    origin_task: IFC-172
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T20:23:47.225Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-172-002:
+    origin_task: IFC-172
+    owner: Tech Lead
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T20:23:47.225Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-173-001:
+    origin_task: IFC-173
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T20:23:47.265Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-173-002:
+    origin_task: IFC-173
+    owner: Tech Lead
+    severity: medium
+    description: 6 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T20:23:47.265Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-182-001:
+    origin_task: IFC-182
+    owner: Backend Dev
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T20:23:47.308Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-182-002:
+    origin_task: IFC-182
+    owner: Backend Dev
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T20:23:47.308Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-183-001:
+    origin_task: IFC-183
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T20:23:47.348Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-183-002:
+    origin_task: IFC-183
+    owner: Tech Lead
+    severity: medium
+    description: 7 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T20:23:47.348Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-140-001:
+    origin_task: PG-140
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T20:23:47.391Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-140-002:
+    origin_task: PG-140
+    owner: Tech Lead
+    severity: medium
+    description: 7 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T20:23:47.391Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-198-001:
+    origin_task: IFC-198
+    owner: Backend Dev
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T20:23:47.433Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-200-001:
+    origin_task: IFC-200
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 124)'
+    created_at: 2026-02-28T20:23:47.480Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-158-001:
+    origin_task: PG-158
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-02-28T20:24:02.475Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-156-001:
+    origin_task: PG-156
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-02-28T23:54:37.811Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-159-001:
+    origin_task: PG-159
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T00:33:55.702Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-005-001:
+    origin_task: IFC-005
+    owner: Backend Dev
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/api test --run (exit code: 1)'
+    created_at: 2026-03-01T21:54:18.478Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/api test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-089-001:
+    origin_task: IFC-089
+    owner: Backend Dev
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T21:54:58.984Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-010-001:
+    origin_task: IFC-010
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm lint (exit code: 1)'
+    created_at: 2026-03-01T21:55:11.248Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm lint" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-013-001:
+    origin_task: IFC-013
+    owner: AI Specialist
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/api test --run (exit code: 1)'
+    created_at: 2026-03-01T21:55:36.682Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/api test --run" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-013-002:
+    origin_task: IFC-013
+    owner: AI Specialist
+    severity: medium
+    description: 3 placeholder(s) found in task artifacts
+    created_at: 2026-03-01T21:55:36.682Z
+    expiry_date: 2026-03-31
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-014-001:
+    origin_task: IFC-014
+    owner: AI Specialist
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T21:55:36.810Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-017-001:
+    origin_task: IFC-017
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/api test --run (exit code: 1)'
+    created_at: 2026-03-01T21:56:04.430Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/api test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-019-001:
+    origin_task: IFC-019
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm lint (exit code: 1)'
+    created_at: 2026-03-01T21:56:04.625Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm lint" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-022-001:
+    origin_task: IFC-022
+    owner: AI Specialist
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/api test --run (exit code: 1)'
+    created_at: 2026-03-01T21:56:33.241Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/api test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-023-001:
+    origin_task: IFC-023
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T21:56:33.352Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-023-002:
+    origin_task: IFC-023
+    owner: Tech Lead
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-03-01T21:56:33.352Z
+    expiry_date: 2026-03-31
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-025-001:
+    origin_task: IFC-025
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/api test --run (exit code: 1)'
+    created_at: 2026-03-01T21:56:58.959Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/api test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-091-001:
+    origin_task: IFC-091
+    owner: Backend Dev
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T21:57:01.342Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-095-001:
+    origin_task: IFC-095
+    owner: AI Specialist
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/api test --run (exit code: 1)'
+    created_at: 2026-03-01T21:57:27.535Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/api test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-079-001:
+    origin_task: IFC-079
+    owner: Backend Dev
+    severity: critical
+    description: 'Validation failed: pnpm lint (exit code: 1)'
+    created_at: 2026-03-01T21:57:47.838Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm lint" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-080-001:
+    origin_task: IFC-080
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm lint (exit code: 1)'
+    created_at: 2026-03-01T21:57:47.933Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm lint" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-082-001:
+    origin_task: IFC-082
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm lint (exit code: 1)'
+    created_at: 2026-03-01T21:57:48.018Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm lint" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-092-001:
+    origin_task: IFC-092
+    owner: Data Eng + Backend Dev
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/api test --run (exit code: 1)'
+    created_at: 2026-03-01T21:58:13.321Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/api test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-093-001:
+    origin_task: IFC-093
+    owner: Backend Dev
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T21:58:13.453Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-093-002:
+    origin_task: IFC-093
+    owner: Backend Dev
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-03-01T21:58:13.453Z
+    expiry_date: 2026-03-31
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-134-001:
+    origin_task: IFC-134
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 1)'
+    created_at: 2026-03-01T21:58:16.070Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-055-001:
+    origin_task: IFC-055
+    owner: Backend Dev
+    severity: critical
+    description: 'Validation failed: pnpm lint (exit code: 1)'
+    created_at: 2026-03-01T21:58:25.922Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm lint" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-077-001:
+    origin_task: IFC-077
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 1)'
+    created_at: 2026-03-01T21:58:28.849Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-124-001:
+    origin_task: IFC-124
+    owner: Frontend Dev
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 1)'
+    created_at: 2026-03-01T21:58:47.653Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-076-001:
+    origin_task: IFC-076
+    owner: Security Engineer
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T21:58:57.305Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-076-002:
+    origin_task: IFC-076
+    owner: Security Engineer
+    severity: medium
+    description: 29 placeholder(s) found in task artifacts
+    created_at: 2026-03-01T21:58:57.305Z
+    expiry_date: 2026-03-31
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-113-001:
+    origin_task: IFC-113
+    owner: AI Specialist
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 1)'
+    created_at: 2026-03-01T21:58:59.669Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-121-001:
+    origin_task: IFC-121
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 1)'
+    created_at: 2026-03-01T21:59:02.000Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-002-001:
+    origin_task: PG-002
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T21:59:14.300Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-003-001:
+    origin_task: PG-003
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T21:59:14.396Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-004-001:
+    origin_task: PG-004
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T21:59:14.483Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-005-001:
+    origin_task: PG-005
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T21:59:14.560Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-006-001:
+    origin_task: PG-006
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T21:59:14.632Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-007-001:
+    origin_task: PG-007
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T21:59:14.706Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-008-001:
+    origin_task: PG-008
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T21:59:14.782Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-042-001:
+    origin_task: IFC-042
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/api test --run (exit code: 1)'
+    created_at: 2026-03-01T21:59:50.533Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/api test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-009-001:
+    origin_task: PG-009
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T21:59:50.798Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-010-001:
+    origin_task: PG-010
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T21:59:50.900Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-011-001:
+    origin_task: PG-011
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T21:59:50.990Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-012-001:
+    origin_task: PG-012
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T21:59:51.074Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-014-001:
+    origin_task: PG-014
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T21:59:51.223Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-016-001:
+    origin_task: PG-016
+    owner: Frontend Dev
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T22:00:05.799Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-017-001:
+    origin_task: PG-017
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T22:00:05.885Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-018-001:
+    origin_task: PG-018
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T22:00:05.967Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-019-001:
+    origin_task: PG-019
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T22:00:06.044Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-020-001:
+    origin_task: PG-020
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T22:00:06.120Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-021-001:
+    origin_task: PG-021
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T22:00:06.195Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-022-001:
+    origin_task: PG-022
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T22:00:06.266Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-023-001:
+    origin_task: PG-023
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T22:00:06.344Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-024-001:
+    origin_task: PG-024
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T22:00:06.420Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-104-001:
+    origin_task: PG-104
+    owner: Frontend Dev
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T22:00:06.497Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-026-001:
+    origin_task: PG-026
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T22:00:23.134Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-027-001:
+    origin_task: PG-027
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T22:00:23.212Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-028-001:
+    origin_task: PG-028
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T22:00:23.294Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-029-001:
+    origin_task: PG-029
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T22:00:23.384Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-029-002:
+    origin_task: PG-029
+    owner: Tech Lead
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-03-01T22:00:23.384Z
+    expiry_date: 2026-03-31
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-030-001:
+    origin_task: PG-030
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T22:00:23.463Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-031-001:
+    origin_task: PG-031
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T22:00:23.544Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-031-002:
+    origin_task: PG-031
+    owner: Tech Lead
+    severity: medium
+    description: 3 placeholder(s) found in task artifacts
+    created_at: 2026-03-01T22:00:23.544Z
+    expiry_date: 2026-03-31
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-165-001:
+    origin_task: PG-165
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T22:00:34.074Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-DOC-003-001:
+    origin_task: DOC-003
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm lint (exit code: 1)'
+    created_at: 2026-03-01T22:00:34.253Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm lint" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-DOC-004-001:
+    origin_task: DOC-004
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm lint (exit code: 1)'
+    created_at: 2026-03-01T22:00:34.336Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm lint" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-DOC-005-001:
+    origin_task: DOC-005
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm lint (exit code: 1)'
+    created_at: 2026-03-01T22:00:34.423Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm lint" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-DOC-006-001:
+    origin_task: DOC-006
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm lint (exit code: 1)'
+    created_at: 2026-03-01T22:00:34.507Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm lint" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-DOC-009-001:
+    origin_task: DOC-009
+    owner: DevRel Lead
+    severity: critical
+    description: 'Validation failed: pnpm lint (exit code: 1)'
+    created_at: 2026-03-01T22:00:34.787Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm lint" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-027-001:
+    origin_task: IFC-027
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm lint (exit code: 1)'
+    created_at: 2026-03-01T22:00:45.563Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm lint" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-032-001:
+    origin_task: PG-032
+    owner: Frontend Dev
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T22:00:45.668Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-033-001:
+    origin_task: PG-033
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T22:00:45.763Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-035-001:
+    origin_task: PG-035
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T22:00:45.963Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-036-001:
+    origin_task: PG-036
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T22:00:46.053Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-037-001:
+    origin_task: PG-037
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T22:00:46.143Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-038-001:
+    origin_task: PG-038
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T22:00:46.287Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-039-001:
+    origin_task: PG-039
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T22:00:46.403Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-040-001:
+    origin_task: PG-040
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T22:00:46.511Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-041-001:
+    origin_task: PG-041
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T22:00:46.624Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-042-001:
+    origin_task: PG-042
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T22:00:46.753Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-160-001:
+    origin_task: PG-160
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T22:00:47.817Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-163-001:
+    origin_task: PG-163
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/api test --run (exit code: 1)'
+    created_at: 2026-03-01T22:00:47.952Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/api test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-169-001:
+    origin_task: PG-169
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T22:00:48.072Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-170-001:
+    origin_task: PG-170
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T22:00:48.245Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-171-001:
+    origin_task: PG-171
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm --filter @intelliflow/web test --run (exit code: 1)'
+    created_at: 2026-03-01T22:00:48.351Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm --filter @intelliflow/web test --run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-DOC-011-001:
+    origin_task: DOC-011
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: compliance-check dry-run (exit code: 1)'
+    created_at: 2026-03-01T22:00:48.520Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "compliance-check dry-run" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-PG-179-001:
+    origin_task: PG-179
+    owner: Tech Lead
+    severity: critical
+    description: 'Validation failed: pnpm test (exit code: 1)'
+    created_at: 2026-03-01T22:00:48.643Z
+    expiry_date: 2026-03-31
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-148-001:
+    origin_task: IFC-148
+    owner: Tech Lead
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-03-02T18:41:57.718Z
+    expiry_date: 2026-04-01
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-138-001:
+    origin_task: PG-138
+    owner: Tech Lead
+    severity: medium
+    description: 2 placeholder(s) found in task artifacts
+    created_at: 2026-03-02T18:41:57.858Z
+    expiry_date: 2026-04-01
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-139-001:
+    origin_task: PG-139
+    owner: Tech Lead
+    severity: medium
+    description: 10 placeholder(s) found in task artifacts
+    created_at: 2026-03-02T18:41:58.007Z
+    expiry_date: 2026-04-01
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-150-001:
+    origin_task: PG-150
+    owner: Tech Lead
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-03-02T18:41:58.148Z
+    expiry_date: 2026-04-01
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-141-001:
+    origin_task: PG-141
+    owner: Tech Lead
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-03-02T18:42:15.366Z
+    expiry_date: 2026-04-01
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-160-001:
+    origin_task: IFC-160
+    owner: Tech Lead
+    severity: medium
+    description: 2 placeholder(s) found in task artifacts
+    created_at: 2026-03-02T18:47:14.930Z
+    expiry_date: 2026-04-01
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-184-001:
+    origin_task: IFC-184
+    owner: Tech Lead
+    severity: medium
+    description: 2 placeholder(s) found in task artifacts
+    created_at: 2026-03-02T18:49:00.266Z
+    expiry_date: 2026-04-01
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-185-001:
+    origin_task: IFC-185
+    owner: Tech Lead
+    severity: medium
+    description: 2 placeholder(s) found in task artifacts
+    created_at: 2026-03-02T18:49:00.442Z
+    expiry_date: 2026-04-01
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-180-001:
+    origin_task: IFC-180
+    owner: Tech Lead
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-03-02T18:49:32.391Z
+    expiry_date: 2026-04-01
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-186-001:
+    origin_task: IFC-186
+    owner: Tech Lead
+    severity: medium
+    description: 2 placeholder(s) found in task artifacts
+    created_at: 2026-03-02T18:49:32.538Z
+    expiry_date: 2026-04-01
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-187-001:
+    origin_task: IFC-187
+    owner: Tech Lead
+    severity: medium
+    description: 5 placeholder(s) found in task artifacts
+    created_at: 2026-03-02T18:49:32.644Z
+    expiry_date: 2026-04-01
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-189-001:
+    origin_task: IFC-189
+    owner: Backend Dev
+    severity: medium
+    description: 2 placeholder(s) found in task artifacts
+    created_at: 2026-03-02T18:49:32.756Z
+    expiry_date: 2026-04-01
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-133-001:
+    origin_task: PG-133
+    owner: Tech Lead
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-03-02T18:49:32.859Z
+    expiry_date: 2026-04-01
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-016-001:
+    origin_task: IFC-016
+    owner: Tech Lead
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-03-02T18:49:55.509Z
+    expiry_date: 2026-04-01
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-139-001:
+    origin_task: IFC-139
+    owner: Backend Dev
+    severity: medium
+    description: 3 placeholder(s) found in task artifacts
+    created_at: 2026-03-02T18:50:06.009Z
+    expiry_date: 2026-04-01
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-144-001:
+    origin_task: IFC-144
+    owner: AI Specialist
+    severity: medium
+    description: 4 placeholder(s) found in task artifacts
+    created_at: 2026-03-02T18:50:06.155Z
+    expiry_date: 2026-04-01
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-137-001:
+    origin_task: PG-137
+    owner: Tech Lead
+    severity: medium
+    description: 6 placeholder(s) found in task artifacts
+    created_at: 2026-03-02T18:50:06.485Z
+    expiry_date: 2026-04-01
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-206-001:
+    origin_task: IFC-206
+    owner: Tech Lead
+    severity: medium
+    description: 2 placeholder(s) found in task artifacts
+    created_at: 2026-03-02T18:50:06.583Z
+    expiry_date: 2026-04-01
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-207-001:
+    origin_task: IFC-207
+    owner: Tech Lead
+    severity: medium
+    description: 2 placeholder(s) found in task artifacts
+    created_at: 2026-03-02T18:50:06.699Z
+    expiry_date: 2026-04-01
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-152-001:
+    origin_task: PG-152
+    owner: Tech Lead
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-03-02T18:50:39.291Z
+    expiry_date: 2026-04-01
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-099-001:
+    origin_task: IFC-099
+    owner: AI Specialist
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-03-02T18:51:41.864Z
+    expiry_date: 2026-04-01
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-174-001:
+    origin_task: IFC-174
+    owner: Tech Lead
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-03-02T18:53:43.321Z
+    expiry_date: 2026-04-01
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-154-001:
+    origin_task: PG-154
+    owner: Tech Lead
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-03-02T18:53:43.490Z
+    expiry_date: 2026-04-01
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-003-001:
+    origin_task: PG-003
+    owner: Tech Lead
+    severity: medium
+    description: 4 placeholder(s) found in task artifacts
+    created_at: 2026-03-02T19:21:06.650Z
+    expiry_date: 2026-04-01
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  WIRE-IFC-094-001:
+    origin_task: IFC-094
+    owner: Backend Dev
+    severity: medium
+    description: 'Document upload/download handlers unwired on Lead, Contact, Deal detail pages. Backend storage infrastructure exists but entity detail buttons have no onClick handlers.'
+    created_at: 2026-03-04T00:00:00.000Z
+    expiry_date: 2026-04-03
+    remediation_plan: IFC-216
+    remediation_sprint: 23
+    status: open
+  WIRE-IFC-144-001:
+    origin_task: IFC-144
+    owner: Frontend Dev
+    severity: medium
+    description: 'EmailCompose not wired into entity detail Compose buttons. Email adapter layer built but Lead/Contact detail Compose buttons are no-ops.'
+    created_at: 2026-03-04T00:00:00.000Z
+    expiry_date: 2026-04-03
+    remediation_plan: IFC-217
+    remediation_sprint: 22
+    status: open
+  WIRE-IFC-099-001:
+    origin_task: IFC-099
+    owner: Backend Dev
+    severity: low
+    description: 'Email list on entity detail pages derived from activities, not real Gmail/Outlook adapter. Connectors exist but not integrated into detail page email tabs.'
+    created_at: 2026-03-04T00:00:00.000Z
+    expiry_date: 2026-04-03
+    remediation_plan: IFC-221
+    remediation_sprint: 22
+    status: open
+  WIRE-IFC-039-001:
+    origin_task: IFC-039
+    owner: AI Specialist
+    severity: low
+    description: 'No Similar Leads/Contacts API using pgvector embeddings. RAG infrastructure exists but no entity similarity query endpoint.'
+    created_at: 2026-03-04T00:00:00.000Z
+    expiry_date: 2026-04-03
+    remediation_plan: IFC-218
+    remediation_sprint: 20
+    status: open
+  WIRE-PG-141-001:
+    origin_task: PG-141
+    owner: Frontend Dev
+    severity: medium
+    description: 'EmailCompose component built as standalone page but not integrated into entity detail page Compose buttons.'
+    created_at: 2026-03-04T00:00:00.000Z
+    expiry_date: 2026-04-03
+    remediation_plan: IFC-217
+    remediation_sprint: 22
+    status: open
+  WIRE-IFC-095-001:
+    origin_task: IFC-095
+    owner: Frontend Dev
+    severity: medium
+    description: 'No Run AI Analysis button or fallback indicator when aiInsight is null on Contact detail. Lead fixed 2026-03-04. Silent fallback to defaults without visual indication.'
+    created_at: 2026-03-04T00:00:00.000Z
+    expiry_date: 2026-04-03
+    remediation_plan: IFC-220
+    remediation_sprint: 16
+    status: open
+  WIRE-IFC-069-001:
+    origin_task: IFC-069
+    owner: Backend Dev
+    severity: low
+    description: 'Activity reactions/comments arrays always []; action buttons (Reply, React, Add Note, Share) are no-ops on Lead and Contact detail pages. Schema additions needed.'
+    created_at: 2026-03-04T00:00:00.000Z
+    expiry_date: 2026-04-03
+    remediation_plan: IFC-219
+    remediation_sprint: 20
+    status: open
+  WIRE-TASK-B09-001:
+    origin_task: IFC-010
+    owner: Backend Dev
+    severity: low
+    description: '3 dead task router endpoints (task.stats, task.assign, task.reschedule) at lines ~695/~751/~814 in task.router.ts — zero frontend callers.'
+    created_at: 2026-03-08T00:00:00.000Z
+    expiry_date: 2026-04-07
+    remediation_plan: Remove or wire during router cleanup sprint
+    remediation_sprint: 23
+    status: open
+  WIRE-TASK-F05-001:
+    origin_task: IFC-010
+    owner: Full Stack Dev
+    severity: medium
+    description: 'Task entity missing Account linking — requires DB migration (add accountId to Task model) + 6-layer change (Prisma, Domain, Application, Validators, API, Frontend). RelatedTasksCard has graceful empty state for account type.'
+    created_at: 2026-03-08T00:00:00.000Z
+    expiry_date: 2026-04-07
+    remediation_plan: Create IFC-* task for Sprint Continuous
+    remediation_sprint: 0
+    status: open
+  WIRE-TASK-B10-001:
+    origin_task: IFC-010
+    owner: Tech Lead
+    severity: low
+    description: 'No optimistic locking on Task (or any entity) — concurrent edits silently overwrite. Requires schema migration (version field), domain change, application layer, and API layer updates. System-wide architectural decision needed.'
+    created_at: 2026-03-08T00:00:00.000Z
+    expiry_date: 2026-04-07
+    remediation_plan: ADR needed for system-wide optimistic locking strategy
+    remediation_sprint: 0
+    status: open
+  DEAD-ANALYTICS-001:
+    origin_task: IFC-037
+    owner: Frontend Dev
+    severity: medium
+    description: '9 dead analytics router endpoints: exportConversionFunnel, exportMetrics, exportReport, getConversionFunnel, getLeadMetrics, getOverview, getSalesMetrics, getTimeSeriesData, leadStats. Backend built (ANALYTICS-001), zero web callers. IFC-037 (analytics dashboard UI) is Backlog sprint 21 but does not wire these procedures.'
+    created_at: 2026-03-06T00:00:00.000Z
+    expiry_date: 2026-04-05
+    remediation_plan: IFC-288
+    remediation_sprint: 21
+    status: open
+  DEAD-AGENT-001:
+    origin_task: IFC-139
+    owner: Frontend Dev
+    severity: medium
+    description: '17 dead agent/conversation router endpoints (13 conversation.* + 4 agent.*). All 13 conversation endpoints have zero production callers — frontend uses autoResponse.* (IFC-029), aiReview.* (IFC-180/181), and aiMonitoring.* (IFC-197) which query the same DB tables (conversationRecord, messageRecord, toolCallRecord) directly. Dead conversation endpoints: create, getById, getBySessionId, search, addMessage, recordToolCall, updateToolCall, approveToolCall, endConversation, escalate, getPendingApprovals, getAnalytics, archiveOld. Dead agent endpoints: executeTool, getPendingCount, getTool, listTools. Only consumers are k6 load test (conversation.search, conversation.getPendingApprovals) — no production traffic.'
+    created_at: 2026-03-06T00:00:00.000Z
+    expiry_date: 2026-04-05
+    remediation_plan: 'IFC-289: wire all 17 endpoints to frontend consumers (chat panel, agent-approvals, AI Search, admin dashboard) and refactor aiMonitoring to delegate to conversation router instead of duplicating DB queries'
+    remediation_sprint: 22
+    status: open
+  DEAD-INTEGRATIONS-001:
+    origin_task: IFC-003
+    owner: Frontend Dev
+    severity: medium
+    description: '5 dead integrations router endpoints: getAllConnectorsHealth, getConnectorHealth, getConnectorsByType, getDashboardConfig, triggerSync. Backend built (IFC-003), zero web callers — no integrations dashboard UI planned.'
+    created_at: 2026-03-06T00:00:00.000Z
+    expiry_date: 2026-04-05
+    remediation_plan: IFC-290
+    remediation_sprint: 23
+    status: open
+  DEAD-FEEDBACK-001:
+    origin_task: IFC-068
+    owner: Frontend Dev
+    severity: low
+    description: '5 dead feedback router endpoints: checkRetraining, exportTrainingData, getForLead, submitCorrection, submitSimple. Backend built (IFC-068), zero web callers — no feedback submission or correction UI exists.'
+    created_at: 2026-03-06T00:00:00.000Z
+    expiry_date: 2026-04-05
+    remediation_plan: IFC-291
+    remediation_sprint: 23
+    status: open
+  DEAD-LEGAL-001:
+    origin_task: IFC-140
+    owner: Frontend Dev
+    severity: low
+    description: '6 dead legal router endpoints: appointments.findNextSlot, documents.grantAccess, documents.placeLegalHold, documents.releaseLegalHold, documents.revokeAccess, documents.submitForReview. Backend built (IFC-137, IFC-140, IFC-152), zero web callers — no legal ACL UI, scheduling wizard, or review workflow UI.'
+    created_at: 2026-03-06T00:00:00.000Z
+    expiry_date: 2026-04-05
+    remediation_plan: IFC-292
+    remediation_sprint: 24
+    status: open
+  DEAD-SECURITY-001:
+    origin_task: IFC-098
+    owner: Frontend Dev
+    severity: medium
+    description: '3 dead security/audit router endpoints: audit.getByResource, audit.getMyActivity, audit.getSecurityEvents. Backend built (IFC-098, IFC-072, IFC-046), zero web callers — no admin security events page or profile activity section.'
+    created_at: 2026-03-06T00:00:00.000Z
+    expiry_date: 2026-04-05
+    remediation_plan: IFC-293
+    remediation_sprint: 24
+    status: open
+  DEAD-NOTIFICATION-001:
+    origin_task: IFC-157
+    owner: Frontend Dev
+    severity: low
+    description: '3 dead notifications router endpoints: batchAction, getPreferences, updatePreferences. Backend built (IFC-157), zero web callers — no notification preferences settings page or batch action UI.'
+    created_at: 2026-03-06T00:00:00.000Z
+    expiry_date: 2026-04-05
+    remediation_plan: IFC-293
+    remediation_sprint: 24
+    status: open
+  DEAD-EXPERIMENT-001:
+    origin_task: IFC-025
+    owner: Frontend Dev
+    severity: low
+    description: '3 dead experiment router endpoints: assignVariant, recordConversion, recordScore. Backend A/B framework built (IFC-025), zero web callers — no experiment tracking code or runner calls these procedures.'
+    created_at: 2026-03-06T00:00:00.000Z
+    expiry_date: 2026-04-05
+    remediation_plan: IFC-294
+    remediation_sprint: 25
+    status: open
+  DEAD-INTELLIGENCE-001:
+    origin_task: IFC-095
+    owner: Frontend Dev
+    severity: low
+    description: '3 dead intelligence router endpoints: getInsightsSummary, triggerPrediction, updateContactInsights. Backend AI scoring built (IFC-095), zero web callers — no insights summary dashboard or prediction trigger UI.'
+    created_at: 2026-03-06T00:00:00.000Z
+    expiry_date: 2026-04-05
+    remediation_plan: IFC-294
+    remediation_sprint: 25
+    status: open
+  DEAD-AI-MONITORING-001:
+    origin_task: IFC-117
+    owner: Frontend Dev
+    severity: low
+    description: '1 dead ai-monitoring router endpoint: getHallucinationReport. Backend built (IFC-117), zero web callers — no hallucination report dashboard section.'
+    created_at: 2026-03-06T00:00:00.000Z
+    expiry_date: 2026-04-05
+    remediation_plan: IFC-294
+    remediation_sprint: 25
+    status: open
+  DEAD-BILLING-001:
+    origin_task: IFC-099
+    owner: Frontend Dev
+    severity: low
+    description: '3 dead billing router endpoints: ensureCustomer, getUsageMetrics, updateBillingInformation. Backend built (IFC-099, IFC-107), zero web callers — no checkout flow, usage metrics page, or billing settings page wires these.'
+    created_at: 2026-03-06T00:00:00.000Z
+    expiry_date: 2026-04-05
+    remediation_plan: IFC-295
+    remediation_sprint: 25
+    status: open
+  DEAD-AUTH-001:
+    origin_task: IFC-006
+    owner: Frontend Dev
+    severity: low
+    description: '1 dead auth router endpoint: getSessions. Backend built (IFC-006), zero web callers — no session list/management UI in security settings.'
+    created_at: 2026-03-06T00:00:00.000Z
+    expiry_date: 2026-04-05
+    remediation_plan: IFC-295
+    remediation_sprint: 25
+    status: open
+  DEAD-SUBSCRIPTION-001:
+    origin_task: IFC-014
+    owner: Frontend Dev
+    severity: low
+    description: '2 dead subscription router endpoints: getPlans, toggleModule. Backend built (IFC-014, IFC-016), zero web callers — pricing/upgrade UI uses Stripe portal directly, no module toggle settings page.'
+    created_at: 2026-03-06T00:00:00.000Z
+    expiry_date: 2026-04-05
+    remediation_plan: IFC-295
+    remediation_sprint: 25
+    status: open
+  DEAD-AUTORESPONSE-001:
+    origin_task: IFC-028
+    owner: Frontend Dev
+    severity: low
+    description: '1 dead autoresponse router endpoint: submitForApproval. Backend built (IFC-028, IFC-029), zero web callers — no approval submission UI or workflow trigger.'
+    created_at: 2026-03-06T00:00:00.000Z
+    expiry_date: 2026-04-05
+    remediation_plan: IFC-295
+    remediation_sprint: 25
+    status: open
+  DEAD-ADMIN-001:
+    origin_task: N/A
+    owner: Tech Lead
+    severity: low
+    description: '1 dead admin router endpoint: queues.getByName. Zero web callers, zero API internal callers, zero tests. Needs queue inspector or admin tools UI.'
+    created_at: 2026-03-06T00:00:00.000Z
+    expiry_date: 2026-04-05
+    remediation_plan: IFC-295
+    remediation_sprint: 25
+    status: open
+summary:
+  total_items: 393
+  by_severity:
+    critical: 241
+    high: 2
+    medium: 136
+    low: 14
+  by_status:
+    open: 393
+    in_progress: 0
+    resolved: 0
+    wont_fix: 0
+  expiring_soon:
+    - FAIL-IFC-105-001
+    - FAIL-IFC-155-001
+    - FAIL-ENG-OPS-001-001
+    - FAIL-IFC-151-001
+    - FAIL-IFC-120-001
+    - PLCH-IFC-120-002
+    - FAIL-ANALYTICS-001-001
+    - FAIL-IFC-156-001
+    - PLCH-IFC-156-002
+    - FAIL-IFC-152-001
+    - FAIL-EXP-ARTIFACTS-002-001
+    - FAIL-IFC-160-001
+    - PLCH-IFC-160-002
+    - FAIL-IFC-026-001
+    - PLCH-PG-032-001
+    - FAIL-IFC-107-001
+    - FAIL-IFC-045-001
+    - FAIL-IFC-181-001
+    - PLCH-IFC-181-002
+    - FAIL-IFC-153-001
+    - FAIL-TRACK-001-001
+    - PLCH-TRACK-003-001
+    - FAIL-PG-034-001
+    - PLCH-PG-034-002
+    - PLCH-PG-040-001
+    - PLCH-PG-042-001
+    - FAIL-IFC-128-001
+    - FAIL-IFC-061-001
+    - FAIL-PG-135-001
+    - FAIL-IFC-154-001
+    - FAIL-TRACK-006-001
+    - FAIL-PG-124-001
+    - FAIL-IFC-062-001
+    - FAIL-PG-136-001
+    - PLCH-PG-136-002
+    - FAIL-IFC-167-001
+    - FAIL-IFC-136-001
+    - PLCH-IFC-136-002
+    - FAIL-IFC-063-001
+    - PLCH-IFC-063-002
+    - FAIL-PG-137-001
+    - PLCH-PG-137-002
+    - FAIL-IFC-168-001
+    - PLCH-IFC-168-002
+    - FAIL-IFC-191-001
+    - PLCH-IFC-191-002
+    - FAIL-IFC-176-001
+    - FAIL-IFC-064-001
+    - PLCH-IFC-064-002
+    - FAIL-IFC-174-001
+    - PLCH-IFC-174-002
+    - FAIL-IFC-205-001
+    - FAIL-IFC-065-001
+    - FAIL-PG-128-001
+    - PLCH-PG-128-002
+    - FAIL-IFC-192-001
+    - FAIL-IFC-066-001
+    - PLCH-IFC-066-002
+    - FAIL-PG-129-001
+    - FAIL-IFC-206-001
+    - PLCH-IFC-206-002
+    - FAIL-IFC-067-001
+    - FAIL-PG-130-001
+    - FAIL-IFC-195-001
+    - PLCH-IFC-195-002
+    - FAIL-IFC-068-001
+    - FAIL-PG-131-001
+    - PLCH-PG-131-002
+    - FAIL-IFC-207-001
+    - PLCH-IFC-207-002
+    - FAIL-PG-157-001
+    - FAIL-IFC-069-001
+    - PLCH-IFC-069-002
+    - FAIL-IFC-086-001
+    - FAIL-IFC-190-001
+    - FAIL-PG-154-001
+    - PLCH-PG-154-002
+    - FAIL-PG-155-001
+    - FAIL-PG-025-001
+    - PLCH-PG-026-001
+    - PLCH-PG-028-001
+    - PLCH-PG-029-001
+    - PLCH-PG-031-001
+    - FAIL-DOC-002-001
+    - FAIL-DOC-007-001
+    - FAIL-DOC-008-001
+    - PLCH-DOC-008-002
+    - PLCH-IFC-093-001
+    - FAIL-IFC-114-001
+    - PLCH-IFC-114-002
+    - FAIL-IFC-122-001
+    - FAIL-IFC-133-001
+    - FAIL-IFC-148-001
+    - PLCH-IFC-148-002
+    - FAIL-PG-138-001
+    - PLCH-PG-138-002
+    - FAIL-PG-139-001
+    - PLCH-PG-139-002
+    - FAIL-PG-142-001
+    - FAIL-PG-143-001
+    - PLCH-PG-143-002
+    - FAIL-PG-144-001
+    - PLCH-PG-144-002
+    - FAIL-IFC-197-001
+    - FAIL-PG-148-001
+    - PLCH-PG-148-002
+    - FAIL-PG-149-001
+    - FAIL-PG-150-001
+    - PLCH-PG-150-002
+    - PLCH-IFC-063-001
+    - PLCH-IFC-064-001
+    - PLCH-IFC-066-001
+    - PLCH-IFC-069-001
+    - PLCH-IFC-076-001
+    - FAIL-IFC-099-001
+    - PLCH-IFC-099-002
+    - PLCH-IFC-113-001
+    - FAIL-IFC-141-001
+    - FAIL-IFC-081-001
+    - PLCH-PG-009-001
+    - PLCH-PG-010-001
+    - PLCH-PG-011-001
+    - FAIL-PG-013-001
+    - PLCH-PG-014-001
+    - FAIL-IFC-169-001
+    - FAIL-IFC-170-001
+    - PLCH-IFC-170-002
+    - FAIL-IFC-171-001
+    - FAIL-IFC-108-001
+    - FAIL-IFC-110-001
+    - FAIL-IFC-131-001
+    - FAIL-IFC-004-001
+    - PLCH-IFC-004-002
+    - PLCH-IFC-005-001
+    - FAIL-IFC-072-001
+    - FAIL-IFC-085-001
+    - FAIL-SALES-002-001
+    - FAIL-IFC-101-001
+    - FAIL-IFC-102-001
+    - FAIL-IFC-103-001
+    - FAIL-IFC-109-001
+    - FAIL-EXC-INIT-001-001
+    - FAIL-AI-SETUP-001-001
+    - FAIL-AI-SETUP-003-001
+    - FAIL-ENV-001-AI-001
+    - PLCH-ENV-001-AI-002
+    - FAIL-ENV-002-AI-001
+    - FAIL-ENV-006-AI-001
+    - PLCH-IFC-170-001
+    - PLCH-PG-015-001
+    - PLCH-PG-016-001
+    - PLCH-PG-018-001
+    - PLCH-PG-019-001
+    - PLCH-PG-021-001
+    - PLCH-PG-022-001
+    - PLCH-IFC-163-001
+    - PLCH-IFC-172-001
+    - PLCH-IFC-173-001
+    - PLCH-IFC-182-001
+    - PLCH-IFC-183-001
+    - PLCH-PG-140-001
+    - FAIL-PG-146-001
+    - FAIL-IFC-137-001
+    - FAIL-IFC-177-001
+    - PLCH-PG-005-001
+    - FAIL-IFC-140-001
+    - PLCH-IFC-140-002
+    - FAIL-IFC-143-001
+    - FAIL-IFC-157-001
+    - FAIL-IFC-158-001
+    - FAIL-PG-141-001
+    - PLCH-PG-141-002
+    - FAIL-ENV-017-AI-001
+    - FAIL-IFC-003-001
+    - FAIL-BRAND-002-001
+    - FAIL-SALES-001-001
+    - FAIL-GOV-001-001
+    - FAIL-IFC-106-001
+    - FAIL-PG-151-001
+    - FAIL-IFC-012-001
+    - PLCH-IFC-013-001
+    - FAIL-IFC-015-001
+    - FAIL-IFC-016-001
+    - PLCH-IFC-016-002
+    - FAIL-IFC-018-001
+    - PLCH-IFC-018-002
+    - FAIL-IFC-021-001
+    - PLCH-IFC-023-001
+    - FAIL-IFC-125-001
+    - FAIL-IFC-129-001
+    - FAIL-IFC-139-001
+    - PLCH-IFC-139-002
+    - FAIL-IFC-144-001
+    - PLCH-IFC-144-002
+    - FAIL-IFC-149-001
+    - PLCH-IFC-149-002
+    - FAIL-IFC-184-001
+    - PLCH-IFC-184-002
+    - FAIL-IFC-006-001
+    - FAIL-IFC-007-001
+    - FAIL-IFC-104-001
+    - FAIL-IFC-096-001
+    - PLCH-IFC-124-001
+    - FAIL-IFC-145-001
+    - FAIL-PG-152-001
+    - PLCH-PG-152-002
+    - FAIL-IFC-178-001
+    - FAIL-IFC-185-001
+    - PLCH-IFC-185-002
+    - FAIL-IFC-188-001
+    - FAIL-IFC-098-001
+    - FAIL-IFC-112-001
+    - FAIL-IFC-127-001
+    - FAIL-IFC-138-001
+    - FAIL-PG-153-001
+    - FAIL-IFC-147-001
+    - FAIL-IFC-150-001
+    - FAIL-IFC-179-001
+    - FAIL-IFC-180-001
+    - PLCH-IFC-180-002
+    - FAIL-IFC-186-001
+    - PLCH-IFC-186-002
+    - FAIL-IFC-187-001
+    - PLCH-IFC-187-002
+    - FAIL-IFC-189-001
+    - PLCH-IFC-189-002
+    - FAIL-PG-133-001
+    - PLCH-PG-133-002
+    - FAIL-PG-134-001
+    - PLCH-PG-134-002
+    - FAIL-ENV-010-AI-001
+    - PLCH-ENV-010-AI-002
+    - FAIL-ENV-015-AI-001
+    - FAIL-IFC-044-001
+    - KPI-IFC-044-002
+    - PLCH-IFC-044-003
+    - FAIL-DOC-001-001
+    - FAIL-BRAND-001-001
+    - FAIL-GTM-001-001
+    - FAIL-GTM-002-001
+    - FAIL-PM-OPS-001-001
+    - KPI-IFC-146-001
+    - PLCH-ENV-001-AI-001
+    - PLCH-IFC-044-002
+    - FAIL-PG-015-001
+    - PLCH-PG-015-002
+    - FAIL-IFC-159-001
+    - FAIL-IFC-163-001
+    - PLCH-IFC-163-002
+    - FAIL-IFC-172-001
+    - PLCH-IFC-172-002
+    - FAIL-IFC-173-001
+    - PLCH-IFC-173-002
+    - FAIL-IFC-182-001
+    - PLCH-IFC-182-002
+    - FAIL-IFC-183-001
+    - PLCH-IFC-183-002
+    - FAIL-PG-140-001
+    - PLCH-PG-140-002
+    - FAIL-IFC-198-001
+    - FAIL-IFC-200-001
+    - FAIL-PG-158-001
+    - FAIL-PG-156-001
+    - FAIL-PG-159-001
+    - FAIL-IFC-005-001
+    - FAIL-IFC-089-001
+    - FAIL-IFC-010-001
+    - FAIL-IFC-013-001
+    - PLCH-IFC-013-002
+    - FAIL-IFC-014-001
+    - FAIL-IFC-017-001
+    - FAIL-IFC-019-001
+    - FAIL-IFC-022-001
+    - FAIL-IFC-023-001
+    - PLCH-IFC-023-002
+    - FAIL-IFC-025-001
+    - FAIL-IFC-091-001
+    - FAIL-IFC-095-001
+    - FAIL-IFC-079-001
+    - FAIL-IFC-080-001
+    - FAIL-IFC-082-001
+    - FAIL-IFC-092-001
+    - FAIL-IFC-093-001
+    - PLCH-IFC-093-002
+    - FAIL-IFC-134-001
+    - FAIL-IFC-055-001
+    - FAIL-IFC-077-001
+    - FAIL-IFC-124-001
+    - FAIL-IFC-076-001
+    - PLCH-IFC-076-002
+    - FAIL-IFC-113-001
+    - FAIL-IFC-121-001
+    - FAIL-PG-002-001
+    - FAIL-PG-003-001
+    - FAIL-PG-004-001
+    - FAIL-PG-005-001
+    - FAIL-PG-006-001
+    - FAIL-PG-007-001
+    - FAIL-PG-008-001
+    - FAIL-IFC-042-001
+    - FAIL-PG-009-001
+    - FAIL-PG-010-001
+    - FAIL-PG-011-001
+    - FAIL-PG-012-001
+    - FAIL-PG-014-001
+    - FAIL-PG-016-001
+    - FAIL-PG-017-001
+    - FAIL-PG-018-001
+    - FAIL-PG-019-001
+    - FAIL-PG-020-001
+    - FAIL-PG-021-001
+    - FAIL-PG-022-001
+    - FAIL-PG-023-001
+    - FAIL-PG-024-001
+    - FAIL-PG-104-001
+    - FAIL-PG-026-001
+    - FAIL-PG-027-001
+    - FAIL-PG-028-001
+    - FAIL-PG-029-001
+    - PLCH-PG-029-002
+    - FAIL-PG-030-001
+    - FAIL-PG-031-001
+    - PLCH-PG-031-002
+    - FAIL-PG-165-001
+    - FAIL-DOC-003-001
+    - FAIL-DOC-004-001
+    - FAIL-DOC-005-001
+    - FAIL-DOC-006-001
+    - FAIL-DOC-009-001
+    - FAIL-IFC-027-001
+    - FAIL-PG-032-001
+    - FAIL-PG-033-001
+    - FAIL-PG-035-001
+    - FAIL-PG-036-001
+    - FAIL-PG-037-001
+    - FAIL-PG-038-001
+    - FAIL-PG-039-001
+    - FAIL-PG-040-001
+    - FAIL-PG-041-001
+    - FAIL-PG-042-001
+    - FAIL-PG-160-001
+    - FAIL-PG-163-001
+    - FAIL-PG-169-001
+    - FAIL-PG-170-001
+    - FAIL-PG-171-001
+    - FAIL-DOC-011-001
+    - FAIL-PG-179-001
+    - PLCH-IFC-148-001
+    - PLCH-PG-138-001
+    - PLCH-PG-139-001
+    - PLCH-PG-150-001
+    - PLCH-PG-141-001
+    - PLCH-IFC-160-001
+    - PLCH-IFC-184-001
+    - PLCH-IFC-185-001
+    - PLCH-IFC-180-001
+    - PLCH-IFC-186-001
+    - PLCH-IFC-187-001
+    - PLCH-IFC-189-001
+    - PLCH-PG-133-001
+    - PLCH-IFC-016-001
+    - PLCH-IFC-139-001
+    - PLCH-IFC-144-001
+    - PLCH-PG-137-001
+    - PLCH-IFC-206-001
+    - PLCH-IFC-207-001
+    - PLCH-PG-152-001
+    - PLCH-IFC-099-001
+    - PLCH-IFC-174-001
+    - PLCH-PG-154-001
+    - PLCH-PG-003-001
+    - WIRE-IFC-094-001
+    - WIRE-IFC-144-001
+    - WIRE-IFC-099-001
+    - WIRE-IFC-039-001
+    - WIRE-PG-141-001
+    - WIRE-IFC-095-001
+    - WIRE-IFC-069-001
+    - WIRE-TASK-B09-001
+    - WIRE-TASK-F05-001
+    - WIRE-TASK-B10-001
+    - DEAD-ANALYTICS-001
+    - DEAD-AGENT-001
+    - DEAD-INTEGRATIONS-001
+    - DEAD-FEEDBACK-001
+    - DEAD-LEGAL-001
+    - DEAD-SECURITY-001
+    - DEAD-NOTIFICATION-001
+    - DEAD-EXPERIMENT-001
+    - DEAD-INTELLIGENCE-001
+    - DEAD-AI-MONITORING-001
+    - DEAD-BILLING-001
+    - DEAD-AUTH-001
+    - DEAD-SUBSCRIPTION-001
+    - DEAD-AUTORESPONSE-001
+    - DEAD-ADMIN-001
+review_schedule:
+  cadence: weekly
+  next_review: 2026-03-02
+  reviewers:
+    - Tech Lead
+    - PM
+  escalation_path:
+    severity_critical: CTO
+    severity_high: Tech Lead
+    expiring_soon: PM
+alerts:
+  expiry_warning_days: 30
+  notification_channels:
+    - 'slack: #tech-debt'
+    - 'email: tech-lead@intelliflow.dev'

@@ -1,0 +1,56 @@
+/**
+ * Domain Services
+ *
+ * These services orchestrate business logic across domain aggregates.
+ * They enforce business rules, coordinate multi-aggregate operations,
+ * and integrate with external services (AI, event bus, etc.).
+ */
+
+export * from './LeadService';
+export * from './ContactService';
+export * from './AccountService';
+export * from './OpportunityService';
+export * from './TaskService';
+
+// Event Handlers & Schedulers (IFC-158)
+export * from './AppointmentIcsEventHandler';
+export * from './ReminderSchedulerService';
+
+// Notification Service (IFC-157)
+export * from './NotificationService';
+
+// File Ingestion (IFC-125)
+export * from './IngestionOrchestrator';
+
+// Auto-Response Service (IFC-029)
+export * from './AutoResponseService';
+
+// Chain Version Service (IFC-086)
+export * from './ChainVersionService';
+
+// Activity Feed Service (IFC-069)
+export * from './ActivityFeedService';
+
+// Billing Domain Service (IFC-198)
+export * from './BillingDomainService';
+
+// Analytics Aggregation Service (IFC-200)
+export * from './AnalyticsAggregationService';
+
+// Internal Signature Provider (IFC-094)
+export * from './InternalSignatureProvider';
+
+// Feedback Survey Analytics Service (IFC-068)
+export * from './FeedbackSurveyAnalyticsService';
+
+// Experiment Service (IFC-025)
+export * from './ExperimentService';
+
+// Calendar Webhook Service (IFC-224)
+export * from './CalendarWebhookService';
+
+// Conversation Search Service (IFC-148)
+export * from './ConversationSearchService';
+
+// Feedback Service
+export * from './FeedbackService';

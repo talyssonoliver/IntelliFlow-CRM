@@ -101,9 +101,7 @@ async function benchmarkLeadScoring(iterations: number = 10): Promise<BenchmarkR
 /**
  * Benchmark lead qualification
  */
-async function benchmarkLeadQualification(
-  iterations: number = 5
-): Promise<BenchmarkResult> {
+async function benchmarkLeadQualification(iterations: number = 5): Promise<BenchmarkResult> {
   logger.info({ iterations }, 'Benchmarking lead qualification...');
 
   const sampleInput = {
@@ -234,6 +232,7 @@ async function runBenchmarks() {
 
 // Run benchmarks
 runBenchmarks().catch((error) => {
+  // NOSONAR typescript:S7785 — top-level await unavailable in CJS modules
   console.error('Fatal error:', error);
   process.exit(1);
 });

@@ -1,0 +1,215 @@
+@startuml IntelliFlow_CRM_Threat_Model
+
+!define RECTANGLE class
+
+title IntelliFlow CRM - STRIDE Threat Model\nMulti-Tenancy & Agent Tool-Calling
+
+skinparam backgroundColor #FEFEFE
+skinparam rectangle {
+    BackgroundColor<<threat>> #FFCCCC
+    BackgroundColor<<control>> #CCFFCC
+    BackgroundColor<<asset>> #CCCCFF
+    BackgroundColor<<boundary>> #FFFFCC
+}
+
+' ==================================
+' Trust Boundaries
+' ==================================
+
+package "Internet (Untrusted)" as internet <<boundary>> {
+    actor "User/Attacker" as user
+    actor "Malicious Agent" as malicious_agent
+}
+
+package "Edge Layer" as edge <<boundary>> {
+    rectangle "CDN/WAF" as waf
+    rectangle "Load Balancer" as lb
+}
+
+package "Application Layer" as app_layer <<boundary>> {
+    rectangle "Next.js Frontend\n(apps/web)" as frontend
+    rectangle "tRPC API Server\n(apps/api)" as api
+    rectangle "AI Worker\n(apps/ai-worker)" as ai_worker
+}
+
+package "Data Layer" as data_layer <<boundary>> {
+    database "PostgreSQL\n(Supabase + RLS)" as db
+    database "Redis\n(Session/Cache)" as redis
+    rectangle "HashiCorp Vault\n(Secrets)" as vault
+}
+
+package "External Services" as external <<boundary>> {
+    cloud "OpenAI API" as openai
+    cloud "Supabase Auth" as supabase_auth
+}
+
+' ==================================
+' Data Flows
+' ==================================
+
+user --> waf : HTTPS Request
+waf --> lb : Filtered Request
+lb --> frontend : Static/SSR
+lb --> api : API Request
+frontend --> api : tRPC Call
+api --> ai_worker : Agent Tool Call
+ai_worker --> openai : LLM Query
+api --> db : SQL Query
+api --> redis : Session/Cache
+api --> vault : Secret Fetch
+api --> supabase_auth : Auth Verify
+
+' ==================================
+' STRIDE Threats - Multi-Tenancy
+' ==================================
+
+note right of db <<threat>>
+**T1: Spoofing (Multi-Tenancy)**
+- Forged tenantId in request
+- Session hijacking across tenants
+- JWT tenant claim manipulation
+
+**Controls:**
+- RLS policies on all tables
+- tenantId from session, not request
+- JWT signature validation
+end note
+
+note left of api <<threat>>
+**T2: Tampering (Multi-Tenancy)**
+- Modified tenant data in transit
+- RLS bypass via raw SQL
+- Privilege escalation via role tampering
+
+**Controls:**
+- TLS 1.3 encryption
+- Prisma ORM (no raw SQL)
+- Role validation middleware
+end note
+
+note right of redis <<threat>>
+**T3: Repudiation**
+- Denial of cross-tenant access
+- Audit log tampering
+- Action attribution gaps
+
+**Controls:**
+- Append-only audit logs
+- Immutable event sourcing
+- Request correlation IDs
+end note
+
+note bottom of db <<threat>>
+**T4: Information Disclosure**
+- Cross-tenant data leakage
+- Tenant enumeration via errors
+- PII exposure in logs
+
+**Controls:**
+- RLS at DB level
+- Generic error messages
+- PII scrubbing in logs
+end note
+
+note left of frontend <<threat>>
+**T5: Denial of Service**
+- Tenant resource exhaustion
+- Rate limit bypass
+- Session flooding
+
+**Controls:**
+- Per-tenant rate limiting
+- Resource quotas
+- Redis-backed limits
+end note
+
+note bottom of api <<threat>>
+**T6: Elevation of Privilege**
+- Cross-tenant admin access
+- Role assignment manipulation
+- RBAC bypass
+
+**Controls:**
+- RBAC middleware
+- Role hierarchy checks
+- Permission audit logging
+end note
+
+' ==================================
+' STRIDE Threats - Agent Tool-Calling
+' ==================================
+
+note right of ai_worker <<threat>>
+**T7: Spoofing (Agent)**
+- Impersonation via prompt injection
+- Fake agent identity claims
+- Unauthorized tool invocation
+
+**Controls:**
+- Agent ID validation
+- Tool authorization checks
+- Prompt sanitization
+end note
+
+note left of openai <<threat>>
+**T8: Tampering (Agent)**
+- Response manipulation
+- Tool parameter injection
+- State corruption via agent
+
+**Controls:**
+- Response validation
+- Schema enforcement (Zod)
+- Transactional state changes
+end note
+
+note bottom of ai_worker <<threat>>
+**T9: Information Disclosure (Agent)**
+- Data exfiltration via prompts
+- System prompt leakage
+- Sensitive context exposure
+
+**Controls:**
+- Output filtering
+- Prompt/response separation
+- Context scope limits
+end note
+
+note right of api <<threat>>
+**T10: Denial of Service (Agent)**
+- Recursive agent calls
+- Resource exhaustion
+- Token/cost bombing
+
+**Controls:**
+- Call depth limits
+- Token budgets
+- Timeout enforcement
+end note
+
+note left of ai_worker <<threat>>
+**T11: Elevation of Privilege (Agent)**
+- Bypassing approval workflow
+- Confidence score manipulation
+- Rollback abuse
+
+**Controls:**
+- Human-in-the-loop required
+- Confidence thresholds
+- Approval audit trail
+end note
+
+' ==================================
+' Trust Boundary Crossings
+' ==================================
+
+note as N1
+**Trust Boundary Crossings:**
+1. Internet → Edge: Authentication required
+2. Edge → App: Rate limiting enforced
+3. App → Data: RLS policies active
+4. App → External: API key validation
+5. Agent → Tools: Authorization middleware
+end note
+
+@enduml

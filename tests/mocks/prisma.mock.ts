@@ -21,7 +21,7 @@
  */
 
 import { vi } from 'vitest';
-import type { PrismaClient } from '@prisma/client';
+import type { PrismaClient } from '@intelliflow/db';
 
 /**
  * Type-safe Prisma mock
@@ -29,7 +29,7 @@ import type { PrismaClient } from '@prisma/client';
 export type MockPrismaClient = {
   [K in keyof PrismaClient]: PrismaClient[K] extends object
     ? {
-        [M in keyof PrismaClient[K]]: PrismaClient[K][M] extends Function
+        [M in keyof PrismaClient[K]]: PrismaClient[K][M] extends (...args: unknown[]) => unknown
           ? ReturnType<typeof vi.fn>
           : PrismaClient[K][M];
       }
@@ -109,7 +109,7 @@ export const mockPrisma = {
   // Middleware
   $use: vi.fn(),
   $on: vi.fn(),
-} as unknown as MockPrismaClient;
+} satisfies Partial<MockPrismaClient> as MockPrismaClient;
 
 /**
  * Reset all Prisma mocks

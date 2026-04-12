@@ -1,0 +1,768 @@
+/**
+ * Session Service
+ *
+ * Manages user sessions including:
+ * - Session creation with device tracking
+ * - Concurrent session enforcement (max 3 per user)
+ * - Session validation and refresh
+ * - Session revocation
+ *
+ * IMPLEMENTS: PG-015 (Sign In page), FLOW-001 (Login with MFA/SSO)
+ *
+ * Note: This works alongside Supabase Auth sessions. Supabase handles
+ * JWT tokens, while this service provides additional session management
+ * features like concurrent session limits and device tracking.
+ */
+
+import { randomBytes } from 'node:crypto';
+import { PrismaClient } from '@intelliflow/db';
+
+// ============================================
+// Types
+// ============================================
+
+/**
+ * Device information extracted from user agent and request
+ */
+export interface DeviceInfo {
+  browser?: string;
+  browserVersion?: string;
+  os?: string;
+  osVersion?: string;
+  device?: string;
+  isMobile?: boolean;
+}
+
+/**
+ * Session data stored in database
+ */
+export interface SessionData {
+  id: string;
+  userId: string;
+  tenantId: string;
+  deviceInfo: DeviceInfo;
+  ipAddress?: string;
+  userAgent?: string;
+  /** Supabase refresh token (encrypted) */
+  refreshToken?: string;
+  /** Session creation time */
+  createdAt: Date;
+  /** Last activity time */
+  lastActiveAt: Date;
+  /** Session expiration time */
+  expiresAt: Date;
+  /** Whether this is a "remember me" session */
+  rememberMe: boolean;
+}
+
+/**
+ * Session creation input
+ */
+export interface CreateSessionInput {
+  userId: string;
+  tenantId: string;
+  deviceInfo?: DeviceInfo;
+  ipAddress?: string;
+  userAgent?: string;
+  refreshToken?: string;
+  rememberMe?: boolean;
+}
+
+/**
+ * Session info for API responses (excludes sensitive data)
+ */
+export interface SessionInfo {
+  id: string;
+  deviceInfo: DeviceInfo;
+  ipAddress?: string;
+  createdAt: Date;
+  lastActiveAt: Date;
+  expiresAt: Date;
+  isCurrent: boolean;
+}
+
+/**
+ * Session validation result
+ */
+export interface SessionValidationResult {
+  valid: boolean;
+  session?: SessionData;
+  error?: string;
+}
+
+// ============================================
+// Configuration
+// ============================================
+
+export interface SessionServiceConfig {
+  /** Maximum concurrent sessions per user */
+  maxConcurrentSessions: number;
+  /** Default session duration in milliseconds */
+  defaultSessionDurationMs: number;
+  /** Extended session duration for "remember me" in milliseconds */
+  rememberMeDurationMs: number;
+  /** Inactivity timeout in milliseconds */
+  inactivityTimeoutMs: number;
+}
+
+export const DEFAULT_SESSION_CONFIG: SessionServiceConfig = {
+  maxConcurrentSessions: 3,
+  defaultSessionDurationMs: 24 * 60 * 60 * 1000, // 24 hours
+  rememberMeDurationMs: 30 * 24 * 60 * 60 * 1000, // 30 days
+  inactivityTimeoutMs: 4 * 60 * 60 * 1000, // 4 hours
+};
+
+// ============================================
+// In-memory store (use Redis in production)
+// ============================================
+
+/** Active sessions by user ID */
+const sessionsByUser = new Map<string, Set<string>>();
+
+/** Session data by session ID */
+const sessionStore = new Map<string, SessionData>();
+
+// ============================================
+// Device Info Parsing Helpers
+// ============================================
+
+/**
+ * Detect browser name and version from user agent string
+ */
+function parseBrowserInfo(userAgent: string, info: DeviceInfo): void {
+  if (userAgent.includes('Chrome') && !userAgent.includes('Edg')) {
+    info.browser = 'Chrome';
+    const match = /Chrome\/([\d.]+)/.exec(userAgent);
+    if (match) info.browserVersion = match[1];
+    return;
+  }
+  if (userAgent.includes('Firefox')) {
+    info.browser = 'Firefox';
+    const match = /Firefox\/([\d.]+)/.exec(userAgent);
+    if (match) info.browserVersion = match[1];
+    return;
+  }
+  if (userAgent.includes('Safari') && !userAgent.includes('Chrome')) {
+    info.browser = 'Safari';
+    const match = /Version\/([\d.]+)/.exec(userAgent);
+    if (match) info.browserVersion = match[1];
+    return;
+  }
+  if (userAgent.includes('Edg')) {
+    info.browser = 'Edge';
+    const match = /Edg\/([\d.]+)/.exec(userAgent);
+    if (match) info.browserVersion = match[1];
+  }
+}
+
+/**
+ * Detect operating system name and version from user agent string
+ */
+function parseOsInfo(userAgent: string, info: DeviceInfo): void {
+  if (userAgent.includes('Windows')) {
+    info.os = 'Windows';
+    if (userAgent.includes('Windows NT 10.0')) info.osVersion = '10';
+    else if (userAgent.includes('Windows NT 11.0')) info.osVersion = '11';
+    return;
+  }
+  if (userAgent.includes('Mac OS X')) {
+    info.os = 'macOS';
+    const match = /Mac OS X ([\d_]+)/.exec(userAgent);
+    if (match) info.osVersion = match[1].replaceAll('_', '.');
+    return;
+  }
+  if (userAgent.includes('Linux')) {
+    info.os = 'Linux';
+    return;
+  }
+  if (userAgent.includes('Android')) {
+    info.os = 'Android';
+    const match = /Android ([\d.]+)/.exec(userAgent);
+    if (match) info.osVersion = match[1];
+    return;
+  }
+  if (userAgent.includes('iOS') || userAgent.includes('iPhone') || userAgent.includes('iPad')) {
+    info.os = 'iOS';
+    const match = /OS ([\d_]+)/.exec(userAgent);
+    if (match) info.osVersion = match[1].replaceAll('_', '.');
+  }
+}
+
+// ============================================
+// Session Service Class
+// ============================================
+
+/**
+ * Session Service
+ *
+ * Manages application-level sessions that work alongside
+ * Supabase Auth for additional features like concurrent
+ * session limits and device tracking.
+ */
+export class SessionService {
+  private readonly config: SessionServiceConfig;
+  private readonly prisma: PrismaClient | null;
+
+  constructor(prisma?: PrismaClient, config: Partial<SessionServiceConfig> = {}) {
+    this.prisma = prisma ?? null;
+    this.config = { ...DEFAULT_SESSION_CONFIG, ...config };
+  }
+
+  // ==========================================
+  // Session Creation
+  // ==========================================
+
+  /**
+   * Create a new session for a user
+   *
+   * If the user already has the maximum number of sessions,
+   * the oldest session will be revoked.
+   */
+  async createSession(input: CreateSessionInput): Promise<SessionData> {
+    const sessionId = this.generateSessionId();
+    const now = new Date();
+
+    // Calculate expiration based on rememberMe
+    const durationMs = input.rememberMe
+      ? this.config.rememberMeDurationMs
+      : this.config.defaultSessionDurationMs;
+    const expiresAt = new Date(now.getTime() + durationMs);
+
+    // Create session data
+    const session: SessionData = {
+      id: sessionId,
+      userId: input.userId,
+      tenantId: input.tenantId,
+      deviceInfo: input.deviceInfo || {},
+      ipAddress: input.ipAddress,
+      userAgent: input.userAgent,
+      refreshToken: input.refreshToken,
+      createdAt: now,
+      lastActiveAt: now,
+      expiresAt,
+      rememberMe: input.rememberMe ?? false,
+    };
+
+    // Enforce concurrent session limit
+    await this.enforceSessionLimit(input.userId);
+
+    // Store session
+    sessionStore.set(sessionId, session);
+
+    // Track by user ID
+    let userSessions = sessionsByUser.get(input.userId);
+    if (!userSessions) {
+      userSessions = new Set();
+      sessionsByUser.set(input.userId, userSessions);
+    }
+    userSessions.add(sessionId);
+
+    // Persist to database if available
+    if (this.prisma) {
+      await this.persistSession(session);
+    }
+
+    return session;
+  }
+
+  /**
+   * Enforce concurrent session limit by revoking oldest sessions
+   */
+  private async enforceSessionLimit(userId: string): Promise<void> {
+    const userSessions = sessionsByUser.get(userId);
+    if (!userSessions) return;
+
+    // Get all active sessions for user
+    const activeSessions: SessionData[] = [];
+    for (const sessionId of userSessions) {
+      const session = sessionStore.get(sessionId);
+      if (session && this.isSessionValid(session)) {
+        activeSessions.push(session);
+      }
+    }
+
+    // Check if we need to revoke sessions
+    const sessionsToRevoke = activeSessions.length - this.config.maxConcurrentSessions + 1;
+    if (sessionsToRevoke <= 0) return;
+
+    // Sort by creation time (oldest first)
+    activeSessions.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+
+    // Revoke oldest sessions
+    for (let i = 0; i < sessionsToRevoke; i++) {
+      await this.revokeSession(activeSessions[i].id);
+    }
+  }
+
+  // ==========================================
+  // Session Validation
+  // ==========================================
+
+  /**
+   * Validate a session and update last active time
+   */
+  async validateSession(sessionId: string): Promise<SessionValidationResult> {
+    const session = sessionStore.get(sessionId);
+
+    if (!session) {
+      // Try loading from database
+      if (this.prisma) {
+        const dbSession = await this.loadSessionFromDb(sessionId);
+        if (dbSession) {
+          sessionStore.set(sessionId, dbSession);
+          return this.validateSession(sessionId);
+        }
+      }
+      return { valid: false, error: 'Session not found' };
+    }
+
+    // Check expiration
+    if (new Date() > session.expiresAt) {
+      await this.revokeSession(sessionId);
+      return { valid: false, error: 'Session expired' };
+    }
+
+    // Check inactivity timeout
+    const inactiveMs = Date.now() - session.lastActiveAt.getTime();
+    if (inactiveMs > this.config.inactivityTimeoutMs) {
+      await this.revokeSession(sessionId);
+      return { valid: false, error: 'Session timed out due to inactivity' };
+    }
+
+    // Update last active time
+    session.lastActiveAt = new Date();
+    if (this.prisma) {
+      await this.updateSessionActivity(sessionId);
+    }
+
+    return { valid: true, session };
+  }
+
+  /**
+   * Check if a session is valid without updating activity
+   */
+  isSessionValid(session: SessionData): boolean {
+    const now = new Date();
+
+    // Check expiration
+    if (now > session.expiresAt) {
+      return false;
+    }
+
+    // Check inactivity
+    const inactiveMs = now.getTime() - session.lastActiveAt.getTime();
+    if (inactiveMs > this.config.inactivityTimeoutMs) {
+      return false;
+    }
+
+    return true;
+  }
+
+  // ==========================================
+  // Session Retrieval
+  // ==========================================
+
+  /**
+   * Get session by ID
+   */
+  async getSession(sessionId: string): Promise<SessionData | null> {
+    let session = sessionStore.get(sessionId);
+
+    if (!session && this.prisma) {
+      session = (await this.loadSessionFromDb(sessionId)) ?? undefined;
+      if (session) {
+        sessionStore.set(sessionId, session);
+      }
+    }
+
+    return session ?? null;
+  }
+
+  /**
+   * Load sessions for a user from database and populate in-memory stores.
+   * Returns true if sessions were loaded.
+   */
+  private async populateUserSessionsFromDb(userId: string): Promise<boolean> {
+    if (!this.prisma) return false;
+    const dbSessions = await this.loadUserSessionsFromDb(userId);
+    if (dbSessions.length === 0) return false;
+    for (const session of dbSessions) {
+      sessionStore.set(session.id, session);
+      let userSessionSet = sessionsByUser.get(userId);
+      if (!userSessionSet) {
+        userSessionSet = new Set();
+        sessionsByUser.set(userId, userSessionSet);
+      }
+      userSessionSet.add(session.id);
+    }
+    return true;
+  }
+
+  /**
+   * Get all active sessions for a user
+   */
+  async getUserSessions(userId: string, currentSessionId?: string): Promise<SessionInfo[]> {
+    let userSessions = sessionsByUser.get(userId);
+
+    if (!userSessions) {
+      const loaded = await this.populateUserSessionsFromDb(userId);
+      if (!loaded) return [];
+      userSessions = sessionsByUser.get(userId);
+      if (!userSessions) return [];
+    }
+
+    const sessions: SessionInfo[] = [];
+    for (const sessionId of userSessions) {
+      const session = sessionStore.get(sessionId);
+      if (session && this.isSessionValid(session)) {
+        sessions.push({
+          id: session.id,
+          deviceInfo: session.deviceInfo,
+          ipAddress: session.ipAddress,
+          createdAt: session.createdAt,
+          lastActiveAt: session.lastActiveAt,
+          expiresAt: session.expiresAt,
+          isCurrent: sessionId === currentSessionId,
+        });
+      }
+    }
+
+    sessions.sort((a, b) => b.lastActiveAt.getTime() - a.lastActiveAt.getTime());
+    return sessions;
+  }
+
+  /**
+   * Get active session count for a user
+   */
+  getActiveSessionCount(userId: string): number {
+    const userSessions = sessionsByUser.get(userId);
+    if (!userSessions) return 0;
+
+    let count = 0;
+    for (const sessionId of userSessions) {
+      const session = sessionStore.get(sessionId);
+      if (session && this.isSessionValid(session)) {
+        count++;
+      }
+    }
+
+    return count;
+  }
+
+  // ==========================================
+  // Session Revocation
+  // ==========================================
+
+  /**
+   * Revoke a specific session
+   */
+  async revokeSession(sessionId: string): Promise<boolean> {
+    const session = sessionStore.get(sessionId);
+    if (!session) return false;
+
+    // Remove from stores
+    sessionStore.delete(sessionId);
+    const userSessions = sessionsByUser.get(session.userId);
+    if (userSessions) {
+      userSessions.delete(sessionId);
+      if (userSessions.size === 0) {
+        sessionsByUser.delete(session.userId);
+      }
+    }
+
+    // Remove from database
+    if (this.prisma) {
+      await this.deleteSessionFromDb(sessionId);
+    }
+
+    return true;
+  }
+
+  /**
+   * Revoke all sessions for a user
+   */
+  async revokeAllUserSessions(userId: string): Promise<number> {
+    const userSessions = sessionsByUser.get(userId);
+    if (!userSessions) return 0;
+
+    const sessionIds = [...userSessions];
+    let revokedCount = 0;
+
+    for (const sessionId of sessionIds) {
+      const revoked = await this.revokeSession(sessionId);
+      if (revoked) revokedCount++;
+    }
+
+    return revokedCount;
+  }
+
+  /**
+   * Revoke all sessions except the current one
+   */
+  async revokeOtherSessions(userId: string, currentSessionId: string): Promise<number> {
+    const userSessions = sessionsByUser.get(userId);
+    if (!userSessions) return 0;
+
+    const sessionIds = [...userSessions].filter((id) => id !== currentSessionId);
+    let revokedCount = 0;
+
+    for (const sessionId of sessionIds) {
+      const revoked = await this.revokeSession(sessionId);
+      if (revoked) revokedCount++;
+    }
+
+    return revokedCount;
+  }
+
+  // ==========================================
+  // Session Refresh
+  // ==========================================
+
+  /**
+   * Extend session expiration
+   */
+  async extendSession(sessionId: string, rememberMe?: boolean): Promise<SessionData | null> {
+    const session = sessionStore.get(sessionId);
+    if (!session || !this.isSessionValid(session)) {
+      return null;
+    }
+
+    // Calculate new expiration
+    const durationMs =
+      (rememberMe ?? session.rememberMe)
+        ? this.config.rememberMeDurationMs
+        : this.config.defaultSessionDurationMs;
+
+    session.expiresAt = new Date(Date.now() + durationMs);
+    session.lastActiveAt = new Date();
+    session.rememberMe = rememberMe ?? session.rememberMe;
+
+    if (this.prisma) {
+      await this.persistSession(session);
+    }
+
+    return session;
+  }
+
+  // ==========================================
+  // Device Info Parsing
+  // ==========================================
+
+  /**
+   * Parse device info from user agent string
+   */
+  parseDeviceInfo(userAgent?: string): DeviceInfo {
+    if (!userAgent) {
+      return {};
+    }
+
+    const info: DeviceInfo = {};
+
+    parseBrowserInfo(userAgent, info);
+    parseOsInfo(userAgent, info);
+
+    // Mobile detection
+    info.isMobile = /Mobile|Android|iPhone|iPad|iPod|iOS/i.test(userAgent);
+    info.device = info.isMobile ? 'Mobile' : 'Desktop';
+
+    return info;
+  }
+
+  // ==========================================
+  // Database Operations (Placeholders)
+  // ==========================================
+
+  /**
+   * Map a Prisma session record to SessionData
+   */
+  private mapDbSession(record: {
+    id: string;
+    userId: string;
+    tenantId: string;
+    deviceInfo: unknown;
+    ipAddress: string | null;
+    userAgent: string | null;
+    refreshToken: string | null;
+    rememberMe: boolean;
+    lastActiveAt: Date;
+    expiresAt: Date;
+    createdAt: Date;
+  }): SessionData {
+    return {
+      id: record.id,
+      userId: record.userId,
+      tenantId: record.tenantId,
+      deviceInfo: (record.deviceInfo as DeviceInfo) ?? {},
+      ipAddress: record.ipAddress ?? undefined,
+      userAgent: record.userAgent ?? undefined,
+      refreshToken: record.refreshToken ?? undefined,
+      rememberMe: record.rememberMe,
+      lastActiveAt: record.lastActiveAt,
+      expiresAt: record.expiresAt,
+      createdAt: record.createdAt,
+    };
+  }
+
+  /**
+   * Persist session to database (upsert — handles both create and update)
+   */
+  private async persistSession(session: SessionData): Promise<void> {
+    if (!this.prisma) return;
+    await (this.prisma as any).session.upsert({
+      where: { id: session.id },
+      create: {
+        id: session.id,
+        userId: session.userId,
+        tenantId: session.tenantId,
+        deviceInfo: session.deviceInfo as object,
+        ipAddress: session.ipAddress ?? null,
+        userAgent: session.userAgent ?? null,
+        refreshToken: session.refreshToken ?? null,
+        rememberMe: session.rememberMe,
+        lastActiveAt: session.lastActiveAt,
+        expiresAt: session.expiresAt,
+        createdAt: session.createdAt,
+      },
+      update: {
+        deviceInfo: session.deviceInfo as object,
+        ipAddress: session.ipAddress ?? null,
+        userAgent: session.userAgent ?? null,
+        refreshToken: session.refreshToken ?? null,
+        rememberMe: session.rememberMe,
+        lastActiveAt: session.lastActiveAt,
+        expiresAt: session.expiresAt,
+      },
+    });
+  }
+
+  /**
+   * Load session from database by ID
+   */
+  private async loadSessionFromDb(sessionId: string): Promise<SessionData | null> {
+    if (!this.prisma) return null;
+    const record = await (this.prisma as any).session.findUnique({
+      where: { id: sessionId },
+    });
+    if (!record) return null;
+    return this.mapDbSession(record);
+  }
+
+  /**
+   * Load all non-expired sessions for a user from database
+   */
+  private async loadUserSessionsFromDb(userId: string): Promise<SessionData[]> {
+    if (!this.prisma) return [];
+    const records = await (this.prisma as any).session.findMany({
+      where: { userId, expiresAt: { gt: new Date() } },
+    });
+    return records.map((r: Parameters<typeof this.mapDbSession>[0]) => this.mapDbSession(r));
+  }
+
+  /**
+   * Update lastActiveAt for a session in the database
+   */
+  private async updateSessionActivity(sessionId: string): Promise<void> {
+    if (!this.prisma) return;
+    await (this.prisma as any).session.update({
+      where: { id: sessionId },
+      data: { lastActiveAt: new Date() },
+    });
+  }
+
+  /**
+   * Delete a session from the database
+   */
+  private async deleteSessionFromDb(sessionId: string): Promise<void> {
+    if (!this.prisma) return;
+    try {
+      await (this.prisma as any).session.delete({ where: { id: sessionId } });
+    } catch {
+      // Session may have already been deleted; ignore not-found errors
+    }
+  }
+
+  // ==========================================
+  // Helper Methods
+  // ==========================================
+
+  /**
+   * Generate a secure session ID
+   */
+  private generateSessionId(): string {
+    return randomBytes(32).toString('hex');
+  }
+
+  // ==========================================
+  // Cleanup
+  // ==========================================
+
+  /**
+   * Clean up expired sessions
+   */
+  cleanupExpiredSessions(): number {
+    let cleaned = 0;
+
+    for (const [sessionId, session] of sessionStore.entries()) {
+      if (!this.isSessionValid(session)) {
+        sessionStore.delete(sessionId);
+        const userSessions = sessionsByUser.get(session.userId);
+        if (userSessions) {
+          userSessions.delete(sessionId);
+          if (userSessions.size === 0) {
+            sessionsByUser.delete(session.userId);
+          }
+        }
+        cleaned++;
+      }
+    }
+
+    return cleaned;
+  }
+
+  /**
+   * Clear all session data (for testing)
+   */
+  clearAll(): void {
+    sessionStore.clear();
+    sessionsByUser.clear();
+  }
+
+  /**
+   * Get statistics
+   */
+  getStats(): { totalSessions: number; totalUsers: number } {
+    return {
+      totalSessions: sessionStore.size,
+      totalUsers: sessionsByUser.size,
+    };
+  }
+}
+
+// ============================================
+// Singleton and Exports
+// ============================================
+
+let sessionServiceInstance: SessionService | null = null;
+
+/**
+ * Get session service instance
+ */
+export function getSessionService(
+  prisma?: PrismaClient,
+  config?: Partial<SessionServiceConfig>
+): SessionService {
+  if (!sessionServiceInstance || prisma || config) {
+    sessionServiceInstance = new SessionService(prisma, config);
+  }
+  return sessionServiceInstance;
+}
+
+/**
+ * Reset session service (for testing)
+ */
+export function resetSessionService(): void {
+  if (sessionServiceInstance) {
+    sessionServiceInstance.clearAll();
+  }
+  sessionServiceInstance = null;
+}

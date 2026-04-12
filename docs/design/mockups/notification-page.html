@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>IntelliFlow CRM - Notifications</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                colors: {
+                    "primary": "#137fec",
+                    "background-light": "#f6f7f8",
+                    "background-dark": "#101922",
+                },
+                fontFamily: {
+                    "display": ["Inter", "sans-serif"],
+                    "mono": ["ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas", "Liberation Mono", "Courier New", "monospace"]
+                },
+                borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+            },
+        },
+    }
+</script>
+<style>
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background-color: #cbd5e1;
+        border-radius: 20px;
+    }
+</style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white h-screen flex flex-col overflow-hidden">
+
+<!-- Header: Matches tickets-sla.html and contact-360-view.html patterns -->
+<header class="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 lg:px-6 z-50 flex-shrink-0">
+    <div class="flex items-center gap-8">
+        <div class="flex items-center gap-2">
+            <div class="bg-primary/10 p-1.5 rounded-lg">
+                <span class="material-symbols-outlined text-primary" style="font-size: 24px;">all_inclusive</span>
+            </div>
+            <span class="text-lg font-bold tracking-tight text-slate-900 dark:text-white">IntelliFlow CRM</span>
+        </div>
+        <nav class="hidden md:flex items-center space-x-1">
+            <a class="px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors" href="#">Dashboard</a>
+            <a class="px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors" href="#">Leads</a>
+            <a class="px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors" href="#">Contacts</a>
+            <a class="px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors" href="#">Deals</a>
+            <a class="px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors" href="#">Tickets</a>
+            <a class="px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors" href="#">Reports</a>
+        </nav>
+    </div>
+    <div class="flex items-center gap-3">
+        <div class="relative hidden lg:block w-64">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400" style="font-size: 20px;">search</span>
+            <input class="w-full h-9 pl-10 pr-4 bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary/50 transition-all" placeholder="Search..." type="text"/>
+        </div>
+        <div class="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1 hidden lg:block"></div>
+        <button class="relative p-2 rounded-lg bg-primary/10 text-primary transition-colors" title="Notifications (current page)">
+            <span class="material-symbols-outlined" style="font-size: 22px; font-variation-settings: 'FILL' 1;">notifications</span>
+            <span class="absolute top-1.5 right-1.5 size-2.5 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
+        </button>
+        <button class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-colors hidden sm:block">
+            <span class="material-symbols-outlined" style="font-size: 22px;">help</span>
+        </button>
+        <div class="flex items-center gap-2 ml-1 cursor-pointer hover:opacity-80 transition-opacity">
+            <div class="size-8 rounded-full bg-cover bg-center ring-2 ring-slate-100 dark:ring-slate-700" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBzf_FUNGvTEbfO98CWt4OZNOtCnKh3_JZBEEuS5HekDE0JSoR9K1OWQFYQ-ptrc5_3x5axmptWYCKbF9UOvTj-volSehNQfDioYlQLgDkqK3hFtSjVJou_Bycgo_bEryoMSIMfFxnd-7qI6z3lDCst3RIRIvyzzi27atfpuzCm-0MfnR50QNomXJGC4cvcNxKaeNvK3Ked02UCRj7OWJUaaHv2jQm-ymYKNqzqqoxl0d2jEPNiu4Z7P0naw_zgnJF7AHFCBmRFn2K6');" data-alt="User profile picture"></div>
+        </div>
+    </div>
+</header>
+
+<div class="flex flex-1 overflow-hidden">
+    <!-- Sidebar: Notification Center focused navigation -->
+    <aside class="w-64 flex-shrink-0 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col z-20 hidden md:flex">
+        <div class="p-4">
+            <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4 px-2">Notification Center</div>
+            <nav class="space-y-1">
+                <a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/10 text-primary dark:bg-slate-800 dark:text-white font-medium transition-colors" href="#">
+                    <span class="material-symbols-outlined" style="font-size: 20px; font-variation-settings: 'FILL' 1;">notifications</span>
+                    <span class="text-sm">All Notifications</span>
+                    <span class="ml-auto bg-primary text-white text-[10px] font-bold px-2 py-0.5 rounded-full">12</span>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors" href="#">
+                    <span class="material-symbols-outlined" style="font-size: 20px;">mark_email_unread</span>
+                    <span class="text-sm">Unread</span>
+                    <span class="ml-auto bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-[10px] font-bold px-2 py-0.5 rounded-full">5</span>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors" href="#">
+                    <span class="material-symbols-outlined" style="font-size: 20px;">alternate_email</span>
+                    <span class="text-sm">Mentions</span>
+                    <span class="ml-auto bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-[10px] font-bold px-2 py-0.5 rounded-full">2</span>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors" href="#">
+                    <span class="material-symbols-outlined" style="font-size: 20px;">timer</span>
+                    <span class="text-sm">SLA Alerts</span>
+                    <span class="ml-auto bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-[10px] font-bold px-2 py-0.5 rounded-full">3</span>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors" href="#">
+                    <span class="material-symbols-outlined" style="font-size: 20px;">psychology</span>
+                    <span class="text-sm">AI Insights</span>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors" href="#">
+                    <span class="material-symbols-outlined" style="font-size: 20px;">info</span>
+                    <span class="text-sm">System Alerts</span>
+                </a>
+            </nav>
+
+            <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4 mt-8 px-2">Configuration</div>
+            <nav class="space-y-1">
+                <a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors" href="#">
+                    <span class="material-symbols-outlined" style="font-size: 20px;">tune</span>
+                    <span class="text-sm">Settings</span>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors" href="#">
+                    <span class="material-symbols-outlined" style="font-size: 20px;">devices</span>
+                    <span class="text-sm">Channels</span>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors" href="#">
+                    <span class="material-symbols-outlined" style="font-size: 20px;">do_not_disturb_on</span>
+                    <span class="text-sm">Quiet Hours</span>
+                </a>
+            </nav>
+        </div>
+
+        <div class="mt-auto p-4 border-t border-slate-100 dark:border-slate-800">
+            <div class="bg-slate-50 dark:bg-slate-800 rounded-lg p-3">
+                <h4 class="text-sm font-medium text-slate-900 dark:text-white mb-1">Stay focused</h4>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Enable Do Not Disturb to pause notifications.</p>
+                <button class="w-full py-1.5 px-3 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined" style="font-size: 16px;">do_not_disturb_on</span>
+                    Enable DND
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col min-w-0 overflow-hidden bg-background-light dark:bg-black/20">
+        <div class="flex-1 overflow-y-auto custom-scrollbar p-6">
+            <div class="mx-auto flex flex-col gap-6">
+                <!-- Page Header -->
+                <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                    <div>
+                        <div class="flex items-center gap-2 mb-1 text-sm text-slate-500 dark:text-slate-400">
+                            <span>Dashboard</span>
+                            <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+                            <span class="text-slate-900 dark:text-white font-medium">Notifications</span>
+                        </div>
+                        <h1 class="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Notifications</h1>
+                        <p class="text-slate-500 dark:text-slate-400 mt-1">Stay updated with your latest alerts and activities.</p>
+                    </div>
+                    <div class="flex gap-3">
+                        <button class="h-10 px-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-2 transition-colors">
+                            <span class="material-symbols-outlined" style="font-size: 18px;">tune</span>
+                            Settings
+                        </button>
+                        <button class="h-10 px-5 rounded-lg bg-primary hover:bg-blue-600 text-white font-semibold text-sm shadow-sm shadow-blue-500/30 flex items-center gap-2 transition-colors">
+                            <span class="material-symbols-outlined" style="font-size: 20px;">done_all</span>
+                            Mark all as read
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filter Bar -->
+                <div class="flex flex-col gap-4">
+                    <div class="flex flex-col lg:flex-row gap-3">
+                        <div class="flex-1 relative">
+                            <div class="absolute left-3.5 top-1/2 -translate-y-1/2 text-primary">
+                                <span class="material-symbols-outlined">search</span>
+                            </div>
+                            <input class="w-full h-12 pl-11 pr-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent shadow-sm" placeholder="Search notifications..." type="text"/>
+                        </div>
+                        <div class="flex gap-3 overflow-x-auto pb-1 lg:pb-0">
+                            <select class="h-12 pl-4 pr-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm focus:ring-2 focus:ring-primary focus:border-transparent shadow-sm cursor-pointer min-w-[140px]">
+                                <option>Type: All</option>
+                                <option>SLA Alerts</option>
+                                <option>Mentions</option>
+                                <option>AI Insights</option>
+                                <option>Tasks</option>
+                                <option>Deals</option>
+                                <option>System</option>
+                            </select>
+                            <select class="h-12 pl-4 pr-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm focus:ring-2 focus:ring-primary focus:border-transparent shadow-sm cursor-pointer min-w-[140px]">
+                                <option>Priority: All</option>
+                                <option>Urgent</option>
+                                <option>High</option>
+                                <option>Medium</option>
+                                <option>Low</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button class="h-8 px-4 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-bold shadow-sm transition-transform active:scale-95">All</button>
+                        <button class="h-8 px-4 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-semibold flex items-center gap-2 transition-colors">
+                            <span class="size-2 rounded-full bg-primary"></span> Unread
+                        </button>
+                        <button class="h-8 px-4 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-semibold flex items-center gap-2 transition-colors">
+                            <span class="size-2 rounded-full bg-red-500"></span> Urgent
+                        </button>
+                        <button class="h-8 px-4 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-semibold flex items-center gap-2 transition-colors">
+                            <span class="size-2 rounded-full bg-orange-500"></span> High
+                        </button>
+                        <button class="ml-auto flex shrink-0 items-center gap-1 text-xs font-semibold text-primary hover:text-primary/80">
+                            Clear filters
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Notification List -->
+                <div class="flex flex-col gap-3">
+
+                    <!-- Notification Item: Urgent SLA & Unread -->
+                    <div class="group relative flex w-full items-start gap-4 rounded-xl bg-white dark:bg-slate-800 p-4 shadow-sm border border-slate-200 dark:border-slate-700 transition-all hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600">
+                        <div class="absolute left-0 top-3 bottom-3 w-1 bg-red-500 rounded-r-lg"></div>
+                        <div class="ml-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 ring-1 ring-red-100 dark:ring-red-800">
+                            <span class="material-symbols-outlined">warning</span>
+                        </div>
+                        <div class="flex flex-1 flex-col gap-1">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <h3 class="text-sm font-bold text-slate-900 dark:text-white">SLA Breach Warning</h3>
+                                    <span class="inline-flex items-center rounded-md bg-red-50 dark:bg-red-900/30 px-2 py-1 text-xs font-medium text-red-700 dark:text-red-300 ring-1 ring-inset ring-red-600/10 dark:ring-red-500/20">Urgent</span>
+                                    <div class="h-2 w-2 rounded-full bg-primary"></div>
+                                </div>
+                                <span class="text-xs font-medium text-slate-500 dark:text-slate-400">2 min ago</span>
+                            </div>
+                            <p class="text-sm text-slate-700 dark:text-slate-300 line-clamp-1 pr-12">Ticket <span class="font-semibold text-slate-900 dark:text-white">#4209 (Acme Corp)</span> is approaching response deadline. Immediate action required.</p>
+                            <p class="text-xs text-slate-400 mt-1">Source: Support System</p>
+                        </div>
+                        <div class="absolute right-4 top-4 hidden group-hover:flex items-center gap-1 bg-white dark:bg-slate-800 pl-2">
+                            <button class="flex h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-primary" title="Mark as read">
+                                <span class="material-symbols-outlined text-[20px]">check_circle</span>
+                            </button>
+                            <button class="flex h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-orange-500" title="Snooze">
+                                <span class="material-symbols-outlined text-[20px]">snooze</span>
+                            </button>
+                            <button class="flex h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-red-500" title="Dismiss">
+                                <span class="material-symbols-outlined text-[20px]">close</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Notification Item: AI Insight & Unread -->
+                    <div class="group relative flex w-full items-start gap-4 rounded-xl bg-blue-50/40 dark:bg-blue-900/10 p-4 shadow-sm border border-blue-100 dark:border-blue-800/30 transition-all hover:shadow-md hover:border-blue-200 dark:hover:border-blue-700/50">
+                        <div class="absolute left-0 top-3 bottom-3 w-1 bg-primary rounded-r-lg"></div>
+                        <div class="ml-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white dark:bg-slate-800 text-primary ring-1 ring-blue-100 dark:ring-blue-800 shadow-sm">
+                            <span class="material-symbols-outlined">psychology</span>
+                        </div>
+                        <div class="flex flex-1 flex-col gap-1">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <h3 class="text-sm font-bold text-slate-900 dark:text-white">Deal Probability Update</h3>
+                                    <div class="h-2 w-2 rounded-full bg-primary"></div>
+                                </div>
+                                <span class="text-xs font-medium text-slate-500 dark:text-slate-400">15 min ago</span>
+                            </div>
+                            <p class="text-sm text-slate-700 dark:text-slate-300 line-clamp-1 pr-12">IntelliFlow AI detected a <span class="font-semibold text-slate-900 dark:text-white">85% probability</span> of closing deal "Global Tech Expansion".</p>
+                            <p class="text-xs text-slate-400 mt-1">Source: AI Insights</p>
+                        </div>
+                        <div class="absolute right-4 top-4 hidden group-hover:flex items-center gap-1 bg-blue-50/50 dark:bg-blue-900/20 pl-2 backdrop-blur-sm">
+                            <button class="flex h-8 w-8 items-center justify-center rounded-md text-slate-500 hover:bg-white dark:hover:bg-slate-700 hover:text-primary" title="Mark as read">
+                                <span class="material-symbols-outlined text-[20px]">check_circle</span>
+                            </button>
+                            <button class="flex h-8 w-8 items-center justify-center rounded-md text-slate-500 hover:bg-white dark:hover:bg-slate-700 hover:text-orange-500" title="Snooze">
+                                <span class="material-symbols-outlined text-[20px]">snooze</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Notification Item: Mention & Unread -->
+                    <div class="group relative flex w-full items-start gap-4 rounded-xl bg-white dark:bg-slate-800 p-4 shadow-sm border border-slate-200 dark:border-slate-700 transition-all hover:shadow-md">
+                        <div class="absolute left-0 top-3 bottom-3 w-1 bg-orange-400 rounded-r-lg"></div>
+                        <div class="ml-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 ring-1 ring-orange-100 dark:ring-orange-800">
+                            <span class="material-symbols-outlined">alternate_email</span>
+                        </div>
+                        <div class="flex flex-1 flex-col gap-1">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <h3 class="text-sm font-bold text-slate-900 dark:text-white">Sarah mentioned you</h3>
+                                    <span class="inline-flex items-center rounded-md bg-orange-50 dark:bg-orange-900/30 px-2 py-1 text-xs font-medium text-orange-700 dark:text-orange-300 ring-1 ring-inset ring-orange-600/10 dark:ring-orange-500/20">High</span>
+                                    <div class="h-2 w-2 rounded-full bg-primary"></div>
+                                </div>
+                                <span class="text-xs font-medium text-slate-500 dark:text-slate-400">1 hour ago</span>
+                            </div>
+                            <p class="text-sm text-slate-700 dark:text-slate-300 line-clamp-1 pr-12">Hey @Alex, can you review the attached Q3 Strategy Doc before the meeting?</p>
+                            <p class="text-xs text-slate-400 mt-1">Source: Team Chat</p>
+                        </div>
+                        <div class="absolute right-4 top-4 hidden group-hover:flex items-center gap-1 bg-white dark:bg-slate-800 pl-2">
+                            <button class="flex h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-primary"><span class="material-symbols-outlined text-[20px]">check_circle</span></button>
+                            <button class="flex h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-red-500"><span class="material-symbols-outlined text-[20px]">close</span></button>
+                        </div>
+                    </div>
+
+                    <!-- Notification Item: Task - Read -->
+                    <div class="group relative flex w-full items-start gap-4 rounded-xl bg-slate-50/50 dark:bg-slate-800/50 p-4 border border-transparent hover:bg-white dark:hover:bg-slate-800 hover:shadow-sm hover:border-slate-200 dark:hover:border-slate-700 transition-all">
+                        <div class="absolute left-0 top-3 bottom-3 w-1 bg-slate-300 dark:bg-slate-600 rounded-r-lg"></div>
+                        <div class="ml-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400">
+                            <span class="material-symbols-outlined">task_alt</span>
+                        </div>
+                        <div class="flex flex-1 flex-col gap-1 opacity-75 group-hover:opacity-100 transition-opacity">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <h3 class="text-sm font-medium text-slate-900 dark:text-white">Task Completed</h3>
+                                </div>
+                                <span class="text-xs font-medium text-slate-400">Yesterday</span>
+                            </div>
+                            <p class="text-sm text-slate-600 dark:text-slate-400 line-clamp-1">Prepare monthly sales report task marked as complete.</p>
+                            <p class="text-xs text-slate-400 mt-1">Source: Tasks</p>
+                        </div>
+                        <div class="absolute right-4 top-4 hidden group-hover:flex items-center gap-1 bg-white dark:bg-slate-800 rounded-lg shadow-sm pl-2 pr-2 py-1">
+                            <button class="flex h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-red-500"><span class="material-symbols-outlined text-[20px]">close</span></button>
+                        </div>
+                    </div>
+
+                    <!-- Notification Item: Calendar - Read -->
+                    <div class="group relative flex w-full items-start gap-4 rounded-xl bg-slate-50/50 dark:bg-slate-800/50 p-4 border border-transparent hover:bg-white dark:hover:bg-slate-800 hover:shadow-sm hover:border-slate-200 dark:hover:border-slate-700 transition-all">
+                        <div class="absolute left-0 top-3 bottom-3 w-1 bg-slate-300 dark:bg-slate-600 rounded-r-lg"></div>
+                        <div class="ml-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400">
+                            <span class="material-symbols-outlined">schedule</span>
+                        </div>
+                        <div class="flex flex-1 flex-col gap-1 opacity-75 group-hover:opacity-100 transition-opacity">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <h3 class="text-sm font-medium text-slate-900 dark:text-white">Weekly Sync Reminder</h3>
+                                </div>
+                                <span class="text-xs font-medium text-slate-400">2 days ago</span>
+                            </div>
+                            <p class="text-sm text-slate-600 dark:text-slate-400 line-clamp-1">Meeting starts in 10 minutes: "Sales Team Weekly Sync".</p>
+                            <p class="text-xs text-slate-400 mt-1">Source: Calendar</p>
+                        </div>
+                        <div class="absolute right-4 top-4 hidden group-hover:flex items-center gap-1 bg-white dark:bg-slate-800 rounded-lg shadow-sm pl-2 pr-2 py-1">
+                            <button class="flex h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-red-500"><span class="material-symbols-outlined text-[20px]">close</span></button>
+                        </div>
+                    </div>
+
+                    <!-- Notification Item: Deal - Read -->
+                    <div class="group relative flex w-full items-start gap-4 rounded-xl bg-slate-50/50 dark:bg-slate-800/50 p-4 border border-transparent hover:bg-white dark:hover:bg-slate-800 hover:shadow-sm hover:border-slate-200 dark:hover:border-slate-700 transition-all">
+                        <div class="absolute left-0 top-3 bottom-3 w-1 bg-emerald-400 rounded-r-lg"></div>
+                        <div class="ml-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400">
+                            <span class="material-symbols-outlined">description</span>
+                        </div>
+                        <div class="flex flex-1 flex-col gap-1 opacity-75 group-hover:opacity-100 transition-opacity">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <h3 class="text-sm font-medium text-slate-900 dark:text-white">Contract Signed</h3>
+                                </div>
+                                <span class="text-xs font-medium text-slate-400">3 days ago</span>
+                            </div>
+                            <p class="text-sm text-slate-600 dark:text-slate-400 line-clamp-1">Docusign: "Service Agreement - Orion Logistics" has been signed by the client.</p>
+                            <p class="text-xs text-slate-400 mt-1">Source: Integrations</p>
+                        </div>
+                        <div class="absolute right-4 top-4 hidden group-hover:flex items-center gap-1 bg-white dark:bg-slate-800 rounded-lg shadow-sm pl-2 pr-2 py-1">
+                            <button class="flex h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-red-500"><span class="material-symbols-outlined text-[20px]">close</span></button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Pagination -->
+                <div class="flex items-center justify-between px-2 py-4 border-t border-slate-200 dark:border-slate-700">
+                    <div class="text-sm text-slate-500 dark:text-slate-400">
+                        Showing <span class="font-semibold text-slate-700 dark:text-slate-200">1</span> to <span class="font-semibold text-slate-700 dark:text-slate-200">6</span> of <span class="font-semibold text-slate-700 dark:text-slate-200">24</span> notifications
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button class="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 disabled:opacity-50 text-sm font-medium transition-colors" disabled>Previous</button>
+                        <button class="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 text-sm font-medium transition-colors">Next</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+</div>
+
+</body></html>

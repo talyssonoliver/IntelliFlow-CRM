@@ -389,7 +389,7 @@ architecture:
 
 # Custom snippets for common tasks
 snippets:
-  - trigger: "test-unit"
+  - trigger: 'test-unit'
     body: |
       describe('{ComponentName}', () => {
         it('should {testCase}', () => {
@@ -404,7 +404,7 @@ snippets:
         })
       })
 
-  - trigger: "test-integration"
+  - trigger: 'test-integration'
     body: |
       describe('{RouterName} integration', () => {
         it('should {testCase}', async () => {
@@ -414,7 +414,7 @@ snippets:
         })
       })
 
-  - trigger: "error-handling"
+  - trigger: 'error-handling'
     body: |
       try {
         // Operation

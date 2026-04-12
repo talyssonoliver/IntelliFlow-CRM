@@ -16,41 +16,51 @@
       "types": "./dist/client.d.ts",
       "import": "./dist/client.mjs",
       "require": "./dist/client.js"
+    },
+    "./seed-ids": {
+      "types": "./dist/seed-ids.d.ts",
+      "import": "./dist/seed-ids.mjs",
+      "require": "./dist/seed-ids.js"
     }
   },
   "scripts": {
-    "build": "tsup src/index.ts src/client.ts --format cjs,esm --dts",
-    "dev": "tsup src/index.ts src/client.ts --format cjs,esm --dts --watch",
+    "build": "node -e \"try{require('fs').unlinkSync('generated/prisma/package.json')}catch(e){}\" && tsup && node scripts/postbuild-esm.mjs",
+    "dev": "tsup --watch",
     "clean": "rm -rf dist .turbo",
-    "db:generate": "prisma generate",
+    "db:generate": "prisma generate && node scripts/fix-prisma-esm.mjs",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate deploy",
     "db:migrate:dev": "prisma migrate dev",
     "db:migrate:create": "prisma migrate dev --create-only",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
-    "db:seed": "tsx prisma/seed.ts",
+    "db:seed": "tsx --env-file=.env prisma/seed.ts",
+    "db:cleanup-legacy": "tsx --env-file=.env prisma/cleanup-legacy-seed-ids.ts",
+    "db:cleanup-legacy:dry-run": "tsx --env-file=.env prisma/cleanup-legacy-seed-ids.ts --dry-run",
     "db:reset": "prisma migrate reset --force",
-    "typecheck": "tsc --noEmit",
-    "lint": "eslint src/",
-    "lint:fix": "eslint src/ --fix",
+    "typecheck": "node -e \"try{require('fs').unlinkSync('generated/prisma/package.json')}catch(e){}\" && tsc --noEmit && node scripts/fix-prisma-esm.mjs",
+    "lint": "eslint \"src/**/*.ts\"",
+    "lint:fix": "eslint \"src/**/*.ts\" --fix",
     "test": "vitest run",
     "test:unit": "vitest run",
     "test:watch": "vitest"
   },
   "prisma": {
-    "seed": "tsx prisma/seed.ts"
+    "seed": "tsx --env-file=.env prisma/seed.ts"
   },
   "dependencies": {
-    "@prisma/client": "^5.10.0"
+    "@intelliflow/domain": "workspace:*",
+    "@prisma/adapter-pg": "^7.4.2",
+    "@prisma/client": "^7.4.2"
   },
   "devDependencies": {
     "@intelliflow/typescript-config": "workspace:*",
-    "@types/node": "^20.11.0",
-    "prisma": "^5.10.0",
+    "@supabase/supabase-js": "^2.98.0",
+    "@types/node": "^25.3.2",
+    "prisma": "^7.4.2",
     "tsup": "^8.0.0",
     "tsx": "^4.7.0",
     "typescript": "^5.3.0",
-    "vitest": "^1.2.0"
+    "vitest": "^4.0.16"
   }
 }

@@ -91,12 +91,7 @@
       "preventSecretsCommit": true,
       "vulnerabilityScan": true,
       "dependencyAudit": true,
-      "allowedLicenses": [
-        "MIT",
-        "Apache-2.0",
-        "BSD-3-Clause",
-        "ISC"
-      ]
+      "allowedLicenses": ["MIT", "Apache-2.0", "BSD-3-Clause", "ISC"]
     },
     "ai_usage": {
       "requireHumanReview": true,
@@ -144,11 +139,7 @@
         "domain_events",
         "cqrs"
       ],
-      "avoidPatterns": [
-        "god_objects",
-        "anemic_models",
-        "service_locator"
-      ]
+      "avoidPatterns": ["god_objects", "anemic_models", "service_locator"]
     }
   },
 
@@ -206,12 +197,7 @@
   "integrations": {
     "github_actions": {
       "enabled": true,
-      "workflows": [
-        "ci.yml",
-        "cd.yml",
-        "code-quality.yml",
-        "security-scan.yml"
-      ]
+      "workflows": ["ci.yml", "cd.yml", "code-quality.yml", "security-scan.yml"]
     },
     "issue_tracking": {
       "enabled": true,
@@ -235,10 +221,7 @@
     },
     "reporting": {
       "frequency": "weekly",
-      "recipients": [
-        "team_lead",
-        "product_owner"
-      ],
+      "recipients": ["team_lead", "product_owner"],
       "metrics": [
         "acceptance_rate",
         "time_saved",
@@ -260,10 +243,7 @@
     },
     "bestPractices": {
       "documentationUrl": "docs/ai-development/copilot-best-practices.md",
-      "exampleProjects": [
-        "packages/domain",
-        "apps/api"
-      ]
+      "exampleProjects": ["packages/domain", "apps/api"]
     }
   },
 
@@ -309,11 +289,7 @@
 
   "feedback": {
     "enabled": true,
-    "channels": [
-      "inline_comments",
-      "github_discussions",
-      "team_meetings"
-    ],
+    "channels": ["inline_comments", "github_discussions", "team_meetings"],
     "reviewCycle": "bi_weekly"
   }
 }

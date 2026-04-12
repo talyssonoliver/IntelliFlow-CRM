@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>IntelliFlow - Deals Kanban</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>.kanban-container::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+        .kanban-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .kanban-container::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .kanban-container::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        .kanban-column::-webkit-scrollbar {
+            width: 4px;
+        }
+        .kanban-column::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .kanban-column::-webkit-scrollbar-thumb {
+            background: #e2e8f0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white font-display overflow-hidden">
+<div class="flex h-screen w-full flex-col overflow-hidden">
+<header class="flex-shrink-0 bg-white dark:bg-[#1a2634] border-b border-slate-200 dark:border-slate-700 z-50">
+<div class="w-full px-6 h-16 flex items-center justify-between">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-3">
+<div class="bg-primary aspect-square rounded-lg size-8 flex items-center justify-center text-white font-bold shadow-sm shadow-blue-500/30">I</div>
+<span class="text-slate-900 dark:text-white text-lg font-bold tracking-tight">IntelliFlow CRM</span>
+</div>
+<nav class="hidden lg:flex items-center gap-1">
+<a class="px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md transition-colors" href="#">Dashboard</a>
+<a class="px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md transition-colors" href="#">Contacts</a>
+<a class="px-3 py-2 text-sm font-medium text-primary bg-primary/10 rounded-md transition-colors" href="#">Deals</a>
+<a class="px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md transition-colors" href="#">Tickets</a>
+<a class="px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md transition-colors" href="#">Reports</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden md:flex items-center w-64">
+<span class="absolute left-3 text-slate-400 material-symbols-outlined" style="font-size: 20px;">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm focus:ring-2 focus:ring-primary text-slate-900 dark:text-white placeholder-slate-400 transition-shadow" placeholder="Search..." type="text"/>
+</div>
+<div class="flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-700">
+<button class="flex items-center justify-center size-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors relative">
+<span class="material-symbols-outlined" style="font-size: 22px;">notifications</span>
+<span class="absolute top-2 right-2.5 size-2 bg-red-500 rounded-full border-2 border-white dark:border-[#1a2634]"></span>
+</button>
+<button class="flex items-center gap-2 pl-1 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 p-1 transition-colors group">
+<div class="bg-center bg-no-repeat bg-cover rounded-full size-8 border border-slate-200 dark:border-slate-700" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAqBlFOa5m7I304G2qsbLUceX-jvgCfoto8EjW1dtHn6o12QMM0yniLAZngPEJfAalRqJFlheiaaN9eKeoxqciL4iYKxu_oPHyTk1rehStjCHY6NHBwvspA0LOVcUJcEjNRXujB8V74EnJYJwuUaQ2n7vMuDtH2tWOGiAWpVhldT-E0BLIfC7Vu1MQqNXml1apTllfw80XVF8IxY4qt2ECnFsk0Wc0uuB_cZcSOd2fXPMLdumhgQSFPdMQRWfPqeYJVfZCWRezlFt6j");'></div>
+<div class="hidden xl:flex flex-col items-start text-left">
+<span class="text-sm font-medium text-slate-700 dark:text-slate-200 leading-none group-hover:text-primary transition-colors">Tom Cook</span>
+</div>
+<span class="hidden xl:block material-symbols-outlined text-slate-400 group-hover:text-slate-600 transition-colors" style="font-size: 18px;">expand_more</span>
+</button>
+</div>
+</div>
+</div>
+</header>
+<main class="flex-1 flex flex-col min-w-0 h-full overflow-hidden bg-background-light dark:bg-background-dark">
+<div class="flex-shrink-0 bg-white dark:bg-[#1a2634] border-b border-slate-200 dark:border-slate-700 px-6 py-3 flex items-center justify-between z-10 shadow-sm">
+<div class="flex items-center gap-4">
+<h2 class="text-slate-900 dark:text-white text-lg font-bold">Deals Kanban</h2>
+<div class="h-6 w-px bg-slate-200 dark:bg-slate-700"></div>
+<button class="flex items-center gap-2 text-slate-500 hover:text-primary transition-colors text-sm group">
+<span class="material-symbols-outlined group-hover:text-primary" style="font-size: 20px;">folder_open</span>
+<span class="font-medium">Sales Pipeline Q4</span>
+<span class="material-symbols-outlined group-hover:text-primary" style="font-size: 20px;">arrow_drop_down</span>
+</button>
+</div>
+<div>
+<button class="flex items-center justify-center size-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors" title="Board Settings">
+<span class="material-symbols-outlined" style="font-size: 20px;">settings</span>
+</button>
+</div>
+</div>
+<div class="flex-shrink-0 px-6 py-4 bg-white dark:bg-[#1a2634]/50 border-b border-slate-200 dark:border-slate-700">
+<div class="flex flex-wrap gap-4">
+<div class="flex-1 min-w-[140px] flex items-center gap-3 p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a2634]">
+<div class="p-2 rounded-md bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400">
+<span class="material-symbols-outlined">attach_money</span>
+</div>
+<div>
+<p class="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wide">Total Value</p>
+<p class="text-slate-900 dark:text-white text-lg font-bold">$1.2M <span class="text-green-500 text-xs font-medium ml-1">↑ 12%</span></p>
+</div>
+</div>
+<div class="flex-1 min-w-[140px] flex items-center gap-3 p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a2634]">
+<div class="p-2 rounded-md bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400">
+<span class="material-symbols-outlined">folder</span>
+</div>
+<div>
+<p class="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wide">Open Deals</p>
+<p class="text-slate-900 dark:text-white text-lg font-bold">45 <span class="text-slate-400 text-xs font-normal">Active</span></p>
+</div>
+</div>
+<div class="flex-1 min-w-[140px] flex items-center gap-3 p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a2634]">
+<div class="p-2 rounded-md bg-purple-50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400">
+<span class="material-symbols-outlined">pie_chart</span>
+</div>
+<div>
+<p class="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wide">Win Rate</p>
+<p class="text-slate-900 dark:text-white text-lg font-bold">68% <span class="text-green-500 text-xs font-medium ml-1">↑ 2%</span></p>
+</div>
+</div>
+<div class="flex-1 min-w-[140px] flex items-center gap-3 p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1a2634]">
+<div class="p-2 rounded-md bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400">
+<span class="material-symbols-outlined">analytics</span>
+</div>
+<div>
+<p class="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wide">Avg Deal</p>
+<p class="text-slate-900 dark:text-white text-lg font-bold">$24k</p>
+</div>
+</div>
+</div>
+</div>
+<div class="flex-shrink-0 px-6 py-3 bg-background-light dark:bg-background-dark flex flex-wrap items-center justify-between gap-4">
+<div class="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0 scrollbar-hide">
+<button class="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-[#1a2634] border border-slate-200 dark:border-slate-700 rounded-md text-sm text-slate-700 dark:text-slate-200 hover:border-primary hover:text-primary transition-colors whitespace-nowrap">
+<span class="material-symbols-outlined" style="font-size: 18px;">person</span>
+<span>My Deals</span>
+<span class="material-symbols-outlined" style="font-size: 16px;">keyboard_arrow_down</span>
+</button>
+<button class="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-[#1a2634] border border-slate-200 dark:border-slate-700 rounded-md text-sm text-slate-700 dark:text-slate-200 hover:border-primary hover:text-primary transition-colors whitespace-nowrap">
+<span class="material-symbols-outlined" style="font-size: 18px;">calendar_month</span>
+<span>This Quarter</span>
+<span class="material-symbols-outlined" style="font-size: 16px;">keyboard_arrow_down</span>
+</button>
+<button class="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-[#1a2634] border border-slate-200 dark:border-slate-700 rounded-md text-sm text-slate-700 dark:text-slate-200 hover:border-primary hover:text-primary transition-colors whitespace-nowrap">
+<span class="material-symbols-outlined" style="font-size: 18px;">filter_list</span>
+<span>More Filters</span>
+</button>
+<div class="h-6 w-px bg-slate-300 dark:bg-slate-700 mx-1"></div>
+<div class="flex bg-white dark:bg-[#1a2634] rounded-lg border border-slate-200 dark:border-slate-700 p-0.5">
+<button class="p-1.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm">
+<span class="material-symbols-outlined block" style="font-size: 20px;">view_kanban</span>
+</button>
+<button class="p-1.5 rounded text-slate-500 hover:text-slate-900 dark:hover:text-white">
+<span class="material-symbols-outlined block" style="font-size: 20px;">format_list_bulleted</span>
+</button>
+</div>
+</div>
+<button class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 shadow-sm transition-colors">
+<span class="material-symbols-outlined" style="font-size: 20px;">add</span>
+<span>New Deal</span>
+</button>
+</div>
+<div class="flex-1 overflow-x-auto overflow-y-hidden kanban-container px-6 pb-6">
+<div class="flex h-full gap-5 min-w-max pb-2">
+<div class="w-80 flex flex-col h-full rounded-xl bg-slate-100/50 dark:bg-[#1a2634]/30 border border-transparent dark:border-slate-700/50">
+<div class="p-3 flex items-center justify-between sticky top-0 bg-transparent z-10">
+<div class="flex items-center gap-2">
+<span class="h-2.5 w-2.5 rounded-full bg-slate-400"></span>
+<h3 class="text-sm font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wide">Prospecting</h3>
+<span class="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-medium px-2 py-0.5 rounded-full">5</span>
+</div>
+<div class="text-xs font-semibold text-slate-500 dark:text-slate-400">$210k</div>
+</div>
+<div class="px-3 pb-2">
+<button class="w-full py-2 border border-dashed border-slate-300 dark:border-slate-600 rounded-lg text-slate-500 dark:text-slate-400 text-sm hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-colors flex items-center justify-center gap-1">
+<span class="material-symbols-outlined" style="font-size: 18px;">add</span>
+                            Quick Add
+                        </button>
+</div>
+<div class="flex-1 overflow-y-auto px-3 pb-3 flex flex-col gap-3 kanban-column">
+<div class="bg-white dark:bg-[#1e293b] p-3.5 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md cursor-grab active:cursor-grabbing group">
+<div class="flex justify-between items-start mb-2">
+<span class="text-sm font-semibold text-slate-900 dark:text-white hover:text-primary transition-colors cursor-pointer">Acme Corp Expansion</span>
+<button class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-opacity">
+<span class="material-symbols-outlined" style="font-size: 18px;">more_horiz</span>
+</button>
+</div>
+<div class="flex items-center gap-2 mb-3">
+<div class="size-5 rounded bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-700 dark:text-indigo-300 text-xs font-bold">A</div>
+<span class="text-xs text-slate-500 dark:text-slate-400">Acme Inc.</span>
+</div>
+<div class="flex items-center justify-between mt-3 pt-3 border-t border-slate-100 dark:border-slate-700/50">
+<span class="text-sm font-bold text-slate-700 dark:text-slate-200">$45,000</span>
+<div class="flex items-center gap-2">
+<div class="size-6 rounded-full bg-cover bg-center border border-white dark:border-slate-800" data-alt="User avatar small" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCH5lKXUTxnHruOp2pRmi_6gZ5BPsGtsi4EynoR_1CtVvOPFq7ctb2ChhsSAqxRYRSLZ4pUUwz2tAaX5OgriRtEgKUS2TK_ZfvUorcQYa7euDaPuXcBFA2-tOz4lUK9jJ2rgfir2trOw6opMPyMzj_EIlhkl4auZqez8n2h4rCbi2VYx7_joNNzGqrKF3Jb3HTGV9Um348MZMKljXekOJK6qz9GMmODvuPVk_rxgQkbd7fWfG5Hw86LIRu4p8EFMQJXi5ESCiyk8qHc");'></div>
+<span class="text-[10px] px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 rounded border border-slate-200 dark:border-slate-600">Oct 24</span>
+</div>
+</div>
+</div>
+<div class="bg-white dark:bg-[#1e293b] p-3.5 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md cursor-grab active:cursor-grabbing group">
+<div class="flex justify-between items-start mb-2">
+<span class="text-sm font-semibold text-slate-900 dark:text-white hover:text-primary transition-colors cursor-pointer">Global Logistics Deal</span>
+<button class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-opacity">
+<span class="material-symbols-outlined" style="font-size: 18px;">more_horiz</span>
+</button>
+</div>
+<div class="flex items-center gap-2 mb-3">
+<div class="size-5 rounded bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center text-orange-700 dark:text-orange-300 text-xs font-bold">G</div>
+<span class="text-xs text-slate-500 dark:text-slate-400">Global Ways</span>
+</div>
+<div class="flex items-center justify-between mt-3 pt-3 border-t border-slate-100 dark:border-slate-700/50">
+<span class="text-sm font-bold text-slate-700 dark:text-slate-200">$120,000</span>
+<div class="flex items-center gap-2">
+<div class="size-6 rounded-full bg-slate-200 flex items-center justify-center text-[10px] text-slate-600 font-bold border border-white dark:border-slate-800">JD</div>
+<span class="text-[10px] px-1.5 py-0.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded border border-red-100 dark:border-red-900/30">Due Tmrw</span>
+</div>
+</div>
+</div>
+<div class="bg-white dark:bg-[#1e293b] p-3.5 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md cursor-grab active:cursor-grabbing group">
+<div class="flex justify-between items-start mb-2">
+<span class="text-sm font-semibold text-slate-900 dark:text-white hover:text-primary transition-colors cursor-pointer">Cloud Migration</span>
+<button class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-opacity">
+<span class="material-symbols-outlined" style="font-size: 18px;">more_horiz</span>
+</button>
+</div>
+<div class="flex items-center gap-2 mb-3">
+<div class="size-5 rounded bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-700 dark:text-blue-300 text-xs font-bold">T</div>
+<span class="text-xs text-slate-500 dark:text-slate-400">TechSoft</span>
+</div>
+<div class="flex items-center justify-between mt-3 pt-3 border-t border-slate-100 dark:border-slate-700/50">
+<span class="text-sm font-bold text-slate-700 dark:text-slate-200">$45,000</span>
+<div class="flex items-center gap-2">
+<div class="size-6 rounded-full bg-cover bg-center border border-white dark:border-slate-800" data-alt="User avatar small" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAwuTa88iqGxlBR_046dQJcFSER3X8WS42JLFzAr2ZNwjY8Pj-u9suUo8V_wWOPr6hAhihlxxU3GZyXGxecCQp1HRcOmUyr2Zx7KioynCQoPDoGhtctGTmxCfzTj2UKNjqJqktgkjbdelVeQPpDGnLfn1fyAVzQtg_tALQRjvTPrlEDHPssl86P3ahyNyOGZPQX1MRfP7_13ryj4mzdp3qZMPK5xJZ2UOIkhD4i3H0HtxCPTtWmwETmKD3ZV17bsoyatjyTB957uq4r");'></div>
+<span class="text-[10px] px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 rounded border border-slate-200 dark:border-slate-600">Nov 01</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="w-80 flex flex-col h-full rounded-xl bg-slate-100/50 dark:bg-[#1a2634]/30 border border-transparent dark:border-slate-700/50">
+<div class="p-3 flex items-center justify-between sticky top-0 bg-transparent z-10">
+<div class="flex items-center gap-2">
+<span class="h-2.5 w-2.5 rounded-full bg-blue-400"></span>
+<h3 class="text-sm font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wide">Qualification</h3>
+<span class="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-medium px-2 py-0.5 rounded-full">3</span>
+</div>
+<div class="text-xs font-semibold text-slate-500 dark:text-slate-400">$85k</div>
+</div>
+<div class="flex-1 overflow-y-auto px-3 pb-3 flex flex-col gap-3 kanban-column">
+<div class="bg-white dark:bg-[#1e293b] p-3.5 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md cursor-grab active:cursor-grabbing group">
+<div class="flex justify-between items-start mb-2">
+<span class="text-sm font-semibold text-slate-900 dark:text-white hover:text-primary transition-colors cursor-pointer">CRM Integration</span>
+<span class="material-symbols-outlined text-amber-500" style="font-size: 16px;" title="High Priority">priority_high</span>
+</div>
+<div class="flex items-center gap-2 mb-3">
+<div class="size-5 rounded bg-green-100 dark:bg-green-900/50 flex items-center justify-center text-green-700 dark:text-green-300 text-xs font-bold">S</div>
+<span class="text-xs text-slate-500 dark:text-slate-400">StartUp io</span>
+</div>
+<div class="flex items-center justify-between mt-3 pt-3 border-t border-slate-100 dark:border-slate-700/50">
+<span class="text-sm font-bold text-slate-700 dark:text-slate-200">$25,000</span>
+<div class="flex items-center gap-2">
+<div class="size-6 rounded-full bg-cover bg-center border border-white dark:border-slate-800" data-alt="User avatar small" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBS-ab6brsopegbPsPx4uHX7Wqf5hRWqNP6hYVa6U6TgtvhXjxNo2REbO8qxQ6XNkWQqtBGi-hErxOjwh7OItb0Rph2c-Pu5XNf775F2BCtNzeWzrET59dVkzfPAYVTds374baygytmWqTbfUejMWBYJ3ixBu350GheN0koP5J5S6EMmNKIkg5Sj9GJnTVHqwEkyUGnlYzQOQ7JHb4ODI3IvPa2EgA2FcOCEhZiiOrCdfl8I6VbiaeWg3WdbWM3KmYMr-QmoCjWaIyi");'></div>
+<span class="text-[10px] px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 rounded border border-slate-200 dark:border-slate-600">Nov 12</span>
+</div>
+</div>
+</div>
+<div class="bg-white dark:bg-[#1e293b] p-3.5 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md cursor-grab active:cursor-grabbing group">
+<div class="flex justify-between items-start mb-2">
+<span class="text-sm font-semibold text-slate-900 dark:text-white hover:text-primary transition-colors cursor-pointer">Consulting 2024</span>
+</div>
+<div class="flex items-center gap-2 mb-3">
+<div class="size-5 rounded bg-pink-100 dark:bg-pink-900/50 flex items-center justify-center text-pink-700 dark:text-pink-300 text-xs font-bold">M</div>
+<span class="text-xs text-slate-500 dark:text-slate-400">MedCore</span>
+</div>
+<div class="flex items-center justify-between mt-3 pt-3 border-t border-slate-100 dark:border-slate-700/50">
+<span class="text-sm font-bold text-slate-700 dark:text-slate-200">$60,000</span>
+<div class="flex items-center gap-2">
+<div class="size-6 rounded-full bg-cover bg-center border border-white dark:border-slate-800" data-alt="User avatar small" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCGaSdatzB6dzlGLhKUmdIJpYrrSZYBOTIbSjXAUfJsl1i_jSZecwP2eAhlI8NOOWtgLleSpIX_3Hhkzg_6578JYYGYVF8zMoL6e7gPd7TcG-fdeVTS9LJfMlHhxGfRWLBqBYuyX1hxR0hFSloBNKp-9D7OSrIomhpQTY6sumYjMO_G5uFqTl5FTLrOKXbmYWmuVabf2vDrnvwxlfz-uLW6aPpdJhCdg9tYTE0b3g1_V68yrH-zjKdOtkq2-Ew4eX7VS5qt5wVu09GB");'></div>
+<span class="text-[10px] px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 rounded border border-slate-200 dark:border-slate-600">Dec 01</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="w-80 flex flex-col h-full rounded-xl bg-slate-100/50 dark:bg-[#1a2634]/30 border border-transparent dark:border-slate-700/50">
+<div class="p-3 flex items-center justify-between sticky top-0 bg-transparent z-10">
+<div class="flex items-center gap-2">
+<span class="h-2.5 w-2.5 rounded-full bg-amber-400"></span>
+<h3 class="text-sm font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wide">Proposal</h3>
+<span class="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-medium px-2 py-0.5 rounded-full">2</span>
+</div>
+<div class="text-xs font-semibold text-slate-500 dark:text-slate-400">$320k</div>
+</div>
+<div class="flex-1 overflow-y-auto px-3 pb-3 flex flex-col gap-3 kanban-column">
+<div class="bg-white dark:bg-[#1e293b] p-3.5 rounded-lg border-l-4 border-l-amber-400 border-t border-r border-b border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md cursor-grab active:cursor-grabbing group">
+<div class="flex justify-between items-start mb-2">
+<span class="text-sm font-semibold text-slate-900 dark:text-white hover:text-primary transition-colors cursor-pointer">Enterprise License</span>
+</div>
+<div class="flex items-center gap-2 mb-3">
+<div class="size-5 rounded bg-slate-800 flex items-center justify-center text-white text-xs font-bold">U</div>
+<span class="text-xs text-slate-500 dark:text-slate-400">Uberty</span>
+</div>
+<div class="w-full bg-slate-100 dark:bg-slate-700 h-1.5 rounded-full mb-3 overflow-hidden">
+<div class="bg-amber-400 h-full rounded-full" style="width: 75%"></div>
+</div>
+<div class="flex items-center justify-between mt-1 pt-2 border-t border-slate-100 dark:border-slate-700/50">
+<span class="text-sm font-bold text-slate-700 dark:text-slate-200">$240,000</span>
+<div class="flex items-center gap-2">
+<div class="size-6 rounded-full bg-cover bg-center border border-white dark:border-slate-800" data-alt="User avatar small" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuB4lCaDAvmJIRnwaBubScG6QeTH5D9Zv0CNEO5YzmPsciIPZGWxIu3BeB6sblh4OL5pD87_Ag0UHUp1MHoJnWqkIb1aU6L63y3PLBYwiwQDp9HvwK-I5vkUig72Zd_qk2Zjtl9lkuVp83QdL_S7zWq-54IyTAG-h9-nPeGfzwAq2IloaVXQG53H1WTNiJtdFMnbo1ylph6cw9GylTorYzfEn1_iv6HzXE_ShTFp3d3q08uEjqH4cmLlLmH9GrQ54sWnyWTw08THVgtF");'></div>
+<span class="text-[10px] px-1.5 py-0.5 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded border border-green-100 dark:border-green-900/30">Likely</span>
+</div>
+</div>
+</div>
+<div class="bg-white dark:bg-[#1e293b] p-3.5 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md cursor-grab active:cursor-grabbing group">
+<div class="flex justify-between items-start mb-2">
+<span class="text-sm font-semibold text-slate-900 dark:text-white hover:text-primary transition-colors cursor-pointer">Security Audit</span>
+</div>
+<div class="flex items-center gap-2 mb-3">
+<div class="size-5 rounded bg-cyan-100 dark:bg-cyan-900/50 flex items-center justify-center text-cyan-700 dark:text-cyan-300 text-xs font-bold">B</div>
+<span class="text-xs text-slate-500 dark:text-slate-400">BankCo</span>
+</div>
+<div class="flex items-center justify-between mt-3 pt-3 border-t border-slate-100 dark:border-slate-700/50">
+<span class="text-sm font-bold text-slate-700 dark:text-slate-200">$80,000</span>
+<div class="flex items-center gap-2">
+<div class="size-6 rounded-full bg-cover bg-center border border-white dark:border-slate-800" data-alt="User avatar small" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuC_GMZhFyZC5qXPP3rPvaTONqgbzR4F4fEMi4DhKWk5vWjlJFROne0wwywQiqPuGUsnzQcyTCC2RUTLMuxi_1qR94ZHRsCfzg97T_OujTFltp5BdKZ-ASwpLVFJxlInxiOUuYuVuYM3XHtMZaeSyKaqO58cDksGmCRjQBijjzx7qHgUPDz-r526xyDutyH_HpshjboAt_NWyZ0OesaMIqncWFaJ95Sl0h2t58qBTXsVfcJkZNNp5jLXmJAKBf4_uxBLJYeGPP1I47rB");'></div>
+<span class="text-[10px] px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 rounded border border-slate-200 dark:border-slate-600">Oct 28</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="w-80 flex flex-col h-full rounded-xl bg-slate-100/50 dark:bg-[#1a2634]/30 border border-transparent dark:border-slate-700/50">
+<div class="p-3 flex items-center justify-between sticky top-0 bg-transparent z-10">
+<div class="flex items-center gap-2">
+<span class="h-2.5 w-2.5 rounded-full bg-purple-500"></span>
+<h3 class="text-sm font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wide">Negotiation</h3>
+<span class="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-medium px-2 py-0.5 rounded-full">1</span>
+</div>
+<div class="text-xs font-semibold text-slate-500 dark:text-slate-400">$150k</div>
+</div>
+<div class="flex-1 overflow-y-auto px-3 pb-3 flex flex-col gap-3 kanban-column">
+<div class="bg-white dark:bg-[#1e293b] p-3.5 rounded-lg border-l-4 border-l-purple-500 border-t border-r border-b border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md cursor-grab active:cursor-grabbing group">
+<div class="flex justify-between items-start mb-2">
+<span class="text-sm font-semibold text-slate-900 dark:text-white hover:text-primary transition-colors cursor-pointer">Annual Renewal</span>
+<span class="material-symbols-outlined text-red-500 animate-pulse" style="font-size: 16px;" title="Critical">error</span>
+</div>
+<div class="flex items-center gap-2 mb-3">
+<div class="size-5 rounded bg-red-100 dark:bg-red-900/50 flex items-center justify-center text-red-700 dark:text-red-300 text-xs font-bold">H</div>
+<span class="text-xs text-slate-500 dark:text-slate-400">HealthPlus</span>
+</div>
+<div class="w-full bg-slate-100 dark:bg-slate-700 h-1.5 rounded-full mb-3 overflow-hidden">
+<div class="bg-purple-500 h-full rounded-full" style="width: 90%"></div>
+</div>
+<div class="flex items-center justify-between mt-1 pt-2 border-t border-slate-100 dark:border-slate-700/50">
+<span class="text-sm font-bold text-slate-700 dark:text-slate-200">$150,000</span>
+<div class="flex items-center gap-2">
+<div class="size-6 rounded-full bg-cover bg-center border border-white dark:border-slate-800" data-alt="User avatar small" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuATiVBF7HqvCgdmSeA7Bei5SkVvoi2MZhsNuO_2bsXT2J8C3sYJLgZoCV3g1d4fdp1vPSSDAnRVgsOXBHLiD1_o4BWqTDnN79yuIbxJen8gSh5XxCu0gbY8i1gvZ9mc5_ypV5K4Wau-0rSNuR6-TJAtUsFGUJPsFF2FzCtOrq06eUnx8iw5bC-5s0C08yQ0ksB-x9fJ-Yzn7gPO2nhdxn3iY-a2iQUbvlNfJxo3ujDA_UtOEDZZ6ioavRxtEgFs_e6iBj9vOwvpkOkB");'></div>
+<span class="text-[10px] px-1.5 py-0.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded border border-red-100 dark:border-red-900/30">Expiring</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="w-80 flex flex-col h-full rounded-xl bg-slate-100/50 dark:bg-[#1a2634]/30 border border-transparent dark:border-slate-700/50">
+<div class="p-3 flex items-center justify-between sticky top-0 bg-transparent z-10">
+<div class="flex items-center gap-2">
+<span class="h-2.5 w-2.5 rounded-full bg-green-500"></span>
+<h3 class="text-sm font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wide">Closed Won</h3>
+<span class="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-medium px-2 py-0.5 rounded-full">8</span>
+</div>
+<div class="text-xs font-semibold text-slate-500 dark:text-slate-400">$450k</div>
+</div>
+<div class="flex-1 overflow-y-auto px-3 pb-3 flex flex-col gap-3 kanban-column">
+<div class="bg-green-50/50 dark:bg-green-900/10 p-3.5 rounded-lg border border-green-200 dark:border-green-900/30 shadow-sm opacity-80 hover:opacity-100 transition-opacity">
+<div class="flex justify-between items-start mb-2">
+<span class="text-sm font-semibold text-slate-900 dark:text-white line-through decoration-slate-400">Marketing Tool</span>
+<span class="material-symbols-outlined text-green-600 dark:text-green-400" style="font-size: 18px;">check_circle</span>
+</div>
+<div class="flex items-center gap-2 mb-3">
+<div class="size-5 rounded bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 text-xs font-bold">F</div>
+<span class="text-xs text-slate-500 dark:text-slate-400">FinTech Ltd</span>
+</div>
+<div class="flex items-center justify-between mt-3 pt-3 border-t border-green-100 dark:border-green-900/20">
+<span class="text-sm font-bold text-slate-700 dark:text-slate-200">$18,000</span>
+<span class="text-[10px] text-green-700 dark:text-green-400 font-medium">Won Oct 20</span>
+</div>
+</div>
+<div class="bg-green-50/50 dark:bg-green-900/10 p-3.5 rounded-lg border border-green-200 dark:border-green-900/30 shadow-sm opacity-80 hover:opacity-100 transition-opacity">
+<div class="flex justify-between items-start mb-2">
+<span class="text-sm font-semibold text-slate-900 dark:text-white line-through decoration-slate-400">Video API</span>
+<span class="material-symbols-outlined text-green-600 dark:text-green-400" style="font-size: 18px;">check_circle</span>
+</div>
+<div class="flex items-center gap-2 mb-3">
+<div class="size-5 rounded bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 text-xs font-bold">S</div>
+<span class="text-xs text-slate-500 dark:text-slate-400">Streamly</span>
+</div>
+<div class="flex items-center justify-between mt-3 pt-3 border-t border-green-100 dark:border-green-900/20">
+<span class="text-sm font-bold text-slate-700 dark:text-slate-200">$32,000</span>
+<span class="text-[10px] text-green-700 dark:text-green-400 font-medium">Won Oct 18</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+
+</body></html>

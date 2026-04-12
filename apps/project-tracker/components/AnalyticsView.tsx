@@ -64,7 +64,7 @@ export default function AnalyticsView({ tasks, sections }: AnalyticsViewProps) {
       <div className="bg-white rounded-lg shadow p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Tasks by Section</h3>
         <div className="space-y-4">
-          {sections.map(section => {
+          {sections.map((section) => {
             const sectionTasks = tasksBySection[section] || [];
             const sectionStats = countTasksByStatus(sectionTasks);
 

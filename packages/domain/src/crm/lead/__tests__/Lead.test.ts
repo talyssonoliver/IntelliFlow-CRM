@@ -44,7 +44,8 @@ describe('Lead Aggregate', () => {
       expect(lead.fullName).toBe('John Doe');
       expect(lead.company).toBe('Acme Corp');
       expect(lead.title).toBe('CTO');
-      expect(lead.phone).toBe('+1-555-0100');
+      // PhoneNumber.value is E.164 normalized (no hyphens)
+      expect(lead.phone?.value).toBe('+15550100');
       expect(lead.source).toBe('WEBSITE');
       expect(lead.status).toBe('NEW');
       expect(lead.score.value).toBe(0);

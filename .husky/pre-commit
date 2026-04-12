@@ -6,9 +6,64 @@
 
 echo "🔍 Running pre-commit checks..."
 
+# Auto-regenerate Sprint Plan split files if source CSV changed
+# (Split files are gitignored - they exist locally for Claude Code to read)
+if git diff --cached --name-only | grep -q "Sprint_plan\.csv$"; then
+  echo "📊 Sprint_plan.csv changed - regenerating local split files..."
+  npx tsx tools/scripts/split-sprint-plan.ts || {
+    echo "❌ Failed to split Sprint_plan.csv"
+    exit 1
+  }
+  echo "✅ Local split files regenerated (not committed - gitignored)"
+fi
+
+# Auto-sync API inventory if router files changed
+# Keeps baseline.json in sync with actual tRPC endpoints
+if git diff --cached --name-only | grep -q "\.router\.ts$"; then
+  echo "🔄 Router files changed - syncing API inventory..."
+  npx tsx tools/scripts/sync-api-inventory.ts || {
+    echo "❌ Failed to sync API inventory"
+    exit 1
+  }
+  # Stage the updated baseline.json
+  git add artifacts/benchmarks/baseline.json
+  echo "✅ API inventory synced and staged"
+fi
+
+# Auto-sync codebase inventory if relevant source files changed
+# Tracks: Prisma schema, middleware, workers, adapters, domain events, validators
+CODEBASE_PATTERNS="schema\.prisma|middleware/|workers/|adapters/src/|domain/src/events|validators/src/"
+if git diff --cached --name-only | grep -qE "$CODEBASE_PATTERNS"; then
+  echo "🔄 Codebase files changed - syncing full inventory..."
+  npx tsx tools/scripts/sync-codebase-inventory.ts || {
+    echo "❌ Failed to sync codebase inventory"
+    exit 1
+  }
+  # Stage the updated baseline.json
+  git add artifacts/benchmarks/baseline.json
+  echo "✅ Codebase inventory synced and staged"
+fi
+
+# Secret scan (gitleaks) - fail fast locally before CI
+echo "🔐 Scanning for secrets..."
+if command -v gitleaks >/dev/null 2>&1; then
+  gitleaks protect --staged --redact --config=.gitleaks.toml --no-banner || {
+    echo "❌ Secret scan failed. Remove secrets before committing."
+    echo "   If this is a false positive, add to .gitleaks.toml allowlist."
+    exit 1
+  }
+  echo "✅ No secrets detected in staged files"
+else
+  echo "⚠️  gitleaks not installed locally — skipping pre-commit secret scan."
+  echo "   CI will still scan this commit. Install locally with:"
+  echo "     brew install gitleaks   # macOS"
+  echo "     scoop install gitleaks  # Windows"
+  echo "     See https://github.com/gitleaks/gitleaks#installing"
+fi
+
 # Run linting
 echo "📋 Linting code..."
-pnpm run lint --filter=!project-tracker || {
+pnpm run lint "--filter=!@intelliflow/project-tracker" || {
   echo "❌ Linting failed. Please fix errors before committing."
   exit 1
 }

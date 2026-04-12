@@ -103,27 +103,24 @@ export function createLogger(config: LoggerConfig): pino.Logger {
   };
 
   // Pretty printing for development
-  const transport = config.prettyPrint || (isDevelopment && !process.env.CI)
-    ? {
-        target: 'pino-pretty',
-        options: {
-          colorize: true,
-          translateTime: 'SYS:standard',
-          ignore: 'pid,hostname',
-          singleLine: false,
-          messageFormat: '{msg} [{traceId}]',
-        },
-      }
-    : undefined;
+  const transport =
+    config.prettyPrint || (isDevelopment && !process.env.CI)
+      ? {
+          target: 'pino-pretty',
+          options: {
+            colorize: true,
+            translateTime: 'SYS:standard',
+            ignore: 'pid,hostname',
+            singleLine: false,
+            messageFormat: '{msg} [{traceId}]',
+          },
+        }
+      : undefined;
 
-  return pino(
-    options,
-    transport
-      ? pino.transport(transport)
-      : config.destination
-      ? pino.destination(config.destination)
-      : undefined
-  );
+  const destinationOrUndefined = config.destination
+    ? pino.destination(config.destination)
+    : undefined;
+  return pino(options, transport ? pino.transport(transport) : destinationOrUndefined);
 }
 
 /**
@@ -145,10 +142,8 @@ export function initLogger(config: LoggerConfig): void {
  * Get the default logger instance
  */
 export function getLogger(): pino.Logger {
-  if (!defaultLogger) {
-    // Create a fallback logger if not initialized
-    defaultLogger = createLogger({ name: 'default' });
-  }
+  // Create a fallback logger if not initialized
+  defaultLogger ??= createLogger({ name: 'default' });
   return defaultLogger;
 }
 
@@ -254,7 +249,10 @@ export const logger = {
  *
  * Creates a child logger with request context
  */
-export function createRequestLogger(requestId: string, additionalContext?: LogContext): pino.Logger {
+export function createRequestLogger(
+  requestId: string,
+  additionalContext?: LogContext
+): pino.Logger {
   return createChildLogger({
     requestId,
     correlationId: requestId,
@@ -290,7 +288,8 @@ export function logApiRequest(
   duration: number,
   context?: LogContext
 ): void {
-  const level = statusCode >= 500 ? 'error' : statusCode >= 400 ? 'warn' : 'info';
+  const warnOrInfo = statusCode >= 400 ? 'warn' : 'info';
+  const level = statusCode >= 500 ? 'error' : warnOrInfo;
 
   getLogger()[level](
     {

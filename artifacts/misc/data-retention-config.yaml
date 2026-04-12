@@ -1,0 +1,313 @@
+# =============================================================================
+# Data Retention Configuration for Conversation Records (IFC-148)
+#
+# This configuration defines retention policies for AI conversation data
+# in compliance with GDPR and internal data governance requirements.
+#
+# Related:
+# - docs/compliance/retention-policy.md
+# - infra/supabase/migrations/20260104000000_conversation_rls.sql
+# - apps/api/src/workflow/dsar-workflow.ts
+# =============================================================================
+
+version: "1.0"
+effective_date: "2026-01-04"
+reviewed_by: "Data Protection Officer"
+
+# =============================================================================
+# CONVERSATION RECORDS RETENTION
+# =============================================================================
+conversation_records:
+  # Default retention for different conversation states
+  retention_by_status:
+    active:
+      retention_days: null  # No expiration while conversation is active
+      description: "Active conversations are not subject to automatic deletion"
+
+    paused:
+      retention_days: 30  # 30 days after last activity
+      description: "Paused conversations expire if not resumed within 30 days"
+
+    ended:
+      retention_days: 365  # 1 year after conversation ended
+      description: "Completed conversations retained for 1 year for analytics and support"
+
+    archived:
+      retention_days: 2555  # 7 years for compliance
+      description: "Archived conversations retained for legal and compliance purposes"
+
+    deleted:
+      retention_days: 30  # Soft delete, hard delete after 30 days
+      description: "Soft-deleted records purged after 30 day recovery window"
+
+  # GDPR data classification
+  gdpr_classification:
+    data_category: "PERSONAL_DATA"
+    special_category: false
+    lawful_basis: "LEGITIMATE_INTEREST"
+    legitimate_interest: "Providing AI assistant services and improving user experience"
+    data_controller: "IntelliFlow CRM"
+    processing_purpose:
+      - "AI-powered customer support"
+      - "Service improvement and analytics"
+      - "Audit and compliance logging"
+      - "User feedback collection"
+
+  # Fields containing PII
+  pii_fields:
+    - user_name
+    - ip_address
+    - user_agent
+    - feedback_text
+    - summary  # May contain user-specific information
+
+  # Anonymization settings for DSAR erasure
+  anonymization:
+    enabled: true
+    anonymized_value: "ANONYMIZED"
+    redacted_value: "[REDACTED BY DSAR REQUEST]"
+    fields_to_anonymize:
+      - user_name
+      - ip_address
+      - user_agent
+      - summary
+      - feedback_text
+      - title  # If contains user info
+    fields_to_null:
+      - embedding  # Vector embedding may encode PII
+
+# =============================================================================
+# MESSAGE RECORDS RETENTION
+# =============================================================================
+message_records:
+  # Messages inherit retention from parent conversation
+  cascade_deletion: true
+  cascade_anonymization: true
+
+  # Retention settings
+  retention:
+    description: "Messages are deleted/archived with their parent conversation"
+    independent_retention: false
+
+  # Special handling for different message roles
+  role_specific_handling:
+    user:
+      # User messages contain PII and must be anonymized on DSAR erasure
+      anonymize_on_erasure: true
+      redact_content: true
+      clear_attachments: true
+      clear_embedding: true
+
+    assistant:
+      # Assistant messages may reference user info
+      anonymize_on_erasure: false  # Keep for context
+      redact_references: true  # Remove user name references
+
+    system:
+      # System messages are operational
+      anonymize_on_erasure: false
+      preserve_for_audit: true
+
+    tool:
+      # Tool messages may contain action results
+      anonymize_on_erasure: false
+      preserve_for_audit: true
+
+  # PII fields in messages
+  pii_fields:
+    - content  # User messages contain PII
+    - edited_content
+    - attachments  # May contain user documents
+
+# =============================================================================
+# TOOL CALL RECORDS RETENTION
+# =============================================================================
+tool_call_records:
+  # Tool calls follow conversation retention
+  cascade_deletion: true
+  cascade_anonymization: true
+
+  # Special retention for audit purposes
+  audit_retention:
+    enabled: true
+    retention_days: 2555  # 7 years for compliance
+    applies_to:
+      - tool_calls_affecting_data  # CREATE, UPDATE, DELETE operations
+      - tool_calls_with_approval   # Human-approved actions
+      - failed_tool_calls          # For debugging and incident response
+
+  # Rollback data retention (for undo functionality)
+  rollback_data:
+    retention_days: 90  # Keep rollback data for 90 days
+    auto_clear_after_rollback: false  # Keep for audit even after rollback
+    auto_clear_on_success: false  # Keep successful rollback data for audit
+
+  # Fields to anonymize
+  anonymization:
+    clear_input_parameters: true
+    clear_output_result: true
+    preserve_audit_fields: true  # Keep affected_entity, change_description (redacted)
+    redacted_json: '{"redacted": true}'
+
+  # Fields containing potentially sensitive data
+  sensitive_fields:
+    - input_parameters  # May contain user queries
+    - output_result     # May contain user data
+    - rollback_data     # Contains previous state
+    - change_description
+
+# =============================================================================
+# AUTOMATED CLEANUP SCHEDULE
+# =============================================================================
+cleanup_schedule:
+  enabled: true
+  timezone: "UTC"
+
+  jobs:
+    # Archive old ended conversations
+    archive_ended:
+      schedule: "0 2 * * *"  # Daily at 2 AM UTC
+      action: "archive"
+      criteria:
+        status: "ENDED"
+        ended_before_days: 90
+      target_status: "ARCHIVED"
+      log_action: true
+
+    # Set retention expiry on archived conversations
+    set_retention_expiry:
+      schedule: "0 2 * * *"  # Daily at 2 AM UTC
+      action: "set_expiry"
+      criteria:
+        status: "ARCHIVED"
+        retention_expires_at: null
+      expiry_days: 2555  # 7 years from archival
+      log_action: true
+
+    # Delete expired archived conversations
+    delete_expired:
+      schedule: "0 3 * * *"  # Daily at 3 AM UTC
+      action: "hard_delete"
+      criteria:
+        retention_expires_at: "< NOW()"
+        status: ["ENDED", "ARCHIVED", "DELETED"]
+      log_action: true
+      vacuum_after: true
+
+    # Clear paused conversations
+    clear_stale_paused:
+      schedule: "0 4 * * *"  # Daily at 4 AM UTC
+      action: "soft_delete"
+      criteria:
+        status: "PAUSED"
+        last_activity_before_days: 30
+      log_action: true
+
+# =============================================================================
+# DSAR (DATA SUBJECT ACCESS REQUEST) INTEGRATION
+# =============================================================================
+dsar:
+  # Include in access requests (Article 15)
+  include_in_access_request: true
+  access_request_format: "json"
+  include_messages: true
+  include_tool_calls: true
+  include_metadata: true
+
+  # Include in data portability (Article 20)
+  include_in_portability: true
+  portability_format: "json"
+  machine_readable: true
+
+  # Anonymize on erasure request (Article 17)
+  anonymize_on_erasure: true
+  check_legal_holds: true
+  log_anonymization: true
+
+  # Tables to include in DSAR processing
+  tables:
+    - conversation_records
+    - message_records
+    - tool_call_records
+
+  # Export function (SQL)
+  export_function: "export_user_conversations"
+
+  # Anonymization function (SQL)
+  anonymization_function: "anonymize_conversation_data"
+
+# =============================================================================
+# LEGAL HOLD EXCEPTIONS
+# =============================================================================
+legal_hold:
+  enabled: true
+  override_retention: true
+  override_deletion: true
+  override_anonymization: true
+
+  # Fields to check for legal holds
+  check_fields:
+    - user_id        # User under investigation
+    - context_id     # Related case/ticket
+    - tenant_id      # Entire tenant hold
+
+  # Logging requirements
+  logging:
+    log_hold_checks: true
+    log_hold_blocks: true
+    notify_dpo_on_block: true
+
+# =============================================================================
+# AUDIT LOGGING
+# =============================================================================
+audit:
+  # Log all retention actions
+  log_retention_actions: true
+  log_anonymization_actions: true
+  log_deletion_actions: true
+
+  # Audit log retention (separate from data retention)
+  audit_log_retention_days: 2555  # 7 years
+
+  # Fields to include in audit logs
+  log_fields:
+    - action_type
+    - affected_records_count
+    - affected_table
+    - executed_at
+    - executed_by
+    - criteria_used
+    - legal_hold_checked
+
+# =============================================================================
+# MONITORING & ALERTS
+# =============================================================================
+monitoring:
+  # Alert thresholds
+  alerts:
+    # Alert if cleanup job fails
+    cleanup_job_failure:
+      enabled: true
+      notify: ["dpo@intelliflow.com", "engineering@intelliflow.com"]
+
+    # Alert if retention queue grows too large
+    pending_deletions_threshold:
+      enabled: true
+      threshold: 10000
+      notify: ["engineering@intelliflow.com"]
+
+    # Alert on DSAR request volume
+    dsar_volume_threshold:
+      enabled: true
+      threshold_per_day: 100
+      notify: ["dpo@intelliflow.com"]
+
+  # Metrics to track
+  metrics:
+    - conversations_archived_daily
+    - conversations_deleted_daily
+    - messages_deleted_daily
+    - tool_calls_deleted_daily
+    - dsar_requests_processed
+    - average_conversation_age
+    - storage_reclaimed_mb

@@ -1,0 +1,28 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/git-destructive-guard.mjs",
+            "timeout": 30,
+            "statusMessage": "Checking git safety..."
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/ralph-stop-hook.sh",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}

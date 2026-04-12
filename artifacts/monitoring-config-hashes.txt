@@ -1,0 +1,18 @@
+# IntelliFlow CRM - Monitoring Config Hashes
+# Generated: 2025-12-19T23:39:53Z
+# Task: EP-001-AI
+
+## Core Configs
+cc852d8c34950a38dea93352a488df07fcbbf399ff2b6978426fa09579d83cd4 *infra/monitoring/docker-compose.monitoring.yml
+138a1fd3d085da9c4d6ccaab271c4b5509e8b0b07576cbe376569b58fa5df4e1 *infra/monitoring/prometheus.yml
+e4f4e1732ed9e5ac2afca15317f03b47999c6f8bf59c33ed490b8a30b326a31b *infra/monitoring/loki-config.yml
+48a5698c3da8b2fe4188accacce30d6b3ba4887823503e3625c3a257518051b2 *infra/monitoring/tempo-config.yml
+3e38ceb4964f64a050ca01a2b449cd468ee7b84d6a28b379b12f9802e1f8caa8 *infra/monitoring/otel-collector.yaml
+
+## Grafana Provisioning
+be9761d326fd4429d946cedd16381327048f86195e037a9b5000c4dcb86153ce *infra/monitoring/grafana/provisioning/datasources/datasources.yml
+32e72c9173092012dff69ed36f422f0477457cf6fd3bc30a474edd98e0a58215 *infra/monitoring/grafana/provisioning/dashboards/dashboards.yml
+
+## Additional Configs
+75f9230654f573cc99503e615ca8eb9649c948ab19f188ceafd93c60ff5116b9 *infra/monitoring/otel-config.yaml
+35afce1e2089cd399d7b0561768c8254423f24ef45b93b933e44e664c8921589 *infra/monitoring/health-checks.yaml

@@ -1,0 +1,16 @@
+{
+  "analysisType": "Full",
+  "totalPackages": 26,
+  "duration": {
+    "coverage": 1.3504014,
+    "dependencies": 20.3215922,
+    "lint": 0.8668604,
+    "architecture": 2.2343056,
+    "circular": 0.3060783,
+    "typecheck": 2.0017047,
+    "complexity": 136.8267711,
+    "deadcode": 3.3744265
+  },
+  "timestamp": "2026-01-23T23:15:45.8010444+00:00",
+  "reportPath": "artifacts/reports/code-review-2026-01-23-231257"
+}

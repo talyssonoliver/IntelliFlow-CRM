@@ -1,0 +1,5 @@
+Integration,Endpoint,Avg Response (ms),P95 Response (ms),Success Rate,Test Date
+codex,completion,1200,2500,99.5%,2024-12-14
+codex,analysis,850,1800,99.8%,2024-12-14
+jules,task,950,2200,99.2%,2024-12-14
+jules,review,1100,2400,99.6%,2024-12-14

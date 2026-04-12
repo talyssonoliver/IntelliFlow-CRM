@@ -1,0 +1,102 @@
+{
+  "timestamp": "2026-03-18T01:30:09.451Z",
+  "knip": {
+    "success": true,
+    "data": {
+      "files": [],
+      "duplicates": [],
+      "dependencies": [
+        "@langchain/core",
+        "zod"
+      ],
+      "devDependencies": [
+        "tailwindcss",
+        "vitest"
+      ],
+      "unlisted": [],
+      "exports": [
+        {
+          "file": "packages/application/src/usecases/scheduling/ScheduleAppointment.ts",
+          "exports": [
+            "ScheduleAppointmentUseCase"
+          ]
+        },
+        {
+          "file": "packages/application/src/usecases/scheduling/RescheduleAppointment.ts",
+          "exports": [
+            "RescheduleAppointmentUseCase"
+          ]
+        },
+        {
+          "file": "packages/application/src/usecases/scheduling/CancelAppointment.ts",
+          "exports": [
+            "CancelAppointmentUseCase"
+          ]
+        },
+        {
+          "file": "packages/application/src/usecases/scheduling/CompleteAppointment.ts",
+          "exports": [
+            "CompleteAppointmentUseCase"
+          ]
+        },
+        {
+          "file": "packages/application/src/usecases/scheduling/CheckConflicts.ts",
+          "exports": [
+            "CheckConflictsUseCase"
+          ]
+        }
+      ],
+      "types": [
+        {
+          "file": "apps/web/src/hooks/useCalendarVisibility.ts",
+          "types": [
+            "CustomCalendarEntry"
+          ]
+        },
+        {
+          "file": "apps/web/src/components/sidebar/configs/EmailSidebarContent.tsx",
+          "types": [
+            "EmailLabelId"
+          ]
+        },
+        {
+          "file": "apps/api/src/modules/calendar/calendar-webhook.router.ts",
+          "types": [
+            "CalendarWebhooksRouter"
+          ]
+        }
+      ]
+    },
+    "summary": {
+      "unusedFiles": 0,
+      "unusedDeps": 4,
+      "unusedExports": 5,
+      "unusedTypes": 3
+    }
+  },
+  "depcheck": {
+    "success": true,
+    "data": {
+      "dependencies": [],
+      "devDependencies": [
+        "@typescript-eslint/eslint-plugin",
+        "@typescript-eslint/parser",
+        "@vitest/coverage-istanbul",
+        "@vitest/coverage-v8",
+        "axe-core",
+        "cspell",
+        "dependency-cruiser",
+        "dotenv-cli",
+        "license-checker",
+        "madge",
+        "markdownlint-cli"
+      ],
+      "missing": {}
+    },
+    "summary": {
+      "unusedDeps": 0,
+      "unusedDevDeps": 11,
+      "missingDeps": 0
+    }
+  }
+}

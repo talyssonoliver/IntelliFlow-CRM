@@ -11,8 +11,9 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "incremental": true,
+    "types": ["node", "vitest/globals", "@testing-library/jest-dom"],
     "plugins": [
       {
         "name": "next"
@@ -21,11 +22,20 @@
     "paths": {
       "@/*": ["./src/*"],
       "@intelliflow/api-client": ["../../packages/api-client/src"],
+      "@intelliflow/api": ["../../apps/api/src"],
+      "@intelliflow/api/context": ["../../apps/api/src/context.ts"],
+      "@intelliflow/api/router": ["../../apps/api/src/router.ts"],
       "@intelliflow/ui": ["../../packages/ui/src"],
       "@intelliflow/validators": ["../../packages/validators/src"]
-    },
-    "baseUrl": "."
+    }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts",
+    ".next/dev/dev/types/**/*.ts"
+  ],
   "exclude": ["node_modules"]
 }

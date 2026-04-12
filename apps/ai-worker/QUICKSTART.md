@@ -35,6 +35,15 @@ OPENAI_API_KEY=sk-your-key-here
 OPENAI_MODEL=gpt-4-turbo-preview
 ```
 
+### Option A2: Using OpenAI-Compatible Endpoint (vLLM-ready)
+
+```bash
+AI_PROVIDER=openai
+OPENAI_BASE_URL=http://localhost:8000/v1
+OPENAI_MODEL=Qwen/Qwen2.5-7B-Instruct
+# OPENAI_API_KEY optional for local OpenAI-compatible runtimes
+```
+
 ### Option B: Using Ollama (Recommended for Development)
 
 1. Install Ollama from https://ollama.ai
@@ -63,6 +72,7 @@ pnpm --filter @intelliflow/ai-worker dev
 ```
 
 You should see:
+
 ```
 🤖 IntelliFlow AI Worker starting...
 AI Worker configuration loaded
@@ -96,7 +106,7 @@ const score = await leadScoringChain.scoreLead({
   firstName: 'John',
   company: 'Acme Corp',
   title: 'VP Sales',
-  source: 'WEBSITE'
+  source: 'WEBSITE',
 });
 
 console.log(`Score: ${score.score}/100`);
@@ -146,25 +156,28 @@ pnpm lint
 
 Key environment variables:
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `AI_PROVIDER` | `openai` or `ollama` | `openai` |
-| `OPENAI_API_KEY` | OpenAI API key | - |
-| `OPENAI_MODEL` | Model name | `gpt-4-turbo-preview` |
-| `COST_WARNING_THRESHOLD` | Warning threshold ($) | `10.0` |
-| `COST_DAILY_LIMIT` | Daily limit ($) | - |
-| `AI_CACHE_ENABLED` | Enable caching | `true` |
-| `LOG_LEVEL` | Log level | `info` |
+| Variable                 | Description           | Default               |
+| ------------------------ | --------------------- | --------------------- |
+| `AI_PROVIDER`            | `openai` or `ollama`  | `openai`              |
+| `OPENAI_API_KEY`         | OpenAI API key        | -                     |
+| `OPENAI_BASE_URL`        | OpenAI-compatible URL | -                     |
+| `OPENAI_MODEL`           | Model name            | `gpt-4-turbo-preview` |
+| `COST_WARNING_THRESHOLD` | Warning threshold ($) | `10.0`                |
+| `COST_DAILY_LIMIT`       | Daily limit ($)       | -                     |
+| `AI_CACHE_ENABLED`       | Enable caching        | `true`                |
+| `LOG_LEVEL`              | Log level             | `info`                |
 
 ## Troubleshooting
 
 ### "OpenAI API key not found"
 
-Make sure you've set `OPENAI_API_KEY` in `.env` or as an environment variable.
+Set `OPENAI_API_KEY` for OpenAI cloud, or set `OPENAI_BASE_URL` for a local
+OpenAI-compatible runtime.
 
 ### "Connection refused" (Ollama)
 
 Make sure Ollama is running:
+
 ```bash
 ollama serve
 ```
@@ -172,6 +185,7 @@ ollama serve
 ### High costs
 
 Set a daily limit:
+
 ```bash
 COST_DAILY_LIMIT=25.0
 ```
@@ -179,11 +193,13 @@ COST_DAILY_LIMIT=25.0
 ### Slow performance
 
 Try a faster model:
+
 ```bash
 OPENAI_MODEL=gpt-3.5-turbo
 ```
 
 Or enable caching:
+
 ```bash
 AI_CACHE_ENABLED=true
 ```
@@ -198,6 +214,7 @@ AI_CACHE_ENABLED=true
 ## Support
 
 For issues or questions:
+
 1. Check the troubleshooting section above
 2. Review the full README.md
 3. Check the CLAUDE.md for architecture guidance

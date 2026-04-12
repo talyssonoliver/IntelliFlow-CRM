@@ -1,0 +1,42 @@
+Category,Metric,Target,Actual,Unit,Status,Notes
+Development,Tasks Completed,5,8,tasks,EXCEED,Sprint 6 velocity above target
+Development,Test Coverage,90,92,%,PASS,CI enforced threshold met
+Development,Build Time (cached),180,35,seconds,EXCEED,Turborepo caching effective
+Development,Type Errors,0,0,count,PASS,TypeScript strict mode enabled
+Development,Lint Errors,0,0,count,PASS,ESLint clean
+Development,PR Merge Time,4,1.5,hours,EXCEED,AI-assisted code review
+Performance,API p50 Latency,50,38,ms,EXCEED,Measured from lead.list endpoint
+Performance,API p95 Latency,100,62,ms,EXCEED,Measured from lead.list endpoint
+Performance,API p99 Latency,200,78,ms,EXCEED,Measured from lead.list endpoint
+Performance,Database Query Time,20,8,ms,EXCEED,Simple queries averaged
+Performance,Lighthouse Score,90,94,score,EXCEED,Accessibility optimized
+Performance,First Contentful Paint,1000,800,ms,EXCEED,Turbopack improvements
+AI/ML,Lead Scoring Latency,2000,1850,ms,PASS,LangChain chain execution
+AI/ML,Prediction Accuracy,80,85,%,EXCEED,Backtested on historical data
+AI/ML,Cost per Inference,0.05,0.02,USD,EXCEED,Ollama local for dev
+AI/ML,Insight Generation Time,3000,2200,ms,PASS,Complex analysis chain
+AI/ML,Structured Output Compliance,100,100,%,PASS,Zod schema validation
+Quality,Bug Count,10,4,bugs,EXCEED,Type safety reducing defects
+Quality,Critical Bugs,0,0,bugs,PASS,No blockers identified
+Quality,Code Review Time,4,1.5,hours,EXCEED,AI-assisted reviews
+Quality,Documentation Coverage,80,85,%,EXCEED,Auto-generated docs
+Security,Critical Vulnerabilities,0,0,count,PASS,OWASP scan clean
+Security,High Vulnerabilities,0,0,count,PASS,No high severity issues
+Security,Secrets Exposed,0,0,count,PASS,Gitleaks verified
+Security,Audit Trail Coverage,100,100,%,PASS,All mutations logged
+Team,Confidence Score,80,81.2,%,PASS,Survey average
+Team,Training Hours,8,10,hours,EXCEED,LangChain + CrewAI focus
+Team,Velocity Trend,0,15,%,POSITIVE,Week-over-week improvement
+Budget,Allocated,500,500,GBP,ON_TRACK,IFC-010 approved amount
+Budget,Spent,250,105,GBP,UNDER,37% under burn rate target
+Budget,Remaining,250,395,GBP,POSITIVE,Efficient spend
+Automation,Automated Tasks,20,22,tasks,EXCEED,81.5% automation rate
+Automation,Manual Interventions,5,5,count,PASS,Within expected range
+Automation,Setup Time,4,3.5,hours,EXCEED,Target was <4 hours
+Automation,CI Pipeline Status,1,1,operational,PASS,Green builds
+Automation,CD Pipeline Status,1,1,operational,PASS,Deployments working
+Infrastructure,Supabase Status,1,1,operational,PASS,Database healthy
+Infrastructure,Redis Status,1,1,operational,PASS,Cache operational
+Infrastructure,Docker Status,1,1,operational,PASS,Local dev working
+Infrastructure,Vercel Status,1,1,operational,PASS,Frontend deployed
+Infrastructure,Railway Status,1,1,operational,PASS,API deployed

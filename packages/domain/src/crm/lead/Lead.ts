@@ -3,6 +3,7 @@ import { Result, DomainError } from '../../shared/Result';
 import { LeadId } from './LeadId';
 import { Email } from './Email';
 import { LeadScore } from './LeadScore';
+import { PhoneNumber } from '../../shared/PhoneNumber';
 import {
   LeadCreatedEvent,
   LeadScoredEvent,
@@ -11,22 +12,30 @@ import {
   LeadConvertedEvent,
 } from './LeadEvents';
 
-export type LeadStatus =
-  | 'NEW'
-  | 'CONTACTED'
-  | 'QUALIFIED'
-  | 'UNQUALIFIED'
-  | 'CONVERTED'
-  | 'LOST';
+// Canonical enum values - single source of truth
+export const LEAD_STATUSES = [
+  'NEW',
+  'CONTACTED',
+  'QUALIFIED',
+  'NEGOTIATING',
+  'UNQUALIFIED',
+  'CONVERTED',
+  'LOST',
+] as const;
 
-export type LeadSource =
-  | 'WEBSITE'
-  | 'REFERRAL'
-  | 'SOCIAL'
-  | 'EMAIL'
-  | 'COLD_CALL'
-  | 'EVENT'
-  | 'OTHER';
+export const LEAD_SOURCES = [
+  'WEBSITE',
+  'REFERRAL',
+  'SOCIAL',
+  'EMAIL',
+  'COLD_CALL',
+  'EVENT',
+  'OTHER',
+] as const;
+
+// Derive types from const arrays
+export type LeadStatus = (typeof LEAD_STATUSES)[number];
+export type LeadSource = (typeof LEAD_SOURCES)[number];
 
 export class LeadAlreadyConvertedError extends DomainError {
   readonly code = 'LEAD_ALREADY_CONVERTED';
@@ -48,13 +57,21 @@ interface LeadProps {
   lastName?: string;
   company?: string;
   title?: string;
-  phone?: string;
+  phone?: PhoneNumber;
   source: LeadSource;
   status: LeadStatus;
   score: LeadScore;
   ownerId: string;
+  tenantId: string;
   createdAt: Date;
   updatedAt: Date;
+  // Lead 360 fields
+  location?: string;
+  website?: string;
+  avatarUrl?: string;
+  lastContactedAt?: Date;
+  estimatedValue?: number; // In cents
+  tags?: string[];
 }
 
 export interface CreateLeadProps {
@@ -63,9 +80,17 @@ export interface CreateLeadProps {
   lastName?: string;
   company?: string;
   title?: string;
-  phone?: string;
+  phone?: string | PhoneNumber; // Accept both for flexibility
   source?: LeadSource;
   ownerId: string;
+  tenantId: string;
+  // Lead 360 fields
+  location?: string;
+  website?: string;
+  avatarUrl?: string;
+  lastContactedAt?: Date;
+  estimatedValue?: number; // In cents
+  tags?: string[];
 }
 
 /**
@@ -73,7 +98,7 @@ export interface CreateLeadProps {
  * Represents a potential customer in the CRM
  */
 export class Lead extends AggregateRoot<LeadId> {
-  private props: LeadProps;
+  private readonly props: LeadProps;
 
   private constructor(id: LeadId, props: LeadProps) {
     super(id);
@@ -94,9 +119,7 @@ export class Lead extends AggregateRoot<LeadId> {
   }
 
   get fullName(): string {
-    return [this.props.firstName, this.props.lastName]
-      .filter(Boolean)
-      .join(' ');
+    return [this.props.firstName, this.props.lastName].filter(Boolean).join(' ');
   }
 
   get company(): string | undefined {
@@ -107,7 +130,7 @@ export class Lead extends AggregateRoot<LeadId> {
     return this.props.title;
   }
 
-  get phone(): string | undefined {
+  get phone(): PhoneNumber | undefined {
     return this.props.phone;
   }
 
@@ -127,12 +150,41 @@ export class Lead extends AggregateRoot<LeadId> {
     return this.props.ownerId;
   }
 
+  get tenantId(): string {
+    return this.props.tenantId;
+  }
+
   get createdAt(): Date {
     return this.props.createdAt;
   }
 
   get updatedAt(): Date {
     return this.props.updatedAt;
+  }
+
+  // Lead 360 fields
+  get location(): string | undefined {
+    return this.props.location;
+  }
+
+  get website(): string | undefined {
+    return this.props.website;
+  }
+
+  get avatarUrl(): string | undefined {
+    return this.props.avatarUrl;
+  }
+
+  get lastContactedAt(): Date | undefined {
+    return this.props.lastContactedAt;
+  }
+
+  get estimatedValue(): number | undefined {
+    return this.props.estimatedValue;
+  }
+
+  get tags(): string[] | undefined {
+    return this.props.tags;
   }
 
   get isConverted(): boolean {
@@ -150,6 +202,21 @@ export class Lead extends AggregateRoot<LeadId> {
       return Result.fail(emailResult.error);
     }
 
+    // Convert phone to PhoneNumber if string provided
+    let phoneNumber: PhoneNumber | undefined = undefined;
+    if (props.phone) {
+      if (typeof props.phone === 'string') {
+        const phoneResult = PhoneNumber.create(props.phone);
+        if (phoneResult.isFailure) {
+          return Result.fail(phoneResult.error);
+        }
+        phoneNumber = phoneResult.value;
+      } else {
+        // Already a PhoneNumber instance
+        phoneNumber = props.phone;
+      }
+    }
+
     const now = new Date();
     const leadId = LeadId.generate();
 
@@ -159,23 +226,24 @@ export class Lead extends AggregateRoot<LeadId> {
       lastName: props.lastName,
       company: props.company,
       title: props.title,
-      phone: props.phone,
+      phone: phoneNumber,
       source: props.source ?? 'WEBSITE',
       status: 'NEW',
       score: LeadScore.zero(),
       ownerId: props.ownerId,
+      tenantId: props.tenantId,
       createdAt: now,
       updatedAt: now,
+      // Lead 360 fields
+      location: props.location,
+      website: props.website,
+      avatarUrl: props.avatarUrl,
+      lastContactedAt: props.lastContactedAt,
+      estimatedValue: props.estimatedValue,
+      tags: props.tags,
     });
 
-    lead.addDomainEvent(
-      new LeadCreatedEvent(
-        leadId,
-        emailResult.value,
-        lead.source,
-        lead.ownerId
-      )
-    );
+    lead.addDomainEvent(new LeadCreatedEvent(leadId, emailResult.value, lead.source, lead.ownerId));
 
     return Result.ok(lead);
   }
@@ -219,9 +287,7 @@ export class Lead extends AggregateRoot<LeadId> {
     this.props.status = newStatus;
     this.props.updatedAt = new Date();
 
-    this.addDomainEvent(
-      new LeadStatusChangedEvent(this.id, previousStatus, newStatus, changedBy)
-    );
+    this.addDomainEvent(new LeadStatusChangedEvent(this.id, previousStatus, newStatus, changedBy));
 
     return Result.ok(undefined);
   }
@@ -243,7 +309,11 @@ export class Lead extends AggregateRoot<LeadId> {
     return Result.ok(undefined);
   }
 
-  convert(contactId: string, accountId: string | null, convertedBy: string): Result<void, LeadAlreadyConvertedError> {
+  convert(
+    contactId: string | null,
+    accountId: string | null,
+    convertedBy: string
+  ): Result<void, LeadAlreadyConvertedError> {
     if (this.isConverted) {
       return Result.fail(new LeadAlreadyConvertedError());
     }
@@ -251,15 +321,35 @@ export class Lead extends AggregateRoot<LeadId> {
     this.props.status = 'CONVERTED';
     this.props.updatedAt = new Date();
 
-    this.addDomainEvent(
-      new LeadConvertedEvent(this.id, contactId, accountId, convertedBy)
-    );
+    this.addDomainEvent(new LeadConvertedEvent(this.id, contactId, accountId, convertedBy));
 
     return Result.ok(undefined);
   }
 
-  updateContactInfo(props: Partial<Pick<LeadProps, 'firstName' | 'lastName' | 'company' | 'title' | 'phone'>>): void {
-    Object.assign(this.props, props);
+  updateContactInfo(
+    props: Partial<
+      Pick<
+        LeadProps,
+        | 'firstName'
+        | 'lastName'
+        | 'company'
+        | 'title'
+        | 'phone'
+        | 'location'
+        | 'website'
+        | 'avatarUrl'
+        | 'lastContactedAt'
+        | 'estimatedValue'
+        | 'tags'
+      >
+    >
+  ): void {
+    // Only apply fields that are explicitly provided (not undefined)
+    // to prevent partial updates from clearing existing data
+    Object.assign(
+      this.props,
+      Object.fromEntries(Object.entries(props).filter(([, v]) => v !== undefined))
+    );
     this.props.updatedAt = new Date();
   }
 

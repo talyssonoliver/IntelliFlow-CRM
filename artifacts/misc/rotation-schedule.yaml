@@ -1,0 +1,119 @@
+# Secret Rotation Schedule
+# Task: IFC-121 - Secret Rotation & Dependency Vulnerability Updates
+# Created: 2025-12-29
+
+apiVersion: security.intelliflow.com/v1
+kind: RotationSchedule
+metadata:
+  name: intelliflow-secret-rotation
+  version: 1.0.0
+
+# Rotation policies by secret type
+policies:
+  # Database credentials - rotate every 30 days
+  database:
+    secrets:
+      - DATABASE_URL
+      - DIRECT_URL
+      - POSTGRES_PASSWORD
+    rotation_interval_days: 90
+    pre_rotation_notification_days: 30
+    method: rolling_update
+    validation:
+      - connection_test
+      - query_test
+
+  # API keys - rotate every 90 days
+  api_keys:
+    secrets:
+      - OPENAI_API_KEY
+      - ANTHROPIC_API_KEY
+      - STRIPE_SECRET_KEY
+      - STRIPE_WEBHOOK_SECRET
+      - SENDGRID_API_KEY
+      - SLACK_BOT_TOKEN
+    rotation_interval_days: 180
+    pre_rotation_notification_days: 90
+    method: dual_key_rotation
+    validation:
+      - api_health_check
+
+  # JWT signing keys - rotate every 7 days
+  jwt_keys:
+    secrets:
+      - JWT_SECRET
+      - REFRESH_TOKEN_SECRET
+    rotation_interval_days: 30
+    pre_rotation_notification_days: 7
+    method: key_versioning
+    validation:
+      - token_generation_test
+      - token_verification_test
+
+  # Encryption keys - rotate every 365 days (with re-encryption)
+  encryption_keys:
+    secrets:
+      - MASTER_ENCRYPTION_KEY
+      - DATA_ENCRYPTION_KEY
+    rotation_interval_days: 420
+    pre_rotation_notification_days: 45
+    method: envelope_encryption_rotation
+    validation:
+      - encryption_test
+      - decryption_test
+    post_rotation:
+      - re_encrypt_sensitive_data
+
+  # OAuth tokens - rotate on expiry
+  oauth_tokens:
+    secrets:
+      - GOOGLE_CLIENT_SECRET
+      - MICROSOFT_CLIENT_SECRET
+      - GITHUB_CLIENT_SECRET
+    rotation_interval_days: 180
+    pre_rotation_notification_days: 30
+    method: oauth_refresh
+    validation:
+      - oauth_flow_test
+
+# Automation configuration
+automation:
+  enabled: true
+  scheduler: github_actions
+  workflow_file: .github/workflows/secret-rotation.yml
+
+  # Notification channels
+  notifications:
+    slack:
+      channel: "#security-alerts"
+      on_rotation_start: true
+      on_rotation_complete: true
+      on_rotation_failure: true
+    email:
+      recipients:
+        - security@intelliflow.com
+        - devops@intelliflow.com
+      on_rotation_failure: true
+
+  # Failure handling
+  on_failure:
+    retry_count: 3
+    retry_delay_minutes: 15
+    escalation:
+      - pagerduty_alert
+      - manual_intervention_required
+
+# Vault integration
+vault:
+  enabled: true
+  address: ${VAULT_ADDR}
+  auth_method: kubernetes
+  secrets_engine: kv-v2
+  mount_path: secret/intelliflow
+
+# Audit logging
+audit:
+  enabled: true
+  log_destination: audit_logs
+  include_metadata: true
+  retention_days: 365

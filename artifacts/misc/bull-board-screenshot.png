@@ -1,0 +1,86 @@
+PLACEHOLDER: Bull Board Dashboard Screenshot
+
+This file represents what the Bull Board dashboard would show when running.
+
+Dashboard URL: http://localhost:3000/admin/queues
+
+=== VISUAL LAYOUT ===
+
++----------------------------------------------------------+
+|   IntelliFlow CRM - Job Queue Dashboard                  |
++----------------------------------------------------------+
+|              |                                            |
+|   QUEUES     |  Queue: intelliflow:ai-scoring            |
+|   --------   |                                            |
+|              |  +--------+ +--------+ +--------+ +------+ |
+|   > AI       |  | Active | |Waiting | |Complete| |Failed| |
+|     Scoring  |  |   5    | |   12   | | 1,234  | |   8  | |
+|              |  +--------+ +--------+ +--------+ +------+ |
+|   > Email    |                                            |
+|     Notify   |  Recent Jobs                               |
+|              |  +----------------------------------------+|
+|   > Webhook  |  | ID    | Status | Progress | Created   ||
+|     Delivery |  |-------+--------+----------+-----------||
+|              |  | job-42| active | 75%      | 2 min ago ||
+|   > Data     |  | job-41| done   | 100%     | 5 min ago ||
+|     Sync     |  | job-40| done   | 100%     | 8 min ago ||
+|              |  | job-39| failed | -        | 12 min ago||
+|              |  +----------------------------------------+|
+|              |                                            |
+|              |  [Pause Queue] [Resume] [Clean Jobs]       |
++----------------------------------------------------------+
+
+=== FEATURES SHOWN ===
+
+1. Queue List Sidebar
+   - Shows all registered queues
+   - Visual indicator for active/paused state
+   - Click to select and view queue details
+
+2. Queue Summary Cards
+   - Active: Jobs currently being processed
+   - Waiting: Jobs in queue waiting for processing
+   - Completed: Successfully processed jobs
+   - Failed: Jobs that exhausted retries
+
+3. Jobs Table
+   - Paginated list of all jobs
+   - Columns: ID, Status, Progress, Created, Actions
+   - Click job to view full details
+
+4. Job Actions
+   - Retry failed jobs
+   - Remove completed/failed jobs
+   - View job data and stack traces
+
+5. Queue Controls
+   - Pause/Resume processing
+   - Clean old jobs (completed/failed)
+   - Rate limit visualization
+
+=== CONFIGURATION ===
+
+Base Path: /admin/queues
+Title: IntelliFlow CRM - Job Queue Dashboard
+Read-Only Mode: Disabled (full controls available)
+
+=== INTEGRATION ===
+
+The Bull Board is integrated via the following code:
+
+```typescript
+import { ExpressAdapter } from '@bull-board/express';
+import { configureBullBoardForExpress } from '@intelliflow/platform/queues';
+
+const serverAdapter = new ExpressAdapter();
+configureBullBoardForExpress(serverAdapter, {
+  basePath: '/admin/queues',
+  title: 'IntelliFlow CRM - Job Queue Dashboard',
+});
+
+app.use('/admin/queues', serverAdapter.getRouter());
+```
+
+Note: This is a placeholder file describing what the dashboard displays.
+The actual screenshot would be captured when the API server is running
+with Redis and Bull Board properly configured.

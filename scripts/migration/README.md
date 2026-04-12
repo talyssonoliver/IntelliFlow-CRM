@@ -1,10 +1,13 @@
 # Artifact Migration Scripts
 
-This directory contains migration scripts and mappings for reorganizing artifacts in the IntelliFlow CRM repository.
+This directory contains migration scripts and mappings for reorganizing
+artifacts in the IntelliFlow CRM repository.
 
 ## Overview
 
-As part of Sprint 0 (IFC-160), we've established strict conventions for artifact organization. This directory helps migrate existing artifacts to their correct locations.
+As part of Sprint 0 (IFC-160), we've established strict conventions for artifact
+organization. This directory helps migrate existing artifacts to their correct
+locations.
 
 ## Files
 
@@ -13,12 +16,14 @@ As part of Sprint 0 (IFC-160), we've established strict conventions for artifact
 A CSV file mapping old artifact locations to new standardized paths.
 
 **Format:**
+
 ```csv
 from,to,reason,status
 "old/path/file.log","artifacts/logs/category/file.log","Reason for move","pending|completed|failed"
 ```
 
 **Columns:**
+
 - `from`: Original file path
 - `to`: Target path in artifacts/ directory
 - `reason`: Explanation for the migration
@@ -35,6 +40,7 @@ pnpm run lint:artifacts:audit
 ```
 
 This will:
+
 - Scan the repository for artifacts in prohibited locations
 - Generate/update `artifact-move-map.csv` with suggested moves
 - Report statistics about misplaced artifacts
@@ -48,6 +54,7 @@ cat scripts/migration/artifact-move-map.csv
 ```
 
 Verify that:
+
 - Source paths are correct
 - Target paths follow conventions
 - Reasons are accurate
@@ -73,6 +80,7 @@ pnpm run artifacts:migrate
 ```
 
 This will:
+
 - Read `artifact-move-map.csv`
 - Create backups of files to be moved
 - Move files to new locations
@@ -96,16 +104,19 @@ This will:
 ### Example 1: Moving Build Logs
 
 **Before:**
+
 ```
 src/build.log
 ```
 
 **After:**
+
 ```
 artifacts/logs/build/build.log
 ```
 
 **Command:**
+
 ```bash
 mkdir -p artifacts/logs/build
 mv src/build.log artifacts/logs/build/build.log
@@ -114,16 +125,19 @@ mv src/build.log artifacts/logs/build/build.log
 ### Example 2: Moving Test Coverage
 
 **Before:**
+
 ```
 apps/web/coverage-report.html
 ```
 
 **After:**
+
 ```
 artifacts/reports/coverage/web-coverage.html
 ```
 
 **Command:**
+
 ```bash
 mkdir -p artifacts/reports/coverage
 mv apps/web/coverage-report.html artifacts/reports/coverage/web-coverage.html
@@ -143,6 +157,7 @@ mv apps/web/coverage-report.html artifacts/reports/coverage/web-coverage.html
 ### Files Not Found
 
 If the migration map references files that don't exist:
+
 - They may have already been moved
 - They may have been deleted
 - Paths may be case-sensitive on some systems
@@ -152,6 +167,7 @@ If the migration map references files that don't exist:
 ### Permission Denied
 
 If you can't move files due to permissions:
+
 - Check file permissions: `ls -la path/to/file`
 - Ensure files aren't locked by running processes
 - Run with appropriate permissions
@@ -159,6 +175,7 @@ If you can't move files due to permissions:
 ### Build Breaks After Migration
 
 If builds fail after migration:
+
 - Check for hardcoded paths in build scripts
 - Update import statements if needed
 - Verify .gitignore patterns still match
@@ -169,16 +186,19 @@ If builds fail after migration:
 After successful migration:
 
 1. **Verify Linter Passes**:
+
    ```bash
    pnpm run lint:artifacts
    ```
 
 2. **Run Full Build**:
+
    ```bash
    pnpm run build
    ```
 
 3. **Run Tests**:
+
    ```bash
    pnpm run test
    ```
@@ -202,6 +222,8 @@ After successful migration:
 ## Support
 
 For questions or issues with artifact migration:
-- Check [artifact-conventions.md](../../docs/architecture/artifact-conventions.md)
+
+- Check
+  [artifact-conventions.md](../../docs/architecture/artifact-conventions.md)
 - Run `pnpm run lint:artifacts` for violations
 - Contact DevOps team via #dev-ops Slack channel

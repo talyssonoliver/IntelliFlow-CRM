@@ -9,6 +9,14 @@ export class InvalidLeadScoreError extends DomainError {
   }
 }
 
+export class InvalidLeadConfidenceError extends DomainError {
+  readonly code = 'INVALID_LEAD_CONFIDENCE';
+
+  constructor(confidence: number) {
+    super(`Invalid lead confidence: ${confidence}. Confidence must be between 0 and 1.`);
+  }
+}
+
 interface LeadScoreProps {
   value: number;
   confidence: number;
@@ -49,20 +57,19 @@ export class LeadScore extends ValueObject<LeadScoreProps> {
   static create(
     value: number,
     confidence: number = 1
-  ): Result<LeadScore, InvalidLeadScoreError> {
+  ): Result<LeadScore, InvalidLeadScoreError | InvalidLeadConfidenceError> {
     if (value < LeadScore.MIN_SCORE || value > LeadScore.MAX_SCORE) {
       return Result.fail(new InvalidLeadScoreError(value));
     }
 
-    const normalizedConfidence = Math.max(
-      LeadScore.MIN_CONFIDENCE,
-      Math.min(LeadScore.MAX_CONFIDENCE, confidence)
-    );
+    if (confidence < LeadScore.MIN_CONFIDENCE || confidence > LeadScore.MAX_CONFIDENCE) {
+      return Result.fail(new InvalidLeadConfidenceError(confidence));
+    }
 
     return Result.ok(
       new LeadScore({
         value: Math.round(value),
-        confidence: normalizedConfidence,
+        confidence,
       })
     );
   }

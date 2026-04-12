@@ -1,0 +1,821 @@
+'use client';
+
+import * as React from 'react';
+import { createPortal } from 'react-dom';
+import Link from 'next/link';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { cn } from '@intelliflow/ui';
+import { useSidebar } from './SidebarContext';
+import type {
+  SidebarConfig,
+  SidebarItem,
+  SidebarSection,
+  SidebarAnnouncement,
+} from './sidebar-types';
+import { MODULE_COLORS } from './icon-reference';
+import { useAuth } from '@/lib/auth';
+
+type ModuleId = keyof typeof MODULE_COLORS;
+
+/** Check whether all item query params are present and matching in the current URL. */
+function itemParamsMatchCurrent(
+  itemParams: URLSearchParams,
+  searchParams: ReturnType<typeof useSearchParams>
+): boolean {
+  for (const [key, value] of itemParams.entries()) {
+    if (searchParams.get(key) !== value) return false;
+  }
+  return true;
+}
+
+interface AppSidebarProps {
+  config: SidebarConfig;
+  className?: string;
+  /** Optional announcement to display at the bottom */
+  announcement?: SidebarAnnouncement;
+  /** Callback when announcement is dismissed */
+  onDismissAnnouncement?: (id: string) => void;
+}
+
+interface SidebarSettingsFooterProps {
+  config: SidebarConfig;
+  isExpanded: boolean;
+  hasFooterContent: boolean;
+}
+
+function SidebarSettingsFooter({ config, isExpanded, hasFooterContent }: Readonly<SidebarSettingsFooterProps>) {
+  if (config.showSettings === false) return null;
+  if (!config.settingsHref && !config.onSettingsClick) return null;
+
+  const itemClass = cn(
+    'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors group',
+    'text-muted-foreground hover:text-foreground hover:bg-accent',
+    !isExpanded && 'justify-center'
+  );
+
+  return (
+    <div className={cn('border-t border-border p-2', !hasFooterContent && 'mt-auto')}>
+      {config.onSettingsClick ? (
+        <button type="button" onClick={config.onSettingsClick} className={cn(itemClass, 'w-full')}>
+          <span className="material-symbols-outlined text-xl transition-colors group-hover:text-primary">settings</span>
+          {isExpanded && <span className="font-medium">Module Settings</span>}
+        </button>
+      ) : (
+        <Link href={config.settingsHref!} className={itemClass}>
+          <span className="material-symbols-outlined text-xl transition-colors group-hover:text-primary">settings</span>
+          {isExpanded && <span className="font-medium">Module Settings</span>}
+        </Link>
+      )}
+    </div>
+  );
+}
+
+/**
+ * AppSidebar - Collapsible navigation sidebar
+ *
+ * Features:
+ * - Expand on hover, collapse when mouse leaves
+ * - Pin/unpin to keep expanded
+ * - Context-specific navigation items
+ * - Module-specific icon colors (only icons, not backgrounds)
+ * - Full dark mode support
+ * - Accessible with proper ARIA attributes
+ */
+export function AppSidebar({
+  config,
+  className,
+  announcement,
+  onDismissAnnouncement,
+}: Readonly<AppSidebarProps>) {
+  const { isExpanded, isPinned, togglePinned, setHovered } = useSidebar();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const { user } = useAuth();
+
+  // Filter out items that require specific roles the current user doesn't have
+  const filteredSections = React.useMemo(() => {
+    return config.sections
+      .map((section) => ({
+        ...section,
+        items: section.items.filter(
+          (item) =>
+            !item.roles || item.roles.length === 0 || (user?.role && item.roles.includes(user.role))
+        ),
+      }))
+      .filter((section) => section.items.length > 0);
+  }, [config.sections, user?.role]);
+
+  // Get module-specific color theme (only for icon colors)
+  const moduleColor = React.useMemo(() => {
+    return MODULE_COLORS[config.moduleId as ModuleId] || MODULE_COLORS.dashboard;
+  }, [config.moduleId]);
+
+  // Determine active item based on URL
+  const isItemActive = React.useCallback(
+    (item: Readonly<SidebarItem>): boolean => {
+      const itemUrl = new URL(item.href, 'http://localhost');
+      const itemPath = itemUrl.pathname;
+      const itemParams = itemUrl.searchParams;
+
+      // Check if paths match
+      if (pathname !== itemPath && !pathname?.startsWith(itemPath + '/')) {
+        return false;
+      }
+
+      // For items with query params, check if they all match current URL
+      if (itemParams.toString()) {
+        return itemParamsMatchCurrent(itemParams, searchParams);
+      }
+
+      // For items without params, require exact pathname match
+      // AND no query params on the current URL — otherwise /email matches /email?folder=sent
+      return pathname === itemPath && !searchParams.toString();
+    },
+    [pathname, searchParams]
+  );
+
+  return (
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- onMouseEnter/Leave control sidebar hover-expand behavior; this is a valid UX pattern for nav elements
+    <nav
+      className={cn(
+        'fixed left-0 top-16 bottom-0 z-30 flex flex-col bg-card border-r border-border',
+        'transition-all duration-300 ease-in-out',
+        isExpanded ? 'w-60' : 'w-14',
+        'hidden lg:flex',
+        className
+      )}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      aria-label={`${config.moduleTitle} navigation`}
+    >
+      {/* Module Header */}
+      <div
+        className={cn(
+          'flex items-center gap-3 px-3 py-4 border-b border-border',
+          !isExpanded && 'justify-center'
+        )}
+      >
+        <div
+          className={cn(
+            'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0',
+            moduleColor.iconBg
+          )}
+        >
+          <span className={cn('material-symbols-outlined text-xl', moduleColor.text)}>
+            {config.moduleIcon}
+          </span>
+        </div>
+        {isExpanded ? (
+          <div className="flex-1 min-w-0">
+            <h2 className="text-sm font-bold text-foreground truncate">{config.moduleTitle}</h2>
+          </div>
+        ) : null}
+        {isExpanded ? (
+          <button
+            onClick={togglePinned}
+            className={cn(
+              'p-1 rounded-md transition-colors',
+              isPinned
+                ? 'text-muted-foreground bg-accent'
+                : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+            )}
+            aria-label={isPinned ? 'Unpin sidebar' : 'Pin sidebar'}
+            title={isPinned ? 'Unpin sidebar' : 'Pin sidebar'}
+          >
+            <span className="material-symbols-outlined text-lg">{'push_pin'}</span>
+          </button>
+        ) : null}
+      </div>
+
+      {/* Before Content (e.g., action buttons) */}
+      {config.beforeContent && (
+        <div className="px-2 pt-3">
+          <config.beforeContent isExpanded={isExpanded} />
+        </div>
+      )}
+
+      {/* Navigation Sections */}
+      <div className="flex-1 overflow-y-auto py-4 px-2">
+        <div className="flex flex-col gap-1">
+          {filteredSections.map((section, index) => (
+            <React.Fragment key={section.id}>
+              {/* Section separator (except for first section) */}
+              {index > 0 && (
+                <div
+                  className={cn(
+                    'my-3',
+                    isExpanded ? 'mx-3 border-t border-border' : 'mx-2 border-t border-border'
+                  )}
+                />
+              )}
+              <SidebarSectionComponent
+                section={section}
+                isExpanded={isExpanded}
+                isItemActive={isItemActive}
+                moduleColor={moduleColor}
+              />
+            </React.Fragment>
+          ))}
+        </div>
+        {config.afterContent && (
+          <>
+            <div
+              className={cn(
+                'my-3',
+                isExpanded ? 'mx-3 border-t border-border' : 'mx-2 border-t border-border'
+              )}
+            />
+            <config.afterContent isExpanded={isExpanded} />
+          </>
+        )}
+      </div>
+
+      {/* Announcement Section - Marketing updates or app announcements */}
+      {announcement && isExpanded && (
+        <AnnouncementCard announcement={announcement} onDismiss={onDismissAnnouncement} />
+      )}
+
+      {/* Footer Content (e.g., storage indicator) */}
+      {config.footerContent && (
+        <div className="mt-auto border-t border-border px-2 pt-3 pb-1">
+          <config.footerContent isExpanded={isExpanded} />
+        </div>
+      )}
+
+      {/* Settings Footer */}
+      <SidebarSettingsFooter config={config} isExpanded={isExpanded} hasFooterContent={!!config.footerContent} />
+    </nav>
+  );
+}
+
+interface ModuleColorTheme {
+  iconBg: string;
+  text: string;
+}
+
+interface SidebarSectionComponentProps {
+  section: SidebarSection;
+  isExpanded: boolean;
+  isItemActive: (item: SidebarItem) => boolean;
+  moduleColor: ModuleColorTheme;
+}
+
+function SidebarSectionComponent({
+  section,
+  isExpanded,
+  isItemActive,
+  moduleColor,
+}: Readonly<SidebarSectionComponentProps>) {
+  return (
+    <div>
+      {isExpanded && (
+        <div className="px-3 mb-2">
+          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            {section.title}
+          </span>
+        </div>
+      )}
+      <nav className="flex flex-col gap-1" aria-label={section.title}>
+        {section.items.map((item) => (
+          <SidebarItemComponent
+            key={item.id}
+            item={item}
+            isExpanded={isExpanded}
+            isActive={isItemActive(item)}
+            moduleColor={moduleColor}
+          />
+        ))}
+      </nav>
+    </div>
+  );
+}
+
+interface SidebarItemComponentProps {
+  item: SidebarItem;
+  isExpanded: boolean;
+  isActive: boolean;
+  moduleColor: ModuleColorTheme;
+}
+
+function SidebarItemComponent({
+  item,
+  isExpanded,
+  isActive,
+  moduleColor,
+}: Readonly<SidebarItemComponentProps>) {
+  const isSegment = Boolean(item.color);
+
+  return (
+    <Link
+      href={item.href}
+      aria-current={isActive ? 'page' : undefined}
+      title={isExpanded ? undefined : item.label}
+      className={cn(
+        'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors group relative',
+        isActive
+          ? 'bg-primary/10 font-medium'
+          : 'text-muted-foreground hover:text-foreground hover:bg-accent',
+        !isExpanded && 'justify-center'
+      )}
+    >
+      {/* Regular items: gray background + module-colored icon */}
+      {/* Segment items: just the colored dot, no background */}
+      {isSegment ? (
+        <span
+          className={cn('material-symbols-outlined text-xl transition-colors', item.color)}
+          aria-hidden="true"
+        >
+          fiber_manual_record
+        </span>
+      ) : (
+        <div
+          className={cn(
+            'w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0',
+            moduleColor.iconBg
+          )}
+        >
+          <span
+            className={cn('material-symbols-outlined text-lg transition-colors', moduleColor.text)}
+            aria-hidden="true"
+          >
+            {item.icon}
+          </span>
+        </div>
+      )}
+      {isExpanded && (
+        <>
+          <span className={cn('flex-1 truncate', isActive ? 'text-foreground' : '')}>
+            {item.label}
+          </span>
+          {item.badge !== undefined && item.badge > 0 && (
+            <span className="px-1.5 py-0.5 text-xs font-medium bg-primary text-primary-foreground rounded-full">
+              {item.badge > 99 ? '99+' : item.badge}
+            </span>
+          )}
+        </>
+      )}
+      {!isExpanded && item.badge !== undefined && item.badge > 0 && (
+        <span className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full" />
+      )}
+    </Link>
+  );
+}
+
+/**
+ * SidebarTrigger - Button to show/expand the sidebar
+ * On mobile: opens mobile drawer
+ * On desktop: toggles pinned state
+ */
+export function SidebarTrigger({ className }: Readonly<{ className?: string }>) {
+  const { togglePinned, toggleMobile, isPinned, isMobileOpen } = useSidebar();
+
+  const handleClick = () => {
+    // Check if we're on mobile (less than lg breakpoint)
+    if (window.innerWidth < 1024) {
+      toggleMobile();
+    } else {
+      togglePinned();
+    }
+  };
+
+  return (
+    <button
+      onClick={handleClick}
+      className={cn(
+        'p-2 rounded-lg transition-colors',
+        'text-muted-foreground hover:text-foreground hover:bg-accent',
+        (isPinned || isMobileOpen) && 'text-primary bg-primary/10',
+        className
+      )}
+      aria-label={isMobileOpen || isPinned ? 'Close menu' : 'Open menu'}
+      aria-expanded={isMobileOpen || isPinned}
+    >
+      <span className="material-symbols-outlined text-xl">
+        {isMobileOpen || isPinned ? 'close' : 'menu'}
+      </span>
+    </button>
+  );
+}
+
+/**
+ * SidebarInset - Wrapper for main content that adjusts for sidebar width
+ */
+export function SidebarInset({
+  children,
+  className,
+}: Readonly<{
+  children: React.ReactNode;
+  className?: string;
+}>) {
+  const { isExpanded, isPinned } = useSidebar();
+
+  return (
+    <div
+      className={cn(
+        'flex-1 min-w-0 overflow-hidden transition-all duration-300 ease-in-out',
+        // Only offset when pinned (not just hovered)
+        isPinned ? 'lg:ml-60' : 'lg:ml-14',
+        // Add extra margin when expanded but not pinned for smooth transition
+        isExpanded && !isPinned ? 'lg:ml-14' : '',
+        className
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
+/**
+ * AnnouncementCard - Marketing updates or app announcements
+ * Displayed at the bottom of the sidebar, visible yet unobtrusive
+ */
+interface AnnouncementCardProps {
+  announcement: SidebarAnnouncement;
+  onDismiss?: (id: string) => void;
+}
+
+function AnnouncementCard({ announcement, onDismiss }: Readonly<AnnouncementCardProps>) {
+  return (
+    <div className="mx-2 mb-2 p-3 rounded-lg bg-muted/50 border border-border relative group">
+      {/* Dismiss button */}
+      {onDismiss && (
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            onDismiss(announcement.id);
+          }}
+          className="absolute top-2 right-2 p-0.5 rounded-sm text-muted-foreground/60 hover:text-foreground hover:bg-accent opacity-0 group-hover:opacity-100 transition-opacity"
+          aria-label="Dismiss announcement"
+        >
+          <span className="material-symbols-outlined text-base">close</span>
+        </button>
+      )}
+
+      {/* Content */}
+      <div className="flex gap-3">
+        {/* Icon */}
+        {announcement.icon && (
+          <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
+            <span className="material-symbols-outlined text-lg text-primary">
+              {announcement.icon}
+            </span>
+          </div>
+        )}
+
+        <div className="flex-1 min-w-0 pr-4">
+          {/* Headline */}
+          <p className="text-xs font-semibold text-foreground leading-tight">
+            {announcement.headline}
+          </p>
+
+          {/* Description */}
+          <p className="text-xs text-muted-foreground mt-1 leading-relaxed line-clamp-2">
+            {announcement.description}
+          </p>
+
+          {/* Action */}
+          <Link
+            href={announcement.actionHref}
+            className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 mt-2 transition-colors"
+          >
+            {announcement.actionText}
+            <span className="material-symbols-outlined text-sm">arrow_forward</span>
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * MobileSidebar - Slide-out drawer for mobile navigation
+ * Only renders on screens smaller than lg breakpoint
+ */
+interface MobileSidebarProps {
+  config: SidebarConfig;
+  announcement?: SidebarAnnouncement;
+  onDismissAnnouncement?: (id: string) => void;
+}
+
+export function MobileSidebar({
+  config,
+  announcement,
+  onDismissAnnouncement,
+}: Readonly<MobileSidebarProps>) {
+  const { isMobileOpen, closeMobile } = useSidebar();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const { user } = useAuth();
+  const [mounted, setMounted] = React.useState(false);
+  const drawerRef = React.useRef<HTMLDialogElement>(null);
+  const triggerRef = React.useRef<Element | null>(null);
+
+  // Track pathname to close sidebar on navigation
+  const prevPathname = React.useRef(pathname);
+  React.useEffect(() => {
+    if (prevPathname.current !== pathname) {
+      closeMobile();
+      prevPathname.current = pathname;
+    }
+  }, [pathname, closeMobile]);
+
+  // Only render after mount to avoid hydration mismatch
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Filter items by role for mobile sidebar
+  const filteredSections = React.useMemo(() => {
+    return config.sections
+      .map((section) => ({
+        ...section,
+        items: section.items.filter(
+          (item) =>
+            !item.roles || item.roles.length === 0 || (user?.role && item.roles.includes(user.role))
+        ),
+      }))
+      .filter((section) => section.items.length > 0);
+  }, [config.sections, user?.role]);
+
+  // Get module-specific color theme
+  const moduleColor = React.useMemo(() => {
+    return MODULE_COLORS[config.moduleId as ModuleId] || MODULE_COLORS.dashboard;
+  }, [config.moduleId]);
+
+  // Determine active item based on URL
+  const isItemActive = React.useCallback(
+    (item: Readonly<SidebarItem>): boolean => {
+      const itemUrl = new URL(item.href, 'http://localhost');
+      const itemPath = itemUrl.pathname;
+      const itemParams = itemUrl.searchParams;
+
+      if (pathname !== itemPath && !pathname?.startsWith(itemPath + '/')) {
+        return false;
+      }
+
+      if (itemParams.toString()) {
+        for (const [key, value] of itemParams.entries()) {
+          if (searchParams.get(key) !== value) {
+            return false;
+          }
+        }
+        return true;
+      }
+
+      const view = searchParams.get('view');
+      const segment = searchParams.get('segment');
+      return !view && !segment;
+    },
+    [pathname, searchParams]
+  );
+
+  // Handle click on item - close sidebar
+  const handleItemClick = () => {
+    closeMobile();
+  };
+
+  // Handle escape key
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isMobileOpen) {
+        closeMobile();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isMobileOpen, closeMobile]);
+
+  // Focus trap: keep Tab/Shift+Tab within the drawer when open
+  React.useEffect(() => {
+    if (!isMobileOpen || !drawerRef.current) return;
+
+    // Save the element that triggered the drawer so we can restore focus
+    triggerRef.current = document.activeElement;
+
+    const drawer = drawerRef.current;
+    const focusableSelector =
+      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+    // Move focus to the close button (first focusable element in the drawer)
+    const firstFocusable = drawer.querySelector<HTMLElement>(focusableSelector);
+    // Use requestAnimationFrame to ensure the drawer is visible before focusing
+    requestAnimationFrame(() => {
+      firstFocusable?.focus();
+    });
+
+    const handleTab = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return;
+
+      const focusables = Array.from(drawer.querySelectorAll<HTMLElement>(focusableSelector));
+      if (focusables.length === 0) return;
+
+      const first = focusables[0];
+      const last = focusables.at(-1);
+
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last?.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleTab);
+    return () => {
+      document.removeEventListener('keydown', handleTab);
+      // Restore focus to the trigger when the drawer closes
+      if (triggerRef.current instanceof HTMLElement) {
+        triggerRef.current.focus();
+      }
+    };
+  }, [isMobileOpen]);
+
+  if (!mounted) return null;
+
+  return createPortal(
+    <>
+      {/* Backdrop */}
+      <button
+        type="button"
+        className={cn(
+          'fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity duration-300 lg:hidden cursor-default',
+          isMobileOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        )}
+        onClick={closeMobile}
+        aria-label="Close navigation menu"
+        tabIndex={isMobileOpen ? 0 : -1}
+      />
+
+      {/* Drawer */}
+      <dialog
+        ref={drawerRef}
+        open={isMobileOpen}
+        aria-modal="true"
+        aria-label={`${config.moduleTitle} navigation menu`}
+        className={cn(
+          'fixed top-0 left-0 bottom-0 z-50 w-72 bg-card border-r border-border',
+          'transform transition-transform duration-300 ease-out lg:hidden',
+          'flex flex-col shadow-2xl m-0 p-0 max-h-none h-full',
+          isMobileOpen ? 'translate-x-0' : '-translate-x-full'
+        )}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-4 border-b border-border">
+          <div className="flex items-center gap-3">
+            <div
+              className={cn(
+                'w-9 h-9 rounded-lg flex items-center justify-center',
+                moduleColor.iconBg
+              )}
+            >
+              <span className={cn('material-symbols-outlined text-xl', moduleColor.text)}>
+                {config.moduleIcon}
+              </span>
+            </div>
+            <h2 className="text-base font-bold text-foreground">{config.moduleTitle}</h2>
+          </div>
+          <button
+            onClick={closeMobile}
+            className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+            aria-label="Close menu"
+          >
+            <span className="material-symbols-outlined text-xl">close</span>
+          </button>
+        </div>
+
+        {/* Before Content (e.g., action buttons) */}
+        {config.beforeContent && (
+          <div className="px-3 pt-3">
+            <config.beforeContent isExpanded={true} />
+          </div>
+        )}
+
+        {/* Navigation */}
+        <div className="flex-1 overflow-y-auto py-4 px-3">
+          <div className="flex flex-col gap-1">
+            {filteredSections.map((section, index) => (
+              <React.Fragment key={section.id}>
+                {index > 0 && <div className="my-3 mx-3 border-t border-border" />}
+                <div>
+                  <div className="px-3 mb-2">
+                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      {section.title}
+                    </span>
+                  </div>
+                  <nav className="flex flex-col gap-1" aria-label={section.title}>
+                    {section.items.map((item) => (
+                      <MobileSidebarItem
+                        key={item.id}
+                        item={item}
+                        isActive={isItemActive(item)}
+                        moduleColor={moduleColor}
+                        onClick={handleItemClick}
+                      />
+                    ))}
+                  </nav>
+                </div>
+              </React.Fragment>
+            ))}
+          </div>
+          {config.afterContent && (
+            <>
+              <div className="my-3 mx-3 border-t border-border" />
+              <config.afterContent isExpanded={true} />
+            </>
+          )}
+        </div>
+
+        {/* Announcement */}
+        {announcement && (
+          <AnnouncementCard announcement={announcement} onDismiss={onDismissAnnouncement} />
+        )}
+
+        {/* Settings Footer */}
+        {config.showSettings !== false && (config.settingsHref || config.onSettingsClick) && (
+          <div className="border-t border-border p-3">
+            {config.onSettingsClick ? (
+              <button
+                type="button"
+                onClick={() => {
+                  config.onSettingsClick!();
+                  handleItemClick();
+                }}
+                className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors text-muted-foreground hover:text-foreground hover:bg-accent w-full"
+              >
+                <span className="material-symbols-outlined text-xl">settings</span>
+                <span className="font-medium">Module Settings</span>
+              </button>
+            ) : (
+              <Link
+                href={config.settingsHref!}
+                onClick={handleItemClick}
+                className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors text-muted-foreground hover:text-foreground hover:bg-accent"
+              >
+                <span className="material-symbols-outlined text-xl">settings</span>
+                <span className="font-medium">Module Settings</span>
+              </Link>
+            )}
+          </div>
+        )}
+      </dialog>
+    </>,
+    document.body
+  );
+}
+
+interface MobileSidebarItemProps {
+  item: SidebarItem;
+  isActive: boolean;
+  moduleColor: ModuleColorTheme;
+  onClick: () => void;
+}
+
+function MobileSidebarItem({
+  item,
+  isActive,
+  moduleColor,
+  onClick,
+}: Readonly<MobileSidebarItemProps>) {
+  const isSegment = Boolean(item.color);
+
+  return (
+    <Link
+      href={item.href}
+      onClick={onClick}
+      aria-current={isActive ? 'page' : undefined}
+      className={cn(
+        'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors',
+        isActive
+          ? 'bg-primary/10 font-medium'
+          : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+      )}
+    >
+      {isSegment ? (
+        <span className={cn('material-symbols-outlined text-xl', item.color)} aria-hidden="true">
+          fiber_manual_record
+        </span>
+      ) : (
+        <div
+          className={cn(
+            'w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0',
+            moduleColor.iconBg
+          )}
+        >
+          <span
+            className={cn('material-symbols-outlined text-lg', moduleColor.text)}
+            aria-hidden="true"
+          >
+            {item.icon}
+          </span>
+        </div>
+      )}
+      <span className={cn('flex-1', isActive ? 'text-foreground' : '')}>{item.label}</span>
+      {item.badge !== undefined && item.badge > 0 && (
+        <span className="px-2 py-0.5 text-xs font-medium bg-primary text-primary-foreground rounded-full">
+          {item.badge > 99 ? '99+' : item.badge}
+        </span>
+      )}
+    </Link>
+  );
+}

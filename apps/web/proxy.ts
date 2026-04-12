@@ -1,0 +1,159 @@
+/**
+ * Next.js 16 Proxy for Authentication
+ *
+ * Implements route protection following FLOW-001 (Login + MFA) specifications
+ * Uses Supabase Auth for session management
+ *
+ * Next.js 16 Migration:
+ * - Renamed from middleware.ts to proxy.ts
+ * - Exported function renamed from middleware() to proxy()
+ * - Runs in Node.js runtime (not Edge)
+ *
+ * @see https://nextjs.org/docs/app/api-reference/file-conventions/proxy
+ * @module apps/web/proxy
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import { decrypt, PUBLIC_ROUTES, PROTECTED_ROUTES, hasRole } from '@/lib/session';
+import { isTokenUsable } from '@/lib/auth/jwt';
+import { PROTECTED_ROUTE_PREFIXES, matchesRoutePrefix } from './src/lib/auth/route-protection';
+
+/**
+ * Protected routes requiring authentication
+ */
+/**
+ * Next.js 16 Proxy function for authentication
+ *
+ * Handles:
+ * 1. Route protection - redirects unauthenticated users to login
+ * 2. Role-based access control - checks user permissions
+ * 3. Session validation - verifies JWT with Supabase
+ * 4. Redirect loops prevention - avoids infinite redirects
+ *
+ * NOTE: This proxy checks for accessToken cookie (set by OAuth callback).
+ * The client-side auth (useRequireAuth hook) handles the actual validation.
+ * This proxy provides a lightweight server-side redirect hint only.
+ */
+export async function proxy(request: NextRequest) {
+  const path = request.nextUrl.pathname;
+
+  // Skip static assets and API routes
+  if (
+    path.startsWith('/_next') ||
+    path.startsWith('/api') ||
+    path.includes('.') // Static files
+  ) {
+    return NextResponse.next();
+  }
+
+  // Check if route is public
+  const isPublicRoute = PUBLIC_ROUTES.includes(path);
+
+  // Check if route is protected
+  const isProtectedRoute = matchesRoutePrefix(path, PROTECTED_ROUTE_PREFIXES);
+
+  // Get accessToken from cookie (set by OAuth callback via syncTokenToCookie)
+  // This is a lightweight check - full validation happens client-side
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get('accessToken')?.value;
+
+  // Also try to get full session if available
+  const sessionCookie = cookieStore.get('session')?.value;
+  const session = sessionCookie ? await decrypt(sessionCookie) : null;
+
+  const hasValidSession = !!session;
+  const hasUsableAccessToken = isTokenUsable(accessToken ?? null);
+  const hasStaleAccessToken = Boolean(accessToken && !hasUsableAccessToken);
+  const hasStaleSession = Boolean(sessionCookie && !hasValidSession);
+  const hasAnyAuthArtifact = hasUsableAccessToken || hasValidSession;
+
+  const clearStaleAuthArtifacts = (response: NextResponse) => {
+    if (hasStaleAccessToken) {
+      response.cookies.delete('accessToken');
+    }
+
+    if (hasStaleSession) {
+      response.cookies.delete('session');
+    }
+
+    return response;
+  };
+
+  console.log(
+    `[Proxy] Path: ${path}, hasAccessToken: ${hasUsableAccessToken}, hasSession: ${!!session}, hasValidSession: ${hasValidSession}`
+  );
+
+  // Protected route without auth -> redirect to login immediately
+  // This eliminates the 200-800ms content flash that occurred when deferring to client-side useRequireAuth
+  if (isProtectedRoute && !hasAnyAuthArtifact) {
+    console.log(`[Proxy] Protected route without auth, redirecting to login: ${path}`);
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('redirect', path);
+    return clearStaleAuthArtifacts(NextResponse.redirect(loginUrl));
+  }
+
+  // Check role-based access (only if we have a full session)
+  if (isProtectedRoute && session) {
+    const requiredRoles = PROTECTED_ROUTES[path];
+    if (requiredRoles && !hasRole(session, requiredRoles)) {
+      // User doesn't have required role -> redirect to dashboard
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
+  }
+
+  // Authenticated user on auth pages (login/signup) -> redirect to dashboard
+  // Only if we have a valid session; stale tokens should not redirect
+  // If token exists but session is missing/invalid, clear cookies to break loops
+  if (path === '/login' || path === '/signup') {
+    if (hasValidSession && !request.nextUrl.searchParams.has('logged_out')) {
+      console.log(`[Proxy] Authenticated user on auth page, redirecting to dashboard`);
+      return clearStaleAuthArtifacts(NextResponse.redirect(new URL('/dashboard', request.url)));
+    }
+
+    if (hasStaleAccessToken || hasStaleSession) {
+      console.log(`[Proxy] Stale access token without session on auth page, clearing cookies`);
+      return clearStaleAuthArtifacts(NextResponse.next());
+    }
+  }
+
+  // Authenticated user on the public marketing home page (`/`) -> redirect to dashboard
+  // This eliminates the spinner-flash that occurs when HomePageContent waits for the
+  // client-side `auth.getStatus` query to resolve before deciding which view to render.
+  // Server-side cookie check + redirect happens before the page HTML is generated, so
+  // authed users go straight to /dashboard with zero loading state.
+  // Unauthenticated visitors fall through and see PublicHomePage SSR'd immediately.
+  if (path === '/' && hasUsableAccessToken && !request.nextUrl.searchParams.has('logged_out')) {
+    console.log(`[Proxy] Authenticated user on home page, redirecting to dashboard`);
+    return clearStaleAuthArtifacts(NextResponse.redirect(new URL('/dashboard', request.url)));
+  }
+
+  // Add user info to headers for server components (if session available)
+  const response = clearStaleAuthArtifacts(NextResponse.next());
+
+  if (session) {
+    response.headers.set('x-user-id', session.userId);
+    response.headers.set('x-user-email', session.email);
+    response.headers.set('x-user-role', session.role);
+  }
+
+  return response;
+}
+
+/**
+ * Proxy configuration
+ * Matcher excludes static files, images, and API routes
+ */
+export const proxyConfig = {
+  matcher: [
+    /*
+     * Match all request paths except:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico, sitemap.xml, robots.txt (metadata files)
+     * - Public assets (images, fonts, etc.)
+     */
+    '/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|woff|woff2|ttf|eot)$).*)',
+  ],
+};

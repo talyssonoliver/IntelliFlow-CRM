@@ -1,0 +1,258 @@
+# IFC-007: Performance Gate Workflow
+# Validates performance benchmarks using k6 load testing
+# Blocks merge on threshold violations
+
+name: Performance Gate
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'apps/api/**'
+      - 'packages/**'
+      - 'artifacts/misc/k6/**'
+  workflow_dispatch:
+    inputs:
+      run_full_test:
+        description: 'Run full 1000 VU test (takes ~10 min)'
+        required: false
+        default: 'false'
+        type: boolean
+
+env:
+  SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+  SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/intelliflow_test
+
+jobs:
+  performance-test:
+    name: k6 Performance Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: intelliflow_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: '10.29.3'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install k6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install k6
+
+      - name: Verify k6 installation
+        run: k6 version
+
+      - name: Generate Prisma client
+        run: pnpm run db:generate
+
+      - name: Run database migrations
+        run: pnpm run db:migrate
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+
+      - name: Seed test data
+        run: pnpm run db:seed
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+
+      - name: Build API server
+        run: pnpm --filter api build
+
+      - name: Start API server
+        run: |
+          pnpm --filter api start &
+          sleep 15
+          # Wait for server to be ready
+          for i in {1..30}; do
+            if curl -s http://localhost:3000/api/trpc/health.ping >/dev/null 2>&1; then
+              echo "API server is ready"
+              break
+            fi
+            echo "Waiting for API server... ($i/30)"
+            sleep 2
+          done
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+          SUPABASE_URL: ${{ env.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ env.SUPABASE_ANON_KEY }}
+
+      - name: Run auth smoke test
+        id: smoke-test
+        run: |
+          k6 run --summary-export=artifacts/benchmarks/ci-smoke.json \
+            --env SUPABASE_URL=${{ env.SUPABASE_URL }} \
+            --env SUPABASE_ANON_KEY=${{ env.SUPABASE_ANON_KEY }} \
+            --env BASE_URL=http://localhost:3000 \
+            artifacts/misc/k6/scripts/__tests__/auth-smoke.js || true
+
+      - name: Run performance test (smoke)
+        id: perf-test
+        if: inputs.run_full_test != 'true'
+        run: |
+          k6 run --summary-export=artifacts/benchmarks/ci-perf.json \
+            --env SUPABASE_URL=${{ env.SUPABASE_URL }} \
+            --env SUPABASE_ANON_KEY=${{ env.SUPABASE_ANON_KEY }} \
+            --env BASE_URL=http://localhost:3000 \
+            artifacts/misc/k6/scripts/authenticated-load-test.js || true
+
+      - name: Run performance test (full)
+        id: perf-test-full
+        if: inputs.run_full_test == 'true'
+        run: |
+          k6 run --summary-export=artifacts/benchmarks/ci-perf-full.json \
+            --env SUPABASE_URL=${{ env.SUPABASE_URL }} \
+            --env SUPABASE_ANON_KEY=${{ env.SUPABASE_ANON_KEY }} \
+            --env BASE_URL=http://localhost:3000 \
+            artifacts/misc/k6/scripts/load-test.js || true
+
+      - name: Validate performance thresholds
+        id: validate
+        run: |
+          RESULTS_FILE="artifacts/benchmarks/ci-perf.json"
+          if [ "${{ inputs.run_full_test }}" == "true" ]; then
+            RESULTS_FILE="artifacts/benchmarks/ci-perf-full.json"
+          fi
+
+          if [ ! -f "$RESULTS_FILE" ]; then
+            echo "Error: Results file not found: $RESULTS_FILE"
+            exit 1
+          fi
+
+          # Parse metrics using Node.js
+          node -e "
+            const fs = require('fs');
+            const results = JSON.parse(fs.readFileSync('$RESULTS_FILE'));
+
+            // Extract metrics with fallbacks
+            const httpDuration = results.metrics?.http_req_duration?.values || {};
+            const p95 = httpDuration['p(95)'] || 0;
+            const p99 = httpDuration['p(99)'] || 0;
+            const errorRate = (results.metrics?.errors?.values?.rate || 0) * 100;
+
+            console.log('=== IFC-007 Performance Results ===');
+            console.log('p95 Latency:', p95.toFixed(2), 'ms (threshold: 200ms)');
+            console.log('p99 Latency:', p99.toFixed(2), 'ms (threshold: 500ms)');
+            console.log('Error Rate:', errorRate.toFixed(2), '% (threshold: 10%)');
+            console.log('===================================');
+
+            // Set output for PR comment
+            const summary = {
+              p95: p95.toFixed(2),
+              p99: p99.toFixed(2),
+              errorRate: errorRate.toFixed(2),
+              p95Pass: p95 <= 200,
+              p99Pass: p99 <= 500,
+              errorPass: errorRate <= 10,
+            };
+            fs.writeFileSync('perf-summary.json', JSON.stringify(summary));
+
+            // Determine overall pass/fail
+            let exitCode = 0;
+            if (p95 > 200) {
+              console.error('FAIL: p95 latency exceeds 200ms threshold');
+              exitCode = 1;
+            }
+            if (p99 > 500) {
+              console.error('FAIL: p99 latency exceeds 500ms threshold');
+              exitCode = 1;
+            }
+            if (errorRate > 10) {
+              console.error('FAIL: Error rate exceeds 10% threshold');
+              exitCode = 1;
+            }
+
+            if (exitCode === 0) {
+              console.log('PASS: All performance thresholds met');
+            }
+
+            process.exit(exitCode);
+          "
+
+      - name: Upload performance artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: performance-results-${{ github.run_id }}
+          path: |
+            artifacts/benchmarks/ci-*.json
+            perf-summary.json
+          retention-days: 30
+
+      - name: Comment PR with results
+        uses: actions/github-script@v7
+        if: github.event_name == 'pull_request' && always()
+        with:
+          script: |
+            const fs = require('fs');
+
+            let summary = { p95: 'N/A', p99: 'N/A', errorRate: 'N/A', p95Pass: false, p99Pass: false, errorPass: false };
+            try {
+              summary = JSON.parse(fs.readFileSync('perf-summary.json', 'utf8'));
+            } catch (e) {
+              console.log('Could not read perf-summary.json');
+            }
+
+            const status = summary.p95Pass && summary.p99Pass && summary.errorPass ? '✅ PASSED' : '❌ FAILED';
+
+            const body = `## 📊 IFC-007 Performance Test Results
+
+            **Status**: ${status}
+
+            | Metric | Value | Threshold | Status |
+            |--------|-------|-----------|--------|
+            | p95 Latency | ${summary.p95}ms | ≤200ms | ${summary.p95Pass ? '✅' : '❌'} |
+            | p99 Latency | ${summary.p99}ms | ≤500ms | ${summary.p99Pass ? '✅' : '❌'} |
+            | Error Rate | ${summary.errorRate}% | ≤10% | ${summary.errorPass ? '✅' : '❌'} |
+
+            <details>
+            <summary>📈 Performance Targets (IFC-007)</summary>
+
+            - **p99 < 100ms** under 1000 VU load (production target)
+            - **p95 < 200ms** for CI gate (current threshold)
+            - **Error rate < 1%** (production target)
+            - **Error rate < 10%** for CI gate (current threshold)
+
+            </details>
+
+            ---
+            🤖 *Generated by IFC-007 Performance Gate*
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body
+            });

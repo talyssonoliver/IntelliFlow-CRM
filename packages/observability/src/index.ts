@@ -9,6 +9,11 @@
  * @packageDocumentation
  */
 
+// Internal imports for initObservability function
+import { initTracing as _initTracing, shutdownTracing as _shutdownTracing } from './tracing';
+import { initMetrics as _initMetrics, shutdownMetrics as _shutdownMetrics } from './metrics';
+import { initLogger as _initLogger } from './logging';
+
 // Export tracing utilities
 export {
   initTracing,
@@ -104,16 +109,14 @@ export function initObservability(config: {
   } = config;
 
   // Initialize logging first (so other systems can log)
-  const { initLogger } = require('./logging');
-  initLogger({
+  _initLogger({
     name: serviceName,
     level: logLevel,
   });
 
   // Initialize tracing
   if (tracingEnabled) {
-    const { initTracing } = require('./tracing');
-    initTracing({
+    _initTracing({
       serviceName,
       serviceVersion,
       environment,
@@ -123,8 +126,7 @@ export function initObservability(config: {
 
   // Initialize metrics
   if (metricsEnabled) {
-    const { initMetrics } = require('./metrics');
-    initMetrics({
+    _initMetrics({
       serviceName,
       serviceVersion,
       environment,
@@ -141,10 +143,7 @@ export function initObservability(config: {
  * Call this on application shutdown to ensure all telemetry is flushed.
  */
 export async function shutdownObservability(): Promise<void> {
-  const { shutdownTracing } = require('./tracing');
-  const { shutdownMetrics } = require('./metrics');
-
-  await Promise.all([shutdownTracing(), shutdownMetrics()]);
+  await Promise.all([_shutdownTracing(), _shutdownMetrics()]);
 
   console.log('✅ Observability shut down');
 }

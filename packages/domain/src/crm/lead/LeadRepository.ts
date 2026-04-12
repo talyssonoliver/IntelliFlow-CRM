@@ -1,11 +1,15 @@
 import { Lead } from './Lead';
 import { LeadId } from './LeadId';
 import { Email } from './Email';
+import { DateRange } from '../../shared/QueryTypes';
 
 /**
  * Lead Repository Interface
  * Defines the contract for lead persistence
  * Implementation lives in adapters layer
+ */
+/**
+ * @knipignore Intentional public repository contract for adapter implementations.
  */
 export interface LeadRepository {
   /**
@@ -63,6 +67,9 @@ export interface LeadRepository {
  * Lead Query Service Interface
  * For complex read-only queries that don't need domain logic
  */
+/**
+ * @knipignore Intentional public query contract shared across application boundaries.
+ */
 export interface LeadQueryService {
   /**
    * Search leads with filters
@@ -81,6 +88,9 @@ export interface LeadQueryService {
 }
 
 // Query Types
+/**
+ * @knipignore Intentional public query DTO shared across application boundaries.
+ */
 export interface LeadSearchParams {
   query?: string;
   status?: string[];
@@ -94,6 +104,9 @@ export interface LeadSearchParams {
   sortOrder?: 'asc' | 'desc';
 }
 
+/**
+ * @knipignore Intentional public query DTO shared across application boundaries.
+ */
 export interface LeadSearchResult {
   leads: Lead[];
   total: number;
@@ -102,6 +115,9 @@ export interface LeadSearchResult {
   hasMore: boolean;
 }
 
+/**
+ * @knipignore Intentional public query DTO shared across application boundaries.
+ */
 export interface LeadStatistics {
   total: number;
   byStatus: Record<string, number>;
@@ -110,11 +126,9 @@ export interface LeadStatistics {
   conversionRate: number;
 }
 
-export interface DateRange {
-  start: Date;
-  end: Date;
-}
-
+/**
+ * @knipignore Intentional public query DTO shared across application boundaries.
+ */
 export interface FunnelMetrics {
   new: number;
   contacted: number;

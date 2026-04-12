@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>IntelliFlow CRM - Customize Dashboard</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#1a2632",
+                        "border-light": "#e7edf3",
+                        "border-dark": "#2d3b4a",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #475569; 
+        }.grid-bg {
+            background-size: 20px 20px;
+            background-image:
+                linear-gradient(to right, #e2e8f0 1px, transparent 1px),
+                linear-gradient(to bottom, #e2e8f0 1px, transparent 1px);
+        }
+        .dark .grid-bg {
+            background-image:
+                linear-gradient(to right, #1e293b 1px, transparent 1px),
+                linear-gradient(to bottom, #1e293b 1px, transparent 1px);
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display overflow-hidden h-screen w-full flex flex-col">
+<header class="flex items-center justify-between whitespace-nowrap border-b border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark px-6 h-16 shrink-0 z-30 relative">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-3 text-slate-900 dark:text-white">
+<div class="size-8 bg-primary rounded-lg flex items-center justify-center text-white">
+<span class="material-symbols-outlined text-[20px]">dataset</span>
+</div>
+<h2 class="text-lg font-bold leading-tight tracking-tight">IntelliFlow CRM</h2>
+</div>
+<nav class="hidden xl:flex items-center gap-1">
+<a class="px-3 py-2 text-sm font-semibold text-primary bg-primary/10 rounded-md transition-colors" href="#">Dashboard</a>
+<a class="px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors" href="#">Leads</a>
+<a class="px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors" href="#">Contacts</a>
+<a class="px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors" href="#">Deals</a>
+<a class="px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors" href="#">Tickets</a>
+<a class="px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors" href="#">Reports</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden lg:block group">
+<span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-[20px] text-slate-400 group-focus-within:text-primary transition-colors">search</span>
+<input class="h-9 w-64 rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark py-1.5 pl-9 pr-3 text-sm text-slate-900 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary placeholder:text-slate-400 transition-all" placeholder="Search..." type="text"/>
+</div>
+<div class="flex items-center gap-1">
+<button class="flex size-9 cursor-pointer items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[22px]">notifications</span>
+</button>
+<button class="flex size-9 cursor-pointer items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[22px]">help</span>
+</button>
+</div>
+<div class="w-px h-6 bg-border-light dark:bg-border-dark mx-1"></div>
+<div class="flex items-center gap-3">
+<div class="bg-center bg-no-repeat bg-cover rounded-full size-8 ring-2 ring-white dark:ring-slate-700 shadow-sm cursor-pointer hover:ring-primary transition-all" data-alt="User profile avatar of John Doe" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDKN0_5xbz09JCFzokdSd89-X-N8CKUa3e1AKNqpDbcf4EIZny8V-A_IW1MQ5-88WyCOUKOvrlH1fps0UrHO-qQkzBic7Q2JSUngUx1S-eteESInzgHmr1dms_GabpfYbLTsgtfyU48Tp9ueAsTn1gWketh1SVvd13fC350z8q6rI_87ZXWgTle4ce6lbBMiV9JN9Bo3CEk-mIk4OWWykbvQ01RE3f1mv7NQwt6mtWTf7OkOikQ1MfDuc0cRWsqNd38Z9x__JoLIURO");'></div>
+</div>
+</div>
+</header>
+<div class="flex flex-1 overflow-hidden">
+<aside class="hidden lg:flex w-64 flex-col bg-surface-light dark:bg-surface-dark border-r border-border-light dark:border-border-dark flex-shrink-0 z-20">
+<div class="flex flex-col flex-1 overflow-y-auto py-4">
+<div class="px-4 mb-2">
+<h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 pl-2">My Dashboards</h3>
+<div class="flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group" href="#">
+<span class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-primary">dashboard</span>
+<span class="text-sm font-medium">Overview</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group" href="#">
+<span class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-primary">trending_up</span>
+<span class="text-sm font-medium">Sales Performance</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group" href="#">
+<span class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-primary">campaign</span>
+<span class="text-sm font-medium">Marketing</span>
+</a>
+</div>
+</div>
+<div class="mx-6 my-3 h-px bg-border-light dark:bg-border-dark"></div>
+<div class="px-4 mb-2">
+<h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 pl-2">Configuration</h3>
+<div class="flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/10 text-primary dark:bg-primary/20" href="#">
+<span class="material-symbols-outlined text-[20px] filled">tune</span>
+<span class="text-sm font-semibold">Layout &amp; Widgets</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group" href="#">
+<span class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-primary">palette</span>
+<span class="text-sm font-medium">Theme Settings</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group" href="#">
+<span class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-primary">share</span>
+<span class="text-sm font-medium">Sharing</span>
+</a>
+</div>
+</div>
+</div>
+<div class="p-4 mt-auto border-t border-border-light dark:border-border-dark">
+<div class="bg-background-light dark:bg-background-dark rounded-xl p-4">
+<div class="flex items-center gap-3 mb-2">
+<span class="material-symbols-outlined text-primary">rocket_launch</span>
+<span class="text-sm font-bold text-slate-900 dark:text-white">Pro Plan</span>
+</div>
+<p class="text-xs text-slate-500 mb-3">You have 14 days left in your trial.</p>
+<button class="w-full py-1.5 px-3 bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark rounded-md text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-primary transition-colors">Upgrade Now</button>
+</div>
+</div>
+</aside>
+<main class="flex-1 flex flex-col min-w-0 bg-background-light dark:bg-background-dark relative">
+<div class="sticky top-0 z-10 bg-white/80 dark:bg-[#1a2632]/90 backdrop-blur-md border-b border-border-light dark:border-border-dark px-6 py-4 flex flex-wrap items-center justify-between gap-4">
+<div class="flex flex-col">
+<h1 class="text-xl font-bold text-slate-900 dark:text-white">Customize Dashboard</h1>
+<p class="text-sm text-slate-500 dark:text-slate-400">Drag and drop widgets to rearrange. Use the gear icon to configure specific data.</p>
+</div>
+<div class="flex items-center gap-3">
+<span class="text-xs text-slate-400 hidden sm:inline-block mr-2">Last saved: Just now</span>
+<button class="flex items-center justify-center rounded-lg h-9 px-4 bg-white dark:bg-transparent border border-border-light dark:border-slate-600 text-slate-700 dark:text-slate-300 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                        Cancel
+                    </button>
+<button class="flex items-center justify-center rounded-lg h-9 px-4 bg-primary hover:bg-blue-600 text-white text-sm font-bold shadow-sm shadow-blue-500/30 transition-all">
+<span class="material-symbols-outlined text-[18px] mr-2">save</span>
+                        Save Changes
+                    </button>
+</div>
+</div>
+<div class="flex flex-1 overflow-hidden">
+<div class="flex-1 overflow-y-auto p-6 md:p-8 relative grid-bg">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 auto-rows-min pb-20">
+<div class="col-span-1 md:col-span-2 lg:col-span-2 xl:col-span-3 h-[320px] bg-white dark:bg-surface-dark rounded-xl border-2 border-primary/40 shadow-lg relative group cursor-move">
+<div class="absolute top-0 left-0 right-0 h-10 bg-primary/5 rounded-t-lg border-b border-primary/20 flex items-center justify-between px-3 cursor-grab active:cursor-grabbing z-10">
+<div class="flex items-center gap-2 text-primary font-semibold text-xs uppercase tracking-wider">
+<span class="material-symbols-outlined text-sm">drag_indicator</span>
+<span>Drag to Move</span>
+</div>
+<div class="flex gap-1">
+<button class="p-1 hover:bg-primary/10 rounded text-slate-500 hover:text-primary"><span class="material-symbols-outlined text-sm">settings</span></button>
+<button class="p-1 hover:bg-red-50 dark:hover:bg-red-900/20 rounded text-slate-500 hover:text-red-500"><span class="material-symbols-outlined text-sm">delete</span></button>
+</div>
+</div>
+<div class="p-5 pt-12 h-full flex flex-col">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h3 class="text-slate-900 dark:text-white font-semibold">Total Revenue</h3>
+<div class="flex items-baseline gap-2">
+<span class="text-2xl font-bold text-slate-900 dark:text-white">$124,500</span>
+<span class="text-xs font-medium text-emerald-500 flex items-center bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded">+12.5%</span>
+</div>
+</div>
+<div class="flex gap-2 text-xs">
+<button class="text-slate-400 hover:text-primary transition-colors">This Week</button>
+<button class="text-primary font-medium bg-primary/10 px-2 rounded">This Month</button>
+</div>
+</div>
+<div class="flex-1 flex items-end justify-between gap-1 w-full px-2">
+<div class="w-full bg-blue-100 dark:bg-blue-900/30 rounded-t-sm h-[40%] relative group/bar">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover/bar:opacity-100 transition-opacity">$12k</div>
+</div>
+<div class="w-full bg-blue-100 dark:bg-blue-900/30 rounded-t-sm h-[65%]"></div>
+<div class="w-full bg-blue-200 dark:bg-blue-800/40 rounded-t-sm h-[50%]"></div>
+<div class="w-full bg-blue-300 dark:bg-blue-700/50 rounded-t-sm h-[75%]"></div>
+<div class="w-full bg-blue-400 dark:bg-blue-600/60 rounded-t-sm h-[60%]"></div>
+<div class="w-full bg-blue-500 dark:bg-blue-500/70 rounded-t-sm h-[85%]"></div>
+<div class="w-full bg-primary rounded-t-sm h-[95%] relative">
+<div class="absolute top-2 right-2 size-2 bg-white rounded-full animate-pulse"></div>
+</div>
+</div>
+<div class="flex justify-between mt-2 text-xs text-slate-400">
+<span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+</div>
+</div>
+</div>
+<div class="col-span-1 h-[150px] bg-white dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark shadow-sm hover:border-primary/50 hover:shadow-md transition-all relative group cursor-move">
+<div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+<button class="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-400"><span class="material-symbols-outlined text-sm">settings</span></button>
+<button class="p-1 hover:bg-red-50 dark:hover:bg-red-900/20 rounded text-slate-400 hover:text-red-500"><span class="material-symbols-outlined text-sm">delete</span></button>
+</div>
+<div class="p-5 flex flex-col justify-between h-full">
+<div class="flex items-center gap-3">
+<div class="size-8 rounded-full bg-violet-100 dark:bg-violet-900/20 flex items-center justify-center text-violet-600 dark:text-violet-400">
+<span class="material-symbols-outlined text-lg">person</span>
+</div>
+<h3 class="font-medium text-slate-700 dark:text-slate-300">Active Leads</h3>
+</div>
+<div>
+<div class="text-3xl font-bold text-slate-900 dark:text-white">1,240</div>
+<div class="text-xs text-slate-500 mt-1">vs 1,100 last month</div>
+</div>
+</div>
+</div>
+<div class="col-span-1 h-[150px] bg-white dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark shadow-sm hover:border-primary/50 hover:shadow-md transition-all relative group cursor-move">
+<div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+<button class="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-400"><span class="material-symbols-outlined text-sm">settings</span></button>
+<button class="p-1 hover:bg-red-50 dark:hover:bg-red-900/20 rounded text-slate-400 hover:text-red-500"><span class="material-symbols-outlined text-sm">delete</span></button>
+</div>
+<div class="p-5 flex flex-col justify-between h-full">
+<div class="flex items-center gap-3">
+<div class="size-8 rounded-full bg-amber-100 dark:bg-amber-900/20 flex items-center justify-center text-amber-600 dark:text-amber-400">
+<span class="material-symbols-outlined text-lg">bolt</span>
+</div>
+<h3 class="font-medium text-slate-700 dark:text-slate-300">Conversion Rate</h3>
+</div>
+<div>
+<div class="text-3xl font-bold text-slate-900 dark:text-white">3.2%</div>
+<div class="w-full bg-slate-100 dark:bg-slate-700 h-1.5 rounded-full mt-2 overflow-hidden">
+<div class="bg-amber-500 h-full rounded-full" style="width: 65%"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="col-span-1 md:col-span-1 lg:col-span-1 xl:col-span-1 row-span-2 bg-white dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark shadow-sm hover:border-primary/50 hover:shadow-md transition-all relative group cursor-move">
+<div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+<button class="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-400"><span class="material-symbols-outlined text-sm">settings</span></button>
+<button class="p-1 hover:bg-red-50 dark:hover:bg-red-900/20 rounded text-slate-400 hover:text-red-500"><span class="material-symbols-outlined text-sm">delete</span></button>
+</div>
+<div class="p-5 flex flex-col h-full">
+<h3 class="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-slate-400">check_circle</span>
+                                    Pending Tasks
+                                </h3>
+<div class="flex flex-col gap-3 overflow-y-auto max-h-[240px] pr-2">
+<div class="flex items-start gap-3 p-2 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg transition-colors cursor-pointer group/item">
+<input class="mt-1 rounded border-slate-300 text-primary focus:ring-primary bg-transparent" type="checkbox"/>
+<div class="flex-1">
+<p class="text-sm font-medium text-slate-800 dark:text-slate-200 group-hover/item:text-primary">Call with Acme Corp</p>
+<p class="text-xs text-slate-500">Today, 2:00 PM</p>
+</div>
+</div>
+<div class="flex items-start gap-3 p-2 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg transition-colors cursor-pointer group/item">
+<input class="mt-1 rounded border-slate-300 text-primary focus:ring-primary bg-transparent" type="checkbox"/>
+<div class="flex-1">
+<p class="text-sm font-medium text-slate-800 dark:text-slate-200 group-hover/item:text-primary">Review Q3 Report</p>
+<p class="text-xs text-slate-500">Tomorrow, 10:00 AM</p>
+</div>
+</div>
+<div class="flex items-start gap-3 p-2 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg transition-colors cursor-pointer group/item">
+<input class="mt-1 rounded border-slate-300 text-primary focus:ring-primary bg-transparent" type="checkbox"/>
+<div class="flex-1">
+<p class="text-sm font-medium text-slate-800 dark:text-slate-200 group-hover/item:text-primary">Email follow-up: Sarah</p>
+<p class="text-xs text-slate-500 text-red-500">Overdue</p>
+</div>
+</div>
+</div>
+<button class="mt-auto w-full py-2 text-sm text-primary font-medium hover:bg-primary/5 rounded-lg border border-transparent hover:border-primary/20 transition-all">
+                                    + Add New Task
+                                </button>
+</div>
+</div>
+<div class="col-span-1 md:col-span-2 lg:col-span-2 xl:col-span-2 h-[200px] bg-white dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark shadow-sm hover:border-primary/50 hover:shadow-md transition-all relative group cursor-move">
+<div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+<button class="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-400"><span class="material-symbols-outlined text-sm">settings</span></button>
+<button class="p-1 hover:bg-red-50 dark:hover:bg-red-900/20 rounded text-slate-400 hover:text-red-500"><span class="material-symbols-outlined text-sm">delete</span></button>
+</div>
+<div class="p-5 h-full flex flex-col">
+<h3 class="font-bold text-slate-900 dark:text-white mb-4">Recent Activity</h3>
+<div class="flex flex-col gap-4">
+<div class="flex items-center gap-3">
+<div class="bg-center bg-no-repeat bg-cover rounded-full size-8" data-alt="Avatar of Alice" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDumQYe7A7b8PYZ5FXv4I4fcF2uYx7p9lStxZmXH2JLUDSAtEDrdEUH_kVPyYZKEw1yXnrw4o0CjyrDotVnxvLuZtzmlEHpZDf5T1Xyl8Pnl9llmpTqoORo4UstRvE9T-JqCP1oKRJFdEubKmKKAn8YdBmqQDeDouglzBlxQxJhi9lNdHXcOi-Lm-mE1zjMvpwxcVnEdgEFTaa8pnDJ43CJhEobfcmoImvZhbuvEJ2XuO6cyR7uhP0s_kMLBuLqYUqZP2YmYKdq_NII");'></div>
+<div class="flex-1">
+<p class="text-sm text-slate-800 dark:text-slate-200"><span class="font-semibold">Alice Smith</span> created a new deal <span class="text-primary">Tech Solutions Bundle</span></p>
+<p class="text-xs text-slate-500">2 minutes ago</p>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="bg-center bg-no-repeat bg-cover rounded-full size-8" data-alt="Avatar of Bob" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDNXGIII2sYb5-Z7p1WN4GriiueWisixQJDiCAgj-K8HVZi0bP1IZzjpVSVWT77qEJD3tlacIs_W8ahFYnbcQcWUtSq7yZZc52RlssjzgeKhJCaVWShsdjEdFlgTnbqZzQ3f2w1swL4j_O2DW2Wp4pVPMMWfjD3oVUb73SOPF6TbE-8v-DNWUIz3Wnt0kM8-08IAq_nzv-88F23v1oM08uk8FhByP0megKcx60r09_fMuplqWy1_GbnDcgafds83Fh2pdt23YBUaR6B");'></div>
+<div class="flex-1">
+<p class="text-sm text-slate-800 dark:text-slate-200"><span class="font-semibold">Bob Jones</span> updated status for <span class="font-medium text-slate-700 dark:text-slate-300">Project Alpha</span></p>
+<p class="text-xs text-slate-500">1 hour ago</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="col-span-1 h-[150px] border-2 border-dashed border-primary/40 bg-primary/5 rounded-xl flex flex-col items-center justify-center text-primary/70 transition-all hover:bg-primary/10 hover:border-primary/60">
+<span class="material-symbols-outlined text-3xl mb-2">add_circle</span>
+<span class="text-sm font-medium">Drop Widget Here</span>
+</div>
+</div>
+</div>
+<aside class="w-80 bg-surface-light dark:bg-surface-dark border-l border-border-light dark:border-border-dark flex flex-col shrink-0 z-20 shadow-xl shadow-slate-200/50 dark:shadow-none">
+<div class="p-4 border-b border-border-light dark:border-border-dark">
+<h3 class="font-bold text-slate-900 dark:text-white mb-3">Widget Library</h3>
+<div class="relative">
+<input class="w-full bg-background-light dark:bg-background-dark border-none rounded-lg text-sm px-3 py-2 pl-9 focus:ring-1 focus:ring-primary placeholder:text-slate-400" placeholder="Search widgets..." type="text"/>
+<span class="material-symbols-outlined absolute left-2.5 top-2 text-slate-400 text-[18px]">search</span>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto p-4 flex flex-col gap-6">
+<div>
+<h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 pl-1">Analytics</h4>
+<div class="flex flex-col gap-2">
+<div class="bg-white dark:bg-[#1a2632] p-3 rounded-lg border border-border-light dark:border-border-dark shadow-sm cursor-grab hover:border-primary hover:shadow-md transition-all flex items-center gap-3 group">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-primary">pie_chart</span>
+<div class="flex-1">
+<p class="text-sm font-medium text-slate-900 dark:text-white">Traffic Sources</p>
+<p class="text-xs text-slate-500">Pie chart view</p>
+</div>
+<span class="material-symbols-outlined text-slate-300">drag_indicator</span>
+</div>
+<div class="bg-white dark:bg-[#1a2632] p-3 rounded-lg border border-border-light dark:border-border-dark shadow-sm cursor-grab hover:border-primary hover:shadow-md transition-all flex items-center gap-3 group">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-primary">show_chart</span>
+<div class="flex-1">
+<p class="text-sm font-medium text-slate-900 dark:text-white">Growth Trends</p>
+<p class="text-xs text-slate-500">Line graph view</p>
+</div>
+<span class="material-symbols-outlined text-slate-300">drag_indicator</span>
+</div>
+</div>
+</div>
+<div>
+<h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 pl-1">Sales</h4>
+<div class="flex flex-col gap-2">
+<div class="bg-white dark:bg-[#1a2632] p-3 rounded-lg border border-border-light dark:border-border-dark shadow-sm cursor-grab hover:border-primary hover:shadow-md transition-all flex items-center gap-3 group">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-primary">filter_alt</span>
+<div class="flex-1">
+<p class="text-sm font-medium text-slate-900 dark:text-white">Sales Pipeline</p>
+<p class="text-xs text-slate-500">Funnel view</p>
+</div>
+<span class="material-symbols-outlined text-slate-300">drag_indicator</span>
+</div>
+<div class="bg-white dark:bg-[#1a2632] p-3 rounded-lg border border-border-light dark:border-border-dark shadow-sm cursor-grab hover:border-primary hover:shadow-md transition-all flex items-center gap-3 group">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-primary">leaderboard</span>
+<div class="flex-1">
+<p class="text-sm font-medium text-slate-900 dark:text-white">Top Performers</p>
+<p class="text-xs text-slate-500">List view</p>
+</div>
+<span class="material-symbols-outlined text-slate-300">drag_indicator</span>
+</div>
+</div>
+</div>
+<div>
+<h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 pl-1">Operational</h4>
+<div class="flex flex-col gap-2">
+<div class="bg-white dark:bg-[#1a2632] p-3 rounded-lg border border-border-light dark:border-border-dark shadow-sm cursor-grab hover:border-primary hover:shadow-md transition-all flex items-center gap-3 group">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-primary">calendar_month</span>
+<div class="flex-1">
+<p class="text-sm font-medium text-slate-900 dark:text-white">Upcoming Events</p>
+<p class="text-xs text-slate-500">Calendar list</p>
+</div>
+<span class="material-symbols-outlined text-slate-300">drag_indicator</span>
+</div>
+<div class="bg-white dark:bg-[#1a2632] p-3 rounded-lg border border-border-light dark:border-border-dark shadow-sm cursor-grab hover:border-primary hover:shadow-md transition-all flex items-center gap-3 group">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-primary">chat</span>
+<div class="flex-1">
+<p class="text-sm font-medium text-slate-900 dark:text-white">Team Chat</p>
+<p class="text-xs text-slate-500">Recent messages</p>
+</div>
+<span class="material-symbols-outlined text-slate-300">drag_indicator</span>
+</div>
+</div>
+</div>
+</div>
+</aside>
+</div>
+</main>
+</div>
+
+</body></html>

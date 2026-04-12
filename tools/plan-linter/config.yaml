@@ -1,0 +1,213 @@
+# =============================================================================
+# Plan Linter Configuration v1.0
+# =============================================================================
+# This configuration defines the rules for validating Sprint_plan.csv
+# against plan-overrides.yaml and validation.yaml
+# =============================================================================
+
+schema_version: '1.0.0'
+
+# -----------------------------------------------------------------------------
+# INPUT FILES
+# -----------------------------------------------------------------------------
+inputs:
+  sprint_plan: 'apps/project-tracker/docs/metrics/_global/Sprint_plan.csv'
+  plan_overrides: 'apps/project-tracker/docs/metrics/plan-overrides.yaml'
+  validation_rules: 'apps/project-tracker/docs/metrics/validation.yaml'
+
+# -----------------------------------------------------------------------------
+# OUTPUT FILES
+# -----------------------------------------------------------------------------
+outputs:
+  review_queue: 'apps/project-tracker/docs/metrics/review-queue.json'
+  lint_report: 'artifacts/reports/plan-lint-report.json'
+
+# -----------------------------------------------------------------------------
+# HARD RULES (CI Fails)
+# These rules cause the linter to exit with non-zero status
+# -----------------------------------------------------------------------------
+hard_rules:
+  # Rule: No dependency cycles allowed
+  - id: NO_CYCLES
+    name: 'No Dependency Cycles'
+    description: 'Detect circular dependencies that would create deadlocks'
+    severity: error
+    enabled: true
+    fix_mechanism: 'Add override_deps_remove in plan-overrides.yaml'
+
+  # Rule: No cross-sprint dependencies without override
+  - id: NO_CROSS_SPRINT_UNRESOLVED
+    name: 'No Unresolved Cross-Sprint Dependencies'
+    description: 'Sprint N tasks cannot depend on Sprint N+1 tasks without explicit override'
+    severity: error
+    enabled: true
+    fix_mechanism: 'Add sprint_override or override_deps_remove in plan-overrides.yaml'
+
+  # Rule: Tier A tasks must have gate_profile
+  - id: TIER_A_GATES_REQUIRED
+    name: 'Tier A Gate Profile Required'
+    description: 'All Tier A tasks must have non-empty gate_profile defined'
+    severity: error
+    enabled: true
+    fix_mechanism: 'Add gate_profile array to task in plan-overrides.yaml'
+
+  # Rule: Tier A tasks must have acceptance_owner
+  - id: TIER_A_OWNER_REQUIRED
+    name: 'Tier A Acceptance Owner Required'
+    description: 'All Tier A tasks must have acceptance_owner defined'
+    severity: error
+    enabled: true
+    fix_mechanism: 'Add acceptance_owner to task in plan-overrides.yaml'
+
+  # Rule: Tier A tasks must have evidence_required
+  - id: TIER_A_EVIDENCE_REQUIRED
+    name: 'Tier A Evidence Required'
+    description: 'All Tier A tasks must have evidence_required artifacts listed'
+    severity: error
+    enabled: true
+    fix_mechanism: 'Add evidence_required array to task in plan-overrides.yaml'
+
+  # Rule: All dependencies must resolve to valid task IDs
+  - id: DEPS_RESOLVE
+    name: 'Dependencies Must Resolve'
+    description: 'All dependency references must exist in Sprint_plan.csv'
+    severity: error
+    enabled: true
+    fix_mechanism: 'Fix typo in dependency or add missing task to plan'
+
+# -----------------------------------------------------------------------------
+# SOFT RULES (Warnings, Generate Review Queue Items)
+# These rules generate warnings and add items to review queue
+# -----------------------------------------------------------------------------
+soft_rules:
+  # Rule: Missing validation coverage
+  - id: MISSING_VALIDATION
+    name: 'Missing Validation Coverage'
+    description: 'Task has no validation commands in validation.yaml'
+    severity: warning
+    enabled: true
+    review_queue_priority: high
+
+  # Rule: Predictive/AI tasks need MVP criteria
+  - id: AI_TASKS_MVP
+    name: 'AI Tasks Need MVP Criteria'
+    description: "Tasks with 'predictive' or 'AI-' prefix need deterministic MVP criteria"
+    severity: warning
+    enabled: true
+    review_queue_priority: medium
+
+  # Rule: High fan-out tasks
+  - id: HIGH_FANOUT
+    name: 'High Fan-Out Task'
+    description: 'Task has 3+ direct dependents - needs careful validation'
+    severity: info
+    enabled: true
+    threshold: 3
+    review_queue_priority: high
+
+  # Rule: Tier B without gate_profile
+  - id: TIER_B_MISSING_GATES
+    name: 'Tier B Missing Gate Profile'
+    description: 'Tier B tasks should have gate_profile defined'
+    severity: warning
+    enabled: true
+    review_queue_priority: medium
+
+  # Rule: Waiver used
+  - id: WAIVER_USED
+    name: 'Waiver in Effect'
+    description: 'Task has debt_allowed or waiver_expiry - needs tracking'
+    severity: info
+    enabled: true
+    review_queue_priority: low
+
+  # Rule: Waiver expiring soon
+  - id: WAIVER_EXPIRING
+    name: 'Waiver Expiring Soon'
+    description: 'Waiver expires within 30 days'
+    severity: warning
+    enabled: true
+    days_threshold: 30
+    review_queue_priority: high
+
+  # Rule: Exception policy used
+  - id: EXCEPTION_POLICY
+    name: 'Exception Policy Active'
+    description: 'Task uses exception_policy (stub, contract, waiver)'
+    severity: info
+    enabled: true
+    review_queue_priority: medium
+
+# -----------------------------------------------------------------------------
+# REVIEW QUEUE CONFIGURATION
+# Items added to review queue based on soft rules and conditions
+# -----------------------------------------------------------------------------
+review_queue:
+  # Always include Tier A tasks
+  include_tier_a: true
+
+  # Include high fan-out tasks (3+ dependents)
+  include_high_fanout: true
+  fanout_threshold: 3
+
+  # Include tasks with waivers
+  include_waivers: true
+
+  # Include tasks with large diffs (future: git integration)
+  include_large_diffs: false
+  diff_threshold_lines: 500
+
+  # Include tasks with repeated retries (future: CI integration)
+  include_repeated_retries: false
+  retry_threshold: 3
+
+# -----------------------------------------------------------------------------
+# TIER CLASSIFICATION
+# Default tier assignment based on task characteristics
+# -----------------------------------------------------------------------------
+tier_defaults:
+  # Root tasks (no dependencies) default to Tier A
+  root_tasks: A
+
+  # High fan-out tasks (3+ dependents) default to Tier A
+  high_fanout: A
+
+  # Security tasks default to Tier A
+  security_prefix:
+    - 'SEC-'
+    - 'EXC-SEC-'
+  security_tier: A
+
+  # Foundation tasks default to Tier B
+  foundation_prefix:
+    - 'ENV-'
+    - 'AI-SETUP-'
+  foundation_tier: B
+
+  # All other tasks default to Tier C
+  default_tier: C
+
+# -----------------------------------------------------------------------------
+# SPRINT 0 SPECIFIC RULES
+# Additional rules for Sprint 0 validation
+# -----------------------------------------------------------------------------
+sprint_0_rules:
+  # All Sprint 0 tasks should be in overrides
+  require_all_in_overrides: true
+
+  # Sprint 0 must have no external blockers
+  no_external_blockers: true
+
+  # Minimum tier coverage
+  min_tier_a_count: 10
+  min_tier_a_percentage: 30
+
+# -----------------------------------------------------------------------------
+# EXIT CODES
+# -----------------------------------------------------------------------------
+exit_codes:
+  success: 0
+  hard_rule_failure: 1
+  soft_rule_warnings: 0 # Warnings don't fail CI by default
+  parse_error: 2
+  config_error: 3

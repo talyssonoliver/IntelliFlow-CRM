@@ -1,0 +1,65 @@
+# IntelliFlow CRM - Tempo Configuration
+# Distributed tracing backend for the monitoring stack
+#
+# Retention: 7 days (traces are storage-intensive)
+# Receives traces from OTel Collector via OTLP
+# Config hash tracked in EP-001-AI.json for audit
+
+server:
+  http_listen_port: 3200
+  grpc_listen_port: 9095
+  log_level: info
+
+distributor:
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: 0.0.0.0:4317
+        http:
+          endpoint: 0.0.0.0:4318
+
+ingester:
+  max_block_duration: 5m
+
+compactor:
+  compaction:
+    # 7 days retention for traces
+    block_retention: 168h
+
+storage:
+  trace:
+    backend: local
+    local:
+      path: /var/tempo/traces
+    wal:
+      path: /var/tempo/wal
+    block:
+      bloom_filter_false_positive: 0.05
+      v2_index_downsample_bytes: 1000
+      v2_encoding: zstd
+
+metrics_generator:
+  registry:
+    external_labels:
+      source: tempo
+      cluster: intelliflow
+  storage:
+    path: /var/tempo/generator/wal
+    remote_write:
+      - url: http://prometheus:9090/api/v1/write
+        send_exemplars: true
+
+# Query settings
+querier:
+  max_concurrent_queries: 20
+  search:
+    query_timeout: 30s
+
+# Overrides for tenants (single tenant mode)
+overrides:
+  metrics_generator_processors: []
+
+# Analytics disabled for privacy
+usage_report:
+  reporting_enabled: false

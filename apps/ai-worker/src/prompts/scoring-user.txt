@@ -1,0 +1,38 @@
+Please analyze the following lead and provide a score:
+
+## Lead Information
+
+- **Email**: {{email}}
+- **First Name**: {{firstName}}
+- **Last Name**: {{lastName}}
+- **Company**: {{company}}
+- **Title**: {{title}}
+- **Phone**: {{phone}}
+- **Source**: {{source}}
+
+## Additional Context
+
+{{#if companyData}}
+### Company Data
+- Industry: {{companyData.industry}}
+- Size: {{companyData.size}}
+- Revenue: {{companyData.revenue}}
+- Location: {{companyData.location}}
+{{/if}}
+
+{{#if recentActivities}}
+### Recent Activities
+{{#each recentActivities}}
+- {{this}}
+{{/each}}
+{{/if}}
+
+## Instructions
+
+1. Calculate the total score (0-100) based on the scoring framework
+2. Provide confidence level (0-1) based on data quality
+3. List each scoring factor with its contribution
+4. Determine the tier (HOT/WARM/COLD)
+5. Provide a brief recommendation for sales follow-up
+
+Respond with valid JSON only.

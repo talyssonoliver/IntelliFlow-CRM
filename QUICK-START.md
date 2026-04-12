@@ -22,6 +22,7 @@ pnpm run dev
 ```
 
 **Access Points:**
+
 - Frontend: http://localhost:3000
 - API: http://localhost:3001
 - Database GUI: `pnpm run db:studio` → http://localhost:5555
@@ -86,12 +87,14 @@ Email pattern: `{role}@intelliflow.dev`
 ## Troubleshooting
 
 ### "Port already in use"
+
 ```bash
 # Kill process on port (example: 3000)
 npx kill-port 3000
 ```
 
 ### "Database connection failed"
+
 ```bash
 # Restart Docker services
 pnpm run docker:down
@@ -102,11 +105,13 @@ pnpm run db:migrate
 ```
 
 ### "Prisma client not found"
+
 ```bash
 pnpm run db:generate
 ```
 
 ### "Module not found"
+
 ```bash
 # Reinstall dependencies
 pnpm install
@@ -136,13 +141,15 @@ intelliFlow-CRM/
 
 1. Read [SETUP.md](./SETUP.md) - Comprehensive setup guide
 2. Check [CLAUDE.md](./CLAUDE.md) - Architecture & patterns
-3. View [ENV-013-016-SUMMARY.md](./ENV-013-016-SUMMARY.md) - Implementation details
+3. View [ENV-013-016-SUMMARY.md](./ENV-013-016-SUMMARY.md) - Implementation
+   details
 
 ---
 
 ## Next Steps
 
 After setup, explore:
+
 - Prisma Studio to see seeded data
 - `apps/web` for frontend code
 - `packages/domain` for business logic

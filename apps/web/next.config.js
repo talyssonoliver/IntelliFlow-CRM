@@ -1,37 +1,72 @@
+const path = require('path');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Output configuration for Docker deployment
-  output: 'standalone',
+  // Set `NEXT_OUTPUT=standalone` for Docker/CI builds (Windows requires symlink support)
+  ...(process.env.NEXT_OUTPUT === 'standalone' ? { output: 'standalone' } : {}),
 
   // Enable strict mode for better error detection
   reactStrictMode: true,
 
-  // Disable telemetry
-  telemetry: {
-    disabled: true,
-  },
+  // Configure server external packages (fix Prisma in monorepo)
+  serverExternalPackages: [
+    '@prisma/client',
+    '.prisma/client',
+    '@prisma/engines',
+    '@prisma/adapter-pg',
+    '@intelliflow/db',
+    '@sentry/node',
+    '@fastify/otel',
+    '@opentelemetry/instrumentation',
+    'require-in-the-middle',
+    '@bull-board/api',
+    'bullmq',
+    'ioredis',
+  ],
 
   // Compiler options
   compiler: {
     // Remove console logs in production
-    removeConsole: process.env.NODE_ENV === 'production' ? {
-      exclude: ['error', 'warn'],
-    } : false,
+    removeConsole:
+      process.env.NODE_ENV === 'production'
+        ? {
+            exclude: ['error', 'warn'],
+          }
+        : false,
   },
 
   // Experimental features
   experimental: {
-    // Enable server actions
+    // Server actions configuration
     serverActions: {
       bodySizeLimit: '2mb',
     },
     // Optimize package imports
-    optimizePackageImports: ['@intelliflow/ui', 'recharts', 'lucide-react'],
+    optimizePackageImports: ['@intelliflow/ui', 'recharts'],
+    // Enable 'use cache' directive, cacheLife(), cacheTag() without PPR
+    useCache: true,
+  },
+
+  // Turbopack configuration (Next.js 16+ default bundler)
+  turbopack: {
+    root: path.resolve(__dirname, '../../'), // Monorepo root (absolute path)
+    rules: {
+      // Add support for SVG imports (equivalent to @svgr/webpack)
+      '*.svg': {
+        loaders: ['@svgr/webpack'],
+        as: '*.js',
+      },
+    },
   },
 
   // Image optimization
   images: {
-    domains: ['localhost'],
+    remotePatterns: [
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+      },
+    ],
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
@@ -71,6 +106,40 @@ const nextConfig = {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=()',
           },
+          {
+            key: 'Content-Security-Policy',
+            // Note: Next.js (Turbopack/webpack) injects inline scripts for HMR in development,
+            // requiring 'unsafe-inline' for script-src in dev mode. In production we omit it
+            // for a strict CSP. 'unsafe-eval' is removed entirely — Next.js 16 does not need it
+            // in production builds, and in development the security trade-off is acceptable.
+            value:
+              process.env.NODE_ENV === 'production'
+                ? [
+                    "default-src 'self'",
+                    "script-src 'self' https://js.stripe.com",
+                    "style-src 'self' 'unsafe-inline'",
+                    "img-src 'self' data: blob: https:",
+                    "font-src 'self' data:",
+                    "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.openai.com",
+                    "frame-src 'self' https://js.stripe.com",
+                    "base-uri 'self'",
+                    "form-action 'self'",
+                    "object-src 'none'",
+                  ].join('; ')
+                : [
+                    "default-src 'self'",
+                    // 'unsafe-inline' needed for HMR injected scripts in dev mode
+                    "script-src 'self' 'unsafe-inline' https://js.stripe.com",
+                    "style-src 'self' 'unsafe-inline'",
+                    "img-src 'self' data: blob: https:",
+                    "font-src 'self' data:",
+                    "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.openai.com ws://localhost:*",
+                    "frame-src 'self' https://js.stripe.com",
+                    "base-uri 'self'",
+                    "form-action 'self'",
+                    "object-src 'none'",
+                  ].join('; '),
+          },
         ],
       },
     ];
@@ -84,6 +153,16 @@ const nextConfig = {
         destination: '/',
         permanent: true,
       },
+      {
+        source: '/appointments',
+        destination: '/calendar',
+        permanent: true,
+      },
+      {
+        source: '/appointments/:path*',
+        destination: '/calendar/:path*',
+        permanent: true,
+      },
     ];
   },
 
@@ -92,69 +171,19 @@ const nextConfig = {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000',
   },
 
-  // Webpack configuration
-  webpack: (config, { isServer, dev }) => {
-    // Optimize bundle size
-    if (!dev && !isServer) {
-      config.optimization = {
-        ...config.optimization,
-        splitChunks: {
-          chunks: 'all',
-          cacheGroups: {
-            default: false,
-            vendors: false,
-            // Vendor chunk for react/next
-            framework: {
-              name: 'framework',
-              chunks: 'all',
-              test: /(?<!node_modules.*)[\\/]node_modules[\\/](react|react-dom|next)[\\/]/,
-              priority: 40,
-              enforce: true,
-            },
-            // UI library chunk
-            ui: {
-              name: 'ui',
-              chunks: 'all',
-              test: /[\\/]node_modules[\\/](@intelliflow\/ui|lucide-react)[\\/]/,
-              priority: 30,
-            },
-            // Charts library chunk
-            charts: {
-              name: 'charts',
-              chunks: 'all',
-              test: /[\\/]node_modules[\\/](recharts)[\\/]/,
-              priority: 25,
-            },
-            // Common shared chunks
-            commons: {
-              name: 'commons',
-              minChunks: 2,
-              priority: 20,
-            },
-          },
-        },
-      };
-    }
-
-    // Add support for SVG imports
-    config.module.rules.push({
-      test: /\.svg$/,
-      use: ['@svgr/webpack'],
-    });
-
+  // Webpack: resolve Prisma 7 generated .js → .ts extension imports
+  webpack: (config) => {
+    config.resolve.extensionAlias = {
+      ...config.resolve.extensionAlias,
+      '.js': ['.js', '.ts'],
+    };
     return config;
   },
 
   // TypeScript configuration
   typescript: {
     // Only run type checking in CI
-    ignoreBuildErrors: process.env.CI !== 'true',
-  },
-
-  // ESLint configuration
-  eslint: {
-    // Only run linting in CI
-    ignoreDuringBuilds: process.env.CI !== 'true',
+    ignoreBuildErrors: false,
   },
 
   // Power features

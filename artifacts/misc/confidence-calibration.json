@@ -1,0 +1,239 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "1.0.0",
+  "createdAt": "2026-01-01T06:30:00.000Z",
+  "description": "Confidence calibration configuration for AI output validation (IFC-022)",
+  "task": "IFC-022",
+
+  "globalThresholds": {
+    "humanReviewRequired": 0.5,
+    "autoApprove": 0.85,
+    "lowConfidenceFlag": 0.4,
+    "criticalDecision": 0.9
+  },
+
+  "agentCalibration": {
+    "leadQualifier": {
+      "name": "Lead Qualification Specialist",
+      "description": "Analyzes leads using BANT framework",
+      "baseConfidenceFloor": 0.4,
+      "dataCompletenessImpact": {
+        "fullProfile": 0.0,
+        "partialProfile": -0.2,
+        "minimalProfile": -0.35
+      },
+      "outputQualityFactors": {
+        "minStrengths": 1,
+        "minRecommendedActions": 1,
+        "reasoningMinLength": 50
+      },
+      "humanReviewTriggers": [
+        "confidence < 0.5",
+        "qualificationLevel == 'UNQUALIFIED' && leadScore > 70",
+        "concerns.length > 3"
+      ]
+    },
+
+    "emailWriter": {
+      "name": "Email Writer Specialist",
+      "description": "Generates personalized sales emails",
+      "baseConfidenceFloor": 0.3,
+      "dataCompletenessImpact": {
+        "fullContext": 0.0,
+        "partialContext": -0.15,
+        "minimalContext": -0.30
+      },
+      "outputQualityFactors": {
+        "minPersonalizationElements": 2,
+        "subjectMaxLength": 50,
+        "callToActionRequired": true
+      },
+      "humanReviewTriggers": [
+        "confidence < 0.5",
+        "purpose == 'RE_ENGAGEMENT'",
+        "urgency == 'HIGH'",
+        "personalizationElements.length < 2"
+      ]
+    },
+
+    "followupAgent": {
+      "name": "Follow-up Strategy Specialist",
+      "description": "Recommends optimal follow-up timing and actions",
+      "baseConfidenceFloor": 0.35,
+      "dataCompletenessImpact": {
+        "hasInteractionHistory": 0.0,
+        "noInteractionHistory": -0.25
+      },
+      "outputQualityFactors": {
+        "minNextSteps": 1,
+        "reasoningMinLength": 30
+      },
+      "humanReviewTriggers": [
+        "confidence < 0.5",
+        "recommendedAction == 'CLOSE_AS_LOST'",
+        "urgency == 'IMMEDIATE'"
+      ]
+    },
+
+    "scoringChain": {
+      "name": "Lead Scoring Chain",
+      "description": "Scores leads 0-100 based on quality factors",
+      "baseConfidenceFloor": 0.5,
+      "dataCompletenessImpact": {
+        "corporateEmail": 0.0,
+        "freeEmail": -0.1,
+        "noEmail": -0.3
+      },
+      "outputQualityFactors": {
+        "minFactors": 3,
+        "factorReasoningRequired": true
+      },
+      "humanReviewTriggers": [
+        "confidence < 0.5",
+        "factors.length == 0"
+      ]
+    }
+  },
+
+  "modelCalibration": {
+    "openai:gpt-4-turbo-preview": {
+      "confidenceAdjustment": 0.0,
+      "hallucinationRisk": "low",
+      "temperatureImpact": {
+        "0.0-0.3": 0.05,
+        "0.3-0.7": 0.0,
+        "0.7-1.0": -0.1
+      }
+    },
+    "openai:gpt-4o": {
+      "confidenceAdjustment": 0.0,
+      "hallucinationRisk": "low",
+      "temperatureImpact": {
+        "0.0-0.3": 0.05,
+        "0.3-0.7": 0.0,
+        "0.7-1.0": -0.1
+      }
+    },
+    "openai:gpt-3.5-turbo": {
+      "confidenceAdjustment": -0.1,
+      "hallucinationRisk": "medium",
+      "temperatureImpact": {
+        "0.0-0.3": 0.03,
+        "0.3-0.7": -0.05,
+        "0.7-1.0": -0.15
+      }
+    },
+    "ollama:llama2": {
+      "confidenceAdjustment": -0.15,
+      "hallucinationRisk": "medium-high",
+      "notes": "Local development only - not for production"
+    },
+    "ollama:mistral": {
+      "confidenceAdjustment": -0.12,
+      "hallucinationRisk": "medium",
+      "notes": "Local development only - not for production"
+    }
+  },
+
+  "actionThresholds": {
+    "send_email": {
+      "minConfidence": 0.75,
+      "requiresApproval": true,
+      "riskLevel": "high"
+    },
+    "update_lead_status": {
+      "minConfidence": 0.70,
+      "requiresApproval": true,
+      "riskLevel": "high"
+    },
+    "schedule_meeting": {
+      "minConfidence": 0.70,
+      "requiresApproval": true,
+      "riskLevel": "high"
+    },
+    "send_proposal": {
+      "minConfidence": 0.80,
+      "requiresApproval": true,
+      "riskLevel": "high"
+    },
+    "create_task": {
+      "minConfidence": 0.50,
+      "requiresApproval": false,
+      "riskLevel": "low"
+    },
+    "add_notes": {
+      "minConfidence": 0.40,
+      "requiresApproval": false,
+      "riskLevel": "low"
+    },
+    "search_leads": {
+      "minConfidence": 0.30,
+      "requiresApproval": false,
+      "riskLevel": "low"
+    },
+    "generate_report": {
+      "minConfidence": 0.50,
+      "requiresApproval": false,
+      "riskLevel": "low"
+    }
+  },
+
+  "crewCalibration": {
+    "leadProcessing": {
+      "description": "Sequential crew for lead qualification pipeline",
+      "aggregationMethod": "minimum",
+      "checkpointThreshold": 0.5,
+      "failFastOnLowConfidence": false
+    },
+    "research": {
+      "description": "Parallel crew for data gathering",
+      "aggregationMethod": "average",
+      "checkpointThreshold": 0.4,
+      "failFastOnLowConfidence": false
+    },
+    "sales": {
+      "description": "Hierarchical crew with manager delegation",
+      "aggregationMethod": "weighted",
+      "weights": {
+        "manager": 0.4,
+        "workers": 0.6
+      },
+      "checkpointThreshold": 0.5
+    }
+  },
+
+  "validationRules": {
+    "allOutputsMustHaveConfidence": true,
+    "confidenceRangeMin": 0.0,
+    "confidenceRangeMax": 1.0,
+    "fallbackConfidenceOnError": 0.0,
+    "fallbackConfidenceOnParseError": 0.1,
+    "logLowConfidenceOutputs": true,
+    "metricsEnabled": true,
+    "alertOnConsistentLowConfidence": {
+      "enabled": true,
+      "threshold": 0.3,
+      "windowSize": 10,
+      "alertMethod": "log"
+    }
+  },
+
+  "kpiTargets": {
+    "hallucinationRate": {
+      "target": 0.05,
+      "description": "Maximum 5% hallucination rate"
+    },
+    "humanReviewRate": {
+      "target": 0.20,
+      "description": "Maximum 20% of outputs require human review"
+    },
+    "autoApprovalRate": {
+      "target": 0.70,
+      "description": "Minimum 70% of outputs auto-approved"
+    },
+    "averageConfidence": {
+      "target": 0.75,
+      "description": "Minimum average confidence across all outputs"
+    }
+  }
+}

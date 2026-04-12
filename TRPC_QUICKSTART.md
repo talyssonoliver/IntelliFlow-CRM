@@ -1,6 +1,7 @@
 # tRPC API Quick Start Guide
 
-This guide will help you get started with the newly created tRPC API infrastructure for IntelliFlow CRM.
+This guide will help you get started with the newly created tRPC API
+infrastructure for IntelliFlow CRM.
 
 ## Prerequisites
 
@@ -228,6 +229,7 @@ console.log('Leads:', leads);
 ## Available Endpoints
 
 ### Leads
+
 - `trpc.lead.create.useMutation()` - Create a lead
 - `trpc.lead.getById.useQuery({ id })` - Get lead by ID
 - `trpc.lead.list.useQuery({ page, limit, ... })` - List leads
@@ -239,6 +241,7 @@ console.log('Leads:', leads);
 - `trpc.lead.stats.useQuery()` - Get lead statistics
 
 ### Contacts
+
 - `trpc.contact.create.useMutation()` - Create a contact
 - `trpc.contact.getById.useQuery({ id })` - Get contact by ID
 - `trpc.contact.getByEmail.useQuery({ email })` - Get contact by email
@@ -252,11 +255,13 @@ console.log('Leads:', leads);
 ## Type Safety
 
 All endpoints are fully typed! TypeScript will autocomplete:
+
 - Input parameters
 - Return types
 - Error types
 
 Example:
+
 ```typescript
 const { data } = trpc.lead.list.useQuery({
   page: 1,
@@ -276,6 +281,7 @@ data.leads.forEach((lead) => {
 ### Build Errors
 
 If you get build errors:
+
 ```bash
 # Clean all build artifacts
 pnpm run clean
@@ -290,6 +296,7 @@ pnpm --filter @intelliflow/api-client run build
 ### Type Errors
 
 If you get type errors:
+
 ```bash
 # Make sure Prisma client is generated
 pnpm --filter @intelliflow/db run db:generate
@@ -301,6 +308,7 @@ pnpm run typecheck
 ### Database Errors
 
 If you get database errors:
+
 ```bash
 # Make sure database is running
 # Check your DATABASE_URL and DIRECT_URL in .env
@@ -314,7 +322,8 @@ pnpm --filter @intelliflow/db run db:migrate
 
 ## Next Steps
 
-1. **Add Authentication**: Replace mock user with real auth (NextAuth.js, Clerk, etc.)
+1. **Add Authentication**: Replace mock user with real auth (NextAuth.js, Clerk,
+   etc.)
 2. **Add More Routers**: Account, Opportunity, Task, Analytics
 3. **Add Tests**: Write unit and integration tests
 4. **Add Monitoring**: OpenTelemetry, Sentry
@@ -333,6 +342,7 @@ pnpm --filter @intelliflow/db run db:migrate
 ## Support
 
 For issues or questions:
+
 1. Check the README files in each package
 2. Review the implementation summary
 3. Check tRPC and React Query documentation

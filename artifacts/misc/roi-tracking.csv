@@ -1,0 +1,5 @@
+metric,baseline,current,improvement,date
+deployment_frequency,1/week,2/week,100%,2025-12-21
+lead_time_hours,72,24,66%,2025-12-21
+mttr_hours,8,2,75%,2025-12-21
+change_failure_rate,15%,5%,66%,2025-12-21

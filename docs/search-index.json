@@ -1,0 +1,206 @@
+{
+  "version": "1.0.0",
+  "generated_at": "2025-12-23T21:00:00.000Z",
+  "index_type": "docusaurus-local-search",
+  "total_documents": 45,
+  "documents": [
+    {
+      "id": "architecture-adr-001",
+      "title": "ADR-001: Modern Stack Selection",
+      "path": "/docs/planning/adr/ADR-001-modern-stack",
+      "content": "Architecture decision record for selecting Next.js, tRPC, Prisma, and Supabase as the core technology stack.",
+      "tags": ["adr", "architecture", "stack", "next.js", "trpc"],
+      "section": "Architecture"
+    },
+    {
+      "id": "architecture-adr-002",
+      "title": "ADR-002: Domain-Driven Design",
+      "path": "/docs/planning/adr/ADR-002-domain-driven-design",
+      "content": "Decision to adopt DDD principles with hexagonal architecture for domain isolation and maintainability.",
+      "tags": ["adr", "ddd", "hexagonal", "architecture"],
+      "section": "Architecture"
+    },
+    {
+      "id": "architecture-adr-003",
+      "title": "ADR-003: Type-Safe API Design",
+      "path": "/docs/planning/adr/ADR-003-type-safe-api-design",
+      "content": "Using tRPC for end-to-end type safety between frontend and backend APIs.",
+      "tags": ["adr", "trpc", "typescript", "api"],
+      "section": "Architecture"
+    },
+    {
+      "id": "architecture-adr-009",
+      "title": "ADR-009: Zero Trust Security",
+      "path": "/docs/planning/adr/ADR-009-zero-trust-security",
+      "content": "Implementing zero trust security model with defense in depth across all layers.",
+      "tags": ["adr", "security", "zero-trust", "rls"],
+      "section": "Architecture"
+    },
+    {
+      "id": "security-zero-trust",
+      "title": "Zero Trust Security Design",
+      "path": "/docs/security/zero-trust-design",
+      "content": "Detailed implementation of zero trust security model with 4 layers: UI, API Auth, API Authz, Database RLS.",
+      "tags": ["security", "zero-trust", "authentication", "authorization"],
+      "section": "Security"
+    },
+    {
+      "id": "security-rls",
+      "title": "Row-Level Security Design",
+      "path": "/docs/security/rls-design",
+      "content": "PostgreSQL RLS policies for automatic tenant isolation and role-based data access.",
+      "tags": ["security", "rls", "postgresql", "multi-tenant"],
+      "section": "Security"
+    },
+    {
+      "id": "security-owasp",
+      "title": "OWASP Top 10 Checklist",
+      "path": "/docs/security/owasp-checklist",
+      "content": "Comprehensive checklist covering OWASP Top 10 vulnerabilities and mitigations.",
+      "tags": ["security", "owasp", "vulnerabilities", "checklist"],
+      "section": "Security"
+    },
+    {
+      "id": "security-dpia",
+      "title": "Data Protection Impact Assessment",
+      "path": "/docs/security/dpia",
+      "content": "DPIA for AI-powered lead scoring and CRM data processing.",
+      "tags": ["security", "gdpr", "dpia", "privacy"],
+      "section": "Security"
+    },
+    {
+      "id": "architecture-hex-boundaries",
+      "title": "Hexagonal Architecture Boundaries",
+      "path": "/docs/architecture/hex-boundaries",
+      "content": "Definition of ports and adapters, layer dependencies, and boundary enforcement.",
+      "tags": ["architecture", "hexagonal", "ports", "adapters"],
+      "section": "Architecture"
+    },
+    {
+      "id": "domain-lead",
+      "title": "Lead Aggregate",
+      "path": "/docs/domain/lead",
+      "content": "Lead entity with value objects (Email, LeadScore), domain events, and business rules.",
+      "tags": ["domain", "lead", "aggregate", "ddd"],
+      "section": "Domain"
+    },
+    {
+      "id": "domain-contact",
+      "title": "Contact Aggregate",
+      "path": "/docs/domain/contact",
+      "content": "Contact entity representing people associated with accounts.",
+      "tags": ["domain", "contact", "aggregate", "ddd"],
+      "section": "Domain"
+    },
+    {
+      "id": "domain-account",
+      "title": "Account Aggregate",
+      "path": "/docs/domain/account",
+      "content": "Account entity representing companies/organizations in the CRM.",
+      "tags": ["domain", "account", "aggregate", "ddd"],
+      "section": "Domain"
+    },
+    {
+      "id": "domain-opportunity",
+      "title": "Opportunity Aggregate",
+      "path": "/docs/domain/opportunity",
+      "content": "Opportunity entity for tracking sales deals through pipeline stages.",
+      "tags": ["domain", "opportunity", "aggregate", "ddd", "sales"],
+      "section": "Domain"
+    },
+    {
+      "id": "domain-task",
+      "title": "Task Aggregate",
+      "path": "/docs/domain/task",
+      "content": "Task entity for managing activities, follow-ups, and reminders.",
+      "tags": ["domain", "task", "aggregate", "ddd"],
+      "section": "Domain"
+    },
+    {
+      "id": "api-trpc",
+      "title": "tRPC API Reference",
+      "path": "/docs/api/trpc",
+      "content": "Type-safe API endpoints for leads, contacts, accounts, opportunities, and tasks.",
+      "tags": ["api", "trpc", "reference", "endpoints"],
+      "section": "API"
+    },
+    {
+      "id": "api-authentication",
+      "title": "Authentication API",
+      "path": "/docs/api/authentication",
+      "content": "JWT-based authentication with Supabase Auth integration.",
+      "tags": ["api", "authentication", "jwt", "supabase"],
+      "section": "API"
+    },
+    {
+      "id": "design-tokens",
+      "title": "Design Token Mapping",
+      "path": "/docs/design-system/token-mapping",
+      "content": "Mapping from brand tokens to Tailwind CSS variables and shadcn/ui components.",
+      "tags": ["design", "tokens", "tailwind", "shadcn"],
+      "section": "Design System"
+    },
+    {
+      "id": "design-theme",
+      "title": "Theme Reference Spec",
+      "path": "/docs/design-system/theme-reference-spec",
+      "content": "Complete theme system documentation including dark mode and component patterns.",
+      "tags": ["design", "theme", "dark-mode", "components"],
+      "section": "Design System"
+    },
+    {
+      "id": "operations-playbook",
+      "title": "Engineering Playbook",
+      "path": "/docs/operations/engineering-playbook",
+      "content": "SDLC process, PR rules, quality gates, and release procedures.",
+      "tags": ["operations", "sdlc", "quality", "release"],
+      "section": "Operations"
+    },
+    {
+      "id": "operations-quality-gates",
+      "title": "Quality Gates",
+      "path": "/docs/operations/quality-gates",
+      "content": "CI/CD quality gates including linting, testing, security scanning.",
+      "tags": ["operations", "ci-cd", "quality", "gates"],
+      "section": "Operations"
+    },
+    {
+      "id": "observability-tracing",
+      "title": "OpenTelemetry Tracing",
+      "path": "/docs/observability/tracing",
+      "content": "Distributed tracing setup with OpenTelemetry, Tempo, and Grafana.",
+      "tags": ["observability", "tracing", "opentelemetry", "grafana"],
+      "section": "Observability"
+    },
+    {
+      "id": "observability-metrics",
+      "title": "Prometheus Metrics",
+      "path": "/docs/observability/metrics",
+      "content": "Application metrics collection with Prometheus and Grafana dashboards.",
+      "tags": ["observability", "metrics", "prometheus", "grafana"],
+      "section": "Observability"
+    },
+    {
+      "id": "observability-logging",
+      "title": "Structured Logging",
+      "path": "/docs/observability/logging",
+      "content": "JSON structured logging with correlation IDs and Loki integration.",
+      "tags": ["observability", "logging", "loki", "correlation"],
+      "section": "Observability"
+    }
+  ],
+  "sections": [
+    { "name": "Architecture", "count": 5 },
+    { "name": "Security", "count": 4 },
+    { "name": "Domain", "count": 5 },
+    { "name": "API", "count": 2 },
+    { "name": "Design System", "count": 2 },
+    { "name": "Operations", "count": 2 },
+    { "name": "Observability", "count": 3 }
+  ],
+  "metadata": {
+    "build_tool": "docusaurus",
+    "search_plugin": "@docusaurus/plugin-content-search",
+    "language": "en"
+  }
+}

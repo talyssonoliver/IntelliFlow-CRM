@@ -1,0 +1,46 @@
+{
+  "valid": false,
+  "errors": [
+    {
+      "variable": "SUPABASE_JWT_SECRET",
+      "type": "security",
+      "message": "Security-sensitive variable 'SUPABASE_JWT_SECRET' appears to contain a placeholder value",
+      "severity": "critical"
+    },
+    {
+      "variable": "OPENAI_API_KEY",
+      "type": "missing",
+      "message": "Required environment variable 'OPENAI_API_KEY' is missing",
+      "severity": "critical"
+    },
+    {
+      "variable": "NEXTAUTH_SECRET",
+      "type": "security",
+      "message": "Security-sensitive variable 'NEXTAUTH_SECRET' appears to contain a placeholder value",
+      "severity": "critical"
+    },
+    {
+      "variable": "JWT_SECRET",
+      "type": "security",
+      "message": "Security-sensitive variable 'JWT_SECRET' appears to contain a placeholder value",
+      "severity": "critical"
+    },
+    {
+      "variable": "ENCRYPTION_KEY",
+      "type": "security",
+      "message": "Security-sensitive variable 'ENCRYPTION_KEY' appears to contain a placeholder value",
+      "severity": "critical"
+    }
+  ],
+  "warnings": [],
+  "summary": {
+    "totalVariables": 26,
+    "requiredVariables": 12,
+    "optionalVariables": 14,
+    "validVariables": 25,
+    "invalidVariables": 1,
+    "missingVariables": 1
+  },
+  "environment": "development",
+  "timestamp": "2025-12-15T07:35:26.954Z"
+}

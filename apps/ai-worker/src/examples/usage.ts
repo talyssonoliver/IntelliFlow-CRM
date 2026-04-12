@@ -113,11 +113,7 @@ async function example3_LeadQualification() {
     phone: '+1-555-0123',
     source: 'WEBSITE',
     score: 85,
-    recentActivities: [
-      'Visited pricing page 3 times',
-      'Downloaded whitepaper',
-      'Requested demo',
-    ],
+    recentActivities: ['Visited pricing page 3 times', 'Downloaded whitepaper', 'Requested demo'],
     companyData: {
       industry: 'Technology',
       size: '500-1000 employees',
@@ -195,8 +191,8 @@ async function example4_CostTracking() {
   console.log(`  Total Operations: ${stats.totalOperations}`);
   console.log(`  Total Cost: $${stats.totalCost.toFixed(4)}`);
   console.log(`  Average Cost per Operation: $${stats.averageCostPerOperation.toFixed(6)}`);
-  console.log(`  Total Input Tokens: ${stats.totalInputTokens.toLocaleString()}`);
-  console.log(`  Total Output Tokens: ${stats.totalOutputTokens.toLocaleString()}\n`);
+  console.log(`  Total Input Tokens: ${stats.totalInputTokens.toLocaleString('en-US')}`);
+  console.log(`  Total Output Tokens: ${stats.totalOutputTokens.toLocaleString('en-US')}\n`);
 
   console.log('Cost by Model:');
   Object.entries(stats.costByModel).forEach(([model, cost]) => {
@@ -296,6 +292,7 @@ async function runAllExamples() {
 // Run examples if this file is executed directly
 if (require.main === module) {
   runAllExamples().catch((error) => {
+    // NOSONAR typescript:S7785 — top-level await unavailable in CJS modules
     console.error('Fatal error:', error);
     process.exit(1);
   });

@@ -1,0 +1,3 @@
+timestamp,action,source_env,target_env,switch_time_ms,health_status,commit_sha,actor,success
+2025-12-26T12:00:00Z,deploy,blue,green,45230,healthy,abc123def,github-actions,true
+2025-12-26T12:00:00Z,status,green,blue,0,healthy,abc123def,github-actions,true

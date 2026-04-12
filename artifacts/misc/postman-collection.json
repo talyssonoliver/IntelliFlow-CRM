@@ -1,0 +1,287 @@
+{
+  "info": {
+    "_postman_id": "intelliflow-crm-api-v1",
+    "name": "IntelliFlow CRM API",
+    "description": "Complete API collection for IntelliFlow CRM tRPC endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3001", "type": "string" },
+    { "key": "token", "value": "", "type": "string" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "Lead",
+      "description": "Lead management endpoints",
+      "item": [
+        {
+          "name": "Create Lead",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/trpc/lead.create",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"company\": \"Acme Inc\",\n  \"phone\": \"+1234567890\",\n  \"source\": \"WEBSITE\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Lead by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/trpc/lead.getById?input={\"id\":\"{{leadId}}\"}",
+              "host": ["{{baseUrl}}"],
+              "path": ["trpc", "lead.getById"],
+              "query": [{ "key": "input", "value": "{\"id\":\"{{leadId}}\"}" }]
+            }
+          }
+        },
+        {
+          "name": "List Leads",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/trpc/lead.list?input={\"page\":1,\"limit\":20}",
+              "host": ["{{baseUrl}}"],
+              "path": ["trpc", "lead.list"],
+              "query": [{ "key": "input", "value": "{\"page\":1,\"limit\":20}" }]
+            }
+          }
+        },
+        {
+          "name": "Update Lead",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/trpc/lead.update",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"{{leadId}}\",\n  \"company\": \"Updated Company Name\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Lead",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/trpc/lead.delete",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"id\": \"{{leadId}}\"\n}" }
+          }
+        },
+        {
+          "name": "Qualify Lead",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/trpc/lead.qualify",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"leadId\": \"{{leadId}}\",\n  \"reason\": \"Met qualification criteria\"\n}" }
+          }
+        },
+        {
+          "name": "Convert Lead",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/trpc/lead.convert",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"leadId\": \"{{leadId}}\",\n  \"createAccount\": true,\n  \"accountName\": \"New Account\"\n}" }
+          }
+        },
+        {
+          "name": "Score Lead with AI",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/trpc/lead.scoreWithAI",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"leadId\": \"{{leadId}}\"\n}" }
+          }
+        },
+        {
+          "name": "Get Lead Stats",
+          "request": { "method": "GET", "url": "{{baseUrl}}/trpc/lead.stats" }
+        },
+        {
+          "name": "Get Hot Leads",
+          "request": { "method": "GET", "url": "{{baseUrl}}/trpc/lead.getHotLeads" }
+        },
+        {
+          "name": "Get Ready for Qualification",
+          "request": { "method": "GET", "url": "{{baseUrl}}/trpc/lead.getReadyForQualification" }
+        },
+        {
+          "name": "Bulk Score Leads",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/trpc/lead.bulkScore",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"leadIds\": [\"{{leadId}}\"]\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Contact",
+      "description": "Contact management endpoints",
+      "item": [
+        {
+          "name": "Create Contact",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/trpc/contact.create",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"jane.doe@example.com\",\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Doe\"\n}" }
+          }
+        },
+        {
+          "name": "List Contacts",
+          "request": { "method": "GET", "url": "{{baseUrl}}/trpc/contact.list" }
+        }
+      ]
+    },
+    {
+      "name": "Account",
+      "description": "Account management endpoints",
+      "item": [
+        {
+          "name": "Create Account",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/trpc/account.create",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Acme Corporation\",\n  \"industry\": \"Technology\"\n}" }
+          }
+        },
+        {
+          "name": "List Accounts",
+          "request": { "method": "GET", "url": "{{baseUrl}}/trpc/account.list" }
+        }
+      ]
+    },
+    {
+      "name": "Opportunity",
+      "description": "Opportunity/deal management endpoints",
+      "item": [
+        {
+          "name": "Create Opportunity",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/trpc/opportunity.create",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Enterprise Deal\",\n  \"amount\": 50000,\n  \"stage\": \"PROSPECTING\"\n}" }
+          }
+        },
+        {
+          "name": "List Opportunities",
+          "request": { "method": "GET", "url": "{{baseUrl}}/trpc/opportunity.list" }
+        },
+        {
+          "name": "Update Stage",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/trpc/opportunity.updateStage",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"id\": \"{{opportunityId}}\",\n  \"stage\": \"NEGOTIATION\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Task",
+      "description": "Task management endpoints",
+      "item": [
+        {
+          "name": "Create Task",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/trpc/task.create",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Follow up with prospect\",\n  \"priority\": \"HIGH\"\n}" }
+          }
+        },
+        {
+          "name": "List Tasks",
+          "request": { "method": "GET", "url": "{{baseUrl}}/trpc/task.list" }
+        }
+      ]
+    },
+    {
+      "name": "Ticket",
+      "description": "Support ticket endpoints",
+      "item": [
+        {
+          "name": "Create Ticket",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/trpc/ticket.create",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"subject\": \"Support request\",\n  \"description\": \"Need help with...\"\n}" }
+          }
+        },
+        {
+          "name": "List Tickets",
+          "request": { "method": "GET", "url": "{{baseUrl}}/trpc/ticket.list" }
+        }
+      ]
+    },
+    {
+      "name": "Analytics",
+      "description": "Dashboard analytics endpoints",
+      "item": [
+        {
+          "name": "Get Dashboard",
+          "request": { "method": "GET", "url": "{{baseUrl}}/trpc/analytics.dashboard" }
+        }
+      ]
+    },
+    {
+      "name": "Agent",
+      "description": "AI agent approval workflow",
+      "item": [
+        {
+          "name": "List Pending Approvals",
+          "request": { "method": "GET", "url": "{{baseUrl}}/trpc/agent.listPending" }
+        },
+        {
+          "name": "Approve Action",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/trpc/agent.approve",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"approvalId\": \"{{approvalId}}\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Audit",
+      "description": "Audit logging endpoints",
+      "item": [
+        {
+          "name": "List Audit Events",
+          "request": { "method": "GET", "url": "{{baseUrl}}/trpc/audit.list" }
+        }
+      ]
+    },
+    {
+      "name": "System",
+      "description": "System health and info",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": { "method": "GET", "url": "{{baseUrl}}/trpc/health.check" }
+        },
+        {
+          "name": "System Info",
+          "request": { "method": "GET", "url": "{{baseUrl}}/trpc/system.info" }
+        }
+      ]
+    }
+  ]
+}

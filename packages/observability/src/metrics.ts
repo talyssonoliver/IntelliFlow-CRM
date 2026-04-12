@@ -24,7 +24,7 @@
  */
 
 import { MeterProvider, PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
-import { Resource } from '@opentelemetry/resources';
+import { resourceFromAttributes } from '@opentelemetry/resources';
 import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-grpc';
 import {
@@ -120,7 +120,7 @@ export function initMetrics(config: MetricsConfig): void {
     return;
   }
 
-  const resource = new Resource({
+  const resource = resourceFromAttributes({
     [ATTR_SERVICE_NAME]: config.serviceName,
     [ATTR_SERVICE_VERSION]: config.serviceVersion || process.env.SERVICE_VERSION || '0.1.0',
     'deployment.environment': config.environment || process.env.ENVIRONMENT || 'development',
@@ -396,15 +396,11 @@ export function MeasureTime(histogram: Histogram | null, attributes?: Record<str
     const originalMethod = descriptor.value;
 
     descriptor.value = async function (...args: any[]) {
-      return measureTime(
-        histogram,
-        () => originalMethod.apply(this, args),
-        {
-          ...attributes,
-          method: propertyKey,
-          class: target.constructor.name,
-        }
-      );
+      return measureTime(histogram, () => originalMethod.apply(this, args), {
+        ...attributes,
+        method: propertyKey,
+        class: target.constructor.name,
+      });
     };
 
     return descriptor;
@@ -481,6 +477,7 @@ export const metricHelpers = {
   /**
    * Record cache hit/miss
    */
+  // NOSONAR typescript:S2301 — boolean parameter is part of the public API; splitting into recordCacheHit/recordCacheMiss would require callers to change conditionals
   recordCacheAccess: (hit: boolean, key?: string) => {
     if (hit) {
       incrementCounter(metrics.cacheHitCount, 1, key ? { key } : undefined);
@@ -492,12 +489,7 @@ export const metricHelpers = {
   /**
    * Record AI inference
    */
-  recordAiInference: (
-    model: string,
-    latency: number,
-    cost: number,
-    confidence?: number
-  ) => {
+  recordAiInference: (model: string, latency: number, cost: number, confidence?: number) => {
     incrementCounter(metrics.aiInferenceCount, 1, { model });
     recordHistogram(metrics.aiInferenceLatency, latency, { model });
     recordHistogram(metrics.aiInferenceCost, cost, { model });

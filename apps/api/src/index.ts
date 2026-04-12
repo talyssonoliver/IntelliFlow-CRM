@@ -13,3 +13,18 @@ export { router, protectedProcedure, publicProcedure } from './server';
 
 // Re-export for convenience
 export type { UserSession } from './context';
+
+// Agent module (IFC-139)
+export * from './agent';
+
+// Security module (IFC-098, IFC-113, IFC-127)
+export * from './security';
+
+// Middleware (auth, logging, rate limiting)
+export * from './middleware';
+
+// Tracing & Observability (IFC-074)
+export * from './tracing';
+
+// Workflow Engine (IFC-028)
+export * from './workflow';

@@ -3,6 +3,7 @@
 Triggers CI/CD pipeline after successful push.
 
 ## Trigger
+
 Runs automatically after `git push`
 
 ## Actions

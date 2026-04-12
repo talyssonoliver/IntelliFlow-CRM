@@ -1,0 +1,843 @@
+{
+  "timestamp": "2026-01-30T00:21:10.461Z",
+  "test_type": "comprehensive_load_test",
+  "target_vus": 5,
+  "duration_seconds": 30,
+  "endpoints_tested": 47,
+  "metrics": {
+    "p50_response_time": 27.17615,
+    "p95_response_time": 90.5593249999998,
+    "p99_response_time": 198.54365299999992,
+    "avg_response_time": 36.08058062827221,
+    "requests_per_second": 118.52753589670807,
+    "error_rate": 78.26086956521739,
+    "total_requests": 3820
+  },
+  "thresholds_passed": true,
+  "raw_data": {
+    "root_group": {
+      "name": "",
+      "path": "",
+      "id": "d41d8cd98f00b204e9800998ecf8427e",
+      "groups": [
+        {
+          "name": "setup",
+          "path": "::setup",
+          "id": "5c0f8025f7e0b6654089e5b00e950f1a",
+          "groups": [],
+          "checks": [
+              {
+                "name": "auth status 200",
+                "path": "::setup::auth status 200",
+                "id": "72c84d82d612c95704d8e84cb4e3d040",
+                "passes": 1,
+                "fails": 0
+              }
+            ]
+        },
+        {
+          "name": "Health Router",
+          "path": "::Health Router",
+          "id": "23f82cca322e628473ceeac0277f16af",
+          "groups": [],
+          "checks": [
+              {
+                "id": "9dfefcca281e2d6476fe09b827cdf81d",
+                "passes": 83,
+                "fails": 0,
+                "name": "health.ping status 200",
+                "path": "::Health Router::health.ping status 200"
+              }
+            ]
+        },
+        {
+          "name": "Lead Router",
+          "path": "::Lead Router",
+          "id": "260e821b36d9840fc0a782bbd1c4f9ab",
+          "groups": [],
+          "checks": [
+              {
+                "path": "::Lead Router::lead.list status 200",
+                "id": "959bd7b101d7f8fd15642d97d1a0471c",
+                "passes": 83,
+                "fails": 0,
+                "name": "lead.list status 200"
+              },
+              {
+                "id": "326937c301b8bdb7736372a51e668403",
+                "passes": 0,
+                "fails": 83,
+                "name": "lead.getStatistics status 200",
+                "path": "::Lead Router::lead.getStatistics status 200"
+              },
+              {
+                "name": "lead.getConversionFunnel status 200",
+                "path": "::Lead Router::lead.getConversionFunnel status 200",
+                "id": "4949b7f0381c3f320b97660badbd1483",
+                "passes": 0,
+                "fails": 83
+              },
+              {
+                "name": "lead.getLeadSources status 200",
+                "path": "::Lead Router::lead.getLeadSources status 200",
+                "id": "827d24f6124e949977ff12bd5e3017da",
+                "passes": 0,
+                "fails": 83
+              }
+            ]
+        },
+        {
+          "id": "f62222bf13cc3930b13ea10077c92d3c",
+          "groups": [],
+          "checks": [
+              {
+                "name": "contact.list status 200",
+                "path": "::Contact Router::contact.list status 200",
+                "id": "599a30e0b48836c655877d5d6a864981",
+                "passes": 83,
+                "fails": 0
+              },
+              {
+                "fails": 83,
+                "name": "contact.search status 200",
+                "path": "::Contact Router::contact.search status 200",
+                "id": "eb47f93d5e013c50ddfbef4e44dfa24c",
+                "passes": 0
+              }
+            ],
+          "name": "Contact Router",
+          "path": "::Contact Router"
+        },
+        {
+          "name": "Account Router",
+          "path": "::Account Router",
+          "id": "195806f01b5459248d9aa77fc6657164",
+          "groups": [],
+          "checks": [
+              {
+                "name": "account.list status 200",
+                "path": "::Account Router::account.list status 200",
+                "id": "142c7ed0a168f7b5c3f30ac5ceafd97d",
+                "passes": 83,
+                "fails": 0
+              },
+              {
+                "path": "::Account Router::account.getStatistics status 200",
+                "id": "f97b6fa2112cf60289c84da7d54d997b",
+                "passes": 0,
+                "fails": 83,
+                "name": "account.getStatistics status 200"
+              }
+            ]
+        },
+        {
+          "id": "1a5e08e26972f78791f61b3edcdde474",
+          "groups": [],
+          "checks": [
+              {
+                "fails": 0,
+                "name": "opportunity.list status 200",
+                "path": "::Opportunity Router::opportunity.list status 200",
+                "id": "ea66fe3ce786c81d723c0decf7d9a226",
+                "passes": 83
+              },
+              {
+                "path": "::Opportunity Router::opportunity.getPipelineStats status 200",
+                "id": "ef28ab0a428631c54aa73c54c538ba65",
+                "passes": 0,
+                "fails": 83,
+                "name": "opportunity.getPipelineStats status 200"
+              },
+              {
+                "passes": 0,
+                "fails": 83,
+                "name": "opportunity.getForecast status 200",
+                "path": "::Opportunity Router::opportunity.getForecast status 200",
+                "id": "d11984e5e26a8d40e89f3fa38858a7e9"
+              }
+            ],
+          "name": "Opportunity Router",
+          "path": "::Opportunity Router"
+        },
+        {
+          "name": "Ticket Router",
+          "path": "::Ticket Router",
+          "id": "44dfca39ae5c74083342f0e36e965472",
+          "groups": [],
+          "checks": [
+              {
+                "name": "ticket.list status 200",
+                "path": "::Ticket Router::ticket.list status 200",
+                "id": "98f2c57d61ea5723f4a6346c27cc3b0f",
+                "passes": 83,
+                "fails": 0
+              },
+              {
+                "path": "::Ticket Router::ticket.getStatistics status 200",
+                "id": "f00c3f02361790bf94945e4b210627b3",
+                "passes": 0,
+                "fails": 83,
+                "name": "ticket.getStatistics status 200"
+              },
+              {
+                "path": "::Ticket Router::ticket.getOpenCount status 200",
+                "id": "8de79edef6869ed15b1b3a7b7a40e4e5",
+                "passes": 0,
+                "fails": 83,
+                "name": "ticket.getOpenCount status 200"
+              }
+            ]
+        },
+        {
+          "name": "Task Router",
+          "path": "::Task Router",
+          "id": "29b14fd4234cadbf8eafeef835289367",
+          "groups": [],
+          "checks": [
+              {
+                "name": "task.list status 200",
+                "path": "::Task Router::task.list status 200",
+                "id": "bcec79852cd2e1d7dc88e285c9b62e19",
+                "passes": 83,
+                "fails": 0
+              },
+              {
+                "name": "task.getUpcoming status 200",
+                "path": "::Task Router::task.getUpcoming status 200",
+                "id": "a6e6dd195b38ea304f577e16affe8528",
+                "passes": 0,
+                "fails": 83
+              },
+              {
+                "passes": 0,
+                "fails": 83,
+                "name": "task.getOverdue status 200",
+                "path": "::Task Router::task.getOverdue status 200",
+                "id": "30c41a35f7783d447f74fe5dd6415992"
+              }
+            ]
+        },
+        {
+          "path": "::Timeline Router",
+          "id": "da852d2f2b3b915c5a83216674715be5",
+          "groups": [],
+          "checks": [
+              {
+                "name": "timeline.getRecent status 200",
+                "path": "::Timeline Router::timeline.getRecent status 200",
+                "id": "d47113d8dd28c60877409b1827034d75",
+                "passes": 0,
+                "fails": 83
+              },
+              {
+                "id": "cd85506056cca2d3828da7d5329dc4a9",
+                "passes": 0,
+                "fails": 83,
+                "name": "timeline.getActivitySummary status 200",
+                "path": "::Timeline Router::timeline.getActivitySummary status 200"
+              }
+            ],
+          "name": "Timeline Router"
+        },
+        {
+          "name": "Billing Router",
+          "path": "::Billing Router",
+          "id": "40eeab74523fe2714db1728863965222",
+          "groups": [],
+          "checks": [
+              {
+                "name": "billing.getSubscription status 200",
+                "path": "::Billing Router::billing.getSubscription status 200",
+                "id": "4563b3d1ea8eac07bd295f8aac1cd2a9",
+                "passes": 83,
+                "fails": 0
+              },
+              {
+                "passes": 0,
+                "fails": 83,
+                "name": "billing.getInvoices status 200",
+                "path": "::Billing Router::billing.getInvoices status 200",
+                "id": "bcd84f0146a71929e4c45a7e8befb243"
+              },
+              {
+                "fails": 83,
+                "name": "billing.getUsage status 200",
+                "path": "::Billing Router::billing.getUsage status 200",
+                "id": "a38b145af6f1215d70b2296bdeb71202",
+                "passes": 0
+              }
+            ]
+        },
+        {
+          "name": "Agent Router",
+          "path": "::Agent Router",
+          "id": "c741effd59fae719d6c29d20386f3734",
+          "groups": [],
+          "checks": [
+              {
+                "name": "agent.getStatus status 200",
+                "path": "::Agent Router::agent.getStatus status 200",
+                "id": "baec4a225f2bc470a8d622b3da1455ad",
+                "passes": 0,
+                "fails": 83
+              },
+              {
+                "name": "agent.getCapabilities status 200",
+                "path": "::Agent Router::agent.getCapabilities status 200",
+                "id": "2db57f2908f0d4c9f40713937f5e5793",
+                "passes": 0,
+                "fails": 83
+              }
+            ]
+        },
+        {
+          "name": "Conversation Router",
+          "path": "::Conversation Router",
+          "id": "b0c802abee80e046bec57ffe0bba5968",
+          "groups": [],
+          "checks": [
+              {
+                "name": "conversation.list status 200",
+                "path": "::Conversation Router::conversation.list status 200",
+                "id": "f657ba236856251ee397c2d195b5e664",
+                "passes": 0,
+                "fails": 83
+              },
+              {
+                "id": "167db5116c896b217624288da6a7b02e",
+                "passes": 0,
+                "fails": 83,
+                "name": "conversation.getRecent status 200",
+                "path": "::Conversation Router::conversation.getRecent status 200"
+              }
+            ]
+        },
+        {
+          "name": "Analytics Router",
+          "path": "::Analytics Router",
+          "id": "9d297d690323e494ea6d6f7240d5d15e",
+          "groups": [],
+          "checks": [
+              {
+                "passes": 0,
+                "fails": 83,
+                "name": "analytics.getDashboard status 200",
+                "path": "::Analytics Router::analytics.getDashboard status 200",
+                "id": "bb7b649e23d74d17235735998b1e0a3d"
+              },
+              {
+                "fails": 83,
+                "name": "analytics.getMetrics status 200",
+                "path": "::Analytics Router::analytics.getMetrics status 200",
+                "id": "b170320a41388a8d8b05e15531264d24",
+                "passes": 0
+              }
+            ]
+        },
+        {
+          "checks": [
+            {
+              "name": "appointments.list status 200",
+              "path": "::Appointments Router::appointments.list status 200",
+              "id": "f01a1a110141202923b8c8b4d34c1d02",
+              "passes": 83,
+              "fails": 0
+            },
+            {
+              "path": "::Appointments Router::appointments.getUpcoming status 200",
+              "id": "060fe7393b363db275798c177d0ea997",
+              "passes": 0,
+              "fails": 83,
+              "name": "appointments.getUpcoming status 200"
+            }
+          ],
+          "name": "Appointments Router",
+          "path": "::Appointments Router",
+          "id": "511c8777056c81b81ca611864a190335",
+          "groups": []
+        },
+        {
+          "id": "32df9d95b8d4f7f0a16177fceba1bf68",
+          "groups": [],
+          "checks": [
+              {
+                "name": "documents.list status 200",
+                "path": "::Documents Router::documents.list status 200",
+                "id": "219084665e861d1ec53748b15814bdb8",
+                "passes": 83,
+                "fails": 0
+              },
+              {
+                "fails": 83,
+                "name": "documents.getRecent status 200",
+                "path": "::Documents Router::documents.getRecent status 200",
+                "id": "5e93d79418095894b10e4da4ed1efc5e",
+                "passes": 0
+              }
+            ],
+          "name": "Documents Router",
+          "path": "::Documents Router"
+        },
+        {
+          "path": "::Experiment Router",
+          "id": "5c55fbefca66bd9c1eba6381cdc8ea8a",
+          "groups": [],
+          "checks": [
+              {
+                "name": "experiment.list status 200",
+                "path": "::Experiment Router::experiment.list status 200",
+                "id": "e745ef83fc8773778dae066901cea076",
+                "passes": 0,
+                "fails": 83
+              },
+              {
+                "id": "c92caf6cf3b33dae1b7673abce236a1f",
+                "passes": 0,
+                "fails": 83,
+                "name": "experiment.getActive status 200",
+                "path": "::Experiment Router::experiment.getActive status 200"
+              }
+            ],
+          "name": "Experiment Router"
+        },
+        {
+          "path": "::ChainVersion Router",
+          "id": "cf11bc48de312ecfddc686ff229e4642",
+          "groups": [],
+          "checks": [
+              {
+                "name": "chainVersion.list status 200",
+                "path": "::ChainVersion Router::chainVersion.list status 200",
+                "id": "43d3653e45c47a8af6f26cfa231a0cb4",
+                "passes": 0,
+                "fails": 83
+              },
+              {
+                "passes": 0,
+                "fails": 83,
+                "name": "chainVersion.getLatest status 200",
+                "path": "::ChainVersion Router::chainVersion.getLatest status 200",
+                "id": "914d67751b568ae63cdbda90cfd6ba46"
+              }
+            ],
+          "name": "ChainVersion Router"
+        },
+        {
+          "groups": [],
+          "checks": [
+              {
+                "path": "::Feedback Router::feedback.list status 200",
+                "id": "e941d68b01c3e048cdea6134e25e704a",
+                "passes": 0,
+                "fails": 83,
+                "name": "feedback.list status 200"
+              },
+              {
+                "name": "feedback.getSummary status 200",
+                "path": "::Feedback Router::feedback.getSummary status 200",
+                "id": "208d84ce63a4fc3f466a3053a1d77bda",
+                "passes": 0,
+                "fails": 83
+              }
+            ],
+          "name": "Feedback Router",
+          "path": "::Feedback Router",
+          "id": "8a6f6f87973cd411896d02120fc84ed9"
+        },
+        {
+          "path": "::PipelineConfig Router",
+          "id": "f1dc7df1b5278c41bbe749b437dfd084",
+          "groups": [],
+          "checks": [
+              {
+                "id": "849043b236bbb7950c8e402c9f8f1db9",
+                "passes": 0,
+                "fails": 83,
+                "name": "pipelineConfig.list status 200",
+                "path": "::PipelineConfig Router::pipelineConfig.list status 200"
+              },
+              {
+                "name": "pipelineConfig.getDefault status 200",
+                "path": "::PipelineConfig Router::pipelineConfig.getDefault status 200",
+                "id": "7d77b49f00450f528605d07b9b9e1326",
+                "passes": 0,
+                "fails": 83
+              }
+            ],
+          "name": "PipelineConfig Router"
+        },
+        {
+          "checks": [
+            {
+              "name": "inbound.list status 200",
+              "path": "::Inbound Router::inbound.list status 200",
+              "id": "863a0c067b31a5fa4fd6c57f5c56d605",
+              "passes": 0,
+              "fails": 83
+            },
+            {
+              "name": "inbound.getUnprocessed status 200",
+              "path": "::Inbound Router::inbound.getUnprocessed status 200",
+              "id": "72acb0ba41d1f9508ec220bbaaadd324",
+              "passes": 0,
+              "fails": 83
+            }
+          ],
+          "name": "Inbound Router",
+          "path": "::Inbound Router",
+          "id": "14a2ea173f0de673ed7be7360e5623f7",
+          "groups": []
+        },
+        {
+          "name": "Integrations Router",
+          "path": "::Integrations Router",
+          "id": "9a6fac486afa369e9eb19c0f1b3c75bb",
+          "groups": [],
+          "checks": [
+              {
+                "id": "0d676a14358f723e07b7b66ebafcae3a",
+                "passes": 0,
+                "fails": 83,
+                "name": "integrations.list status 200",
+                "path": "::Integrations Router::integrations.list status 200"
+              },
+              {
+                "path": "::Integrations Router::integrations.getStatus status 200",
+                "id": "bbe6f1645b99a638902adbe5fd236def",
+                "passes": 0,
+                "fails": 83,
+                "name": "integrations.getStatus status 200"
+              }
+            ]
+        },
+        {
+          "path": "::Audit Router",
+          "id": "4a9c55ac7a3912815c2fc96fce628138",
+          "groups": [],
+          "checks": [
+              {
+                "path": "::Audit Router::audit.list status 200",
+                "id": "58740bc0b71b759dc4609c97d34d1672",
+                "passes": 0,
+                "fails": 83,
+                "name": "audit.list status 200"
+              }
+            ],
+          "name": "Audit Router"
+        },
+        {
+          "name": "teardown",
+          "path": "::teardown",
+          "id": "a8a9942382e8ffe2e56ef29e664b8229",
+          "groups": [],
+          "checks": []
+        }
+      ],
+      "checks": []
+    },
+    "options": {
+      "summaryTrendStats": [
+        "avg",
+        "min",
+        "med",
+        "max",
+        "p(50)",
+        "p(90)",
+        "p(95)",
+        "p(99)"
+      ],
+      "summaryTimeUnit": "",
+      "noColor": false
+    },
+    "state": {
+      "isStdOutTTY": false,
+      "isStdErrTTY": false,
+      "testRunDurationMs": 32228.7979
+    },
+    "metrics": {
+      "http_req_receiving": {
+        "type": "trend",
+        "contains": "time",
+        "values": {
+          "med": 0,
+          "max": 2.0525,
+          "p(50)": 0,
+          "p(90)": 0.5753599999999995,
+          "p(95)": 1.0057,
+          "p(99)": 1.5461,
+          "avg": 0.21417468586387436,
+          "min": 0
+        }
+      },
+      "http_req_blocked": {
+        "type": "trend",
+        "contains": "time",
+        "values": {
+          "min": 0,
+          "med": 0,
+          "max": 35.5654,
+          "p(50)": 0,
+          "p(90)": 0,
+          "p(95)": 0,
+          "p(99)": 0,
+          "avg": 0.012984057591623037
+        }
+      },
+      "vus": {
+        "values": {
+          "max": 5,
+          "value": 1,
+          "min": 1
+        },
+        "type": "gauge",
+        "contains": "default"
+      },
+      "http_req_sending": {
+        "type": "trend",
+        "contains": "time",
+        "values": {
+          "max": 1.7326,
+          "p(50)": 0,
+          "p(90)": 0,
+          "p(95)": 0,
+          "p(99)": 0.525862,
+          "avg": 0.016939188481675384,
+          "min": 0,
+          "med": 0
+        }
+      },
+      "data_received": {
+        "type": "counter",
+        "contains": "data",
+        "values": {
+          "rate": 592944.8892041983,
+          "count": 19109901
+        }
+      },
+      "failed_requests": {
+        "type": "counter",
+        "contains": "default",
+        "values": {
+          "rate": 92.71211446580202,
+          "count": 2988
+        }
+      },
+      "http_req_duration{expected_response:true}": {
+        "type": "trend",
+        "contains": "time",
+        "values": {
+          "avg": 70.31932860576931,
+          "min": 7.9261,
+          "med": 53.255849999999995,
+          "max": 623.922,
+          "p(50)": 53.255849999999995,
+          "p(90)": 160.39104999999998,
+          "p(95)": 185.6916349999999,
+          "p(99)": 307.7902949999996
+        }
+      },
+      "vus_max": {
+        "type": "gauge",
+        "contains": "default",
+        "values": {
+          "value": 5,
+          "min": 5,
+          "max": 5
+        }
+      },
+      "http_req_connecting": {
+        "type": "trend",
+        "contains": "time",
+        "values": {
+          "p(50)": 0,
+          "p(90)": 0,
+          "p(95)": 0,
+          "p(99)": 0,
+          "avg": 0.0030694764397905757,
+          "min": 0,
+          "med": 0,
+          "max": 9.1599
+        }
+      },
+      "http_req_tls_handshaking": {
+        "type": "trend",
+        "contains": "time",
+        "values": {
+          "p(90)": 0,
+          "p(95)": 0,
+          "p(99)": 0,
+          "avg": 0.004752303664921466,
+          "min": 0,
+          "med": 0,
+          "max": 18.1538,
+          "p(50)": 0
+        }
+      },
+      "data_sent": {
+        "type": "counter",
+        "contains": "data",
+        "values": {
+          "count": 3993528,
+          "rate": 123911.78884149445
+        }
+      },
+      "trpc_latency": {
+        "type": "trend",
+        "contains": "time",
+        "values": {
+          "med": 27,
+          "max": 345,
+          "p(50)": 27,
+          "p(90)": 59,
+          "p(95)": 90.14999999999964,
+          "p(99)": 197.65999999999985,
+          "avg": 36.01178627553693,
+          "min": 4
+        },
+        "thresholds": {
+          "p(95)<250": {
+            "ok": true
+          }
+        }
+      },
+      "successful_requests": {
+        "contains": "default",
+        "values": {
+          "count": 830,
+          "rate": 25.75336512938945
+        },
+        "type": "counter"
+      },
+      "auth_latency": {
+        "type": "trend",
+        "contains": "time",
+        "values": {
+          "med": 659,
+          "max": 659,
+          "p(50)": 659,
+          "p(90)": 659,
+          "p(95)": 659,
+          "p(99)": 659,
+          "avg": 659,
+          "min": 659
+        }
+      },
+      "http_req_waiting": {
+        "type": "trend",
+        "contains": "time",
+        "values": {
+          "max": 623.4039,
+          "p(50)": 26.860300000000002,
+          "p(90)": 58.842789999999994,
+          "p(95)": 90.5593249999998,
+          "p(99)": 198.54365299999992,
+          "avg": 35.84946675392662,
+          "min": 4.1846,
+          "med": 26.860300000000002
+        }
+      },
+      "http_req_failed": {
+        "type": "rate",
+        "contains": "default",
+        "values": {
+          "rate": 0.7821989528795812,
+          "passes": 2988,
+          "fails": 832
+        }
+      },
+      "http_req_duration": {
+        "type": "trend",
+        "contains": "time",
+        "values": {
+          "min": 4.1846,
+          "med": 27.17615,
+          "max": 623.922,
+          "p(50)": 27.17615,
+          "p(90)": 59.250429999999994,
+          "p(95)": 90.5593249999998,
+          "p(99)": 198.54365299999992,
+          "avg": 36.08058062827221
+        },
+        "thresholds": {
+          "p(95)<300": {
+            "ok": true
+          },
+          "p(99)<500": {
+            "ok": true
+          }
+        }
+      },
+      "iteration_duration": {
+        "values": {
+          "avg": 1829.1313964705869,
+          "min": 0,
+          "med": 1871.4454,
+          "max": 2245.3789,
+          "p(50)": 1871.4454,
+          "p(90)": 2035.3643000000002,
+          "p(95)": 2201.5201999999995,
+          "p(99)": 2241.589072
+        },
+        "type": "trend",
+        "contains": "time"
+      },
+      "iterations": {
+        "type": "counter",
+        "contains": "default",
+        "values": {
+          "count": 83,
+          "rate": 2.5753365129389447
+        }
+      },
+      "errors": {
+        "values": {
+          "rate": 0.782608695652174,
+          "passes": 2988,
+          "fails": 830
+        },
+        "thresholds": {
+          "rate<0.3": {
+            "ok": false
+          }
+        },
+        "type": "rate",
+        "contains": "default"
+      },
+      "http_reqs": {
+        "type": "counter",
+        "contains": "default",
+        "values": {
+          "count": 3820,
+          "rate": 118.52753589670807
+        }
+      },
+      "group_duration": {
+        "type": "trend",
+        "contains": "time",
+        "values": {
+          "med": 64.6758,
+          "max": 387.1766,
+          "p(50)": 64.6758,
+          "p(90)": 142.22962,
+          "p(95)": 208.01648999999995,
+          "p(99)": 322.35461599999934,
+          "avg": 79.11224968445207,
+          "min": 7.9261
+        }
+      },
+      "checks": {
+        "type": "rate",
+        "contains": "default",
+        "values": {
+          "rate": 0.2175962293794187,
+          "passes": 831,
+          "fails": 2988
+        }
+      }
+    },
+    "setup_data": {
+      "authToken": "eyJhbGciOiJFUzI1NiIsImtpZCI6Ijk5ZTk0N2I1LWE0OTYtNGM5MS1iZTM4LWJjODE5YjcyMDY5YyIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2dwaXJ0Y3Z3bXNzeGh3Y3d3dWNxLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiI4NTJjNGIyMy00OTk3LTQ4ODYtOGIyOS03NGE2MmE5NmJhYmQiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzY5NzM2MDM0LCJpYXQiOjE3Njk3MzI0MzQsImVtYWlsIjoiYWRtaW5AaW50ZWxsaWZsb3cuZGV2IiwicGhvbmUiOiIiLCJhcHBfbWV0YWRhdGEiOnsicHJvdmlkZXIiOiJlbWFpbCIsInByb3ZpZGVycyI6WyJlbWFpbCJdfSwidXNlcl9tZXRhZGF0YSI6eyJlbWFpbF92ZXJpZmllZCI6dHJ1ZX0sInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYWFsIjoiYWFsMSIsImFtciI6W3sibWV0aG9kIjoicGFzc3dvcmQiLCJ0aW1lc3RhbXAiOjE3Njk3MzI0MzR9XSwic2Vzc2lvbl9pZCI6IjcxNTFhY2Y5LWNkYzUtNDRlOS1hZjExLTIxMmI5Y2Q0Mzc0NyIsImlzX2Fub255bW91cyI6ZmFsc2V9.k9n7wuPa7IVI4kxu9JMCTc18ySd_wKKVWL7FE5IPrzXK8XnOfYoF4ZfY8Qz8Ea8YnqsnudBk5i5bupBB9r1uSA",
+      "startTime": "2026-01-30T00:20:38.909Z"
+    }
+  }
+}

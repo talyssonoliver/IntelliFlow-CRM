@@ -5,7 +5,14 @@ import tseslint from 'typescript-eslint';
 
 const eslintConfig = tseslint.config(
   {
-    ignores: ['.next/**', 'node_modules/**', '*.config.js', '*.config.ts', '.turbo/**', 'tsconfig.tsbuildinfo'],
+    ignores: [
+      '.next/**',
+      'node_modules/**',
+      '*.config.js',
+      '*.config.ts',
+      '.turbo/**',
+      'tsconfig.tsbuildinfo',
+    ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
@@ -14,10 +21,25 @@ const eslintConfig = tseslint.config(
     plugins: {
       '@next/next': nextPlugin,
     },
+    languageOptions: {
+      parserOptions: {
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
     rules: {
       ...nextPlugin.configs.recommended.rules,
       ...nextPlugin.configs['core-web-vitals'].rules,
       '@typescript-eslint/no-explicit-any': 'off',
+      // Material Symbols loaded via <link> in layout.tsx (App Router) — Pages Router rule is a false positive
+      '@next/next/no-page-custom-font': 'off',
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+        },
+      ],
     },
   }
 );

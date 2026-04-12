@@ -1,0 +1,534 @@
+'use client';
+
+import { useState, useMemo, useCallback, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import { ColumnDef } from '@tanstack/react-table';
+import {
+  DataTable,
+  TableRowActions,
+  type BulkAction,
+  ConfirmationDialog,
+  toast,
+} from '@intelliflow/ui';
+import { trpc } from '@/lib/trpc';
+import { useRequireAuth } from '@/lib/auth/AuthContext';
+import { PageHeader, SearchFilterBar } from '@/components/shared';
+import {
+  DocumentStatusBadge,
+  formatFileSize,
+  formatDate,
+  type DocumentRecord,
+  type DocumentStatus,
+} from '@/components/documents';
+
+// =============================================================================
+// Filter Options
+// =============================================================================
+
+const DOCUMENT_TYPE_OPTIONS = [
+  { value: 'contract', label: 'Contract' },
+  { value: 'motion', label: 'Motion' },
+  { value: 'evidence', label: 'Evidence' },
+  { value: 'agreement', label: 'Agreement' },
+];
+
+const DOCUMENT_STATUS_OPTIONS = [
+  { value: 'DRAFT', label: 'Draft' },
+  { value: 'UNDER_REVIEW', label: 'In Review' },
+  { value: 'APPROVED', label: 'Approved' },
+  { value: 'SIGNED', label: 'Signed' },
+];
+
+const SORT_OPTIONS = [
+  { value: 'newest', label: 'Newest First' },
+  { value: 'oldest', label: 'Oldest First' },
+  { value: 'name', label: 'Name A-Z' },
+];
+
+// =============================================================================
+// Column Definitions
+// =============================================================================
+
+const columns: ColumnDef<DocumentRecord>[] = [
+  {
+    accessorKey: 'metadata.title',
+    header: 'Document Title',
+    cell: ({ row }) => {
+      const doc = row.original;
+      const hasLegalHold = doc.retentionUntil && new Date(doc.retentionUntil) > new Date();
+
+      return (
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded bg-slate-100 dark:bg-slate-700">
+            <span className="material-symbols-outlined text-[20px] text-primary">description</span>
+          </div>
+          <div>
+            <p className="font-medium text-slate-900 dark:text-white">{doc.metadata.title}</p>
+            {doc.metadata.description && (
+              <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-1">
+                {doc.metadata.description}
+              </p>
+            )}
+            {hasLegalHold && (
+              <span className="inline-flex items-center gap-1 mt-1 text-xs text-amber-600 dark:text-amber-400">
+                <span className="material-symbols-outlined text-sm">shield</span> Legal Hold
+              </span>
+            )}
+          </div>
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: 'metadata.documentType',
+    header: 'Type',
+    cell: ({ row }) => (
+      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+        {row.original.metadata.documentType}
+      </span>
+    ),
+  },
+  {
+    accessorKey: 'status',
+    header: 'Status',
+    cell: ({ row }) => {
+      const doc = row.original;
+      return <DocumentStatusBadge status={doc.status as DocumentStatus} />;
+    },
+  },
+  {
+    id: 'version',
+    header: 'Version',
+    cell: ({ row }) => {
+      const doc = row.original;
+      const version = doc.version
+        ? `${doc.version.major}.${doc.version.minor}.${doc.version.patch}`
+        : '1.0.0';
+      return (
+        <span className="font-mono text-sm text-slate-500 dark:text-slate-400">v{version}</span>
+      );
+    },
+  },
+  {
+    accessorKey: 'sizeBytes',
+    header: 'Size',
+    cell: ({ row }) => (
+      <span className="text-sm text-slate-500 dark:text-slate-400">
+        {row.original.sizeBytes ? formatFileSize(Number(row.original.sizeBytes)) : '-'}
+      </span>
+    ),
+  },
+  {
+    accessorKey: 'createdAt',
+    header: 'Created',
+    cell: ({ row }) => (
+      <div>
+        <p className="text-sm text-slate-900 dark:text-white">
+          {formatDate(row.original.createdAt)}
+        </p>
+        {row.original.createdBy && (
+          <p className="text-xs text-slate-500 dark:text-slate-400">by {row.original.createdBy}</p>
+        )}
+      </div>
+    ),
+  },
+  {
+    id: 'actions',
+    header: 'Actions',
+    cell: ({ row }) => {
+      const doc = row.original;
+      return (
+        <TableRowActions
+          quickActions={[
+            {
+              icon: 'download',
+              label: 'Download',
+              onClick: () => console.log('Download document:', doc.id),
+            },
+            {
+              icon: 'share',
+              label: 'Share',
+              onClick: () => console.log('Share document:', doc.id),
+            },
+          ]}
+          dropdownActions={[
+            {
+              icon: 'edit',
+              label: 'Edit Metadata',
+              onClick: () => console.log('Edit document:', doc.id),
+            },
+            {
+              icon: 'content_copy',
+              label: 'Duplicate',
+              onClick: () => console.log('Duplicate document:', doc.id),
+            },
+            {
+              icon: 'draw',
+              label: 'Request Signature',
+              onClick: () => console.log('Request signature for:', doc.id),
+            },
+            {
+              icon: 'history',
+              label: 'Version History',
+              onClick: () => console.log('View history:', doc.id),
+            },
+            { id: 'sep-1', icon: '', label: '', onClick: () => {}, separator: true }, // Separator: onClick is intentionally a no-op
+            {
+              icon: 'archive',
+              label: 'Archive',
+              onClick: () => console.log('Archive document:', doc.id),
+            },
+            {
+              icon: 'delete',
+              label: 'Delete',
+              variant: 'danger',
+              onClick: () => console.log('Delete document:', doc.id),
+            },
+          ]}
+        />
+      );
+    },
+  },
+];
+
+// =============================================================================
+// Page Component
+// =============================================================================
+
+export default function DocumentsPage() {
+  const router = useRouter();
+  const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [typeFilter, setTypeFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [sortOrder, setSortOrder] = useState('newest');
+
+  // Dialog state
+  const [showArchiveDialog, setShowArchiveDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Track selected documents for bulk actions
+  const selectedDocumentsRef = useRef<DocumentRecord[]>([]);
+
+  // Fetch documents from API
+  const { data, isLoading, error, refetch } = trpc.documents.list.useQuery(
+    { limit: 100, offset: 0 },
+    { enabled: isAuthenticated && !authLoading }
+  );
+
+  // tRPC mutations
+  const bulkDownloadMutation = trpc.documents.bulkDownload.useMutation();
+  const bulkArchiveMutation = trpc.documents.bulkArchive.useMutation();
+  const bulkDeleteMutation = trpc.documents.bulkDelete.useMutation();
+
+  const documents = (data?.data || []) as DocumentRecord[];
+
+  // Filter and sort documents
+  const filteredDocuments = useMemo(() => {
+    let docs = documents.filter(
+      (doc) =>
+        searchQuery === '' ||
+        doc.metadata.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        doc.metadata.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        doc.metadata.documentType.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    if (typeFilter) {
+      docs = docs.filter(
+        (doc) => doc.metadata.documentType.toLowerCase() === typeFilter.toLowerCase()
+      );
+    }
+
+    if (statusFilter) {
+      docs = docs.filter((doc) => doc.status === statusFilter);
+    }
+
+    if (sortOrder === 'name') {
+      docs = [...docs].sort((a, b) => a.metadata.title.localeCompare(b.metadata.title));
+    } else if (sortOrder === 'oldest') {
+      docs = [...docs].sort(
+        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      );
+    } else {
+      docs = [...docs].sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+    }
+
+    return docs;
+  }, [documents, searchQuery, typeFilter, statusFilter, sortOrder]);
+
+  // Handle row click - navigate to document detail
+  const handleRowClick = (doc: DocumentRecord) => {
+    router.push(`/documents/${doc.id}`);
+  };
+
+  // ==========================================================================
+  // Bulk Action Handlers
+  // ==========================================================================
+
+  const handleBulkDownload = useCallback(
+    async (documents: DocumentRecord[]) => {
+      try {
+        const result = await bulkDownloadMutation.mutateAsync({
+          ids: documents.map((d) => d.id),
+        });
+
+        if (result.storageKeys.length > 0) {
+          // In a real implementation, you would generate download URLs
+          // For now, show a success message with the count
+          toast({
+            title: 'Download Ready',
+            description: `${result.storageKeys.length} document(s) ready for download.`,
+          });
+
+          // Open download for each file (in production, you might create a zip)
+          result.storageKeys.forEach((doc) => {
+            // This would be replaced with actual storage URL generation
+            console.log(`Downloading: ${doc.title} (${doc.storageKey})`);
+          });
+        }
+
+        if (result.failed.length > 0) {
+          toast({
+            title: 'Some downloads failed',
+            description: `${result.failed.length} document(s) could not be downloaded.`,
+            variant: 'destructive',
+          });
+        }
+      } catch (error) {
+        toast({
+          title: 'Download Failed',
+          description: error instanceof Error ? error.message : 'An unexpected error occurred',
+          variant: 'destructive',
+        });
+      }
+    },
+    [bulkDownloadMutation]
+  );
+
+  const handleBulkShare = useCallback(async (documents: DocumentRecord[]) => {
+    // Bulk recipient-selection dialog is tracked in IFC-152 (document sharing UI).
+    // Per-document ACL management is fully implemented in the document detail page
+    // (/documents/[id]) under the "Access Control" tab.
+    // Directing users there is the correct workflow until the bulk share dialog ships.
+    toast({
+      title: `Share ${documents.length} Document${documents.length === 1 ? '' : 's'}`,
+      description: "Open each document's detail page to manage sharing and access control.",
+    });
+  }, []);
+
+  const handleBulkArchive = useCallback(async () => {
+    const documents = selectedDocumentsRef.current;
+    if (documents.length === 0) return;
+
+    setIsSubmitting(true);
+    try {
+      const result = await bulkArchiveMutation.mutateAsync({
+        ids: documents.map((d) => d.id),
+      });
+
+      if (result.successful.length > 0) {
+        toast({
+          title: 'Documents Archived',
+          description: `Successfully archived ${result.successful.length} document(s).`,
+        });
+        refetch();
+      }
+
+      if (result.failed.length > 0) {
+        toast({
+          title: 'Some documents could not be archived',
+          description: `${result.failed.length} document(s) failed: ${result.failed[0]?.error ?? 'Unknown error'}`,
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Archive Failed',
+        description: error instanceof Error ? error.message : 'An unexpected error occurred',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+      setShowArchiveDialog(false);
+    }
+  }, [bulkArchiveMutation, refetch]);
+
+  const handleBulkDelete = useCallback(async () => {
+    const documents = selectedDocumentsRef.current;
+    if (documents.length === 0) return;
+
+    setIsSubmitting(true);
+    try {
+      const result = await bulkDeleteMutation.mutateAsync({
+        ids: documents.map((d) => d.id),
+      });
+
+      if (result.successful.length > 0) {
+        toast({
+          title: 'Documents Deleted',
+          description: `Successfully deleted ${result.successful.length} document(s).`,
+        });
+        refetch();
+      }
+
+      if (result.failed.length > 0) {
+        toast({
+          title: 'Some documents could not be deleted',
+          description: `${result.failed.length} document(s) failed: ${result.failed[0]?.error ?? 'Unknown error'}`,
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Delete Failed',
+        description: error instanceof Error ? error.message : 'An unexpected error occurred',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+      setShowDeleteDialog(false);
+    }
+  }, [bulkDeleteMutation, refetch]);
+
+  // Bulk actions for selected documents
+  const bulkActions: BulkAction<DocumentRecord>[] = useMemo(
+    () => [
+      {
+        icon: 'download',
+        label: 'Download',
+        onClick: (selected) => {
+          handleBulkDownload(selected);
+        },
+      },
+      {
+        icon: 'share',
+        label: 'Share',
+        onClick: (selected) => {
+          handleBulkShare(selected);
+        },
+      },
+      {
+        icon: 'archive',
+        label: 'Archive',
+        onClick: (selected) => {
+          selectedDocumentsRef.current = selected;
+          setShowArchiveDialog(true);
+        },
+      },
+      {
+        icon: 'delete',
+        label: 'Delete',
+        variant: 'danger',
+        onClick: (selected) => {
+          selectedDocumentsRef.current = selected;
+          setShowDeleteDialog(true);
+        },
+      },
+    ],
+    [handleBulkDownload, handleBulkShare]
+  );
+
+  return (
+    <div className="flex flex-col gap-6">
+      {/* Header */}
+      <PageHeader
+        breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Documents' }]}
+        title="Document Library"
+        description="Manage legal documents with versioning, e-signatures, and access control."
+        actions={[
+          {
+            label: 'Upload Document',
+            icon: 'upload_file',
+            variant: 'primary',
+            href: '/documents/new',
+          },
+        ]}
+      />
+
+      {/* Search and Filters */}
+      <SearchFilterBar
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder="Search documents by title, type, or content..."
+        searchAriaLabel="Search documents"
+        filters={[
+          {
+            id: 'type',
+            label: 'Document Type',
+            icon: 'description',
+            options: DOCUMENT_TYPE_OPTIONS,
+            value: typeFilter,
+            onChange: setTypeFilter,
+          },
+          {
+            id: 'status',
+            label: 'Status',
+            icon: 'label',
+            options: DOCUMENT_STATUS_OPTIONS,
+            value: statusFilter,
+            onChange: setStatusFilter,
+          },
+        ]}
+        sort={{
+          options: SORT_OPTIONS,
+          value: sortOrder,
+          onChange: setSortOrder,
+        }}
+      />
+
+      {/* Data Table */}
+      {(isLoading || authLoading) && (
+        <div className="flex items-center justify-center py-8">
+          <div className="text-muted-foreground">Loading documents...</div>
+        </div>
+      )}
+      {!isLoading && !authLoading && error && (
+        <div className="flex items-center justify-center py-8">
+          <div className="text-destructive">{error.message}</div>
+        </div>
+      )}
+      {!isLoading && !authLoading && !error && (
+        <DataTable
+          columns={columns}
+          data={filteredDocuments}
+          entity="documents"
+          emptyMessage={searchQuery ? 'No documents match your search' : 'No documents found'}
+          emptyIcon="description"
+          onRowClick={handleRowClick}
+          enableRowSelection
+          bulkActions={bulkActions}
+          pageSize={10}
+        />
+      )}
+
+      {/* Bulk Archive Confirmation Dialog */}
+      <ConfirmationDialog
+        open={showArchiveDialog}
+        onOpenChange={setShowArchiveDialog}
+        title="Archive Documents"
+        description={`Are you sure you want to archive ${selectedDocumentsRef.current.length} selected document(s)? Archived documents can be restored later.`}
+        confirmLabel="Archive"
+        onConfirm={handleBulkArchive}
+        variant="default"
+        isLoading={isSubmitting}
+        icon="archive"
+      />
+
+      {/* Bulk Delete Confirmation Dialog */}
+      <ConfirmationDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        title="Delete Documents"
+        description={`Are you sure you want to delete ${selectedDocumentsRef.current.length} selected document(s)? Documents under legal hold cannot be deleted.`}
+        confirmLabel="Delete"
+        onConfirm={handleBulkDelete}
+        variant="destructive"
+        isLoading={isSubmitting}
+        icon="delete"
+      />
+    </div>
+  );
+}

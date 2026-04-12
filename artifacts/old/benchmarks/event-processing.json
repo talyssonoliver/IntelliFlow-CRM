@@ -1,0 +1,40 @@
+{
+  "timestamp": "2026-02-01T20:20:00Z",
+  "task_id": "IFC-150",
+  "description": "Domain Events Infrastructure: Event processing performance metrics",
+  "metrics": {
+    "event_publish_p50_ms": null,
+    "event_publish_p95_ms": null,
+    "event_publish_p99_ms": null,
+    "outbox_poll_p50_ms": null,
+    "outbox_poll_p95_ms": null,
+    "dispatch_p50_ms": null,
+    "dispatch_p95_ms": null,
+    "events_per_second": null,
+    "notes": "Metrics pending database migration. Schema validated, unit tests pass."
+  },
+  "targets": {
+    "p95_latency_ms": 200,
+    "lost_events": 0,
+    "description": "Performance targets from contracts-v1.yaml"
+  },
+  "validation": {
+    "unit_tests_passed": 24,
+    "unit_tests_total": 24,
+    "typecheck_passed": true,
+    "lint_passed": true,
+    "schema_validated": true,
+    "integration_tests_pending": "Requires database migration",
+    "benchmark_pending": "Requires database migration"
+  },
+  "artifacts_created": [
+    "packages/db/prisma/schema.prisma (modified)",
+    "packages/adapters/src/repositories/PrismaOutboxRepository.ts",
+    "packages/adapters/src/events/OutboxEventBusAdapter.ts",
+    "packages/adapters/src/events/event-metadata.ts",
+    "packages/validators/src/events.ts",
+    "packages/db/src/__tests__/domain-event-outbox.test.ts",
+    "packages/adapters/src/repositories/__tests__/PrismaOutboxRepository.test.ts",
+    "packages/adapters/src/events/__tests__/OutboxEventBusAdapter.test.ts"
+  ]
+}

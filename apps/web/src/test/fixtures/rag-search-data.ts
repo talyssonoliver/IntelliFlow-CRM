@@ -1,0 +1,147 @@
+import type { SearchResultItem, AISearchResponse } from '@/lib/ai-search/types';
+
+export const mockSearchResults: SearchResultItem[] = [
+  {
+    id: 'lead-001',
+    source: 'leads',
+    title: 'John Doe - Enterprise Lead',
+    snippet:
+      'John Doe expressed interest in our enterprise plan during the demo call. Follow-up scheduled for next week.',
+    relevanceScore: 0.95,
+    metadata: { status: 'QUALIFIED', company: 'Acme Corp' },
+    citation: 'Lead record created on 2026-01-15',
+    createdAt: '2026-01-15T10:00:00Z',
+    updatedAt: '2026-02-10T14:30:00Z',
+  },
+  {
+    id: 'contact-002',
+    source: 'contacts',
+    title: 'Jane Smith - VP Sales',
+    snippet:
+      'Jane Smith is the primary contact for the Acme Corp account. She manages a team of 15 sales reps.',
+    relevanceScore: 0.88,
+    metadata: { company: 'Acme Corp', role: 'VP Sales' },
+    citation: 'Contact synced from CRM integration',
+    createdAt: '2026-01-10T08:00:00Z',
+    updatedAt: '2026-02-08T11:00:00Z',
+  },
+  {
+    id: 'account-003',
+    source: 'accounts',
+    title: 'Acme Corp',
+    snippet:
+      'Acme Corp is a Fortune 500 company specializing in manufacturing. Annual revenue $2.5B.',
+    relevanceScore: 0.82,
+    metadata: { industry: 'Manufacturing', size: 'Enterprise' },
+    citation: 'Account record',
+    createdAt: '2025-12-01T09:00:00Z',
+    updatedAt: '2026-02-12T16:00:00Z',
+  },
+  {
+    id: 'opp-004',
+    source: 'opportunities',
+    title: 'Acme Corp - Enterprise License',
+    snippet:
+      'Enterprise license deal worth $150,000. Currently in negotiation phase with expected close date Q1 2026.',
+    relevanceScore: 0.78,
+    metadata: { value: 150000, stage: 'NEGOTIATION' },
+    citation: 'Opportunity pipeline',
+    createdAt: '2026-01-20T13:00:00Z',
+    updatedAt: '2026-02-14T09:30:00Z',
+  },
+  {
+    id: 'doc-005',
+    source: 'documents',
+    title: 'Acme Corp Proposal v2.docx',
+    snippet:
+      'Updated proposal for Acme Corp including revised pricing and implementation timeline.',
+    relevanceScore: 0.72,
+    metadata: { type: 'proposal', pages: 12 },
+    citation: 'Document uploaded by sales team',
+    createdAt: '2026-02-01T11:00:00Z',
+    updatedAt: '2026-02-01T11:00:00Z',
+  },
+  {
+    id: 'note-006',
+    source: 'notes',
+    title: 'Meeting notes - Acme Corp',
+    snippet:
+      'Discussion about implementation requirements. Key concern: data migration from legacy system.',
+    relevanceScore: 0.65,
+    metadata: { author: 'Sales Rep' },
+    citation: 'Note from meeting',
+    createdAt: '2026-02-05T15:00:00Z',
+    updatedAt: '2026-02-05T15:00:00Z',
+  },
+  {
+    id: 'conv-007',
+    source: 'conversations',
+    title: 'AI Agent conversation about Acme',
+    snippet: 'Agent analyzed Acme Corp lead scoring data and recommended increasing priority.',
+    relevanceScore: 0.6,
+    metadata: { agentType: 'lead-scorer' },
+    citation: 'AI conversation log',
+    createdAt: '2026-02-10T10:00:00Z',
+    updatedAt: '2026-02-10T10:00:00Z',
+  },
+  {
+    id: 'msg-008',
+    source: 'messages',
+    title: 'Email: Re: Proposal Review',
+    snippet:
+      'Thanks for the updated proposal. We would like to schedule a follow-up call to discuss pricing.',
+    relevanceScore: 0.55,
+    metadata: { from: 'jane@acme.com' },
+    citation: 'Email message',
+    createdAt: '2026-02-11T09:00:00Z',
+    updatedAt: '2026-02-11T09:00:00Z',
+  },
+  {
+    id: 'ticket-009',
+    source: 'tickets',
+    title: 'Acme Corp - Integration Issue',
+    snippet:
+      'Customer reported issues with API integration. Error: timeout on bulk data import endpoint.',
+    relevanceScore: 0.5,
+    metadata: { priority: 'HIGH', status: 'OPEN' },
+    citation: 'Support ticket',
+    createdAt: '2026-02-13T08:00:00Z',
+    updatedAt: '2026-02-14T10:00:00Z',
+  },
+];
+
+export const mockSourceCounts: Record<string, number> = {
+  leads: 1,
+  contacts: 1,
+  accounts: 1,
+  opportunities: 1,
+  documents: 1,
+  notes: 1,
+  conversations: 1,
+  messages: 1,
+  tickets: 1,
+};
+
+export const mockSearchResponse: AISearchResponse = {
+  results: mockSearchResults,
+  totalResults: 9,
+  avgRelevance: 0.72,
+  executionTimeMs: 245,
+  sourceCounts: mockSourceCounts,
+};
+
+export const mockEmptySearchResponse: AISearchResponse = {
+  results: [],
+  totalResults: 0,
+  avgRelevance: 0,
+  executionTimeMs: 50,
+  sourceCounts: {},
+};
+
+export const mockSingleResultResponse: AISearchResponse = {
+  results: [mockSearchResults[0]],
+  totalResults: 1,
+  avgRelevance: 0.95,
+  executionTimeMs: 120,
+  sourceCounts: { leads: 1 },
+};

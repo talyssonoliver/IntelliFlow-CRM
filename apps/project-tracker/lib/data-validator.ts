@@ -43,7 +43,7 @@ export function validateDataConsistency(files: MetricsFiles): ValidationResult {
   const tasksChecked = new Set<string>();
 
   // Build task map from CSV (single source of truth)
-  const csvTaskMap = new Map(files.sprintPlanCsv.map(t => [t.id, t]));
+  const csvTaskMap = new Map(files.sprintPlanCsv.map((t) => [t.id, t]));
 
   // Validate Task Registry
   validateTaskRegistry(files.taskRegistry, csvTaskMap, issues, tasksChecked);
@@ -58,8 +58,8 @@ export function validateDataConsistency(files: MetricsFiles): ValidationResult {
   validatePhaseSummaries(files.phaseSummaries, files.individualTasks, csvTaskMap, issues);
 
   // Count severity
-  const errors = issues.filter(i => i.severity === 'error').length;
-  const warnings = issues.filter(i => i.severity === 'warning').length;
+  const errors = issues.filter((i) => i.severity === 'error').length;
+  const warnings = issues.filter((i) => i.severity === 'warning').length;
 
   return {
     isValid: errors === 0,
@@ -294,15 +294,22 @@ function validatePhaseSummaries(
     if (!summary.aggregated_metrics) continue;
 
     // Count tasks in this phase from individual task files
-    const phaseTasks = Array.from(individualTasks.values()).filter(
-      t => t.phase === phaseId
-    );
+    const phaseTasks = Array.from(individualTasks.values()).filter((t) => t.phase === phaseId);
 
     const actualCounts = {
-      done: phaseTasks.filter(t => t.status === 'DONE').length,
-      in_progress: phaseTasks.filter(t => t.status === 'IN_PROGRESS').length,
-      blocked: phaseTasks.filter(t => t.status === 'BLOCKED').length,
-      not_started: phaseTasks.filter(t => t.status === 'PLANNED' || t.status === 'NOT_STARTED').length,
+      done: phaseTasks.filter((t) => t.status === 'DONE').length,
+      in_progress: phaseTasks.filter((t) => t.status === 'IN_PROGRESS' || t.status === 'VALIDATING')
+        .length,
+      blocked: phaseTasks.filter(
+        (t) => t.status === 'BLOCKED' || t.status === 'NEEDS_HUMAN' || t.status === 'FAILED'
+      ).length,
+      not_started: phaseTasks.filter(
+        (t) =>
+          t.status === 'PLANNED' ||
+          t.status === 'NOT_STARTED' ||
+          t.status === 'BACKLOG' ||
+          t.status === 'IN_REVIEW'
+      ).length,
     };
 
     const expected = summary.aggregated_metrics;
@@ -394,6 +401,10 @@ function mapCsvStatus(status: string): string {
   if (status === 'Blocked') return 'BLOCKED';
   if (status === 'Planned') return 'PLANNED';
   if (status === 'Backlog') return 'BACKLOG';
+  if (status === 'Failed') return 'FAILED';
+  if (status === 'Needs Human') return 'NEEDS_HUMAN';
+  if (status === 'In Review') return 'IN_REVIEW';
+  if (status === 'Validating') return 'VALIDATING';
   return 'BACKLOG';
 }
 
@@ -420,8 +431,8 @@ export function formatValidationResult(result: ValidationResult): string {
     lines.push('ISSUES FOUND:', '-'.repeat(80));
 
     // Group by severity
-    const errors = result.issues.filter(i => i.severity === 'error');
-    const warnings = result.issues.filter(i => i.severity === 'warning');
+    const errors = result.issues.filter((i) => i.severity === 'error');
+    const warnings = result.issues.filter((i) => i.severity === 'warning');
 
     if (errors.length > 0) {
       lines.push('', '❌ ERRORS:');

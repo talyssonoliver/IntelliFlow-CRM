@@ -1,11 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2017",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -23,18 +19,11 @@
       }
     ],
     "paths": {
-      "@/*": [
-        "./*"
-      ],
-      "@/components/*": [
-        "./components/*"
-      ],
-      "@/lib/*": [
-        "./lib/*"
-      ],
-      "@/hooks/*": [
-        "./hooks/*"
-      ]
+      "@/*": ["./*"],
+      "@/components/*": ["./components/*"],
+      "@/lib/*": ["./lib/*"],
+      "@/hooks/*": ["./hooks/*"],
+      "@tools/*": ["../../tools/*"]
     }
   },
   "include": [
@@ -42,9 +31,8 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts"
+    ".next/dev/types/**/*.ts",
+    "../../tools/scripts/lib/workflow/**/*.ts"
   ],
-  "exclude": [
-    "node_modules"
-  ]
+  "exclude": ["node_modules"]
 }

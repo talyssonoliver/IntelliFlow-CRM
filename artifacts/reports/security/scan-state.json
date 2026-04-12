@@ -1,0 +1,14 @@
+{
+  "status": "running",
+  "startedAt": "2026-02-22T20:23:44.965Z",
+  "completedAt": null,
+  "currentStep": "Initializing security scan...",
+  "progress": {
+    "dependency_check": "pending",
+    "outdated_check": "pending",
+    "secret_scan": "pending",
+    "sast_scan": "pending"
+  },
+  "errors": [],
+  "scanId": "scan-1771791824965"
+}

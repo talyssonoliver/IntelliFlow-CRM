@@ -1,12 +1,14 @@
 import { NextResponse } from 'next/server';
 import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { parse } from 'csv-parse/sync';
+import { normalizeStatus, TASK_STATUSES, STATUS_GROUPS } from '@/lib/csv-parser';
+import { PATHS } from '@/lib/paths';
 
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 interface PhaseMetrics {
   phase: string;
+  description: string;
   status: string;
   aggregated_metrics: {
     total_tasks: number;
@@ -15,44 +17,149 @@ interface PhaseMetrics {
     blocked: number;
     not_started: number;
   };
+  started_at: string | null;
+  completed_at: string | null;
 }
 
-export async function GET() {
-  try {
-    const sprintPath = join(process.cwd(), 'docs', 'metrics', 'sprint-0');
-    const phases = [
-      'phase-0-initialisation',
-      'phase-1-ai-foundation',
-      'phase-2-parallel',
-      'phase-3-dependencies',
-      'phase-4-integration',
-    ];
+interface CsvTask {
+  'Task ID': string;
+  Section: string;
+  Description: string;
+  Owner: string;
+  Status: string;
+  'Target Sprint': string;
+  KPIs: string;
+}
 
-    const phaseData: PhaseMetrics[] = [];
+function getPhasesFromCsv(tasks: CsvTask[], sprintNumber: string): PhaseMetrics[] {
+  const sprintTasks = tasks.filter((task) => task['Target Sprint'] === sprintNumber);
+  const sections = groupTasksBySection(sprintTasks);
+  return Object.entries(sections).map(([section, sectionTasks]) =>
+    buildPhaseMetricsForSection(section, sectionTasks, `tasks for Sprint ${sprintNumber}`)
+  );
+}
 
-    for (const phase of phases) {
-      try {
-        const phaseSummaryPath = join(sprintPath, phase, '_phase-summary.json');
-        const content = await readFile(phaseSummaryPath, 'utf-8');
-        const data = JSON.parse(content);
-        phaseData.push(data);
-      } catch (error) {
-        console.error(`Error reading ${phase}:`, error);
-      }
+const NO_CACHE = {
+  'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+  Pragma: 'no-cache',
+  Expires: '0',
+};
+
+async function loadCsvTasks(): Promise<CsvTask[]> {
+  const csvContent = await readFile(PATHS.sprintTracking.SPRINT_PLAN_CSV, 'utf-8');
+  return parse(csvContent, {
+    columns: true,
+    skip_empty_lines: true,
+    relax_quotes: true,
+    relax_column_count: true,
+    bom: true,
+  }) as CsvTask[];
+}
+
+function groupTasksBySection(tasks: CsvTask[]): Record<string, CsvTask[]> {
+  const sections: Record<string, CsvTask[]> = {};
+  for (const task of tasks) {
+    const section = task.Section || 'Other';
+    if (!sections[section]) sections[section] = [];
+    sections[section].push(task);
+  }
+  return sections;
+}
+
+function buildPhaseMetricsForSection(
+  section: string,
+  sectionTasks: CsvTask[],
+  descriptionSuffix: string
+): PhaseMetrics {
+  const metrics = {
+    total_tasks: sectionTasks.length,
+    done: 0,
+    in_progress: 0,
+    blocked: 0,
+    not_started: 0,
+  };
+
+  for (const task of sectionTasks) {
+    const status = normalizeStatus(task.Status || '');
+    if (STATUS_GROUPS.completed.includes(status)) {
+      metrics.done++;
+    } else if (STATUS_GROUPS.active.includes(status)) {
+      metrics.in_progress++;
+    } else if (status === TASK_STATUSES.BLOCKED || status === TASK_STATUSES.NEEDS_HUMAN) {
+      metrics.blocked++;
+    } else {
+      metrics.not_started++;
     }
+  }
 
-    return NextResponse.json(phaseData, {
-      headers: {
-        'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
-        'Pragma': 'no-cache',
-        'Expires': '0',
-      },
-    });
+  const allDone = metrics.done === metrics.total_tasks;
+  const hasProgress = metrics.done > 0 || metrics.in_progress > 0;
+  const now = new Date().toISOString();
+  let phaseStatus: 'completed' | 'in_progress' | 'not_started';
+  if (allDone) {
+    phaseStatus = 'completed';
+  } else if (hasProgress) {
+    phaseStatus = 'in_progress';
+  } else {
+    phaseStatus = 'not_started';
+  }
+
+  return {
+    phase: section,
+    description: `${section} ${descriptionSuffix}`,
+    status: phaseStatus,
+    aggregated_metrics: metrics,
+    started_at: hasProgress ? now : null,
+    completed_at: allDone ? now : null,
+  };
+}
+
+async function handleAllPhases(): Promise<NextResponse> {
+  try {
+    const tasks = await loadCsvTasks();
+    const sections = groupTasksBySection(tasks);
+    const allPhases = Object.entries(sections).map(([section, sectionTasks]) =>
+      buildPhaseMetricsForSection(section, sectionTasks, 'tasks across all sprints')
+    );
+    return NextResponse.json(allPhases, { headers: NO_CACHE });
+  } catch (csvError) {
+    console.error('Error reading CSV for all phases:', csvError);
+    return NextResponse.json([], { headers: NO_CACHE });
+  }
+}
+
+async function handleContinuousPhases(): Promise<NextResponse> {
+  try {
+    const tasks = await loadCsvTasks();
+    const phases = getPhasesFromCsv(tasks, 'Continuous');
+    return NextResponse.json(phases, { headers: NO_CACHE });
+  } catch (csvError) {
+    console.error('Error reading CSV for continuous phases:', csvError);
+    return NextResponse.json([], { headers: NO_CACHE });
+  }
+}
+
+async function handleSprintPhases(sprintNumber: string): Promise<NextResponse> {
+  try {
+    const tasks = await loadCsvTasks();
+    const phases = getPhasesFromCsv(tasks, sprintNumber);
+    return NextResponse.json(phases, { headers: NO_CACHE });
+  } catch (csvError) {
+    console.error('Error reading CSV for phases:', csvError);
+    return NextResponse.json([], { headers: NO_CACHE });
+  }
+}
+
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const sprintParam = searchParams.get('sprint') || '0';
+
+    if (sprintParam === 'all') return handleAllPhases();
+    if (sprintParam === 'continuous') return handleContinuousPhases();
+    return handleSprintPhases(sprintParam);
   } catch (error) {
     console.error('Error reading phase metrics:', error);
-    return NextResponse.json(
-      { error: 'Failed to load phase metrics' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to load phase metrics' }, { status: 500 });
   }
 }

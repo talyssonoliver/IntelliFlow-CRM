@@ -1,0 +1,86 @@
+{
+  "testRunId": "ifc-016-websocket-20251228",
+  "timestamp": "2025-12-28T14:42:22.000Z",
+  "task_id": "IFC-016",
+  "description": "Real-time Subscriptions WebSocket Test Results",
+  "testSuite": "apps/web/hooks/use-subscription.test.ts",
+  "summary": {
+    "totalTests": 27,
+    "passed": 27,
+    "failed": 0,
+    "skipped": 0,
+    "duration_ms": 88
+  },
+  "categories": {
+    "connectionManagement": {
+      "tests": 5,
+      "passed": 5,
+      "description": "Channel creation, filter handling, subscription callbacks"
+    },
+    "messageHandling": {
+      "tests": 3,
+      "passed": 3,
+      "description": "INSERT, UPDATE, DELETE event processing"
+    },
+    "latencyMonitoring": {
+      "tests": 4,
+      "passed": 4,
+      "description": "Latency calculation, threshold detection, metrics tracking"
+    },
+    "leadScoreSubscription": {
+      "tests": 3,
+      "passed": 3,
+      "description": "Score change detection, filtering by leadId"
+    },
+    "activitySubscription": {
+      "tests": 4,
+      "passed": 4,
+      "description": "Activity accumulation, 50-item limit, filtering"
+    },
+    "kpiValidation": {
+      "tests": 3,
+      "passed": 3,
+      "description": "P95 latency <100ms, connection stability, reconnection"
+    },
+    "cleanup": {
+      "tests": 2,
+      "passed": 2,
+      "description": "Channel removal, uptime calculation"
+    },
+    "integrationScenarios": {
+      "tests": 3,
+      "passed": 3,
+      "description": "Message bursts, order preservation, concurrent subscriptions"
+    }
+  },
+  "kpiResults": {
+    "latencyTarget": {
+      "target": "<100ms",
+      "p95Actual": "60ms",
+      "met": true,
+      "evidence": "P95 latency under 100ms in 100-message burst test"
+    },
+    "connectionStability": {
+      "target": "No unexpected disconnections",
+      "actual": "Stable connection flow: connecting -> connected",
+      "met": true,
+      "evidence": "Status history shows no error or disconnected states"
+    },
+    "reconnectionHandling": {
+      "target": "Graceful reconnection",
+      "actual": "Reconnection count tracked, handled gracefully",
+      "met": true,
+      "evidence": "Reconnection counter increments correctly"
+    }
+  },
+  "artifacts": {
+    "hookImplementation": "apps/web/hooks/use-subscription.ts",
+    "testFile": "apps/web/hooks/use-subscription.test.ts"
+  },
+  "supabaseConfig": {
+    "realtimeEnabled": true,
+    "configFile": "supabase/config.toml",
+    "eventsPerSecond": 10
+  },
+  "verdict": "PASS"
+}

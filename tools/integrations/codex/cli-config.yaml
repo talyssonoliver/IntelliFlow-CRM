@@ -10,9 +10,9 @@ api:
   base_url: https://api.openai.com/v1
   model: gpt-4-turbo
   fallback_model: gpt-3.5-turbo
-  timeout: 30000  # 30 seconds
+  timeout: 30000 # 30 seconds
   max_retries: 3
-  retry_delay: 1000  # 1 second
+  retry_delay: 1000 # 1 second
 
   # Rate limiting
   rate_limit:
@@ -22,7 +22,7 @@ api:
 
   # Cost management
   cost_control:
-    max_monthly_cost: 500  # USD
+    max_monthly_cost: 500 # USD
     alert_threshold: 0.8
     track_usage: true
     cost_per_1k_tokens:
@@ -32,8 +32,8 @@ api:
 # Authentication
 auth:
   method: api_key
-  key_source: environment  # OPENAI_API_KEY
-  organization_id: ${OPENAI_ORG_ID}  # Optional
+  key_source: environment # OPENAI_API_KEY
+  organization_id: ${OPENAI_ORG_ID} # Optional
   verify_ssl: true
 
 # CLI Settings
@@ -53,7 +53,7 @@ cli:
 
   # Default options
   defaults:
-    temperature: 0.2  # Lower for more consistent code generation
+    temperature: 0.2 # Lower for more consistent code generation
     max_tokens: 4096
     top_p: 1.0
     frequency_penalty: 0.0
@@ -63,7 +63,7 @@ cli:
 prompts:
   base_path: tools/integrations/codex/prompts
   cache_enabled: true
-  cache_ttl: 3600  # 1 hour
+  cache_ttl: 3600 # 1 hour
 
   # Available prompts
   available:
@@ -148,8 +148,8 @@ output:
 
   # File naming
   file_naming:
-    pattern: "{command}_{timestamp}_{hash}"
-    timestamp_format: "YYYY-MM-DD_HH-mm-ss"
+    pattern: '{command}_{timestamp}_{hash}'
+    timestamp_format: 'YYYY-MM-DD_HH-mm-ss'
     extension: .md
 
 # Code Review Settings
@@ -220,13 +220,13 @@ test_generation:
   test_types:
     - unit:
         enabled: true
-        pattern: "**/*.test.ts"
+        pattern: '**/*.test.ts'
         isolation: true
         mock_dependencies: true
 
     - integration:
         enabled: true
-        pattern: "**/*.integration.test.ts"
+        pattern: '**/*.integration.test.ts'
         use_test_db: true
 
     - e2e:
@@ -243,8 +243,8 @@ test_generation:
     use_it_blocks: true
 
   naming_conventions:
-    describe_pattern: "{ClassName}"
-    it_pattern: "should {behavior}"
+    describe_pattern: '{ClassName}'
+    it_pattern: 'should {behavior}'
 
 # Documentation Settings
 documentation:
@@ -272,7 +272,7 @@ documentation:
 # Refactoring Settings
 refactoring:
   enabled: true
-  auto_apply: false  # Safety: require manual review
+  auto_apply: false # Safety: require manual review
 
   patterns_to_detect:
     - extract_function
@@ -294,7 +294,7 @@ cache:
   enabled: true
   provider: filesystem
   directory: .cache/codex
-  ttl: 3600  # 1 hour
+  ttl: 3600 # 1 hour
   max_size_mb: 100
 
   cache_keys:
@@ -347,7 +347,7 @@ safety:
   enabled: true
 
   input_validation:
-    max_input_length: 100000  # characters
+    max_input_length: 100000 # characters
     allowed_file_types: [ts, tsx, js, jsx, py, yaml, json, md]
     sanitize_inputs: true
 

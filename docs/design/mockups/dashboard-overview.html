@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>IntelliFlow CRM - Dashboard Overview</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "primary-hover": "#0e6ac7",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#1e2936",
+                        "border-light": "#e2e8f0",
+                        "border-dark": "#334155",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.375rem", 
+                        "lg": "0.5rem", 
+                        "xl": "0.75rem", 
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .icon-filled {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #475569; 
+        }
+        .dark ::-webkit-scrollbar-thumb:hover {
+            background: #64748b; 
+        }
+    </style>
+</head>
+<body class="font-display bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 antialiased overflow-hidden">
+<header class="h-16 bg-surface-light dark:bg-surface-dark border-b border-border-light dark:border-border-dark flex items-center justify-between px-4 sm:px-6 fixed top-0 w-full z-50">
+<div class="flex items-center gap-2 lg:gap-8">
+<div class="flex items-center gap-2">
+<div class="bg-primary/10 rounded-lg p-1.5 text-primary">
+<span class="material-symbols-outlined text-2xl">hub</span>
+</div>
+<span class="text-lg font-bold text-slate-900 dark:text-white hidden sm:inline-block">IntelliFlow CRM</span>
+</div>
+<nav class="hidden lg:flex items-center gap-1">
+<a class="px-3 py-2 text-sm font-medium rounded-md bg-primary/10 text-primary transition-colors" href="#">
+                    Dashboard
+                </a>
+<a class="px-3 py-2 text-sm font-medium rounded-md text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors" href="#">
+                    Contacts
+                </a>
+<a class="px-3 py-2 text-sm font-medium rounded-md text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors" href="#">
+                    Deals
+                </a>
+<a class="px-3 py-2 text-sm font-medium rounded-md text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors" href="#">
+                    Tickets
+                </a>
+<a class="px-3 py-2 text-sm font-medium rounded-md text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors" href="#">
+                    Reports
+                </a>
+</nav>
+</div>
+<div class="flex items-center gap-2 sm:gap-4">
+<div class="hidden md:flex items-center relative">
+<span class="material-symbols-outlined absolute left-3 text-slate-400 text-[20px]">search</span>
+<input class="h-9 pl-10 pr-4 rounded-full bg-slate-100 dark:bg-slate-800 border-none text-sm focus:ring-2 focus:ring-primary w-48 lg:w-64 placeholder-slate-400 dark:text-white transition-all" placeholder="Search..." type="text"/>
+</div>
+<button class="md:hidden p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
+<span class="material-symbols-outlined">search</span>
+</button>
+<button class="relative p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-surface-light dark:border-surface-dark"></span>
+</button>
+<div class="h-6 w-px bg-slate-200 dark:bg-slate-700 hidden sm:block"></div>
+<button class="flex items-center gap-2 p-1 pl-2 pr-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border border-transparent hover:border-slate-200 dark:hover:border-slate-700">
+<div class="size-8 rounded-full bg-slate-200 dark:bg-slate-700 bg-cover bg-center" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDcVXW-rIidOjQXQAPgUWz9ntbrUpPFQFXamrHQOsgmbBPJ0oOIUVronh_jEzBjUgrFqHwAd96cZpuSZEKr-NBjX0ErWaO-H7Xj5XnaPcxtYwAkOB9jrIacCgFKZM06xqAWH3i_p1GYSx792l6vKpeL2NyaSfgis6E5zbVB-QuSygdUhGcI29A95FeYazPD1jgOnceykAmMadBPuIVdNKW79dXAY25ILIg2YLQbUb1we8Jy27Pg9m1PkuBJJiRH6Q1A4OvtCTWSIiUp');"></div>
+<span class="text-sm font-medium text-slate-700 dark:text-slate-200 hidden sm:block">Alex</span>
+<span class="material-symbols-outlined text-slate-400 text-lg hidden sm:block">expand_more</span>
+</button>
+<button class="lg:hidden p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors ml-1">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</div>
+</header>
+<div class="pt-16 h-screen flex flex-col">
+<main class="flex-1 overflow-y-auto bg-background-light dark:bg-background-dark">
+<div class=" mx-auto px-4 sm:px-6 py-8 flex flex-col gap-8">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+<div>
+<div class="flex items-center gap-2 text-sm text-slate-500 mb-1">
+<span>Home</span>
+<span class="material-symbols-outlined text-xs">chevron_right</span>
+<span class="text-slate-900 dark:text-slate-100 font-medium">Dashboard</span>
+</div>
+<h1 class="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Dashboard Overview</h1>
+<p class="text-slate-500 dark:text-slate-400 mt-1">Welcome back, Alex. Here's what's happening today.</p>
+</div>
+<div class="flex items-center gap-3">
+<button class="flex items-center justify-center h-10 px-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold rounded-lg transition-colors shadow-sm gap-2">
+<span class="material-symbols-outlined text-[20px]">tune</span>
+<span class="hidden sm:inline">Customize</span>
+</button>
+<button class="flex items-center justify-center h-10 px-4 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-colors shadow-sm gap-2">
+<span class="material-symbols-outlined text-[20px]">add</span>
+<span>Add New</span>
+</button>
+</div>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+<div class="bg-surface-light dark:bg-surface-dark p-5 rounded-xl border border-border-light dark:border-border-dark shadow-sm hover:shadow-md transition-shadow group">
+<div class="flex justify-between items-start mb-2">
+<div class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-primary">
+<span class="material-symbols-outlined">groups</span>
+</div>
+<span class="flex items-center text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded text-xs font-semibold">
+<span class="material-symbols-outlined text-sm mr-0.5">trending_up</span>
+                                12%
+                            </span>
+</div>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Total Leads</p>
+<p class="text-2xl font-bold text-slate-900 dark:text-white mt-1">1,248</p>
+</div>
+<div class="bg-surface-light dark:bg-surface-dark p-5 rounded-xl border border-border-light dark:border-border-dark shadow-sm hover:shadow-md transition-shadow">
+<div class="flex justify-between items-start mb-2">
+<div class="p-2 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg text-indigo-600 dark:text-indigo-400">
+<span class="material-symbols-outlined">payments</span>
+</div>
+<span class="flex items-center text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-xs font-semibold">
+                                On track
+                            </span>
+</div>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Sales Revenue</p>
+<p class="text-2xl font-bold text-slate-900 dark:text-white mt-1">$45,200</p>
+</div>
+<div class="bg-surface-light dark:bg-surface-dark p-5 rounded-xl border border-border-light dark:border-border-dark shadow-sm hover:shadow-md transition-shadow">
+<div class="flex justify-between items-start mb-2">
+<div class="p-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg text-amber-600 dark:text-amber-400">
+<span class="material-symbols-outlined">handshake</span>
+</div>
+</div>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Active Deals</p>
+<p class="text-2xl font-bold text-slate-900 dark:text-white mt-1">18</p>
+</div>
+<div class="bg-surface-light dark:bg-surface-dark p-5 rounded-xl border border-border-light dark:border-border-dark shadow-sm hover:shadow-md transition-shadow">
+<div class="flex justify-between items-start mb-2">
+<div class="p-2 bg-rose-50 dark:bg-rose-900/20 rounded-lg text-rose-600 dark:text-rose-400">
+<span class="material-symbols-outlined">confirmation_number</span>
+</div>
+<span class="flex items-center text-rose-600 bg-rose-50 dark:bg-rose-900/20 px-2 py-0.5 rounded text-xs font-semibold">
+                                3 Urgent
+                            </span>
+</div>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Open Tickets</p>
+<p class="text-2xl font-bold text-slate-900 dark:text-white mt-1">42</p>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<div class="lg:col-span-2 bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark shadow-sm flex flex-col">
+<div class="p-5 border-b border-border-light dark:border-border-dark flex justify-between items-center">
+<h3 class="font-bold text-slate-900 dark:text-white">Pipeline Summary</h3>
+<button class="text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_horiz</span>
+</button>
+</div>
+<div class="p-6 flex flex-col justify-center gap-6 h-full">
+<div class="space-y-4">
+<div class="group">
+<div class="flex justify-between text-sm mb-1">
+<span class="font-medium text-slate-700 dark:text-slate-200">Qualification</span>
+<span class="text-slate-500 dark:text-slate-400">$12,400 (8 Deals)</span>
+</div>
+<div class="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-3">
+<div class="bg-primary h-3 rounded-full" style="width: 45%"></div>
+</div>
+</div>
+<div class="group">
+<div class="flex justify-between text-sm mb-1">
+<span class="font-medium text-slate-700 dark:text-slate-200">Proposal</span>
+<span class="text-slate-500 dark:text-slate-400">$34,200 (12 Deals)</span>
+</div>
+<div class="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-3">
+<div class="bg-indigo-500 h-3 rounded-full" style="width: 65%"></div>
+</div>
+</div>
+<div class="group">
+<div class="flex justify-between text-sm mb-1">
+<span class="font-medium text-slate-700 dark:text-slate-200">Negotiation</span>
+<span class="text-slate-500 dark:text-slate-400">$120,000 (4 Deals)</span>
+</div>
+<div class="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-3">
+<div class="bg-amber-500 h-3 rounded-full" style="width: 30%"></div>
+</div>
+</div>
+<div class="group">
+<div class="flex justify-between text-sm mb-1">
+<span class="font-medium text-slate-700 dark:text-slate-200">Closed Won</span>
+<span class="text-slate-500 dark:text-slate-400">$40,000 (2 Deals)</span>
+</div>
+<div class="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-3">
+<div class="bg-emerald-500 h-3 rounded-full" style="width: 15%"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark shadow-sm flex flex-col h-full">
+<div class="p-5 border-b border-border-light dark:border-border-dark flex justify-between items-center">
+<h3 class="font-bold text-slate-900 dark:text-white">Upcoming Tasks</h3>
+<button class="text-primary text-sm font-semibold hover:underline">View All</button>
+</div>
+<div class="p-2 flex-1 overflow-y-auto">
+<ul class="divide-y divide-border-light dark:divide-border-dark">
+<li class="p-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg transition-colors group cursor-pointer">
+<div class="flex items-start gap-3">
+<div class="pt-0.5">
+<div class="size-5 rounded border-2 border-slate-300 dark:border-slate-600 group-hover:border-primary cursor-pointer flex items-center justify-center"></div>
+</div>
+<div class="flex-1">
+<p class="text-sm font-medium text-slate-800 dark:text-slate-200 group-hover:text-primary transition-colors">Call Sarah re: contract</p>
+<div class="flex items-center gap-2 mt-1">
+<span class="text-xs text-rose-600 bg-rose-50 dark:bg-rose-900/20 px-1.5 py-0.5 rounded font-medium">High</span>
+<span class="text-xs text-slate-400">Due Today</span>
+</div>
+</div>
+</div>
+</li>
+<li class="p-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg transition-colors group cursor-pointer">
+<div class="flex items-start gap-3">
+<div class="pt-0.5">
+<div class="size-5 rounded border-2 border-slate-300 dark:border-slate-600 group-hover:border-primary cursor-pointer flex items-center justify-center"></div>
+</div>
+<div class="flex-1">
+<p class="text-sm font-medium text-slate-800 dark:text-slate-200 group-hover:text-primary transition-colors">Follow up with TechCorp</p>
+<div class="flex items-center gap-2 mt-1">
+<span class="text-xs text-amber-600 bg-amber-50 dark:bg-amber-900/20 px-1.5 py-0.5 rounded font-medium">Medium</span>
+<span class="text-xs text-slate-400">Due Tomorrow</span>
+</div>
+</div>
+</div>
+</li>
+<li class="p-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg transition-colors group cursor-pointer">
+<div class="flex items-start gap-3">
+<div class="pt-0.5">
+<div class="size-5 rounded border-2 border-slate-300 dark:border-slate-600 group-hover:border-primary cursor-pointer flex items-center justify-center"></div>
+</div>
+<div class="flex-1">
+<p class="text-sm font-medium text-slate-800 dark:text-slate-200 group-hover:text-primary transition-colors">Prepare Q3 Report</p>
+<div class="flex items-center gap-2 mt-1">
+<span class="text-xs text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 px-1.5 py-0.5 rounded font-medium">Low</span>
+<span class="text-xs text-slate-400">Due Oct 24</span>
+</div>
+</div>
+</div>
+</li>
+</ul>
+</div>
+</div>
+<div class="lg:col-span-2 bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark shadow-sm flex flex-col">
+<div class="p-5 border-b border-border-light dark:border-border-dark flex justify-between items-center">
+<h3 class="font-bold text-slate-900 dark:text-white">Deals Won (Last 6 Months)</h3>
+<div class="flex gap-2">
+<select class="bg-slate-50 dark:bg-slate-800 border-none text-xs font-medium rounded-lg text-slate-600 dark:text-slate-300 py-1 px-3 focus:ring-0 cursor-pointer">
+<option>Last 6 Months</option>
+<option>This Year</option>
+</select>
+</div>
+</div>
+<div class="p-6 relative h-64 flex items-end justify-between gap-2 sm:gap-4">
+<div class="flex flex-col items-center flex-1 gap-2 group cursor-pointer">
+<div class="relative w-full bg-slate-100 dark:bg-slate-800 rounded-t-lg h-40 flex items-end overflow-hidden group-hover:bg-slate-200 dark:group-hover:bg-slate-700 transition-colors">
+<div class="w-full bg-primary/40 group-hover:bg-primary/60 transition-all h-[40%]"></div>
+</div>
+<span class="text-xs text-slate-500 font-medium">May</span>
+</div>
+<div class="flex flex-col items-center flex-1 gap-2 group cursor-pointer">
+<div class="relative w-full bg-slate-100 dark:bg-slate-800 rounded-t-lg h-40 flex items-end overflow-hidden group-hover:bg-slate-200 dark:group-hover:bg-slate-700 transition-colors">
+<div class="w-full bg-primary/50 group-hover:bg-primary/70 transition-all h-[55%]"></div>
+</div>
+<span class="text-xs text-slate-500 font-medium">Jun</span>
+</div>
+<div class="flex flex-col items-center flex-1 gap-2 group cursor-pointer">
+<div class="relative w-full bg-slate-100 dark:bg-slate-800 rounded-t-lg h-40 flex items-end overflow-hidden group-hover:bg-slate-200 dark:group-hover:bg-slate-700 transition-colors">
+<div class="w-full bg-primary/60 group-hover:bg-primary/80 transition-all h-[35%]"></div>
+</div>
+<span class="text-xs text-slate-500 font-medium">Jul</span>
+</div>
+<div class="flex flex-col items-center flex-1 gap-2 group cursor-pointer">
+<div class="relative w-full bg-slate-100 dark:bg-slate-800 rounded-t-lg h-40 flex items-end overflow-hidden group-hover:bg-slate-200 dark:group-hover:bg-slate-700 transition-colors">
+<div class="w-full bg-primary/70 group-hover:bg-primary/90 transition-all h-[75%]"></div>
+</div>
+<span class="text-xs text-slate-500 font-medium">Aug</span>
+</div>
+<div class="flex flex-col items-center flex-1 gap-2 group cursor-pointer">
+<div class="relative w-full bg-slate-100 dark:bg-slate-800 rounded-t-lg h-40 flex items-end overflow-hidden group-hover:bg-slate-200 dark:group-hover:bg-slate-700 transition-colors">
+<div class="w-full bg-primary/80 group-hover:bg-primary transition-all h-[60%]"></div>
+</div>
+<span class="text-xs text-slate-500 font-medium">Sep</span>
+</div>
+<div class="flex flex-col items-center flex-1 gap-2 group cursor-pointer">
+<div class="relative w-full bg-slate-100 dark:bg-slate-800 rounded-t-lg h-40 flex items-end overflow-hidden group-hover:bg-slate-200 dark:group-hover:bg-slate-700 transition-colors">
+<div class="w-full bg-primary h-[85%] relative">
+<div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                                            $52k Won
+                                        </div>
+</div>
+</div>
+<span class="text-xs text-primary font-bold">Oct</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark shadow-sm flex flex-col h-full">
+<div class="p-5 border-b border-border-light dark:border-border-dark flex justify-between items-center">
+<h3 class="font-bold text-slate-900 dark:text-white">Recent Activity</h3>
+<button class="text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">refresh</span>
+</button>
+</div>
+<div class="p-5 flex-1 overflow-y-auto">
+<div class="relative pl-4 border-l border-slate-200 dark:border-slate-700 space-y-6">
+<div class="relative">
+<div class="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-primary ring-4 ring-white dark:ring-surface-dark"></div>
+<p class="text-sm text-slate-800 dark:text-slate-200"><span class="font-semibold">John Doe</span> added a note to <a class="text-primary hover:underline" href="#">Deal #402</a></p>
+<p class="text-xs text-slate-400 mt-1">2 hours ago</p>
+</div>
+<div class="relative">
+<div class="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-slate-300 dark:bg-slate-600 ring-4 ring-white dark:ring-surface-dark"></div>
+<p class="text-sm text-slate-800 dark:text-slate-200">Email sent to <span class="font-semibold">Mike Ross</span></p>
+<p class="text-xs text-slate-400 mt-1">4 hours ago</p>
+</div>
+<div class="relative">
+<div class="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-4 ring-white dark:ring-surface-dark"></div>
+<p class="text-sm text-slate-800 dark:text-slate-200">Meeting scheduled with <span class="font-semibold">Pearson Specter</span></p>
+<p class="text-xs text-slate-400 mt-1">Yesterday at 2:00 PM</p>
+</div>
+<div class="relative">
+<div class="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-slate-300 dark:bg-slate-600 ring-4 ring-white dark:ring-surface-dark"></div>
+<p class="text-sm text-slate-800 dark:text-slate-200">New lead <span class="font-semibold">Harvey Specter</span> assigned to you</p>
+<p class="text-xs text-slate-400 mt-1">Oct 20</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+
+</body></html>

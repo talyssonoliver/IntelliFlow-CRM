@@ -1,0 +1,36 @@
+Scope: 25 of 26 workspace projects
+apps/project-tracker typecheck$ tsc --noEmit
+apps/workers typecheck$ pnpm -r --filter './events-worker' --filter './ingestion-worker' --filter './notifications-worker' run typecheck
+apps/workers typecheck: No projects matched the filters in "C:\Users\talys\projects\intelliFlow-CRM"
+apps/workers typecheck: Done
+apps/project-tracker typecheck: app/api/matop/plan/route.ts(57,30): error TS7006: Parameter 't' implicitly has an 'any' type.
+apps/project-tracker typecheck: app/api/matop/plan/route.ts(204,13): error TS7006: Parameter 'd' implicitly has an 'any' type.
+apps/project-tracker typecheck: app/api/matop/plan/route.ts(209,16): error TS7006: Parameter 'a' implicitly has an 'any' type.
+apps/project-tracker typecheck: app/api/matop/plan/route.ts(210,13): error TS7006: Parameter 'a' implicitly has an 'any' type.
+apps/project-tracker typecheck: app/api/matop/plan/route.ts(214,16): error TS7006: Parameter 'v' implicitly has an 'any' type.
+apps/project-tracker typecheck: app/api/matop/plan/route.ts(215,13): error TS7006: Parameter 'v' implicitly has an 'any' type.
+apps/project-tracker typecheck: app/api/matop/plan/route.ts(260,6): error TS7006: Parameter 'd' implicitly has an 'any' type.
+apps/project-tracker typecheck: app/api/matop/plan/route.ts(260,9): error TS7006: Parameter 'i' implicitly has an 'any' type.
+apps/project-tracker typecheck: app/api/matop/plan/route.ts(291,20): error TS7006: Parameter 'v' implicitly has an 'any' type.
+apps/project-tracker typecheck: app/api/matop/plan/route.ts(306,18): error TS7006: Parameter 'a' implicitly has an 'any' type.
+apps/project-tracker typecheck: app/api/matop/spec/route.ts(61,30): error TS7006: Parameter 't' implicitly has an 'any' type.
+apps/project-tracker typecheck: app/api/matop/spec/route.ts(185,13): error TS7006: Parameter 'd' implicitly has an 'any' type.
+apps/project-tracker typecheck: app/api/matop/spec/route.ts(189,32): error TS7006: Parameter 'depId' implicitly has an 'any' type.
+apps/project-tracker typecheck: app/api/matop/spec/route.ts(202,21): error TS7006: Parameter 'depId' implicitly has an 'any' type.
+apps/project-tracker typecheck: app/api/matop/spec/route.ts(257,12): error TS7006: Parameter 'd' implicitly has an 'any' type.
+apps/project-tracker typecheck: app/api/matop/spec/route.ts(270,11): error TS7006: Parameter 'a' implicitly has an 'any' type.
+apps/project-tracker typecheck: app/api/matop/spec/route.ts(353,13): error TS7006: Parameter 'd' implicitly has an 'any' type.
+apps/project-tracker typecheck: app/api/matop/spec/route.ts(356,11): error TS7006: Parameter 'depId' implicitly has an 'any' type.
+apps/project-tracker typecheck: app/api/matop/spec/route.ts(367,13): error TS7006: Parameter 'd' implicitly has an 'any' type.
+apps/project-tracker typecheck: app/api/matop/spec/route.ts(372,16): error TS7006: Parameter 'a' implicitly has an 'any' type.
+apps/project-tracker typecheck: app/api/matop/spec/route.ts(373,13): error TS7006: Parameter 'a' implicitly has an 'any' type.
+apps/project-tracker typecheck: app/api/matop/spec/route.ts(410,11): error TS7006: Parameter 'a' implicitly has an 'any' type.
+apps/project-tracker typecheck: app/api/matop/spec/route.ts(417,12): error TS7006: Parameter 'd' implicitly has an 'any' type.
+apps/project-tracker typecheck: app/api/matop/spec/route.ts(417,15): error TS7006: Parameter 'i' implicitly has an 'any' type.
+apps/project-tracker typecheck: app/api/matop/spec/route.ts(434,12): error TS7006: Parameter 'd' implicitly has an 'any' type.
+apps/project-tracker typecheck: app/api/sprint/execute/route.ts(127,40): error TS7006: Parameter 't' implicitly has an 'any' type.
+apps/project-tracker typecheck: lib/csv-status.ts(58,8): error TS2307: Cannot find module '../../../../tools/scripts/lib/workflow/adapter' or its corresponding type declarations.
+apps/project-tracker typecheck: Failed
+C:\Users\talys\projects\intelliFlow-CRM\apps\project-tracker:
+ÔÇëERR_PNPM_RECURSIVE_RUN_FIRST_FAILÔÇë @intelliflow/project-tracker@0.0.1 typecheck: `tsc --noEmit`
+Exit status 1

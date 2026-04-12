@@ -18,7 +18,11 @@ interface EmailProps {
  * Encapsulates email validation and formatting
  */
 export class Email extends ValueObject<EmailProps> {
-  private static readonly EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  // Safe regex with bounded quantifiers to prevent ReDoS
+  // Local part: up to 64 chars, domain: up to 255 chars total
+  private static readonly EMAIL_REGEX =
+    /^[a-zA-Z0-9._%+-]{1,64}@[a-zA-Z0-9.-]{1,253}\.[a-zA-Z]{2,63}$/;
+  private static readonly MAX_EMAIL_LENGTH = 320; // RFC 5321
 
   private constructor(props: EmailProps) {
     super(props);
@@ -42,6 +46,11 @@ export class Email extends ValueObject<EmailProps> {
     }
 
     const normalizedEmail = value.toLowerCase().trim();
+
+    // Length check before regex to prevent ReDoS on very long inputs
+    if (normalizedEmail.length > Email.MAX_EMAIL_LENGTH) {
+      return Result.fail(new InvalidEmailError(value));
+    }
 
     if (!Email.EMAIL_REGEX.test(normalizedEmail)) {
       return Result.fail(new InvalidEmailError(value));

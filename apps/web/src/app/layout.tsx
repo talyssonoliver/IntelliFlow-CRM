@@ -1,24 +1,110 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+import localFont from 'next/font/local';
+import { GoogleTagManager } from '@next/third-parties/google';
 import './globals.css';
 import { Providers } from './providers';
+import { ThemeProvider } from '@/components/theme-provider';
+import { Navigation } from '@/components/navigation';
+import { RouteAccessGate } from '@/components/auth/RouteAccessGate';
+import { CookieConsentBanner, Toaster } from '@intelliflow/ui';
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
+
+const materialSymbols = localFont({
+  src: '../../public/fonts/MaterialSymbolsOutlined.woff2',
+  variable: '--font-material-symbols',
+  display: 'swap',
+  weight: '100 700',
+});
 
 export const metadata: Metadata = {
-  title: 'IntelliFlow CRM',
-  description: 'AI-powered CRM for intelligent sales automation',
+  title: {
+    default: 'IntelliFlow CRM - AI-Powered Customer Relationship Management',
+    template: '%s | IntelliFlow CRM',
+  },
+  description:
+    'Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.',
+  keywords: [
+    'CRM',
+    'customer relationship management',
+    'AI CRM',
+    'lead scoring',
+    'sales automation',
+    'pipeline management',
+    'sales analytics',
+  ],
+  authors: [{ name: 'IntelliFlow Team' }],
+  creator: 'IntelliFlow',
+  publisher: 'IntelliFlow',
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  metadataBase: new URL('https://intelliflow-crm.com'),
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    title: 'IntelliFlow CRM - AI-Powered Sales Intelligence',
+    description:
+      'Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.',
+    url: 'https://intelliflow-crm.com',
+    siteName: 'IntelliFlow CRM',
+    locale: 'en_GB',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'IntelliFlow CRM - AI-Powered Sales Intelligence',
+    description:
+      'Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.',
+    creator: '@intelliflowcrm',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
-        <Providers>{children}</Providers>
+      <body className={`${inter.variable} ${materialSymbols.variable}`}>
+        {process.env.NEXT_PUBLIC_GTM_ID && (
+          <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GTM_ID} />
+        )}
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <Providers>
+            <div className="relative min-h-screen bg-background">
+              <a
+                href="#main-content"
+                className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-4 focus:left-4 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:text-sm focus:font-medium"
+              >
+                Skip to main content
+              </a>
+              <Navigation />
+              <RouteAccessGate>
+                <div id="main-content">{children}</div>
+              </RouteAccessGate>
+            </div>
+            <Toaster />
+            <CookieConsentBanner privacyPolicyUrl="/privacy" cookiePolicyUrl="/cookies" />
+          </Providers>
+        </ThemeProvider>
       </body>
     </html>
   );

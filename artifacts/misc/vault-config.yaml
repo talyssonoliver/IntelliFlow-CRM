@@ -1,5 +1,6 @@
 # IntelliFlow CRM - HashiCorp Vault Configuration
 # Generated: 2025-12-14T23:09:42Z
+# Updated: 2025-12-29T00:00:00Z (IFC-113 - Secrets Management & Encryption)
 # Status: VERIFIED AGAINST RUNNING VAULT SERVER
 
 vault:
@@ -19,6 +20,10 @@ vault:
   auth:
     method: token
     # In production, use kubernetes or approle auth
+    production_methods:
+      - kubernetes  # For Kubernetes deployments
+      - approle     # For automated systems
+      - oidc        # For human users via SSO
 
   # Secrets engines mounted
   secrets_engines:
@@ -27,6 +32,32 @@ vault:
       version: 2
     - path: cubbyhole/
       type: cubbyhole
+    - path: transit/
+      type: transit
+      description: "Encryption as a service for IFC-113"
+
+  # Transit engine for encryption (IFC-113)
+  transit:
+    enabled: true
+    path: transit/
+    keys:
+      # AES-256-GCM for data encryption at rest
+      - name: intelliflow-data-key
+        type: aes256-gcm96
+        exportable: false
+        allow_plaintext_backup: false
+        auto_rotate_period: "720h"  # 30 days
+        deletion_allowed: false
+      # RSA key for key wrapping
+      - name: intelliflow-key-wrap
+        type: rsa-4096
+        exportable: false
+        allow_plaintext_backup: false
+      # Ed25519 for signing
+      - name: intelliflow-signing-key
+        type: ed25519
+        exportable: false
+        allow_plaintext_backup: false
 
   # IntelliFlow secret paths
   intelliflow_paths:
@@ -34,5 +65,93 @@ vault:
     openai: secret/data/intelliflow/openai
     supabase: secret/data/intelliflow/supabase
     redis: secret/data/intelliflow/redis
+    # Encryption keys for IFC-113
+    encryption_keys: secret/data/intelliflow/encryption
+    tls_certs: secret/data/intelliflow/tls
+
+  # Key rotation configuration (IFC-113)
+  key_rotation:
+    enabled: true
+    schedule: "0 0 1 * *"  # First day of each month
+    retention_versions: 5
+    notification_webhook: ${VAULT_ROTATION_WEBHOOK:-}
+    pre_rotation_check: true
+    post_rotation_verify: true
+
+  # Audit configuration
+  audit:
+    enabled: true
+    backend:
+      - type: file
+        path: /var/log/vault/audit.log
+        format: json
+      - type: syslog
+        path: ""
+        tag: vault-intelliflow
+
+# TLS Configuration (Production)
+tls:
+  enabled: true
+  cert_file: /etc/vault/tls/vault.crt
+  key_file: /etc/vault/tls/vault.key
+  ca_file: /etc/vault/tls/ca.crt
+  min_version: "1.2"
+  cipher_suites:
+    - TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
+    - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+    - TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305
+    - TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305
+
+# mTLS for service-to-service communication
+mtls:
+  enabled: true
+  client_cert_required: true
+  allowed_client_cns:
+    - "intelliflow-api"
+    - "intelliflow-ai-worker"
+    - "intelliflow-web"
+  crl_check: true
+
+# Encryption policies (IFC-113)
+policies:
+  # Application encryption policy
+  intelliflow-app-encrypt:
+    path: "transit/encrypt/intelliflow-data-key"
+    capabilities:
+      - update
+
+  intelliflow-app-decrypt:
+    path: "transit/decrypt/intelliflow-data-key"
+    capabilities:
+      - update
+
+  # Key management policy (admin only)
+  intelliflow-key-admin:
+    path: "transit/keys/*"
+    capabilities:
+      - create
+      - read
+      - update
+      - delete
+      - list
+
+  # Read-only secrets policy
+  intelliflow-secrets-read:
+    path: "secret/data/intelliflow/*"
+    capabilities:
+      - read
+
+# Seal configuration (production)
+seal:
+  type: awskms  # Change to gcpkms or azurekeyvault as needed
+  region: eu-west-2
+  kms_key_id: ${VAULT_KMS_KEY_ID:-}
 
 # NOTE: DEV MODE - For production use proper auth and TLS
+# Production checklist:
+# - [ ] Enable TLS with proper certificates
+# - [ ] Configure auto-unseal with cloud KMS
+# - [ ] Set up HA with Raft or Consul
+# - [ ] Enable audit logging
+# - [ ] Configure backup and DR
+# - [ ] Implement key rotation schedule

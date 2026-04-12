@@ -3,11 +3,13 @@
  * Entry point for AI processing services
  */
 
-import dotenv from 'dotenv';
-import pino from 'pino';
+// CRITICAL: env.ts MUST be the first import.
+// ES import hoisting causes all module-level code to run before any statements.
+// This module loads .env, .env.local, .env.development into process.env
+// so that aiConfig and chain constructors see the correct values.
+import './env';
 
-// Load environment variables
-dotenv.config();
+import pino from 'pino';
 
 const logger = pino({
   name: 'ai-worker',
@@ -29,43 +31,205 @@ const logger = pino({
 export { aiConfig, loadAIConfig, calculateCost } from './config/ai.config';
 export { costTracker, CostTracker } from './utils/cost-tracker';
 export { leadScoringChain, LeadScoringChain } from './chains/scoring.chain';
+export { embeddingChain, EmbeddingChain } from './chains/embedding.chain';
 export { BaseAgent } from './agents/base.agent';
 export {
   qualificationAgent,
+  getQualificationAgent,
   LeadQualificationAgent,
   createQualificationTask,
 } from './agents/qualification.agent';
+export { createLogger, withContext, withTiming } from './utils/logger';
+
+// IFC-154: Export OCR worker for cross-worker reuse
+export {
+  OCRWorker,
+  createOCRWorker,
+  type OCRJobInput,
+  type OCRJobResult,
+  type OCRProvenance,
+  type OCRQualityMetrics,
+  type ExtractedTextArtifact,
+  type SupportedFormat,
+  type OCREngine,
+} from './workers/ocr-worker';
+
+// IFC-155: Export services for search index management
+export {
+  DocumentIndexer,
+  createDocumentIndexer,
+  type IndexerConfig,
+  type IndexResult,
+  type BatchIndexResult,
+  type ReindexProgress,
+} from './services/document-indexer';
+export {
+  EmbeddingPurgeService,
+  LegalHoldError,
+  createEmbeddingPurgeService,
+  type EmbeddingPurgeResult,
+} from './services/embedding-purge.service';
+export {
+  withRetry,
+  withTimeout,
+  withRetryAndTimeout,
+  CircuitBreaker,
+  RetryableError,
+  RateLimitError,
+  TimeoutError,
+  NetworkError,
+} from './utils/retry';
+
+// Export worker and jobs (IFC-168)
+export { AIWorker, createAIWorker } from './ai-worker';
+export {
+  AI_WORKER_QUEUES,
+  SCORING_QUEUE,
+  PREDICTION_QUEUE,
+  INSIGHT_QUEUE,
+  processScoringJob,
+  processPredictionJob,
+  processInsightJob,
+  ScoringJobDataSchema,
+  ScoringJobResultSchema,
+  PredictionJobDataSchema,
+  PredictionJobResultSchema,
+  InsightJobDataSchema,
+  InsightJobResultSchema,
+  DEFAULT_SCORING_JOB_OPTIONS,
+  DEFAULT_PREDICTION_JOB_OPTIONS,
+  DEFAULT_INSIGHT_JOB_OPTIONS,
+} from './jobs';
 
 // Export types
 export type { AIConfig, AIProvider, ModelName } from './config/ai.config';
 export type { UsageMetrics, CostStatistics } from './utils/cost-tracker';
 export type { LeadInput, ScoringResult } from './chains/scoring.chain';
 export type {
-  AgentContext,
-  AgentTask,
-  AgentResult,
-  BaseAgentConfig,
-} from './agents/base.agent';
+  EmbeddingInput,
+  EmbeddingResult,
+  BatchEmbeddingResult,
+} from './chains/embedding.chain';
+export type { AgentContext, AgentTask, AgentResult, BaseAgentConfig } from './agents/base.agent';
+export type { QualificationInput, QualificationOutput } from './agents/qualification.agent';
+export type { LoggerContext, LogLevel } from './utils/logger';
+export type { RetryConfig } from './utils/retry';
+
+// Export job types (IFC-168)
 export type {
-  QualificationInput,
-  QualificationOutput,
-} from './agents/qualification.agent';
+  ScoringJobData,
+  ScoringJobResult,
+  PredictionJobData,
+  PredictionJobResult,
+  PredictionType,
+  InsightJobData,
+  InsightJobResult,
+} from './jobs';
+
+// Additional chain exports (IFC-029, IFC-039, IFC-095)
+export {
+  AutoResponseChain,
+  SentimentAnalysisChain,
+  sentimentChain,
+  sentimentInputSchema,
+  sentimentResultSchema,
+  SENTIMENT_LABELS,
+  EMOTION_LABELS,
+  URGENCY_LEVELS,
+  ChurnRiskChain,
+  churnRiskChain,
+  churnRiskInputSchema,
+  churnRiskResultSchema,
+  riskFactorSchema,
+  RISK_LEVEL_CONFIG,
+  RAGContextChain,
+  ragContextChain,
+  createRAGContextChain,
+  RAG_SOURCES,
+  ragContextInputSchema,
+  ragContextResultSchema,
+  contextItemSchema,
+  chainLeadInputSchema,
+  InsightGenerationChain,
+  insightGenerationChain,
+  getInsightGenerationChain,
+  InsightGenerationInputSchema,
+  GeneratedInsightSchema,
+} from './chains';
+export type {
+  AutoResponseInput,
+  AutoResponseOutput,
+  ValidationResult,
+  SentimentInput,
+  SentimentResult,
+  SentimentLabel,
+  EmotionLabel,
+  UrgencyLevel,
+  ChurnRiskInput,
+  ChurnRiskResult,
+  RiskFactor,
+  ChurnRiskLevel,
+  RAGSource,
+  RAGContextInput,
+  RAGContextResult,
+  ContextItem,
+  IRetrievalService,
+  ChainLeadInput,
+  ChainScoringResult,
+  InsightGenerationInput,
+  GeneratedInsight,
+} from './chains';
+
+// Analytics module (IFC-024, IFC-025)
+export * from './analytics';
+
+// Relevance configuration (IFC-155)
+export * from './config';
+
+// Prompt templates
+export * from './prompts';
+
+// Shared AI types
+export * from './types';
+
+// Agent Status Tracking (Active Agents dashboard)
+export {
+  extractJobContext,
+  markAgentActive,
+  markAgentIdle,
+  markAgentError,
+} from './services/agent-status';
+export type { AgentStatusContext, JobCompletionMeta } from './services/agent-status';
+
+// AI Model Monitoring (IFC-117)
+export * from './monitoring';
+
+// Chain versioning (IFC-086)
+export * from './versioning';
 
 /**
- * Initialize the AI Worker
+ * Initialize the AI Worker (legacy mode - library only)
+ * @deprecated Use createAIWorker() for queue-based processing
  */
 async function initializeWorker() {
-  logger.info('🤖 IntelliFlow AI Worker starting...');
+  logger.info('🤖 IntelliFlow AI Worker starting (library mode)...');
 
   try {
     // Validate configuration
-    const { aiConfig } = await import('./config/ai.config');
+    const { aiConfig } = await import('./config/ai.config.js');
 
+    const ollamaModelName = aiConfig.provider === 'ollama' ? aiConfig.ollama.model : 'mock';
+    const modelName = aiConfig.provider === 'openai' ? aiConfig.openai.model : ollamaModelName;
+    const ollamaEndpointUrl = aiConfig.provider === 'ollama' ? aiConfig.ollama.baseUrl : 'mock';
+    const endpointUrl =
+      aiConfig.provider === 'openai'
+        ? aiConfig.openai.baseUrl || 'https://api.openai.com'
+        : ollamaEndpointUrl;
     logger.info(
       {
         provider: aiConfig.provider,
-        model:
-          aiConfig.provider === 'openai' ? aiConfig.openai.model : aiConfig.ollama.model,
+        model: modelName,
+        endpoint: endpointUrl,
         costTrackingEnabled: aiConfig.costTracking.enabled,
         cacheEnabled: aiConfig.performance.cacheEnabled,
       },
@@ -73,24 +237,28 @@ async function initializeWorker() {
     );
 
     // Initialize cost tracker
-    const { costTracker } = await import('./utils/cost-tracker');
+    const { costTracker } = await import('./utils/cost-tracker.js');
     logger.info('Cost tracker initialized');
 
     // Initialize chains
-    const { leadScoringChain } = await import('./chains/scoring.chain');
+    const { leadScoringChain } = await import('./chains/scoring.chain.js');
     logger.info('Lead scoring chain initialized');
 
+    const { embeddingChain } = await import('./chains/embedding.chain.js');
+    logger.info('Embedding chain initialized');
+
     // Initialize agents
-    const { qualificationAgent } = await import('./agents/qualification.agent');
+    const { qualificationAgent } = await import('./agents/qualification.agent.js');
     logger.info('Qualification agent initialized');
 
-    logger.info('✅ AI Worker initialized successfully');
+    logger.info('✅ AI Worker initialized successfully (library mode)');
 
     // Return public API
     return {
       aiConfig,
       costTracker,
       leadScoringChain,
+      embeddingChain,
       qualificationAgent,
     };
   } catch (error) {
@@ -113,7 +281,7 @@ async function shutdown() {
 
   try {
     // Generate final cost report
-    const { costTracker } = await import('./utils/cost-tracker');
+    const { costTracker } = await import('./utils/cost-tracker.js');
     const report = costTracker.generateReport();
     logger.info('\n' + report);
 
@@ -168,39 +336,74 @@ function setupSignalHandlers() {
 
 /**
  * Main entry point
+ *
+ * Supports two modes:
+ * 1. Queue mode (default): Starts BullMQ worker to process jobs from Redis
+ * 2. Library mode (AI_WORKER_MODE=library): Exports APIs without queue processing
  */
 async function main() {
-  setupSignalHandlers();
+  const mode = process.env.AI_WORKER_MODE || 'queue';
 
-  try {
-    const worker = await initializeWorker();
+  if (mode === 'library') {
+    // Legacy library-only mode
+    setupSignalHandlers();
+    await initializeWorker();
+    logger.info('AI Worker running in library mode (no queue processing)');
+    // Keep the process alive indefinitely in library mode. The promise is never resolved;
+    // SIGINT/SIGTERM handlers registered by setupSignalHandlers() handle graceful shutdown.
+    await new Promise<never>(() => undefined);
+  } else {
+    // Queue mode - use the new AIWorker class (IFC-168)
+    logger.info('🤖 Starting AI Worker in queue mode...');
 
-    // Keep the process running
-    logger.info('AI Worker is ready and waiting for tasks...');
+    try {
+      const { createAIWorker } = await import('./ai-worker.js');
+      const worker = await createAIWorker();
 
-    // In a production setup, this would connect to a message queue
-    // or start an HTTP server to receive tasks
-    // For now, we just keep the process alive
-    await new Promise(() => {
-      // Keep alive indefinitely
-    });
-  } catch (error) {
-    logger.error(
-      {
-        error: error instanceof Error ? error.message : String(error),
-      },
-      'Fatal error in main'
-    );
-    process.exit(1);
+      logger.info('AI Worker is ready and processing jobs from queues');
+
+      // The worker handles its own shutdown via BaseWorker
+      // Keep process alive by waiting for worker status
+      await new Promise<void>((resolve) => {
+        const checkStatus = setInterval(() => {
+          const status = worker.getStatus();
+          if (status.state === 'stopped' || status.state === 'error') {
+            clearInterval(checkStatus);
+            resolve();
+          }
+        }, 1000);
+      });
+    } catch (error) {
+      logger.error(
+        {
+          error: error instanceof Error ? error.message : String(error),
+        },
+        'Fatal error starting AI Worker'
+      );
+      process.exit(1);
+    }
   }
 }
 
-// Run the worker if this file is executed directly
-if (require.main === module) {
-  main().catch((error) => {
-    console.error('Fatal error:', error);
-    process.exit(1);
-  });
+// Run the worker if this file is executed directly.
+// `require.main === module` works for plain `node` but is always false under
+// `tsx watch` (which transpiles to ESM). Detect tsx by checking if any argv
+// entry ends with our source file path.
+const isDirectExecution =
+  require.main === module ||
+  process.argv.some(
+    (arg) => arg.replace(/\\/g, '/').endsWith('/ai-worker/src/index.ts') || arg === 'src/index.ts'
+  );
+
+if (isDirectExecution) {
+  (async () => {
+    try {
+      await main();
+    } catch (error: unknown) {
+      console.error('Fatal error:', error);
+      process.exit(1);
+    }
+  })().catch(() => {}); // NOSONAR typescript:S7785 — top-level await unavailable in CJS modules; async IIFE is the correct pattern
 }
 
 // Export initialize function for programmatic use

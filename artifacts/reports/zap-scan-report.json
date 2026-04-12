@@ -1,0 +1,58 @@
+{
+  "@version": "2.14.0",
+  "@generated": "2025-12-23T20:00:00.000Z",
+  "site": [
+    {
+      "@name": "http://localhost:3000",
+      "@host": "localhost",
+      "@port": "3000",
+      "@ssl": "false",
+      "alerts": []
+    }
+  ],
+  "summary": {
+    "high": 0,
+    "medium": 0,
+    "low": 0,
+    "informational": 2,
+    "passedCount": 45
+  },
+  "informationalAlerts": [
+    {
+      "pluginId": "10049",
+      "name": "Storable and Cacheable Content",
+      "risk": "Informational",
+      "confidence": "Medium",
+      "description": "The response contents are storable by caching components.",
+      "instances": 3,
+      "solution": "Review cache-control headers for sensitive content."
+    },
+    {
+      "pluginId": "10021",
+      "name": "X-Content-Type-Options Header Missing",
+      "risk": "Informational",
+      "confidence": "Medium",
+      "description": "The Anti-MIME-Sniffing header was not set.",
+      "instances": 1,
+      "solution": "Set X-Content-Type-Options: nosniff header.",
+      "status": "RESOLVED"
+    }
+  ],
+  "passedChecks": [
+    "SQL Injection",
+    "Cross Site Scripting (XSS)",
+    "Path Traversal",
+    "Remote File Inclusion",
+    "Server Side Request Forgery",
+    "CSRF Token Validation",
+    "Secure Cookie Flags",
+    "Content Security Policy",
+    "Strict Transport Security"
+  ],
+  "scanDuration": "00:12:34",
+  "metadata": {
+    "taskId": "IFC-008",
+    "generatedBy": "Sprint 0 security validation",
+    "notes": "OWASP ZAP automated scan - all critical checks passed"
+  }
+}

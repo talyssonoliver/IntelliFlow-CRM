@@ -1,0 +1,473 @@
+/**
+ * Auth Validation Schemas
+ *
+ * Zod schemas for authentication-related validation.
+ * All enums derive from @intelliflow/domain constants (single source of truth).
+ * Implements: PG-015 (Sign In page), FLOW-001 (Login with MFA/SSO)
+ */
+
+import { z } from 'zod';
+import { emailSchema, idSchema } from './common';
+import { MFA_METHODS, OAUTH_PROVIDERS } from '@intelliflow/domain';
+
+// ============================================
+// AUTH ENUMS - derived from domain constants
+// ============================================
+
+export const mfaMethodSchema = z.enum(MFA_METHODS);
+export type MfaMethod = z.infer<typeof mfaMethodSchema>;
+
+export const oauthProviderSchema = z.enum(OAUTH_PROVIDERS);
+export type OAuthProvider = z.infer<typeof oauthProviderSchema>;
+
+// ============================================
+// LOGIN SCHEMAS
+// ============================================
+
+/**
+ * Login credentials schema
+ * Used for email/password authentication
+ */
+export const loginSchema = z.object({
+  email: emailSchema,
+  password: z
+    .string()
+    .min(12, 'Password must be at least 12 characters')
+    .max(128, 'Password is too long'),
+  rememberMe: z.boolean().default(false),
+});
+
+export type LoginInput = z.infer<typeof loginSchema>;
+
+/**
+ * Login response schema
+ * Returned after successful credential verification
+ */
+export const loginResponseSchema = z.object({
+  success: z.boolean(),
+  user: z
+    .object({
+      id: idSchema,
+      email: emailSchema,
+      name: z.string().nullable(),
+      role: z.string(),
+      avatar: z.url().nullable().optional(),
+    })
+    .optional(),
+  session: z
+    .object({
+      accessToken: z.string(),
+      refreshToken: z.string().optional(),
+      expiresAt: z.coerce.date(),
+    })
+    .optional(),
+  requiresMfa: z.boolean().default(false),
+  mfaChallengeId: z.uuid().optional(),
+  mfaMethods: z.array(mfaMethodSchema).optional(),
+  /** Fix #13: MFA_REQUIRED env flag — user has not enrolled in MFA yet */
+  mfaEnrollmentRequired: z.boolean().optional(),
+});
+
+export type LoginResponse = z.infer<typeof loginResponseSchema>;
+
+// ============================================
+// MFA SCHEMAS
+// ============================================
+
+/**
+ * MFA verification schema
+ * Used when verifying TOTP, SMS, Email OTP, or backup codes
+ */
+export const mfaVerifySchema = z.object({
+  challengeId: z.uuid(),
+  code: z
+    .string()
+    .min(6, 'Code must be at least 6 characters')
+    .max(20, 'Code is too long')
+    .transform((val) => val.replaceAll(/\s/g, '').toUpperCase()),
+  method: mfaMethodSchema,
+});
+
+export type MfaVerifyInput = z.infer<typeof mfaVerifySchema>;
+
+/**
+ * MFA setup initiation schema
+ * Used when user requests to enable MFA
+ */
+export const mfaSetupSchema = z.object({
+  method: mfaMethodSchema,
+  phone: z
+    .string()
+    .check(z.regex(/^\+?[1-9]\d{1,14}$/, 'Invalid phone number format (E.164)'))
+    .optional(), // Required for SMS method
+});
+
+export type MfaSetupInput = z.infer<typeof mfaSetupSchema>;
+
+/**
+ * MFA setup response schema
+ * Returned after MFA setup initiation
+ */
+export const mfaSetupResponseSchema = z.object({
+  success: z.boolean(),
+  method: mfaMethodSchema,
+  // For TOTP - return secret and QR code
+  secret: z.string().optional(),
+  qrCodeUrl: z.url().optional(),
+  // For SMS/Email - confirmation that code was sent
+  codeSentTo: z.string().optional(),
+});
+
+export type MfaSetupResponse = z.infer<typeof mfaSetupResponseSchema>;
+
+/**
+ * MFA confirmation schema
+ * Used to confirm and enable MFA after setup
+ */
+export const mfaConfirmSchema = z.object({
+  method: mfaMethodSchema,
+  code: z
+    .string()
+    .min(6)
+    .max(20)
+    .transform((val) => val.replaceAll(/\s/g, '').toUpperCase()),
+});
+
+export type MfaConfirmInput = z.infer<typeof mfaConfirmSchema>;
+
+/**
+ * Backup codes response schema
+ * Returned when generating backup codes
+ */
+export const backupCodesResponseSchema = z.object({
+  codes: z.array(z.string().length(10)),
+  generatedAt: z.coerce.date(),
+  warning: z.string(),
+});
+
+export type BackupCodesResponse = z.infer<typeof backupCodesResponseSchema>;
+
+/**
+ * Resend MFA code schema
+ * Used when user requests to resend MFA verification code (SMS/Email)
+ */
+export const resendMfaCodeSchema = z.object({
+  method: mfaMethodSchema,
+  email: emailSchema.optional(),
+  phone: z
+    .string()
+    .check(z.regex(/^\+?[1-9]\d{1,14}$/, 'Invalid phone number format (E.164)'))
+    .optional(),
+  challengeId: z.uuid().optional(),
+});
+
+export type ResendMfaCodeInput = z.infer<typeof resendMfaCodeSchema>;
+
+/**
+ * Resend MFA code response schema
+ */
+export const resendMfaCodeResponseSchema = z.object({
+  success: z.boolean(),
+  message: z.string(),
+});
+
+export type ResendMfaCodeResponse = z.infer<typeof resendMfaCodeResponseSchema>;
+
+// ============================================
+// MFA MANAGEMENT SCHEMAS (PG-125)
+// ============================================
+
+/**
+ * Disable MFA schema
+ * Requires re-authentication via TOTP code or password
+ */
+export const disableMfaSchema = z
+  .object({
+    totpCode: z
+      .string()
+      .length(6)
+      .regex(/^\d{6}$/)
+      .optional(),
+    password: z.string().min(12).max(128).optional(),
+  })
+  .refine((data) => !!(data.totpCode || data.password), {
+    message: 'Either TOTP code or password required',
+  });
+
+export type DisableMfaInput = z.infer<typeof disableMfaSchema>;
+
+/**
+ * Regenerate backup codes schema
+ * Requires TOTP code for proof of possession
+ */
+export const regenerateBackupCodesSchema = z.object({
+  totpCode: z
+    .string()
+    .length(6)
+    .regex(/^\d{6}$/),
+});
+
+export type RegenerateBackupCodesInput = z.infer<typeof regenerateBackupCodesSchema>;
+
+/**
+ * MFA status response schema
+ * Shape returned by getMfaStatus endpoint
+ */
+export const mfaStatusResponseSchema = z.object({
+  enabled: z.boolean(),
+  methods: z.object({
+    totp: z.boolean(),
+    sms: z.boolean(),
+    email: z.boolean(),
+  }),
+  backupCodesRemaining: z.number().int().min(0),
+  lastVerifiedAt: z.coerce.date().nullable(),
+  enabledAt: z.coerce.date().nullable(),
+});
+
+export type MfaStatusResponse = z.infer<typeof mfaStatusResponseSchema>;
+
+// ============================================
+// OAUTH SCHEMAS
+// ============================================
+
+/**
+ * OAuth initiation schema
+ * Used when starting OAuth flow
+ */
+export const oauthInitSchema = z.object({
+  provider: oauthProviderSchema,
+  redirectTo: z.url().optional(),
+});
+
+export type OAuthInitInput = z.infer<typeof oauthInitSchema>;
+
+/**
+ * OAuth callback schema
+ * Used when handling OAuth callback
+ */
+export const oauthCallbackSchema = z.object({
+  code: z.string().min(1),
+  state: z.string().optional(),
+  error: z.string().optional(),
+  errorDescription: z.string().optional(),
+  provider: oauthProviderSchema.optional(),
+});
+
+export type OAuthCallbackInput = z.infer<typeof oauthCallbackSchema>;
+
+/**
+ * SSO domain resolution schemas
+ * Used for enterprise SSO email-domain lookup
+ *
+ * IMPLEMENTS: PG-124 (SSO/OAuth social login providers)
+ */
+export const ssoResolveSchema = z.object({
+  email: z.email(),
+});
+
+export type SsoResolveInput = z.infer<typeof ssoResolveSchema>;
+
+export const ssoResolutionSchema = z.object({
+  provider_id: z.string(),
+  provider_name: z.string(),
+  redirect_url: z.url(),
+});
+
+export type SsoResolution = z.infer<typeof ssoResolutionSchema>;
+
+// ============================================
+// SESSION SCHEMAS
+// ============================================
+
+/**
+ * Session info schema
+ * Represents an active user session
+ */
+export const sessionInfoSchema = z.object({
+  id: idSchema,
+  userId: idSchema,
+  deviceInfo: z.object({
+    browser: z.string().optional(),
+    os: z.string().optional(),
+    device: z.string().optional(),
+  }),
+  ipAddress: z.string().optional(),
+  createdAt: z.coerce.date(),
+  lastActiveAt: z.coerce.date(),
+  expiresAt: z.coerce.date(),
+  isCurrent: z.boolean(),
+});
+
+export type SessionInfo = z.infer<typeof sessionInfoSchema>;
+
+/**
+ * Active sessions response schema
+ */
+export const activeSessionsResponseSchema = z.object({
+  sessions: z.array(sessionInfoSchema),
+  maxSessions: z.number().int().positive(),
+});
+
+export type ActiveSessionsResponse = z.infer<typeof activeSessionsResponseSchema>;
+
+/**
+ * Revoke session schema
+ */
+export const revokeSessionSchema = z.object({
+  sessionId: idSchema,
+});
+
+export type RevokeSessionInput = z.infer<typeof revokeSessionSchema>;
+
+/**
+ * Refresh token schema
+ */
+export const refreshTokenSchema = z.object({
+  refreshToken: z.string().min(1),
+});
+
+export type RefreshTokenInput = z.infer<typeof refreshTokenSchema>;
+
+// ============================================
+// PASSWORD SCHEMAS
+// ============================================
+
+/**
+ * Password strength rules:
+ * - At least 8 characters
+ * - At least one uppercase letter
+ * - At least one lowercase letter
+ * - At least one number
+ * - At least one special character
+ */
+export const strongPasswordSchema = z
+  .string()
+  .min(12, 'Password must be at least 12 characters')
+  .max(128, 'Password is too long')
+  .check(z.regex(/[A-Z]/, 'Password must contain at least one uppercase letter'))
+  .check(z.regex(/[a-z]/, 'Password must contain at least one lowercase letter'))
+  .check(z.regex(/\d/, 'Password must contain at least one number'))
+  .check(z.regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character'));
+
+/**
+ * Forgot password schema
+ */
+export const forgotPasswordSchema = z.object({
+  email: emailSchema,
+});
+
+export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
+
+/**
+ * Reset password schema
+ */
+export const resetPasswordSchema = z
+  .object({
+    token: z.string().min(20, 'Invalid reset token'),
+    password: strongPasswordSchema,
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
+
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
+
+/**
+ * Change password schema (for authenticated users)
+ */
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1),
+    newPassword: strongPasswordSchema,
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
+
+export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
+
+// ============================================
+// SIGNUP SCHEMAS
+// ============================================
+
+/**
+ * Signup schema
+ */
+export const signupSchema = z
+  .object({
+    email: emailSchema,
+    password: strongPasswordSchema,
+    confirmPassword: z.string(),
+    name: z
+      .string()
+      .min(1)
+      .max(100)
+      .transform((v) => v.trim()),
+    acceptTerms: z.literal(true, {
+      message: 'You must accept the terms and conditions',
+    }),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
+
+export type SignupInput = z.infer<typeof signupSchema>;
+
+// ============================================
+// EMAIL VERIFICATION SCHEMAS
+// ============================================
+
+/**
+ * Email verification schema
+ * Used when verifying email from verification link
+ *
+ * IMPLEMENTS: PG-023 (Email Verification page)
+ */
+export const verifyEmailSchema = z.object({
+  token: z
+    .string()
+    .min(64, 'Invalid verification token')
+    .max(64, 'Invalid verification token')
+    .check(z.regex(/^[a-f0-9]+$/, 'Invalid verification token format')),
+});
+
+export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;
+
+/**
+ * Email verification callback schema (Supabase redirect flow)
+ *
+ * Used when verifying email from Supabase callback URL with token_hash and type params.
+ * IMPLEMENTS: IFC-120 (Email verification via Supabase native flow)
+ */
+export const verifyEmailCallbackSchema = z.object({
+  token_hash: z.string().min(6, 'Invalid verification token'),
+  type: z.enum(['email', 'signup']),
+});
+
+export type VerifyEmailCallbackInput = z.infer<typeof verifyEmailCallbackSchema>;
+
+/**
+ * Email verification response schema
+ */
+export const verifyEmailResponseSchema = z.object({
+  success: z.boolean(),
+  email: emailSchema.optional(),
+  message: z.string(),
+});
+
+export type VerifyEmailResponse = z.infer<typeof verifyEmailResponseSchema>;
+
+/**
+ * Resend verification email schema
+ */
+export const resendVerificationSchema = z.object({
+  email: emailSchema,
+});
+
+export type ResendVerificationInput = z.infer<typeof resendVerificationSchema>;

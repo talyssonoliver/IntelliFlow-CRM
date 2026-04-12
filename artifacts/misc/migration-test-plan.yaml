@@ -1,0 +1,493 @@
+---
+document_id: IFC-057
+title: Vendor Migration Test Plan
+version: 1.0
+created_at: "2025-12-29T03:45:00Z"
+status: completed
+description: >
+  Comprehensive test plan for validating vendor migrations across database,
+  authentication, and hosting layers. Ensures data integrity, feature parity,
+  and performance during vendor transitions.
+
+scope:
+  included:
+    - Database migration testing (PostgreSQL variants, MySQL, MongoDB)
+    - Authentication provider switching (Auth0, Keycloak, Okta)
+    - Hosting platform migration (Railway, AWS Lambda, GCP Cloud Run)
+    - Data integrity validation
+    - Performance benchmarking
+    - Rollback procedures
+  excluded:
+    - UI/UX changes
+    - Business logic modifications
+    - Feature additions during migration
+
+test_phases:
+  phase_1_pre_migration:
+    name: Pre-Migration Validation
+    duration_hours: 8
+    tests:
+      - test_id: MIGRATE-001
+        name: Environment Setup Validation
+        description: Verify target environment is properly configured
+        prerequisites:
+          - Target vendor credentials available
+          - Network connectivity confirmed
+          - Backup of current system created
+        test_steps:
+          - step_1: Verify connectivity to target vendor
+          - step_2: Check storage capacity (20% headroom minimum)
+          - step_3: Validate credentials/permissions
+          - step_4: Confirm backup strategy
+          - step_5: Document baseline metrics
+        acceptance_criteria:
+          - All connectivity checks pass
+          - Sufficient capacity available
+          - Backup confirmed and tested
+          - Metrics baseline recorded
+        estimated_duration_minutes: 30
+        owner: DevOps Lead
+
+      - test_id: MIGRATE-002
+        name: Data Export Validation
+        description: Verify data can be completely exported from current vendor
+        prerequisites:
+          - Database backup created
+          - Export scripts tested locally
+        test_steps:
+          - step_1: Execute full data export
+          - step_2: Verify export completeness (row counts match)
+          - step_3: Validate data integrity (checksums)
+          - step_4: Check for NULL values and edge cases
+          - step_5: Verify export file is readable
+        acceptance_criteria:
+          - All tables exported successfully
+          - Row counts match source system
+          - Checksums validate
+          - No data truncation or loss
+        estimated_duration_minutes: 45
+        owner: Database Admin
+
+      - test_id: MIGRATE-003
+        name: Code Compatibility Check
+        description: Verify new vendor adapter code compiles and passes type checks
+        prerequisites:
+          - Adapter code completed
+          - Dependencies available
+        test_steps:
+          - step_1: Run TypeScript compiler
+          - step_2: Run eslint/prettier checks
+          - step_3: Run unit tests for adapter
+          - step_4: Verify imports and dependencies
+          - step_5: Check for vendor-specific code leaks
+        acceptance_criteria:
+          - TypeScript compilation succeeds with no errors
+          - Linting passes 100%
+          - All unit tests pass
+          - No vendor APIs in domain layer
+        estimated_duration_minutes: 30
+        owner: Lead Developer
+
+  phase_2_data_migration:
+    name: Data Migration & Validation
+    duration_hours: 12
+    tests:
+      - test_id: MIGRATE-010
+        name: Schema Migration
+        description: Migrate database schema to target vendor
+        prerequisites:
+          - Migration scripts prepared
+          - Target database created
+        test_steps:
+          - step_1: Create target database with identical schema
+          - step_2: Apply all migrations
+          - step_3: Verify schema matches source
+          - step_4: Check indexes and constraints
+          - step_5: Validate foreign key relationships
+        acceptance_criteria:
+          - Schema created without errors
+          - All tables present and correctly defined
+          - Indexes match source system
+          - Foreign keys verified
+        estimated_duration_minutes: 30
+        owner: Database Admin
+
+      - test_id: MIGRATE-011
+        name: Data Import
+        description: Import exported data to target vendor
+        prerequisites:
+          - Data exported
+          - Target schema created
+        test_steps:
+          - step_1: Import data in batches (10% at a time)
+          - step_2: After each batch, verify row counts
+          - step_3: Check for import errors
+          - step_4: Validate data types
+          - step_5: Verify referential integrity
+        acceptance_criteria:
+          - All data imported successfully
+          - Row counts match export
+          - No import errors or warnings
+          - Referential integrity maintained
+        estimated_duration_minutes: 60
+        owner: Database Admin
+
+      - test_id: MIGRATE-012
+        name: Data Integrity Validation
+        description: Comprehensive validation of migrated data
+        prerequisites:
+          - Data imported to target
+        test_steps:
+          - step_1: Run row count verification
+          - step_2: Check for NULL values in NOT NULL columns
+          - step_3: Validate email formats
+          - step_4: Verify date ranges
+          - step_5: Spot-check random records (100+ samples)
+          - step_6: Verify calculated fields/aggregates
+        acceptance_criteria:
+          - All row counts match exactly
+          - No integrity constraint violations
+          - All required fields populated
+          - Spot checks show 100% accuracy
+          - Aggregates match source system
+        estimated_duration_minutes: 90
+        owner: QA Engineer
+
+      - test_id: MIGRATE-013
+        name: Relationship Integrity
+        description: Verify all foreign key relationships maintained
+        prerequisites:
+          - Data imported
+          - Constraints applied
+        test_steps:
+          - step_1: Query orphaned records (should be zero)
+          - step_2: Validate Lead → Contact relationships
+          - step_3: Validate Account → Opportunity relationships
+          - step_4: Validate User ownership relationships
+          - step_5: Validate cascade delete behavior
+        acceptance_criteria:
+          - Zero orphaned records
+          - All parent-child relationships valid
+          - Cascade deletes work correctly
+          - Referential integrity 100%
+        estimated_duration_minutes: 45
+        owner: Database Admin
+
+  phase_3_functionality_testing:
+    name: Application Functionality Testing
+    duration_hours: 16
+    tests:
+      - test_id: MIGRATE-020
+        name: Repository Layer Testing
+        description: Verify all repository operations work with new vendor
+        prerequisites:
+          - New adapter implemented
+          - Target database populated
+        test_steps:
+          - step_1: Test save() operation - create new record
+          - step_2: Test findById() - retrieve by primary key
+          - step_3: Test findByEmail() - retrieve by unique field
+          - step_4: Test findAll() - retrieve full collection
+          - step_5: Test update() - modify existing record
+          - step_6: Test delete() - remove record
+          - step_7: Test batch operations
+        acceptance_criteria:
+          - All CRUD operations succeed
+          - Data persisted correctly
+          - Updates reflected immediately
+          - Deletes cascade correctly
+          - No data corruption
+        estimated_duration_minutes: 120
+        owner: Lead Developer
+
+      - test_id: MIGRATE-021
+        name: API Endpoint Integration Testing
+        description: Verify all tRPC endpoints work with new database
+        prerequisites:
+          - Application deployed to target
+          - Test data loaded
+        test_steps:
+          - step_1: Test GET /leads endpoint
+          - step_2: Test POST /leads endpoint (create)
+          - step_3: Test PUT /leads/:id endpoint (update)
+          - step_4: Test DELETE /leads/:id endpoint
+          - step_5: Test filtering and pagination
+          - step_6: Test search functionality
+          - step_7: Test complex queries
+        acceptance_criteria:
+          - All endpoints return correct data
+          - Response times within SLA (p95 < 100ms)
+          - Pagination works correctly
+          - Search results accurate
+          - No N+1 query problems
+        estimated_duration_minutes: 90
+        owner: QA Engineer
+
+      - test_id: MIGRATE-022
+        name: Authentication Testing
+        description: If migrating auth provider, verify login flows
+        prerequisites:
+          - New auth adapter configured
+          - Users migrated or replicated
+        test_steps:
+          - step_1: Test login with valid credentials
+          - step_2: Test login with invalid credentials
+          - step_3: Test token generation and validation
+          - step_4: Test token refresh
+          - step_5: Test logout
+          - step_6: Test session persistence
+          - step_7: Test role-based access control
+        acceptance_criteria:
+          - Valid credentials authenticate successfully
+          - Invalid credentials rejected
+          - Tokens generated and validated correctly
+          - Session persists across requests
+          - RBAC enforced correctly
+        estimated_duration_minutes: 60
+        owner: Security Engineer
+
+      - test_id: MIGRATE-023
+        name: UI Integration Testing
+        description: Verify frontend applications work with new backend
+        prerequisites:
+          - Frontend updated to point to new backend
+          - Test account created
+        test_steps:
+          - step_1: Load home page
+          - step_2: Navigate to leads list
+          - step_3: Create new lead (UI → API → DB)
+          - step_4: Edit existing lead
+          - step_5: Delete lead
+          - step_6: Filter and search
+          - step_7: Check responsive design
+        acceptance_criteria:
+          - All pages load correctly
+          - Form submissions work
+          - Data displays accurately
+          - Responsive on mobile/tablet
+          - No console errors
+        estimated_duration_minutes: 60
+        owner: QA Engineer
+
+  phase_4_performance_testing:
+    name: Performance & Load Testing
+    duration_hours: 8
+    tests:
+      - test_id: MIGRATE-030
+        name: Query Performance Baseline
+        description: Measure query performance on new vendor
+        prerequisites:
+          - Production-like data volume loaded
+          - Monitoring configured
+        test_steps:
+          - step_1: Warm up connection pool
+          - step_2: Execute 100 simple queries, measure latency
+          - step_3: Execute 100 complex queries, measure latency
+          - step_4: Execute 100 joins, measure latency
+          - step_5: Measure average response time
+          - step_6: Measure p95 and p99 latencies
+        acceptance_criteria:
+          - Simple queries: p95 < 50ms
+          - Complex queries: p95 < 200ms
+          - Joins: p95 < 500ms
+          - No timeout errors
+          - Consistent performance
+        estimated_duration_minutes: 60
+        owner: Performance Engineer
+
+      - test_id: MIGRATE-031
+        name: Load Testing
+        description: Simulate production load on new vendor
+        prerequisites:
+          - Load testing tools configured
+          - Production metrics baseline available
+        test_steps:
+          - step_1: Run 100 concurrent users for 5 minutes
+          - step_2: Measure response times and errors
+          - step_3: Increase to 500 concurrent users
+          - step_4: Measure resource utilization
+          - step_5: Verify no data corruption under load
+          - step_6: Check database connection pool saturation
+        acceptance_criteria:
+          - Response times stable under load
+          - Error rate < 0.1%
+          - No connection pool exhaustion
+          - Database remains responsive
+          - Data consistency maintained
+        estimated_duration_minutes: 45
+        owner: Performance Engineer
+
+      - test_id: MIGRATE-032
+        name: Comparison with Source System
+        description: Compare performance between source and target vendors
+        prerequisites:
+          - Both systems running
+          - Identical load profile
+        test_steps:
+          - step_1: Measure latency on source system
+          - step_2: Measure latency on target system
+          - step_3: Calculate difference
+          - step_4: Measure throughput on both systems
+          - step_5: Compare under load
+        acceptance_criteria:
+          - Target system within 20% of source performance
+          - No significant regressions
+          - Improvement acceptable or trade-off acceptable
+        estimated_duration_minutes: 60
+        owner: Performance Engineer
+
+  phase_5_reliability_testing:
+    name: Reliability & Rollback Testing
+    duration_hours: 8
+    tests:
+      - test_id: MIGRATE-040
+        name: Failover Testing
+        description: Verify failover and recovery procedures
+        prerequisites:
+          - High availability configured
+          - Failover procedures documented
+        test_steps:
+          - step_1: Stop primary database instance
+          - step_2: Verify automatic failover to replica
+          - step_3: Confirm data integrity after failover
+          - step_4: Restart primary
+          - step_5: Verify resync
+          - step_6: Monitor consistency
+        acceptance_criteria:
+          - Automatic failover < 30 seconds
+          - Zero data loss during failover
+          - Resync completes without errors
+          - No manual intervention required
+        estimated_duration_minutes: 45
+        owner: DevOps Lead
+
+      - test_id: MIGRATE-041
+        name: Backup & Restore Testing
+        description: Verify backup and restore procedures work
+        prerequisites:
+          - Backup system configured
+        test_steps:
+          - step_1: Trigger full backup
+          - step_2: Verify backup size and integrity
+          - step_3: Restore from backup to test environment
+          - step_4: Verify data completeness
+          - step_5: Run integrity checks
+          - step_6: Test point-in-time recovery
+        acceptance_criteria:
+          - Backup completes successfully
+          - Restore from backup succeeds
+          - Restored data matches source exactly
+          - PITR works correctly
+          - Recovery time < 1 hour
+        estimated_duration_minutes: 60
+        owner: DevOps Lead
+
+      - test_id: MIGRATE-042
+        name: Rollback Testing
+        description: Verify rollback to source system is possible
+        prerequisites:
+          - Source system still operational
+          - Rollback plan documented
+        test_steps:
+          - step_1: Take snapshot of migrated system
+          - step_2: Simulate rollback trigger
+          - step_3: Redirect traffic to source system
+          - step_4: Verify all services operational
+          - step_5: Verify data consistency on source
+          - step_6: Test rollback automation
+        acceptance_criteria:
+          - Rollback can be initiated at any time
+          - Traffic switch succeeds
+          - Source system returns to normal
+          - No data loss on rollback
+          - Rollback time < 15 minutes
+        estimated_duration_minutes: 45
+        owner: DevOps Lead
+
+  phase_6_production_cutover:
+    name: Production Cutover
+    duration_hours: 4
+    tests:
+      - test_id: MIGRATE-050
+        name: Pre-Cutover Sanity Checks
+        description: Final validation before traffic switch
+        prerequisites:
+          - All testing passed
+          - Team available for monitoring
+        test_steps:
+          - step_1: Verify both systems in sync
+          - step_2: Run full data consistency check
+          - step_3: Verify monitoring and alerting configured
+          - step_4: Run smoke tests on target system
+          - step_5: Brief team on rollback procedures
+          - step_6: Confirm cutover time with stakeholders
+        acceptance_criteria:
+          - Data perfectly in sync
+          - All checks pass
+          - Monitoring shows no issues
+          - Team briefed and ready
+        estimated_duration_minutes: 45
+        owner: DevOps Lead
+
+      - test_id: MIGRATE-051
+        name: Traffic Cutover (Blue-Green)
+        description: Switch production traffic to new vendor
+        prerequisites:
+          - Pre-cutover checks passed
+          - Blue-green setup complete
+        test_steps:
+          - step_1: Ensure both systems operational
+          - step_2: Divert 1% traffic to target (canary)
+          - step_3: Monitor for errors (5 minutes)
+          - step_4: Divert 10% traffic
+          - step_5: Monitor for errors (10 minutes)
+          - step_6: Divert 50% traffic
+          - step_7: Monitor for errors (15 minutes)
+          - step_8: Divert 100% traffic
+          - step_9: Monitor for 30 minutes
+        acceptance_criteria:
+          - Error rate stays below 0.1%
+          - Response times within SLA
+          - User reports no issues
+          - All business functions working
+        estimated_duration_minutes: 120
+        owner: DevOps Lead
+
+test_execution_schedule:
+  phase_1: Sprint 7, Week 1
+  phase_2: Sprint 7, Week 2
+  phase_3: Sprint 8, Week 1
+  phase_4: Sprint 8, Week 2
+  phase_5: Sprint 8, Week 3
+  phase_6: Sprint 8, Week 4 OR Sprint 9, Week 1
+
+success_criteria:
+  - All test phases completed
+  - 100% of test cases passed
+  - No critical or blocking issues
+  - Performance within acceptable range
+  - Data integrity verified
+  - Team trained on new system
+  - Documentation updated
+  - Rollback tested and verified
+
+failure_handling:
+  - Level 1 (Minor Issue): Document, create backlog item, proceed if < 5% impact
+  - Level 2 (Moderate Issue): Fix before proceeding, re-test affected area
+  - Level 3 (Critical Issue): Pause testing, escalate, consider rollback
+
+sign_off:
+  required_approvers:
+    - Lead Developer
+    - Database Admin
+    - DevOps Lead
+    - QA Lead
+    - Product Owner
+  approval_date: "2025-12-29"
+
+notes:
+  - All test environments should mirror production
+  - Database backups required before each migration phase
+  - Performance metrics should be monitored continuously
+  - Rollback procedures must be tested weekly during migration window
+  - Team must be on-call for 24 hours post-cutover

@@ -1,0 +1,1490 @@
+/**
+ * Appointments Router
+ *
+ * Provides type-safe tRPC endpoints for appointment management:
+ * - CRUD operations (create, read, update, delete)
+ * - Conflict detection and availability checking
+ * - Rescheduling and cancellation
+ * - Case linkage
+ * - Recurrence support
+ *
+ * Task: IFC-137 - Appointment Aggregate with conflict detection
+ * KPIs: Conflict detection accuracy >95%, scheduling latency <=100ms
+ *
+ * INTEGRATION: Uses AppointmentDomainService for domain logic
+ * - ConflictDetector for sophisticated conflict detection
+ * - Buffer time handling
+ * - Recurrence pattern generation
+ */
+
+import { z } from 'zod';
+import { TRPCError } from '@trpc/server';
+import { createTRPCRouter, tenantProcedure } from '../../trpc';
+import { AppointmentDomainService } from '../../services';
+import {
+  ConflictDetectionError,
+  AppointmentConflictDetectedEvent,
+  AppointmentCreatedEvent,
+  AppointmentRescheduledEvent,
+  AppointmentCancelledEvent,
+  AppointmentId,
+  Appointment,
+  TimeSlot,
+} from '@intelliflow/domain';
+import { container } from '../../container';
+import { createNotification } from '../notifications/notifications.router';
+import { safeTimezone } from '../../lib/timezone-utils';
+
+// Zod schemas for appointment operations
+const appointmentTypeSchema = z.enum([
+  'MEETING',
+  'CALL',
+  'HEARING',
+  'CONSULTATION',
+  'DEPOSITION',
+  'OTHER',
+]);
+
+const appointmentStatusSchema = z.enum([
+  'SCHEDULED',
+  'CONFIRMED',
+  'IN_PROGRESS',
+  'COMPLETED',
+  'CANCELLED',
+  'NO_SHOW',
+]);
+
+const dayOfWeekSchema = z.enum([
+  'SUNDAY',
+  'MONDAY',
+  'TUESDAY',
+  'WEDNESDAY',
+  'THURSDAY',
+  'FRIDAY',
+  'SATURDAY',
+]);
+
+const recurrenceSchema = z
+  .object({
+    frequency: z.enum(['DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY']),
+    interval: z.number().min(1).optional().default(1),
+    daysOfWeek: z.array(dayOfWeekSchema).optional(),
+    dayOfMonth: z.number().min(1).max(31).optional(),
+    monthOfYear: z.number().min(1).max(12).optional(),
+    endDate: z.coerce.date().optional(),
+    occurrenceCount: z.number().min(1).optional(),
+  })
+  .optional();
+
+const ianaTimezoneSchema = z.string().refine(
+  (tz) => {
+    if (tz === 'UTC' || tz.includes('/')) {
+      try {
+        Intl.DateTimeFormat(undefined, { timeZone: tz });
+        return true;
+      } catch {
+        return false;
+      }
+    }
+    return false;
+  },
+  { message: 'Must be a valid IANA timezone (e.g. America/New_York) or UTC' }
+);
+
+const createAppointmentSchema = z.object({
+  title: z.string().min(1).max(255),
+  description: z.string().max(2000).optional(),
+  startTime: z.coerce.date(),
+  endTime: z.coerce.date(),
+  timezone: ianaTimezoneSchema.optional(),
+  appointmentType: appointmentTypeSchema,
+  location: z.string().max(500).optional(),
+  attendeeIds: z.array(z.string()).optional().default([]),
+  linkedCaseIds: z.array(z.string()).optional().default([]),
+  bufferMinutesBefore: z.number().min(0).max(240).optional().default(0),
+  bufferMinutesAfter: z.number().min(0).max(240).optional().default(0),
+  recurrence: recurrenceSchema,
+  reminderMinutes: z.number().min(0).optional(),
+  forceOverrideConflicts: z.boolean().optional().default(false),
+  calendarId: z.string().optional().nullable(),
+});
+
+const updateAppointmentSchema = z.object({
+  id: z.string(),
+  title: z.string().min(1).max(255).optional(),
+  description: z.string().max(2000).optional(),
+  location: z.string().max(500).optional(),
+  timezone: ianaTimezoneSchema.optional().nullable(),
+  appointmentType: appointmentTypeSchema.optional(),
+  notes: z.string().max(5000).optional(),
+  reminderMinutes: z.number().min(0).optional(),
+  calendarId: z.string().optional().nullable(),
+});
+
+const rescheduleSchema = z.object({
+  id: z.string(),
+  newStartTime: z.coerce.date(),
+  newEndTime: z.coerce.date(),
+  reason: z.string().max(500).optional(),
+  forceOverrideConflicts: z.boolean().optional().default(false),
+});
+
+const checkConflictsSchema = z.object({
+  startTime: z.coerce.date(),
+  endTime: z.coerce.date(),
+  attendeeIds: z.array(z.string()).min(1),
+  bufferMinutesBefore: z.number().min(0).max(240).optional().default(0),
+  bufferMinutesAfter: z.number().min(0).max(240).optional().default(0),
+  excludeAppointmentId: z.string().optional(),
+});
+
+const checkAvailabilitySchema = z.object({
+  attendeeId: z.string(),
+  startTime: z.coerce.date(),
+  endTime: z.coerce.date(),
+  minimumSlotMinutes: z.number().min(5).optional().default(30),
+});
+
+const findNextSlotSchema = z.object({
+  attendeeId: z.string(),
+  startFrom: z.coerce.date(),
+  durationMinutes: z.number().min(5),
+  maxDaysAhead: z.number().min(1).max(365).optional().default(30),
+  bufferMinutesBefore: z.number().min(0).max(240).optional().default(0),
+  bufferMinutesAfter: z.number().min(0).max(240).optional().default(0),
+});
+
+const listAppointmentsSchema = z.object({
+  page: z.number().min(1).optional().default(1),
+  limit: z.number().min(1).max(100).optional().default(20),
+  status: z.array(appointmentStatusSchema).optional(),
+  appointmentType: z.array(appointmentTypeSchema).optional(),
+  startTimeFrom: z.coerce.date().optional(),
+  startTimeTo: z.coerce.date().optional(),
+  caseId: z.string().optional(),
+  calendarId: z.string().optional(),
+  sortBy: z.enum(['startTime', 'createdAt', 'updatedAt']).optional().default('startTime'),
+  sortOrder: z.enum(['asc', 'desc']).optional().default('asc'),
+});
+
+/**
+ * Returns a Prisma WHERE clause scoping appointments to the current user,
+ * or an empty object for admins (who can see all appointments).
+ */
+function userScopeFilter(user: { userId: string; role: string }) {
+  if (user.role === 'ADMIN') return {};
+  return {
+    OR: [{ organizerId: user.userId }, { attendees: { some: { userId: user.userId } } }],
+  };
+}
+
+/**
+ * Business-hours window (inclusive start, exclusive end) in 24-hour clock,
+ * matching the calendar's day boundaries: 07:00 – 19:00.
+ * Update both sides in sync if the range changes.
+ */
+const BUSINESS_HOURS_START = 7;
+const BUSINESS_HOURS_END = 19;
+
+function getLocalHour(date: Date, timezone?: string): number {
+  const tz = timezone ?? 'UTC';
+  // Use en-GB to get 24-hour format reliably
+  const hourStr = new Intl.DateTimeFormat('en-GB', {
+    hour: '2-digit',
+    hour12: false,
+    timeZone: tz,
+  }).format(date);
+  // en-GB can return "24" for midnight in some engines — normalise
+  const hour = parseInt(hourStr, 10);
+  return hour === 24 ? 0 : hour;
+}
+
+/**
+ * Validates that the appointment's start and end fall within business hours
+ * (07:00 – 19:00) in the provided timezone. Throws a BAD_REQUEST if outside.
+ */
+function assertWithinBusinessHours(
+  startTime: Date,
+  endTime: Date,
+  timezone?: string
+): void {
+  const startHour = getLocalHour(startTime, timezone);
+  const endHour = getLocalHour(endTime, timezone);
+  const startWithinDay = startHour >= BUSINESS_HOURS_START && startHour < BUSINESS_HOURS_END;
+  // End boundary: end hour == 19 is OK when minutes are 00 (meeting ends at 19:00 sharp)
+  const endMinutes = parseInt(
+    new Intl.DateTimeFormat('en-GB', {
+      minute: '2-digit',
+      timeZone: timezone ?? 'UTC',
+    }).format(endTime),
+    10
+  );
+  const endWithinDay =
+    (endHour >= BUSINESS_HOURS_START && endHour < BUSINESS_HOURS_END) ||
+    (endHour === BUSINESS_HOURS_END && endMinutes === 0);
+
+  if (!startWithinDay || !endWithinDay) {
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: `Appointments must start and end between ${String(BUSINESS_HOURS_START).padStart(
+        2,
+        '0'
+      )}:00 and ${String(BUSINESS_HOURS_END).padStart(2, '0')}:00.`,
+    });
+  }
+}
+
+/**
+ * Convert a Prisma appointment record to a domain Appointment for ICS/reminder handlers.
+ * Uses AppointmentDomainService.toDomainAppointments (handles TimeSlot, Buffer, etc.)
+ * and returns the first result, or null if conversion fails.
+ */
+function toDomainAppointment(dbRecord: any): Appointment | null {
+  const results = AppointmentDomainService.toDomainAppointments([
+    {
+      ...dbRecord,
+      bufferMinutesBefore: dbRecord.bufferMinutesBefore ?? 0,
+      bufferMinutesAfter: dbRecord.bufferMinutesAfter ?? 0,
+      attendees: dbRecord.attendees?.map((a: any) => ({ userId: a.userId ?? a })) ?? [],
+    },
+  ]);
+  return results.length > 0 ? results[0] : null;
+}
+
+/**
+ * Fire-and-forget: dispatch ICS invitation, schedule reminder, and emit audit event
+ * after an appointment is created. Errors are logged but do not block the response.
+ */
+async function onAppointmentCreated(dbRecord: any, userId: string): Promise<void> {
+  try {
+    const appointment = toDomainAppointment(dbRecord);
+    if (!appointment) return;
+
+    const idResult = AppointmentId.create(dbRecord.id);
+    if (idResult.isFailure) return;
+
+    const timeSlotResult = TimeSlot.create(dbRecord.startTime, dbRecord.endTime);
+    if (timeSlotResult.isFailure) return;
+
+    const event = new AppointmentCreatedEvent(
+      idResult.value,
+      dbRecord.title,
+      timeSlotResult.value,
+      dbRecord.appointmentType,
+      userId
+    );
+
+    // ICS invitation
+    await container.appointmentIcsHandler.handleAppointmentCreated(event, appointment);
+    // Schedule reminder
+    await container.reminderScheduler.handleAppointmentCreated(event, appointment);
+    // Audit trail via event bus
+    await container.adapters.eventBus.publish(event);
+  } catch (error) {
+    console.error('[appointments] onAppointmentCreated side-effect error:', error);
+  }
+}
+
+/**
+ * Fire-and-forget: regenerate ICS, reschedule reminders, emit audit event
+ */
+async function onAppointmentRescheduled(
+  dbRecord: any,
+  previousStartTime: Date,
+  previousEndTime: Date,
+  userId: string,
+  reason?: string
+): Promise<void> {
+  try {
+    const appointment = toDomainAppointment(dbRecord);
+    if (!appointment) return;
+
+    const idResult = AppointmentId.create(dbRecord.id);
+    if (idResult.isFailure) return;
+
+    const prevSlotResult = TimeSlot.create(previousStartTime, previousEndTime);
+    const newSlotResult = TimeSlot.create(dbRecord.startTime, dbRecord.endTime);
+    if (prevSlotResult.isFailure || newSlotResult.isFailure) return;
+
+    const event = new AppointmentRescheduledEvent(
+      idResult.value,
+      prevSlotResult.value,
+      newSlotResult.value,
+      userId,
+      reason
+    );
+
+    await container.appointmentIcsHandler.handleAppointmentRescheduled(event, appointment);
+    await container.reminderScheduler.handleAppointmentRescheduled(event, appointment);
+    await container.adapters.eventBus.publish(event);
+  } catch (error) {
+    console.error('[appointments] onAppointmentRescheduled side-effect error:', error);
+  }
+}
+
+/**
+ * Fire-and-forget: cancel ICS, cancel reminders, emit audit event
+ */
+async function onAppointmentCancelled(
+  dbRecord: any,
+  userId: string,
+  reason?: string
+): Promise<void> {
+  try {
+    const appointment = toDomainAppointment(dbRecord);
+    if (!appointment) return;
+
+    const idResult = AppointmentId.create(dbRecord.id);
+    if (idResult.isFailure) return;
+
+    const event = new AppointmentCancelledEvent(idResult.value, userId, reason);
+
+    await container.appointmentIcsHandler.handleAppointmentCancelled(event, appointment);
+    await container.reminderScheduler.handleAppointmentCancelled(event, appointment);
+    await container.adapters.eventBus.publish(event);
+  } catch (error) {
+    console.error('[appointments] onAppointmentCancelled side-effect error:', error);
+  }
+}
+
+export const appointmentsRouter = createTRPCRouter({
+  /**
+   * Create a new appointment
+   * Includes domain-based validation and conflict detection
+   *
+   * Uses AppointmentDomainService for:
+   * - Input validation (time range, duration, buffer limits, title)
+   * - Recurrence validation
+   * - Sophisticated conflict detection via ConflictDetector
+   */
+  create: tenantProcedure.input(createAppointmentSchema).mutation(async ({ ctx, input }) => {
+    const startTime = performance.now();
+
+    try {
+      // Reject appointments outside business hours (07:00 – 19:00).
+      assertWithinBusinessHours(input.startTime, input.endTime, input.timezone);
+
+      // Use domain service for input validation
+      const validation = AppointmentDomainService.validateInput({
+        title: input.title,
+        description: input.description,
+        startTime: input.startTime,
+        endTime: input.endTime,
+        appointmentType: input.appointmentType as any,
+        location: input.location,
+        organizerId: ctx.user.userId,
+        attendeeIds: input.attendeeIds,
+        linkedCaseIds: input.linkedCaseIds,
+        bufferMinutesBefore: input.bufferMinutesBefore,
+        bufferMinutesAfter: input.bufferMinutesAfter,
+        recurrence: input.recurrence as any,
+        reminderMinutes: input.reminderMinutes,
+      });
+
+      if (!validation.valid) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: validation.errors.join('; '),
+        });
+      }
+
+      // Check for conflicts if not overriding
+      if (!input.forceOverrideConflicts) {
+        const allAttendees = [ctx.user.userId, ...input.attendeeIds];
+
+        // Fetch existing appointments for conflict detection
+        const dbAppointments = await ctx.prismaWithTenant.appointment.findMany({
+          where: {
+            AND: [
+              {
+                OR: [
+                  { organizerId: { in: allAttendees } },
+                  { attendees: { some: { userId: { in: allAttendees } } } },
+                ],
+              },
+              { status: { notIn: ['CANCELLED', 'NO_SHOW'] } },
+            ],
+          },
+          include: {
+            attendees: { select: { userId: true } },
+          },
+        });
+
+        // Convert to domain Appointments
+        const domainAppointments = AppointmentDomainService.toDomainAppointments(dbAppointments);
+
+        // Use domain service for sophisticated conflict detection
+        const conflictResult = AppointmentDomainService.checkConflicts(
+          {
+            startTime: input.startTime,
+            endTime: input.endTime,
+            attendeeIds: allAttendees,
+            bufferMinutesBefore: input.bufferMinutesBefore,
+            bufferMinutesAfter: input.bufferMinutesAfter,
+          },
+          domainAppointments
+        );
+
+        if (conflictResult.hasConflicts) {
+          // Get conflict details from database
+          const conflictDetails = await ctx.prismaWithTenant.appointment.findMany({
+            where: { id: { in: conflictResult.conflicts.map((c) => c.appointmentId) } },
+            select: { id: true, title: true, startTime: true, endTime: true },
+          });
+
+          // Log conflict detection for audit/monitoring
+          console.warn('[appointments.create] Conflict detected:', {
+            attemptedTimeSlot: { start: input.startTime, end: input.endTime },
+            conflictCount: conflictResult.conflicts.length,
+            attendees: allAttendees,
+          });
+
+          // Emit conflict detected domain event for audit trail
+          const appointmentIdResult = AppointmentId.create(input.title);
+          if (appointmentIdResult.isSuccess) {
+            const conflictIds = conflictResult.conflicts
+              .map((c) => AppointmentId.create(c.appointmentId))
+              .filter((r) => r.isSuccess)
+              .map((r) => r.value);
+            const conflictEvent = new AppointmentConflictDetectedEvent(
+              appointmentIdResult.value,
+              conflictIds,
+              new Date()
+            );
+            console.log('[appointments] Conflict detected:', conflictEvent.toPayload());
+          }
+
+          throw new TRPCError({
+            code: 'CONFLICT',
+            message: `Scheduling conflict detected with ${conflictResult.conflicts.length} appointment(s)`,
+            cause: {
+              conflicts: conflictResult.conflicts.map((c) => {
+                const details = conflictDetails.find((d) => d.id === c.appointmentId);
+                return {
+                  id: c.appointmentId,
+                  title: details?.title ?? 'Unknown',
+                  startTime: details?.startTime ?? c.conflictStart,
+                  endTime: details?.endTime ?? c.conflictEnd,
+                  overlapMinutes: c.overlapMinutes,
+                  conflictType: c.conflictType,
+                };
+              }),
+            },
+          });
+        }
+      }
+    } catch (error) {
+      // Handle domain-specific conflict detection errors
+      if (error instanceof ConflictDetectionError) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: `Conflict detection failed: ${error.message}`,
+        });
+      }
+      throw error;
+    }
+
+    // Create the appointment
+    const tenantId = ctx.user.tenantId;
+    const appointment = await ctx.prismaWithTenant.appointment.create({
+      data: {
+        title: input.title,
+        description: input.description,
+        startTime: input.startTime,
+        endTime: input.endTime,
+        timezone: input.timezone ?? null,
+        appointmentType: input.appointmentType,
+        location: input.location,
+        bufferMinutesBefore: input.bufferMinutesBefore,
+        bufferMinutesAfter: input.bufferMinutesAfter,
+        recurrence: input.recurrence ?? undefined,
+        reminderMinutes: input.reminderMinutes,
+        calendarId: input.calendarId || null,
+        organizerId: ctx.user.userId,
+        tenantId,
+        attendees: {
+          create: input.attendeeIds.map((userId) => ({ userId, tenantId })),
+        },
+        linkedCases: {
+          create: input.linkedCaseIds.map((caseId) => ({ caseId, tenantId })),
+        },
+      },
+      include: {
+        attendees: true,
+        linkedCases: true,
+      },
+    });
+
+    const duration = performance.now() - startTime;
+    console.log(`[appointments.create] Domain-validated and scheduled in ${duration.toFixed(2)}ms`);
+
+    // IFC-158: Fire-and-forget ICS, reminders, audit trail
+    onAppointmentCreated(appointment, ctx.user.userId).catch((err) =>
+      console.error('[appointments.router] Side-effect failed:', err)
+    );
+
+    // Notify organizer of scheduled appointment
+    createNotification(
+      ctx.prismaWithTenant,
+      {
+        userId: ctx.user.userId,
+        tenantId,
+        type: 'appointment_scheduled',
+        title: 'Appointment scheduled',
+        body: `Appointment "${input.title}" scheduled for ${input.startTime.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: safeTimezone(ctx.user?.timezone) })}`,
+        priority: 'normal',
+        entityType: 'appointment',
+        entityId: appointment.id,
+        entityName: input.title,
+        actionUrl: `/calendar/${appointment.id}`,
+      },
+      ctx.services?.notificationOrchestrator
+    ).catch((err) => console.error('[appointments.router] Side-effect failed:', err));
+
+    return appointment;
+  }),
+
+  /**
+   * Get a single appointment by ID
+   */
+  getById: tenantProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
+    const appointment = await ctx.prismaWithTenant.appointment.findUnique({
+      where: { id: input.id },
+      include: {
+        attendees: true,
+        linkedCases: true,
+      },
+    });
+
+    if (!appointment) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: `Appointment with ID ${input.id} not found`,
+      });
+    }
+
+    return appointment;
+  }),
+
+  /**
+   * List appointments with filtering
+   */
+  list: tenantProcedure.input(listAppointmentsSchema).query(async ({ ctx, input }) => {
+    const {
+      page,
+      limit,
+      status,
+      appointmentType,
+      startTimeFrom,
+      startTimeTo,
+      caseId,
+      calendarId,
+      sortBy,
+      sortOrder,
+    } = input;
+    const skip = (page - 1) * limit;
+
+    // Admins see all appointments; regular users only see their own
+    const where: any = { ...userScopeFilter(ctx.user) };
+
+    if (status && status.length > 0) {
+      where.status = { in: status };
+    }
+
+    if (appointmentType && appointmentType.length > 0) {
+      where.appointmentType = { in: appointmentType };
+    }
+
+    if (startTimeFrom || startTimeTo) {
+      where.startTime = {};
+      if (startTimeFrom) where.startTime.gte = startTimeFrom;
+      if (startTimeTo) where.startTime.lte = startTimeTo;
+    }
+
+    if (caseId) {
+      where.linkedCases = { some: { caseId } };
+    }
+
+    if (calendarId !== undefined) {
+      where.calendarId = calendarId;
+    }
+
+    const [appointments, total] = await Promise.all([
+      ctx.prismaWithTenant.appointment.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { [sortBy]: sortOrder },
+        include: {
+          attendees: true,
+          linkedCases: true,
+        },
+      }),
+      ctx.prismaWithTenant.appointment.count({ where }),
+    ]);
+
+    // Enrich attendees with user data for display
+    const allUserIds = [
+      ...new Set(
+        appointments.flatMap((a) => [a.organizerId, ...a.attendees.map((att) => att.userId)])
+      ),
+    ];
+    const users = await ctx.prismaWithTenant.user.findMany({
+      where: { id: { in: allUserIds } },
+      select: { id: true, name: true, avatarUrl: true },
+    });
+    const userMap = new Map(users.map((u) => [u.id, u]));
+
+    const enrichedAppointments = appointments.map((a) => ({
+      ...a,
+      organizer: userMap.get(a.organizerId) ?? null,
+      attendees: a.attendees.map((att) => ({
+        ...att,
+        user: userMap.get(att.userId) ?? null,
+      })),
+    }));
+
+    return {
+      appointments: enrichedAppointments,
+      total,
+      page,
+      limit,
+      hasMore: skip + appointments.length < total,
+    };
+  }),
+
+  /**
+   * Update appointment details
+   */
+  update: tenantProcedure.input(updateAppointmentSchema).mutation(async ({ ctx, input }) => {
+    const { id, ...data } = input;
+
+    const existing = await ctx.prismaWithTenant.appointment.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: `Appointment with ID ${id} not found`,
+      });
+    }
+
+    if (existing.status === 'CANCELLED') {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: 'Cannot update a cancelled appointment',
+      });
+    }
+
+    const appointment = await ctx.prismaWithTenant.appointment.update({
+      where: { id },
+      data,
+      include: {
+        attendees: true,
+        linkedCases: true,
+      },
+    });
+
+    return appointment;
+  }),
+
+  /**
+   * Reschedule an appointment
+   *
+   * Uses domain ConflictDetector for sophisticated conflict detection
+   * when checking the new time slot
+   */
+  reschedule: tenantProcedure.input(rescheduleSchema).mutation(async ({ ctx, input }) => {
+    const startTime = performance.now();
+
+    // Reject rescheduling outside business hours (07:00 – 19:00).
+    assertWithinBusinessHours(input.newStartTime, input.newEndTime);
+
+    const existing = await ctx.prismaWithTenant.appointment.findUnique({
+      where: { id: input.id },
+      include: {
+        attendees: true,
+      },
+    });
+
+    if (!existing) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: `Appointment with ID ${input.id} not found`,
+      });
+    }
+
+    if (existing.status === 'CANCELLED') {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: 'Cannot reschedule a cancelled appointment',
+      });
+    }
+
+    if (existing.status === 'COMPLETED') {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: 'Cannot reschedule a completed appointment',
+      });
+    }
+
+    // Validate new time range
+    if (input.newStartTime >= input.newEndTime) {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: 'New start time must be before new end time',
+      });
+    }
+
+    // Check for conflicts if not overriding
+    if (!input.forceOverrideConflicts) {
+      const allAttendees = [existing.organizerId, ...existing.attendees.map((a) => a.userId)];
+
+      // Fetch existing appointments for conflict detection
+      const dbAppointments = await ctx.prismaWithTenant.appointment.findMany({
+        where: {
+          AND: [
+            {
+              OR: [
+                { organizerId: { in: allAttendees } },
+                { attendees: { some: { userId: { in: allAttendees } } } },
+              ],
+            },
+            { status: { notIn: ['CANCELLED', 'NO_SHOW'] } },
+          ],
+        },
+        include: {
+          attendees: { select: { userId: true } },
+        },
+      });
+
+      // Convert to domain Appointments
+      const domainAppointments = AppointmentDomainService.toDomainAppointments(dbAppointments);
+
+      // Use domain service for conflict detection, excluding the current appointment
+      const conflictResult = AppointmentDomainService.checkConflicts(
+        {
+          startTime: input.newStartTime,
+          endTime: input.newEndTime,
+          attendeeIds: allAttendees,
+          bufferMinutesBefore: existing.bufferMinutesBefore,
+          bufferMinutesAfter: existing.bufferMinutesAfter,
+          excludeAppointmentId: input.id,
+        },
+        domainAppointments
+      );
+
+      if (conflictResult.hasConflicts) {
+        // Get conflict details from database
+        const conflictDetails = await ctx.prismaWithTenant.appointment.findMany({
+          where: { id: { in: conflictResult.conflicts.map((c) => c.appointmentId) } },
+          select: { id: true, title: true, startTime: true, endTime: true },
+        });
+
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: `Rescheduling conflict detected with ${conflictResult.conflicts.length} appointment(s)`,
+          cause: {
+            conflicts: conflictResult.conflicts.map((c) => {
+              const details = conflictDetails.find((d) => d.id === c.appointmentId);
+              return {
+                id: c.appointmentId,
+                title: details?.title ?? 'Unknown',
+                startTime: details?.startTime ?? c.conflictStart,
+                endTime: details?.endTime ?? c.conflictEnd,
+                overlapMinutes: c.overlapMinutes,
+                conflictType: c.conflictType,
+              };
+            }),
+          },
+        });
+      }
+    }
+
+    const appointment = await ctx.prismaWithTenant.appointment.update({
+      where: { id: input.id },
+      data: {
+        startTime: input.newStartTime,
+        endTime: input.newEndTime,
+      },
+      include: {
+        attendees: true,
+        linkedCases: true,
+      },
+    });
+
+    const duration = performance.now() - startTime;
+    console.log(
+      `[appointments.reschedule] Domain-validated reschedule in ${duration.toFixed(2)}ms`
+    );
+
+    // IFC-158: Fire-and-forget ICS regeneration, reminder rescheduling, audit trail
+    onAppointmentRescheduled(
+      appointment,
+      existing.startTime,
+      existing.endTime,
+      ctx.user.userId,
+      input.reason
+    ).catch((err) => console.error('[appointments.router] Side-effect failed:', err));
+
+    // Notify organizer of rescheduled appointment
+    createNotification(
+      ctx.prismaWithTenant,
+      {
+        userId: existing.organizerId,
+        tenantId: ctx.user.tenantId,
+        type: 'appointment_rescheduled',
+        title: 'Appointment rescheduled',
+        body: `Appointment "${existing.title}" has been rescheduled`,
+        priority: 'normal',
+        entityType: 'appointment',
+        entityId: appointment.id,
+        entityName: existing.title,
+        actionUrl: `/calendar/${appointment.id}`,
+      },
+      ctx.services?.notificationOrchestrator
+    ).catch((err) => console.error('[appointments.router] Side-effect failed:', err));
+
+    return {
+      appointment,
+      previousTime: {
+        startTime: existing.startTime,
+        endTime: existing.endTime,
+      },
+    };
+  }),
+
+  /**
+   * Confirm an appointment
+   */
+  confirm: tenantProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
+    const existing = await ctx.prismaWithTenant.appointment.findUnique({
+      where: { id: input.id },
+    });
+
+    if (!existing) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: `Appointment with ID ${input.id} not found`,
+      });
+    }
+
+    if (existing.status !== 'SCHEDULED') {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: `Cannot confirm appointment with status ${existing.status}`,
+      });
+    }
+
+    const appointment = await ctx.prismaWithTenant.appointment.update({
+      where: { id: input.id },
+      data: { status: 'CONFIRMED' },
+      include: {
+        attendees: true,
+        linkedCases: true,
+      },
+    });
+
+    return appointment;
+  }),
+
+  /**
+   * Complete an appointment
+   */
+  complete: tenantProcedure
+    .input(z.object({ id: z.string(), notes: z.string().max(5000).optional() }))
+    .mutation(async ({ ctx, input }) => {
+      const existing = await ctx.prismaWithTenant.appointment.findUnique({
+        where: { id: input.id },
+      });
+
+      if (!existing) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: `Appointment with ID ${input.id} not found`,
+        });
+      }
+
+      if (existing.status === 'CANCELLED') {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Cannot complete a cancelled appointment',
+        });
+      }
+
+      if (existing.status === 'COMPLETED') {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Appointment is already completed',
+        });
+      }
+
+      const appointment = await ctx.prismaWithTenant.appointment.update({
+        where: { id: input.id },
+        data: {
+          status: 'COMPLETED',
+          completedAt: new Date(),
+          notes: input.notes,
+        },
+        include: {
+          attendees: true,
+          linkedCases: true,
+        },
+      });
+
+      return appointment;
+    }),
+
+  /**
+   * Cancel an appointment
+   */
+  cancel: tenantProcedure
+    .input(z.object({ id: z.string(), reason: z.string().max(500).optional() }))
+    .mutation(async ({ ctx, input }) => {
+      const existing = await ctx.prismaWithTenant.appointment.findUnique({
+        where: { id: input.id },
+      });
+
+      if (!existing) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: `Appointment with ID ${input.id} not found`,
+        });
+      }
+
+      if (existing.status === 'CANCELLED') {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Appointment is already cancelled',
+        });
+      }
+
+      if (existing.status === 'COMPLETED') {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Cannot cancel a completed appointment',
+        });
+      }
+
+      const appointment = await ctx.prismaWithTenant.appointment.update({
+        where: { id: input.id },
+        data: {
+          status: 'CANCELLED',
+          cancelledAt: new Date(),
+          cancellationReason: input.reason,
+        },
+        include: {
+          attendees: true,
+          linkedCases: true,
+        },
+      });
+
+      // IFC-158: Fire-and-forget ICS cancellation, cancel reminders, audit trail
+      onAppointmentCancelled(appointment, ctx.user.userId, input.reason).catch((err) =>
+        console.error('[appointments.router] Side-effect failed:', err)
+      );
+
+      return appointment;
+    }),
+
+  /**
+   * Mark appointment as no-show
+   */
+  markNoShow: tenantProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const existing = await ctx.prismaWithTenant.appointment.findUnique({
+        where: { id: input.id },
+      });
+
+      if (!existing) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: `Appointment with ID ${input.id} not found`,
+        });
+      }
+
+      if (existing.status !== 'SCHEDULED' && existing.status !== 'CONFIRMED') {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: `Cannot mark as no-show for status ${existing.status}`,
+        });
+      }
+
+      const appointment = await ctx.prismaWithTenant.appointment.update({
+        where: { id: input.id },
+        data: { status: 'NO_SHOW' },
+        include: {
+          attendees: true,
+          linkedCases: true,
+        },
+      });
+
+      return appointment;
+    }),
+
+  /**
+   * Delete an appointment
+   */
+  delete: tenantProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
+    const existing = await ctx.prismaWithTenant.appointment.findUnique({
+      where: { id: input.id },
+    });
+
+    if (!existing) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: `Appointment with ID ${input.id} not found`,
+      });
+    }
+
+    await ctx.prismaWithTenant.appointment.delete({
+      where: { id: input.id },
+    });
+
+    return { success: true, id: input.id };
+  }),
+
+  /**
+   * Check for scheduling conflicts
+   * Returns detailed conflict information
+   *
+   * Uses domain ConflictDetector for sophisticated conflict detection:
+   * - O(n) algorithm for performance
+   * - Proper buffer time handling
+   * - Conflict type classification (EXACT, PARTIAL, BUFFER)
+   */
+  checkConflicts: tenantProcedure.input(checkConflictsSchema).query(async ({ ctx, input }) => {
+    const startTime = performance.now();
+
+    // Fetch existing appointments for the attendees
+    const dbAppointments = await ctx.prismaWithTenant.appointment.findMany({
+      where: {
+        AND: [
+          {
+            OR: [
+              { organizerId: { in: input.attendeeIds } },
+              { attendees: { some: { userId: { in: input.attendeeIds } } } },
+            ],
+          },
+          { status: { notIn: ['CANCELLED', 'NO_SHOW'] } },
+        ],
+      },
+      include: {
+        attendees: { select: { userId: true } },
+      },
+    });
+
+    // Convert to domain Appointments for ConflictDetector
+    const domainAppointments = AppointmentDomainService.toDomainAppointments(dbAppointments);
+
+    // Use domain service for conflict detection
+    const result = AppointmentDomainService.checkConflicts(
+      {
+        startTime: input.startTime,
+        endTime: input.endTime,
+        attendeeIds: input.attendeeIds,
+        bufferMinutesBefore: input.bufferMinutesBefore,
+        bufferMinutesAfter: input.bufferMinutesAfter,
+        excludeAppointmentId: input.excludeAppointmentId,
+      },
+      domainAppointments
+    );
+
+    // Map conflict IDs to appointment details
+    const conflictDetails = await ctx.prismaWithTenant.appointment.findMany({
+      where: { id: { in: result.conflicts.map((c) => c.appointmentId) } },
+      select: {
+        id: true,
+        title: true,
+        startTime: true,
+        endTime: true,
+        appointmentType: true,
+      },
+    });
+
+    const conflictMap = new Map(conflictDetails.map((c) => [c.id, c]));
+
+    const duration = performance.now() - startTime;
+    console.log(`[appointments.checkConflicts] Domain-based check in ${duration.toFixed(2)}ms`);
+
+    return {
+      hasConflicts: result.hasConflicts,
+      conflicts: result.conflicts.map((c) => {
+        const details = conflictMap.get(c.appointmentId);
+        return {
+          id: c.appointmentId,
+          title: details?.title ?? 'Unknown',
+          startTime: details?.startTime ?? c.conflictStart,
+          endTime: details?.endTime ?? c.conflictEnd,
+          appointmentType: details?.appointmentType ?? 'OTHER',
+          overlapMinutes: c.overlapMinutes,
+          conflictType: c.conflictType,
+        };
+      }),
+      checkDurationMs: duration,
+    };
+  }),
+
+  /**
+   * Check availability for an attendee
+   * Returns available time slots
+   *
+   * Uses domain ConflictDetector.checkAvailability for sophisticated slot finding
+   */
+  checkAvailability: tenantProcedure
+    .input(checkAvailabilitySchema)
+    .query(async ({ ctx, input }) => {
+      const startTime = performance.now();
+
+      // Get all appointments for the attendee in the time range
+      const dbAppointments = await ctx.prismaWithTenant.appointment.findMany({
+        where: {
+          AND: [
+            {
+              OR: [
+                { organizerId: input.attendeeId },
+                { attendees: { some: { userId: input.attendeeId } } },
+              ],
+            },
+            { startTime: { lt: input.endTime } },
+            { endTime: { gt: input.startTime } },
+            { status: { notIn: ['CANCELLED', 'NO_SHOW'] } },
+          ],
+        },
+        include: {
+          attendees: { select: { userId: true } },
+        },
+      });
+
+      // Convert to domain Appointments
+      const domainAppointments = AppointmentDomainService.toDomainAppointments(dbAppointments);
+
+      // Use domain service for availability check
+      const availableSlots = AppointmentDomainService.checkAvailability(
+        {
+          attendeeId: input.attendeeId,
+          startTime: input.startTime,
+          endTime: input.endTime,
+          minimumSlotMinutes: input.minimumSlotMinutes,
+          includeBuffer: true,
+        },
+        domainAppointments
+      );
+
+      const totalAvailableMinutes = availableSlots.reduce(
+        (sum, slot) => sum + slot.durationMinutes,
+        0
+      );
+
+      const duration = performance.now() - startTime;
+      console.log(
+        `[appointments.checkAvailability] Domain-based check in ${duration.toFixed(2)}ms`
+      );
+
+      return {
+        availableSlots,
+        totalAvailableMinutes,
+        checkDurationMs: duration,
+      };
+    }),
+
+  /**
+   * Find next available slot
+   *
+   * Uses domain ConflictDetector.findNextAvailableSlot for sophisticated slot finding:
+   * - Working hours awareness (9 AM - 5 PM, weekdays)
+   * - Buffer time handling
+   * - Weekend exclusion
+   */
+  findNextSlot: tenantProcedure.input(findNextSlotSchema).query(async ({ ctx, input }) => {
+    const startTime = performance.now();
+
+    const searchEndDate = new Date(input.startFrom);
+    searchEndDate.setUTCDate(searchEndDate.getUTCDate() + input.maxDaysAhead);
+
+    // Get all appointments for the attendee in the search range
+    const dbAppointments = await ctx.prismaWithTenant.appointment.findMany({
+      where: {
+        AND: [
+          {
+            OR: [
+              { organizerId: input.attendeeId },
+              { attendees: { some: { userId: input.attendeeId } } },
+            ],
+          },
+          { endTime: { gt: input.startFrom } },
+          { startTime: { lt: searchEndDate } },
+          { status: { notIn: ['CANCELLED', 'NO_SHOW'] } },
+        ],
+      },
+      include: {
+        attendees: { select: { userId: true } },
+      },
+    });
+
+    // Convert to domain Appointments
+    const domainAppointments = AppointmentDomainService.toDomainAppointments(dbAppointments);
+
+    // Use domain service to find next available slot
+    const slot = AppointmentDomainService.findNextAvailableSlot(
+      {
+        attendeeId: input.attendeeId,
+        startFrom: input.startFrom,
+        durationMinutes: input.durationMinutes,
+        maxDaysAhead: input.maxDaysAhead,
+        bufferMinutesBefore: input.bufferMinutesBefore,
+        bufferMinutesAfter: input.bufferMinutesAfter,
+        workingHoursStart: 9,
+        workingHoursEnd: 17,
+      },
+      domainAppointments
+    );
+
+    const duration = performance.now() - startTime;
+
+    if (slot) {
+      console.log(`[appointments.findNextSlot] Domain-based found in ${duration.toFixed(2)}ms`);
+      return {
+        slot: {
+          startTime: slot.startTime,
+          endTime: slot.endTime,
+          durationMinutes: slot.durationMinutes,
+        },
+        searchDurationMs: duration,
+      };
+    }
+
+    console.log(`[appointments.findNextSlot] No slot found in ${duration.toFixed(2)}ms`);
+    return {
+      slot: null,
+      searchDurationMs: duration,
+    };
+  }),
+
+  /**
+   * Link appointment to a case
+   */
+  linkToCase: tenantProcedure
+    .input(z.object({ appointmentId: z.string(), caseId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const existing = await ctx.prismaWithTenant.appointment.findUnique({
+        where: { id: input.appointmentId },
+      });
+
+      if (!existing) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: `Appointment with ID ${input.appointmentId} not found`,
+        });
+      }
+
+      // Check if already linked
+      const existingLink = await ctx.prismaWithTenant.appointmentCase.findUnique({
+        where: {
+          appointmentId_caseId: {
+            appointmentId: input.appointmentId,
+            caseId: input.caseId,
+          },
+        },
+      });
+
+      if (existingLink) {
+        return { success: true, message: 'Already linked' };
+      }
+
+      await ctx.prismaWithTenant.appointmentCase.create({
+        data: {
+          tenantId: ctx.user.tenantId,
+          appointmentId: input.appointmentId,
+          caseId: input.caseId,
+        },
+      });
+
+      return { success: true };
+    }),
+
+  /**
+   * Unlink appointment from a case
+   */
+  unlinkFromCase: tenantProcedure
+    .input(z.object({ appointmentId: z.string(), caseId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const existing = await ctx.prismaWithTenant.appointmentCase.findUnique({
+        where: {
+          appointmentId_caseId: {
+            appointmentId: input.appointmentId,
+            caseId: input.caseId,
+          },
+        },
+      });
+
+      if (!existing) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Link not found',
+        });
+      }
+
+      await ctx.prismaWithTenant.appointmentCase.delete({
+        where: { id: existing.id },
+      });
+
+      return { success: true };
+    }),
+
+  /**
+   * Add attendee to appointment
+   */
+  addAttendee: tenantProcedure
+    .input(z.object({ appointmentId: z.string(), userId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const existing = await ctx.prismaWithTenant.appointment.findUnique({
+        where: { id: input.appointmentId },
+      });
+
+      if (!existing) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: `Appointment with ID ${input.appointmentId} not found`,
+        });
+      }
+
+      // Check if already added
+      const existingAttendee = await ctx.prismaWithTenant.appointmentAttendee.findUnique({
+        where: {
+          appointmentId_userId: {
+            appointmentId: input.appointmentId,
+            userId: input.userId,
+          },
+        },
+      });
+
+      if (existingAttendee) {
+        return { success: true, message: 'Already added' };
+      }
+
+      await ctx.prismaWithTenant.appointmentAttendee.create({
+        data: {
+          tenantId: ctx.user.tenantId,
+          appointmentId: input.appointmentId,
+          userId: input.userId,
+        },
+      });
+
+      return { success: true };
+    }),
+
+  /**
+   * Remove attendee from appointment
+   */
+  removeAttendee: tenantProcedure
+    .input(z.object({ appointmentId: z.string(), userId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const existing = await ctx.prismaWithTenant.appointmentAttendee.findUnique({
+        where: {
+          appointmentId_userId: {
+            appointmentId: input.appointmentId,
+            userId: input.userId,
+          },
+        },
+      });
+
+      if (!existing) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Attendee not found',
+        });
+      }
+
+      await ctx.prismaWithTenant.appointmentAttendee.delete({
+        where: { id: existing.id },
+      });
+
+      return { success: true };
+    }),
+
+  /**
+   * Get upcoming appointments
+   */
+  upcoming: tenantProcedure
+    .input(z.object({ limit: z.number().min(1).max(50).optional().default(10) }))
+    .query(async ({ ctx, input }) => {
+      const now = new Date();
+
+      const scopeFilter = userScopeFilter(ctx.user);
+      const appointments = await ctx.prismaWithTenant.appointment.findMany({
+        where: {
+          ...scopeFilter,
+          startTime: { gte: now },
+          status: { notIn: ['CANCELLED', 'COMPLETED', 'NO_SHOW'] },
+        },
+        take: input.limit,
+        orderBy: { startTime: 'asc' },
+        include: {
+          attendees: true,
+          linkedCases: true,
+        },
+      });
+
+      return appointments;
+    }),
+
+  /**
+   * Get appointment statistics
+   */
+  stats: tenantProcedure.query(async ({ ctx }) => {
+    const scopeFilter = userScopeFilter(ctx.user);
+    const [total, byStatus, byType, upcoming, overdue] = await Promise.all([
+      ctx.prismaWithTenant.appointment.count({ where: scopeFilter }),
+      ctx.prismaWithTenant.appointment.groupBy({
+        by: ['status'],
+        where: scopeFilter,
+        _count: true,
+      }),
+      ctx.prismaWithTenant.appointment.groupBy({
+        by: ['appointmentType'],
+        where: scopeFilter,
+        _count: true,
+      }),
+      ctx.prismaWithTenant.appointment.count({
+        where: {
+          ...scopeFilter,
+          startTime: { gte: new Date() },
+          status: { in: ['SCHEDULED', 'CONFIRMED'] },
+        },
+      }),
+      ctx.prismaWithTenant.appointment.count({
+        where: {
+          ...scopeFilter,
+          endTime: { lt: new Date() },
+          status: { in: ['SCHEDULED', 'CONFIRMED'] },
+        },
+      }),
+    ]);
+
+    return {
+      total,
+      byStatus: byStatus.reduce(
+        (acc, item) => {
+          acc[item.status] = item._count;
+          return acc;
+        },
+        {} as Record<string, number>
+      ),
+      byType: byType.reduce(
+        (acc, item) => {
+          acc[item.appointmentType] = item._count;
+          return acc;
+        },
+        {} as Record<string, number>
+      ),
+      upcoming,
+      overdue,
+    };
+  }),
+});
+
+// Export type for use in merged router
+export type AppointmentsRouter = typeof appointmentsRouter;

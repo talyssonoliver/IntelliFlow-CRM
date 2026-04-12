@@ -1,0 +1,514 @@
+import type {
+  AnalyticsRepository,
+  OpportunityGroupByResult,
+  LeadGroupByResult,
+  DateRangeQuery,
+  ActivityItem,
+} from '@intelliflow/application';
+
+/**
+ * In-Memory Analytics Repository
+ * Used for testing and development without database dependency
+ *
+ * This repository stores raw data that can be seeded for tests,
+ * then provides the same aggregation results as the Prisma implementation.
+ */
+export class InMemoryAnalyticsRepository implements AnalyticsRepository {
+  // Raw data stores for seeding
+  private opportunities: OpportunityData[] = [];
+  private leads: LeadData[] = [];
+  private contacts: ContactData[] = [];
+  private auditLogs: AuditLogData[] = [];
+
+  /**
+   * Get deals won grouped by month for trend chart
+   */
+  async getDealsWonByMonth(tenantId: string, months: number): Promise<OpportunityGroupByResult[]> {
+    const cutoff = new Date();
+    cutoff.setUTCMonth(cutoff.getUTCMonth() - months);
+
+    // Filter closed-won opportunities in date range
+    const filtered = this.opportunities.filter(
+      (opp) =>
+        opp.tenantId === tenantId &&
+        opp.stage === 'CLOSED_WON' &&
+        opp.closedAt &&
+        opp.closedAt >= cutoff
+    );
+
+    // Group by closedAt date
+    const grouped = new Map<string, { count: number; value: number }>();
+
+    for (const opp of filtered) {
+      if (!opp.closedAt) continue;
+      const key = opp.closedAt.toISOString();
+      const existing = grouped.get(key) || { count: 0, value: 0 };
+      grouped.set(key, {
+        count: existing.count + 1,
+        value: existing.value + (opp.value ?? 0),
+      });
+    }
+
+    // Convert to result format
+    return Array.from(grouped.entries()).map(([dateStr, data]) => ({
+      closedAt: new Date(dateStr),
+      _count: data.count,
+      _sum: { value: data.value },
+    }));
+  }
+
+  /**
+   * Get monthly revenue from closed won opportunities
+   */
+  async getMonthlyRevenue(tenantId: string, dateRange: DateRangeQuery): Promise<number> {
+    return this.opportunities
+      .filter(
+        (opp) =>
+          opp.tenantId === tenantId &&
+          opp.stage === 'CLOSED_WON' &&
+          opp.closedAt &&
+          opp.closedAt >= dateRange.startDate &&
+          opp.closedAt <= dateRange.endDate
+      )
+      .reduce((sum, opp) => sum + (opp.value ?? 0), 0);
+  }
+
+  /**
+   * Count leads created in date range
+   */
+  async countLeadsInRange(tenantId: string, dateRange: DateRangeQuery): Promise<number> {
+    return this.leads.filter(
+      (lead) =>
+        lead.tenantId === tenantId &&
+        lead.createdAt >= dateRange.startDate &&
+        lead.createdAt <= dateRange.endDate
+    ).length;
+  }
+
+  /**
+   * Count opportunities created in date range
+   */
+  async countOpportunitiesInRange(tenantId: string, dateRange: DateRangeQuery): Promise<number> {
+    return this.opportunities.filter(
+      (opp) =>
+        opp.tenantId === tenantId &&
+        opp.createdAt >= dateRange.startDate &&
+        opp.createdAt <= dateRange.endDate
+    ).length;
+  }
+
+  /**
+   * Count contacts created in date range
+   */
+  async countContactsInRange(tenantId: string, dateRange: DateRangeQuery): Promise<number> {
+    return this.contacts.filter(
+      (contact) =>
+        contact.tenantId === tenantId &&
+        contact.createdAt >= dateRange.startDate &&
+        contact.createdAt <= dateRange.endDate
+    ).length;
+  }
+
+  /**
+   * Get leads grouped by source
+   */
+  async getLeadsBySource(tenantId: string): Promise<LeadGroupByResult[]> {
+    const counts = new Map<string, number>();
+
+    for (const lead of this.leads) {
+      if (lead.tenantId !== tenantId) continue;
+      const current = counts.get(lead.source) ?? 0;
+      counts.set(lead.source, current + 1);
+    }
+
+    return Array.from(counts.entries()).map(([source, count]) => ({
+      source,
+      _count: count,
+    }));
+  }
+
+  /**
+   * Get recent audit log entries for activity feed
+   */
+  async getRecentAuditLogs(
+    tenantId: string,
+    limit: number,
+    actions?: string[]
+  ): Promise<ActivityItem[]> {
+    let logs = this.auditLogs.filter((log) => log.tenantId === tenantId);
+
+    if (actions && actions.length > 0) {
+      logs = logs.filter((log) => actions.includes(log.action));
+    }
+
+    // Sort by timestamp descending
+    logs.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+
+    // Apply limit
+    logs = logs.slice(0, limit);
+
+    // Map to ActivityItem
+    return logs.map((log) => ({
+      id: log.id,
+      action: log.action,
+      eventType: log.eventType,
+      icon: this.getIconForAction(log.action),
+      description: this.getDescriptionForAction(log.action, log.metadata),
+      actorName: null,
+      createdAt: log.timestamp,
+      metadata: log.metadata,
+    }));
+  }
+
+  /**
+   * Count total leads for tenant
+   */
+  async countTotalLeads(tenantId: string): Promise<number> {
+    return this.leads.filter((lead) => lead.tenantId === tenantId).length;
+  }
+
+  /**
+   * Count leads created since start of current month
+   */
+  async countLeadsThisMonth(tenantId: string): Promise<number> {
+    const now = new Date();
+    const startOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+
+    return this.leads.filter((lead) => lead.tenantId === tenantId && lead.createdAt >= startOfMonth)
+      .length;
+  }
+
+  // ============================================
+  // IFC-190: Sales Metrics
+  // ============================================
+
+  async countClosedWonInRange(
+    tenantId: string,
+    dateRange: DateRangeQuery,
+    ownerId?: string
+  ): Promise<number> {
+    return this.opportunities.filter(
+      (opp) =>
+        opp.tenantId === tenantId &&
+        opp.stage === 'CLOSED_WON' &&
+        opp.closedAt &&
+        opp.closedAt >= dateRange.startDate &&
+        opp.closedAt <= dateRange.endDate &&
+        (!ownerId || opp.ownerId === ownerId)
+    ).length;
+  }
+
+  async countClosedLostInRange(
+    tenantId: string,
+    dateRange: DateRangeQuery,
+    ownerId?: string
+  ): Promise<number> {
+    return this.opportunities.filter(
+      (opp) =>
+        opp.tenantId === tenantId &&
+        opp.stage === 'CLOSED_LOST' &&
+        opp.closedAt &&
+        opp.closedAt >= dateRange.startDate &&
+        opp.closedAt <= dateRange.endDate &&
+        (!ownerId || opp.ownerId === ownerId)
+    ).length;
+  }
+
+  async getPipelineValue(
+    tenantId: string,
+    dateRange: DateRangeQuery,
+    ownerId?: string
+  ): Promise<number> {
+    return this.opportunities
+      .filter(
+        (opp) =>
+          opp.tenantId === tenantId &&
+          opp.stage !== 'CLOSED_WON' &&
+          opp.stage !== 'CLOSED_LOST' &&
+          opp.createdAt >= dateRange.startDate &&
+          opp.createdAt <= dateRange.endDate &&
+          (!ownerId || opp.ownerId === ownerId)
+      )
+      .reduce((sum, opp) => sum + (opp.value ?? 0), 0);
+  }
+
+  async getAvgSalesCycleLength(
+    tenantId: string,
+    dateRange: DateRangeQuery,
+    ownerId?: string
+  ): Promise<number | null> {
+    const closedWon = this.opportunities.filter(
+      (opp) =>
+        opp.tenantId === tenantId &&
+        opp.stage === 'CLOSED_WON' &&
+        opp.closedAt &&
+        opp.closedAt >= dateRange.startDate &&
+        opp.closedAt <= dateRange.endDate &&
+        (!ownerId || opp.ownerId === ownerId)
+    );
+    if (closedWon.length === 0) return null;
+    const totalDays = closedWon.reduce((sum, opp) => {
+      const diffMs = opp.closedAt!.getTime() - opp.createdAt.getTime();
+      return sum + diffMs / (1000 * 60 * 60 * 24);
+    }, 0);
+    return Math.round((totalDays / closedWon.length) * 10) / 10;
+  }
+
+  async getRevenueInRange(
+    tenantId: string,
+    dateRange: DateRangeQuery,
+    ownerId?: string
+  ): Promise<number> {
+    return this.opportunities
+      .filter(
+        (opp) =>
+          opp.tenantId === tenantId &&
+          opp.stage === 'CLOSED_WON' &&
+          opp.closedAt &&
+          opp.closedAt >= dateRange.startDate &&
+          opp.closedAt <= dateRange.endDate &&
+          (!ownerId || opp.ownerId === ownerId)
+      )
+      .reduce((sum, opp) => sum + (opp.value ?? 0), 0);
+  }
+
+  // IFC-190: Lead Metrics
+
+  async getLeadsBySourceInRange(
+    tenantId: string,
+    dateRange: DateRangeQuery
+  ): Promise<LeadGroupByResult[]> {
+    const counts = new Map<string, number>();
+    for (const lead of this.leads) {
+      if (lead.tenantId !== tenantId) continue;
+      if (lead.createdAt < dateRange.startDate || lead.createdAt > dateRange.endDate) continue;
+      counts.set(lead.source, (counts.get(lead.source) ?? 0) + 1);
+    }
+    return Array.from(counts.entries()).map(([source, count]) => ({ source, _count: count }));
+  }
+
+  async getLeadsByStatus(
+    tenantId: string,
+    dateRange: DateRangeQuery
+  ): Promise<Array<{ status: string; _count: number }>> {
+    const counts = new Map<string, number>();
+    for (const lead of this.leads) {
+      if (lead.tenantId !== tenantId) continue;
+      if (lead.createdAt < dateRange.startDate || lead.createdAt > dateRange.endDate) continue;
+      const status = (lead as LeadData & { status?: string }).status ?? 'NEW';
+      counts.set(status, (counts.get(status) ?? 0) + 1);
+    }
+    return Array.from(counts.entries()).map(([status, count]) => ({ status, _count: count }));
+  }
+
+  async countConvertedLeadsInRange(tenantId: string, dateRange: DateRangeQuery): Promise<number> {
+    return this.leads.filter(
+      (lead) =>
+        lead.tenantId === tenantId &&
+        (lead as LeadData & { status?: string }).status === 'CONVERTED' &&
+        lead.createdAt >= dateRange.startDate &&
+        lead.createdAt <= dateRange.endDate
+    ).length;
+  }
+
+  // IFC-190: Conversion Funnel
+
+  async getOpportunitiesByStageInRange(
+    tenantId: string,
+    dateRange: DateRangeQuery
+  ): Promise<Array<{ stage: string; _count: number; _sum: { value: number | null } }>> {
+    const groups = new Map<string, { count: number; value: number }>();
+    for (const opp of this.opportunities) {
+      if (opp.tenantId !== tenantId) continue;
+      if (opp.createdAt < dateRange.startDate || opp.createdAt > dateRange.endDate) continue;
+      const existing = groups.get(opp.stage) ?? { count: 0, value: 0 };
+      groups.set(opp.stage, {
+        count: existing.count + 1,
+        value: existing.value + (opp.value ?? 0),
+      });
+    }
+    return Array.from(groups.entries()).map(([stage, data]) => ({
+      stage,
+      _count: data.count,
+      _sum: { value: data.value || null },
+    }));
+  }
+
+  // ============================================
+  // TEST HELPER METHODS
+  // ============================================
+
+  /**
+   * Clear all data
+   */
+  clear(): void {
+    this.opportunities = [];
+    this.leads = [];
+    this.contacts = [];
+    this.auditLogs = [];
+  }
+
+  /**
+   * Seed opportunity data (for testing)
+   */
+  seedOpportunity(data: OpportunityData): void {
+    this.opportunities.push(data);
+  }
+
+  /**
+   * Seed multiple opportunities (for testing)
+   */
+  seedOpportunities(data: OpportunityData[]): void {
+    this.opportunities.push(...data);
+  }
+
+  /**
+   * Seed lead data (for testing)
+   */
+  seedLead(data: LeadData): void {
+    this.leads.push(data);
+  }
+
+  /**
+   * Seed multiple leads (for testing)
+   */
+  seedLeads(data: LeadData[]): void {
+    this.leads.push(...data);
+  }
+
+  /**
+   * Seed contact data (for testing)
+   */
+  seedContact(data: ContactData): void {
+    this.contacts.push(data);
+  }
+
+  /**
+   * Seed multiple contacts (for testing)
+   */
+  seedContacts(data: ContactData[]): void {
+    this.contacts.push(...data);
+  }
+
+  /**
+   * Seed audit log data (for testing)
+   */
+  seedAuditLog(data: AuditLogData): void {
+    this.auditLogs.push(data);
+  }
+
+  /**
+   * Seed multiple audit logs (for testing)
+   */
+  seedAuditLogs(data: AuditLogData[]): void {
+    this.auditLogs.push(...data);
+  }
+
+  /**
+   * Get all opportunities (for test assertions)
+   */
+  getAllOpportunities(): OpportunityData[] {
+    return [...this.opportunities];
+  }
+
+  /**
+   * Get all leads (for test assertions)
+   */
+  getAllLeads(): LeadData[] {
+    return [...this.leads];
+  }
+
+  // ============================================
+  // PRIVATE HELPERS
+  // ============================================
+
+  private getIconForAction(action: string): string {
+    const iconMap: Record<string, string> = {
+      CREATE: 'add_circle',
+      QUALIFY: 'check_circle',
+      CONVERT: 'swap_horiz',
+      UPDATE: 'edit',
+      DELETE: 'delete',
+      'lead.created': 'person_add',
+      'lead.qualified': 'check_circle',
+      'lead.converted': 'swap_horiz',
+      'opportunity.created': 'handshake',
+      'opportunity.won': 'celebration',
+      'contact.created': 'contacts',
+      'task.completed': 'task_alt',
+    };
+    return iconMap[action] || 'event';
+  }
+
+  private getDescriptionForAction(action: string, metadata?: Record<string, unknown>): string {
+    const data = metadata || {};
+
+    const name = (data.name as string | null | undefined) || 'Unknown';
+    const resourceType = (data.resourceType as string | null | undefined) || 'item';
+    const value = (data.value as number | null | undefined) || 0;
+    const title = (data.title as string | null | undefined) || 'Unknown';
+
+    switch (action) {
+      case 'CREATE':
+        return `New ${resourceType}: ${name}`;
+      case 'QUALIFY':
+        return `Qualified: ${name}`;
+      case 'CONVERT':
+        return `Converted: ${name}`;
+      case 'UPDATE':
+        return `Updated: ${name}`;
+      case 'lead.created':
+        return `New lead: ${name}`;
+      case 'lead.qualified':
+        return `Lead qualified: ${name}`;
+      case 'lead.converted':
+        return `Lead converted to contact: ${name}`;
+      case 'opportunity.created':
+        return `New deal: ${name}`;
+      case 'opportunity.won':
+        return `Deal won: ${name} ($${value})`;
+      case 'contact.created':
+        return `New contact: ${name}`;
+      case 'task.completed':
+        return `Task completed: ${title}`;
+      default:
+        return action;
+    }
+  }
+}
+
+// ============================================
+// DATA TYPES FOR SEEDING
+// ============================================
+
+export interface OpportunityData {
+  id: string;
+  tenantId: string;
+  stage: string;
+  value: number | null;
+  createdAt: Date;
+  closedAt: Date | null;
+  ownerId?: string;
+}
+
+export interface LeadData {
+  id: string;
+  tenantId: string;
+  source: string;
+  createdAt: Date;
+}
+
+export interface ContactData {
+  id: string;
+  tenantId: string;
+  createdAt: Date;
+}
+
+export interface AuditLogData {
+  id: string;
+  tenantId: string;
+  action: string;
+  eventType?: string;
+  timestamp: Date;
+  metadata?: Record<string, unknown>;
+}

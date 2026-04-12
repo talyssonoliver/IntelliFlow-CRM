@@ -1,23 +1,102 @@
 import { z } from 'zod';
+import { PhoneNumber, Money, WebsiteUrl, DateRange, Percentage } from '@intelliflow/domain';
 
 // Common ID schemas
-export const idSchema = z.string().cuid();
-
-export const uuidSchema = z.string().uuid();
+// Prisma uses @default(cuid()) while seed data uses deterministic UUIDs.
+// Accept both formats so runtime-created and seeded entities both pass validation.
+export const uuidSchema = z.uuid();
+export const cuidSchema = z.string().check(z.regex(/^c[a-z0-9]{8,}$/, 'Invalid CUID'));
+export const idSchema = z.union([uuidSchema, cuidSchema]);
 
 // Common string schemas
 export const emailSchema = z
   .string()
   .email('Invalid email address')
-  .toLowerCase()
-  .trim();
+  .transform((v) => v.toLowerCase().trim());
 
+// Name validation with consistent rules (used across all entities)
+export const nameSchema = z
+  .string()
+  .min(1)
+  .max(100)
+  .transform((val) => val.trim());
+
+// Phone schema - transforms to PhoneNumber Value Object
 export const phoneSchema = z
   .string()
-  .regex(/^\+?[1-9]\d{1,14}$/, 'Invalid phone number format')
-  .optional();
+  .optional()
+  .nullable()
+  .transform((val, ctx) => {
+    if (!val) return undefined;
 
-export const urlSchema = z.string().url('Invalid URL').optional();
+    const result = PhoneNumber.create(val);
+
+    if (result.isFailure) {
+      ctx.addIssue({
+        code: 'custom',
+        message: result.error.message,
+      });
+      return z.NEVER;
+    }
+
+    return result.value;
+  });
+
+// Money schema - transforms to Money Value Object
+export const moneySchema = z
+  .object({
+    amount: z.number().min(0, 'Amount must be non-negative'),
+    currency: z.string().default('USD'),
+  })
+  .transform((val, ctx) => {
+    const result = Money.create(val.amount, val.currency);
+
+    if (result.isFailure) {
+      ctx.addIssue({
+        code: 'custom',
+        message: result.error.message,
+      });
+      return z.NEVER;
+    }
+
+    return result.value;
+  });
+
+// Percentage schema - transforms to Percentage Value Object
+export const percentageSchema = z.number().transform((val, ctx) => {
+  const result = Percentage.create(val);
+
+  if (result.isFailure) {
+    ctx.addIssue({
+      code: 'custom',
+      message: result.error.message,
+    });
+    return z.NEVER;
+  }
+
+  return result.value;
+});
+
+// URL schema - transforms to WebsiteUrl Value Object
+export const urlSchema = z
+  .string()
+  .optional()
+  .nullable()
+  .transform((val, ctx) => {
+    if (!val) return undefined;
+
+    const result = WebsiteUrl.create(val);
+
+    if (result.isFailure) {
+      ctx.addIssue({
+        code: 'custom',
+        message: result.error.message,
+      });
+      return z.NEVER;
+    }
+
+    return result.value;
+  });
 
 // Pagination schemas
 export const paginationSchema = z.object({
@@ -29,21 +108,34 @@ export const paginationSchema = z.object({
 
 export type PaginationInput = z.infer<typeof paginationSchema>;
 
-// Date range schema
-export const dateRangeSchema = z.object({
-  start: z.coerce.date(),
-  end: z.coerce.date(),
-}).refine(
-  (data) => data.start <= data.end,
-  { message: 'Start date must be before end date' }
-);
+// Date range schema - transforms to DateRange Value Object
+export const dateRangeSchema = z
+  .object({
+    start: z.coerce.date(),
+    end: z.coerce.date(),
+  })
+  .transform((val, ctx) => {
+    const result = DateRange.create(val.start, val.end);
+
+    if (result.isFailure) {
+      ctx.addIssue({
+        code: 'custom',
+        message: result.error.message,
+      });
+      return z.NEVER;
+    }
+
+    return result.value;
+  });
 
 export type DateRangeInput = z.infer<typeof dateRangeSchema>;
 
 // Search/filter schema
 export const searchSchema = z.object({
   query: z.string().min(1).max(200).optional(),
-  filters: z.record(z.union([z.string(), z.number(), z.boolean(), z.array(z.string())])).optional(),
+  filters: z
+    .record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.array(z.string())]))
+    .optional(),
 });
 
 export type SearchInput = z.infer<typeof searchSchema>;
@@ -54,7 +146,7 @@ export const apiResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
     success: z.boolean(),
     data: dataSchema,
     message: z.string().optional(),
-    timestamp: z.string().datetime(),
+    timestamp: z.iso.datetime(),
   });
 
 export const apiErrorSchema = z.object({
@@ -62,9 +154,9 @@ export const apiErrorSchema = z.object({
   error: z.object({
     code: z.string(),
     message: z.string(),
-    details: z.record(z.unknown()).optional(),
+    details: z.record(z.string(), z.unknown()).optional(),
   }),
-  timestamp: z.string().datetime(),
+  timestamp: z.iso.datetime(),
 });
 
 export type ApiError = z.infer<typeof apiErrorSchema>;

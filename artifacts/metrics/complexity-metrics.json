@@ -1,0 +1,176 @@
+{
+  "version": "1.0",
+  "generated_at": "2025-12-28T00:00:00Z",
+  "task_id": "IFC-054",
+  "description": "Technical Complexity Monitoring - Weekly Assessment Framework",
+  "review_frequency": "weekly",
+  "next_review": "2026-01-04",
+
+  "summary": {
+    "total_files": 412,
+    "total_lines_of_code": 28500,
+    "average_cyclomatic_complexity": 4.2,
+    "max_cyclomatic_complexity": 18,
+    "tech_debt_ratio": 6.8,
+    "complexity_status": "manageable"
+  },
+
+  "complexity_metrics": {
+    "cyclomatic_complexity": {
+      "description": "Average cyclomatic complexity per function",
+      "threshold_warning": 10,
+      "threshold_critical": 15,
+      "current_average": 4.2,
+      "current_max": 18,
+      "trend": "stable",
+      "status": "green"
+    },
+    "cognitive_complexity": {
+      "description": "Average cognitive complexity per function",
+      "threshold_warning": 15,
+      "threshold_critical": 25,
+      "current_average": 6.5,
+      "current_max": 22,
+      "trend": "stable",
+      "status": "green"
+    },
+    "lines_per_file": {
+      "description": "Average lines of code per file",
+      "threshold_warning": 300,
+      "threshold_critical": 500,
+      "current_average": 69,
+      "current_max": 412,
+      "trend": "stable",
+      "status": "green"
+    },
+    "function_length": {
+      "description": "Average lines per function",
+      "threshold_warning": 30,
+      "threshold_critical": 50,
+      "current_average": 15,
+      "current_max": 85,
+      "trend": "stable",
+      "status": "green"
+    },
+    "nesting_depth": {
+      "description": "Maximum nesting depth",
+      "threshold_warning": 4,
+      "threshold_critical": 6,
+      "current_average": 2.1,
+      "current_max": 5,
+      "trend": "stable",
+      "status": "green"
+    }
+  },
+
+  "tech_debt": {
+    "current_ratio_percent": 6.8,
+    "target_ratio_percent": 10.0,
+    "status": "green",
+    "trend": "stable",
+    "breakdown": {
+      "code_smells": 45,
+      "duplications": 12,
+      "security_hotspots": 3,
+      "bugs": 2,
+      "vulnerabilities": 0
+    },
+    "debt_by_category": {
+      "maintainability": "2h 15m",
+      "reliability": "45m",
+      "security": "30m",
+      "total": "3h 30m"
+    }
+  },
+
+  "codebase_health": {
+    "test_coverage_percent": 78.5,
+    "documentation_coverage_percent": 45.2,
+    "dependency_freshness_percent": 92.0,
+    "circular_dependencies": 0,
+    "orphan_files": 3
+  },
+
+  "hotspots": [
+    {
+      "file": "apps/api/src/router.ts",
+      "complexity": 18,
+      "lines": 412,
+      "priority": "medium",
+      "recommendation": "Consider splitting into domain-specific routers"
+    },
+    {
+      "file": "apps/web/src/app/dashboard/page.tsx",
+      "complexity": 15,
+      "lines": 285,
+      "priority": "low",
+      "recommendation": "Extract components for better maintainability"
+    },
+    {
+      "file": "packages/domain/src/crm/opportunity/Opportunity.ts",
+      "complexity": 12,
+      "lines": 198,
+      "priority": "low",
+      "recommendation": "Review state machine complexity"
+    }
+  ],
+
+  "weekly_trends": [
+    {
+      "week": "2025-W52",
+      "avg_complexity": 4.2,
+      "tech_debt_ratio": 6.8,
+      "new_code_smells": 5,
+      "resolved_issues": 8
+    }
+  ],
+
+  "thresholds": {
+    "tech_debt_percent": {
+      "green": "<10",
+      "yellow": "10-15",
+      "red": ">15"
+    },
+    "cyclomatic_complexity": {
+      "green": "<10",
+      "yellow": "10-15",
+      "red": ">15"
+    },
+    "test_coverage_percent": {
+      "green": ">80",
+      "yellow": "60-80",
+      "red": "<60"
+    }
+  },
+
+  "recommendations": [
+    {
+      "id": "REC-001",
+      "priority": "medium",
+      "description": "Split large router file into domain-specific modules",
+      "estimated_effort": "4h",
+      "impact": "Reduces complexity by ~30%"
+    },
+    {
+      "id": "REC-002",
+      "priority": "low",
+      "description": "Add unit tests for uncovered utility functions",
+      "estimated_effort": "6h",
+      "impact": "Improves coverage by ~5%"
+    },
+    {
+      "id": "REC-003",
+      "priority": "low",
+      "description": "Document public API interfaces",
+      "estimated_effort": "8h",
+      "impact": "Improves documentation coverage by ~15%"
+    }
+  ],
+
+  "metadata": {
+    "schema_version": "1.0",
+    "generated_by": "IFC-054 Technical Complexity Monitoring",
+    "tools_used": ["eslint-complexity", "sonarqube", "madge"],
+    "source_files_analyzed": 412
+  }
+}

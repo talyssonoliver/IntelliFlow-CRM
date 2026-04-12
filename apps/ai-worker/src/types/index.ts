@@ -17,20 +17,8 @@ export type AgentRole =
   | 'follow_up_scheduler'
   | 'data_enricher';
 
-/**
- * Task priority levels
- */
-export type TaskPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
-
-/**
- * Task status
- */
-export type TaskStatus =
-  | 'PENDING'
-  | 'IN_PROGRESS'
-  | 'COMPLETED'
-  | 'FAILED'
-  | 'CANCELLED';
+// Re-export task types from domain
+export type { TaskPriority, TaskStatus } from '@intelliflow/domain';
 
 /**
  * Human-in-the-loop decision
@@ -47,7 +35,7 @@ export interface HumanDecision {
  * Confidence levels
  */
 export enum ConfidenceLevel {
-  VERY_LOW = 0.0,
+  VERY_LOW = 0,
   LOW = 0.3,
   MEDIUM = 0.5,
   HIGH = 0.7,

@@ -5,276 +5,276 @@ version: 1.0
 
 # Exclude generated files
 generated:
-  - pattern: "**/.next/**"
-    reason: "Next.js build output"
+  - pattern: '**/.next/**'
+    reason: 'Next.js build output'
 
-  - pattern: "**/dist/**"
-    reason: "Build output"
+  - pattern: '**/dist/**'
+    reason: 'Build output'
 
-  - pattern: "**/build/**"
-    reason: "Build artifacts"
+  - pattern: '**/build/**'
+    reason: 'Build artifacts'
 
-  - pattern: "**/node_modules/**"
-    reason: "Third-party dependencies"
+  - pattern: '**/node_modules/**'
+    reason: 'Third-party dependencies'
 
-  - pattern: "**/.turbo/**"
-    reason: "Turborepo cache"
+  - pattern: '**/.turbo/**'
+    reason: 'Turborepo cache'
 
-  - pattern: "**/generated/**"
-    reason: "Generated code"
+  - pattern: '**/generated/**'
+    reason: 'Generated code'
 
-  - pattern: "**/*.generated.ts"
-    reason: "Auto-generated TypeScript files"
+  - pattern: '**/*.generated.ts'
+    reason: 'Auto-generated TypeScript files'
 
-  - pattern: "**/prisma/migrations/**"
-    reason: "Database migrations (auto-generated)"
+  - pattern: '**/prisma/migrations/**'
+    reason: 'Database migrations (auto-generated)'
 
 # Exclude configuration files
 config:
-  - pattern: "**/pnpm-lock.yaml"
-    reason: "Lock file - should not be manually edited"
+  - pattern: '**/pnpm-lock.yaml'
+    reason: 'Lock file - should not be manually edited'
 
-  - pattern: "**/package-lock.json"
-    reason: "Lock file - should not be manually edited"
+  - pattern: '**/package-lock.json'
+    reason: 'Lock file - should not be manually edited'
 
-  - pattern: "**/yarn.lock"
-    reason: "Lock file - should not be manually edited"
+  - pattern: '**/yarn.lock'
+    reason: 'Lock file - should not be manually edited'
 
 # Exclude sensitive files
 sensitive:
-  - pattern: "**/.env"
-    reason: "Environment variables - contains secrets"
+  - pattern: '**/.env'
+    reason: 'Environment variables - contains secrets'
 
-  - pattern: "**/.env.local"
-    reason: "Local environment variables"
+  - pattern: '**/.env.local'
+    reason: 'Local environment variables'
 
-  - pattern: "**/.env.production"
-    reason: "Production environment variables"
+  - pattern: '**/.env.production'
+    reason: 'Production environment variables'
 
-  - pattern: "**/.env.development"
-    reason: "Development environment variables"
+  - pattern: '**/.env.development'
+    reason: 'Development environment variables'
 
-  - pattern: "**/secrets/**"
-    reason: "Sensitive data"
+  - pattern: '**/secrets/**'
+    reason: 'Sensitive data'
 
-  - pattern: "**/*.pem"
-    reason: "Private keys"
+  - pattern: '**/*.pem'
+    reason: 'Private keys'
 
-  - pattern: "**/*.key"
-    reason: "Private keys"
+  - pattern: '**/*.key'
+    reason: 'Private keys'
 
-  - pattern: "**/credentials.json"
-    reason: "Credentials file"
+  - pattern: '**/credentials.json'
+    reason: 'Credentials file'
 
 # Exclude vendor and third-party code
 vendor:
-  - pattern: "**/vendor/**"
-    reason: "Third-party vendor code"
+  - pattern: '**/vendor/**'
+    reason: 'Third-party vendor code'
 
-  - pattern: "**/third-party/**"
-    reason: "Third-party libraries"
+  - pattern: '**/third-party/**'
+    reason: 'Third-party libraries'
 
-  - pattern: "**/libs/**"
-    reason: "External libraries"
+  - pattern: '**/libs/**'
+    reason: 'External libraries'
 
 # Exclude test artifacts and coverage
 test_artifacts:
-  - pattern: "**/coverage/**"
-    reason: "Code coverage reports"
+  - pattern: '**/coverage/**'
+    reason: 'Code coverage reports'
 
-  - pattern: "**/.nyc_output/**"
-    reason: "NYC coverage output"
+  - pattern: '**/.nyc_output/**'
+    reason: 'NYC coverage output'
 
-  - pattern: "**/test-results/**"
-    reason: "Test execution results"
+  - pattern: '**/test-results/**'
+    reason: 'Test execution results'
 
-  - pattern: "**/playwright-report/**"
-    reason: "Playwright test reports"
+  - pattern: '**/playwright-report/**'
+    reason: 'Playwright test reports'
 
-  - pattern: "**/__snapshots__/**"
-    reason: "Test snapshots - auto-generated"
+  - pattern: '**/__snapshots__/**'
+    reason: 'Test snapshots - auto-generated'
 
 # Exclude logs and temporary files
 logs_temp:
-  - pattern: "**/*.log"
-    reason: "Log files"
+  - pattern: '**/*.log'
+    reason: 'Log files'
 
-  - pattern: "**/logs/**"
-    reason: "Log directory"
+  - pattern: '**/logs/**'
+    reason: 'Log directory'
 
-  - pattern: "**/tmp/**"
-    reason: "Temporary files"
+  - pattern: '**/tmp/**'
+    reason: 'Temporary files'
 
-  - pattern: "**/.cache/**"
-    reason: "Cache directory"
+  - pattern: '**/.cache/**'
+    reason: 'Cache directory'
 
-  - pattern: "**/*.tmp"
-    reason: "Temporary files"
+  - pattern: '**/*.tmp'
+    reason: 'Temporary files'
 
-  - pattern: "**/*.temp"
-    reason: "Temporary files"
+  - pattern: '**/*.temp'
+    reason: 'Temporary files'
 
 # Exclude IDE and editor files
 ide:
-  - pattern: "**/.vscode/**"
-    reason: "VS Code settings"
+  - pattern: '**/.vscode/**'
+    reason: 'VS Code settings'
 
-  - pattern: "**/.idea/**"
-    reason: "IntelliJ IDEA settings"
+  - pattern: '**/.idea/**'
+    reason: 'IntelliJ IDEA settings'
 
-  - pattern: "**/*.swp"
-    reason: "Vim swap files"
+  - pattern: '**/*.swp'
+    reason: 'Vim swap files'
 
-  - pattern: "**/*.swo"
-    reason: "Vim swap files"
+  - pattern: '**/*.swo'
+    reason: 'Vim swap files'
 
-  - pattern: "**/.DS_Store"
-    reason: "macOS system files"
+  - pattern: '**/.DS_Store'
+    reason: 'macOS system files'
 
 # Exclude documentation builds
 docs:
-  - pattern: "**/docs/.docusaurus/**"
-    reason: "Docusaurus build output"
+  - pattern: '**/docs/.docusaurus/**'
+    reason: 'Docusaurus build output'
 
-  - pattern: "**/docs/build/**"
-    reason: "Documentation build output"
+  - pattern: '**/docs/build/**'
+    reason: 'Documentation build output'
 
 # Exclude artifacts directory (except specific files)
 artifacts:
-  - pattern: "**/artifacts/coverage/**"
-    reason: "Coverage artifacts"
+  - pattern: '**/artifacts/coverage/**'
+    reason: 'Coverage artifacts'
 
-  - pattern: "**/artifacts/benchmarks/**/*.json"
-    reason: "Benchmark result files"
+  - pattern: '**/artifacts/benchmarks/**/*.json'
+    reason: 'Benchmark result files'
 
-  - pattern: "**/artifacts/logs/**"
-    reason: "Log artifacts"
+  - pattern: '**/artifacts/logs/**'
+    reason: 'Log artifacts'
 
-  - pattern: "**/artifacts/reports/**/*.html"
-    reason: "Generated reports"
+  - pattern: '**/artifacts/reports/**/*.html'
+    reason: 'Generated reports'
 
 # Exclude large data files
 data:
-  - pattern: "**/*.csv"
-    reason: "Large data files"
+  - pattern: '**/*.csv'
+    reason: 'Large data files'
     exceptions:
-      - "Sprint_plan.csv"
-      - "artifacts/metrics/**/*.csv"
+      - 'Sprint_plan.csv'
+      - 'artifacts/metrics/**/*.csv'
 
-  - pattern: "**/*.json"
-    reason: "Large JSON files"
+  - pattern: '**/*.json'
+    reason: 'Large JSON files'
     exceptions:
-      - "package.json"
-      - "tsconfig.json"
-      - "**/config/*.json"
+      - 'package.json'
+      - 'tsconfig.json'
+      - '**/config/*.json'
 
-  - pattern: "**/*.xml"
-    reason: "Large XML files"
+  - pattern: '**/*.xml'
+    reason: 'Large XML files'
 
-  - pattern: "**/*.sql"
-    reason: "SQL dump files"
+  - pattern: '**/*.sql'
+    reason: 'SQL dump files'
 
 # Exclude binary and media files
 binary_media:
-  - pattern: "**/*.png"
-    reason: "Image files"
+  - pattern: '**/*.png'
+    reason: 'Image files'
 
-  - pattern: "**/*.jpg"
-    reason: "Image files"
+  - pattern: '**/*.jpg'
+    reason: 'Image files'
 
-  - pattern: "**/*.jpeg"
-    reason: "Image files"
+  - pattern: '**/*.jpeg'
+    reason: 'Image files'
 
-  - pattern: "**/*.gif"
-    reason: "Image files"
+  - pattern: '**/*.gif'
+    reason: 'Image files'
 
-  - pattern: "**/*.svg"
-    reason: "SVG files (unless icons)"
+  - pattern: '**/*.svg'
+    reason: 'SVG files (unless icons)'
     exceptions:
-      - "**/icons/**/*.svg"
+      - '**/icons/**/*.svg'
 
-  - pattern: "**/*.pdf"
-    reason: "PDF documents"
+  - pattern: '**/*.pdf'
+    reason: 'PDF documents'
 
-  - pattern: "**/*.zip"
-    reason: "Archive files"
+  - pattern: '**/*.zip'
+    reason: 'Archive files'
 
-  - pattern: "**/*.tar.gz"
-    reason: "Archive files"
+  - pattern: '**/*.tar.gz'
+    reason: 'Archive files'
 
 # Exclude database files
 database:
-  - pattern: "**/*.db"
-    reason: "SQLite database files"
+  - pattern: '**/*.db'
+    reason: 'SQLite database files'
 
-  - pattern: "**/*.sqlite"
-    reason: "SQLite database files"
+  - pattern: '**/*.sqlite'
+    reason: 'SQLite database files'
 
-  - pattern: "**/data/**/*.db"
-    reason: "Database files"
+  - pattern: '**/data/**/*.db'
+    reason: 'Database files'
 
 # Exclude Docker and infrastructure artifacts
 infrastructure:
-  - pattern: "**/docker/volumes/**"
-    reason: "Docker volume data"
+  - pattern: '**/docker/volumes/**'
+    reason: 'Docker volume data'
 
 # Specific file exclusions
 specific_files:
-  - pattern: "**/CHANGELOG.md"
-    reason: "Auto-generated changelog"
+  - pattern: '**/CHANGELOG.md'
+    reason: 'Auto-generated changelog'
 
-  - pattern: "**/LICENSE"
-    reason: "License file - should not be modified"
+  - pattern: '**/LICENSE'
+    reason: 'License file - should not be modified'
 
-  - pattern: "**/.gitattributes"
-    reason: "Git configuration"
+  - pattern: '**/.gitattributes'
+    reason: 'Git configuration'
 
 # Conditional exclusions for specific contexts
 contextual:
   # Exclude AI model files during general coding
-  - pattern: "**/models/**/*.bin"
-    reason: "Binary AI model files"
-    context: "general"
+  - pattern: '**/models/**/*.bin'
+    reason: 'Binary AI model files'
+    context: 'general'
 
   # Exclude large language model weights
-  - pattern: "**/*.gguf"
-    reason: "LLM model weights"
+  - pattern: '**/*.gguf'
+    reason: 'LLM model weights'
 
-  - pattern: "**/*.safetensors"
-    reason: "Model weights"
+  - pattern: '**/*.safetensors'
+    reason: 'Model weights'
 
 # Performance: Exclude very large files
 performance:
-  - pattern: "**/*"
-    reason: "Files larger than 1MB"
-    size_limit: 1048576  # 1MB in bytes
+  - pattern: '**/*'
+    reason: 'Files larger than 1MB'
+    size_limit: 1048576 # 1MB in bytes
     exceptions:
-      - "**/*.md"
-      - "**/*.ts"
-      - "**/*.tsx"
-      - "**/*.js"
-      - "**/*.jsx"
+      - '**/*.md'
+      - '**/*.ts'
+      - '**/*.tsx'
+      - '**/*.js'
+      - '**/*.jsx'
 
 # Custom exclusion patterns
 custom:
   # Exclude sandbox and experimental code
-  - pattern: "**/sandbox/**"
-    reason: "Experimental/sandbox code"
+  - pattern: '**/sandbox/**'
+    reason: 'Experimental/sandbox code'
 
-  - pattern: "**/experiments/**"
-    reason: "Experimental code"
+  - pattern: '**/experiments/**'
+    reason: 'Experimental code'
 
   # Exclude archived code
-  - pattern: "**/archive/**"
-    reason: "Archived code"
+  - pattern: '**/archive/**'
+    reason: 'Archived code'
 
-  - pattern: "**/deprecated/**"
-    reason: "Deprecated code"
+  - pattern: '**/deprecated/**'
+    reason: 'Deprecated code'
 
   # Exclude mock data
-  - pattern: "**/mocks/**/*.json"
-    reason: "Mock data files"
+  - pattern: '**/mocks/**/*.json'
+    reason: 'Mock data files'
 
   # Exclude fixtures
-  - pattern: "**/fixtures/**"
-    reason: "Test fixtures (static data)"
+  - pattern: '**/fixtures/**'
+    reason: 'Test fixtures (static data)'

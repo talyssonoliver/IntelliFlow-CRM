@@ -1,0 +1,72 @@
+import { defineConfig } from 'vitest/config';
+import { createRequire } from 'node:module';
+import path from 'node:path';
+
+// Resolve @vitejs/plugin-react from apps/web where it's installed
+const require = createRequire(path.resolve(__dirname, '../../apps/web/package.json'));
+const react = require('@vitejs/plugin-react');
+
+const webRoot = path.resolve(__dirname, '../../apps/web');
+
+export default defineConfig({
+  // Type assertion needed due to vite version mismatch between
+  // @vitejs/plugin-react (vite@6.x) and vitest (vite@7.x)
+
+  plugins: [react.default ? react.default() : react()],
+  test: {
+    name: 'a11y',
+    globals: true,
+    environment: 'jsdom', // axe-core requires jsdom (not happy-dom)
+    setupFiles: [path.resolve(__dirname, './setup.ts')],
+    include: ['**/*.spec.{ts,tsx}'],
+    exclude: ['node_modules', 'dist'],
+
+    // Resolve deps from apps/web where axe-core/vitest-axe are installed
+    deps: {
+      moduleDirectories: ['node_modules', path.resolve(webRoot, 'node_modules')],
+    },
+
+    // Memory optimization (Vitest v4)
+    restoreMocks: true,
+    clearMocks: true,
+    mockReset: true,
+    unstubGlobals: true,
+    unstubEnvs: true,
+
+    // Pool and isolation
+    pool: 'forks',
+    isolate: true,
+    forceExit: process.env['COVERAGE_RUN'] !== '1',
+    cache: false,
+
+    // Timeouts
+    testTimeout: 30000,
+    hookTimeout: 30000,
+    teardownTimeout: 10000,
+  },
+  resolve: {
+    alias: [
+      // Stub uninstalled optional dependencies
+      {
+        find: /^@scalar\/api-reference-react\/style\.css$/,
+        replacement: path.resolve(webRoot, 'src/test/__mocks__/empty.ts'),
+      },
+      {
+        find: /^@scalar\/api-reference-react$/,
+        replacement: path.resolve(webRoot, 'src/test/__mocks__/scalar-stub.ts'),
+      },
+      {
+        find: 'next/navigation',
+        replacement: path.resolve(__dirname, './mocks/next-navigation.ts'),
+      },
+      { find: '@intelliflow/ui', replacement: path.resolve(__dirname, '../../packages/ui/src') },
+      {
+        find: '@intelliflow/domain',
+        replacement: path.resolve(__dirname, '../../packages/domain/src'),
+      },
+      { find: '@/components', replacement: path.resolve(webRoot, 'src/components') },
+      { find: '@/lib', replacement: path.resolve(webRoot, 'src/lib') },
+      { find: '@', replacement: path.resolve(webRoot, 'src') },
+    ],
+  },
+});

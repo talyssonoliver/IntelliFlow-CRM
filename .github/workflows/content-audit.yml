@@ -1,0 +1,72 @@
+name: Content Audit Drift Detection
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'apps/web/src/app/**/page.tsx'
+      - 'apps/web/src/app/**/layout.tsx'
+      - 'apps/web/src/app/layout.tsx'
+      - 'tools/scripts/content-audit.ts'
+      - '.github/workflows/content-audit.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '10.29.3'
+
+jobs:
+  content-audit:
+    name: Content Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run content audit
+        id: audit
+        run: |
+          pnpm tsx tools/scripts/content-audit.ts 2>&1 | tee audit-output.txt
+          echo "exit_code=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
+
+      - name: Upload audit results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: content-audit-results
+          path: artifacts/reports/content-audit-results.json
+          retention-days: 30
+
+      - name: Comment on PR if drift detected
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const output = fs.readFileSync('audit-output.txt', 'utf-8');
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## Content Audit Drift Detected\n\nThe content audit script detected route count drift. Please regenerate the audit:\n\n\`\`\`bash\npnpm tsx tools/scripts/content-audit.ts\ngit add artifacts/reports/content-audit-results.json\ngit commit -m "chore: regenerate content audit"\n\`\`\`\n\n<details><summary>Audit Output</summary>\n\n\`\`\`\n${output}\n\`\`\`\n</details>`
+            });
+
+      - name: Fail on drift
+        if: steps.audit.outputs.exit_code != '0'
+        run: exit 1

@@ -1,0 +1,300 @@
+{
+  "$schema": "https://schema.claude.ai/mcp-config.schema.json",
+  "description": "MCP server configuration for SonarQube Fix Agent",
+  "servers": {
+    "sonarqube": {
+      "description": "SonarQube API integration for fetching code quality issues",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sonarqube"],
+      "env": {
+        "SONARQUBE_URL": "${SONARQUBE_URL}",
+        "SONARQUBE_TOKEN": "${SONARQUBE_TOKEN}",
+        "SONARQUBE_PROJECT_KEY": "intelliflow-crm"
+      },
+      "required": false,
+      "fallback": "parse-local-reports",
+      "tools": [
+        {
+          "name": "sonarqube_get_issues",
+          "description": "Fetch SonarQube issues for the project",
+          "parameters": {
+            "severity": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["BLOCKER", "CRITICAL", "MAJOR", "MINOR", "INFO"]
+              }
+            },
+            "type": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["BUG", "VULNERABILITY", "CODE_SMELL", "SECURITY_HOTSPOT"]
+              }
+            },
+            "resolved": {
+              "type": "boolean",
+              "default": false
+            },
+            "file": {
+              "type": "string",
+              "description": "Filter by file path"
+            },
+            "rule": {
+              "type": "string",
+              "description": "Filter by specific rule key"
+            }
+          }
+        },
+        {
+          "name": "sonarqube_get_rule",
+          "description": "Get detailed information about a SonarQube rule",
+          "parameters": {
+            "rule_key": {
+              "type": "string",
+              "required": true,
+              "description": "SonarQube rule key (e.g., typescript:S1541)"
+            }
+          }
+        },
+        {
+          "name": "sonarqube_get_metrics",
+          "description": "Get quality metrics for the project",
+          "parameters": {
+            "metrics": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "bugs",
+                  "vulnerabilities",
+                  "code_smells",
+                  "coverage",
+                  "duplicated_lines_density",
+                  "sqale_rating"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "name": "sonarqube_mark_resolved",
+          "description": "Mark an issue as resolved (requires write permissions)",
+          "parameters": {
+            "issue_key": {
+              "type": "string",
+              "required": true
+            },
+            "resolution": {
+              "type": "string",
+              "enum": ["FIXED", "FALSE_POSITIVE", "WONTFIX"],
+              "default": "FIXED"
+            },
+            "comment": {
+              "type": "string",
+              "description": "Optional comment explaining the resolution"
+            }
+          }
+        }
+      ]
+    },
+    "web-search": {
+      "description": "Web search for researching solutions and best practices",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-brave-search"],
+      "env": {
+        "BRAVE_API_KEY": "${BRAVE_API_KEY}"
+      },
+      "required": false,
+      "fallback": "use-builtin-websearch",
+      "tools": [
+        {
+          "name": "web_search",
+          "description": "Search the web for information",
+          "parameters": {
+            "query": {
+              "type": "string",
+              "required": true,
+              "description": "Search query"
+            },
+            "limit": {
+              "type": "number",
+              "default": 10,
+              "description": "Maximum number of results"
+            },
+            "freshness": {
+              "type": "string",
+              "enum": ["day", "week", "month", "year"],
+              "description": "Recency filter"
+            }
+          }
+        }
+      ]
+    },
+    "code-search": {
+      "description": "Search codebase for patterns and similar code",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-ripgrep"],
+      "env": {
+        "WORKSPACE_PATH": "${WORKSPACE_PATH}"
+      },
+      "required": false,
+      "fallback": "use-builtin-grep",
+      "tools": [
+        {
+          "name": "code_search",
+          "description": "Search codebase using ripgrep",
+          "parameters": {
+            "pattern": {
+              "type": "string",
+              "required": true,
+              "description": "Search pattern (regex)"
+            },
+            "file_pattern": {
+              "type": "string",
+              "description": "File glob pattern (e.g., '*.ts')"
+            },
+            "path": {
+              "type": "string",
+              "description": "Directory to search in"
+            },
+            "context_lines": {
+              "type": "number",
+              "default": 3,
+              "description": "Lines of context to show"
+            }
+          }
+        }
+      ]
+    },
+    "docs-fetch": {
+      "description": "Fetch external documentation and reference materials",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-fetch"],
+      "required": false,
+      "fallback": "use-builtin-webfetch",
+      "tools": [
+        {
+          "name": "fetch_url",
+          "description": "Fetch content from a URL",
+          "parameters": {
+            "url": {
+              "type": "string",
+              "required": true,
+              "description": "URL to fetch"
+            },
+            "format": {
+              "type": "string",
+              "enum": ["markdown", "text", "html"],
+              "default": "markdown"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "research_config": {
+    "description": "Configuration for web research and deep thinking",
+    "enabled": true,
+    "strategies": [
+      {
+        "name": "official_docs",
+        "priority": 1,
+        "sources": [
+          "https://docs.sonarqube.org/",
+          "https://www.typescriptlang.org/docs/",
+          "https://developer.mozilla.org/",
+          "https://owasp.org/",
+          "https://github.com/typescript-eslint/typescript-eslint"
+        ]
+      },
+      {
+        "name": "community_solutions",
+        "priority": 2,
+        "sources": [
+          "https://stackoverflow.com/",
+          "https://github.com/",
+          "https://dev.to/"
+        ]
+      },
+      {
+        "name": "best_practices",
+        "priority": 3,
+        "sources": [
+          "https://refactoring.guru/",
+          "https://martinfowler.com/",
+          "https://cleancoders.com/"
+        ]
+      }
+    ],
+    "deep_thinking": {
+      "enabled": true,
+      "max_iterations": 5,
+      "timeout_seconds": 60,
+      "research_depth": "thorough"
+    },
+    "caching": {
+      "enabled": true,
+      "ttl_seconds": 3600,
+      "cache_path": "artifacts/cache/sonarqube-research.json"
+    }
+  },
+  "fallback_strategies": {
+    "sonarqube": {
+      "method": "parse-local-reports",
+      "paths": [
+        "artifacts/reports/sonarqube/issues.json",
+        "target/sonar/report-task.txt",
+        ".scannerwork/report-task.txt"
+      ]
+    },
+    "web-search": {
+      "method": "use-builtin-websearch",
+      "tool": "WebSearch"
+    },
+    "code-search": {
+      "method": "use-builtin-grep",
+      "tool": "Grep"
+    },
+    "docs-fetch": {
+      "method": "use-builtin-webfetch",
+      "tool": "WebFetch"
+    }
+  },
+  "quality_gates": {
+    "description": "Quality gates that must pass after fixes",
+    "gates": [
+      {
+        "name": "typescript_check",
+        "command": "pnpm run typecheck",
+        "required": true,
+        "timeout_seconds": 60
+      },
+      {
+        "name": "eslint",
+        "command": "pnpm run lint",
+        "required": true,
+        "timeout_seconds": 30
+      },
+      {
+        "name": "unit_tests",
+        "command": "pnpm run test",
+        "required": true,
+        "timeout_seconds": 300
+      },
+      {
+        "name": "coverage_check",
+        "command": "pnpm run test:coverage",
+        "required": true,
+        "min_coverage": 90,
+        "timeout_seconds": 300
+      },
+      {
+        "name": "build",
+        "command": "pnpm run build",
+        "required": false,
+        "timeout_seconds": 180
+      }
+    ]
+  }
+}

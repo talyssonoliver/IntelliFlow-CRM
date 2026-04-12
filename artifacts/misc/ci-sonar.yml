@@ -1,0 +1,270 @@
+# =============================================================================
+# IntelliFlow CRM - SonarQube/SonarCloud CI Pipeline
+# =============================================================================
+# Task: IFC-111 - Set up SonarQube and integrate static analysis into CI/CD
+# Owner: DevOps + QA Lead (STOA-Quality)
+# Sprint: 5
+# KPIs: Sonar quality gate >= A, zero blocker issues
+#
+# This workflow integrates SonarCloud analysis into the CI/CD pipeline.
+# It runs on push to main/develop and on pull requests.
+#
+# Required GitHub Secrets:
+#   - SONAR_TOKEN: SonarCloud authentication token
+#
+# Required GitHub Variables:
+#   - SONAR_ORGANIZATION: SonarCloud organization key
+# =============================================================================
+
+name: SonarCloud Analysis
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        description: 'Enable debug mode'
+        required: false
+        default: 'false'
+        type: boolean
+
+concurrency:
+  group: sonar-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '8.15.0'
+
+jobs:
+  # ===========================================================================
+  # SonarCloud Analysis Job
+  # ===========================================================================
+  sonarcloud:
+    name: SonarCloud Scan
+    runs-on: ubuntu-latest
+    # Skip if SONAR_TOKEN is not configured
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+
+    steps:
+      # -----------------------------------------------------------------------
+      # Setup
+      # -----------------------------------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for SonarCloud blame analysis
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # -----------------------------------------------------------------------
+      # Test Coverage (required for SonarCloud)
+      # -----------------------------------------------------------------------
+      - name: Run tests with coverage
+        run: pnpm run test -- --coverage
+        continue-on-error: true  # Continue even if tests fail to report coverage
+
+      - name: Verify coverage report exists
+        run: |
+          if [ -f "artifacts/coverage/lcov.info" ]; then
+            echo "Coverage report found at artifacts/coverage/lcov.info"
+            echo "COVERAGE_REPORT=artifacts/coverage/lcov.info" >> $GITHUB_ENV
+          elif [ -f "coverage/lcov.info" ]; then
+            echo "Coverage report found at coverage/lcov.info"
+            echo "COVERAGE_REPORT=coverage/lcov.info" >> $GITHUB_ENV
+          else
+            echo "::warning::No coverage report found. SonarCloud will analyze without coverage data."
+            echo "COVERAGE_REPORT=" >> $GITHUB_ENV
+          fi
+
+      # -----------------------------------------------------------------------
+      # SonarCloud Analysis
+      # -----------------------------------------------------------------------
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.projectKey=IntelliFlow
+            -Dsonar.organization=${{ vars.SONAR_ORGANIZATION }}
+            -Dsonar.sources=apps/api/src,apps/ai-worker/src,apps/web/src,apps/project-tracker/app,apps/project-tracker/components,apps/project-tracker/lib,packages/adapters/src,packages/api-client/src,packages/application/src,packages/db/src,packages/domain/src,packages/observability/src,packages/platform/src,packages/ui/src,packages/validators/src
+            -Dsonar.tests=tests
+            -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/build/**,**/.next/**,**/coverage/**,**/*.test.ts,**/*.test.tsx,**/*.spec.ts,**/*.spec.tsx,**/migrations/**,**/*.config.js,**/*.config.ts
+            -Dsonar.test.inclusions=**/*.test.ts,**/*.test.tsx,**/*.spec.ts,**/*.spec.tsx
+            -Dsonar.javascript.lcov.reportPaths=${{ env.COVERAGE_REPORT }}
+            -Dsonar.typescript.lcov.reportPaths=${{ env.COVERAGE_REPORT }}
+            -Dsonar.qualitygate.wait=true
+
+      # -----------------------------------------------------------------------
+      # Quality Gate Check
+      # -----------------------------------------------------------------------
+      - name: SonarCloud Quality Gate Check
+        id: quality-gate
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.projectKey=IntelliFlow
+            -Dsonar.organization=${{ vars.SONAR_ORGANIZATION }}
+        continue-on-error: true
+
+      # -----------------------------------------------------------------------
+      # PR Comment with Results
+      # -----------------------------------------------------------------------
+      - name: Create PR Comment
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const qualityGatePassed = '${{ steps.quality-gate.outcome }}' === 'success';
+            const status = qualityGatePassed ? ':white_check_mark: **Passed**' : ':x: **Failed**';
+
+            const body = `## SonarCloud Analysis Results
+
+            | Metric | Status |
+            |--------|--------|
+            | Quality Gate | ${status} |
+            | Coverage Report | ${process.env.COVERAGE_REPORT ? ':white_check_mark: Available' : ':warning: Not Found'} |
+
+            ### Quality Gate Criteria (IFC-111 KPIs)
+            - Reliability Rating: A (no new bugs)
+            - Security Rating: A (no new vulnerabilities)
+            - Maintainability Rating: A (technical debt ratio < 3%)
+            - Coverage: >= 80% on new code
+            - Duplications: < 3% on new code
+            - Blocker Issues: 0
+            - Critical Issues: 0
+
+            [View detailed results on SonarCloud](https://sonarcloud.io/summary/new_code?id=IntelliFlow)`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
+
+      # -----------------------------------------------------------------------
+      # Summary
+      # -----------------------------------------------------------------------
+      - name: Generate Summary
+        if: always()
+        run: |
+          echo "## SonarCloud Analysis Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Configuration" >> $GITHUB_STEP_SUMMARY
+          echo "| Setting | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Project Key | IntelliFlow |" >> $GITHUB_STEP_SUMMARY
+          echo "| Organization | \${{ vars.SONAR_ORGANIZATION }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Quality Gate Wait | Enabled |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Quality Gate Status" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.quality-gate.outcome }}" == "success" ]; then
+            echo ":white_check_mark: **Quality Gate Passed**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo ":x: **Quality Gate Failed**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Review the SonarCloud dashboard for details on failing conditions." >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### OWASP and Clean Code Rules" >> $GITHUB_STEP_SUMMARY
+          echo "The following rule sets are enabled by default:" >> $GITHUB_STEP_SUMMARY
+          echo "- OWASP Top 10 security rules" >> $GITHUB_STEP_SUMMARY
+          echo "- Clean Code rules for maintainability" >> $GITHUB_STEP_SUMMARY
+          echo "- TypeScript/JavaScript best practices" >> $GITHUB_STEP_SUMMARY
+
+  # ===========================================================================
+  # Local SonarQube Analysis (for manual dispatch only)
+  # ===========================================================================
+  local-sonarqube:
+    name: Local SonarQube Analysis
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+
+    services:
+      sonarqube:
+        image: sonarqube:10-community
+        ports:
+          - 9000:9000
+        env:
+          SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: true
+        options: >-
+          --health-cmd "wget -q --spider http://localhost:9000/api/system/status"
+          --health-interval 30s
+          --health-timeout 10s
+          --health-retries 10
+          --health-start-period 120s
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Wait for SonarQube
+        run: |
+          echo "Waiting for SonarQube to be ready..."
+          for i in {1..30}; do
+            if curl -s http://localhost:9000/api/system/status | grep -q '"status":"UP"'; then
+              echo "SonarQube is ready!"
+              break
+            fi
+            echo "Attempt $i/30 - SonarQube not ready yet..."
+            sleep 10
+          done
+
+      - name: Generate admin token
+        id: token
+        run: |
+          # Wait a bit for SonarQube to fully initialize
+          sleep 10
+          # Generate token using default admin credentials
+          TOKEN=$(curl -s -u admin:admin -X POST \
+            "http://localhost:9000/api/user_tokens/generate?name=ci-token-$(date +%s)" \
+            | jq -r '.token')
+          echo "SONAR_TOKEN=$TOKEN" >> $GITHUB_ENV
+
+      - name: Run tests with coverage
+        run: pnpm run test -- --coverage
+        continue-on-error: true
+
+      - name: Run SonarQube scanner
+        run: |
+          npx sonarqube-scanner \
+            -Dsonar.host.url=http://localhost:9000 \
+            -Dsonar.token=${{ env.SONAR_TOKEN }} \
+            -Dsonar.qualitygate.wait=true

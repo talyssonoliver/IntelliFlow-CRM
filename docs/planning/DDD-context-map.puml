@@ -1,0 +1,129 @@
+@startuml IntelliFlow-CRM-Context-Map
+
+title IntelliFlow CRM - DDD Context Map (Strategic)
+
+' Style definitions
+skinparam componentStyle uml2
+
+' ============================================================
+' BOUNDED CONTEXTS
+' ============================================================
+
+package "CRM Core Domain" as CRM {
+  rectangle "Lead Management" as LeadBC {
+    [Lead Aggregate]
+  }
+
+  rectangle "Contact Management" as ContactBC {
+    [Contact Aggregate]
+  }
+
+  rectangle "Account Management" as AccountBC {
+    [Account Aggregate]
+  }
+
+  rectangle "Opportunity Management" as OpportunityBC {
+    [Opportunity Aggregate]
+  }
+
+  rectangle "Support & Ticketing" as TicketBC {
+    [Ticket Aggregate]
+  }
+}
+
+package "Intelligence Domain" as Intelligence {
+  rectangle "AI Scoring & Next Best Action" as ScoringBC {
+    [Scoring Engine]
+  }
+
+  rectangle "RAG & Knowledge" as RagBC {
+    [Knowledge Base]
+  }
+
+  rectangle "Model Governance" as ModelGovBC {
+    [Model Registry]
+  }
+}
+
+package "Platform & Support Domain" as Platform {
+  rectangle "IAM & Tenancy" as AuthBC {
+    [Identity & Access]
+  }
+
+  rectangle "Document Management" as DocBC {
+    [Blob Storage]
+  }
+
+  rectangle "Workflow Automation" as WorkflowBC {
+    [Process Engine]
+  }
+
+  rectangle "Audit & Compliance" as AuditBC {
+    [Audit Log]
+  }
+}
+
+package "Integration Domain" as Integration {
+  rectangle "Communication Adapters" as CommBC {
+    [Email/WhatsApp Provider]
+  }
+  
+  rectangle "ERP Connectors" as ErpBC {
+    [External ERP]
+  }
+}
+
+' ============================================================
+' RELATIONSHIPS (Arrow points to Dependency / Upstream unless noted)
+' Downstream --> Upstream
+' Partnership uses bidirectional coupling (A <--> B)
+' ============================================================
+
+' CRM Internal
+LeadBC -down-> ContactBC : "Converts to" \n(Conformist)
+LeadBC -right-> OpportunityBC : "Initiates" \n(Customer-Supplier)
+ContactBC -right-> AccountBC : "Belongs to" \n(Customer-Supplier)
+OpportunityBC -up-> AccountBC : "Attached to" \n(Customer-Supplier)
+TicketBC -up-> ContactBC : "Refers to" \n(Customer-Supplier)
+TicketBC -up-> AccountBC : "Refers to" \n(Customer-Supplier)
+
+' Intelligence (Services)
+LeadBC -up-> ScoringBC : "Uses" \n(Customer-Supplier)
+OpportunityBC -up-> ScoringBC : "Uses" \n(Customer-Supplier)
+TicketBC -up-> RagBC : "Uses" \n(Customer-Supplier)
+
+' Model Governance
+ScoringBC -right-> ModelGovBC : "Verified by" \n(Conformist)
+RagBC -left-> ModelGovBC : "Verified by" \n(Conformist)
+
+' Platform Support (Foundation)
+CRM -down-> AuthBC : "Uses Identity" \n(Conformist)
+Intelligence -down-> AuthBC : "Uses Identity" \n(Conformist)
+CRM -down-> DocBC : "References" \n(Customer-Supplier)
+TicketBC -down-> DocBC : "References" \n(Customer-Supplier)
+
+' Workflow
+OpportunityBC <--> WorkflowBC : "Delegates State" \n(Partnership)
+TicketBC <--> WorkflowBC : "Delegates State" \n(Partnership)
+
+' Audit (Compliance)
+AuditBC ..> CRM : "Observes" \n(Open Host Service)
+AuditBC ..> Intelligence : "Observes" \n(Open Host Service)
+AuditBC ..> Platform : "Observes" \n(Open Host Service)
+
+' Integration (ACL)
+ContactBC ..> CommBC : "Uses" \n(ACL)
+AccountBC ..> ErpBC : "Uses" \n(ACL)
+
+legend right
+  | Arrow | Meaning |
+  | A -> B | A depends on B (B is Upstream) |
+  | A <-> B | A and B are mutually dependent |
+  | A ..> B | A implements/uses B (weak dependency) |
+  | Conformist | Downstream strictly adheres to Upstream model |
+  | Customer-Supplier | Negotiated interface |
+  | ACL | Anti-Corruption Layer (Adapter) |
+  | Partnership | Coupled evolution |
+endlegend
+
+@enduml

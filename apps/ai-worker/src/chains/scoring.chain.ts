@@ -1,11 +1,17 @@
 import { ChatOpenAI } from '@langchain/openai';
-import { ChatOllama } from '@langchain/community/chat_models/ollama';
+import { ChatOllama } from '@langchain/ollama';
+import { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { PromptTemplate } from '@langchain/core/prompts';
-import { StructuredOutputParser } from 'langchain/output_parsers';
+import { StructuredOutputParser } from '@langchain/core/output_parsers';
 import { z } from 'zod';
 import { aiConfig } from '../config/ai.config';
 import { costTracker } from '../utils/cost-tracker';
-import { leadScoreSchema } from '@intelliflow/validators/lead';
+import { getOpenAIClientSettings } from '../utils/openai-client';
+import { chainMonitor, withMonitoring } from '../monitoring/chain-monitor';
+import type { MonitoredResult } from '../monitoring/chain-monitor';
+import { leadScoreSchema } from '@intelliflow/validators';
+import { requiresHumanReview } from '@intelliflow/domain';
+import { sanitizeStringField } from '../utils/input-sanitizer';
 import pino from 'pino';
 
 const logger = pino({
@@ -17,14 +23,14 @@ const logger = pino({
  * Lead data input for scoring
  */
 export const leadInputSchema = z.object({
-  email: z.string().email(),
+  email: z.email(),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
   company: z.string().optional(),
   title: z.string().optional(),
   phone: z.string().optional(),
   source: z.string(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 export type LeadInput = z.infer<typeof leadInputSchema>;
@@ -39,19 +45,21 @@ export type ScoringResult = z.infer<typeof leadScoreSchema>;
  * Uses LangChain to score leads based on multiple factors with structured output
  */
 export class LeadScoringChain {
-  private model: ChatOpenAI | ChatOllama;
-  private parser: StructuredOutputParser<ScoringResult>;
-  private prompt: PromptTemplate;
+  private readonly model: BaseChatModel;
+  private readonly parser: StructuredOutputParser<typeof leadScoreSchema>;
+  private readonly prompt: PromptTemplate;
 
   constructor() {
     // Initialize the appropriate model based on configuration
     if (aiConfig.provider === 'openai') {
+      const openAIClientSettings = getOpenAIClientSettings();
       this.model = new ChatOpenAI({
         modelName: aiConfig.openai.model,
         temperature: aiConfig.openai.temperature,
         maxTokens: aiConfig.openai.maxTokens,
         timeout: aiConfig.openai.timeout,
-        openAIApiKey: aiConfig.openai.apiKey,
+        apiKey: openAIClientSettings.apiKey,
+        configuration: openAIClientSettings.configuration,
         callbacks: aiConfig.features.enableChainLogging
           ? [
               {
@@ -71,12 +79,37 @@ export class LeadScoringChain {
             ]
           : undefined,
       });
-    } else {
+    } else if (aiConfig.provider === 'ollama') {
+      // Ollama local development support (IFC-085)
+      // Uses @langchain/ollama for local LLM inference
+      // Benefits: 90% cost reduction, no rate limits, offline dev, data privacy
+      // IFC-174: Forward timeout via custom fetch with AbortSignal
+      // ChatOllama doesn't accept a timeout param directly — use fetch wrapper
+      const ollamaTimeout = aiConfig.ollama.timeout;
       this.model = new ChatOllama({
         baseUrl: aiConfig.ollama.baseUrl,
         model: aiConfig.ollama.model,
         temperature: aiConfig.ollama.temperature,
+        numCtx: 4096,
+        format: 'json',
+        fetch: (url: string | URL | Request, init?: RequestInit) => {
+          return globalThis.fetch(url, {
+            ...init,
+            signal: init?.signal ?? AbortSignal.timeout(ollamaTimeout),
+          });
+        },
       });
+
+      logger.info(
+        {
+          baseUrl: aiConfig.ollama.baseUrl,
+          model: aiConfig.ollama.model,
+        },
+        'Initialized Ollama provider for lead scoring'
+      );
+    } else {
+      // Mock provider for testing or unsupported provider
+      throw new Error(`Unsupported AI provider: ${aiConfig.provider}`);
     }
 
     // Create structured output parser
@@ -138,31 +171,49 @@ Be thorough but concise. Each factor should have a clear impact score and reason
         lead_info: leadInfo,
       });
 
-      // Call the LLM
-      const response = await this.model.invoke(formattedPrompt);
+      // Wrap LLM call + parsing with monitoring (IFC-117)
+      const monitoredConfig = chainMonitor.getConfig();
+      const monitored: MonitoredResult<ScoringResult> = await withMonitoring(async () => {
+        // Call the LLM
+        const response = await this.model.invoke(formattedPrompt);
 
-      // Parse the structured output
-      const result = await this.parser.parse(response.content as string);
+        // Parse the structured output
+        const result = (await this.parser.parse(response.content as string)) as Omit<
+          ScoringResult,
+          'modelVersion'
+        >;
 
-      // Add model version
-      const scoringResult: ScoringResult = {
-        ...result,
-        modelVersion: `${aiConfig.provider}:${aiConfig.provider === 'openai' ? aiConfig.openai.model : aiConfig.ollama.model}:v1`,
-      };
+        // Add model version
+        return {
+          ...result,
+          modelVersion: `${aiConfig.provider}:${aiConfig.provider === 'openai' ? aiConfig.openai.model : aiConfig.ollama.model}:v1`,
+        };
+      }, monitoredConfig);
 
+      const scoringResult = monitored.result;
       const duration = Date.now() - startTime;
+
+      // Fix #15: Check if result requires human review based on confidence threshold
+      // and propagate the flag through the result object so callers can act on it.
+      const needsReview = requiresHumanReview(scoringResult.confidence, 'LEAD_SCORING');
 
       logger.info(
         {
           leadEmail: lead.email,
           score: scoringResult.score,
           confidence: scoringResult.confidence,
+          requiresHumanReview: needsReview,
           duration,
+          monitoringMetrics: {
+            operationId: monitored.metrics.operationId,
+            latencyMs: monitored.metrics.latencyMs,
+            driftScore: monitored.metrics.driftScore,
+          },
         },
         'Lead scoring completed'
       );
 
-      return scoringResult;
+      return { ...scoringResult, requiresReview: needsReview };
     } catch (error) {
       logger.error(
         {
@@ -213,39 +264,35 @@ Be thorough but concise. Each factor should have a clear impact score and reason
   }
 
   /**
-   * Format lead information for the prompt
+   * Format lead information for the prompt.
+   * Sanitizes all user-provided string fields against prompt injection (Fix #12).
    */
   private formatLeadInfo(lead: LeadInput): string {
     const parts: string[] = [];
 
     if (lead.email) {
-      parts.push(`Email: ${lead.email}`);
       const domain = lead.email.split('@')[1];
       parts.push(`Email Domain: ${domain}`);
+      parts.push(`Has Email: Yes`);
     }
 
     if (lead.firstName || lead.lastName) {
-      const name = [lead.firstName, lead.lastName].filter(Boolean).join(' ');
-      parts.push(`Name: ${name}`);
+      parts.push(`Has Name: Yes`);
     }
 
     if (lead.company) {
-      parts.push(`Company: ${lead.company}`);
+      parts.push(`Company: ${sanitizeStringField(lead.company, 500)}`);
     }
 
     if (lead.title) {
-      parts.push(`Title: ${lead.title}`);
+      parts.push(`Title: ${sanitizeStringField(lead.title, 500)}`);
     }
 
     if (lead.phone) {
       parts.push(`Phone: Available`);
     }
 
-    parts.push(`Source: ${lead.source}`);
-
-    if (lead.metadata) {
-      parts.push(`Additional Data: ${JSON.stringify(lead.metadata)}`);
-    }
+    parts.push(`Source: ${sanitizeStringField(lead.source, 500)}`);
 
     return parts.join('\n');
   }
@@ -285,6 +332,36 @@ Be thorough but concise. Each factor should have a clear impact score and reason
 }
 
 /**
- * Global scoring chain instance
+ * Global scoring chain instance (lazy initialized)
+ * Use getLeadScoringChain() to access when Ollama is configured
  */
-export const leadScoringChain = new LeadScoringChain();
+let _leadScoringChain: LeadScoringChain | null = null;
+
+/**
+ * Get or create the global lead scoring chain instance
+ * @throws Error if Ollama is not configured (provider='ollama' but no OpenAI API key)
+ */
+export function getLeadScoringChain(): LeadScoringChain {
+  _leadScoringChain ??= new LeadScoringChain();
+  return _leadScoringChain;
+}
+
+/**
+ * Creates a new lead scoring chain proxy that lazily initializes
+ * This allows the module to be imported without throwing
+ */
+function createLazyChainProxy(): LeadScoringChain {
+  return new Proxy({} as LeadScoringChain, {
+    get(_target, prop) {
+      const chain = getLeadScoringChain();
+      const value = (chain as any)[prop];
+      return typeof value === 'function' ? value.bind(chain) : value;
+    },
+  });
+}
+
+/**
+ * Global scoring chain instance
+ * Note: This is lazily initialized - will throw on first method call if Ollama not available
+ */
+export const leadScoringChain = createLazyChainProxy();

@@ -1,0 +1,137 @@
+/**
+ * Invoice PDF Generator Utilities
+ *
+ * Provides helper functions for invoice PDF handling including
+ * opening, downloading, and filename generation.
+ *
+ * @implements PG-027 (Invoices)
+ */
+
+// ============================================
+// PDF URL Validation
+// ============================================
+
+/**
+ * Check if a PDF URL is valid and accessible
+ */
+export function isValidPdfUrl(url: string | null | undefined): url is string {
+  if (!url) return false;
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'https:' || parsed.protocol === 'http:';
+  } catch {
+    return false;
+  }
+}
+
+// ============================================
+// Filename Generation
+// ============================================
+
+/**
+ * Generate a filename for invoice PDF download
+ * Format: invoice-{id}-{date}.pdf
+ */
+export function generateInvoiceFilename(invoiceId: string, date: Date): string {
+  const dateStr = new Intl.DateTimeFormat('en-GB', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  })
+    .format(date)
+    .replaceAll('/', '-');
+
+  // Extract last part of invoice ID for cleaner filename
+  const shortId = invoiceId.includes('_') ? invoiceId.split('_').pop() || invoiceId : invoiceId;
+
+  return `invoice-${shortId}-${dateStr}.pdf`;
+}
+
+// ============================================
+// PDF Actions
+// ============================================
+
+/**
+ * Open invoice PDF in a new browser tab
+ */
+export function openInvoicePdf(url: string): void {
+  if (!isValidPdfUrl(url)) {
+    console.warn('Invalid PDF URL provided:', url);
+    return;
+  }
+  window.open(url, '_blank', 'noopener,noreferrer');
+}
+
+/**
+ * Download invoice PDF file.
+ * Fetches the PDF through our same-origin `/api/billing/pdf-proxy` route
+ * to avoid CORS blocks from Stripe, then creates a blob URL for download.
+ */
+export async function downloadInvoicePdf(url: string, filename: string): Promise<void> {
+  if (!isValidPdfUrl(url)) {
+    throw new Error('Invalid PDF URL provided');
+  }
+
+  const proxyUrl = `/api/billing/pdf-proxy?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(filename)}`;
+  const response = await fetch(proxyUrl);
+
+  if (!response.ok) {
+    const text = await response.text().catch(() => response.statusText);
+    throw new Error(`Failed to download PDF: ${text}`);
+  }
+
+  const blob = await response.blob();
+  const blobUrl = URL.createObjectURL(blob);
+
+  const link = document.createElement('a');
+  link.href = blobUrl;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+
+  // Clean up blob URL after browser starts the download
+  setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+}
+
+// ============================================
+// Invoice PDF Info
+// ============================================
+
+export interface InvoicePdfInfo {
+  canDownload: boolean;
+  canView: boolean;
+  pdfUrl: string | null;
+  hostedUrl: string | null;
+}
+
+/**
+ * Get PDF availability info for an invoice
+ */
+export function getInvoicePdfInfo(
+  invoicePdf?: string | null,
+  hostedInvoiceUrl?: string | null
+): InvoicePdfInfo {
+  const pdfValid = isValidPdfUrl(invoicePdf);
+  const hostedValid = isValidPdfUrl(hostedInvoiceUrl);
+
+  return {
+    canDownload: pdfValid,
+    canView: pdfValid || hostedValid,
+    pdfUrl: pdfValid ? (invoicePdf ?? null) : null,
+    hostedUrl: hostedValid ? (hostedInvoiceUrl ?? null) : null,
+  };
+}
+
+/**
+ * Get the best URL to view an invoice
+ * Prefers PDF URL over hosted URL
+ */
+export function getBestViewUrl(
+  invoicePdf?: string | null,
+  hostedInvoiceUrl?: string | null
+): string | null {
+  if (isValidPdfUrl(invoicePdf)) return invoicePdf;
+  if (isValidPdfUrl(hostedInvoiceUrl)) return hostedInvoiceUrl;
+  return null;
+}

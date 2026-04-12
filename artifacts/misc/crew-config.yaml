@@ -1,0 +1,221 @@
+# CrewAI Agent Framework Configuration
+# Task: IFC-021 - PHASE-011: CrewAI Agent Framework
+# Generated: 2026-01-01
+
+# Framework settings
+framework:
+  name: "IntelliFlow CrewAI"
+  version: "1.0.0"
+  description: "Multi-agent collaboration system for CRM automation"
+
+# Default configuration for all agents
+defaults:
+  provider: "openai"  # openai | ollama
+  model: "gpt-4-turbo-preview"
+  temperature: 0.7
+  maxTokens: 4096
+  timeout: 30000  # ms
+  maxIterations: 5
+  verbose: true
+  costTracking:
+    enabled: true
+    alertThreshold: 10.0  # USD
+
+# Human-in-the-loop settings
+humanReview:
+  enabled: true
+  confidenceThreshold: 0.5  # Trigger review if below this
+  highRiskActions:
+    - "send_email"
+    - "update_lead_status"
+    - "schedule_meeting"
+    - "create_proposal"
+  approvalTimeout: 3600000  # 1 hour in ms
+
+# Agent definitions
+agents:
+  # Lead Qualification Specialist
+  leadQualifier:
+    name: "Lead Qualification Specialist"
+    role: "Expert Lead Qualification Analyst"
+    goal: "Analyze leads comprehensively and determine qualification status with detailed reasoning"
+    backstory: |
+      You are a seasoned sales qualification expert with 15+ years of experience in B2B sales.
+      You excel at analyzing lead data, identifying buying signals, and determining sales readiness.
+      You understand BANT (Budget, Authority, Need, Timeline) criteria and modern sales frameworks.
+      Your recommendations are data-driven, actionable, and focused on conversion optimization.
+    capabilities:
+      - "Analyze lead data and engagement patterns"
+      - "Apply BANT qualification framework"
+      - "Identify buying signals and red flags"
+      - "Provide actionable recommendations"
+    inputSchema: "qualificationInputSchema"
+    outputSchema: "qualificationOutputSchema"
+    maxIterations: 3
+    allowDelegation: false
+
+  # Email Writer Specialist
+  emailWriter:
+    name: "Email Writer Specialist"
+    role: "Professional Email Communication Expert"
+    goal: "Generate personalized, compelling emails that drive engagement and conversions"
+    backstory: |
+      You are an expert email copywriter with extensive experience in B2B sales communication.
+      You understand the psychology of email engagement and craft messages that are personalized,
+      compelling, and action-oriented. You excel at matching tone to context and creating emails
+      that feel personal while remaining professional. Your emails consistently achieve high open
+      and response rates.
+    capabilities:
+      - "Write personalized outreach emails"
+      - "Generate follow-up sequences"
+      - "Create compelling subject lines"
+      - "Match tone to recipient and context"
+    inputSchema: "emailWriterInputSchema"
+    outputSchema: "emailWriterOutputSchema"
+    maxIterations: 3
+    allowDelegation: false
+    humanReviewRequired:
+      - "HIGH urgency emails"
+      - "RE_ENGAGEMENT emails"
+      - "Emails to UNQUALIFIED leads"
+
+  # Follow-up Strategy Specialist
+  followupAgent:
+    name: "Follow-up Strategy Specialist"
+    role: "Sales Follow-up and Engagement Expert"
+    goal: "Determine optimal follow-up strategies that maximize conversion while respecting lead preferences"
+    backstory: |
+      You are a senior sales strategist with deep expertise in lead nurturing and follow-up optimization.
+      You understand the psychology of B2B sales cycles and know exactly when to push, when to wait, and when to
+      change tactics. Your recommendations are data-driven, considering engagement patterns, timing science, and
+      the specific context of each lead. You excel at balancing persistence with professionalism.
+    capabilities:
+      - "Analyze interaction history"
+      - "Determine optimal contact timing"
+      - "Recommend communication channel"
+      - "Suggest talking points and objection handling"
+    inputSchema: "followupInputSchema"
+    outputSchema: "followupOutputSchema"
+    maxIterations: 3
+    allowDelegation: false
+
+# Crew configurations
+crews:
+  # Lead Processing Pipeline
+  leadProcessing:
+    name: "Lead Processing Crew"
+    description: "Comprehensive lead processing pipeline with multiple specialized agents"
+    process: "sequential"
+    agents:
+      - "leadQualifier"
+      - "emailWriter"
+      - "followupAgent"
+    humanCheckpointThreshold: 0.5
+    maxRetries: 2
+    verbose: true
+
+  # Research Team
+  research:
+    name: "Research Crew"
+    description: "Parallel research agents for comprehensive market intelligence"
+    process: "parallel"
+    agents:
+      - "companyResearcher"  # Future agent
+      - "industryAnalyst"    # Future agent
+      - "competitorAnalyst"  # Future agent
+    humanCheckpointThreshold: 0.4
+    maxRetries: 2
+    verbose: true
+
+  # Sales Team (Hierarchical)
+  sales:
+    name: "Sales Crew"
+    description: "Hierarchical sales team with manager delegation to specialists"
+    process: "hierarchical"
+    manager: "leadQualifier"  # Manager agent
+    workers:
+      - "emailWriter"
+      - "followupAgent"
+    humanCheckpointThreshold: 0.5
+    maxRetries: 2
+    verbose: true
+
+# Interaction logging configuration
+logging:
+  enabled: true
+  outputPath: "artifacts/logs/agent-interaction-logs.json"
+  logLevel: "info"  # debug | info | warn | error
+  fields:
+    - "timestamp"
+    - "crewName"
+    - "taskId"
+    - "agentName"
+    - "phase"
+    - "confidence"
+    - "duration"
+  retentionDays: 30
+  maxLogSize: "100MB"
+
+# Tool definitions (from ADR-006)
+tools:
+  readOnly:
+    - name: "search_leads"
+      description: "Search for leads by email, name, or company"
+      requiresApproval: false
+      riskLevel: "low"
+
+    - name: "get_lead_history"
+      description: "Get interaction history for a lead"
+      requiresApproval: false
+      riskLevel: "low"
+
+    - name: "get_company_info"
+      description: "Retrieve company information and enrichment data"
+      requiresApproval: false
+      riskLevel: "low"
+
+  writeActions:
+    - name: "update_lead_status"
+      description: "Update the status of a lead"
+      requiresApproval: true
+      riskLevel: "high"
+
+    - name: "send_email"
+      description: "Send an email to a lead or contact"
+      requiresApproval: true
+      riskLevel: "high"
+
+    - name: "schedule_task"
+      description: "Create a follow-up task"
+      requiresApproval: false
+      riskLevel: "medium"
+
+    - name: "update_notes"
+      description: "Add notes to a lead record"
+      requiresApproval: false
+      riskLevel: "low"
+
+# Performance thresholds
+performance:
+  maxExecutionTime: 120000  # 2 minutes per agent
+  maxTotalCrewTime: 300000  # 5 minutes total
+  costBudget:
+    perExecution: 1.0   # USD
+    daily: 50.0         # USD
+    monthly: 500.0      # USD
+
+# Metrics and monitoring
+metrics:
+  enabled: true
+  exporters:
+    - type: "prometheus"
+      endpoint: "/metrics"
+    - type: "json"
+      path: "artifacts/metrics/agent-metrics.json"
+  trackMetrics:
+    - "execution_duration_ms"
+    - "confidence_scores"
+    - "token_usage"
+    - "cost_usd"
+    - "success_rate"
+    - "human_review_rate"

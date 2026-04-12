@@ -1,0 +1,156 @@
+{
+  "$schema": "../schemas/agent-interaction-log.schema.json",
+  "metadata": {
+    "version": "1.0.0",
+    "task": "IFC-021",
+    "description": "Agent interaction logs for CrewAI framework",
+    "created": "2026-01-01T03:00:00Z",
+    "updated": "2026-01-01T03:00:00Z"
+  },
+  "logs": [
+    {
+      "timestamp": "2026-01-01T03:00:00Z",
+      "crewName": "Lead Processing Crew",
+      "taskId": "example-task-001",
+      "agentName": "Lead Qualification Specialist",
+      "phase": "start",
+      "input": {
+        "leadId": "lead-123",
+        "email": "john@example.com",
+        "company": "Example Corp"
+      },
+      "metadata": {
+        "executionId": "exec-001",
+        "sessionId": "session-001"
+      }
+    },
+    {
+      "timestamp": "2026-01-01T03:00:05Z",
+      "crewName": "Lead Processing Crew",
+      "taskId": "example-task-001",
+      "agentName": "Lead Qualification Specialist",
+      "phase": "complete",
+      "output": {
+        "qualified": true,
+        "qualificationLevel": "HIGH",
+        "confidence": 0.85
+      },
+      "confidence": 0.85,
+      "duration": 5000,
+      "metadata": {
+        "executionId": "exec-001",
+        "tokensUsed": 1250,
+        "costUsd": 0.025
+      }
+    },
+    {
+      "timestamp": "2026-01-01T03:00:05Z",
+      "crewName": "Lead Processing Crew",
+      "taskId": "example-task-001",
+      "agentName": "Email Writer Specialist",
+      "phase": "start",
+      "input": {
+        "recipientEmail": "john@example.com",
+        "purpose": "INITIAL_OUTREACH"
+      },
+      "metadata": {
+        "executionId": "exec-001"
+      }
+    },
+    {
+      "timestamp": "2026-01-01T03:00:10Z",
+      "crewName": "Lead Processing Crew",
+      "taskId": "example-task-001",
+      "agentName": "Email Writer Specialist",
+      "phase": "complete",
+      "output": {
+        "subject": "Personalized Subject Line",
+        "confidence": 0.78
+      },
+      "confidence": 0.78,
+      "duration": 5000,
+      "metadata": {
+        "executionId": "exec-001",
+        "tokensUsed": 980,
+        "costUsd": 0.020
+      }
+    },
+    {
+      "timestamp": "2026-01-01T03:00:10Z",
+      "crewName": "Lead Processing Crew",
+      "taskId": "example-task-001",
+      "agentName": "Follow-up Strategy Specialist",
+      "phase": "start",
+      "input": {
+        "leadId": "lead-123",
+        "currentStatus": "CONTACTED"
+      },
+      "metadata": {
+        "executionId": "exec-001"
+      }
+    },
+    {
+      "timestamp": "2026-01-01T03:00:15Z",
+      "crewName": "Lead Processing Crew",
+      "taskId": "example-task-001",
+      "agentName": "Follow-up Strategy Specialist",
+      "phase": "complete",
+      "output": {
+        "shouldFollowUp": true,
+        "urgency": "HIGH",
+        "recommendedAction": "PHONE_CALL"
+      },
+      "confidence": 0.82,
+      "duration": 5000,
+      "metadata": {
+        "executionId": "exec-001",
+        "tokensUsed": 1100,
+        "costUsd": 0.022
+      }
+    },
+    {
+      "timestamp": "2026-01-01T03:00:15Z",
+      "crewName": "Lead Processing Crew",
+      "taskId": "example-task-001",
+      "agentName": "Follow-up Strategy Specialist",
+      "phase": "checkpoint",
+      "metadata": {
+        "reason": "human_approval_requested",
+        "action": "PHONE_CALL",
+        "urgency": "HIGH"
+      }
+    }
+  ],
+  "summary": {
+    "totalLogs": 7,
+    "uniqueTasks": 1,
+    "agentStats": {
+      "Lead Qualification Specialist": {
+        "executions": 1,
+        "avgConfidence": 0.85,
+        "avgDurationMs": 5000,
+        "successRate": 1.0
+      },
+      "Email Writer Specialist": {
+        "executions": 1,
+        "avgConfidence": 0.78,
+        "avgDurationMs": 5000,
+        "successRate": 1.0
+      },
+      "Follow-up Strategy Specialist": {
+        "executions": 1,
+        "avgConfidence": 0.82,
+        "avgDurationMs": 5000,
+        "successRate": 1.0
+      }
+    },
+    "phaseDistribution": {
+      "start": 3,
+      "complete": 3,
+      "checkpoint": 1,
+      "error": 0,
+      "delegate": 0
+    },
+    "humanReviewRequired": 1
+  }
+}

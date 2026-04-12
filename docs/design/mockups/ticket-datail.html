@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>IntelliFlow CRM - Ticket Detail</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "mono": ["ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas", "Liberation Mono", "Courier New", "monospace"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 20px;
+        }
+        .timeline-line::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 20px;width: 2px;
+            background-color: #e2e8f0;
+            z-index: 0;
+        }
+        .dark .timeline-line::before {
+            background-color: #334155;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white h-screen flex flex-col overflow-hidden">
+<div class="flex flex-1 overflow-hidden">
+<main class="flex-1 flex min-w-0 bg-background-light dark:bg-black/20">
+<div class="flex-1 flex flex-col min-w-0 border-r border-slate-200 dark:border-slate-800">
+<div class="bg-white dark:bg-slate-900 px-6 py-5 border-b border-slate-200 dark:border-slate-800 flex-shrink-0">
+<div class="flex items-center gap-2 mb-2 text-sm text-slate-500 dark:text-slate-400">
+<a class="hover:text-primary transition-colors flex items-center gap-1" href="#">
+<span class="material-symbols-outlined text-[18px]">arrow_back</span>
+    Back to Tickets
+</a>
+<span class="text-slate-300 dark:text-slate-700 mx-2">|</span>
+<span class="text-slate-900 dark:text-white font-medium">#T-10924</span>
+</div>
+<div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
+<div class="flex-1">
+<div class="flex items-start gap-3">
+<h1 class="text-2xl font-black text-slate-900 dark:text-white leading-tight">System Outage: West Region</h1>
+<div class="flex gap-2 mt-1">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">Open</span>
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-xs font-bold bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/50 uppercase">
+<span class="material-symbols-outlined fill-current" style="font-size: 14px;">priority_high</span> Critical
+                                </span>
+</div>
+</div>
+<p class="text-slate-500 dark:text-slate-400 mt-2 text-sm line-clamp-1">Customer reported inability to access the dashboard from CA servers. Error 503 persisting.</p>
+</div>
+<div class="flex-shrink-0 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 rounded-lg p-3 flex items-center gap-3">
+<div class="flex flex-col items-end">
+<span class="text-xs font-semibold text-red-600 dark:text-red-400 uppercase tracking-wide">SLA Breached</span>
+<span class="font-mono text-lg font-bold text-red-700 dark:text-red-300">-02h 14m 32s</span>
+</div>
+<div class="h-8 w-8 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center">
+<span class="material-symbols-outlined text-red-600 dark:text-red-400" style="font-size: 20px;">timer_off</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-6 mt-6 border-b border-slate-200 dark:border-slate-800 -mb-5">
+<button class="pb-4 border-b-2 border-transparent text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors">Details</button>
+<button class="pb-4 border-b-2 border-primary text-sm font-bold text-primary transition-colors flex items-center gap-2">
+                        Activity
+                        <span class="bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded-full">8</span>
+</button>
+<button class="pb-4 border-b-2 border-transparent text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors">Resolution</button>
+<button class="pb-4 border-b-2 border-transparent text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors">Attachments</button>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto custom-scrollbar bg-slate-50/50 dark:bg-black/20 p-6">
+<div class="max-w-3xl mx-auto timeline-line relative pb-10">
+<div class="relative pl-12 mb-8 group">
+<div class="absolute left-0 top-0 size-10 rounded-full border-4 border-white dark:border-slate-900 bg-slate-200 dark:bg-slate-700 z-10 overflow-hidden">
+<div class="w-full h-full bg-cover bg-center" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAPMqWA-7Tt8fOJE74NKw25TL1NCA25pZjfOiRlvMOEwONSPT9SBucgTSVY5HLwP85N7HTafXcwOy2Xf-YNfvtdv-nD8O4gkXMpe3Idv79zK0awaEXKX3dfBG7ZUuRH17bv5Nbwxqt-GWNJgihU9KP2kpV6tdqgtVPBHoaCmiHegujSRR_S2VsJDCYMCKN2nbwcfx9EwdZd3NWwjMq3h4v0tfSFSozxJ7uwbAUxG6wqRSSfhsOU5fXGzyDmd2gcia0bEGW-cgjv_SlB');"></div>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2">
+<span class="font-bold text-slate-900 dark:text-white text-sm">David Kim (Customer)</span>
+<span class="text-slate-400 text-xs">created ticket via Email</span>
+<span class="text-slate-400 text-xs ml-auto">Yesterday at 4:30 PM</span>
+</div>
+<div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 shadow-sm text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+<p>Hi Support,</p>
+<p class="mt-2">Our team in the West Region is reporting consistent 503 errors when trying to load the main dashboard. This started about 30 minutes ago. We've tried clearing cache and different browsers but the issue persists.</p>
+<p class="mt-2">Please investigate ASAP as this is blocking our daily reporting.</p>
+<p class="mt-4 text-slate-500">Regards,<br/>David</p>
+</div>
+</div>
+</div>
+<div class="relative pl-12 mb-8">
+<div class="absolute left-0 top-0 size-10 rounded-full border-4 border-white dark:border-slate-900 bg-slate-100 dark:bg-slate-800 z-10 flex items-center justify-center">
+<span class="material-symbols-outlined text-slate-400 text-lg">smart_toy</span>
+</div>
+<div class="flex items-center gap-2 pt-2">
+<span class="text-slate-500 dark:text-slate-400 text-xs font-medium">System</span>
+<span class="text-slate-400 text-xs">automatically assigned priority</span>
+<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 uppercase">High</span>
+<span class="text-slate-400 text-xs ml-auto">Yesterday at 4:30 PM</span>
+</div>
+</div>
+<div class="relative pl-12 mb-8">
+<div class="absolute left-0 top-0 size-10 rounded-full border-4 border-white dark:border-slate-900 bg-primary z-10 overflow-hidden">
+<div class="w-full h-full bg-cover bg-center" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBPvjJFgyFFa9edR-nkHgeu6XVX6xJtfJRxMggUoY2h-94Qc6DHU8bxCs24ukPbQkPDA9emjc-ys8fSMmpXC1P4V8KetIapVfKNDhIwm9CXRzy_93hqL2M32uLeXhYR7CubSaWGuTT5oNHuNRcajONlZk3lvZfLVl2gw3dNm0U4CvD8-Nj_-HZK4Gvl3n1pfTUYSMdmgnJBEBf0RuuYdPm101krnvTvgVNgeJ03mHnlA8-VY2n2yiZjATu4DxXoyQCYxnvb53r_VMpi');"></div>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2">
+<span class="font-bold text-slate-900 dark:text-white text-sm">Sarah Jenkins (Agent)</span>
+<span class="text-slate-400 text-xs">replied</span>
+<span class="text-slate-400 text-xs ml-auto">Yesterday at 4:45 PM</span>
+</div>
+<div class="bg-blue-50 dark:bg-slate-800/80 border border-blue-100 dark:border-slate-700 rounded-lg p-4 shadow-sm text-sm text-slate-800 dark:text-slate-200 leading-relaxed">
+<p>Hello David,</p>
+<p class="mt-2">Thanks for reaching out. I'm looking into this immediately. We are checking our load balancers for the West region.</p>
+<p class="mt-2">I've escalated this to our DevOps team.</p>
+</div>
+</div>
+</div>
+<div class="relative pl-12 mb-8">
+<div class="absolute left-0 top-0 size-10 rounded-full border-4 border-white dark:border-slate-900 bg-red-100 dark:bg-red-900/30 z-10 flex items-center justify-center">
+<span class="material-symbols-outlined text-red-500 text-lg">priority_high</span>
+</div>
+<div class="flex items-center gap-2 pt-2">
+<span class="font-bold text-slate-900 dark:text-white text-xs">Sarah Jenkins</span>
+<span class="text-slate-400 text-xs">changed priority to</span>
+<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 uppercase">Critical</span>
+<span class="text-slate-400 text-xs ml-auto">Yesterday at 5:00 PM</span>
+</div>
+</div>
+<div class="relative pl-12 mb-8">
+<div class="absolute left-0 top-0 size-10 rounded-full border-4 border-white dark:border-slate-900 bg-yellow-100 dark:bg-yellow-900/30 z-10 flex items-center justify-center">
+<span class="material-symbols-outlined text-yellow-600 text-lg">lock</span>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2">
+<span class="font-bold text-slate-900 dark:text-white text-sm">Mike Ross (DevOps)</span>
+<span class="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 text-[10px] font-bold px-1.5 rounded border border-yellow-200 dark:border-yellow-800">INTERNAL NOTE</span>
+<span class="text-slate-400 text-xs ml-auto">Today at 9:15 AM</span>
+</div>
+<div class="bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-100 dark:border-yellow-900/30 rounded-lg p-3 shadow-sm text-sm text-slate-700 dark:text-slate-300 leading-relaxed italic">
+<p>We identified a degraded shard in the DB cluster. Replication lag is high. Creating a fix now.</p>
+</div>
+</div>
+</div>
+<div class="relative pl-12 mb-8">
+<div class="absolute left-0 top-0 size-10 rounded-full border-4 border-white dark:border-slate-900 bg-red-500 z-10 flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-lg">timer_off</span>
+</div>
+<div class="flex items-center gap-2 pt-2">
+<span class="text-red-600 dark:text-red-400 text-xs font-bold uppercase">SLA Breached</span>
+<span class="text-slate-400 text-xs">Resolution time exceeded by 2 hours</span>
+<span class="text-slate-400 text-xs ml-auto">2 hours ago</span>
+</div>
+</div>
+<div class="relative pl-12 mt-6">
+<div class="absolute left-0 top-0 size-10 rounded-full border-4 border-white dark:border-slate-900 bg-primary z-10 overflow-hidden">
+<div class="w-full h-full bg-cover bg-center" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBPvjJFgyFFa9edR-nkHgeu6XVX6xJtfJRxMggUoY2h-94Qc6DHU8bxCs24ukPbQkPDA9emjc-ys8fSMmpXC1P4V8KetIapVfKNDhIwm9CXRzy_93hqL2M32uLeXhYR7CubSaWGuTT5oNHuNRcajONlZk3lvZfLVl2gw3dNm0U4CvD8-Nj_-HZK4Gvl3n1pfTUYSMdmgnJBEBf0RuuYdPm101krnvTvgVNgeJ03mHnlA8-VY2n2yiZjATu4DxXoyQCYxnvb53r_VMpi');"></div>
+</div>
+<div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm overflow-hidden focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+<div class="flex border-b border-slate-100 dark:border-slate-700">
+<button class="flex-1 py-2.5 text-xs font-medium bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-r border-slate-100 dark:border-slate-700 hover:bg-white dark:hover:bg-slate-700 transition-colors">Public Reply</button>
+<button class="flex-1 py-2.5 text-xs font-medium bg-yellow-50/50 dark:bg-yellow-900/10 text-yellow-700 dark:text-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition-colors">Internal Note</button>
+</div>
+<textarea class="w-full p-4 text-sm text-slate-900 dark:text-white bg-transparent border-none focus:ring-0 min-h-[120px] resize-y placeholder:text-slate-400" placeholder="Type your reply here... use @ to mention teammates"></textarea>
+<div class="flex items-center justify-between px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-700">
+<div class="flex items-center gap-1 text-slate-500">
+<button class="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-slate-500 dark:text-slate-400 transition-colors"><span class="material-symbols-outlined text-[18px]">format_bold</span></button>
+<button class="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-slate-500 dark:text-slate-400 transition-colors"><span class="material-symbols-outlined text-[18px]">format_italic</span></button>
+<button class="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-slate-500 dark:text-slate-400 transition-colors"><span class="material-symbols-outlined text-[18px]">link</span></button>
+<button class="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-slate-500 dark:text-slate-400 transition-colors"><span class="material-symbols-outlined text-[18px]">attach_file</span></button>
+</div>
+<div class="flex items-center gap-3">
+<button class="px-4 py-1.5 rounded-lg text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">Save Draft</button>
+<button class="px-4 py-1.5 bg-primary hover:bg-blue-600 text-white text-xs font-bold rounded-lg shadow-sm shadow-blue-500/30 transition-colors flex items-center gap-2">
+                                        Send Reply
+                                        <span class="material-symbols-outlined text-[16px]">send</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<aside class="w-80 bg-white dark:bg-slate-900 flex-shrink-0 border-l border-slate-200 dark:border-slate-800 overflow-y-auto custom-scrollbar flex flex-col z-10">
+<div class="p-5 border-b border-slate-100 dark:border-slate-800">
+<h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Quick Actions</h3>
+<div class="grid grid-cols-2 gap-2">
+<button class="flex flex-col items-center justify-center p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-green-600 transition-all group">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-green-600 mb-1" style="font-size: 24px;">check_circle</span>
+<span class="text-xs font-bold text-slate-600 dark:text-slate-400 group-hover:text-green-600">Resolve</span>
+</button>
+<button class="flex flex-col items-center justify-center p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all group">
+<span class="material-symbols-outlined text-slate-400 mb-1" style="font-size: 24px;">close</span>
+<span class="text-xs font-bold text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white">Close</span>
+</button>
+<button class="flex flex-col items-center justify-center p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 transition-all group">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-red-600 mb-1" style="font-size: 24px;">publish</span>
+<span class="text-xs font-bold text-slate-600 dark:text-slate-400 group-hover:text-red-600">Escalate</span>
+</button>
+<button class="flex flex-col items-center justify-center p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-primary hover:bg-primary/5 dark:hover:bg-primary/10 hover:text-primary transition-all group">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-primary mb-1" style="font-size: 24px;">forward</span>
+<span class="text-xs font-bold text-slate-600 dark:text-slate-400 group-hover:text-primary">Assign</span>
+</button>
+</div>
+</div>
+<div class="p-5 border-b border-slate-100 dark:border-slate-800">
+<div class="flex items-center justify-between mb-3">
+<h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Properties</h3>
+<button class="text-primary text-xs hover:underline">Edit</button>
+</div>
+<div class="space-y-4">
+<div>
+<label class="block text-xs text-slate-500 dark:text-slate-400 mb-1">Status</label>
+<select class="w-full py-1.5 px-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded text-sm text-slate-900 dark:text-white focus:ring-primary focus:border-primary">
+<option>Open</option>
+<option>Pending</option>
+<option>Resolved</option>
+<option>Closed</option>
+</select>
+</div>
+<div>
+<label class="block text-xs text-slate-500 dark:text-slate-400 mb-1">Priority</label>
+<select class="w-full py-1.5 px-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded text-sm text-slate-900 dark:text-white focus:ring-primary focus:border-primary">
+<option>Low</option>
+<option>Medium</option>
+<option>High</option>
+<option selected="">Critical</option>
+</select>
+</div>
+<div>
+<label class="block text-xs text-slate-500 dark:text-slate-400 mb-1">Assignee</label>
+<div class="flex items-center gap-2 p-1.5 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-800 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+<div class="size-6 rounded-full bg-cover bg-center" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBPvjJFgyFFa9edR-nkHgeu6XVX6xJtfJRxMggUoY2h-94Qc6DHU8bxCs24ukPbQkPDA9emjc-ys8fSMmpXC1P4V8KetIapVfKNDhIwm9CXRzy_93hqL2M32uLeXhYR7CubSaWGuTT5oNHuNRcajONlZk3lvZfLVl2gw3dNm0U4CvD8-Nj_-HZK4Gvl3n1pfTUYSMdmgnJBEBf0RuuYdPm101krnvTvgVNgeJ03mHnlA8-VY2n2yiZjATu4DxXoyQCYxnvb53r_VMpi');"></div>
+<span class="text-sm text-slate-900 dark:text-white">Sarah Jenkins</span>
+</div>
+</div>
+<div>
+<label class="block text-xs text-slate-500 dark:text-slate-400 mb-1">Tags</label>
+<div class="flex flex-wrap gap-2">
+<span class="inline-flex px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-xs text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">Outage</span>
+<span class="inline-flex px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-xs text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">West Region</span>
+<button class="size-5 flex items-center justify-center rounded-full border border-slate-300 dark:border-slate-600 text-slate-500 hover:text-primary hover:border-primary transition-colors">
+<span class="material-symbols-outlined text-[14px]">add</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<div class="p-5 border-b border-slate-100 dark:border-slate-800">
+<h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Customer</h3>
+<div class="flex items-start gap-3">
+<div class="size-10 rounded-full bg-cover bg-center" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAPMqWA-7Tt8fOJE74NKw25TL1NCA25pZjfOiRlvMOEwONSPT9SBucgTSVY5HLwP85N7HTafXcwOy2Xf-YNfvtdv-nD8O4gkXMpe3Idv79zK0awaEXKX3dfBG7ZUuRH17bv5Nbwxqt-GWNJgihU9KP2kpV6tdqgtVPBHoaCmiHegujSRR_S2VsJDCYMCKN2nbwcfx9EwdZd3NWwjMq3h4v0tfSFSozxJ7uwbAUxG6wqRSSfhsOU5fXGzyDmd2gcia0bEGW-cgjv_SlB');"></div>
+<div>
+<div class="text-sm font-bold text-slate-900 dark:text-white">David Kim</div>
+<div class="text-xs text-slate-500 dark:text-slate-400">TechLead @ SolarTech Inc</div>
+<div class="flex gap-2 mt-2">
+<a class="size-7 flex items-center justify-center rounded bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-[16px]">mail</span>
+</a>
+<a class="size-7 flex items-center justify-center rounded bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-[16px]">call</span>
+</a>
+<a class="size-7 flex items-center justify-center rounded bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-[16px]">history</span>
+</a>
+</div>
+</div>
+</div>
+</div>
+<div class="p-5">
+<h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">SLA Tracking</h3>
+<div class="space-y-4">
+<div>
+<div class="flex justify-between text-xs mb-1">
+<span class="text-slate-600 dark:text-slate-300">First Response</span>
+<span class="text-green-600 font-medium">Met (15m)</span>
+</div>
+<div class="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+<div class="h-full bg-green-500 w-full"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-xs mb-1">
+<span class="text-slate-600 dark:text-slate-300">Resolution</span>
+<span class="text-red-600 font-medium">Overdue</span>
+</div>
+<div class="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+<div class="h-full bg-red-500 w-full"></div>
+</div>
+<div class="text-[10px] text-slate-400 mt-1">Due: Yesterday, 6:30 PM</div>
+</div>
+</div>
+</div>
+</aside>
+</main>
+</div>
+</body></html>

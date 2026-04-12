@@ -1,0 +1,31 @@
+Component,Package,Storybook,Tests,A11y Status,WCAG Level,Actual Usage Count,Consumer Apps,Last Verified
+Accordion,@intelliflow/ui,Yes,Yes,PASS,AA,0,none,2025-12-29
+Alert,@intelliflow/ui,Yes,Yes,PASS,AA,0,none,2025-12-29
+AlertDialog,@intelliflow/ui,No,Yes,PASS,AA,0,none,2025-12-29
+Avatar,@intelliflow/ui,Yes,Yes,PASS,AA,0,none,2025-12-29
+Badge,@intelliflow/ui,Yes,Yes,PASS,AA,2,project-tracker,2025-12-29
+Button,@intelliflow/ui,Yes,Yes,PASS,AA,4,web,2025-12-29
+Card,@intelliflow/ui,Yes,Yes,PASS,AA,24,web,2025-12-29
+Checkbox,@intelliflow/ui,Yes,Yes,PASS,AA,0,none,2025-12-29
+DataTable,@intelliflow/ui,No,Yes,PASS,AA,0,none,2025-12-29
+Dialog,@intelliflow/ui,Yes,Yes,PASS,AA,0,none,2025-12-29
+DropdownMenu,@intelliflow/ui,No,Yes,PASS,AA,0,none,2025-12-29
+Form,@intelliflow/ui,No,Yes,PASS,AA,0,none,2025-12-29
+Input,@intelliflow/ui,Yes,Yes,PASS,AA,0,none,2025-12-29
+Label,@intelliflow/ui,No,Yes,PASS,AA,0,none,2025-12-29
+Popover,@intelliflow/ui,No,Yes,PASS,AA,0,none,2025-12-29
+Progress,@intelliflow/ui,Yes,Yes,PASS,AA,0,none,2025-12-29
+RadioGroup,@intelliflow/ui,Yes,Yes,PASS,AA,0,none,2025-12-29
+ScrollArea,@intelliflow/ui,No,Yes,PASS,AA,0,none,2025-12-29
+Select,@intelliflow/ui,Yes,Yes,PASS,AA,0,none,2025-12-29
+Separator,@intelliflow/ui,Yes,Yes,PASS,AA,0,none,2025-12-29
+Skeleton,@intelliflow/ui,Yes,Yes,PASS,AA,0,none,2025-12-29
+Slider,@intelliflow/ui,Yes,Yes,PASS,AA,0,none,2025-12-29
+Switch,@intelliflow/ui,Yes,Yes,PASS,AA,0,none,2025-12-29
+Table,@intelliflow/ui,No,Yes,PASS,AA,0,none,2025-12-29
+Tabs,@intelliflow/ui,Yes,Yes,PASS,AA,0,none,2025-12-29
+Textarea,@intelliflow/ui,Yes,Yes,PASS,AA,0,none,2025-12-29
+Toast,@intelliflow/ui,No,Yes,PASS,AA,0,none,2025-12-29
+Tooltip,@intelliflow/ui,Yes,Yes,PASS,AA,0,none,2025-12-29
+cn (utility),@intelliflow/ui,N/A,N/A,N/A,N/A,8,web,2025-12-29
+Widget (type),@intelliflow/ui,N/A,N/A,N/A,N/A,1,web,2025-12-29

@@ -19,8 +19,10 @@ import type { AppRouter } from '@intelliflow/api';
 
 /**
  * Create the tRPC React client
+ * Using ReturnType to capture the full inferred type
  */
-export const trpc = createTRPCReact<AppRouter>();
+type TRPCReactClient = ReturnType<typeof createTRPCReact<AppRouter>>;
+export const trpc: TRPCReactClient = createTRPCReact<AppRouter>();
 
 export interface TRPCProviderProps {
   children: React.ReactNode;
@@ -66,7 +68,7 @@ export function TRPCProvider({
   url,
   headers,
   queryClient: providedQueryClient,
-}: TRPCProviderProps) {
+}: Readonly<TRPCProviderProps>) {
   const [queryClient] = useState(
     () =>
       providedQueryClient ||

@@ -1,0 +1,141 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "A/B Testing Configuration",
+  "description": "Configuration for IntelliFlow CRM A/B testing framework (IFC-025)",
+  "version": "1.0.0",
+  "createdAt": "2026-01-03T00:00:00.000Z",
+  "defaultSettings": {
+    "minSampleSize": 30,
+    "significanceLevel": 0.05,
+    "defaultPower": 0.8,
+    "defaultTrafficPercent": 50,
+    "maxExperimentDuration": "30d",
+    "autoStopOnSignificance": false
+  },
+  "experimentTypes": [
+    {
+      "id": "AI_VS_MANUAL",
+      "name": "AI vs Manual Scoring",
+      "description": "Compare AI-generated lead scores against manual human scoring",
+      "primaryMetric": "score_accuracy",
+      "secondaryMetrics": ["conversion_rate", "time_to_score"],
+      "controlVariant": "manual",
+      "treatmentVariant": "ai"
+    },
+    {
+      "id": "MODEL_COMPARISON",
+      "name": "Model A/B Testing",
+      "description": "Compare two AI model versions to determine which performs better",
+      "primaryMetric": "prediction_accuracy",
+      "secondaryMetrics": ["latency", "confidence_calibration"],
+      "controlVariant": "model_v1",
+      "treatmentVariant": "model_v2"
+    },
+    {
+      "id": "THRESHOLD_TEST",
+      "name": "Threshold Optimization",
+      "description": "Test different score thresholds for lead qualification",
+      "primaryMetric": "qualification_precision",
+      "secondaryMetrics": ["recall", "false_positive_rate"],
+      "controlVariant": "current_threshold",
+      "treatmentVariant": "new_threshold"
+    }
+  ],
+  "statisticalMethods": {
+    "tTest": {
+      "name": "Welch's t-test",
+      "description": "Two-sample t-test with unequal variances",
+      "useCase": "Comparing continuous metrics (scores, latency)",
+      "formula": "t = (x̄₁ - x̄₂) / √(s₁²/n₁ + s₂²/n₂)"
+    },
+    "chiSquare": {
+      "name": "Chi-square test",
+      "description": "Test for independence in categorical data",
+      "useCase": "Comparing conversion rates between variants",
+      "formula": "χ² = Σ((O - E)² / E)"
+    },
+    "effectSize": {
+      "name": "Cohen's d",
+      "description": "Standardized measure of effect magnitude",
+      "interpretation": {
+        "negligible": "d < 0.2",
+        "small": "0.2 ≤ d < 0.5",
+        "medium": "0.5 ≤ d < 0.8",
+        "large": "d ≥ 0.8"
+      },
+      "formula": "d = (x̄₁ - x̄₂) / s_pooled"
+    }
+  },
+  "significanceLevels": {
+    "LOW": {
+      "alpha": 0.1,
+      "confidence": "90%",
+      "useCase": "Exploratory analysis, early stopping"
+    },
+    "MEDIUM": {
+      "alpha": 0.05,
+      "confidence": "95%",
+      "useCase": "Standard significance testing (default)"
+    },
+    "HIGH": {
+      "alpha": 0.01,
+      "confidence": "99%",
+      "useCase": "High-stakes decisions, regulatory compliance"
+    }
+  },
+  "powerAnalysis": {
+    "defaultEffectSize": 0.2,
+    "minimumSamples": {
+      "small_effect": 393,
+      "medium_effect": 64,
+      "large_effect": 26
+    },
+    "notes": "Sample sizes calculated for 80% power at α = 0.05"
+  },
+  "integrations": {
+    "featureFlags": {
+      "enabled": true,
+      "provider": "packages/platform/src/feature-flags/",
+      "hashAlgorithm": "deterministic_string_hash"
+    },
+    "monitoring": {
+      "metricsExport": true,
+      "dashboardPath": "/governance/experiments",
+      "alertOnSignificance": false
+    },
+    "auditLogging": {
+      "enabled": true,
+      "logAssignments": true,
+      "logAnalysis": true
+    }
+  },
+  "experiments": [
+    {
+      "id": "ai_scoring_v1",
+      "name": "AI vs Manual Lead Scoring Pilot",
+      "type": "AI_VS_MANUAL",
+      "status": "COMPLETED",
+      "hypothesis": "AI-generated lead scores will be at least as accurate as manual scores while reducing scoring time by 80%",
+      "startDate": "2025-12-01T00:00:00.000Z",
+      "endDate": "2025-12-31T23:59:59.000Z",
+      "trafficPercent": 50,
+      "minSampleSize": 100,
+      "significanceLevel": 0.05,
+      "metrics": {
+        "primaryMetric": "score_accuracy",
+        "targetImprovement": 5
+      },
+      "result": {
+        "controlSampleSize": 127,
+        "treatmentSampleSize": 131,
+        "controlMean": 72.4,
+        "treatmentMean": 78.6,
+        "pValue": 0.023,
+        "effectSize": 0.42,
+        "isSignificant": true,
+        "winner": "treatment",
+        "recommendation": "AI scoring shows statistically significant improvement. Recommend gradual rollout to 100% of leads."
+      }
+    }
+  ]
+}

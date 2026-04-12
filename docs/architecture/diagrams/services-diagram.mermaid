@@ -1,0 +1,42 @@
+graph TB
+    subgraph Frontend["Frontend Layer"]
+        Web["Next.js Web App<br/>Port: 3000/3001<br/><code>pnpm dev:web</code>"]
+    end
+    
+    subgraph Backend["Backend Layer"]
+        API["API Server (tRPC)<br/>Port: 4000<br/><code>pnpm dev:api</code>"]
+        WS["WebSocket Server<br/>Port: 4000<br/><code>pnpm dev:api:ws</code>"]
+    end
+    
+    subgraph Workers["Worker Services"]
+        Notifications["Notifications Worker<br/><code>pnpm dev:workers</code>"]
+        Events["Events Worker<br/><code>pnpm dev:workers</code>"]
+        Ingestion["Ingestion Worker<br/><code>pnpm dev:workers</code>"]
+        AI["AI Worker<br/><code>pnpm dev:worker</code>"]
+    end
+    
+    subgraph Data["Data Layer"]
+        DB[(PostgreSQL<br/>Supabase)]
+        Redis[(Redis Cache)]
+    end
+    
+    Web -->|HTTP/REST| API
+    Web -->|WebSocket| WS
+    API --> DB
+    WS --> DB
+    API --> Redis
+    Notifications --> DB
+    Events --> DB
+    Ingestion --> DB
+    AI --> DB
+    API -.->|AI Tasks| AI
+    
+    style Web fill:#61dafb,stroke:#333,stroke-width:2px
+    style API fill:#68a063,stroke:#333,stroke-width:2px
+    style WS fill:#ff6b6b,stroke:#333,stroke-width:2px
+    style AI fill:#ffd93d,stroke:#333,stroke-width:2px
+    style DB fill:#336791,stroke:#333,stroke-width:2px
+    style Redis fill:#dc382d,stroke:#333,stroke-width:2px
+    style Notifications fill:#9b59b6,stroke:#333,stroke-width:2px
+    style Events fill:#3498db,stroke:#333,stroke-width:2px
+    style Ingestion fill:#16a085,stroke:#333,stroke-width:2px

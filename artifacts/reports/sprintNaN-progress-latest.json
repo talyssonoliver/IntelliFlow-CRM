@@ -1,0 +1,19 @@
+{
+  "source": "fresh",
+  "timestamp": "2026-02-09T18:11:44.477Z",
+  "pattern": "RSI",
+  "sprint": null,
+  "fallbackPath": "C:\\Users\\talys\\projects\\intelliFlow-CRM\\artifacts\\reports\\sprintNaN-progress-latest.json",
+  "summary": {
+    "total": 0,
+    "completed": 0,
+    "inProgress": 0,
+    "planned": 0,
+    "percentage": 0
+  },
+  "phases": [],
+  "bySection": {},
+  "recentCompletions": [],
+  "tasks": [],
+  "hasMore": false
+}

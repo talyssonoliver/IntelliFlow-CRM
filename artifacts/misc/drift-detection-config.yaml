@@ -1,0 +1,259 @@
+# Terraform Drift Detection Configuration
+# This file configures automated drift detection for infrastructure
+
+# Detection Schedule
+schedule:
+  # Run drift detection daily at 8 AM UTC
+  cron: "0 8 * * *"
+  timezone: "UTC"
+  enabled: true
+
+# Detection Settings
+detection:
+  # Run terraform plan to detect drift
+  command: "terraform plan -detailed-exitcode"
+
+  # Working directory
+  working_directory: "infra/terraform"
+
+  # Exit code meanings:
+  # 0 = No drift detected
+  # 1 = Error occurred
+  # 2 = Drift detected
+  exit_codes:
+    success: 0
+    error: 1
+    drift: 2
+
+  # Timeout for drift detection (in seconds)
+  timeout: 300
+
+  # Retry configuration
+  retry:
+    enabled: true
+    max_attempts: 3
+    backoff_seconds: 30
+
+# Notification Settings
+notifications:
+  # Channels to notify on drift detection
+  channels:
+    - type: "github_issue"
+      enabled: true
+      config:
+        title_template: "🚨 Terraform Drift Detected - {{ .Environment }}"
+        body_template: |
+          ## Infrastructure Drift Detected
+
+          **Environment:** {{ .Environment }}
+          **Detection Time:** {{ .Timestamp }}
+          **Affected Resources:** {{ .ResourceCount }}
+
+          ### Drift Summary
+          {{ .DriftSummary }}
+
+          ### Recommended Actions
+          1. Review the drift details in the [workflow run]({{ .WorkflowUrl }})
+          2. Determine if changes were intentional or unauthorized
+          3. Update Terraform configuration to match current state, OR
+          4. Apply Terraform to restore desired state
+
+          ### Auto-Remediation
+          - **Status:** {{ .RemediationStatus }}
+          - **Action Taken:** {{ .RemediationAction }}
+        labels:
+          - "infrastructure"
+          - "drift-detected"
+          - "needs-review"
+
+    - type: "slack"
+      enabled: false
+      config:
+        webhook_url_env: "SLACK_WEBHOOK_URL"
+        channel: "#infrastructure-alerts"
+        username: "Terraform Drift Bot"
+        icon_emoji: ":warning:"
+
+    - type: "email"
+      enabled: false
+      config:
+        recipients:
+          - "devops-team@example.com"
+          - "security-team@example.com"
+        subject_template: "[ALERT] Terraform Drift - {{ .Environment }}"
+
+# Remediation Settings
+remediation:
+  # Automatic remediation (USE WITH CAUTION!)
+  auto_remediate: false
+
+  # Remediation strategies
+  strategies:
+    - name: "apply_terraform"
+      description: "Automatically apply Terraform to restore desired state"
+      enabled: false
+      conditions:
+        - "environment == 'dev'"
+        - "resource_count <= 5"
+        - "no_deletion_detected"
+
+    - name: "update_state"
+      description: "Update Terraform state to match actual infrastructure"
+      enabled: false
+      conditions:
+        - "manual_approval_received"
+
+    - name: "create_plan"
+      description: "Create and save remediation plan for manual review"
+      enabled: true
+      conditions:
+        - "always"
+
+  # Approval requirements
+  approval:
+    required: true
+    approvers:
+      - "devops-team"
+      - "tech-lead"
+    timeout_hours: 24
+
+# Reporting
+reporting:
+  # Generate drift report
+  enabled: true
+
+  # Report format
+  format: "markdown"
+
+  # Output location
+  output_path: "artifacts/reports/drift-reports"
+
+  # Include in report
+  include:
+    - "resource_changes"
+    - "affected_modules"
+    - "timeline"
+    - "remediation_steps"
+
+  # Retention
+  retention_days: 90
+
+  # Dashboard integration
+  dashboard:
+    enabled: true
+    url: "https://grafana.intelliflow.com/d/terraform-drift"
+
+# Filtering
+filters:
+  # Ignore specific resources (expected drift)
+  ignore_resources:
+    - "random_password.*"  # Random values change
+    - "time_*"             # Time-based resources
+
+  # Ignore specific attributes
+  ignore_attributes:
+    - "*.last_modified"
+    - "*.updated_at"
+    - "vercel_project.main.latest_deployment"
+
+  # Only check specific modules
+  check_modules:
+    - "module.supabase"
+    - "module.vercel"
+    - "module.railway"
+
+# Environments
+environments:
+  dev:
+    enabled: true
+    schedule: "0 8 * * *"  # Daily
+    auto_remediate: false
+    notification_channels: ["github_issue"]
+
+  staging:
+    enabled: true
+    schedule: "0 8,20 * * *"  # Twice daily
+    auto_remediate: false
+    notification_channels: ["github_issue", "slack"]
+
+  production:
+    enabled: true
+    schedule: "0 * * * *"  # Hourly
+    auto_remediate: false
+    notification_channels: ["github_issue", "slack", "email"]
+    approval:
+      required: true
+      approvers: ["senior-devops", "cto"]
+
+# State Management
+state:
+  # Backend configuration
+  backend: "s3"
+
+  # Lock during detection
+  lock_state: true
+
+  # Refresh state before detection
+  refresh: true
+
+  # State file validation
+  validation:
+    enabled: true
+    check_integrity: true
+    check_encryption: true
+
+# Security
+security:
+  # Audit logging
+  audit_log:
+    enabled: true
+    path: "artifacts/logs/drift-detection-audit.log"
+
+  # Sensitive data handling
+  mask_sensitive: true
+
+  # Access control
+  required_permissions:
+    - "terraform:read"
+    - "terraform:plan"
+
+# Metrics
+metrics:
+  # Export metrics for monitoring
+  enabled: true
+
+  # Metrics to track
+  track:
+    - "drift_detected_count"
+    - "detection_duration_seconds"
+    - "resources_drifted"
+    - "auto_remediation_success_rate"
+    - "time_to_remediate"
+
+  # Export format
+  format: "prometheus"
+
+  # Export endpoint
+  endpoint: "https://metrics.intelliflow.com/terraform/drift"
+
+# Advanced
+advanced:
+  # Parallel execution
+  parallelism: 10
+
+  # Diff options
+  diff:
+    detailed: true
+    color: false
+    context_lines: 3
+
+  # Performance
+  cache:
+    enabled: true
+    ttl_seconds: 3600
+
+  # Debugging
+  debug:
+    enabled: false
+    verbose: false
+    save_artifacts: true

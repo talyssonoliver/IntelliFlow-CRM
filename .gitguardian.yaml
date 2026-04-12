@@ -1,0 +1,55 @@
+# GitGuardian configuration
+# https://docs.gitguardian.com/internal-repositories-monitoring/integrations/git_hooks/pre_commit
+
+version: 2
+
+# Paths to exclude from GitGuardian scanning
+paths-ignore:
+  # Test files and directories
+  - '**/*.test.ts'
+  - '**/*.test.tsx'
+  - '**/*.test.js'
+  - '**/*.test.jsx'
+  - '**/*.spec.ts'
+  - '**/*.spec.tsx'
+  - '**/*.spec.js'
+  - '**/*.spec.jsx'
+  - '**/tests/**'
+  - '**/test/**'
+  - '**/__tests__/**'
+  - '**/fixtures/**'
+  - '**/mocks/**'
+
+  # Storybook files (contain example/demo data)
+  - '**/*.stories.ts'
+  - '**/*.stories.tsx'
+  - '**/*.stories.js'
+  - '**/*.stories.jsx'
+
+  # Test integration/e2e directories
+  - 'tests/**'
+  - 'e2e/**'
+
+  # Example and documentation files
+  - '**/*.example.*'
+  - '**/examples/**'
+  - '**/docs/**'
+
+  # Build outputs and dependencies
+  - 'node_modules/**'
+  - 'dist/**'
+  - 'build/**'
+  - '.next/**'
+  - 'out/**'
+  - 'coverage/**'
+
+# Ignore specific false-positive patterns in the scanned files.
+# Note: test/story/fixture/mock paths are already fully excluded above via paths-ignore.
+secret:
+  ignored_matches:
+    # Test JWT tokens (not real secrets)
+    - name: 'Test JWT tokens'
+      match: "eyJ[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+"
+    # Literal placeholder passwords used in test fixtures
+    - name: 'Test passwords'
+      match: '(password|Password|PASSWORD)'

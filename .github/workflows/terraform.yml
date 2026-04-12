@@ -1,0 +1,332 @@
+name: Terraform CI/CD
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'infra/terraform/**'
+      - '.github/workflows/terraform.yml'
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'infra/terraform/**'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy'
+        required: true
+        type: choice
+        options:
+          - dev
+          - staging
+          - production
+      action:
+        description: 'Terraform action'
+        required: true
+        type: choice
+        options:
+          - plan
+          - apply
+          - destroy
+
+env:
+  TF_VERSION: '1.6.0'
+  TF_WORKING_DIR: 'infra/terraform'
+
+jobs:
+  validate:
+    name: Validate Terraform
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform Format Check
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform fmt -check -recursive
+
+      - name: Terraform Init
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform init -backend=false
+
+      - name: Terraform Validate
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform validate
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run Checkov
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: ${{ env.TF_WORKING_DIR }}
+          framework: terraform
+          output_format: sarif
+          output_file_path: reports/checkov.sarif
+
+      - name: Upload SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: reports/checkov.sarif
+
+      - name: tfsec
+        uses: aquasecurity/tfsec-action@v1.0.3
+        with:
+          working_directory: ${{ env.TF_WORKING_DIR }}
+          soft_fail: true
+
+  plan:
+    name: Terraform Plan
+    runs-on: ubuntu-latest
+    needs: [validate, security-scan]
+    if: github.event_name == 'pull_request' || github.event.inputs.action == 'plan'
+    strategy:
+      matrix:
+        environment: [dev, staging]
+    environment: ${{ matrix.environment }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Configure AWS Credentials (for state backend)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Terraform Init
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: |
+          terraform init \
+            -backend-config="key=crm/${{ matrix.environment }}/terraform.tfstate"
+
+      - name: Terraform Plan
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        env:
+          TF_VAR_supabase_access_token: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          TF_VAR_vercel_api_token: ${{ secrets.VERCEL_API_TOKEN }}
+          TF_VAR_railway_token: ${{ secrets.RAILWAY_TOKEN }}
+          TF_VAR_supabase_db_password: ${{ secrets.DB_PASSWORD }}
+          TF_VAR_environment: ${{ matrix.environment }}
+        run: |
+          terraform plan \
+            -var-file="environments/${{ matrix.environment }}/terraform.tfvars" \
+            -out=plan.tfplan \
+            -no-color | tee plan.txt
+
+      - name: Upload Plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan-${{ matrix.environment }}
+          path: |
+            ${{ env.TF_WORKING_DIR }}/plan.tfplan
+            ${{ env.TF_WORKING_DIR }}/plan.txt
+
+      - name: Comment PR
+        uses: actions/github-script@v7
+        if: github.event_name == 'pull_request'
+        with:
+          script: |
+            const fs = require('fs');
+            const plan = fs.readFileSync('${{ env.TF_WORKING_DIR }}/plan.txt', 'utf8');
+            const truncatedPlan = plan.length > 65000 ? plan.substring(0, 65000) + '\n\n... (truncated)' : plan;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## Terraform Plan - ${{ matrix.environment }}
+
+            \`\`\`terraform
+            ${truncatedPlan}
+            \`\`\`
+
+            <details>
+            <summary>Show full plan</summary>
+
+            Download the full plan artifact from the workflow run.
+            </details>
+            `
+            });
+
+  apply:
+    name: Terraform Apply
+    runs-on: ubuntu-latest
+    needs: plan
+    if: |
+      (github.ref == 'refs/heads/main' && github.event_name == 'push') ||
+      github.event.inputs.action == 'apply'
+    strategy:
+      matrix:
+        environment: [dev, staging]
+    environment: ${{ matrix.environment }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Download Plan
+        uses: actions/download-artifact@v4
+        with:
+          name: terraform-plan-${{ matrix.environment }}
+          path: ${{ env.TF_WORKING_DIR }}
+
+      - name: Terraform Init
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: |
+          terraform init \
+            -backend-config="key=crm/${{ matrix.environment }}/terraform.tfstate"
+
+      - name: Terraform Apply
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        env:
+          TF_VAR_supabase_access_token: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          TF_VAR_vercel_api_token: ${{ secrets.VERCEL_API_TOKEN }}
+          TF_VAR_railway_token: ${{ secrets.RAILWAY_TOKEN }}
+          TF_VAR_supabase_db_password: ${{ secrets.DB_PASSWORD }}
+        run: terraform apply -auto-approve plan.tfplan
+
+      - name: Terraform Output
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: |
+          terraform output -json > outputs.json
+          cat outputs.json
+
+      - name: Upload Outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-outputs-${{ matrix.environment }}
+          path: ${{ env.TF_WORKING_DIR }}/outputs.json
+
+  production-plan:
+    name: Production Plan
+    runs-on: ubuntu-latest
+    needs: [validate, security-scan]
+    if: |
+      github.ref == 'refs/heads/main' ||
+      github.event.inputs.environment == 'production'
+    environment: production-plan
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Terraform Init
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform init -backend-config="key=crm/production/terraform.tfstate"
+
+      - name: Terraform Plan
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        env:
+          TF_VAR_supabase_access_token: ${{ secrets.SUPABASE_ACCESS_TOKEN_PROD }}
+          TF_VAR_vercel_api_token: ${{ secrets.VERCEL_API_TOKEN_PROD }}
+          TF_VAR_railway_token: ${{ secrets.RAILWAY_TOKEN_PROD }}
+          TF_VAR_supabase_db_password: ${{ secrets.DB_PASSWORD_PROD }}
+          TF_VAR_environment: production
+        run: |
+          terraform plan \
+            -var-file="environments/production/terraform.tfvars" \
+            -out=plan.tfplan \
+            -no-color | tee plan.txt
+
+      - name: Upload Plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan-production
+          path: |
+            ${{ env.TF_WORKING_DIR }}/plan.tfplan
+            ${{ env.TF_WORKING_DIR }}/plan.txt
+
+  production-apply:
+    name: Production Apply
+    runs-on: ubuntu-latest
+    needs: production-plan
+    if: github.event.inputs.action == 'apply' && github.event.inputs.environment == 'production'
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Download Plan
+        uses: actions/download-artifact@v4
+        with:
+          name: terraform-plan-production
+          path: ${{ env.TF_WORKING_DIR }}
+
+      - name: Terraform Init
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform init -backend-config="key=crm/production/terraform.tfstate"
+
+      - name: Terraform Apply
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        env:
+          TF_VAR_supabase_access_token: ${{ secrets.SUPABASE_ACCESS_TOKEN_PROD }}
+          TF_VAR_vercel_api_token: ${{ secrets.VERCEL_API_TOKEN_PROD }}
+          TF_VAR_railway_token: ${{ secrets.RAILWAY_TOKEN_PROD }}
+          TF_VAR_supabase_db_password: ${{ secrets.DB_PASSWORD_PROD }}
+        run: terraform apply -auto-approve plan.tfplan
+
+      - name: Terraform Output
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform output -json > outputs.json
+
+      - name: Upload Outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-outputs-production
+          path: ${{ env.TF_WORKING_DIR }}/outputs.json

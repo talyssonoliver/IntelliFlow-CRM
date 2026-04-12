@@ -1,0 +1,38 @@
+[
+  {
+    "url": "http://localhost:3000/",
+    "isRepresentativeRun": false,
+    "htmlPath": "C:\\Users\\talys\\projects\\intelliFlow-CRM\\artifacts\\benchmarks\\home-page-lighthouse\\localhost--2026_04_11_15_19_00.report.html",
+    "jsonPath": "C:\\Users\\talys\\projects\\intelliFlow-CRM\\artifacts\\benchmarks\\home-page-lighthouse\\localhost--2026_04_11_15_19_00.report.json",
+    "summary": {
+      "performance": 0.63,
+      "accessibility": 1,
+      "best-practices": 0.93,
+      "seo": 1
+    }
+  },
+  {
+    "url": "http://localhost:3000/",
+    "isRepresentativeRun": false,
+    "htmlPath": "C:\\Users\\talys\\projects\\intelliFlow-CRM\\artifacts\\benchmarks\\home-page-lighthouse\\localhost--2026_04_11_15_19_15.report.html",
+    "jsonPath": "C:\\Users\\talys\\projects\\intelliFlow-CRM\\artifacts\\benchmarks\\home-page-lighthouse\\localhost--2026_04_11_15_19_15.report.json",
+    "summary": {
+      "performance": 0.99,
+      "accessibility": 1,
+      "best-practices": 0.93,
+      "seo": 1
+    }
+  },
+  {
+    "url": "http://localhost:3000/",
+    "isRepresentativeRun": true,
+    "htmlPath": "C:\\Users\\talys\\projects\\intelliFlow-CRM\\artifacts\\benchmarks\\home-page-lighthouse\\localhost--2026_04_11_15_19_28.report.html",
+    "jsonPath": "C:\\Users\\talys\\projects\\intelliFlow-CRM\\artifacts\\benchmarks\\home-page-lighthouse\\localhost--2026_04_11_15_19_28.report.json",
+    "summary": {
+      "performance": 1,
+      "accessibility": 1,
+      "best-practices": 0.93,
+      "seo": 1
+    }
+  }
+]

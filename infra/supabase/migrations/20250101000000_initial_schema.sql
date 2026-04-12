@@ -2,9 +2,12 @@
 -- Generated from Prisma schema with pgvector support
 -- Migration: 20250101000000_initial_schema
 
--- Enable required extensions
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS "vector";
+-- Create dedicated schema for extensions (best practice)
+CREATE SCHEMA IF NOT EXISTS extensions;
+
+-- Enable required extensions in dedicated schema
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp" SCHEMA extensions;
+CREATE EXTENSION IF NOT EXISTS "vector" SCHEMA extensions;
 
 -- ============================================
 -- ENUMS

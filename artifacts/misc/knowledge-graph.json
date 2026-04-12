@@ -1,0 +1,916 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "meta": {
+    "title": "IntelliFlow CRM Domain Knowledge Graph",
+    "description": "Structured representation of bounded contexts, aggregates, domain events, and relationships for LLM consumption",
+    "version": "1.0.0",
+    "created": "2025-12-28T00:00:00Z",
+    "source_task": "IFC-082",
+    "searchable": true
+  },
+  "boundedContexts": [
+    {
+      "id": "crm",
+      "name": "CRM Context",
+      "type": "core",
+      "description": "Core customer relationship management domain handling leads, contacts, accounts, opportunities, and tasks",
+      "package": "packages/domain/src/crm",
+      "subdomains": [
+        {
+          "id": "lead-management",
+          "name": "Lead Management",
+          "description": "Lead capture, scoring, qualification, and conversion",
+          "aggregates": ["Lead"]
+        },
+        {
+          "id": "contact-management",
+          "name": "Contact Management",
+          "description": "Individual contacts from converted leads or direct entry",
+          "aggregates": ["Contact"]
+        },
+        {
+          "id": "account-management",
+          "name": "Account Management",
+          "description": "Organizations/companies associated with contacts and opportunities",
+          "aggregates": ["Account"]
+        },
+        {
+          "id": "opportunity-management",
+          "name": "Opportunity Management",
+          "description": "Sales pipeline tracking from prospecting to close",
+          "aggregates": ["Opportunity"]
+        },
+        {
+          "id": "task-management",
+          "name": "Task Management",
+          "description": "Activities and follow-ups related to leads, contacts, and opportunities",
+          "aggregates": ["Task"]
+        }
+      ]
+    },
+    {
+      "id": "legal",
+      "name": "Legal Context",
+      "type": "core",
+      "description": "Legal practice management including case management, appointments, and deadline tracking",
+      "package": "packages/domain/src/legal",
+      "subdomains": [
+        {
+          "id": "case-management",
+          "name": "Case/Matter Management",
+          "description": "Legal cases with tasks, deadlines, and client associations",
+          "aggregates": ["Case", "CaseTask"]
+        },
+        {
+          "id": "appointment-management",
+          "name": "Appointment Management",
+          "description": "Scheduling meetings, hearings, consultations with conflict detection",
+          "aggregates": ["Appointment"]
+        },
+        {
+          "id": "deadline-management",
+          "name": "Deadline Management",
+          "description": "Court deadlines, filing deadlines with rule-based calculation",
+          "aggregates": ["Deadline", "DeadlineRule", "HolidayCalendar"]
+        }
+      ]
+    },
+    {
+      "id": "intelligence",
+      "name": "Intelligence Context",
+      "type": "core",
+      "description": "AI-powered scoring, predictions, and recommendations",
+      "package": "apps/ai-worker",
+      "subdomains": [
+        {
+          "id": "ai-scoring",
+          "name": "AI Scoring",
+          "description": "ML-based lead scoring with confidence and reasoning",
+          "services": ["AIServicePort", "LeadScoringService"]
+        },
+        {
+          "id": "predictions",
+          "name": "Predictions",
+          "description": "Opportunity win probability predictions",
+          "services": ["PredictionEngine", "ConversionPredictor"]
+        },
+        {
+          "id": "recommendations",
+          "name": "Recommendations",
+          "description": "Next best action suggestions for sales activities",
+          "services": ["RecommendationEngine", "NextBestAction"]
+        }
+      ]
+    },
+    {
+      "id": "platform",
+      "name": "Platform Context",
+      "type": "supporting",
+      "description": "Foundational services for authentication, notifications, and audit",
+      "subdomains": [
+        {
+          "id": "authentication",
+          "name": "Authentication",
+          "description": "User management, session handling, RBAC permissions",
+          "concepts": ["User", "Session", "Permissions"]
+        },
+        {
+          "id": "notifications",
+          "name": "Notifications",
+          "description": "Multi-channel notification delivery (email, SMS, in-app)",
+          "concepts": ["Notification", "EmailService", "SMSService"]
+        },
+        {
+          "id": "audit",
+          "name": "Audit",
+          "description": "Event sourcing and compliance audit logging",
+          "concepts": ["AuditLog", "EventStore"]
+        }
+      ]
+    },
+    {
+      "id": "integration",
+      "name": "Integration Context",
+      "type": "generic",
+      "description": "External API integrations with anti-corruption layer",
+      "subdomains": [
+        {
+          "id": "external-apis",
+          "name": "External APIs",
+          "description": "Third-party service integrations",
+          "concepts": ["EmailProvider", "CalendarSync", "DataEnrichment"]
+        }
+      ]
+    }
+  ],
+  "aggregates": [
+    {
+      "id": "Lead",
+      "context": "crm",
+      "description": "Potential customer record that can be scored, qualified, and converted",
+      "identityClass": "LeadId",
+      "valueObjects": [
+        {
+          "name": "Email",
+          "description": "Validated email address value object",
+          "validations": ["format", "domain"]
+        },
+        {
+          "name": "LeadScore",
+          "description": "AI-generated score (0-100) with confidence and tier",
+          "properties": ["value", "confidence", "tier"]
+        }
+      ],
+      "properties": ["email", "firstName", "lastName", "company", "title", "phone", "source", "status", "score", "ownerId"],
+      "invariants": [
+        "Score must be between 0 and 100",
+        "Email must be valid format",
+        "Cannot convert if status is already CONVERTED"
+      ],
+      "lifecycle": ["NEW", "CONTACTED", "QUALIFIED", "UNQUALIFIED", "CONVERTED"],
+      "events": [
+        "LeadCreatedEvent",
+        "LeadScoredEvent",
+        "LeadStatusChangedEvent",
+        "LeadQualifiedEvent",
+        "LeadConvertedEvent"
+      ],
+      "repository": "LeadRepository"
+    },
+    {
+      "id": "Contact",
+      "context": "crm",
+      "description": "Person record, typically created from lead conversion or direct entry",
+      "identityClass": "ContactId",
+      "valueObjects": ["Email"],
+      "properties": ["email", "firstName", "lastName", "phone", "accountId", "ownerId"],
+      "invariants": [
+        "Email must be valid format",
+        "Cannot associate with non-existent account"
+      ],
+      "events": [
+        "ContactCreatedEvent",
+        "ContactUpdatedEvent",
+        "ContactAccountAssociatedEvent",
+        "ContactAccountDisassociatedEvent",
+        "ContactConvertedFromLeadEvent"
+      ],
+      "repository": "ContactRepository"
+    },
+    {
+      "id": "Account",
+      "context": "crm",
+      "description": "Organization or company record",
+      "identityClass": "AccountId",
+      "properties": ["name", "industry", "revenue", "website", "ownerId"],
+      "invariants": [
+        "Name is required",
+        "Revenue must be non-negative if provided"
+      ],
+      "events": [
+        "AccountCreatedEvent",
+        "AccountUpdatedEvent",
+        "AccountRevenueUpdatedEvent",
+        "AccountIndustryCategorizedEvent"
+      ],
+      "repository": "AccountRepository"
+    },
+    {
+      "id": "Opportunity",
+      "context": "crm",
+      "description": "Sales deal tracked through pipeline stages",
+      "identityClass": "OpportunityId",
+      "properties": ["name", "value", "stage", "probability", "expectedCloseDate", "accountId", "contactId", "ownerId"],
+      "stages": ["PROSPECTING", "QUALIFICATION", "NEEDS_ANALYSIS", "PROPOSAL", "NEGOTIATION", "CLOSED_WON", "CLOSED_LOST"],
+      "invariants": [
+        "Value must be non-negative",
+        "Probability must be between 0 and 100",
+        "Cannot reopen a won opportunity"
+      ],
+      "events": [
+        "OpportunityCreatedEvent",
+        "OpportunityStageChangedEvent",
+        "OpportunityValueUpdatedEvent",
+        "OpportunityWonEvent",
+        "OpportunityLostEvent",
+        "OpportunityProbabilityUpdatedEvent",
+        "OpportunityCloseDateChangedEvent",
+        "OpportunityReopenedEvent"
+      ],
+      "repository": "OpportunityRepository"
+    },
+    {
+      "id": "Task",
+      "context": "crm",
+      "description": "Activity or follow-up item related to other entities",
+      "identityClass": "TaskId",
+      "properties": ["title", "description", "status", "priority", "dueDate", "relatedEntityType", "relatedEntityId", "ownerId"],
+      "statuses": ["PENDING", "IN_PROGRESS", "COMPLETED", "CANCELLED"],
+      "priorities": ["LOW", "MEDIUM", "HIGH", "URGENT"],
+      "invariants": [
+        "Title is required",
+        "Cannot complete a cancelled task"
+      ],
+      "events": [
+        "TaskCreatedEvent",
+        "TaskStatusChangedEvent",
+        "TaskCompletedEvent",
+        "TaskCancelledEvent",
+        "TaskPriorityChangedEvent",
+        "TaskDueDateChangedEvent",
+        "TaskAssignedEvent"
+      ],
+      "repository": "TaskRepository"
+    },
+    {
+      "id": "Case",
+      "context": "legal",
+      "description": "Legal case/matter with tasks and deadlines",
+      "identityClass": "CaseId",
+      "childEntities": ["CaseTask"],
+      "properties": ["title", "description", "status", "priority", "clientId", "assignedTo", "deadline"],
+      "statuses": ["OPEN", "IN_PROGRESS", "ON_HOLD", "CLOSED", "CANCELLED"],
+      "priorities": ["LOW", "MEDIUM", "HIGH", "URGENT"],
+      "events": [
+        "CaseCreatedEvent",
+        "CaseStatusChangedEvent",
+        "CaseDeadlineUpdatedEvent",
+        "CaseTaskAddedEvent",
+        "CaseTaskRemovedEvent",
+        "CaseTaskCompletedEvent",
+        "CasePriorityChangedEvent",
+        "CaseClosedEvent"
+      ],
+      "repository": "CaseRepository"
+    },
+    {
+      "id": "CaseTask",
+      "context": "legal",
+      "description": "Task within a legal case",
+      "identityClass": "CaseTaskId",
+      "parent": "Case",
+      "properties": ["title", "description", "status", "dueDate", "assignedTo"],
+      "statuses": ["PENDING", "IN_PROGRESS", "COMPLETED", "CANCELLED"]
+    },
+    {
+      "id": "Appointment",
+      "context": "legal",
+      "description": "Scheduled meeting, hearing, or consultation",
+      "identityClass": "AppointmentId",
+      "valueObjects": [
+        {
+          "name": "TimeSlot",
+          "description": "Start and end time for appointment",
+          "properties": ["startTime", "endTime", "duration"]
+        },
+        {
+          "name": "Recurrence",
+          "description": "Recurring appointment pattern",
+          "properties": ["frequency", "interval", "endDate"]
+        },
+        {
+          "name": "Buffer",
+          "description": "Buffer time before/after appointment",
+          "properties": ["before", "after"]
+        }
+      ],
+      "properties": ["title", "description", "timeSlot", "type", "status", "location", "caseId", "attendeeIds"],
+      "types": ["MEETING", "CALL", "HEARING", "CONSULTATION", "DEPOSITION", "OTHER"],
+      "statuses": ["SCHEDULED", "CONFIRMED", "IN_PROGRESS", "COMPLETED", "CANCELLED", "NO_SHOW"],
+      "domainServices": ["ConflictDetector"],
+      "events": [
+        "AppointmentCreatedEvent",
+        "AppointmentRescheduledEvent",
+        "AppointmentConfirmedEvent",
+        "AppointmentCancelledEvent",
+        "AppointmentCompletedEvent",
+        "AppointmentNoShowEvent",
+        "AppointmentLinkedToCaseEvent",
+        "AppointmentUnlinkedFromCaseEvent",
+        "AppointmentAttendeeAddedEvent",
+        "AppointmentAttendeeRemovedEvent",
+        "AppointmentConflictDetectedEvent"
+      ],
+      "repository": "AppointmentRepository"
+    },
+    {
+      "id": "Deadline",
+      "context": "legal",
+      "description": "Court or filing deadline with rule-based calculation",
+      "identityClass": "DeadlineId",
+      "valueObjects": [
+        {
+          "name": "DeadlineRule",
+          "description": "Rule for calculating deadline dates",
+          "properties": ["ruleType", "daysOffset", "excludeWeekends", "excludeHolidays"]
+        },
+        {
+          "name": "HolidayCalendar",
+          "description": "Calendar of court holidays",
+          "properties": ["jurisdiction", "holidays"]
+        }
+      ],
+      "properties": ["title", "dueDate", "status", "priority", "caseId", "ruleId", "reminderDays"],
+      "statuses": ["PENDING", "APPROACHING", "DUE_TODAY", "OVERDUE", "COMPLETED", "WAIVED"],
+      "priorities": ["LOW", "MEDIUM", "HIGH", "CRITICAL"],
+      "domainServices": ["deadline-engine"],
+      "events": [
+        "DeadlineCreatedEvent",
+        "DeadlineStatusChangedEvent",
+        "DeadlineApproachingEvent",
+        "DeadlineDueTodayEvent",
+        "DeadlineOverdueEvent",
+        "DeadlineCompletedEvent",
+        "DeadlineWaivedEvent",
+        "DeadlineExtendedEvent",
+        "DeadlineReminderSentEvent"
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "from": "Lead",
+      "to": "Contact",
+      "type": "converts_to",
+      "description": "Lead converts to Contact when qualified",
+      "pattern": "Conformist"
+    },
+    {
+      "from": "Contact",
+      "to": "Account",
+      "type": "belongs_to",
+      "description": "Contact is associated with an Account (organization)",
+      "pattern": "Customer-Supplier"
+    },
+    {
+      "from": "Opportunity",
+      "to": "Account",
+      "type": "belongs_to",
+      "description": "Opportunity is linked to an Account",
+      "pattern": "Customer-Supplier"
+    },
+    {
+      "from": "Opportunity",
+      "to": "Contact",
+      "type": "associated_with",
+      "description": "Opportunity involves specific Contacts",
+      "pattern": "Customer-Supplier"
+    },
+    {
+      "from": "Task",
+      "to": "Lead",
+      "type": "relates_to",
+      "description": "Task can be associated with a Lead",
+      "pattern": "Shared Kernel"
+    },
+    {
+      "from": "Task",
+      "to": "Contact",
+      "type": "relates_to",
+      "description": "Task can be associated with a Contact",
+      "pattern": "Shared Kernel"
+    },
+    {
+      "from": "Task",
+      "to": "Opportunity",
+      "type": "relates_to",
+      "description": "Task can be associated with an Opportunity",
+      "pattern": "Shared Kernel"
+    },
+    {
+      "from": "CaseTask",
+      "to": "Case",
+      "type": "child_of",
+      "description": "CaseTask is a child entity within Case aggregate",
+      "pattern": "Aggregate Composition"
+    },
+    {
+      "from": "Appointment",
+      "to": "Case",
+      "type": "linked_to",
+      "description": "Appointment can be linked to a Case",
+      "pattern": "Customer-Supplier"
+    },
+    {
+      "from": "Deadline",
+      "to": "Case",
+      "type": "belongs_to",
+      "description": "Deadline is associated with a Case",
+      "pattern": "Customer-Supplier"
+    },
+    {
+      "from": "AIServicePort",
+      "to": "Lead",
+      "type": "scores",
+      "description": "AI Service scores leads for qualification",
+      "pattern": "Customer-Supplier"
+    },
+    {
+      "from": "Integration",
+      "to": "Contact",
+      "type": "enriches",
+      "description": "External APIs enrich Contact data",
+      "pattern": "Anti-Corruption Layer"
+    },
+    {
+      "from": "Integration",
+      "to": "Account",
+      "type": "enriches",
+      "description": "External APIs enrich Account data",
+      "pattern": "Anti-Corruption Layer"
+    }
+  ],
+  "domainEvents": {
+    "crm": {
+      "lead": [
+        {
+          "name": "LeadCreatedEvent",
+          "trigger": "Lead is created",
+          "payload": ["leadId", "email", "source", "ownerId"],
+          "subscribers": ["Notification", "Audit", "AIScoring"]
+        },
+        {
+          "name": "LeadScoredEvent",
+          "trigger": "AI scores the lead",
+          "payload": ["leadId", "score", "confidence", "tier", "previousScore", "modelVersion"],
+          "subscribers": ["Notification", "Analytics"]
+        },
+        {
+          "name": "LeadStatusChangedEvent",
+          "trigger": "Lead status is updated",
+          "payload": ["leadId", "previousStatus", "newStatus", "changedBy"],
+          "subscribers": ["Notification", "Audit"]
+        },
+        {
+          "name": "LeadQualifiedEvent",
+          "trigger": "Lead is qualified for follow-up",
+          "payload": ["leadId", "qualifiedBy", "reason"],
+          "subscribers": ["Notification", "TaskCreation"]
+        },
+        {
+          "name": "LeadConvertedEvent",
+          "trigger": "Lead is converted to Contact",
+          "payload": ["leadId", "contactId", "accountId", "convertedBy"],
+          "subscribers": ["ContactCreation", "Analytics"]
+        }
+      ],
+      "contact": [
+        {
+          "name": "ContactCreatedEvent",
+          "trigger": "Contact is created",
+          "payload": ["contactId", "email", "firstName", "lastName", "ownerId"],
+          "subscribers": ["Notification", "Audit", "DataEnrichment"]
+        },
+        {
+          "name": "ContactUpdatedEvent",
+          "trigger": "Contact details are updated",
+          "payload": ["contactId", "updatedFields", "updatedBy"],
+          "subscribers": ["Audit"]
+        },
+        {
+          "name": "ContactAccountAssociatedEvent",
+          "trigger": "Contact is linked to an account",
+          "payload": ["contactId", "accountId", "associatedBy"],
+          "subscribers": ["Audit"]
+        },
+        {
+          "name": "ContactAccountDisassociatedEvent",
+          "trigger": "Contact is unlinked from account",
+          "payload": ["contactId", "previousAccountId", "disassociatedBy"],
+          "subscribers": ["Audit"]
+        },
+        {
+          "name": "ContactConvertedFromLeadEvent",
+          "trigger": "Contact was created from lead conversion",
+          "payload": ["contactId", "leadId", "convertedBy"],
+          "subscribers": ["Analytics"]
+        }
+      ],
+      "account": [
+        {
+          "name": "AccountCreatedEvent",
+          "trigger": "Account is created",
+          "payload": ["accountId", "name", "ownerId"],
+          "subscribers": ["Notification", "Audit", "DataEnrichment"]
+        },
+        {
+          "name": "AccountUpdatedEvent",
+          "trigger": "Account details are updated",
+          "payload": ["accountId", "updatedFields", "updatedBy"],
+          "subscribers": ["Audit"]
+        },
+        {
+          "name": "AccountRevenueUpdatedEvent",
+          "trigger": "Account revenue is updated",
+          "payload": ["accountId", "previousRevenue", "newRevenue", "updatedBy"],
+          "subscribers": ["Analytics"]
+        },
+        {
+          "name": "AccountIndustryCategorizedEvent",
+          "trigger": "Account industry is categorized",
+          "payload": ["accountId", "industry", "categorizedBy"],
+          "subscribers": ["Analytics"]
+        }
+      ],
+      "opportunity": [
+        {
+          "name": "OpportunityCreatedEvent",
+          "trigger": "Opportunity is created",
+          "payload": ["opportunityId", "name", "value", "accountId", "ownerId"],
+          "subscribers": ["Notification", "Audit", "Pipeline"]
+        },
+        {
+          "name": "OpportunityStageChangedEvent",
+          "trigger": "Opportunity moves through pipeline",
+          "payload": ["opportunityId", "previousStage", "newStage", "changedBy"],
+          "subscribers": ["Notification", "Analytics", "Audit"]
+        },
+        {
+          "name": "OpportunityValueUpdatedEvent",
+          "trigger": "Deal value is updated",
+          "payload": ["opportunityId", "previousValue", "newValue", "updatedBy"],
+          "subscribers": ["Analytics", "Audit"]
+        },
+        {
+          "name": "OpportunityWonEvent",
+          "trigger": "Opportunity is won",
+          "payload": ["opportunityId", "value", "closedBy"],
+          "subscribers": ["Notification", "Analytics", "Billing"]
+        },
+        {
+          "name": "OpportunityLostEvent",
+          "trigger": "Opportunity is lost",
+          "payload": ["opportunityId", "reason", "closedBy"],
+          "subscribers": ["Analytics", "Audit"]
+        },
+        {
+          "name": "OpportunityProbabilityUpdatedEvent",
+          "trigger": "Win probability is updated",
+          "payload": ["opportunityId", "previousProbability", "newProbability", "updatedBy"],
+          "subscribers": ["Analytics"]
+        },
+        {
+          "name": "OpportunityCloseDateChangedEvent",
+          "trigger": "Expected close date is changed",
+          "payload": ["opportunityId", "previousDate", "newDate", "changedBy"],
+          "subscribers": ["Analytics", "Audit"]
+        },
+        {
+          "name": "OpportunityReopenedEvent",
+          "trigger": "Lost opportunity is reopened",
+          "payload": ["opportunityId", "reopenedBy"],
+          "subscribers": ["Notification", "Audit"]
+        }
+      ],
+      "task": [
+        {
+          "name": "TaskCreatedEvent",
+          "trigger": "Task is created",
+          "payload": ["taskId", "title", "priority", "ownerId"],
+          "subscribers": ["Notification", "Audit"]
+        },
+        {
+          "name": "TaskStatusChangedEvent",
+          "trigger": "Task status is updated",
+          "payload": ["taskId", "previousStatus", "newStatus", "changedBy"],
+          "subscribers": ["Notification", "Audit"]
+        },
+        {
+          "name": "TaskCompletedEvent",
+          "trigger": "Task is completed",
+          "payload": ["taskId", "completedBy"],
+          "subscribers": ["Notification", "Analytics"]
+        },
+        {
+          "name": "TaskCancelledEvent",
+          "trigger": "Task is cancelled",
+          "payload": ["taskId", "reason", "cancelledBy"],
+          "subscribers": ["Audit"]
+        },
+        {
+          "name": "TaskPriorityChangedEvent",
+          "trigger": "Task priority is changed",
+          "payload": ["taskId", "previousPriority", "newPriority", "changedBy"],
+          "subscribers": ["Notification", "Audit"]
+        },
+        {
+          "name": "TaskDueDateChangedEvent",
+          "trigger": "Task due date is changed",
+          "payload": ["taskId", "previousDueDate", "newDueDate", "changedBy"],
+          "subscribers": ["Notification", "Audit"]
+        },
+        {
+          "name": "TaskAssignedEvent",
+          "trigger": "Task is assigned to an entity",
+          "payload": ["taskId", "entityType", "entityId", "assignedBy"],
+          "subscribers": ["Notification", "Audit"]
+        }
+      ]
+    },
+    "legal": {
+      "case": [
+        {
+          "name": "CaseCreatedEvent",
+          "trigger": "Case is created",
+          "payload": ["caseId", "title", "clientId", "assignedTo", "priority"],
+          "subscribers": ["Notification", "Audit"]
+        },
+        {
+          "name": "CaseStatusChangedEvent",
+          "trigger": "Case status is updated",
+          "payload": ["caseId", "previousStatus", "newStatus", "changedBy"],
+          "subscribers": ["Notification", "Audit"]
+        },
+        {
+          "name": "CaseDeadlineUpdatedEvent",
+          "trigger": "Case deadline is updated",
+          "payload": ["caseId", "previousDeadline", "newDeadline", "changedBy"],
+          "subscribers": ["Notification", "DeadlineService"]
+        },
+        {
+          "name": "CaseTaskAddedEvent",
+          "trigger": "Task is added to case",
+          "payload": ["caseId", "taskId", "title", "addedBy"],
+          "subscribers": ["Notification"]
+        },
+        {
+          "name": "CaseTaskCompletedEvent",
+          "trigger": "Case task is completed",
+          "payload": ["caseId", "taskId", "completedBy"],
+          "subscribers": ["Notification", "Analytics"]
+        },
+        {
+          "name": "CaseClosedEvent",
+          "trigger": "Case is closed",
+          "payload": ["caseId", "resolution", "closedBy"],
+          "subscribers": ["Notification", "Analytics", "Billing"]
+        }
+      ],
+      "appointment": [
+        {
+          "name": "AppointmentCreatedEvent",
+          "trigger": "Appointment is scheduled",
+          "payload": ["appointmentId", "title", "timeSlot", "appointmentType", "createdBy"],
+          "subscribers": ["Notification", "Calendar"]
+        },
+        {
+          "name": "AppointmentRescheduledEvent",
+          "trigger": "Appointment is rescheduled",
+          "payload": ["appointmentId", "previousTimeSlot", "newTimeSlot", "rescheduledBy", "reason"],
+          "subscribers": ["Notification", "Calendar"]
+        },
+        {
+          "name": "AppointmentConfirmedEvent",
+          "trigger": "Appointment is confirmed",
+          "payload": ["appointmentId", "confirmedBy"],
+          "subscribers": ["Notification"]
+        },
+        {
+          "name": "AppointmentCancelledEvent",
+          "trigger": "Appointment is cancelled",
+          "payload": ["appointmentId", "cancelledBy", "reason"],
+          "subscribers": ["Notification", "Calendar"]
+        },
+        {
+          "name": "AppointmentConflictDetectedEvent",
+          "trigger": "Scheduling conflict is detected",
+          "payload": ["appointmentId", "conflictingAppointmentIds", "detectedAt"],
+          "subscribers": ["Notification", "ConflictResolver"]
+        }
+      ],
+      "deadline": [
+        {
+          "name": "DeadlineCreatedEvent",
+          "trigger": "Deadline is created",
+          "payload": ["deadlineId", "caseId", "title", "dueDate", "priority"],
+          "subscribers": ["Notification", "Calendar"]
+        },
+        {
+          "name": "DeadlineApproachingEvent",
+          "trigger": "Deadline is within warning threshold",
+          "payload": ["deadlineId", "caseId", "title", "dueDate", "daysRemaining"],
+          "subscribers": ["Notification"]
+        },
+        {
+          "name": "DeadlineDueTodayEvent",
+          "trigger": "Deadline is due today",
+          "payload": ["deadlineId", "caseId", "title"],
+          "subscribers": ["Notification"]
+        },
+        {
+          "name": "DeadlineOverdueEvent",
+          "trigger": "Deadline has passed",
+          "payload": ["deadlineId", "caseId", "title", "dueDate", "daysOverdue"],
+          "subscribers": ["Notification", "Escalation"]
+        },
+        {
+          "name": "DeadlineCompletedEvent",
+          "trigger": "Deadline is completed",
+          "payload": ["deadlineId", "caseId", "completedBy", "wasOverdue"],
+          "subscribers": ["Notification", "Analytics"]
+        }
+      ]
+    }
+  },
+  "workflows": [
+    {
+      "id": "lead-to-opportunity",
+      "name": "Lead to Opportunity Workflow",
+      "description": "Complete flow from lead capture to opportunity creation",
+      "steps": [
+        {
+          "order": 1,
+          "action": "Lead Created",
+          "event": "LeadCreatedEvent",
+          "context": "crm"
+        },
+        {
+          "order": 2,
+          "action": "AI Scoring",
+          "event": "LeadScoredEvent",
+          "context": "intelligence"
+        },
+        {
+          "order": 3,
+          "action": "Lead Qualification",
+          "event": "LeadQualifiedEvent",
+          "context": "crm"
+        },
+        {
+          "order": 4,
+          "action": "Lead Conversion",
+          "event": "LeadConvertedEvent",
+          "context": "crm"
+        },
+        {
+          "order": 5,
+          "action": "Contact Created",
+          "event": "ContactCreatedEvent",
+          "context": "crm"
+        },
+        {
+          "order": 6,
+          "action": "Account Created/Associated",
+          "event": "AccountCreatedEvent",
+          "context": "crm"
+        },
+        {
+          "order": 7,
+          "action": "Opportunity Created",
+          "event": "OpportunityCreatedEvent",
+          "context": "crm"
+        }
+      ]
+    },
+    {
+      "id": "opportunity-pipeline",
+      "name": "Opportunity Pipeline Workflow",
+      "description": "Pipeline stages from prospecting to close",
+      "steps": [
+        {
+          "order": 1,
+          "stage": "PROSPECTING",
+          "description": "Initial outreach and discovery"
+        },
+        {
+          "order": 2,
+          "stage": "QUALIFICATION",
+          "description": "Budget, authority, need, timeline validation"
+        },
+        {
+          "order": 3,
+          "stage": "NEEDS_ANALYSIS",
+          "description": "Deep dive into requirements"
+        },
+        {
+          "order": 4,
+          "stage": "PROPOSAL",
+          "description": "Solution presentation and pricing"
+        },
+        {
+          "order": 5,
+          "stage": "NEGOTIATION",
+          "description": "Terms and contract negotiation"
+        },
+        {
+          "order": 6,
+          "stage": "CLOSED_WON or CLOSED_LOST",
+          "description": "Final outcome"
+        }
+      ]
+    },
+    {
+      "id": "case-lifecycle",
+      "name": "Legal Case Lifecycle",
+      "description": "Case management from intake to closure",
+      "steps": [
+        {
+          "order": 1,
+          "status": "OPEN",
+          "description": "Case created and assigned"
+        },
+        {
+          "order": 2,
+          "status": "IN_PROGRESS",
+          "description": "Active work on case"
+        },
+        {
+          "order": 3,
+          "status": "ON_HOLD",
+          "description": "Waiting for external action",
+          "optional": true
+        },
+        {
+          "order": 4,
+          "status": "CLOSED",
+          "description": "Case resolved"
+        }
+      ]
+    }
+  ],
+  "architectureLayers": {
+    "domain": {
+      "package": "packages/domain",
+      "description": "Pure business logic with no infrastructure dependencies",
+      "contents": ["Entities", "Value Objects", "Aggregates", "Domain Events", "Domain Services", "Repository Interfaces"]
+    },
+    "application": {
+      "package": "packages/application",
+      "description": "Use cases and application services orchestrating domain logic",
+      "contents": ["Use Cases", "Application Services", "Port Interfaces", "Application Errors"],
+      "ports": {
+        "repositories": ["LeadRepositoryPort", "ContactRepositoryPort", "AccountRepositoryPort", "OpportunityRepositoryPort", "TaskRepositoryPort"],
+        "external": ["AIServicePort", "AuthServicePort", "CachePort", "EventBusPort", "CalendarServicePort"]
+      }
+    },
+    "adapters": {
+      "package": "packages/adapters",
+      "description": "Infrastructure implementations for ports",
+      "contents": ["Prisma Repositories", "In-Memory Repositories", "External API Clients", "Event Bus Implementations"]
+    },
+    "apps": {
+      "packages": ["apps/web", "apps/api", "apps/ai-worker", "apps/project-tracker"],
+      "description": "Composition root wiring all layers together",
+      "contents": ["tRPC Routers", "Next.js Pages", "AI Worker Agents", "Dashboard"]
+    }
+  },
+  "searchIndex": {
+    "terms": {
+      "lead": ["Lead", "LeadId", "LeadScore", "lead-management", "LeadCreatedEvent", "LeadScoredEvent", "LeadConvertedEvent"],
+      "contact": ["Contact", "ContactId", "contact-management", "ContactCreatedEvent", "ContactAccountAssociatedEvent"],
+      "account": ["Account", "AccountId", "account-management", "AccountCreatedEvent", "organization", "company"],
+      "opportunity": ["Opportunity", "OpportunityId", "opportunity-management", "deal", "pipeline", "OpportunityWonEvent", "OpportunityLostEvent"],
+      "task": ["Task", "TaskId", "task-management", "activity", "follow-up", "TaskCompletedEvent"],
+      "case": ["Case", "CaseId", "case-management", "matter", "legal", "CaseTask", "CaseCreatedEvent"],
+      "appointment": ["Appointment", "AppointmentId", "scheduling", "meeting", "hearing", "consultation", "TimeSlot"],
+      "deadline": ["Deadline", "DeadlineId", "deadline-management", "court deadline", "filing", "DeadlineRule"],
+      "scoring": ["LeadScore", "AIServicePort", "ai-scoring", "confidence", "tier", "LeadScoredEvent"],
+      "conversion": ["convert", "LeadConvertedEvent", "ContactConvertedFromLeadEvent", "lead-to-opportunity"],
+      "pipeline": ["stage", "PROSPECTING", "QUALIFICATION", "NEGOTIATION", "CLOSED_WON", "CLOSED_LOST", "OpportunityStageChangedEvent"],
+      "event": ["DomainEvent", "domain events", "event-driven", "EventBusPort"],
+      "repository": ["repository", "LeadRepository", "ContactRepository", "AccountRepository", "RepositoryPort"],
+      "hexagonal": ["hexagonal architecture", "ports and adapters", "domain layer", "application layer", "adapters layer"],
+      "ddd": ["domain-driven design", "aggregate", "bounded context", "value object", "entity"]
+    }
+  }
+}

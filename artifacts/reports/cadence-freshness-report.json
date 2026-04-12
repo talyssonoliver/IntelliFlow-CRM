@@ -1,0 +1,124 @@
+{
+  "audit_metadata": {
+    "generated_at": "2026-02-28T00:49:39.152Z",
+    "audit_type": "CADENCE_FRESHNESS_CHECK",
+    "continuous_tasks_checked": 5
+  },
+  "summary": {
+    "total": 5,
+    "fresh": 4,
+    "stale": 1,
+    "missing": 0,
+    "freshness_score": "80%"
+  },
+  "tasks": [
+    {
+      "task_id": "EXP-REPORTS-001",
+      "description": "Project Status & Tracking Reports (Continuous)",
+      "cadence": "daily:1d",
+      "threshold_days": 1,
+      "status": "fresh",
+      "artifacts": [
+        {
+          "path": "artifacts/reports/status-snapshot.json",
+          "last_modified": "2026-02-28T00:49:37.683Z",
+          "age_days": 0,
+          "threshold_days": 1,
+          "status": "fresh"
+        },
+        {
+          "path": "artifacts/reports/completed-task-ids.txt",
+          "last_modified": "2026-02-28T00:49:37.684Z",
+          "age_days": 0,
+          "threshold_days": 1,
+          "status": "fresh"
+        }
+      ]
+    },
+    {
+      "task_id": "EXP-REPORTS-002",
+      "description": "Technical Debt & Quality Tracking (Continuous)",
+      "cadence": "weekly:7d",
+      "threshold_days": 7,
+      "status": "fresh",
+      "artifacts": [
+        {
+          "path": "artifacts/reports/phantom-completion-audit.json",
+          "last_modified": "2026-02-28T00:36:35.087Z",
+          "age_days": 0,
+          "threshold_days": 7,
+          "status": "fresh"
+        }
+      ]
+    },
+    {
+      "task_id": "EXP-REPORTS-003",
+      "description": "Risk Management & Compliance Tracking",
+      "cadence": "quarterly:90d",
+      "threshold_days": 90,
+      "status": "fresh",
+      "artifacts": [
+        {
+          "path": "artifacts/reports/risk-register.csv",
+          "last_modified": "2026-02-23T20:36:15.382Z",
+          "age_days": 4,
+          "threshold_days": 90,
+          "status": "fresh"
+        },
+        {
+          "path": "artifacts/reports/gdpr-compliance.md",
+          "last_modified": "2026-02-23T20:37:27.986Z",
+          "age_days": 4,
+          "threshold_days": 90,
+          "status": "fresh"
+        }
+      ]
+    },
+    {
+      "task_id": "EXP-REPORTS-004",
+      "description": "Sprint Audit System (Continuous)",
+      "cadence": "per-sprint:14d",
+      "threshold_days": 14,
+      "status": "stale",
+      "artifacts": [
+        {
+          "path": "artifacts/reports/sprint-audit/sprint-11-latest/audit.json",
+          "last_modified": "2025-12-31T17:35:58.540Z",
+          "age_days": 58,
+          "threshold_days": 14,
+          "status": "stale"
+        },
+        {
+          "path": "artifacts/reports/sprint-audit/sprint-11-latest/verdict.json",
+          "last_modified": "2025-12-31T17:35:58.607Z",
+          "age_days": 58,
+          "threshold_days": 14,
+          "status": "stale"
+        }
+      ]
+    },
+    {
+      "task_id": "EXP-REPORTS-005",
+      "description": "Build & Validation Reports (Continuous)",
+      "cadence": "per-build:1d",
+      "threshold_days": 1,
+      "status": "fresh",
+      "artifacts": [
+        {
+          "path": "artifacts/reports/turbo-validation.json",
+          "last_modified": "2026-02-28T00:36:45.856Z",
+          "age_days": 0,
+          "threshold_days": 1,
+          "status": "fresh"
+        },
+        {
+          "path": "artifacts/reports/audit-report.json",
+          "last_modified": "2026-02-28T00:37:01.455Z",
+          "age_days": 0,
+          "threshold_days": 1,
+          "status": "fresh"
+        }
+      ]
+    }
+  ]
+}

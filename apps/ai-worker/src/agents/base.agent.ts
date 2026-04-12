@@ -1,10 +1,21 @@
 import { ChatOpenAI } from '@langchain/openai';
-import { ChatOllama } from '@langchain/community/chat_models/ollama';
+import { ChatOllama } from '@langchain/ollama';
 import { BaseMessage, HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { z } from 'zod';
 import { aiConfig } from '../config/ai.config';
 import { costTracker } from '../utils/cost-tracker';
+import { countMessagesTokens, countTokens } from '../utils/token-counter';
+import { getOpenAIClientSettings } from '../utils/openai-client';
+import { ConversationRecordCallbackHandler } from '../callbacks/conversation-record.handler';
 import pino from 'pino';
+
+/**
+ * Interface for LLM model invocation
+ * Supports both real LangChain models and mock implementations
+ */
+interface LLMModel {
+  invoke(input: BaseMessage[] | string): Promise<{ content: string | unknown[] }>;
+}
 
 const logger = pino({
   name: 'base-agent',
@@ -18,6 +29,12 @@ export interface AgentContext {
   userId?: string;
   sessionId?: string;
   metadata?: Record<string, unknown>;
+  // Crew-specific context properties
+  crewTask?: string;
+  expectedOutput?: string;
+  role?: 'manager' | 'worker';
+  workers?: string[];
+  managerOutput?: unknown;
 }
 
 /**
@@ -64,9 +81,12 @@ export interface BaseAgentConfig {
  * Provides common functionality for agent execution, error handling, and monitoring
  */
 export abstract class BaseAgent<TInput = unknown, TOutput = unknown> {
-  protected model: ChatOpenAI | ChatOllama;
+  protected model: LLMModel;
   protected config: BaseAgentConfig;
   protected executionCount: number = 0;
+
+  /** Optional callback handler for recording LLM calls to the database. */
+  private conversationCallback?: ConversationRecordCallbackHandler;
 
   constructor(config: BaseAgentConfig) {
     this.config = {
@@ -78,19 +98,28 @@ export abstract class BaseAgent<TInput = unknown, TOutput = unknown> {
 
     // Initialize the appropriate model
     if (aiConfig.provider === 'openai') {
+      const openAIClientSettings = getOpenAIClientSettings();
       this.model = new ChatOpenAI({
         modelName: aiConfig.openai.model,
         temperature: aiConfig.openai.temperature,
         maxTokens: aiConfig.openai.maxTokens,
         timeout: aiConfig.openai.timeout,
-        openAIApiKey: aiConfig.openai.apiKey,
+        apiKey: openAIClientSettings.apiKey,
+        configuration: openAIClientSettings.configuration,
       });
-    } else {
+    } else if (aiConfig.provider === 'mock') {
+      // Mock provider for testing - no real API calls
+      this.model = {
+        invoke: async () => ({ content: 'Mock response' }),
+      };
+    } else if (aiConfig.provider === 'ollama') {
       this.model = new ChatOllama({
         baseUrl: aiConfig.ollama.baseUrl,
         model: aiConfig.ollama.model,
         temperature: aiConfig.ollama.temperature,
       });
+    } else {
+      throw new Error(`Unknown AI provider: ${aiConfig.provider}`);
     }
 
     logger.info(
@@ -200,8 +229,8 @@ export abstract class BaseAgent<TInput = unknown, TOutput = unknown> {
    * Can be overridden by subclasses for custom confidence calculation
    */
   protected async calculateConfidence(
-    task: AgentTask<TInput, TOutput>,
-    output: TOutput
+    _task: AgentTask<TInput, TOutput>,
+    _output: TOutput
   ): Promise<number> {
     // Default confidence calculation
     // Subclasses should override this for more sophisticated confidence scoring
@@ -233,23 +262,51 @@ You MUST NOT:
   }
 
   /**
+   * Attach a conversation-record callback handler so LLM calls are
+   * persisted to the database for the Agent Logs page.
+   *
+   * Called by AIWorker.processJob() when agent-status context is available.
+   */
+  public attachConversationRecording(options: {
+    sessionId: string;
+    tenantId: string;
+    model?: string;
+  }): void {
+    this.conversationCallback = new ConversationRecordCallbackHandler(options);
+  }
+
+  /**
    * Invoke the LLM with messages
    */
   protected async invokeLLM(messages: BaseMessage[]): Promise<string> {
     const startTime = Date.now();
 
+    // Notify callback handler of LLM start (input messages)
+    if (this.conversationCallback) {
+      const prompt = messages.map((m) => `[${m._getType()}] ${m.content}`).join('\n');
+      await this.conversationCallback
+        .handleLLMStart(
+          { id: ['langchain', 'llms', this.config.name], lc: 1, type: 'not_implemented' },
+          [prompt],
+          `run-${Date.now()}`
+        )
+        .catch(() => {});
+    }
+
     try {
       const response = await this.model.invoke(messages);
       const duration = Date.now() - startTime;
+      const responseText = response.content as string;
 
-      // Track costs for OpenAI
+      // Track costs for OpenAI with accurate token counting
       if (aiConfig.provider === 'openai' && aiConfig.costTracking.enabled) {
-        // Note: Token counting would need to be implemented
-        // This is a placeholder for demonstration
+        const inputTokens = countMessagesTokens(messages, aiConfig.openai.model);
+        const outputTokens = countTokens(responseText, aiConfig.openai.model);
+
         costTracker.recordUsage({
           model: aiConfig.openai.model,
-          inputTokens: 0, // Would need actual token counting
-          outputTokens: 0,
+          inputTokens,
+          outputTokens,
           operationType: `agent:${this.config.name}`,
           metadata: {
             duration,
@@ -257,8 +314,20 @@ You MUST NOT:
         });
       }
 
-      return response.content as string;
+      // Notify callback handler of LLM end (response)
+      if (this.conversationCallback) {
+        await this.conversationCallback
+          .handleLLMEnd({ generations: [[{ text: responseText }]] }, `run-${Date.now()}`)
+          .catch(() => {});
+      }
+
+      return responseText;
     } catch (error) {
+      // Notify callback handler of LLM error
+      if (this.conversationCallback && error instanceof Error) {
+        await this.conversationCallback.handleLLMError(error, `run-${Date.now()}`).catch(() => {});
+      }
+
       logger.error(
         {
           agentName: this.config.name,

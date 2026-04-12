@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "taskId": "ENV-015-AI",
+  "flags": [
+    {
+      "key": "ai.worker.enabled",
+      "description": "Enable AI worker processing pipeline",
+      "enabled": true,
+      "rolloutPercent": 0,
+      "variants": ["control", "treatment"],
+      "rules": [
+        {
+          "when": { "environment": "development" },
+          "then": { "enabled": true, "variant": "control" }
+        }
+      ]
+    },
+    {
+      "key": "analytics.enabled",
+      "description": "Enable privacy-first analytics event emission",
+      "enabled": true,
+      "rolloutPercent": 0,
+      "rules": [
+        { "when": { "environment": "development" }, "then": { "enabled": true } }
+      ]
+    }
+  ],
+  "notes": "Sprint 0 config is deterministic and conservative; predictive rollout is deferred."
+}
+

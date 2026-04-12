@@ -1,0 +1,99 @@
+# Rate Limiting Configuration
+# IntelliFlow CRM API Rate Limiting Settings
+# Task: IFC-077
+
+version: "1.0"
+generated_at: "2025-12-21T16:30:00Z"
+
+# Default rate limits (requests per window)
+defaults:
+  window_ms: 60000  # 1 minute
+  max_requests: 100
+
+# Endpoint-specific limits
+endpoints:
+  # Public endpoints - stricter limits
+  public:
+    window_ms: 60000
+    max_requests: 50
+    applies_to:
+      - "/api/health"
+      - "/api/public/*"
+
+  # Authentication endpoints - very strict
+  auth:
+    window_ms: 60000
+    max_requests: 10
+    applies_to:
+      - "/api/auth/login"
+      - "/api/auth/register"
+      - "/api/auth/reset-password"
+      - "/api/auth/verify-email"
+
+  # Read-only endpoints - lenient
+  read:
+    window_ms: 60000
+    max_requests: 1000
+    applies_to:
+      - "GET /api/leads/*"
+      - "GET /api/contacts/*"
+      - "GET /api/opportunities/*"
+
+  # Write endpoints - moderate
+  write:
+    window_ms: 60000
+    max_requests: 100
+    applies_to:
+      - "POST /api/*"
+      - "PUT /api/*"
+      - "PATCH /api/*"
+      - "DELETE /api/*"
+
+  # AI endpoints - resource intensive
+  ai:
+    window_ms: 60000
+    max_requests: 20
+    applies_to:
+      - "/api/ai/score"
+      - "/api/ai/predict"
+      - "/api/ai/generate"
+
+# Rate limit bypass (for internal services)
+bypass:
+  enabled: true
+  header: "X-Internal-Service-Key"
+  allowed_ips:
+    - "127.0.0.1"
+    - "10.0.0.0/8"
+    - "172.16.0.0/12"
+
+# Response headers
+headers:
+  enabled: true
+  rate_limit: "X-RateLimit-Limit"
+  remaining: "X-RateLimit-Remaining"
+  reset: "X-RateLimit-Reset"
+
+# Storage backend
+storage:
+  development:
+    type: "memory"
+    cleanup_interval_ms: 60000
+
+  production:
+    type: "redis"
+    url: "${UPSTASH_REDIS_URL}"
+    key_prefix: "ratelimit:"
+
+# DDoS protection
+ddos_protection:
+  enabled: true
+  burst_limit: 500       # Max requests in burst
+  burst_window_ms: 1000  # 1 second
+  block_duration_ms: 300000  # 5 minutes ban
+
+# Monitoring
+monitoring:
+  log_exceeded: true
+  metrics_enabled: true
+  alert_threshold: 0.8  # Alert when 80% of limit reached

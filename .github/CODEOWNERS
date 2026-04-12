@@ -1,0 +1,248 @@
+# CODEOWNERS - IntelliFlow CRM
+# This file defines code ownership for automated review assignments
+# Reference: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owners for everything in the repo
+# These users will be requested for review when someone opens a pull request
+* @intelliflow-crm/core-team
+
+# ============================================================================
+# SECURITY & INFRASTRUCTURE
+# ============================================================================
+
+# Security policies and scanning configurations
+/SECURITY.md @intelliflow-crm/security-team
+/.github/workflows/security.yml @intelliflow-crm/security-team
+/infra/security/ @intelliflow-crm/security-team @intelliflow-crm/devops-team
+
+# Infrastructure and deployment
+/infra/ @intelliflow-crm/devops-team
+/docker-compose.yml @intelliflow-crm/devops-team
+/infra/docker/ @intelliflow-crm/devops-team
+/infra/terraform/ @intelliflow-crm/devops-team
+/infra/monitoring/ @intelliflow-crm/devops-team @intelliflow-crm/observability-team
+
+# CI/CD workflows
+/.github/workflows/ @intelliflow-crm/devops-team
+/.github/actions/ @intelliflow-crm/devops-team
+
+# Secrets and environment configuration
+/.env.example @intelliflow-crm/security-team @intelliflow-crm/devops-team
+/infra/supabase/ @intelliflow-crm/backend-team @intelliflow-crm/devops-team
+
+# ============================================================================
+# BACKEND & API
+# ============================================================================
+
+# Backend applications
+/apps/api/ @intelliflow-crm/backend-team
+/apps/ai-worker/ @intelliflow-crm/ai-team @intelliflow-crm/backend-team
+
+# Database and ORM
+/packages/db/ @intelliflow-crm/backend-team
+/packages/db/prisma/schema.prisma @intelliflow-crm/backend-team @intelliflow-crm/architecture-team
+/supabase/migrations/ @intelliflow-crm/backend-team
+
+# Domain layer (requires architecture review)
+/packages/domain/ @intelliflow-crm/architecture-team @intelliflow-crm/backend-team
+/packages/application/ @intelliflow-crm/architecture-team @intelliflow-crm/backend-team
+/packages/adapters/ @intelliflow-crm/backend-team
+
+# API layer
+/packages/api-client/ @intelliflow-crm/backend-team @intelliflow-crm/frontend-team
+
+# Validation schemas
+/packages/validators/ @intelliflow-crm/backend-team @intelliflow-crm/frontend-team
+
+# ============================================================================
+# FRONTEND
+# ============================================================================
+
+# Web application
+/apps/web/ @intelliflow-crm/frontend-team
+
+# UI components
+/packages/ui/ @intelliflow-crm/frontend-team
+
+# Shared components
+/packages/ui/src/components/ @intelliflow-crm/frontend-team
+
+# Styling and themes
+/packages/ui/src/styles/ @intelliflow-crm/frontend-team
+*.css @intelliflow-crm/frontend-team
+*.scss @intelliflow-crm/frontend-team
+
+# ============================================================================
+# AI & MACHINE LEARNING
+# ============================================================================
+
+# AI workers and chains
+/apps/ai-worker/ @intelliflow-crm/ai-team
+/apps/ai-worker/src/chains/ @intelliflow-crm/ai-team
+/apps/ai-worker/src/agents/ @intelliflow-crm/ai-team
+
+# AI configurations
+/apps/ai-worker/src/config/ @intelliflow-crm/ai-team @intelliflow-crm/backend-team
+
+# AI prompts and templates
+/apps/ai-worker/src/prompts/ @intelliflow-crm/ai-team
+
+# ============================================================================
+# TESTING
+# ============================================================================
+
+# Test infrastructure
+/tests/ @intelliflow-crm/qa-team
+/vitest.config.ts @intelliflow-crm/qa-team @intelliflow-crm/backend-team
+/playwright.config.ts @intelliflow-crm/qa-team @intelliflow-crm/frontend-team
+
+# E2E tests
+/tests/e2e/ @intelliflow-crm/qa-team @intelliflow-crm/frontend-team
+
+# Integration tests
+/tests/integration/ @intelliflow-crm/qa-team @intelliflow-crm/backend-team
+
+# Architecture tests
+/tests/architecture/ @intelliflow-crm/architecture-team
+
+# ============================================================================
+# DOCUMENTATION
+# ============================================================================
+
+# Documentation site
+/docs/ @intelliflow-crm/documentation-team
+
+# Architecture Decision Records (requires architecture team approval)
+/docs/planning/adr/ @intelliflow-crm/architecture-team
+
+# Domain model documentation
+/docs/domain/ @intelliflow-crm/architecture-team @intelliflow-crm/backend-team
+
+# Operations runbooks
+/docs/operations/ @intelliflow-crm/devops-team @intelliflow-crm/observability-team
+
+# Security documentation
+/docs/security/ @intelliflow-crm/security-team
+
+# API documentation
+/docs/api/ @intelliflow-crm/backend-team
+
+# ============================================================================
+# PROJECT MANAGEMENT
+# ============================================================================
+
+# Sprint planning and tracking
+/Sprint_plan.csv @intelliflow-crm/product-team @intelliflow-crm/core-team
+/Readme.md @intelliflow-crm/product-team
+/apps/project-tracker/ @intelliflow-crm/product-team
+
+# ============================================================================
+# BUILD & TOOLING
+# ============================================================================
+
+# Monorepo configuration
+/turbo.json @intelliflow-crm/devops-team
+/pnpm-workspace.yaml @intelliflow-crm/devops-team
+/package.json @intelliflow-crm/devops-team
+
+# TypeScript configuration
+/tsconfig.json @intelliflow-crm/backend-team @intelliflow-crm/frontend-team
+/**/tsconfig.json @intelliflow-crm/backend-team @intelliflow-crm/frontend-team
+
+# Linting and formatting
+/.eslintrc.js @intelliflow-crm/core-team
+/.prettierrc @intelliflow-crm/core-team
+/.editorconfig @intelliflow-crm/core-team
+
+# Git configuration
+/.gitignore @intelliflow-crm/devops-team
+/.gitattributes @intelliflow-crm/devops-team
+
+# Husky hooks
+/.husky/ @intelliflow-crm/devops-team
+
+# Custom scripts
+/scripts/ @intelliflow-crm/devops-team
+
+# Tools
+/tools/ @intelliflow-crm/devops-team
+
+# ============================================================================
+# ARTIFACTS & REPORTS
+# ============================================================================
+
+# Artifacts directory (require review for changes to structure)
+/artifacts/ @intelliflow-crm/devops-team
+/artifacts/misc/ @intelliflow-crm/devops-team
+
+# ============================================================================
+# SPECIAL FILES
+# ============================================================================
+
+# Claude AI configuration
+/CLAUDE.md @intelliflow-crm/core-team @intelliflow-crm/architecture-team
+/.claude/ @intelliflow-crm/core-team
+
+# GitHub Copilot configuration
+/.github/copilot/ @intelliflow-crm/core-team
+
+# License
+/LICENSE @intelliflow-crm/legal-team
+
+# Contributing guidelines
+/CONTRIBUTING.md @intelliflow-crm/core-team
+
+# Code of Conduct
+/CODE_OF_CONDUCT.md @intelliflow-crm/core-team
+
+# ============================================================================
+# FILE TYPE SPECIFIC OWNERSHIP
+# ============================================================================
+
+# Dockerfile changes require DevOps review
+**/Dockerfile* @intelliflow-crm/devops-team
+
+# Docker Compose files
+**/docker-compose*.yml @intelliflow-crm/devops-team
+
+# Kubernetes manifests
+**/*.k8s.yaml @intelliflow-crm/devops-team
+**/*.k8s.yml @intelliflow-crm/devops-team
+
+# Terraform files
+**/*.tf @intelliflow-crm/devops-team
+
+# SQL migrations
+**/*.sql @intelliflow-crm/backend-team
+**/migrations/ @intelliflow-crm/backend-team
+
+# Prisma schema
+**/schema.prisma @intelliflow-crm/backend-team @intelliflow-crm/architecture-team
+
+# ============================================================================
+# NOTES
+# ============================================================================
+
+# Team Definitions (configure in GitHub Organization Settings):
+#
+# @intelliflow-crm/core-team - All core contributors
+# @intelliflow-crm/architecture-team - Architecture decisions
+# @intelliflow-crm/backend-team - Backend engineers
+# @intelliflow-crm/frontend-team - Frontend engineers
+# @intelliflow-crm/ai-team - AI/ML engineers
+# @intelliflow-crm/devops-team - DevOps/Infrastructure
+# @intelliflow-crm/security-team - Security engineers
+# @intelliflow-crm/qa-team - QA engineers
+# @intelliflow-crm/documentation-team - Technical writers
+# @intelliflow-crm/observability-team - Monitoring/observability
+# @intelliflow-crm/product-team - Product management
+# @intelliflow-crm/legal-team - Legal/compliance
+#
+# For solo/small team development, you can replace teams with individual usernames
+# Example: * @username
+#
+# CODEOWNERS file rules:
+# - Last matching pattern takes precedence
+# - Patterns are matched top to bottom
+# - Use # for comments
+# - Use @username or @org/team-name for owners

@@ -1,0 +1,104 @@
+{
+  "generatedAt": "2026-04-07T21:18:51.620Z",
+  "resolvedCount": 0,
+  "backfilledCount": 12,
+  "skippedCount": 0,
+  "entries": [
+    {
+      "taskId": "ENV-003-AI",
+      "blockerCreatedAt": "2025-12-21T17:46:36.409Z",
+      "status": "Completed",
+      "action": "backfilled",
+      "reason": "Resolved blocker was missing canonical resolution evidence",
+      "attestationPath": ".specify/sprints/sprint-0/attestations/ENV-003-AI/ENV-003-AI-attestation.json"
+    },
+    {
+      "taskId": "ENV-004-AI",
+      "blockerCreatedAt": "2025-12-21T17:50:33.105Z",
+      "status": "Completed",
+      "action": "backfilled",
+      "reason": "Resolved blocker was missing canonical resolution evidence",
+      "attestationPath": ".specify/sprints/sprint-0/attestations/ENV-004-AI/ENV-004-AI-attestation.json"
+    },
+    {
+      "taskId": "ENV-006-AI",
+      "blockerCreatedAt": "2025-12-21T17:56:09.634Z",
+      "status": "Completed",
+      "action": "backfilled",
+      "reason": "Resolved blocker was missing canonical resolution evidence",
+      "attestationPath": ".specify/sprints/sprint-0/attestations/ENV-006-AI/ENV-006-AI-attestation.json"
+    },
+    {
+      "taskId": "EXC-INIT-001",
+      "blockerCreatedAt": "2025-12-21T18:10:24.130Z",
+      "status": "Completed",
+      "action": "backfilled",
+      "reason": "Resolved blocker was missing canonical resolution evidence",
+      "attestationPath": ".specify/sprints/sprint-0/attestations/EXC-INIT-001/EXC-INIT-001-attestation.json"
+    },
+    {
+      "taskId": "ENV-001-AI",
+      "blockerCreatedAt": "2025-12-21T18:13:30.409Z",
+      "status": "Completed",
+      "action": "backfilled",
+      "reason": "Resolved blocker was missing canonical resolution evidence",
+      "attestationPath": ".specify/sprints/sprint-0/attestations/ENV-001-AI/ENV-001-AI-attestation.json"
+    },
+    {
+      "taskId": "ENV-002-AI",
+      "blockerCreatedAt": "2025-12-21T18:15:26.057Z",
+      "status": "Completed",
+      "action": "backfilled",
+      "reason": "Resolved blocker was missing canonical resolution evidence",
+      "attestationPath": ".specify/sprints/sprint-0/attestations/ENV-002-AI/ENV-002-AI-attestation.json"
+    },
+    {
+      "taskId": "ENV-005-AI",
+      "blockerCreatedAt": "2025-12-21T18:20:33.946Z",
+      "status": "Completed",
+      "action": "backfilled",
+      "reason": "Resolved blocker was missing canonical resolution evidence",
+      "attestationPath": ".specify/sprints/sprint-0/attestations/ENV-005-AI/ENV-005-AI-attestation.json"
+    },
+    {
+      "taskId": "IFC-008",
+      "blockerCreatedAt": "2025-12-22T21:13:40.985Z",
+      "status": "Completed",
+      "action": "backfilled",
+      "reason": "Resolved blocker was missing canonical resolution evidence",
+      "attestationPath": ".specify/sprints/sprint-2/attestations/IFC-008/IFC-008-attestation.json"
+    },
+    {
+      "taskId": "IFC-101",
+      "blockerCreatedAt": "2025-12-22T21:16:41.023Z",
+      "status": "Completed",
+      "action": "backfilled",
+      "reason": "Resolved blocker was missing canonical resolution evidence",
+      "attestationPath": ".specify/sprints/sprint-2/attestations/IFC-101/IFC-101-attestation.json"
+    },
+    {
+      "taskId": "IFC-102",
+      "blockerCreatedAt": "2025-12-22T21:18:18.832Z",
+      "status": "Completed",
+      "action": "backfilled",
+      "reason": "Resolved blocker was missing canonical resolution evidence",
+      "attestationPath": ".specify/sprints/sprint-2/attestations/IFC-102/attestation.json"
+    },
+    {
+      "taskId": "IFC-103",
+      "blockerCreatedAt": "2025-12-22T21:19:16.036Z",
+      "status": "Completed",
+      "action": "backfilled",
+      "reason": "Resolved blocker was missing canonical resolution evidence",
+      "attestationPath": ".specify/sprints/sprint-2/attestations/IFC-103/IFC-103-attestation.json"
+    },
+    {
+      "taskId": "IFC-118",
+      "blockerCreatedAt": "2025-12-22T21:20:06.909Z",
+      "status": "Completed",
+      "action": "backfilled",
+      "reason": "Resolved blocker was missing canonical resolution evidence",
+      "attestationPath": ".specify/sprints/sprint-8/attestations/IFC-118/attestation.json"
+    }
+  ]
+}

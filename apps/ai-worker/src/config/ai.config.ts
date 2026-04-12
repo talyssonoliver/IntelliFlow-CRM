@@ -5,7 +5,7 @@ import { z } from 'zod';
  * Supports both OpenAI (production) and Ollama (local development)
  */
 
-export const AIProviderSchema = z.enum(['openai', 'ollama']);
+export const AIProviderSchema = z.enum(['openai', 'ollama', 'mock']);
 export type AIProvider = z.infer<typeof AIProviderSchema>;
 
 export const AIConfigSchema = z.object({
@@ -15,6 +15,8 @@ export const AIConfigSchema = z.object({
   // OpenAI Configuration
   openai: z.object({
     apiKey: z.string().optional(),
+    // Optional OpenAI-compatible endpoint (e.g., vLLM)
+    baseUrl: z.url().optional(),
     model: z.string().default('gpt-4-turbo-preview'),
     temperature: z.number().min(0).max(2).default(0.7),
     maxTokens: z.number().positive().default(2000),
@@ -23,7 +25,7 @@ export const AIConfigSchema = z.object({
 
   // Ollama Configuration (local development)
   ollama: z.object({
-    baseUrl: z.string().url().default('http://localhost:11434'),
+    baseUrl: z.url().default('http://localhost:11434'),
     model: z.string().default('mistral'),
     temperature: z.number().min(0).max(2).default(0.7),
     timeout: z.number().positive().default(60000), // 60 seconds
@@ -32,7 +34,7 @@ export const AIConfigSchema = z.object({
   // Cost tracking
   costTracking: z.object({
     enabled: z.boolean().default(true),
-    warningThreshold: z.number().positive().default(10.0), // $10 USD
+    warningThreshold: z.number().positive().default(10), // $10 USD
     dailyLimit: z.number().positive().optional(),
   }),
 
@@ -61,39 +63,41 @@ export type AIConfig = z.infer<typeof AIConfigSchema>;
  */
 export function loadAIConfig(): AIConfig {
   const provider = (process.env.AI_PROVIDER || 'openai') as AIProvider;
+  const openAIBaseUrl = (process.env.OPENAI_BASE_URL || process.env.OPENAI_API_BASE || '').trim();
 
   const config: AIConfig = {
     provider,
 
     openai: {
       apiKey: process.env.OPENAI_API_KEY,
+      baseUrl: openAIBaseUrl || undefined,
       model: process.env.OPENAI_MODEL || 'gpt-4-turbo-preview',
-      temperature: parseFloat(process.env.OPENAI_TEMPERATURE || '0.7'),
-      maxTokens: parseInt(process.env.OPENAI_MAX_TOKENS || '2000', 10),
-      timeout: parseInt(process.env.OPENAI_TIMEOUT || '30000', 10),
+      temperature: Number.parseFloat(process.env.OPENAI_TEMPERATURE || '0.7'),
+      maxTokens: Number.parseInt(process.env.OPENAI_MAX_TOKENS || '2000', 10),
+      timeout: Number.parseInt(process.env.OPENAI_TIMEOUT || '30000', 10),
     },
 
     ollama: {
       baseUrl: process.env.OLLAMA_BASE_URL || 'http://localhost:11434',
       model: process.env.OLLAMA_MODEL || 'mistral',
-      temperature: parseFloat(process.env.OLLAMA_TEMPERATURE || '0.7'),
-      timeout: parseInt(process.env.OLLAMA_TIMEOUT || '60000', 10),
+      temperature: Number.parseFloat(process.env.OLLAMA_TEMPERATURE || '0.7'),
+      timeout: Number.parseInt(process.env.OLLAMA_TIMEOUT || '60000', 10),
     },
 
     costTracking: {
       enabled: process.env.COST_TRACKING_ENABLED !== 'false',
-      warningThreshold: parseFloat(process.env.COST_WARNING_THRESHOLD || '10.0'),
+      warningThreshold: Number.parseFloat(process.env.COST_WARNING_THRESHOLD || '10'),
       dailyLimit: process.env.COST_DAILY_LIMIT
-        ? parseFloat(process.env.COST_DAILY_LIMIT)
+        ? Number.parseFloat(process.env.COST_DAILY_LIMIT)
         : undefined,
     },
 
     performance: {
       cacheEnabled: process.env.AI_CACHE_ENABLED !== 'false',
-      cacheTTL: parseInt(process.env.AI_CACHE_TTL || '3600', 10),
-      rateLimitPerMinute: parseInt(process.env.AI_RATE_LIMIT || '60', 10),
-      retryAttempts: parseInt(process.env.AI_RETRY_ATTEMPTS || '3', 10),
-      retryDelay: parseInt(process.env.AI_RETRY_DELAY || '1000', 10),
+      cacheTTL: Number.parseInt(process.env.AI_CACHE_TTL || '3600', 10),
+      rateLimitPerMinute: Number.parseInt(process.env.AI_RATE_LIMIT || '60', 10),
+      retryAttempts: Number.parseInt(process.env.AI_RETRY_ATTEMPTS || '3', 10),
+      retryDelay: Number.parseInt(process.env.AI_RETRY_DELAY || '1000', 10),
     },
 
     features: {
@@ -111,9 +115,15 @@ export function loadAIConfig(): AIConfig {
 /**
  * Model pricing (USD per 1K tokens)
  * Used for cost tracking
+ *
+ * IFC-029: Added GPT-4o-mini pricing for <1s latency auto-response
  */
 export const MODEL_PRICING = {
   'gpt-4-turbo-preview': {
+    input: 0.01,
+    output: 0.03,
+  },
+  'gpt-4-turbo': {
     input: 0.01,
     output: 0.03,
   },
@@ -121,11 +131,20 @@ export const MODEL_PRICING = {
     input: 0.03,
     output: 0.06,
   },
+  // IFC-029: GPT-4o-mini for <1s auto-response latency
+  'gpt-4o-mini': {
+    input: 0.00015,
+    output: 0.0006,
+  },
+  'gpt-4o': {
+    input: 0.0025,
+    output: 0.01,
+  },
   'gpt-3.5-turbo': {
     input: 0.0005,
     output: 0.0015,
   },
-  'ollama': {
+  ollama: {
     input: 0,
     output: 0,
   },
@@ -136,11 +155,7 @@ export type ModelName = keyof typeof MODEL_PRICING;
 /**
  * Calculate cost for a given number of tokens
  */
-export function calculateCost(
-  model: string,
-  inputTokens: number,
-  outputTokens: number
-): number {
+export function calculateCost(model: string, inputTokens: number, outputTokens: number): number {
   const pricing = MODEL_PRICING[model as ModelName] || MODEL_PRICING['gpt-3.5-turbo'];
 
   const inputCost = (inputTokens / 1000) * pricing.input;
@@ -151,5 +166,8 @@ export function calculateCost(
 
 /**
  * Default configuration instance
+ *
+ * NOTE: This relies on env.ts being imported first in the ai-worker entry point
+ * so that process.env is populated before this module evaluates.
  */
 export const aiConfig = loadAIConfig();

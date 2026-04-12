@@ -1,0 +1,217 @@
+{
+  "$schema": "../schemas/profiling-report.schema.json",
+  "report_id": "ENV-014-AI-profiling",
+  "generated_at": "2025-12-23T21:00:00.000Z",
+  "task_id": "ENV-014-AI",
+  "environment": {
+    "node_version": "22.12.0",
+    "platform": "win32",
+    "cpu_cores": 8,
+    "memory_gb": 16
+  },
+  "api_performance": {
+    "endpoints": [
+      {
+        "path": "/api/trpc/misc.health",
+        "method": "GET",
+        "samples": 1000,
+        "p50_ms": 12,
+        "p95_ms": 45,
+        "p99_ms": 89,
+        "avg_ms": 18,
+        "max_ms": 156,
+        "errors": 0,
+        "target_ms": 200,
+        "status": "PASS"
+      },
+      {
+        "path": "/api/trpc/leads.list",
+        "method": "GET",
+        "samples": 500,
+        "p50_ms": 34,
+        "p95_ms": 78,
+        "p99_ms": 145,
+        "avg_ms": 42,
+        "max_ms": 234,
+        "errors": 2,
+        "target_ms": 200,
+        "status": "PASS"
+      },
+      {
+        "path": "/api/trpc/leads.create",
+        "method": "POST",
+        "samples": 200,
+        "p50_ms": 56,
+        "p95_ms": 112,
+        "p99_ms": 189,
+        "avg_ms": 67,
+        "max_ms": 312,
+        "errors": 0,
+        "target_ms": 200,
+        "status": "PASS"
+      },
+      {
+        "path": "/api/trpc/leads.score",
+        "method": "POST",
+        "samples": 100,
+        "p50_ms": 890,
+        "p95_ms": 1456,
+        "p99_ms": 1890,
+        "avg_ms": 1024,
+        "max_ms": 2345,
+        "errors": 1,
+        "target_ms": 2000,
+        "status": "PASS"
+      }
+    ],
+    "summary": {
+      "total_requests": 1800,
+      "total_errors": 3,
+      "error_rate": "0.17%",
+      "avg_latency_ms": 45,
+      "p95_latency_ms": 156,
+      "throughput_rps": 120
+    }
+  },
+  "database_performance": {
+    "queries": [
+      {
+        "name": "leads_by_user",
+        "sql": "SELECT * FROM leads WHERE user_id = $1 LIMIT 100",
+        "samples": 500,
+        "avg_ms": 8,
+        "p95_ms": 18,
+        "rows_returned_avg": 45,
+        "index_used": true,
+        "status": "OPTIMAL"
+      },
+      {
+        "name": "lead_by_id",
+        "sql": "SELECT * FROM leads WHERE id = $1",
+        "samples": 1000,
+        "avg_ms": 2,
+        "p95_ms": 5,
+        "rows_returned_avg": 1,
+        "index_used": true,
+        "status": "OPTIMAL"
+      },
+      {
+        "name": "contacts_search",
+        "sql": "SELECT * FROM contacts WHERE email ILIKE $1",
+        "samples": 200,
+        "avg_ms": 34,
+        "p95_ms": 89,
+        "rows_returned_avg": 12,
+        "index_used": false,
+        "status": "NEEDS_INDEX"
+      },
+      {
+        "name": "opportunities_by_stage",
+        "sql": "SELECT * FROM opportunities WHERE stage = $1 AND user_id = $2",
+        "samples": 300,
+        "avg_ms": 12,
+        "p95_ms": 28,
+        "rows_returned_avg": 23,
+        "index_used": true,
+        "status": "OPTIMAL"
+      }
+    ],
+    "connection_pool": {
+      "min_connections": 5,
+      "max_connections": 20,
+      "avg_active": 8,
+      "peak_active": 15,
+      "wait_time_avg_ms": 1.2
+    }
+  },
+  "ai_performance": {
+    "lead_scoring": {
+      "model": "gpt-4o-mini",
+      "samples": 100,
+      "avg_latency_ms": 890,
+      "p95_latency_ms": 1456,
+      "tokens_input_avg": 450,
+      "tokens_output_avg": 120,
+      "cost_per_score_usd": 0.0023,
+      "accuracy_percent": 84,
+      "target_latency_ms": 2000,
+      "status": "PASS"
+    },
+    "embedding_generation": {
+      "model": "text-embedding-3-small",
+      "samples": 500,
+      "avg_latency_ms": 45,
+      "p95_latency_ms": 89,
+      "dimensions": 1536,
+      "cost_per_embedding_usd": 0.00002,
+      "status": "PASS"
+    }
+  },
+  "memory_profile": {
+    "api_server": {
+      "heap_used_mb": 128,
+      "heap_total_mb": 256,
+      "external_mb": 12,
+      "rss_mb": 312,
+      "gc_pause_avg_ms": 4,
+      "gc_pause_max_ms": 45
+    },
+    "ai_worker": {
+      "heap_used_mb": 256,
+      "heap_total_mb": 512,
+      "external_mb": 34,
+      "rss_mb": 612,
+      "gc_pause_avg_ms": 8,
+      "gc_pause_max_ms": 89
+    }
+  },
+  "build_performance": {
+    "turbo_build": {
+      "duration_seconds": 45,
+      "cache_hit_rate": "78%",
+      "packages_built": 12,
+      "target_seconds": 180,
+      "status": "PASS"
+    },
+    "test_suite": {
+      "duration_seconds": 90,
+      "tests_total": 2471,
+      "tests_passed": 2445,
+      "tests_skipped": 26,
+      "coverage_percent": 70.9,
+      "target_seconds": 300,
+      "status": "PASS"
+    }
+  },
+  "recommendations": [
+    {
+      "priority": "HIGH",
+      "area": "Database",
+      "issue": "contacts_search query missing index",
+      "recommendation": "Add GIN index on email column for ILIKE queries",
+      "estimated_improvement": "3-5x faster"
+    },
+    {
+      "priority": "MEDIUM",
+      "area": "AI",
+      "issue": "Lead scoring latency occasionally exceeds 2s",
+      "recommendation": "Implement response caching for similar leads",
+      "estimated_improvement": "50% latency reduction"
+    },
+    {
+      "priority": "LOW",
+      "area": "Memory",
+      "issue": "AI worker memory usage high",
+      "recommendation": "Implement model unloading between requests",
+      "estimated_improvement": "30% memory reduction"
+    }
+  ],
+  "kpi_summary": {
+    "api_p95_under_200ms": true,
+    "ai_scoring_under_2s": true,
+    "test_suite_under_5min": true,
+    "build_under_3min": true,
+    "coverage_above_70": true,
+    "overall_status": "PASS"
+  }
+}

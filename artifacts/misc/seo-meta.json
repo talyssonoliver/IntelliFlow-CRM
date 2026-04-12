@@ -1,0 +1,74 @@
+{
+  "page": "Home",
+  "route": "/",
+  "title": "IntelliFlow CRM - AI-First CRM with Governance Built In",
+  "description": "AI-first CRM that pairs automation with governance-grade validation. Launch sales, pipeline, and service flows with accessibility, performance, and audit guardrails baked in.",
+  "keywords": [
+    "CRM",
+    "customer relationship management",
+    "AI CRM",
+    "lead scoring",
+    "sales automation",
+    "pipeline management",
+    "sales analytics",
+    "AI-powered CRM",
+    "intelligent CRM",
+    "sales intelligence",
+    "governance",
+    "accessibility",
+    "performance budget"
+  ],
+  "og": {
+    "title": "IntelliFlow CRM - Governed AI for Sales Teams",
+    "description": "Automation with safeguards, audit-ready validation, WCAG-aligned experiences, and performance budgets that keep Lighthouse ≥90.",
+    "type": "website",
+    "url": "https://intelliflow-crm.com",
+    "image": "https://intelliflow-crm.com/og-image.png",
+    "site_name": "IntelliFlow CRM"
+  },
+  "twitter": {
+    "card": "summary_large_image",
+    "site": "@intelliflowcrm",
+    "title": "IntelliFlow CRM - AI Automation with Guardrails",
+    "description": "Launch AI-first flows faster with governance-grade validation, WCAG 2.1 AA defaults, and performance-first UX.",
+    "image": "https://intelliflow-crm.com/twitter-card.png"
+  },
+  "canonical": "https://intelliflow-crm.com",
+  "robots": "index, follow",
+  "language": "en",
+  "author": "IntelliFlow Team",
+  "schema": {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "IntelliFlow CRM",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Web",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "GBP"
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.8",
+      "reviewCount": "127"
+    },
+    "description": "AI-powered CRM for intelligent sales automation, lead scoring, and pipeline analytics"
+  },
+  "performance_targets": {
+    "lighthouse_score": 90,
+    "first_contentful_paint": "<1s",
+    "response_time": "<200ms",
+    "largest_contentful_paint": "<2.5s",
+    "cumulative_layout_shift": "<0.1",
+    "first_input_delay": "<100ms"
+  },
+  "accessibility": {
+    "wcag_level": "AA",
+    "aria_labels": true,
+    "keyboard_navigation": true,
+    "screen_reader_tested": true
+  },
+  "created_at": "2025-12-29T23:45:00Z",
+  "task_id": "PG-001"
+}

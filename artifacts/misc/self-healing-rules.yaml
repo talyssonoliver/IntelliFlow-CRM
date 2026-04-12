@@ -1,0 +1,42 @@
+# IntelliFlow CRM - Self-healing playbooks (Sprint 0)
+#
+# Sprint 0 scope:
+# - Document deterministic "if/then" remediation playbooks.
+# - Do NOT execute remediation automatically in CI.
+# - Operators may wire these into their runtime platform (K8s, Nomad, etc).
+#
+# Advanced / predictive remediation is tracked as tech debt (ENV-008-AI).
+
+version: 1
+taskId: ENV-008-AI
+playbooks:
+  - id: restart-service
+    title: Restart unhealthy service instance
+    trigger:
+      alert: IntelliFlowServiceDown
+    steps:
+      - type: operator_action
+        description: "Restart the affected service (Docker/K8s) and confirm health endpoint is green."
+      - type: verify
+        description: "Confirm traces/metrics resume and error rate returns to baseline."
+
+  - id: scale-up-api
+    title: Scale API replicas when latency budget exceeded
+    trigger:
+      alert: IntelliFlowP99LatencyBudgetExceeded
+    steps:
+      - type: operator_action
+        description: "Increase API replicas (or CPU limit) and confirm p99 latency returns under 200ms."
+      - type: verify
+        description: "Record before/after in artifacts/performance/ and update optimization-log.csv."
+
+  - id: shed-load-ai
+    title: Shed AI load during cost spike
+    trigger:
+      anomalyRule: ai_cost_spike
+    steps:
+      - type: operator_action
+        description: "Enable AI feature flag kill-switch (see ENV-015-AI) or reduce concurrency on ai-worker."
+      - type: verify
+        description: "Confirm cost metric returns to baseline and no core CRM flows are impacted."
+

@@ -1,0 +1,417 @@
+{
+  "version": "1.0.0",
+  "description": "Sentry error tracking configuration for IntelliFlow CRM",
+  "metadata": {
+    "created_at": "2025-12-20T00:00:00Z",
+    "created_by": "IFC-074 implementation",
+    "task_id": "IFC-074"
+  },
+  "projects": {
+    "intelliflow-api": {
+      "platform": "node",
+      "dsn": "https://<key>@<org>.ingest.sentry.io/<project-id>",
+      "environment": "production",
+      "release": "${GIT_COMMIT_SHA}",
+      "sampleRate": {
+        "errors": 1.0,
+        "transactions": 0.1,
+        "replays": 0.1
+      },
+      "integrations": {
+        "http": true,
+        "express": true,
+        "postgres": true,
+        "prisma": true,
+        "tracing": {
+          "enabled": true,
+          "tracePropagationTargets": [
+            "localhost",
+            "intelliflow-api.railway.app",
+            "/api/"
+          ]
+        }
+      },
+      "beforeSend": {
+        "enabled": true,
+        "filters": [
+          "filter_health_checks",
+          "filter_pii",
+          "add_user_context",
+          "add_lead_context"
+        ]
+      },
+      "ignoreErrors": [
+        "AbortError",
+        "ECONNRESET",
+        "ETIMEDOUT",
+        "Non-Error promise rejection"
+      ],
+      "denyUrls": [
+        "/health",
+        "/metrics",
+        "/_health"
+      ]
+    },
+    "intelliflow-web": {
+      "platform": "javascript",
+      "dsn": "https://<key>@<org>.ingest.sentry.io/<project-id>",
+      "environment": "production",
+      "release": "${VERCEL_GIT_COMMIT_SHA}",
+      "sampleRate": {
+        "errors": 1.0,
+        "transactions": 0.05,
+        "replays": {
+          "onError": 1.0,
+          "onSession": 0.1
+        }
+      },
+      "integrations": {
+        "browserTracing": true,
+        "replay": {
+          "enabled": true,
+          "maskAllText": true,
+          "maskAllInputs": true,
+          "blockAllMedia": true
+        },
+        "feedback": {
+          "enabled": true,
+          "colorScheme": "system"
+        }
+      },
+      "beforeSend": {
+        "enabled": true,
+        "filters": [
+          "filter_third_party",
+          "filter_extensions",
+          "add_user_context"
+        ]
+      },
+      "ignoreErrors": [
+        "ResizeObserver loop",
+        "Non-Error promise rejection",
+        "NetworkError",
+        "ChunkLoadError"
+      ],
+      "denyUrls": [
+        "/extensions/",
+        "chrome-extension://",
+        "moz-extension://"
+      ],
+      "tracePropagationTargets": [
+        "localhost",
+        "intelliflow.vercel.app",
+        "api.intelliflow.dev"
+      ]
+    },
+    "intelliflow-ai-worker": {
+      "platform": "node",
+      "dsn": "https://<key>@<org>.ingest.sentry.io/<project-id>",
+      "environment": "production",
+      "release": "${GIT_COMMIT_SHA}",
+      "sampleRate": {
+        "errors": 1.0,
+        "transactions": 0.2,
+        "replays": 0
+      },
+      "integrations": {
+        "http": true,
+        "tracing": {
+          "enabled": true,
+          "tracePropagationTargets": [
+            "api.openai.com",
+            "localhost",
+            "/api/"
+          ]
+        }
+      },
+      "beforeSend": {
+        "enabled": true,
+        "filters": [
+          "filter_ai_prompts",
+          "redact_api_keys",
+          "add_ai_context"
+        ]
+      },
+      "ignoreErrors": [
+        "OpenAI API timeout",
+        "Rate limit exceeded",
+        "Model not available"
+      ],
+      "attachments": {
+        "maxAttachmentSize": 100000,
+        "enabled": true
+      }
+    }
+  },
+  "organization": {
+    "slug": "intelliflow",
+    "name": "IntelliFlow CRM"
+  },
+  "errorTracking": {
+    "enabled": true,
+    "grouping": {
+      "strategy": "fingerprint",
+      "enhancers": [
+        "exception_message",
+        "stacktrace",
+        "template"
+      ]
+    },
+    "notifications": {
+      "email": {
+        "enabled": true,
+        "recipients": ["sre-team@example.com"],
+        "workflow": "only_new_issues"
+      },
+      "slack": {
+        "enabled": true,
+        "webhook": "https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXX",
+        "channel": "#alerts-production"
+      },
+      "pagerduty": {
+        "enabled": false,
+        "integration_key": "placeholder"
+      }
+    },
+    "issueOwnership": {
+      "enabled": true,
+      "rules": [
+        "path:**/api/** → team:backend",
+        "path:**/web/** → team:frontend",
+        "path:**/ai-worker/** → team:ai-ml",
+        "tag:lead.* → team:crm",
+        "tag:ai.* → team:ai-ml"
+      ]
+    }
+  },
+  "performanceMonitoring": {
+    "enabled": true,
+    "transactions": {
+      "api": {
+        "threshold_p95": 200,
+        "threshold_p99": 500,
+        "alerts": {
+          "enabled": true,
+          "channels": ["slack"]
+        }
+      },
+      "web": {
+        "threshold_lcp": 2500,
+        "threshold_fid": 100,
+        "threshold_cls": 0.1,
+        "threshold_ttfb": 600,
+        "alerts": {
+          "enabled": true,
+          "channels": ["slack"]
+        }
+      },
+      "ai_worker": {
+        "threshold_p95": 2000,
+        "threshold_p99": 5000,
+        "alerts": {
+          "enabled": true,
+          "channels": ["slack", "email"]
+        }
+      }
+    },
+    "profiling": {
+      "enabled": true,
+      "sampleRate": 0.01,
+      "continuous": true
+    }
+  },
+  "releaseTracking": {
+    "enabled": true,
+    "deployNotifications": {
+      "slack": true,
+      "email": false
+    },
+    "healthCheckEndpoint": "/api/health",
+    "commitTracking": {
+      "repository": "intelliflow/intelliflow-crm",
+      "integrations": ["github"]
+    }
+  },
+  "dataScrubbing": {
+    "enabled": true,
+    "scrubDefaults": true,
+    "sensitiveFields": [
+      "password",
+      "apiKey",
+      "api_key",
+      "token",
+      "secret",
+      "authorization",
+      "cookie",
+      "session",
+      "credit_card",
+      "ssn",
+      "phone",
+      "email"
+    ],
+    "datalakeIpAddress": "scrub"
+  },
+  "securityAndCompliance": {
+    "dataResidency": "US",
+    "retentionDays": 90,
+    "gdprCompliance": {
+      "enabled": true,
+      "dataDeletion": true,
+      "dataExport": true
+    },
+    "hipaaCompliance": {
+      "enabled": false
+    },
+    "soc2Compliance": {
+      "enabled": true,
+      "auditLogs": true
+    }
+  },
+  "quotas": {
+    "errors": {
+      "limit": 100000,
+      "window": "hour"
+    },
+    "transactions": {
+      "limit": 50000,
+      "window": "hour"
+    },
+    "attachments": {
+      "limit": 1000000000,
+      "window": "month"
+    }
+  },
+  "alerts": {
+    "highErrorRate": {
+      "enabled": true,
+      "threshold": 5,
+      "window": "5m",
+      "channels": ["slack", "email"]
+    },
+    "newIssue": {
+      "enabled": true,
+      "channels": ["slack"]
+    },
+    "regressionDetected": {
+      "enabled": true,
+      "channels": ["slack", "email"]
+    },
+    "performanceDegradation": {
+      "enabled": true,
+      "threshold": 20,
+      "window": "15m",
+      "channels": ["slack"]
+    }
+  },
+  "dashboards": {
+    "overview": {
+      "widgets": [
+        "error_rate",
+        "transaction_throughput",
+        "p95_latency",
+        "apdex_score",
+        "release_health"
+      ]
+    },
+    "custom": [
+      {
+        "name": "AI Performance",
+        "widgets": [
+          "ai_inference_count",
+          "ai_latency",
+          "ai_cost",
+          "ai_error_rate"
+        ]
+      },
+      {
+        "name": "CRM Metrics",
+        "widgets": [
+          "leads_created",
+          "leads_scored",
+          "conversions",
+          "user_sessions"
+        ]
+      }
+    ]
+  },
+  "integrations": {
+    "github": {
+      "enabled": true,
+      "repository": "intelliflow/intelliflow-crm",
+      "features": [
+        "commit_tracking",
+        "suspect_commits",
+        "issue_linking"
+      ]
+    },
+    "slack": {
+      "enabled": true,
+      "workspace": "intelliflow",
+      "features": [
+        "alert_notifications",
+        "deploy_notifications",
+        "issue_management"
+      ]
+    },
+    "jira": {
+      "enabled": false
+    },
+    "pagerduty": {
+      "enabled": false
+    }
+  },
+  "sdkConfiguration": {
+    "node": {
+      "version": "^8.0.0",
+      "tracing": {
+        "enabled": true,
+        "tracingOrigins": ["localhost", "intelliflow-api.railway.app"],
+        "tracePropagationTargets": ["localhost", "/api/"]
+      },
+      "autoSessionTracking": true,
+      "attachStacktrace": true,
+      "enableTracing": true,
+      "normalizeDepth": 5,
+      "maxBreadcrumbs": 100
+    },
+    "javascript": {
+      "version": "^8.0.0",
+      "tracing": {
+        "enabled": true,
+        "tracingOrigins": ["localhost", "intelliflow.vercel.app"]
+      },
+      "replaysSessionSampleRate": 0.1,
+      "replaysOnErrorSampleRate": 1.0,
+      "enableTracing": true,
+      "normalizeDepth": 3,
+      "maxBreadcrumbs": 50
+    }
+  },
+  "environment": {
+    "production": {
+      "errorSampleRate": 1.0,
+      "transactionSampleRate": 0.1,
+      "replaySampleRate": 0.1,
+      "logLevel": "warn"
+    },
+    "staging": {
+      "errorSampleRate": 1.0,
+      "transactionSampleRate": 0.5,
+      "replaySampleRate": 0.5,
+      "logLevel": "info"
+    },
+    "development": {
+      "errorSampleRate": 1.0,
+      "transactionSampleRate": 1.0,
+      "replaySampleRate": 1.0,
+      "logLevel": "debug"
+    }
+  },
+  "notes": {
+    "setup": "Replace placeholder DSN values with actual Sentry project DSNs",
+    "secrets": "Store DSN in environment variables, not in code",
+    "sampling": "Adjust sample rates based on traffic volume and budget",
+    "pii": "Ensure PII is scrubbed before sending to Sentry",
+    "integration": "Sentry complements OpenTelemetry - both can coexist"
+  }
+}

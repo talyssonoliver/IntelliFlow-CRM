@@ -1,0 +1,368 @@
+/**
+ * Draft Message Agent Tool
+ *
+ * IFC-139: Agent tool for drafting messages (emails, SMS, notes)
+ *
+ * This tool allows AI agents to draft messages for leads, contacts, or accounts.
+ * Draft operations require human approval before sending.
+ *
+ * Following hexagonal architecture, this tool prepares messages that will be
+ * processed by the messaging service after approval.
+ */
+
+import { randomUUID } from 'node:crypto';
+import {
+  AgentToolDefinition,
+  AgentToolResult,
+  AgentAuthContext,
+  ActionPreview,
+  PendingAction,
+  RollbackResult,
+  DraftMessageInput,
+  DraftMessageInputSchema,
+} from '../types';
+import { agentLogger } from '../logger';
+import { pendingActionsStore } from '../approval-workflow';
+
+/**
+ * Approval expiry time (30 minutes)
+ */
+const APPROVAL_EXPIRY_MS = 30 * 60 * 1000;
+
+export type MessageRecipientType = 'LEAD' | 'CONTACT' | 'ACCOUNT';
+
+/**
+ * Drafted message result structure
+ */
+export interface DraftedMessageResult {
+  id: string;
+  type: 'EMAIL' | 'SMS' | 'NOTE';
+  recipientType: MessageRecipientType;
+  recipientId: string;
+  subject?: string;
+  body: string;
+  status: 'DRAFT' | 'PENDING_APPROVAL' | 'SCHEDULED' | 'SENT';
+  scheduledFor?: Date;
+  createdAt: Date;
+}
+
+/**
+ * Determine the estimated impact level based on message type.
+ */
+function messageImpactLevel(type: string): 'LOW' | 'MEDIUM' | 'HIGH' {
+  if (type === 'SMS') return 'HIGH'; // SMS is harder to "unsend" and has immediate visibility
+  if (type === 'NOTE') return 'LOW'; // Internal notes have lower external impact
+  return 'MEDIUM'; // Emails are trackable and reversible in perception
+}
+
+/**
+ * Build the changes list for the preview.
+ */
+function buildMessageChanges(input: DraftMessageInput): Array<{
+  field: string;
+  previousValue: null;
+  newValue: string;
+  changeType: 'ADD';
+}> {
+  const changes: Array<{
+    field: string;
+    previousValue: null;
+    newValue: string;
+    changeType: 'ADD';
+  }> = [];
+
+  changes.push(
+    { field: 'type', previousValue: null, newValue: input.type, changeType: 'ADD' },
+    {
+      field: 'recipient',
+      previousValue: null,
+      newValue: `${input.recipientType}: ${input.recipientId}`,
+      changeType: 'ADD',
+    }
+  );
+  if (input.subject) {
+    changes.push({
+      field: 'subject',
+      previousValue: null,
+      newValue: input.subject,
+      changeType: 'ADD',
+    });
+  }
+  changes.push({ field: 'body', previousValue: null, newValue: input.body, changeType: 'ADD' });
+  if (input.scheduledFor) {
+    changes.push({
+      field: 'scheduledFor',
+      previousValue: null,
+      newValue: input.scheduledFor.toISOString(),
+      changeType: 'ADD',
+    });
+  }
+  if (input.templateId) {
+    changes.push({
+      field: 'templateId',
+      previousValue: null,
+      newValue: input.templateId,
+      changeType: 'ADD',
+    });
+  }
+
+  return changes;
+}
+
+/**
+ * Collect all warnings for the message preview into the warnings array.
+ */
+function collectMessageWarnings(input: DraftMessageInput, warnings: string[]): void {
+  if (input.type === 'SMS' && input.body.length > 160) {
+    warnings.push(
+      `SMS message is ${input.body.length} characters. Messages over 160 characters may be split into multiple SMS.`
+    );
+  }
+  if (input.type === 'EMAIL' && input.body.length > 5000) {
+    warnings.push('Email body is quite long. Consider splitting into multiple emails.');
+  }
+  if (input.scheduledFor) {
+    if (input.scheduledFor < new Date()) {
+      warnings.push('Warning: Scheduled time is in the past');
+    }
+    const hour = input.scheduledFor.getUTCHours();
+    if (hour < 8 || hour > 18) {
+      warnings.push('Scheduled time is outside typical business hours (8am-6pm)');
+    }
+  }
+  const bodyLower = input.body.toLowerCase();
+  if (bodyLower.includes('confidential') || bodyLower.includes('private')) {
+    warnings.push('Message contains potentially confidential content - please review carefully');
+  }
+  if (input.type === 'EMAIL' && !bodyLower.includes('unsubscribe')) {
+    warnings.push('Consider adding an unsubscribe link for marketing emails (compliance)');
+  }
+}
+
+/**
+ * Validate all guard conditions for draft message execution.
+ * Returns an error string if any guard fails, or null if all pass.
+ */
+function validateDraftMessageGuards(
+  input: DraftMessageInput,
+  context: AgentAuthContext
+): string | null {
+  if (!context.allowedActionTypes.includes('DRAFT')) {
+    return 'Not authorized to draft messages';
+  }
+  const recipientEntityType = input.recipientType;
+  if (!context.allowedEntityTypes.includes(recipientEntityType)) {
+    return `Not authorized to send messages to ${input.recipientType}`;
+  }
+  if (input.type === 'EMAIL' && !input.subject) {
+    return 'Email messages require a subject';
+  }
+  if (context.actionCount >= context.maxActionsPerSession) {
+    return 'Maximum actions per session exceeded';
+  }
+  return null;
+}
+
+/**
+ * Draft Message Tool
+ *
+ * Creates a draft message for a lead, contact, or account.
+ * This operation REQUIRES human approval before the message is sent.
+ * Messages can be reviewed, edited, and approved or rejected through the approval workflow.
+ */
+export const draftMessageTool: AgentToolDefinition<DraftMessageInput, DraftedMessageResult> = {
+  name: 'draft_message',
+  description:
+    'Draft an email, SMS, or internal note for a lead, contact, or account. Requires human approval before sending.',
+  actionType: 'DRAFT',
+  entityTypes: ['MESSAGE', 'LEAD', 'CONTACT', 'ACCOUNT'],
+  requiresApproval: true,
+  inputSchema: DraftMessageInputSchema,
+
+  async execute(
+    input: DraftMessageInput,
+    context: AgentAuthContext
+  ): Promise<AgentToolResult<DraftedMessageResult>> {
+    const startTime = performance.now();
+
+    try {
+      const guardError = validateDraftMessageGuards(input, context);
+      if (guardError) {
+        return {
+          success: false,
+          error: guardError,
+          requiresApproval: true,
+          executionTimeMs: performance.now() - startTime,
+        };
+      }
+
+      // Generate preview and create pending action
+      const preview = await this.generatePreview(input, context);
+      const actionId = randomUUID();
+      const now = new Date();
+
+      const pendingAction: PendingAction = {
+        id: actionId,
+        toolName: 'draft_message',
+        actionType: 'DRAFT',
+        entityType: 'MESSAGE',
+        input: { ...input },
+        preview,
+        status: 'PENDING',
+        createdAt: now,
+        expiresAt: new Date(now.getTime() + APPROVAL_EXPIRY_MS),
+        createdBy: context.userId,
+        agentSessionId: context.agentSessionId,
+        metadata: {
+          recipientType: input.recipientType,
+          recipientId: input.recipientId,
+          messageType: input.type,
+        },
+      };
+
+      // Store pending action for approval
+      await pendingActionsStore.add(pendingAction);
+
+      // Log the pending action
+      await agentLogger.log({
+        userId: context.userId,
+        agentSessionId: context.agentSessionId,
+        toolName: 'draft_message',
+        actionType: 'DRAFT',
+        entityType: 'MESSAGE',
+        input,
+        success: true,
+        durationMs: performance.now() - startTime,
+        approvalRequired: true,
+        approvalStatus: 'PENDING',
+        metadata: { actionId, recipientType: input.recipientType, recipientId: input.recipientId },
+      });
+
+      return {
+        success: true,
+        requiresApproval: true,
+        actionId,
+        executionTimeMs: performance.now() - startTime,
+      };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+      await agentLogger.log({
+        userId: context.userId,
+        agentSessionId: context.agentSessionId,
+        toolName: 'draft_message',
+        actionType: 'DRAFT',
+        entityType: 'MESSAGE',
+        input,
+        success: false,
+        error: errorMessage,
+        durationMs: performance.now() - startTime,
+        approvalRequired: true,
+      });
+
+      return {
+        success: false,
+        error: errorMessage,
+        requiresApproval: true,
+        executionTimeMs: performance.now() - startTime,
+      };
+    }
+  },
+
+  async generatePreview(
+    input: DraftMessageInput,
+    _context: AgentAuthContext
+  ): Promise<ActionPreview> {
+    const warnings: string[] = [];
+    const changes = buildMessageChanges(input);
+
+    collectMessageWarnings(input, warnings);
+
+    const estimatedImpact = messageImpactLevel(input.type);
+
+    const affectedEntities = [
+      {
+        type: 'MESSAGE' as const,
+        id: 'NEW',
+        name: input.subject || `${input.type} to ${input.recipientType}`,
+        action: 'CREATE' as const,
+      },
+      {
+        type: input.recipientType,
+        id: input.recipientId,
+        name: `${input.recipientType} ${input.recipientId}`,
+        action: 'UPDATE' as const, // Adding a message affects the recipient's activity
+      },
+    ];
+
+    // Create summary
+    let summary = `Draft ${input.type.toLowerCase()}`;
+    if (input.subject) {
+      summary += `: "${input.subject}"`;
+    }
+    summary += ` to ${input.recipientType.toLowerCase()} ${input.recipientId}`;
+    if (input.scheduledFor) {
+      summary += ` (scheduled for ${input.scheduledFor.toLocaleString('en-US', { timeZone: 'UTC' })})`;
+    }
+
+    return {
+      summary,
+      changes,
+      affectedEntities,
+      warnings: warnings.length > 0 ? warnings : undefined,
+      estimatedImpact,
+    };
+  },
+
+  async rollback(
+    actionId: string,
+    executionResult: DraftedMessageResult,
+    context: AgentAuthContext
+  ): Promise<RollbackResult> {
+    try {
+      // For drafts, rollback means marking the message as cancelled/deleted
+      // If the message was already sent, rollback is not possible
+
+      if (executionResult.status === 'SENT') {
+        return {
+          success: false,
+          actionId,
+          error: 'Cannot rollback a message that has already been sent',
+        };
+      }
+
+      await agentLogger.log({
+        userId: context.userId,
+        agentSessionId: context.agentSessionId,
+        toolName: 'draft_message',
+        actionType: 'DELETE',
+        entityType: 'MESSAGE',
+        input: { messageId: executionResult.id, action: 'rollback' },
+        success: true,
+        durationMs: 0,
+        approvalRequired: false,
+        metadata: { originalActionId: actionId },
+      });
+
+      return {
+        success: true,
+        actionId,
+        rolledBackAt: new Date(),
+        restoredState: { cancelledMessageId: executionResult.id },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        actionId,
+        error: error instanceof Error ? error.message : 'Rollback failed',
+      };
+    }
+  },
+};
+
+/**
+ * Export draft message tools
+ */
+export const draftMessageTools = {
+  draftMessageTool,
+};

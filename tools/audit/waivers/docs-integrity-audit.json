@@ -1,0 +1,26 @@
+{
+  "tool_id": "docs-integrity-audit",
+  "waiver_type": "deferred_enablement",
+  "reason": "Documentation integrity audit tooling is under development and not yet production-ready. Manual documentation review is performed during sprint planning and PR review cycles as an alternative control. The tool will be enabled once the docs-integrity-audit.ts script is completed, tested, and its CI integration is confirmed non-blocking for a baseline scan.",
+  "status": "active",
+  "created_at": "2026-03-08T00:00:00Z",
+  "created_by": "Tech Lead",
+  "expires_at": "2026-06-08T23:59:59Z",
+  "review_cadence": "quarterly",
+  "alternative_controls": [
+    "Manual documentation review during PR review process",
+    "Sprint planning documentation hygiene checks",
+    "validate-sprint Gate 4 (docs hygiene) catches runtime artifacts under docs/",
+    "validate-sprint Gate 5 (metrics tracked state) ensures no untracked files under docs/metrics"
+  ],
+  "acceptance_criteria": [
+    "docs-integrity-audit.ts script completed and unit-tested",
+    "Baseline scan run with all findings triaged and resolved or waived",
+    "CI integration confirmed non-blocking on first full run",
+    "audit-matrix.yml updated to set enabled: true"
+  ],
+  "risk_assessment": {
+    "residual_risk": "low",
+    "justification": "Manual documentation review in place during PR process. Runtime artifact hygiene and untracked-file hygiene are covered by Gate 4 and Gate 5 of sprint validation. No documentation drift has been observed that would indicate material risk."
+  }
+}

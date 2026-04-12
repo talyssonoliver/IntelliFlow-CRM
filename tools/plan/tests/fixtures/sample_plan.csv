@@ -1,0 +1,4 @@
+Task ID,Section,Description,Owner,Dependencies,CleanDependencies,CrossQuarterDeps,Pre-requisites,Definition of Done,Status,KPIs,Target Sprint,Artifacts To Track,Validation Method
+TEST-001,Foundation,Initialize project,DevOps,,,,,Project initialized,Completed,,0,,
+TEST-002,Foundation,Setup CI/CD,DevOps,TEST-001,TEST-001,,,CI pipeline running,Planned,,0,,
+TEST-003,Foundation,Configure linting,DevOps,"TEST-001,TEST-002","TEST-001,TEST-002",,,Linting configured,Planned,,0,,

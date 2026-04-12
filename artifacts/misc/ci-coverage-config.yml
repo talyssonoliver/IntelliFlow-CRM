@@ -1,0 +1,145 @@
+# IntelliFlow CRM - CI Coverage Configuration
+# Task: IFC-109 - TDD Process, Coverage & Review Checklist
+#
+# This configuration defines code coverage thresholds enforced by CI
+# Builds will fail if coverage drops below these thresholds
+
+coverage:
+  # Global coverage settings
+  global:
+    # Overall project thresholds
+    lines: 90
+    statements: 90
+    branches: 85
+    functions: 90
+
+  # Layer-specific thresholds (DDD architecture)
+  layers:
+    # Domain layer - highest coverage required (pure business logic)
+    domain:
+      path: "packages/domain/src/**"
+      thresholds:
+        lines: 95
+        statements: 95
+        branches: 90
+        functions: 95
+      enforcement: strict  # Fail on any drop
+
+    # Application layer - use cases and ports
+    application:
+      path: "packages/application/src/**"
+      thresholds:
+        lines: 90
+        statements: 90
+        branches: 85
+        functions: 90
+      enforcement: strict
+
+    # Adapters layer - infrastructure implementations
+    adapters:
+      path: "packages/adapters/src/**"
+      thresholds:
+        lines: 85
+        statements: 85
+        branches: 80
+        functions: 85
+      enforcement: warn  # Warn but don't fail
+
+    # API routes
+    api:
+      path: "apps/api/src/**"
+      thresholds:
+        lines: 85
+        statements: 85
+        branches: 80
+        functions: 85
+      enforcement: strict
+
+    # AI Worker
+    ai_worker:
+      path: "apps/ai-worker/src/**"
+      thresholds:
+        lines: 80
+        statements: 80
+        branches: 75
+        functions: 80
+      enforcement: warn  # AI code harder to test fully
+
+    # Web frontend
+    web:
+      path: "apps/web/src/**"
+      thresholds:
+        lines: 70
+        statements: 70
+        branches: 65
+        functions: 70
+      enforcement: warn  # UI tests are harder
+
+  # Files to exclude from coverage
+  exclude:
+    - "**/*.d.ts"
+    - "**/*.test.ts"
+    - "**/*.spec.ts"
+    - "**/test/**"
+    - "**/tests/**"
+    - "**/__tests__/**"
+    - "**/node_modules/**"
+    - "**/dist/**"
+    - "**/.next/**"
+    - "**/coverage/**"
+    - "**/*.config.js"
+    - "**/*.config.ts"
+
+# Vitest coverage reporter configuration
+vitest:
+  coverage:
+    enabled: true
+    provider: v8
+    reporter:
+      - text          # Console output
+      - json          # JSON for CI parsing
+      - lcov          # For coverage tools
+      - html          # Human-readable reports
+    reportsDirectory: ./artifacts/coverage
+    all: true         # Include uncovered files
+    skipFull: false   # Show fully covered files
+
+# CI/CD integration
+ci:
+  # GitHub Actions coverage check
+  github_actions:
+    fail_on_decrease: true
+    comment_on_pr: true
+    upload_to_codecov: false  # Use built-in reporting
+
+  # Coverage badge generation
+  badge:
+    enabled: true
+    output: ./artifacts/coverage/badge.svg
+    style: flat
+
+  # PR blocking rules
+  pr_blocking:
+    enabled: true
+    rules:
+      - "Domain coverage must be >= 95%"
+      - "Overall coverage must be >= 90%"
+      - "No decrease in coverage without justification"
+
+# Test run configuration
+test_run:
+  # Parallel execution
+  parallel: true
+  max_workers: 4
+
+  # Timeout settings
+  test_timeout: 30000    # 30 seconds per test
+  suite_timeout: 600000  # 10 minutes per suite
+
+  # Retry failed tests
+  retry: 2
+
+  # Watch mode settings (for local development)
+  watch:
+    poll: false
+    followSymlinks: true

@@ -1,0 +1,75 @@
+{
+  "report_id": "IFC-174-ollama-real-benchmark-report",
+  "title": "Real Ollama Benchmark Report",
+  "description": "Comprehensive benchmark of Ollama mistral model for lead scoring with real inference",
+  "task_reference": "IFC-174",
+  "dependencies": [
+    "IFC-085",
+    "IFC-168"
+  ],
+  "timestamp": "2026-02-22T22:52:49.557Z",
+  "methodology": {
+    "approach": "Score 6 test leads across 5 iterations using real Ollama inference",
+    "warmup": "1 warmup lead scored and discarded to avoid cold-start model loading skew",
+    "timing": "performance.now() for sub-millisecond precision (NF-003)",
+    "statistics": "Sample standard deviation with n-1 denominator (NF-004)",
+    "minimum_operations": "30 operations (>= 30 MIN_SAMPLE_SIZE per AIConstants.ts)",
+    "lead_distribution": "2 high-quality (C-suite, corporate), 2 medium (managers), 2 low (free email)",
+    "provider": "Ollama 0.16.0 with mistral model"
+  },
+  "environment": {
+    "node": "v25.2.1",
+    "platform": "win32",
+    "ollama_version": "0.16.0",
+    "model": "mistral",
+    "benchmark_date": "2026-02-22T22:52:49.557Z"
+  },
+  "summary": {
+    "total_operations": 30,
+    "successful_operations": 30,
+    "error_count": 0,
+    "error_rate": 0,
+    "avg_score": 62.87,
+    "score_std_dev": 22.54,
+    "avg_confidence": 0.829,
+    "avg_latency_ms": 148572.45,
+    "p50_latency_ms": 142808.31,
+    "p95_latency_ms": 219338.91,
+    "p99_latency_ms": 234094.68,
+    "score_differentiation": 51.8,
+    "factor_completeness_pct": 100,
+    "cost_per_1k_leads_usd": 0
+  },
+  "tier_breakdown": {
+    "high": {
+      "count": 10,
+      "avg_score": 86.9,
+      "std_dev": 5.63
+    },
+    "medium": {
+      "count": 10,
+      "avg_score": 66.6,
+      "std_dev": 7.56
+    },
+    "low": {
+      "count": 10,
+      "avg_score": 35.1,
+      "std_dev": 5.9
+    }
+  },
+  "kpi_validation": {
+    "latency_p95_under_2s": false,
+    "score_differentiation_adequate": true,
+    "error_rate_under_5pct": true,
+    "factor_completeness_above_80pct": true,
+    "all_targets_met": false
+  },
+  "conclusions": [
+    "Tested ollama/mistral with 30 real scoring operations",
+    "Average latency: 148572ms (p95: 219339ms)",
+    "Score differentiation: 51.8 points between high and low quality leads",
+    "Factor completeness: 100.0%",
+    "Cost per 1K leads: $0.00 (Ollama is free)",
+    "No errors during benchmark"
+  ]
+}

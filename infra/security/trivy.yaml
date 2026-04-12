@@ -1,0 +1,274 @@
+# Trivy Security Scanner Configuration
+# Used for container image and filesystem vulnerability scanning
+# Reference: https://aquasecurity.github.io/trivy/latest/docs/configuration/
+
+# Scan configuration
+scan:
+  # Security checks to perform
+  security-checks:
+    - vuln # Vulnerabilities
+    - config # Misconfigurations
+    - secret # Secrets detection
+    - license # License scanning
+
+  # Scanners to use
+  scanners:
+    - vuln
+    - misconfig
+    - secret
+    - license
+
+# Vulnerability settings
+vulnerability:
+  # Vulnerability types to detect
+  type:
+    - os # OS packages
+    - library # Application dependencies
+
+  # Severity levels to report (CRITICAL, HIGH, MEDIUM, LOW, UNKNOWN)
+  severity:
+    - CRITICAL
+    - HIGH
+    - MEDIUM
+    - LOW
+
+  # Exit code when vulnerabilities are found
+  # 0: No vulnerabilities found
+  # 1: Vulnerabilities found
+  exit-code: 1
+
+# Database settings
+db:
+  # Skip database update (use cached database)
+  skip-update: false
+
+  # Database repository
+  repository: ghcr.io/aquasecurity/trivy-db
+
+# Reporting settings
+report:
+  # Report format (table, json, sarif, template, cyclonedx, spdx)
+  format: json
+
+  # Template for custom output
+  # template: "@/path/to/template.tpl"
+
+  # Output file
+  # output: "trivy-results.json"
+
+  # Severity levels to include in output
+  severity: CRITICAL,HIGH,MEDIUM,LOW
+
+# Misconfiguration scanning
+misconfig:
+  # Scanners to use for misconfiguration detection
+  scanners:
+    - dockerfile
+    - kubernetes
+    - terraform
+    - cloudformation
+    - yaml
+
+  # Severity threshold for misconfigurations
+  severity:
+    - CRITICAL
+    - HIGH
+    - MEDIUM
+
+  # Include non-failures (passed checks)
+  include-non-failures: false
+
+# Secret scanning
+secret:
+  # Secret scanning configuration
+  config: '' # Path to custom secret scanning config
+
+# License scanning
+license:
+  # License categories to detect
+  full: false
+
+  # Severity for licenses
+  # severity:
+  #   - HIGH
+  #   - MEDIUM
+
+  # Forbidden licenses
+  forbidden:
+    - GPL-2.0
+    - GPL-3.0
+    - AGPL-1.0
+    - AGPL-3.0
+
+  # Ignored licenses
+  ignored: []
+
+# Ignore settings
+ignore:
+  # File patterns to skip
+  unfixed: false # Skip unfixed vulnerabilities
+
+  # Policy file for ignoring vulnerabilities
+  # policy: ".trivyignore.yaml"
+
+  # File paths to skip scanning
+  file-patterns:
+    - '**/node_modules/**'
+    - '**/test/**'
+    - '**/tests/**'
+    - '**/*.test.ts'
+    - '**/*.spec.ts'
+    - '**/dist/**'
+    - '**/build/**'
+    - '**/.next/**'
+    - '**/.turbo/**'
+
+# Cache settings
+cache:
+  # Cache directory
+  dir: '$HOME/.cache/trivy'
+
+  # Clear cache before scanning
+  clear: false
+
+# Timeout settings
+timeout:
+  # Timeout for scanning
+  default: 5m
+
+# Offline mode
+offline-scan: false
+
+# Skip files/directories
+skip-dirs:
+  - node_modules
+  - .git
+  - .next
+  - .turbo
+  - dist
+  - build
+  - coverage
+  - artifacts
+
+skip-files:
+  - '*.lock'
+  - 'pnpm-lock.yaml'
+  - 'package-lock.json'
+  - 'yarn.lock'
+
+# Dependency tree
+dependency-tree: false
+
+# List all packages
+list-all-pkgs: false
+
+# Exit on EOL (End of Life) OS
+exit-on-eol: 0
+
+# Image configuration (for container scanning)
+image:
+  # Image to scan
+  # input: ""
+
+  # Removed packages from image
+  removed-pkgs: false
+
+  # Platform (os/arch)
+  # platform: "linux/amd64"
+
+# File patterns for configuration scanning
+file-patterns:
+  dockerfile:
+    - 'Dockerfile'
+    - 'Dockerfile.*'
+    - '*.dockerfile'
+
+  kubernetes:
+    - '*.yaml'
+    - '*.yml'
+    - 'Chart.yaml'
+    - 'values.yaml'
+
+  terraform:
+    - '*.tf'
+    - '*.tfvars'
+
+# Custom policies/checks
+# policy:
+#   # Policy bundle repository
+#   bundle-repository: ""
+#
+#   # Policy namespace
+#   namespace: ""
+
+# Compliance
+# compliance:
+#   # Compliance spec to use
+#   spec:
+#     - name: "CIS Kubernetes Benchmark v1.23"
+#       id: "k8s-cis-1.23"
+
+# Registry settings (for private registries)
+# registry:
+#   # Registry credentials
+#   username: ""
+#   password: ""
+#   token: ""
+
+# Rego options (for custom policies)
+# rego:
+#   # Rego trace
+#   trace: false
+#
+#   # Rego skip dirs
+#   skip-dirs: []
+
+# Output settings
+output:
+  # Suppress progress bar
+  quiet: false
+
+  # Suppress output
+  no-progress: false
+
+  # Debug mode
+  debug: false
+
+  # Insecure mode (skip TLS verification)
+  insecure: false
+
+# Ignored vulnerabilities (CVE IDs)
+# ignoredVulnerabilities:
+#   - CVE-2023-XXXXX
+#   - CVE-2024-XXXXX
+
+# Package ignore list
+# ignoredPackages:
+#   - package-name
+
+# IntelliFlow CRM Specific Configuration
+# Custom rules for this project
+
+# Severity thresholds for CI/CD
+ci:
+  # Fail build on these severities
+  fail-on:
+    - CRITICAL
+    - HIGH
+
+  # Maximum number of vulnerabilities allowed before failing
+  max-allowed:
+    critical: 0
+    high: 5
+    medium: 20
+    low: 50
+
+# Monitoring and alerting
+monitoring:
+  # Enable monitoring
+  enabled: true
+
+  # Alert channels (configure in CI/CD secrets)
+  # - slack
+  # - email
+  # - pagerduty

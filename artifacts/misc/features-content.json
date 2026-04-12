@@ -1,0 +1,133 @@
+{
+  "categories": [
+    {
+      "id": "core-crm",
+      "name": "Core CRM",
+      "description": "Essential tools for modern sales teams",
+      "icon": "workspace_premium",
+      "features": [
+        {
+          "id": "ai-lead-scoring",
+          "title": "AI Lead Scoring",
+          "description": "Automatically score and prioritize leads using advanced machine learning models. Focus on high-value opportunities and close more deals faster.",
+          "icon": "auto_awesome",
+          "benefits": ["Save time with automated prioritization", "Focus on hot leads", "Increase conversion rates by 30%+"],
+          "learnMoreUrl": "/features/ai-lead-scoring"
+        },
+        {
+          "id": "smart-contacts",
+          "title": "Smart Contact Management",
+          "description": "360° view of your contacts with AI-powered insights, relationship mapping, and intelligent suggestions for next best actions.",
+          "icon": "contacts",
+          "benefits": ["Complete contact history", "Relationship intelligence", "Automated data enrichment"],
+          "learnMoreUrl": "/features/smart-contacts"
+        },
+        {
+          "id": "pipeline-analytics",
+          "title": "Pipeline Analytics",
+          "description": "Real-time analytics and forecasting for your sales pipeline. Track deals, predict revenue, and identify bottlenecks before they impact your targets.",
+          "icon": "trending_up",
+          "benefits": ["Real-time forecasting", "Deal velocity insights", "Bottleneck detection"],
+          "learnMoreUrl": "/features/pipeline-analytics"
+        },
+        {
+          "id": "workflow-automation",
+          "title": "Workflow Automation",
+          "description": "Visual workflow builder with pre-built templates. Automate repetitive tasks, enforce business rules, and ensure consistent processes across your team.",
+          "icon": "device_hub",
+          "benefits": ["Drag-and-drop builder", "50+ templates included", "Save 10+ hours per week"],
+          "learnMoreUrl": "/features/workflow-automation"
+        }
+      ]
+    },
+    {
+      "id": "ai-intelligence",
+      "name": "AI & Intelligence",
+      "description": "Advanced AI capabilities for smarter decisions",
+      "icon": "psychology",
+      "features": [
+        {
+          "id": "ai-insights",
+          "title": "AI-Powered Insights",
+          "description": "Predictive analytics for churn risk, customer lifetime value, and next best actions. Let AI guide your sales strategy with data-driven recommendations.",
+          "icon": "insights",
+          "benefits": ["Churn prediction", "Lifetime value forecasting", "Next best action suggestions"],
+          "learnMoreUrl": "/features/ai-insights"
+        },
+        {
+          "id": "explainability",
+          "title": "AI Explainability",
+          "description": "Transparent AI with explainable recommendations. Understand why AI made specific suggestions and build trust in automated decisions.",
+          "icon": "view_in_ar",
+          "benefits": ["Transparent AI decisions", "Model explanations", "Trust scoring >80%"],
+          "learnMoreUrl": "/features/explainability"
+        },
+        {
+          "id": "feedback-loop",
+          "title": "Human-in-the-Loop",
+          "description": "Continuous AI improvement through human feedback. Override AI suggestions, provide corrections, and help the system learn from your expertise.",
+          "icon": "thumbs_up_down",
+          "benefits": ["AI learns from your team", "Continuous improvement", "100% override control"],
+          "learnMoreUrl": "/features/feedback-loop"
+        },
+        {
+          "id": "document-ai",
+          "title": "Document Intelligence",
+          "description": "AI-powered document analysis and e-signature integration. Extract insights from contracts, automate document workflows, and close deals faster.",
+          "icon": "description",
+          "benefits": ["Contract analysis", "E-signature integration", "Automated extraction"],
+          "learnMoreUrl": "/features/document-ai"
+        }
+      ]
+    },
+    {
+      "id": "security-governance",
+      "name": "Security & Governance",
+      "description": "Enterprise-grade security and compliance",
+      "icon": "shield",
+      "features": [
+        {
+          "id": "zero-trust",
+          "title": "Zero Trust Security",
+          "description": "Row-level security, comprehensive audit logging, and zero-trust architecture. Every action is logged, verified, and traceable for complete accountability.",
+          "icon": "verified_user",
+          "benefits": ["Row-level security", "Complete audit trail", "Zero trust architecture"],
+          "learnMoreUrl": "/features/zero-trust"
+        },
+        {
+          "id": "rbac",
+          "title": "Role-Based Access Control",
+          "description": "Granular permissions and role management. Define custom roles, control access to sensitive data, and enforce least-privilege principles.",
+          "icon": "admin_panel_settings",
+          "benefits": ["Custom role definitions", "Granular permissions", "Least-privilege enforcement"],
+          "learnMoreUrl": "/features/rbac"
+        },
+        {
+          "id": "compliance",
+          "title": "Compliance Ready",
+          "description": "GDPR, ISO 27001, and ISO 42001 (AI) compliance built-in. Data residency controls, right to deletion, and comprehensive compliance reporting.",
+          "icon": "policy",
+          "benefits": ["GDPR compliant", "ISO 27001/42001 ready", "Data residency controls"],
+          "learnMoreUrl": "/features/compliance"
+        },
+        {
+          "id": "multi-tenancy",
+          "title": "Secure Multi-Tenancy",
+          "description": "Complete workspace isolation with tenant-level security. Your data stays private with cryptographic separation and dedicated encryption keys.",
+          "icon": "domain",
+          "benefits": ["Complete isolation", "Dedicated encryption", "99.9% uptime SLA"],
+          "learnMoreUrl": "/features/multi-tenancy"
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "lastUpdated": "2025-12-30",
+    "totalFeatures": 12,
+    "totalCategories": 3,
+    "version": "1.0.0",
+    "schema_version": "1.0",
+    "created_by": "PG-002 Implementation",
+    "notes": "Initial feature set for public Features page. Content can be updated without code changes by modifying this JSON file."
+  }
+}

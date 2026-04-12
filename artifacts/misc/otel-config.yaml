@@ -1,0 +1,275 @@
+# OpenTelemetry Collector Configuration for IntelliFlow CRM
+# This configuration enables distributed tracing, metrics collection, and log aggregation
+
+# Receivers define how telemetry data is collected
+receivers:
+  # OTLP receiver for traces, metrics, and logs from applications
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+  # Prometheus receiver for scraping metrics
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: 'intelliflow-crm'
+          scrape_interval: 30s
+          static_configs:
+            - targets: ['localhost:9090']
+              labels:
+                service: 'intelliflow-crm'
+                environment: '${env:ENVIRONMENT}'
+
+        - job_name: 'intelliflow-api'
+          scrape_interval: 30s
+          static_configs:
+            - targets: ['localhost:3001']
+              labels:
+                service: 'intelliflow-api'
+                environment: '${env:ENVIRONMENT}'
+
+        - job_name: 'intelliflow-ai-worker'
+          scrape_interval: 60s
+          static_configs:
+            - targets: ['localhost:3002']
+              labels:
+                service: 'intelliflow-ai-worker'
+                environment: '${env:ENVIRONMENT}'
+
+  # Host metrics for infrastructure monitoring
+  hostmetrics:
+    collection_interval: 30s
+    scrapers:
+      cpu:
+      memory:
+      disk:
+      filesystem:
+      network:
+      process:
+        mute_process_name_error: true
+
+# Processors transform and enrich telemetry data
+processors:
+  # Batch processor groups data before export (reduces network overhead)
+  batch:
+    timeout: 10s
+    send_batch_size: 1024
+    send_batch_max_size: 2048
+
+  # Memory limiter prevents OOM issues
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 512
+    spike_limit_mib: 128
+
+  # Resource processor adds deployment metadata
+  resource:
+    attributes:
+      - key: service.name
+        value: intelliflow-crm
+        action: upsert
+      - key: deployment.environment
+        value: ${env:ENVIRONMENT}
+        action: upsert
+      - key: service.version
+        value: ${env:SERVICE_VERSION}
+        action: upsert
+      - key: service.namespace
+        value: intelliflow
+        action: upsert
+
+  # Attributes processor for filtering and transformation
+  attributes:
+    actions:
+      # Add correlation IDs
+      - key: trace.id
+        action: insert
+        from_attribute: trace_id
+      # Add request metadata
+      - key: http.user_agent
+        action: hash
+      # Remove sensitive data
+      - key: http.request.header.authorization
+        action: delete
+      - key: http.request.header.cookie
+        action: delete
+
+  # Span processor for trace-specific transformations
+  span:
+    name:
+      # Rename spans for better readability
+      from_attributes: ['http.method', 'http.route']
+      separator: ' '
+
+  # Filter processor to reduce noise
+  filter:
+    traces:
+      span:
+        # Exclude health check traces
+        - 'attributes["http.route"] == "/api/health"'
+        - 'attributes["http.route"] == "/health"'
+
+  # Tail sampling for intelligent trace sampling
+  tail_sampling:
+    decision_wait: 10s
+    num_traces: 100
+    policies:
+      # Always sample errors
+      - name: error-sampling
+        type: status_code
+        status_code:
+          status_codes: [ERROR]
+      # Sample 10% of successful requests
+      - name: success-sampling
+        type: probabilistic
+        probabilistic:
+          sampling_percentage: 10
+      # Always sample slow requests (>1s)
+      - name: latency-sampling
+        type: latency
+        latency:
+          threshold_ms: 1000
+
+# Exporters send telemetry data to backend systems
+exporters:
+  # OTLP exporter for Jaeger/Tempo
+  otlp/jaeger:
+    endpoint: ${env:JAEGER_ENDPOINT:-jaeger:4317}
+    tls:
+      insecure: true
+
+  # OTLP exporter for Grafana Cloud/Tempo
+  otlp/tempo:
+    endpoint: ${env:TEMPO_ENDPOINT:-tempo:4317}
+    tls:
+      insecure: false
+      cert_file: /etc/otel/certs/tempo.crt
+      key_file: /etc/otel/certs/tempo.key
+
+  # Prometheus exporter for metrics
+  prometheus:
+    endpoint: 0.0.0.0:8889
+    namespace: intelliflow
+    const_labels:
+      environment: ${env:ENVIRONMENT}
+
+  # Prometheus Remote Write for long-term storage
+  prometheusremotewrite:
+    endpoint: ${env:PROMETHEUS_REMOTE_WRITE_ENDPOINT:-http://prometheus:9090/api/v1/write}
+    tls:
+      insecure: true
+
+  # Loki exporter for logs
+  loki:
+    endpoint: ${env:LOKI_ENDPOINT:-http://loki:3100/loki/api/v1/push}
+    labels:
+      resource:
+        service.name: 'service_name'
+        deployment.environment: 'environment'
+      attributes:
+        level: 'level'
+
+  # Logging exporter for debugging
+  logging:
+    loglevel: ${env:OTEL_LOG_LEVEL:-info}
+    sampling_initial: 5
+    sampling_thereafter: 200
+
+  # File exporter for local development
+  file:
+    path: /var/log/otel/traces.json
+
+# Extensions provide operational capabilities
+extensions:
+  # Health check endpoint
+  health_check:
+    endpoint: 0.0.0.0:13133
+
+  # Performance profiler
+  pprof:
+    endpoint: 0.0.0.0:1777
+
+  # ZPages for debugging
+  zpages:
+    endpoint: 0.0.0.0:55679
+
+# Service defines the telemetry pipeline
+service:
+  extensions: [health_check, pprof, zpages]
+
+  pipelines:
+    # Traces pipeline
+    traces:
+      receivers: [otlp]
+      processors:
+        - memory_limiter
+        - resource
+        - attributes
+        - span
+        - filter
+        - tail_sampling
+        - batch
+      exporters:
+        - otlp/jaeger
+        - otlp/tempo
+        - logging
+
+    # Metrics pipeline
+    metrics:
+      receivers: [otlp, prometheus, hostmetrics]
+      processors:
+        - memory_limiter
+        - resource
+        - attributes
+        - batch
+      exporters:
+        - prometheus
+        - prometheusremotewrite
+        - logging
+
+    # Logs pipeline
+    logs:
+      receivers: [otlp]
+      processors:
+        - memory_limiter
+        - resource
+        - attributes
+        - batch
+      exporters:
+        - loki
+        - logging
+
+  # Telemetry configuration for the collector itself
+  telemetry:
+    logs:
+      level: ${env:OTEL_LOG_LEVEL:-info}
+    metrics:
+      level: detailed
+      address: 0.0.0.0:8888
+
+# Performance tuning
+# Adjust these based on your load and infrastructure
+# For production, increase batch sizes and memory limits
+# For development, keep defaults or reduce for faster feedback
+
+# Environment-specific overrides
+# Override these via environment variables:
+# - OTEL_LOG_LEVEL: Log level for collector (info, debug, warn)
+# - ENVIRONMENT: Deployment environment (development, staging, production)
+# - SERVICE_VERSION: Service version to tag all telemetry
+# - JAEGER_ENDPOINT: Jaeger backend endpoint (optional)
+# - TEMPO_ENDPOINT: Tempo backend endpoint (optional)
+# - LOKI_ENDPOINT: Loki backend endpoint (optional)
+# - PROMETHEUS_REMOTE_WRITE_ENDPOINT: Prometheus remote write endpoint (optional)
+
+# Expected environment setup:
+# - Jaeger OTLP receiver: localhost:6831 or configured via JAEGER_ENDPOINT
+# - Prometheus scrape target: localhost:8889/metrics
+# - Loki HTTP API: http://localhost:3100/loki/api/v1/push
+# - Tempo gRPC endpoint: localhost:4317
+
+# All sensitive data (auth headers, cookies, API keys) is automatically removed
+# by the attributes processor before export. Safe for use in all environments.

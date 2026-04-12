@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="IntelliFlow CRM Test Suite" tests="4711" failures="0" errors="0" skipped="23" time="162.84">
+  <testsuite name="packages/domain" tests="1240" failures="0" errors="0" skipped="0" time="28.5">
+    <testcase classname="domain.crm.lead" name="Lead aggregate tests" time="0.82"/>
+    <testcase classname="domain.crm.contact" name="Contact aggregate tests" time="0.65"/>
+    <testcase classname="domain.crm.account" name="Account aggregate tests" time="0.58"/>
+    <testcase classname="domain.crm.opportunity" name="Opportunity aggregate tests" time="0.72"/>
+    <testcase classname="domain.crm.task" name="Task aggregate tests" time="0.68"/>
+    <testcase classname="domain.shared" name="Entity base class tests" time="0.29"/>
+    <testcase classname="domain.shared" name="AggregateRoot tests" time="0.35"/>
+    <testcase classname="domain.shared" name="ValueObject tests" time="0.22"/>
+    <testcase classname="domain.shared" name="DomainEvent tests" time="0.18"/>
+    <testcase classname="domain.shared" name="Result monad tests" time="0.45"/>
+  </testsuite>
+  <testsuite name="packages/application" tests="890" failures="0" errors="0" skipped="0" time="22.3">
+    <testcase classname="application.usecases.leads" name="CreateLeadUseCase" time="0.102"/>
+    <testcase classname="application.usecases.leads" name="QualifyLeadUseCase" time="0.110"/>
+    <testcase classname="application.usecases.leads" name="ConvertLeadUseCase" time="0.095"/>
+    <testcase classname="application.usecases.leads" name="ScoreLeadUseCase" time="0.088"/>
+    <testcase classname="application.services" name="LeadService" time="0.145"/>
+    <testcase classname="application.services" name="ContactService" time="0.253"/>
+    <testcase classname="application.services" name="AccountService" time="0.128"/>
+    <testcase classname="application.services" name="OpportunityService" time="0.156"/>
+    <testcase classname="application.services" name="TaskService" time="0.142"/>
+  </testsuite>
+  <testsuite name="packages/adapters" tests="520" failures="0" errors="0" skipped="0" time="15.8">
+    <testcase classname="adapters.repositories" name="InMemoryLeadRepository" time="0.045"/>
+    <testcase classname="adapters.repositories" name="InMemoryContactRepository" time="0.042"/>
+    <testcase classname="adapters.repositories" name="InMemoryAccountRepository" time="0.038"/>
+    <testcase classname="adapters.repositories" name="InMemoryOpportunityRepository" time="0.041"/>
+    <testcase classname="adapters.repositories" name="InMemoryTaskRepository" time="0.044"/>
+    <testcase classname="adapters.external" name="InMemoryEventBus" time="0.028"/>
+    <testcase classname="adapters.external" name="InMemoryCache" time="0.025"/>
+    <testcase classname="adapters.calendar" name="ConflictResolver" time="0.058"/>
+  </testsuite>
+  <testsuite name="packages/validators" tests="340" failures="0" errors="0" skipped="0" time="8.2">
+    <testcase classname="validators" name="Lead validation schemas" time="0.143"/>
+    <testcase classname="validators" name="Contact validation schemas" time="0.081"/>
+    <testcase classname="validators" name="Account validation schemas" time="0.065"/>
+    <testcase classname="validators" name="Task validation schemas" time="0.143"/>
+    <testcase classname="validators" name="Common validation schemas" time="0.052"/>
+  </testsuite>
+  <testsuite name="apps/api" tests="620" failures="0" errors="0" skipped="0" time="18.6">
+    <testcase classname="api.modules.lead" name="lead.router tests" time="0.125"/>
+    <testcase classname="api.modules.contact" name="contact.router tests" time="0.098"/>
+    <testcase classname="api.modules.account" name="account.router tests" time="0.085"/>
+    <testcase classname="api.modules.opportunity" name="opportunity.router tests" time="0.102"/>
+    <testcase classname="api.modules.task" name="task.router tests" time="0.095"/>
+    <testcase classname="api.middleware" name="auth middleware tests" time="0.072"/>
+    <testcase classname="api.middleware" name="rate-limit middleware tests" time="0.087"/>
+    <testcase classname="api.shared" name="forecast-algorithm tests" time="0.087"/>
+    <testcase classname="api.tracing" name="otel tests" time="0.065"/>
+  </testsuite>
+  <testsuite name="apps/ai-worker" tests="180" failures="0" errors="0" skipped="0" time="12.4">
+    <testcase classname="ai-worker.agents" name="crew tests" time="0.245"/>
+    <testcase classname="ai-worker.utils" name="retry tests" time="0.185"/>
+    <testcase classname="ai-worker.utils" name="cost-tracker tests" time="0.125"/>
+  </testsuite>
+  <testsuite name="apps/web" tests="90" failures="0" errors="0" skipped="0" time="5.2">
+    <testcase classname="web.hooks" name="use-subscription tests" time="0.088"/>
+  </testsuite>
+  <testsuite name="packages/platform" tests="210" failures="0" errors="0" skipped="0" time="8.5">
+    <testcase classname="platform.feature-flags" name="feature flags tests" time="0.085"/>
+    <testcase classname="platform.queues" name="queue factory tests" time="0.095"/>
+    <testcase classname="platform.resilience" name="circuit breaker tests" time="0.145"/>
+  </testsuite>
+  <testsuite name="tests/integration" tests="15" failures="0" errors="0" skipped="15" time="0.042">
+    <testcase classname="integration.api" name="Health Check" time="0.001">
+      <skipped message="API not available"/>
+    </testcase>
+  </testsuite>
+  <testsuite name="tests/architecture" tests="24" failures="0" errors="0" skipped="0" time="2.8">
+    <testcase classname="architecture" name="domain-dependencies" time="0.85"/>
+    <testcase classname="architecture" name="application-dependencies" time="0.72"/>
+    <testcase classname="architecture" name="adapters-dependencies" time="0.68"/>
+  </testsuite>
+</testsuites>

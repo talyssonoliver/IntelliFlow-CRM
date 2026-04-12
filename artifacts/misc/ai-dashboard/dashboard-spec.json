@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "1.0",
+  "taskId": "AUTOMATION-002",
+  "generatedAt": "2025-12-19T00:00:00Z",
+  "widgets": [
+    { "id": "dora.lead_time", "title": "Lead time for changes", "type": "timeseries" },
+    { "id": "dora.deploy_frequency", "title": "Deploy frequency", "type": "timeseries" },
+    { "id": "dora.change_failure_rate", "title": "Change failure rate", "type": "timeseries" },
+    { "id": "dora.mttr", "title": "Mean time to recovery (MTTR)", "type": "timeseries" },
+    { "id": "ai.cost", "title": "AI cost (USD)", "type": "timeseries" },
+    { "id": "ai.latency", "title": "AI latency (p95)", "type": "timeseries" }
+  ]
+}
+

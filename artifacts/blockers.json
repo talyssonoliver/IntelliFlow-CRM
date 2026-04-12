@@ -1,0 +1,179 @@
+{
+  "blockers": [
+    {
+      "taskId": "ENV-003-AI",
+      "runId": "20251221-174441-05ae6baf",
+      "type": "gate_failure",
+      "message": "2 gate(s) failed: prettier-check, turbo-typecheck",
+      "failedGates": [
+        "prettier-check",
+        "turbo-typecheck"
+      ],
+      "evidencePath": "C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-174441-05ae6baf",
+      "createdAt": "2025-12-21T17:46:36.409Z",
+      "resolvedAt": "2026-04-07T20:27:50.805Z",
+      "resolvedBy": "reconcile-blockers:.specify/sprints/sprint-0/attestations/ENV-003-AI/ENV-003-AI-attestation.json",
+      "resolutionEvidencePath": ".specify/sprints/sprint-0/attestations/ENV-003-AI/ENV-003-AI-attestation.json"
+    },
+    {
+      "taskId": "ENV-004-AI",
+      "runId": "20251221-174643-c031fb76",
+      "type": "gate_failure",
+      "message": "1 gate(s) failed: prettier-check",
+      "failedGates": [
+        "prettier-check"
+      ],
+      "evidencePath": "C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-174643-c031fb76",
+      "createdAt": "2025-12-21T17:50:33.105Z",
+      "resolvedAt": "2026-04-07T20:27:50.807Z",
+      "resolvedBy": "reconcile-blockers:.specify/sprints/sprint-0/attestations/ENV-004-AI/ENV-004-AI-attestation.json",
+      "resolutionEvidencePath": ".specify/sprints/sprint-0/attestations/ENV-004-AI/ENV-004-AI-attestation.json"
+    },
+    {
+      "taskId": "ENV-006-AI",
+      "runId": "20251221-175335-651b7461",
+      "type": "gate_failure",
+      "message": "1 gate(s) failed: turbo-test-coverage",
+      "failedGates": [
+        "prettier-check",
+        "turbo-build",
+        "turbo-test-coverage",
+        "turbo-typecheck"
+      ],
+      "evidencePath": "C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-175335-651b7461",
+      "createdAt": "2025-12-21T17:56:09.634Z",
+      "resolvedAt": "2026-04-07T20:27:50.810Z",
+      "resolvedBy": "reconcile-blockers:.specify/sprints/sprint-0/attestations/ENV-006-AI/ENV-006-AI-attestation.json",
+      "resolutionEvidencePath": ".specify/sprints/sprint-0/attestations/ENV-006-AI/ENV-006-AI-attestation.json"
+    },
+    {
+      "taskId": "EXC-INIT-001",
+      "runId": "20251221-180417-1a0e2880",
+      "type": "gate_failure",
+      "message": "1 gate(s) failed: prettier-check",
+      "failedGates": [
+        "prettier-check",
+        "turbo-build"
+      ],
+      "evidencePath": "C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-180417-1a0e2880",
+      "createdAt": "2025-12-21T18:10:24.130Z",
+      "resolvedAt": "2026-04-07T20:27:50.812Z",
+      "resolvedBy": "reconcile-blockers:.specify/sprints/sprint-0/attestations/EXC-INIT-001/EXC-INIT-001-attestation.json",
+      "resolutionEvidencePath": ".specify/sprints/sprint-0/attestations/EXC-INIT-001/EXC-INIT-001-attestation.json"
+    },
+    {
+      "taskId": "ENV-001-AI",
+      "runId": "20251221-181126-8130081f",
+      "type": "gate_failure",
+      "message": "1 gate(s) failed: prettier-check",
+      "failedGates": [
+        "prettier-check"
+      ],
+      "evidencePath": "C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-181126-8130081f",
+      "createdAt": "2025-12-21T18:13:30.409Z",
+      "resolvedAt": "2026-04-07T20:27:50.814Z",
+      "resolvedBy": "reconcile-blockers:.specify/sprints/sprint-0/attestations/ENV-001-AI/ENV-001-AI-attestation.json",
+      "resolutionEvidencePath": ".specify/sprints/sprint-0/attestations/ENV-001-AI/ENV-001-AI-attestation.json"
+    },
+    {
+      "taskId": "ENV-002-AI",
+      "runId": "20251221-181333-5ca97e22",
+      "type": "gate_failure",
+      "message": "1 gate(s) failed: prettier-check",
+      "failedGates": [
+        "prettier-check"
+      ],
+      "evidencePath": "C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-181333-5ca97e22",
+      "createdAt": "2025-12-21T18:15:26.057Z",
+      "resolvedAt": "2026-04-07T20:27:50.816Z",
+      "resolvedBy": "reconcile-blockers:.specify/sprints/sprint-0/attestations/ENV-002-AI/ENV-002-AI-attestation.json",
+      "resolutionEvidencePath": ".specify/sprints/sprint-0/attestations/ENV-002-AI/ENV-002-AI-attestation.json"
+    },
+    {
+      "taskId": "ENV-005-AI",
+      "runId": "20251221-181903-ace24f3e",
+      "type": "gate_failure",
+      "message": "2 gate(s) failed: turbo-build, turbo-typecheck",
+      "failedGates": [
+        "turbo-build",
+        "turbo-typecheck"
+      ],
+      "evidencePath": "C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251221-181903-ace24f3e",
+      "createdAt": "2025-12-21T18:20:33.946Z",
+      "resolvedAt": "2026-04-07T20:27:50.817Z",
+      "resolvedBy": "reconcile-blockers:.specify/sprints/sprint-0/attestations/ENV-005-AI/ENV-005-AI-attestation.json",
+      "resolutionEvidencePath": ".specify/sprints/sprint-0/attestations/ENV-005-AI/ENV-005-AI-attestation.json"
+    },
+    {
+      "taskId": "IFC-008",
+      "runId": "20251222-211124-d01dd204",
+      "type": "gate_failure",
+      "message": "1 gate(s) failed: turbo-typecheck",
+      "failedGates": [
+        "turbo-typecheck"
+      ],
+      "evidencePath": "C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251222-211124-d01dd204",
+      "createdAt": "2025-12-22T21:13:40.985Z",
+      "resolvedAt": "2026-04-07T20:27:50.819Z",
+      "resolvedBy": "reconcile-blockers:.specify/sprints/sprint-2/attestations/IFC-008/IFC-008-attestation.json",
+      "resolutionEvidencePath": ".specify/sprints/sprint-2/attestations/IFC-008/IFC-008-attestation.json"
+    },
+    {
+      "taskId": "IFC-101",
+      "runId": "20251222-211532-eca8cc2d",
+      "type": "gate_failure",
+      "message": "1 gate(s) failed: turbo-typecheck",
+      "failedGates": [
+        "turbo-typecheck"
+      ],
+      "evidencePath": "C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251222-211532-eca8cc2d",
+      "createdAt": "2025-12-22T21:16:41.023Z",
+      "resolvedAt": "2026-04-07T20:27:50.821Z",
+      "resolvedBy": "reconcile-blockers:.specify/sprints/sprint-2/attestations/IFC-101/IFC-101-attestation.json",
+      "resolutionEvidencePath": ".specify/sprints/sprint-2/attestations/IFC-101/IFC-101-attestation.json"
+    },
+    {
+      "taskId": "IFC-102",
+      "runId": "20251222-211645-5159b335",
+      "type": "gate_failure",
+      "message": "1 gate(s) failed: turbo-typecheck",
+      "failedGates": [
+        "turbo-typecheck"
+      ],
+      "evidencePath": "C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251222-211645-5159b335",
+      "createdAt": "2025-12-22T21:18:18.832Z",
+      "resolvedAt": "2026-04-07T20:27:50.823Z",
+      "resolvedBy": "reconcile-blockers:.specify/sprints/sprint-2/attestations/IFC-102/attestation.json",
+      "resolutionEvidencePath": ".specify/sprints/sprint-2/attestations/IFC-102/attestation.json"
+    },
+    {
+      "taskId": "IFC-103",
+      "runId": "20251222-211828-1a7c95a2",
+      "type": "gate_failure",
+      "message": "1 gate(s) failed: turbo-typecheck",
+      "failedGates": [
+        "turbo-typecheck"
+      ],
+      "evidencePath": "C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251222-211828-1a7c95a2",
+      "createdAt": "2025-12-22T21:19:16.036Z",
+      "resolvedAt": "2026-04-07T20:27:50.824Z",
+      "resolvedBy": "reconcile-blockers:.specify/sprints/sprint-2/attestations/IFC-103/IFC-103-attestation.json",
+      "resolutionEvidencePath": ".specify/sprints/sprint-2/attestations/IFC-103/IFC-103-attestation.json"
+    },
+    {
+      "taskId": "IFC-118",
+      "runId": "20251222-211918-6e7017cf",
+      "type": "gate_failure",
+      "message": "1 gate(s) failed: turbo-typecheck",
+      "failedGates": [
+        "turbo-typecheck"
+      ],
+      "evidencePath": "C:\\taly\\intelliFlow-CRM\\artifacts\\reports\\system-audit\\20251222-211918-6e7017cf",
+      "createdAt": "2025-12-22T21:20:06.909Z",
+      "resolvedAt": "2026-04-07T20:27:50.826Z",
+      "resolvedBy": "reconcile-blockers:.specify/sprints/sprint-8/attestations/IFC-118/attestation.json",
+      "resolutionEvidencePath": ".specify/sprints/sprint-8/attestations/IFC-118/attestation.json"
+    }
+  ],
+  "last_updated": "2026-04-07T21:18:51.619Z"
+}

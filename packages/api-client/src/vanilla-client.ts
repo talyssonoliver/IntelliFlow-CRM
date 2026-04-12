@@ -64,8 +64,3 @@ export function createTRPCClient(config: TRPCClientConfig) {
     ],
   });
 }
-
-/**
- * Type of the vanilla tRPC client
- */
-export type TRPCClient = ReturnType<typeof createTRPCClient>;

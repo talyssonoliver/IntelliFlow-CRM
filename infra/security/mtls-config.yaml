@@ -1,0 +1,215 @@
+# Mutual TLS (mTLS) Configuration
+# File: infra/security/mtls-config.yaml
+# Purpose: Configure mutual TLS authentication for service-to-service communication
+# Related Task: IFC-008 (Security Assessment)
+# Last Updated: 2025-12-22
+
+mtls:
+  # Enable mutual TLS authentication
+  enabled: true
+
+  certificates:
+    # Certificate Authority (CA) certificate
+    # Used to verify client certificates
+    ca: /etc/ssl/ca.crt
+
+    # Server certificate (signed by CA)
+    # Presented to clients during TLS handshake
+    cert: /etc/ssl/server.crt
+
+    # Server private key
+    # Must be kept secure with restricted permissions (chmod 600)
+    key: /etc/ssl/server.key
+
+  # Client certificate verification mode
+  # Options: required, optional, none
+  # 'required' enforces strict mTLS - reject connections without valid client cert
+  verify_client: required
+
+  # Certificate validation settings
+  validation:
+    # Verify certificate is not expired
+    check_expiry: true
+
+    # Verify certificate is not revoked (requires CRL or OCSP)
+    check_revocation: false # TODO: Enable when CRL endpoint configured
+
+    # Verify certificate subject matches expected pattern
+    verify_subject: true
+
+    # Allowed certificate subjects (CN or SAN)
+    # Empty list = allow all certificates signed by CA
+    allowed_subjects: []
+      # - "intelliflow-api.internal"
+      # - "intelliflow-ai-worker.internal"
+      # - "*.intelliflow.internal"
+
+  # TLS protocol settings
+  tls:
+    # Minimum TLS version (1.2 or 1.3)
+    min_version: '1.3'
+
+    # Maximum TLS version
+    max_version: '1.3'
+
+    # Allowed cipher suites (TLS 1.3)
+    # Only include strong ciphers with forward secrecy
+    cipher_suites:
+      - 'TLS_AES_256_GCM_SHA384'
+      - 'TLS_AES_128_GCM_SHA256'
+      - 'TLS_CHACHA20_POLY1305_SHA256'
+
+    # Session resumption (performance optimization)
+    session_resumption: true
+
+    # Session cache size (number of sessions)
+    session_cache_size: 1000
+
+    # Session timeout (seconds)
+    session_timeout: 3600
+
+  # Certificate rotation settings
+  rotation:
+    # Auto-reload certificates when files change
+    auto_reload: true
+
+    # Check interval for certificate changes (seconds)
+    reload_interval: 300
+
+    # Grace period before cert expiry to trigger warning alerts (days)
+    expiry_warning_days: 30
+
+  # Service-specific mTLS configurations
+  services:
+    # API server configuration
+    api:
+      enabled: true
+      port: 8443
+      cert: /etc/ssl/services/api/server.crt
+      key: /etc/ssl/services/api/server.key
+      # Require mTLS from ai-worker and web app
+      require_mtls_from:
+        - ai-worker
+        - web
+
+    # AI worker configuration
+    ai-worker:
+      enabled: true
+      port: 8444
+      cert: /etc/ssl/services/ai-worker/server.crt
+      key: /etc/ssl/services/ai-worker/server.key
+      # Require mTLS from API server only
+      require_mtls_from:
+        - api
+
+    # Database connections (Supabase/Postgres)
+    database:
+      enabled: true
+      # Use client certificate for database authentication
+      client_cert: /etc/ssl/services/db-client/client.crt
+      client_key: /etc/ssl/services/db-client/client.key
+      # Verify database server certificate
+      verify_server: true
+      server_ca: /etc/ssl/ca.crt
+
+    # Redis connections (Upstash)
+    redis:
+      enabled: true
+      # TLS-only, no mTLS (Upstash handles auth via tokens)
+      tls_only: true
+      verify_server: true
+
+  # Monitoring and logging
+  monitoring:
+    # Log TLS handshake details
+    log_handshakes: true
+
+    # Log certificate verification failures
+    log_verification_failures: true
+
+    # Export Prometheus metrics
+    prometheus:
+      enabled: true
+      metrics_port: 9090
+      metrics:
+        - mtls_handshakes_total
+        - mtls_handshake_errors_total
+        - mtls_certificate_expiry_seconds
+        - mtls_verification_failures_total
+
+    # Send alerts for security events
+    alerts:
+      # Alert on certificate verification failures
+      on_verification_failure: true
+
+      # Alert when certificate expires soon
+      on_expiry_warning: true
+
+      # Alert on configuration errors
+      on_config_error: true
+
+      # Alert destination (Sentry, PagerDuty, etc.)
+      destination: sentry
+
+# Certificate generation commands (for reference):
+#
+# Generate CA key and certificate:
+#   openssl genrsa -out ca.key 4096
+#   openssl req -new -x509 -days 3650 -key ca.key -out ca.crt -subj "/CN=IntelliFlow CA"
+#
+# Generate server key and CSR:
+#   openssl genrsa -out server.key 2048
+#   openssl req -new -key server.key -out server.csr -subj "/CN=intelliflow-api.internal"
+#
+# Sign server certificate with CA:
+#   openssl x509 -req -days 365 -in server.csr -CA ca.crt -CAkey ca.key -set_serial 01 -out server.crt
+#
+# Generate client certificate (same process with different CN):
+#   openssl genrsa -out client.key 2048
+#   openssl req -new -key client.key -out client.csr -subj "/CN=intelliflow-client"
+#   openssl x509 -req -days 365 -in client.csr -CA ca.crt -CAkey ca.key -set_serial 02 -out client.crt
+#
+# Verify certificate:
+#   openssl verify -CAfile ca.crt server.crt
+#
+# Check certificate expiry:
+#   openssl x509 -in server.crt -noout -dates
+
+# Deployment notes:
+#
+# 1. Store CA private key in HashiCorp Vault (EXC-SEC-001):
+#    vault kv put secret/mtls/ca key=@ca.key
+#
+# 2. Use Vault PKI secrets engine for automatic certificate rotation:
+#    vault secrets enable pki
+#    vault write pki/root/generate/internal common_name="IntelliFlow CA" ttl=87600h
+#
+# 3. Generate certificates on-demand:
+#    vault write pki/issue/intelliflow-server common_name="api.intelliflow.internal" ttl=24h
+#
+# 4. Mount certificates as Kubernetes secrets:
+#    kubectl create secret tls mtls-certs --cert=server.crt --key=server.key
+#
+# 5. Docker Compose volume mounts:
+#    volumes:
+#      - ./infra/security/certs/ca.crt:/etc/ssl/ca.crt:ro
+#      - ./infra/security/certs/server.crt:/etc/ssl/server.crt:ro
+#      - ./infra/security/certs/server.key:/etc/ssl/server.key:ro
+
+# Environment-specific overrides:
+#
+# Development (docker-compose):
+#   - Use self-signed certificates
+#   - verify_client: optional (for easier local testing)
+#   - Allow connections without client certs
+#
+# Staging:
+#   - Use Vault-generated short-lived certs (24h TTL)
+#   - verify_client: required
+#   - Full mTLS enforcement
+#
+# Production:
+#   - Use Vault PKI with automatic rotation
+#   - verify_client: required
+#   - Certificate pinning for critical services
+#   - Hardware Security Module (HSM) for CA key storage

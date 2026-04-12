@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>IntelliFlow CRM - Appointment Detail</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen">
+<!-- Main Container -->
+<div class="flex flex-col min-h-screen">
+<!-- Top Navigation Bar -->
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 bg-white dark:bg-slate-900 px-6 py-3 sticky top-0 z-50">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-3 text-primary">
+<div class="size-8 bg-primary text-white flex items-center justify-center rounded-lg">
+<span class="material-symbols-outlined">account_tree</span>
+</div>
+<h2 class="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-tight">IntelliFlow CRM</h2>
+</div>
+<nav class="hidden lg:flex items-center gap-6">
+<a class="text-slate-600 dark:text-slate-300 text-sm font-medium hover:text-primary transition-colors" href="#">Dashboard</a>
+<a class="text-slate-600 dark:text-slate-300 text-sm font-medium hover:text-primary transition-colors" href="#">Leads</a>
+<a class="text-slate-600 dark:text-slate-300 text-sm font-medium hover:text-primary transition-colors" href="#">Contacts</a>
+<a class="text-slate-600 dark:text-slate-300 text-sm font-medium hover:text-primary transition-colors" href="#">Deals</a>
+<a class="text-slate-600 dark:text-slate-300 text-sm font-medium hover:text-primary transition-colors" href="#">Tickets</a>
+<a class="text-slate-600 dark:text-slate-300 text-sm font-medium hover:text-primary transition-colors" href="#">Reports</a>
+</nav>
+</div>
+<div class="flex flex-1 justify-end gap-4">
+<label class="hidden md:flex flex-col min-w-40 h-10 max-w-64">
+<div class="flex w-full flex-1 items-stretch rounded-lg h-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+<div class="text-slate-500 flex items-center justify-center pl-3">
+<span class="material-symbols-outlined text-[20px]">search</span>
+</div>
+<input class="w-full bg-transparent border-none focus:ring-0 text-sm placeholder:text-slate-500" placeholder="Search..."/>
+</div>
+</label>
+<div class="flex items-center gap-3">
+<button class="text-slate-500 hover:text-primary transition-colors"><span class="material-symbols-outlined">notifications</span></button>
+<div class="bg-primary/10 border-2 border-primary/20 aspect-square rounded-full size-10 flex items-center justify-center overflow-hidden">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="Corporate headshot of a male professional" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBX8vvgX0hLmbZTl9Fft21qaLFN46pwJYdNi_Pbb-1HB9vrS1b_S6vsyfwGO-tBJC0c88DS_aJxm-6qHuZ_NWkzaMFf9vwsTbriFWYDkwZqDqudGg-w5dJmHVZpcdsvHMa3sqF-DXOOblERJKfna0zPe4jKTBB6qlHz6uZM2LHZIC1E9VVf5kKHkd4uY4j7D-QOv4f99VzhDX8fx8ZMfcZZY_JI4gJlSTAOs4bQM30WwCTVM73xoR_KolcGh4DkdKCrD2ghr6ZI7bbn"/>
+</div>
+</div>
+</div>
+</header>
+<div class="flex flex-1">
+<!-- Left Sidebar Navigation -->
+<aside class="w-64 border-r border-slate-200 bg-white dark:bg-slate-900 hidden md:flex flex-col p-4 gap-2">
+<div class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer group">
+<span class="material-symbols-outlined group-hover:text-primary">dashboard</span>
+<span class="text-sm font-medium">Dashboard</span>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 bg-primary/10 text-primary rounded-lg cursor-pointer">
+<span class="material-symbols-outlined fill-1">calendar_today</span>
+<span class="text-sm font-semibold">Calendar</span>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer group">
+<span class="material-symbols-outlined group-hover:text-primary">task_alt</span>
+<span class="text-sm font-medium">Tasks</span>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer group">
+<span class="material-symbols-outlined group-hover:text-primary">mail</span>
+<span class="text-sm font-medium">Email</span>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer group">
+<span class="material-symbols-outlined group-hover:text-primary">description</span>
+<span class="text-sm font-medium">Documents</span>
+</div>
+<div class="mt-auto flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer group">
+<span class="material-symbols-outlined group-hover:text-primary">settings</span>
+<span class="text-sm font-medium">Settings</span>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col p-6 overflow-y-auto">
+<!-- Breadcrumbs & Header Actions -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+<div class="flex flex-col gap-1">
+<nav class="flex items-center gap-2 text-sm text-slate-500 font-medium">
+<a class="hover:text-primary" href="#">Dashboard</a>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+<a class="hover:text-primary" href="#">Calendar</a>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+<span class="text-slate-900 dark:text-white">Appointment Detail</span>
+</nav>
+<h1 class="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Quarterly Strategy Review</h1>
+<p class="text-slate-600 dark:text-slate-400">Client Meeting • Monday, Oct 24, 2023 • 10:00 AM - 11:30 AM (90 min)</p>
+</div>
+<div class="flex gap-3">
+<button class="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[18px]">arrow_back</span>
+                            Back to Calendar
+                        </button>
+<button class="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                            New Appointment
+                        </button>
+</div>
+</div>
+<!-- 3-Column Layout Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+<!-- 1. Left Panel (Schedule Snapshot) -->
+<div class="lg:col-span-3 flex flex-col gap-6">
+<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm">
+<h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">Schedule Snapshot</h3>
+<div class="space-y-4">
+<div>
+<p class="text-xs text-slate-500 mb-1">Status</p>
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-primary/10 text-primary border border-primary/20">
+<span class="size-1.5 rounded-full bg-primary animate-pulse"></span>
+                                        Scheduled
+                                    </span>
+</div>
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-slate-400 mt-0.5">category</span>
+<div>
+<p class="text-xs text-slate-500">Type</p>
+<p class="text-sm font-semibold">Client Meeting</p>
+</div>
+</div>
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-slate-400 mt-0.5">location_on</span>
+<div>
+<p class="text-xs text-slate-500">Location</p>
+<p class="text-sm font-semibold text-primary underline decoration-primary/30 cursor-pointer">Zoom / Conference Room A</p>
+</div>
+</div>
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-slate-400 mt-0.5">person</span>
+<div>
+<p class="text-xs text-slate-500">Organizer</p>
+<p class="text-sm font-semibold">Alex Morgan</p>
+</div>
+</div>
+<div class="border-t border-slate-100 dark:border-slate-800 pt-4 space-y-3">
+<div class="flex justify-between text-sm">
+<span class="text-slate-500">Buffer Time</span>
+<span class="font-medium">15 min</span>
+</div>
+<div class="flex justify-between text-sm">
+<span class="text-slate-500">Recurrence</span>
+<span class="font-medium">Quarterly</span>
+</div>
+<div class="flex justify-between text-sm">
+<span class="text-slate-500">Reminder</span>
+<span class="font-medium text-primary">10 min before</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- 2. Center Panel (Tabs) -->
+<div class="lg:col-span-6 flex flex-col gap-6">
+<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col min-h-[500px]">
+<!-- Tab Headers -->
+<div class="flex border-b border-slate-200 dark:border-slate-800 px-6">
+<button class="px-4 py-4 text-sm font-bold border-b-2 border-primary text-primary">Overview</button>
+<button class="px-4 py-4 text-sm font-semibold text-slate-500 hover:text-slate-700">Attendees</button>
+<button class="px-4 py-4 text-sm font-semibold text-slate-500 hover:text-slate-700">Linked Cases</button>
+</div>
+<!-- Tab Content (Overview by default) -->
+<div class="p-6 flex flex-col gap-8">
+<div>
+<h4 class="text-sm font-bold text-slate-900 dark:text-white mb-2">Description</h4>
+<div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-lg border border-slate-100 dark:border-slate-700">
+<p class="text-slate-700 dark:text-slate-300 leading-relaxed">
+                                            Comprehensive review of Q3 performance metrics, customer feedback, and retention data. 
+                                            We will align on the key strategy pivots and set specific, measurable objectives for Q4 success.
+                                        </p>
+</div>
+</div>
+<div>
+<h4 class="text-sm font-bold text-slate-900 dark:text-white mb-2">Internal Notes</h4>
+<textarea class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm focus:ring-primary focus:border-primary" placeholder="Add private notes for the team..." rows="4"></textarea>
+</div>
+<!-- Placeholder Content for Hidden Tabs (Demonstration) -->
+<div class="hidden">
+<div class="flex justify-between items-center mb-4">
+<h4 class="text-sm font-bold text-slate-900 dark:text-white">Attendees (4)</h4>
+<button class="text-xs font-bold text-primary flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">add</span> Add Attendee</button>
+</div>
+<div class="space-y-3">
+<div class="flex items-center justify-between p-3 border border-slate-100 dark:border-slate-800 rounded-lg">
+<div class="flex items-center gap-3">
+<div class="size-8 rounded-full bg-slate-200"></div>
+<div>
+<p class="text-sm font-semibold">Sarah Jenkins</p>
+<p class="text-xs text-slate-500">sarah.j@client.com</p>
+</div>
+</div>
+<span class="text-[10px] uppercase font-bold tracking-widest text-slate-400">Accepted</span>
+</div>
+</div>
+</div>
+<div class="mt-auto pt-6 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
+<div class="flex items-center gap-3">
+<div class="size-10 bg-primary/10 rounded flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">folder_open</span>
+</div>
+<div>
+<p class="text-sm font-bold">Q3 Performance Issue #123</p>
+<p class="text-xs text-slate-500">Linked Case • Critical Priority</p>
+</div>
+</div>
+<button class="px-3 py-1.5 text-xs font-bold border border-slate-200 dark:border-slate-700 rounded-md hover:bg-slate-50 transition-colors">
+                                        Link Case
+                                    </button>
+</div>
+</div>
+</div>
+</div>
+<!-- 3. Right Panel (Quick Actions) -->
+<div class="lg:col-span-3 flex flex-col gap-6">
+<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm">
+<h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">Quick Actions</h3>
+<div class="flex flex-col gap-3">
+<button class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500 text-white rounded-lg text-sm font-bold hover:bg-emerald-600 transition-colors">
+<span class="material-symbols-outlined text-[20px]">check_circle</span>
+                                    Confirm
+                                </button>
+<button class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-primary text-white rounded-lg text-sm font-bold hover:bg-primary/90 transition-colors">
+<span class="material-symbols-outlined text-[20px]">task_alt</span>
+                                    Complete
+                                </button>
+<div class="h-px bg-slate-100 dark:bg-slate-800 my-1"></div>
+<button class="w-full flex items-center justify-start gap-3 px-4 py-2 text-slate-700 dark:text-slate-300 rounded-lg text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+<span class="material-symbols-outlined text-slate-400">update</span>
+                                    Reschedule
+                                </button>
+<button class="w-full flex items-center justify-start gap-3 px-4 py-2 text-rose-600 rounded-lg text-sm font-semibold hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors">
+<span class="material-symbols-outlined">cancel</span>
+                                    Cancel
+                                </button>
+<button class="w-full flex items-center justify-start gap-3 px-4 py-2 text-slate-500 rounded-lg text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+<span class="material-symbols-outlined">person_off</span>
+                                    Mark No Show
+                                </button>
+</div>
+</div>
+<!-- Secondary Widget: Recent Activity -->
+<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm">
+<h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">Timeline</h3>
+<div class="space-y-4">
+<div class="flex gap-3">
+<div class="relative">
+<div class="size-2 rounded-full bg-primary mt-1.5"></div>
+<div class="absolute top-4 left-[3px] w-[1px] h-8 bg-slate-200 dark:bg-slate-800"></div>
+</div>
+<div>
+<p class="text-xs font-bold">Appointment Created</p>
+<p class="text-[10px] text-slate-500">Oct 18, 2023 • 2:45 PM</p>
+</div>
+</div>
+<div class="flex gap-3">
+<div class="size-2 rounded-full bg-slate-300 mt-1.5"></div>
+<div>
+<p class="text-xs font-bold text-slate-400">Meeting Reminder Sent</p>
+<p class="text-[10px] text-slate-500">Scheduled for Oct 24</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</div>
+</body></html>

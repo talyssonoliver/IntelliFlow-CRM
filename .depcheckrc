@@ -1,0 +1,26 @@
+{
+  "ignores": [
+    "@types/*",
+    "eslint-*",
+    "prettier",
+    "husky",
+    "lint-staged",
+    "turbo",
+    "@changesets/cli",
+    "tsx",
+    "vitest",
+    "@vitest/*",
+    "@playwright/test"
+  ],
+  "ignore-patterns": [
+    "dist",
+    "build",
+    ".next",
+    ".tsup",
+    "generated",
+    "coverage",
+    "node_modules",
+    "__pycache__"
+  ],
+  "skip-missing": true
+}

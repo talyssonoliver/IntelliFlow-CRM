@@ -1,0 +1,23 @@
+{
+  "name": "@intelliflow/architecture-tests",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Architecture boundary tests for IntelliFlow CRM",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@intelliflow/adapters": "workspace:*",
+    "@intelliflow/application": "workspace:*",
+    "@intelliflow/domain": "workspace:*"
+  },
+  "devDependencies": {
+    "@intelliflow/typescript-config": "workspace:*",
+    "@types/node": "^25.3.2",
+    "dependency-cruiser": "^16.3.0",
+    "typescript": "^5.3.0",
+    "vitest": "^4.0.16"
+  }
+}

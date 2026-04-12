@@ -1,0 +1,10 @@
+{
+  "analysisType": "Quick",
+  "duration": {
+    "typecheck": 29.0817303,
+    "lint": 1.8428201
+  },
+  "reportPath": "artifacts/reports/code-review-2026-01-23-232344",
+  "totalPackages": 26,
+  "timestamp": "2026-01-23T23:24:18.8862579+00:00"
+}

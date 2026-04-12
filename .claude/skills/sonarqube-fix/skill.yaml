@@ -1,0 +1,101 @@
+name: sonarqube-fix
+description: Intelligent SonarQube linter agent with deep analysis and automated fixes
+version: 1.0.0
+type: project
+
+aliases:
+  - sq-fix
+  - sonar-fix
+
+capabilities:
+  - code-analysis
+  - web-research
+  - automated-fixes
+  - sub-agents
+  - mcp-integration
+
+config:
+  max_concurrent_agents: 3
+  enable_deep_thinking: true
+  enable_web_search: true
+  auto_fix_enabled: false
+  require_test_validation: true
+
+mcp_servers:
+  - name: sonarqube
+    description: SonarQube API integration for fetching issues
+    required: false
+  - name: web-search
+    description: Web search for researching solutions
+    required: false
+
+sub_agents:
+  - name: stoa-quality
+    description: Code quality analysis and improvements
+    skill: stoa-quality
+  - name: stoa-security
+    description: Security issue analysis and fixes
+    skill: stoa-security
+  - name: stoa-automation
+    description: Automated fix application and validation
+    skill: stoa-automation
+
+parameters:
+  - name: severity
+    type: string
+    description: Filter by severity level
+    options: [blocker, critical, major, minor, info]
+    required: false
+
+  - name: type
+    type: string
+    description: Filter by issue type
+    options: [bug, vulnerability, code_smell, security_hotspot]
+    required: false
+
+  - name: file
+    type: string
+    description: Analyze specific file path
+    required: false
+
+  - name: rule
+    type: string
+    description: Focus on specific SonarQube rule ID
+    required: false
+
+  - name: auto_fix
+    type: boolean
+    description: Automatically apply fixes
+    default: false
+
+  - name: deep_think
+    type: boolean
+    description: Enable extended analysis mode
+    default: true
+
+  - name: report
+    type: boolean
+    description: Generate detailed analysis report
+    default: false
+
+outputs:
+  - type: report
+    path: artifacts/reports/sonarqube-fix-{timestamp}.md
+  - type: metrics
+    path: artifacts/metrics/sonarqube-fixes.json
+  - type: logs
+    path: artifacts/logs/sonarqube-agent.log
+
+validation:
+  - run: pnpm run typecheck
+    description: Verify TypeScript compilation
+  - run: pnpm run test
+    description: Ensure all tests pass
+  - run: pnpm run lint
+    description: Verify linting rules
+
+success_criteria:
+  - min_issues_fixed: 1
+  - test_coverage_maintained: true
+  - no_breaking_changes: true
+  - build_successful: true

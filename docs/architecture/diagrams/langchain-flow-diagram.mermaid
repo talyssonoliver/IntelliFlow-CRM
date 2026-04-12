@@ -1,0 +1,168 @@
+%% IntelliFlow CRM - LangChain Pipeline Flow Diagram
+%% Task: IFC-020 - LangChain Pipeline Design
+%% Created: 2025-12-31
+
+graph TB
+    subgraph "Application Layer"
+        A1[User Request] --> A2[tRPC API]
+        A2 --> A3[Application Service]
+        A3 --> A4{Request Type}
+    end
+
+    subgraph "AI Worker - Pipeline Router"
+        A4 -->|Lead Scoring| B1[LeadScoringChain]
+        A4 -->|Qualification| B2[QualificationAgent]
+        A4 -->|Email Gen| B3[EmailAgent]
+        A4 -->|Embedding| B4[EmbeddingChain]
+    end
+
+    subgraph "Lead Scoring Pipeline"
+        B1 --> C1[Validate Input]
+        C1 --> C2[Format Prompt]
+        C2 --> C3[Check Cache]
+        C3 -->|Cache Miss| C4[Invoke LLM]
+        C3 -->|Cache Hit| C9[Return Cached]
+        C4 --> C5[Parse Structured Output]
+        C5 --> C6[Validate with Zod]
+        C6 --> C7{Confidence Check}
+        C7 -->|>= 0.8| C8[Auto-Execute]
+        C7 -->|0.5-0.8| C10[Human Review]
+        C7 -->|< 0.5| C11[Flag for Manual]
+        C8 --> C12[Update Lead Score]
+        C9 --> C12
+        C10 --> C12
+        C11 --> C12
+    end
+
+    subgraph "Agent Execution Pipeline"
+        B2 --> D1[Load Session]
+        D1 --> D2[Zep Memory Manager]
+        D2 --> D3[Retrieve History]
+        D3 --> D4[Generate System Prompt]
+        D4 --> D5[Agent Loop]
+
+        D5 --> D6{More Work?}
+        D6 -->|Yes| D7[Invoke LLM]
+        D7 --> D8{Tool Needed?}
+        D8 -->|Yes| D9[Parse Tool Call]
+        D9 --> D10[Execute Tool]
+        D10 --> D11[Store Tool Result]
+        D11 --> D5
+        D8 -->|No| D12[Process Response]
+        D12 --> D5
+        D6 -->|No| D13[Calculate Confidence]
+        D13 --> D14[Store in Zep]
+        D14 --> D15[Return AgentResult]
+    end
+
+    subgraph "Memory Layer (Zep)"
+        M1[(Zep Server)]
+        M2[Session Store]
+        M3[Message History]
+        M4[Vector Search]
+        M5[Auto Summarization]
+
+        M1 --> M2
+        M1 --> M3
+        M1 --> M4
+        M1 --> M5
+
+        D2 --> M1
+        D3 --> M3
+        D14 --> M3
+    end
+
+    subgraph "Tools Layer"
+        T1[CRMSearchTool]
+        T2[CRMUpdateTool]
+        T3[EmailSendTool]
+        T4[CalendarTool]
+
+        D10 --> T1
+        D10 --> T2
+        D10 --> T3
+        D10 --> T4
+
+        T1 --> T5[tRPC Client]
+        T2 --> T5
+        T3 --> T5
+        T4 --> T5
+    end
+
+    subgraph "LLM Providers"
+        L1{Provider Selection}
+        L2[OpenAI API]
+        L3[Ollama Local]
+
+        C4 --> L1
+        D7 --> L1
+        L1 -->|Production| L2
+        L1 -->|Development| L3
+    end
+
+    subgraph "Cost & Monitoring"
+        CT1[Cost Tracker]
+        CT2[Token Counter]
+        CT3[Daily Budget Check]
+        CT4{Budget OK?}
+        CT5[Send Alert]
+        CT6[Record Usage]
+
+        L2 --> CT1
+        CT1 --> CT2
+        CT2 --> CT3
+        CT3 --> CT4
+        CT4 -->|No| CT5
+        CT4 -->|Yes| CT6
+        CT6 --> CT7[(Cost Database)]
+    end
+
+    subgraph "Observability"
+        O1[Logger]
+        O2[Metrics]
+        O3[Traces]
+
+        C4 -.-> O1
+        D7 -.-> O1
+        C4 -.-> O2
+        D7 -.-> O2
+        C4 -.-> O3
+        D7 -.-> O3
+    end
+
+    subgraph "Response Path"
+        R1[Format Response]
+        R2{Success?}
+        R3[Return Success]
+        R4[Return Error]
+        R5[Store Result]
+
+        C12 --> R1
+        D15 --> R1
+        R1 --> R2
+        R2 -->|Yes| R3
+        R2 -->|No| R4
+        R3 --> R5
+        R4 --> R5
+        R5 --> A3
+    end
+
+    %% Human-in-the-Loop Checkpoints
+    HI1[Human Review Queue]
+    C10 -.->|Low Confidence| HI1
+    C11 -.->|Very Low Confidence| HI1
+
+    %% Styling
+    classDef chainClass fill:#137fec,stroke:#0e6ac7,color:#fff
+    classDef agentClass fill:#6366f1,stroke:#4f46e5,color:#fff
+    classDef memoryClass fill:#22c55e,stroke:#16a34a,color:#fff
+    classDef toolClass fill:#f59e0b,stroke:#d97706,color:#fff
+    classDef llmClass fill:#ef4444,stroke:#dc2626,color:#fff
+    classDef humanClass fill:#ec4899,stroke:#db2777,color:#fff
+
+    class B1,B4,C1,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11,C12 chainClass
+    class B2,B3,D1,D2,D3,D4,D5,D6,D7,D8,D9,D10,D11,D12,D13,D14,D15 agentClass
+    class M1,M2,M3,M4,M5 memoryClass
+    class T1,T2,T3,T4,T5 toolClass
+    class L1,L2,L3 llmClass
+    class HI1,C10,C11 humanClass

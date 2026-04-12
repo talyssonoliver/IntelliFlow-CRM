@@ -1,0 +1,24 @@
+# IntelliFlow CRM - Baseline caching configuration (Sprint 0)
+#
+# This file is a placeholder to track caching decisions for ENV-014-AI.
+# Replace with concrete runtime configs (CDN, Next.js caching, Redis caching)
+# once deployment targets are selected.
+
+version: 1
+taskId: ENV-014-AI
+caching:
+  http:
+    cdn:
+      enabled: false
+      notes: "Enable when deploying behind CDN (Vercel/Cloudflare)."
+  api:
+    trpc:
+      enabled: false
+      ttlSeconds: 30
+      notes: "Enable for read-heavy endpoints once invalidation strategy is defined."
+  ai:
+    embeddings:
+      enabled: false
+      ttlSeconds: 86400
+      notes: "Cache embedding results to reduce cost; ensure privacy constraints."
+

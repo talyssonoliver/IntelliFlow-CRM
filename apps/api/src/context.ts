@@ -3,13 +3,17 @@
  *
  * This defines the context available to all tRPC procedures.
  * The context includes:
- * - Prisma database client
- * - User authentication info (placeholder for now)
+ * - Prisma database client (for backward compatibility and direct queries)
+ * - Application services (following hexagonal architecture)
+ * - User authentication info (extracted from JWT token)
  * - Request metadata
+ *
+ * IFC-007: Fixed to extract and verify JWT tokens from Authorization header
  */
 
-import { inferAsyncReturnType } from '@trpc/server';
-import { prisma } from '@intelliflow/db/client';
+import type { PrismaClient } from '@intelliflow/db';
+import { container, type Container, apiPrisma } from './container';
+import { supabaseAdmin, verifyToken } from './lib/supabase';
 
 /**
  * User session interface (will be replaced with actual auth implementation)
@@ -17,38 +21,592 @@ import { prisma } from '@intelliflow/db/client';
 export interface UserSession {
   userId: string;
   email: string;
+  name?: string;
   role: string;
+  tenantId: string;
+  stripeCustomerId?: string;
+  timezone?: string;
+}
+
+/**
+ * Services type from container
+ * Note: Some services (experiment, feedback) are optional
+ * as they are planned for future implementation
+ */
+export type Services = {
+  lead: Container['leadService'];
+  contact: Container['contactService'];
+  account: Container['accountService'];
+  opportunity: Container['opportunityService'];
+  task: Container['taskService'];
+  ticket: Container['ticketService'];
+  ticketRouting: Container['ticketRoutingService'];
+  leadRouting: Container['leadRoutingService'];
+  analytics: Container['analyticsService'];
+  chainVersion: Container['chainVersionService'];
+  convertLeadToDeal: Container['convertLeadToDealUseCase'];
+  closeDealWon: Container['closeDealWonUseCase'];
+  closeDealLost: Container['closeDealLostUseCase'];
+  feedbackSurvey: Container['feedbackSurveyService'];
+  // IFC-025: Experiment Service
+  experiment: Container['experimentService'];
+  // IFC-157: Notification Orchestrator (unified service with preferences + audit)
+  notificationOrchestrator: Container['notificationOrchestrator'];
+  // IFC-297: AI Monitoring persistence service
+  aiMonitoringService: Container['aiMonitoringService'];
+  // Optional future services
+  feedback?: unknown;
+};
+
+/**
+ * Security services type from container
+ * IFC-098: RBAC/ABAC & Audit Trail
+ * IFC-113: Secrets Management & Encryption
+ * IFC-127: Tenant Isolation
+ */
+export type SecurityServices = Container['security'];
+
+/**
+ * Adapters type from container
+ */
+export type Adapters = Container['adapters'];
+
+/**
+ * Base context interface for production use
+ */
+export interface BaseContext {
+  prisma: PrismaClient;
+  container: Container;
+  services: Services;
+  security: SecurityServices;
+  adapters: Adapters;
+  user: UserSession | null | undefined;
+  req?: Request;
+  res?: Response;
+  [key: string]: unknown;
+}
+
+/**
+ * Context type for routers - uses Partial to allow testing flexibility
+ * In production, createContext always provides full context
+ * In tests, services/adapters/security can be omitted for backward compatibility
+ *
+ * Note: When using services in routers, check for their existence first
+ * or use the full BaseContext type when you need guaranteed access.
+ */
+export interface Context {
+  prisma: PrismaClient;
+  prismaWithTenant?: PrismaClient;
+  container?: Container;
+  services?: Partial<Services>;
+  security?: Partial<SecurityServices>;
+  adapters?: Partial<Adapters>;
+  user: UserSession | null | undefined;
+  req?: Request;
+  res?: Response;
+  [key: string]: unknown;
+}
+
+/**
+ * Extract Bearer token from Authorization header
+ */
+function extractBearerToken(req?: Request): string | null {
+  if (!req) return null;
+
+  const authHeader = req.headers.get('Authorization') || req.headers.get('authorization');
+  if (!authHeader) return null;
+
+  const parts = authHeader.split(' ');
+  if (parts.length !== 2 || parts[0].toLowerCase() !== 'bearer') return null;
+
+  return parts[1];
+}
+
+/**
+ * Default fallback user for development when no valid token is provided
+ * Uses Sarah Johnson from seed data
+ */
+const FALLBACK_USER: UserSession = {
+  userId: '00000000-0000-4000-8000-000000000103', // Sarah Johnson from SEED_IDS.users.sarahJohnson
+  email: 'sarah.johnson@intelliflow.dev',
+  name: 'Sarah Johnson',
+  role: 'SALES_REP',
+  tenantId: '00000000-0000-4000-8000-000000000001', // Default tenant from database
+};
+
+/**
+ * Dev-only escape hatch for local diagnostics.
+ *
+ * Disabled by default because it bypasses real authentication and can expose
+ * tenant-scoped data in the UI when route guards are missing.
+ */
+function isDevAuthFallbackEnabled(): boolean {
+  return process.env.NODE_ENV !== 'production' && process.env.ALLOW_DEV_AUTH_FALLBACK === 'true';
 }
 
 /**
  * Create context for tRPC requests
  *
- * In a real app, this would:
- * - Extract auth token from headers
- * - Validate JWT/session
- * - Fetch user from database
- * - Handle rate limiting
+ * IFC-007: Now properly extracts and verifies JWT tokens from Authorization header
  *
- * For now, we use a mock user for development
+ * Flow:
+ * 1. Extract Bearer token from Authorization header
+ * 2. Verify token with Supabase Auth
+ * 3. Look up user in database to get role and tenant
+ * 4. Return authenticated user session
+ *
+ * Falls back to mock user only when explicitly enabled for development diagnostics
  */
-export const createContext = async (opts?: { req?: Request; res?: Response }) => {
-  // TODO: Extract user from auth token/session
-  // For development, we'll use a mock user
-  const mockUser: UserSession = {
-    userId: 'mock-user-id',
-    email: 'dev@intelliflow.ai',
-    role: 'ADMIN',
+/**
+ * Build the shared services object from the container
+ */
+function buildServicesFromContainer(): Services {
+  return {
+    lead: container.leadService,
+    contact: container.contactService,
+    account: container.accountService,
+    opportunity: container.opportunityService,
+    task: container.taskService,
+    ticket: container.ticketService,
+    ticketRouting: container.ticketRoutingService,
+    leadRouting: container.leadRoutingService,
+    analytics: container.analyticsService,
+    chainVersion: container.chainVersionService,
+    convertLeadToDeal: container.convertLeadToDealUseCase,
+    closeDealWon: container.closeDealWonUseCase,
+    closeDealLost: container.closeDealLostUseCase,
+    feedbackSurvey: container.feedbackSurveyService,
+    experiment: container.experimentService,
+    notificationOrchestrator: container.notificationOrchestrator,
+    aiMonitoringService: container.aiMonitoringService,
   };
+}
+
+/**
+ * Attempt to resolve a UserSession from a verified Supabase user ID.
+ * Returns null when the DB user does not exist.
+ */
+type UserProvisioningPrisma = Pick<PrismaClient, 'tenant' | 'user'>;
+
+const DEFAULT_BOOTSTRAP_ADMIN_EMAILS = ['talyssondasilvaoliveira@gmail.com'];
+
+function normalizeEmail(email: string | undefined): string | null {
+  return email?.trim().toLowerCase() || null;
+}
+
+function getBootstrapAdminEmails(): Set<string> {
+  const configured = [
+    process.env.BOOTSTRAP_ADMIN_EMAILS,
+    process.env.INITIAL_ADMIN_EMAILS,
+    process.env.OWNER_EMAIL,
+  ]
+    .filter((value): value is string => Boolean(value))
+    .flatMap((value) =>
+      value
+        .split(',')
+        .map((entry) => normalizeEmail(entry))
+        .filter((entry): entry is string => Boolean(entry))
+    );
+
+  return new Set([...DEFAULT_BOOTSTRAP_ADMIN_EMAILS, ...configured]);
+}
+
+function resolveProvisionedRole(email: string | undefined): 'ADMIN' | 'USER' {
+  const normalized = normalizeEmail(email);
+  return normalized && getBootstrapAdminEmails().has(normalized) ? 'ADMIN' : 'USER';
+}
+
+async function syncSupabaseUserRole(
+  userId: string,
+  userMetadata: Record<string, unknown>,
+  role: UserSession['role']
+): Promise<void> {
+  try {
+    await supabaseAdmin.auth.admin.updateUserById(userId, {
+      user_metadata: {
+        ...userMetadata,
+        role,
+      },
+    });
+  } catch (error) {
+    console.warn('[Auth] Failed to sync Supabase user role metadata:', error);
+  }
+}
+
+async function resolveDbUserWith(
+  prisma: UserProvisioningPrisma,
+  supabaseId: string
+): Promise<UserSession | null> {
+  const dbUser = await prisma.user.findUnique({
+    where: { id: supabaseId },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      role: true,
+      tenantId: true,
+      stripeCustomerId: true,
+      timezone: true,
+    },
+  });
+
+  if (!dbUser) return null;
 
   return {
-    prisma,
-    user: mockUser,
+    userId: dbUser.id,
+    email: dbUser.email,
+    name: dbUser.name ?? undefined,
+    role: dbUser.role,
+    tenantId: dbUser.tenantId,
+    stripeCustomerId: dbUser.stripeCustomerId ?? undefined,
+    timezone: dbUser.timezone ?? 'Europe/London',
+  };
+}
+
+async function maybePromoteBootstrapAdmin(
+  prisma: UserProvisioningPrisma,
+  session: UserSession,
+  supabaseUser?: {
+    user_metadata?: Record<string, unknown>;
+  }
+): Promise<UserSession> {
+  if (resolveProvisionedRole(session.email) !== 'ADMIN' || session.role === 'ADMIN') {
+    return session;
+  }
+
+  const updated = await prisma.user.update({
+    where: { id: session.userId },
+    data: { role: 'ADMIN' },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      role: true,
+      tenantId: true,
+      stripeCustomerId: true,
+      timezone: true,
+    },
+  });
+
+  await syncSupabaseUserRole(updated.id, supabaseUser?.user_metadata ?? {}, updated.role);
+
+  return {
+    userId: updated.id,
+    email: updated.email,
+    name: updated.name ?? undefined,
+    role: updated.role,
+    tenantId: updated.tenantId,
+    stripeCustomerId: updated.stripeCustomerId ?? undefined,
+    timezone: updated.timezone ?? 'Europe/London',
+  };
+}
+
+/**
+ * Auto-provision a new user (JIT — Just In Time user creation for OAuth).
+ * Returns a minimal UserSession on failure.
+ */
+function extractUserName(meta: Record<string, unknown>, email: string | undefined): string {
+  return (
+    (meta.name as string | undefined) ||
+    (meta.full_name as string | undefined) ||
+    email?.split('@')[0] ||
+    'User'
+  );
+}
+
+function extractAvatarUrl(meta: Record<string, unknown>): string | null {
+  return (meta.avatar_url as string | undefined) || (meta.picture as string | undefined) || null;
+}
+
+function extractGivenName(meta: Record<string, unknown>): string | null {
+  return (meta.given_name as string | undefined) || (meta.first_name as string | undefined) || null;
+}
+
+function extractFamilyName(meta: Record<string, unknown>): string | null {
+  return (meta.family_name as string | undefined) || (meta.last_name as string | undefined) || null;
+}
+
+function extractLocale(meta: Record<string, unknown>): string | null {
+  const locale = (meta.locale as string | undefined) || (meta.language as string | undefined);
+  return locale || null;
+}
+
+function extractProvider(supabaseUser: { app_metadata?: Record<string, unknown>; user_metadata?: Record<string, unknown> }): string | null {
+  const appMeta = supabaseUser.app_metadata ?? {};
+  const userMeta = supabaseUser.user_metadata ?? {};
+  return (
+    (appMeta.provider as string | undefined) ||
+    (userMeta.provider as string | undefined) ||
+    (userMeta.iss as string | undefined) ||
+    null
+  );
+}
+
+function extractEmailVerified(supabaseUser: { email_confirmed_at?: string | null; user_metadata?: Record<string, unknown> }): boolean {
+  if (supabaseUser.email_confirmed_at) return true;
+  const meta = supabaseUser.user_metadata ?? {};
+  return Boolean(meta.email_verified);
+}
+
+async function provisionNewUserWith(
+  prisma: UserProvisioningPrisma,
+  supabaseUser: {
+    id: string;
+    email?: string;
+    user_metadata?: Record<string, unknown>;
+    app_metadata?: Record<string, unknown>;
+    email_confirmed_at?: string | null;
+  }
+): Promise<UserSession> {
+  try {
+    let defaultTenant = await prisma.tenant.findUnique({ where: { slug: 'default' } });
+
+    if (!defaultTenant) {
+      console.log('[Auth] Creating default tenant...');
+      defaultTenant = await prisma.tenant.create({
+        data: { name: 'Default Organization', slug: 'default', status: 'ACTIVE' },
+      });
+    }
+
+    const meta = supabaseUser.user_metadata ?? {};
+    const userName = extractUserName(meta, supabaseUser.email);
+    const avatarUrl = extractAvatarUrl(meta);
+    const givenName = extractGivenName(meta);
+    const familyName = extractFamilyName(meta);
+    const locale = extractLocale(meta);
+    const provider = extractProvider(supabaseUser);
+    const emailVerified = extractEmailVerified(supabaseUser);
+    const role = resolveProvisionedRole(supabaseUser.email);
+
+    const newUser = await prisma.user.create({
+      data: {
+        id: supabaseUser.id,
+        email: supabaseUser.email || '',
+        name: userName,
+        givenName,
+        familyName,
+        avatarUrl,
+        locale,
+        provider,
+        emailVerified,
+        lastSignInAt: new Date(),
+        signInCount: 1,
+        role,
+        tenantId: defaultTenant.id,
+      },
+    });
+
+    await syncSupabaseUserRole(newUser.id, meta, newUser.role);
+
+    console.log('[Auth] Auto-provisioned new user:', {
+      id: newUser.id,
+      email: newUser.email,
+      name: newUser.name,
+      role: newUser.role,
+      tenantId: newUser.tenantId,
+    });
+
+    return {
+      userId: newUser.id,
+      email: newUser.email,
+      name: newUser.name ?? undefined,
+      role: newUser.role,
+      tenantId: newUser.tenantId,
+    };
+  } catch (provisionError) {
+    console.error('[Auth] Failed to auto-provision user:', provisionError);
+    return {
+      userId: supabaseUser.id,
+      email: supabaseUser.email || '',
+      role: 'USER',
+      tenantId: '', // Will fail tenant isolation
+    };
+  }
+}
+
+export async function ensureAppUserSession(
+  prisma: UserProvisioningPrisma,
+  supabaseUser: {
+    id: string;
+    email?: string;
+    user_metadata?: Record<string, unknown>;
+    app_metadata?: Record<string, unknown>;
+    email_confirmed_at?: string | null;
+  }
+): Promise<UserSession> {
+  const existing = await resolveDbUserWith(prisma, supabaseUser.id);
+  if (existing) {
+    // Track sign-in for existing user (fire-and-forget — no need to await)
+    void prisma.user
+      .update({
+        where: { id: existing.userId },
+        data: {
+          lastSignInAt: new Date(),
+          signInCount: { increment: 1 },
+          emailVerified: extractEmailVerified(supabaseUser),
+        },
+      })
+      .catch((err) => console.warn('[Auth] Failed to update sign-in metadata:', err));
+
+    return maybePromoteBootstrapAdmin(prisma, existing, supabaseUser);
+  }
+
+  return provisionNewUserWith(prisma, supabaseUser);
+}
+
+// ============================================
+// USER SESSION CACHE (performance fix)
+// ============================================
+// Cache resolved UserSession objects in-process to avoid a DB round-trip
+// (prisma.user.findUnique) on every request from the same user.
+// TTL: 60 seconds. Eviction: on size limit (1000 entries).
+
+const USER_SESSION_CACHE = new Map<string, { session: UserSession; expiresAt: number }>();
+const USER_CACHE_TTL_MS = 60_000; // 60 seconds
+const USER_CACHE_MAX_SIZE = 1_000;
+
+function getCachedSession(userId: string): UserSession | null {
+  const entry = USER_SESSION_CACHE.get(userId);
+  if (!entry) return null;
+  if (Date.now() > entry.expiresAt) {
+    USER_SESSION_CACHE.delete(userId);
+    return null;
+  }
+  return entry.session;
+}
+
+function cacheSession(userId: string, session: UserSession): void {
+  // Simple size eviction: clear oldest entries when at limit
+  if (USER_SESSION_CACHE.size >= USER_CACHE_MAX_SIZE) {
+    const firstKey = USER_SESSION_CACHE.keys().next().value;
+    if (firstKey) USER_SESSION_CACHE.delete(firstKey);
+  }
+  USER_SESSION_CACHE.set(userId, { session, expiresAt: Date.now() + USER_CACHE_TTL_MS });
+}
+
+/**
+ * Resolve a UserSession from a raw JWT token.
+ * Uses local JWT verification + in-process session cache to minimize latency.
+ * Returns null when the token is invalid or the Supabase user cannot be verified.
+ */
+async function resolveUserFromToken(token: string): Promise<UserSession | null> {
+  const { user: supabaseUser, error } = await verifyToken(token);
+
+  if (error) {
+    console.warn('[Auth] Token verification failed:', error.message);
+    return null;
+  }
+
+  if (!supabaseUser) return null;
+
+  // Check session cache before hitting the database
+  const cached = getCachedSession(supabaseUser.id);
+  if (cached) return cached;
+
+  const session = await ensureAppUserSession(apiPrisma, supabaseUser);
+
+  // Cache the resolved session
+  if (session) {
+    cacheSession(supabaseUser.id, session);
+  }
+
+  return session;
+}
+
+/**
+ * Extract a raw bearer token from an Authorization header string.
+ * Returns null if the header is absent or not a valid Bearer scheme.
+ */
+function extractWsBearerToken(authHeader: string | undefined): string | null {
+  if (!authHeader) return null;
+  const parts = authHeader.split(' ');
+  if (parts.length !== 2 || parts[0].toLowerCase() !== 'bearer') return null;
+  return parts[1] ?? null;
+}
+
+/**
+ * Resolve a UserSession for a WebSocket connection from a raw JWT.
+ * Returns null when the token is invalid or the DB user is absent.
+ */
+async function resolveWsUser(token: string): Promise<UserSession | null> {
+  const { user: supabaseUser, error } = await verifyToken(token);
+  if (error || !supabaseUser) return null;
+
+  return ensureAppUserSession(apiPrisma, supabaseUser);
+}
+
+/**
+ * Create context for WebSocket connections
+ *
+ * Simplified context creation that takes auth header directly,
+ * avoiding the need to convert IncomingMessage to Request.
+ */
+export const createWSContext = async (authHeader?: string): Promise<BaseContext> => {
+  let user: UserSession | null = null;
+  const hadBearerToken = Boolean(authHeader?.startsWith('Bearer '));
+  const token = extractWsBearerToken(authHeader);
+
+  if (token) {
+    try {
+      user = await resolveWsUser(token);
+    } catch (err) {
+      console.error('[WS Auth] Error verifying token:', err);
+    }
+  }
+
+  // Explicit opt-in only: never auto-authenticate by default in development.
+  if (!user && !hadBearerToken && isDevAuthFallbackEnabled()) {
+    user = FALLBACK_USER;
+  }
+
+  return {
+    prisma: apiPrisma,
+    container,
+    services: buildServicesFromContainer(),
+    security: container.security,
+    adapters: container.adapters,
+    user,
+  };
+};
+
+export const createContext = async (opts?: {
+  req?: Request;
+  res?: Response;
+}): Promise<BaseContext> => {
+  let user: UserSession | null = null;
+  const hadBearerToken = Boolean(opts?.req && extractBearerToken(opts?.req));
+
+  // Extract and verify token from Authorization header
+  const token = extractBearerToken(opts?.req);
+
+  if (token) {
+    try {
+      user = await resolveUserFromToken(token);
+    } catch (err) {
+      console.error('[Auth] Error verifying token:', err);
+    }
+  }
+
+  // Explicit opt-in only: never auto-authenticate by default in development.
+  if (!user && !hadBearerToken && isDevAuthFallbackEnabled()) {
+    user = FALLBACK_USER;
+  }
+
+  return {
+    // Database client (for backward compatibility and complex queries)
+    // Uses same fresh instance as container to avoid multiple connections
+    prisma: apiPrisma,
+    // Dependency injection container (for advanced use cases)
+    container,
+    // Application services (hexagonal architecture)
+    services: buildServicesFromContainer(),
+    // Security services (IFC-098, IFC-113, IFC-127)
+    security: container.security,
+    // Adapters for direct access when needed
+    adapters: container.adapters,
+    // User session (null in production if no valid token)
+    user,
     req: opts?.req,
     res: opts?.res,
   };
 };
-
-/**
- * Context type that will be used in routers
- */
-export type Context = inferAsyncReturnType<typeof createContext>;
