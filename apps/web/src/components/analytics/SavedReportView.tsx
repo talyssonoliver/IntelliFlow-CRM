@@ -46,7 +46,10 @@ export interface SavedReportViewProps {
 // Constants
 // ============================================
 
-const PERIOD_OPTIONS: Record<SavedReportConfig['reportType'], { value: PeriodKey; label: string }[]> = {
+const PERIOD_OPTIONS: Record<
+  SavedReportConfig['reportType'],
+  { value: PeriodKey; label: string }[]
+> = {
   weekly: [
     { value: '7d', label: 'Last 7 days' },
     { value: '30d', label: 'Last 30 days' },
@@ -61,7 +64,10 @@ const PERIOD_OPTIONS: Record<SavedReportConfig['reportType'], { value: PeriodKey
   ],
 };
 
-const EXPORT_TYPE_MAP: Record<SavedReportConfig['reportType'], 'overview' | 'sales' | 'timeseries'> = {
+const EXPORT_TYPE_MAP: Record<
+  SavedReportConfig['reportType'],
+  'overview' | 'sales' | 'timeseries'
+> = {
   weekly: 'overview',
   monthly: 'sales',
   quarterly: 'timeseries',
@@ -86,9 +92,13 @@ function formatCurrency(value: number): string {
 }
 
 function toMetricChange(delta: number, label = 'vs prev period'): MetricChange {
+  let direction: 'up' | 'down' | 'neutral';
+  if (delta > 0) direction = 'up';
+  else if (delta < 0) direction = 'down';
+  else direction = 'neutral';
   return {
     value: Math.abs(delta),
-    direction: delta > 0 ? 'up' : delta < 0 ? 'down' : 'neutral',
+    direction,
     label,
   };
 }
@@ -120,7 +130,7 @@ export default function SavedReportView({ config }: Readonly<SavedReportViewProp
   // --- tRPC queries ---
   const { data: overview, isLoading: overviewLoading } = trpc.analytics.getOverview.useQuery(
     { startDate: dateRange.startDate, endDate: dateRange.endDate },
-    { enabled },
+    { enabled }
   );
 
   const { data: timeSeries, isLoading: timeSeriesLoading } =
@@ -131,22 +141,22 @@ export default function SavedReportView({ config }: Readonly<SavedReportViewProp
         endDate: dateRange.endDate,
         granularity: config.reportType === 'weekly' ? 'day' : 'week',
       },
-      { enabled: enabled && (config.reportType === 'weekly' || config.reportType === 'monthly') },
+      { enabled: enabled && (config.reportType === 'weekly' || config.reportType === 'monthly') }
     );
 
   const { data: salesMetrics } = trpc.analytics.getSalesMetrics.useQuery(
     { startDate: dateRange.startDate, endDate: dateRange.endDate },
-    { enabled: enabled && (config.reportType === 'monthly' || config.reportType === 'quarterly') },
+    { enabled: enabled && (config.reportType === 'monthly' || config.reportType === 'quarterly') }
   );
 
   const { data: _funnel } = trpc.analytics.getConversionFunnel.useQuery(
     { startDate: dateRange.startDate, endDate: dateRange.endDate, includeLeads: true },
-    { enabled: enabled && (config.reportType === 'weekly' || config.reportType === 'quarterly') },
+    { enabled: enabled && (config.reportType === 'weekly' || config.reportType === 'quarterly') }
   );
 
   const { data: growthData, isLoading: growthLoading } = trpc.analytics.growthTrends.useQuery(
     { metric: 'revenue', months: 12 },
-    { enabled: enabled && config.reportType === 'quarterly' },
+    { enabled: enabled && config.reportType === 'quarterly' }
   );
 
   const { data: trafficSources } = trpc.analytics.trafficSources.useQuery(undefined, {
@@ -200,7 +210,7 @@ export default function SavedReportView({ config }: Readonly<SavedReportViewProp
       sections.push({
         title: 'Growth Trend',
         type: 'table',
-        data: growthData.map((p) => ({
+        data: growthData.map((p: { month: string; value: number }) => ({
           Month: p.month,
           Revenue: formatCurrency(p.value),
         })),
@@ -224,7 +234,10 @@ export default function SavedReportView({ config }: Readonly<SavedReportViewProp
   return (
     <>
       {/* Breadcrumb */}
-      <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+      <nav
+        aria-label="Breadcrumb"
+        className="flex items-center gap-2 text-sm text-muted-foreground mb-4"
+      >
         <Link href="/dashboard" className="hover:text-primary">
           Dashboard
         </Link>
@@ -269,10 +282,13 @@ export default function SavedReportView({ config }: Readonly<SavedReportViewProp
               aria-expanded={exportMenuOpen}
               className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-2.5 px-5 rounded-lg shadow-sm shadow-primary/30 transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 group"
             >
-              <span className="material-symbols-outlined text-lg transition-transform group-hover:scale-110" aria-hidden="true">
+              <span
+                className="material-symbols-outlined text-lg transition-transform group-hover:scale-110"
+                aria-hidden="true"
+              >
                 download
               </span>
-              Export
+              {' '}Export
               <span
                 className={`material-symbols-outlined text-sm transition-transform ${exportMenuOpen ? 'rotate-180' : ''}`}
                 aria-hidden="true"
@@ -282,27 +298,36 @@ export default function SavedReportView({ config }: Readonly<SavedReportViewProp
             </button>
 
             {exportMenuOpen && (
-              <div role="menu" className="absolute right-0 mt-2 w-56 bg-card rounded-lg shadow-lg border border-border z-50 overflow-hidden">
+              <div
+                role="menu"
+                className="absolute right-0 mt-2 w-56 bg-card rounded-lg shadow-lg border border-border z-50 overflow-hidden"
+              >
                 <div className="py-1">
                   <button
                     role="menuitem"
                     onClick={handleCSVExport}
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
                   >
-                    <span className="material-symbols-outlined text-lg text-muted-foreground" aria-hidden="true">
+                    <span
+                      className="material-symbols-outlined text-lg text-muted-foreground"
+                      aria-hidden="true"
+                    >
                       table_chart
                     </span>
-                    Export CSV
+                    {' '}Export CSV
                   </button>
                   <button
                     role="menuitem"
                     onClick={handlePDFExport}
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
                   >
-                    <span className="material-symbols-outlined text-lg text-muted-foreground" aria-hidden="true">
+                    <span
+                      className="material-symbols-outlined text-lg text-muted-foreground"
+                      aria-hidden="true"
+                    >
                       picture_as_pdf
                     </span>
-                    Export PDF
+                    {' '}Export PDF
                   </button>
                 </div>
               </div>
@@ -383,53 +408,138 @@ interface MetricCardConfig {
 
 function getMetricCards(
   reportType: SavedReportConfig['reportType'],
-  overview: { totalLeads: number; leadDelta: number; totalRevenue: number; revenueDelta: number; openOpportunities: number; openOpportunitiesDelta: number; winRate: number; winRateDelta: number } | undefined | null,
-  salesMetrics: { pipelineValue: number; winRate: number; avgDealSize: number; totalRevenue: number } | undefined | null,
+  overview:
+    | {
+        totalLeads: number;
+        leadDelta: number;
+        totalRevenue: number;
+        revenueDelta: number;
+        openOpportunities: number;
+        openOpportunitiesDelta: number;
+        winRate: number;
+        winRateDelta: number;
+      }
+    | undefined
+    | null,
+  salesMetrics:
+    | { pipelineValue: number; winRate: number; avgDealSize: number; totalRevenue: number }
+    | undefined
+    | null
 ): MetricCardConfig[] {
   if (!overview) {
-    return reportType === 'weekly'
-      ? [
-          { title: 'Revenue', value: 0, format: 'currency', icon: 'attach_money' },
-          { title: 'Leads', value: 0, format: 'number', icon: 'people' },
-          { title: 'Open Opportunities', value: 0, format: 'number', icon: 'handshake' },
-          { title: 'Win Rate', value: 0, format: 'percentage', icon: 'emoji_events' },
-        ]
-      : reportType === 'monthly'
-        ? [
-            { title: 'Total Revenue', value: 0, format: 'currency', icon: 'attach_money' },
-            { title: 'Pipeline Value', value: 0, format: 'currency', icon: 'trending_up' },
-            { title: 'Win Rate', value: 0, format: 'percentage', icon: 'emoji_events' },
-            { title: 'Avg Deal Size', value: 0, format: 'currency', icon: 'paid' },
-          ]
-        : [
-            { title: 'Revenue', value: 0, format: 'currency', icon: 'attach_money' },
-            { title: 'Win Rate', value: 0, format: 'percentage', icon: 'emoji_events' },
-            { title: 'Pipeline Value', value: 0, format: 'currency', icon: 'trending_up' },
-            { title: 'Deals Closed', value: 0, format: 'number', icon: 'handshake' },
-          ];
+    if (reportType === 'weekly') {
+      return [
+        { title: 'Revenue', value: 0, format: 'currency', icon: 'attach_money' },
+        { title: 'Leads', value: 0, format: 'number', icon: 'people' },
+        { title: 'Open Opportunities', value: 0, format: 'number', icon: 'handshake' },
+        { title: 'Win Rate', value: 0, format: 'percentage', icon: 'emoji_events' },
+      ];
+    }
+    if (reportType === 'monthly') {
+      return [
+        { title: 'Total Revenue', value: 0, format: 'currency', icon: 'attach_money' },
+        { title: 'Pipeline Value', value: 0, format: 'currency', icon: 'trending_up' },
+        { title: 'Win Rate', value: 0, format: 'percentage', icon: 'emoji_events' },
+        { title: 'Avg Deal Size', value: 0, format: 'currency', icon: 'paid' },
+      ];
+    }
+    return [
+      { title: 'Revenue', value: 0, format: 'currency', icon: 'attach_money' },
+      { title: 'Win Rate', value: 0, format: 'percentage', icon: 'emoji_events' },
+      { title: 'Pipeline Value', value: 0, format: 'currency', icon: 'trending_up' },
+      { title: 'Deals Closed', value: 0, format: 'number', icon: 'handshake' },
+    ];
   }
 
   switch (reportType) {
     case 'weekly':
       return [
-        { title: 'Revenue', value: overview.totalRevenue, format: 'currency', icon: 'attach_money', change: toMetricChange(overview.revenueDelta) },
-        { title: 'Leads', value: overview.totalLeads, format: 'number', icon: 'people', change: toMetricChange(overview.leadDelta) },
-        { title: 'Open Opportunities', value: overview.openOpportunities, format: 'number', icon: 'handshake', change: toMetricChange(overview.openOpportunitiesDelta) },
-        { title: 'Win Rate', value: overview.winRate, format: 'percentage', icon: 'emoji_events', change: toMetricChange(overview.winRateDelta, 'pp vs prev period') },
+        {
+          title: 'Revenue',
+          value: overview.totalRevenue,
+          format: 'currency',
+          icon: 'attach_money',
+          change: toMetricChange(overview.revenueDelta),
+        },
+        {
+          title: 'Leads',
+          value: overview.totalLeads,
+          format: 'number',
+          icon: 'people',
+          change: toMetricChange(overview.leadDelta),
+        },
+        {
+          title: 'Open Opportunities',
+          value: overview.openOpportunities,
+          format: 'number',
+          icon: 'handshake',
+          change: toMetricChange(overview.openOpportunitiesDelta),
+        },
+        {
+          title: 'Win Rate',
+          value: overview.winRate,
+          format: 'percentage',
+          icon: 'emoji_events',
+          change: toMetricChange(overview.winRateDelta, 'pp vs prev period'),
+        },
       ];
     case 'monthly':
       return [
-        { title: 'Total Revenue', value: salesMetrics?.totalRevenue ?? overview.totalRevenue, format: 'currency', icon: 'attach_money', change: toMetricChange(overview.revenueDelta) },
-        { title: 'Pipeline Value', value: salesMetrics?.pipelineValue ?? 0, format: 'currency', icon: 'trending_up' },
-        { title: 'Win Rate', value: salesMetrics?.winRate ?? overview.winRate, format: 'percentage', icon: 'emoji_events', change: toMetricChange(overview.winRateDelta, 'pp vs prev period') },
-        { title: 'Avg Deal Size', value: salesMetrics?.avgDealSize ?? 0, format: 'currency', icon: 'paid' },
+        {
+          title: 'Total Revenue',
+          value: salesMetrics?.totalRevenue ?? overview.totalRevenue,
+          format: 'currency',
+          icon: 'attach_money',
+          change: toMetricChange(overview.revenueDelta),
+        },
+        {
+          title: 'Pipeline Value',
+          value: salesMetrics?.pipelineValue ?? 0,
+          format: 'currency',
+          icon: 'trending_up',
+        },
+        {
+          title: 'Win Rate',
+          value: salesMetrics?.winRate ?? overview.winRate,
+          format: 'percentage',
+          icon: 'emoji_events',
+          change: toMetricChange(overview.winRateDelta, 'pp vs prev period'),
+        },
+        {
+          title: 'Avg Deal Size',
+          value: salesMetrics?.avgDealSize ?? 0,
+          format: 'currency',
+          icon: 'paid',
+        },
       ];
     case 'quarterly':
       return [
-        { title: 'Revenue', value: salesMetrics?.totalRevenue ?? overview.totalRevenue, format: 'currency', icon: 'attach_money', change: toMetricChange(overview.revenueDelta) },
-        { title: 'Win Rate', value: salesMetrics?.winRate ?? overview.winRate, format: 'percentage', icon: 'emoji_events', change: toMetricChange(overview.winRateDelta, 'pp vs prev period') },
-        { title: 'Pipeline Value', value: salesMetrics?.pipelineValue ?? 0, format: 'currency', icon: 'trending_up' },
-        { title: 'Deals Closed', value: (salesMetrics as Record<string, unknown>)?.closedWonCount as number ?? 0, format: 'number', icon: 'handshake' },
+        {
+          title: 'Revenue',
+          value: salesMetrics?.totalRevenue ?? overview.totalRevenue,
+          format: 'currency',
+          icon: 'attach_money',
+          change: toMetricChange(overview.revenueDelta),
+        },
+        {
+          title: 'Win Rate',
+          value: salesMetrics?.winRate ?? overview.winRate,
+          format: 'percentage',
+          icon: 'emoji_events',
+          change: toMetricChange(overview.winRateDelta, 'pp vs prev period'),
+        },
+        {
+          title: 'Pipeline Value',
+          value: salesMetrics?.pipelineValue ?? 0,
+          format: 'currency',
+          icon: 'trending_up',
+        },
+        {
+          title: 'Deals Closed',
+          value: ((salesMetrics as Record<string, unknown>)?.closedWonCount as number) ?? 0,
+          format: 'number',
+          icon: 'handshake',
+        },
       ];
   }
 }
@@ -437,17 +547,22 @@ function getMetricCards(
 function getMetricsForExport(
   reportType: SavedReportConfig['reportType'],
   overview: Record<string, unknown>,
-  salesMetrics?: Record<string, unknown> | null,
+  salesMetrics?: Record<string, unknown> | null
 ): Array<{ name: string; value: string | number; trend?: string }> {
   const cards = getMetricCards(
     reportType,
     overview as Parameters<typeof getMetricCards>[1],
-    salesMetrics as Parameters<typeof getMetricCards>[2],
+    salesMetrics as Parameters<typeof getMetricCards>[2]
   );
   return cards.map((c) => ({
     name: c.title,
     value: c.value,
-    trend: c.change ? `${c.change.direction === 'up' ? '+' : c.change.direction === 'down' ? '-' : ''}${c.change.value}%` : undefined,
+    trend: (() => {
+      if (!c.change) return undefined;
+      const signMap: Record<string, string> = { up: '+', down: '-', neutral: '' };
+      const sign = signMap[c.change.direction] ?? '';
+      return `${sign}${c.change.value}%`;
+    })(),
   }));
 }
 
@@ -481,12 +596,25 @@ function RevenueBarChart({
     );
   }
   return (
+    // eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- Recharts container cannot be an <img>; role="img" is the correct ARIA pattern
     <div className="h-64" role="img" aria-label="Revenue bar chart">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
-          <XAxis dataKey="periodLabel" tick={{ fontSize: 12 }} className="fill-muted-foreground" tickLine={false} axisLine={false} />
-          <YAxis tick={{ fontSize: 12 }} className="fill-muted-foreground" tickLine={false} axisLine={false} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
+          <XAxis
+            dataKey="periodLabel"
+            tick={{ fontSize: 12 }}
+            className="fill-muted-foreground"
+            tickLine={false}
+            axisLine={false}
+          />
+          <YAxis
+            tick={{ fontSize: 12 }}
+            className="fill-muted-foreground"
+            tickLine={false}
+            axisLine={false}
+            tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
+          />
           <Tooltip
             formatter={(value) => formatCurrency(typeof value === 'number' ? value : 0)}
             contentStyle={{
@@ -523,12 +651,25 @@ function GrowthTrendChart({
     );
   }
   return (
+    // eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- Recharts container cannot be an <img>; role="img" is the correct ARIA pattern
     <div className="h-64" role="img" aria-label="12-month revenue trend line chart">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
-          <XAxis dataKey="month" tick={{ fontSize: 12 }} className="fill-muted-foreground" tickLine={false} axisLine={false} />
-          <YAxis tick={{ fontSize: 12 }} className="fill-muted-foreground" tickLine={false} axisLine={false} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
+          <XAxis
+            dataKey="month"
+            tick={{ fontSize: 12 }}
+            className="fill-muted-foreground"
+            tickLine={false}
+            axisLine={false}
+          />
+          <YAxis
+            tick={{ fontSize: 12 }}
+            className="fill-muted-foreground"
+            tickLine={false}
+            axisLine={false}
+            tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
+          />
           <Tooltip
             formatter={(value) => formatCurrency(typeof value === 'number' ? value : 0)}
             contentStyle={{
@@ -538,7 +679,14 @@ function GrowthTrendChart({
               color: 'hsl(var(--foreground))',
             }}
           />
-          <Line type="monotone" dataKey="value" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+          <Line
+            type="monotone"
+            dataKey="value"
+            stroke="hsl(var(--primary))"
+            strokeWidth={2}
+            dot={{ r: 4 }}
+            activeDot={{ r: 6 }}
+          />
         </LineChart>
       </ResponsiveContainer>
     </div>
@@ -563,10 +711,19 @@ function LeadSourceChart({
     );
   }
   return (
+    // eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- Recharts container cannot be an <img>; role="img" is the correct ARIA pattern
     <div className="h-64" role="img" aria-label="Lead source distribution chart">
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
-          <Pie data={data} dataKey="percentage" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, value }) => `${name}: ${value}%`}>
+          <Pie
+            data={data}
+            dataKey="percentage"
+            nameKey="name"
+            cx="50%"
+            cy="50%"
+            outerRadius={80}
+            label={({ name, value }) => `${name}: ${value}%`}
+          >
             {data.map((entry, index) => (
               <Cell key={entry.name} fill={CHART_COLORS[index % CHART_COLORS.length]} />
             ))}

@@ -18,7 +18,7 @@ import type { FeedbackDashboardFilters } from './types';
 export function useFeedbackSurveyDashboard(filters: FeedbackDashboardFilters) {
   return api.feedbackSurvey.getDashboardStats.useQuery(filters, {
     refetchInterval: 30_000,
-    placeholderData: (prev) => prev,
+    placeholderData: (prev: unknown) => prev as never,
   });
 }
 
@@ -27,7 +27,7 @@ export function useFeedbackSurveyDashboard(filters: FeedbackDashboardFilters) {
  */
 export function useFeedbackNPSTrend(filters: FeedbackDashboardFilters) {
   return api.feedbackSurvey.getNPSTrend.useQuery(filters, {
-    placeholderData: (prev) => prev,
+    placeholderData: (prev: unknown) => prev as never,
   });
 }
 
@@ -36,7 +36,7 @@ export function useFeedbackNPSTrend(filters: FeedbackDashboardFilters) {
  */
 export function useFeedbackSentiment(filters: FeedbackDashboardFilters) {
   return api.feedbackSurvey.getSentimentBreakdown.useQuery(filters, {
-    placeholderData: (prev) => prev,
+    placeholderData: (prev: unknown) => prev as never,
   });
 }
 

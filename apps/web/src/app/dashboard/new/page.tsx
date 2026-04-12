@@ -197,7 +197,7 @@ const otherActions = [
     title: 'New Workflow',
     description: 'Create an automation rule',
     icon: 'account_tree',
-    href: '/automation/workflows/new',
+    href: '/cases/case-workflows',
     bgColor: 'bg-rose-50 dark:bg-rose-900/20',
     iconColor: 'text-rose-600 dark:text-rose-400',
   },
@@ -338,8 +338,8 @@ export default function CreateNewRecordPage() {
               <div
                 className={`mt-auto pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2 text-xs font-medium text-slate-400 ${record.actionColor} transition-colors`}
               >
-                <span className="material-symbols-outlined text-sm">add</span>
-                {' '}Create {record.title.replaceAll('New ', '')}
+                <span className="material-symbols-outlined text-sm">add</span> Create{' '}
+                {record.title.replaceAll('New ', '')}
               </div>
             </Link>
           ))}
