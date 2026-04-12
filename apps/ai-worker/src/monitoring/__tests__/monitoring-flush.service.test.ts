@@ -70,8 +70,26 @@ describe('MonitoringFlushService', () => {
         driftScore: 0.85,
         pValue: 0.01,
         timestamp: now,
-        baselineWindow: { startTime: now, endTime: now, sampleCount: 10, mean: 0.5, variance: 0.1, min: 0, max: 1, distribution: {} },
-        currentWindow: { startTime: now, endTime: now, sampleCount: 10, mean: 0.8, variance: 0.2, min: 0, max: 1, distribution: {} },
+        baselineWindow: {
+          startTime: now,
+          endTime: now,
+          sampleCount: 10,
+          mean: 0.5,
+          variance: 0.1,
+          min: 0,
+          max: 1,
+          distribution: {},
+        },
+        currentWindow: {
+          startTime: now,
+          endTime: now,
+          sampleCount: 10,
+          mean: 0.8,
+          variance: 0.2,
+          min: 0,
+          max: 1,
+          distribution: {},
+        },
         recommendations: ['Retrain model'],
       } as any,
     ]);
@@ -89,7 +107,7 @@ describe('MonitoringFlushService', () => {
           }),
         ]),
         skipDuplicates: true,
-      }),
+      })
     );
   });
 
@@ -119,7 +137,7 @@ describe('MonitoringFlushService', () => {
             flagged: false,
           }),
         ]),
-      }),
+      })
     );
   });
 
@@ -153,7 +171,7 @@ describe('MonitoringFlushService', () => {
             value: 0.8,
           }),
         ]),
-      }),
+      })
     );
   });
 
@@ -161,14 +179,23 @@ describe('MonitoringFlushService', () => {
     const now = new Date();
     vi.mocked(roiTracker.getCostsSince).mockReturnValue([
       {
-        id: 'cost-1', timestamp: now, model: 'gpt-4',
-        operationType: 'scoring', inputTokens: 100, outputTokens: 50, cost: 0.005,
+        id: 'cost-1',
+        timestamp: now,
+        model: 'gpt-4',
+        operationType: 'scoring',
+        inputTokens: 100,
+        outputTokens: 50,
+        cost: 0.005,
       },
     ]);
     vi.mocked(roiTracker.getValuesSince).mockReturnValue([
       {
-        id: 'val-1', timestamp: now, valueType: 'lead_scored' as any,
-        estimatedValue: 100, confidence: 0.8, relatedCostIds: ['cost-1'],
+        id: 'val-1',
+        timestamp: now,
+        valueType: 'lead_scored' as any,
+        estimatedValue: 100,
+        confidence: 0.8,
+        relatedCostIds: ['cost-1'],
       },
     ]);
 
@@ -179,14 +206,22 @@ describe('MonitoringFlushService', () => {
       expect.arrayContaining([
         expect.objectContaining({ eventType: 'roi_cost', model: 'gpt-4', value: 0.005 }),
         expect.objectContaining({ eventType: 'roi_value', value: 100 }),
-      ]),
+      ])
     );
   });
 
   it('flushNow() handles Prisma failure gracefully', async () => {
     const now = new Date();
     vi.mocked(latencyMonitor.getMeasurementsSince).mockReturnValue([
-      { id: 'lat-1', timestamp: now, model: 'gpt-4', operationType: 'x', phase: 'total' as any, durationMs: 10, success: true },
+      {
+        id: 'lat-1',
+        timestamp: now,
+        model: 'gpt-4',
+        operationType: 'x',
+        phase: 'total' as any,
+        durationMs: 10,
+        success: true,
+      },
     ]);
     mockPrisma.aIMonitoringEvent.createMany.mockRejectedValueOnce(new Error('DB down'));
 
@@ -220,7 +255,15 @@ describe('MonitoringFlushService', () => {
   it('flushNow() advances high-water mark after successful flush', async () => {
     const now = new Date();
     vi.mocked(latencyMonitor.getMeasurementsSince).mockReturnValue([
-      { id: 'lat-1', timestamp: now, model: 'gpt-4', operationType: 'x', phase: 'total' as any, durationMs: 10, success: true },
+      {
+        id: 'lat-1',
+        timestamp: now,
+        model: 'gpt-4',
+        operationType: 'x',
+        phase: 'total' as any,
+        durationMs: 10,
+        success: true,
+      },
     ]);
 
     await service.flushNow();
@@ -233,17 +276,24 @@ describe('MonitoringFlushService', () => {
   it('flushNow() forwards tenantId when present', async () => {
     const now = new Date();
     vi.mocked(latencyMonitor.getMeasurementsSince).mockReturnValue([
-      { id: 'lat-1', timestamp: now, model: 'gpt-4', operationType: 'x', phase: 'total' as any, durationMs: 10, success: true, tenantId: 'tenant-abc' } as any,
+      {
+        id: 'lat-1',
+        timestamp: now,
+        model: 'gpt-4',
+        operationType: 'x',
+        phase: 'total' as any,
+        durationMs: 10,
+        success: true,
+        tenantId: 'tenant-abc',
+      } as any,
     ]);
 
     await service.flushNow();
 
     expect(mockPrisma.aIMonitoringEvent.createMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.arrayContaining([
-          expect.objectContaining({ tenantId: 'tenant-abc' }),
-        ]),
-      }),
+        data: expect.arrayContaining([expect.objectContaining({ tenantId: 'tenant-abc' })]),
+      })
     );
   });
 });

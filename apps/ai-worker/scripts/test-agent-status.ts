@@ -68,7 +68,11 @@ async function main() {
     console.log('\nMarking agent IDLE...');
     await markAgentIdle(ctx, undefined, {
       durationMs: 272_000,
-      result: { insightsCreated: 5, processingTimeMs: 272_000, processedAt: new Date().toISOString() },
+      result: {
+        insightsCreated: 5,
+        processingTimeMs: 272_000,
+        processedAt: new Date().toISOString(),
+      },
     });
 
     const res2 = await client.query(
@@ -102,10 +106,7 @@ async function main() {
     for (const m of msgRes3.rows) console.log(`  [${m.role}] ${m.content}`);
 
     // 6. Cleanup: delete test messages and reset messageCount
-    await client.query(
-      `DELETE FROM message_records WHERE "conversationId" = $1`,
-      [res.rows[0].id]
-    );
+    await client.query(`DELETE FROM message_records WHERE "conversationId" = $1`, [res.rows[0].id]);
     await client.query(
       `UPDATE conversation_records SET "messageCount" = 0, status = 'IDLE', "contextName" = 'Awaiting new jobs' WHERE id = $1`,
       [res.rows[0].id]

@@ -144,7 +144,10 @@ function generateRecommendations(tier: LeadTier, score: number): string[] {
 /**
  * Handle the scheduled cron sentinel — enumerate unscored/stale leads and enqueue per-lead jobs.
  */
-async function handleScheduledDispatch(job: Job<ScoringJobData>, startTime: number): Promise<ScoringJobResult> {
+async function handleScheduledDispatch(
+  job: Job<ScoringJobData>,
+  startTime: number
+): Promise<ScoringJobResult> {
   const { leadId } = job.data;
   logger.info({ jobId: job.id }, 'Scheduled scoring dispatcher — enumerating unscored leads');
   let enqueued = 0;
@@ -156,10 +159,7 @@ async function handleScheduledDispatch(job: Job<ScoringJobData>, startTime: numb
     const staleThreshold = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const unscoredLeads = await prisma.lead.findMany({
       where: {
-        OR: [
-          { aiInsight: null },
-          { aiInsight: { updatedAt: { lt: staleThreshold } } },
-        ],
+        OR: [{ aiInsight: null }, { aiInsight: { updatedAt: { lt: staleThreshold } } }],
       },
       select: {
         id: true,
@@ -184,26 +184,33 @@ async function handleScheduledDispatch(job: Job<ScoringJobData>, startTime: numb
       });
 
       for (const l of unscoredLeads) {
-        await queue.add('score-lead', {
-          leadId: l.id,
-          tenantId: l.tenantId,
-          lead: {
-            email: l.email,
-            firstName: l.firstName ?? undefined,
-            lastName: l.lastName ?? undefined,
-            company: l.company ?? undefined,
-            title: l.title ?? undefined,
-            phone: l.phone ?? undefined,
-            source: l.source ?? 'unknown',
+        await queue.add(
+          'score-lead',
+          {
+            leadId: l.id,
+            tenantId: l.tenantId,
+            lead: {
+              email: l.email,
+              firstName: l.firstName ?? undefined,
+              lastName: l.lastName ?? undefined,
+              company: l.company ?? undefined,
+              title: l.title ?? undefined,
+              phone: l.phone ?? undefined,
+              source: l.source ?? 'unknown',
+            },
           },
-        }, DEFAULT_SCORING_JOB_OPTIONS);
+          DEFAULT_SCORING_JOB_OPTIONS
+        );
         enqueued++;
       }
 
       await queue.close();
     }
 
-    logger.info({ jobId: job.id, leadsEnqueued: enqueued }, 'Scheduled scoring dispatcher completed');
+    logger.info(
+      { jobId: job.id, leadsEnqueued: enqueued },
+      'Scheduled scoring dispatcher completed'
+    );
   } catch (error) {
     logger.error(
       { jobId: job.id, error: error instanceof Error ? error.message : String(error) },

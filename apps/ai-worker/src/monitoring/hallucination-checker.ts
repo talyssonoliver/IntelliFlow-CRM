@@ -158,7 +158,9 @@ export class HallucinationChecker {
     const entityCheck = this.checkForFabricatedEntities(params.output);
     checksPerformed += this.accumulateCheck(
       this.config.enableEntityValidation,
-      hallucinationTypes, evidence, scoreTotal,
+      hallucinationTypes,
+      evidence,
+      scoreTotal,
       'fabricated_entity',
       [`Fabricated entities: ${entityCheck.fabricated.join(', ')}`],
       entityCheck.score,
@@ -166,12 +168,15 @@ export class HallucinationChecker {
     );
 
     // 2. Check for factual errors against ground truth
-    const factCheck = this.config.enableFactChecking && params.groundTruth
-      ? this.checkFactualAccuracy(params.output, params.groundTruth)
-      : null;
+    const factCheck =
+      this.config.enableFactChecking && params.groundTruth
+        ? this.checkFactualAccuracy(params.output, params.groundTruth)
+        : null;
     checksPerformed += this.accumulateCheck(
       !!(this.config.enableFactChecking && params.groundTruth),
-      hallucinationTypes, evidence, scoreTotal,
+      hallucinationTypes,
+      evidence,
+      scoreTotal,
       'factual_error',
       (factCheck?.errors ?? []).map((e) => `Factual error: ${e}`),
       factCheck?.score ?? 0,
@@ -182,7 +187,9 @@ export class HallucinationChecker {
     const logicCheck = this.checkLogicalConsistency(params.output);
     checksPerformed += this.accumulateCheck(
       this.config.enableLogicChecking,
-      hallucinationTypes, evidence, scoreTotal,
+      hallucinationTypes,
+      evidence,
+      scoreTotal,
       'inconsistent_logic',
       logicCheck.contradictions.map((c) => `Contradiction: ${c}`),
       logicCheck.score,
@@ -193,7 +200,9 @@ export class HallucinationChecker {
     const claimCheck = this.checkClaimSupport(params.output, params.inputContext);
     checksPerformed += this.accumulateCheck(
       true,
-      hallucinationTypes, evidence, scoreTotal,
+      hallucinationTypes,
+      evidence,
+      scoreTotal,
       'unsupported_claim',
       claimCheck.unsupportedClaims.map((c) => `Unsupported: ${c}`),
       claimCheck.score,
@@ -204,7 +213,9 @@ export class HallucinationChecker {
     const driftCheck = this.checkContextDrift(params.inputContext, params.output);
     checksPerformed += this.accumulateCheck(
       true,
-      hallucinationTypes, evidence, scoreTotal,
+      hallucinationTypes,
+      evidence,
+      scoreTotal,
       'context_drift',
       [`Context drift detected: ${driftCheck.reason}`],
       driftCheck.score,
@@ -215,7 +226,9 @@ export class HallucinationChecker {
     const numCheck = this.checkNumericalAccuracy(params.output);
     checksPerformed += this.accumulateCheck(
       true,
-      hallucinationTypes, evidence, scoreTotal,
+      hallucinationTypes,
+      evidence,
+      scoreTotal,
       'numerical_error',
       numCheck.errors.map((e) => `Numerical error: ${e}`),
       numCheck.score,

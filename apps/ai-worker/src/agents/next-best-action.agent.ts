@@ -219,7 +219,10 @@ export class NextBestActionAgent extends BaseAgent<NBAContext, NBAResult> {
           durationMs,
           result: { retrieved: ragResult.context.length, avgRelevance: ragResult.avgRelevance },
         });
-        return { ragContextUsed: true, ragContent: this.ragChain.formatContextForPrompt(ragResult.context) };
+        return {
+          ragContextUsed: true,
+          ragContent: this.ragChain.formatContextForPrompt(ragResult.context),
+        };
       }
       const durationMs = Date.now() - startMs;
       await markAgentIdle(statusCtx, 'No relevant context found', { durationMs });
@@ -227,10 +230,7 @@ export class NextBestActionAgent extends BaseAgent<NBAContext, NBAResult> {
       const durationMs = Date.now() - startMs;
       const errMsg = error instanceof Error ? error.message : String(error);
       await markAgentError(statusCtx, errMsg, durationMs);
-      logger.warn(
-        { error: errMsg },
-        'RAG context retrieval failed, proceeding without'
-      );
+      logger.warn({ error: errMsg }, 'RAG context retrieval failed, proceeding without');
     }
     return { ragContextUsed: false, ragContent: '' };
   }
@@ -285,10 +285,7 @@ export class NextBestActionAgent extends BaseAgent<NBAContext, NBAResult> {
       const durationMs = Date.now() - startMs;
       const errMsg = error instanceof Error ? error.message : String(error);
       await markAgentError(statusCtx, errMsg, durationMs);
-      logger.warn(
-        { error: errMsg },
-        'Sentiment analysis failed, proceeding without'
-      );
+      logger.warn({ error: errMsg }, 'Sentiment analysis failed, proceeding without');
       return undefined;
     }
   }
@@ -413,7 +410,7 @@ ENTITY CONTEXT:
 - Title: ${context.title || 'Unknown'}
 - Score: ${context.score ?? 'Not scored'}
 - Stage: ${context.stage || 'Unknown'}
-- Value: ${context.value ? `$${context.value.toLocaleString()}` : 'Unknown'}
+- Value: ${context.value ? `$${context.value.toLocaleString('en-US')}` : 'Unknown'}
 - Days since last contact: ${context.daysSinceLastContact ?? 'Unknown'}
 - Total interactions: ${context.totalInteractions ?? 0}
 `;
@@ -626,7 +623,7 @@ Valid ACTION_TYPES: ${ACTION_TYPES.join(', ')}
     if (context.company) parts.push(`at ${context.company}`);
     if (context.title) parts.push(`(${context.title})`);
     if (context.stage) parts.push(`- Stage: ${context.stage}`);
-    if (context.value) parts.push(`- Value: $${context.value.toLocaleString()}`);
+    if (context.value) parts.push(`- Value: $${context.value.toLocaleString('en-US')}`);
     if (context.score !== undefined) parts.push(`- Score: ${context.score}`);
 
     return parts.join(' ') || `${context.entityType} ${context.entityId}`;

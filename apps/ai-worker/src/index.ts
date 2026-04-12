@@ -220,8 +220,7 @@ async function initializeWorker() {
 
     const ollamaModelName = aiConfig.provider === 'ollama' ? aiConfig.ollama.model : 'mock';
     const modelName = aiConfig.provider === 'openai' ? aiConfig.openai.model : ollamaModelName;
-    const ollamaEndpointUrl =
-      aiConfig.provider === 'ollama' ? aiConfig.ollama.baseUrl : 'mock';
+    const ollamaEndpointUrl = aiConfig.provider === 'ollama' ? aiConfig.ollama.baseUrl : 'mock';
     const endpointUrl =
       aiConfig.provider === 'openai'
         ? aiConfig.openai.baseUrl || 'https://api.openai.com'
@@ -392,7 +391,9 @@ async function main() {
 // entry ends with our source file path.
 const isDirectExecution =
   require.main === module ||
-  process.argv.some((arg) => arg.replace(/\\/g, '/').endsWith('/ai-worker/src/index.ts') || arg === 'src/index.ts');
+  process.argv.some(
+    (arg) => arg.replace(/\\/g, '/').endsWith('/ai-worker/src/index.ts') || arg === 'src/index.ts'
+  );
 
 if (isDirectExecution) {
   (async () => {

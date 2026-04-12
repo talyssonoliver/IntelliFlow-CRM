@@ -26,9 +26,7 @@ import {
 } from '@intelliflow/db';
 import { z } from 'zod';
 import { EmbeddingChain } from '../chains/embedding.chain';
-import {
-  DEFAULT_RELEVANCE_CONFIG as CANONICAL_RELEVANCE_CONFIG,
-} from '../config/relevance-config';
+import { DEFAULT_RELEVANCE_CONFIG as CANONICAL_RELEVANCE_CONFIG } from '../config/relevance-config';
 import type { ConversationRecordData, MessageRecordWithConversation } from '@intelliflow/domain';
 
 // Simple type interfaces to avoid Prisma generic complexity

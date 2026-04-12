@@ -284,11 +284,13 @@ You MUST NOT:
     // Notify callback handler of LLM start (input messages)
     if (this.conversationCallback) {
       const prompt = messages.map((m) => `[${m._getType()}] ${m.content}`).join('\n');
-      await this.conversationCallback.handleLLMStart(
-        { id: ['langchain', 'llms', this.config.name], lc: 1, type: 'not_implemented' },
-        [prompt],
-        `run-${Date.now()}`
-      ).catch(() => {});
+      await this.conversationCallback
+        .handleLLMStart(
+          { id: ['langchain', 'llms', this.config.name], lc: 1, type: 'not_implemented' },
+          [prompt],
+          `run-${Date.now()}`
+        )
+        .catch(() => {});
     }
 
     try {
@@ -314,10 +316,9 @@ You MUST NOT:
 
       // Notify callback handler of LLM end (response)
       if (this.conversationCallback) {
-        await this.conversationCallback.handleLLMEnd(
-          { generations: [[{ text: responseText }]] },
-          `run-${Date.now()}`
-        ).catch(() => {});
+        await this.conversationCallback
+          .handleLLMEnd({ generations: [[{ text: responseText }]] }, `run-${Date.now()}`)
+          .catch(() => {});
       }
 
       return responseText;

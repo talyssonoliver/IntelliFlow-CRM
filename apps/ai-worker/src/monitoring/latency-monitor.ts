@@ -212,7 +212,8 @@ export class LatencyMonitor {
     }
 
     // Apply sampling (non-security: probabilistic sampling decision, not used for auth or tokens)
-    if (Math.random() <= this.config.samplingRate) { // NOSONAR
+    if (Math.random() <= this.config.samplingRate) {
+      // NOSONAR
       this.measurements.push(...measurements);
     }
 
@@ -245,7 +246,8 @@ export class LatencyMonitor {
       timestamp: new Date(),
     };
 
-    if (Math.random() <= this.config.samplingRate) { // NOSONAR
+    if (Math.random() <= this.config.samplingRate) {
+      // NOSONAR
       this.measurements.push(entry);
     }
 
@@ -626,9 +628,7 @@ function getBucketRatio(bucket: number, percentiles: LatencyPercentiles): number
   return 1;
 }
 
-function buildHistogramMetrics(
-  stats: ReturnType<LatencyMonitor['getStats']>
-): string {
+function buildHistogramMetrics(stats: ReturnType<LatencyMonitor['getStats']>): string {
   const buckets = [100, 250, 500, 1000, 2000, 5000, 10000];
   const totalMeasurements = stats.sampleCount;
   let out = `# HELP intelliflow_ai_latency_seconds AI operation latency in seconds\n`;
@@ -644,9 +644,7 @@ function buildHistogramMetrics(
   return out;
 }
 
-function buildPercentileGauges(
-  stats: ReturnType<LatencyMonitor['getStats']>
-): string {
+function buildPercentileGauges(stats: ReturnType<LatencyMonitor['getStats']>): string {
   let out = `# HELP intelliflow_ai_latency_p95_ms P95 latency in milliseconds\n`;
   out += `# TYPE intelliflow_ai_latency_p95_ms gauge\n`;
   out += `intelliflow_ai_latency_p95_ms ${stats.percentiles.p95.toFixed(1)}\n`;
@@ -656,9 +654,7 @@ function buildPercentileGauges(
   return out;
 }
 
-function buildSloAndRateMetrics(
-  stats: ReturnType<LatencyMonitor['getStats']>
-): string {
+function buildSloAndRateMetrics(stats: ReturnType<LatencyMonitor['getStats']>): string {
   const p95Flag = stats.sloCompliance.p95Compliant ? 1 : 0;
   const p99Flag = stats.sloCompliance.p99Compliant ? 1 : 0;
   let out = `# HELP intelliflow_ai_slo_compliant SLO compliance status (1=compliant, 0=not)\n`;
@@ -671,9 +667,7 @@ function buildSloAndRateMetrics(
   return out;
 }
 
-function buildPerModelMetrics(
-  stats: ReturnType<LatencyMonitor['getStats']>
-): string {
+function buildPerModelMetrics(stats: ReturnType<LatencyMonitor['getStats']>): string {
   let out = `# HELP intelliflow_ai_latency_by_model_p95_ms P95 latency by model in milliseconds\n`;
   out += `# TYPE intelliflow_ai_latency_by_model_p95_ms gauge\n`;
   for (const [model, p] of Object.entries(stats.byModel)) {

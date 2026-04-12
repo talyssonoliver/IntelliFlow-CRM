@@ -373,10 +373,7 @@ export class DriftDetector {
       totalSamples,
       driftDetected: recentDrift.some((d) => d.detected),
       highSeverityCount: highSeverity.length,
-      lastCheck:
-        this.driftHistory.length > 0
-          ? this.driftHistory.at(-1)!.timestamp
-          : null,
+      lastCheck: this.driftHistory.length > 0 ? this.driftHistory.at(-1)!.timestamp : null,
     };
   }
 
@@ -503,21 +500,21 @@ export class DriftDetector {
         recommendations.push(
           'URGENT: Immediately investigate model performance',
           'Consider rolling back to previous model version',
-          'Alert on-call team',
+          'Alert on-call team'
         );
         break;
       case 'high':
         recommendations.push(
           'Review recent model inputs for anomalies',
           'Compare model outputs with human evaluations',
-          'Schedule model retraining if drift persists',
+          'Schedule model retraining if drift persists'
         );
         break;
       case 'medium':
         recommendations.push(
           'Monitor closely over next 24 hours',
           'Review input data quality',
-          'Check for seasonal patterns',
+          'Check for seasonal patterns'
         );
         break;
       case 'low':

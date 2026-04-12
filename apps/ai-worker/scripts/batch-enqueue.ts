@@ -11,9 +11,7 @@ const insightPayloads = [
       { id: 'd1', name: 'Acme Corp', daysSinceUpdate: 14, stage: 'negotiation', value: 50000 },
       { id: 'd2', name: 'GlobalTech', daysSinceUpdate: 21, stage: 'proposal', value: 120000 },
     ],
-    hotLeads: [
-      { id: 'l1', name: 'Jane Smith', score: 92, company: 'TechCo', status: 'new' },
-    ],
+    hotLeads: [{ id: 'l1', name: 'Jane Smith', score: 92, company: 'TechCo', status: 'new' }],
     overdueTasksCount: 5,
     staleContacts: [
       { id: 'c1', name: 'Bob Johnson', daysSinceContact: 45, hasOpenOpportunities: true },
@@ -49,11 +47,15 @@ async function main() {
   const q = new Queue('ai-insights', { connection });
 
   for (let i = 0; i < insightPayloads.length; i++) {
-    const job = await q.add('generate-insights', {
-      tenantId: TENANT_ID,
-      correlationId: `batch-${Date.now()}-${i}`,
-      ...insightPayloads[i],
-    }, DEFAULT_INSIGHT_JOB_OPTIONS);
+    const job = await q.add(
+      'generate-insights',
+      {
+        tenantId: TENANT_ID,
+        correlationId: `batch-${Date.now()}-${i}`,
+        ...insightPayloads[i],
+      },
+      DEFAULT_INSIGHT_JOB_OPTIONS
+    );
     console.log(`insight job #${job.id} queued (user: ${insightPayloads[i].userId})`);
   }
 

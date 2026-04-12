@@ -32,8 +32,10 @@ export class MonitoringFlushService {
     // Run retention cleanup once on start, then every 24h
     this.cleanupOldEvents().catch(() => {});
     this.cleanupInterval = setInterval(
-      () => { this.cleanupOldEvents().catch(() => {}); },
-      24 * 60 * 60 * 1000,
+      () => {
+        this.cleanupOldEvents().catch(() => {});
+      },
+      24 * 60 * 60 * 1000
     );
   }
 

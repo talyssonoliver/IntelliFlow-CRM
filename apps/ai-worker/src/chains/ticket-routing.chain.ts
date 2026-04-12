@@ -271,7 +271,8 @@ IMPORTANT: The assigneeId MUST be one of the agent IDs listed above.
    */
   generateFallbackResult(input: TicketRoutingInput, executionTimeMs: number): TicketRoutingResult {
     // Fix #12: sanitize before keyword matching to prevent control-char injection
-    const text = `${sanitizeStringField(input.subject, 500)} ${sanitizeStringField(input.description || '', 2000)}`.toLowerCase();
+    const text =
+      `${sanitizeStringField(input.subject, 500)} ${sanitizeStringField(input.description || '', 2000)}`.toLowerCase();
 
     // Keyword-based category inference
     let inferredCategory: TicketCategory = 'GENERAL';
@@ -350,4 +351,8 @@ export const ticketRoutingChain = createLazyTicketRoutingProxy();
 
 // Re-export types and schemas for convenience
 export { ticketRoutingInputSchema, ticketRoutingResultSchema } from '@intelliflow/validators';
-export type { TicketRoutingInput, TicketRoutingResult, AgentCandidate } from '@intelliflow/validators';
+export type {
+  TicketRoutingInput,
+  TicketRoutingResult,
+  AgentCandidate,
+} from '@intelliflow/validators';

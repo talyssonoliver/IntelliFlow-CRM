@@ -157,7 +157,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
    */
   private async registerScheduledJobs(): Promise<void> {
     const insightsCron = process.env.AI_INSIGHTS_CRON || '0 */6 * * *'; // every 6 hours
-    const scoringCron = process.env.AI_SCORING_CRON || '0 */4 * * *';   // every 4 hours
+    const scoringCron = process.env.AI_SCORING_CRON || '0 */4 * * *'; // every 4 hours
 
     // Use a real tenant ID so agent-status tracking writes ConversationRecord rows
     const systemTenantId = process.env.SYSTEM_TENANT_ID || '00000000-0000-4000-8000-000000000001';
@@ -241,7 +241,9 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     const app = express();
     app.disable('x-powered-by');
     app.use('/queues', serverAdapter.getRouter());
-    app.get('/', (_req, res) => { res.redirect('/queues'); });
+    app.get('/', (_req, res) => {
+      res.redirect('/queues');
+    });
 
     this.dashboardServer = app.listen(port, () => {
       this.logger.info({ url: `http://localhost:${port}/queues` }, 'Bull Board dashboard started');
@@ -292,11 +294,12 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
       let result: AIJobResult;
 
       // Map queue → chain tool name for ToolCallRecord
-      const chainToolName = {
-        [SCORING_QUEUE]: 'lead_scoring_chain',
-        [PREDICTION_QUEUE]: 'prediction_chain',
-        [INSIGHT_QUEUE]: 'insight_generation_chain',
-      }[job.queueName] ?? job.queueName;
+      const chainToolName =
+        {
+          [SCORING_QUEUE]: 'lead_scoring_chain',
+          [PREDICTION_QUEUE]: 'prediction_chain',
+          [INSIGHT_QUEUE]: 'insight_generation_chain',
+        }[job.queueName] ?? job.queueName;
 
       switch (job.queueName) {
         case SCORING_QUEUE:
@@ -340,11 +343,12 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
         const durationMs = Date.now() - startMs;
 
         // Record the failed chain execution as a tool call
-        const chainToolName = {
-          [SCORING_QUEUE]: 'lead_scoring_chain',
-          [PREDICTION_QUEUE]: 'prediction_chain',
-          [INSIGHT_QUEUE]: 'insight_generation_chain',
-        }[job.queueName] ?? job.queueName;
+        const chainToolName =
+          {
+            [SCORING_QUEUE]: 'lead_scoring_chain',
+            [PREDICTION_QUEUE]: 'prediction_chain',
+            [INSIGHT_QUEUE]: 'insight_generation_chain',
+          }[job.queueName] ?? job.queueName;
 
         await recordToolCall(
           ctx,
@@ -482,7 +486,9 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     };
   }
 
-  private getConfiguredProviderHealth(lastCheck: string): Promise<ComponentHealth> | ComponentHealth {
+  private getConfiguredProviderHealth(
+    lastCheck: string
+  ): Promise<ComponentHealth> | ComponentHealth {
     if (aiConfig.provider === 'mock') return this.getMockProviderHealth(lastCheck);
     if (aiConfig.provider === 'openai') return this.getOpenAIProviderHealth(lastCheck);
     if (aiConfig.provider === 'ollama') return this.checkOllamaHealth(lastCheck);

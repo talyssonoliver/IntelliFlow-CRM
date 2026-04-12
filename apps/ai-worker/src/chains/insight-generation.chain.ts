@@ -296,9 +296,7 @@ ANALYSIS INSTRUCTIONS:
     return result.insights;
   }
 
-  async generateInsightsWithMeta(
-    input: InsightGenerationInput
-  ): Promise<InsightGenerationResult> {
+  async generateInsightsWithMeta(input: InsightGenerationInput): Promise<InsightGenerationResult> {
     const startTime = Date.now();
 
     try {
@@ -323,7 +321,7 @@ ANALYSIS INSTRUCTIONS:
                 (d) =>
                   `- ${sanitizeStringField(d.name, 200)} (ID: ${d.id}): ${d.daysSinceUpdate} days since last update` +
                   (d.stage ? `, stage: ${sanitizeStringField(d.stage, 100)}` : '') +
-                  (d.value ? `, value: $${d.value.toLocaleString()}` : '')
+                  (d.value ? `, value: $${d.value.toLocaleString('en-US')}` : '')
               )
               .join('\n')
           : 'No deals at risk';
@@ -346,7 +344,9 @@ ANALYSIS INSTRUCTIONS:
               .map(
                 (c) =>
                   `- ${sanitizeStringField(c.name, 200)} (ID: ${c.id}): ` +
-                  (c.daysSinceContact === null ? 'never contacted' : `${c.daysSinceContact} days since last contact`)
+                  (c.daysSinceContact === null
+                    ? 'never contacted'
+                    : `${c.daysSinceContact} days since last contact`)
               )
               .join('\n')
           : 'No stale contacts';

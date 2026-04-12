@@ -123,7 +123,15 @@ describe('processInsightJob', () => {
         ];
       }
 
-      return [createInsight({ entityId: null, entityType: null, type: 'achievement', priority: 'low', confidence: 0.4 })];
+      return [
+        createInsight({
+          entityId: null,
+          entityType: null,
+          type: 'achievement',
+          priority: 'low',
+          confidence: 0.4,
+        }),
+      ];
     });
 
     mockCreate.mockResolvedValue({ id: 'insight-1' });

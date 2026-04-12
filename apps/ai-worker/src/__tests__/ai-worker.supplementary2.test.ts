@@ -44,7 +44,9 @@ vi.mock('@intelliflow/worker-shared', () => ({
     constructor(opts: any) {
       mocks.mockBaseWorkerCtor(opts);
     }
-    getQueue(_name: string) { return {}; }
+    getQueue(_name: string) {
+      return {};
+    }
     async start() {
       await (this as any).onStart?.();
       mocks.mockStart();
@@ -120,7 +122,9 @@ vi.mock('../monitoring', () => ({
 // ============================================================
 vi.mock('bullmq', () => ({
   Job: class {},
-  Queue: class { constructor(_name: any, _opts: any) {} },
+  Queue: class {
+    constructor(_name: any, _opts: any) {}
+  },
 }));
 
 // ============================================================
@@ -131,7 +135,9 @@ vi.mock('@bull-board/api', () => ({
 }));
 
 vi.mock('@bull-board/api/bullMQAdapter', () => ({
-  BullMQAdapter: class { constructor(_q: any) {} },
+  BullMQAdapter: class {
+    constructor(_q: any) {}
+  },
 }));
 
 vi.mock('@bull-board/express', () => ({

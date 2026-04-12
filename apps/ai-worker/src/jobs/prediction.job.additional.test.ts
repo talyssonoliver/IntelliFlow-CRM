@@ -153,15 +153,11 @@ describe('qualification error propagation', () => {
   beforeEach(() => vi.clearAllMocks());
   it('propagates Error for retry', async () => {
     mockScore.mockRejectedValue(new Error('m'));
-    await expect(
-      processPredictionJob(j({ predictionType: 'QUALIFICATION' }))
-    ).rejects.toThrow('m');
+    await expect(processPredictionJob(j({ predictionType: 'QUALIFICATION' }))).rejects.toThrow('m');
   });
   it('propagates non-Error for retry', async () => {
     mockScore.mockRejectedValue('f');
-    await expect(
-      processPredictionJob(j({ predictionType: 'QUALIFICATION' }))
-    ).rejects.toBe('f');
+    await expect(processPredictionJob(j({ predictionType: 'QUALIFICATION' }))).rejects.toBe('f');
   });
 });
 

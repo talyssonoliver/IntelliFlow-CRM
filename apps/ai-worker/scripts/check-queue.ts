@@ -14,7 +14,8 @@ async function main() {
     const userId = job.data?.userId ?? 'N/A';
     console.log(`Job #${id}: state=${state}, userId=${userId}`);
     if (state === 'failed') console.log(`  reason: ${job.failedReason?.slice(0, 200)}`);
-    if (state === 'completed') console.log(`  result: ${JSON.stringify(job.returnvalue)?.slice(0, 200)}`);
+    if (state === 'completed')
+      console.log(`  result: ${JSON.stringify(job.returnvalue)?.slice(0, 200)}`);
   }
 
   await q.close();

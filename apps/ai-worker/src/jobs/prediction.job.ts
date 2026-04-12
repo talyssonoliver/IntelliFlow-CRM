@@ -128,7 +128,14 @@ export async function processPredictionJob(
   // Persist prediction results to entity insight tables
   const tenantId = context?.tenantId as string | undefined;
   if (tenantId) {
-    await persistPredictionResult(entityType, entityId, tenantId, predictionType, prediction, recommendations);
+    await persistPredictionResult(
+      entityType,
+      entityId,
+      tenantId,
+      predictionType,
+      prediction,
+      recommendations
+    );
 
     // Notify on high churn risk (non-blocking)
     if (predictionType === 'CHURN_RISK') {
@@ -191,9 +198,8 @@ function buildPredictionUpdateData(
     const status = typeof prediction.value === 'string' ? prediction.value : 'NEEDS_REVIEW';
     updateData.nextBestAction = recommendations[0] || `Qualification: ${status}`;
   } else if (predictionType === 'NEXT_BEST_ACTION') {
-    updateData.nextBestAction = typeof prediction.value === 'string'
-      ? prediction.value
-      : recommendations[0] || 'Follow up';
+    updateData.nextBestAction =
+      typeof prediction.value === 'string' ? prediction.value : recommendations[0] || 'Follow up';
   }
 
   return updateData;
@@ -281,9 +287,23 @@ async function persistPredictionResult(
     const { prisma } = await import('@intelliflow/db');
 
     if (entityType === 'lead') {
-      await persistLeadPrediction(prisma, entityId, tenantId, predictionType, prediction, recommendations);
+      await persistLeadPrediction(
+        prisma,
+        entityId,
+        tenantId,
+        predictionType,
+        prediction,
+        recommendations
+      );
     } else if (entityType === 'contact') {
-      await persistContactPrediction(prisma, entityId, tenantId, predictionType, prediction, recommendations);
+      await persistContactPrediction(
+        prisma,
+        entityId,
+        tenantId,
+        predictionType,
+        prediction,
+        recommendations
+      );
     } else {
       logger.info(
         { entityType, entityId, predictionType },
@@ -316,8 +336,11 @@ async function notifyHighChurnRisk(
 ): Promise<void> {
   if (prediction.confidence < 0.7) return;
 
-  const riskLevel = typeof prediction.value === 'string' ? prediction.value : String(prediction.value);
-  const isHighRisk = riskLevel === 'HIGH' || riskLevel === 'CRITICAL' ||
+  const riskLevel =
+    typeof prediction.value === 'string' ? prediction.value : String(prediction.value);
+  const isHighRisk =
+    riskLevel === 'HIGH' ||
+    riskLevel === 'CRITICAL' ||
     (typeof prediction.value === 'number' && prediction.value >= 0.7);
   if (!isHighRisk) return;
 
@@ -533,9 +556,9 @@ async function processNextBestAction(
         });
         if (existingInsight) {
           nbaContext.score = existingInsight.engagementScore ?? nbaContext.score;
-          nbaContext.urgencyOverride = nbaContext.urgencyOverride ?? (
-            existingInsight.churnRisk === 'HIGH' ? 'HIGH' : undefined
-          );
+          nbaContext.urgencyOverride =
+            nbaContext.urgencyOverride ??
+            (existingInsight.churnRisk === 'HIGH' ? 'HIGH' : undefined);
         }
       } catch {
         // Non-blocking — proceed without enrichment

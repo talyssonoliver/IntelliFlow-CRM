@@ -522,10 +522,7 @@ export class ROITracker {
   /**
    * Determine ROI trend direction
    */
-  private determineTrend(
-    currentROI: number,
-    previousROI: number
-  ): ROITrend {
+  private determineTrend(currentROI: number, previousROI: number): ROITrend {
     const change = currentROI - previousROI;
     if (change > 5) return 'improving';
     if (change < -5) return 'declining';

@@ -16,7 +16,10 @@ import type { Serialized } from '@langchain/core/load/serializable';
 import { randomUUID } from 'node:crypto';
 import pino from 'pino';
 
-const logger = pino({ name: 'conversation-record-handler', level: process.env.LOG_LEVEL || 'info' });
+const logger = pino({
+  name: 'conversation-record-handler',
+  level: process.env.LOG_LEVEL || 'info',
+});
 
 // Lazy Prisma import (same pattern as agent-status.ts)
 let prismaPromise: Promise<any> | null = null;
@@ -111,11 +114,7 @@ export class ConversationRecordCallbackHandler extends BaseCallbackHandler {
   // LLM callbacks
   // ---------------------------------------------------------------------------
 
-  async handleLLMStart(
-    _llm: Serialized,
-    prompts: string[],
-    _runId: string
-  ): Promise<void> {
+  async handleLLMStart(_llm: Serialized, prompts: string[], _runId: string): Promise<void> {
     const content = prompts.join('\n---\n').slice(0, 5000);
     if (content) {
       await this.addMessage('USER', content);
@@ -140,11 +139,7 @@ export class ConversationRecordCallbackHandler extends BaseCallbackHandler {
   // Tool callbacks
   // ---------------------------------------------------------------------------
 
-  async handleToolStart(
-    _tool: Serialized,
-    input: string,
-    runId: string
-  ): Promise<void> {
+  async handleToolStart(_tool: Serialized, input: string, runId: string): Promise<void> {
     try {
       const conversationId = await this.getConversationId();
       if (!conversationId) return;

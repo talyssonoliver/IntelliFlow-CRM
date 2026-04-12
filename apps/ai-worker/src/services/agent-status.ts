@@ -78,8 +78,7 @@ export function extractJobContext(
       tenantId = raw.tenantId as string | undefined;
       userId = raw.userId as string | undefined;
       agentType = 'scoring';
-      const name =
-        [d.lead.firstName, d.lead.lastName].filter(Boolean).join(' ') || d.lead.email;
+      const name = [d.lead.firstName, d.lead.lastName].filter(Boolean).join(' ') || d.lead.email;
       taskDescription = `Scoring lead ${name}`;
       break;
     }
@@ -310,7 +309,10 @@ export async function recordToolCall(
     });
 
     if (!record) {
-      logger.debug({ agentType: ctx.agentType }, 'No conversation record found for tool call — skipping');
+      logger.debug(
+        { agentType: ctx.agentType },
+        'No conversation record found for tool call — skipping'
+      );
       return;
     }
 
@@ -340,7 +342,11 @@ export async function recordToolCall(
     logger.debug({ agentType: ctx.agentType, toolName, status }, 'Tool call recorded');
   } catch (error) {
     logger.warn(
-      { error: error instanceof Error ? error.message : String(error), agentType: ctx.agentType, toolName },
+      {
+        error: error instanceof Error ? error.message : String(error),
+        agentType: ctx.agentType,
+        toolName,
+      },
       'Failed to record tool call'
     );
   }

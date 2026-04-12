@@ -227,7 +227,15 @@ describe('Fix #14 — Hallucination checker wired into job handlers', () => {
       source: 'llm',
       executionTimeMs: 25,
     });
-    mockGenerateFallbackInsights.mockReturnValue([createInsight({ entityId: null, entityType: null, type: 'achievement', priority: 'low', confidence: 0.4 })]);
+    mockGenerateFallbackInsights.mockReturnValue([
+      createInsight({
+        entityId: null,
+        entityType: null,
+        type: 'achievement',
+        priority: 'low',
+        confidence: 0.4,
+      }),
+    ]);
   });
 
   it('calls hallucinationChecker.checkOutput after churn risk prediction', async () => {
@@ -419,7 +427,15 @@ describe('Fix #20 — Conversation record audit logging', () => {
       source: 'llm',
       executionTimeMs: 25,
     });
-    mockGenerateFallbackInsights.mockReturnValue([createInsight({ entityId: null, entityType: null, type: 'achievement', priority: 'low', confidence: 0.4 })]);
+    mockGenerateFallbackInsights.mockReturnValue([
+      createInsight({
+        entityId: null,
+        entityType: null,
+        type: 'achievement',
+        priority: 'low',
+        confidence: 0.4,
+      }),
+    ]);
   });
 
   it('logConversationRecord utility function logs structured data', async () => {
