@@ -23,7 +23,10 @@ function getArcColor(score: number): string {
   return '#22c55e';
 }
 
-export function HealthScoreGauge({ score, label = 'Health Score' }: Readonly<HealthScoreGaugeProps>) {
+export function HealthScoreGauge({
+  score,
+  label = 'Health Score',
+}: Readonly<HealthScoreGaugeProps>) {
   const clampedScore = Math.min(100, Math.max(0, score));
   // Semicircle arc: 180 degrees, radius 60, center (80, 70)
   const radius = 60;
@@ -49,6 +52,7 @@ export function HealthScoreGauge({ score, label = 'Health Score' }: Readonly<Hea
         <CardTitle className="text-base">{label}</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col items-center pb-4">
+        {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- SVG gauge; <meter> cannot contain SVG children; role="meter" is the correct ARIA pattern */}
         <div // NOSONAR — SVG gauge; role="meter" is the correct ARIA pattern, no native HTML equivalent for SVG-based meters
           role="meter"
           aria-valuenow={clampedScore}

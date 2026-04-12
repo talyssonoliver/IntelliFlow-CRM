@@ -144,8 +144,22 @@ export function VersionAuditLog({ auditLog, isLoading }: Readonly<VersionAuditLo
                     <TableCell className="text-muted-foreground">{entry.performedBy}</TableCell>
                     <TableCell className="text-muted-foreground">
                       {typeof entry.performedAt === 'string'
-                        ? new Date(entry.performedAt).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: timezone })
-                        : entry.performedAt.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: timezone })}
+                        ? new Date(entry.performedAt).toLocaleString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                            hour: 'numeric',
+                            minute: '2-digit',
+                            timeZone: timezone,
+                          })
+                        : entry.performedAt.toLocaleString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                            hour: 'numeric',
+                            minute: '2-digit',
+                            timeZone: timezone,
+                          })}
                     </TableCell>
                     <TableCell>
                       {entry.reason ? (

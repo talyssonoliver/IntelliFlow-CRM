@@ -97,7 +97,15 @@ export function ChainVersionCard({
   const { timezone } = useTimezoneContext();
   const statusConfig = STATUS_CONFIG[status];
   const chainLabel = CHAIN_TYPE_LABELS[chainType];
-  const dateStr = typeof createdAt === 'string' ? createdAt : createdAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: timezone });
+  const dateStr =
+    typeof createdAt === 'string'
+      ? createdAt
+      : createdAt.toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+          timeZone: timezone,
+        });
 
   const canActivate = status === 'DRAFT';
   const canDeprecate = status === 'ACTIVE';
@@ -105,6 +113,7 @@ export function ChainVersionCard({
   const canEdit = status === 'DRAFT';
 
   return (
+    // eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- Card contains nested <Button> elements; <button> cannot contain other buttons per HTML spec
     <Card
       className={`p-4 transition-all cursor-pointer hover:border-primary/50 ${
         isSelected ? 'border-primary ring-1 ring-primary' : ''

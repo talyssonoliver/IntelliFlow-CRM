@@ -25,17 +25,18 @@ export function AISettingsSidebarNav({
           className={cn(
             'flex items-center gap-3 px-3 py-2 rounded-lg text-sm w-full',
             'bg-primary/10 font-medium text-foreground',
-            !sidebarExpanded && 'justify-center',
+            !sidebarExpanded && 'justify-center'
           )}
         >
           <div className="w-7 h-7 rounded-md flex items-center justify-center shrink-0 bg-slate-100 dark:bg-slate-800">
-            <span className="material-symbols-outlined text-lg text-purple-600 dark:text-purple-400" aria-hidden="true">
+            <span
+              className="material-symbols-outlined text-lg text-purple-600 dark:text-purple-400"
+              aria-hidden="true"
+            >
               settings
             </span>
           </div>
-          {sidebarExpanded && (
-            <span className="font-medium truncate">AI & Agents Settings</span>
-          )}
+          {sidebarExpanded && <span className="font-medium truncate">AI & Agents Settings</span>}
         </div>
 
         {sidebarExpanded ? (
@@ -51,13 +52,13 @@ export function AISettingsSidebarNav({
                     'flex items-center gap-3 px-3 py-1.5 rounded-lg text-sm transition-colors',
                     active
                       ? 'bg-primary/10 font-medium text-foreground'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-accent',
+                      : 'text-muted-foreground hover:text-foreground hover:bg-accent'
                   )}
                 >
                   <span
                     className={cn(
                       'material-symbols-outlined text-lg',
-                      active ? 'text-purple-600 dark:text-purple-400' : 'text-muted-foreground',
+                      active ? 'text-purple-600 dark:text-purple-400' : 'text-muted-foreground'
                     )}
                     aria-hidden="true"
                   >
@@ -80,13 +81,15 @@ export function AISettingsSidebarNav({
                   title={item.label}
                   className={cn(
                     'flex items-center justify-center px-3 py-1.5 rounded-lg transition-colors',
-                    active ? 'bg-primary/10' : 'text-muted-foreground hover:text-foreground hover:bg-accent',
+                    active
+                      ? 'bg-primary/10'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-accent'
                   )}
                 >
                   <span
                     className={cn(
                       'material-symbols-outlined text-lg',
-                      active ? 'text-purple-600 dark:text-purple-400' : '',
+                      active ? 'text-purple-600 dark:text-purple-400' : ''
                     )}
                     aria-hidden="true"
                   >

@@ -489,38 +489,40 @@ export function LeadScoringDashboard() {
 
       {/* Scored Leads List */}
       {(() => {
-        if (isLoading) return (
-        <div className="space-y-4">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-36 w-full rounded-xl" /> // NOSONAR typescript:S6479
-          ))}
-        </div>
-        );
-        if (filteredLeads.length === 0) return (
-        <div data-testid="empty-state">
-          <EmptyState entity="insights" phase="passive" />
-        </div>
-        );
-        return (
-        <div className="space-y-4">
-          {filteredLeads.map((lead) => (
-            <LeadCard key={lead.id} lead={lead} />
-          ))}
-          {scoredLeads.length >= 20 && (
-            <div className="flex justify-center pt-4 pb-8">
-              <button
-                className="flex items-center gap-2 px-6 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-sm font-bold rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm"
-                onClick={handleLoadMore}
-                data-testid="load-more-button"
-              >
-                Load More Leads{' '}
-                <span className="material-symbols-outlined text-lg" aria-hidden="true">
-                  expand_more
-                </span>
-              </button>
+        if (isLoading)
+          return (
+            <div className="space-y-4">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} className="h-36 w-full rounded-xl" /> // NOSONAR typescript:S6479
+              ))}
             </div>
-          )}
-        </div>
+          );
+        if (filteredLeads.length === 0)
+          return (
+            <div data-testid="empty-state">
+              <EmptyState entity="insights" phase="passive" />
+            </div>
+          );
+        return (
+          <div className="space-y-4">
+            {filteredLeads.map((lead) => (
+              <LeadCard key={lead.id} lead={lead} />
+            ))}
+            {scoredLeads.length >= 20 && (
+              <div className="flex justify-center pt-4 pb-8">
+                <button
+                  className="flex items-center gap-2 px-6 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-sm font-bold rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm"
+                  onClick={handleLoadMore}
+                  data-testid="load-more-button"
+                >
+                  Load More Leads{' '}
+                  <span className="material-symbols-outlined text-lg" aria-hidden="true">
+                    expand_more
+                  </span>
+                </button>
+              </div>
+            )}
+          </div>
         );
       })()}
     </div>

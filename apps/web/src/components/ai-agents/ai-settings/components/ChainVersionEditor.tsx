@@ -159,7 +159,7 @@ export function ChainVersionEditor({
           {/* Chain Type */}
           <div className="space-y-2">
             <Label htmlFor="editor-chain-type">
-              Chain Type{' '}<span className="text-destructive">*</span>
+              Chain Type <span className="text-destructive">*</span>
             </Label>
             <select
               id="editor-chain-type"
@@ -181,7 +181,7 @@ export function ChainVersionEditor({
           {/* Model */}
           <div className="space-y-2">
             <Label htmlFor="editor-model">
-              Model{' '}<span className="text-destructive">*</span>
+              Model <span className="text-destructive">*</span>
             </Label>
             <Input
               id="editor-model"
@@ -196,7 +196,7 @@ export function ChainVersionEditor({
           {/* System Prompt */}
           <div className="space-y-2">
             <Label htmlFor="editor-prompt">
-              System Prompt{' '}<span className="text-destructive">*</span>
+              System Prompt <span className="text-destructive">*</span>
             </Label>
             <Textarea
               id="editor-prompt"

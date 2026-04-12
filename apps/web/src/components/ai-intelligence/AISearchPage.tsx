@@ -433,7 +433,9 @@ export function AISearchPage() {
       {hasQuery && isLoading && (
         <div className="space-y-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Card key={i}> {/* NOSONAR typescript:S6479 */}
+            <Card key={i}>
+              {' '}
+              {/* NOSONAR typescript:S6479 */}
               <CardContent className="p-4 space-y-3">
                 <Skeleton className="h-5 w-2/3" />
                 <Skeleton className="h-4 w-full" />
@@ -453,7 +455,7 @@ export function AISearchPage() {
               {error.message || 'An unexpected error occurred'}
             </p>
             <Button onClick={() => refetch()} variant="outline">
-              <span className="material-symbols-outlined mr-2 text-sm">refresh</span>{' '}Retry
+              <span className="material-symbols-outlined mr-2 text-sm">refresh</span> Retry
             </Button>
           </CardContent>
         </Card>
@@ -482,8 +484,7 @@ export function AISearchPage() {
       {hasMore && !isLoading && (
         <div className="flex justify-center">
           <Button onClick={handleLoadMore} variant="outline">
-            <span className="material-symbols-outlined mr-2 text-sm">expand_more</span>{' '}
-            Load More
+            <span className="material-symbols-outlined mr-2 text-sm">expand_more</span> Load More
           </Button>
         </div>
       )}
@@ -495,15 +496,16 @@ export function AISearchPage() {
 // Search Result Card
 // ============================================
 
-function SearchResultCard({ result, query }: Readonly<{ result: SearchResultItem; query: string }>) {
+function SearchResultCard({
+  result,
+  query,
+}: Readonly<{ result: SearchResultItem; query: string }>) {
   const href = getSourceHref(result.source, result.id);
   const sourceColor = getSourceColor(result.source);
   const isLinked = href !== '#';
 
   const card = (
-    <Card
-      className={cn('transition-shadow', isLinked && 'hover:shadow-md cursor-pointer')}
-    >
+    <Card className={cn('transition-shadow', isLinked && 'hover:shadow-md cursor-pointer')}>
       <CardContent className="p-4">
         <div className="flex flex-col gap-2">
           {/* Title + Source Badge */}

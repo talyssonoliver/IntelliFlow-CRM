@@ -33,7 +33,12 @@ function formatRelativeTime(dateStr: string, timezone: string = 'Europe/London')
   if (diffMins < 60) return `${diffMins}m ago`;
   if (diffHours < 24) return `${diffHours}h ago`;
   if (diffDays < 30) return `${diffDays}d ago`;
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: timezone });
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: timezone,
+  });
 }
 
 export function CitationDisplay({
@@ -80,7 +85,17 @@ export function CitationDisplay({
 
       <Badge className={cn('text-xs font-medium', relevanceClass)}>{scoreText}</Badge>
 
-      <span className="text-xs" title={new Date(createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: timezone })}>
+      <span
+        className="text-xs"
+        title={new Date(createdAt).toLocaleString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit',
+          timeZone: timezone,
+        })}
+      >
         {timeAgo}
       </span>
     </div>

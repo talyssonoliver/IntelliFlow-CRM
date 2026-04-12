@@ -82,7 +82,7 @@ export function RollbackConfirmDialog({
           <DialogTitle>Rollback to Version?</DialogTitle>
           <DialogDescription>
             This will create a new version based on{' '}
-            <span className="font-mono text-foreground">{targetVersion.id.slice(0, 8)}...</span>{' '}and
+            <span className="font-mono text-foreground">{targetVersion.id.slice(0, 8)}...</span> and
             activate it. The current active version will be deprecated.
           </DialogDescription>
         </DialogHeader>
@@ -107,8 +107,18 @@ export function RollbackConfirmDialog({
                 <span className="text-muted-foreground">Created:</span>
                 <span className="ml-2 font-medium">
                   {typeof targetVersion.createdAt === 'string'
-                    ? new Date(targetVersion.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: timezone })
-                    : targetVersion.createdAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: timezone })}
+                    ? new Date(targetVersion.createdAt).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                        timeZone: timezone,
+                      })
+                    : targetVersion.createdAt.toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                        timeZone: timezone,
+                      })}
                 </span>
               </div>
             </div>
@@ -117,7 +127,7 @@ export function RollbackConfirmDialog({
           {/* Reason Input */}
           <div className="space-y-2">
             <label htmlFor="rollback-reason" className="text-sm font-medium text-foreground">
-              Reason for rollback{' '}<span className="text-destructive">*</span>
+              Reason for rollback <span className="text-destructive">*</span>
             </label>
             <Textarea
               id="rollback-reason"
@@ -131,10 +141,12 @@ export function RollbackConfirmDialog({
             <div className="flex justify-between text-xs">
               <span id="reason-hint" className="text-muted-foreground">
                 {(() => {
-                if (characterCount < MIN_REASON_LENGTH) return `Minimum ${MIN_REASON_LENGTH} characters required`;
-                if (characterCount > MAX_REASON_LENGTH) return `Maximum ${MAX_REASON_LENGTH} characters allowed`;
-                return 'Reason will be recorded in the audit log';
-              })()}
+                  if (characterCount < MIN_REASON_LENGTH)
+                    return `Minimum ${MIN_REASON_LENGTH} characters required`;
+                  if (characterCount > MAX_REASON_LENGTH)
+                    return `Maximum ${MAX_REASON_LENGTH} characters allowed`;
+                  return 'Reason will be recorded in the audit log';
+                })()}
               </span>
               <span
                 id="reason-count"

@@ -1,8 +1,6 @@
 'use client';
 
-import {
-  ModuleSettingsNav,
-} from '@/components/shared/module-settings-nav';
+import { ModuleSettingsNav } from '@/components/shared/module-settings-nav';
 import { AI_AGENT_SECTIONS } from '@/components/sidebar/configs/agent-approvals';
 
 interface AIAgentSettingsPanelProps {
@@ -10,7 +8,10 @@ interface AIAgentSettingsPanelProps {
   onClose: () => void;
 }
 
-export function AIAgentSettingsPanel({ activeSectionId, onClose }: Readonly<AIAgentSettingsPanelProps>) {
+export function AIAgentSettingsPanel({
+  activeSectionId,
+  onClose,
+}: Readonly<AIAgentSettingsPanelProps>) {
   const section = activeSectionId
     ? AI_AGENT_SECTIONS.find((s) => s.id === activeSectionId)
     : undefined;

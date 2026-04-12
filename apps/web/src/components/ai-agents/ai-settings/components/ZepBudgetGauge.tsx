@@ -138,12 +138,20 @@ export function ZepBudgetGauge({ className }: Readonly<ZepBudgetGaugeProps>) {
             </TooltipTrigger>
             <TooltipContent>
               <div className="text-sm">
-                <p>Used: {budget.used.toLocaleString()} episodes</p>
-                <p>Remaining: {budget.remaining.toLocaleString()} episodes</p>
-                <p>Total: {budget.total.toLocaleString()} episodes</p>
+                <p>Used: {budget.used.toLocaleString('en-US')} episodes</p>
+                <p>Remaining: {budget.remaining.toLocaleString('en-US')} episodes</p>
+                <p>Total: {budget.total.toLocaleString('en-US')} episodes</p>
                 {budget.lastSyncedAt && (
                   <p className="text-muted-foreground mt-1">
-                    Last synced: {new Date(budget.lastSyncedAt).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: timezone })}
+                    Last synced:{' '}
+                    {new Date(budget.lastSyncedAt).toLocaleString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                      hour: 'numeric',
+                      minute: '2-digit',
+                      timeZone: timezone,
+                    })}
                   </p>
                 )}
               </div>
@@ -154,7 +162,7 @@ export function ZepBudgetGauge({ className }: Readonly<ZepBudgetGaugeProps>) {
         {/* Status text */}
         <div className="mt-4">
           <p className="text-sm text-muted-foreground">
-            {budget.used.toLocaleString()} / {budget.total.toLocaleString()} episodes
+            {budget.used.toLocaleString('en-US')} / {budget.total.toLocaleString('en-US')} episodes
           </p>
           {budgetStatus === 'warning' && (
             <p className="text-xs text-yellow-600 mt-1">Approaching limit - consider upgrading</p>

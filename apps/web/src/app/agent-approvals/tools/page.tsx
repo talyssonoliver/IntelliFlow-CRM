@@ -90,17 +90,19 @@ function ToolDetailPanel({
   executeMutation,
   handleTestExecute,
 }: Readonly<ToolDetailPanelProps>) {
-  if (detailQuery.isLoading) return (
-    <div className="space-y-2">
-      <Skeleton className="h-4 w-48" />
-      <Skeleton className="h-4 w-32" />
-    </div>
-  );
-  if (detailQuery.error) return (
-    <p className="text-sm text-destructive">
-      Failed to load tool details: {detailQuery.error.message}
-    </p>
-  );
+  if (detailQuery.isLoading)
+    return (
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-48" />
+        <Skeleton className="h-4 w-32" />
+      </div>
+    );
+  if (detailQuery.error)
+    return (
+      <p className="text-sm text-destructive">
+        Failed to load tool details: {detailQuery.error.message}
+      </p>
+    );
   if (!detailQuery.data) return null;
 
   const detail = detailQuery.data as ToolDetail;
@@ -144,17 +146,15 @@ function ToolDetailPanel({
           </span>
           {executeMutation.isSuccess && (
             <span className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
-              <span className="material-symbols-outlined text-sm">check_circle</span>{' '}
-              Action submitted — check{' '}
+              <span className="material-symbols-outlined text-sm">check_circle</span> Action
+              submitted — check{' '}
               <Link href="/agent-approvals/preview" className="underline">
                 Tool Actions
               </Link>
             </span>
           )}
           {executeMutation.error && (
-            <span className="text-xs text-destructive">
-              {executeMutation.error.message}
-            </span>
+            <span className="text-xs text-destructive">{executeMutation.error.message}</span>
           )}
         </div>
       )}
@@ -175,10 +175,7 @@ interface ToolCardProps {
 
 function ToolCard({ tool, requiresApproval, isExpanded, onToggle }: Readonly<ToolCardProps>) {
   const style = getActionStyle(tool.actionType);
-  const detailQuery = trpc.agent.getTool.useQuery(
-    { toolName: tool.name },
-    { enabled: isExpanded }
-  );
+  const detailQuery = trpc.agent.getTool.useQuery({ toolName: tool.name }, { enabled: isExpanded });
 
   const executeMutation = trpc.agent.executeTool.useMutation();
   const utils = trpc.useUtils();
@@ -230,8 +227,8 @@ function ToolCard({ tool, requiresApproval, isExpanded, onToggle }: Readonly<Too
                 </span>
                 {requiresApproval && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-400">
-                    <span className="material-symbols-outlined text-xs">shield</span>{' '}
-                    Approval Required
+                    <span className="material-symbols-outlined text-xs">shield</span> Approval
+                    Required
                   </span>
                 )}
               </div>
@@ -239,10 +236,11 @@ function ToolCard({ tool, requiresApproval, isExpanded, onToggle }: Readonly<Too
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <span className="text-xs text-muted-foreground">
-              {tool.entityTypes.join(', ')}
-            </span>
-            <span className="material-symbols-outlined text-base text-muted-foreground transition-transform" style={{ transform: isExpanded ? 'rotate(180deg)' : undefined }}>
+            <span className="text-xs text-muted-foreground">{tool.entityTypes.join(', ')}</span>
+            <span
+              className="material-symbols-outlined text-base text-muted-foreground transition-transform"
+              style={{ transform: isExpanded ? 'rotate(180deg)' : undefined }}
+            >
               expand_more
             </span>
           </div>
@@ -320,10 +318,7 @@ function AgentToolsDashboard() {
 
   const data = toolsQuery.data!;
   const approvalSet = new Set(data.requiringApproval.map((t) => t.name));
-  const allTools = [
-    ...data.requiringApproval,
-    ...data.noApproval,
-  ];
+  const allTools = [...data.requiringApproval, ...data.noApproval];
 
   let filteredTools: typeof allTools;
   if (filter === 'approval') {
@@ -371,26 +366,29 @@ function AgentToolsDashboard() {
       {/* Categories */}
       {data.metadata?.categories && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {Object.entries(data.metadata.categories as Record<string, { name: string; description: string; requiresApproval: boolean; tools: string[] }>).map(
-            ([key, cat]) => {
-              const catStyle = getActionStyle(key.toUpperCase());
-              return (
-                <Card key={key} className="border-l-4" style={{ borderLeftColor: 'currentColor' }}>
-                  <CardContent className={cn('p-3', catStyle.text)}>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="material-symbols-outlined text-sm">{catStyle.icon}</span>
-                      <span className="text-sm font-medium">{cat.name}</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">{cat.description}</p>
-                    <p className="text-xs mt-1">
-                      {cat.tools.length} tool{cat.tools.length === 1 ? '' : 's'}{' '}
-                      {cat.requiresApproval ? '(approval)' : '(auto)'}
-                    </p>
-                  </CardContent>
-                </Card>
-              );
-            }
-          )}
+          {Object.entries(
+            data.metadata.categories as Record<
+              string,
+              { name: string; description: string; requiresApproval: boolean; tools: string[] }
+            >
+          ).map(([key, cat]) => {
+            const catStyle = getActionStyle(key.toUpperCase());
+            return (
+              <Card key={key} className="border-l-4" style={{ borderLeftColor: 'currentColor' }}>
+                <CardContent className={cn('p-3', catStyle.text)}>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="material-symbols-outlined text-sm">{catStyle.icon}</span>
+                    <span className="text-sm font-medium">{cat.name}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{cat.description}</p>
+                  <p className="text-xs mt-1">
+                    {cat.tools.length} tool{cat.tools.length === 1 ? '' : 's'}{' '}
+                    {cat.requiresApproval ? '(approval)' : '(auto)'}
+                  </p>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
 
@@ -431,9 +429,7 @@ function AgentToolsDashboard() {
               tool={tool}
               requiresApproval={approvalSet.has(tool.name)}
               isExpanded={expandedTool === tool.name}
-              onToggle={() =>
-                setExpandedTool((prev) => (prev === tool.name ? null : tool.name))
-              }
+              onToggle={() => setExpandedTool((prev) => (prev === tool.name ? null : tool.name))}
             />
           ))}
         </div>
@@ -444,14 +440,12 @@ function AgentToolsDashboard() {
         <div className="flex items-center gap-2">
           <span className="h-2 w-2 rounded-full bg-green-500" />
           <span className="text-sm font-medium">Backend Connection</span>
-          <span className="text-xs text-muted-foreground">
-            Connected to agent.listTools
-          </span>
+          <span className="text-xs text-muted-foreground">Connected to agent.listTools</span>
         </div>
         <Link href="/agent-approvals/preview">
           <Button variant="outline" size="sm" className="gap-1.5">
-            <span className="material-symbols-outlined text-sm">pending_actions</span>{' '}
-            View Pending Actions
+            <span className="material-symbols-outlined text-sm">pending_actions</span> View Pending
+            Actions
             {pendingCount > 0 && (
               <span className="ml-1 rounded-full bg-primary px-1.5 text-xs text-primary-foreground">
                 {pendingCount}
@@ -508,8 +502,7 @@ function Header({ pendingCount, onRefresh }: Readonly<HeaderProps>) {
           )}
           {onRefresh && (
             <Button variant="outline" onClick={onRefresh} className="gap-2">
-              <span className="material-symbols-outlined text-base">refresh</span>{' '}
-              Refresh
+              <span className="material-symbols-outlined text-base">refresh</span> Refresh
             </Button>
           )}
         </div>
@@ -529,7 +522,5 @@ function AgentToolsContent() {
 }
 
 export default function AgentToolsPage() {
-  return (
-    <AgentToolsContent />
-  );
+  return <AgentToolsContent />;
 }

@@ -39,17 +39,18 @@ export function AIAgentSectionNav({
               isPanelOpen
                 ? 'bg-accent text-foreground'
                 : 'text-muted-foreground hover:text-foreground hover:bg-accent',
-              !sidebarExpanded && 'justify-center',
+              !sidebarExpanded && 'justify-center'
             )}
           >
             <div className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0 bg-slate-100 dark:bg-slate-800">
-              <span className="material-symbols-outlined text-lg text-purple-600 dark:text-purple-400" aria-hidden="true">
+              <span
+                className="material-symbols-outlined text-lg text-purple-600 dark:text-purple-400"
+                aria-hidden="true"
+              >
                 {section.icon}
               </span>
             </div>
-            {sidebarExpanded && (
-              <span className="font-medium truncate">{section.title}</span>
-            )}
+            {sidebarExpanded && <span className="font-medium truncate">{section.title}</span>}
           </button>
         );
       })}

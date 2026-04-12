@@ -8,10 +8,7 @@
  */
 
 import { api } from '@/lib/api';
-import type {
-  QueueSchedulerData,
-  SchedulerQueueName,
-} from './types';
+import type { QueueSchedulerData, SchedulerQueueName } from './types';
 
 // ---------------------------------------------------------------------------
 // useQueueScheduler — list all queues with 60s auto-refresh (AC-012)
@@ -30,7 +27,9 @@ export function useQueueScheduler() {
     isLoading: query.isLoading,
     isUnavailable: !query.isLoading && !!query.error,
     error: query.error as Error | null,
-    refetch: () => { query.refetch(); },
+    refetch: () => {
+      query.refetch();
+    },
   };
 }
 
@@ -48,7 +47,9 @@ export function useQueueMutations() {
   const pauseMutation = api.queuesAdmin.pause.useMutation({ onSuccess: invalidate });
   const resumeMutation = api.queuesAdmin.resume.useMutation({ onSuccess: invalidate });
   const retryFailedMutation = api.queuesAdmin.retryFailed.useMutation({ onSuccess: invalidate });
-  const deleteSchedulerMutation = api.queuesAdmin.deleteScheduler.useMutation({ onSuccess: invalidate });
+  const deleteSchedulerMutation = api.queuesAdmin.deleteScheduler.useMutation({
+    onSuccess: invalidate,
+  });
 
   // Build isPending map safely — variables may be undefined when not pending
   const pending: Partial<Record<SchedulerQueueName, boolean>> = {};

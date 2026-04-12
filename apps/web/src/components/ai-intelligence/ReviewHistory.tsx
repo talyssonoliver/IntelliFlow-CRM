@@ -67,7 +67,9 @@ const BUCKET_ORDER = ['Today', 'Yesterday', 'Last 7 Days', 'Last 30 Days', 'Olde
 
 function groupByDateBucket(reviews: ReviewResponse[]): DateGroup[] {
   const now = new Date();
-  const startOfToday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const startOfToday = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
+  );
   const buckets = new Map<string, ReviewResponse[]>();
 
   for (const review of reviews) {

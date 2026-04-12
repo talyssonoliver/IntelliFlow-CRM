@@ -288,7 +288,7 @@ export default function AIReviewDetailPage() {
               </p>
               {review.reviewerId && (
                 <p>
-                  <span className="font-medium text-foreground">Reviewer:</span>{' '}{review.reviewerId}
+                  <span className="font-medium text-foreground">Reviewer:</span> {review.reviewerId}
                 </p>
               )}
               {review.reviewDecision && (

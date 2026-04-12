@@ -124,9 +124,7 @@ function pollIntervalFor(status: WorkflowExecutionStatus | undefined): number | 
 // Hook
 // ---------------------------------------------------------------------------
 
-export function useWorkflowProgress(
-  params: UseWorkflowProgressParams,
-): UseWorkflowProgressResult {
+export function useWorkflowProgress(params: UseWorkflowProgressParams): UseWorkflowProgressResult {
   const enabled = params.enabled ?? true;
   const hasExecutionId = Boolean(params.executionId);
   const hasEntityPair = Boolean(params.entityType && params.entityId);
@@ -140,7 +138,7 @@ export function useWorkflowProgress(
         const d = query.state.data as RawExecution | null | undefined;
         return pollIntervalFor(d?.status);
       },
-    },
+    }
   );
 
   const entityQuery = api.workflow.getExecutionsByEntity.useQuery(
@@ -155,7 +153,7 @@ export function useWorkflowProgress(
         const d = query.state.data as RawExecution | null | undefined;
         return pollIntervalFor(d?.status);
       },
-    },
+    }
   );
 
   if (!hasExecutionId && !hasEntityPair) {

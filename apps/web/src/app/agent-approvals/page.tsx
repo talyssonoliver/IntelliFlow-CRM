@@ -438,7 +438,10 @@ function ActionCard({
           {isEscalated && (
             <div className="p-4 bg-orange-50 dark:bg-orange-900/20 border-b border-slate-200 dark:border-slate-700">
               <div className="flex items-start gap-2">
-                <Icon name="arrow_upward" className="text-base text-orange-600 dark:text-orange-400 mt-0.5 flex-shrink-0" />
+                <Icon
+                  name="arrow_upward"
+                  className="text-base text-orange-600 dark:text-orange-400 mt-0.5 flex-shrink-0"
+                />
                 <div className="flex-1 space-y-2">
                   <h3 className="text-sm font-medium text-orange-900 dark:text-orange-200">
                     Escalated for Manager Review
@@ -446,7 +449,7 @@ function ActionCard({
                   {action.escalation ? (
                     <div className="space-y-1.5">
                       <p className="text-sm text-orange-800 dark:text-orange-300">
-                        <span className="font-medium">Reason:</span>{' '}{action.escalation.reason}
+                        <span className="font-medium">Reason:</span> {action.escalation.reason}
                       </p>
                       <div className="flex items-center gap-4 text-xs text-orange-700 dark:text-orange-400">
                         <span className="flex items-center gap-1">
@@ -608,12 +611,15 @@ function ActionCard({
               </div>
             )}
 
-            {action.status !== 'pending' && action.status !== 'rejected' && action.status !== 'expired' && action.feedback && (
-              <div className="text-sm">
-                <span className="text-slate-500 dark:text-slate-400">Feedback: </span>
-                <span className="text-slate-700 dark:text-slate-300">{action.feedback}</span>
-              </div>
-            )}
+            {action.status !== 'pending' &&
+              action.status !== 'rejected' &&
+              action.status !== 'expired' &&
+              action.feedback && (
+                <div className="text-sm">
+                  <span className="text-slate-500 dark:text-slate-400">Feedback: </span>
+                  <span className="text-slate-700 dark:text-slate-300">{action.feedback}</span>
+                </div>
+              )}
 
             {action.status === 'expired' && (
               <div className="space-y-3">
@@ -624,10 +630,12 @@ function ActionCard({
                       Draft Expired / Invalidated
                     </p>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                      This draft was not reviewed within its approval window and has been automatically invalidated. The email was not sent.
+                      This draft was not reviewed within its approval window and has been
+                      automatically invalidated. The email was not sent.
                     </p>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                      You can regenerate a new draft with the same content and a fresh approval window.
+                      You can regenerate a new draft with the same content and a fresh approval
+                      window.
                     </p>
                   </div>
                 </div>
@@ -704,7 +712,8 @@ function computeMetricsValues(stats: Record<string, number>) {
   const total = Object.values(stats).reduce((a, b) => a + b, 0);
   const approved = (stats['APPROVED'] ?? 0) + (stats['SENT'] ?? 0);
   const rejected = (stats['REJECTED'] ?? 0) + (stats['FAILED'] ?? 0);
-  const pending = (stats['DRAFT'] ?? 0) + (stats['PENDING_APPROVAL'] ?? 0) + (stats['ESCALATED'] ?? 0);
+  const pending =
+    (stats['DRAFT'] ?? 0) + (stats['PENDING_APPROVAL'] ?? 0) + (stats['ESCALATED'] ?? 0);
   const approvalRate = total > 0 ? Math.round((approved / total) * 100) : 0;
   return { total, approved, rejected, pending, approvalRate };
 }
@@ -936,10 +945,17 @@ function AgentApprovalsContent() {
           decision: 'APPROVED',
           decidedBy: userId,
         });
-        toast({ title: 'Draft Approved', description: 'The AI draft has been approved and will be sent.' });
+        toast({
+          title: 'Draft Approved',
+          description: 'The AI draft has been approved and will be sent.',
+        });
       } catch (error) {
         console.error('Failed to approve:', error);
-        toast({ title: 'Approval Failed', description: String(error instanceof Error ? error.message : 'Unknown error'), variant: 'destructive' });
+        toast({
+          title: 'Approval Failed',
+          description: String(error instanceof Error ? error.message : 'Unknown error'),
+          variant: 'destructive',
+        });
       }
     },
     [approveMutation, userId]
@@ -965,7 +981,11 @@ function AgentApprovalsContent() {
         toast({ title: 'Draft Rejected', description: 'The AI draft has been rejected.' });
       } catch (error) {
         console.error('Failed to reject:', error);
-        toast({ title: 'Rejection Failed', description: String(error instanceof Error ? error.message : 'Unknown error'), variant: 'destructive' });
+        toast({
+          title: 'Rejection Failed',
+          description: String(error instanceof Error ? error.message : 'Unknown error'),
+          variant: 'destructive',
+        });
       }
     },
     [rejectMutation, userId]
@@ -997,13 +1017,20 @@ function AgentApprovalsContent() {
           reason: escalateReason,
           escalationExpiryHours: escalateSlaHours,
         });
-        toast({ title: 'Escalated', description: `Draft escalated for manager review (${escalateSlaHours}h SLA).` });
+        toast({
+          title: 'Escalated',
+          description: `Draft escalated for manager review (${escalateSlaHours}h SLA).`,
+        });
         setEscalatingActionId(null);
         setEscalateReason('');
         setEscalateSlaHours(48);
       } catch (error) {
         console.error('Failed to escalate:', error);
-        toast({ title: 'Escalation Failed', description: String(error instanceof Error ? error.message : 'Unknown error'), variant: 'destructive' });
+        toast({
+          title: 'Escalation Failed',
+          description: String(error instanceof Error ? error.message : 'Unknown error'),
+          variant: 'destructive',
+        });
       }
     },
     [escalateMutation, userId, escalatingActionId, escalateReason, escalateSlaHours]
@@ -1029,7 +1056,11 @@ function AgentApprovalsContent() {
         toast({ title: 'Rolled Back', description: 'The approved action has been rolled back.' });
       } catch (error) {
         console.error('Failed to rollback:', error);
-        toast({ title: 'Rollback Failed', description: String(error instanceof Error ? error.message : 'Unknown error'), variant: 'destructive' });
+        toast({
+          title: 'Rollback Failed',
+          description: String(error instanceof Error ? error.message : 'Unknown error'),
+          variant: 'destructive',
+        });
       }
     },
     [rollbackMutation, userId]
@@ -1039,12 +1070,19 @@ function AgentApprovalsContent() {
     async (actionId: string) => {
       try {
         const result = await regenerateMutation.mutateAsync({ draftId: actionId });
-        toast({ title: 'Draft Regenerated', description: `A new draft has been created with a fresh approval window. New ID: ${result.draftId.substring(0, 8)}...` });
+        toast({
+          title: 'Draft Regenerated',
+          description: `A new draft has been created with a fresh approval window. New ID: ${result.draftId.substring(0, 8)}...`,
+        });
         // Expand the new draft card
         setExpandedActionId(result.draftId);
       } catch (error) {
         console.error('Failed to regenerate:', error);
-        toast({ title: 'Regeneration Failed', description: String(error instanceof Error ? error.message : 'Unknown error'), variant: 'destructive' });
+        toast({
+          title: 'Regeneration Failed',
+          description: String(error instanceof Error ? error.message : 'Unknown error'),
+          variant: 'destructive',
+        });
       }
     },
     [regenerateMutation]
@@ -1183,7 +1221,9 @@ function AgentApprovalsContent() {
               <Icon name="mail" className="text-lg text-[#137fec]" />
               <div>
                 <h3 className="text-sm font-medium text-slate-900 dark:text-white">Email Drafts</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Auto-response emails pending review</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Auto-response emails pending review
+                </p>
               </div>
             </div>
             <span className="text-lg font-bold text-[#137fec]">{pendingCount}</span>
@@ -1195,8 +1235,12 @@ function AgentApprovalsContent() {
               <div className="flex items-center gap-2">
                 <Icon name="build" className="text-lg text-amber-600" />
                 <div>
-                  <h3 className="text-sm font-medium text-slate-900 dark:text-white">Tool Actions</h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">AI agent CRM changes awaiting approval</p>
+                  <h3 className="text-sm font-medium text-slate-900 dark:text-white">
+                    Tool Actions
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    AI agent CRM changes awaiting approval
+                  </p>
                 </div>
               </div>
               <span className="text-lg font-bold text-amber-600">{toolActionCount}</span>
@@ -1210,7 +1254,9 @@ function AgentApprovalsContent() {
                 <Icon name="rate_review" className="text-lg text-purple-600" />
                 <div>
                   <h3 className="text-sm font-medium text-slate-900 dark:text-white">AI Review</h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">AI output quality checks</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    AI output quality checks
+                  </p>
                 </div>
               </div>
               <Icon name="chevron_right" className="text-base text-slate-400" />
@@ -1230,20 +1276,22 @@ function AgentApprovalsContent() {
             <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Filter:</span>
           </div>
           <div className="flex flex-wrap gap-2" data-testid="filter-buttons">
-            {(['all', 'pending', 'escalated', 'approved', 'rejected', 'expired'] as const).map((status) => (
-              <button
-                key={status}
-                type="button"
-                onClick={() => setFilterStatus(status)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                  filterStatus === status
-                    ? 'bg-[#137fec] text-white'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                }`}
-              >
-                {status === 'all' ? 'All' : status.charAt(0).toUpperCase() + status.slice(1)}
-              </button>
-            ))}
+            {(['all', 'pending', 'escalated', 'approved', 'rejected', 'expired'] as const).map(
+              (status) => (
+                <button
+                  key={status}
+                  type="button"
+                  onClick={() => setFilterStatus(status)}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    filterStatus === status
+                      ? 'bg-[#137fec] text-white'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                  }`}
+                >
+                  {status === 'all' ? 'All' : status.charAt(0).toUpperCase() + status.slice(1)}
+                </button>
+              )
+            )}
           </div>
         </div>
       </Card>
@@ -1308,7 +1356,12 @@ function AgentApprovalsContent() {
             </div>
           </div>
           <div className="text-xs text-slate-500 dark:text-slate-400" suppressHydrationWarning>
-            Last refresh: {new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: timezone })}
+            Last refresh:{' '}
+            {new Date().toLocaleTimeString('en-US', {
+              hour: 'numeric',
+              minute: '2-digit',
+              timeZone: timezone,
+            })}
           </div>
         </div>
       </Card>
@@ -1387,7 +1440,9 @@ function AgentApprovalsContent() {
                     min={1}
                     max={168}
                     value={escalateSlaHours}
-                    onChange={(e) => setEscalateSlaHours(Math.max(1, Math.min(168, Number(e.target.value) || 48)))}
+                    onChange={(e) =>
+                      setEscalateSlaHours(Math.max(1, Math.min(168, Number(e.target.value) || 48)))
+                    }
                     className="w-24 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#137fec] text-sm"
                   />
                   <span className="text-sm text-slate-500 dark:text-slate-400">

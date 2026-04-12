@@ -26,8 +26,8 @@ export function InterventionAlerts({ customers }: Readonly<InterventionAlertsPro
         <CardTitle className="text-base flex items-center gap-2">
           <span className="material-symbols-outlined text-lg text-amber-500" aria-hidden="true">
             notifications_active
-          </span>
-          {' '}Urgent Interventions
+          </span>{' '}
+          Urgent Interventions
           {urgentCustomers.length > 0 && (
             <Badge variant="destructive" className="ml-1">
               {urgentCustomers.length}

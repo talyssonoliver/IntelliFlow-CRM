@@ -70,7 +70,7 @@ export default function AgentApprovalsLayoutShell({
       return createAgentApprovalsSettingsSidebarConfig(
         ({ isExpanded }: { isExpanded: boolean }) => (
           <AISettingsSidebarNav isExpanded={isExpanded} />
-        ),
+        )
       );
     }
     return createAgentApprovalsSidebarConfig(urlSectionId, InactiveSections, handleSettingsClick);
@@ -85,14 +85,8 @@ export default function AgentApprovalsLayoutShell({
           {/* Section panel (accordion mode) */}
           {!onSettingsPage && (
             <>
-              <AIAgentSettingsPanel
-                activeSectionId={panelSectionId}
-                onClose={handleClose}
-              />
-              <AIModuleSettingsPanel
-                isOpen={settingsOpen}
-                onClose={() => setSettingsOpen(false)}
-              />
+              <AIAgentSettingsPanel activeSectionId={panelSectionId} onClose={handleClose} />
+              <AIModuleSettingsPanel isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
             </>
           )}
 

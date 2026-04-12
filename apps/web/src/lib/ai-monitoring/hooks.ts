@@ -56,7 +56,9 @@ function filterAndSort(history: DriftHistoryItem[], filters?: DriftFilters): Dri
   return result;
 }
 
-export function useDriftDashboard(filters?: DriftFilters): DriftDashboardData & { available: boolean } {
+export function useDriftDashboard(
+  filters?: DriftFilters
+): DriftDashboardData & { available: boolean } {
   const statusQuery = api.aiMonitoring.getStatus.useQuery(undefined, {
     staleTime: 20000,
     refetchInterval: 30000,
@@ -232,7 +234,9 @@ const DEFAULT_SLO: SLOCompliance = {
   complianceRate: 1,
 };
 
-export function useLatencyDashboard(filters?: LatencyFilters): LatencyDashboardData & { available: boolean } {
+export function useLatencyDashboard(
+  filters?: LatencyFilters
+): LatencyDashboardData & { available: boolean } {
   const startTime = filters?.timeRange
     ? new Date(Date.now() - TIME_RANGE_MS[filters.timeRange])
     : undefined;
@@ -277,7 +281,9 @@ export function useLatencyDashboard(filters?: LatencyFilters): LatencyDashboardD
     | undefined;
 
   const trendRaw = trendQuery.data as Record<string, unknown> | undefined;
-  const trendData = (Array.isArray(trendRaw) ? trendRaw : (trendRaw?.data as LatencyTrendPoint[] | undefined)) ?? [];
+  const trendData =
+    (Array.isArray(trendRaw) ? trendRaw : (trendRaw?.data as LatencyTrendPoint[] | undefined)) ??
+    [];
 
   // Check if backend reports data unavailable (multi-process isolation)
   const metricsAvailable = (metricsData as Record<string, unknown>)?.available !== false;

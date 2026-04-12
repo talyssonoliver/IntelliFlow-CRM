@@ -99,10 +99,7 @@ export function ChainVersionsDashboard({
           >
             {/* Header */}
             <div className="flex items-center gap-2 mb-3">
-              <span
-                className="text-2xl"
-                aria-label={config.label}
-              >
+              <span className="text-2xl" aria-label={config.label}>
                 {config.icon}
               </span>
               <div>
@@ -134,8 +131,18 @@ export function ChainVersionsDashboard({
                   <span className="text-xs text-muted-foreground">Created</span>
                   <span className="text-xs text-foreground">
                     {typeof version.createdAt === 'string'
-                      ? new Date(version.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: timezone })
-                      : version.createdAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: timezone })}
+                      ? new Date(version.createdAt).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                          timeZone: timezone,
+                        })
+                      : version.createdAt.toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                          timeZone: timezone,
+                        })}
                   </span>
                 </div>
 

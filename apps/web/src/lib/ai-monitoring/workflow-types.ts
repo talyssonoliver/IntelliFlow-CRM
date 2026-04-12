@@ -9,19 +9,9 @@
 // Core Types
 // ---------------------------------------------------------------------------
 
-export type WorkflowExecutionStatus =
-  | 'RUNNING'
-  | 'PAUSED'
-  | 'COMPLETED'
-  | 'FAILED'
-  | 'CANCELLED';
+export type WorkflowExecutionStatus = 'RUNNING' | 'PAUSED' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
 
-export type WorkflowStepStatus =
-  | 'completed'
-  | 'pending'
-  | 'running'
-  | 'failed'
-  | 'skipped';
+export type WorkflowStepStatus = 'completed' | 'pending' | 'running' | 'failed' | 'skipped';
 
 export interface WorkflowStepDef {
   /** Numeric step identifier (1-based, from WorkflowDefinition.steps[].id) */

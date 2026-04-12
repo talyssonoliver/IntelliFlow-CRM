@@ -694,7 +694,8 @@ function AgentApprovalsPreviewContent() {
     return actions.filter((action) => action.status === filterStatus);
   }, [actions, filterStatus]);
 
-  const pendingCount = countQuery.data?.count ?? actions.filter((a) => a.status === 'pending').length;
+  const pendingCount =
+    countQuery.data?.count ?? actions.filter((a) => a.status === 'pending').length;
 
   // Auto-expand action if actionId is provided in URL (from timeline navigation)
   useEffect(() => {
@@ -824,12 +825,7 @@ function AgentApprovalsPreviewContent() {
               {pendingCount} pending
             </span>
           )}
-          <Button
-            variant="outline"
-            onClick={handleRefresh}
-            disabled={isLoading}
-            className="gap-2"
-          >
+          <Button variant="outline" onClick={handleRefresh} disabled={isLoading} className="gap-2">
             <Icon name="refresh" className={`text-base ${isLoading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>

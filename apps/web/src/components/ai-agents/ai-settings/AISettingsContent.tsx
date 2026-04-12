@@ -403,7 +403,7 @@ export default function AISettingsContent() {
               <DialogTitle>Activate Version?</DialogTitle>
               <DialogDescription>
                 This will activate version{' '}
-                <span className="font-mono">{actionVersion?.id.slice(0, 8)}...</span>{' '}and deprecate
+                <span className="font-mono">{actionVersion?.id.slice(0, 8)}...</span> and deprecate
                 the current active version for {actionVersion?.chainType}.
               </DialogDescription>
             </DialogHeader>

@@ -207,8 +207,10 @@ function AnalysisCard({ analysis }: Readonly<{ analysis: SentimentAnalysis }>) {
                   className={cn(
                     'inline-block px-2 py-0.5 rounded-full text-xs truncate max-w-[200px]',
                     (() => {
-                      if (kp.sentiment === 'positive') return 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400';
-                      if (kp.sentiment === 'negative') return 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400';
+                      if (kp.sentiment === 'positive')
+                        return 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400';
+                      if (kp.sentiment === 'negative')
+                        return 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400';
                       return 'bg-slate-50 text-slate-600 dark:bg-slate-800/50 dark:text-slate-400';
                     })()
                   )}
@@ -409,7 +411,8 @@ export function SentimentDashboard() {
 
       {/* Date Range + SearchFilterBar */}
       <div className="flex flex-col gap-3">
-        <fieldset className="flex items-center gap-2 border-0 p-0 m-0"><legend className="sr-only">Date range</legend>
+        <fieldset className="flex items-center gap-2 border-0 p-0 m-0">
+          <legend className="sr-only">Date range</legend>
           {DATE_RANGES.map((dr) => (
             <Button
               key={dr}
@@ -477,31 +480,33 @@ export function SentimentDashboard() {
 
       {/* Recent Analyses */}
       {(() => {
-        if (isLoading) return (
-        <div className="space-y-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-36 w-full rounded-lg" /> // NOSONAR typescript:S6479
-          ))}
-        </div>
-        );
-        if (filteredAnalyses.length === 0) return (
-        <div data-testid="empty-state">
-          <EmptyState entity="insights" phase="passive" />
-        </div>
-        );
-        return (
-        <div className="space-y-3">
-          {filteredAnalyses.map((analysis) => (
-            <AnalysisCard key={analysis.id} analysis={analysis} />
-          ))}
-          {recentAnalyses.length >= 20 ? (
-            <div className="flex justify-center">
-              <Button variant="outline" onClick={handleLoadMore} data-testid="load-more-button">
-                Load more
-              </Button>
+        if (isLoading)
+          return (
+            <div className="space-y-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} className="h-36 w-full rounded-lg" /> // NOSONAR typescript:S6479
+              ))}
             </div>
-          ) : null}
-        </div>
+          );
+        if (filteredAnalyses.length === 0)
+          return (
+            <div data-testid="empty-state">
+              <EmptyState entity="insights" phase="passive" />
+            </div>
+          );
+        return (
+          <div className="space-y-3">
+            {filteredAnalyses.map((analysis) => (
+              <AnalysisCard key={analysis.id} analysis={analysis} />
+            ))}
+            {recentAnalyses.length >= 20 ? (
+              <div className="flex justify-center">
+                <Button variant="outline" onClick={handleLoadMore} data-testid="load-more-button">
+                  Load more
+                </Button>
+              </div>
+            ) : null}
+          </div>
         );
       })()}
     </div>
