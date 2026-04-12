@@ -41,6 +41,39 @@ const defaultStats: AppointmentStats = {
   overdue: 0,
 };
 
+/**
+ * Compute the visible date range for a calendar view.
+ * Adds padding so appointments in the grid's overflow days (e.g. days of the
+ * previous/next month shown in a month grid) are still fetched.
+ */
+function getCalendarRange(
+  date: Date,
+  view: 'month' | 'week' | 'day'
+): { from: Date; to: Date } {
+  const from = new Date(date);
+  const to = new Date(date);
+  if (view === 'month') {
+    // First of month minus 7 days → last of month plus 7 days (covers grid overflow)
+    from.setDate(1);
+    from.setDate(from.getDate() - 7);
+    from.setHours(0, 0, 0, 0);
+    to.setMonth(to.getMonth() + 1, 0); // last day of current month
+    to.setDate(to.getDate() + 7);
+    to.setHours(23, 59, 59, 999);
+  } else if (view === 'week') {
+    // Start of ISO week (Sun) → end of week (Sat)
+    const day = from.getDay();
+    from.setDate(from.getDate() - day);
+    from.setHours(0, 0, 0, 0);
+    to.setDate(to.getDate() + (6 - day));
+    to.setHours(23, 59, 59, 999);
+  } else {
+    from.setHours(0, 0, 0, 0);
+    to.setHours(23, 59, 59, 999);
+  }
+  return { from, to };
+}
+
 export default function CalendarPage() {
   const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
   const router = useRouter();
@@ -74,15 +107,60 @@ export default function CalendarPage() {
   const [showTaskCreate, setShowTaskCreate] = useState(false);
   const [taskCreateDefaultDate, setTaskCreateDefaultDate] = useState<string>('');
 
+  /**
+   * When in calendar mode, expand the query range to cover the visible grid
+   * and raise the pagination limit so appointments in the current view actually
+   * reach the calendar. Without this, the default list query returns only the
+   * 20 oldest appointments (sort=startTime ASC, limit=20) — which almost never
+   * overlap with today's month.
+   */
+  const calendarQueryParams = useMemo(() => {
+    if (filters.viewMode !== 'calendar') return queryParams;
+    const range = getCalendarRange(currentDate, filters.calendarView);
+    return {
+      ...queryParams,
+      startTimeFrom: range.from.toISOString(),
+      startTimeTo: range.to.toISOString(),
+      // Calendar mode: max allowed by listAppointmentsSchema. The narrow date
+      // window (visible grid) means 100 is enough for typical usage.
+      limit: 100,
+      page: 1,
+    };
+  }, [queryParams, filters.viewMode, filters.calendarView, currentDate]);
+
   // tRPC queries — cast to simplified type to avoid TS2589 (excessively deep instantiation)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, isLoading } = api.appointments.list.useQuery(queryParams, { staleTime: 30_000 }) as any as { data: { appointments?: Record<string, unknown>[]; total?: number } | undefined; isLoading: boolean };
+  const { data, isLoading } = api.appointments.list.useQuery(calendarQueryParams, {
+    staleTime: 30_000,
+  }) as any as {
+    data: { appointments?: Record<string, unknown>[]; total?: number } | undefined;
+    isLoading: boolean;
+  };
 
   const { data: rawStats } = api.appointments.stats.useQuery(undefined, {
     staleTime: 5 * 60_000,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
   });
+
+  // Task stats — merged into KPI cards so the Calendar page shows combined
+  // counts (appointments + tasks), matching what users see in the calendar grid.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: rawTaskStats } = (api as any).task.stats.useQuery(undefined, {
+    staleTime: 5 * 60_000,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+  }) as {
+    data:
+      | {
+          total?: number;
+          byStatus?: Record<string, number>;
+          byPriority?: Record<string, number>;
+          overdue?: number;
+          dueToday?: number;
+        }
+      | undefined;
+  };
 
   const appointments: AppointmentListItem[] = useMemo(() => {
     const rawAppointments: Record<string, unknown>[] | undefined = data?.appointments;
@@ -113,9 +191,31 @@ export default function CalendarPage() {
   const total = data?.total ?? 0;
 
   const stats: AppointmentStats = useMemo(() => {
-    if (!rawStats) return defaultStats;
-    return rawStats as AppointmentStats;
-  }, [rawStats]);
+    const apptStats = (rawStats as AppointmentStats | undefined) ?? defaultStats;
+    const taskStats = rawTaskStats ?? {};
+    const taskByStatus = taskStats.byStatus ?? {};
+    const totalTasks = taskStats.total ?? 0;
+    const completedTasks = taskByStatus.COMPLETED ?? 0;
+    const cancelledTasks = taskByStatus.CANCELLED ?? 0;
+    const inProgressTasks = taskByStatus.IN_PROGRESS ?? 0;
+    const overdueTasks = taskStats.overdue ?? 0;
+    // "Upcoming tasks" = active tasks that aren't overdue.
+    const upcomingTasks = Math.max(
+      0,
+      totalTasks - completedTasks - cancelledTasks - overdueTasks
+    );
+
+    return {
+      ...apptStats,
+      upcoming: apptStats.upcoming + upcomingTasks,
+      overdue: apptStats.overdue + overdueTasks,
+      byStatus: {
+        ...apptStats.byStatus,
+        CONFIRMED: (apptStats.byStatus?.CONFIRMED ?? 0) + inProgressTasks,
+        COMPLETED: (apptStats.byStatus?.COMPLETED ?? 0) + completedTasks,
+      },
+    };
+  }, [rawStats, rawTaskStats]);
 
   const calendarAppointments = useMemo((): CalendarAppointment[] => {
     return appointments
@@ -210,7 +310,7 @@ export default function CalendarPage() {
   );
 
   const handleCreateWithDate = useCallback((date: Date) => {
-    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    const dateStr = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-${String(date.getUTCDate()).padStart(2, '0')}`;
     setTaskCreateDefaultDate(dateStr);
     setShowTaskCreate(true);
   }, []);
@@ -292,6 +392,8 @@ export default function CalendarPage() {
           total={total}
           isLoading={isLoading}
           stats={stats}
+          tasks={calendarTasks}
+          onTaskClick={handleTaskClick}
           onRowClick={handleRowClick}
           pagination={{
             page: filters.page,
@@ -303,8 +405,17 @@ export default function CalendarPage() {
             if (partial.search !== undefined) setSearch(partial.search);
             if (partial.status !== undefined) setStatusFilter(partial.status);
             if (partial.appointmentType !== undefined) setTypeFilter(partial.appointmentType);
-            if (partial.startTimeFrom !== undefined || partial.startTimeTo !== undefined)
-              setDateRange(partial.startTimeFrom, partial.startTimeTo);
+            // Use `in` operator so we can distinguish "field not touched" from
+            // "field explicitly cleared to undefined". When only one date is
+            // changed, keep the other from current state instead of wiping it.
+            const fromTouched = 'startTimeFrom' in partial;
+            const toTouched = 'startTimeTo' in partial;
+            if (fromTouched || toTouched) {
+              setDateRange(
+                fromTouched ? partial.startTimeFrom : filters.startTimeFrom,
+                toTouched ? partial.startTimeTo : filters.startTimeTo
+              );
+            }
             if (partial.caseId !== undefined) setCaseFilter(partial.caseId);
             if (partial.sortBy !== undefined) setSort(partial.sortBy, partial.sortOrder);
           }}

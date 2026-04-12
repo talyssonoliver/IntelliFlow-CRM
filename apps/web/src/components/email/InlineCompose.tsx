@@ -42,9 +42,7 @@ function getRecipients(
     return { to: [from.address], cc: [] };
   }
   if (mode === 'replyAll') {
-    const cc = to
-      .filter((r) => r.address !== from.address)
-      .map((r) => r.address);
+    const cc = to.filter((r) => r.address !== from.address).map((r) => r.address);
     return { to: [from.address], cc };
   }
   // forward — user must add recipients
@@ -130,7 +128,10 @@ export function InlineCompose({
     }
   }, [mode, forwardTo, recipients, originalMessage, sendMutation, onSent]);
 
-  const modeLabel = mode === 'replyAll' ? 'Reply All' : mode === 'forward' ? 'Forward' : 'Reply';
+  let modeLabel: string;
+  if (mode === 'replyAll') modeLabel = 'Reply All';
+  else if (mode === 'forward') modeLabel = 'Forward';
+  else modeLabel = 'Reply';
 
   return (
     <div className={cn('rounded-lg border border-primary/30 bg-card', className)}>
@@ -171,6 +172,7 @@ export function InlineCompose({
 
       {/* Body */}
       <div className="px-3 py-2">
+        {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- contentEditable rich-text editor; <textarea> does not support contentEditable with rich formatting */}
         <div
           ref={bodyRef}
           role="textbox"
@@ -187,7 +189,10 @@ export function InlineCompose({
 
       {/* Validation hints */}
       {validationErrors.length > 0 && (
-        <div className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-destructive" role="alert">
+        <div
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-destructive"
+          role="alert"
+        >
           <AlertCircle className="h-3.5 w-3.5 shrink-0" />
           <span>{validationErrors[0]}</span>
         </div>

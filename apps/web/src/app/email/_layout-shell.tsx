@@ -17,14 +17,13 @@ import { trpc } from '@/lib/trpc';
 import { EmailSettingsPanel } from '@/components/email/EmailSettingsPanel';
 import { EmailSettingsSidebarNav } from '@/components/email/EmailSettingsSidebarNav';
 
-export default function EmailLayoutShell({ children }: Readonly<{ readonly children: React.ReactNode }>) {
+export default function EmailLayoutShell({
+  children,
+}: Readonly<{ readonly children: React.ReactNode }>) {
   const pathname = usePathname();
   const [settingsOpen, setSettingsOpen] = useState(false);
 
-  const unreadQuery = trpc.email.getUnreadCounts.useQuery(
-    {},
-    { refetchInterval: 30_000 }
-  );
+  const unreadQuery = trpc.email.getUnreadCounts.useQuery({}, { refetchInterval: 30_000 });
 
   const onSettingsPage = isEmailSettingsPage(pathname);
 
@@ -34,12 +33,11 @@ export default function EmailLayoutShell({ children }: Readonly<{ readonly child
         ({ isExpanded }: { isExpanded: boolean }) => (
           <EmailSettingsSidebarNav isExpanded={isExpanded} />
         ),
-        unreadQuery.data ?? undefined,
+        unreadQuery.data ?? undefined
       );
     }
-    return createEmailSidebarConfig(
-      unreadQuery.data ?? undefined,
-      () => setSettingsOpen((prev) => !prev),
+    return createEmailSidebarConfig(unreadQuery.data ?? undefined, () =>
+      setSettingsOpen((prev) => !prev)
     );
   }, [onSettingsPage, unreadQuery.data]);
 
@@ -49,10 +47,7 @@ export default function EmailLayoutShell({ children }: Readonly<{ readonly child
         <SidebarWithSuspense config={config} />
 
         {!onSettingsPage && (
-          <EmailSettingsPanel
-            isOpen={settingsOpen}
-            onClose={() => setSettingsOpen(false)}
-          />
+          <EmailSettingsPanel isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
         )}
 
         <SidebarInset>

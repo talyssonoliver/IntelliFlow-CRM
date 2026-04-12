@@ -28,7 +28,11 @@ export interface AppointmentDetailProps {
 type Tab = 'overview' | 'attendees' | 'cases';
 type Dialog = 'complete' | 'cancel' | 'reschedule' | 'addAttendee' | 'linkCase' | null;
 
-const TERMINAL_STATUSES = new Set<AppointmentDetailData['status']>(['COMPLETED', 'CANCELLED', 'NO_SHOW']);
+const TERMINAL_STATUSES = new Set<AppointmentDetailData['status']>([
+  'COMPLETED',
+  'CANCELLED',
+  'NO_SHOW',
+]);
 
 function formatReminder(minutes?: number): string {
   if (!minutes || minutes <= 0) return 'None';
@@ -294,8 +298,8 @@ export function AppointmentDetail({
                         }}
                         className="inline-flex items-center gap-1 rounded-md border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700"
                       >
-                        <span className="material-symbols-outlined text-base">add_link</span>{' '}
-                        Link Case
+                        <span className="material-symbols-outlined text-base">add_link</span> Link
+                        Case
                       </button>
                     )}
                   </div>
@@ -317,8 +321,8 @@ export function AppointmentDetail({
                         }}
                         className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary-hover"
                       >
-                        <span className="material-symbols-outlined text-base">person_add</span>{' '}
-                        Add Attendee
+                        <span className="material-symbols-outlined text-base">person_add</span> Add
+                        Attendee
                       </button>
                     )}
                   </div>
@@ -375,8 +379,8 @@ export function AppointmentDetail({
                         }}
                         className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary-hover"
                       >
-                        <span className="material-symbols-outlined text-base">add_link</span>{' '}
-                        Link Case
+                        <span className="material-symbols-outlined text-base">add_link</span> Link
+                        Case
                       </button>
                     )}
                   </div>
@@ -450,8 +454,7 @@ export function AppointmentDetail({
                     disabled={isActionLoading}
                     className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
                   >
-                    <span className="material-symbols-outlined text-base">task_alt</span>{' '}
-                    Complete
+                    <span className="material-symbols-outlined text-base">task_alt</span> Complete
                   </button>
                 )}
 
@@ -481,8 +484,7 @@ export function AppointmentDetail({
                   disabled={isActionLoading}
                   className="w-full inline-flex items-center gap-3 rounded-lg px-4 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 disabled:opacity-50"
                 >
-                  <span className="material-symbols-outlined text-base">cancel</span>{' '}
-                  Cancel
+                  <span className="material-symbols-outlined text-base">cancel</span> Cancel
                 </button>
 
                 {appointment.status === 'CONFIRMED' && (
@@ -492,8 +494,8 @@ export function AppointmentDetail({
                     disabled={isActionLoading}
                     className="w-full inline-flex items-center gap-3 rounded-lg px-4 py-2 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50"
                   >
-                    <span className="material-symbols-outlined text-base">person_off</span>{' '}
-                    Mark No Show
+                    <span className="material-symbols-outlined text-base">person_off</span> Mark No
+                    Show
                   </button>
                 )}
               </div>

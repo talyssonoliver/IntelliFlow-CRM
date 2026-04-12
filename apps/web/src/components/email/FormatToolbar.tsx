@@ -103,7 +103,9 @@ export function FormatToolbar({
               tabIndex={i === focusIndex ? 0 : -1}
               aria-label={btn.label}
               aria-pressed={btn.toggle ? isActive : undefined}
-              title={'shortcut' in btn && btn.shortcut ? `${btn.label} (${btn.shortcut})` : btn.label}
+              title={
+                'shortcut' in btn && btn.shortcut ? `${btn.label} (${btn.shortcut})` : btn.label
+              }
               className={cn(
                 'inline-flex h-8 w-8 items-center justify-center rounded-md text-sm',
                 'hover:bg-accent hover:text-accent-foreground',

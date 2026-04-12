@@ -9,7 +9,11 @@ export interface ConflictWarningProps {
   onOverride?: () => void;
 }
 
-export function ConflictWarning({ conflicts, onViewConflict, onOverride }: Readonly<ConflictWarningProps>) {
+export function ConflictWarning({
+  conflicts,
+  onViewConflict,
+  onOverride,
+}: Readonly<ConflictWarningProps>) {
   if (conflicts.length === 0) return null;
 
   return (
@@ -60,8 +64,7 @@ export function ConflictWarning({ conflicts, onViewConflict, onOverride }: Reado
                   onClick={() => onViewConflict(conflict.id)}
                   className="text-sm text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 shrink-0"
                 >
-                  <span className="material-symbols-outlined text-base">visibility</span>{' '}
-                  View
+                  <span className="material-symbols-outlined text-base">visibility</span> View
                 </button>
               </div>
             </li>

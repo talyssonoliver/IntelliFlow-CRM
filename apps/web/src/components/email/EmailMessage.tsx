@@ -53,6 +53,7 @@ export function EmailMessage({
   return (
     <article className="rounded-lg border border-border">
       {/* Header — always visible (div instead of button to allow nested interactive elements) */}
+      {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- contains nested interactive HoverCard elements; <button> cannot contain other interactive elements */}
       <div
         role="button"
         tabIndex={0}
@@ -74,7 +75,12 @@ export function EmailMessage({
         }}
       >
         {/* Avatar with hover card */}
-        <EntityHoverCard email={message.from.address} displayName={message.from.name} side="bottom" align="start">
+        <EntityHoverCard
+          email={message.from.address}
+          displayName={message.from.name}
+          side="bottom"
+          align="start"
+        >
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-medium text-primary hover:ring-2 hover:ring-primary/30 transition-shadow">
             {getInitial(message.from.name, message.from.address)}
           </div>
@@ -82,7 +88,12 @@ export function EmailMessage({
 
         {/* Sender + recipients info */}
         <div className="flex-1 min-w-0">
-          <EntityHoverCard email={message.from.address} displayName={message.from.name} side="bottom" align="start">
+          <EntityHoverCard
+            email={message.from.address}
+            displayName={message.from.name}
+            side="bottom"
+            align="start"
+          >
             <span id={headingId} className="text-sm font-medium hover:underline cursor-pointer">
               {message.from.name || message.from.address}
             </span>
@@ -93,9 +104,7 @@ export function EmailMessage({
               <span key={t.address}>
                 {i > 0 && ', '}
                 <EntityHoverCard email={t.address} displayName={t.name} side="bottom" align="start">
-                  <span className="hover:underline cursor-pointer">
-                    {t.name || t.address}
-                  </span>
+                  <span className="hover:underline cursor-pointer">{t.name || t.address}</span>
                 </EntityHoverCard>
               </span>
             ))}
@@ -104,7 +113,14 @@ export function EmailMessage({
 
         {/* Timestamp */}
         <time dateTime={message.receivedAt} className="shrink-0 text-xs text-muted-foreground">
-          {new Date(message.receivedAt).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: timezone })}
+          {new Date(message.receivedAt).toLocaleString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+            timeZone: timezone,
+          })}
         </time>
 
         {/* Expand icon */}
@@ -117,11 +133,7 @@ export function EmailMessage({
 
       {/* Content — only when expanded */}
       {isExpanded && (
-        <section
-          id={contentId}
-          aria-labelledby={headingId}
-          className="border-t border-border"
-        >
+        <section id={contentId} aria-labelledby={headingId} className="border-t border-border">
           {/* Body */}
           <div className="px-4 py-3">
             {message.htmlBody ? (

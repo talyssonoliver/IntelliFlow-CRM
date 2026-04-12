@@ -20,7 +20,11 @@ interface TemplateSelectorProps {
   className?: string;
 }
 
-export function TemplateSelector({ onSelect, currentBody = '', className }: Readonly<TemplateSelectorProps>) {
+export function TemplateSelector({
+  onSelect,
+  currentBody = '',
+  className,
+}: Readonly<TemplateSelectorProps>) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [pendingTemplate, setPendingTemplate] = useState<Template | null>(null);
@@ -99,9 +103,7 @@ export function TemplateSelector({ onSelect, currentBody = '', className }: Read
       </button>
 
       {isOpen && (
-        <div
-          className="absolute bottom-full right-0 z-50 mb-1 w-80 rounded-md border border-border bg-popover p-2 shadow-lg"
-        >
+        <div className="absolute bottom-full right-0 z-50 mb-1 w-80 rounded-md border border-border bg-popover p-2 shadow-lg">
           {/* Search input */}
           <div className="relative mb-2">
             <Search className="absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -124,14 +126,9 @@ export function TemplateSelector({ onSelect, currentBody = '', className }: Read
               No templates available
             </div>
           ) : (
-            <ul
-              className="max-h-48 space-y-0.5 overflow-auto"
-            >
+            <ul className="max-h-48 space-y-0.5 overflow-auto">
               {filteredTemplates.map((template, i) => (
-                <li
-                  key={template.id}
-                  data-highlighted={i === highlightIndex ? true : undefined}
-                >
+                <li key={template.id} data-highlighted={i === highlightIndex ? true : undefined}>
                   <button
                     type="button"
                     aria-pressed={i === highlightIndex}

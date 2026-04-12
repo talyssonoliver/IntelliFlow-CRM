@@ -115,6 +115,27 @@ export function AppointmentForm({
     if (startTime && endTime && new Date(endTime) <= new Date(startTime)) {
       newErrors.endTime = 'End time must be after start time';
     }
+    // Business-hours check: 07:00 – 19:00 (matches calendar dayBoundaries and
+    // the server-side assertWithinBusinessHours check). Parsing the local
+    // datetime-local string directly avoids timezone ambiguity.
+    const BUSINESS_HOURS_START = 7;
+    const BUSINESS_HOURS_END = 19;
+    const isOutsideBusinessHours = (dtLocal: string): boolean => {
+      const match = /T(\d{2}):(\d{2})/.exec(dtLocal);
+      if (!match) return false;
+      const hour = parseInt(match[1], 10);
+      const minute = parseInt(match[2], 10);
+      if (hour < BUSINESS_HOURS_START) return true;
+      if (hour > BUSINESS_HOURS_END) return true;
+      if (hour === BUSINESS_HOURS_END && minute > 0) return true;
+      return false;
+    };
+    if (startTime && isOutsideBusinessHours(startTime)) {
+      newErrors.startTime = `Start must be between ${String(BUSINESS_HOURS_START).padStart(2, '0')}:00 and ${String(BUSINESS_HOURS_END).padStart(2, '0')}:00.`;
+    }
+    if (endTime && isOutsideBusinessHours(endTime)) {
+      newErrors.endTime = `End must be between ${String(BUSINESS_HOURS_START).padStart(2, '0')}:00 and ${String(BUSINESS_HOURS_END).padStart(2, '0')}:00.`;
+    }
     if (!appointmentType) newErrors.appointmentType = 'Type is required';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -148,7 +169,7 @@ export function AppointmentForm({
       {/* Title */}
       <div>
         <label htmlFor="appt-title" className="block text-sm font-medium text-gray-700 mb-1">
-          Title{' '}<span className="text-red-500">*</span>
+          Title <span className="text-red-500">*</span>
         </label>
         <input
           id="appt-title"
@@ -187,7 +208,7 @@ export function AppointmentForm({
       {/* Type */}
       <div>
         <label htmlFor="appt-type" className="block text-sm font-medium text-gray-700 mb-1">
-          Type{' '}<span className="text-red-500">*</span>
+          Type <span className="text-red-500">*</span>
         </label>
         <select
           id="appt-type"
@@ -212,7 +233,7 @@ export function AppointmentForm({
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label htmlFor="appt-start" className="block text-sm font-medium text-gray-700 mb-1">
-            Start Time{' '}<span className="text-red-500">*</span>
+            Start Time <span className="text-red-500">*</span>
           </label>
           <input
             id="appt-start"
@@ -232,7 +253,7 @@ export function AppointmentForm({
         </div>
         <div>
           <label htmlFor="appt-end" className="block text-sm font-medium text-gray-700 mb-1">
-            End Time{' '}<span className="text-red-500">*</span>
+            End Time <span className="text-red-500">*</span>
           </label>
           <input
             id="appt-end"
@@ -270,9 +291,7 @@ export function AppointmentForm({
 
       {/* Timezone */}
       <fieldset>
-        <legend className="block text-sm font-medium text-gray-700 mb-1">
-          Event Timezone
-        </legend>
+        <legend className="block text-sm font-medium text-gray-700 mb-1">Event Timezone</legend>
         <TimezoneSelector
           value={eventTimezone}
           onChange={setEventTimezone}
@@ -408,10 +427,10 @@ export function AppointmentForm({
 
 function toLocalDateTimeString(date: Date | string): string {
   const d = new Date(date);
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  const hours = String(d.getHours()).padStart(2, '0');
-  const minutes = String(d.getMinutes()).padStart(2, '0');
+  const year = d.getUTCFullYear();
+  const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(d.getUTCDate()).padStart(2, '0');
+  const hours = String(d.getUTCHours()).padStart(2, '0');
+  const minutes = String(d.getUTCMinutes()).padStart(2, '0');
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 }

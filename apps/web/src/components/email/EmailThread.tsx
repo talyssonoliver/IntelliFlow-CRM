@@ -231,9 +231,7 @@ export function EmailThread({
                         style={{ backgroundColor: label.color }}
                       />
                       <span className="flex-1 text-left">{label.name}</span>
-                      {isActive && (
-                        <span className="text-xs text-primary">&#10003;</span>
-                      )}
+                      {isActive && <span className="text-xs text-primary">&#10003;</span>}
                     </button>
                   );
                 })}

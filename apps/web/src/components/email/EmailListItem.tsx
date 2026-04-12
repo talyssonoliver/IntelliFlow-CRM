@@ -55,8 +55,14 @@ function getPreview(email: Readonly<EmailItemData>): string {
 export function EmailListItem({ email, isSelected, onSelect }: Readonly<EmailListItemProps>) {
   const { formatDate } = useTimezoneContext();
   return (
-    <EntityHoverCard email={email.from.address} displayName={email.from.name} side="right" align="start">
-      <li // NOSONAR typescript:S6842 — custom listbox option item; role="option" is the correct ARIA pattern for items in a listbox widget; replacing with <option> would require a <select> parent and lose rich visual design
+    <EntityHoverCard
+      email={email.from.address}
+      displayName={email.from.name}
+      side="right"
+      align="start"
+    >
+      {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- custom listbox option item; <option> cannot contain rich visual content and requires <select> parent */}
+      <li // NOSONAR typescript:S6842
         role="option"
         aria-selected={isSelected}
         tabIndex={-1}

@@ -105,7 +105,9 @@ export function EmailList({
         </div>
         <div className="space-y-1 p-2">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="flex gap-3 rounded-lg p-3"> {/* NOSONAR typescript:S6479 */}
+            <div key={i} className="flex gap-3 rounded-lg p-3">
+              {' '}
+              {/* NOSONAR typescript:S6479 */}
               <div className="h-9 w-9 rounded-full bg-muted animate-pulse" />
               <div className="flex-1 space-y-1.5">
                 <div className="h-4 w-3/4 rounded bg-muted animate-pulse" />
@@ -136,7 +138,7 @@ export function EmailList({
           className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
           onClick={onRetry}
         >
-          <RotateCcw className="h-3.5 w-3.5" />{' '}Retry
+          <RotateCcw className="h-3.5 w-3.5" /> Retry
         </button>
       </div>
     );
@@ -183,16 +185,8 @@ export function EmailList({
           )}
         </div>
       ) : (
-        <div
-          role="none"
-          onKeyDown={handleListKeyDown}
-          className="flex-1 overflow-auto"
-        >
-          <ul
-            ref={listRef}
-            aria-label="Email list"
-            className="space-y-0.5 p-1 list-none"
-          >
+        <div role="none" onKeyDown={handleListKeyDown} className="flex-1 overflow-auto">
+          <ul ref={listRef} aria-label="Email list" className="space-y-0.5 p-1 list-none">
             {emails.map((email) => (
               <EmailListItem
                 key={email.id}

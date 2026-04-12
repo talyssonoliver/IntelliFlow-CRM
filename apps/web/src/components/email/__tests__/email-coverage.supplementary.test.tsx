@@ -20,7 +20,13 @@ vi.mock('@/components/tasks/TaskCreateSheet', () => ({
   TaskCreateSheet: () => null,
 }));
 vi.mock('@/hooks/use-entity-pin', () => ({
-  useEntityPin: () => ({ isPinned: false, isLoading: false, togglePin: vi.fn(), pin: vi.fn(), unpin: vi.fn() }),
+  useEntityPin: () => ({
+    isPinned: false,
+    isLoading: false,
+    togglePin: vi.fn(),
+    pin: vi.fn(),
+    unpin: vi.fn(),
+  }),
 }));
 vi.mock('@/hooks/useDebounce', () => ({
   useDebounce: (value: string) => value,
@@ -281,7 +287,11 @@ describe('EmailCompose handler coverage', () => {
       error: null,
     });
     mocks.searchContacts.mockReturnValue({ data: [], isLoading: false, isError: false });
-    mocks.contactSearch.mockReturnValue({ data: { contacts: [] }, isLoading: false, isError: false });
+    mocks.contactSearch.mockReturnValue({
+      data: { contacts: [] },
+      isLoading: false,
+      isError: false,
+    });
     mocks.leadList.mockReturnValue({ data: { leads: [] }, isLoading: false, isError: false });
     mocks.listTemplates.mockReturnValue({ data: [], isLoading: false, isError: false });
   });

@@ -94,7 +94,9 @@ export function EmailCompose({
 
   const defaults = getDefaultRecipients(mode, originalEmail);
 
-  const [toRecipients, setToRecipients] = useState<Recipient[]>(initialTo && initialTo.length > 0 ? initialTo : defaults.to);
+  const [toRecipients, setToRecipients] = useState<Recipient[]>(
+    initialTo && initialTo.length > 0 ? initialTo : defaults.to
+  );
   const [ccRecipients, setCcRecipients] = useState<Recipient[]>(defaults.cc);
   const [bccRecipients, setBccRecipients] = useState<Recipient[]>([]);
   const [showCc, setShowCc] = useState(defaults.cc.length > 0);
@@ -223,33 +225,36 @@ export function EmailCompose({
    * The toolbar buttons use onMouseDown={preventDefault} to keep the
    * editor selection alive, so we can just execCommand directly.
    */
-  const handleFormat = useCallback((command: string, value?: string) => {
-    // Restore selection in case it was lost
-    restoreSelection();
-    bodyRef.current?.focus();
+  const handleFormat = useCallback(
+    (command: string, value?: string) => {
+      // Restore selection in case it was lost
+      restoreSelection();
+      bodyRef.current?.focus();
 
-    if (command === 'createLink' && value) {
-      document.execCommand('createLink', false, value);
-    } else if (command === 'createLink') {
-      // No URL provided — ignore
-      return;
-    } else {
-      document.execCommand(command, false); // NOSONAR typescript:S1874
-    }
-
-    // Update active formats immediately after command
-    const formats: string[] = [];
-    try {
-      for (const cmd of TRACKED_COMMANDS) {
-        if (document.queryCommandState(cmd)) {
-          formats.push(cmd);
-        }
+      if (command === 'createLink' && value) {
+        document.execCommand('createLink', false, value);
+      } else if (command === 'createLink') {
+        // No URL provided — ignore
+        return;
+      } else {
+        document.execCommand(command, false); // NOSONAR typescript:S1874
       }
-    } catch {
-      /* ignore */
-    }
-    setActiveFormats(formats);
-  }, [restoreSelection]);
+
+      // Update active formats immediately after command
+      const formats: string[] = [];
+      try {
+        for (const cmd of TRACKED_COMMANDS) {
+          if (document.queryCommandState(cmd)) {
+            formats.push(cmd);
+          }
+        }
+      } catch {
+        /* ignore */
+      }
+      setActiveFormats(formats);
+    },
+    [restoreSelection]
+  );
 
   const contactLookup = trpc.email.searchContacts.useQuery(
     { query: toRecipients[0]?.email ?? '', limit: 1 },
@@ -258,7 +263,11 @@ export function EmailCompose({
 
   const resolveVariables = useCallback(
     (text: string): string => {
-      const contact = (contactLookup.data as Array<{ firstName: string; lastName: string; email: string; company: string | null }> | undefined)?.[0];
+      const contact = (
+        contactLookup.data as
+          | Array<{ firstName: string; lastName: string; email: string; company: string | null }>
+          | undefined
+      )?.[0];
       if (!contact) {
         // Fall back to recipient info if no contact found
         const r = toRecipients[0];
@@ -485,6 +494,7 @@ export function EmailCompose({
         <label className="sr-only" htmlFor="compose-body">
           Message body
         </label>
+        {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- contentEditable rich-text editor; <textarea> does not support contentEditable with rich formatting */}
         <div // NOSONAR — contentEditable rich-text editor; role="textbox" is the correct ARIA pattern
           ref={bodyRef}
           id="compose-body"

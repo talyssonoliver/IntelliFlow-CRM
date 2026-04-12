@@ -10,7 +10,13 @@ vi.mock('@/components/tasks/TaskCreateSheet', () => ({
   TaskCreateSheet: () => null,
 }));
 vi.mock('@/hooks/use-entity-pin', () => ({
-  useEntityPin: () => ({ isPinned: false, isLoading: false, togglePin: vi.fn(), pin: vi.fn(), unpin: vi.fn() }),
+  useEntityPin: () => ({
+    isPinned: false,
+    isLoading: false,
+    togglePin: vi.fn(),
+    pin: vi.fn(),
+    unpin: vi.fn(),
+  }),
 }));
 
 const { EmailThread } = await import('../EmailThread');

@@ -11,7 +11,13 @@ vi.mock('@/components/tasks/TaskCreateSheet', () => ({
   TaskCreateSheet: () => null,
 }));
 vi.mock('@/hooks/use-entity-pin', () => ({
-  useEntityPin: () => ({ isPinned: false, isLoading: false, togglePin: vi.fn(), pin: vi.fn(), unpin: vi.fn() }),
+  useEntityPin: () => ({
+    isPinned: false,
+    isLoading: false,
+    togglePin: vi.fn(),
+    pin: vi.fn(),
+    unpin: vi.fn(),
+  }),
 }));
 vi.mock('@/lib/trpc', () => ({
   trpc: {
@@ -156,7 +162,15 @@ describe('EmailList', () => {
 
   it('shows error state with retry', async () => {
     const user = userEvent.setup();
-    render(<EmailList {...defaultProps} isError={true} error={new Error('Fail')} emails={[]} totalUnfilteredCount={0} />);
+    render(
+      <EmailList
+        {...defaultProps}
+        isError={true}
+        error={new Error('Fail')}
+        emails={[]}
+        totalUnfilteredCount={0}
+      />
+    );
     expect(screen.getByText(/failed to load/i)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /retry/i }));
     expect(defaultProps.onRetry).toHaveBeenCalled();

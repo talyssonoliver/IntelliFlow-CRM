@@ -10,7 +10,8 @@ vi.mock('@/lib/trpc', () => ({
   trpc: {
     email: {
       getUnreadCounts: {
-        useQuery: (...args: unknown[]) => (mockGetUnreadCounts as (...params: unknown[]) => unknown)(...args),
+        useQuery: (...args: unknown[]) =>
+          (mockGetUnreadCounts as (...params: unknown[]) => unknown)(...args),
       },
     },
   },

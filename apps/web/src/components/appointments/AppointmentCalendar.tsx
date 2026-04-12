@@ -78,7 +78,11 @@ export function AppointmentCalendar({
           year: 'numeric',
           timeZone: timezone,
         })
-      : currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: timezone });
+      : currentDate.toLocaleDateString('en-US', {
+          month: 'long',
+          year: 'numeric',
+          timeZone: timezone,
+        });
 
   if (isLoading) {
     return (

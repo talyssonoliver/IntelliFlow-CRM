@@ -11,7 +11,13 @@ vi.mock('@/components/tasks/TaskCreateSheet', () => ({
   TaskCreateSheet: () => null,
 }));
 vi.mock('@/hooks/use-entity-pin', () => ({
-  useEntityPin: () => ({ isPinned: false, isLoading: false, togglePin: vi.fn(), pin: vi.fn(), unpin: vi.fn() }),
+  useEntityPin: () => ({
+    isPinned: false,
+    isLoading: false,
+    togglePin: vi.fn(),
+    pin: vi.fn(),
+    unpin: vi.fn(),
+  }),
 }));
 vi.mock('@/hooks/useDebounce', () => ({
   useDebounce: (value: string) => value,
@@ -193,7 +199,9 @@ describe('EmailPage', () => {
           createMockEmail({
             id: 'with-attach',
             subject: 'Email With File',
-            attachments: [{ filename: 'doc.pdf', contentType: 'application/pdf', size: 1024, checksum: '' }],
+            attachments: [
+              { filename: 'doc.pdf', contentType: 'application/pdf', size: 1024, checksum: '' },
+            ],
           }),
         ],
         total: 2,
@@ -222,9 +230,7 @@ describe('EmailPage', () => {
     const user = userEvent.setup();
     mocks.listEmails.mockReturnValue({
       data: {
-        emails: [
-          createMockEmail({ id: 'read-1', subject: 'Read Email', isRead: true }),
-        ],
+        emails: [createMockEmail({ id: 'read-1', subject: 'Read Email', isRead: true })],
         total: 1,
         hasMore: false,
       },
@@ -330,9 +336,9 @@ describe('EmailPage', () => {
 
   it('renders interactive filter elements', () => {
     render(<EmailPage />);
-    const filterChips = screen.getAllByRole('button').filter((btn) =>
-      btn.hasAttribute('aria-pressed')
-    );
+    const filterChips = screen
+      .getAllByRole('button')
+      .filter((btn) => btn.hasAttribute('aria-pressed'));
     expect(filterChips.length).toBeGreaterThan(0);
   });
 

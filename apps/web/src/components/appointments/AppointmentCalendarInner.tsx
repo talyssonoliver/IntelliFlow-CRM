@@ -15,6 +15,10 @@ import {
   formatDuration,
 } from '@/lib/appointments/appointment-utils';
 import type { CalendarAppointment, CalendarTask } from './types';
+import {
+  CalendarEventHoverCard,
+  type CalendarEventHoverCardData,
+} from './CalendarEventHoverCard';
 
 export interface AppointmentCalendarInnerProps {
   appointments: CalendarAppointment[];
@@ -51,9 +55,9 @@ function toTemporalZonedDateTime(date: Readonly<Date>): Temporal.ZonedDateTime {
 
 function toTemporalPlainDate(date: Readonly<Date>): Temporal.PlainDate {
   return Temporal.PlainDate.from({
-    year: date.getFullYear(),
-    month: date.getMonth() + 1,
-    day: date.getDate(),
+    year: date.getUTCFullYear(),
+    month: date.getUTCMonth() + 1,
+    day: date.getUTCDate(),
   });
 }
 
@@ -70,72 +74,215 @@ function mapAppointmentsToEvents(appointments: CalendarAppointment[]) {
       hasConflict: appt.hasConflict,
       startTime: appt.startTime,
       endTime: appt.endTime,
+      location: appt.location,
+      attendeeCount: appt.attendeeCount,
+      linkedCaseCount: appt.linkedCaseCount,
+      isRecurring: appt.isRecurring,
     },
   }));
+}
+
+/**
+ * Default time slot for tasks that only have a due date (no time component).
+ * Placing tasks at 09:00 with a 30-minute block renders them inside the
+ * calendar time grid instead of the all-day header row.
+ */
+const TASK_DEFAULT_HOUR = 9;
+const TASK_DEFAULT_MINUTE = 0;
+const TASK_DEFAULT_DURATION_MIN = 30;
+
+function toTaskZonedRange(date: Readonly<Date>): {
+  start: Temporal.ZonedDateTime;
+  end: Temporal.ZonedDateTime;
+} {
+  const tz = Temporal.Now.timeZoneId();
+  const plainDate = toTemporalPlainDate(date);
+  // If the stored dueDate already carries a non-midnight time, honour it.
+  const hasExplicitTime =
+    date.getUTCHours() !== 0 || date.getUTCMinutes() !== 0 || date.getUTCSeconds() !== 0;
+  const startHour = hasExplicitTime ? date.getHours() : TASK_DEFAULT_HOUR;
+  const startMinute = hasExplicitTime ? date.getMinutes() : TASK_DEFAULT_MINUTE;
+  const start = plainDate
+    .toPlainDateTime({ hour: startHour, minute: startMinute })
+    .toZonedDateTime(tz);
+  const end = start.add({ minutes: TASK_DEFAULT_DURATION_MIN });
+  return { start, end };
 }
 
 function mapTasksToEvents(tasks: CalendarTask[]) {
   return tasks.map((task) => {
     const d = typeof task.dueDate === 'string' ? new Date(task.dueDate) : task.dueDate;
-    const plainDate = toTemporalPlainDate(d);
+    const { start, end } = toTaskZonedRange(d);
     return {
       id: `task--${task.id}`,
       title: task.title,
-      start: plainDate,
-      end: plainDate,
+      start,
+      end,
       _custom: {
         _type: 'task' as const,
         priority: task.priority,
+        dueDate: d,
       },
     };
   });
 }
 
+/**
+ * Convert a Schedule-X calendar event into the shape the hover card expects.
+ * Returns null when the event lacks the custom payload (shouldn't happen in
+ * practice but keeps rendering safe).
+ */
+function toHoverCardData(
+  calendarEvent: Record<string, unknown>
+): CalendarEventHoverCardData | null {
+  const title = (calendarEvent.title as string) ?? '';
+  const id = String(calendarEvent.id ?? '');
+  const custom = calendarEvent._custom as
+    | {
+        _type?: 'appointment' | 'task';
+        appointmentType?: string;
+        status?: string;
+        hasConflict?: boolean;
+        startTime?: Date;
+        endTime?: Date;
+        location?: string;
+        attendeeCount?: number;
+        linkedCaseCount?: number;
+        isRecurring?: boolean;
+        priority?: string;
+        dueDate?: Date;
+      }
+    | undefined;
+
+  if (!custom) return null;
+
+  if (custom._type === 'task') {
+    return {
+      kind: 'task',
+      id: id.startsWith('task--') ? id.slice(6) : id,
+      title,
+      dueDate: custom.dueDate ?? new Date(),
+      priority: custom.priority ?? 'MEDIUM',
+    };
+  }
+
+  if (!custom.startTime || !custom.endTime) return null;
+  return {
+    kind: 'appointment',
+    id,
+    title,
+    startTime: custom.startTime,
+    endTime: custom.endTime,
+    appointmentType: custom.appointmentType ?? 'OTHER',
+    status: custom.status ?? 'SCHEDULED',
+    location: custom.location,
+    attendeeCount: custom.attendeeCount,
+    linkedCaseCount: custom.linkedCaseCount,
+    hasConflict: custom.hasConflict,
+    isRecurring: custom.isRecurring,
+  };
+}
+
+/**
+ * Wraps the visual event in a hover card. Kept as its own tiny component so
+ * each event renderer can add the tooltip without duplicating the guard logic.
+ */
+function EventHoverWrap({
+  calendarEvent,
+  side,
+  children,
+}: Readonly<{
+  calendarEvent: Record<string, unknown>;
+  side?: 'top' | 'bottom' | 'left' | 'right';
+  children: React.ReactNode;
+}>) {
+  const data = toHoverCardData(calendarEvent);
+  if (!data) return <>{children}</>;
+  return (
+    <CalendarEventHoverCard event={data} side={side}>
+      {children}
+    </CalendarEventHoverCard>
+  );
+}
+
 function TimeGridEvent({ calendarEvent }: Readonly<{ calendarEvent: Record<string, unknown> }>) {
   const custom = calendarEvent._custom as
     | {
-        appointmentType: string;
-        status: string;
-        hasConflict: boolean;
-        startTime: Date;
-        endTime: Date;
+        _type?: 'appointment' | 'task';
+        appointmentType?: string;
+        status?: string;
+        hasConflict?: boolean;
+        startTime?: Date;
+        endTime?: Date;
+        priority?: string;
+        dueDate?: Date;
       }
     | undefined;
+
+  // Tasks rendered inside the time grid — use priority chip style to visually
+  // distinguish from appointments and avoid the all-day header stacking.
+  if (custom?._type === 'task') {
+    const priority = custom.priority ?? 'MEDIUM';
+    const chipColor = PRIORITY_CHIP_COLORS[priority] ?? PRIORITY_CHIP_COLORS.MEDIUM;
+    return (
+      <EventHoverWrap calendarEvent={calendarEvent} side="right">
+        <div
+          className={`w-full h-full p-1.5 rounded text-left overflow-hidden cursor-pointer ${chipColor}`}
+          data-testid="calendar-task-chip"
+        >
+          <div className="flex items-center gap-1">
+            <span
+              className="material-symbols-outlined text-[12px] shrink-0"
+              aria-hidden="true"
+            >
+              task_alt
+            </span>
+            <span className="text-xs font-medium truncate">{calendarEvent.title as string}</span>
+          </div>
+          <div className="text-[10px] opacity-75 mt-0.5 truncate">
+            {priority.toLowerCase()} priority
+          </div>
+        </div>
+      </EventHoverWrap>
+    );
+  }
 
   const typeConfig = getTypeConfig(custom?.appointmentType ?? 'OTHER');
   const statusConfig = getStatusConfig(custom?.status ?? 'SCHEDULED');
 
   return (
-    <div
-      className={`w-full h-full p-1.5 rounded text-left overflow-hidden border border-slate-200 dark:border-slate-600 ${typeConfig.bgColor} ${
-        custom?.hasConflict ? 'ring-2 ring-destructive' : ''
-      }`}
-    >
-      <div className="flex items-center justify-between gap-1">
-        <span className={`text-xs font-medium truncate ${typeConfig.color}`}>
-          {calendarEvent.title as string}
-        </span>
-        <span
-          className={`text-[10px] px-1 py-0.5 rounded whitespace-nowrap ${statusConfig.bgColor} ${statusConfig.color}`}
-        >
-          {statusConfig.label}
-        </span>
-      </div>
-      {custom && (
-        <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">
-          {formatTimeRange(custom.startTime, custom.endTime)} ·{' '}
-          {formatDuration(custom.startTime, custom.endTime)}
-        </div>
-      )}
-      {custom?.hasConflict && (
-        <div className="flex items-center gap-0.5 text-[10px] text-destructive mt-0.5">
-          <span className="material-symbols-outlined text-[10px]" aria-hidden="true">
-            warning
+    <EventHoverWrap calendarEvent={calendarEvent} side="right">
+      <div
+        className={`w-full h-full p-1.5 rounded text-left overflow-hidden border border-slate-200 dark:border-slate-600 cursor-pointer ${typeConfig.bgColor} ${
+          custom?.hasConflict ? 'ring-2 ring-destructive' : ''
+        }`}
+      >
+        <div className="flex items-center justify-between gap-1">
+          <span className={`text-xs font-medium truncate ${typeConfig.color}`}>
+            {calendarEvent.title as string}
           </span>
-          <span>Conflict</span>
+          <span
+            className={`text-[10px] px-1 py-0.5 rounded whitespace-nowrap ${statusConfig.bgColor} ${statusConfig.color}`}
+          >
+            {statusConfig.label}
+          </span>
         </div>
-      )}
-    </div>
+        {custom?.startTime && custom?.endTime && (
+          <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+            {formatTimeRange(custom.startTime, custom.endTime)} ·{' '}
+            {formatDuration(custom.startTime, custom.endTime)}
+          </div>
+        )}
+        {custom?.hasConflict && (
+          <div className="flex items-center gap-0.5 text-[10px] text-destructive mt-0.5">
+            <span className="material-symbols-outlined text-[10px]" aria-hidden="true">
+              warning
+            </span>
+            <span>Conflict</span>
+          </div>
+        )}
+      </div>
+    </EventHoverWrap>
   );
 }
 
@@ -146,16 +293,18 @@ function MonthGridEvent({ calendarEvent }: Readonly<{ calendarEvent: Record<stri
     const priority = (custom.priority as string) ?? 'MEDIUM';
     const chipColor = PRIORITY_CHIP_COLORS[priority] ?? PRIORITY_CHIP_COLORS.MEDIUM;
     return (
-      <div
-        className={`w-full text-left rounded px-1 py-0.5 text-[10px] truncate cursor-pointer ${chipColor}`}
-        data-testid="calendar-task-chip"
-      >
-        <span
-          className="inline-block w-1.5 h-1.5 rounded-full bg-current mr-1 align-middle"
-          aria-hidden="true"
-        />
-        {calendarEvent.title as string}
-      </div>
+      <EventHoverWrap calendarEvent={calendarEvent} side="right">
+        <div
+          className={`w-full text-left rounded px-1 py-0.5 text-[10px] truncate cursor-pointer ${chipColor}`}
+          data-testid="calendar-task-chip"
+        >
+          <span
+            className="inline-block w-1.5 h-1.5 rounded-full bg-current mr-1 align-middle"
+            aria-hidden="true"
+          />
+          {calendarEvent.title as string}
+        </div>
+      </EventHoverWrap>
     );
   }
 
@@ -163,21 +312,23 @@ function MonthGridEvent({ calendarEvent }: Readonly<{ calendarEvent: Record<stri
   const hasConflict = custom?.hasConflict as boolean | undefined;
 
   return (
-    <div
-      className={`w-full text-left text-xs px-1.5 py-0.5 rounded truncate ${typeConfig.bgColor} ${typeConfig.color} ${
-        hasConflict ? 'ring-2 ring-destructive' : ''
-      }`}
-    >
-      {hasConflict && (
-        <span
-          className="material-symbols-outlined text-xs text-destructive mr-0.5"
-          aria-hidden="true"
-        >
-          warning
-        </span>
-      )}
-      {calendarEvent.title as string}
-    </div>
+    <EventHoverWrap calendarEvent={calendarEvent} side="right">
+      <div
+        className={`w-full text-left text-xs px-1.5 py-0.5 rounded truncate cursor-pointer ${typeConfig.bgColor} ${typeConfig.color} ${
+          hasConflict ? 'ring-2 ring-destructive' : ''
+        }`}
+      >
+        {hasConflict && (
+          <span
+            className="material-symbols-outlined text-xs text-destructive mr-0.5"
+            aria-hidden="true"
+          >
+            warning
+          </span>
+        )}
+        {calendarEvent.title as string}
+      </div>
+    </EventHoverWrap>
   );
 }
 
@@ -188,27 +339,31 @@ function DateGridEvent({ calendarEvent }: Readonly<{ calendarEvent: Record<strin
     const priority = (custom.priority as string) ?? 'MEDIUM';
     const chipColor = PRIORITY_CHIP_COLORS[priority] ?? PRIORITY_CHIP_COLORS.MEDIUM;
     return (
-      <div
-        className={`w-full text-left rounded px-1 py-0.5 text-[10px] truncate cursor-pointer ${chipColor}`}
-        data-testid="calendar-task-chip"
-      >
-        <span
-          className="inline-block w-1.5 h-1.5 rounded-full bg-current mr-1 align-middle"
-          aria-hidden="true"
-        />
-        {calendarEvent.title as string}
-      </div>
+      <EventHoverWrap calendarEvent={calendarEvent} side="bottom">
+        <div
+          className={`w-full text-left rounded px-1 py-0.5 text-[10px] truncate cursor-pointer ${chipColor}`}
+          data-testid="calendar-task-chip"
+        >
+          <span
+            className="inline-block w-1.5 h-1.5 rounded-full bg-current mr-1 align-middle"
+            aria-hidden="true"
+          />
+          {calendarEvent.title as string}
+        </div>
+      </EventHoverWrap>
     );
   }
 
   // Appointment all-day events — use type-based colors
   const typeConfig = getTypeConfig((custom?.appointmentType as string) ?? 'OTHER');
   return (
-    <div
-      className={`w-full text-left text-xs px-1.5 py-0.5 rounded truncate ${typeConfig.bgColor} ${typeConfig.color}`}
-    >
-      {calendarEvent.title as string}
-    </div>
+    <EventHoverWrap calendarEvent={calendarEvent} side="bottom">
+      <div
+        className={`w-full text-left text-xs px-1.5 py-0.5 rounded truncate cursor-pointer ${typeConfig.bgColor} ${typeConfig.color}`}
+      >
+        {calendarEvent.title as string}
+      </div>
+    </EventHoverWrap>
   );
 }
 
@@ -237,6 +392,8 @@ export function AppointmentCalendarInner({
   const onCreateWithDateRef = useRef(onCreateWithDate);
   const onDateChangeRef = useRef(onDateChange);
   const onMoreClickRef = useRef(onMoreClick);
+  /** Guards against feedback loop: programmatic setDate → onSelectedDateUpdate → setCurrentDate → repeat */
+  const isSyncingDateRef = useRef(false);
 
   useEffect(() => {
     onAppointmentClickRef.current = onAppointmentClick;
@@ -245,7 +402,14 @@ export function AppointmentCalendarInner({
     onCreateWithDateRef.current = onCreateWithDate;
     onDateChangeRef.current = onDateChange;
     onMoreClickRef.current = onMoreClick;
-  }, [onAppointmentClick, onTaskClick, onCreateWithSlot, onCreateWithDate, onDateChange, onMoreClick]);
+  }, [
+    onAppointmentClick,
+    onTaskClick,
+    onCreateWithSlot,
+    onCreateWithDate,
+    onDateChange,
+    onMoreClick,
+  ]);
 
   const calendar = useNextCalendarApp({
     views: [createViewDay(), createViewWeek(), createViewMonthGrid()],
@@ -282,6 +446,7 @@ export function AppointmentCalendarInner({
         onCreateWithDateRef.current?.(jsDate);
       },
       onSelectedDateUpdate(date) {
+        if (isSyncingDateRef.current) return;
         const jsDate = new Date(date.year, date.month - 1, date.day);
         onDateChangeRef.current(jsDate);
       },
@@ -308,11 +473,13 @@ export function AppointmentCalendarInner({
     if (!calendar) return;
     const prev = prevDateRef.current;
     if (
-      prev.getFullYear() !== currentDate.getFullYear() ||
-      prev.getMonth() !== currentDate.getMonth() ||
-      prev.getDate() !== currentDate.getDate()
+      prev.getUTCFullYear() !== currentDate.getUTCFullYear() ||
+      prev.getUTCMonth() !== currentDate.getUTCMonth() ||
+      prev.getUTCDate() !== currentDate.getUTCDate()
     ) {
+      isSyncingDateRef.current = true;
       calendarControls.setDate(toTemporalPlainDate(currentDate));
+      isSyncingDateRef.current = false;
       prevDateRef.current = currentDate;
     }
   }, [currentDate, calendar, calendarControls]);

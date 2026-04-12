@@ -10,18 +10,33 @@ import {
   APPOINTMENT_TYPE_OPTIONS,
   APPOINTMENT_STATUS_OPTIONS,
 } from '@/lib/appointments/appointment-utils';
-import type { AppointmentListItem, AppointmentStats, AppointmentFilters } from './types';
+import type {
+  AppointmentListItem,
+  AppointmentStats,
+  AppointmentFilters,
+  CalendarTask,
+} from './types';
 
 export interface AppointmentListProps {
   appointments: AppointmentListItem[];
   total: number;
   isLoading: boolean;
   stats: AppointmentStats;
+  /** Tasks with due dates in the selected range — rendered below appointments */
+  tasks?: CalendarTask[];
   onRowClick: (id: string) => void;
+  onTaskClick?: (id: string) => void;
   pagination: { page: number; limit: number; onPageChange: (page: number) => void };
   filters: AppointmentFilters;
   onFilterChange: (filters: Partial<AppointmentFilters>) => void;
 }
+
+const PRIORITY_STYLE: Record<string, string> = {
+  LOW: 'bg-slate-100 text-slate-700',
+  MEDIUM: 'bg-yellow-50 text-yellow-700',
+  HIGH: 'bg-orange-50 text-orange-700',
+  URGENT: 'bg-red-50 text-red-700',
+};
 
 const STAT_CARDS = [
   {
@@ -100,12 +115,33 @@ export function AppointmentList({
   total,
   isLoading,
   stats,
+  tasks = [],
   onRowClick,
+  onTaskClick,
   pagination,
   filters,
   onFilterChange,
 }: Readonly<AppointmentListProps>) {
   const totalPages = Math.ceil(total / pagination.limit);
+
+  // Apply date-range filter to tasks so the list view mirrors the calendar view.
+  // Tasks are sorted by dueDate ascending.
+  const visibleTasks = tasks
+    .filter((t) => {
+      const d = typeof t.dueDate === 'string' ? new Date(t.dueDate) : t.dueDate;
+      if (filters.startTimeFrom && d < filters.startTimeFrom) return false;
+      if (filters.startTimeTo && d > filters.startTimeTo) return false;
+      if (filters.search) {
+        const q = filters.search.toLowerCase();
+        if (!t.title.toLowerCase().includes(q)) return false;
+      }
+      return true;
+    })
+    .sort((a, b) => {
+      const da = typeof a.dueDate === 'string' ? new Date(a.dueDate) : a.dueDate;
+      const db = typeof b.dueDate === 'string' ? new Date(b.dueDate) : b.dueDate;
+      return da.getTime() - db.getTime();
+    });
 
   const getStatValue = (key: string): number => {
     if (key === 'upcoming') return stats.upcoming;
@@ -260,12 +296,12 @@ export function AppointmentList({
         )}
       </div>
 
-      {/* Table */}
-      {appointments.length === 0 ? (
+      {/* Appointments table */}
+      {appointments.length === 0 && visibleTasks.length === 0 ? (
         <div data-testid="list-empty">
           <EmptyState entity="appointments" phase="passive" />
         </div>
-      ) : (
+      ) : appointments.length === 0 ? null : (
         <div className="border rounded-lg overflow-hidden">
           <table className="w-full text-sm">
             <thead>
@@ -366,6 +402,75 @@ export function AppointmentList({
         </div>
       )}
 
+      {/* Tasks section — mirrors what the calendar shows alongside appointments */}
+      {visibleTasks.length > 0 && (
+        <div className="space-y-2 pt-2" data-testid="task-section">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-gray-500 text-lg" aria-hidden="true">
+              task_alt
+            </span>
+            <h3 className="text-sm font-semibold text-gray-800">
+              Tasks due
+              <span className="ml-2 text-xs font-normal text-gray-500">
+                ({visibleTasks.length})
+              </span>
+            </h3>
+          </div>
+          <div className="border rounded-lg overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50 border-b">
+                  <th className="text-left px-4 py-3 font-medium text-gray-600">Title</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600">Due date</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600">Priority</th>
+                </tr>
+              </thead>
+              <tbody>
+                {visibleTasks.map((t) => {
+                  const due = typeof t.dueDate === 'string' ? new Date(t.dueDate) : t.dueDate;
+                  const priorityClass = PRIORITY_STYLE[t.priority] ?? PRIORITY_STYLE.MEDIUM;
+                  return (
+                    <tr
+                      key={t.id}
+                      onClick={() => onTaskClick?.(t.id)}
+                      className="border-b hover:bg-gray-50 cursor-pointer transition-colors"
+                    >
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="material-symbols-outlined text-indigo-500 text-base"
+                            aria-hidden="true"
+                          >
+                            task_alt
+                          </span>
+                          <span className="font-medium text-gray-900 truncate max-w-[200px]">
+                            {t.title}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-gray-600">
+                        {due.toLocaleDateString('en-US', {
+                          weekday: 'short',
+                          month: 'short',
+                          day: 'numeric',
+                        })}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`text-xs px-2 py-1 rounded uppercase tracking-wide font-medium ${priorityClass}`}
+                        >
+                          {t.priority}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between pt-2" data-testid="pagination">
@@ -399,8 +504,11 @@ export function AppointmentList({
 
 function toDateInputValue(date: Readonly<Date>): string {
   const d = new Date(date);
+  // Use local getters consistently — mixing getFullYear()/getMonth() (local)
+  // with getUTCDate() (UTC) would shift the day by ±1 in non-UTC timezones
+  // and make the input appear to "reset" to the previous day.
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getUTCDate()).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
   return `${y}-${m}-${day}`;
 }

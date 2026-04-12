@@ -27,11 +27,9 @@ export default function CalendarLayoutShell({ children }: Readonly<{ children: R
 
   const sidebarConfig = useMemo(() => {
     if (onSettingsPage) {
-      return createAppointmentsSettingsSidebarConfig(
-        ({ isExpanded }: { isExpanded: boolean }) => (
-          <CalendarSettingsSidebarNav isExpanded={isExpanded} />
-        ),
-      );
+      return createAppointmentsSettingsSidebarConfig(({ isExpanded }: { isExpanded: boolean }) => (
+        <CalendarSettingsSidebarNav isExpanded={isExpanded} />
+      ));
     }
     return createAppointmentsSidebarConfig(() => setSettingsOpen((prev) => !prev));
   }, [onSettingsPage]);
@@ -44,10 +42,7 @@ export default function CalendarLayoutShell({ children }: Readonly<{ children: R
             <SidebarWithSuspense config={sidebarConfig} />
 
             {!onSettingsPage && (
-              <CalendarSettingsPanel
-                isOpen={settingsOpen}
-                onClose={() => setSettingsOpen(false)}
-              />
+              <CalendarSettingsPanel isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
             )}
 
             {/* Portal target for page-injected sidebar content */}

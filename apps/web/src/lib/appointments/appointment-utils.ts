@@ -84,11 +84,20 @@ export function getConflictSeverityColor(type: string): {
   }
 }
 
-export function formatTimeRange(start: Date | string, end: Date | string, timezone: string = 'Europe/London'): string {
+export function formatTimeRange(
+  start: Date | string,
+  end: Date | string,
+  timezone: string = 'Europe/London'
+): string {
   const s = new Date(start);
   const e = new Date(end);
   const fmt = (d: Date) =>
-    d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: timezone });
+    d.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+      timeZone: timezone,
+    });
   return `${fmt(s)} - ${fmt(e)}`;
 }
 
@@ -125,7 +134,12 @@ export function timeAgo(date: Date | string, timezone: string = 'Europe/London')
   const days = Math.floor(hours / 24);
   if (days === 1) return 'Yesterday';
   if (days < 7) return `${days} days ago`;
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: timezone });
+  return d.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: timezone,
+  });
 }
 
 export function getInitials(name: string): string {
@@ -155,7 +169,10 @@ const FREQUENCY_LABELS: Record<string, string> = {
   YEARLY: 'year',
 };
 
-export function formatRecurrence(pattern: RecurrencePattern | null | undefined, timezone: string = 'Europe/London'): string {
+export function formatRecurrence(
+  pattern: RecurrencePattern | null | undefined,
+  timezone: string = 'Europe/London'
+): string {
   if (!pattern) return '';
   const freq = FREQUENCY_LABELS[pattern.frequency] || pattern.frequency.toLowerCase();
   let text =

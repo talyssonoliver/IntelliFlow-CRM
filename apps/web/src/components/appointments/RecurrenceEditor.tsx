@@ -45,8 +45,7 @@ export function RecurrenceEditor({ value, onChange, disabled }: Readonly<Recurre
           disabled={disabled}
           className="text-sm text-blue-600 hover:text-blue-800 hover:underline disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
         >
-          <span className="material-symbols-outlined text-base">repeat</span>{' '}
-          Add recurrence
+          <span className="material-symbols-outlined text-base">repeat</span> Add recurrence
         </button>
       </div>
     );

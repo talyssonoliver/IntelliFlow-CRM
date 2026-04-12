@@ -171,7 +171,8 @@ describe('RecipientPicker', () => {
     const input = screen.getByPlaceholderText(/add recipient/i);
     await user.type(input, 'a');
     await user.keyboard('{ArrowDown}');
-    expect(within(screen.getByRole('list', { name: /to suggestions/i })).getAllByRole('button')[0])
-      .toHaveAttribute('data-highlighted', 'true');
+    expect(
+      within(screen.getByRole('list', { name: /to suggestions/i })).getAllByRole('button')[0]
+    ).toHaveAttribute('data-highlighted', 'true');
   });
 });
