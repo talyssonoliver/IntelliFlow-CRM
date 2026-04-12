@@ -445,8 +445,10 @@ enum LeadStatus {
   QUALIFIED
   NEGOTIATING
   UNQUALIFIED
+  DISQUALIFIED
   CONVERTED
   LOST
+  ARCHIVED
 }
 
 enum ContactStatus {

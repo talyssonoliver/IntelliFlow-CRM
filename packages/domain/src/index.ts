@@ -50,7 +50,7 @@ export * from './crm/task/TaskEvents';
 export * from './crm/task/TaskRepository';
 
 // Legal Domain - Cases/Matters
-export * from './legal/cases/case';
+export * from './legal/cases/Case';
 export * from './legal/cases/case-document';
 export * from './legal/cases/DocumentIngestionEvents';
 export * from './legal/cases/CaseId';
