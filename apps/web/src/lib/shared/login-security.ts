@@ -161,7 +161,11 @@ export function getDeviceFingerprint(): DeviceFingerprint {
   const components: DeviceFingerprintComponents = {
     userAgent: navigator.userAgent,
     language: navigator.language,
-    platform: ('userAgentData' in navigator && (navigator as { userAgentData?: { platform?: string } }).userAgentData?.platform) || navigator.platform || 'unknown',
+    platform:
+      ('userAgentData' in navigator &&
+        (navigator as { userAgentData?: { platform?: string } }).userAgentData?.platform) ||
+      navigator.platform ||
+      'unknown',
     screenResolution: `${screen.width}x${screen.height}`,
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     colorDepth: screen.colorDepth,
@@ -442,7 +446,8 @@ export function checkSecurityHeaders(): SecurityHeadersCheck {
   // In client-side code, we can't directly access response headers
   // This is mainly for verification during development
   const headers: Record<string, boolean> = {
-    'https-enabled': typeof globalThis.window !== 'undefined' && globalThis.location.protocol === 'https:',
+    'https-enabled':
+      typeof globalThis.window !== 'undefined' && globalThis.location.protocol === 'https:',
   };
 
   const missingHeaders = Object.entries(headers)

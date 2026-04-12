@@ -287,7 +287,8 @@ export async function clearIndexedDB(): Promise<string[]> {
               clearedDatabases.push(db.name!);
               resolve();
             };
-            request.onerror = () => reject(request.error ?? new Error('Failed to delete IndexedDB database'));
+            request.onerror = () =>
+              reject(request.error ?? new Error('Failed to delete IndexedDB database'));
             request.onblocked = () => {
               console.warn(`[SessionCleanup] IndexedDB ${db.name} deletion blocked`);
               resolve();

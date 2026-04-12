@@ -99,10 +99,7 @@ export function formatDateTime(
  * formatDateShort(new Date(), 'America/New_York')
  * // → "3/15/2026"
  */
-export function formatDateShort(
-  input: DateInput,
-  timezone: string = 'Europe/London'
-): string {
+export function formatDateShort(input: DateInput, timezone: string = 'Europe/London'): string {
   const date = toDate(input);
   return date.toLocaleDateString('en-US', {
     year: 'numeric',
@@ -120,10 +117,7 @@ export function formatDateShort(
  * formatISODate(new Date('2026-03-16T03:00:00Z'), 'America/New_York')
  * // → "2026-03-15" (still March 15 in New York)
  */
-export function formatISODate(
-  input: DateInput,
-  timezone: string = 'Europe/London'
-): string {
+export function formatISODate(input: DateInput, timezone: string = 'Europe/London'): string {
   const date = toDate(input);
   const parts = new Intl.DateTimeFormat('en-CA', {
     year: 'numeric',
@@ -148,10 +142,7 @@ export function formatISODate(
  * startOfDay('America/New_York')
  * // → Date representing "2026-03-15T05:00:00.000Z" (midnight ET in UTC)
  */
-export function startOfDay(
-  timezone: string = 'Europe/London',
-  referenceDate?: DateInput
-): Date {
+export function startOfDay(timezone: string = 'Europe/London', referenceDate?: DateInput): Date {
   const ref = referenceDate ? toDate(referenceDate) : new Date();
   const isoDate = formatISODate(ref, timezone);
 
@@ -192,7 +183,7 @@ export function startOfDay(
 
   // Offset in minutes: local = UTC + offset → offset = local - UTC
   // Account for day boundaries
-  let offsetMinutes = (tzH * 60 + tzM) - (utcH * 60 + utcM);
+  let offsetMinutes = tzH * 60 + tzM - (utcH * 60 + utcM);
 
   // Handle day-crossing (e.g., UTC 23:00, local 01:00 next day)
   if (offsetMinutes > 720) offsetMinutes -= 1440;
@@ -208,10 +199,7 @@ export function startOfDay(
 /**
  * Get the end of "today" (start of tomorrow) in a specific timezone as UTC Date.
  */
-export function endOfDay(
-  timezone: string = 'Europe/London',
-  referenceDate?: DateInput
-): Date {
+export function endOfDay(timezone: string = 'Europe/London', referenceDate?: DateInput): Date {
   const start = startOfDay(timezone, referenceDate);
   return new Date(start.getTime() + 24 * 60 * 60 * 1000);
 }
@@ -219,10 +207,7 @@ export function endOfDay(
 /**
  * Get the start of the current month in a specific timezone as a UTC Date.
  */
-export function startOfMonth(
-  timezone: string = 'Europe/London',
-  referenceDate?: DateInput
-): Date {
+export function startOfMonth(timezone: string = 'Europe/London', referenceDate?: DateInput): Date {
   const ref = referenceDate ? toDate(referenceDate) : new Date();
   const isoDate = formatISODate(ref, timezone);
   const monthStart = `${isoDate.substring(0, 7)}-01`;
@@ -303,10 +288,13 @@ export function getTimezoneLabel(timezone: string): string {
   try {
     const now = new Date();
     const abbr = getTimezoneAbbreviation(timezone, now);
-    const longName = new Intl.DateTimeFormat('en-US', {
-      timeZone: timezone,
-      timeZoneName: 'long',
-    }).formatToParts(now).find((p) => p.type === 'timeZoneName')?.value ?? timezone;
+    const longName =
+      new Intl.DateTimeFormat('en-US', {
+        timeZone: timezone,
+        timeZoneName: 'long',
+      })
+        .formatToParts(now)
+        .find((p) => p.type === 'timeZoneName')?.value ?? timezone;
 
     return `${longName} (${abbr})`;
   } catch {

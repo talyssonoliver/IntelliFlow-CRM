@@ -279,7 +279,8 @@ function incrementRateLimit(email: string): void {
  * Build the password reset URL
  */
 export function buildResetUrl(token: string, baseUrl?: string): string {
-  const base = baseUrl || (typeof globalThis.window === 'undefined' ? '' : globalThis.location.origin);
+  const base =
+    baseUrl || (typeof globalThis.window === 'undefined' ? '' : globalThis.location.origin);
   return `${base}/reset-password/${token}`;
 }
 
