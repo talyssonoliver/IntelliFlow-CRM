@@ -3,20 +3,20 @@ name: Validate Sprint (Governance)
 on:
   pull_request:
     paths:
-      - ".gitignore"
-      - "apps/project-tracker/docs/**"
-      - "tools/scripts/sprint-validation.ts"
-      - "tools/scripts/lib/**"
+      - '.gitignore'
+      - 'apps/project-tracker/docs/**'
+      - 'tools/scripts/sprint-validation.ts'
+      - 'tools/scripts/lib/**'
   push:
     branches:
       - main
       - master
       - develop
     paths:
-      - ".gitignore"
-      - "apps/project-tracker/docs/**"
-      - "tools/scripts/sprint-validation.ts"
-      - "tools/scripts/lib/**"
+      - '.gitignore'
+      - 'apps/project-tracker/docs/**'
+      - 'tools/scripts/sprint-validation.ts'
+      - 'tools/scripts/lib/**'
 
 jobs:
   validate-sprint:
@@ -34,12 +34,12 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: '20'
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: "10.29.3"
+          version: '10.29.3'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile

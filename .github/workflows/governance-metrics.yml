@@ -15,28 +15,28 @@ name: Governance Metrics
 on:
   schedule:
     # Run weekly on Monday at 6 AM UTC
-    - cron: "0 6 * * 1"
+    - cron: '0 6 * * 1'
   workflow_dispatch:
     inputs:
       force_all:
-        description: "Regenerate all metrics (even if unchanged)"
+        description: 'Regenerate all metrics (even if unchanged)'
         required: false
-        default: "false"
+        default: 'false'
         type: boolean
   push:
     branches: [main]
     paths:
-      - "packages/**/*.ts"
-      - "apps/**/*.ts"
-      - "docs/debt-ledger.yaml"
+      - 'packages/**/*.ts'
+      - 'apps/**/*.ts'
+      - 'docs/debt-ledger.yaml'
 
 concurrency:
   group: governance-metrics-${{ github.ref }}
   cancel-in-progress: true
 
 env:
-  NODE_VERSION: "20"
-  PNPM_VERSION: "10.29.3"
+  NODE_VERSION: '20'
+  PNPM_VERSION: '10.29.3'
 
 jobs:
   performance-benchmarks:
@@ -52,7 +52,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -82,7 +82,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -201,7 +201,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -298,7 +298,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -362,8 +362,7 @@ jobs:
   commit-artifacts:
     name: Commit Updated Artifacts
     runs-on: ubuntu-latest
-    needs:
-      [performance-benchmarks, technical-debt, test-metrics, security-tracking]
+    needs: [performance-benchmarks, technical-debt, test-metrics, security-tracking]
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     steps:
       - uses: actions/checkout@v4
@@ -429,8 +428,7 @@ jobs:
   summary:
     name: Generate Summary
     runs-on: ubuntu-latest
-    needs:
-      [performance-benchmarks, technical-debt, test-metrics, security-tracking]
+    needs: [performance-benchmarks, technical-debt, test-metrics, security-tracking]
     if: always()
     steps:
       - name: Generate workflow summary
