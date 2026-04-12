@@ -5,14 +5,23 @@
  *
  * Contains all interactive dashboard logic: widget grid, localStorage layout,
  * auth guard, and customize/add-new actions.
+ *
+ * Each widget is independently wrapped in a <Suspense> boundary so widgets
+ * stream in as their data arrives instead of all blocking on the slowest one.
  */
 
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Card } from '@intelliflow/ui';
 import type { Widget } from '@intelliflow/ui';
 import { widgetRegistry } from '@/components/dashboard/widgets';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
+import {
+  StatCardSkeleton,
+  ChartWidgetSkeleton,
+  ListWidgetSkeleton,
+  PipelineWidgetSkeleton,
+} from '@/components/dashboard/WidgetSkeleton';
 
 // Default widgets matching the original dashboard layout
 const defaultWidgets: Widget[] = [
@@ -29,6 +38,38 @@ const defaultWidgets: Widget[] = [
   { id: 'w8', type: 'recent-activity', title: 'Recent Activity', colSpan: 1, rowSpan: 1 },
 ];
 
+/** Map widget type → appropriate Suspense skeleton fallback. */
+function getSkeletonFallback(widget: Widget): React.ReactNode {
+  switch (widget.type) {
+    case 'total-leads':
+    case 'sales-revenue':
+    case 'active-deals':
+    case 'open-tickets':
+      return <StatCardSkeleton colSpan={widget.colSpan} />;
+    case 'pipeline-summary':
+      return <PipelineWidgetSkeleton colSpan={widget.colSpan} />;
+    case 'deals-won':
+      return <ChartWidgetSkeleton colSpan={widget.colSpan} />;
+    case 'upcoming-tasks':
+    case 'recent-activity':
+      return <ListWidgetSkeleton colSpan={widget.colSpan} />;
+    default:
+      return <StatCardSkeleton colSpan={widget.colSpan} />;
+  }
+}
+
+const colSpanClasses: Record<number, string> = {
+  1: 'col-span-1',
+  2: 'col-span-1 md:col-span-2',
+  3: 'col-span-1 md:col-span-2 lg:col-span-3',
+  4: 'col-span-1 md:col-span-2 lg:col-span-4',
+};
+
+const rowSpanClasses: Record<number, string> = {
+  1: '',
+  2: 'row-span-2',
+};
+
 interface DashboardClientProps {
   initialLeadStats?: unknown;
 }
@@ -36,9 +77,11 @@ interface DashboardClientProps {
 export default function DashboardClient({ initialLeadStats }: Readonly<DashboardClientProps>) {
   const { isLoading: authLoading } = useRequireAuth();
   const [widgets, setWidgets] = useState<Widget[]>(defaultWidgets);
-  const [isLoaded, setIsLoaded] = useState(false);
 
-  // Load saved layout from localStorage on mount
+  // Load saved layout from localStorage on mount.
+  // This no longer gates the entire grid — widgets render immediately with
+  // their Suspense skeletons; if a saved layout exists, the grid re-orders
+  // once localStorage is read (typically <1 frame).
   useEffect(() => {
     const saved = localStorage.getItem('dashboard-layout');
     if (saved) {
@@ -51,21 +94,7 @@ export default function DashboardClient({ initialLeadStats }: Readonly<Dashboard
         console.error('Failed to parse saved dashboard layout:', e);
       }
     }
-    setIsLoaded(true);
   }, []);
-
-  // Grid column span classes
-  const colSpanClasses: Record<number, string> = {
-    1: 'col-span-1',
-    2: 'col-span-1 md:col-span-2',
-    3: 'col-span-1 md:col-span-2 lg:col-span-3',
-    4: 'col-span-1 md:col-span-2 lg:col-span-4',
-  };
-
-  const rowSpanClasses: Record<number, string> = {
-    1: '',
-    2: 'row-span-2',
-  };
 
   // Show loading skeleton while auth is being verified
   if (authLoading) {
@@ -129,43 +158,40 @@ export default function DashboardClient({ initialLeadStats }: Readonly<Dashboard
         </div>
       </div>
 
-      {/* Dashboard Widgets Grid */}
-      {isLoaded ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 auto-rows-min">
-          {widgets.map((widget) => {
-            const WidgetComponent = widgetRegistry[widget.type];
+      {/* Dashboard Widgets Grid — each widget has its own Suspense boundary */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 auto-rows-min">
+        {widgets.map((widget) => {
+          const WidgetComponent = widgetRegistry[widget.type];
+          const gridClasses = `
+            ${colSpanClasses[widget.colSpan] || 'col-span-1'}
+            ${rowSpanClasses[widget.rowSpan] || ''}
+          `;
+
+          if (!WidgetComponent) {
             return (
               <Card
                 key={widget.id}
-                className={`
-                  bg-surface-light dark:bg-surface-dark border-border-light dark:border-border-dark
-                  ${colSpanClasses[widget.colSpan] || 'col-span-1'}
-                  ${rowSpanClasses[widget.rowSpan] || ''}
-                `}
+                className={`bg-surface-light dark:bg-surface-dark border-border-light dark:border-border-dark ${gridClasses}`}
               >
-                {WidgetComponent ? (
-                  <WidgetComponent
-                    config={widget.config}
-                    initialData={widget.type === 'total-leads' ? initialLeadStats : undefined}
-                  />
-                ) : (
-                  <div className="p-6 text-slate-400">Unknown widget: {widget.type}</div>
-                )}
+                <div className="p-6 text-slate-400">Unknown widget: {widget.type}</div>
               </Card>
             );
-          })}
-        </div>
-      ) : (
-        /* Loading skeleton */
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-          {[1, 2, 3, 4].map((i) => (
-            <Card
-              key={i}
-              className="h-32 bg-surface-light dark:bg-surface-dark border-border-light dark:border-border-dark animate-pulse"
-            />
-          ))}
-        </div>
-      )}
+          }
+
+          return (
+            <Suspense key={widget.id} fallback={getSkeletonFallback(widget)}>
+              <Card
+                className={`bg-surface-light dark:bg-surface-dark border-border-light dark:border-border-dark ${gridClasses}`}
+              >
+                <WidgetComponent
+                  config={widget.config}
+                  initialData={widget.type === 'total-leads' ? initialLeadStats : undefined}
+                />
+              </Card>
+            </Suspense>
+          );
+        })}
+      </div>
     </div>
   );
 }
