@@ -1,13 +1,11 @@
-'use client';
-
-import dynamic from 'next/dynamic';
+import { Suspense } from 'react';
+import LeadSettingsContent from '@/app/settings/leads/LeadSettingsContent';
 import { LeadSettingsLoading } from '@/app/settings/leads/LeadSettingsLoading';
 
-const LeadSettingsContent = dynamic(() => import('@/app/settings/leads/LeadSettingsContent'), {
-  ssr: false,
-  loading: () => <LeadSettingsLoading />,
-});
-
 export default function LeadSettingsPage() {
-  return <LeadSettingsContent />;
+  return (
+    <Suspense fallback={<LeadSettingsLoading />}>
+      <LeadSettingsContent />
+    </Suspense>
+  );
 }

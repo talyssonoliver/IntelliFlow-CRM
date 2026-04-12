@@ -1,20 +1,18 @@
-'use client';
-
 /**
  * Lead Settings Page - PG-178
  *
- * Client component wrapper that dynamically loads the content component
- * with SSR disabled to prevent hydration issues with hooks.
+ * Server Component shell — streams the skeleton immediately, then
+ * hydrates LeadSettingsContent (client component) via Suspense.
  */
 
-import dynamic from 'next/dynamic';
+import { Suspense } from 'react';
+import LeadSettingsContent from './LeadSettingsContent';
 import { LeadSettingsLoading } from './LeadSettingsLoading';
 
-const LeadSettingsContent = dynamic(() => import('./LeadSettingsContent'), {
-  ssr: false,
-  loading: () => <LeadSettingsLoading />,
-});
-
 export default function LeadSettingsPage() {
-  return <LeadSettingsContent />;
+  return (
+    <Suspense fallback={<LeadSettingsLoading />}>
+      <LeadSettingsContent />
+    </Suspense>
+  );
 }

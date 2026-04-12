@@ -1,13 +1,11 @@
-'use client';
-
-import dynamic from 'next/dynamic';
+import { Suspense } from 'react';
+import AccountSettingsContent from './AccountSettingsContent';
 import { AccountSettingsLoading } from './AccountSettingsLoading';
 
-const AccountSettingsContent = dynamic(() => import('./AccountSettingsContent'), {
-  ssr: false,
-  loading: () => <AccountSettingsLoading />,
-});
-
 export default function AccountSettingsPage() {
-  return <AccountSettingsContent />;
+  return (
+    <Suspense fallback={<AccountSettingsLoading />}>
+      <AccountSettingsContent />
+    </Suspense>
+  );
 }
