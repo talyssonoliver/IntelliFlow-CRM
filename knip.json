@@ -64,7 +64,12 @@
       "project": ["src/**/*.{ts,tsx}"]
     },
     "packages/search": {
-      "entry": ["src/index.ts", "src/retrieval.ts", "src/indexer.ts", "src/worker.ts"],
+      "entry": [
+        "src/index.ts",
+        "src/retrieval.ts",
+        "src/indexer.ts",
+        "src/worker.ts"
+      ],
       "project": ["src/**/*.ts"]
     },
     "packages/ui": {

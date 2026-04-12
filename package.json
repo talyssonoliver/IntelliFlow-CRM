@@ -73,6 +73,7 @@
     "validate:sprint0:report": "tsx tools/scripts/capture-validation-output.ts --output artifacts/sprint0/codex-run/validation-output.txt",
     "validate:sprint:report": "tsx tools/scripts/capture-validation-output.ts",
     "validate:sprint-data": "tsx tools/scripts/validate-sprint-data.ts",
+    "report:current-state": "npx tsx apps/project-tracker/scripts/generate-current-state-report.ts",
     "sync:metrics": "cd apps/project-tracker && npx tsx scripts/sync-metrics.ts",
     "sync:api-inventory": "npx tsx tools/scripts/sync-api-inventory.ts",
     "sync:codebase-inventory": "npx tsx tools/scripts/sync-codebase-inventory.ts",
@@ -162,6 +163,7 @@
     "memfs": "^4.51.1",
     "papaparse": "^5.4.1",
     "prettier": "^3.3.0",
+    "puppeteer": "^24.40.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "tsx": "^4.7.0",
@@ -213,5 +215,8 @@
       "@xmldom/xmldom": ">=0.8.12 <1",
       "defu": ">=6.1.5 <7"
     }
+  },
+  "dependencies": {
+    "jose": "^6.2.2"
   }
 }

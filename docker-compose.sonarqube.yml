@@ -7,7 +7,7 @@
 #   Default credentials: admin/admin (change on first login)
 # =============================================================================
 
-version: "3.9"
+version: '3.9'
 
 services:
   sonarqube:
@@ -25,18 +25,11 @@ services:
       - sonarqube_extensions:/opt/sonarqube/extensions
       - sonarqube_logs:/opt/sonarqube/logs
     ports:
-      - "9000:9000"
+      - '9000:9000'
     networks:
       - sonarqube-network
     healthcheck:
-      test:
-        [
-          "CMD",
-          "wget",
-          "-q",
-          "--spider",
-          "http://localhost:9000/api/system/status",
-        ]
+      test: ['CMD', 'wget', '-q', '--spider', 'http://localhost:9000/api/system/status']
       interval: 30s
       timeout: 10s
       retries: 5
@@ -54,7 +47,7 @@ services:
     networks:
       - sonarqube-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U sonarqube"]
+      test: ['CMD-SHELL', 'pg_isready -U sonarqube']
       interval: 10s
       timeout: 5s
       retries: 5

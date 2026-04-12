@@ -9,9 +9,8 @@ module.exports = {
       url: ['http://localhost:3000/'],
       numberOfRuns: 3,
       puppeteerScript: './tools/lighthouse/lhci-auth.js',
-      startServerCommand:
-        'pnpm --filter @intelliflow/web build && pnpm --filter @intelliflow/web start',
-      startServerReadyPattern: 'ready on',
+      startServerCommand: 'pnpm --filter @intelliflow/web start',
+      startServerReadyPattern: 'Starting',
       startServerReadyTimeout: 120000,
       settings: {
         preset: 'desktop',

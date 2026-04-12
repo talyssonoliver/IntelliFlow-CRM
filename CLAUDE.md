@@ -32,11 +32,15 @@ files:
 ```
 apps/project-tracker/docs/metrics/_global/
 ├── Sprint_plan.csv      # Source of truth (edit here only)
-├── Sprint_plan_A.csv    # Rows 1-79 (Sprint 0 early)
-├── Sprint_plan_B.csv    # Rows 80-165 (Sprint 0-1)
-├── Sprint_plan_C.csv    # Rows 166-249 (Sprint 1-3)
-├── Sprint_plan_D.csv    # Rows 250-316 (Sprint 3-12)
-└── Sprint_plan_E.csv    # Rows 317-353 (Sprint 12+)
+├── Sprint_plan_A.csv    # 67 rows (EXC-INIT-001 → IFC-042)
+├── Sprint_plan_B.csv    # 72 rows (IFC-043 → PG-015)
+├── Sprint_plan_C.csv    # 73 rows (PG-016 → SALES-002)
+├── Sprint_plan_D.csv    # 69 rows (PM-OPS-001 → IFC-123)
+├── Sprint_plan_E.csv    # 63 rows (IFC-124 → IFC-170)
+├── Sprint_plan_F.csv    # 64 rows (IFC-171 → PG-156)
+├── Sprint_plan_G.csv    # 64 rows (PG-157 → IFC-233)
+├── Sprint_plan_H.csv    # 62 rows (IFC-234 → IFC-296)
+└── Sprint_plan_I.csv    # 26 rows (IFC-297 → IFC-308)
 ```
 
 Regenerate splits: `npx tsx tools/scripts/split-sprint-plan.ts` Full guide:
@@ -166,23 +170,33 @@ of the current working state generated from the metrics tree + git.
 
 1. **At the start of every new session**, read `docs/SESSION_CONTEXT.md` before
    doing anything else. It tells you which sprint is active, what's in progress,
-   what blockers exist, and what the next unblocked tasks are.
+   what blockers exist, and what the next unblocked tasks are. Its **Project
+   Health** section shows project-wide completion % and evidence health from the
+   full state report.
 2. **After completing a task or before running out of context**, regenerate it
    so the next session starts from an accurate snapshot:
    - CLI: `npx tsx apps/project-tracker/scripts/generate-context.ts`
    - API: `curl -X POST http://localhost:3002/api/context`
-   - Slash command: `/resume`
+   - Slash command: `/refresh-context`
+   - All three also regenerate `docs/CURRENT_STATE_REPORT.md` automatically.
 3. **Never edit `docs/SESSION_CONTEXT.md` by hand** — it is derived from the
    metrics files, same discipline as `Sprint_plan.json`.
+4. **For full sprint-by-sprint detail**, read `docs/CURRENT_STATE_REPORT.md` —
+   the deep reference with per-sprint breakdowns, attestation evidence, and
+   source health diagnostics. Generated from `.specify/` attestations + CSV.
 
-**Generator source**: `apps/project-tracker/lib/context-snapshot.ts`
+**Generator sources**:
+- Session digest: `apps/project-tracker/lib/context-snapshot.ts`
+- Full state report: `apps/project-tracker/lib/current-state-report.ts`
 
 ## Resources
 
 - **Sprint Plan**: `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv`
+- **Session Context** (quick digest): `docs/SESSION_CONTEXT.md`
+- **Current State Report** (full detail): `docs/CURRENT_STATE_REPORT.md`
 - **Metrics Dashboard**: http://localhost:3002/
 - **Context Snapshot API**: http://localhost:3002/api/context (GET = view, POST
-  = regenerate)
+  = regenerate — also refreshes the state report)
 - **ADRs**: `docs/planning/adr/`
 - **Dependency Chains**: `docs/design/diagrams/complete-dependency-chains.md`
 - **Design Mockups**: `docs/design/README.md`

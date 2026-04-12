@@ -104,8 +104,8 @@ Each subdirectory has its own AGENTS.md with area-specific rules and patterns:
 
 Detailed guides loaded on-demand:
 
-| Doc                                     | Topics                                                          |
-| --------------------------------------- | --------------------------------------------------------------- |
+| Doc                                    | Topics                                                          |
+| -------------------------------------- | --------------------------------------------------------------- |
 | `docs/Codex-refs/sprint-plan-guide.md` | CSV columns, pre-req prefixes, dashboard views, task structure  |
 | `docs/Codex-refs/architecture.md`      | DDD/hexagonal, events, AI patterns, design patterns, dep chains |
 | `docs/Codex-refs/feature-workflow.md`  | 9-step feature creation, testing strategy, git workflow         |
@@ -113,7 +113,7 @@ Detailed guides loaded on-demand:
 | `docs/Codex-refs/nonfunctional.md`     | Performance targets, security, monitoring                       |
 | `docs/Codex-refs/gotchas.md`           | 14 common gotchas + testing-specific gotchas                    |
 | `docs/Codex-refs/sprint-context.md`    | Sprint phases (0-33), decision gates                            |
-| `docs/Codex-refs/ai-workflow.md`       | Codex workflows, Copilot, AI code gen                     |
+| `docs/Codex-refs/ai-workflow.md`       | Codex workflows, Copilot, AI code gen                           |
 
 ## Critical Rules
 
