@@ -42,6 +42,22 @@ function resolvePolicyPath(): string {
   return match;
 }
 
+function applyFrontmatterLine(
+  line: string,
+  metadata: PrivacyPolicyMetadata,
+  currentListKey: 'summary' | null
+): 'summary' | null {
+  if (line.startsWith('title: ')) { metadata.title = line.slice(7).trim(); return null; }
+  if (line.startsWith('version: ')) { metadata.version = line.slice(9).trim(); return null; }
+  if (line.startsWith('effectiveDate: ')) { metadata.effectiveDate = line.slice(15).trim(); return null; }
+  if (line.startsWith('contactEmail: ')) { metadata.contactEmail = line.slice(14).trim(); return null; }
+  if (line.trim() === 'summary:') return 'summary';
+  if (currentListKey === 'summary' && line.trim().startsWith('- ')) {
+    metadata.summary.push(line.trim().slice(2).trim());
+  }
+  return currentListKey;
+}
+
 function slugify(value: string): string {
   return value
     .toLowerCase()
@@ -50,17 +66,20 @@ function slugify(value: string): string {
 }
 
 function parseFrontmatter(raw: string): { metadata: PrivacyPolicyMetadata; body: string } {
-  if (!raw.startsWith('---\n')) {
+  // Normalize CRLF → LF so frontmatter detection works on Windows
+  const normalized = raw.replace(/\r\n/g, '\n');
+
+  if (!normalized.startsWith('---\n')) {
     throw new Error('Privacy policy content is missing frontmatter.');
   }
 
-  const closingIndex = raw.indexOf('\n---\n', 4);
+  const closingIndex = normalized.indexOf('\n---\n', 4);
   if (closingIndex === -1) {
     throw new Error('Privacy policy frontmatter is not terminated.');
   }
 
-  const frontmatter = raw.slice(4, closingIndex).split(/\r?\n/);
-  const body = raw.slice(closingIndex + 5).trim();
+  const frontmatter = normalized.slice(4, closingIndex).split('\n');
+  const body = normalized.slice(closingIndex + 5).trim();
 
   const metadata: PrivacyPolicyMetadata = {
     title: '',
@@ -73,38 +92,7 @@ function parseFrontmatter(raw: string): { metadata: PrivacyPolicyMetadata; body:
   let currentListKey: 'summary' | null = null;
 
   for (const line of frontmatter) {
-    if (line.startsWith('title: ')) {
-      metadata.title = line.slice(7).trim();
-      currentListKey = null;
-      continue;
-    }
-
-    if (line.startsWith('version: ')) {
-      metadata.version = line.slice(9).trim();
-      currentListKey = null;
-      continue;
-    }
-
-    if (line.startsWith('effectiveDate: ')) {
-      metadata.effectiveDate = line.slice(15).trim();
-      currentListKey = null;
-      continue;
-    }
-
-    if (line.startsWith('contactEmail: ')) {
-      metadata.contactEmail = line.slice(14).trim();
-      currentListKey = null;
-      continue;
-    }
-
-    if (line.trim() === 'summary:') {
-      currentListKey = 'summary';
-      continue;
-    }
-
-    if (currentListKey === 'summary' && line.trim().startsWith('- ')) {
-      metadata.summary.push(line.trim().slice(2).trim());
-    }
+    currentListKey = applyFrontmatterLine(line, metadata, currentListKey);
   }
 
   return { metadata, body };
