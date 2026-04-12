@@ -1,0 +1,24 @@
+{
+  "url": "http://localhost:3000/",
+  "fetchTime": "2026-04-11T15:19:28.674Z",
+  "scores": {
+    "performance": 1,
+    "accessibility": 1,
+    "bestPractices": 0.93,
+    "seo": 1
+  },
+  "metrics": {
+    "tti": 852.5717500000001,
+    "fcp": 250.62869999999998,
+    "lcp": 757.57175,
+    "cls": 0.000434,
+    "tbt": 5,
+    "si": 259.1203713054134
+  },
+  "passedThresholds": {
+    "performance": true,
+    "accessibility": true,
+    "tti": true
+  },
+  "generatedAt": "2026-04-11T15:20:06.096Z"
+}

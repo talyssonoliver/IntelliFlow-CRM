@@ -23,6 +23,71 @@ import { promisify } from 'node:util';
 
 const execAsync = promisify(exec);
 
+// Load environment variables from .env.local / .env
+function loadEnvFile(filePath: string): Record<string, string> {
+  const vars: Record<string, string> = {};
+  if (!existsSync(filePath)) return vars;
+  const content = readFileSync(filePath, 'utf-8');
+  for (const line of content.split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const eqIdx = trimmed.indexOf('=');
+    if (eqIdx === -1) continue;
+    const key = trimmed.slice(0, eqIdx).trim();
+    const val = trimmed.slice(eqIdx + 1).trim();
+    vars[key] = val;
+  }
+  return vars;
+}
+
+function getEnvVar(name: string): string {
+  if (process.env[name]) return process.env[name]!;
+  const envLocal = loadEnvFile(join(process.cwd(), '.env.local'));
+  if (envLocal[name]) return envLocal[name];
+  const envFile = loadEnvFile(join(process.cwd(), '.env'));
+  return envFile[name] || '';
+}
+
+/**
+ * Authenticate with Supabase and return a Bearer token.
+ * Uses the admin seed user (admin@intelliflow.dev / TestPassword123!).
+ */
+async function getAuthToken(): Promise<string | null> {
+  const supabaseUrl = getEnvVar('SUPABASE_URL') || getEnvVar('NEXT_PUBLIC_SUPABASE_URL');
+  const anonKey = getEnvVar('SUPABASE_ANON_KEY') || getEnvVar('NEXT_PUBLIC_SUPABASE_ANON_KEY');
+
+  if (!supabaseUrl || !anonKey) {
+    console.log('  ⚠ SUPABASE_URL or SUPABASE_ANON_KEY not found in environment or .env.local');
+    return null;
+  }
+
+  try {
+    const response = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=password`, {
+      method: 'POST',
+      headers: { 'apikey': anonKey, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'admin@intelliflow.dev', password: 'TestPassword123!' }),
+    });
+
+    if (!response.ok) {
+      const body = await response.text();
+      console.log(`  ⚠ Auth failed (HTTP ${response.status}): ${body.substring(0, 200)}`);
+      return null;
+    }
+
+    const data = await response.json();
+    if (!data.access_token) {
+      console.log('  ⚠ Auth response missing access_token');
+      return null;
+    }
+
+    console.log(`  ✅ Authenticated as admin@intelliflow.dev (user: ${data.user?.id})`);
+    return data.access_token;
+  } catch (error) {
+    console.log(`  ⚠ Auth error: ${error instanceof Error ? error.message : String(error)}`);
+    return null;
+  }
+}
+
 // Types
 interface BenchmarkResult {
   name: string;
@@ -185,7 +250,31 @@ async function runBenchmark(
  * - Port 3001: Standalone API server (if running separately)
  */
 async function checkApiAvailable(): Promise<{ available: boolean; baseUrl: string; type: 'trpc' | 'standalone' }> {
-  // Check Next.js tRPC endpoint first (most common setup)
+  // Check port 4000 first — the dedicated API server (preferred for benchmarking
+  // as it avoids Next.js dev-mode proxy overhead)
+  try {
+    const response = await fetch('http://localhost:4000/api/trpc/health.ping', { method: 'GET' });
+    if (response.ok) {
+      const data = await response.json();
+      if (data.result?.data?.status === 'healthy') {
+        return { available: true, baseUrl: 'http://localhost:4000/api/trpc', type: 'trpc' };
+      }
+    }
+  } catch {
+    // Not available
+  }
+
+  // Check port 4000 standalone /health fallback
+  try {
+    const response = await fetch('http://localhost:4000/health', { method: 'GET' });
+    if (response.ok) {
+      return { available: true, baseUrl: 'http://localhost:4000', type: 'standalone' };
+    }
+  } catch {
+    // Not available
+  }
+
+  // Fallback: Check Next.js tRPC endpoint on port 3000
   try {
     const response = await fetch('http://localhost:3000/api/trpc/health.check', { method: 'GET' });
     if (response.ok) {
@@ -193,26 +282,6 @@ async function checkApiAvailable(): Promise<{ available: boolean; baseUrl: strin
       if (data.result?.data?.status === 'healthy') {
         return { available: true, baseUrl: 'http://localhost:3000/api/trpc', type: 'trpc' };
       }
-    }
-  } catch {
-    // Continue to next check
-  }
-
-  // Check standalone API server
-  try {
-    const response = await fetch('http://localhost:3001/health', { method: 'GET' });
-    if (response.ok) {
-      return { available: true, baseUrl: 'http://localhost:3001', type: 'standalone' };
-    }
-  } catch {
-    // Continue to next check
-  }
-
-  // Check port 4000 (alternative)
-  try {
-    const response = await fetch('http://localhost:4000/health', { method: 'GET' });
-    if (response.ok) {
-      return { available: true, baseUrl: 'http://localhost:4000', type: 'standalone' };
     }
   } catch {
     // Not available
@@ -226,33 +295,49 @@ async function checkApiAvailable(): Promise<{ available: boolean; baseUrl: strin
  * Uses the health.check tRPC endpoint which includes database connectivity
  */
 async function checkDatabaseAvailable(): Promise<boolean> {
-  try {
-    // Check via tRPC health endpoint which validates DB connection
-    const response = await fetch('http://localhost:3000/api/trpc/health.check', { method: 'GET' });
-    if (response.ok) {
-      const data = await response.json();
-      return data.result?.data?.checks?.database?.status === 'ok';
-    }
-    return false;
-  } catch {
-    // Fallback: Try direct Prisma check
+  // Try multiple ports for the health check that includes DB status
+  const healthUrls = [
+    'http://localhost:4000/api/trpc/health.check',
+    'http://localhost:3000/api/trpc/health.check',
+  ];
+  for (const url of healthUrls) {
     try {
-      await execAsync('pnpm --filter @intelliflow/db exec prisma db execute --stdin <<< "SELECT 1"', {
-        timeout: 5000,
-      });
-      return true;
+      const response = await fetch(url, { method: 'GET' });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.result?.data?.checks?.database?.status === 'ok') return true;
+        // Some health endpoints return status at top level
+        if (data.result?.data?.status === 'healthy') return true;
+      }
     } catch {
-      return false;
+      // Try next URL
     }
+  }
+  // Fallback: Try direct Prisma check using spawn + stdin (cross-platform, no bash heredoc)
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const child = spawn('pnpm', ['--filter', '@intelliflow/db', 'exec', 'prisma', 'db', 'execute', '--stdin'], {
+        timeout: 5000,
+        shell: true,
+      });
+      child.stdin.write('SELECT 1');
+      child.stdin.end();
+      child.on('close', (code) => (code === 0 ? resolve() : reject(new Error(`exit ${code}`))));
+      child.on('error', reject);
+    });
+    return true;
+  } catch {
+    return false;
   }
 }
 
 /**
  * Run API benchmarks
  */
-async function benchmarkApi(apiInfo: { baseUrl: string; type: 'trpc' | 'standalone' }): Promise<BenchmarkResult[]> {
+async function benchmarkApi(apiInfo: { baseUrl: string; type: 'trpc' | 'standalone' }, authToken: string | null): Promise<BenchmarkResult[]> {
   const results: BenchmarkResult[] = [];
   const { baseUrl, type } = apiInfo;
+  const authHeaders: Record<string, string> = authToken ? { 'Authorization': `Bearer ${authToken}` } : {};
 
   // All tRPC routers and their GET endpoints to benchmark
   // Based on actual router definitions in apps/api/src/modules/
@@ -301,18 +386,18 @@ async function benchmarkApi(apiInfo: { baseUrl: string; type: 'trpc' | 'standalo
 
     // === Ticket (4 GET) ===
     { router: 'ticket', endpoint: 'list', description: 'Ticket list', input: { limit: 10 } },
-    { router: 'ticket', endpoint: 'stats', description: 'Ticket stats' },
+    { router: 'ticket', endpoint: 'stats', description: 'Ticket stats', input: {} },
 
     // === Appointments (7 GET) ===
     { router: 'appointments', endpoint: 'list', description: 'Appointments list', input: { limit: 10 } },
     { router: 'appointments', endpoint: 'stats', description: 'Appointments stats' },
-    { router: 'appointments', endpoint: 'checkConflicts', description: 'Check conflicts', input: { startTime: new Date().toISOString(), endTime: new Date().toISOString() } },
+    { router: 'appointments', endpoint: 'checkConflicts', description: 'Check conflicts', input: { startTime: new Date().toISOString(), endTime: new Date(Date.now() + 3600000).toISOString(), attendeeIds: ['00000000-0000-4000-8000-000000000101'] } },
 
     // === Documents (3 GET) ===
     { router: 'documents', endpoint: 'list', description: 'Documents list', input: { limit: 10 } },
 
     // === Conversation (5 GET) ===
-    { router: 'conversation', endpoint: 'list', description: 'Conversation list', input: { limit: 10 } },
+    { router: 'conversation', endpoint: 'search', description: 'Conversation search', input: { query: 'test', limit: 10 } },
 
     // === Agent (5 GET) ===
     { router: 'agent', endpoint: 'listTools', description: 'Agent tools list' },
@@ -345,14 +430,14 @@ async function benchmarkApi(apiInfo: { baseUrl: string; type: 'trpc' | 'standalo
     // === Experiment (5 GET) ===
     { router: 'experiment', endpoint: 'list', description: 'Experiment list', input: { limit: 10 } },
 
-    // === Feedback (3 GET) ===
-    { router: 'feedback', endpoint: 'list', description: 'Feedback list', input: { limit: 10 } },
+    // === Feedback Survey (3 GET) — registered as feedbackSurvey ===
+    { router: 'feedbackSurvey', endpoint: 'getDashboardStats', description: 'Feedback dashboard stats', input: {} },
 
     // === Chain Version (8 GET) ===
     { router: 'chainVersion', endpoint: 'list', description: 'Chain version list', input: { limit: 10 } },
 
-    // === Inbound (4 GET) ===
-    { router: 'inbound', endpoint: 'list', description: 'Inbound list', input: { limit: 10 } },
+    // === Email / Inbound (4 GET) — registered as email ===
+    { router: 'email', endpoint: 'getStorageUsage', description: 'Email storage usage' },
   ];
 
   if (type === 'trpc') {
@@ -369,9 +454,8 @@ async function benchmarkApi(apiInfo: { baseUrl: string; type: 'trpc' | 'standalo
           `${ep.router}-${ep.endpoint}`,
           `${ep.description} endpoint response time`,
           async () => {
-            const response = await fetch(url);
-            // Accept 401/403 as "working" since it means the endpoint exists but needs auth
-            if (!response.ok && response.status !== 401 && response.status !== 403 && response.status !== 400) {
+            const response = await fetch(url, { headers: authHeaders });
+            if (!response.ok) {
               throw new Error(`HTTP ${response.status}`);
             }
           },
@@ -448,31 +532,50 @@ async function benchmarkApi(apiInfo: { baseUrl: string; type: 'trpc' | 'standalo
 }
 
 /**
- * Run database benchmarks (if Prisma client available)
+ * Run a SQL query via `prisma db execute --stdin` using cross-platform spawn (no bash heredoc).
+ * Works on Windows cmd/PowerShell as well as Unix shells.
+ */
+function runPrismaQuery(sql: string, timeoutMs = 10000): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    const child = spawn('pnpm', ['--filter', '@intelliflow/db', 'exec', 'prisma', 'db', 'execute', '--stdin'], {
+      timeout: timeoutMs,
+      shell: true,
+    });
+    child.stdin.write(sql);
+    child.stdin.end();
+    child.on('close', (code) => (code === 0 ? resolve() : reject(new Error(`prisma db execute exited with code ${code}`))));
+    child.on('error', reject);
+  });
+}
+
+/**
+ * Run database benchmarks.
+ *
+ * Three complementary approaches:
+ *  1. Raw Prisma CLI query (SELECT COUNT(*) FROM leads) — lowest-level round-trip to Supabase.
+ *  2. health.dbStats tRPC endpoint — API-mediated DB timing already computed server-side.
+ *  3. lead.stats tRPC endpoint — realistic aggregate query path that users actually trigger.
  */
 async function benchmarkDatabase(): Promise<BenchmarkResult[]> {
   const results: BenchmarkResult[] = [];
 
-  // Simple query: COUNT
+  // ------------------------------------------------------------------
+  // 1. Raw DB query via Prisma CLI (cross-platform spawn + stdin pipe)
+  // ------------------------------------------------------------------
   try {
     results.push(
       await runBenchmark(
         'db-query-simple',
-        'Simple SELECT COUNT query',
-        async () => {
-          await execAsync(
-            'pnpm --filter @intelliflow/db exec prisma db execute --stdin <<< "SELECT COUNT(*) FROM leads"',
-            { timeout: 5000 }
-          );
-        },
-        { iterations: 20, warmup: 3, metadata: { query: 'SELECT COUNT(*) FROM leads' } }
+        'Simple SELECT COUNT(*) FROM leads via Prisma CLI',
+        () => runPrismaQuery('SELECT COUNT(*) FROM leads'),
+        { iterations: 20, warmup: 3, metadata: { query: 'SELECT COUNT(*) FROM leads', method: 'prisma-cli' } }
       )
     );
   } catch (error) {
-    console.log('    Simple query failed:', error);
+    console.log('    Simple query (Prisma CLI) failed:', error);
     results.push({
       name: 'db-query-simple',
-      description: 'Simple SELECT COUNT query',
+      description: 'Simple SELECT COUNT(*) FROM leads via Prisma CLI',
       iterations: 0,
       totalTime: 0,
       avgTime: 0,
@@ -482,9 +585,85 @@ async function benchmarkDatabase(): Promise<BenchmarkResult[]> {
       p95: 0,
       p99: 0,
       timestamp: new Date().toISOString(),
-      metadata: { error: String(error) },
+      metadata: { error: String(error), method: 'prisma-cli' },
       status: 'SKIP',
     });
+  }
+
+  // ------------------------------------------------------------------
+  // 2. API-mediated DB timing: health.dbStats endpoint
+  //    This endpoint already runs DB diagnostics and returns timing data,
+  //    making it the most reliable proxy for "how fast is the DB via API".
+  // ------------------------------------------------------------------
+  const dbStatsUrls = [
+    'http://localhost:4000/api/trpc/health.dbStats',
+    'http://localhost:3000/api/trpc/health.dbStats',
+  ];
+  let dbStatsUrl: string | null = null;
+  for (const url of dbStatsUrls) {
+    try {
+      const probe = await fetch(url, { signal: AbortSignal.timeout(3000) });
+      if (probe.ok || probe.status === 401) { dbStatsUrl = url; break; }
+    } catch { /* try next */ }
+  }
+
+  if (dbStatsUrl) {
+    const capturedUrl = dbStatsUrl;
+    try {
+      results.push(
+        await runBenchmark(
+          'db-via-api-dbstats',
+          'DB stats round-trip via health.dbStats tRPC endpoint',
+          async () => {
+            const res = await fetch(capturedUrl, { signal: AbortSignal.timeout(8000) });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          },
+          { iterations: 20, warmup: 3, metadata: { endpoint: capturedUrl, method: 'trpc-health-dbstats' } }
+        )
+      );
+    } catch (error) {
+      console.log('    health.dbStats benchmark failed:', error);
+    }
+  } else {
+    console.log('    health.dbStats endpoint not reachable — skipping API DB benchmark');
+  }
+
+  // ------------------------------------------------------------------
+  // 3. Realistic user path: lead.stats tRPC endpoint
+  //    Executes aggregate GROUP-BY queries on leads — the same path
+  //    real users hit when viewing the CRM dashboard.
+  // ------------------------------------------------------------------
+  const leadStatsUrls = [
+    'http://localhost:4000/api/trpc/lead.stats',
+    'http://localhost:3000/api/trpc/lead.stats',
+  ];
+  let leadStatsUrl: string | null = null;
+  for (const url of leadStatsUrls) {
+    try {
+      const probe = await fetch(url, { signal: AbortSignal.timeout(3000) });
+      if (probe.ok || probe.status === 401) { leadStatsUrl = url; break; }
+    } catch { /* try next */ }
+  }
+
+  if (leadStatsUrl) {
+    const capturedUrl = leadStatsUrl;
+    try {
+      results.push(
+        await runBenchmark(
+          'db-via-api-lead-stats',
+          'Realistic DB aggregate query via lead.stats tRPC endpoint',
+          async () => {
+            const res = await fetch(capturedUrl, { signal: AbortSignal.timeout(8000) });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          },
+          { iterations: 20, warmup: 3, metadata: { endpoint: capturedUrl, method: 'trpc-lead-stats' } }
+        )
+      );
+    } catch (error) {
+      console.log('    lead.stats benchmark failed:', error);
+    }
+  } else {
+    console.log('    lead.stats endpoint not reachable — skipping realistic DB benchmark');
   }
 
   return results;
@@ -586,6 +765,14 @@ async function main() {
   console.log(`  Database: ${dbAvailable ? '✅ Available (Supabase)' : '❌ Not available'}`);
   console.log();
 
+  // Authenticate before running benchmarks
+  console.log('Authenticating...');
+  const authToken = await getAuthToken();
+  if (!authToken) {
+    console.log('  ⚠ Running without auth — authenticated endpoints will fail honestly');
+  }
+  console.log();
+
   const results: BenchmarkReport['results'] = {
     api: [],
     database: [],
@@ -595,7 +782,7 @@ async function main() {
   // Run benchmarks based on availability
   if (apiInfo.available) {
     console.log('Running API benchmarks...');
-    results.api = await benchmarkApi(apiInfo);
+    results.api = await benchmarkApi(apiInfo, authToken);
     console.log(`  Completed ${results.api.length} API benchmarks`);
   } else {
     console.log('Skipping API benchmarks (server not running)');
@@ -683,7 +870,7 @@ async function main() {
     }
   }
 
-  // Merge: keep inventory data, update benchmark results
+  // Merge: keep inventory data and load_test_results, update benchmark results
   const mergedReport = {
     ...report,
     // Preserve inventory data from existing file
@@ -695,6 +882,8 @@ async function main() {
     domain_events_inventory: existingData.domain_events_inventory,
     validators_inventory: existingData.validators_inventory,
     cache_inventory: existingData.cache_inventory,
+    // Preserve load test results (written by integrate-k6-results.ts)
+    load_test_results: existingData.load_test_results,
   };
 
   writeFileSync(outputPath, JSON.stringify(mergedReport, null, 2), 'utf-8');

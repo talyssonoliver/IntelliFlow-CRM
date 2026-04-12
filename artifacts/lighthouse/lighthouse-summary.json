@@ -1,0 +1,22 @@
+{
+  "scores": {
+    "performance": 99,
+    "accessibility": 100,
+    "bestPractices": 93,
+    "seo": 100
+  },
+  "vitals": {
+    "fcp": 250.01209999999998,
+    "lcp": 825.0302499999997,
+    "tbt": 3,
+    "cls": 0.000434,
+    "tti": 838.0302499999998,
+    "si": 250.325427048349,
+    "serverResponse": 4.39,
+    "jsBytes": 448469,
+    "totalBytes": 4048245,
+    "url": "http://localhost:3000/"
+  },
+  "generatedAt": "2026-04-11T15:19:15.089Z",
+  "source": "ci"
+}

@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-04-09T20:51:34.757Z",
+  "generated_at": "2026-04-12T01:46:32.805Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
-    "total_specs_analyzed": 367,
-    "completed": 361,
-    "partially_done": 1,
+    "total_specs_analyzed": 369,
+    "completed": 368,
+    "partially_done": 0,
     "spec_only": 1,
-    "uncertain": 4
+    "uncertain": 0
   },
   "status_legend": {
     "COMPLETED": "All evidence confirms task is done: attestation present, CSV=Completed, plan checkboxes done",
@@ -28,34 +28,16 @@
       "recommendation": "Update CSV to 100% to match attestation and metric evidence."
     },
     {
-      "task_id": "PG-038",
-      "severity": "HIGH",
-      "issue": "CSV says Completed but attestation verdict does not confirm completion. Real status: UNCERTAIN.",
-      "recommendation": "Investigate attestation evidence. Re-run validation if needed."
-    },
-    {
-      "task_id": "PG-044",
-      "severity": "HIGH",
-      "issue": "CSV says Completed but attestation verdict does not confirm completion. Real status: UNCERTAIN.",
-      "recommendation": "Investigate attestation evidence. Re-run validation if needed."
-    },
-    {
       "task_id": "PG-050",
       "severity": "MEDIUM",
       "issue": "Attestation confirms completion but CSV shows only 0% complete. Likely a CSV update lag.",
       "recommendation": "Update CSV to 100% to match attestation and metric evidence."
     },
     {
-      "task_id": "PG-125",
-      "severity": "HIGH",
-      "issue": "CSV says Completed but attestation verdict does not confirm completion. Real status: UNCERTAIN.",
-      "recommendation": "Investigate attestation evidence. Re-run validation if needed."
-    },
-    {
       "task_id": "PG-166",
       "severity": "MEDIUM",
-      "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
-      "recommendation": "Run /exec PG-166 when ready for implementation."
+      "issue": "Attestation confirms completion but CSV shows only 85% complete. Likely a CSV update lag.",
+      "recommendation": "Update CSV to 100% to match attestation and metric evidence."
     },
     {
       "task_id": "PG-175",
@@ -68,12 +50,6 @@
       "severity": "MEDIUM",
       "issue": "Attestation confirms completion but CSV shows only 50% complete. Likely a CSV update lag.",
       "recommendation": "Update CSV to 100% to match attestation and metric evidence."
-    },
-    {
-      "task_id": "PG-178",
-      "severity": "HIGH",
-      "issue": "CSV says Completed but attestation verdict does not confirm completion. Real status: UNCERTAIN.",
-      "recommendation": "Investigate attestation evidence. Re-run validation if needed."
     }
   ],
   "tasks": [
@@ -3876,6 +3852,22 @@
       "real_status": "COMPLETED"
     },
     {
+      "task_id": "IFC-213",
+      "title": "Replace Math.random connector health checks with adapter-backed health checks in integrations router",
+      "sprint": 14,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-099"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
       "task_id": "IFC-220",
       "title": "AI Insight Null-State UX (Contact)  -  Add Run AI Analysis button when aiInsight is null on Contact detail page. Lead detail already done 2026-03-04. Pattern: amber dashed-border banner + button wired to scoreWithAI mutation. Invalidate query on success. Follows IFC-095 (Pattern 2  -  scope oversight). Resolves WIRE-IFC-095-001.",
       "sprint": 16,
@@ -3958,6 +3950,20 @@
       "title": "Lead Detail Null-State UX - Fix engagement/churn/sentiment showing raw 'Unknown' string when aiInsight is null. Replace with styled 'Not analyzed' state with visual distinction from real AI data. Page: leads/[id]/page.tsx lines 588, 2258.",
       "sprint": 16,
       "spec_path": ".specify/sprints/sprint-16/specifications/IFC-226-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-232",
+      "title": "Sidebar Broken Links Cleanup - 1 remaining broken navigation link: /deals/trash has no page.tsx (sidebar config deals.ts links to it but route 404s). Original 17 broken nav links and 6 settings links resolved by PG-025/PG-045/PG-174 and other sprint work. Fix: create trash/deleted-deals page at apps/web/src/app/deals/trash/page.tsx OR remove the sidebar item from deals.ts if soft-delete is not yet supported.",
+      "sprint": 16,
+      "spec_path": ".specify/sprints/sprint-16/specifications/IFC-232-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
@@ -4883,7 +4889,7 @@
       "dependencies": [
         "PG-032"
       ],
-      "real_status": "UNCERTAIN"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-039",
@@ -4979,7 +4985,7 @@
       "dependencies": [
         "PG-043"
       ],
-      "real_status": "UNCERTAIN"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-045",
@@ -5127,7 +5133,7 @@
         "PG-022",
         "IFC-006"
       ],
-      "real_status": "UNCERTAIN"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-128",
@@ -5733,13 +5739,13 @@
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
-      "csv_status": "Backlog",
+      "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-129"
       ],
-      "real_status": "PARTIALLY_DONE"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-167",
@@ -5920,7 +5926,7 @@
         "PG-104",
         "IFC-076"
       ],
-      "real_status": "UNCERTAIN"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-179",

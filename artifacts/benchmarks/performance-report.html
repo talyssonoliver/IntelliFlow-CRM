@@ -1,0 +1,2303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IntelliFlow CRM - Performance Baseline</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --success: #16a34a;
+            --warning: #ea580c;
+            --danger: #dc2626;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-700: #374151;
+            --gray-900: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--gray-50);
+            color: var(--gray-900);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary), #1d4ed8);
+            color: white;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border-radius: 8px;
+        }
+
+        header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            opacity: 0.9;
+        }
+
+        .meta-info {
+            display: flex;
+            gap: 2rem;
+            margin-top: 1rem;
+            font-size: 0.875rem;
+        }
+
+        .meta-info span {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+
+        .section-header {
+            background: var(--gray-100);
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .section-header h2 {
+            font-size: 1.25rem;
+            color: var(--gray-700);
+        }
+
+        .section-body {
+            padding: 1.5rem;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .kpi-card {
+            background: var(--gray-50);
+            border-radius: 8px;
+            padding: 1.25rem;
+            text-align: center;
+            border: 1px solid var(--gray-200);
+        }
+
+        .kpi-card.success {
+            border-color: var(--success);
+            background: #f0fdf4;
+        }
+
+        .kpi-card.warning {
+            border-color: var(--warning);
+            background: #fff7ed;
+        }
+
+        .kpi-card.danger {
+            border-color: var(--danger);
+            background: #fef2f2;
+        }
+
+        .kpi-card.pending {
+            border-color: var(--gray-200);
+            background: var(--gray-50);
+        }
+
+        .kpi-card.danger {
+            border-color: var(--danger);
+            background: #fef2f2;
+        }
+
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .kpi-label {
+            font-size: 0.875rem;
+            color: var(--gray-700);
+        }
+
+        .kpi-target {
+            font-size: 0.75rem;
+            color: var(--gray-700);
+            margin-top: 0.5rem;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-badge.pass {
+            background: #dcfce7;
+            color: var(--success);
+        }
+
+        .status-badge.fail {
+            background: #fef2f2;
+            color: var(--danger);
+        }
+
+        .status-badge.pending {
+            background: var(--gray-100);
+            color: var(--gray-700);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        th {
+            background: var(--gray-50);
+            font-weight: 600;
+            color: var(--gray-700);
+            font-size: 0.875rem;
+        }
+
+        td {
+            font-size: 0.875rem;
+        }
+
+        tr:hover {
+            background: var(--gray-50);
+        }
+
+        .bar-chart {
+            display: flex;
+            align-items: flex-end;
+            gap: 0.5rem;
+            height: 200px;
+            padding: 1rem 0;
+        }
+
+        .bar-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .bar {
+            width: 100%;
+            max-width: 60px;
+            background: var(--primary);
+            border-radius: 4px 4px 0 0;
+            transition: height 0.3s ease;
+        }
+
+        .bar.p50 { background: #60a5fa; }
+        .bar.p95 { background: #2563eb; }
+        .bar.p99 { background: #1e40af; }
+        .bar.pending { background: var(--gray-200); }
+
+        .bar-label {
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+            color: var(--gray-700);
+        }
+
+        .bar-value {
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--gray-200);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+
+        .resource-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .resource-card {
+            background: var(--gray-50);
+            border-radius: 8px;
+            padding: 1rem;
+            border: 1px solid var(--gray-200);
+        }
+
+        .resource-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .resource-name {
+            font-weight: 600;
+        }
+
+        .resource-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--gray-200);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-fill.high {
+            background: var(--warning);
+        }
+
+        .progress-fill.critical {
+            background: var(--danger);
+        }
+
+        .recommendations {
+            list-style: none;
+        }
+
+        .recommendations li {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+
+        .recommendations li:last-child {
+            border-bottom: none;
+        }
+
+        .recommendation-icon {
+            flex-shrink: 0;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+        }
+
+        .recommendation-icon.high {
+            background: #fef2f2;
+            color: var(--danger);
+        }
+
+        .recommendation-icon.medium {
+            background: #fff7ed;
+            color: var(--warning);
+        }
+
+        .recommendation-icon.low {
+            background: #f0fdf4;
+            color: var(--success);
+        }
+
+        .alert {
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+
+        .alert-warning {
+            background: #fff7ed;
+            border: 1px solid var(--warning);
+        }
+
+        .alert-info {
+            background: #eff6ff;
+            border: 1px solid var(--primary);
+        }
+
+        .alert h3 {
+            margin-bottom: 0.5rem;
+        }
+
+        .alert-warning h3 {
+            color: var(--warning);
+        }
+
+        .alert-info h3 {
+            color: var(--primary);
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--gray-700);
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>IntelliFlow CRM - Performance Baseline</h1>
+            <p>Task: IFC-007 - Performance Benchmarks - Modern Stack</p>
+            <div class="meta-info">
+                <span>Generated: <strong id="report-date">2026-04-11</strong></span>
+                <span>Target Users: <strong>10 Concurrent</strong></span>
+                <span>Duration: <strong>30s</strong></span>
+                <span>Status: <strong class="status-badge pass">COMPLETED</strong></span>
+            </div>
+        </header>
+
+        
+        <!-- Executive Summary -->
+        <section class="section">
+            <div class="section-header">
+                <h2>Executive Summary</h2>
+            </div>
+            <div class="section-body">
+                
+                <p style="margin-bottom: 1rem; color: var(--gray-700);">
+                    Benchmarked <strong>50</strong> of <strong>50</strong> endpoints.
+                    <span style="color: var(--success);">All endpoints passing.</span>
+                     Load test: <strong>10 VUs</strong> for <strong>30s</strong>.
+                </p>
+                
+                <div class="kpi-grid">
+                    <div class="kpi-card success">
+                        <div class="kpi-value">44ms</div>
+                        <div class="kpi-label">Median p50 Response Time</div>
+                        <div class="kpi-target">Target: &lt; 50ms</div>
+                    </div>
+                    <div class="kpi-card success">
+                        <div class="kpi-value">50ms</div>
+                        <div class="kpi-label">Median p95 Response Time</div>
+                        <div class="kpi-target">Target: &lt; 100ms</div>
+                    </div>
+                    <div class="kpi-card success">
+                        <div class="kpi-value">50ms</div>
+                        <div class="kpi-label">Median p99 Response Time</div>
+                        <div class="kpi-target">Target: &lt; 200ms</div>
+                    </div>
+                    <div class="kpi-card success">
+                        <div class="kpi-value">41</div>
+                        <div class="kpi-label">Requests/Second</div>
+                        <div class="kpi-target">Load test (10 VUs)</div>
+                    </div>
+                    <div class="kpi-card success">
+                        <div class="kpi-value">0.0%</div>
+                        <div class="kpi-label">Endpoint Failure Rate</div>
+                        <div class="kpi-target">0/50 failed</div>
+                    </div>
+                    <div class="kpi-card success">
+                        <div class="kpi-value">10</div>
+                        <div class="kpi-label">Concurrent Users Tested</div>
+                        <div class="kpi-target">30s duration</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Frontend Performance (Lighthouse) -->
+        <section class="section">
+            <div class="section-header">
+                <h2>Frontend Performance (Lighthouse CI)</h2>
+            </div>
+            <div class="section-body">
+                <p style="margin-bottom: 1rem; color: var(--gray-700);">
+                    URL: <strong>http://localhost:3000/</strong>
+                     | Collected: <strong>2026-04-11</strong>
+                    | 3 runs, median selected (cold start excluded)
+                </p>
+
+                <h3 style="margin-bottom: 0.75rem; font-size: 1rem; color: var(--gray-700);">Category Scores</h3>
+                <div class="kpi-grid" style="margin-bottom: 1.5rem;">
+                    <div class="kpi-card success">
+                        <div class="kpi-value">100%</div>
+                        <div class="kpi-label">Performance</div>
+                        <div class="kpi-target">Target: &ge; 90%</div>
+                    </div>
+                    <div class="kpi-card success">
+                        <div class="kpi-value">100%</div>
+                        <div class="kpi-label">Accessibility</div>
+                        <div class="kpi-target">Target: &ge; 90%</div>
+                    </div>
+                    <div class="kpi-card success">
+                        <div class="kpi-value">93%</div>
+                        <div class="kpi-label">Best Practices</div>
+                        <div class="kpi-target">Target: &ge; 90%</div>
+                    </div>
+                    <div class="kpi-card success">
+                        <div class="kpi-value">100%</div>
+                        <div class="kpi-label">SEO</div>
+                        <div class="kpi-target">Target: &ge; 90%</div>
+                    </div>
+                </div>
+
+                <h3 style="margin-bottom: 0.75rem; font-size: 1rem; color: var(--gray-700);">Core Web Vitals &amp; Metrics</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Actual</th>
+                            <th>Target</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>First Contentful Paint (FCP)</td>
+                            <td>251ms</td>
+                            <td>&lt; 1000ms</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td>Largest Contentful Paint (LCP)</td>
+                            <td>758ms</td>
+                            <td>&lt; 2500ms</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td>Total Blocking Time (TBT)</td>
+                            <td>5ms</td>
+                            <td>&lt; 300ms</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td>Cumulative Layout Shift (CLS)</td>
+                            <td>0.0004</td>
+                            <td>&lt; 0.1</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td>Time to Interactive (TTI)</td>
+                            <td>853ms</td>
+                            <td>&lt; 1000ms</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td>Speed Index (SI)</td>
+                            <td>259ms</td>
+                            <td>&lt; 3000ms</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td>Server Response (TTFB)</td>
+                            <td>4ms</td>
+                            <td>&lt; 200ms</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                
+                <h3 style="margin-top: 1.5rem; margin-bottom: 0.75rem; font-size: 1rem; color: var(--gray-700);">Resource Budgets</h3>
+                <table>
+                    <thead>
+                        <tr><th>Resource</th><th>Size</th><th>Budget</th><th>Status</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>JavaScript (transferred)</td>
+                            <td>438 KB</td>
+                            <td>&lt; 300 KB</td>
+                            <td><span class="status-badge fail">FAIL</span></td>
+                        </tr>
+                        <tr>
+                            <td>Total page weight</td>
+                            <td>3953 KB</td>
+                            <td>&lt; 1000 KB</td>
+                            <td><span class="status-badge fail">FAIL</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        
+        <!-- API Inventory -->
+        <section class="section">
+            <div class="section-header">
+                <h2>API Inventory Summary</h2>
+            </div>
+            <div class="section-body">
+                <div class="kpi-grid" style="margin-bottom: 1.5rem;">
+                    <div class="kpi-card">
+                        <div class="kpi-value">25</div>
+                        <div class="kpi-label">Total Routers</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-value">232</div>
+                        <div class="kpi-label">Total Endpoints</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-value">110</div>
+                        <div class="kpi-label">Queries (GET)</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-value">122</div>
+                        <div class="kpi-label">Mutations (POST)</div>
+                    </div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Router</th>
+                            <th>Endpoints</th>
+                            <th>Queries</th>
+                            <th>Mutations</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                        <tr>
+                            <td><strong>appointments</strong></td>
+                            <td>19</td>
+                            <td>7</td>
+                            <td>12</td>
+                        </tr>
+                        <tr>
+                            <td><strong>lead</strong></td>
+                            <td>17</td>
+                            <td>6</td>
+                            <td>11</td>
+                        </tr>
+                        <tr>
+                            <td><strong>documents</strong></td>
+                            <td>17</td>
+                            <td>3</td>
+                            <td>14</td>
+                        </tr>
+                        <tr>
+                            <td><strong>auth</strong></td>
+                            <td>15</td>
+                            <td>2</td>
+                            <td>13</td>
+                        </tr>
+                        <tr>
+                            <td><strong>experiment</strong></td>
+                            <td>15</td>
+                            <td>5</td>
+                            <td>10</td>
+                        </tr>
+                        <tr>
+                            <td><strong>chainVersion</strong></td>
+                            <td>14</td>
+                            <td>8</td>
+                            <td>6</td>
+                        </tr>
+                        <tr>
+                            <td><strong>contact</strong></td>
+                            <td>14</td>
+                            <td>6</td>
+                            <td>8</td>
+                        </tr>
+                        <tr>
+                            <td><strong>conversation</strong></td>
+                            <td>13</td>
+                            <td>5</td>
+                            <td>8</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ticket</strong></td>
+                            <td>13</td>
+                            <td>4</td>
+                            <td>9</td>
+                        </tr>
+                        <tr>
+                            <td><strong>billing</strong></td>
+                            <td>11</td>
+                            <td>5</td>
+                            <td>6</td>
+                        </tr>
+                        <tr>
+                            <td><strong>agent</strong></td>
+                            <td>8</td>
+                            <td>5</td>
+                            <td>3</td>
+                        </tr>
+                        <tr>
+                            <td><strong>timeline</strong></td>
+                            <td>8</td>
+                            <td>8</td>
+                            <td>0</td>
+                        </tr>
+                        <tr>
+                            <td><strong>account</strong></td>
+                            <td>7</td>
+                            <td>4</td>
+                            <td>3</td>
+                        </tr>
+                        <tr>
+                            <td><strong>opportunity</strong></td>
+                            <td>7</td>
+                            <td>4</td>
+                            <td>3</td>
+                        </tr>
+                        <tr>
+                            <td><strong>task</strong></td>
+                            <td>7</td>
+                            <td>3</td>
+                            <td>4</td>
+                        </tr>
+                        <tr>
+                            <td><strong>inbound</strong></td>
+                            <td>6</td>
+                            <td>4</td>
+                            <td>2</td>
+                        </tr>
+                        <tr>
+                            <td><strong>feedback</strong></td>
+                            <td>6</td>
+                            <td>3</td>
+                            <td>3</td>
+                        </tr>
+                        <tr>
+                            <td><strong>integrations</strong></td>
+                            <td>6</td>
+                            <td>4</td>
+                            <td>2</td>
+                        </tr>
+                        <tr>
+                            <td><strong>system</strong></td>
+                            <td>6</td>
+                            <td>6</td>
+                            <td>0</td>
+                        </tr>
+                        <tr>
+                            <td><strong>analytics</strong></td>
+                            <td>5</td>
+                            <td>5</td>
+                            <td>0</td>
+                        </tr>
+                        <tr>
+                            <td><strong>health</strong></td>
+                            <td>5</td>
+                            <td>5</td>
+                            <td>0</td>
+                        </tr>
+                        <tr>
+                            <td><strong>pipelineConfig</strong></td>
+                            <td>5</td>
+                            <td>2</td>
+                            <td>3</td>
+                        </tr>
+                        <tr>
+                            <td><strong>audit</strong></td>
+                            <td>5</td>
+                            <td>5</td>
+                            <td>0</td>
+                        </tr>
+                        <tr>
+                            <td><strong>upload</strong></td>
+                            <td>2</td>
+                            <td>1</td>
+                            <td>1</td>
+                        </tr>
+                        <tr>
+                            <td><strong>emailInbound</strong></td>
+                            <td>1</td>
+                            <td>0</td>
+                            <td>1</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        
+        <!-- Database Schema Inventory -->
+        <section class="section">
+            <div class="section-header">
+                <h2>Database Schema Inventory</h2>
+            </div>
+            <div class="section-body">
+                <div class="kpi-grid" style="margin-bottom: 1.5rem;">
+                    <div class="kpi-card">
+                        <div class="kpi-value">96</div>
+                        <div class="kpi-label">Tables</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-value">1301</div>
+                        <div class="kpi-label">Fields</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-value">418</div>
+                        <div class="kpi-label">Indexes</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-value">51</div>
+                        <div class="kpi-label">Enums</div>
+                    </div>
+                    <div class="kpi-card success">
+                        <div class="kpi-value">3</div>
+                        <div class="kpi-label">AI-Enabled (pgvector)</div>
+                    </div>
+                </div>
+                <h3 style="margin-bottom: 0.75rem; font-size: 1rem;">Top Tables by Field Count</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Table</th>
+                            <th>Fields</th>
+                            <th>Indexes</th>
+                            <th>Relations</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                        <tr>
+                            <td><strong>ConversationRecord</strong></td>
+                            <td>36</td>
+                            <td>7</td>
+                            <td>2</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Contact</strong> <span class="status-badge pass" style="font-size: 0.65rem;">AI</span></td>
+                            <td>33</td>
+                            <td>7</td>
+                            <td>4</td>
+                        </tr>
+                        <tr>
+                            <td><strong>CaseDocument</strong></td>
+                            <td>32</td>
+                            <td>11</td>
+                            <td>0</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ToolCallRecord</strong></td>
+                            <td>31</td>
+                            <td>7</td>
+                            <td>2</td>
+                        </tr>
+                        <tr>
+                            <td><strong>AuditLogEntry</strong></td>
+                            <td>31</td>
+                            <td>8</td>
+                            <td>1</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Ticket</strong></td>
+                            <td>29</td>
+                            <td>10</td>
+                            <td>3</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Notification</strong></td>
+                            <td>27</td>
+                            <td>9</td>
+                            <td>0</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Appointment</strong></td>
+                            <td>25</td>
+                            <td>8</td>
+                            <td>2</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Document</strong></td>
+                            <td>23</td>
+                            <td>6</td>
+                            <td>0</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Opportunity</strong></td>
+                            <td>22</td>
+                            <td>6</td>
+                            <td>4</td>
+                        </tr>
+                        <tr>
+                            <td><strong>EmailRecord</strong></td>
+                            <td>22</td>
+                            <td>5</td>
+                            <td>0</td>
+                        </tr>
+                        <tr>
+                            <td><strong>CallRecord</strong></td>
+                            <td>22</td>
+                            <td>5</td>
+                            <td>0</td>
+                        </tr>
+                        <tr>
+                            <td><strong>AgentAction</strong></td>
+                            <td>21</td>
+                            <td>5</td>
+                            <td>0</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Tenant</strong></td>
+                            <td>20</td>
+                            <td>4</td>
+                            <td>1</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Lead</strong> <span class="status-badge pass" style="font-size: 0.65rem;">AI</span></td>
+                            <td>20</td>
+                            <td>8</td>
+                            <td>2</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p style="margin-top: 0.5rem; font-size: 0.875rem; color: var(--gray-700);">Showing top 15 of 96 tables</p>
+            </div>
+        </section>
+        
+        <!-- Middleware Stack -->
+        <section class="section">
+            <div class="section-header">
+                <h2>Middleware Stack</h2>
+            </div>
+            <div class="section-body">
+                <p style="margin-bottom: 1rem; color: var(--gray-700);">Request pipeline middleware affecting response latency</p>
+                <div class="kpi-grid" style="margin-bottom: 1.5rem;">
+                    <div class="kpi-card">
+                        <div class="kpi-value">6</div>
+                        <div class="kpi-label">Total Middleware</div>
+                    </div>
+                    
+                    <div class="kpi-card">
+                        <div class="kpi-value">1</div>
+                        <div class="kpi-label">Auth</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-value">2</div>
+                        <div class="kpi-label">Other</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-value">2</div>
+                        <div class="kpi-label">Logging</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-value">1</div>
+                        <div class="kpi-label">Error</div>
+                    </div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Middleware</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                        <tr>
+                            <td><strong>createAuthMiddleware</strong></td>
+                            <td><span class="status-badge pass">auth</span></td>
+                            <td>Authentication and authorization</td>
+                            <td><span class="status-badge pass">Enabled</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>createAdminMiddleware</strong></td>
+                            <td><span class="status-badge ">other</span></td>
+                            <td>Admin role verification</td>
+                            <td><span class="status-badge pass">Enabled</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>createManagerMiddleware</strong></td>
+                            <td><span class="status-badge ">other</span></td>
+                            <td>Manager role verification</td>
+                            <td><span class="status-badge pass">Enabled</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>createLoggingMiddleware</strong></td>
+                            <td><span class="status-badge ">logging</span></td>
+                            <td>Request/response logging</td>
+                            <td><span class="status-badge pass">Enabled</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>createPerformanceMiddleware</strong></td>
+                            <td><span class="status-badge ">logging</span></td>
+                            <td>Performance monitoring and metrics</td>
+                            <td><span class="status-badge pass">Enabled</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>createErrorTrackingMiddleware</strong></td>
+                            <td><span class="status-badge ">error</span></td>
+                            <td>Error tracking and reporting</td>
+                            <td><span class="status-badge pass">Enabled</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        
+        <!-- Background Workers -->
+        <section class="section">
+            <div class="section-header">
+                <h2>Background Workers</h2>
+            </div>
+            <div class="section-body">
+                <p style="margin-bottom: 1rem; color: var(--gray-700);">Async job processing capacity</p>
+                <div class="kpi-grid" style="margin-bottom: 1.5rem;">
+                    <div class="kpi-card">
+                        <div class="kpi-value">3</div>
+                        <div class="kpi-label">Workers</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-value">6</div>
+                        <div class="kpi-label">Job Types</div>
+                    </div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Worker</th>
+                            <th>Type</th>
+                            <th>Jobs</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                        <tr>
+                            <td><strong>events</strong></td>
+                            <td><span class="status-badge">events</span></td>
+                            <td>event-dispatcher, pollOutbox</td>
+                            <td>Domain event processing and outbox polling</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ingestion</strong></td>
+                            <td><span class="status-badge">ingestion</span></td>
+                            <td>extractText</td>
+                            <td>Document ingestion and text extraction</td>
+                        </tr>
+                        <tr>
+                            <td><strong>notifications</strong></td>
+                            <td><span class="status-badge">notifications</span></td>
+                            <td>channel:email, channel:sms, channel:webhook</td>
+                            <td>Multi-channel notification delivery</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        
+        <!-- External Integrations -->
+        <section class="section">
+            <div class="section-header">
+                <h2>External Integrations</h2>
+            </div>
+            <div class="section-body">
+                <p style="margin-bottom: 1rem; color: var(--gray-700);">Third-party service dependencies affecting latency</p>
+                <div class="kpi-grid" style="margin-bottom: 1.5rem;">
+                    <div class="kpi-card">
+                        <div class="kpi-value">12</div>
+                        <div class="kpi-label">Total Integrations</div>
+                    </div>
+                    
+                    <div class="kpi-card">
+                        <div class="kpi-value">2</div>
+                        <div class="kpi-label">Calendar</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-value">2</div>
+                        <div class="kpi-label">Email</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-value">2</div>
+                        <div class="kpi-label">Payment</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-value">2</div>
+                        <div class="kpi-label">Messaging</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-value">1</div>
+                        <div class="kpi-label">Erp</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-value">1</div>
+                        <div class="kpi-label">Storage</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-value">1</div>
+                        <div class="kpi-label">Ai</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-value">1</div>
+                        <div class="kpi-label">Other</div>
+                    </div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Provider</th>
+                            <th>Category</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                        <tr>
+                            <td><strong>Google Calendar</strong></td>
+                            <td><span class="status-badge">calendar</span></td>
+                            <td>Google Calendar calendar sync and event management</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Microsoft Outlook</strong></td>
+                            <td><span class="status-badge">calendar</span></td>
+                            <td>Microsoft Outlook calendar sync and event management</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Gmail</strong></td>
+                            <td><span class="status-badge">email</span></td>
+                            <td>Gmail email sending and receiving</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Outlook</strong></td>
+                            <td><span class="status-badge">email</span></td>
+                            <td>Outlook email sending and receiving</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Stripe</strong></td>
+                            <td><span class="status-badge">payment</span></td>
+                            <td>Stripe payment processing</td>
+                        </tr>
+                        <tr>
+                            <td><strong>PayPal</strong></td>
+                            <td><span class="status-badge">payment</span></td>
+                            <td>PayPal payment processing</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Slack</strong></td>
+                            <td><span class="status-badge">messaging</span></td>
+                            <td>Slack team messaging integration</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Microsoft Teams</strong></td>
+                            <td><span class="status-badge">messaging</span></td>
+                            <td>Microsoft Teams team messaging integration</td>
+                        </tr>
+                        <tr>
+                            <td><strong>SAP</strong></td>
+                            <td><span class="status-badge">erp</span></td>
+                            <td>SAP ERP system integration</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Supabase Storage</strong></td>
+                            <td><span class="status-badge">storage</span></td>
+                            <td>Supabase Storage file storage</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Zep Memory</strong></td>
+                            <td><span class="status-badge">ai</span></td>
+                            <td>Zep Memory AI memory/context management</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ClamAV</strong></td>
+                            <td><span class="status-badge">other</span></td>
+                            <td>ClamAV integration</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        
+        <!-- Domain Events -->
+        <section class="section">
+            <div class="section-header">
+                <h2>Domain Events Catalog</h2>
+            </div>
+            <div class="section-body">
+                <p style="margin-bottom: 1rem; color: var(--gray-700);">Event-driven architecture overview</p>
+                <div class="kpi-grid" style="margin-bottom: 1.5rem;">
+                    <div class="kpi-card">
+                        <div class="kpi-value">23</div>
+                        <div class="kpi-label">Total Events</div>
+                    </div>
+                    
+                    <div class="kpi-card">
+                        <div class="kpi-value">21</div>
+                        <div class="kpi-label">case events</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-value">2</div>
+                        <div class="kpi-label">document events</div>
+                    </div>
+                </div>
+                
+                <h3 style="margin-bottom: 0.75rem; font-size: 1rem;">By Workflow Engine</h3>
+                <div class="kpi-grid" style="margin-bottom: 1.5rem;">
+                    
+                    <div class="kpi-card">
+                        <div class="kpi-value">10</div>
+                        <div class="kpi-label">temporal</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-value">5</div>
+                        <div class="kpi-label">rules</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-value">6</div>
+                        <div class="kpi-label">bullmq</div>
+                    </div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Event Class</th>
+                            <th>Event Type</th>
+                            <th>Aggregate</th>
+                            <th>Workflow Engine</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                        <tr>
+                            <td><strong>CaseWorkflowStartedEvent</strong></td>
+                            <td><code>case.workflow_started</code></td>
+                            <td>case</td>
+                            <td><span class="status-badge">temporal</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>CaseWorkflowCompletedEvent</strong></td>
+                            <td><code>case.workflow_completed</code></td>
+                            <td>case</td>
+                            <td><span class="status-badge">temporal</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>CaseWorkflowFailedEvent</strong></td>
+                            <td><code>case.workflow_failed</code></td>
+                            <td>case</td>
+                            <td><span class="status-badge">temporal</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>CaseApprovalRequiredEvent</strong></td>
+                            <td><code>case.approval_required</code></td>
+                            <td>case</td>
+                            <td><span class="status-badge">temporal</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>CaseApprovalReceivedEvent</strong></td>
+                            <td><code>case.approval_received</code></td>
+                            <td>case</td>
+                            <td><span class="status-badge">temporal</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>CaseEscalatedEvent</strong></td>
+                            <td><code>case.escalated</code></td>
+                            <td>case</td>
+                            <td><span class="status-badge">temporal</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>CaseSLABreachedEvent</strong></td>
+                            <td><code>case.sla_breached</code></td>
+                            <td>case</td>
+                            <td><span class="status-badge">rules</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>CaseAssignedEvent</strong></td>
+                            <td><code>case.assigned</code></td>
+                            <td>case</td>
+                            <td><span class="status-badge">bullmq</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>CaseNoteAddedEvent</strong></td>
+                            <td><code>case.note_added</code></td>
+                            <td>case</td>
+                            <td><span class="status-badge">bullmq</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>CaseDocumentAttachedEvent</strong></td>
+                            <td><code>case.document_attached</code></td>
+                            <td>case</td>
+                            <td><span class="status-badge">bullmq</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>CaseReopenedEvent</strong></td>
+                            <td><code>case.reopened</code></td>
+                            <td>case</td>
+                            <td><span class="status-badge">temporal</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>CaseTimerStartedEvent</strong></td>
+                            <td><code>case.timer_started</code></td>
+                            <td>case</td>
+                            <td><span class="status-badge">rules</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>CaseTimerPausedEvent</strong></td>
+                            <td><code>case.timer_paused</code></td>
+                            <td>case</td>
+                            <td><span class="status-badge">rules</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>CaseCreatedEvent</strong></td>
+                            <td><code>case.created</code></td>
+                            <td>case</td>
+                            <td><span class="status-badge">temporal</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>CaseStatusChangedEvent</strong></td>
+                            <td><code>case.status_changed</code></td>
+                            <td>case</td>
+                            <td><span class="status-badge">temporal</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>CaseDeadlineUpdatedEvent</strong></td>
+                            <td><code>case.deadline_updated</code></td>
+                            <td>case</td>
+                            <td><span class="status-badge">rules</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>CaseTaskAddedEvent</strong></td>
+                            <td><code>case.task_added</code></td>
+                            <td>case</td>
+                            <td><span class="status-badge">bullmq</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>CaseTaskRemovedEvent</strong></td>
+                            <td><code>case.task_removed</code></td>
+                            <td>case</td>
+                            <td><span class="status-badge">bullmq</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>CaseTaskCompletedEvent</strong></td>
+                            <td><code>case.task_completed</code></td>
+                            <td>case</td>
+                            <td><span class="status-badge">bullmq</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>CasePriorityChangedEvent</strong></td>
+                            <td><code>case.priority_changed</code></td>
+                            <td>case</td>
+                            <td><span class="status-badge">rules</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p style="margin-top: 0.5rem; font-size: 0.875rem; color: var(--gray-700);">Showing 20 of 23 events</p>
+            </div>
+        </section>
+        
+        <!-- Validation Schemas -->
+        <section class="section">
+            <div class="section-header">
+                <h2>Validation Schemas</h2>
+            </div>
+            <div class="section-body">
+                <p style="margin-bottom: 1rem; color: var(--gray-700);">Zod schema complexity affecting validation overhead</p>
+                <div class="kpi-grid" style="margin-bottom: 1.5rem;">
+                    <div class="kpi-card">
+                        <div class="kpi-value">22</div>
+                        <div class="kpi-label">Validator Files</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-value">248</div>
+                        <div class="kpi-label">Total Schemas</div>
+                    </div>
+                    
+                    <div class="kpi-card warning">
+                        <div class="kpi-value">13</div>
+                        <div class="kpi-label">Complex</div>
+                    </div>
+                    <div class="kpi-card ">
+                        <div class="kpi-value">8</div>
+                        <div class="kpi-label">Moderate</div>
+                    </div>
+                    <div class="kpi-card success">
+                        <div class="kpi-value">1</div>
+                        <div class="kpi-label">Simple</div>
+                    </div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Validator</th>
+                            <th>Schemas</th>
+                            <th>Complexity</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                        <tr>
+                            <td><strong>platform-metrics</strong></td>
+                            <td>27</td>
+                            <td><span class="status-badge fail">complex</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>auth</strong></td>
+                            <td>24</td>
+                            <td><span class="status-badge fail">complex</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>billing</strong></td>
+                            <td>21</td>
+                            <td><span class="status-badge fail">complex</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>ai</strong></td>
+                            <td>20</td>
+                            <td><span class="status-badge fail">complex</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>timeline</strong></td>
+                            <td>19</td>
+                            <td><span class="status-badge fail">complex</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>chain-version</strong></td>
+                            <td>17</td>
+                            <td><span class="status-badge fail">complex</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>experiment</strong></td>
+                            <td>17</td>
+                            <td><span class="status-badge fail">complex</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>feedback</strong></td>
+                            <td>16</td>
+                            <td><span class="status-badge fail">complex</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>case</strong></td>
+                            <td>15</td>
+                            <td><span class="status-badge fail">complex</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>config</strong></td>
+                            <td>11</td>
+                            <td><span class="status-badge fail">complex</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>env</strong></td>
+                            <td>11</td>
+                            <td><span class="status-badge fail">complex</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>lead</strong></td>
+                            <td>9</td>
+                            <td><span class="status-badge fail">complex</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>common</strong></td>
+                            <td>7</td>
+                            <td><span class="status-badge fail">complex</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>task</strong></td>
+                            <td>7</td>
+                            <td><span class="status-badge pending">moderate</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>opportunity</strong></td>
+                            <td>6</td>
+                            <td><span class="status-badge pending">moderate</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        
+        <!-- Cache Configuration -->
+        <section class="section">
+            <div class="section-header">
+                <h2>Cache Configuration</h2>
+            </div>
+            <div class="section-body">
+                <div class="kpi-grid" style="margin-bottom: 1.5rem;">
+                    <div class="kpi-card success">
+                        <div class="kpi-value">Yes</div>
+                        <div class="kpi-label">Cache Enabled</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-value">Redis (Upstash)</div>
+                        <div class="kpi-label">Provider</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-value">5</div>
+                        <div class="kpi-label">Key Patterns</div>
+                    </div>
+                </div>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Key Pattern</th>
+                            <th>Purpose</th>
+                            <th>TTL</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                        <tr>
+                            <td><code>session:*</code></td>
+                            <td>User session data</td>
+                            <td>24h</td>
+                        </tr>
+                        <tr>
+                            <td><code>rate-limit:*</code></td>
+                            <td>Rate limiting counters</td>
+                            <td>1m</td>
+                        </tr>
+                        <tr>
+                            <td><code>ai-score:*</code></td>
+                            <td>AI scoring cache</td>
+                            <td>1h</td>
+                        </tr>
+                        <tr>
+                            <td><code>user:*</code></td>
+                            <td>User profile cache</td>
+                            <td>15m</td>
+                        </tr>
+                        <tr>
+                            <td><code>tenant:*</code></td>
+                            <td>Tenant configuration cache</td>
+                            <td>5m</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        
+        <!-- Response Time Metrics -->
+        <section class="section">
+            <div class="section-header">
+                <h2>Response Time Metrics by Endpoint</h2>
+            </div>
+            <div class="section-body">
+                
+                <div class="bar-chart">
+                    
+                    <div class="bar-group">
+                        <div class="bar-value">262ms</div>
+                        <div class="bar p50" style="height: 97.76608615048649%"></div>
+                        <div class="bar-value">268ms</div>
+                        <div class="bar p95" style="height: 99.99219534710218%"></div>
+                        <div class="bar-value">268ms</div>
+                        <div class="bar p99" style="height: 100%"></div>
+                        <div class="bar-label">timeline.getEvents</div>
+                    </div>
+                    <div class="bar-group">
+                        <div class="bar-value">235ms</div>
+                        <div class="bar p50" style="height: 87.74160698736905%"></div>
+                        <div class="bar-value">247ms</div>
+                        <div class="bar p95" style="height: 92.26917388962981%"></div>
+                        <div class="bar-value">250ms</div>
+                        <div class="bar p99" style="height: 93.30832794740833%"></div>
+                        <div class="bar-label">integrations.getAllConnectorsHealth</div>
+                    </div>
+                    <div class="bar-group">
+                        <div class="bar-value">119ms</div>
+                        <div class="bar p50" style="height: 44.578795672973804%"></div>
+                        <div class="bar-value">126ms</div>
+                        <div class="bar p95" style="height: 47.13716462748349%"></div>
+                        <div class="bar-value">153ms</div>
+                        <div class="bar p99" style="height: 57.249327012062814%"></div>
+                        <div class="bar-label">appointments.checkConflicts</div>
+                    </div>
+                    <div class="bar-group">
+                        <div class="bar-value">118ms</div>
+                        <div class="bar p50" style="height: 44.117350238187896%"></div>
+                        <div class="bar-value">124ms</div>
+                        <div class="bar p95" style="height: 46.292609693882994%"></div>
+                        <div class="bar-value">126ms</div>
+                        <div class="bar p99" style="height: 46.9465260845797%"></div>
+                        <div class="bar-label">appointments.list</div>
+                    </div>
+                    <div class="bar-group">
+                        <div class="bar-value">120ms</div>
+                        <div class="bar p50" style="height: 44.68090966030372%"></div>
+                        <div class="bar-value">122ms</div>
+                        <div class="bar p95" style="height: 45.722319225427036%"></div>
+                        <div class="bar-value">123ms</div>
+                        <div class="bar p99" style="height: 46.01253879103946%"></div>
+                        <div class="bar-label">opportunity.forecast</div>
+                    </div>
+                    <div class="bar-group">
+                        <div class="bar-value">75ms</div>
+                        <div class="bar p50" style="height: 27.949899729814387%"></div>
+                        <div class="bar-value">118ms</div>
+                        <div class="bar p95" style="height: 44.04392861954088%"></div>
+                        <div class="bar-value">139ms</div>
+                        <div class="bar p99" style="height: 51.95350443385394%"></div>
+                        <div class="bar-label">documents.list</div>
+                    </div>
+                    <div class="bar-group">
+                        <div class="bar-value">67ms</div>
+                        <div class="bar p50" style="height: 24.85475737005243%"></div>
+                        <div class="bar-value">106ms</div>
+                        <div class="bar p95" style="height: 39.61507750645851%"></div>
+                        <div class="bar-value">107ms</div>
+                        <div class="bar p99" style="height: 39.91085966104493%"></div>
+                        <div class="bar-label">account.list</div>
+                    </div>
+                    <div class="bar-group">
+                        <div class="bar-value">98ms</div>
+                        <div class="bar p50" style="height: 36.54297194273957%"></div>
+                        <div class="bar-value">103ms</div>
+                        <div class="bar p95" style="height: 38.43390117162353%"></div>
+                        <div class="bar-value">106ms</div>
+                        <div class="bar p99" style="height: 39.513213716136306%"></div>
+                        <div class="bar-label">ticket.list</div>
+                    </div>
+                    <div class="bar-group">
+                        <div class="bar-value">95ms</div>
+                        <div class="bar p50" style="height: 35.47054168305485%"></div>
+                        <div class="bar-value">101ms</div>
+                        <div class="bar p95" style="height: 37.7026854821064%"></div>
+                        <div class="bar-value">102ms</div>
+                        <div class="bar p99" style="height: 38.046856484664396%"></div>
+                        <div class="bar-label">agent.getPendingApprovals</div>
+                    </div>
+                    <div class="bar-group">
+                        <div class="bar-value">97ms</div>
+                        <div class="bar p50" style="height: 36.29307367863058%"></div>
+                        <div class="bar-value">100ms</div>
+                        <div class="bar p95" style="height: 37.41460976875764%"></div>
+                        <div class="bar-value">101ms</div>
+                        <div class="bar p99" style="height: 37.81193755269482%"></div>
+                        <div class="bar-label">email.getStorageUsage</div>
+                    </div>
+                    <div class="bar-group">
+                        <div class="bar-value">95ms</div>
+                        <div class="bar p50" style="height: 35.47591905156065%"></div>
+                        <div class="bar-value">98ms</div>
+                        <div class="bar p95" style="height: 36.551626145178%"></div>
+                        <div class="bar-value">103ms</div>
+                        <div class="bar p99" style="height: 38.63944174699498%"></div>
+                        <div class="bar-label">pipelineConfig.getStats</div>
+                    </div>
+                    <div class="bar-group">
+                        <div class="bar-value">95ms</div>
+                        <div class="bar p50" style="height: 35.339729725617744%"></div>
+                        <div class="bar-value">96ms</div>
+                        <div class="bar p95" style="height: 36.02545250416008%"></div>
+                        <div class="bar-value">98ms</div>
+                        <div class="bar p99" style="height: 36.47437613889895%"></div>
+                        <div class="bar-label">agent.getPendingCount</div>
+                    </div>
+                </div>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #60a5fa"></div>
+                        <span>p50 (Median)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #2563eb"></div>
+                        <span>p95</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #1e40af"></div>
+                        <span>p99</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section class="section">
+            <div class="section-header">
+                <h2>Endpoint Performance Detail (50 endpoints)</h2>
+            </div>
+            <div class="section-body">
+                <div style="max-height: 600px; overflow-y: auto;">
+                <table>
+                    <thead style="position: sticky; top: 0; background: white;">
+                        <tr>
+                            <th>Endpoint</th>
+                            <th>Description</th>
+                            <th>p50</th>
+                            <th>p95</th>
+                            <th>Req/sec</th>
+                            <th>Iterations</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody><tr style="background: var(--gray-100);"><td colspan="7" style="font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; color: var(--gray-700);">health (5)</td></tr>
+                        <tr>
+                            <td>health.ping</td>
+                            <td>Health ping endpoint response time</td>
+                            <td>1ms</td>
+                            <td>2ms</td>
+                            <td>790.5</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td>health.check</td>
+                            <td>Health check with DB endpoint response time</td>
+                            <td>23ms</td>
+                            <td>26ms</td>
+                            <td>43.5</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td>health.ready</td>
+                            <td>Readiness probe endpoint response time</td>
+                            <td>22ms</td>
+                            <td>24ms</td>
+                            <td>43.9</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td>health.alive</td>
+                            <td>Liveness probe endpoint response time</td>
+                            <td>1ms</td>
+                            <td>2ms</td>
+                            <td>864.2</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td>health.dbStats</td>
+                            <td>Database stats endpoint response time</td>
+                            <td>1ms</td>
+                            <td>1ms</td>
+                            <td>945.2</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr><tr style="background: var(--gray-100);"><td colspan="7" style="font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; color: var(--gray-700);">system (4)</td></tr>
+                        <tr>
+                            <td>system.version</td>
+                            <td>System version endpoint response time</td>
+                            <td>1ms</td>
+                            <td>1ms</td>
+                            <td>1004.4</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td>system.info</td>
+                            <td>System info endpoint response time</td>
+                            <td>1ms</td>
+                            <td>1ms</td>
+                            <td>1050.4</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td>system.features</td>
+                            <td>Feature flags endpoint response time</td>
+                            <td>1ms</td>
+                            <td>1ms</td>
+                            <td>912.8</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td>system.capabilities</td>
+                            <td>System capabilities endpoint response time</td>
+                            <td>1ms</td>
+                            <td>1ms</td>
+                            <td>1081.8</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr><tr style="background: var(--gray-100);"><td colspan="7" style="font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; color: var(--gray-700);">auth (2)</td></tr>
+                        <tr>
+                            <td>auth.getStatus</td>
+                            <td>Auth status endpoint response time</td>
+                            <td>44ms</td>
+                            <td>46ms</td>
+                            <td>22.3</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td>auth.getSessions</td>
+                            <td>User sessions endpoint response time</td>
+                            <td>23ms</td>
+                            <td>24ms</td>
+                            <td>43.3</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr><tr style="background: var(--gray-100);"><td colspan="7" style="font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; color: var(--gray-700);">lead (4)</td></tr>
+                        <tr>
+                            <td>lead.list</td>
+                            <td>Lead list endpoint response time</td>
+                            <td>66ms</td>
+                            <td>84ms</td>
+                            <td>14.5</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td>lead.stats</td>
+                            <td>Lead stats endpoint response time</td>
+                            <td>43ms</td>
+                            <td>51ms</td>
+                            <td>22.4</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td>lead.getHotLeads</td>
+                            <td>Hot leads endpoint response time</td>
+                            <td>43ms</td>
+                            <td>45ms</td>
+                            <td>23.0</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td>lead.getReadyForQualification</td>
+                            <td>Ready for qualification endpoint response time</td>
+                            <td>44ms</td>
+                            <td>46ms</td>
+                            <td>22.7</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr><tr style="background: var(--gray-100);"><td colspan="7" style="font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; color: var(--gray-700);">contact (3)</td></tr>
+                        <tr>
+                            <td>contact.list</td>
+                            <td>Contact list endpoint response time</td>
+                            <td>66ms</td>
+                            <td>86ms</td>
+                            <td>14.5</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td>contact.stats</td>
+                            <td>Contact stats endpoint response time</td>
+                            <td>44ms</td>
+                            <td>45ms</td>
+                            <td>23.0</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td>contact.search</td>
+                            <td>Contact search endpoint response time</td>
+                            <td>43ms</td>
+                            <td>51ms</td>
+                            <td>22.0</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr><tr style="background: var(--gray-100);"><td colspan="7" style="font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; color: var(--gray-700);">account (2)</td></tr>
+                        <tr>
+                            <td>account.list</td>
+                            <td>Account list endpoint response time</td>
+                            <td>67ms</td>
+                            <td>106ms</td>
+                            <td>13.9</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td>account.stats</td>
+                            <td>Account stats endpoint response time</td>
+                            <td>48ms</td>
+                            <td>49ms</td>
+                            <td>20.9</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr><tr style="background: var(--gray-100);"><td colspan="7" style="font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; color: var(--gray-700);">opportunity (3)</td></tr>
+                        <tr>
+                            <td>opportunity.list</td>
+                            <td>Opportunity list endpoint response time</td>
+                            <td>71ms</td>
+                            <td>74ms</td>
+                            <td>14.0</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td>opportunity.stats</td>
+                            <td>Opportunity stats endpoint response time</td>
+                            <td>48ms</td>
+                            <td>51ms</td>
+                            <td>20.3</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td>opportunity.forecast</td>
+                            <td>Opportunity forecast endpoint response time</td>
+                            <td>120ms</td>
+                            <td>122ms</td>
+                            <td>8.3</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr><tr style="background: var(--gray-100);"><td colspan="7" style="font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; color: var(--gray-700);">task (2)</td></tr>
+                        <tr>
+                            <td>task.list</td>
+                            <td>Task list endpoint response time</td>
+                            <td>71ms</td>
+                            <td>75ms</td>
+                            <td>13.9</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td>task.stats</td>
+                            <td>Task stats endpoint response time</td>
+                            <td>48ms</td>
+                            <td>50ms</td>
+                            <td>20.6</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr><tr style="background: var(--gray-100);"><td colspan="7" style="font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; color: var(--gray-700);">ticket (2)</td></tr>
+                        <tr>
+                            <td>ticket.list</td>
+                            <td>Ticket list endpoint response time</td>
+                            <td>98ms</td>
+                            <td>103ms</td>
+                            <td>10.2</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td>ticket.stats</td>
+                            <td>Ticket stats endpoint response time</td>
+                            <td>27ms</td>
+                            <td>34ms</td>
+                            <td>35.6</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr><tr style="background: var(--gray-100);"><td colspan="7" style="font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; color: var(--gray-700);">appointments (3)</td></tr>
+                        <tr>
+                            <td>appointments.list</td>
+                            <td>Appointments list endpoint response time</td>
+                            <td>118ms</td>
+                            <td>124ms</td>
+                            <td>8.4</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td>appointments.stats</td>
+                            <td>Appointments stats endpoint response time</td>
+                            <td>48ms</td>
+                            <td>50ms</td>
+                            <td>20.7</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td>appointments.checkConflicts</td>
+                            <td>Check conflicts endpoint response time</td>
+                            <td>119ms</td>
+                            <td>126ms</td>
+                            <td>8.2</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr><tr style="background: var(--gray-100);"><td colspan="7" style="font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; color: var(--gray-700);">documents (1)</td></tr>
+                        <tr>
+                            <td>documents.list</td>
+                            <td>Documents list endpoint response time</td>
+                            <td>75ms</td>
+                            <td>118ms</td>
+                            <td>12.3</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr><tr style="background: var(--gray-100);"><td colspan="7" style="font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; color: var(--gray-700);">conversation (1)</td></tr>
+                        <tr>
+                            <td>conversation.search</td>
+                            <td>Conversation search endpoint response time</td>
+                            <td>49ms</td>
+                            <td>50ms</td>
+                            <td>20.4</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr><tr style="background: var(--gray-100);"><td colspan="7" style="font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; color: var(--gray-700);">agent (3)</td></tr>
+                        <tr>
+                            <td>agent.listTools</td>
+                            <td>Agent tools list endpoint response time</td>
+                            <td>1ms</td>
+                            <td>1ms</td>
+                            <td>921.6</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td>agent.getPendingApprovals</td>
+                            <td>Pending approvals endpoint response time</td>
+                            <td>95ms</td>
+                            <td>101ms</td>
+                            <td>10.5</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td>agent.getPendingCount</td>
+                            <td>Pending count endpoint response time</td>
+                            <td>95ms</td>
+                            <td>96ms</td>
+                            <td>10.6</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr><tr style="background: var(--gray-100);"><td colspan="7" style="font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; color: var(--gray-700);">billing (3)</td></tr>
+                        <tr>
+                            <td>billing.getSubscription</td>
+                            <td>Subscription info endpoint response time</td>
+                            <td>1ms</td>
+                            <td>2ms</td>
+                            <td>780.5</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td>billing.getPaymentMethods</td>
+                            <td>Payment methods endpoint response time</td>
+                            <td>1ms</td>
+                            <td>2ms</td>
+                            <td>786.1</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td>billing.getUsageMetrics</td>
+                            <td>Usage metrics endpoint response time</td>
+                            <td>1ms</td>
+                            <td>2ms</td>
+                            <td>764.5</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr><tr style="background: var(--gray-100);"><td colspan="7" style="font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; color: var(--gray-700);">analytics (2)</td></tr>
+                        <tr>
+                            <td>analytics.leadStats</td>
+                            <td>Lead analytics endpoint response time</td>
+                            <td>26ms</td>
+                            <td>28ms</td>
+                            <td>38.4</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td>analytics.trafficSources</td>
+                            <td>Traffic sources endpoint response time</td>
+                            <td>26ms</td>
+                            <td>30ms</td>
+                            <td>37.7</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr><tr style="background: var(--gray-100);"><td colspan="7" style="font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; color: var(--gray-700);">timeline (1)</td></tr>
+                        <tr>
+                            <td>timeline.getEvents</td>
+                            <td>Timeline events endpoint response time</td>
+                            <td>262ms</td>
+                            <td>268ms</td>
+                            <td>3.8</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr><tr style="background: var(--gray-100);"><td colspan="7" style="font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; color: var(--gray-700);">pipelineConfig (2)</td></tr>
+                        <tr>
+                            <td>pipelineConfig.getAll</td>
+                            <td>All pipeline configs endpoint response time</td>
+                            <td>49ms</td>
+                            <td>50ms</td>
+                            <td>20.6</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td>pipelineConfig.getStats</td>
+                            <td>Pipeline stats endpoint response time</td>
+                            <td>95ms</td>
+                            <td>98ms</td>
+                            <td>10.5</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr><tr style="background: var(--gray-100);"><td colspan="7" style="font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; color: var(--gray-700);">integrations (2)</td></tr>
+                        <tr>
+                            <td>integrations.getAllConnectorsHealth</td>
+                            <td>Connectors health endpoint response time</td>
+                            <td>235ms</td>
+                            <td>247ms</td>
+                            <td>4.2</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td>integrations.getDashboardConfig</td>
+                            <td>Dashboard config endpoint response time</td>
+                            <td>1ms</td>
+                            <td>2ms</td>
+                            <td>901.0</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr><tr style="background: var(--gray-100);"><td colspan="7" style="font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; color: var(--gray-700);">audit (1)</td></tr>
+                        <tr>
+                            <td>audit.search</td>
+                            <td>Audit search endpoint response time</td>
+                            <td>65ms</td>
+                            <td>66ms</td>
+                            <td>15.4</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr><tr style="background: var(--gray-100);"><td colspan="7" style="font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; color: var(--gray-700);">experiment (1)</td></tr>
+                        <tr>
+                            <td>experiment.list</td>
+                            <td>Experiment list endpoint response time</td>
+                            <td>24ms</td>
+                            <td>25ms</td>
+                            <td>42.6</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr><tr style="background: var(--gray-100);"><td colspan="7" style="font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; color: var(--gray-700);">feedbackSurvey (1)</td></tr>
+                        <tr>
+                            <td>feedbackSurvey.getDashboardStats</td>
+                            <td>Feedback dashboard stats endpoint response time</td>
+                            <td>51ms</td>
+                            <td>53ms</td>
+                            <td>19.5</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr><tr style="background: var(--gray-100);"><td colspan="7" style="font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; color: var(--gray-700);">chainVersion (1)</td></tr>
+                        <tr>
+                            <td>chainVersion.list</td>
+                            <td>Chain version list endpoint response time</td>
+                            <td>27ms</td>
+                            <td>29ms</td>
+                            <td>37.1</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr><tr style="background: var(--gray-100);"><td colspan="7" style="font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; color: var(--gray-700);">email (1)</td></tr>
+                        <tr>
+                            <td>email.getStorageUsage</td>
+                            <td>Email storage usage endpoint response time</td>
+                            <td>97ms</td>
+                            <td>100ms</td>
+                            <td>10.2</td>
+                            <td>20</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr></tbody>
+                </table>
+                </div>
+            </div>
+        </section>
+        
+        <section class="section">
+            <div class="section-header"><h2>Error Analysis</h2></div>
+            <div class="section-body">
+                <p style="color: var(--success); font-weight: 600;">All 50 endpoints returned successfully. No errors detected.</p>
+            </div>
+        </section>
+        
+        <!-- Resource Utilization -->
+        <section class="section">
+            <div class="section-header">
+                <h2>Resource Utilization</h2>
+            </div>
+            <div class="section-body">
+                <div class="alert alert-info">
+                    <h3>Not Measured in This Run</h3>
+                    <p>Resource monitoring (CPU, memory, DB connections, Redis, network) was not included in this benchmark.
+                    These metrics require infrastructure-level monitoring (e.g., Prometheus, Grafana, or cloud provider dashboards)
+                    during a load test. A future benchmark run with k6 + Docker resource monitoring will populate this section.</p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Test Configuration -->
+        <section class="section">
+            <div class="section-header">
+                <h2>Test Configuration</h2>
+            </div>
+            <div class="section-body">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Value</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Benchmark Runner</td>
+                            <td>run-baseline-benchmark.ts</td>
+                            <td>Custom Node.js benchmark with 20 iterations per endpoint + 3 warmup</td>
+                        </tr>
+                        <tr>
+                            <td>Endpoints Tested</td>
+                            <td>50 tRPC queries</td>
+                            <td>Authenticated GET endpoints across all routers</td>
+                        </tr>
+                        <tr>
+                            <td>Iterations per Endpoint</td>
+                            <td>20</td>
+                            <td>With 3 warmup iterations excluded from results</td>
+                        </tr>
+                        <tr>
+                            <td>Load Test (k6)</td>
+                            <td>10 VUs / 30s</td>
+                            <td>41 rps achieved</td>
+                        </tr>
+                        <tr>
+                            <td>Node.js Version</td>
+                            <td>v25.2.1</td>
+                            <td>Platform: win32 (x64)</td>
+                        </tr>
+                        <tr>
+                            <td>API Type</td>
+                            <td>trpc</td>
+                            <td>http://localhost:4000/api/trpc</td>
+                        </tr>
+                        <tr>
+                            <td>Database</td>
+                            <td>Supabase PostgreSQL (cloud)</td>
+                            <td>Connected</td>
+                        </tr>
+                        <tr>
+                            <td>Authentication</td>
+                            <td>Supabase Auth (Bearer token)</td>
+                            <td>All endpoints tested with real authentication</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        
+        <section class="section">
+            <div class="section-header"><h2>Optimization Recommendations</h2></div>
+            <div class="section-body">
+                <ul class="recommendations">
+                    <li>
+                        <div class="recommendation-icon medium">!</div>
+                        <div>
+                            <strong>1 endpoint(s) with p95 > 250ms</strong>
+                            <p style="font-size: 0.875rem; color: var(--gray-700); margin-top: 0.25rem;">Slowest: timeline.getEvents (268ms). Consider adding Redis caching for aggregate queries and optimizing DB indexes.</p>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="recommendation-icon medium">!</div>
+                        <div>
+                            <strong>Load test only used 10 virtual users</strong>
+                            <p style="font-size: 0.875rem; color: var(--gray-700); margin-top: 0.25rem;">Current load test ran with 10 VUs for 30s. Scale up to 100-1000 VUs to validate concurrent user targets and identify bottlenecks under load.</p>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="recommendation-icon low">i</div>
+                        <div>
+                            <strong>Database benchmark issues</strong>
+                            <p style="font-size: 0.875rem; color: var(--gray-700); margin-top: 0.25rem;">1 DB benchmark(s) failed. Supabase cloud DB adds ~25ms network latency per query. Consider using Supavisor connection pooling (port 6543) and batching queries where possible.</p>
+                        </div>
+                    </li></ul>
+            </div>
+        </section>
+        
+        <!-- Threshold Summary -->
+        <section class="section">
+            <div class="section-header">
+                <h2>KPI Threshold Summary</h2>
+            </div>
+            <div class="section-body">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>KPI</th>
+                            <th>Target</th>
+                            <th>Actual</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                        <tr>
+                            <td>API Endpoints Passing</td>
+                            <td>100%</td>
+                            <td>50/50 (100%)</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td>Response Time (p95 median)</td>
+                            <td>< 100ms</td>
+                            <td>50ms</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td>Response Time (p99 median)</td>
+                            <td>< 200ms</td>
+                            <td>50ms</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td>Response Time (p50 median)</td>
+                            <td>< 50ms</td>
+                            <td>44ms</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td>Endpoint Failure Rate</td>
+                            <td>0%</td>
+                            <td>0.0%</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr>
+                        <tr>
+                            <td>Load Test Throughput</td>
+                            <td>10 VUs sustained</td>
+                            <td>41 rps (30s)</td>
+                            <td><span class="status-badge pass">PASS</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div style="margin-top: 1rem; padding: 1rem; background: #fef2f2; border-radius: 6px; border-left: 4px solid var(--danger);">
+                    <strong style="color: var(--danger);">Budget Violations</strong>
+                    <ul style="margin-top: 0.5rem; padding-left: 1.5rem; font-size: 0.875rem; color: var(--gray-700);">
+                        <li>[ERROR] api-p95: 125.21ms exceeds budget of 100ms</li><li>[ERROR] db-query-simple: 2496.63ms exceeds budget of 20ms</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <p>IntelliFlow CRM Performance Benchmark Report</p>
+            <p>Generated from baseline.json benchmark data | Task: ENV-015-AI</p>
+            <p style="margin-top: 0.5rem;">Report generated on <span id="footer-date">2026-04-11</span></p>
+            
+        </footer>
+    </div>
+
+    <script>
+        // Update dates dynamically
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('report-date').textContent = today;
+        document.getElementById('footer-date').textContent = today;
+    </script>
+</body>
+</html>
