@@ -16,7 +16,9 @@ import {
 import { ContactSettingsPanel } from '@/components/contacts/ContactSettingsPanel';
 import { ContactSettingsSidebarNav } from '@/components/contacts/ContactSettingsSidebarNav';
 
-export default function ContactsListLayout({ children }: Readonly<{ readonly children: React.ReactNode }>) {
+export default function ContactsListLayout({
+  children,
+}: Readonly<{ readonly children: React.ReactNode }>) {
   const pathname = usePathname();
   const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -24,11 +26,9 @@ export default function ContactsListLayout({ children }: Readonly<{ readonly chi
 
   const sidebarConfig = useMemo(() => {
     if (onSettingsPage) {
-      return createContactsSettingsSidebarConfig(
-        ({ isExpanded }: { isExpanded: boolean }) => (
-          <ContactSettingsSidebarNav isExpanded={isExpanded} />
-        ),
-      );
+      return createContactsSettingsSidebarConfig(({ isExpanded }: { isExpanded: boolean }) => (
+        <ContactSettingsSidebarNav isExpanded={isExpanded} />
+      ));
     }
     return createContactsSidebarConfig(() => setSettingsOpen((prev) => !prev));
   }, [onSettingsPage]);
@@ -39,10 +39,7 @@ export default function ContactsListLayout({ children }: Readonly<{ readonly chi
         <SidebarWithSuspense config={sidebarConfig} />
 
         {!onSettingsPage && (
-          <ContactSettingsPanel
-            isOpen={settingsOpen}
-            onClose={() => setSettingsOpen(false)}
-          />
+          <ContactSettingsPanel isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
         )}
 
         <SidebarInset>

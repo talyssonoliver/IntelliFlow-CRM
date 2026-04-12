@@ -92,7 +92,10 @@ describe('AccountDetailPage - loading state', () => {
     }));
 
     vi.doMock('@intelliflow/ui', () => ({
-      Card: ({ children, className }: Readonly<{ children: React.ReactNode; className?: string }>) => (
+      Card: ({
+        children,
+        className,
+      }: Readonly<{ children: React.ReactNode; className?: string }>) => (
         <div data-testid="card" className={className}>
           {children}
         </div>

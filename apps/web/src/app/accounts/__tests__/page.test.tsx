@@ -91,7 +91,9 @@ vi.mock('@/hooks/use-dynamic-filters', () => ({
 
 // Mock shared components
 vi.mock('@/components/shared', () => ({
-  PageHeader: ({ title }: Readonly<{ title: string }>) => <div data-testid="page-header">{title}</div>,
+  PageHeader: ({ title }: Readonly<{ title: string }>) => (
+    <div data-testid="page-header">{title}</div>
+  ),
   SearchFilterBar: () => <div data-testid="search-filter-bar" />,
 }));
 

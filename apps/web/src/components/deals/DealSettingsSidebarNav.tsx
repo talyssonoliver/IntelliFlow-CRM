@@ -25,17 +25,18 @@ export function DealSettingsSidebarNav({
           className={cn(
             'flex items-center gap-3 px-3 py-2 rounded-lg text-sm w-full',
             'bg-primary/10 font-medium text-foreground',
-            !sidebarExpanded && 'justify-center',
+            !sidebarExpanded && 'justify-center'
           )}
         >
           <div className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0 bg-amber-50 dark:bg-amber-950">
-            <span className="material-symbols-outlined text-lg text-amber-600 dark:text-amber-400" aria-hidden="true">
+            <span
+              className="material-symbols-outlined text-lg text-amber-600 dark:text-amber-400"
+              aria-hidden="true"
+            >
               settings
             </span>
           </div>
-          {sidebarExpanded && (
-            <span className="font-medium truncate">Deal Settings</span>
-          )}
+          {sidebarExpanded && <span className="font-medium truncate">Deal Settings</span>}
         </div>
 
         {sidebarExpanded ? (
@@ -51,13 +52,13 @@ export function DealSettingsSidebarNav({
                     'flex items-center gap-3 px-3 py-1.5 rounded-lg text-sm transition-colors',
                     active
                       ? 'bg-primary/10 font-medium text-foreground'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-accent',
+                      : 'text-muted-foreground hover:text-foreground hover:bg-accent'
                   )}
                 >
                   <span
                     className={cn(
                       'material-symbols-outlined text-lg',
-                      active ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground',
+                      active ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground'
                     )}
                     aria-hidden="true"
                   >
@@ -80,13 +81,15 @@ export function DealSettingsSidebarNav({
                   title={item.label}
                   className={cn(
                     'flex items-center justify-center px-3 py-1.5 rounded-lg transition-colors',
-                    active ? 'bg-primary/10' : 'text-muted-foreground hover:text-foreground hover:bg-accent',
+                    active
+                      ? 'bg-primary/10'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-accent'
                   )}
                 >
                   <span
                     className={cn(
                       'material-symbols-outlined text-lg',
-                      active ? 'text-amber-600 dark:text-amber-400' : '',
+                      active ? 'text-amber-600 dark:text-amber-400' : ''
                     )}
                     aria-hidden="true"
                   >

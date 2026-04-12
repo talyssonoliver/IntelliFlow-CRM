@@ -198,9 +198,7 @@ export function ContactForm({
           aria-label={`Step ${currentStepIndex + 1} of ${steps.length}`}
           className="sr-only"
         />
-        <div
-          className="relative flex items-center justify-between w-full max-w-2xl mx-auto"
-        >
+        <div className="relative flex items-center justify-between w-full max-w-2xl mx-auto">
           <div
             className="absolute left-0 top-5 w-full h-0.5 bg-slate-100 dark:bg-slate-700 -z-10"
             aria-hidden="true"
@@ -208,12 +206,12 @@ export function ContactForm({
           {steps.map((step) => {
             const status = getStepStatus(step);
             const isClickable = status === 'completed' || status === 'current';
-            const completedOrDefaultCircleClass = status === 'completed'
-              ? 'bg-primary text-white hover:bg-blue-600'
-              : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border-2 border-slate-200 dark:border-slate-700';
-            const stepCircleClass = status === 'current'
-              ? 'bg-primary text-white'
-              : completedOrDefaultCircleClass;
+            const completedOrDefaultCircleClass =
+              status === 'completed'
+                ? 'bg-primary text-white hover:bg-blue-600'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border-2 border-slate-200 dark:border-slate-700';
+            const stepCircleClass =
+              status === 'current' ? 'bg-primary text-white' : completedOrDefaultCircleClass;
             return (
               <button
                 key={step.id}
@@ -463,8 +461,8 @@ export function ContactForm({
                 onClick={handleNextStep}
                 className="flex items-center gap-2 bg-primary hover:bg-blue-600 text-white font-bold py-2.5 px-6 rounded-lg transition-all"
               >
-                Next Step
-                {' '}<span className="material-symbols-outlined text-lg" aria-hidden="true">
+                Next Step{' '}
+                <span className="material-symbols-outlined text-lg" aria-hidden="true">
                   arrow_forward
                 </span>
               </button>

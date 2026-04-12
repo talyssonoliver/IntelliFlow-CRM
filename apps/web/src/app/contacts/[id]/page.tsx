@@ -28,7 +28,11 @@ import { AppAvatar } from '@/components/shared/app-avatar';
 import { RelatedTasksCard } from '@/components/tasks/RelatedTasksCard';
 import { UpcomingEventsCard } from '@/components/shared';
 import { normalizeAvatarSource } from '@/lib/shared/avatar-utils';
-import { ActivityFeed, ActivityFeedItem, ActivityFeedItemActions } from '@/components/shared/activity-feed';
+import {
+  ActivityFeed,
+  ActivityFeedItem,
+  ActivityFeedItemActions,
+} from '@/components/shared/activity-feed';
 import { useActivityFeed } from '@/hooks/useActivityFeed';
 import { useActivityDeepLink, isDeepLinkedActivity } from '@/hooks/useActivityDeepLink';
 import { useActivityReactions } from '@/hooks/useActivityReactions';
@@ -348,10 +352,13 @@ type ContactAiInsightsSummary = {
   lastEngagementDays: number;
 } | null;
 
-type ContactPageQueryError = {
-  data?: { code?: string } | null;
-  message?: string;
-} | null | undefined;
+type ContactPageQueryError =
+  | {
+      data?: { code?: string } | null;
+      message?: string;
+    }
+  | null
+  | undefined;
 
 function isUnauthorizedContactError(error: ContactPageQueryError): boolean {
   const message = error?.message?.toLowerCase() ?? '';
@@ -621,7 +628,9 @@ function ContactAiSummaryCard({
           <div>
             <div className="flex justify-between mb-1.5">
               <span className="text-sm text-slate-600 dark:text-slate-300">Engagement</span>
-              <span className="text-sm font-bold text-green-600">{aiInsights.engagementScore}%</span>
+              <span className="text-sm font-bold text-green-600">
+                {aiInsights.engagementScore}%
+              </span>
             </div>
             <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
               <div
@@ -749,66 +758,91 @@ function getActivityIconBg(type: ActivityType): string {
 
 function getSentimentColor(sentiment?: string): string {
   switch (sentiment) {
-    case 'positive': return 'text-green-500';
-    case 'negative': return 'text-red-500';
-    default: return 'text-slate-400';
+    case 'positive':
+      return 'text-green-500';
+    case 'negative':
+      return 'text-red-500';
+    default:
+      return 'text-slate-400';
   }
 }
 
 function getChannelIcon(channel?: string): string {
   switch (channel) {
-    case 'whatsapp': return '💬';
-    case 'teams': return '👥';
-    case 'slack': return '💼';
-    default: return '💬';
+    case 'whatsapp':
+      return '💬';
+    case 'teams':
+      return '👥';
+    case 'slack':
+      return '💼';
+    default:
+      return '💬';
   }
 }
 
 function getCallOutcomeStyle(outcome?: string): string {
   switch (outcome) {
-    case 'connected': return 'bg-green-100 text-green-700';
-    case 'voicemail': return 'bg-yellow-100 text-yellow-700';
-    default: return 'bg-red-100 text-red-700';
+    case 'connected':
+      return 'bg-green-100 text-green-700';
+    case 'voicemail':
+      return 'bg-yellow-100 text-yellow-700';
+    default:
+      return 'bg-red-100 text-red-700';
   }
 }
 
 function getCallOutcomeLabel(outcome?: string): string {
   switch (outcome) {
-    case 'connected': return '✓ Connected';
-    case 'voicemail': return '📞 Voicemail';
-    default: return '✗ No Answer';
+    case 'connected':
+      return '✓ Connected';
+    case 'voicemail':
+      return '📞 Voicemail';
+    default:
+      return '✗ No Answer';
   }
 }
 
 function getTicketStatusStyle(status?: string): string {
   switch (status) {
-    case 'Resolved': return 'bg-green-100 text-green-700';
-    case 'Open': return 'bg-blue-100 text-blue-700';
-    default: return 'bg-yellow-100 text-yellow-700';
+    case 'Resolved':
+      return 'bg-green-100 text-green-700';
+    case 'Open':
+      return 'bg-blue-100 text-blue-700';
+    default:
+      return 'bg-yellow-100 text-yellow-700';
   }
 }
 
 function getPriorityStyle(priority?: string): string {
   switch (priority) {
-    case 'High': return 'text-red-600';
-    case 'Medium': return 'text-yellow-600';
-    default: return 'text-slate-500';
+    case 'High':
+      return 'text-red-600';
+    case 'Medium':
+      return 'text-yellow-600';
+    default:
+      return 'text-slate-500';
   }
 }
 
 function getSentimentTrendStyle(trend?: string): string {
   switch (trend) {
-    case 'improving': return 'text-green-600';
-    case 'declining': return 'text-red-600';
-    default: return 'text-slate-600';
+    case 'improving':
+      return 'text-green-600';
+    case 'declining':
+      return 'text-red-600';
+    default:
+      return 'text-slate-600';
   }
 }
 
 function getSentimentEmoji(sentiment?: string): string {
   switch (sentiment) {
-    case 'positive': return '😊';
-    case 'negative': return '😟';
-    default: return '😐';
+    case 'positive':
+      return '😊';
+    case 'negative':
+      return '😟';
+    default:
+      return '😐';
   }
 }
 
@@ -1013,16 +1047,14 @@ function ContactNotFoundError({ fromInsight }: { fromInsight: boolean }) {
               href="/"
               className="inline-flex items-center gap-2 px-4 py-2 bg-[#137fec] text-white rounded-lg hover:bg-blue-600 transition-colors"
             >
-              <span className="material-symbols-outlined text-sm">home</span>{' '}
-              Back to Home
+              <span className="material-symbols-outlined text-sm">home</span> Back to Home
             </Link>
           )}
           <Link
             href="/contacts"
             className="inline-flex items-center gap-2 px-4 py-2 bg-[#137fec] text-white rounded-lg hover:bg-blue-600 transition-colors"
           >
-            <span className="material-symbols-outlined text-sm">arrow_back</span>{' '}
-            Back to Contacts
+            <span className="material-symbols-outlined text-sm">arrow_back</span> Back to Contacts
           </Link>
         </div>
       </Card>
@@ -1033,18 +1065,38 @@ function ContactNotFoundError({ fromInsight }: { fromInsight: boolean }) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** Returns true when a stale linked insight should be auto-dismissed. */
-const CONTACT_VALID_TABS: TabId[] = ['overview', 'activity', 'tasks', 'deals', 'tickets', 'documents', 'notes', 'ai-insights'];
+const CONTACT_VALID_TABS: TabId[] = [
+  'overview',
+  'activity',
+  'tasks',
+  'deals',
+  'tickets',
+  'documents',
+  'notes',
+  'ai-insights',
+];
 function resolveInitialContactTab(tabParam: TabId | null): TabId {
   return tabParam && CONTACT_VALID_TABS.includes(tabParam) ? tabParam : 'overview';
 }
 
-function transformFeedToActivities(feedItems: Array<{ id: string; type: string; title: string; description?: string | null; timestamp: string | Date; actor?: { name?: string | null } | null; metadata?: Record<string, unknown> | null }>): Activity[] {
+function transformFeedToActivities(
+  feedItems: Array<{
+    id: string;
+    type: string;
+    title: string;
+    description?: string | null;
+    timestamp: string | Date;
+    actor?: { name?: string | null } | null;
+    metadata?: Record<string, unknown> | null;
+  }>
+): Activity[] {
   return feedItems.map((item) => ({
     id: item.id,
-    type: (item.type.toLowerCase()) as ActivityType,
+    type: item.type.toLowerCase() as ActivityType,
     title: item.title,
     description: item.description || '',
-    timestamp: typeof item.timestamp === 'string' ? item.timestamp : new Date(item.timestamp).toISOString(),
+    timestamp:
+      typeof item.timestamp === 'string' ? item.timestamp : new Date(item.timestamp).toISOString(),
     user: item.actor?.name || 'System',
     metadata: item.metadata as Activity['metadata'],
     sentiment: item.metadata?.sentiment
@@ -1055,29 +1107,73 @@ function transformFeedToActivities(feedItems: Array<{ id: string; type: string; 
   }));
 }
 
-function buildChurnRiskData(insight: ContactWithRelations['aiInsight'] | undefined): ChurnRiskData | null {
+function buildChurnRiskData(
+  insight: ContactWithRelations['aiInsight'] | undefined
+): ChurnRiskData | null {
   if (!insight) return null;
-  const levelMap: Record<string, ChurnRiskLevel> = { LOW: 'LOW', MEDIUM: 'MEDIUM', HIGH: 'HIGH', CRITICAL: 'CRITICAL', MINIMAL: 'MINIMAL' };
+  const levelMap: Record<string, ChurnRiskLevel> = {
+    LOW: 'LOW',
+    MEDIUM: 'MEDIUM',
+    HIGH: 'HIGH',
+    CRITICAL: 'CRITICAL',
+    MINIMAL: 'MINIMAL',
+  };
   const level = levelMap[insight.churnRisk] || 'LOW';
-  const scoreMap: Record<ChurnRiskLevel, number> = { CRITICAL: 90, HIGH: 70, MEDIUM: 50, LOW: 25, MINIMAL: 10 };
-  const slaMap: Record<ChurnRiskLevel, number> = { CRITICAL: 24, HIGH: 48, MEDIUM: 168, LOW: 336, MINIMAL: 720 };
+  const scoreMap: Record<ChurnRiskLevel, number> = {
+    CRITICAL: 90,
+    HIGH: 70,
+    MEDIUM: 50,
+    LOW: 25,
+    MINIMAL: 10,
+  };
+  const slaMap: Record<ChurnRiskLevel, number> = {
+    CRITICAL: 24,
+    HIGH: 48,
+    MEDIUM: 168,
+    LOW: 336,
+    MINIMAL: 720,
+  };
   let trend: 'IMPROVING' | 'DECLINING' | 'STABLE';
-  if (insight.sentimentTrend === 'IMPROVING') { trend = 'IMPROVING'; }
-  else if (insight.sentimentTrend === 'DECLINING') { trend = 'DECLINING'; }
-  else { trend = 'STABLE'; }
+  if (insight.sentimentTrend === 'IMPROVING') {
+    trend = 'IMPROVING';
+  } else if (insight.sentimentTrend === 'DECLINING') {
+    trend = 'DECLINING';
+  } else {
+    trend = 'STABLE';
+  }
   let engagementImpact: 'HIGH' | 'MEDIUM' | 'LOW';
-  if (insight.engagementScore < 30) { engagementImpact = 'HIGH'; }
-  else if (insight.engagementScore < 60) { engagementImpact = 'MEDIUM'; }
-  else { engagementImpact = 'LOW'; }
+  if (insight.engagementScore < 30) {
+    engagementImpact = 'HIGH';
+  } else if (insight.engagementScore < 60) {
+    engagementImpact = 'MEDIUM';
+  } else {
+    engagementImpact = 'LOW';
+  }
   let daysImpact: 'HIGH' | 'MEDIUM' | 'LOW';
-  if (insight.lastEngagementDays > 30) { daysImpact = 'HIGH'; }
-  else if (insight.lastEngagementDays > 14) { daysImpact = 'MEDIUM'; }
-  else { daysImpact = 'LOW'; }
+  if (insight.lastEngagementDays > 30) {
+    daysImpact = 'HIGH';
+  } else if (insight.lastEngagementDays > 14) {
+    daysImpact = 'MEDIUM';
+  } else {
+    daysImpact = 'LOW';
+  }
   return {
-    score: scoreMap[level], level, confidence: 0.85, slaHours: slaMap[level], trend,
+    score: scoreMap[level],
+    level,
+    confidence: 0.85,
+    slaHours: slaMap[level],
+    trend,
     factors: [
-      { factor: 'Engagement Score', impact: engagementImpact, value: `${insight.engagementScore}%` },
-      { factor: 'Days Since Contact', impact: daysImpact, value: `${insight.lastEngagementDays} days` },
+      {
+        factor: 'Engagement Score',
+        impact: engagementImpact,
+        value: `${insight.engagementScore}%`,
+      },
+      {
+        factor: 'Days Since Contact',
+        impact: daysImpact,
+        value: `${insight.lastEngagementDays} days`,
+      },
     ],
   };
 }
@@ -1151,7 +1247,7 @@ function filterContactActivities(
   activities: Activity[],
   activityTypeFilter: string,
   personFilter: string,
-  searchQuery: string,
+  searchQuery: string
 ) {
   return activities.filter((activity) => {
     if (activityTypeFilter !== 'all' && activity.type !== activityTypeFilter) return false;
@@ -1177,7 +1273,7 @@ function shouldDismissStaleInsight(
   errorCode: string | undefined,
   isLoading: boolean,
   contact: unknown,
-  alreadyDismissed: boolean,
+  alreadyDismissed: boolean
 ): boolean {
   if (!fromInsight || !insightIdParam || alreadyDismissed) return false;
   return errorCode === 'NOT_FOUND' || (!isLoading && !contact);
@@ -1276,7 +1372,10 @@ export default function Contact360Page() {
   const [searchQuery, setSearchQuery] = useState('');
   const [visibleCount, setVisibleCount] = useState(5);
   const [activityView, setActivityView] = useState<'timeline' | 'unified'>('timeline');
-  const { selectedActivityId } = useActivityDeepLink(activeTab, setActiveTab as (tab: 'activity') => void);
+  const { selectedActivityId } = useActivityDeepLink(
+    activeTab,
+    setActiveTab as (tab: 'activity') => void
+  );
 
   // Deep-link: auto-expand the targeted activity and scroll it into view
   const deepLinkScrolledRef = useRef(false);
@@ -1311,7 +1410,7 @@ export default function Contact360Page() {
 
   // Transform API data to UI format
   const contact = useMemo(
-    () => apiContact ? transformContactForUI(apiContact) : null,
+    () => (apiContact ? transformContactForUI(apiContact) : null),
     [apiContact]
   );
 
@@ -1459,21 +1558,35 @@ export default function Contact360Page() {
     'CONTACT_ACTIVITY',
     user?.email
   );
-  const { comments: commentsMap, addComment, isAdding: isAddingComment } = useActivityComments(
-    activityIdsForReactions,
-    'CONTACT_ACTIVITY'
-  );
+  const {
+    comments: commentsMap,
+    addComment,
+    isAdding: isAddingComment,
+  } = useActivityComments(activityIdsForReactions, 'CONTACT_ACTIVITY');
 
   // Auto-dismiss stale insight when the referenced entity no longer exists
   const fromInsight = !!insightIdParam;
   const dismissInsightMutation = api.home.dismissInsight.useMutation();
   const dismissedInsightRef = useRef(false);
   useEffect(() => {
-    if (shouldDismissStaleInsight(fromInsight, insightIdParam, error?.data?.code, isLoading, contact, dismissedInsightRef.current)) {
+    if (
+      shouldDismissStaleInsight(
+        fromInsight,
+        insightIdParam,
+        error?.data?.code,
+        isLoading,
+        contact,
+        dismissedInsightRef.current
+      )
+    ) {
       dismissedInsightRef.current = true;
       dismissInsightMutation.mutate(
         { insightId: insightIdParam!, reason: 'Referenced contact no longer exists' },
-        { onError: () => { /* best-effort */ } }
+        {
+          onError: () => {
+            /* best-effort */
+          },
+        }
       );
     }
   }, [fromInsight, insightIdParam, error, isLoading, contact, dismissInsightMutation]);
@@ -1684,7 +1797,10 @@ export default function Contact360Page() {
                   </svg>
                   <div className="flex flex-col">
                     <span className="text-xs text-slate-400 uppercase font-semibold">Email</span>
-                    <EntityHoverCard email={contact.email} displayName={`${contact.firstName} ${contact.lastName}`.trim()}>
+                    <EntityHoverCard
+                      email={contact.email}
+                      displayName={`${contact.firstName} ${contact.lastName}`.trim()}
+                    >
                       <Link
                         href={`/email/compose?to=${encodeURIComponent(contact.email)}`}
                         className="text-sm text-slate-700 dark:text-slate-300 hover:text-[#137fec] break-all"
@@ -1906,8 +2022,7 @@ export default function Contact360Page() {
                               : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                           }`}
                         >
-                          <span>{filter.icon}</span>{' '}
-                          {filter.label}
+                          <span>{filter.icon}</span> {filter.label}
                         </button>
                       ))}
                     </div>
@@ -1982,7 +2097,10 @@ export default function Contact360Page() {
                   {/* Activity Timeline */}
                   <div className="relative space-y-4" style={{ paddingLeft: 40 }}>
                     {/* Continuous vertical timeline line */}
-                    <div className="absolute top-0 bottom-0 w-0.5 bg-slate-200 dark:bg-slate-700" style={{ left: 19 }} />
+                    <div
+                      className="absolute top-0 bottom-0 w-0.5 bg-slate-200 dark:bg-slate-700"
+                      style={{ left: 19 }}
+                    />
 
                     {visibleActivities.map((activity) => {
                       const isExpanded = expandedActivities.has(activity.id);
@@ -1998,12 +2116,13 @@ export default function Contact360Page() {
                           </div>
 
                           {/* Activity Card */}
-                          <div className={`rounded-lg p-4 transition-colors ${
-                            isDeepLinked
-                              ? 'bg-primary/5 border-2 border-primary/30 ring-1 ring-primary/20'
-                              : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
-                          }`}>
-
+                          <div
+                            className={`rounded-lg p-4 transition-colors ${
+                              isDeepLinked
+                                ? 'bg-primary/5 border-2 border-primary/30 ring-1 ring-primary/20'
+                                : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+                            }`}
+                          >
                             {/* Header */}
                             <div className="flex items-start justify-between gap-2">
                               <div className="flex-1">
@@ -2024,7 +2143,8 @@ export default function Contact360Page() {
                                   {activity.description}
                                 </p>
                                 <p className="text-xs text-slate-500 mt-1">
-                                  {activity.user} • {formatContactRelativeTime(activity.timestamp, timezone)}
+                                  {activity.user} •{' '}
+                                  {formatContactRelativeTime(activity.timestamp, timezone)}
                                 </p>
                               </div>
                               <button
@@ -2076,7 +2196,8 @@ export default function Contact360Page() {
                                           {comment.text}
                                         </p>
                                         <p className="text-xs text-slate-500 mt-1">
-                                          {comment.user} • {formatContactRelativeTime(comment.timestamp, timezone)}
+                                          {comment.user} •{' '}
+                                          {formatContactRelativeTime(comment.timestamp, timezone)}
                                         </p>
                                       </div>
                                     ))}
@@ -2441,7 +2562,10 @@ export default function Contact360Page() {
                   />
                   <div className="flex items-center justify-end gap-2 mt-2">
                     <button
-                      onClick={() => { setShowNoteInput(false); setNewNoteContent(''); }}
+                      onClick={() => {
+                        setShowNoteInput(false);
+                        setNewNoteContent('');
+                      }}
                       className="px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 rounded transition-colors"
                     >
                       Cancel
@@ -2492,7 +2616,10 @@ export default function Contact360Page() {
 
         {/* Right Sidebar */}
         <aside className="lg:col-span-3 flex flex-col gap-6">
-          <ContactAiSummaryCard aiInsights={aiInsights} onViewAiTab={() => setActiveTab('ai-insights')} />
+          <ContactAiSummaryCard
+            aiInsights={aiInsights}
+            onViewAiTab={() => setActiveTab('ai-insights')}
+          />
           <RelatedTasksCard
             entityType="contact"
             entityId={contactId}
@@ -2505,7 +2632,10 @@ export default function Contact360Page() {
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-base font-bold text-slate-900 dark:text-white">Notes</h3>
               <button
-                onClick={() => { setShowNoteInput(true); setActiveTab('notes'); }}
+                onClick={() => {
+                  setShowNoteInput(true);
+                  setActiveTab('notes');
+                }}
                 className="w-6 h-6 rounded hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-500"
                 title="Add note"
               >
@@ -2530,9 +2660,7 @@ export default function Contact360Page() {
                   </div>
                 </div>
               ))}
-              {notes.length === 0 && (
-                <EmptyState entity="notes" phase="passive" className="py-2" />
-              )}
+              {notes.length === 0 && <EmptyState entity="notes" phase="passive" className="py-2" />}
             </div>
             {notes.length > 2 && (
               <button

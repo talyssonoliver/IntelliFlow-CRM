@@ -1,7 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Sheet, SheetContent, SheetTitle, SheetDescription, Button, Input, Label, toast } from '@intelliflow/ui';
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+  SheetDescription,
+  Button,
+  Input,
+  Label,
+  toast,
+} from '@intelliflow/ui';
 import { api } from '@/lib/api';
 
 export interface ContactAddSheetProps {
@@ -41,14 +50,18 @@ export function ContactAddSheet({
     onSuccess: () => {
       utils.account.getContacts.invalidate({ accountId });
       utils.account.getById.invalidate({ id: accountId });
-      toast({ title: 'Contact created', description: `${form.firstName} ${form.lastName} has been added.` });
+      toast({
+        title: 'Contact created',
+        description: `${form.firstName} ${form.lastName} has been added.`,
+      });
       onOpenChange(false);
       onSuccess?.();
     },
     onError: (error) => {
-      const desc = error.message.includes('not found') || error.message.includes('foreign key')
-        ? 'Account may have been deleted. Please refresh.'
-        : error.message;
+      const desc =
+        error.message.includes('not found') || error.message.includes('foreign key')
+          ? 'Account may have been deleted. Please refresh.'
+          : error.message;
       toast({ title: 'Failed to create contact', description: desc, variant: 'destructive' });
     },
   });

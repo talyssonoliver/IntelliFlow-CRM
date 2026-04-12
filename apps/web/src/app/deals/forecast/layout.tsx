@@ -8,7 +8,9 @@ import {
   dealsSidebarConfig,
 } from '@/components/sidebar';
 
-export default function DealsForecastLayout({ children }: Readonly<{ readonly children: React.ReactNode }>) {
+export default function DealsForecastLayout({
+  children,
+}: Readonly<{ readonly children: React.ReactNode }>) {
   return (
     <SidebarProvider>
       <div className="flex min-h-[calc(100vh-4rem)] w-full overflow-hidden">

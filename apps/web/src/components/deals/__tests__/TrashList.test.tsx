@@ -558,9 +558,7 @@ describe('TrashList', { timeout: 10000 }, () => {
         capturedRestoreConfig.onSuccess?.();
       });
 
-      expect(mockToast).toHaveBeenCalledWith(
-        expect.objectContaining({ title: 'Deal Restored' })
-      );
+      expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Deal Restored' }));
     });
 
     it('successful restore invalidates the trashed list query', async () => {
@@ -883,7 +881,7 @@ describe('TrashList', { timeout: 10000 }, () => {
       });
     });
 
-    it('bulk restore error with non-Error object shows fallback message', async () => {
+    it('bulk restore error with non-Error object shows all-failed message', async () => {
       mockRestoreMutateAsync.mockRejectedValue('string error');
       const user = userEvent.setup();
 
@@ -898,13 +896,13 @@ describe('TrashList', { timeout: 10000 }, () => {
         expect(mockToast).toHaveBeenCalledWith(
           expect.objectContaining({
             title: 'Bulk Restore Failed',
-            description: 'An error occurred',
+            variant: 'destructive',
           })
         );
       });
     });
 
-    it('bulk permanent delete error with non-Error object shows fallback message', async () => {
+    it('bulk permanent delete error with non-Error object shows all-failed message', async () => {
       mockPermDeleteMutateAsync.mockRejectedValue({ code: 500 });
       const user = userEvent.setup();
 
@@ -919,7 +917,7 @@ describe('TrashList', { timeout: 10000 }, () => {
         expect(mockToast).toHaveBeenCalledWith(
           expect.objectContaining({
             title: 'Bulk Delete Failed',
-            description: 'An error occurred',
+            variant: 'destructive',
           })
         );
       });
@@ -1070,9 +1068,12 @@ describe('TrashList', { timeout: 10000 }, () => {
       // The EmptyState (from @intelliflow/ui) should not be present
       // (EmptyState only shown when !isLoading && !isError && deals.length === 0 && !debouncedSearch)
       // After typing we have debouncedSearch, so DataTable branch runs
-      await waitFor(() => {
-        expect(screen.queryByTestId('empty-state')).not.toBeInTheDocument();
-      }, { timeout: 1000 });
+      await waitFor(
+        () => {
+          expect(screen.queryByTestId('empty-state')).not.toBeInTheDocument();
+        },
+        { timeout: 1000 }
+      );
     });
   });
 

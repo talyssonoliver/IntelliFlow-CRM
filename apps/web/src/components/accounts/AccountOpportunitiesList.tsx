@@ -20,7 +20,10 @@ interface AccountOpportunitiesListProps {
   onCreateOpportunity?: () => void;
 }
 
-export function AccountOpportunitiesList({ accountId, onCreateOpportunity }: Readonly<AccountOpportunitiesListProps>) {
+export function AccountOpportunitiesList({
+  accountId,
+  onCreateOpportunity,
+}: Readonly<AccountOpportunitiesListProps>) {
   const router = useRouter();
   const [cursor, setCursor] = useState<string | undefined>();
   const [stageFilter, setStageFilter] = useState<OpportunityStage | undefined>();
@@ -65,8 +68,7 @@ export function AccountOpportunitiesList({ accountId, onCreateOpportunity }: Rea
         <EmptyState entity="deals" phase="passive" className="py-4" />
         <div className="flex justify-center">
           <Button variant="outline" size="sm" onClick={onCreateOpportunity} type="button">
-            <span className="material-symbols-outlined text-base mr-1">add</span>{' '}
-            Create Opportunity
+            <span className="material-symbols-outlined text-base mr-1">add</span> Create Opportunity
           </Button>
         </div>
       </>
@@ -114,8 +116,7 @@ export function AccountOpportunitiesList({ accountId, onCreateOpportunity }: Rea
           <option value="CLOSED_LOST">Closed Lost</option>
         </select>
         <Button variant="outline" size="sm" onClick={onCreateOpportunity} type="button">
-          <span className="material-symbols-outlined text-base mr-1">add</span>{' '}
-          Create Opportunity
+          <span className="material-symbols-outlined text-base mr-1">add</span> Create Opportunity
         </Button>
       </div>
 

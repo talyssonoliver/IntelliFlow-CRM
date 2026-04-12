@@ -18,7 +18,9 @@ interface ValueSummaryProps {
   readonly stats: PipelineStats;
 }
 
-export const ValueSummary = React.memo(function ValueSummary({ stats }: Readonly<ValueSummaryProps>) {
+export const ValueSummary = React.memo(function ValueSummary({
+  stats,
+}: Readonly<ValueSummaryProps>) {
   return (
     <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
       <Card

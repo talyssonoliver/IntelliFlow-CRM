@@ -14,7 +14,9 @@ import {
 import { LeadSettingsPanel } from '@/components/leads/LeadSettingsPanel';
 import { LeadSettingsSidebarNav } from '@/components/leads/LeadSettingsSidebarNav';
 
-export default function LeadsListLayout({ children }: Readonly<{ readonly children: React.ReactNode }>) {
+export default function LeadsListLayout({
+  children,
+}: Readonly<{ readonly children: React.ReactNode }>) {
   const pathname = usePathname();
   const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -22,11 +24,9 @@ export default function LeadsListLayout({ children }: Readonly<{ readonly childr
 
   const sidebarConfig = useMemo(() => {
     if (onSettingsPage) {
-      return createLeadsSettingsSidebarConfig(
-        ({ isExpanded }: { isExpanded: boolean }) => (
-          <LeadSettingsSidebarNav isExpanded={isExpanded} />
-        ),
-      );
+      return createLeadsSettingsSidebarConfig(({ isExpanded }: { isExpanded: boolean }) => (
+        <LeadSettingsSidebarNav isExpanded={isExpanded} />
+      ));
     }
     return createLeadsSidebarConfig(() => setSettingsOpen((prev) => !prev));
   }, [onSettingsPage]);
@@ -38,10 +38,7 @@ export default function LeadsListLayout({ children }: Readonly<{ readonly childr
 
         {/* Panel only needed in list mode */}
         {!onSettingsPage && (
-          <LeadSettingsPanel
-            isOpen={settingsOpen}
-            onClose={() => setSettingsOpen(false)}
-          />
+          <LeadSettingsPanel isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
         )}
 
         <SidebarInset>

@@ -33,9 +33,10 @@ vi.mock('@intelliflow/ui', () => ({
   Label: ({ children, htmlFor }: { children: React.ReactNode; htmlFor?: string }) => (
     <label htmlFor={htmlFor}>{children}</label>
   ),
-  Textarea: React.forwardRef<HTMLTextAreaElement, React.TextareaHTMLAttributes<HTMLTextAreaElement>>(
-    (props, ref) => <textarea ref={ref} {...props} />
-  ),
+  Textarea: React.forwardRef<
+    HTMLTextAreaElement,
+    React.TextareaHTMLAttributes<HTMLTextAreaElement>
+  >((props, ref) => <textarea ref={ref} {...props} />),
   Select: ({
     children,
     value,
@@ -43,7 +44,11 @@ vi.mock('@intelliflow/ui', () => ({
     children: React.ReactNode;
     value?: string;
     onValueChange?: (value: string) => void;
-  }) => <div data-testid="stage-select" data-value={value}>{children}</div>,
+  }) => (
+    <div data-testid="stage-select" data-value={value}>
+      {children}
+    </div>
+  ),
   SelectTrigger: ({ children, id }: { children: React.ReactNode; id?: string }) => (
     <div id={id}>{children}</div>
   ),
@@ -102,7 +107,11 @@ vi.mock('next/link', () => ({
   }: {
     children: React.ReactNode;
     href: string;
-  } & Record<string, unknown>) => <a href={href} {...props}>{children}</a>,
+  } & Record<string, unknown>) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
 }));
 
 import { DealForm, type DealFormProps } from '../DealForm';
@@ -222,10 +231,7 @@ describe('DealForm', () => {
       },
     });
 
-    expect(screen.getByTestId('entity-search-contact')).toHaveAttribute(
-      'data-value',
-      CONTACT_ID_1
-    );
+    expect(screen.getByTestId('entity-search-contact')).toHaveAttribute('data-value', CONTACT_ID_1);
 
     fireEvent.click(screen.getByText('Switch account'));
 

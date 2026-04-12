@@ -75,13 +75,20 @@ const statusConfig: Record<ContactStatus, { label: string; className: string; ic
 
 // ─── Component ──────────────────────────────────────────────────────────────────
 
-export function ContactCard({ contact, onClick, onCall, onEmail, compact }: Readonly<ContactCardProps>) {
+export function ContactCard({
+  contact,
+  onClick,
+  onCall,
+  onEmail,
+  compact,
+}: Readonly<ContactCardProps>) {
   const fullName = `${contact.firstName} ${contact.lastName}`;
   const initials =
     `${contact.firstName?.[0] || ''}${contact.lastName?.[0] || ''}`.toUpperCase() || '?';
   const status = statusConfig[contact.status] ?? {
     label: contact.status,
-    className: 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700',
+    className:
+      'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700',
     icon: 'help',
   };
   const opportunities = contact._count?.opportunities ?? 0;

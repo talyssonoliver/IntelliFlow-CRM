@@ -19,7 +19,10 @@ interface AccountContactsListProps {
   onAddContact?: () => void;
 }
 
-export function AccountContactsList({ accountId, onAddContact }: Readonly<AccountContactsListProps>) {
+export function AccountContactsList({
+  accountId,
+  onAddContact,
+}: Readonly<AccountContactsListProps>) {
   const router = useRouter();
   const [cursor, setCursor] = useState<string | undefined>();
   const [statusFilter, setStatusFilter] = useState<ContactStatus | undefined>();
@@ -58,8 +61,7 @@ export function AccountContactsList({ accountId, onAddContact }: Readonly<Accoun
         <EmptyState entity="contacts" phase="passive" className="py-4" />
         <div className="flex justify-center">
           <Button variant="outline" size="sm" onClick={onAddContact} type="button">
-            <span className="material-symbols-outlined text-base mr-1">person_add</span>{' '}
-            Add Contact
+            <span className="material-symbols-outlined text-base mr-1">person_add</span> Add Contact
           </Button>
         </div>
       </>
@@ -83,8 +85,7 @@ export function AccountContactsList({ accountId, onAddContact }: Readonly<Accoun
           <option value="LEAD">Lead</option>
         </select>
         <Button variant="outline" size="sm" onClick={onAddContact} type="button">
-          <span className="material-symbols-outlined text-base mr-1">person_add</span>{' '}
-          Add Contact
+          <span className="material-symbols-outlined text-base mr-1">person_add</span> Add Contact
         </Button>
       </div>
 

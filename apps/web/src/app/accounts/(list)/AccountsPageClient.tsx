@@ -52,7 +52,10 @@ const SORT_OPTIONS = [
   { value: 'revenue-asc', label: 'Revenue Low-High' },
 ];
 
-function getSortParams(sortOrder: string): { sortBy: 'createdAt' | 'updatedAt' | 'name' | 'revenue' | 'employees' | 'industry'; sortOrder: 'asc' | 'desc' } {
+function getSortParams(sortOrder: string): {
+  sortBy: 'createdAt' | 'updatedAt' | 'name' | 'revenue' | 'employees' | 'industry';
+  sortOrder: 'asc' | 'desc';
+} {
   switch (sortOrder) {
     case 'oldest':
       return { sortBy: 'createdAt', sortOrder: 'asc' };
@@ -219,7 +222,13 @@ export default function AccountsPageClient({
   // Stats query — hydrated with server-prefetched data when available
   const { data: stats, isLoading: statsLoading } = api.account.stats.useQuery(undefined, {
     enabled: isAuthenticated && !authLoading,
-    ...(serverStats == null ? {} : { initialData: serverStats as NonNullable<Parameters<typeof api.account.stats.useQuery>[1]>['initialData'] }),
+    ...(serverStats == null
+      ? {}
+      : {
+          initialData: serverStats as NonNullable<
+            Parameters<typeof api.account.stats.useQuery>[1]
+          >['initialData'],
+        }),
   });
 
   // Reset to page 1 when filters change

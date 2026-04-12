@@ -23,13 +23,19 @@ vi.mock('@/lib/api', () => ({
 }));
 
 vi.mock('@intelliflow/ui', () => ({
-  Button: ({ children, ...props }: Readonly<{ children?: React.ReactNode; [key: string]: unknown }>) => (
+  Button: ({
+    children,
+    ...props
+  }: Readonly<{ children?: React.ReactNode; [key: string]: unknown }>) => (
     <button {...props}>{children}</button>
   ),
   Skeleton: ({ className }: Readonly<{ className?: string }>) => (
     <div className={`animate-pulse ${className ?? ''}`} />
   ),
-  Badge: ({ children, ...props }: Readonly<{ children?: React.ReactNode; [key: string]: unknown }>) => (
+  Badge: ({
+    children,
+    ...props
+  }: Readonly<{ children?: React.ReactNode; [key: string]: unknown }>) => (
     <span {...props}>{children}</span>
   ),
 }));
@@ -189,9 +195,7 @@ describe('AccountContactsList', () => {
     const onAddContact = vi.fn();
     useQueryMock.mockReturnValue({
       data: {
-        contacts: [
-          { id: 'c1', firstName: 'A', lastName: 'B', email: 'a@b.com', status: 'ACTIVE' },
-        ],
+        contacts: [{ id: 'c1', firstName: 'A', lastName: 'B', email: 'a@b.com', status: 'ACTIVE' }],
         nextCursor: null,
       },
       isLoading: false,

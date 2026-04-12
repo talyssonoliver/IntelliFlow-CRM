@@ -46,7 +46,9 @@ export function ForecastHeader({
   if (mode === 'portfolio') {
     badges = [{ label: quarter, variant: 'info' as const }];
   } else if (dealStage) {
-    badges = [{ label: PIPELINE_STAGE_CONFIG[dealStage]?.label ?? dealStage, variant: 'status' as const }];
+    badges = [
+      { label: PIPELINE_STAGE_CONFIG[dealStage]?.label ?? dealStage, variant: 'status' as const },
+    ];
   } else {
     badges = [];
   }

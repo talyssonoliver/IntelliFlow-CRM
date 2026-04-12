@@ -16,7 +16,9 @@ import {
 import { AccountSettingsPanel } from '@/components/accounts/AccountSettingsPanel';
 import { AccountSettingsSidebarNav } from '@/components/accounts/AccountSettingsSidebarNav';
 
-export default function AccountsListLayout({ children }: Readonly<{ readonly children: React.ReactNode }>) {
+export default function AccountsListLayout({
+  children,
+}: Readonly<{ readonly children: React.ReactNode }>) {
   const pathname = usePathname();
   const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -24,11 +26,9 @@ export default function AccountsListLayout({ children }: Readonly<{ readonly chi
 
   const sidebarConfig = useMemo(() => {
     if (onSettingsPage) {
-      return createAccountsSettingsSidebarConfig(
-        ({ isExpanded }: { isExpanded: boolean }) => (
-          <AccountSettingsSidebarNav isExpanded={isExpanded} />
-        ),
-      );
+      return createAccountsSettingsSidebarConfig(({ isExpanded }: { isExpanded: boolean }) => (
+        <AccountSettingsSidebarNav isExpanded={isExpanded} />
+      ));
     }
     return createAccountsSidebarConfig(() => setSettingsOpen((prev) => !prev));
   }, [onSettingsPage]);
@@ -39,10 +39,7 @@ export default function AccountsListLayout({ children }: Readonly<{ readonly chi
         <SidebarWithSuspense config={sidebarConfig} />
 
         {!onSettingsPage && (
-          <AccountSettingsPanel
-            isOpen={settingsOpen}
-            onClose={() => setSettingsOpen(false)}
-          />
+          <AccountSettingsPanel isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
         )}
 
         <SidebarInset>

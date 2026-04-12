@@ -8,7 +8,9 @@ export default function DealSettingsPage() {
       <div className="mt-8 flex flex-1 items-center justify-center">
         <div className="text-center">
           <span className="material-symbols-outlined text-5xl text-muted-foreground/40">tune</span>
-          <p className="mt-4 text-sm text-muted-foreground">Deal settings configuration coming soon.</p>
+          <p className="mt-4 text-sm text-muted-foreground">
+            Deal settings configuration coming soon.
+          </p>
         </div>
       </div>
     </div>

@@ -23,17 +23,23 @@ vi.mock('@/lib/api', () => ({
 }));
 
 vi.mock('@/lib/pricing/calculator', () => ({
-  formatCurrency: (v: number) => `$${v.toLocaleString()}`,
+  formatCurrency: (v: number) => `$${v.toLocaleString('en-US')}`,
 }));
 
 vi.mock('@intelliflow/ui', () => ({
-  Button: ({ children, ...props }: Readonly<{ children?: React.ReactNode; [key: string]: unknown }>) => (
+  Button: ({
+    children,
+    ...props
+  }: Readonly<{ children?: React.ReactNode; [key: string]: unknown }>) => (
     <button {...props}>{children}</button>
   ),
   Skeleton: ({ className }: Readonly<{ className?: string }>) => (
     <div className={`animate-pulse ${className ?? ''}`} />
   ),
-  Badge: ({ children, ...props }: Readonly<{ children?: React.ReactNode; [key: string]: unknown }>) => (
+  Badge: ({
+    children,
+    ...props
+  }: Readonly<{ children?: React.ReactNode; [key: string]: unknown }>) => (
     <span {...props}>{children}</span>
   ),
   Card: ({ children, className }: Readonly<{ children: React.ReactNode; className?: string }>) => (

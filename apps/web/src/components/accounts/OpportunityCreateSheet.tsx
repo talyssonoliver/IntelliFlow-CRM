@@ -1,7 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Sheet, SheetContent, SheetTitle, SheetDescription, Button, Input, Label, toast } from '@intelliflow/ui';
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+  SheetDescription,
+  Button,
+  Input,
+  Label,
+  toast,
+} from '@intelliflow/ui';
 import { OPPORTUNITY_STAGES } from '@intelliflow/domain';
 import { api } from '@/lib/api';
 
@@ -49,9 +58,10 @@ export function OpportunityCreateSheet({
       onSuccess?.();
     },
     onError: (error) => {
-      const desc = error.message.includes('not found') || error.message.includes('foreign key')
-        ? 'Account may have been deleted. Please refresh.'
-        : error.message;
+      const desc =
+        error.message.includes('not found') || error.message.includes('foreign key')
+          ? 'Account may have been deleted. Please refresh.'
+          : error.message;
       toast({ title: 'Failed to create deal', description: desc, variant: 'destructive' });
     },
   });
@@ -83,7 +93,7 @@ export function OpportunityCreateSheet({
     createMutation.mutate({
       name: form.name.trim(),
       value: { amount: parseFloat(form.value), currency: 'USD' },
-      stage: form.stage as typeof OPPORTUNITY_STAGES[number],
+      stage: form.stage as (typeof OPPORTUNITY_STAGES)[number],
       probability: 10,
       accountId,
       ...(form.expectedCloseDate ? { expectedCloseDate: new Date(form.expectedCloseDate) } : {}),

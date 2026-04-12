@@ -80,7 +80,12 @@ vi.mock('@intelliflow/ui', () => ({
     children: React.ReactNode;
     open?: boolean;
     variant?: string;
-  }) => (open ? <div data-testid="toast" data-variant={variant}>{children}</div> : null),
+  }) =>
+    open ? (
+      <div data-testid="toast" data-variant={variant}>
+        {children}
+      </div>
+    ) : null,
   ToastTitle: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="toast-title">{children}</div>
   ),
@@ -208,9 +213,12 @@ describe('NewDealPage', () => {
       capturedMutationConfig.onSuccess?.({ id: 'deal-123', name: 'Enterprise License' });
     });
 
-    await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith('/deals/deal-123');
-    }, { timeout: 1000 });
+    await waitFor(
+      () => {
+        expect(mockPush).toHaveBeenCalledWith('/deals/deal-123');
+      },
+      { timeout: 1000 }
+    );
   });
 
   it('shows a success toast on create', async () => {

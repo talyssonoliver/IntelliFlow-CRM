@@ -80,7 +80,12 @@ export interface AccountRowHandlers {
 function formatDate(date: Date | string, timezone: string = 'Europe/London'): string {
   const d = typeof date === 'string' ? new Date(date) : date;
   if (Number.isNaN(d.getTime())) return 'Invalid date';
-  return d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric', timeZone: timezone });
+  return d.toLocaleDateString('en-US', {
+    month: 'short',
+    day: '2-digit',
+    year: 'numeric',
+    timeZone: timezone,
+  });
 }
 
 function formatCompactCurrency(value: number): string {
@@ -105,7 +110,9 @@ function getInitials(name: string): string {
     .slice(0, 2);
 }
 
-export function createAccountColumns(handlers: Readonly<AccountRowHandlers>): ColumnDef<AccountRow>[] {
+export function createAccountColumns(
+  handlers: Readonly<AccountRowHandlers>
+): ColumnDef<AccountRow>[] {
   return [
     {
       accessorKey: 'name',

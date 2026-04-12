@@ -6,13 +6,7 @@ import * as React from 'react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 
-const {
-  mockConvertMutate,
-  mockPush,
-  mockToast,
-  callbacks,
-  mockLeadData,
-} = vi.hoisted(() => ({
+const { mockConvertMutate, mockPush, mockToast, callbacks, mockLeadData } = vi.hoisted(() => ({
   mockConvertMutate: vi.fn(),
   mockPush: vi.fn(),
   mockToast: vi.fn(),

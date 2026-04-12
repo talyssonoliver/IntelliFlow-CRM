@@ -54,9 +54,7 @@ const STAGE_PROBABILITIES: Record<string, number> = {
 };
 
 /** Stages available for deal creation — exclude terminal stages */
-const CREATE_STAGES = OPPORTUNITY_STAGES.filter(
-  (s) => s !== 'CLOSED_WON' && s !== 'CLOSED_LOST'
-);
+const CREATE_STAGES = OPPORTUNITY_STAGES.filter((s) => s !== 'CLOSED_WON' && s !== 'CLOSED_LOST');
 
 const STAGE_DISPLAY_NAMES: Record<string, string> = {
   PROSPECTING: 'Prospecting',
@@ -96,6 +94,29 @@ function buildCreateOpportunityInput(formData: DealFormData) {
   };
 }
 
+function applyZodIssuesToErrors(
+  issues: Array<{ path: (string | number | symbol)[]; message: string }>,
+  errors: Partial<Record<keyof DealFormData, string>>
+): Partial<Record<keyof DealFormData, string>> {
+  const result = { ...errors };
+  for (const issue of issues) {
+    const [field] = issue.path;
+    if (field === 'probability' && !result.probability) {
+      result.probability = 'Probability must be between 0 and 100';
+    }
+    if (field === 'expectedCloseDate' && !result.expectedCloseDate) {
+      result.expectedCloseDate = 'Expected close date is invalid';
+    }
+    if (field === 'contactId' && !result.contactId) {
+      result.contactId = 'Contact selection is invalid';
+    }
+    if (field === 'description' && !result.description) {
+      result.description = issue.message;
+    }
+  }
+  return result;
+}
+
 // ── Component ──────────────────────────────────────────────────────────────────
 
 export function DealForm({
@@ -125,7 +146,7 @@ export function DealForm({
   }, [formData, initialFormData, onDirtyChange]);
 
   const validateForm = useCallback((): boolean => {
-    const newErrors: Partial<Record<keyof DealFormData, string>> = {};
+    let newErrors: Partial<Record<keyof DealFormData, string>> = {};
 
     if (!formData.name.trim()) {
       newErrors.name = 'Deal name is required';
@@ -139,21 +160,7 @@ export function DealForm({
 
     const parsedInput = createOpportunitySchema.safeParse(buildCreateOpportunityInput(formData));
     if (!parsedInput.success) {
-      for (const issue of parsedInput.error.issues) {
-        const [field] = issue.path;
-        if (field === 'probability' && !newErrors.probability) {
-          newErrors.probability = 'Probability must be between 0 and 100';
-        }
-        if (field === 'expectedCloseDate' && !newErrors.expectedCloseDate) {
-          newErrors.expectedCloseDate = 'Expected close date is invalid';
-        }
-        if (field === 'contactId' && !newErrors.contactId) {
-          newErrors.contactId = 'Contact selection is invalid';
-        }
-        if (field === 'description' && !newErrors.description) {
-          newErrors.description = issue.message;
-        }
-      }
+      newErrors = applyZodIssuesToErrors(parsedInput.error.issues, newErrors);
     }
 
     setErrors(newErrors);
@@ -179,16 +186,19 @@ export function DealForm({
     [formData, validateForm, onSubmit]
   );
 
-  const updateField = useCallback(<K extends keyof DealFormData>(key: K, value: DealFormData[K]) => {
-    setFormData((prev) => ({ ...prev, [key]: value }));
-    // Clear error for this field
-    setErrors((prev) => {
-      if (!prev[key]) return prev;
-      const next = { ...prev };
-      delete next[key];
-      return next;
-    });
-  }, []);
+  const updateField = useCallback(
+    <K extends keyof DealFormData>(key: K, value: DealFormData[K]) => {
+      setFormData((prev) => ({ ...prev, [key]: value }));
+      // Clear error for this field
+      setErrors((prev) => {
+        if (!prev[key]) return prev;
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      });
+    },
+    []
+  );
 
   const handleAccountChange = useCallback((id: string, name: string) => {
     setFormData((prev) => ({
@@ -220,6 +230,8 @@ export function DealForm({
     });
   }, []);
 
+  const submitLabel = mode === 'create' ? 'Create Deal' : 'Save Changes';
+
   return (
     <form onSubmit={handleSubmit}>
       <Card className="p-6">
@@ -247,7 +259,9 @@ export function DealForm({
           <div>
             <Label htmlFor="deal-value">Deal Value (USD) *</Label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">$</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                $
+              </span>
               <Input
                 id="deal-value"
                 type="number"
@@ -304,7 +318,11 @@ export function DealForm({
                 aria-describedby={errors.probability ? 'deal-probability-error' : undefined}
               />
               {errors.probability && (
-                <p id="deal-probability-error" className="text-sm text-destructive mt-1" role="alert">
+                <p
+                  id="deal-probability-error"
+                  className="text-sm text-destructive mt-1"
+                  role="alert"
+                >
                   {errors.probability}
                 </p>
               )}
@@ -347,7 +365,9 @@ export function DealForm({
           {/* Contact Search */}
           <div>
             {!formData.accountId && (
-              <p className="text-xs text-muted-foreground mb-1">Select an account before linking a contact.</p>
+              <p className="text-xs text-muted-foreground mb-1">
+                Select an account before linking a contact.
+              </p>
             )}
             {errors.contactId && (
               <p id="deal-contact-error" className="text-sm text-destructive mb-1" role="alert">
@@ -382,15 +402,13 @@ export function DealForm({
                 {errors.description}
               </p>
             )}
-            <p className="text-xs text-muted-foreground mt-1">
-              {formData.description.length}/1000
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">{formData.description.length}/1000</p>
           </div>
 
           {/* Actions */}
           <div className="flex items-center gap-3 pt-4 border-t">
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Creating...' : mode === 'create' ? 'Create Deal' : 'Save Changes'}
+              {isSubmitting ? 'Creating...' : submitLabel}
             </Button>
             <Button type="button" variant="outline" asChild>
               <Link href="/deals">Cancel</Link>

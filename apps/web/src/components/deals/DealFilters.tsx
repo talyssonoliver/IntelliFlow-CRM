@@ -106,19 +106,18 @@ export const DealFilters = React.memo(function DealFilters({
         className="inline-flex items-center gap-1.5 rounded-lg bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 text-sm font-medium py-2.5 px-4 hover:bg-slate-100 dark:hover:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
         aria-label="More filters"
       >
-        <span className="material-symbols-outlined text-[18px]">tune</span>{' '}
-        More Filters
+        <span className="material-symbols-outlined text-[18px]">tune</span> More Filters
       </button>
 
       {/* Spacer */}
       <div className="flex-1" />
 
       {/* View Mode Toggle */}
-      <div
+      <fieldset
         className="inline-flex items-center rounded-lg border border-slate-200 dark:border-slate-600 overflow-hidden"
-        role="group" // NOSONAR typescript:S6819 — ARIA group for view mode toggle buttons; <fieldset> would require <legend> and changes layout
         aria-label="View mode"
       >
+        <legend className="sr-only">View mode</legend>
         <button
           type="button"
           className={`inline-flex items-center justify-center h-10 w-10 transition-colors ${
@@ -145,7 +144,7 @@ export const DealFilters = React.memo(function DealFilters({
         >
           <span className="material-symbols-outlined text-[20px]">view_list</span>
         </button>
-      </div>
+      </fieldset>
     </div>
   );
 });

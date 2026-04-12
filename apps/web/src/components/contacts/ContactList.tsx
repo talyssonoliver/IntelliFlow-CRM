@@ -66,14 +66,20 @@ function formatDate(date: Date | string, timezone: string = 'Europe/London'): st
   if (diffHours < 1) return 'Just now';
   if (diffHours < 24) return `${diffHours}h ago`;
   if (diffDays < 7) return `${diffDays}d ago`;
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: timezone });
+  return d.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: timezone,
+  });
 }
 
 // ─── Column sub-components (module-level — fixes S6478) ─────────────────────────
 
 function ContactNameCell({ contact }: Readonly<{ contact: Contact }>) {
   const name = `${contact.firstName}${contact.lastName}`;
-  const initials = `${contact.firstName?.[0] || ''}${contact.lastName?.[0] || ''}`.toUpperCase() || '?';
+  const initials =
+    `${contact.firstName?.[0] || ''}${contact.lastName?.[0] || ''}`.toUpperCase() || '?';
   return (
     <div className="flex items-center gap-3">
       <span
@@ -97,9 +103,7 @@ function ContactNameCell({ contact }: Readonly<{ contact: Contact }>) {
 function ContactAccountCell({ contact }: Readonly<{ contact: Contact }>) {
   return (
     <div>
-      <p className="font-medium text-slate-900 dark:text-white">
-        {contact.account?.name || '-'}
-      </p>
+      <p className="font-medium text-slate-900 dark:text-white">{contact.account?.name || '-'}</p>
       {contact.department && (
         <p className="text-sm text-slate-500 dark:text-slate-400">{contact.department}</p>
       )}
@@ -126,9 +130,7 @@ function ContactEmailCell({ contact }: Readonly<{ contact: Contact }>) {
 }
 
 function ContactPhoneCell({ contact }: Readonly<{ contact: Contact }>) {
-  return (
-    <span className="text-sm text-slate-500 dark:text-slate-400">{contact.phone || '-'}</span>
-  );
+  return <span className="text-sm text-slate-500 dark:text-slate-400">{contact.phone || '-'}</span>;
 }
 
 function ContactAddedCell({ contact, timezone }: Readonly<{ contact: Contact; timezone: string }>) {
@@ -139,9 +141,7 @@ function ContactAddedCell({ contact, timezone }: Readonly<{ contact: Contact; ti
   );
 }
 
-const noActivityCell = (
-  <span className="text-sm text-muted-foreground italic">No activity</span>
-);
+const noActivityCell = <span className="text-sm text-muted-foreground italic">No activity</span>;
 
 function ContactActivityCell({ contact }: Readonly<{ contact: Contact }>) {
   const opp = contact._count?.opportunities ?? 0;
@@ -151,13 +151,17 @@ function ContactActivityCell({ contact }: Readonly<{ contact: Contact }>) {
     <div className="flex flex-col gap-1">
       {opp > 0 && (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
-          <span className="material-symbols-outlined text-sm" aria-hidden="true">handshake</span>
+          <span className="material-symbols-outlined text-sm" aria-hidden="true">
+            handshake
+          </span>
           {opp} {opp === 1 ? 'Deal' : 'Deals'}
         </span>
       )}
       {tasks > 0 && (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-          <span className="material-symbols-outlined text-sm" aria-hidden="true">task_alt</span>
+          <span className="material-symbols-outlined text-sm" aria-hidden="true">
+            task_alt
+          </span>
           {tasks} {tasks === 1 ? 'Task' : 'Tasks'}
         </span>
       )}
@@ -191,12 +195,16 @@ function ContactActionsCell({
         {
           icon: 'phone',
           label: 'Call',
-          onClick: () => { if (contact.phone) window.open(`tel:${contact.phone}`); },
+          onClick: () => {
+            if (contact.phone) window.open(`tel:${contact.phone}`);
+          },
         },
         {
           icon: 'mail',
           label: 'Send Email',
-          onClick: () => { window.location.href = `/email/compose?to=${encodeURIComponent(contact.email)}`; },
+          onClick: () => {
+            window.location.href = `/email/compose?to=${encodeURIComponent(contact.email)}`;
+          },
         },
       ]}
       dropdownActions={[
@@ -205,10 +213,22 @@ function ContactActionsCell({
           ? [{ icon: 'handshake', label: 'Create Deal', onClick: () => onCreateDeal(contact) }]
           : []),
         ...(onCreateTicket
-          ? [{ icon: 'confirmation_number', label: 'Create Ticket', onClick: () => onCreateTicket(contact) }]
+          ? [
+              {
+                icon: 'confirmation_number',
+                label: 'Create Ticket',
+                onClick: () => onCreateTicket(contact),
+              },
+            ]
           : []),
         ...(onScheduleMeeting
-          ? [{ icon: 'event', label: 'Schedule Meeting', onClick: () => onScheduleMeeting(contact) }]
+          ? [
+              {
+                icon: 'event',
+                label: 'Schedule Meeting',
+                onClick: () => onScheduleMeeting(contact),
+              },
+            ]
           : []),
         { id: 'sep-1', icon: '', label: '', onClick: () => undefined, separator: true },
         { icon: 'delete', label: 'Delete', variant: 'danger', onClick: () => onDelete(contact) },
@@ -218,7 +238,10 @@ function ContactActionsCell({
 }
 
 /** Column factory — defined at module level (not inside the component) to satisfy S6478. */
-function buildContactColumns(callbacks: ContactActionCallbacks, timezone: string = 'Europe/London'): ColumnDef<Contact>[] {
+function buildContactColumns(
+  callbacks: ContactActionCallbacks,
+  timezone: string = 'Europe/London'
+): ColumnDef<Contact>[] {
   const { onDelete, onEdit, onCreateDeal, onCreateTicket, onScheduleMeeting } = callbacks;
   return [
     {
@@ -296,7 +319,11 @@ export function ContactList({
   // Columns are built by a module-level factory to avoid S6478 (JSX-returning
   // functions defined inside a React component). useMemo caches the result.
   const columns = useMemo(
-    () => buildContactColumns({ onDelete, onEdit, onCreateDeal, onCreateTicket, onScheduleMeeting }, timezone),
+    () =>
+      buildContactColumns(
+        { onDelete, onEdit, onCreateDeal, onCreateTicket, onScheduleMeeting },
+        timezone
+      ),
     [onDelete, onEdit, onCreateDeal, onCreateTicket, onScheduleMeeting, timezone]
   );
 
@@ -348,9 +375,7 @@ export function ContactList({
   }
 
   if (contacts.length === 0) {
-    return (
-      <EmptyState entity="contacts" phase="passive" />
-    );
+    return <EmptyState entity="contacts" phase="passive" />;
   }
 
   return (

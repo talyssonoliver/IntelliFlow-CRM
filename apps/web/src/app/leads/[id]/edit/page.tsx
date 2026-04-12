@@ -186,7 +186,9 @@ export default function EditLeadPage() {
         <Skeleton className="h-8 w-48 mb-6" />
         <Card className="p-6 space-y-6">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="space-y-2"> {/* NOSONAR typescript:S6479 */}
+            <div key={i} className="space-y-2">
+              {' '}
+              {/* NOSONAR typescript:S6479 */}
               <Skeleton className="h-4 w-24" />
               <Skeleton className="h-10 w-full" />
             </div>

@@ -276,7 +276,15 @@ export function AccountHierarchy({ accountId }: Readonly<AccountHierarchyProps>)
       if (!focusedNodeId || !data?.current) return;
       const idx = visibleNodes.indexOf(focusedNodeId);
       if (idx === -1) return;
-      const ARROW_KEYS = new Set(['ArrowDown', 'ArrowUp', 'ArrowRight', 'ArrowLeft', 'Enter', 'Home', 'End']);
+      const ARROW_KEYS = new Set([
+        'ArrowDown',
+        'ArrowUp',
+        'ArrowRight',
+        'ArrowLeft',
+        'Enter',
+        'Home',
+        'End',
+      ]);
       if (!ARROW_KEYS.has(e.key)) return;
       e.preventDefault();
       if (e.key === 'ArrowDown') handleArrowDown(idx);
@@ -350,7 +358,9 @@ export function AccountHierarchy({ accountId }: Readonly<AccountHierarchyProps>)
 
       {hasHierarchy ? (
         <Card className="p-4">
-          <ul role="tree" aria-label="Account hierarchy" onKeyDown={handleKeyDown}> {/* NOSONAR typescript:S6842 — tree role is required for ARIA tree widget pattern */}
+          <ul role="tree" aria-label="Account hierarchy" onKeyDown={handleKeyDown}>
+            {' '}
+            {/* NOSONAR typescript:S6842 — tree role is required for ARIA tree widget pattern */}
             <TreeNode
               node={data.current}
               currentId={accountId}
@@ -375,8 +385,7 @@ export function AccountHierarchy({ accountId }: Readonly<AccountHierarchyProps>)
 
       <div className="flex items-center gap-2">
         <Button variant="outline" size="sm" onClick={() => setShowPicker(true)}>
-          <span className="material-symbols-outlined text-base mr-1">link</span>{' '}
-          Set Parent Account
+          <span className="material-symbols-outlined text-base mr-1">link</span> Set Parent Account
         </Button>
         {data.ancestors.length > 0 ? (
           <Button
@@ -385,8 +394,7 @@ export function AccountHierarchy({ accountId }: Readonly<AccountHierarchyProps>)
             onClick={() => setParentMutation.mutate({ accountId, parentAccountId: null })}
             disabled={setParentMutation.isPending}
           >
-            <span className="material-symbols-outlined text-base mr-1">link_off</span>{' '}
-            Remove Parent
+            <span className="material-symbols-outlined text-base mr-1">link_off</span> Remove Parent
           </Button>
         ) : null}
       </div>

@@ -14,7 +14,9 @@ import {
 import { DealSettingsPanel } from '@/components/deals/DealSettingsPanel';
 import { DealSettingsSidebarNav } from '@/components/deals/DealSettingsSidebarNav';
 
-export default function DealsListLayout({ children }: Readonly<{ readonly children: React.ReactNode }>) {
+export default function DealsListLayout({
+  children,
+}: Readonly<{ readonly children: React.ReactNode }>) {
   const pathname = usePathname();
   const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -22,11 +24,9 @@ export default function DealsListLayout({ children }: Readonly<{ readonly childr
 
   const sidebarConfig = useMemo(() => {
     if (onSettingsPage) {
-      return createDealsSettingsSidebarConfig(
-        ({ isExpanded }) => (
-          <DealSettingsSidebarNav isExpanded={isExpanded} />
-        ),
-      );
+      return createDealsSettingsSidebarConfig(({ isExpanded }) => (
+        <DealSettingsSidebarNav isExpanded={isExpanded} />
+      ));
     }
     return createDealsSidebarConfig(() => setSettingsOpen((prev) => !prev));
   }, [onSettingsPage]);
@@ -38,10 +38,7 @@ export default function DealsListLayout({ children }: Readonly<{ readonly childr
 
         {/* Panel only needed in list mode */}
         {!onSettingsPage && (
-          <DealSettingsPanel
-            isOpen={settingsOpen}
-            onClose={() => setSettingsOpen(false)}
-          />
+          <DealSettingsPanel isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
         )}
 
         {/* Main Content */}

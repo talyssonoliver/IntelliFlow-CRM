@@ -52,7 +52,14 @@ vi.mock('@intelliflow/ui', async () => {
 });
 
 vi.mock('@intelliflow/domain', () => ({
-  OPPORTUNITY_STAGES: ['PROSPECTING', 'QUALIFICATION', 'PROPOSAL', 'NEGOTIATION', 'CLOSED_WON', 'CLOSED_LOST'],
+  OPPORTUNITY_STAGES: [
+    'PROSPECTING',
+    'QUALIFICATION',
+    'PROPOSAL',
+    'NEGOTIATION',
+    'CLOSED_WON',
+    'CLOSED_LOST',
+  ],
 }));
 
 let mutateFn: ReturnType<typeof vi.fn>;
@@ -66,7 +73,10 @@ vi.mock('@/lib/api', () => ({
   api: {
     opportunity: {
       create: {
-        useMutation: (opts: { onSuccess?: () => void; onError?: (err: { message: string }) => void }) => {
+        useMutation: (opts: {
+          onSuccess?: () => void;
+          onError?: (err: { message: string }) => void;
+        }) => {
           mutationOpts = opts;
           return { mutate: mutateFn, isPending: isPendingValue };
         },

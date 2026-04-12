@@ -62,7 +62,10 @@ vi.mock('@/lib/api', () => ({
   api: {
     contact: {
       create: {
-        useMutation: (opts: { onSuccess?: () => void; onError?: (err: { message: string }) => void }) => {
+        useMutation: (opts: {
+          onSuccess?: () => void;
+          onError?: (err: { message: string }) => void;
+        }) => {
           mutationOpts = opts;
           return { mutate: mutateFn, isPending: isPendingValue };
         },

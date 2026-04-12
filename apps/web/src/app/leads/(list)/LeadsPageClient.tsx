@@ -115,7 +115,10 @@ interface RowActionHandlers {
   onDelete: (lead: Lead) => void;
 }
 
-function createColumns(handlers: RowActionHandlers, timezone: string = 'Europe/London'): ColumnDef<Lead>[] {
+function createColumns(
+  handlers: RowActionHandlers,
+  timezone: string = 'Europe/London'
+): ColumnDef<Lead>[] {
   return [
     {
       accessorKey: 'firstName',
@@ -203,7 +206,9 @@ function createColumns(handlers: RowActionHandlers, timezone: string = 'Europe/L
               {
                 icon: 'mail',
                 label: 'Send Email',
-                onClick: () => { window.location.href = `/email/compose?to=${encodeURIComponent(lead.email)}`; },
+                onClick: () => {
+                  window.location.href = `/email/compose?to=${encodeURIComponent(lead.email)}`;
+                },
               },
             ]}
             dropdownActions={[
@@ -304,7 +309,10 @@ const LEAD_STATUS_OPTIONS: StatusOption[] = [
 // =============================================================================
 
 // Map sort option to API parameters
-function getSortParams(sortOrder: string): { sortBy: 'createdAt' | 'score'; sortOrder: 'asc' | 'desc' } {
+function getSortParams(sortOrder: string): {
+  sortBy: 'createdAt' | 'score';
+  sortOrder: 'asc' | 'desc';
+} {
   switch (sortOrder) {
     case 'oldest':
       return { sortBy: 'createdAt', sortOrder: 'asc' };
@@ -390,7 +398,10 @@ export default function LeadsPageClient({ initialData: serverData }: LeadsPageCl
     },
     {
       enabled: isAuthenticated && !authLoading,
-      initialData: isDefaultQuery && serverData ? (serverData as NonNullable<Parameters<typeof api.lead.list.useQuery>[1]>['initialData']) : undefined,
+      initialData:
+        isDefaultQuery && serverData
+          ? (serverData as NonNullable<Parameters<typeof api.lead.list.useQuery>[1]>['initialData'])
+          : undefined,
     }
   );
 
@@ -711,7 +722,10 @@ export default function LeadsPageClient({ initialData: serverData }: LeadsPageCl
   );
 
   // Create columns with row handlers
-  const columns = useMemo(() => createColumns(rowActionHandlers, timezone), [rowActionHandlers, timezone]);
+  const columns = useMemo(
+    () => createColumns(rowActionHandlers, timezone),
+    [rowActionHandlers, timezone]
+  );
 
   // Bulk actions for selected leads
   const bulkActions: BulkAction<Lead>[] = useMemo(
@@ -765,7 +779,10 @@ export default function LeadsPageClient({ initialData: serverData }: LeadsPageCl
       <PageHeader
         breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Leads' }]}
         title="Lead List"
-        description={`Manage and track your potential customers effectively.` + (totalItems > 0 ? ` (${totalItems} total)` : '')}
+        description={
+          `Manage and track your potential customers effectively.` +
+          (totalItems > 0 ? ` (${totalItems} total)` : '')
+        }
         actions={[
           {
             label: 'New Lead',
@@ -851,8 +868,7 @@ export default function LeadsPageClient({ initialData: serverData }: LeadsPageCl
             onClick={() => refetch()}
             className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
           >
-            <span className="material-symbols-outlined text-[16px]">refresh</span>{' '}
-            Try Again
+            <span className="material-symbols-outlined text-[16px]">refresh</span> Try Again
           </button>
         </div>
       )}

@@ -183,27 +183,19 @@ vi.mock('@intelliflow/ui', () => ({
   AlertDialogHeader: ({ children }: Readonly<{ children: React.ReactNode }>) => (
     <div>{children}</div>
   ),
-  AlertDialogTitle: ({ children }: Readonly<{ children: React.ReactNode }>) => (
-    <h2>{children}</h2>
-  ),
+  AlertDialogTitle: ({ children }: Readonly<{ children: React.ReactNode }>) => <h2>{children}</h2>,
   Dialog: ({ children }: Readonly<{ children: React.ReactNode }>) => <div>{children}</div>,
-  DialogContent: ({ children }: Readonly<{ children: React.ReactNode }>) => (
-    <div>{children}</div>
-  ),
+  DialogContent: ({ children }: Readonly<{ children: React.ReactNode }>) => <div>{children}</div>,
   DialogHeader: ({ children }: Readonly<{ children: React.ReactNode }>) => <div>{children}</div>,
   DialogFooter: ({ children }: Readonly<{ children: React.ReactNode }>) => <div>{children}</div>,
   DialogTitle: ({ children }: Readonly<{ children: React.ReactNode }>) => <h2>{children}</h2>,
-  DialogDescription: ({ children }: Readonly<{ children: React.ReactNode }>) => (
-    <p>{children}</p>
-  ),
+  DialogDescription: ({ children }: Readonly<{ children: React.ReactNode }>) => <p>{children}</p>,
   toast: vi.fn(),
   Tooltip: ({ children }: Readonly<{ children: React.ReactNode }>) => <div>{children}</div>,
   TooltipTrigger: ({ children }: Readonly<{ children: React.ReactNode; asChild?: boolean }>) => (
     <>{children}</>
   ),
-  TooltipContent: ({ children }: Readonly<{ children: React.ReactNode }>) => (
-    <div>{children}</div>
-  ),
+  TooltipContent: ({ children }: Readonly<{ children: React.ReactNode }>) => <div>{children}</div>,
   TooltipProvider: ({ children }: Readonly<{ children: React.ReactNode }>) => <>{children}</>,
   EmptyState: ({
     entity,
@@ -461,7 +453,9 @@ describe('LeadDetailPage - Empty State CTA', () => {
       },
     ];
     render(<Lead360Page />);
-    expect(screen.queryByRole('button', { name: /Log your first activity/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /Log your first activity/i })
+    ).not.toBeInTheDocument();
   });
 
   it('renders LeadStatusBadge with "Negotiating" label for NEGOTIATING status (AC-005, AC-006)', () => {

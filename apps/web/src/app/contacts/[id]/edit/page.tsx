@@ -80,7 +80,6 @@ export default function EditContactPage() {
       });
       setSeeded(true);
     }
-    // @ts-expect-error TS2589 — deep tRPC/Prisma return type exceeds TS depth limit
   }, [record, seeded]);
 
   // Track unsaved changes — dirty state reported by ContactForm via onDirtyChange

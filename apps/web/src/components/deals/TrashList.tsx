@@ -263,7 +263,10 @@ export const TrashList = React.memo(function TrashList() {
     onSuccess: () => {
       utils.opportunity.listTrashed.invalidate();
       if (!isBulkOperationRef.current) {
-        toast({ title: 'Deal Permanently Deleted', description: 'The deal has been permanently removed.' });
+        toast({
+          title: 'Deal Permanently Deleted',
+          description: 'The deal has been permanently removed.',
+        });
       }
     },
     onError: (err) => {
@@ -278,24 +281,24 @@ export const TrashList = React.memo(function TrashList() {
     setCurrentPage(1);
   }, [debouncedSearch, sortOrder]);
 
-  // Transform data
+  // Transform data — let tRPC infer the item type from the router's return type
   const trashedDeals = useMemo((): TrashedDeal[] => {
     if (!trashedData?.opportunities) return [];
-    return trashedData.opportunities.map((item: Record<string, unknown>) => ({
-      id: item.id as string,
-      name: item.name as string,
+    return trashedData.opportunities.map((item) => ({
+      id: item.id,
+      name: item.name,
       value: Number(item.value) || 0,
       stage: item.stage as OpportunityStage,
-      probability: (item.probability as number) ?? 0,
+      probability: item.probability ?? 0,
       expectedCloseDate: item.expectedCloseDate?.toString() ?? null,
-      accountName: (item.account as Record<string, string>)?.name ?? 'Unknown Account',
+      accountName: item.account?.name ?? 'Unknown Account',
       contactName: item.contact
-        ? `${(item.contact as Record<string, string>).firstName} ${(item.contact as Record<string, string>).lastName}`
+        ? `${item.contact.firstName} ${item.contact.lastName}`
         : null,
-      ownerId: (item.ownerId as string) ?? '',
+      ownerId: item.ownerId ?? '',
       ownerName:
-        (item.owner as Record<string, string>)?.name ??
-        (item.owner as Record<string, string>)?.email ??
+        item.owner?.name ??
+        item.owner?.email ??
         'Unknown',
       createdAt: item.createdAt?.toString() ?? '',
       deletedAt: item.deletedAt?.toString() ?? '',
@@ -362,17 +365,18 @@ export const TrashList = React.memo(function TrashList() {
     setIsSubmitting(true);
     isBulkOperationRef.current = true;
     try {
-      await Promise.all(selected.map((deal) => restoreMutation.mutateAsync({ id: deal.id })));
-      toast({
-        title: 'Deals Restored',
-        description: `${selected.length} deal(s) restored successfully.`,
-      });
-    } catch (err) {
-      toast({
-        title: 'Bulk Restore Failed',
-        description: err instanceof Error ? err.message : 'An error occurred',
-        variant: 'destructive',
-      });
+      const results = await Promise.allSettled(
+        selected.map((deal) => restoreMutation.mutateAsync({ id: deal.id }))
+      );
+      const succeeded = results.filter((r) => r.status === 'fulfilled').length;
+      const failed = results.filter((r) => r.status === 'rejected').length;
+      if (failed === 0) {
+        toast({ title: 'Deals Restored', description: `${succeeded} deal(s) restored successfully.` });
+      } else if (succeeded === 0) {
+        toast({ title: 'Bulk Restore Failed', description: `All ${failed} deal(s) failed to restore.`, variant: 'destructive' });
+      } else {
+        toast({ title: 'Partial Restore', description: `${succeeded} restored, ${failed} failed.`, variant: 'destructive' });
+      }
     } finally {
       isBulkOperationRef.current = false;
       setIsSubmitting(false);
@@ -386,19 +390,18 @@ export const TrashList = React.memo(function TrashList() {
     setIsSubmitting(true);
     isBulkOperationRef.current = true;
     try {
-      await Promise.all(
+      const results = await Promise.allSettled(
         selected.map((deal) => permanentDeleteMutation.mutateAsync({ id: deal.id }))
       );
-      toast({
-        title: 'Deals Permanently Deleted',
-        description: `${selected.length} deal(s) permanently removed.`,
-      });
-    } catch (err) {
-      toast({
-        title: 'Bulk Delete Failed',
-        description: err instanceof Error ? err.message : 'An error occurred',
-        variant: 'destructive',
-      });
+      const succeeded = results.filter((r) => r.status === 'fulfilled').length;
+      const failed = results.filter((r) => r.status === 'rejected').length;
+      if (failed === 0) {
+        toast({ title: 'Deals Permanently Deleted', description: `${succeeded} deal(s) permanently removed.` });
+      } else if (succeeded === 0) {
+        toast({ title: 'Bulk Delete Failed', description: `All ${failed} deal(s) failed to delete.`, variant: 'destructive' });
+      } else {
+        toast({ title: 'Partial Delete', description: `${succeeded} deleted, ${failed} failed.`, variant: 'destructive' });
+      }
     } finally {
       isBulkOperationRef.current = false;
       setIsSubmitting(false);
@@ -473,7 +476,9 @@ export const TrashList = React.memo(function TrashList() {
       {isError && !isLoading && (
         <div className="flex flex-col items-center justify-center p-8 bg-destructive/10 rounded-lg border border-destructive">
           <span className="material-symbols-outlined text-[48px] text-destructive mb-4">error</span>
-          <h3 className="text-lg font-semibold text-foreground mb-2">Failed to load trashed deals</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-2">
+            Failed to load trashed deals
+          </h3>
           <p className="text-sm text-muted-foreground mb-4 text-center max-w-md">
             {error?.message || 'An unexpected error occurred.'}
           </p>
@@ -481,8 +486,7 @@ export const TrashList = React.memo(function TrashList() {
             onClick={() => refetch()}
             className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors"
           >
-            <span className="material-symbols-outlined text-[16px]">refresh</span>{' '}
-            Try Again
+            <span className="material-symbols-outlined text-[16px]">refresh</span> Try Again
           </button>
         </div>
       )}

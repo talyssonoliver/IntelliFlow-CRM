@@ -97,7 +97,12 @@ function formatRelativeTime(dateString: string, timezone: string = 'Europe/Londo
   if (diffDays === 1) return 'Yesterday';
   if (diffDays < 7) return `${diffDays} days ago`;
   if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: timezone });
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: timezone,
+  });
 }
 
 // ─── Component ──────────────────────────────────────────────────────────────────
@@ -162,10 +167,7 @@ export function ActivityTimeline({
 
   if (isLoading) {
     return (
-      <output
-        aria-busy="true"
-        className="space-y-4 p-6"
-      >
+      <output aria-busy="true" className="space-y-4 p-6">
         <span className="sr-only">Loading activities...</span>
         {[1, 2, 3].map((i) => (
           <div key={i} className="h-20 bg-slate-100 dark:bg-slate-800 rounded-lg animate-pulse" />

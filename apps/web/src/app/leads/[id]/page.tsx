@@ -225,7 +225,14 @@ interface Activity {
 }
 
 // Lead status type matching domain
-type LeadStatus = 'NEW' | 'CONTACTED' | 'QUALIFIED' | 'NEGOTIATING' | 'UNQUALIFIED' | 'CONVERTED' | 'LOST';
+type LeadStatus =
+  | 'NEW'
+  | 'CONTACTED'
+  | 'QUALIFIED'
+  | 'NEGOTIATING'
+  | 'UNQUALIFIED'
+  | 'CONVERTED'
+  | 'LOST';
 type LeadSource = 'WEBSITE' | 'REFERRAL' | 'SOCIAL' | 'EMAIL' | 'COLD_CALL' | 'EVENT' | 'OTHER';
 type LeadTemperature = 'hot' | 'warm' | 'cold';
 
@@ -408,7 +415,8 @@ function getLeadErrorMessage(
   if (isNotFound && fromInsight) {
     return 'This lead may have been deleted or converted since the insight was generated. The insight has been dismissed automatically.';
   }
-  if (isNotFound) return "The lead you're looking for doesn't exist or you don't have permission to view it.";
+  if (isNotFound)
+    return "The lead you're looking for doesn't exist or you don't have permission to view it.";
   return errorMessage || 'An error occurred while loading this lead.';
 }
 
@@ -438,7 +446,8 @@ function filterActivity(
 
 function getCallOutcomeBadge(outcome: string | undefined): { cls: string; label: string } {
   if (outcome === 'connected') return { cls: 'bg-green-100 text-green-700', label: '✓ Connected' };
-  if (outcome === 'voicemail') return { cls: 'bg-yellow-100 text-yellow-700', label: '📞 Voicemail' };
+  if (outcome === 'voicemail')
+    return { cls: 'bg-yellow-100 text-yellow-700', label: '📞 Voicemail' };
   return { cls: 'bg-red-100 text-red-700', label: '✗ No Answer' };
 }
 
@@ -454,7 +463,10 @@ function formatRelativeTime(dateString: string, timezone: string = 'Europe/Londo
   if (diffDays === 1) return 'Yesterday';
   if (diffDays < 7) return `${diffDays} days ago`;
   return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric', month: 'short', day: 'numeric', timeZone: timezone,
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    timeZone: timezone,
   });
 }
 
@@ -633,22 +645,16 @@ function LeadErrorView({
   return (
     <div className="mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
       <Card className="p-8 text-center">
-        <span className="material-symbols-outlined text-5xl text-red-500 mb-4">
-          {errorIcon}
-        </span>
-        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
-          {errorTitle}
-        </h2>
-        <p className="text-slate-500 dark:text-slate-400 mb-4">
-          {errorMessage}
-        </p>
+        <span className="material-symbols-outlined text-5xl text-red-500 mb-4">{errorIcon}</span>
+        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{errorTitle}</h2>
+        <p className="text-slate-500 dark:text-slate-400 mb-4">{errorMessage}</p>
         <div className="flex items-center justify-center gap-3">
           {isServerError && (
             <button
               onClick={() => globalThis.location.reload()}
               className="inline-flex items-center gap-2 px-4 py-2 bg-[#137fec] text-white rounded-lg hover:bg-blue-600 transition-colors"
             >
-              <span className="material-symbols-outlined !text-lg">refresh</span>{' '}Retry
+              <span className="material-symbols-outlined !text-lg">refresh</span> Retry
             </button>
           )}
           {fromInsight && (
@@ -656,14 +662,14 @@ function LeadErrorView({
               href="/"
               className="inline-flex items-center gap-2 px-4 py-2 bg-[#137fec] text-white rounded-lg hover:bg-blue-600 transition-colors"
             >
-              <span className="material-symbols-outlined !text-lg">home</span>{' '}Back to Home
+              <span className="material-symbols-outlined !text-lg">home</span> Back to Home
             </Link>
           )}
           <Link
             href="/leads"
             className="inline-flex items-center gap-2 px-4 py-2 bg-[#137fec] text-white rounded-lg hover:bg-blue-600 transition-colors"
           >
-            <span className="material-symbols-outlined !text-lg">arrow_back</span>{' '}Back to Leads
+            <span className="material-symbols-outlined !text-lg">arrow_back</span> Back to Leads
           </Link>
         </div>
       </Card>
@@ -753,10 +759,26 @@ function LeadDialogs({
   deleteMutation: { isPending: boolean; mutate: (args: { id: string }) => void };
   archiveConfirmOpen: boolean;
   setArchiveConfirmOpen: (v: boolean) => void;
-  archiveMutation: { isPending: boolean; mutate: (args: { id: string; status: 'NEW' | 'CONTACTED' | 'QUALIFIED' | 'NEGOTIATING' | 'UNQUALIFIED' | 'CONVERTED' | 'LOST' }) => void };
+  archiveMutation: {
+    isPending: boolean;
+    mutate: (args: {
+      id: string;
+      status:
+        | 'NEW'
+        | 'CONTACTED'
+        | 'QUALIFIED'
+        | 'NEGOTIATING'
+        | 'UNQUALIFIED'
+        | 'CONVERTED'
+        | 'LOST';
+    }) => void;
+  };
   convertConfirmOpen: boolean;
   setConvertConfirmOpen: (v: boolean) => void;
-  convertMutation: { isPending: boolean; mutate: (args: { leadId: string; createAccount: boolean; accountName?: string }) => void };
+  convertMutation: {
+    isPending: boolean;
+    mutate: (args: { leadId: string; createAccount: boolean; accountName?: string }) => void;
+  };
   convertCreateAccount: boolean;
   setConvertCreateAccount: (v: boolean) => void;
   convertAccountName: string;
@@ -767,7 +789,23 @@ function LeadDialogs({
   setLogCallTitle: (v: string) => void;
   logCallDescription: string;
   setLogCallDescription: (v: string) => void;
-  logActivityMutation: { isPending: boolean; mutate: (args: { leadId: string; type: 'QUALIFICATION' | 'EMAIL' | 'CALL' | 'MEETING' | 'NOTE' | 'STATUS_CHANGE' | 'WEB_FORM' | 'SCORE_UPDATE'; title: string; description?: string }) => void };
+  logActivityMutation: {
+    isPending: boolean;
+    mutate: (args: {
+      leadId: string;
+      type:
+        | 'QUALIFICATION'
+        | 'EMAIL'
+        | 'CALL'
+        | 'MEETING'
+        | 'NOTE'
+        | 'STATUS_CHANGE'
+        | 'WEB_FORM'
+        | 'SCORE_UPDATE';
+      title: string;
+      description?: string;
+    }) => void;
+  };
 }) {
   return (
     <>
@@ -829,8 +867,8 @@ function LeadDialogs({
           <AlertDialogHeader>
             <AlertDialogTitle>Convert Lead to Contact</AlertDialogTitle>
             <AlertDialogDescription>
-              Convert {lead.firstName} {lead.lastName} to a contact record? This action
-              will change the lead status to CONVERTED and cannot be undone.
+              Convert {lead.firstName} {lead.lastName} to a contact record? This action will change
+              the lead status to CONVERTED and cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="flex flex-col gap-3 py-2">
@@ -874,9 +912,10 @@ function LeadDialogs({
                 convertMutation.mutate({
                   leadId: lead.id,
                   createAccount: convertCreateAccount,
-                  accountName: convertCreateAccount && convertAccountName.trim()
-                    ? convertAccountName.trim()
-                    : undefined,
+                  accountName:
+                    convertCreateAccount && convertAccountName.trim()
+                      ? convertAccountName.trim()
+                      : undefined,
                 });
               }}
               disabled={convertMutation.isPending}
@@ -902,7 +941,7 @@ function LeadDialogs({
                 htmlFor="log-call-title"
                 className="text-sm font-medium text-slate-700 dark:text-slate-300"
               >
-                Call Title{' '}<span className="text-red-500">*</span>
+                Call Title <span className="text-red-500">*</span>
               </label>
               <input
                 id="log-call-title"
@@ -918,7 +957,7 @@ function LeadDialogs({
                 htmlFor="log-call-description"
                 className="text-sm font-medium text-slate-700 dark:text-slate-300"
               >
-                Notes{' '}<span className="text-slate-400 text-xs font-normal">(optional)</span>
+                Notes <span className="text-slate-400 text-xs font-normal">(optional)</span>
               </label>
               <textarea
                 id="log-call-description"
@@ -997,7 +1036,13 @@ interface LeadMetrics {
   touchpoints: number;
 }
 
-function LeadProfileCard({ lead, leadMetrics }: { lead: LeadProfileData; leadMetrics: LeadMetrics }) {
+function LeadProfileCard({
+  lead,
+  leadMetrics,
+}: {
+  lead: LeadProfileData;
+  leadMetrics: LeadMetrics;
+}) {
   return (
     <Card className="overflow-hidden">
       <div className="h-24 bg-gradient-to-r from-blue-100 to-indigo-50 dark:from-slate-800 dark:to-slate-800" />
@@ -1014,9 +1059,7 @@ function LeadProfileCard({ lead, leadMetrics }: { lead: LeadProfileData; leadMet
           <h2 className="text-xl font-bold text-slate-900 dark:text-white">
             {lead.firstName} {lead.lastName}
           </h2>
-          <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">
-            {lead.title}
-          </p>
+          <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{lead.title}</p>
           <div className="flex items-center gap-1 text-[#137fec] text-sm font-medium mt-1">
             <span className="material-symbols-outlined !text-sm">domain</span>
             <span>{lead.company}</span>
@@ -1036,10 +1079,15 @@ function LeadProfileCard({ lead, leadMetrics }: { lead: LeadProfileData; leadMet
         </div>
         <div className="space-y-4">
           <div className="flex items-start gap-3">
-            <span className="material-symbols-outlined text-slate-400 !text-[20px] mt-0.5">mail</span>
+            <span className="material-symbols-outlined text-slate-400 !text-[20px] mt-0.5">
+              mail
+            </span>
             <div className="flex flex-col">
               <span className="text-xs text-slate-400 uppercase font-semibold">Email</span>
-              <EntityHoverCard email={lead.email} displayName={`${lead.firstName} ${lead.lastName}`.trim()}>
+              <EntityHoverCard
+                email={lead.email}
+                displayName={`${lead.firstName} ${lead.lastName}`.trim()}
+              >
                 <Link
                   href={`/email/compose?to=${encodeURIComponent(lead.email)}`}
                   className="text-sm text-slate-700 dark:text-slate-300 hover:text-[#137fec] break-all"
@@ -1050,7 +1098,9 @@ function LeadProfileCard({ lead, leadMetrics }: { lead: LeadProfileData; leadMet
             </div>
           </div>
           <div className="flex items-start gap-3">
-            <span className="material-symbols-outlined text-slate-400 !text-[20px] mt-0.5">call</span>
+            <span className="material-symbols-outlined text-slate-400 !text-[20px] mt-0.5">
+              call
+            </span>
             <div className="flex flex-col">
               <span className="text-xs text-slate-400 uppercase font-semibold">Phone</span>
               <a
@@ -1062,14 +1112,18 @@ function LeadProfileCard({ lead, leadMetrics }: { lead: LeadProfileData; leadMet
             </div>
           </div>
           <div className="flex items-start gap-3">
-            <span className="material-symbols-outlined text-slate-400 !text-[20px] mt-0.5">location_on</span>
+            <span className="material-symbols-outlined text-slate-400 !text-[20px] mt-0.5">
+              location_on
+            </span>
             <div className="flex flex-col">
               <span className="text-xs text-slate-400 uppercase font-semibold">Location</span>
               <span className="text-sm text-slate-700 dark:text-slate-300">{lead.location}</span>
             </div>
           </div>
           <div className="flex items-start gap-3">
-            <span className="material-symbols-outlined text-slate-400 !text-[20px] mt-0.5">language</span>
+            <span className="material-symbols-outlined text-slate-400 !text-[20px] mt-0.5">
+              language
+            </span>
             <div className="flex flex-col">
               <span className="text-xs text-slate-400 uppercase font-semibold">Website</span>
               <a
@@ -1116,7 +1170,9 @@ function LeadProfileCard({ lead, leadMetrics }: { lead: LeadProfileData; leadMet
       <div className="h-32 w-full bg-cover bg-center border-t border-slate-200 dark:border-slate-800 relative">
         <div className="w-full h-full bg-gradient-to-br from-blue-100 to-blue-50 dark:from-slate-700 dark:to-slate-800 flex items-center justify-center">
           <div className="text-center">
-            <span className="material-symbols-outlined text-[#137fec] !text-3xl mb-1">location_on</span>
+            <span className="material-symbols-outlined text-[#137fec] !text-3xl mb-1">
+              location_on
+            </span>
             <button className="bg-white/90 text-slate-900 text-xs font-bold px-3 py-1.5 rounded shadow-sm hover:bg-white transition">
               View Map
             </button>
@@ -1149,7 +1205,13 @@ function LeadOwnerCard({ owner }: { owner: { name: string; title: string; avatar
   );
 }
 
-function LeadLeftSidebar({ lead, leadMetrics }: { lead: LeadProfileData; leadMetrics: LeadMetrics }) {
+function LeadLeftSidebar({
+  lead,
+  leadMetrics,
+}: {
+  lead: LeadProfileData;
+  leadMetrics: LeadMetrics;
+}) {
   return (
     <aside className="lg:col-span-3 flex flex-col gap-6">
       <LeadProfileCard lead={lead} leadMetrics={leadMetrics} />
@@ -1199,8 +1261,12 @@ function LeadOverviewTab({
                   </span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-900 dark:text-white">{activity.title}</p>
-                  <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">{activity.description}</p>
+                  <p className="text-sm font-medium text-slate-900 dark:text-white">
+                    {activity.title}
+                  </p>
+                  <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">
+                    {activity.description}
+                  </p>
                   <p className="text-xs text-slate-500 mt-1">
                     {activity.user} • {formatRelativeTime(activity.timestamp, timezone)}
                   </p>
@@ -1213,23 +1279,33 @@ function LeadOverviewTab({
         </div>
       </Card>
       <Card className="p-6">
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Lead Information</h3>
+        <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+          Lead Information
+        </h3>
         <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <dt className="text-sm text-slate-500 dark:text-slate-400">Status</dt>
-            <dd className="text-sm font-medium mt-1"><LeadStatusBadge status={lead.status} /></dd>
+            <dd className="text-sm font-medium mt-1">
+              <LeadStatusBadge status={lead.status} />
+            </dd>
           </div>
           <div>
             <dt className="text-sm text-slate-500 dark:text-slate-400">Source</dt>
-            <dd className="text-sm font-medium mt-1"><SourceBadge source={lead.source} /></dd>
+            <dd className="text-sm font-medium mt-1">
+              <SourceBadge source={lead.source} />
+            </dd>
           </div>
           <div>
             <dt className="text-sm text-slate-500 dark:text-slate-400">Temperature</dt>
-            <dd className="text-sm font-medium mt-1"><TemperatureBadge temperature={lead.temperature} /></dd>
+            <dd className="text-sm font-medium mt-1">
+              <TemperatureBadge temperature={lead.temperature} />
+            </dd>
           </div>
           <div>
             <dt className="text-sm text-slate-500 dark:text-slate-400">Lead Owner</dt>
-            <dd className="text-sm font-medium text-slate-900 dark:text-white">{lead.owner.name}</dd>
+            <dd className="text-sm font-medium text-slate-900 dark:text-white">
+              {lead.owner.name}
+            </dd>
           </div>
           <div>
             <dt className="text-sm text-slate-500 dark:text-slate-400">Last Contacted</dt>
@@ -1246,16 +1322,16 @@ function LeadOverviewTab({
             <dt className="text-sm text-slate-500 dark:text-slate-400">Created</dt>
             <dd className="text-sm font-medium text-slate-900 dark:text-white">
               {formatDate(
-                typeof lead.createdAt === 'string'
-                  ? lead.createdAt
-                  : lead.createdAt.toISOString(),
+                typeof lead.createdAt === 'string' ? lead.createdAt : lead.createdAt.toISOString(),
                 timezone
               )}
             </dd>
           </div>
           <div>
             <dt className="text-sm text-slate-500 dark:text-slate-400">Company</dt>
-            <dd className="text-sm font-medium"><span className="text-[#137fec]">{lead.company}</span></dd>
+            <dd className="text-sm font-medium">
+              <span className="text-[#137fec]">{lead.company}</span>
+            </dd>
           </div>
           <div>
             <dt className="text-sm text-slate-500 dark:text-slate-400">Lead Score</dt>
@@ -1282,7 +1358,9 @@ function ActivityRichPreview({ activity }: { activity: Activity }) {
   if (activity.type === 'web_form') {
     return (
       <div className="mt-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3 border border-slate-100 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400">
-        <p><span className="font-semibold">Message:</span>{' '}"{meta.message}"</p>
+        <p>
+          <span className="font-semibold">Message:</span> "{meta.message}"
+        </p>
       </div>
     );
   }
@@ -1290,22 +1368,30 @@ function ActivityRichPreview({ activity }: { activity: Activity }) {
     return (
       <div className="mt-2 flex items-center gap-2">
         <span className="text-xs text-slate-500">Score changed from</span>
-        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">{meta.oldScore}</span>
+        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">
+          {meta.oldScore}
+        </span>
         <span className="material-symbols-outlined text-slate-400 !text-sm">arrow_forward</span>
-        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">{meta.newScore}</span>
+        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">
+          {meta.newScore}
+        </span>
       </div>
     );
   }
   if (activity.type === 'email') {
     return (
       <div className="mt-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700">
-        {meta.subject && <p className="text-sm font-medium text-slate-900 dark:text-white mb-1">{meta.subject}</p>}
-        {meta.preview && <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">{meta.preview}</p>}
+        {meta.subject && (
+          <p className="text-sm font-medium text-slate-900 dark:text-white mb-1">{meta.subject}</p>
+        )}
+        {meta.preview && (
+          <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">{meta.preview}</p>
+        )}
         <div className="flex gap-2 mt-2">
           {meta.opened && (
             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-600 border border-blue-100">
-              <span className="material-symbols-outlined !text-[14px] mr-1">done_all</span>{' '}
-              Opened{meta.openCount && meta.openCount > 1 ? ` ${meta.openCount}x` : ''}
+              <span className="material-symbols-outlined !text-[14px] mr-1">done_all</span> Opened
+              {meta.openCount && meta.openCount > 1 ? ` ${meta.openCount}x` : ''}
             </span>
           )}
           {meta.clicked && (
@@ -1323,14 +1409,17 @@ function ActivityRichPreview({ activity }: { activity: Activity }) {
       <div className="mt-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${callOutcome.cls}`}>
+            <span
+              className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${callOutcome.cls}`}
+            >
               {callOutcome.label}
             </span>
             {meta.duration && <span className="text-sm text-slate-500">{meta.duration}</span>}
           </div>
           {meta.recordingUrl && (
             <button className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-[#137fec] hover:bg-[#137fec]/10 rounded transition-colors">
-              <span className="material-symbols-outlined !text-[16px]">play_arrow</span>{' '}Play Recording
+              <span className="material-symbols-outlined !text-[16px]">play_arrow</span> Play
+              Recording
             </button>
           )}
         </div>
@@ -1385,19 +1474,25 @@ function ActivityTimelineItem({
         className={`absolute w-8 h-8 rounded-full border-2 border-white dark:border-slate-900 shadow-sm flex items-center justify-center z-10 ${getActivityIconBg(activity.type)}`}
         style={{ left: -36, top: 12 }}
       >
-        <span className="material-symbols-outlined !text-[16px]">{getActivityIcon(activity.type)}</span>
+        <span className="material-symbols-outlined !text-[16px]">
+          {getActivityIcon(activity.type)}
+        </span>
       </div>
       {/* Activity Card */}
-      <div className={`rounded-lg p-4 transition-colors ${
-        isDeepLinked
-          ? 'bg-primary/5 border-2 border-primary/30 ring-1 ring-primary/20'
-          : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
-      }`}>
+      <div
+        className={`rounded-lg p-4 transition-colors ${
+          isDeepLinked
+            ? 'bg-primary/5 border-2 border-primary/30 ring-1 ring-primary/20'
+            : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+        }`}
+      >
         {/* Header */}
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1">
             <p className="text-sm font-semibold text-slate-900 dark:text-white">{activity.title}</p>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">{activity.description}</p>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">
+              {activity.description}
+            </p>
             <p className="text-xs text-slate-500 mt-1">
               {activity.user} • {formatRelativeTime(activity.timestamp, timezone)}
             </p>
@@ -1406,7 +1501,9 @@ function ActivityTimelineItem({
             onClick={() => onToggleExpand(activity.id)}
             className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors"
           >
-            <span className={`material-symbols-outlined !text-[18px] transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
+            <span
+              className={`material-symbols-outlined !text-[18px] transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+            >
               expand_more
             </span>
           </button>
@@ -1482,7 +1579,9 @@ function ActivityFilterBar({
   return (
     <div className="mb-6 space-y-4">
       <div className="relative">
-        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 !text-[18px] text-slate-400">search</span>
+        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 !text-[18px] text-slate-400">
+          search
+        </span>
         <input
           type="text"
           value={searchQuery}
@@ -1502,7 +1601,7 @@ function ActivityFilterBar({
                 : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
             }`}
           >
-            <span>{filter.icon}</span>{' '}{filter.label}
+            <span>{filter.icon}</span> {filter.label}
           </button>
         ))}
       </div>
@@ -1514,7 +1613,9 @@ function ActivityFilterBar({
           className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:border-[#137fec] focus:ring-1 focus:ring-[#137fec]"
         >
           {personFilters.map((filter) => (
-            <option key={filter.value} value={filter.value}>{filter.label}</option>
+            <option key={filter.value} value={filter.value}>
+              {filter.label}
+            </option>
           ))}
         </select>
         {(activityTypeFilter !== 'all' || personFilter !== 'all' || searchQuery) && (
@@ -1526,7 +1627,9 @@ function ActivityFilterBar({
       {aiInsightsSentimentTrend && (
         <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-800 rounded-lg border border-blue-100 dark:border-slate-700">
           <div className="w-8 h-8 rounded-full bg-[#137fec]/10 flex items-center justify-center">
-            <span className="material-symbols-outlined !text-[18px] text-[#137fec]">auto_awesome</span>
+            <span className="material-symbols-outlined !text-[18px] text-[#137fec]">
+              auto_awesome
+            </span>
           </div>
           <div className="flex-1">
             <p className="text-sm font-medium text-slate-900 dark:text-white">
@@ -1612,7 +1715,8 @@ function LeadActivityTab({
               : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'
           }`}
         >
-          <span className="material-symbols-outlined text-sm align-middle mr-1">timeline</span>{' '}Timeline
+          <span className="material-symbols-outlined text-sm align-middle mr-1">timeline</span>{' '}
+          Timeline
         </button>
         <button
           onClick={() => onActivityViewChange('unified')}
@@ -1622,7 +1726,8 @@ function LeadActivityTab({
               : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'
           }`}
         >
-          <span className="material-symbols-outlined text-sm align-middle mr-1">dynamic_feed</span>{' '}All Sources
+          <span className="material-symbols-outlined text-sm align-middle mr-1">dynamic_feed</span>{' '}
+          All Sources
         </button>
       </div>
       {activityView === 'unified' ? (
@@ -1652,7 +1757,10 @@ function LeadActivityTab({
             </p>
           </div>
           <div className="relative space-y-4" style={{ paddingLeft: 40 }}>
-            <div className="absolute top-0 bottom-0 w-0.5 bg-slate-200 dark:bg-slate-700" style={{ left: 19 }} />
+            <div
+              className="absolute top-0 bottom-0 w-0.5 bg-slate-200 dark:bg-slate-700"
+              style={{ left: 19 }}
+            />
             {visibleActivities.map((activity) => (
               <ActivityTimelineItem
                 key={activity.id}
@@ -1690,7 +1798,10 @@ interface LeadNotesTabProps {
   onActivityNoteChange: (v: string) => void;
   onAddNote: () => void;
   leadId: string;
-  addNoteMutation: { isPending: boolean; mutate: (args: { leadId: string; content: string }) => void };
+  addNoteMutation: {
+    isPending: boolean;
+    mutate: (args: { leadId: string; content: string }) => void;
+  };
   timezone: string;
 }
 
@@ -1715,7 +1826,8 @@ function LeadNotesTab({
           onKeyDown={(e) => {
             if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
               e.preventDefault();
-              if (activityNote.trim()) addNoteMutation.mutate({ leadId, content: activityNote.trim() });
+              if (activityNote.trim())
+                addNoteMutation.mutate({ leadId, content: activityNote.trim() });
             }
           }}
           placeholder="Write a note..."
@@ -1736,10 +1848,14 @@ function LeadNotesTab({
       <div className="space-y-4">
         {notes.length > 0 ? (
           notes.map((note) => (
-            <div key={note.id} className="pb-4 border-b border-slate-100 dark:border-slate-800 last:border-0 last:pb-0">
+            <div
+              key={note.id}
+              className="pb-4 border-b border-slate-100 dark:border-slate-800 last:border-0 last:pb-0"
+            >
               <p className="text-sm text-slate-600 dark:text-slate-400">{note.content}</p>
               <div className="flex items-center gap-2 mt-2 text-xs text-slate-500">
-                <span>{note.author}</span><span>•</span>
+                <span>{note.author}</span>
+                <span>•</span>
                 <span>{formatRelativeTime(note.createdAt, timezone)}</span>
               </div>
             </div>
@@ -1765,7 +1881,7 @@ function LeadEmailsTab({ emails, timezone }: LeadEmailsTabProps) {
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Emails</h3>
         <button className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#137fec] hover:bg-[#137fec]/10 rounded-lg transition-colors">
-          <span className="material-symbols-outlined !text-[18px]">send</span>{' '}Compose
+          <span className="material-symbols-outlined !text-[18px]">send</span> Compose
         </button>
       </div>
       <div className="space-y-3">
@@ -1779,12 +1895,18 @@ function LeadEmailsTab({ emails, timezone }: LeadEmailsTabProps) {
                 <span className="material-symbols-outlined !text-[20px] text-orange-600">mail</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-slate-900 dark:text-white truncate">{email.subject}</p>
+                <p className="font-medium text-slate-900 dark:text-white truncate">
+                  {email.subject}
+                </p>
                 <div className="flex items-center gap-2 mt-0.5">
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${email.status === 'opened' ? 'bg-green-50 text-green-700' : 'bg-slate-100 text-slate-600'}`}>
+                  <span
+                    className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${email.status === 'opened' ? 'bg-green-50 text-green-700' : 'bg-slate-100 text-slate-600'}`}
+                  >
                     {email.status === 'opened' ? `Opened ${email.openCount}x` : 'Sent'}
                   </span>
-                  <span className="text-xs text-slate-500">{formatRelativeTime(email.sentAt, timezone)}</span>
+                  <span className="text-xs text-slate-500">
+                    {formatRelativeTime(email.sentAt, timezone)}
+                  </span>
                 </div>
               </div>
               <button className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg">
@@ -1813,19 +1935,26 @@ function LeadFilesTab({ files, timezone }: LeadFilesTabProps) {
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Files</h3>
         <button className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#137fec] hover:bg-[#137fec]/10 rounded-lg transition-colors">
-          <span className="material-symbols-outlined !text-[18px]">upload</span>{' '}Upload
+          <span className="material-symbols-outlined !text-[18px]">upload</span> Upload
         </button>
       </div>
       <div className="space-y-3">
         {files.length > 0 ? (
           files.map((file) => (
-            <div key={file.id} className="flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+            <div
+              key={file.id}
+              className="flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg"
+            >
               <div className="w-10 h-10 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-                <span className="material-symbols-outlined !text-[20px] text-red-600">description</span>
+                <span className="material-symbols-outlined !text-[20px] text-red-600">
+                  description
+                </span>
               </div>
               <div className="flex-1">
                 <p className="font-medium text-slate-900 dark:text-white">{file.name}</p>
-                <p className="text-sm text-slate-500">{file.size} • {formatRelativeTime(file.uploadedAt, timezone)}</p>
+                <p className="text-sm text-slate-500">
+                  {file.size} • {formatRelativeTime(file.uploadedAt, timezone)}
+                </p>
               </div>
               <button className="p-2 text-slate-500 hover:text-[#137fec] hover:bg-[#137fec]/10 rounded-lg transition-colors">
                 <span className="material-symbols-outlined !text-[18px]">download</span>
@@ -1890,20 +2019,35 @@ function LeadAIInsightsTab({
       )}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {churnRiskData && (
-          <ChurnRiskCard data={churnRiskData} title="Churn Risk Assessment" showFactors showConfidence showSLA />
+          <ChurnRiskCard
+            data={churnRiskData}
+            title="Churn Risk Assessment"
+            showFactors
+            showConfidence
+            showSLA
+          />
         )}
         {nextBestActionData && (
-          <NextBestActionCard data={nextBestActionData} title="Recommended Action" showRationale showConfidence />
+          <NextBestActionCard
+            data={nextBestActionData}
+            title="Recommended Action"
+            showRationale
+            showConfidence
+          />
         )}
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="p-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-              <span className="material-symbols-outlined !text-[20px] text-green-600">trending_up</span>
+              <span className="material-symbols-outlined !text-[20px] text-green-600">
+                trending_up
+              </span>
             </div>
             <div>
-              <p className={`text-2xl font-bold ${hasAiInsight ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}>
+              <p
+                className={`text-2xl font-bold ${hasAiInsight ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}
+              >
                 <span data-testid={hasAiInsight ? 'conversion-value' : 'conversion-null-state'}>
                   {hasAiInsight ? `${aiInsights.conversionProbability}%` : '--'}
                 </span>
@@ -1915,10 +2059,14 @@ function LeadAIInsightsTab({
         <Card className="p-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-[#137fec]/10 flex items-center justify-center">
-              <span className="material-symbols-outlined !text-[20px] text-[#137fec]">payments</span>
+              <span className="material-symbols-outlined !text-[20px] text-[#137fec]">
+                payments
+              </span>
             </div>
             <div>
-              <p className={`text-2xl font-bold ${hasAiInsight ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}>
+              <p
+                className={`text-2xl font-bold ${hasAiInsight ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}
+              >
                 <span data-testid={hasAiInsight ? 'deal-value' : 'deal-value-null-state'}>
                   {hasAiInsight ? `$${(aiInsights.estimatedValue / 1000).toFixed(0)}k` : '--'}
                 </span>
@@ -1933,7 +2081,9 @@ function LeadAIInsightsTab({
               <span className="material-symbols-outlined !text-[20px] text-purple-600">grade</span>
             </div>
             <div>
-              <p className={`text-2xl font-bold ${hasAiInsight ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}>
+              <p
+                className={`text-2xl font-bold ${hasAiInsight ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}
+              >
                 <span data-testid={hasAiInsight ? 'lead-score-value' : 'lead-score-null-state'}>
                   {hasAiInsight ? aiInsights.qualificationScore : '--'}
                 </span>
@@ -1944,10 +2094,14 @@ function LeadAIInsightsTab({
         </Card>
       </div>
       <Card className="p-6">
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">AI Recommendations</h3>
+        <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+          AI Recommendations
+        </h3>
         <ul className="space-y-3">
           {aiInsights.recommendations.map((rec, index) => (
-            <li key={`rec-${index}`} className="flex items-start gap-3"> {/* NOSONAR typescript:S6479 */}
+            <li key={`rec-${index}`} className="flex items-start gap-3">
+              {' '}
+              {/* NOSONAR typescript:S6479 */}
               <div className="w-6 h-6 rounded-full bg-[#137fec]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
                 <span className="text-xs font-medium text-[#137fec]">{index + 1}</span>
               </div>
@@ -1957,17 +2111,26 @@ function LeadAIInsightsTab({
         </ul>
       </Card>
       <Card className="p-6">
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Engagement Analysis</h3>
+        <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+          Engagement Analysis
+        </h3>
         <div className="space-y-4">
           <div>
             <div className="flex justify-between mb-1.5">
-              <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Engagement Score</span>
-              <span className={`text-sm font-bold ${hasAiInsight ? 'text-[#137fec]' : 'text-slate-400 dark:text-slate-500'}`}>
+              <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
+                Engagement Score
+              </span>
+              <span
+                className={`text-sm font-bold ${hasAiInsight ? 'text-[#137fec]' : 'text-slate-400 dark:text-slate-500'}`}
+              >
                 {hasAiInsight ? `${aiInsights.engagementScore}%` : '--'}
               </span>
             </div>
             <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
-              <div className="bg-[#137fec] h-2 rounded-full" style={{ width: `${aiInsights.engagementScore}%` }} />
+              <div
+                className="bg-[#137fec] h-2 rounded-full"
+                style={{ width: `${aiInsights.engagementScore}%` }}
+              />
             </div>
           </div>
           <div className="flex items-center justify-between pt-2">
@@ -2021,28 +2184,40 @@ function LeadRightSidebar({
             <span className="material-symbols-outlined text-[#137fec]">auto_awesome</span>
             <h3 className="text-base font-bold text-slate-900 dark:text-white">Lead IQ</h3>
           </div>
-          <span className="text-[10px] bg-[#137fec]/10 text-[#137fec] px-1.5 py-0.5 rounded font-bold">BETA</span>
+          <span className="text-[10px] bg-[#137fec]/10 text-[#137fec] px-1.5 py-0.5 rounded font-bold">
+            BETA
+          </span>
         </div>
         {!hasAiInsight && (
           <p className="text-xs text-amber-600 dark:text-amber-400 mb-3 flex items-center gap-1">
-            <span className="material-symbols-outlined !text-[14px]">warning</span>{' '}AI analysis not run yet
+            <span className="material-symbols-outlined !text-[14px]">warning</span> AI analysis not
+            run yet
           </p>
         )}
         <div className="space-y-5">
           <div>
             <div className="flex justify-between mb-1.5">
-              <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Lead Score</span>
-              <span className="text-sm font-bold text-green-600">{aiInsights.qualificationScore}/100</span>
+              <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
+                Lead Score
+              </span>
+              <span className="text-sm font-bold text-green-600">
+                {aiInsights.qualificationScore}/100
+              </span>
             </div>
             <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
-              <div className="bg-green-500 h-2 rounded-full" style={{ width: `${aiInsights.qualificationScore}%` }} />
+              <div
+                className="bg-green-500 h-2 rounded-full"
+                style={{ width: `${aiInsights.qualificationScore}%` }}
+              />
             </div>
             <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">{aiInsights.icpMatch}</p>
           </div>
           <div className="h-px bg-slate-100 dark:bg-slate-800 w-full" />
           <div>
             <div className="flex justify-between items-center mb-2">
-              <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Engagement</span>
+              <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
+                Engagement
+              </span>
               <span
                 data-testid={hasAiInsight ? 'engagement-value' : 'engagement-null-state'}
                 className={`text-xs font-bold px-2 py-0.5 rounded ${
@@ -2078,7 +2253,9 @@ function LeadRightSidebar({
           </div>
           <div className="h-px bg-slate-100 dark:bg-slate-800 w-full" />
           <div>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Recommended Next Steps</p>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+              Recommended Next Steps
+            </p>
             <div className="space-y-2">
               {aiInsights.nextBestActions.map((action) => (
                 <button
@@ -2090,10 +2267,14 @@ function LeadRightSidebar({
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    <span className={`material-symbols-outlined !text-[18px] ${action.primary ? 'text-[#137fec]' : 'text-slate-500'}`}>
+                    <span
+                      className={`material-symbols-outlined !text-[18px] ${action.primary ? 'text-[#137fec]' : 'text-slate-500'}`}
+                    >
                       {action.icon}
                     </span>
-                    <span className={`text-sm font-medium ${action.primary ? 'text-slate-700 dark:text-slate-200 group-hover:text-[#137fec]' : 'text-slate-600 dark:text-slate-300 group-hover:text-slate-900'}`}>
+                    <span
+                      className={`text-sm font-medium ${action.primary ? 'text-slate-700 dark:text-slate-200 group-hover:text-[#137fec]' : 'text-slate-600 dark:text-slate-300 group-hover:text-slate-900'}`}
+                    >
                       {action.label}
                     </span>
                   </div>
@@ -2102,7 +2283,10 @@ function LeadRightSidebar({
             </div>
           </div>
         </div>
-        <button onClick={onViewAIInsights} className="w-full mt-4 text-sm text-[#137fec] hover:underline text-center">
+        <button
+          onClick={onViewAIInsights}
+          className="w-full mt-4 text-sm text-[#137fec] hover:underline text-center"
+        >
           View Full Analysis
         </button>
       </Card>
@@ -2131,10 +2315,16 @@ function LeadRightSidebar({
         <div className="space-y-4">
           {notes.length > 0 ? (
             notes.slice(0, 2).map((note) => (
-              <div key={note.id} className="pb-4 border-b border-slate-100 dark:border-slate-800 last:border-0 last:pb-0">
-                <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">{note.content}</p>
+              <div
+                key={note.id}
+                className="pb-4 border-b border-slate-100 dark:border-slate-800 last:border-0 last:pb-0"
+              >
+                <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">
+                  {note.content}
+                </p>
                 <div className="flex items-center gap-2 mt-2 text-xs text-slate-500">
-                  <span>{note.author}</span><span>•</span>
+                  <span>{note.author}</span>
+                  <span>•</span>
                   <span>{formatRelativeTime(note.createdAt, timezone)}</span>
                 </div>
               </div>
@@ -2170,10 +2360,19 @@ interface LeadTabBarProps {
   activeTab: TabId;
   onTabChange: (id: TabId) => void;
   leadId: string;
-  logActivityMutation: { isPending: boolean; mutate: (args: { leadId: string; type: 'NOTE'; title: string; description: string }) => void };
+  logActivityMutation: {
+    isPending: boolean;
+    mutate: (args: { leadId: string; type: 'NOTE'; title: string; description: string }) => void;
+  };
 }
 
-function LeadTabBar({ tabs, activeTab, onTabChange, leadId, logActivityMutation }: LeadTabBarProps) {
+function LeadTabBar({
+  tabs,
+  activeTab,
+  onTabChange,
+  leadId,
+  logActivityMutation,
+}: LeadTabBarProps) {
   return (
     <Card>
       <div className="flex border-b border-slate-200 dark:border-slate-800 px-2 overflow-x-auto">
@@ -2200,7 +2399,12 @@ function LeadTabBar({ tabs, activeTab, onTabChange, leadId, logActivityMutation 
         placeholder="Log a call, email, or internal note..."
         isSubmitting={logActivityMutation.isPending}
         onSubmit={(note) => {
-          logActivityMutation.mutate({ leadId, type: 'NOTE', title: 'Note Added', description: note });
+          logActivityMutation.mutate({
+            leadId,
+            type: 'NOTE',
+            title: 'Note Added',
+            description: note,
+          });
         }}
       />
     </Card>
@@ -2230,7 +2434,9 @@ function LeadPageHeader({
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
       <div>
         <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-1">
-          <Link href="/leads" className="hover:text-[#137fec]">Leads</Link>
+          <Link href="/leads" className="hover:text-[#137fec]">
+            Leads
+          </Link>
           <span className="material-symbols-outlined !text-sm">chevron_right</span>
           <span className="font-medium text-slate-900 dark:text-white">
             {lead.firstName} {lead.lastName}
@@ -2241,18 +2447,22 @@ function LeadPageHeader({
         </h1>
       </div>
       <div className="flex gap-3">
-        <LeadConvertButton lead={lead} convertMutation={convertMutation} onOpenConvert={onOpenConvert} />
+        <LeadConvertButton
+          lead={lead}
+          convertMutation={convertMutation}
+          onOpenConvert={onOpenConvert}
+        />
         <button
           onClick={onEdit}
           className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
         >
-          <span className="material-symbols-outlined !text-[18px]">edit</span>{' '}Edit
+          <span className="material-symbols-outlined !text-[18px]">edit</span> Edit
         </button>
         <button
           onClick={onLogCall}
           className="flex items-center gap-2 px-4 h-10 rounded-lg bg-[#137fec] text-white text-sm font-semibold hover:bg-blue-600 transition-colors shadow-sm shadow-blue-200 dark:shadow-none"
         >
-          <span className="material-symbols-outlined !text-[18px]">call</span>{' '}Log Call
+          <span className="material-symbols-outlined !text-[18px]">call</span> Log Call
         </button>
         <PinButton
           entityType="lead"
@@ -2270,7 +2480,15 @@ function LeadPageHeader({
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-const LEAD_VALID_TABS: TabId[] = ['overview', 'activity', 'tasks', 'notes', 'emails', 'files', 'ai-insights'];
+const LEAD_VALID_TABS: TabId[] = [
+  'overview',
+  'activity',
+  'tasks',
+  'notes',
+  'emails',
+  'files',
+  'ai-insights',
+];
 function resolveInitialLeadTab(tabParam: TabId | null): TabId {
   return tabParam && LEAD_VALID_TABS.includes(tabParam) ? tabParam : 'overview';
 }
@@ -2336,12 +2554,15 @@ function transformLeadForUI(apiLead: LeadWithRelations) {
 
 function getConvertErrorDescription(msg: string): string {
   if (msg.includes('Only qualified')) return 'Only leads with QUALIFIED status can be converted.';
-  if (msg.includes('already converted')) return 'This lead has already been converted to a contact.';
+  if (msg.includes('already converted'))
+    return 'This lead has already been converted to a contact.';
   if (msg.includes('not found')) return 'Lead not found. It may have been deleted.';
   return msg;
 }
 
-function isLeadAuthError(error: { data?: { code?: string } | null; message?: string } | null | undefined): boolean {
+function isLeadAuthError(
+  error: { data?: { code?: string } | null; message?: string } | null | undefined
+): boolean {
   if (!error) return false;
   return (
     error.data?.code === 'UNAUTHORIZED' ||
@@ -2394,7 +2615,10 @@ export default function Lead360Page() {
   const [expandedActivities, setExpandedActivities] = useState<Set<string>>(new Set());
   const [visibleCount, setVisibleCount] = useState(5);
   const [activityView, setActivityView] = useState<'timeline' | 'unified'>('timeline');
-  const { selectedActivityId } = useActivityDeepLink(activeTab, setActiveTab as (tab: 'activity') => void);
+  const { selectedActivityId } = useActivityDeepLink(
+    activeTab,
+    setActiveTab as (tab: 'activity') => void
+  );
 
   // Deep-link: auto-expand the targeted activity and scroll it into view
   const deepLinkScrolledRef = useRef(false);
@@ -2456,7 +2680,11 @@ export default function Lead360Page() {
       router.push(`/contacts/${data.contactId}`);
     },
     onError: (err) => {
-      toast({ title: 'Conversion failed', description: getConvertErrorDescription(err.message), variant: 'destructive' });
+      toast({
+        title: 'Conversion failed',
+        description: getConvertErrorDescription(err.message),
+        variant: 'destructive',
+      });
     },
   });
 
@@ -2500,10 +2728,7 @@ export default function Lead360Page() {
   });
 
   // Transform API data to UI format
-  const lead = useMemo(
-    () => apiLead ? transformLeadForUI(apiLead) : null,
-    [apiLead]
-  );
+  const lead = useMemo(() => (apiLead ? transformLeadForUI(apiLead) : null), [apiLead]);
 
   // Transform activities from API to UI format
   const activities: Activity[] = useMemo(() => {
@@ -2546,10 +2771,7 @@ export default function Lead360Page() {
   }, [apiLead?.files]);
 
   // Transform tasks from API
-  const tasks = useMemo(
-    () => transformLeadTasks(apiLead?.tasks),
-    [apiLead?.tasks]
-  );
+  const tasks = useMemo(() => transformLeadTasks(apiLead?.tasks), [apiLead?.tasks]);
 
   // Derive emails from email activities
   const emails = useMemo(() => {
@@ -2723,9 +2945,10 @@ export default function Lead360Page() {
 
   // Activity reactions/comments — hooks must be before any early returns
   const filteredActivitiesAll = useMemo(
-    () => activities.filter((activity) =>
-      filterActivity(activity, activityTypeFilter, personFilter, searchQuery)
-    ),
+    () =>
+      activities.filter((activity) =>
+        filterActivity(activity, activityTypeFilter, personFilter, searchQuery)
+      ),
     [activities, activityTypeFilter, personFilter, searchQuery]
   );
   const visibleActivitiesAll = useMemo(
@@ -2741,10 +2964,11 @@ export default function Lead360Page() {
     'LEAD_ACTIVITY',
     user?.email ?? undefined
   );
-  const { comments: commentsMap, addComment, isAdding: isAddingComment } = useActivityComments(
-    activityIdsForReactions,
-    'LEAD_ACTIVITY'
-  );
+  const {
+    comments: commentsMap,
+    addComment,
+    isAdding: isAddingComment,
+  } = useActivityComments(activityIdsForReactions, 'LEAD_ACTIVITY');
 
   // Auto-dismiss stale insight when the referenced entity no longer exists
   const insightId = searchParams.get('insightId');
@@ -2752,11 +2976,20 @@ export default function Lead360Page() {
   const dismissMutation = api.home.dismissInsight.useMutation();
   const dismissedRef = useRef(false);
   useEffect(() => {
-    if (fromInsight && insightId && (error?.data?.code === 'NOT_FOUND' || (!isLoading && !lead)) && !dismissedRef.current) {
+    if (
+      fromInsight &&
+      insightId &&
+      (error?.data?.code === 'NOT_FOUND' || (!isLoading && !lead)) &&
+      !dismissedRef.current
+    ) {
       dismissedRef.current = true;
       dismissMutation.mutate(
         { insightId, reason: 'Referenced lead no longer exists' },
-        { onError: () => { /* best-effort */ } }
+        {
+          onError: () => {
+            /* best-effort */
+          },
+        }
       );
     }
   }, [fromInsight, insightId, error, isLoading, lead, dismissMutation]);
@@ -2776,13 +3009,21 @@ export default function Lead360Page() {
     const isNotFound = error?.data?.code === 'NOT_FOUND' || !lead;
     const isServerError = error?.data?.code === 'INTERNAL_SERVER_ERROR';
     let errorIcon: string;
-    if (isServerError) { errorIcon = 'cloud_off'; }
-    else if (fromInsight) { errorIcon = 'link_off'; }
-    else { errorIcon = 'error'; }
+    if (isServerError) {
+      errorIcon = 'cloud_off';
+    } else if (fromInsight) {
+      errorIcon = 'link_off';
+    } else {
+      errorIcon = 'error';
+    }
     let errorTitle: string;
-    if (isServerError) { errorTitle = 'Something Went Wrong'; }
-    else if (fromInsight) { errorTitle = 'Stale Insight'; }
-    else { errorTitle = 'Lead Not Found'; }
+    if (isServerError) {
+      errorTitle = 'Something Went Wrong';
+    } else if (fromInsight) {
+      errorTitle = 'Stale Insight';
+    } else {
+      errorTitle = 'Lead Not Found';
+    }
     return (
       <LeadErrorView
         errorIcon={errorIcon}
@@ -2864,7 +3105,12 @@ export default function Lead360Page() {
         }}
         extraActions={[
           { label: 'Archive', icon: 'archive', onClick: () => setArchiveConfirmOpen(true) },
-          { label: 'Delete', icon: 'delete', onClick: () => setDeleteConfirmOpen(true), destructive: true },
+          {
+            label: 'Delete',
+            icon: 'delete',
+            onClick: () => setDeleteConfirmOpen(true),
+            destructive: true,
+          },
         ]}
       />
 
@@ -2942,7 +3188,11 @@ export default function Lead360Page() {
               selectedActivityId={selectedActivityId}
               aiInsightsSentimentTrend={aiInsights.sentimentTrend}
               aiInsightsLastEngagementDays={aiInsights.lastEngagementDays}
-              onClearFilters={() => { setActivityTypeFilter('all'); setPersonFilter('all'); setSearchQuery(''); }}
+              onClearFilters={() => {
+                setActivityTypeFilter('all');
+                setPersonFilter('all');
+                setSearchQuery('');
+              }}
               renderActions={renderActivityActions}
             />
           )}
@@ -2956,20 +3206,19 @@ export default function Lead360Page() {
               notes={notes}
               activityNote={activityNote}
               onActivityNoteChange={setActivityNote}
-              onAddNote={() => { if (activityNote.trim()) addNoteMutation.mutate({ leadId, content: activityNote.trim() }); }}
+              onAddNote={() => {
+                if (activityNote.trim())
+                  addNoteMutation.mutate({ leadId, content: activityNote.trim() });
+              }}
               leadId={leadId}
               addNoteMutation={addNoteMutation}
               timezone={timezone}
             />
           )}
 
-          {activeTab === 'emails' && (
-            <LeadEmailsTab emails={emails} timezone={timezone} />
-          )}
+          {activeTab === 'emails' && <LeadEmailsTab emails={emails} timezone={timezone} />}
 
-          {activeTab === 'files' && (
-            <LeadFilesTab files={files} timezone={timezone} />
-          )}
+          {activeTab === 'files' && <LeadFilesTab files={files} timezone={timezone} />}
 
           {activeTab === 'ai-insights' && (
             <LeadAIInsightsTab

@@ -71,7 +71,15 @@ vi.mock('@/lib/auth', () => ({
 }));
 
 vi.mock('@/components/shared/assign-sheet', () => ({
-  AssignSheet: ({ open, onAssign, title }: { open: boolean; onAssign: (id: string) => void; title: string }) =>
+  AssignSheet: ({
+    open,
+    onAssign,
+    title,
+  }: {
+    open: boolean;
+    onAssign: (id: string) => void;
+    title: string;
+  }) =>
     open ? (
       <div data-testid="assign-owner-sheet">
         <span>{title}</span>
@@ -83,9 +91,14 @@ vi.mock('@/components/shared/assign-sheet', () => ({
 }));
 
 vi.mock('@/components/shared/app-avatar', () => ({
-  AppAvatar: ({ name, ...props }: { name: string; className?: string; fallbackClassName?: string }) => (
-    <div data-testid="app-avatar" data-name={name} {...props} />
-  ),
+  AppAvatar: ({
+    name,
+    ...props
+  }: {
+    name: string;
+    className?: string;
+    fallbackClassName?: string;
+  }) => <div data-testid="app-avatar" data-name={name} {...props} />,
 }));
 
 vi.mock('@/lib/pricing/calculator', () => ({
@@ -107,7 +120,11 @@ vi.mock('../AccountContactsList', () => ({
   AccountContactsList: ({ onAddContact }: { onAddContact?: () => void }) => (
     <div data-testid="contacts-list">
       Contacts List
-      {onAddContact && <button data-testid="contacts-add-btn" onClick={onAddContact}>Add Contact</button>}
+      {onAddContact && (
+        <button data-testid="contacts-add-btn" onClick={onAddContact}>
+          Add Contact
+        </button>
+      )}
     </div>
   ),
 }));
@@ -115,17 +132,29 @@ vi.mock('../AccountOpportunitiesList', () => ({
   AccountOpportunitiesList: ({ onCreateOpportunity }: { onCreateOpportunity?: () => void }) => (
     <div data-testid="opps-list">
       Opportunities List
-      {onCreateOpportunity && <button data-testid="opps-create-btn" onClick={onCreateOpportunity}>Create Opportunity</button>}
+      {onCreateOpportunity && (
+        <button data-testid="opps-create-btn" onClick={onCreateOpportunity}>
+          Create Opportunity
+        </button>
+      )}
     </div>
   ),
 }));
 vi.mock('../OpportunityCreateSheet', () => ({
   OpportunityCreateSheet: ({ open, accountId }: { open: boolean; accountId: string }) =>
-    open ? <div data-testid="opp-create-sheet" data-account-id={accountId}>Opportunity Create Sheet</div> : null,
+    open ? (
+      <div data-testid="opp-create-sheet" data-account-id={accountId}>
+        Opportunity Create Sheet
+      </div>
+    ) : null,
 }));
 vi.mock('../ContactAddSheet', () => ({
   ContactAddSheet: ({ open, accountId }: { open: boolean; accountId: string }) =>
-    open ? <div data-testid="contact-add-sheet" data-account-id={accountId}>Contact Add Sheet</div> : null,
+    open ? (
+      <div data-testid="contact-add-sheet" data-account-id={accountId}>
+        Contact Add Sheet
+      </div>
+    ) : null,
 }));
 vi.mock('../RevenueChart', () => ({
   RevenueChart: () => <div data-testid="revenue-chart">Revenue Chart</div>,
@@ -184,11 +213,19 @@ vi.mock('@intelliflow/ui', () => ({
   toast: vi.fn(),
   AlertDialog: ({ children, open }: Readonly<{ children: React.ReactNode; open?: boolean }>) =>
     open ? <div>{children}</div> : null,
-  AlertDialogContent: ({ children }: Readonly<{ children: React.ReactNode }>) => <div>{children}</div>,
-  AlertDialogHeader: ({ children }: Readonly<{ children: React.ReactNode }>) => <div>{children}</div>,
-  AlertDialogFooter: ({ children }: Readonly<{ children: React.ReactNode }>) => <div>{children}</div>,
+  AlertDialogContent: ({ children }: Readonly<{ children: React.ReactNode }>) => (
+    <div>{children}</div>
+  ),
+  AlertDialogHeader: ({ children }: Readonly<{ children: React.ReactNode }>) => (
+    <div>{children}</div>
+  ),
+  AlertDialogFooter: ({ children }: Readonly<{ children: React.ReactNode }>) => (
+    <div>{children}</div>
+  ),
   AlertDialogTitle: ({ children }: Readonly<{ children: React.ReactNode }>) => <h2>{children}</h2>,
-  AlertDialogDescription: ({ children }: Readonly<{ children: React.ReactNode }>) => <p>{children}</p>,
+  AlertDialogDescription: ({ children }: Readonly<{ children: React.ReactNode }>) => (
+    <p>{children}</p>
+  ),
   AlertDialogAction: ({
     children,
     onClick,
@@ -202,7 +239,9 @@ vi.mock('@intelliflow/ui', () => ({
       {children}
     </button>
   ),
-  AlertDialogCancel: ({ children }: Readonly<{ children: React.ReactNode }>) => <button>{children}</button>,
+  AlertDialogCancel: ({ children }: Readonly<{ children: React.ReactNode }>) => (
+    <button>{children}</button>
+  ),
 }));
 
 const mockAccount = {

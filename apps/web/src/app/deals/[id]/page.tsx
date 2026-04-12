@@ -48,7 +48,13 @@ interface DealDetail {
   updatedAt: Date | string;
   owner: { id: string; name: string | null; email: string } | null;
   account: { id: string; name: string; website: string | null } | null;
-  contact: { id: string; firstName: string; lastName: string; title: string | null; email: string } | null;
+  contact: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    title: string | null;
+    email: string;
+  } | null;
 }
 
 // =============================================================================
@@ -131,8 +137,8 @@ function StageProgress({
           <p className="text-xs text-slate-500">
             {isClosed
               ? `${STAGE_LABELS[stage]}`
-              : `Stage ${stageIndex + 1} of ${ACTIVE_STAGES.length}`}
-            {' '}&bull; {probability}% Probability
+              : `Stage ${stageIndex + 1} of ${ACTIVE_STAGES.length}`}{' '}
+            &bull; {probability}% Probability
           </p>
         </div>
       </div>
@@ -230,7 +236,10 @@ function StakeholdersCard({ deal }: Readonly<{ deal: DealDetail }>) {
                   {deal.account.name}
                 </Link>
                 <div className="flex gap-2 mt-2">
-                  <Link href={`/accounts/${deal.accountId}`} className="text-slate-400 hover:text-primary">
+                  <Link
+                    href={`/accounts/${deal.accountId}`}
+                    className="text-slate-400 hover:text-primary"
+                  >
                     <Icon name="open_in_new" className="text-base" />
                   </Link>
                   {deal.account.website && (
@@ -338,9 +347,7 @@ function ProductsCard({ dealId }: Readonly<{ dealId: string }>) {
                 }`}
               >
                 <div>
-                  <p className="font-medium text-slate-900 dark:text-white">
-                    {product.name}
-                  </p>
+                  <p className="font-medium text-slate-900 dark:text-white">{product.name}</p>
                   <p className="text-xs text-slate-500">{product.description}</p>
                 </div>
                 <p className="font-semibold text-slate-900 dark:text-white">
@@ -408,7 +415,8 @@ function DealNotFoundError() {
           Deal not found or you don&apos;t have access
         </h2>
         <p className="text-slate-500 mb-6">
-          The deal you&apos;re looking for may have been deleted or you may not have permission to view it.
+          The deal you&apos;re looking for may have been deleted or you may not have permission to
+          view it.
         </p>
         <Link href="/deals">
           <Button>Back to Deals</Button>
@@ -428,7 +436,11 @@ export default function DealDetailPage() {
   const [actionSheetOpen, setActionSheetOpen] = useState(false);
   const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
 
-  const { data: deal, isLoading, error } = api.opportunity.getById.useQuery(
+  const {
+    data: deal,
+    isLoading,
+    error,
+  } = api.opportunity.getById.useQuery(
     { id: dealId },
     { enabled: isAuthenticated && !authLoading && !!dealId }
   );
@@ -509,11 +521,7 @@ export default function DealDetailPage() {
         />
 
         {/* Stage Progress */}
-        <StageProgress
-          value={d.value}
-          stage={stage}
-          probability={d.probability}
-        />
+        <StageProgress value={d.value} stage={stage} probability={d.probability} />
 
         {/* Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">

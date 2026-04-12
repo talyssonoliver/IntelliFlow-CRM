@@ -84,7 +84,12 @@ function formatRelativeDate(dateStr: string, timezone: string = 'Europe/London')
   if (diffHours < 1) return 'Just now';
   if (diffHours < 24) return `${diffHours}h ago`;
   if (diffDays < 7) return `${diffDays}d ago`;
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: timezone });
+  return d.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: timezone,
+  });
 }
 
 function getSortParams(sortOrder: string): { sortBy: string; sortOrder: 'asc' | 'desc' } {
@@ -179,7 +184,10 @@ interface RowActionHandlers {
   onDelete: (deal: Deal) => void;
 }
 
-function createColumns(handlers: Readonly<RowActionHandlers>, timezone: string = 'Europe/London'): ColumnDef<Deal>[] {
+function createColumns(
+  handlers: Readonly<RowActionHandlers>,
+  timezone: string = 'Europe/London'
+): ColumnDef<Deal>[] {
   return [
     {
       accessorKey: 'name',
@@ -402,7 +410,10 @@ export const DealListView = React.memo(function DealListView() {
     [router]
   );
 
-  const columns = useMemo(() => createColumns(rowActionHandlers, timezone), [rowActionHandlers, timezone]);
+  const columns = useMemo(
+    () => createColumns(rowActionHandlers, timezone),
+    [rowActionHandlers, timezone]
+  );
 
   // Single deal actions
   const handleSingleDelete = useCallback(async () => {
@@ -581,8 +592,7 @@ export const DealListView = React.memo(function DealListView() {
             onClick={() => refetch()}
             className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors"
           >
-            <span className="material-symbols-outlined text-[16px]">refresh</span>{' '}
-            Try Again
+            <span className="material-symbols-outlined text-[16px]">refresh</span> Try Again
           </button>
         </div>
       )}

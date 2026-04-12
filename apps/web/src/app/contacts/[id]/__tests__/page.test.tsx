@@ -299,13 +299,17 @@ describe('Contact360Page - Empty State CTA', () => {
       isLoading: false,
     });
     render(<Contact360Page />);
-    expect(screen.queryByRole('button', { name: /Log your first activity/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /Log your first activity/i })
+    ).not.toBeInTheDocument();
   });
 
   it('CTA button is NOT rendered while isUnifiedLoading is true (AC-007)', () => {
     mockUseActivityFeed.mockReturnValue({ items: [], isLoading: true });
     render(<Contact360Page />);
-    expect(screen.queryByRole('button', { name: /Log your first activity/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /Log your first activity/i })
+    ).not.toBeInTheDocument();
     expect(screen.getByText('Loading activity...')).toBeInTheDocument();
   });
 });
@@ -405,11 +409,56 @@ describe('Contact360Page - Open Rate NaN fix (IFC-253 F-01)', () => {
     mockContactQueryState.data = {
       ...mockContactQueryState.data,
       activities: [
-        { id: 'a1', type: 'EMAIL', title: 'Email 1', description: '', createdAt: '2026-03-01T00:00:00Z', userId: 'u1', contactId: 'c1', metadata: null },
-        { id: 'a2', type: 'EMAIL', title: 'Email 2', description: '', createdAt: '2026-03-01T00:00:00Z', userId: 'u1', contactId: 'c1', metadata: null },
-        { id: 'a3', type: 'EMAIL', title: 'Email 3', description: '', createdAt: '2026-03-01T00:00:00Z', userId: 'u1', contactId: 'c1', metadata: null },
-        { id: 'a4', type: 'EMAIL', title: 'Email 4', description: '', createdAt: '2026-03-01T00:00:00Z', userId: 'u1', contactId: 'c1', metadata: null },
-        { id: 'a5', type: 'EMAIL', title: 'Email 5', description: '', createdAt: '2026-03-01T00:00:00Z', userId: 'u1', contactId: 'c1', metadata: null },
+        {
+          id: 'a1',
+          type: 'EMAIL',
+          title: 'Email 1',
+          description: '',
+          createdAt: '2026-03-01T00:00:00Z',
+          userId: 'u1',
+          contactId: 'c1',
+          metadata: null,
+        },
+        {
+          id: 'a2',
+          type: 'EMAIL',
+          title: 'Email 2',
+          description: '',
+          createdAt: '2026-03-01T00:00:00Z',
+          userId: 'u1',
+          contactId: 'c1',
+          metadata: null,
+        },
+        {
+          id: 'a3',
+          type: 'EMAIL',
+          title: 'Email 3',
+          description: '',
+          createdAt: '2026-03-01T00:00:00Z',
+          userId: 'u1',
+          contactId: 'c1',
+          metadata: null,
+        },
+        {
+          id: 'a4',
+          type: 'EMAIL',
+          title: 'Email 4',
+          description: '',
+          createdAt: '2026-03-01T00:00:00Z',
+          userId: 'u1',
+          contactId: 'c1',
+          metadata: null,
+        },
+        {
+          id: 'a5',
+          type: 'EMAIL',
+          title: 'Email 5',
+          description: '',
+          createdAt: '2026-03-01T00:00:00Z',
+          userId: 'u1',
+          contactId: 'c1',
+          metadata: null,
+        },
       ] as any,
     };
     render(<Contact360Page />);

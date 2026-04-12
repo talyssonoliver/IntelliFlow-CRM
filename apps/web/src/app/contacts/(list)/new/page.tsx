@@ -400,7 +400,8 @@ export default function CreateNewContactPage() {
                     <div
                       className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ring-4 ring-white dark:ring-slate-900 shadow-sm transition-all ${(() => {
                         if (status === 'current') return 'bg-[#137fec] text-white';
-                        if (status === 'completed') return 'bg-[#137fec] text-white hover:bg-[#0e6ac7]';
+                        if (status === 'completed')
+                          return 'bg-[#137fec] text-white hover:bg-[#0e6ac7]';
                         return 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border-2 border-slate-200 dark:border-slate-700';
                       })()}`}
                     >
@@ -415,7 +416,8 @@ export default function CreateNewContactPage() {
                     <span
                       className={`text-sm font-medium ${(() => {
                         if (status === 'current') return 'font-bold text-slate-900 dark:text-white';
-                        if (status === 'completed') return 'font-bold text-slate-900 dark:text-white hover:text-[#137fec]';
+                        if (status === 'completed')
+                          return 'font-bold text-slate-900 dark:text-white hover:text-[#137fec]';
                         return 'text-slate-500 dark:text-slate-400';
                       })()}`}
                     >
@@ -454,7 +456,7 @@ export default function CreateNewContactPage() {
                         htmlFor="firstName"
                         className="block text-sm font-semibold text-slate-700 dark:text-slate-300"
                       >
-                        First Name{' '}<span className="text-red-500">*</span>
+                        First Name <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
@@ -479,7 +481,7 @@ export default function CreateNewContactPage() {
                         htmlFor="lastName"
                         className="block text-sm font-semibold text-slate-700 dark:text-slate-300"
                       >
-                        Last Name{' '}<span className="text-red-500">*</span>
+                        Last Name <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
@@ -502,7 +504,7 @@ export default function CreateNewContactPage() {
                         htmlFor="email"
                         className="block text-sm font-semibold text-slate-700 dark:text-slate-300"
                       >
-                        Email Address{' '}<span className="text-red-500">*</span>
+                        Email Address <span className="text-red-500">*</span>
                       </label>
                       <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
@@ -703,7 +705,7 @@ export default function CreateNewContactPage() {
                           htmlFor="departmentOther"
                           className="block text-sm font-semibold text-slate-700 dark:text-slate-300"
                         >
-                          Please specify the department{' '}<span className="text-red-500">*</span>
+                          Please specify the department <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
@@ -861,7 +863,7 @@ export default function CreateNewContactPage() {
                           htmlFor="contactTypeOther"
                           className="block text-sm font-semibold text-slate-700 dark:text-slate-300"
                         >
-                          Please specify the contact type{' '}<span className="text-red-500">*</span>
+                          Please specify the contact type <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"

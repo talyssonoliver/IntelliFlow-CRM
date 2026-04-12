@@ -89,7 +89,7 @@ function formatCurrency(value: number): string {
   if (value >= 1000) {
     return `$${Math.round(value / 1000)}K`;
   }
-  return `$${value.toLocaleString()}`;
+  return `$${value.toLocaleString('en-US')}`;
 }
 
 function formatFullCurrency(value: number): string {
@@ -260,7 +260,8 @@ function WinRateTrendCard({ data }: Readonly<{ data: WinRateData[] }>) {
           <div
             key={`${item.month}-${index}`}
             className={`flex-1 rounded-t transition-all hover:opacity-80 ${(() => {
-              if (item.isProjected) return 'bg-slate-200 dark:bg-slate-700 border-t-2 border-dashed border-slate-400';
+              if (item.isProjected)
+                return 'bg-slate-200 dark:bg-slate-700 border-t-2 border-dashed border-slate-400';
               if (index === data.length - 2) return 'bg-primary';
               return 'bg-primary/30';
             })()}`}
@@ -506,11 +507,13 @@ function buildForecastCSV(
     `Total Pipeline Value,${totalPipelineValue}`,
     `Weighted Forecast,${weightedForecast}`,
     '',
-    'Deal Name,Stage,Value,Probability (%),Expected Close,Owner,Risk Level',
+    'Deal Name,Stage,Value,Probability (%),Expected Close,Owner,Risk Level'
   );
 
   for (const deal of deals) {
-    const closeDate = new Date(deal.expectedCloseDate).toLocaleDateString('en-US', { timeZone: timezone });
+    const closeDate = new Date(deal.expectedCloseDate).toLocaleDateString('en-US', {
+      timeZone: timezone,
+    });
     const row = [
       `"${deal.name.replaceAll('"', '""')}"`,
       STAGE_LABELS[deal.stage] || deal.stage,

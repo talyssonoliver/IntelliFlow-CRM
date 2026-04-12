@@ -290,7 +290,10 @@ function DealsPageContent() {
           : 'Failed to update deal stage. Please try again.';
       toast({ title: message, variant: 'destructive' });
     },
-    onMutate: async ({ id, targetStage }: Readonly<{ id: string; targetStage: string; reason?: string }>) => {
+    onMutate: async ({
+      id,
+      targetStage,
+    }: Readonly<{ id: string; targetStage: string; reason?: string }>) => {
       const previousDeals = [...deals];
       // Optimistic update (AC-002)
       setPendingDealId(id);

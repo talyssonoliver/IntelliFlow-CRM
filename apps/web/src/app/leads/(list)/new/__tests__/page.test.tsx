@@ -9,11 +9,7 @@ import { render, screen, act } from '@testing-library/react';
 // ---------------------------------------------------------------------------
 // vi.hoisted — variables available inside vi.mock factories
 // ---------------------------------------------------------------------------
-const {
-  mockUseRequireAuth,
-  mockCreateMutation,
-  mockPush,
-} = vi.hoisted(() => {
+const { mockUseRequireAuth, mockCreateMutation, mockPush } = vi.hoisted(() => {
   const mockMutateAsync = vi.fn().mockResolvedValue({ id: 'new-lead-1' });
   const mockPush = vi.fn();
   let capturedOnSuccess: (() => void) | undefined;

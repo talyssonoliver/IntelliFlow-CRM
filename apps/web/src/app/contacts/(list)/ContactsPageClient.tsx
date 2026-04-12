@@ -41,7 +41,19 @@ function useDebounce<T>(value: T, delay: number): T {
 // Helper Functions
 // =============================================================================
 
-function getSortParams(sortOrder: string): { sortBy: 'createdAt' | 'updatedAt' | 'firstName' | 'lastName' | 'email' | 'status' | 'company' | 'department' | 'lastContactedAt'; sortOrder: 'asc' | 'desc' } {
+function getSortParams(sortOrder: string): {
+  sortBy:
+    | 'createdAt'
+    | 'updatedAt'
+    | 'firstName'
+    | 'lastName'
+    | 'email'
+    | 'status'
+    | 'company'
+    | 'department'
+    | 'lastContactedAt';
+  sortOrder: 'asc' | 'desc';
+} {
   switch (sortOrder) {
     case 'oldest':
       return { sortBy: 'createdAt', sortOrder: 'asc' };
@@ -335,7 +347,10 @@ export default function ContactsPageClient({
       <PageHeader
         breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Contacts' }]}
         title="Contact List"
-        description={`View and manage your customer database efficiently.` + (totalItems > 0 ? ` (${totalItems} total)` : '')}
+        description={
+          `View and manage your customer database efficiently.` +
+          (totalItems > 0 ? ` (${totalItems} total)` : '')
+        }
         actions={[
           {
             label: 'New Contact',

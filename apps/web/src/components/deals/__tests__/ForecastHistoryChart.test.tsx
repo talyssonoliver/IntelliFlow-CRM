@@ -62,7 +62,9 @@ vi.mock('recharts', () => ({
       </div>
     );
   },
-  ReferenceLine: ({ y }: Readonly<{ y: number }>) => <div data-testid="reference-line" data-y={y} />,
+  ReferenceLine: ({ y }: Readonly<{ y: number }>) => (
+    <div data-testid="reference-line" data-y={y} />
+  ),
 }));
 
 // Import after mocks
