@@ -25,10 +25,7 @@ import { sanitizeCode, isValidTotpCode, isValidBackupCode } from '@/lib/shared/c
 // Helpers
 // ============================================
 
-function resolveVerifyErrorMessage(
-  message: string,
-  setIsExpired: (v: boolean) => void
-): string {
+function resolveVerifyErrorMessage(message: string, setIsExpired: (v: boolean) => void): string {
   if (message.includes('expired')) {
     setIsExpired(true);
     return 'This verification code has expired. Please request a new one.';
@@ -324,10 +321,11 @@ export function MfaVerification({
 
       {/* Loading indicator (for test) */}
       {verifyMfaMutation.isPending && (
+        // eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- indeterminate loading overlay with spinner icon; <progress> cannot contain child elements
         <div
           data-testid="loading-indicator"
           className="absolute inset-0 bg-slate-900/50 flex items-center justify-center z-10"
-          role="progressbar" // NOSONAR typescript:S6819 — indeterminate loading overlay with spinner icon; <progress> cannot contain child elements
+          role="progressbar" // NOSONAR typescript:S6819
           aria-label="Verifying code"
         >
           <span className="material-symbols-outlined animate-spin text-3xl text-primary">

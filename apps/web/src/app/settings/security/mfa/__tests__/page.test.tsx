@@ -303,7 +303,7 @@ describe('MfaSetupPage', () => {
       // Select SMS method
       fireEvent.click(screen.getByText('SMS Code'));
       // Enter phone number (required for SMS)
-      const phoneInput = screen.getByPlaceholderText(/\+1/);
+      const phoneInput = screen.getByPlaceholderText(/phone number/i);
       fireEvent.change(phoneInput, { target: { value: '+15551234567' } });
       fireEvent.click(screen.getByRole('button', { name: /continue with/i }));
       await waitFor(() => {
@@ -450,7 +450,7 @@ describe('MfaSetupPage', () => {
       mockSetupMfa.mockResolvedValue(SMS_RESPONSE);
       render(<MfaSetupPage />);
       fireEvent.click(screen.getByText('SMS Code'));
-      const phoneInput = screen.getByPlaceholderText(/\+1/);
+      const phoneInput = screen.getByPlaceholderText(/phone number/i);
       fireEvent.change(phoneInput, { target: { value: '+15551234567' } });
       fireEvent.click(screen.getByRole('button', { name: /continue with/i }));
       await waitFor(() => {
@@ -485,7 +485,7 @@ describe('MfaSetupPage', () => {
       mockSetupMfa.mockResolvedValue(SMS_RESPONSE);
       render(<MfaSetupPage />);
       fireEvent.click(screen.getByText('SMS Code'));
-      const phoneInput = screen.getByPlaceholderText(/\+1/);
+      const phoneInput = screen.getByPlaceholderText(/phone number/i);
       fireEvent.change(phoneInput, { target: { value: '+15551234567' } });
       fireEvent.click(screen.getByRole('button', { name: /continue with/i }));
       await waitFor(() => {
@@ -615,7 +615,7 @@ describe('MfaSetupPage', () => {
     it('enables Continue when phone number entered', () => {
       render(<MfaSetupPage />);
       fireEvent.click(screen.getByText('SMS Code'));
-      const phoneInput = screen.getByPlaceholderText(/\+1/);
+      const phoneInput = screen.getByPlaceholderText(/phone number/i);
       fireEvent.change(phoneInput, { target: { value: '+15551234567' } });
       const continueBtn = screen.getByRole('button', { name: /continue with/i });
       expect(continueBtn).not.toBeDisabled();
@@ -625,7 +625,7 @@ describe('MfaSetupPage', () => {
       mockSetupMfa.mockResolvedValue(SMS_RESPONSE);
       render(<MfaSetupPage />);
       fireEvent.click(screen.getByText('SMS Code'));
-      const phoneInput = screen.getByPlaceholderText(/\+1/);
+      const phoneInput = screen.getByPlaceholderText(/phone number/i);
       fireEvent.change(phoneInput, { target: { value: '+447700900000' } });
       fireEvent.click(screen.getByRole('button', { name: /continue with/i }));
       await waitFor(() => {
@@ -662,16 +662,14 @@ describe('MfaSetupPage', () => {
       });
     });
 
-    it('logs errors to console.error', async () => {
+    it('shows error message when setup fails', async () => {
       // AC9
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       mockSetupMfa.mockRejectedValue(new Error('Test error'));
       render(<MfaSetupPage />);
       fireEvent.click(screen.getByRole('button', { name: /continue with/i }));
       await waitFor(() => {
-        expect(consoleSpy).toHaveBeenCalledWith('MFA setup failed:', expect.any(Error));
+        expect(screen.getByText('Test error')).toBeInTheDocument();
       });
-      consoleSpy.mockRestore();
     });
   });
 
@@ -684,17 +682,19 @@ describe('MfaSetupPage', () => {
       render(<MfaSetupPage />);
       const nav = screen.getByRole('navigation', { name: /breadcrumb/i });
       expect(nav).toBeInTheDocument();
+      expect(screen.getByText('Dashboard')).toBeInTheDocument();
       expect(screen.getByText('Settings')).toBeInTheDocument();
-      expect(screen.getByText('Account')).toBeInTheDocument();
+      expect(screen.getByText('Security')).toBeInTheDocument();
       expect(screen.getByText('MFA Setup')).toBeInTheDocument();
     });
 
     it('cancel link is keyboard accessible', () => {
       // AC12
       render(<MfaSetupPage />);
-      const cancelLink = screen.getByText(/cancel and return to settings/i);
-      expect(cancelLink.tagName).toBe('A');
-      expect(cancelLink).toHaveAttribute('href', '/settings/account');
+      const cancelText = screen.getByText(/cancel and return to settings/i);
+      const link = cancelText.closest('a');
+      expect(link).toBeTruthy();
+      expect(link).toHaveAttribute('href', '/settings/account');
     });
 
     it('provides sr-only text for progress indicator state', () => {

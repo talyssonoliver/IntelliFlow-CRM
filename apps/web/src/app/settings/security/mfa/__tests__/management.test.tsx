@@ -49,7 +49,11 @@ vi.mock('next/navigation', () => ({
 }));
 
 vi.mock('next/link', () => ({
-  default: ({ children, href, ...props }: any) => <a href={href} {...props}>{children}</a>,
+  default: ({ children, href, ...props }: any) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
 }));
 
 // Mock PageHeader
@@ -58,16 +62,26 @@ vi.mock('@/components/shared/page-header', () => ({
 }));
 
 // Mock @intelliflow/ui - provide all required components
-vi.mock('@intelliflow/ui', () => {
-  const React = require('react');
+vi.mock('@intelliflow/ui', async () => {
+  const React = await import('react');
   return {
     Card: ({ children, className }: any) => <div className={className}>{children}</div>,
-    Badge: ({ children, variant, ...props }: any) => <span data-variant={variant} {...props}>{children}</span>,
-    Alert: ({ children, variant }: any) => <div role="alert" data-variant={variant}>{children}</div>,
+    Badge: ({ children, variant, ...props }: any) => (
+      <span data-variant={variant} {...props}>
+        {children}
+      </span>
+    ),
+    Alert: ({ children, variant }: any) => (
+      <div role="alert" data-variant={variant}>
+        {children}
+      </div>
+    ),
     AlertDescription: ({ children }: any) => <div>{children}</div>,
     AlertDialog: ({ children }: any) => <div>{children}</div>,
     AlertDialogAction: ({ children, onClick, disabled, ...props }: any) => (
-      <button onClick={onClick} disabled={disabled} {...props}>{children}</button>
+      <button onClick={onClick} disabled={disabled} {...props}>
+        {children}
+      </button>
     ),
     AlertDialogCancel: ({ children, onClick }: any) => (
       <button onClick={onClick}>{children}</button>
@@ -81,13 +95,21 @@ vi.mock('@intelliflow/ui', () => {
       if (asChild && React.isValidElement(children)) return children;
       return <div>{children}</div>;
     },
+    Button: ({ children, onClick, disabled, variant, asChild, className, ...props }: any) => {
+      if (asChild && React.isValidElement(children)) {
+        return React.cloneElement(children as React.ReactElement<any>, { className, ...props });
+      }
+      return <button onClick={onClick} disabled={disabled} data-variant={variant} className={className} {...props}>{children}</button>;
+    },
+    Input: (props: any) => <input {...props} />,
+    Label: ({ children, htmlFor }: any) => <label htmlFor={htmlFor}>{children}</label>,
     Skeleton: ({ className }: any) => <div className={className} data-testid="skeleton" />,
     cn: (...args: any[]) => args.filter(Boolean).join(' '),
   };
 });
 
 // Import after mocks
-const { default: MfaManagementPage } = await import('../page');
+const { default: MfaManagementPage } = await import('../MfaContent');
 
 describe('MFA Management Dashboard (PG-125)', () => {
   beforeEach(() => {
@@ -115,7 +137,11 @@ describe('MFA Management Dashboard (PG-125)', () => {
     });
 
     it('should show "Disabled" badge when MFA is disabled', () => {
-      mockMfaStatus.data = { ...mockMfaStatus.data, enabled: false, methods: { totp: false, sms: false, email: false } };
+      mockMfaStatus.data = {
+        ...mockMfaStatus.data,
+        enabled: false,
+        methods: { totp: false, sms: false, email: false },
+      };
       render(<MfaManagementPage />);
       const badge = screen.getByTestId('mfa-status-badge');
       expect(badge.textContent).toBe('Disabled');
@@ -129,7 +155,7 @@ describe('MFA Management Dashboard (PG-125)', () => {
 
     it('should show backup codes remaining', () => {
       render(<MfaManagementPage />);
-      expect(screen.getByText('5 remaining')).toBeTruthy();
+      expect(screen.getByText('5 codes')).toBeTruthy();
     });
 
     it('should show loading skeleton', () => {
@@ -206,9 +232,13 @@ describe('MFA Management Dashboard (PG-125)', () => {
     });
 
     it('should show "Get started" link when MFA is disabled', () => {
-      mockMfaStatus.data = { ...mockMfaStatus.data, enabled: false, methods: { totp: false, sms: false, email: false } };
+      mockMfaStatus.data = {
+        ...mockMfaStatus.data,
+        enabled: false,
+        methods: { totp: false, sms: false, email: false },
+      };
       render(<MfaManagementPage />);
-      expect(screen.getByText(/Get started/)).toBeTruthy();
+      expect(screen.getAllByText(/Get started/).length).toBeGreaterThanOrEqual(1);
     });
 
     it('should link to setup page', () => {
@@ -324,7 +354,7 @@ describe('MFA Management Dashboard (PG-125)', () => {
     it('should show destructive warning alert', () => {
       render(<MfaManagementPage />);
       const alerts = screen.getAllByRole('alert');
-      const destructive = alerts.find(el => el.getAttribute('data-variant') === 'destructive');
+      const destructive = alerts.find((el) => el.getAttribute('data-variant') === 'destructive');
       expect(destructive).toBeTruthy();
     });
 
