@@ -70,7 +70,13 @@ const PRIORITY_LABELS: Record<CasePriority, string> = {
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
-export function CaseForm({ initialData, onSubmit, onCancel, isSubmitting, mode }: Readonly<CaseFormProps>) {
+export function CaseForm({
+  initialData,
+  onSubmit,
+  onCancel,
+  isSubmitting,
+  mode,
+}: Readonly<CaseFormProps>) {
   const { timezone: userTimezone } = useTimezoneContext();
   const [formData, setFormData] = useState<CaseFormData>({
     subject: initialData?.subject ?? '',
@@ -219,7 +225,7 @@ export function CaseForm({ initialData, onSubmit, onCancel, isSubmitting, mode }
           {/* Subject */}
           <div>
             <label htmlFor="subject" className="block text-sm font-semibold text-foreground mb-1.5">
-              Subject{' '}<span className="text-destructive">*</span>
+              Subject <span className="text-destructive">*</span>
             </label>
             <input
               id="subject"
@@ -319,7 +325,7 @@ export function CaseForm({ initialData, onSubmit, onCancel, isSubmitting, mode }
               htmlFor="clientSearch"
               className="block text-sm font-semibold text-foreground mb-1.5"
             >
-              Link to Client/Account{' '}<span className="text-destructive">*</span>
+              Link to Client/Account <span className="text-destructive">*</span>
             </label>
 
             {formData.clientId ? (
@@ -371,11 +377,12 @@ export function CaseForm({ initialData, onSubmit, onCancel, isSubmitting, mode }
             )}
 
             {/* ── Dropdown results ── */}
+            {/* eslint-disable jsx-a11y/prefer-tag-over-role -- custom autocomplete widget; <select>/<option> cannot contain custom-styled items */}
             {clientDropdownOpen && !formData.clientId && debouncedClientSearch.length >= 2 && (
               <div
                 id="client-listbox"
                 className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-background shadow-lg max-h-56 overflow-y-auto"
-                role="listbox" // NOSONAR typescript:S6819 — custom accessible autocomplete dropdown; <select> cannot contain custom-styled items
+                role="listbox" // NOSONAR typescript:S6819
               >
                 {contactQuery.isLoading && (
                   <div className="flex items-center gap-2 px-3 py-3 text-sm text-muted-foreground">
@@ -400,7 +407,7 @@ export function CaseForm({ initialData, onSubmit, onCancel, isSubmitting, mode }
                       type="button"
                       onClick={() => handleClientSelect(client.id, client.name)}
                       className="w-full text-left px-3 py-2.5 hover:bg-accent transition-colors flex items-center gap-3"
-                      role="option" // NOSONAR typescript:S6819 — listbox option button; <option> cannot contain icons or custom layout
+                      role="option" // NOSONAR typescript:S6819
                       aria-selected={false}
                     >
                       <span
@@ -423,6 +430,7 @@ export function CaseForm({ initialData, onSubmit, onCancel, isSubmitting, mode }
                   ))}
               </div>
             )}
+            {/* eslint-enable jsx-a11y/prefer-tag-over-role */}
 
             {errors.clientSearch ? (
               <p id="client-error" className="text-xs text-destructive mt-1">

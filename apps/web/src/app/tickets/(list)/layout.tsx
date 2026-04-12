@@ -23,19 +23,14 @@ export default function TicketsListLayout({ children }: Readonly<{ children: Rea
 
   const onSettingsPage = isTicketSettingsPage(pathname);
 
-  const sidebarConfig = useMemo(
-    () => {
-      if (onSettingsPage) {
-        return createTicketsSettingsSidebarConfig(
-          ({ isExpanded }) => (
-            <TicketSettingsSidebarNav isExpanded={isExpanded} />
-          ),
-        );
-      }
-      return createTicketsSidebarConfig(() => setSettingsOpen((prev) => !prev));
-    },
-    [onSettingsPage]
-  );
+  const sidebarConfig = useMemo(() => {
+    if (onSettingsPage) {
+      return createTicketsSettingsSidebarConfig(({ isExpanded }) => (
+        <TicketSettingsSidebarNav isExpanded={isExpanded} />
+      ));
+    }
+    return createTicketsSidebarConfig(() => setSettingsOpen((prev) => !prev));
+  }, [onSettingsPage]);
 
   return (
     <ModuleGate moduleId="SUPPORT">
@@ -46,10 +41,7 @@ export default function TicketsListLayout({ children }: Readonly<{ children: Rea
 
             {/* Complementary settings panel — slides in next to the sidebar */}
             {!onSettingsPage && (
-              <TicketSettingsPanel
-                isOpen={settingsOpen}
-                onClose={() => setSettingsOpen(false)}
-              />
+              <TicketSettingsPanel isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
             )}
 
             {/* Portal target for page-injected sidebar content */}

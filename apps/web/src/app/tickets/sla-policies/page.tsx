@@ -7,10 +7,7 @@ export default function SLAPoliciesPage() {
   return (
     <>
       <PageHeader
-        breadcrumbs={[
-          { label: 'Tickets', href: '/tickets' },
-          { label: 'SLA Policies' },
-        ]}
+        breadcrumbs={[{ label: 'Tickets', href: '/tickets' }, { label: 'SLA Policies' }]}
         title="SLA Policies"
         description="Manage SLA response and resolution time targets."
       />

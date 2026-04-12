@@ -100,17 +100,13 @@ describe('StatusUpdater', () => {
   });
 
   it('disables interaction when isLoading is true', () => {
-    render(
-      <StatusUpdater currentStatus="OPEN" onStatusChange={mockOnStatusChange} isLoading />
-    );
+    render(<StatusUpdater currentStatus="OPEN" onStatusChange={mockOnStatusChange} isLoading />);
     const trigger = screen.getByRole('button', { name: /change status/i });
     expect(trigger).toBeDisabled();
   });
 
   it('disables interaction when disabled prop is true', () => {
-    render(
-      <StatusUpdater currentStatus="OPEN" onStatusChange={mockOnStatusChange} disabled />
-    );
+    render(<StatusUpdater currentStatus="OPEN" onStatusChange={mockOnStatusChange} disabled />);
     const trigger = screen.getByRole('button', { name: /change status/i });
     expect(trigger).toBeDisabled();
   });

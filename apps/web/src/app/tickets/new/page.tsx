@@ -45,7 +45,9 @@ export default function NewTicketPage() {
                 Dashboard
               </Link>
             </li>
-            <li><span className="text-slate-300 dark:text-slate-600">/</span></li>
+            <li>
+              <span className="text-slate-300 dark:text-slate-600">/</span>
+            </li>
             <li>
               <Link
                 href="/tickets"
@@ -54,7 +56,9 @@ export default function NewTicketPage() {
                 Tickets
               </Link>
             </li>
-            <li><span className="text-slate-300 dark:text-slate-600">/</span></li>
+            <li>
+              <span className="text-slate-300 dark:text-slate-600">/</span>
+            </li>
             <li>
               <span className="text-slate-900 dark:text-white text-sm font-medium">New Ticket</span>
             </li>

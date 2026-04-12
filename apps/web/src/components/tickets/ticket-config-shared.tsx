@@ -15,7 +15,12 @@ interface ConfigEmptyStateProps {
   onAction: () => void;
 }
 
-export function ConfigEmptyState({ title, description, actionLabel, onAction }: ConfigEmptyStateProps) {
+export function ConfigEmptyState({
+  title,
+  description,
+  actionLabel,
+  onAction,
+}: ConfigEmptyStateProps) {
   return (
     <Card>
       <CardContent className="flex flex-col items-center justify-center py-16 text-center">

@@ -10,10 +10,27 @@
 import { Fragment, useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import {
-  Button, Switch, Input, Label, Textarea,
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Button,
+  Switch,
+  Input,
+  Label,
+  Textarea,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '@intelliflow/ui';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { ConfigEmptyState, ConfigCardSkeleton } from './ticket-config-shared';
@@ -47,15 +64,27 @@ export function TicketTypeManager() {
   const { data: slaPolicies } = trpc.ticketConfig.slaPolicy.list.useQuery();
 
   const createMutation = trpc.ticketConfig.category.create.useMutation({
-    onSuccess: () => { utils.ticketConfig.category.list.invalidate(); setDialogOpen(false); toast({ title: 'Category created' }); },
+    onSuccess: () => {
+      utils.ticketConfig.category.list.invalidate();
+      setDialogOpen(false);
+      toast({ title: 'Category created' });
+    },
     onError: (err) => toast({ title: err.message, variant: 'destructive' }),
   });
   const updateMutation = trpc.ticketConfig.category.update.useMutation({
-    onSuccess: () => { utils.ticketConfig.category.list.invalidate(); setDialogOpen(false); setEditingId(null); toast({ title: 'Category updated' }); },
+    onSuccess: () => {
+      utils.ticketConfig.category.list.invalidate();
+      setDialogOpen(false);
+      setEditingId(null);
+      toast({ title: 'Category updated' });
+    },
     onError: (err) => toast({ title: err.message, variant: 'destructive' }),
   });
   const deleteMutation = trpc.ticketConfig.category.delete.useMutation({
-    onSuccess: () => { utils.ticketConfig.category.list.invalidate(); toast({ title: 'Category deactivated' }); },
+    onSuccess: () => {
+      utils.ticketConfig.category.list.invalidate();
+      toast({ title: 'Category deactivated' });
+    },
     onError: (err) => toast({ title: err.message, variant: 'destructive' }),
   });
 
@@ -113,7 +142,14 @@ export function TicketTypeManager() {
   if (isLoading) return <ConfigCardSkeleton />;
 
   if (!categories?.length) {
-    return <ConfigEmptyState title="No Ticket Types" description="Create ticket categories to organize and route support tickets." actionLabel="Add Type" onAction={openCreate} />;
+    return (
+      <ConfigEmptyState
+        title="No Ticket Types"
+        description="Create ticket categories to organize and route support tickets."
+        actionLabel="Add Type"
+        onAction={openCreate}
+      />
+    );
   }
 
   return (
@@ -145,7 +181,10 @@ export function TicketTypeManager() {
                 <TableCell>
                   {parent.color && (
                     <div className="flex items-center gap-2">
-                      <div className="h-4 w-4 rounded-full" style={{ backgroundColor: parent.color }} />
+                      <div
+                        className="h-4 w-4 rounded-full"
+                        style={{ backgroundColor: parent.color }}
+                      />
                       <span className="text-xs text-muted-foreground">{parent.color}</span>
                     </div>
                   )}
@@ -155,15 +194,29 @@ export function TicketTypeManager() {
                   {slaPolicies?.find((p) => p.id === parent.slaPolicyId)?.name ?? '—'}
                 </TableCell>
                 <TableCell>
-                  <Switch checked={parent.isActive} onCheckedChange={() => handleToggleActive(parent.id, parent.isActive)} aria-label={`Toggle ${parent.name} active state`} />
+                  <Switch
+                    checked={parent.isActive}
+                    onCheckedChange={() => handleToggleActive(parent.id, parent.isActive)}
+                    aria-label={`Toggle ${parent.name} active state`}
+                  />
                 </TableCell>
                 <TableCell>{parent.sortOrder}</TableCell>
                 <TableCell>
                   <div className="flex gap-1">
-                    <Button variant="ghost" size="icon" onClick={() => openEdit(parent)} aria-label={`Edit ${parent.name}`}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => openEdit(parent)}
+                      aria-label={`Edit ${parent.name}`}
+                    >
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => deleteMutation.mutate({ id: parent.id })} aria-label={`Delete ${parent.name}`}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => deleteMutation.mutate({ id: parent.id })}
+                      aria-label={`Delete ${parent.name}`}
+                    >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -175,7 +228,10 @@ export function TicketTypeManager() {
                   <TableCell>
                     {child.color && (
                       <div className="flex items-center gap-2">
-                        <div className="h-4 w-4 rounded-full" style={{ backgroundColor: child.color }} />
+                        <div
+                          className="h-4 w-4 rounded-full"
+                          style={{ backgroundColor: child.color }}
+                        />
                         <span className="text-xs text-muted-foreground">{child.color}</span>
                       </div>
                     )}
@@ -185,15 +241,29 @@ export function TicketTypeManager() {
                     {slaPolicies?.find((p) => p.id === child.slaPolicyId)?.name ?? '—'}
                   </TableCell>
                   <TableCell>
-                    <Switch checked={child.isActive} onCheckedChange={() => handleToggleActive(child.id, child.isActive)} aria-label={`Toggle ${child.name} active state`} />
+                    <Switch
+                      checked={child.isActive}
+                      onCheckedChange={() => handleToggleActive(child.id, child.isActive)}
+                      aria-label={`Toggle ${child.name} active state`}
+                    />
                   </TableCell>
                   <TableCell>{child.sortOrder}</TableCell>
                   <TableCell>
                     <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" onClick={() => openEdit(child)} aria-label={`Edit ${child.name}`}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => openEdit(child)}
+                        aria-label={`Edit ${child.name}`}
+                      >
                         <Pencil className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => deleteMutation.mutate({ id: child.id })} aria-label={`Delete ${child.name}`}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => deleteMutation.mutate({ id: child.id })}
+                        aria-label={`Delete ${child.name}`}
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -207,27 +277,45 @@ export function TicketTypeManager() {
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent role="dialog">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>{editingId ? 'Edit Ticket Type' : 'Add Ticket Type'}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="cat-name">Name</Label>
-              <Input id="cat-name" value={formData.name} onChange={(e) => setFormData((f) => ({ ...f, name: e.target.value }))} placeholder="e.g. Billing" />
+              <Input
+                id="cat-name"
+                value={formData.name}
+                onChange={(e) => setFormData((f) => ({ ...f, name: e.target.value }))}
+                placeholder="e.g. Billing"
+              />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="cat-desc">Description</Label>
-              <Textarea id="cat-desc" value={formData.description} onChange={(e) => setFormData((f) => ({ ...f, description: e.target.value }))} />
+              <Textarea
+                id="cat-desc"
+                value={formData.description}
+                onChange={(e) => setFormData((f) => ({ ...f, description: e.target.value }))}
+              />
             </div>
             <div className="grid gap-2">
               <Label>Parent Category</Label>
-              <Select value={formData.parentId} onValueChange={(v) => setFormData((f) => ({ ...f, parentId: v === 'none' ? '' : v }))}>
-                <SelectTrigger><SelectValue placeholder="None (top-level)" /></SelectTrigger>
+              <Select
+                value={formData.parentId}
+                onValueChange={(v) =>
+                  setFormData((f) => ({ ...f, parentId: v === 'none' ? '' : v }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="None (top-level)" />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">None (top-level)</SelectItem>
                   {parents.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -235,28 +323,49 @@ export function TicketTypeManager() {
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="cat-color">Color</Label>
-                <Input id="cat-color" type="color" value={formData.color} onChange={(e) => setFormData((f) => ({ ...f, color: e.target.value }))} />
+                <Input
+                  id="cat-color"
+                  type="color"
+                  value={formData.color}
+                  onChange={(e) => setFormData((f) => ({ ...f, color: e.target.value }))}
+                />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="cat-icon">Icon</Label>
-                <Input id="cat-icon" value={formData.icon} onChange={(e) => setFormData((f) => ({ ...f, icon: e.target.value }))} placeholder="e.g. credit-card" />
+                <Input
+                  id="cat-icon"
+                  value={formData.icon}
+                  onChange={(e) => setFormData((f) => ({ ...f, icon: e.target.value }))}
+                  placeholder="e.g. credit-card"
+                />
               </div>
             </div>
             <div className="grid gap-2">
               <Label>SLA Policy</Label>
-              <Select value={formData.slaPolicyId} onValueChange={(v) => setFormData((f) => ({ ...f, slaPolicyId: v === 'none' ? '' : v }))}>
-                <SelectTrigger><SelectValue placeholder="No SLA policy" /></SelectTrigger>
+              <Select
+                value={formData.slaPolicyId}
+                onValueChange={(v) =>
+                  setFormData((f) => ({ ...f, slaPolicyId: v === 'none' ? '' : v }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="No SLA policy" />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">No SLA policy</SelectItem>
                   {slaPolicies?.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+              Cancel
+            </Button>
             <Button onClick={handleSubmit} disabled={!formData.name.trim()}>
               {editingId ? 'Save Changes' : 'Add Type'}
             </Button>

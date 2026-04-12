@@ -94,6 +94,7 @@ function SLATrack({
       </div>
 
       <div className="flex items-center gap-2">
+        {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- custom styled progress bar with overflow:hidden child; <progress> cannot contain child elements */}
         <div
           role="progressbar" // NOSONAR typescript:S6819 — custom styled progress bar with overflow:hidden child; <progress> cannot contain child elements
           aria-valuenow={progressPct}
@@ -120,7 +121,15 @@ function SLATrack({
 
       {targetDue && (
         <span className="text-[10px] text-muted-foreground">
-          Target: {new Date(targetDue).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: timezone })}
+          Target:{' '}
+          {new Date(targetDue).toLocaleString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+            timeZone: timezone,
+          })}
         </span>
       )}
     </div>

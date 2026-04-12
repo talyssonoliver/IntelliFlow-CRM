@@ -107,9 +107,7 @@ export function searchHelpContent(
   });
 
   // If query is non-empty, only return items with score > 0
-  const scored = normalizedQuery
-    ? results.filter((r) => r.score > 0)
-    : results;
+  const scored = normalizedQuery ? results.filter((r) => r.score > 0) : results;
 
   // Sort based on mode
   switch (mergedFilters.sortMode) {

@@ -99,9 +99,7 @@ describe('searchHelpContent', () => {
       sortMode: 'most-articles',
     });
     for (let i = 1; i < results.length; i++) {
-      expect(results[i - 1].item.articleCount).toBeGreaterThanOrEqual(
-        results[i].item.articleCount
-      );
+      expect(results[i - 1].item.articleCount).toBeGreaterThanOrEqual(results[i].item.articleCount);
     }
   });
 

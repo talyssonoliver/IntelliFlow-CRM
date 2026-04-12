@@ -10,14 +10,38 @@
 import { useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import {
-  Button, Badge, Switch, Input, Label, Textarea,
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  Button,
+  Badge,
+  Switch,
+  Input,
+  Label,
+  Textarea,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
 } from '@intelliflow/ui';
 import { Star, Plus, Pencil, Trash2 } from 'lucide-react';
-import { ConfigEmptyState, ConfigCardSkeleton, formatMinutesToDisplay } from './ticket-config-shared';
+import {
+  ConfigEmptyState,
+  ConfigCardSkeleton,
+  formatMinutesToDisplay,
+} from './ticket-config-shared';
 import { toast } from '@intelliflow/ui';
 
 interface PolicyFormData {
@@ -58,19 +82,35 @@ export function SLAPolicyManager() {
   const { data: policies, isLoading } = trpc.ticketConfig.slaPolicy.list.useQuery();
 
   const createMutation = trpc.ticketConfig.slaPolicy.create.useMutation({
-    onSuccess: () => { utils.ticketConfig.slaPolicy.list.invalidate(); setDialogOpen(false); toast({ title: 'Policy created' }); },
+    onSuccess: () => {
+      utils.ticketConfig.slaPolicy.list.invalidate();
+      setDialogOpen(false);
+      toast({ title: 'Policy created' });
+    },
     onError: (err) => toast({ title: err.message, variant: 'destructive' }),
   });
   const updateMutation = trpc.ticketConfig.slaPolicy.update.useMutation({
-    onSuccess: () => { utils.ticketConfig.slaPolicy.list.invalidate(); setDialogOpen(false); setEditingId(null); toast({ title: 'Policy updated' }); },
+    onSuccess: () => {
+      utils.ticketConfig.slaPolicy.list.invalidate();
+      setDialogOpen(false);
+      setEditingId(null);
+      toast({ title: 'Policy updated' });
+    },
     onError: (err) => toast({ title: err.message, variant: 'destructive' }),
   });
   const deleteMutation = trpc.ticketConfig.slaPolicy.delete.useMutation({
-    onSuccess: () => { utils.ticketConfig.slaPolicy.list.invalidate(); setDeleteId(null); toast({ title: 'Policy deactivated' }); },
+    onSuccess: () => {
+      utils.ticketConfig.slaPolicy.list.invalidate();
+      setDeleteId(null);
+      toast({ title: 'Policy deactivated' });
+    },
     onError: (err) => toast({ title: err.message, variant: 'destructive' }),
   });
   const setDefaultMutation = trpc.ticketConfig.slaPolicy.setDefault.useMutation({
-    onSuccess: () => { utils.ticketConfig.slaPolicy.list.invalidate(); toast({ title: 'Default policy updated' }); },
+    onSuccess: () => {
+      utils.ticketConfig.slaPolicy.list.invalidate();
+      toast({ title: 'Default policy updated' });
+    },
     onError: (err) => toast({ title: err.message, variant: 'destructive' }),
   });
 
@@ -114,7 +154,14 @@ export function SLAPolicyManager() {
   if (isLoading) return <ConfigCardSkeleton />;
 
   if (!policies?.length) {
-    return <ConfigEmptyState title="No SLA Policies" description="Create your first SLA policy to define response and resolution time targets." actionLabel="Create Policy" onAction={openCreate} />;
+    return (
+      <ConfigEmptyState
+        title="No SLA Policies"
+        description="Create your first SLA policy to define response and resolution time targets."
+        actionLabel="Create Policy"
+        onAction={openCreate}
+      />
+    );
   }
 
   return (
@@ -161,20 +208,39 @@ export function SLAPolicyManager() {
                     <Star className="mr-1 h-3 w-3" /> Default
                   </Badge>
                 ) : (
-                  <Button variant="ghost" size="sm" onClick={() => setDefaultMutation.mutate({ id: policy.id })} aria-label={`Set ${policy.name} as default`}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setDefaultMutation.mutate({ id: policy.id })}
+                    aria-label={`Set ${policy.name} as default`}
+                  >
                     Set Default
                   </Button>
                 )}
               </TableCell>
               <TableCell>
-                <Switch checked={policy.isActive} onCheckedChange={() => handleToggleActive(policy.id, policy.isActive)} aria-label={`Toggle ${policy.name} active state`} />
+                <Switch
+                  checked={policy.isActive}
+                  onCheckedChange={() => handleToggleActive(policy.id, policy.isActive)}
+                  aria-label={`Toggle ${policy.name} active state`}
+                />
               </TableCell>
               <TableCell>
                 <div className="flex gap-1">
-                  <Button variant="ghost" size="icon" onClick={() => openEdit(policy)} aria-label={`Edit ${policy.name}`}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => openEdit(policy)}
+                    aria-label={`Edit ${policy.name}`}
+                  >
                     <Pencil className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" onClick={() => setDeleteId(policy.id)} aria-label={`Delete ${policy.name}`}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setDeleteId(policy.id)}
+                    aria-label={`Delete ${policy.name}`}
+                  >
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
@@ -186,18 +252,27 @@ export function SLAPolicyManager() {
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl" role="dialog">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>{editingId ? 'Edit SLA Policy' : 'Create SLA Policy'}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="name">Name</Label>
-              <Input id="name" value={formData.name} onChange={(e) => setFormData((f) => ({ ...f, name: e.target.value }))} placeholder="e.g. Standard SLA" />
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData((f) => ({ ...f, name: e.target.value }))}
+                placeholder="e.g. Standard SLA"
+              />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="description">Description</Label>
-              <Textarea id="description" value={formData.description} onChange={(e) => setFormData((f) => ({ ...f, description: e.target.value }))} />
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData((f) => ({ ...f, description: e.target.value }))}
+              />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -205,7 +280,17 @@ export function SLAPolicyManager() {
                 {(['critical', 'high', 'medium', 'low'] as const).map((priority) => (
                   <div key={priority} className="mb-2 flex items-center gap-2">
                     <Label className="w-20 capitalize">{priority}</Label>
-                    <Input type="number" min={1} value={formData[`${priority}ResponseMinutes`]} onChange={(e) => setFormData((f) => ({ ...f, [`${priority}ResponseMinutes`]: parseInt(e.target.value) || 1 }))} />
+                    <Input
+                      type="number"
+                      min={1}
+                      value={formData[`${priority}ResponseMinutes`]}
+                      onChange={(e) =>
+                        setFormData((f) => ({
+                          ...f,
+                          [`${priority}ResponseMinutes`]: parseInt(e.target.value) || 1,
+                        }))
+                      }
+                    />
                   </div>
                 ))}
               </div>
@@ -214,18 +299,42 @@ export function SLAPolicyManager() {
                 {(['critical', 'high', 'medium', 'low'] as const).map((priority) => (
                   <div key={priority} className="mb-2 flex items-center gap-2">
                     <Label className="w-20 capitalize">{priority}</Label>
-                    <Input type="number" min={1} value={formData[`${priority}ResolutionMinutes`]} onChange={(e) => setFormData((f) => ({ ...f, [`${priority}ResolutionMinutes`]: parseInt(e.target.value) || 1 }))} />
+                    <Input
+                      type="number"
+                      min={1}
+                      value={formData[`${priority}ResolutionMinutes`]}
+                      onChange={(e) =>
+                        setFormData((f) => ({
+                          ...f,
+                          [`${priority}ResolutionMinutes`]: parseInt(e.target.value) || 1,
+                        }))
+                      }
+                    />
                   </div>
                 ))}
               </div>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="warningThreshold">Warning Threshold (%)</Label>
-              <Input id="warningThreshold" type="number" min={1} max={100} value={formData.warningThresholdPercent} onChange={(e) => setFormData((f) => ({ ...f, warningThresholdPercent: parseInt(e.target.value) || 25 }))} />
+              <Input
+                id="warningThreshold"
+                type="number"
+                min={1}
+                max={100}
+                value={formData.warningThresholdPercent}
+                onChange={(e) =>
+                  setFormData((f) => ({
+                    ...f,
+                    warningThresholdPercent: parseInt(e.target.value) || 25,
+                  }))
+                }
+              />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+              Cancel
+            </Button>
             <Button onClick={handleSubmit} disabled={!formData.name.trim()}>
               {editingId ? 'Save Changes' : 'Create Policy'}
             </Button>
@@ -239,7 +348,8 @@ export function SLAPolicyManager() {
           <AlertDialogHeader>
             <AlertDialogTitle>Deactivate SLA Policy?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will deactivate the policy. Existing tickets using this policy will not be affected.
+              This will deactivate the policy. Existing tickets using this policy will not be
+              affected.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

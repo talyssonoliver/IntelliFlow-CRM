@@ -4,9 +4,18 @@ import { SupportTicketForm } from '../ticket-form';
 
 // Mock the composed components
 vi.mock('../TicketForm', () => ({
-  TicketForm: ({ mode, onSubmit, onCancel, isSubmitting, renderBeforeActions }: Record<string, unknown>) => (
+  TicketForm: ({
+    mode,
+    onSubmit,
+    onCancel,
+    isSubmitting,
+    renderBeforeActions,
+  }: Record<string, unknown>) => (
     <div data-testid="ticket-form" data-mode={mode} data-submitting={String(isSubmitting)}>
-      <button data-testid="form-submit" onClick={() => (onSubmit as (d: Record<string, unknown>) => void)({ subject: 'Test' })}>
+      <button
+        data-testid="form-submit"
+        onClick={() => (onSubmit as (d: Record<string, unknown>) => void)({ subject: 'Test' })}
+      >
         Submit
       </button>
       <button data-testid="form-cancel" onClick={onCancel as () => void}>

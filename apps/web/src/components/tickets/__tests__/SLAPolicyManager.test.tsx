@@ -39,7 +39,7 @@ const mockPolicy2 = {
 type MockQueryReturn<T> = { data: T | undefined; isLoading: boolean };
 type MockMutationReturn = { mutate: ReturnType<typeof vi.fn>; isPending: boolean };
 
-const mockListQuery = vi.fn<() => MockQueryReturn<typeof mockPolicy1[]>>(() => ({
+const mockListQuery = vi.fn<() => MockQueryReturn<(typeof mockPolicy1)[]>>(() => ({
   data: [mockPolicy1, mockPolicy2],
   isLoading: false,
 }));
@@ -163,7 +163,9 @@ describe('SLAPolicyManager', () => {
     render(<SLAPolicyManager />);
     const toggles = screen.getAllByRole('switch');
     fireEvent.click(toggles[0]);
-    expect(mutateFn).toHaveBeenCalledWith(expect.objectContaining({ id: 'sla-1', isActive: false }));
+    expect(mutateFn).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'sla-1', isActive: false })
+    );
   });
 
   it('calls setDefault mutation when clicking Set Default', () => {
@@ -189,7 +191,7 @@ describe('SLAPolicyManager', () => {
     fireEvent.change(nameInput, { target: { value: 'New Policy' } });
     // Click the submit button (Create Policy in dialog footer)
     const buttons = screen.getAllByRole('button', { name: /create policy/i });
-    const submitBtn = buttons.find(b => !b.getAttribute('aria-label'));
+    const submitBtn = buttons.find((b) => !b.getAttribute('aria-label'));
     if (submitBtn) fireEvent.click(submitBtn);
     expect(mutateFn).toHaveBeenCalledWith(expect.objectContaining({ name: 'New Policy' }));
   });
@@ -204,7 +206,9 @@ describe('SLAPolicyManager', () => {
     fireEvent.change(nameInput, { target: { value: 'Updated SLA' } });
     // Click Save Changes
     fireEvent.click(screen.getByText('Save Changes'));
-    expect(mutateFn).toHaveBeenCalledWith(expect.objectContaining({ id: 'sla-1', name: 'Updated SLA' }));
+    expect(mutateFn).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'sla-1', name: 'Updated SLA' })
+    );
   });
 
   it('shows resolution times in display', () => {

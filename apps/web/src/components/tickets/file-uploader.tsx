@@ -94,7 +94,7 @@ export function FileUploader({
         onChange([...files, ...validFiles]);
       }
     },
-    [files, onChange, maxFiles, maxSizeBytes, maxSizeMB, acceptedTypes],
+    [files, onChange, maxFiles, maxSizeBytes, maxSizeMB, acceptedTypes]
   );
 
   const handleDragOver = useCallback(
@@ -102,7 +102,7 @@ export function FileUploader({
       e.preventDefault();
       if (!disabled) setIsDragOver(true);
     },
-    [disabled],
+    [disabled]
   );
 
   const handleDragLeave = useCallback((e: React.DragEvent) => {
@@ -118,7 +118,7 @@ export function FileUploader({
       const droppedFiles = Array.from(e.dataTransfer.files);
       validateAndAddFiles(droppedFiles);
     },
-    [disabled, validateAndAddFiles],
+    [disabled, validateAndAddFiles]
   );
 
   const handleFileSelect = useCallback(
@@ -129,7 +129,7 @@ export function FileUploader({
       // Reset input so same file can be re-selected
       e.target.value = '';
     },
-    [validateAndAddFiles],
+    [validateAndAddFiles]
   );
 
   const handleRemove = useCallback(
@@ -138,31 +138,39 @@ export function FileUploader({
       onChange(updated);
       setErrors([]);
     },
-    [files, onChange],
+    [files, onChange]
   );
 
   const handleBrowseClick = useCallback(() => {
     inputRef.current?.click();
   }, []);
 
+  let dropZoneClass: string;
+  if (disabled) {
+    dropZoneClass = 'cursor-not-allowed border-slate-200 dark:border-slate-700 bg-slate-100/50 dark:bg-slate-800/30 opacity-60';
+  } else if (isDragOver) {
+    dropZoneClass = 'border-[#137fec] bg-[#137fec]/5';
+  } else {
+    dropZoneClass = 'border-slate-300 dark:border-slate-600 hover:border-[#137fec]/50';
+  }
+
   return (
     <div className="space-y-3">
-      <label htmlFor="file-upload-input" className="block text-sm font-semibold text-slate-700 dark:text-slate-300">Attachments</label>
+      <label
+        htmlFor="file-upload-input"
+        className="block text-sm font-semibold text-slate-700 dark:text-slate-300"
+      >
+        Attachments
+      </label>
 
       {/* Drop zone */}
-      <div
-        role="region"
+      {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- drag-and-drop handlers are intentional on the upload region */}
+      <section
         aria-label="File upload area"
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        className={`relative rounded-lg border-2 border-dashed p-4 text-center transition-colors ${
-          disabled
-            ? 'cursor-not-allowed border-slate-200 dark:border-slate-700 bg-slate-100/50 dark:bg-slate-800/30 opacity-60'
-            : isDragOver
-              ? 'border-[#137fec] bg-[#137fec]/5'
-              : 'border-slate-300 dark:border-slate-600 hover:border-[#137fec]/50'
-        }`}
+        className={`relative rounded-lg border-2 border-dashed p-4 text-center transition-colors ${dropZoneClass}`}
       >
         <span className="material-symbols-outlined text-2xl text-slate-400 dark:text-slate-500 mb-1 block">
           cloud_upload
@@ -193,7 +201,7 @@ export function FileUploader({
           tabIndex={-1}
           aria-hidden="true"
         />
-      </div>
+      </section>
 
       {/* Error messages */}
       {errors.length > 0 && (
@@ -219,7 +227,9 @@ export function FileUploader({
               </span>
               <div className="flex-1 min-w-0">
                 <p className="truncate font-medium text-slate-900 dark:text-white">{file.name}</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">{formatFileSize(file.size)}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {formatFileSize(file.size)}
+                </p>
               </div>
               <button
                 type="button"

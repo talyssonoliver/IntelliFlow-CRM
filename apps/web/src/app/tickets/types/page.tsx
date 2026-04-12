@@ -7,10 +7,7 @@ export default function TicketTypesPage() {
   return (
     <>
       <PageHeader
-        breadcrumbs={[
-          { label: 'Tickets', href: '/tickets' },
-          { label: 'Ticket Types' },
-        ]}
+        breadcrumbs={[{ label: 'Tickets', href: '/tickets' }, { label: 'Ticket Types' }]}
         title="Ticket Types"
         description="Organize tickets with categories and assign SLA policies."
       />

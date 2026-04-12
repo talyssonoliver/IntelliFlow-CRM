@@ -91,9 +91,7 @@ export function FeedbackWidget({ articleId, onFeedback }: Readonly<FeedbackWidge
               </div>
             </div>
             {error && (
-              <p className="text-sm text-destructive">
-                Something went wrong. Please try again.
-              </p>
+              <p className="text-sm text-destructive">Something went wrong. Please try again.</p>
             )}
           </div>
         )}

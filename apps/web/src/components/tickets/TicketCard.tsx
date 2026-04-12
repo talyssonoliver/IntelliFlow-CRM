@@ -18,10 +18,16 @@ interface TicketCardProps {
   compact?: boolean;
 }
 
-export function TicketCard({ ticket, onClick, onQuickAction, compact = false }: Readonly<TicketCardProps>) {
+export function TicketCard({
+  ticket,
+  onClick,
+  onQuickAction,
+  compact = false,
+}: Readonly<TicketCardProps>) {
   const priorityConfig = getPriorityConfig(ticket.priority);
 
   return (
+    // eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- shadcn Card renders as a styled div; converting to <article> would lose Card styling
     <Card
       className="p-4 hover:shadow-md transition-shadow cursor-pointer group bg-card border-border"
       onClick={onClick}

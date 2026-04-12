@@ -76,25 +76,41 @@ vi.mock('@/lib/api', () => ({
     ticket: {
       getById: { useQuery: vi.fn(() => mockGetById) },
       assignees: { useQuery: vi.fn(() => mockAssignees) },
-      update: { useMutation: vi.fn((opts?: Record<string, unknown>) => {
-        if (opts?.onSuccess) (mockUpdateMutation as Record<string, unknown>).__onSuccess = opts.onSuccess;
-        if (opts?.onError) (mockUpdateMutation as Record<string, unknown>).__onError = opts.onError;
-        return mockUpdateMutation;
-      }) },
-      addResponse: { useMutation: vi.fn((opts?: Record<string, unknown>) => {
-        if (opts?.onSuccess) (mockAddResponseMutation as Record<string, unknown>).__onSuccess = opts.onSuccess;
-        if (opts?.onError) (mockAddResponseMutation as Record<string, unknown>).__onError = opts.onError;
-        return mockAddResponseMutation;
-      }) },
+      update: {
+        useMutation: vi.fn((opts?: Record<string, unknown>) => {
+          if (opts?.onSuccess)
+            (mockUpdateMutation as Record<string, unknown>).__onSuccess = opts.onSuccess;
+          if (opts?.onError)
+            (mockUpdateMutation as Record<string, unknown>).__onError = opts.onError;
+          return mockUpdateMutation;
+        }),
+      },
+      addResponse: {
+        useMutation: vi.fn((opts?: Record<string, unknown>) => {
+          if (opts?.onSuccess)
+            (mockAddResponseMutation as Record<string, unknown>).__onSuccess = opts.onSuccess;
+          if (opts?.onError)
+            (mockAddResponseMutation as Record<string, unknown>).__onError = opts.onError;
+          return mockAddResponseMutation;
+        }),
+      },
     },
   },
 }));
 
 // Mock PageHeader
 vi.mock('@/components/shared', () => ({
-  PageHeader: ({ title, breadcrumbs }: { title: string; breadcrumbs: Array<{ label: string }> }) => (
+  PageHeader: ({
+    title,
+    breadcrumbs,
+  }: {
+    title: string;
+    breadcrumbs: Array<{ label: string }>;
+  }) => (
     <div data-testid="page-header" data-title={title}>
-      {breadcrumbs?.map((b) => <span key={b.label}>{b.label}</span>)}
+      {breadcrumbs?.map((b) => (
+        <span key={b.label}>{b.label}</span>
+      ))}
     </div>
   ),
 }));
@@ -179,14 +195,14 @@ describe('SupportTicketDetailPage', () => {
     const onError = (mockUpdateMutation as Record<string, unknown>).__onError as (e: Error) => void;
     if (onError) onError(new Error('fail'));
 
-    expect(mockToast).toHaveBeenCalledWith(
-      expect.objectContaining({ variant: 'destructive' })
-    );
+    expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ variant: 'destructive' }));
   });
 
   it('calls update.mutateAsync for priority change', async () => {
     render(<SupportTicketDetailPage />);
-    const onPriorityChange = capturedTicketDetailProps.onPriorityChange as (p: string) => Promise<void>;
+    const onPriorityChange = capturedTicketDetailProps.onPriorityChange as (
+      p: string
+    ) => Promise<void>;
     await act(() => onPriorityChange('HIGH'));
     expect(mockUpdateMutation.mutateAsync).toHaveBeenCalledWith(
       expect.objectContaining({ id: 'ticket-abc-123', priority: 'HIGH' })
@@ -195,7 +211,10 @@ describe('SupportTicketDetailPage', () => {
 
   it('calls addResponse.mutateAsync for public reply', async () => {
     render(<SupportTicketDetailPage />);
-    const onAddResponse = capturedTicketDetailProps.onAddResponse as (c: string, i: boolean) => Promise<void>;
+    const onAddResponse = capturedTicketDetailProps.onAddResponse as (
+      c: string,
+      i: boolean
+    ) => Promise<void>;
     await act(() => onAddResponse('Reply text', false));
     expect(mockAddResponseMutation.mutateAsync).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -208,7 +227,10 @@ describe('SupportTicketDetailPage', () => {
 
   it('calls addResponse.mutateAsync with authorRole "internal" for internal note', async () => {
     render(<SupportTicketDetailPage />);
-    const onAddResponse = capturedTicketDetailProps.onAddResponse as (c: string, i: boolean) => Promise<void>;
+    const onAddResponse = capturedTicketDetailProps.onAddResponse as (
+      c: string,
+      i: boolean
+    ) => Promise<void>;
     await act(() => onAddResponse('Internal info', true));
     expect(mockAddResponseMutation.mutateAsync).toHaveBeenCalledWith(
       expect.objectContaining({

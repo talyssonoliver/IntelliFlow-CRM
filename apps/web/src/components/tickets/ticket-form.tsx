@@ -40,11 +40,7 @@ export function SupportTicketForm({
       onCancel={onCancel}
       isSubmitting={isSubmitting}
       renderBeforeActions={
-        <FileUploader
-          files={stagedFiles}
-          onChange={setStagedFiles}
-          disabled={isSubmitting}
-        />
+        <FileUploader files={stagedFiles} onChange={setStagedFiles} disabled={isSubmitting} />
       }
     />
   );

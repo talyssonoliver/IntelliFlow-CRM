@@ -158,8 +158,7 @@ export default function SupportTicketDetailPage() {
             href="/support/tickets"
             className="inline-flex items-center gap-2 px-4 py-2 bg-[#137fec] text-white rounded-lg hover:bg-blue-600 transition-colors"
           >
-            <span className="material-symbols-outlined !text-lg">arrow_back</span>{' '}
-            Back to Tickets
+            <span className="material-symbols-outlined !text-lg">arrow_back</span> Back to Tickets
           </Link>
         </Card>
       </div>

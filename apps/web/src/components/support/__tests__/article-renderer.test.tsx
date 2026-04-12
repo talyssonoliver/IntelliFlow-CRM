@@ -61,7 +61,8 @@ const EMPTY_SECTIONS_ARTICLE: HelpArticle = {
 const LONG_TITLE_ARTICLE: HelpArticle = {
   ...SAMPLE_ARTICLE,
   id: 'long-title',
-  title: 'This Is A Very Long Article Title That Should Wrap Properly Without Causing Overflow Issues In The Layout',
+  title:
+    'This Is A Very Long Article Title That Should Wrap Properly Without Causing Overflow Issues In The Layout',
 };
 
 describe('ArticleRenderer', () => {
@@ -104,7 +105,9 @@ describe('ArticleRenderer', () => {
   it('renders multiple sections in correct order', () => {
     render(<ArticleRenderer article={SAMPLE_ARTICLE} />);
     const article = screen.getByRole('article');
-    const headings = within(article).getAllByRole('heading', { level: 2 }).filter((h) => h.id);
+    const headings = within(article)
+      .getAllByRole('heading', { level: 2 })
+      .filter((h) => h.id);
     expect(headings[0]).toHaveTextContent('First Section');
     expect(headings[1]).toHaveTextContent('Second Section');
     expect(headings[2]).toHaveTextContent('Third Section');

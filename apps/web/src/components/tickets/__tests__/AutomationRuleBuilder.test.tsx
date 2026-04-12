@@ -36,7 +36,9 @@ const mockRule2 = {
 type MockQueryReturn<T> = { data: T | undefined; isLoading: boolean };
 type MockMutationReturn = { mutate: ReturnType<typeof vi.fn>; isPending: boolean };
 
-const mockListQuery = vi.fn<() => MockQueryReturn<{ items: typeof mockRule1[]; nextCursor?: string }>>(() => ({
+const mockListQuery = vi.fn<
+  () => MockQueryReturn<{ items: (typeof mockRule1)[]; nextCursor?: string }>
+>(() => ({
   data: { items: [mockRule1, mockRule2], nextCursor: undefined },
   isLoading: false,
 }));

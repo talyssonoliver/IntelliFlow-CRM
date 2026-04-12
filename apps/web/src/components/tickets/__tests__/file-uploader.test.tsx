@@ -89,10 +89,12 @@ describe('FileUploader', () => {
 
   it('rejects when adding more than max files', () => {
     const existingFiles = Array.from({ length: 5 }, (_, i) =>
-      createMockFile(`file${i}.txt`, 100, 'text/plain'),
+      createMockFile(`file${i}.txt`, 100, 'text/plain')
     );
     const onChange = vi.fn();
-    render(<FileUploader {...defaultProps} files={existingFiles} onChange={onChange} maxFiles={5} />);
+    render(
+      <FileUploader {...defaultProps} files={existingFiles} onChange={onChange} maxFiles={5} />
+    );
     const dropZone = screen.getByRole('region', { name: 'File upload area' });
 
     const newFile = createMockFile('extra.txt', 100, 'text/plain');

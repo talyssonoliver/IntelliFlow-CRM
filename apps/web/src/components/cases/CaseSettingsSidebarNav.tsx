@@ -25,7 +25,7 @@ export function CaseSettingsSidebarNav({
           className={cn(
             'flex items-center gap-3 px-3 py-2 rounded-lg text-sm w-full',
             'bg-primary/10 font-medium text-foreground',
-            !sidebarExpanded && 'justify-center',
+            !sidebarExpanded && 'justify-center'
           )}
         >
           <div className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0 bg-slate-100 dark:bg-slate-800">
@@ -33,9 +33,7 @@ export function CaseSettingsSidebarNav({
               settings
             </span>
           </div>
-          {sidebarExpanded && (
-            <span className="font-medium truncate">Case Settings</span>
-          )}
+          {sidebarExpanded && <span className="font-medium truncate">Case Settings</span>}
         </div>
 
         {sidebarExpanded ? (
@@ -51,13 +49,13 @@ export function CaseSettingsSidebarNav({
                     'flex items-center gap-3 px-3 py-1.5 rounded-lg text-sm transition-colors',
                     active
                       ? 'bg-primary/10 font-medium text-foreground'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-accent',
+                      : 'text-muted-foreground hover:text-foreground hover:bg-accent'
                   )}
                 >
                   <span
                     className={cn(
                       'material-symbols-outlined text-lg',
-                      active ? 'text-primary' : 'text-muted-foreground',
+                      active ? 'text-primary' : 'text-muted-foreground'
                     )}
                     aria-hidden="true"
                   >
@@ -80,13 +78,15 @@ export function CaseSettingsSidebarNav({
                   title={item.label}
                   className={cn(
                     'flex items-center justify-center px-3 py-1.5 rounded-lg transition-colors',
-                    active ? 'bg-primary/10' : 'text-muted-foreground hover:text-foreground hover:bg-accent',
+                    active
+                      ? 'bg-primary/10'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-accent'
                   )}
                 >
                   <span
                     className={cn(
                       'material-symbols-outlined text-lg',
-                      active ? 'text-primary' : '',
+                      active ? 'text-primary' : ''
                     )}
                     aria-hidden="true"
                   >

@@ -3,7 +3,14 @@
 import * as React from 'react';
 import { useState, useMemo, useCallback, Suspense, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, EmptyState } from '@intelliflow/ui';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  EmptyState,
+} from '@intelliflow/ui';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 // Material Symbols icon helper component
 const Icon = ({ name, className = '' }: Readonly<{ name: string; className?: string }>) => (
@@ -853,7 +860,12 @@ interface RawTimelineEvent {
   isOverdue?: boolean | null;
   task?: { status: string } | null;
   appointment?: { status: string; endTime: string | number | Date } | null;
-  agentAction?: { status: string; actionId?: string | null; agentName?: string | null; confidence?: number | null } | null;
+  agentAction?: {
+    status: string;
+    actionId?: string | null;
+    agentName?: string | null;
+    confidence?: number | null;
+  } | null;
   actor?: { name?: string | null } | null;
 }
 

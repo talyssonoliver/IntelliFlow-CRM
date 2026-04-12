@@ -138,8 +138,7 @@ function StatsBar({ stats, isLoading }: Readonly<{ stats: CaseStats; isLoading: 
         <p className="text-red-700 text-3xl font-bold leading-tight relative">{stats.overdue}</p>
         {stats.overdue > 0 && (
           <p className="text-red-600 text-sm font-medium flex items-center gap-1 relative">
-            <span className="material-symbols-outlined text-[16px]">warning</span>{' '}
-            Action required
+            <span className="material-symbols-outlined text-[16px]">warning</span> Action required
           </p>
         )}
       </div>
@@ -165,15 +164,14 @@ function StatsBar({ stats, isLoading }: Readonly<{ stats: CaseStats; isLoading: 
 
 function CaseCaseNumberCell({ row }: Readonly<{ row: CaseListItem }>) {
   return (
-    <span className="text-sm font-bold text-primary">
-      {row.caseNumber || row.id.slice(0, 12)}
-    </span>
+    <span className="text-sm font-bold text-primary">{row.caseNumber || row.id.slice(0, 12)}</span>
   );
 }
 
 function CaseTitleCell({ row }: Readonly<{ row: CaseListItem }>) {
   const isClosed = row.status === 'CLOSED' || row.status === 'CANCELLED';
-  const subtitle = row.lastActivityText || (row.updatedAt ? `Updated ${timeAgo(row.updatedAt)}` : '');
+  const subtitle =
+    row.lastActivityText || (row.updatedAt ? `Updated ${timeAgo(row.updatedAt)}` : '');
   return (
     <div className={cn('flex flex-col', isClosed && 'opacity-70')}>
       <span className="text-sm font-semibold text-foreground">{row.title}</span>
@@ -207,10 +205,7 @@ function CasePriorityCell({ row }: Readonly<{ row: CaseListItem }>) {
   const priorityCfg = getPriorityConfig(row.priority);
   return (
     <span
-      className={cn(
-        'inline-flex items-center gap-1.5 text-xs font-medium',
-        priorityCfg.textColor
-      )}
+      className={cn('inline-flex items-center gap-1.5 text-xs font-medium', priorityCfg.textColor)}
     >
       <span className={cn('size-2 rounded-full', priorityCfg.dotColor)} />
       {priorityCfg.label}

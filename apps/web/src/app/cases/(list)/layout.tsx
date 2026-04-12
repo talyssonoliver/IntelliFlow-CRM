@@ -24,11 +24,9 @@ export default function CasesListLayout({ children }: Readonly<{ children: React
 
   const sidebarConfig = useMemo(() => {
     if (onSettingsPage) {
-      return createCasesSettingsSidebarConfig(
-        ({ isExpanded }) => (
-          <CaseSettingsSidebarNav isExpanded={isExpanded} />
-        ),
-      );
+      return createCasesSettingsSidebarConfig(({ isExpanded }) => (
+        <CaseSettingsSidebarNav isExpanded={isExpanded} />
+      ));
     }
     return createCasesSidebarConfig(() => setSettingsOpen((prev) => !prev));
   }, [onSettingsPage]);
@@ -41,10 +39,7 @@ export default function CasesListLayout({ children }: Readonly<{ children: React
 
           {/* Panel only needed in list mode */}
           {!onSettingsPage && (
-            <CaseSettingsPanel
-              isOpen={settingsOpen}
-              onClose={() => setSettingsOpen(false)}
-            />
+            <CaseSettingsPanel isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
           )}
 
           {/* Portal target for page-injected sidebar content */}

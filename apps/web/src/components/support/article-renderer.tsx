@@ -143,9 +143,7 @@ function BlockRenderer({ block }: Readonly<{ block: ContentBlock }>) {
 
 // ─── Table of Contents ────────────────────────────────────────────────────
 
-function TableOfContents({
-  sections,
-}: Readonly<{ sections: readonly { heading: string }[] }>) {
+function TableOfContents({ sections }: Readonly<{ sections: readonly { heading: string }[] }>) {
   if (sections.length < 2) return null;
 
   return (
@@ -154,10 +152,13 @@ function TableOfContents({
       aria-label="Table of contents"
     >
       <h2 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-        <span className="material-symbols-outlined text-base text-muted-foreground" aria-hidden="true">
+        <span
+          className="material-symbols-outlined text-base text-muted-foreground"
+          aria-hidden="true"
+        >
           list
         </span>
-        In this article
+        {' '}In this article
       </h2>
       <ul className="space-y-2 list-none p-0 m-0">
         {sections.map((section) => {
@@ -168,10 +169,7 @@ function TableOfContents({
                 href={`#${id}`}
                 className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-2"
               >
-                <span
-                  className="material-symbols-outlined text-xs"
-                  aria-hidden="true"
-                >
+                <span className="material-symbols-outlined text-xs" aria-hidden="true">
                   arrow_forward
                 </span>
                 {section.heading}
@@ -208,8 +206,7 @@ export function ArticleRenderer({ article }: Readonly<ArticleRendererProps>) {
           <span className="material-symbols-outlined text-base" aria-hidden="true">
             update
           </span>
-          Updated{' '}
-          <time dateTime={article.lastUpdatedAt}>{formatDate(article.lastUpdatedAt)}</time>
+          Updated <time dateTime={article.lastUpdatedAt}>{formatDate(article.lastUpdatedAt)}</time>
         </span>
       </div>
 

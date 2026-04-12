@@ -89,7 +89,10 @@ import { TicketTypeManager } from '../TicketTypeManager';
 describe('TicketTypeManager', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockCategoryListQuery.mockReturnValue({ data: [mockParentCategory, mockChildCategory], isLoading: false });
+    mockCategoryListQuery.mockReturnValue({
+      data: [mockParentCategory, mockChildCategory],
+      isLoading: false,
+    });
     mockSlaListQuery.mockReturnValue({ data: [mockSlaPolicy], isLoading: false });
   });
 
@@ -164,7 +167,9 @@ describe('TicketTypeManager', () => {
     render(<TicketTypeManager />);
     const toggles = screen.getAllByRole('switch');
     fireEvent.click(toggles[0]);
-    expect(mutateFn).toHaveBeenCalledWith(expect.objectContaining({ id: 'cat-1', isActive: false }));
+    expect(mutateFn).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'cat-1', isActive: false })
+    );
   });
 
   it('calls delete mutation when clicking delete', () => {
@@ -196,7 +201,9 @@ describe('TicketTypeManager', () => {
     const nameInput = screen.getByDisplayValue('Billing');
     fireEvent.change(nameInput, { target: { value: 'Updated Billing' } });
     fireEvent.click(screen.getByText('Save Changes'));
-    expect(mutateFn).toHaveBeenCalledWith(expect.objectContaining({ id: 'cat-1', name: 'Updated Billing' }));
+    expect(mutateFn).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'cat-1', name: 'Updated Billing' })
+    );
   });
 
   it('shows sort order for categories', () => {

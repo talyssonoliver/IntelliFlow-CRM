@@ -90,7 +90,10 @@ const SORT_OPTIONS = [
 // =============================================================================
 
 const TICKET_STATUS_OPTIONS: StatusOption[] = TICKET_STATUSES.map((status) => {
-  const configs: Record<string, { color: StatusOption['color']; icon: string; description: string }> = {
+  const configs: Record<
+    string,
+    { color: StatusOption['color']; icon: string; description: string }
+  > = {
     OPEN: { color: 'blue', icon: 'inbox', description: 'Ticket awaiting action' },
     IN_PROGRESS: { color: 'amber', icon: 'pending', description: 'Actively being worked on' },
     WAITING_ON_CUSTOMER: {
@@ -236,9 +239,7 @@ function TicketAssigneeCell({ ticket }: Readonly<{ ticket: TicketListItem }>) {
 }
 
 function TicketUpdatedCell({ ticket }: Readonly<{ ticket: TicketListItem }>) {
-  return (
-    <span className="text-sm text-slate-500 dark:text-slate-400">{ticket.updatedAt}</span>
-  );
+  return <span className="text-sm text-slate-500 dark:text-slate-400">{ticket.updatedAt}</span>;
 }
 
 interface TicketActionHandlers {
@@ -271,11 +272,24 @@ function TicketActionsCell({
         },
       ]}
       dropdownActions={[
-        { icon: 'person_add', label: 'Assign to...', onClick: () => handlers.onSingleAssign(ticket) },
-        { icon: 'flag', label: 'Change Priority', onClick: () => handlers.onSingleChangePriority(ticket) },
+        {
+          icon: 'person_add',
+          label: 'Assign to...',
+          onClick: () => handlers.onSingleAssign(ticket),
+        },
+        {
+          icon: 'flag',
+          label: 'Change Priority',
+          onClick: () => handlers.onSingleChangePriority(ticket),
+        },
         { icon: 'history', label: 'View History', onClick: () => handlers.onViewHistory(ticket) },
         { id: 'sep-1', icon: '', label: '', onClick: () => {}, separator: true },
-        { icon: 'delete', label: 'Delete', variant: 'danger', onClick: () => handlers.onSingleDelete(ticket) },
+        {
+          icon: 'delete',
+          label: 'Delete',
+          variant: 'danger',
+          onClick: () => handlers.onSingleDelete(ticket),
+        },
       ]}
     />
   );
@@ -562,7 +576,9 @@ export function TicketList({
         {/* Stats Cards Skeleton */}
         <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Card key={i} className="p-4"> {/* NOSONAR typescript:S6479 */}
+            <Card key={i} className="p-4">
+              {' '}
+              {/* NOSONAR typescript:S6479 */}
               <div className="flex items-center gap-3">
                 <Skeleton className="w-10 h-10 rounded-lg" />
                 <div className="space-y-2 flex-1">

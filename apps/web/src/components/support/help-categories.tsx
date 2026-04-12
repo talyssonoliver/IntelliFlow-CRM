@@ -19,7 +19,10 @@ export function HelpCategories({ categories }: Readonly<HelpCategoriesProps>) {
   });
 
   return (
-    <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" aria-label="Help categories">
+    <ul
+      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+      aria-label="Help categories"
+    >
       {sorted.map((category) => (
         <li key={category.id}>
           <Link
@@ -33,7 +36,10 @@ export function HelpCategories({ categories }: Readonly<HelpCategoriesProps>) {
                     <div
                       className={`flex h-10 w-10 items-center justify-center rounded-lg ${category.color} dark:opacity-90`}
                     >
-                      <span className="material-symbols-outlined text-white text-xl" aria-hidden="true">
+                      <span
+                        className="material-symbols-outlined text-white text-xl"
+                        aria-hidden="true"
+                      >
                         {category.icon}
                       </span>
                     </div>

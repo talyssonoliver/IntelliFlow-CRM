@@ -7,10 +7,7 @@ export default function AutomationsPage() {
   return (
     <>
       <PageHeader
-        breadcrumbs={[
-          { label: 'Tickets', href: '/tickets' },
-          { label: 'Automations' },
-        ]}
+        breadcrumbs={[{ label: 'Tickets', href: '/tickets' }, { label: 'Automations' }]}
         title="Automations"
         description="Create rules to automatically route, assign, and escalate tickets."
       />

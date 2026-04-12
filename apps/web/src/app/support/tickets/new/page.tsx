@@ -121,7 +121,9 @@ export default function SupportNewTicketPage() {
                 Support
               </Link>
             </li>
-            <li><span className="text-slate-300 dark:text-slate-600">/</span></li>
+            <li>
+              <span className="text-slate-300 dark:text-slate-600">/</span>
+            </li>
             <li>
               <Link
                 href="/support/tickets"
@@ -130,7 +132,9 @@ export default function SupportNewTicketPage() {
                 Tickets
               </Link>
             </li>
-            <li><span className="text-slate-300 dark:text-slate-600">/</span></li>
+            <li>
+              <span className="text-slate-300 dark:text-slate-600">/</span>
+            </li>
             <li>
               <span className="text-slate-900 dark:text-white text-sm font-medium">New Ticket</span>
             </li>

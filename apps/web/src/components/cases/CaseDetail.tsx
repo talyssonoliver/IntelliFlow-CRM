@@ -81,7 +81,11 @@ function TimelineIcon({ type }: Readonly<{ type: TimelineEntry['type'] }>) {
 
 // ─── Avatar helpers ─────────────────────────────────────────────────────────
 
-function Avatar({ name, url, size = 'sm' }: Readonly<{ name: string; url?: string; size?: 'sm' | 'md' }>) {
+function Avatar({
+  name,
+  url,
+  size = 'sm',
+}: Readonly<{ name: string; url?: string; size?: 'sm' | 'md' }>) {
   const sizeClass = size === 'md' ? 'size-8' : 'size-5';
   const textSize = size === 'md' ? 'text-[10px]' : 'text-[8px]';
   if (url) {
@@ -224,14 +228,14 @@ export function CaseDetail({
         </div>
         <div className="flex items-center gap-3">
           <button className="flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-lg text-sm font-bold text-foreground hover:bg-muted transition-colors">
-            <span className="material-symbols-outlined">ios_share</span>{' '}Export
+            <span className="material-symbols-outlined">ios_share</span> Export
           </button>
           {!isClosed && (
             <button
               onClick={() => setShowCloseDialog(true)}
               className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all"
             >
-              <span className="material-symbols-outlined">add</span>{' '}New Entry
+              <span className="material-symbols-outlined">add</span> New Entry
             </button>
           )}
         </div>

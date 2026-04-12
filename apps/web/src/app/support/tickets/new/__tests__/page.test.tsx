@@ -20,7 +20,9 @@ const mockToast = vi.fn();
 vi.mock('@intelliflow/ui', () => ({
   toast: (...args: unknown[]) => mockToast(...args),
   Card: ({ children, className }: { children: React.ReactNode; className?: string }) => (
-    <div data-testid="card" className={className}>{children}</div>
+    <div data-testid="card" className={className}>
+      {children}
+    </div>
   ),
 }));
 
@@ -30,16 +32,13 @@ vi.mock('@/components/tickets/ticket-form', () => ({
   SupportTicketForm: (props: Record<string, unknown>) => {
     _capturedFormProps = props;
     return (
-      <div
-        data-testid="support-ticket-form"
-        data-is-submitting={String(props.isSubmitting)}
-      >
+      <div data-testid="support-ticket-form" data-is-submitting={String(props.isSubmitting)}>
         <button
           data-testid="form-submit"
           onClick={() =>
             (props.onSubmit as (d: Record<string, unknown>, f: File[]) => Promise<void>)(
               { subject: 'Test Ticket', priority: 'HIGH' },
-              [],
+              []
             )
           }
         >
@@ -53,16 +52,13 @@ vi.mock('@/components/tickets/ticket-form', () => ({
               [
                 new File(['content1'], 'doc.pdf', { type: 'application/pdf' }),
                 new File(['content2'], 'img.png', { type: 'image/png' }),
-              ],
+              ]
             )
           }
         >
           Submit With Files
         </button>
-        <button
-          data-testid="form-cancel"
-          onClick={props.onCancel as () => void}
-        >
+        <button data-testid="form-cancel" onClick={props.onCancel as () => void}>
           Cancel
         </button>
       </div>
@@ -129,12 +125,10 @@ describe('SupportNewTicketPage', () => {
     });
 
     expect(mockCreateMutateAsync).toHaveBeenCalledWith(
-      expect.objectContaining({ subject: 'Test Ticket', priority: 'HIGH' }),
+      expect.objectContaining({ subject: 'Test Ticket', priority: 'HIGH' })
     );
     expect(mockAddAttachmentMutateAsync).not.toHaveBeenCalled();
-    expect(mockToast).toHaveBeenCalledWith(
-      expect.objectContaining({ title: 'Ticket Created' }),
-    );
+    expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Ticket Created' }));
     expect(mockPush).toHaveBeenCalledWith('/support/tickets/ticket-abc-123');
   });
 
@@ -154,14 +148,14 @@ describe('SupportNewTicketPage', () => {
         ticketId: 'ticket-abc-123',
         name: 'doc.pdf',
         fileType: 'application/pdf',
-      }),
+      })
     );
     expect(mockAddAttachmentMutateAsync).toHaveBeenCalledWith(
       expect.objectContaining({
         ticketId: 'ticket-abc-123',
         name: 'img.png',
         fileType: 'image/png',
-      }),
+      })
     );
     expect(mockPush).toHaveBeenCalledWith('/support/tickets/ticket-abc-123');
   });
@@ -177,7 +171,7 @@ describe('SupportNewTicketPage', () => {
       expect.objectContaining({
         title: 'Failed to create ticket',
         variant: 'destructive',
-      }),
+      })
     );
     expect(mockPush).not.toHaveBeenCalled();
   });
@@ -195,7 +189,7 @@ describe('SupportNewTicketPage', () => {
         expect.objectContaining({
           title: 'Ticket created with warnings',
           variant: 'destructive',
-        }),
+        })
       );
     });
     // Still redirects because ticket was created
@@ -220,7 +214,7 @@ describe('SupportNewTicketPage', () => {
         expect.objectContaining({
           title: 'Ticket Created',
           description: expect.stringContaining('attachments'),
-        }),
+        })
       );
     });
   });

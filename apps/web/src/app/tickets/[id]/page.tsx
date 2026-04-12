@@ -43,7 +43,10 @@ export default function TicketDetailPage() {
   const validId = isValidEntityId(ticketId);
 
   // tRPC queries — only fire when the URL param looks like a real ID
-  const { data: ticket, isLoading } = api.ticket.getById.useQuery({ id: ticketId }, { enabled: validId });
+  const { data: ticket, isLoading } = api.ticket.getById.useQuery(
+    { id: ticketId },
+    { enabled: validId }
+  );
   const { data: assigneeOptions = [], isLoading: isAssigneeOptionsLoading } =
     api.ticket.assignees.useQuery();
 
@@ -211,8 +214,7 @@ export default function TicketDetailPage() {
             href="/tickets"
             className="inline-flex items-center gap-2 px-4 py-2 bg-[#137fec] text-white rounded-lg hover:bg-blue-600 transition-colors"
           >
-            <span className="material-symbols-outlined !text-lg">arrow_back</span>{' '}
-            Back to Tickets
+            <span className="material-symbols-outlined !text-lg">arrow_back</span> Back to Tickets
           </Link>
         </Card>
       </div>

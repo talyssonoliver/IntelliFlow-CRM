@@ -124,7 +124,10 @@ export function TicketForm({
     <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
       {/* Row 1: Subject (full width) */}
       <div className="space-y-1">
-        <label htmlFor="subject" className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
+        <label
+          htmlFor="subject"
+          className="block text-sm font-semibold text-slate-700 dark:text-slate-300"
+        >
           Subject <span className="text-red-500">*</span>
         </label>
         <input
@@ -146,7 +149,10 @@ export function TicketForm({
 
       {/* Row 2: Description (full width, compact) */}
       <div className="space-y-1">
-        <label htmlFor="description" className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
+        <label
+          htmlFor="description"
+          className="block text-sm font-semibold text-slate-700 dark:text-slate-300"
+        >
           Description
         </label>
         <textarea
@@ -162,7 +168,10 @@ export function TicketForm({
       {/* Row 3: Contact Name + Contact Email */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-1">
-          <label htmlFor="contactName" className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
+          <label
+            htmlFor="contactName"
+            className="block text-sm font-semibold text-slate-700 dark:text-slate-300"
+          >
             Contact Name <span className="text-red-500">*</span>
           </label>
           <input
@@ -182,7 +191,10 @@ export function TicketForm({
           )}
         </div>
         <div className="space-y-1">
-          <label htmlFor="contactEmail" className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
+          <label
+            htmlFor="contactEmail"
+            className="block text-sm font-semibold text-slate-700 dark:text-slate-300"
+          >
             Contact Email <span className="text-red-500">*</span>
           </label>
           <input
@@ -206,7 +218,10 @@ export function TicketForm({
       {/* Row 4: Priority + Category */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-1">
-          <label htmlFor="priority" className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
+          <label
+            htmlFor="priority"
+            className="block text-sm font-semibold text-slate-700 dark:text-slate-300"
+          >
             Priority <span className="text-red-500">*</span>
           </label>
           <select
@@ -226,7 +241,10 @@ export function TicketForm({
           </select>
         </div>
         <div className="space-y-1">
-          <label htmlFor="category" className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
+          <label
+            htmlFor="category"
+            className="block text-sm font-semibold text-slate-700 dark:text-slate-300"
+          >
             Category
           </label>
           <select
@@ -248,7 +266,10 @@ export function TicketForm({
       {/* Row 5: Channel + Tags */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-1">
-          <label htmlFor="channel" className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
+          <label
+            htmlFor="channel"
+            className="block text-sm font-semibold text-slate-700 dark:text-slate-300"
+          >
             Channel
           </label>
           <select
@@ -265,7 +286,10 @@ export function TicketForm({
           </select>
         </div>
         <div className="space-y-1">
-          <label htmlFor="tags" className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
+          <label
+            htmlFor="tags"
+            className="block text-sm font-semibold text-slate-700 dark:text-slate-300"
+          >
             Tags
           </label>
           <input

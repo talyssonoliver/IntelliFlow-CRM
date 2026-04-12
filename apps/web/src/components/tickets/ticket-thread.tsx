@@ -23,11 +23,7 @@ export interface TicketThreadProps {
 type ViewMode = 'timeline' | 'all-sources';
 type ComposerMode = 'public' | 'internal';
 
-export function TicketThread({
-  activities,
-  onAddResponse,
-  isLoading = false,
-}: TicketThreadProps) {
+export function TicketThread({ activities, onAddResponse, isLoading = false }: TicketThreadProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('timeline');
   const [composerMode, setComposerMode] = useState<ComposerMode>('public');
   const [replyContent, setReplyContent] = useState('');
@@ -83,9 +79,7 @@ export function TicketThread({
         {activities.length === 0 ? (
           <EmptyState entity="activity" phase="passive" />
         ) : (
-          activities.map((activity) => (
-            <ActivityItem key={activity.id} activity={activity} />
-          ))
+          activities.map((activity) => <ActivityItem key={activity.id} activity={activity} />)
         )}
       </div>
 
@@ -159,7 +153,12 @@ function ActivityItem({ activity }: { activity: TicketActivity }) {
       className={cn('rounded-lg border p-3', typeConfig.containerClass)}
     >
       <div className="flex items-start gap-3">
-        <div className={cn('mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm', typeConfig.iconClass)}>
+        <div
+          className={cn(
+            'mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm',
+            typeConfig.iconClass
+          )}
+        >
           {typeConfig.icon}
         </div>
         <div className="flex-1 min-w-0">
@@ -209,7 +208,8 @@ function getActivityTypeConfig(type: TicketActivity['type']) {
       return {
         icon: '🔒',
         iconClass: 'bg-amber-100 dark:bg-amber-900/30',
-        containerClass: 'bg-amber-50/50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800',
+        containerClass:
+          'bg-amber-50/50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800',
         contentClass: '',
       };
     case 'system_event':

@@ -153,7 +153,10 @@ export function TicketDetail({
   const [replyMode, setReplyMode] = useState<'public' | 'internal'>('public');
   const [replyContent, setReplyContent] = useState('');
   const [activityView, setActivityView] = useState<'timeline' | 'unified'>('timeline');
-  const { selectedActivityId } = useActivityDeepLink(activeTab, setActiveTab as (tab: 'activity') => void);
+  const { selectedActivityId } = useActivityDeepLink(
+    activeTab,
+    setActiveTab as (tab: 'activity') => void
+  );
 
   // Deep-link: scroll to the targeted activity item
   const deepLinkScrolledRef = useRef(false);
@@ -220,12 +223,18 @@ export function TicketDetail({
       }
       toast({
         title: 'Ticket Escalated',
-        description: `Ticket has been escalated and assigned to a manager.` + (escalationReason ? ` Reason: ${escalationReason}` : ''),
+        description:
+          `Ticket has been escalated and assigned to a manager.` +
+          (escalationReason ? ` Reason: ${escalationReason}` : ''),
       });
       setEscalationSheetOpen(false);
       setEscalationReason('');
     } catch {
-      toast({ title: 'Escalation Failed', description: 'Could not escalate the ticket.', variant: 'destructive' });
+      toast({
+        title: 'Escalation Failed',
+        description: 'Could not escalate the ticket.',
+        variant: 'destructive',
+      });
       throw new Error('Escalation failed'); // Keep AssignSheet open
     }
   };
@@ -245,7 +254,7 @@ export function TicketDetail({
                 href={listHref}
                 className="hover:text-[#137fec] transition-colors flex items-center gap-1"
               >
-                <span className="material-symbols-outlined text-[16px]">arrow_back</span>{' '}Tickets
+                <span className="material-symbols-outlined text-[16px]">arrow_back</span> Tickets
               </Link>
               <span className="material-symbols-outlined text-[14px]">chevron_right</span>
               <span className="text-slate-900 dark:text-slate-200 font-medium">
@@ -278,8 +287,7 @@ export function TicketDetail({
               disabled={isLoading}
               className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
             >
-              <span className="material-symbols-outlined text-[18px]">edit</span>{' '}
-              Change Status
+              <span className="material-symbols-outlined text-[18px]">edit</span> Change Status
             </button>
             <PinButton
               entityType="ticket"
@@ -322,7 +330,7 @@ export function TicketDetail({
                 _onStatusChange('SPAM').catch(() => {});
               },
             },
-            ...((() => {
+            ...(() => {
               if (ticket.status === 'RESOLVED' || ticket.status === 'CLOSED') {
                 return [
                   {
@@ -363,7 +371,7 @@ export function TicketDetail({
                 ];
               }
               return [];
-            })()),
+            })(),
           ]}
         />
         <TicketAssignSidebar
@@ -582,7 +590,10 @@ export function TicketDetail({
                     <span className="material-symbols-outlined text-[18px] text-slate-400">
                       mail
                     </span>
-                    <EntityHoverCard email={ticket.customer.email} displayName={ticket.customer.name}>
+                    <EntityHoverCard
+                      email={ticket.customer.email}
+                      displayName={ticket.customer.name}
+                    >
                       <Link
                         href={`/email/compose?to=${encodeURIComponent(ticket.customer.email)}`}
                         className="text-slate-700 dark:text-slate-300 hover:text-[#137fec]"
@@ -605,17 +616,16 @@ export function TicketDetail({
                 </div>
                 <div className="flex gap-2 mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
                   <button className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-[#137fec]/10 text-[#137fec] text-xs font-semibold hover:bg-[#137fec]/20 transition-colors">
-                    <span className="material-symbols-outlined text-[16px]">mail</span>{' '}Email
+                    <span className="material-symbols-outlined text-[16px]">mail</span> Email
                   </button>
                   <button className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-[#137fec]/10 text-[#137fec] text-xs font-semibold hover:bg-[#137fec]/20 transition-colors">
-                    <span className="material-symbols-outlined text-[16px]">call</span>{' '}Call
+                    <span className="material-symbols-outlined text-[16px]">call</span> Call
                   </button>
                   <Link
                     href={`/contacts/${ticket.customer.id}`}
                     className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
                   >
-                    <span className="material-symbols-outlined text-[16px]">person</span>{' '}
-                    Profile
+                    <span className="material-symbols-outlined text-[16px]">person</span> Profile
                   </Link>
                 </div>
                 <div className="grid grid-cols-2 gap-2 mt-4">
@@ -675,7 +685,8 @@ export function TicketDetail({
               {/* Tabs */}
               <div className="flex border-b border-slate-200 dark:border-slate-800 px-2 overflow-x-auto">
                 {tabs.map((tab) => {
-                  const attachmentsOrUndefined = tab.id === 'attachments' ? attachmentCount : undefined;
+                  const attachmentsOrUndefined =
+                    tab.id === 'attachments' ? attachmentCount : undefined;
                   const count = tab.id === 'activity' ? activityCount : attachmentsOrUndefined;
                   return (
                     <button
@@ -702,11 +713,16 @@ export function TicketDetail({
                 placeholder="Add an internal note to this ticket..."
                 submitLabel="Add Note"
                 onSubmit={(note) => {
-                  onAddResponse(note, true).then(() => {
-                    toast({ title: 'Note added', description: 'Internal note has been recorded.' });
-                  }).catch(() => {
-                    toast({ title: 'Failed to add note', variant: 'destructive' });
-                  });
+                  onAddResponse(note, true)
+                    .then(() => {
+                      toast({
+                        title: 'Note added',
+                        description: 'Internal note has been recorded.',
+                      });
+                    })
+                    .catch(() => {
+                      toast({ title: 'Failed to add note', variant: 'destructive' });
+                    });
                 }}
               />
             </Card>
@@ -807,116 +823,119 @@ export function TicketDetail({
             {/* Activity Tab */}
             {activeTab === 'activity' && (
               <Card className="p-6">
-                  <div className="space-y-6">
-                    {/* View Toggle: Timeline vs Unified Feed (IFC-069) */}
-                    <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1 w-fit">
-                      <button
-                        onClick={() => setActivityView('timeline')}
-                        className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                          activityView === 'timeline'
-                            ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
-                            : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'
-                        }`}
-                      >
-                        <span className="material-symbols-outlined text-sm align-middle mr-1">
-                          timeline
-                        </span>{' '}
-                        Timeline
-                      </button>
-                      <button
-                        onClick={() => setActivityView('unified')}
-                        className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                          activityView === 'unified'
-                            ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
-                            : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'
-                        }`}
-                      >
-                        <span className="material-symbols-outlined text-sm align-middle mr-1">
-                          dynamic_feed
-                        </span>{' '}
-                        All Sources
-                      </button>
-                    </div>
+                <div className="space-y-6">
+                  {/* View Toggle: Timeline vs Unified Feed (IFC-069) */}
+                  <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1 w-fit">
+                    <button
+                      onClick={() => setActivityView('timeline')}
+                      className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                        activityView === 'timeline'
+                          ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
+                          : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-sm align-middle mr-1">
+                        timeline
+                      </span>{' '}
+                      Timeline
+                    </button>
+                    <button
+                      onClick={() => setActivityView('unified')}
+                      className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                        activityView === 'unified'
+                          ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
+                          : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-sm align-middle mr-1">
+                        dynamic_feed
+                      </span>{' '}
+                      All Sources
+                    </button>
+                  </div>
 
-                    {activityView === 'unified' ? (
-                      <ActivityFeed
-                        entityType="TICKET"
-                        entityId={ticket.id}
-                        height={500}
-                        emptyMessage="No activity found across all sources"
-                      />
-                    ) : (
-                      <>
-                        <div className="relative space-y-6" style={{ paddingLeft: 40 }}>
-                          {/* Continuous vertical timeline line — centered through icons */}
-                          <div className="absolute top-0 bottom-0 w-0.5 bg-slate-200 dark:bg-slate-700" style={{ left: 19 }} />
+                  {activityView === 'unified' ? (
+                    <ActivityFeed
+                      entityType="TICKET"
+                      entityId={ticket.id}
+                      height={500}
+                      emptyMessage="No activity found across all sources"
+                    />
+                  ) : (
+                    <>
+                      <div className="relative space-y-6" style={{ paddingLeft: 40 }}>
+                        {/* Continuous vertical timeline line — centered through icons */}
+                        <div
+                          className="absolute top-0 bottom-0 w-0.5 bg-slate-200 dark:bg-slate-700"
+                          style={{ left: 19 }}
+                        />
 
-                          {ticket.activities.map((activity) => (
-                            <ActivityItem
-                              key={activity.id}
-                              activity={activity}
-                              isDeepLinked={isDeepLinkedActivity(activity.id, selectedActivityId)}
-                            />
-                          ))}
-                        </div>
+                        {ticket.activities.map((activity) => (
+                          <ActivityItem
+                            key={activity.id}
+                            activity={activity}
+                            isDeepLinked={isDeepLinkedActivity(activity.id, selectedActivityId)}
+                          />
+                        ))}
+                      </div>
 
-                        <div className="border-t border-slate-200 dark:border-slate-700 pt-6">
-                          <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
-                            <div className="flex border-b border-slate-100 dark:border-slate-700">
-                              <button
-                                onClick={() => setReplyMode('public')}
-                                className={`flex-1 py-2.5 text-xs font-medium transition-colors ${
-                                  replyMode === 'public'
-                                    ? 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200'
-                                    : 'text-slate-400 hover:bg-slate-50'
-                                }`}
-                              >
-                                Public Reply
+                      <div className="border-t border-slate-200 dark:border-slate-700 pt-6">
+                        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
+                          <div className="flex border-b border-slate-100 dark:border-slate-700">
+                            <button
+                              onClick={() => setReplyMode('public')}
+                              className={`flex-1 py-2.5 text-xs font-medium transition-colors ${
+                                replyMode === 'public'
+                                  ? 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200'
+                                  : 'text-slate-400 hover:bg-slate-50'
+                              }`}
+                            >
+                              Public Reply
+                            </button>
+                            <button
+                              onClick={() => setReplyMode('internal')}
+                              className={`flex-1 py-2.5 text-xs font-medium transition-colors ${
+                                replyMode === 'internal'
+                                  ? 'bg-yellow-50 dark:bg-yellow-900/10 text-yellow-700'
+                                  : 'text-slate-400 hover:bg-yellow-50'
+                              }`}
+                            >
+                              Internal Note
+                            </button>
+                          </div>
+                          <textarea
+                            value={replyContent}
+                            onChange={(e) => setReplyContent(e.target.value)}
+                            className="w-full p-4 text-sm bg-transparent border-none focus:ring-0 min-h-[120px] resize-y placeholder:text-slate-400"
+                            placeholder="Type your reply..."
+                          />
+                          <div className="flex items-center justify-between px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-700">
+                            <div className="flex gap-1">
+                              <button className="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-slate-500 transition-colors">
+                                <span className="material-symbols-outlined text-[18px]">
+                                  format_bold
+                                </span>
                               </button>
-                              <button
-                                onClick={() => setReplyMode('internal')}
-                                className={`flex-1 py-2.5 text-xs font-medium transition-colors ${
-                                  replyMode === 'internal'
-                                    ? 'bg-yellow-50 dark:bg-yellow-900/10 text-yellow-700'
-                                    : 'text-slate-400 hover:bg-yellow-50'
-                                }`}
-                              >
-                                Internal Note
-                              </button>
-                            </div>
-                            <textarea
-                              value={replyContent}
-                              onChange={(e) => setReplyContent(e.target.value)}
-                              className="w-full p-4 text-sm bg-transparent border-none focus:ring-0 min-h-[120px] resize-y placeholder:text-slate-400"
-                              placeholder="Type your reply..."
-                            />
-                            <div className="flex items-center justify-between px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-700">
-                              <div className="flex gap-1">
-                                <button className="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-slate-500 transition-colors">
-                                  <span className="material-symbols-outlined text-[18px]">
-                                    format_bold
-                                  </span>
-                                </button>
-                                <button className="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-slate-500 transition-colors">
-                                  <span className="material-symbols-outlined text-[18px]">
-                                    attach_file
-                                  </span>
-                                </button>
-                              </div>
-                              <button
-                                onClick={handleSendReply}
-                                disabled={isLoading || !replyContent.trim()}
-                                className="px-4 py-1.5 bg-[#137fec] text-white text-xs font-bold rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2 disabled:opacity-50"
-                              >
-                                Send Reply
-                                {' '}<span className="material-symbols-outlined text-[16px]">send</span>
+                              <button className="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-slate-500 transition-colors">
+                                <span className="material-symbols-outlined text-[18px]">
+                                  attach_file
+                                </span>
                               </button>
                             </div>
+                            <button
+                              onClick={handleSendReply}
+                              disabled={isLoading || !replyContent.trim()}
+                              className="px-4 py-1.5 bg-[#137fec] text-white text-xs font-bold rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2 disabled:opacity-50"
+                            >
+                              Send Reply{' '}
+                              <span className="material-symbols-outlined text-[16px]">send</span>
+                            </button>
                           </div>
                         </div>
-                      </>
-                    )}
-                  </div>
+                      </div>
+                    </>
+                  )}
+                </div>
               </Card>
             )}
 
@@ -924,98 +943,98 @@ export function TicketDetail({
             {activeTab === 'resolution' && (
               <Card className="p-6">
                 <div className="space-y-6">
-                    <div className="flex items-center justify-between p-4 bg-amber-50 dark:bg-amber-900/10 rounded-lg border border-amber-100 dark:border-amber-900/30">
-                      <div>
-                        <p className="font-bold text-amber-800 dark:text-amber-400">
-                          Pending Resolution
-                        </p>
-                        <p className="text-sm text-slate-600 dark:text-slate-400">
-                          This ticket requires a resolution.
-                        </p>
-                      </div>
-                      <span className="material-symbols-outlined text-amber-500 text-3xl">
-                        pending
-                      </span>
+                  <div className="flex items-center justify-between p-4 bg-amber-50 dark:bg-amber-900/10 rounded-lg border border-amber-100 dark:border-amber-900/30">
+                    <div>
+                      <p className="font-bold text-amber-800 dark:text-amber-400">
+                        Pending Resolution
+                      </p>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">
+                        This ticket requires a resolution.
+                      </p>
                     </div>
+                    <span className="material-symbols-outlined text-amber-500 text-3xl">
+                      pending
+                    </span>
+                  </div>
 
-                    <div className="space-y-4">
-                      <div>
-                        <label
-                          htmlFor="resolution-type-select"
-                          className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
-                        >
-                          Resolution Type
-                        </label>
-                        <select
-                          id="resolution-type-select"
-                          value={resolutionType}
-                          onChange={(e) => setResolutionType(e.target.value)}
-                          className="w-full py-2 px-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg text-sm"
-                        >
-                          <option value="">Select type...</option>
-                          <option value="Fixed">Fixed</option>
-                          <option value="Workaround Provided">Workaround Provided</option>
-                          <option value="Cannot Reproduce">Cannot Reproduce</option>
-                          <option value="Duplicate">Duplicate</option>
-                          <option value="Won't Fix">Won&apos;t Fix</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label
-                          htmlFor="root-cause-textarea"
-                          className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
-                        >
-                          Root Cause
-                        </label>
-                        <textarea
-                          id="root-cause-textarea"
-                          value={rootCause}
-                          onChange={(e) => setRootCause(e.target.value)}
-                          className="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-800 min-h-[80px]"
-                          placeholder="Describe the root cause..."
-                        />
-                      </div>
-                      <div>
-                        <label
-                          htmlFor="resolution-summary-textarea"
-                          className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
-                        >
-                          Resolution Summary
-                        </label>
-                        <textarea
-                          id="resolution-summary-textarea"
-                          value={resolutionSummary}
-                          onChange={(e) => setResolutionSummary(e.target.value)}
-                          className="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-800 min-h-[120px]"
-                          placeholder="Describe how the issue was resolved..."
-                        />
-                      </div>
-                      <label className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={notifyCustomer}
-                          onChange={(e) => setNotifyCustomer(e.target.checked)}
-                          className="rounded border-slate-300 text-[#137fec]"
-                        />
-                        <span className="text-sm text-slate-600 dark:text-slate-300">
-                          Notify customer of resolution
-                        </span>
-                      </label>
-                    </div>
-
-                    <div className="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
-                      <button className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
-                        Save Draft
-                      </button>
-                      <button
-                        onClick={handleResolve}
-                        disabled={isLoading || !resolutionType || !resolutionSummary.trim()}
-                        className="px-4 py-2 bg-green-600 text-white text-sm font-bold rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+                  <div className="space-y-4">
+                    <div>
+                      <label
+                        htmlFor="resolution-type-select"
+                        className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
                       >
-                        <span className="material-symbols-outlined text-[18px]">check_circle</span>{' '}
-                        Mark as Resolved
-                      </button>
+                        Resolution Type
+                      </label>
+                      <select
+                        id="resolution-type-select"
+                        value={resolutionType}
+                        onChange={(e) => setResolutionType(e.target.value)}
+                        className="w-full py-2 px-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg text-sm"
+                      >
+                        <option value="">Select type...</option>
+                        <option value="Fixed">Fixed</option>
+                        <option value="Workaround Provided">Workaround Provided</option>
+                        <option value="Cannot Reproduce">Cannot Reproduce</option>
+                        <option value="Duplicate">Duplicate</option>
+                        <option value="Won't Fix">Won&apos;t Fix</option>
+                      </select>
                     </div>
+                    <div>
+                      <label
+                        htmlFor="root-cause-textarea"
+                        className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+                      >
+                        Root Cause
+                      </label>
+                      <textarea
+                        id="root-cause-textarea"
+                        value={rootCause}
+                        onChange={(e) => setRootCause(e.target.value)}
+                        className="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-800 min-h-[80px]"
+                        placeholder="Describe the root cause..."
+                      />
+                    </div>
+                    <div>
+                      <label
+                        htmlFor="resolution-summary-textarea"
+                        className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+                      >
+                        Resolution Summary
+                      </label>
+                      <textarea
+                        id="resolution-summary-textarea"
+                        value={resolutionSummary}
+                        onChange={(e) => setResolutionSummary(e.target.value)}
+                        className="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-800 min-h-[120px]"
+                        placeholder="Describe how the issue was resolved..."
+                      />
+                    </div>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={notifyCustomer}
+                        onChange={(e) => setNotifyCustomer(e.target.checked)}
+                        className="rounded border-slate-300 text-[#137fec]"
+                      />
+                      <span className="text-sm text-slate-600 dark:text-slate-300">
+                        Notify customer of resolution
+                      </span>
+                    </label>
+                  </div>
+
+                  <div className="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
+                    <button className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
+                      Save Draft
+                    </button>
+                    <button
+                      onClick={handleResolve}
+                      disabled={isLoading || !resolutionType || !resolutionSummary.trim()}
+                      className="px-4 py-2 bg-green-600 text-white text-sm font-bold rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">check_circle</span>{' '}
+                      Mark as Resolved
+                    </button>
+                  </div>
                 </div>
               </Card>
             )}
@@ -1024,73 +1043,73 @@ export function TicketDetail({
             {activeTab === 'attachments' && (
               <Card className="p-6">
                 <div className="space-y-6">
-                    <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-8 text-center hover:border-[#137fec] hover:bg-[#137fec]/5 transition-colors cursor-pointer">
-                      <span className="material-symbols-outlined text-4xl text-slate-400 mb-2">
-                        cloud_upload
-                      </span>
-                      <p className="text-sm font-medium text-slate-900 dark:text-white mb-1">
-                        Drop files here or click to upload
-                      </p>
-                      <p className="text-xs text-slate-500">PDF, DOC, PNG, JPG up to 10MB</p>
-                    </div>
+                  <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-8 text-center hover:border-[#137fec] hover:bg-[#137fec]/5 transition-colors cursor-pointer">
+                    <span className="material-symbols-outlined text-4xl text-slate-400 mb-2">
+                      cloud_upload
+                    </span>
+                    <p className="text-sm font-medium text-slate-900 dark:text-white mb-1">
+                      Drop files here or click to upload
+                    </p>
+                    <p className="text-xs text-slate-500">PDF, DOC, PNG, JPG up to 10MB</p>
+                  </div>
 
-                    <div className="space-y-3">
-                      {ticket.attachments.map((file) => (
-                        <div
-                          key={file.id}
-                          className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg"
-                        >
-                          {(() => {
-                            const fileIsPdf = file.type === 'pdf';
-                            const fileIsImage = file.type === 'image';
-                            let fileBgClass: string;
-                            if (fileIsPdf) {
-                              fileBgClass = 'bg-red-100 dark:bg-red-900/30';
-                            } else if (fileIsImage) {
-                              fileBgClass = 'bg-blue-100 dark:bg-blue-900/30';
-                            } else {
-                              fileBgClass = 'bg-green-100 dark:bg-green-900/30';
-                            }
-                            let fileTextClass: string;
-                            if (fileIsPdf) {
-                              fileTextClass = 'text-red-600';
-                            } else if (fileIsImage) {
-                              fileTextClass = 'text-blue-600';
-                            } else {
-                              fileTextClass = 'text-green-600';
-                            }
-                            let fileIconName: string;
-                            if (fileIsPdf) {
-                              fileIconName = 'picture_as_pdf';
-                            } else if (fileIsImage) {
-                              fileIconName = 'image';
-                            } else {
-                              fileIconName = 'description';
-                            }
-                            return (
-                              <div
-                                className={`w-10 h-10 rounded-lg flex items-center justify-center ${fileBgClass}`}
-                              >
-                                <span className={`material-symbols-outlined ${fileTextClass}`}>
-                                  {fileIconName}
-                                </span>
-                              </div>
-                            );
-                          })()}
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-slate-900 dark:text-white">
-                              {file.name}
-                            </p>
-                            <p className="text-xs text-slate-500">
-                              {file.size} • {file.uploader}
-                            </p>
-                          </div>
-                          <button className="p-1.5 text-slate-400 hover:text-[#137fec] transition-colors">
-                            <span className="material-symbols-outlined">download</span>
-                          </button>
+                  <div className="space-y-3">
+                    {ticket.attachments.map((file) => (
+                      <div
+                        key={file.id}
+                        className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg"
+                      >
+                        {(() => {
+                          const fileIsPdf = file.type === 'pdf';
+                          const fileIsImage = file.type === 'image';
+                          let fileBgClass: string;
+                          if (fileIsPdf) {
+                            fileBgClass = 'bg-red-100 dark:bg-red-900/30';
+                          } else if (fileIsImage) {
+                            fileBgClass = 'bg-blue-100 dark:bg-blue-900/30';
+                          } else {
+                            fileBgClass = 'bg-green-100 dark:bg-green-900/30';
+                          }
+                          let fileTextClass: string;
+                          if (fileIsPdf) {
+                            fileTextClass = 'text-red-600';
+                          } else if (fileIsImage) {
+                            fileTextClass = 'text-blue-600';
+                          } else {
+                            fileTextClass = 'text-green-600';
+                          }
+                          let fileIconName: string;
+                          if (fileIsPdf) {
+                            fileIconName = 'picture_as_pdf';
+                          } else if (fileIsImage) {
+                            fileIconName = 'image';
+                          } else {
+                            fileIconName = 'description';
+                          }
+                          return (
+                            <div
+                              className={`w-10 h-10 rounded-lg flex items-center justify-center ${fileBgClass}`}
+                            >
+                              <span className={`material-symbols-outlined ${fileTextClass}`}>
+                                {fileIconName}
+                              </span>
+                            </div>
+                          );
+                        })()}
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-slate-900 dark:text-white">
+                            {file.name}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {file.size} • {file.uploader}
+                          </p>
                         </div>
-                      ))}
-                    </div>
+                        <button className="p-1.5 text-slate-400 hover:text-[#137fec] transition-colors">
+                          <span className="material-symbols-outlined">download</span>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </Card>
             )}
@@ -1099,124 +1118,128 @@ export function TicketDetail({
             {activeTab === 'ai-insights' && (
               <Card className="p-6">
                 <div className="space-y-6">
-                    {(() => {
-                      const riskIsHigh = ticket.aiInsights.escalationRisk === 'high';
-                      const riskIsMedium = ticket.aiInsights.escalationRisk === 'medium';
-                      let riskBgBorderClass: string;
-                      if (riskIsHigh) {
-                        riskBgBorderClass = 'bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800';
-                      } else if (riskIsMedium) {
-                        riskBgBorderClass = 'bg-yellow-50 dark:bg-yellow-900/10 border-yellow-200 dark:border-yellow-800';
-                      } else {
-                        riskBgBorderClass = 'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800';
-                      }
-                      let riskIconColorClass: string;
-                      if (riskIsHigh) {
-                        riskIconColorClass = 'text-red-500';
-                      } else if (riskIsMedium) {
-                        riskIconColorClass = 'text-yellow-500';
-                      } else {
-                        riskIconColorClass = 'text-green-500';
-                      }
-                      return (
-                    <div
-                      className={`p-4 rounded-lg border ${riskBgBorderClass}`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <span
-                          className={`material-symbols-outlined text-2xl ${riskIconColorClass}`}
-                        >
-                          {riskIsHigh ? 'warning' : 'insights'}
-                        </span>
-                        <div>
-                          <p className="font-bold text-slate-900 dark:text-white">
-                            Escalation Risk:
-                            {' '}<span className="capitalize">{ticket.aiInsights.escalationRisk}</span>
-                          </p>
-                          <p className="text-sm text-slate-600 dark:text-slate-400">
-                            Predicted resolution time: {ticket.aiInsights.predictedResolutionTime}
-                          </p>
+                  {(() => {
+                    const riskIsHigh = ticket.aiInsights.escalationRisk === 'high';
+                    const riskIsMedium = ticket.aiInsights.escalationRisk === 'medium';
+                    let riskBgBorderClass: string;
+                    if (riskIsHigh) {
+                      riskBgBorderClass =
+                        'bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800';
+                    } else if (riskIsMedium) {
+                      riskBgBorderClass =
+                        'bg-yellow-50 dark:bg-yellow-900/10 border-yellow-200 dark:border-yellow-800';
+                    } else {
+                      riskBgBorderClass =
+                        'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800';
+                    }
+                    let riskIconColorClass: string;
+                    if (riskIsHigh) {
+                      riskIconColorClass = 'text-red-500';
+                    } else if (riskIsMedium) {
+                      riskIconColorClass = 'text-yellow-500';
+                    } else {
+                      riskIconColorClass = 'text-green-500';
+                    }
+                    return (
+                      <div className={`p-4 rounded-lg border ${riskBgBorderClass}`}>
+                        <div className="flex items-center gap-3">
+                          <span
+                            className={`material-symbols-outlined text-2xl ${riskIconColorClass}`}
+                          >
+                            {riskIsHigh ? 'warning' : 'insights'}
+                          </span>
+                          <div>
+                            <p className="font-bold text-slate-900 dark:text-white">
+                              Escalation Risk:{' '}
+                              <span className="capitalize">{ticket.aiInsights.escalationRisk}</span>
+                            </p>
+                            <p className="text-sm text-slate-600 dark:text-slate-400">
+                              Predicted resolution time: {ticket.aiInsights.predictedResolutionTime}
+                            </p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                      );
-                    })()}
+                    );
+                  })()}
 
-                    <div>
-                      <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
-                        <span className="material-symbols-outlined text-[#137fec] text-[20px]">
-                          lightbulb
-                        </span>{' '}
-                        Suggested Solutions
-                      </h4>
-                      <div className="space-y-2">
-                        {ticket.aiInsights.suggestedSolutions.map((solution, i) => (
-                          <div
-                            key={i} // NOSONAR typescript:S6479
-                            className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg"
+                  <div>
+                    <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                      <span className="material-symbols-outlined text-[#137fec] text-[20px]">
+                        lightbulb
+                      </span>{' '}
+                      Suggested Solutions
+                    </h4>
+                    <div className="space-y-2">
+                      {ticket.aiInsights.suggestedSolutions.map((solution, i) => (
+                        <div
+                          key={i} // NOSONAR typescript:S6479
+                          className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg"
+                        >
+                          <span className="text-[#137fec] font-bold text-sm">{i + 1}.</span>
+                          <p className="text-sm text-slate-700 dark:text-slate-300">{solution}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                      <span className="material-symbols-outlined text-purple-500 text-[20px]">
+                        content_copy
+                      </span>{' '}
+                      Similar Resolved Tickets ({ticket.aiInsights.similarResolvedTickets})
+                    </h4>
+                    <div className="space-y-2">
+                      {ticket.relatedTickets
+                        .filter((t) => t.status === 'RESOLVED')
+                        .map((related) => (
+                          <Link
+                            key={related.id}
+                            href={`${detailUrlPrefix}/${related.id}`}
+                            className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
                           >
-                            <span className="text-[#137fec] font-bold text-sm">{i + 1}.</span>
-                            <p className="text-sm text-slate-700 dark:text-slate-300">{solution}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
-                        <span className="material-symbols-outlined text-purple-500 text-[20px]">
-                          content_copy
-                        </span>{' '}
-                        Similar Resolved Tickets ({ticket.aiInsights.similarResolvedTickets})
-                      </h4>
-                      <div className="space-y-2">
-                        {ticket.relatedTickets
-                          .filter((t) => t.status === 'RESOLVED')
-                          .map((related) => (
-                            <Link
-                              key={related.id}
-                              href={`${detailUrlPrefix}/${related.id}`}
-                              className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-                            >
-                              <div>
-                                <span className="text-sm font-medium text-[#137fec]">
-                                  #{related.id}
-                                </span>
-                                <p className="text-sm text-slate-600 dark:text-slate-400">
-                                  {related.subject}
-                                </p>
-                              </div>
-                              <span className="text-xs font-medium text-green-600 bg-green-100 dark:bg-green-900/30 px-2 py-0.5 rounded">
-                                {related.similarity}% match
+                            <div>
+                              <span className="text-sm font-medium text-[#137fec]">
+                                #{related.id}
                               </span>
-                            </Link>
-                          ))}
-                      </div>
+                              <p className="text-sm text-slate-600 dark:text-slate-400">
+                                {related.subject}
+                              </p>
+                            </div>
+                            <span className="text-xs font-medium text-green-600 bg-green-100 dark:bg-green-900/30 px-2 py-0.5 rounded">
+                              {related.similarity}% match
+                            </span>
+                          </Link>
+                        ))}
                     </div>
+                  </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg text-center">
-                        <span className="text-3xl mb-2 block">
-                          {(() => {
-                            const sentimentNegativeEmoji = ticket.aiInsights.sentiment === 'negative' ? '😟' : '😐';
-                            return ticket.aiInsights.sentiment === 'positive' ? '😊' : sentimentNegativeEmoji;
-                          })()}
-                        </span>
-                        <p className="text-sm font-medium text-slate-900 dark:text-white capitalize">
-                          {ticket.aiInsights.sentiment} Sentiment
-                        </p>
-                        <p className="text-xs text-slate-500">Based on customer messages</p>
-                      </div>
-                      <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg text-center">
-                        <p className="text-3xl font-bold text-[#137fec] mb-2">
-                          {ticket.aiInsights.similarResolvedTickets}
-                        </p>
-                        <p className="text-sm font-medium text-slate-900 dark:text-white">
-                          Similar Tickets Resolved
-                        </p>
-                        <p className="text-xs text-slate-500">In the last 30 days</p>
-                      </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg text-center">
+                      <span className="text-3xl mb-2 block">
+                        {(() => {
+                          const sentimentNegativeEmoji =
+                            ticket.aiInsights.sentiment === 'negative' ? '😟' : '😐';
+                          return ticket.aiInsights.sentiment === 'positive'
+                            ? '😊'
+                            : sentimentNegativeEmoji;
+                        })()}
+                      </span>
+                      <p className="text-sm font-medium text-slate-900 dark:text-white capitalize">
+                        {ticket.aiInsights.sentiment} Sentiment
+                      </p>
+                      <p className="text-xs text-slate-500">Based on customer messages</p>
                     </div>
+                    <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg text-center">
+                      <p className="text-3xl font-bold text-[#137fec] mb-2">
+                        {ticket.aiInsights.similarResolvedTickets}
+                      </p>
+                      <p className="text-sm font-medium text-slate-900 dark:text-white">
+                        Similar Tickets Resolved
+                      </p>
+                      <p className="text-xs text-slate-500">In the last 30 days</p>
+                    </div>
+                  </div>
                 </div>
               </Card>
             )}
@@ -1245,8 +1268,14 @@ export function TicketDetail({
                   </div>
                   <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                     {(() => {
-                      const slaAtRiskOrGreenColor = ticket.sla.resolution.status === 'AT_RISK' ? 'bg-yellow-500' : 'bg-green-500';
-                      const slaBarColor = ticket.sla.resolution.status === 'BREACHED' ? 'bg-red-500' : slaAtRiskOrGreenColor;
+                      const slaAtRiskOrGreenColor =
+                        ticket.sla.resolution.status === 'AT_RISK'
+                          ? 'bg-yellow-500'
+                          : 'bg-green-500';
+                      const slaBarColor =
+                        ticket.sla.resolution.status === 'BREACHED'
+                          ? 'bg-red-500'
+                          : slaAtRiskOrGreenColor;
                       return <div className={`h-full ${slaBarColor} w-full`} />;
                     })()}
                   </div>
@@ -1410,26 +1439,62 @@ export function TicketDetail({
 // ─── Activity Item Component ────────────────────────────────────────────────
 
 const TICKET_ACTIVITY_ICON: Record<string, { icon: string; bg: string; color: string }> = {
-  customer_message: { icon: 'chat_bubble', bg: 'bg-slate-100 dark:bg-slate-700', color: 'text-slate-600 dark:text-slate-300' },
-  agent_reply: { icon: 'reply', bg: 'bg-blue-100 dark:bg-blue-900', color: 'text-blue-600 dark:text-blue-300' },
-  internal_note: { icon: 'sticky_note_2', bg: 'bg-yellow-100 dark:bg-yellow-900', color: 'text-yellow-600 dark:text-yellow-300' },
-  system_event: { icon: 'settings', bg: 'bg-slate-200 dark:bg-slate-700', color: 'text-slate-500 dark:text-slate-400' },
-  sla_breach: { icon: 'timer_off', bg: 'bg-red-100 dark:bg-red-900', color: 'text-red-600 dark:text-red-300' },
-  priority_change: { icon: 'swap_vert', bg: 'bg-orange-100 dark:bg-orange-900', color: 'text-orange-600 dark:text-orange-300' },
+  customer_message: {
+    icon: 'chat_bubble',
+    bg: 'bg-slate-100 dark:bg-slate-700',
+    color: 'text-slate-600 dark:text-slate-300',
+  },
+  agent_reply: {
+    icon: 'reply',
+    bg: 'bg-blue-100 dark:bg-blue-900',
+    color: 'text-blue-600 dark:text-blue-300',
+  },
+  internal_note: {
+    icon: 'sticky_note_2',
+    bg: 'bg-yellow-100 dark:bg-yellow-900',
+    color: 'text-yellow-600 dark:text-yellow-300',
+  },
+  system_event: {
+    icon: 'settings',
+    bg: 'bg-slate-200 dark:bg-slate-700',
+    color: 'text-slate-500 dark:text-slate-400',
+  },
+  sla_breach: {
+    icon: 'timer_off',
+    bg: 'bg-red-100 dark:bg-red-900',
+    color: 'text-red-600 dark:text-red-300',
+  },
+  priority_change: {
+    icon: 'swap_vert',
+    bg: 'bg-orange-100 dark:bg-orange-900',
+    color: 'text-orange-600 dark:text-orange-300',
+  },
 };
 
-const DEFAULT_TICKET_ICON = { icon: 'info', bg: 'bg-slate-100 dark:bg-slate-800', color: 'text-slate-500 dark:text-slate-400' };
+const DEFAULT_TICKET_ICON = {
+  icon: 'info',
+  bg: 'bg-slate-100 dark:bg-slate-800',
+  color: 'text-slate-500 dark:text-slate-400',
+};
 
-function ActivityItem({ activity, isDeepLinked = false }: Readonly<{ activity: TicketActivity; isDeepLinked?: boolean }>) {
+function ActivityItem({
+  activity,
+  isDeepLinked = false,
+}: Readonly<{ activity: TicketActivity; isDeepLinked?: boolean }>) {
   const iconStyle = TICKET_ACTIVITY_ICON[activity.type] || DEFAULT_TICKET_ICON;
   return (
-    <div data-activity-id={activity.id} className={`relative rounded-lg transition-colors ${isDeepLinked ? 'bg-primary/5 ring-2 ring-primary/30 ring-inset p-2' : ''}`}>
+    <div
+      data-activity-id={activity.id}
+      className={`relative rounded-lg transition-colors ${isDeepLinked ? 'bg-primary/5 ring-2 ring-primary/30 ring-inset p-2' : ''}`}
+    >
       {/* Timeline dot — centered on the vertical line (matches contacts/leads layout) */}
       <div
         className={`absolute w-8 h-8 rounded-full border-2 border-white dark:border-slate-900 shadow-sm flex items-center justify-center z-10 ${iconStyle.bg}`}
         style={{ left: -36, top: 12 }}
       >
-        <span className={`material-symbols-outlined !text-[16px] ${iconStyle.color}`}>{iconStyle.icon}</span>
+        <span className={`material-symbols-outlined !text-[16px] ${iconStyle.color}`}>
+          {iconStyle.icon}
+        </span>
       </div>
 
       {(activity.type === 'customer_message' || activity.type === 'agent_reply') && (

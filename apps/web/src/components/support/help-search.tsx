@@ -51,7 +51,7 @@ export function HelpSearch({
         onChange('');
       }
     },
-    [onChange],
+    [onChange]
   );
 
   const handleClear = useCallback(() => {

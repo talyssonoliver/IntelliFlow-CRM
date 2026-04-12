@@ -29,7 +29,10 @@ export function StatusUpdater({
   const [isOpen, setIsOpen] = useState(false);
 
   // Fallback for statuses not in getStatusConfig (e.g., ARCHIVED)
-  const defaultConfig = { bg: 'bg-slate-100 dark:bg-slate-800', text: 'text-slate-500 dark:text-slate-400' };
+  const defaultConfig = {
+    bg: 'bg-slate-100 dark:bg-slate-800',
+    text: 'text-slate-500 dark:text-slate-400',
+  };
   const statusConfig = getStatusConfig(currentStatus) ?? defaultConfig;
 
   // Get valid transitions, excluding ARCHIVED for support agent context
@@ -39,7 +42,11 @@ export function StatusUpdater({
 
   // Disable when: loading, explicitly disabled, terminal state, closed (no support transitions), or no valid targets
   const isDisabled =
-    isLoading || disabled || isTerminalStatus(currentStatus) || currentStatus === 'CLOSED' || validTargets.length === 0;
+    isLoading ||
+    disabled ||
+    isTerminalStatus(currentStatus) ||
+    currentStatus === 'CLOSED' ||
+    validTargets.length === 0;
 
   const handleSelect = async (targetStatus: string) => {
     setIsOpen(false);
@@ -59,7 +66,13 @@ export function StatusUpdater({
           isDisabled && 'cursor-not-allowed opacity-50'
         )}
       >
-        <span className={cn('inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium', statusConfig.bg, statusConfig.text)}>
+        <span
+          className={cn(
+            'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
+            statusConfig.bg,
+            statusConfig.text
+          )}
+        >
           {currentStatus}
         </span>
         {!isDisabled && (
@@ -69,6 +82,7 @@ export function StatusUpdater({
         )}
       </button>
 
+      {/* eslint-disable jsx-a11y/prefer-tag-over-role -- custom combobox widget: listbox/option roles on div/button for styled status picker */}
       {isOpen && !isDisabled && (
         <div
           role="listbox"
@@ -87,7 +101,13 @@ export function StatusUpdater({
                 onClick={() => handleSelect(targetStatus)}
                 className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted/50 transition-colors"
               >
-                <span className={cn('inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium', targetConfig.bg, targetConfig.text)}>
+                <span
+                  className={cn(
+                    'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
+                    targetConfig.bg,
+                    targetConfig.text
+                  )}
+                >
                   {targetStatus}
                 </span>
               </button>
@@ -95,6 +115,7 @@ export function StatusUpdater({
           })}
         </div>
       )}
+      {/* eslint-enable jsx-a11y/prefer-tag-over-role */}
     </div>
   );
 }
