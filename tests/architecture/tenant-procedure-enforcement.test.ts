@@ -72,7 +72,9 @@ describe('tenantProcedure enforcement', () => {
         violations.push(path.relative(ROUTER_DIR, file));
       }
     }
-    expect(violations, `Router files with getTenantId helper: ${violations.join(', ')}`).toEqual([]);
+    expect(violations, `Router files with getTenantId helper: ${violations.join(', ')}`).toEqual(
+      []
+    );
   });
 
   it('should not have any router file defining a getUserId helper function', () => {
@@ -101,13 +103,17 @@ describe('tenantProcedure enforcement', () => {
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
         // Skip comments and import lines
-        if (line.trim().startsWith('//') || line.trim().startsWith('*') || line.includes('import')) continue;
-        if (/ctx\.user[\?!]?\.tenantId/.test(line)) {
+        if (line.trim().startsWith('//') || line.trim().startsWith('*') || line.includes('import'))
+          continue;
+        if (/ctx\.user[?!]?\.tenantId/.test(line)) {
           violations.push(`${path.relative(ROUTER_DIR, file)}:${i + 1}`);
         }
       }
     }
-    expect(violations, `Routers using ctx.user.tenantId instead of ctx.tenant.tenantId: ${violations.join(', ')}`).toEqual([]);
+    expect(
+      violations,
+      `Routers using ctx.user.tenantId instead of ctx.tenant.tenantId: ${violations.join(', ')}`
+    ).toEqual([]);
   });
 
   it('should have tenantProcedure imported in non-allowlisted routers that use tenant-scoped data', () => {
@@ -122,6 +128,9 @@ describe('tenantProcedure enforcement', () => {
         violations.push(path.relative(ROUTER_DIR, file));
       }
     }
-    expect(violations, `Non-allowlisted routers using protectedProcedure without tenantProcedure: ${violations.join(', ')}`).toEqual([]);
+    expect(
+      violations,
+      `Non-allowlisted routers using protectedProcedure without tenantProcedure: ${violations.join(', ')}`
+    ).toEqual([]);
   });
 });

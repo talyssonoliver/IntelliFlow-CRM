@@ -89,7 +89,10 @@ test.describe('MFA Management', () => {
 
     // Look for "Add Method" or setup link
     const setupLink = page.locator('a[href*="/setup"]');
-    const isVisible = await setupLink.first().isVisible().catch(() => false);
+    const isVisible = await setupLink
+      .first()
+      .isVisible()
+      .catch(() => false);
     if (isVisible) {
       await setupLink.first().click();
       await expect(page).toHaveURL(/\/settings\/security\/mfa\/setup/);
@@ -123,7 +126,10 @@ test.describe('MFA Management', () => {
     // After entering code, new codes should be displayed
     const codesDisplay = page.getByTestId('new-backup-codes-display');
     // This may require TOTP input — just verify the flow starts
-    const dialogVisible = await page.locator('[role="alertdialog"]').isVisible().catch(() => false);
+    const dialogVisible = await page
+      .locator('[role="alertdialog"]')
+      .isVisible()
+      .catch(() => false);
     expect(dialogVisible).toBe(true);
   });
 });

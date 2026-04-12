@@ -430,7 +430,8 @@ describe('Tenant Resource Limiter', () => {
       );
     });
 
-    it('should throw FORBIDDEN when at limit', async () => { // NOSONAR typescript:S2699 — assertion: await expect(enforceResourceLimit(...)).rejects.toThrow(TRPCError)
+    it('should throw FORBIDDEN when at limit', async () => {
+      // NOSONAR typescript:S2699 — assertion: await expect(enforceResourceLimit(...)).rejects.toThrow(TRPCError)
       mockPrisma.user.findUnique.mockResolvedValue({ role: 'USER' });
       mockPrisma.lead.count.mockResolvedValue(1000);
 
@@ -441,7 +442,8 @@ describe('Tenant Resource Limiter', () => {
   });
 
   describe('rate limiting', () => {
-    it('should track rate limit increments', async () => { // NOSONAR typescript:S2699 — assertion: expect(usage.current).toBe(3)
+    it('should track rate limit increments', async () => {
+      // NOSONAR typescript:S2699 — assertion: expect(usage.current).toBe(3)
       incrementRateLimit('user-123');
       incrementRateLimit('user-123');
       incrementRateLimit('user-123');
@@ -455,7 +457,8 @@ describe('Tenant Resource Limiter', () => {
       expect(usage.current).toBe(3);
     });
 
-    it('should track daily request increments', async () => { // NOSONAR typescript:S2699 — assertion: expect(usage.current).toBe(2)
+    it('should track daily request increments', async () => {
+      // NOSONAR typescript:S2699 — assertion: expect(usage.current).toBe(2)
       incrementDailyRequests('user-123');
       incrementDailyRequests('user-123');
 
@@ -495,7 +498,8 @@ describe('Tenant Resource Limiter', () => {
   });
 
   describe('checkApproachingLimits', () => {
-    it('should return resources approaching limit', async () => { // NOSONAR typescript:S2699 — assertion: expect(approaching.some(...)).toBe(true)
+    it('should return resources approaching limit', async () => {
+      // NOSONAR typescript:S2699 — assertion: expect(approaching.some(...)).toBe(true)
       mockPrisma.user.findUnique.mockResolvedValue({ role: 'USER' });
       mockPrisma.lead.count.mockResolvedValue(900); // 90% of 1000
       mockPrisma.contact.count.mockResolvedValue(100); // 10% of 1000
@@ -586,7 +590,8 @@ describe('Tenant Isolation Security Tests', () => {
       }).toThrow('Cannot create resource for another tenant');
     });
 
-    it('should not grant manager access for non-manager role', () => { // NOSONAR typescript:S2699 — assertion: expect(regularUser.canAccessAllTenantData).toBe(false)
+    it('should not grant manager access for non-manager role', () => {
+      // NOSONAR typescript:S2699 — assertion: expect(regularUser.canAccessAllTenantData).toBe(false)
       const regularUser: TenantContext = {
         tenantId: 'user-123',
         tenantType: 'user',
