@@ -1,6 +1,10 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
+
+// Stub server-only so server modules can be imported in jsdom tests
+vi.mock('server-only', () => ({}));
+
 import PrivacyPage, { metadata } from '../page';
 
 describe('PrivacyPage', () => {
