@@ -181,7 +181,13 @@ export function ExportReportButton({ className }: Readonly<ExportReportButtonPro
       const doc: JsPDFDoc = new jsPDF() as JsPDFDoc;
       const pageWidth = doc.internal.pageSize.getWidth();
       const yPosRef = { value: 20 };
-      const checkNewPage = makePageChecker(doc, () => yPosRef.value, (y) => { yPosRef.value = y; });
+      const checkNewPage = makePageChecker(
+        doc,
+        () => yPosRef.value,
+        (y) => {
+          yPosRef.value = y;
+        }
+      );
 
       // Title
       doc.setFontSize(20);
@@ -193,7 +199,12 @@ export function ExportReportButton({ className }: Readonly<ExportReportButtonPro
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(128, 128, 128);
-      doc.text(`Generated: ${new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: timezone })}`, pageWidth / 2, yPosRef.value, { align: 'center' });
+      doc.text(
+        `Generated: ${new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: timezone })}`,
+        pageWidth / 2,
+        yPosRef.value,
+        { align: 'center' }
+      );
       yPosRef.value += 15;
       doc.setTextColor(0, 0, 0);
 
@@ -258,7 +269,12 @@ export function ExportReportButton({ className }: Readonly<ExportReportButtonPro
         doc.setPage(i);
         doc.setFontSize(8);
         doc.setTextColor(150, 150, 150);
-        doc.text(`IntelliFlow CRM - Compliance Report - Page ${i} of ${pageCount}`, pageWidth / 2, 290, { align: 'center' });
+        doc.text(
+          `IntelliFlow CRM - Compliance Report - Page ${i} of ${pageCount}`,
+          pageWidth / 2,
+          290,
+          { align: 'center' }
+        );
       }
 
       doc.save(`compliance-report-${new Date().toISOString().split('T')[0]}.pdf`);

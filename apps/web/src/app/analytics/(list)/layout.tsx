@@ -23,11 +23,9 @@ export default function AnalyticsListLayout({ children }: Readonly<{ children: R
 
   const sidebarConfig = useMemo(() => {
     if (onSettingsPage) {
-      return createAnalyticsSettingsSidebarConfig(
-        ({ isExpanded }) => (
-          <AnalyticsSettingsSidebarNav isExpanded={isExpanded} />
-        ),
-      );
+      return createAnalyticsSettingsSidebarConfig(({ isExpanded }) => (
+        <AnalyticsSettingsSidebarNav isExpanded={isExpanded} />
+      ));
     }
     return createAnalyticsSidebarConfig(() => setSettingsOpen((prev) => !prev));
   }, [onSettingsPage]);
@@ -40,10 +38,7 @@ export default function AnalyticsListLayout({ children }: Readonly<{ children: R
 
           {/* Panel only needed in list mode */}
           {!onSettingsPage && (
-            <AnalyticsSettingsPanel
-              isOpen={settingsOpen}
-              onClose={() => setSettingsOpen(false)}
-            />
+            <AnalyticsSettingsPanel isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
           )}
 
           {/* Main Content */}

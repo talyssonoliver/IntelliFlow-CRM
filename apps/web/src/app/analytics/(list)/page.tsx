@@ -2,15 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Card, EmptyState } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
 import { useAuth } from '@/lib/auth/AuthContext';
@@ -476,7 +468,6 @@ function QuickStat({
   );
 }
 
-
 interface FunnelStage {
   stage: string;
   label: string;
@@ -494,16 +485,17 @@ function PipelineFunnelContent({
   loading,
   funnel,
 }: Readonly<{ loading: boolean; funnel: FunnelData | undefined | null }>) {
-  if (loading) return (
-    <div className="space-y-4">
-      {[1, 2, 3, 4].map((i) => (
-        <div key={i} className="animate-pulse">
-          <div className="h-4 w-32 bg-muted rounded mb-2" />
-          <div className="h-2 bg-muted rounded-full" />
-        </div>
-      ))}
-    </div>
-  );
+  if (loading)
+    return (
+      <div className="space-y-4">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="animate-pulse">
+            <div className="h-4 w-32 bg-muted rounded mb-2" />
+            <div className="h-2 bg-muted rounded-full" />
+          </div>
+        ))}
+      </div>
+    );
   if (funnel && funnel.stages.length > 0) {
     const totalValue = funnel.stages.reduce((sum, s) => sum + s.value, 0);
     return (
@@ -526,7 +518,9 @@ function PipelineFunnelContent({
       </div>
     );
   }
-  return <EmptyState entity="activity" phase="passive" description="No pipeline data for this period" />;
+  return (
+    <EmptyState entity="activity" phase="passive" description="No pipeline data for this period" />
+  );
 }
 
 interface TimeSeriesEntry {
@@ -539,43 +533,46 @@ function RevenueTrendContent({
   timeSeries,
 }: Readonly<{ loading: boolean; timeSeries: TimeSeriesEntry[] | undefined | null }>) {
   if (loading) return <div className="h-64 animate-pulse rounded-lg bg-muted" />;
-  if (timeSeries && timeSeries.length > 0) return (
-    <div className="h-64">
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={timeSeries} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
-          <XAxis
-            dataKey="periodLabel"
-            tick={{ fontSize: 12 }}
-            className="fill-muted-foreground"
-            tickLine={false}
-            axisLine={false}
-          />
-          <YAxis
-            tick={{ fontSize: 12 }}
-            className="fill-muted-foreground"
-            tickLine={false}
-            axisLine={false}
-            tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
-          />
-          <Tooltip
-            formatter={(value) => {
-              const numValue = typeof value === 'number' ? value : 0;
-              return formatCurrency(numValue);
-            }}
-            contentStyle={{
-              backgroundColor: 'hsl(var(--card))',
-              border: '1px solid hsl(var(--border))',
-              borderRadius: '0.5rem',
-              color: 'hsl(var(--foreground))',
-            }}
-          />
-          <Bar dataKey="value" radius={[4, 4, 0, 0]} className="fill-primary" />
-        </BarChart>
-      </ResponsiveContainer>
-    </div>
+  if (timeSeries && timeSeries.length > 0)
+    return (
+      <div className="h-64">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={timeSeries} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
+            <XAxis
+              dataKey="periodLabel"
+              tick={{ fontSize: 12 }}
+              className="fill-muted-foreground"
+              tickLine={false}
+              axisLine={false}
+            />
+            <YAxis
+              tick={{ fontSize: 12 }}
+              className="fill-muted-foreground"
+              tickLine={false}
+              axisLine={false}
+              tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
+            />
+            <Tooltip
+              formatter={(value) => {
+                const numValue = typeof value === 'number' ? value : 0;
+                return formatCurrency(numValue);
+              }}
+              contentStyle={{
+                backgroundColor: 'hsl(var(--card))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: '0.5rem',
+                color: 'hsl(var(--foreground))',
+              }}
+            />
+            <Bar dataKey="value" radius={[4, 4, 0, 0]} className="fill-primary" />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    );
+  return (
+    <EmptyState entity="activity" phase="passive" description="No revenue data for this period" />
   );
-  return <EmptyState entity="activity" phase="passive" description="No revenue data for this period" />;
 }
 
 interface RecentActivityItem {
@@ -594,31 +591,33 @@ function RecentActivityContent({
   loading,
   overview,
 }: Readonly<{ loading: boolean; overview: OverviewForActivity | undefined | null }>) {
-  if (loading) return (
-    <div className="space-y-4">
-      {[1, 2, 3].map((i) => (
-        <div key={i} className="animate-pulse flex gap-3">
-          <div className="w-2 h-2 rounded-full bg-muted mt-2" />
-          <div className="flex-1">
-            <div className="h-4 w-3/4 bg-muted rounded mb-1" />
-            <div className="h-3 w-1/3 bg-muted rounded" />
+  if (loading)
+    return (
+      <div className="space-y-4">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="animate-pulse flex gap-3">
+            <div className="w-2 h-2 rounded-full bg-muted mt-2" />
+            <div className="flex-1">
+              <div className="h-4 w-3/4 bg-muted rounded mb-1" />
+              <div className="h-3 w-1/3 bg-muted rounded" />
+            </div>
           </div>
-        </div>
-      ))}
-    </div>
-  );
-  if (overview && overview.recentActivity.length > 0) return (
-    <div className="space-y-4">
-      {overview.recentActivity.map((activity) => (
-        <ActivityItem
-          key={activity.id}
-          icon={activity.icon}
-          actorName={activity.actorName}
-          description={activity.description}
-          createdAt={activity.createdAt}
-        />
-      ))}
-    </div>
-  );
+        ))}
+      </div>
+    );
+  if (overview && overview.recentActivity.length > 0)
+    return (
+      <div className="space-y-4">
+        {overview.recentActivity.map((activity) => (
+          <ActivityItem
+            key={activity.id}
+            icon={activity.icon}
+            actorName={activity.actorName}
+            description={activity.description}
+            createdAt={activity.createdAt}
+          />
+        ))}
+      </div>
+    );
   return <EmptyState entity="activity" phase="passive" description="No recent activity" />;
 }

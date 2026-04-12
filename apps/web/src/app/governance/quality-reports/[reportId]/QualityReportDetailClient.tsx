@@ -179,14 +179,12 @@ export default function QualityReportDetailClient() {
                 <div>
                   <p className="text-sm text-muted-foreground">Score</p>
                   <p
-                    className={`font-semibold text-2xl ${
-                      (() => {
-                        if (report.score === undefined) return 'text-muted-foreground';
-                        if (report.score >= 90) return 'text-emerald-500';
-                        if (report.score >= 70) return 'text-amber-500';
-                        return 'text-red-500';
-                      })()
-                    }`}
+                    className={`font-semibold text-2xl ${(() => {
+                      if (report.score === undefined) return 'text-muted-foreground';
+                      if (report.score >= 90) return 'text-emerald-500';
+                      if (report.score >= 70) return 'text-amber-500';
+                      return 'text-red-500';
+                    })()}`}
                   >
                     {report.score === undefined ? 'N/A' : `${report.score}%`}
                   </p>
@@ -256,8 +254,8 @@ export default function QualityReportDetailClient() {
                     window.open(`/api/quality-reports/view?report=${reportId}`, '_blank')
                   }
                 >
-                  <span className="material-symbols-outlined text-base mr-1">open_in_new</span>{' '}
-                  Open in New Tab
+                  <span className="material-symbols-outlined text-base mr-1">open_in_new</span> Open
+                  in New Tab
                 </Button>
               </div>
             </div>
@@ -273,6 +271,7 @@ export default function QualityReportDetailClient() {
                   </div>
                 </div>
               )}
+              {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- onLoad is a standard iframe load event, not a mouse/keyboard interaction */}
               <iframe
                 src={`/api/quality-reports/view?report=${reportId}`}
                 className="w-full h-full border-0"
@@ -294,8 +293,8 @@ export default function QualityReportDetailClient() {
             The requested quality report could not be found.
           </p>
           <Button onClick={() => router.push('/governance/quality-reports')}>
-            <span className="material-symbols-outlined text-base mr-1">arrow_back</span>{' '}
-            Back to Quality Reports
+            <span className="material-symbols-outlined text-base mr-1">arrow_back</span> Back to
+            Quality Reports
           </Button>
         </Card>
       )}

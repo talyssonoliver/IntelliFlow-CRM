@@ -54,8 +54,7 @@ export default function PoliciesPage() {
               </p>
             </div>
             <button className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium">
-              <span className="material-symbols-outlined text-lg">upload</span>{' '}
-              Upload Policy
+              <span className="material-symbols-outlined text-lg">upload</span> Upload Policy
             </button>
           </div>
         </div>

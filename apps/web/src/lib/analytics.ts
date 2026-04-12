@@ -38,7 +38,7 @@ export type HomeAnalyticsEvent =
 
 export function trackHomeEvent(
   name: HomeAnalyticsEvent,
-  properties?: Record<string, unknown>,
+  properties?: Record<string, unknown>
 ): void {
   trackEvent({ name, category: 'home', properties });
 }
@@ -74,7 +74,7 @@ export function trackInsightsViewAllClick(): void {
 export function trackQuickActionClick(
   actionId: string,
   actionLabel: string,
-  isComingSoon: boolean,
+  isComingSoon: boolean
 ): void {
   trackHomeEvent('home.quick_action_clicked', {
     action_id: actionId,

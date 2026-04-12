@@ -41,12 +41,40 @@ const mockExportFetch = vi.fn().mockResolvedValue({
 vi.mock('@/lib/trpc', () => ({
   trpc: {
     analytics: {
-      getOverview: { useQuery: (_input: unknown, opts?: { enabled?: boolean }) => opts?.enabled === false ? { data: undefined, isLoading: false } : mockQueries.getOverview },
-      getTimeSeriesData: { useQuery: (_input: unknown, opts?: { enabled?: boolean }) => opts?.enabled === false ? { data: undefined, isLoading: false } : mockQueries.getTimeSeriesData },
-      getSalesMetrics: { useQuery: (_input: unknown, opts?: { enabled?: boolean }) => opts?.enabled === false ? { data: undefined, isLoading: false } : mockQueries.getSalesMetrics },
-      getConversionFunnel: { useQuery: (_input: unknown, opts?: { enabled?: boolean }) => opts?.enabled === false ? { data: undefined, isLoading: false } : mockQueries.getConversionFunnel },
-      growthTrends: { useQuery: (_input: unknown, opts?: { enabled?: boolean }) => opts?.enabled === false ? { data: undefined, isLoading: false } : mockQueries.growthTrends },
-      trafficSources: { useQuery: (_input: unknown, opts?: { enabled?: boolean }) => opts?.enabled === false ? { data: undefined, isLoading: false } : mockQueries.trafficSources },
+      getOverview: {
+        useQuery: (_input: unknown, opts?: { enabled?: boolean }) =>
+          opts?.enabled === false ? { data: undefined, isLoading: false } : mockQueries.getOverview,
+      },
+      getTimeSeriesData: {
+        useQuery: (_input: unknown, opts?: { enabled?: boolean }) =>
+          opts?.enabled === false
+            ? { data: undefined, isLoading: false }
+            : mockQueries.getTimeSeriesData,
+      },
+      getSalesMetrics: {
+        useQuery: (_input: unknown, opts?: { enabled?: boolean }) =>
+          opts?.enabled === false
+            ? { data: undefined, isLoading: false }
+            : mockQueries.getSalesMetrics,
+      },
+      getConversionFunnel: {
+        useQuery: (_input: unknown, opts?: { enabled?: boolean }) =>
+          opts?.enabled === false
+            ? { data: undefined, isLoading: false }
+            : mockQueries.getConversionFunnel,
+      },
+      growthTrends: {
+        useQuery: (_input: unknown, opts?: { enabled?: boolean }) =>
+          opts?.enabled === false
+            ? { data: undefined, isLoading: false }
+            : mockQueries.growthTrends,
+      },
+      trafficSources: {
+        useQuery: (_input: unknown, opts?: { enabled?: boolean }) =>
+          opts?.enabled === false
+            ? { data: undefined, isLoading: false }
+            : mockQueries.trafficSources,
+      },
     },
     useUtils: () => ({ analytics: { exportReport: { fetch: mockExportFetch } } }),
   },
@@ -66,7 +94,7 @@ vi.mock('@/hooks/useAnalyticsDateRange', () => ({
 vi.mock('@/providers/TimezoneProvider', () => ({
   useTimezoneContext: () => ({
     timezone: 'UTC',
-    formatDate: (d: string | Date) => typeof d === 'string' ? d : d.toISOString(),
+    formatDate: (d: string | Date) => (typeof d === 'string' ? d : d.toISOString()),
   }),
 }));
 
@@ -150,7 +178,7 @@ describe('Saved Report Export', () => {
     await userEvent.click(screen.getByRole('button', { name: /export/i }));
     await userEvent.click(screen.getByText('Export CSV'));
     expect(mockExportFetch).toHaveBeenCalledWith(
-      expect.objectContaining({ format: 'csv', reportType: 'overview' }),
+      expect.objectContaining({ format: 'csv', reportType: 'overview' })
     );
   });
 
@@ -159,7 +187,7 @@ describe('Saved Report Export', () => {
     await userEvent.click(screen.getByRole('button', { name: /export/i }));
     await userEvent.click(screen.getByText('Export CSV'));
     expect(mockExportFetch).toHaveBeenCalledWith(
-      expect.objectContaining({ format: 'csv', reportType: 'sales' }),
+      expect.objectContaining({ format: 'csv', reportType: 'sales' })
     );
   });
 
@@ -169,7 +197,7 @@ describe('Saved Report Export', () => {
     await userEvent.click(screen.getByRole('button', { name: /export/i }));
     await userEvent.click(screen.getByText('Export CSV'));
     expect(mockExportFetch).toHaveBeenCalledWith(
-      expect.objectContaining({ format: 'csv', reportType: 'timeseries' }),
+      expect.objectContaining({ format: 'csv', reportType: 'timeseries' })
     );
   });
 
@@ -182,7 +210,7 @@ describe('Saved Report Export', () => {
     await Promise.resolve();
     expect(mockDownloadCSV).toHaveBeenCalledWith(
       'metric,value\nRevenue,50000',
-      'intelliflow-overview-2026-03-01-2026-03-16.csv',
+      'intelliflow-overview-2026-03-01-2026-03-16.csv'
     );
   });
 
@@ -191,10 +219,8 @@ describe('Saved Report Export', () => {
     await userEvent.click(screen.getByRole('button', { name: /export/i }));
     await userEvent.click(screen.getByText('Export PDF'));
     expect(mockExportToPDF).toHaveBeenCalledWith(
-      expect.arrayContaining([
-        expect.objectContaining({ title: 'Key Metrics', type: 'metrics' }),
-      ]),
-      expect.objectContaining({ title: 'Weekly Summary Report' }),
+      expect.arrayContaining([expect.objectContaining({ title: 'Key Metrics', type: 'metrics' })]),
+      expect.objectContaining({ title: 'Weekly Summary Report' })
     );
   });
 
@@ -211,13 +237,16 @@ describe('Saved Report Export', () => {
         expect.objectContaining({ title: 'Key Metrics' }),
         expect.objectContaining({ title: 'Lead Sources', type: 'table' }),
       ]),
-      expect.any(Object),
+      expect.any(Object)
     );
   });
 
   it('PDF export for quarterly calls exportToPDF with metrics + growth trend', async () => {
     mockQueries.growthTrends = {
-      data: [{ month: 'Jan', value: 30000 }, { month: 'Feb', value: 32000 }],
+      data: [
+        { month: 'Jan', value: 30000 },
+        { month: 'Feb', value: 32000 },
+      ],
       isLoading: false,
     };
     render(<SavedReportView config={quarterlyConfig} />);
@@ -228,7 +257,7 @@ describe('Saved Report Export', () => {
         expect.objectContaining({ title: 'Key Metrics' }),
         expect.objectContaining({ title: 'Growth Trend', type: 'table' }),
       ]),
-      expect.any(Object),
+      expect.any(Object)
     );
   });
 
@@ -257,7 +286,7 @@ describe('Saved Report Export', () => {
       expect.objectContaining({
         startDate: '2026-03-01T00:00:00Z',
         endDate: '2026-03-16T00:00:00Z',
-      }),
+      })
     );
   });
 });

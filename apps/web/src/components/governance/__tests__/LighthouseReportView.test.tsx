@@ -89,10 +89,10 @@ describe('LighthouseReportView', () => {
       data: {
         ...mockLighthouseData.data,
         details: {
-          performance: 95,    // emerald
-          accessibility: 75,  // amber
-          bestPractices: 60,  // red
-          seo: 90,            // emerald
+          performance: 95, // emerald
+          accessibility: 75, // amber
+          bestPractices: 60, // red
+          seo: 90, // emerald
         },
       },
     };
@@ -121,10 +121,10 @@ describe('LighthouseReportView', () => {
       data: {
         ...mockLighthouseData.data,
         details: {
-          performance: 90,    // emerald (boundary)
-          accessibility: 89,  // amber (boundary)
-          bestPractices: 70,  // amber (boundary)
-          seo: 69,            // red (boundary)
+          performance: 90, // emerald (boundary)
+          accessibility: 89, // amber (boundary)
+          bestPractices: 70, // amber (boundary)
+          seo: 69, // red (boundary)
         },
       },
     };

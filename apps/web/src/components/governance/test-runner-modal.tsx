@@ -369,8 +369,7 @@ export function TestRunnerModal({ isOpen, onClose, onComplete }: Readonly<TestRu
                 Cancel
               </Button>
               <Button onClick={handleStart} className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-lg">play_arrow</span>{' '}
-                Start Tests
+                <span className="material-symbols-outlined text-lg">play_arrow</span> Start Tests
               </Button>
             </div>
           </>
@@ -431,14 +430,17 @@ export function TestRunnerModal({ isOpen, onClose, onComplete }: Readonly<TestRu
                 <p className="text-muted-foreground">Waiting for test output...</p>
               ) : (
                 logs.map((log, i) => {
-                  const skipOrDefaultClass = log.type === 'skip' ? 'text-amber-500' : 'text-muted-foreground';
+                  const skipOrDefaultClass =
+                    log.type === 'skip' ? 'text-amber-500' : 'text-muted-foreground';
                   const logColorClass = (() => {
                     if (log.type === 'pass') return 'text-emerald-500';
                     if (log.type === 'fail') return 'text-red-500';
                     return skipOrDefaultClass;
                   })();
                   return (
-                    <div key={i} className={logColorClass}> {/* NOSONAR typescript:S6479 */}
+                    <div key={i} className={logColorClass}>
+                      {' '}
+                      {/* NOSONAR typescript:S6479 */}
                       {log.type === 'pass' && '  '}
                       {log.type === 'fail' && '  '}
                       {log.type === 'skip' && '  '}
@@ -463,8 +465,8 @@ export function TestRunnerModal({ isOpen, onClose, onComplete }: Readonly<TestRu
                     Close
                   </Button>
                   <Button onClick={handleStart}>
-                    <span className="material-symbols-outlined text-lg mr-2">refresh</span>{' '}
-                    Run Again
+                    <span className="material-symbols-outlined text-lg mr-2">refresh</span> Run
+                    Again
                   </Button>
                 </>
               )}

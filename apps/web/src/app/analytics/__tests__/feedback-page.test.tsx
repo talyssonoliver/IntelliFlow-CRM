@@ -22,7 +22,9 @@ vi.mock('recharts', () => ({
   PieChart: ({ children }: Readonly<{ children: React.ReactNode }>) => (
     <div data-testid="pie-chart">{children}</div>
   ),
-  Pie: ({ children }: Readonly<{ children: React.ReactNode }>) => <div data-testid="pie">{children}</div>,
+  Pie: ({ children }: Readonly<{ children: React.ReactNode }>) => (
+    <div data-testid="pie">{children}</div>
+  ),
   Cell: () => <div data-testid="cell" />,
   AreaChart: ({ children }: Readonly<{ children: React.ReactNode }>) => (
     <div data-testid="area-chart">{children}</div>

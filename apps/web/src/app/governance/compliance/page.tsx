@@ -123,7 +123,9 @@ function ComplianceCard({
 
       <div className="grid grid-cols-2 gap-4 text-sm border-t border-border pt-4">
         {details.map((detail, index) => (
-          <div key={index}> {/* NOSONAR typescript:S6479 */}
+          <div key={index}>
+            {' '}
+            {/* NOSONAR typescript:S6479 */}
             <p className="text-muted-foreground mb-0.5">{detail.label}</p>
             <p className="font-semibold text-foreground">{detail.value}</p>
           </div>
@@ -213,7 +215,12 @@ function formatActivityTime(date: Date | string, timezone: string = 'Europe/Lond
   if (diffHours < 1) return 'Just now';
   if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
   if (diffDays < 7) return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: timezone });
+  return d.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: timezone,
+  });
 }
 
 export default function ComplianceDashboardPage() {
@@ -242,8 +249,7 @@ export default function ComplianceDashboardPage() {
           </div>
           <div className="flex items-center gap-3">
             <button className="inline-flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-lg text-foreground text-sm font-semibold hover:bg-accent transition-colors shadow-sm">
-              <span className="material-symbols-outlined text-lg">refresh</span>{' '}
-              Refresh Data
+              <span className="material-symbols-outlined text-lg">refresh</span> Refresh Data
             </button>
             <ExportReportButton />
           </div>
@@ -344,21 +350,25 @@ export default function ComplianceDashboardPage() {
             </button>
           </div>
           <div className="space-y-6">
-            {recentActivity.length > 0 ? recentActivity.map((activity, index) => (
-              <div key={activity.id} className="flex gap-4">
-                <div className="flex flex-col items-center">
-                  <div className="w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-600 my-1" />
-                  {index < recentActivity.length - 1 && <div className="w-px h-full bg-border" />}
+            {recentActivity.length > 0 ? (
+              recentActivity.map((activity, index) => (
+                <div key={activity.id} className="flex gap-4">
+                  <div className="flex flex-col items-center">
+                    <div className="w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-600 my-1" />
+                    {index < recentActivity.length - 1 && <div className="w-px h-full bg-border" />}
+                  </div>
+                  <div className="pb-2">
+                    <p className="text-sm font-semibold text-foreground">{activity.description}</p>
+                    {activity.actorName && (
+                      <p className="text-sm text-muted-foreground">by {activity.actorName}</p>
+                    )}
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {formatActivityTime(activity.createdAt, timezone)}
+                    </p>
+                  </div>
                 </div>
-                <div className="pb-2">
-                  <p className="text-sm font-semibold text-foreground">{activity.description}</p>
-                  {activity.actorName && (
-                    <p className="text-sm text-muted-foreground">by {activity.actorName}</p>
-                  )}
-                  <p className="text-xs text-muted-foreground mt-1">{formatActivityTime(activity.createdAt, timezone)}</p>
-                </div>
-              </div>
-            )) : (
+              ))
+            ) : (
               <p className="text-sm text-muted-foreground text-center py-4">No recent activity</p>
             )}
           </div>

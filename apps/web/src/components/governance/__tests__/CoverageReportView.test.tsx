@@ -93,10 +93,10 @@ describe('CoverageReportView', () => {
       data: {
         ...mockCoverageData.data,
         details: {
-          statements: 92.5,  // pass (>=90)
-          branches: 85.3,    // pass (>=80)
-          functions: 91.0,   // pass (>=90)
-          lines: 93.1,       // pass (>=90)
+          statements: 92.5, // pass (>=90)
+          branches: 85.3, // pass (>=80)
+          functions: 91.0, // pass (>=90)
+          lines: 93.1, // pass (>=90)
         },
       },
     };
@@ -117,10 +117,10 @@ describe('CoverageReportView', () => {
       data: {
         ...mockCoverageData.data,
         details: {
-          statements: 89.9,  // fail (<90)
-          branches: 80.0,    // pass (>=80)
-          functions: 90.0,   // pass (>=90)
-          lines: 89.0,       // fail (<90)
+          statements: 89.9, // fail (<90)
+          branches: 80.0, // pass (>=80)
+          functions: 90.0, // pass (>=90)
+          lines: 89.0, // fail (<90)
         },
       },
     };

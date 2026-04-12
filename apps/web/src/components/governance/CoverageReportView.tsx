@@ -111,7 +111,8 @@ export default function CoverageReportView() {
             No Coverage Report Available
           </h3>
           <p className="text-muted-foreground">
-            {report?.placeholderReason || 'No coverage report has been generated yet. Run tests with coverage to populate this page.'}
+            {report?.placeholderReason ||
+              'No coverage report has been generated yet. Run tests with coverage to populate this page.'}
           </p>
         </Card>
       )}
@@ -119,6 +120,7 @@ export default function CoverageReportView() {
       {!loading && !error && report && !isPlaceholder && details && (
         <>
           {/* Metric Cards */}
+          {/* eslint-disable jsx-a11y/prefer-tag-over-role -- shadcn Card renders a div; role="region" provides correct landmark semantics */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
             {metrics.map(({ key, label, threshold }) => {
               const value = details[key] as number;
@@ -149,9 +151,7 @@ export default function CoverageReportView() {
                     className={`h-2 ${getProgressColor(value)}`}
                     aria-label={`${label} coverage: ${value}%`}
                   />
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Threshold: &ge;{threshold}%
-                  </p>
+                  <p className="text-xs text-muted-foreground mt-2">Threshold: &ge;{threshold}%</p>
                 </Card>
               );
             })}
@@ -175,7 +175,9 @@ export default function CoverageReportView() {
                   <p className="text-sm text-muted-foreground">Passed</p>
                 </div>
                 <div className="text-center">
-                  <p className={`text-2xl font-bold ${(details.testsFailed ?? 0) > 0 ? 'text-red-500' : 'text-foreground'}`}>
+                  <p
+                    className={`text-2xl font-bold ${(details.testsFailed ?? 0) > 0 ? 'text-red-500' : 'text-foreground'}`}
+                  >
                     {formatNumber(details.testsFailed ?? 0)}
                   </p>
                   <p className="text-sm text-muted-foreground">Failed</p>
@@ -203,6 +205,7 @@ export default function CoverageReportView() {
               </div>
             </Card>
           )}
+          {/* eslint-enable jsx-a11y/prefer-tag-over-role */}
 
           {/* Metadata */}
           <Card className="p-4">

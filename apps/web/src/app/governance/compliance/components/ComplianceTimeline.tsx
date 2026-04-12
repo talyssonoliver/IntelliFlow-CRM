@@ -56,7 +56,13 @@ interface CalendarDayProps {
   onEventClick: (event: ComplianceEvent) => void;
 }
 
-function CalendarDay({ date, events, isCurrentMonth, isToday, onEventClick }: Readonly<CalendarDayProps>) {
+function CalendarDay({
+  date,
+  events,
+  isCurrentMonth,
+  isToday,
+  onEventClick,
+}: Readonly<CalendarDayProps>) {
   return (
     <div
       className={`
@@ -68,7 +74,7 @@ function CalendarDay({ date, events, isCurrentMonth, isToday, onEventClick }: Re
       <div
         className={`text-xs font-medium mb-1 ${isToday ? 'text-primary' : 'text-muted-foreground'}`}
       >
-        {date.getDate()}
+        {date.getUTCDate()}
       </div>
       <div className="space-y-1">
         {events.slice(0, 2).map((event) => {
@@ -209,18 +215,18 @@ export function ComplianceTimeline() {
 
     // Start from Sunday of the week containing the first day
     const startDate = new Date(firstDay);
-    startDate.setDate(startDate.getDate() - startDate.getDay());
+    startDate.setUTCDate(startDate.getUTCDate() - startDate.getUTCDay());
 
     // End on Saturday of the week containing the last day
     const endDate = new Date(lastDay);
-    endDate.setDate(endDate.getDate() + (6 - endDate.getDay()));
+    endDate.setUTCDate(endDate.getUTCDate() + (6 - endDate.getUTCDay()));
 
     const days: Date[] = [];
     const current = new Date(startDate);
 
     while (current <= endDate) {
       days.push(new Date(current));
-      current.setDate(current.getDate() + 1);
+      current.setUTCDate(current.getUTCDate() + 1);
     }
 
     return days;
@@ -324,7 +330,11 @@ export function ComplianceTimeline() {
           <span className="material-symbols-outlined">chevron_left</span>
         </button>
         <h3 className="text-lg font-medium text-foreground">
-          {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: timezone })}
+          {currentDate.toLocaleDateString('en-US', {
+            month: 'long',
+            year: 'numeric',
+            timeZone: timezone,
+          })}
         </h3>
         <button
           onClick={() => navigateMonth(1)}

@@ -277,14 +277,12 @@ export default function ADRRegistryPage() {
         {/* Messages */}
         {successMessage && (
           <div className="mb-4 p-4 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-400 rounded-lg flex items-center gap-2">
-            <span className="material-symbols-outlined">check_circle</span>{' '}
-            {successMessage}
+            <span className="material-symbols-outlined">check_circle</span> {successMessage}
           </div>
         )}
         {error && (
           <div className="mb-4 p-4 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400 rounded-lg flex items-center gap-2">
-            <span className="material-symbols-outlined">error</span>{' '}
-            {error}
+            <span className="material-symbols-outlined">error</span> {error}
           </div>
         )}
 
@@ -302,15 +300,13 @@ export default function ADRRegistryPage() {
                 onClick={handleValidate}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-lg text-foreground text-sm font-medium hover:bg-accent transition-colors"
               >
-                <span className="material-symbols-outlined text-lg">checklist</span>{' '}
-                Validate
+                <span className="material-symbols-outlined text-lg">checklist</span> Validate
               </button>
               <button
                 onClick={() => setShowCreateModal(true)}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium"
               >
-                <span className="material-symbols-outlined text-lg">add</span>{' '}
-                New ADR
+                <span className="material-symbols-outlined text-lg">add</span> New ADR
               </button>
             </div>
           </div>
@@ -325,8 +321,7 @@ export default function ADRRegistryPage() {
                   : 'border-transparent text-muted-foreground hover:text-foreground'
               }`}
             >
-              <span className="material-symbols-outlined text-lg align-middle mr-1">list</span>{' '}
-              List
+              <span className="material-symbols-outlined text-lg align-middle mr-1">list</span> List
             </button>
             <button
               onClick={() => setActiveTab('index')}
@@ -425,119 +420,121 @@ export default function ADRRegistryPage() {
             {/* ADR List */}
             <Card>
               {(() => {
-              if (loading) return (
-                <div className="p-8 text-center text-muted-foreground">Loading ADRs...</div>
-              );
-              if (adrs.length === 0) return (
-                <div className="p-8 text-center">
-                  <span className="material-symbols-outlined text-4xl text-muted-foreground mb-2">
-                    architecture
-                  </span>
-                  <p className="text-muted-foreground">
-                    {searchQuery ? 'No ADRs found matching your search' : 'No ADRs found'}
-                  </p>
-                </div>
-              );
-              return (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-border">
-                        <th className="text-left px-6 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                          ADR
-                        </th>
-                        <th className="text-left px-6 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                          Status
-                        </th>
-                        <th className="text-left px-6 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                          Sprint
-                        </th>
-                        <th className="text-left px-6 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                          Date
-                        </th>
-                        <th className="text-right px-6 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border">
-                      {adrs.map((adr) => (
-                        <tr key={adr.id} className="hover:bg-accent/50 transition-colors">
-                          <td className="px-6 py-4">
-                            <div>
-                              <p className="font-medium text-foreground">
-                                {adr.id}: {adr.title}
-                              </p>
-                              {adr.technicalStory && (
-                                <p className="text-sm text-muted-foreground mt-0.5">
-                                  Story: {adr.technicalStory}
-                                </p>
-                              )}
-                              {adr.relatedADRs.length > 0 && (
-                                <div className="flex gap-1 mt-1">
-                                  {adr.relatedADRs.slice(0, 3).map((related) => (
-                                    <span
-                                      key={related}
-                                      className="inline-flex px-1.5 py-0.5 text-xs bg-muted rounded"
-                                    >
-                                      {related}
-                                    </span>
-                                  ))}
-                                  {adr.relatedADRs.length > 3 && (
-                                    <span className="text-xs text-muted-foreground">
-                                      +{adr.relatedADRs.length - 3} more
-                                    </span>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            {selectedAdr === adr.id ? (
-                              <div className="flex flex-col gap-1">
-                                {VALID_STATUSES.map((status) => (
-                                  <button
-                                    key={status}
-                                    onClick={() => handleStatusUpdate(adr.id, status)} // NOSONAR typescript:S2004 — inline callback is idiomatic React; extracted named function adds complexity for trivial use
-                                    disabled={statusUpdating === adr.id}
-                                    className={`text-left px-2 py-1 text-xs rounded hover:bg-accent transition-colors ${
-                                      adr.status.includes(status) ? 'font-bold' : ''
-                                    }`}
-                                  >
-                                    {status}
-                                  </button>
-                                ))}
-                                <button
-                                  onClick={() => setSelectedAdr(null)}
-                                  className="text-left px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
-                                >
-                                  Cancel
-                                </button>
-                              </div>
-                            ) : (
-                              <button
-                                onClick={() => setSelectedAdr(adr.id)}
-                                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeClass(adr.status)}`}
-                              >
-                                {adr.status}
-                                <span className="material-symbols-outlined text-sm">edit</span>
-                              </button>
-                            )}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-muted-foreground">
-                            Sprint {adr.sprint}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-muted-foreground">{adr.date}</td>
-                          <td className="px-6 py-4 text-right">
-                            <button className="text-primary hover:underline text-sm">View</button>
-                          </td>
+                if (loading)
+                  return (
+                    <div className="p-8 text-center text-muted-foreground">Loading ADRs...</div>
+                  );
+                if (adrs.length === 0)
+                  return (
+                    <div className="p-8 text-center">
+                      <span className="material-symbols-outlined text-4xl text-muted-foreground mb-2">
+                        architecture
+                      </span>
+                      <p className="text-muted-foreground">
+                        {searchQuery ? 'No ADRs found matching your search' : 'No ADRs found'}
+                      </p>
+                    </div>
+                  );
+                return (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-border">
+                          <th className="text-left px-6 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                            ADR
+                          </th>
+                          <th className="text-left px-6 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                            Status
+                          </th>
+                          <th className="text-left px-6 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                            Sprint
+                          </th>
+                          <th className="text-left px-6 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                            Date
+                          </th>
+                          <th className="text-right px-6 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                            Actions
+                          </th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              );
-            })()}
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        {adrs.map((adr) => (
+                          <tr key={adr.id} className="hover:bg-accent/50 transition-colors">
+                            <td className="px-6 py-4">
+                              <div>
+                                <p className="font-medium text-foreground">
+                                  {adr.id}: {adr.title}
+                                </p>
+                                {adr.technicalStory && (
+                                  <p className="text-sm text-muted-foreground mt-0.5">
+                                    Story: {adr.technicalStory}
+                                  </p>
+                                )}
+                                {adr.relatedADRs.length > 0 && (
+                                  <div className="flex gap-1 mt-1">
+                                    {adr.relatedADRs.slice(0, 3).map((related) => (
+                                      <span
+                                        key={related}
+                                        className="inline-flex px-1.5 py-0.5 text-xs bg-muted rounded"
+                                      >
+                                        {related}
+                                      </span>
+                                    ))}
+                                    {adr.relatedADRs.length > 3 && (
+                                      <span className="text-xs text-muted-foreground">
+                                        +{adr.relatedADRs.length - 3} more
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4">
+                              {selectedAdr === adr.id ? (
+                                <div className="flex flex-col gap-1">
+                                  {VALID_STATUSES.map((status) => (
+                                    <button
+                                      key={status}
+                                      onClick={() => handleStatusUpdate(adr.id, status)} // NOSONAR typescript:S2004 — inline callback is idiomatic React; extracted named function adds complexity for trivial use
+                                      disabled={statusUpdating === adr.id}
+                                      className={`text-left px-2 py-1 text-xs rounded hover:bg-accent transition-colors ${
+                                        adr.status.includes(status) ? 'font-bold' : ''
+                                      }`}
+                                    >
+                                      {status}
+                                    </button>
+                                  ))}
+                                  <button
+                                    onClick={() => setSelectedAdr(null)}
+                                    className="text-left px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={() => setSelectedAdr(adr.id)}
+                                  className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeClass(adr.status)}`}
+                                >
+                                  {adr.status}
+                                  <span className="material-symbols-outlined text-sm">edit</span>
+                                </button>
+                              )}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-muted-foreground">
+                              Sprint {adr.sprint}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-muted-foreground">{adr.date}</td>
+                            <td className="px-6 py-4 text-right">
+                              <button className="text-primary hover:underline text-sm">View</button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              })()}
             </Card>
           </>
         )}
@@ -551,8 +548,7 @@ export default function ADRRegistryPage() {
                   onClick={() => copyToClipboard(indexContent)}
                   className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  <span className="material-symbols-outlined text-lg">content_copy</span>{' '}
-                  Copy
+                  <span className="material-symbols-outlined text-lg">content_copy</span> Copy
                 </button>
                 <button
                   onClick={handleGenerateIndex}
@@ -588,8 +584,7 @@ export default function ADRRegistryPage() {
                 onClick={() => copyToClipboard('```mermaid\n' + graphContent + '\n```')}
                 className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
-                <span className="material-symbols-outlined text-lg">content_copy</span>{' '}
-                Copy Mermaid
+                <span className="material-symbols-outlined text-lg">content_copy</span> Copy Mermaid
               </button>
             </div>
             <p className="text-sm text-muted-foreground mb-4">
@@ -621,7 +616,7 @@ export default function ADRRegistryPage() {
                     htmlFor="adr-new-title"
                     className="block text-sm font-medium text-foreground mb-1"
                   >
-                    Title{' '}<span className="text-red-500">*</span>
+                    Title <span className="text-red-500">*</span>
                   </label>
                   <input
                     id="adr-new-title"
@@ -692,8 +687,10 @@ export default function ADRRegistryPage() {
                       <div
                         key={v.id}
                         className={`p-4 rounded-lg border ${(() => {
-                          if (v.validation.valid === false) return 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20';
-                          if (v.validation.warnings.length > 0) return 'border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20';
+                          if (v.validation.valid === false)
+                            return 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20';
+                          if (v.validation.warnings.length > 0)
+                            return 'border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20';
                           return 'border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-900/20';
                         })()}`}
                       >

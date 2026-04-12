@@ -7,8 +7,12 @@ export default function ScheduledReportsPage() {
       <p className="text-muted-foreground mt-1">Set up automated delivery and cadence.</p>
       <div className="mt-8 flex flex-1 items-center justify-center">
         <div className="text-center">
-          <span className="material-symbols-outlined text-5xl text-muted-foreground/40">schedule_send</span>
-          <p className="mt-4 text-sm text-muted-foreground">Scheduled reports configuration coming soon.</p>
+          <span className="material-symbols-outlined text-5xl text-muted-foreground/40">
+            schedule_send
+          </span>
+          <p className="mt-4 text-sm text-muted-foreground">
+            Scheduled reports configuration coming soon.
+          </p>
         </div>
       </div>
     </div>

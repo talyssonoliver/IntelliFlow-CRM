@@ -856,7 +856,13 @@ export default function QualityReportsPage() {
       {/* Reports Grid */}
       <div className="grid gap-6 md:grid-cols-3">
         {data?.reports.map((report) => {
-          const config = reportConfigs[report.type];
+          const config = reportConfigs[report.type] ?? {
+            icon: 'description',
+            color: 'bg-slate-500',
+            description: report.type,
+            scopes: { quick: '', standard: '', comprehensive: '' },
+            estimatedTime: { quick: '—', standard: '—', comprehensive: '—' },
+          };
           const statusInfo = getStatusInfo(report.status);
           const hasCached = isCached(report.type);
 
@@ -987,9 +993,7 @@ export default function QualityReportsPage() {
         <Card>
           <EmptyState entity="reports" phase="passive" />
           <div className="flex justify-center pb-8">
-            <Button onClick={() => setShowGenerateModal(true)}>
-              Generate Reports Now
-            </Button>
+            <Button onClick={() => setShowGenerateModal(true)}>Generate Reports Now</Button>
           </div>
         </Card>
       )}

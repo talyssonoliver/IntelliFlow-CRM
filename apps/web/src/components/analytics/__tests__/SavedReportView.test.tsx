@@ -64,9 +64,27 @@ const mockTrafficSources = [
 
 const mockFunnel = {
   stages: [
-    { stage: 'PROSPECTING', label: 'Prospecting', count: 50, value: 125000, conversionFromPrevious: null },
-    { stage: 'QUALIFICATION', label: 'Qualification', count: 30, value: 75000, conversionFromPrevious: 60 },
-    { stage: 'CLOSED_WON', label: 'Closed Won', count: 10, value: 25000, conversionFromPrevious: 33 },
+    {
+      stage: 'PROSPECTING',
+      label: 'Prospecting',
+      count: 50,
+      value: 125000,
+      conversionFromPrevious: null,
+    },
+    {
+      stage: 'QUALIFICATION',
+      label: 'Qualification',
+      count: 30,
+      value: 75000,
+      conversionFromPrevious: 60,
+    },
+    {
+      stage: 'CLOSED_WON',
+      label: 'Closed Won',
+      count: 10,
+      value: 25000,
+      conversionFromPrevious: 33,
+    },
   ],
   totalLeads: 50,
   overallConversionRate: 20,
@@ -84,18 +102,48 @@ function resetQueries() {
   mockQueries.trafficSources = { data: undefined, isLoading: false };
 }
 
-const mockExportFetch = vi.fn().mockResolvedValue({ format: 'csv', data: 'col1,col2\nval1,val2', filename: 'report.csv' });
+const mockExportFetch = vi
+  .fn()
+  .mockResolvedValue({ format: 'csv', data: 'col1,col2\nval1,val2', filename: 'report.csv' });
 const mockUseUtils = { analytics: { exportReport: { fetch: mockExportFetch } } };
 
 vi.mock('@/lib/trpc', () => ({
   trpc: {
     analytics: {
-      getOverview: { useQuery: (_input: unknown, opts?: { enabled?: boolean }) => opts?.enabled === false ? { data: undefined, isLoading: false } : mockQueries.getOverview },
-      getTimeSeriesData: { useQuery: (_input: unknown, opts?: { enabled?: boolean }) => opts?.enabled === false ? { data: undefined, isLoading: false } : mockQueries.getTimeSeriesData },
-      getSalesMetrics: { useQuery: (_input: unknown, opts?: { enabled?: boolean }) => opts?.enabled === false ? { data: undefined, isLoading: false } : mockQueries.getSalesMetrics },
-      getConversionFunnel: { useQuery: (_input: unknown, opts?: { enabled?: boolean }) => opts?.enabled === false ? { data: undefined, isLoading: false } : mockQueries.getConversionFunnel },
-      growthTrends: { useQuery: (_input: unknown, opts?: { enabled?: boolean }) => opts?.enabled === false ? { data: undefined, isLoading: false } : mockQueries.growthTrends },
-      trafficSources: { useQuery: (_input: unknown, opts?: { enabled?: boolean }) => opts?.enabled === false ? { data: undefined, isLoading: false } : mockQueries.trafficSources },
+      getOverview: {
+        useQuery: (_input: unknown, opts?: { enabled?: boolean }) =>
+          opts?.enabled === false ? { data: undefined, isLoading: false } : mockQueries.getOverview,
+      },
+      getTimeSeriesData: {
+        useQuery: (_input: unknown, opts?: { enabled?: boolean }) =>
+          opts?.enabled === false
+            ? { data: undefined, isLoading: false }
+            : mockQueries.getTimeSeriesData,
+      },
+      getSalesMetrics: {
+        useQuery: (_input: unknown, opts?: { enabled?: boolean }) =>
+          opts?.enabled === false
+            ? { data: undefined, isLoading: false }
+            : mockQueries.getSalesMetrics,
+      },
+      getConversionFunnel: {
+        useQuery: (_input: unknown, opts?: { enabled?: boolean }) =>
+          opts?.enabled === false
+            ? { data: undefined, isLoading: false }
+            : mockQueries.getConversionFunnel,
+      },
+      growthTrends: {
+        useQuery: (_input: unknown, opts?: { enabled?: boolean }) =>
+          opts?.enabled === false
+            ? { data: undefined, isLoading: false }
+            : mockQueries.growthTrends,
+      },
+      trafficSources: {
+        useQuery: (_input: unknown, opts?: { enabled?: boolean }) =>
+          opts?.enabled === false
+            ? { data: undefined, isLoading: false }
+            : mockQueries.trafficSources,
+      },
     },
     useUtils: () => mockUseUtils,
   },
@@ -116,7 +164,7 @@ vi.mock('@/hooks/useAnalyticsDateRange', () => ({
 vi.mock('@/providers/TimezoneProvider', () => ({
   useTimezoneContext: () => ({
     timezone: 'UTC',
-    formatDate: (d: string | Date) => typeof d === 'string' ? d : d.toISOString(),
+    formatDate: (d: string | Date) => (typeof d === 'string' ? d : d.toISOString()),
   }),
 }));
 
@@ -132,16 +180,28 @@ vi.mock('@/lib/export/pdf', () => ({
 
 // Recharts mock — render minimal structure
 vi.mock('recharts', () => ({
-  ResponsiveContainer: ({ children }: { children: React.ReactNode }) => <div data-testid="responsive-container">{children}</div>,
-  BarChart: ({ children, data }: { children: React.ReactNode; data: unknown[] }) => <div data-testid="bar-chart" data-points={data?.length}>{children}</div>,
+  ResponsiveContainer: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="responsive-container">{children}</div>
+  ),
+  BarChart: ({ children, data }: { children: React.ReactNode; data: unknown[] }) => (
+    <div data-testid="bar-chart" data-points={data?.length}>
+      {children}
+    </div>
+  ),
   Bar: () => <div data-testid="bar" />,
-  LineChart: ({ children, data }: { children: React.ReactNode; data: unknown[] }) => <div data-testid="line-chart" data-points={data?.length}>{children}</div>,
+  LineChart: ({ children, data }: { children: React.ReactNode; data: unknown[] }) => (
+    <div data-testid="line-chart" data-points={data?.length}>
+      {children}
+    </div>
+  ),
   Line: () => <div data-testid="line" />,
   XAxis: () => <div data-testid="x-axis" />,
   YAxis: () => <div data-testid="y-axis" />,
   CartesianGrid: () => <div data-testid="cartesian-grid" />,
   Tooltip: () => <div data-testid="tooltip" />,
-  PieChart: ({ children }: { children: React.ReactNode }) => <div data-testid="pie-chart">{children}</div>,
+  PieChart: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="pie-chart">{children}</div>
+  ),
   Pie: ({ children }: { children: React.ReactNode }) => <div data-testid="pie">{children}</div>,
   Cell: () => <div data-testid="cell" />,
 }));
@@ -377,13 +437,17 @@ describe('SavedReportView', () => {
         expect.objectContaining({
           format: 'csv',
           reportType: 'overview', // weekly maps to 'overview'
-        }),
+        })
       );
     });
 
     it('CSV export calls downloadCSV with server result', async () => {
       // Use flushPromises pattern for async mock resolution
-      mockExportFetch.mockResolvedValue({ format: 'csv', data: 'col1,col2\nval1,val2', filename: 'report.csv' });
+      mockExportFetch.mockResolvedValue({
+        format: 'csv',
+        data: 'col1,col2\nval1,val2',
+        filename: 'report.csv',
+      });
       render(<SavedReportView config={weeklyConfig} />);
       const exportBtn = screen.getByRole('button', { name: /export/i });
       await userEvent.click(exportBtn);
@@ -402,7 +466,7 @@ describe('SavedReportView', () => {
         expect.arrayContaining([
           expect.objectContaining({ title: 'Key Metrics', type: 'metrics' }),
         ]),
-        expect.objectContaining({ title: 'Weekly Summary Report' }),
+        expect.objectContaining({ title: 'Weekly Summary Report' })
       );
     });
   });

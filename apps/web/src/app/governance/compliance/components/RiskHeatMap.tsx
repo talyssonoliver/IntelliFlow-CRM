@@ -124,8 +124,10 @@ function RiskDetailTooltip({ risks, onClose }: Readonly<RiskDetailTooltipProps>)
             <div
               key={risk.id}
               className={`p-3 rounded-lg border ${(() => {
-                if (risk.status === 'requires_action') return 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20';
-                if (risk.status === 'mitigated') return 'border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20';
+                if (risk.status === 'requires_action')
+                  return 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20';
+                if (risk.status === 'mitigated')
+                  return 'border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20';
                 return 'border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-900/20';
               })()}`}
             >
@@ -145,7 +147,13 @@ function RiskDetailTooltip({ risks, onClose }: Readonly<RiskDetailTooltipProps>)
               )}
               {risk.dueDate && (
                 <p className="text-xs text-muted-foreground mt-1">
-                  Due: {new Date(risk.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: timezone })}
+                  Due:{' '}
+                  {new Date(risk.dueDate).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                    timeZone: timezone,
+                  })}
                 </p>
               )}
             </div>
@@ -228,7 +236,14 @@ export function RiskHeatMap() {
           </div>
         </div>
         <div className="text-xs text-muted-foreground">
-          Last updated: {data?.lastUpdated ? new Date(data.lastUpdated).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: timezone }) : '-'}
+          Last updated:{' '}
+          {data?.lastUpdated
+            ? new Date(data.lastUpdated).toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                minute: '2-digit',
+                timeZone: timezone,
+              })
+            : '-'}
         </div>
       </div>
 

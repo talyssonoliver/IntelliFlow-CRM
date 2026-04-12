@@ -8,7 +8,9 @@ import {
   governanceSidebarConfig,
 } from '@/components/sidebar';
 
-export default function GovernanceLayoutShell({ children }: Readonly<{ children: React.ReactNode }>) {
+export default function GovernanceLayoutShell({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <SidebarProvider>
       <div className="flex min-h-[calc(100vh-4rem)]">

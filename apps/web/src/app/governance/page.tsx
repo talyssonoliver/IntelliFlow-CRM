@@ -52,7 +52,12 @@ function formatActivityTime(date: Date | string, timezone: string = 'Europe/Lond
   if (diffHours < 1) return 'Just now';
   if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
   if (diffDays < 7) return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: timezone });
+  return d.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: timezone,
+  });
 }
 
 export default function GovernancePage() {
@@ -185,25 +190,32 @@ export default function GovernancePage() {
             <button className="text-sm text-primary hover:underline">View All</button>
           </div>
           <div className="space-y-4">
-            {recentActivity.length > 0 ? recentActivity.map((activity) => {
-              const cfg = ACTION_ICON_MAP[activity.action] ?? { icon: activity.icon, iconColor: 'text-muted-foreground' };
-              return (
-                <div key={activity.id} className="flex items-start gap-4">
-                  <div className="flex-shrink-0 mt-0.5">
-                    <span className={`material-symbols-outlined ${cfg.iconColor}`}>
-                      {cfg.icon}
-                    </span>
+            {recentActivity.length > 0 ? (
+              recentActivity.map((activity) => {
+                const cfg = ACTION_ICON_MAP[activity.action] ?? {
+                  icon: activity.icon,
+                  iconColor: 'text-muted-foreground',
+                };
+                return (
+                  <div key={activity.id} className="flex items-start gap-4">
+                    <div className="flex-shrink-0 mt-0.5">
+                      <span className={`material-symbols-outlined ${cfg.iconColor}`}>
+                        {cfg.icon}
+                      </span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground">{activity.description}</p>
+                      {activity.actorName && (
+                        <p className="text-sm text-muted-foreground">by {activity.actorName}</p>
+                      )}
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {formatActivityTime(activity.createdAt, timezone)}
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground">{activity.description}</p>
-                    {activity.actorName && (
-                      <p className="text-sm text-muted-foreground">by {activity.actorName}</p>
-                    )}
-                    <p className="text-xs text-muted-foreground mt-1">{formatActivityTime(activity.createdAt, timezone)}</p>
-                  </div>
-                </div>
-              );
-            }) : (
+                );
+              })
+            ) : (
               <p className="text-sm text-muted-foreground text-center py-4">No recent activity</p>
             )}
           </div>

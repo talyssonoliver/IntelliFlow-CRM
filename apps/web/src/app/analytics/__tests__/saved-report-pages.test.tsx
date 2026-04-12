@@ -6,7 +6,9 @@ import React from 'react';
 // Mock SavedReportView to isolate page tests
 // ============================================
 
-const mockSavedReportView = vi.fn((_props: Record<string, unknown>) => <div data-testid="saved-report-view" />);
+const mockSavedReportView = vi.fn((_props: Record<string, unknown>) => (
+  <div data-testid="saved-report-view" />
+));
 
 vi.mock('@/components/analytics/SavedReportView', () => ({
   default: (props: Record<string, unknown>) => {
@@ -42,7 +44,7 @@ describe('Saved Report Pages', () => {
       expect(mockSavedReportView).toHaveBeenCalledWith(
         expect.objectContaining({
           config: expect.objectContaining({ defaultPeriod: '7d', reportType: 'weekly' }),
-        }),
+        })
       );
     });
 
@@ -52,7 +54,7 @@ describe('Saved Report Pages', () => {
       expect(mockSavedReportView).toHaveBeenCalledWith(
         expect.objectContaining({
           config: expect.objectContaining({ breadcrumbLabel: 'Weekly Summary' }),
-        }),
+        })
       );
     });
 
@@ -76,7 +78,7 @@ describe('Saved Report Pages', () => {
       expect(mockSavedReportView).toHaveBeenCalledWith(
         expect.objectContaining({
           config: expect.objectContaining({ defaultPeriod: '30d', reportType: 'monthly' }),
-        }),
+        })
       );
     });
 
@@ -86,7 +88,7 @@ describe('Saved Report Pages', () => {
       expect(mockSavedReportView).toHaveBeenCalledWith(
         expect.objectContaining({
           config: expect.objectContaining({ breadcrumbLabel: 'Monthly Revenue' }),
-        }),
+        })
       );
     });
 
@@ -99,28 +101,31 @@ describe('Saved Report Pages', () => {
 
   describe('Quarterly page', () => {
     it('renders with heading "Q4 Performance"', async () => {
-      const { default: QuarterlyPage } = await import('@/app/analytics/(list)/saved/quarterly/page');
+      const { default: QuarterlyPage } =
+        await import('@/app/analytics/(list)/saved/quarterly/page');
       render(<QuarterlyPage />);
       expect(screen.getByText('Q4 Performance')).toBeInTheDocument();
     });
 
     it('passes defaultPeriod="90d" to SavedReportView', async () => {
-      const { default: QuarterlyPage } = await import('@/app/analytics/(list)/saved/quarterly/page');
+      const { default: QuarterlyPage } =
+        await import('@/app/analytics/(list)/saved/quarterly/page');
       render(<QuarterlyPage />);
       expect(mockSavedReportView).toHaveBeenCalledWith(
         expect.objectContaining({
           config: expect.objectContaining({ defaultPeriod: '90d', reportType: 'quarterly' }),
-        }),
+        })
       );
     });
 
     it('passes breadcrumbLabel "Q4 Performance"', async () => {
-      const { default: QuarterlyPage } = await import('@/app/analytics/(list)/saved/quarterly/page');
+      const { default: QuarterlyPage } =
+        await import('@/app/analytics/(list)/saved/quarterly/page');
       render(<QuarterlyPage />);
       expect(mockSavedReportView).toHaveBeenCalledWith(
         expect.objectContaining({
           config: expect.objectContaining({ breadcrumbLabel: 'Q4 Performance' }),
-        }),
+        })
       );
     });
 
