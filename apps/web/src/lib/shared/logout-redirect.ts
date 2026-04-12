@@ -48,6 +48,14 @@ export interface LogoutRedirectResult {
 
 const DEFAULT_LOGIN_PATH = '/login';
 const DEFAULT_LOGOUT_PATH = '/logout';
+/**
+ * Default landing after a successful sign out. We land users on the public
+ * marketing home (`/`) rather than forcing them straight back to `/login` —
+ * this gives them the chance to browse the site or sign in again at their own
+ * pace. The `/login` path remains the destination when the user explicitly
+ * clicks a "Sign in" CTA.
+ */
+const DEFAULT_POST_LOGOUT_PATH = '/';
 const _ALLOWED_REDIRECT_HOSTS: string[] = []; // Add trusted hosts here
 
 const LOGOUT_MESSAGES: Record<LogoutReason, string> = {
@@ -240,7 +248,7 @@ export function getLogoutRedirect(options: LogoutRedirectOptions = {}): LogoutRe
   }
 
   const queryString = params.toString();
-  const url = queryString ? `${DEFAULT_LOGIN_PATH}?${queryString}` : DEFAULT_LOGIN_PATH;
+  const url = queryString ? `${DEFAULT_POST_LOGOUT_PATH}?${queryString}` : DEFAULT_POST_LOGOUT_PATH;
 
   return {
     url,

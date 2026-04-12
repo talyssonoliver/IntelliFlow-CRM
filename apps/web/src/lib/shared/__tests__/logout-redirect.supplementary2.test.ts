@@ -187,9 +187,10 @@ describe('logout-redirect supplementary2', () => {
   // getLogoutRedirect - edge cases
   // -------------------------------------------------------
   describe('getLogoutRedirect - edge cases', () => {
-    it('returns base /login URL with no options', () => {
+    it('returns base public home URL with no options', () => {
       const result = getLogoutRedirect();
-      expect(result.url).toBe('/login');
+      // Post-logout now lands on `/` (public home), not `/login`
+      expect(result.url).toBe('/');
       expect(result.requiresSsoLogout).toBe(false);
       expect(result.ssoLogoutUrl).toBeUndefined();
     });
@@ -220,9 +221,11 @@ describe('logout-redirect supplementary2', () => {
   // performLogoutRedirect - edge cases
   // -------------------------------------------------------
   describe('performLogoutRedirect - edge cases', () => {
-    it('redirects with delay=0 (immediate)', () => {
+    it('redirects to public home with delay=0 (immediate)', () => {
       performLogoutRedirect({ delay: 0 });
-      expect(window.location.href).toContain('/login');
+      // Post-logout now lands on `/` (public home), not `/login`
+      expect(window.location.href).toMatch(/\/($|\?)/);
+      expect(window.location.href).not.toContain('/login');
     });
 
     it('redirects to SSO with google provider immediately', () => {
@@ -230,9 +233,11 @@ describe('logout-redirect supplementary2', () => {
       expect(window.location.href).toContain('accounts.google.com');
     });
 
-    it('redirects to login when ssoLogout is true but provider is missing', () => {
+    it('redirects to public home when ssoLogout is true but provider is missing', () => {
       performLogoutRedirect({ ssoLogout: true });
-      expect(window.location.href).toContain('/login');
+      // No provider → fall through to regular (non-SSO) redirect, which now lands on `/`
+      expect(window.location.href).toMatch(/\/($|\?)/);
+      expect(window.location.href).not.toContain('/login');
     });
 
     it('delays redirect with SSO', () => {

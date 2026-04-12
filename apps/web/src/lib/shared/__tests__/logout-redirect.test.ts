@@ -161,7 +161,8 @@ describe('logout-redirect', () => {
     it('returns redirect info', () => {
       const result = getLogoutRedirect();
 
-      expect(result.url).toBe('/login');
+      // Post-logout now lands on public home (`/`), not `/login`
+      expect(result.url).toBe('/');
       expect(result.requiresSsoLogout).toBe(false);
     });
 

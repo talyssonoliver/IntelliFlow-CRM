@@ -43,9 +43,11 @@ describe('logout-redirect supplementary', () => {
   // ==========================================================================
 
   describe('performLogoutRedirect', () => {
-    it('redirects immediately when no delay', () => {
+    it('redirects immediately to public home when no delay', () => {
       performLogoutRedirect({ reason: 'user_initiated' });
-      expect(window.location.href).toContain('/login');
+      // Post-logout now lands on public home (`/`), not `/login`
+      expect(window.location.href).toMatch(/\/($|\?)/);
+      expect(window.location.href).not.toContain('/login');
     });
 
     it('redirects to SSO logout URL when ssoLogout is true with provider', () => {
@@ -56,12 +58,13 @@ describe('logout-redirect supplementary', () => {
       expect(window.location.href).toContain('accounts.google.com');
     });
 
-    it('redirects to login page when ssoLogout is false', () => {
+    it('redirects to public home when ssoLogout is false', () => {
       performLogoutRedirect({
         ssoLogout: false,
         ssoProvider: 'google',
       });
-      expect(window.location.href).toContain('/login');
+      expect(window.location.href).toMatch(/\/($|\?)/);
+      expect(window.location.href).not.toContain('/login');
     });
 
     it('delays redirect when delay > 0', () => {
@@ -74,7 +77,8 @@ describe('logout-redirect supplementary', () => {
 
       vi.advanceTimersByTime(3000);
 
-      expect(window.location.href).toContain('/login');
+      expect(window.location.href).toMatch(/\/($|\?)/);
+      expect(window.location.href).not.toContain('/login');
 
       vi.useRealTimers();
     });
@@ -104,8 +108,10 @@ describe('logout-redirect supplementary', () => {
         showMessage: true,
       });
 
-      // The redirect goes to login with returnUrl and message params
-      expect(window.location.href).toContain('/login');
+      // Redirect lands on public home with returnUrl and message query params
+      expect(window.location.href).toContain('returnUrl=');
+      expect(window.location.href).toContain('message=');
+      expect(window.location.href).not.toContain('/login');
     });
   });
 
