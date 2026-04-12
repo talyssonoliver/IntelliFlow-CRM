@@ -1,7 +1,8 @@
 {
-  "timestamp": "2026-03-19T19:11:26.600Z",
+  "timestamp": "2026-04-12T15:07:06.274Z",
   "docRoutes": [
     "/",
+    "/500",
     "/about",
     "/accounts",
     "/agent-approvals",
@@ -31,6 +32,7 @@
     "/calendar/new",
     "/careers",
     "/cases",
+    "/cases/case-workflows",
     "/cases/new",
     "/cases/timeline",
     "/contact",
@@ -83,6 +85,7 @@
     "/sso",
     "/status",
     "/tasks",
+    "/terms",
     "/tickets",
     "/tickets/automations",
     "/tickets/new",
@@ -93,6 +96,7 @@
   "fsRoutes": [
     "/",
     "/404",
+    "/500",
     "/about",
     "/accounts",
     "/accounts/account-settings",
@@ -156,6 +160,7 @@
     "/contacts/contact-types",
     "/contacts/import-export",
     "/contacts/new",
+    "/cookies",
     "/dashboard",
     "/dashboard/customize",
     "/dashboard/new",
@@ -223,7 +228,6 @@
     "/settings",
     "/settings/account",
     "/settings/accounts",
-    "/settings/ai",
     "/settings/appointments",
     "/settings/billing",
     "/settings/cases",
@@ -251,6 +255,7 @@
     "/tasks/automation",
     "/tasks/task-settings",
     "/tasks/task-types",
+    "/terms",
     "/tickets",
     "/tickets/automations",
     "/tickets/new",
@@ -261,6 +266,7 @@
   ],
   "matchedRoutes": [
     "/",
+    "/500",
     "/about",
     "/accounts",
     "/agent-approvals",
@@ -290,6 +296,7 @@
     "/calendar/new",
     "/careers",
     "/cases",
+    "/cases/case-workflows",
     "/cases/new",
     "/cases/timeline",
     "/contact",
@@ -329,7 +336,6 @@
     "/security",
     "/settings",
     "/settings/account",
-    "/settings/ai",
     "/settings/integrations",
     "/settings/leads",
     "/settings/notifications",
@@ -342,6 +348,7 @@
     "/sso",
     "/status",
     "/tasks",
+    "/terms",
     "/tickets",
     "/tickets/automations",
     "/tickets/new",
@@ -349,7 +356,9 @@
     "/tickets/types",
     "/verify-email/callback"
   ],
-  "docOnlyRoutes": [],
+  "docOnlyRoutes": [
+    "/settings/ai"
+  ],
   "fsOnlyRoutes": [
     "/404",
     "/accounts/account-settings",
@@ -377,10 +386,10 @@
     "/calendar/event-types",
     "/cases/case-settings",
     "/cases/case-types",
-    "/cases/case-workflows",
     "/contacts/contact-settings",
     "/contacts/contact-types",
     "/contacts/import-export",
+    "/cookies",
     "/deals/all/forecast",
     "/deals/deal-automation",
     "/deals/deal-settings",
@@ -435,17 +444,20 @@
     {
       "name": "PARSE_OK",
       "severity": "PASS",
-      "message": "Parsed 88 routes from conformance statement"
+      "message": "Parsed 91 routes from conformance statement"
     },
     {
       "name": "COUNT_MATCH",
       "severity": "PASS",
-      "message": "Doc routes: 88, FS routes: 167"
+      "message": "Doc routes: 91, FS routes: 169"
     },
     {
       "name": "STATEMENT_COVERS_DISK",
-      "severity": "PASS",
-      "message": "All conformance statement routes have corresponding page.tsx on disk"
+      "severity": "FAIL",
+      "message": "1 route(s) in conformance statement not found on disk",
+      "details": [
+        "/settings/ai"
+      ]
     },
     {
       "name": "DISK_COVERED_BY_STATEMENT",
@@ -478,10 +490,10 @@
         "/calendar/event-types",
         "/cases/case-settings",
         "/cases/case-types",
-        "/cases/case-workflows",
         "/contacts/contact-settings",
         "/contacts/contact-types",
         "/contacts/import-export",
+        "/cookies",
         "/deals/all/forecast",
         "/deals/deal-automation",
         "/deals/deal-settings",
@@ -536,8 +548,8 @@
     {
       "name": "TOTAL_COUNT",
       "severity": "INFO",
-      "message": "Total: 88 matched, 0 doc-only, 79 fs-only"
+      "message": "Total: 90 matched, 1 doc-only, 79 fs-only"
     }
   ],
-  "exitCode": 0
+  "exitCode": 1
 }

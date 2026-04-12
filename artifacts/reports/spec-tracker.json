@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-04-12T01:46:32.805Z",
+  "generated_at": "2026-04-12T17:13:05.899Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
-    "total_specs_analyzed": 369,
-    "completed": 368,
-    "partially_done": 0,
-    "spec_only": 1,
+    "total_specs_analyzed": 373,
+    "completed": 370,
+    "partially_done": 1,
+    "spec_only": 2,
     "uncertain": 0
   },
   "status_legend": {
@@ -62,7 +62,7 @@
       "has_plan": false,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
+      "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "EXC-INIT-001"
@@ -78,7 +78,7 @@
       "has_plan": false,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
+      "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "AI-SETUP-001"
@@ -94,7 +94,7 @@
       "has_plan": false,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
+      "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "AI-SETUP-001"
@@ -127,7 +127,7 @@
       "has_plan": false,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
+      "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "AI-SETUP-001",
@@ -147,7 +147,7 @@
       "has_plan": false,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
+      "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "AUTOMATION-001"
@@ -436,7 +436,7 @@
       "has_plan": false,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
+      "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "AI-SETUP-001"
@@ -452,7 +452,7 @@
       "has_plan": false,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
+      "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "ENV-001-AI"
@@ -468,7 +468,7 @@
       "has_plan": false,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
+      "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "ENV-001-AI"
@@ -484,7 +484,7 @@
       "has_plan": false,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
+      "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "ENV-003-AI"
@@ -516,7 +516,7 @@
       "has_plan": false,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
+      "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "ENV-004-AI"
@@ -532,7 +532,7 @@
       "has_plan": false,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
+      "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "ENV-006-AI"
@@ -548,7 +548,7 @@
       "has_plan": false,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
+      "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "ENV-005-AI"
@@ -564,7 +564,7 @@
       "has_plan": false,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
+      "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "ENV-001-AI"
@@ -580,7 +580,7 @@
       "has_plan": false,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
+      "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "ENV-007-AI",
@@ -597,7 +597,7 @@
       "has_plan": false,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
+      "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "ENV-007-AI"
@@ -613,7 +613,7 @@
       "has_plan": false,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
+      "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "ENV-001-AI"
@@ -629,7 +629,7 @@
       "has_plan": false,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
+      "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "ENV-005-AI",
@@ -749,7 +749,7 @@
       "has_plan": false,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
+      "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [],
       "real_status": "COMPLETED"
@@ -763,7 +763,7 @@
       "has_plan": false,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
+      "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "ENV-013-AI"
@@ -1457,6 +1457,22 @@
       "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-029"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-031",
+      "title": "Workflow Builder UI (React Flow)",
+      "sprint": 17,
+      "spec_path": ".specify/sprints/sprint-17/specifications/IFC-031-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-028"
       ],
       "real_status": "COMPLETED"
     },
@@ -3187,7 +3203,7 @@
       "has_plan": false,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
+      "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "ENV-001-AI",
@@ -5068,6 +5084,38 @@
       "real_status": "COMPLETED"
     },
     {
+      "task_id": "PG-051",
+      "title": "Terms of Service",
+      "sprint": 17,
+      "spec_path": ".specify/sprints/sprint-17/specifications/PG-051-spec.md",
+      "has_spec": true,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Spec Complete",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-050"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "PG-052",
+      "title": "Cookie Policy",
+      "sprint": 17,
+      "spec_path": ".specify/sprints/sprint-17/specifications/PG-052-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Needs Human",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-050"
+      ],
+      "real_status": "PARTIALLY_DONE"
+    },
+    {
       "task_id": "PG-055",
       "title": "404 Not Found",
       "sprint": 17,
@@ -5080,6 +5128,22 @@
       "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-076"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-056",
+      "title": "500 Error",
+      "sprint": 17,
+      "spec_path": ".specify/sprints/sprint-17/specifications/PG-056-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-055"
       ],
       "real_status": "COMPLETED"
     },

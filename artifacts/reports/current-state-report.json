@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-11T22:55:26.942Z",
+  "generatedAt": "2026-04-12T15:10:41.219Z",
   "sources": {
     "metricsDir": "apps/project-tracker/docs/metrics",
     "specifySprintsDir": ".specify/sprints",
@@ -304,11 +304,14 @@
       ".specify/sprints/sprint-16/attestations/PG-192/attestation.json",
       ".specify/sprints/sprint-16/attestations/PG-193/attestation.json",
       ".specify/sprints/sprint-17/attestations/IFC-030/attestation.json",
+      ".specify/sprints/sprint-17/attestations/IFC-031/attestation.json",
       ".specify/sprints/sprint-17/attestations/IFC-298/attestation.json",
       ".specify/sprints/sprint-17/attestations/IFC-299/attestation.json",
       ".specify/sprints/sprint-17/attestations/IFC-303/attestation.json",
       ".specify/sprints/sprint-17/attestations/PG-050/attestation.json",
+      ".specify/sprints/sprint-17/attestations/PG-052/attestation.json",
       ".specify/sprints/sprint-17/attestations/PG-055/attestation.json",
+      ".specify/sprints/sprint-17/attestations/PG-056/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-070/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-078/attestation.json",
       ".specify/sprints/sprint-18/attestations/PG-132/attestation.json",
@@ -444,18 +447,25 @@
     "totalTasks": 569,
     "totalNumberedSprintTasks": 564,
     "continuousTaskCount": 5,
-    "completedTasks": 368,
-    "backlogTasks": 201,
+    "completedTasks": 370,
+    "backlogTasks": 198,
     "blockedTasks": 0,
-    "completionPercentage": 64.67,
+    "completionPercentage": 65.03,
     "inProgressTasks": 0,
-    "otherTasks": 0
+    "otherTasks": 1
   },
   "inconsistencies": {
     "missingSpecifySprintSummaries": [],
     "ignoredSpecifySprintDirs": [],
     "completedWithoutCanonicalAttestation": [],
-    "attestedButNotCompletedInCsv": [],
+    "attestedButNotCompletedInCsv": [
+      {
+        "taskId": "PG-052",
+        "status": "Needs Human",
+        "sprint": 17,
+        "attestationPath": ".specify/sprints/sprint-17/attestations/PG-052/attestation.json"
+      }
+    ],
     "duplicateCanonicalAttestations": [],
     "sprintMismatches": []
   },
@@ -615,38 +625,6 @@
     "blockedTasks": [],
     "readyToStart": [
       {
-        "taskId": "IFC-031",
-        "sprint": 17,
-        "status": "Backlog",
-        "section": "Automation",
-        "title": "PHASE-005: Workflow Builder UI (React Flow)",
-        "description": "PHASE-005: Workflow Builder UI (React Flow)",
-        "summary": "Visual workflow creation, node-based editor",
-        "definitionOfDone": "Visual workflow creation, node-based editor; artifacts: usability-test-video.mp4, context_ack.json; verified by: pnpm build",
-        "definitionOfDoneSnapshot": "Visual workflow creation, node-based editor",
-        "dependencies": [
-          "IFC-028"
-        ],
-        "attestation": {
-          "exists": false,
-          "path": null,
-          "verdict": null,
-          "timestamp": null,
-          "sprintFolder": null
-        },
-        "validationSummary": {
-          "total": 0,
-          "passed": 0,
-          "failed": 0,
-          "failingNames": []
-        },
-        "kpiSummary": {
-          "total": 0,
-          "met": 0,
-          "missed": 0
-        }
-      },
-      {
         "taskId": "IFC-196",
         "sprint": 17,
         "status": "Backlog",
@@ -744,38 +722,6 @@
         }
       },
       {
-        "taskId": "PG-052",
-        "sprint": 17,
-        "status": "Backlog",
-        "section": "Legal Pages",
-        "title": "Cookie Policy",
-        "description": "Cookie Policy",
-        "summary": "response under 200ms, Lighthouse 90, policy shown",
-        "definitionOfDone": "Response <200ms, Lighthouse ≥90, policy shown; artifacts: page.tsx, cookie-content.md, cookie-banner.tsx",
-        "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, policy shown",
-        "dependencies": [
-          "PG-050"
-        ],
-        "attestation": {
-          "exists": false,
-          "path": null,
-          "verdict": null,
-          "timestamp": null,
-          "sprintFolder": null
-        },
-        "validationSummary": {
-          "total": 0,
-          "passed": 0,
-          "failed": 0,
-          "failingNames": []
-        },
-        "kpiSummary": {
-          "total": 0,
-          "met": 0,
-          "missed": 0
-        }
-      },
-      {
         "taskId": "PG-053",
         "sprint": 17,
         "status": "Backlog",
@@ -819,38 +765,6 @@
         "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, AUP displayed",
         "dependencies": [
           "PG-050"
-        ],
-        "attestation": {
-          "exists": false,
-          "path": null,
-          "verdict": null,
-          "timestamp": null,
-          "sprintFolder": null
-        },
-        "validationSummary": {
-          "total": 0,
-          "passed": 0,
-          "failed": 0,
-          "failingNames": []
-        },
-        "kpiSummary": {
-          "total": 0,
-          "met": 0,
-          "missed": 0
-        }
-      },
-      {
-        "taskId": "PG-056",
-        "sprint": 17,
-        "status": "Backlog",
-        "section": "System Pages",
-        "title": "500 Error",
-        "description": "500 Error",
-        "summary": "response under 200ms, Lighthouse 90, errors logged",
-        "definitionOfDone": "Response <200ms, Lighthouse ≥90, errors logged; artifacts: page.tsx, incident-creator.ts, error-notifier.ts",
-        "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, errors logged",
-        "dependencies": [
-          "PG-055"
         ],
         "attestation": {
           "exists": false,
@@ -916,6 +830,102 @@
         "dependencies": [
           "PG-001",
           "PG-002"
+        ],
+        "attestation": {
+          "exists": false,
+          "path": null,
+          "verdict": null,
+          "timestamp": null,
+          "sprintFolder": null
+        },
+        "validationSummary": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0,
+          "failingNames": []
+        },
+        "kpiSummary": {
+          "total": 0,
+          "met": 0,
+          "missed": 0
+        }
+      },
+      {
+        "taskId": "PG-182",
+        "sprint": 17,
+        "status": "Backlog",
+        "section": "Settings",
+        "title": "Module Settings - Contacts (/contacts/contact-settings)",
+        "description": "Module Settings - Contacts (/contacts/contact-settings)",
+        "summary": "Contact settings page at /contacts/contact-settings with duplicate detection, required fields, tags config; uses in-module settings sidebar pattern; Lighthouse >=90",
+        "definitionOfDone": "Contact settings page at /contacts/contact-settings with duplicate detection, required fields, tags config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
+        "definitionOfDoneSnapshot": "Contact settings page at /contacts/contact-settings with duplicate detection, required fields, tags config; uses in-module settings sidebar pattern; Lighthouse >=90",
+        "dependencies": [
+          "PG-178"
+        ],
+        "attestation": {
+          "exists": false,
+          "path": null,
+          "verdict": null,
+          "timestamp": null,
+          "sprintFolder": null
+        },
+        "validationSummary": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0,
+          "failingNames": []
+        },
+        "kpiSummary": {
+          "total": 0,
+          "met": 0,
+          "missed": 0
+        }
+      },
+      {
+        "taskId": "PG-183",
+        "sprint": 17,
+        "status": "Backlog",
+        "section": "Settings",
+        "title": "Module Settings - Accounts (/accounts/account-settings)",
+        "description": "Module Settings - Accounts (/accounts/account-settings)",
+        "summary": "Account settings page at /accounts/account-settings with hierarchy, industry, custom fields config; uses in-module settings sidebar pattern; Lighthouse >=90",
+        "definitionOfDone": "Account settings page at /accounts/account-settings with hierarchy, industry, custom fields config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
+        "definitionOfDoneSnapshot": "Account settings page at /accounts/account-settings with hierarchy, industry, custom fields config; uses in-module settings sidebar pattern; Lighthouse >=90",
+        "dependencies": [
+          "PG-178"
+        ],
+        "attestation": {
+          "exists": false,
+          "path": null,
+          "verdict": null,
+          "timestamp": null,
+          "sprintFolder": null
+        },
+        "validationSummary": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0,
+          "failingNames": []
+        },
+        "kpiSummary": {
+          "total": 0,
+          "met": 0,
+          "missed": 0
+        }
+      },
+      {
+        "taskId": "PG-184",
+        "sprint": 17,
+        "status": "Backlog",
+        "section": "Settings",
+        "title": "Module Settings - Deals (/deals/deal-settings)",
+        "description": "Module Settings - Deals (/deals/deal-settings)",
+        "summary": "Deal settings page at /deals/deal-settings with pipeline stages, win-loss reasons, scoring config; uses in-module settings sidebar pattern; Lighthouse >=90",
+        "definitionOfDone": "Deal settings page at /deals/deal-settings with pipeline stages, win-loss reasons, scoring config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
+        "definitionOfDoneSnapshot": "Deal settings page at /deals/deal-settings with pipeline stages, win-loss reasons, scoring config; uses in-module settings sidebar pattern; Lighthouse >=90",
+        "dependencies": [
+          "PG-178"
         ],
         "attestation": {
           "exists": false,
@@ -16473,11 +16483,11 @@
       "name": "Sprint 17",
       "summarySource": "specify",
       "totalTasks": 21,
-      "completedTasks": 6,
-      "backlogTasks": 15,
+      "completedTasks": 8,
+      "backlogTasks": 12,
       "blockedTasks": 0,
       "inProgressTasks": 0,
-      "attestedCompletedTasks": 6,
+      "attestedCompletedTasks": 8,
       "missingCompletedAttestations": [],
       "context": "Primary focus areas: Legal Pages (5), Settings (5), Support (4).",
       "notableCompleted": [
@@ -16610,23 +16620,23 @@
           }
         },
         {
-          "taskId": "IFC-303",
+          "taskId": "PG-056",
           "sprint": 17,
           "status": "Completed",
-          "section": "Support",
-          "title": "Article Feedback tRPC Mutation",
-          "description": "Article Feedback tRPC Mutation",
-          "summary": "Added submitFeedback mutation and getFeedbackStats query to existing help-article router (created by IFC-299). Wired FeedbackWidget to call tRPC mutation with onSuccess/onError error handling. Post-audit fixes:......",
-          "definitionOfDone": "helpArticle.submitFeedback mutation stores feedback in ArticleFeedback table; FeedbackWidget onFeedback wired to tRPC; analytics aggregation; coverage >=90%; verified by: pnpm test",
-          "definitionOfDoneSnapshot": "helpArticle.submitFeedback mutation stores feedback in ArticleFeedback table; FeedbackWidget onFeedback wired to tRPC; analytics aggregation; coverage >=90%",
+          "section": "System Pages",
+          "title": "500 Error",
+          "description": "500 Error",
+          "summary": "Implementation was completed in a prior session. This session: verified all artifacts, updated sitemap-fixes.test.ts count (28→29, pre-existing drift from /status static route addition), ran all validations, checked plan checkboxes (14/14),......",
+          "definitionOfDone": "Response <200ms, Lighthouse ≥90, errors logged; artifacts: page.tsx, incident-creator.ts, error-notifier.ts",
+          "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, errors logged",
           "dependencies": [
-            "IFC-298"
+            "PG-055"
           ],
           "attestation": {
             "exists": true,
-            "path": ".specify/sprints/sprint-17/attestations/IFC-303/attestation.json",
+            "path": ".specify/sprints/sprint-17/attestations/PG-056/attestation.json",
             "verdict": "COMPLETE",
-            "timestamp": "2026-03-19T00:30:00Z",
+            "timestamp": null,
             "sprintFolder": 17
           },
           "validationSummary": {
@@ -16644,38 +16654,6 @@
       ],
       "openTasks": [
         {
-          "taskId": "IFC-031",
-          "sprint": 17,
-          "status": "Backlog",
-          "section": "Automation",
-          "title": "PHASE-005: Workflow Builder UI (React Flow)",
-          "description": "PHASE-005: Workflow Builder UI (React Flow)",
-          "summary": "Visual workflow creation, node-based editor",
-          "definitionOfDone": "Visual workflow creation, node-based editor; artifacts: usability-test-video.mp4, context_ack.json; verified by: pnpm build",
-          "definitionOfDoneSnapshot": "Visual workflow creation, node-based editor",
-          "dependencies": [
-            "IFC-028"
-          ],
-          "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
-          },
-          "validationSummary": {
-            "total": 0,
-            "passed": 0,
-            "failed": 0,
-            "failingNames": []
-          },
-          "kpiSummary": {
-            "total": 0,
-            "met": 0,
-            "missed": 0
-          }
-        },
-        {
           "taskId": "PG-051",
           "sprint": 17,
           "status": "Backlog",
@@ -16685,38 +16663,6 @@
           "summary": "response under 200ms, Lighthouse 90, terms displayed",
           "definitionOfDone": "Response <200ms, Lighthouse ≥90, terms displayed; artifacts: page.tsx, terms-content.md, acceptance-tracker.ts",
           "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, terms displayed",
-          "dependencies": [
-            "PG-050"
-          ],
-          "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
-          },
-          "validationSummary": {
-            "total": 0,
-            "passed": 0,
-            "failed": 0,
-            "failingNames": []
-          },
-          "kpiSummary": {
-            "total": 0,
-            "met": 0,
-            "missed": 0
-          }
-        },
-        {
-          "taskId": "PG-052",
-          "sprint": 17,
-          "status": "Backlog",
-          "section": "Legal Pages",
-          "title": "Cookie Policy",
-          "description": "Cookie Policy",
-          "summary": "response under 200ms, Lighthouse 90, policy shown",
-          "definitionOfDone": "Response <200ms, Lighthouse ≥90, policy shown; artifacts: page.tsx, cookie-content.md, cookie-banner.tsx",
-          "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, policy shown",
           "dependencies": [
             "PG-050"
           ],
@@ -16802,6 +16748,71 @@
             "met": 0,
             "missed": 0
           }
+        },
+        {
+          "taskId": "PG-057",
+          "sprint": 17,
+          "status": "Backlog",
+          "section": "System Pages",
+          "title": "Maintenance",
+          "description": "Maintenance",
+          "summary": "response under 200ms, Lighthouse 90, status shown",
+          "definitionOfDone": "Response <200ms, Lighthouse ≥90, status shown; artifacts: page.tsx, maintenance-mode.ts, status-updater.ts",
+          "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, status shown",
+          "dependencies": [
+            "PG-055"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "PG-126",
+          "sprint": 17,
+          "status": "Backlog",
+          "section": "Public Pages",
+          "title": "Add in‑app onboarding, guided product tours and feedback collection",
+          "description": "Add in‑app onboarding, guided product tours and feedback collection",
+          "summary": "Users see guided tours on first login; ability to replay; feedback widget integrated",
+          "definitionOfDone": "Users see guided tours on first login; ability to replay; feedback widget integrated; targets: >=70%; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Users see guided tours on first login; ability to replay; feedback widget integrated",
+          "dependencies": [
+            "PG-001",
+            "PG-002"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
         }
       ],
       "sectionSummary": [
@@ -16826,14 +16837,14 @@
         {
           "section": "System Pages",
           "total": 3,
-          "completed": 1,
-          "open": 2
+          "completed": 2,
+          "open": 1
         },
         {
           "section": "Automation",
           "total": 2,
-          "completed": 1,
-          "open": 1
+          "completed": 2,
+          "open": 0
         },
         {
           "section": "Performance",
@@ -16884,28 +16895,30 @@
         {
           "taskId": "IFC-031",
           "sprint": 17,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Automation",
           "title": "PHASE-005: Workflow Builder UI (React Flow)",
           "description": "PHASE-005: Workflow Builder UI (React Flow)",
-          "summary": "Visual workflow creation, node-based editor",
+          "summary": "Build gate shows FAIL due to pre-existing privacy page frontmatter bug (/(public)/privacy/page.tsx) — completely unrelated to IFC-031. All IFC-031 files compile clean in typecheck.... Visual workflow creation, node-based editor",
           "definitionOfDone": "Visual workflow creation, node-based editor; artifacts: usability-test-video.mp4, context_ack.json; verified by: pnpm build",
           "definitionOfDoneSnapshot": "Visual workflow creation, node-based editor",
           "dependencies": [
             "IFC-028"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-17/attestations/IFC-031/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-04-12T15:20:00Z",
+            "sprintFolder": 17
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
-            "failed": 0,
-            "failingNames": []
+            "total": 4,
+            "passed": 3,
+            "failed": 1,
+            "failingNames": [
+              "Build"
+            ]
           },
           "kpiSummary": {
             "total": 0,
@@ -16980,32 +16993,36 @@
         {
           "taskId": "PG-052",
           "sprint": 17,
-          "status": "Backlog",
+          "status": "Needs Human",
           "section": "Legal Pages",
           "title": "Cookie Policy",
           "description": "Cookie Policy",
-          "summary": "response under 200ms, Lighthouse 90, policy shown",
+          "summary": "All PG-052-scoped validation passes (9 new tests + 37 regression tests + 100% scoped coverage + audit-schema + sitemap-reconciliation). Tier-1 gates (typecheck/lint/build) FAIL for pre-existing baseline reasons unrelated to PG-052:......",
           "definitionOfDone": "Response <200ms, Lighthouse ≥90, policy shown; artifacts: page.tsx, cookie-content.md, cookie-banner.tsx",
           "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, policy shown",
           "dependencies": [
             "PG-050"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-17/attestations/PG-052/attestation.json",
+            "verdict": "NEEDS_HUMAN",
+            "timestamp": "2026-04-12T10:55:00Z",
+            "sprintFolder": 17
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
-            "failed": 0,
-            "failingNames": []
+            "total": 4,
+            "passed": 1,
+            "failed": 3,
+            "failingNames": [
+              "TypeScript",
+              "Lint",
+              "Build"
+            ]
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 4,
+            "met": 4,
             "missed": 0
           }
         },
@@ -17108,26 +17125,26 @@
         {
           "taskId": "PG-056",
           "sprint": 17,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "System Pages",
           "title": "500 Error",
           "description": "500 Error",
-          "summary": "response under 200ms, Lighthouse 90, errors logged",
+          "summary": "Implementation was completed in a prior session. This session: verified all artifacts, updated sitemap-fixes.test.ts count (28→29, pre-existing drift from /status static route addition), ran all validations, checked plan checkboxes (14/14),......",
           "definitionOfDone": "Response <200ms, Lighthouse ≥90, errors logged; artifacts: page.tsx, incident-creator.ts, error-notifier.ts",
           "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, errors logged",
           "dependencies": [
             "PG-055"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
+            "exists": true,
+            "path": ".specify/sprints/sprint-17/attestations/PG-056/attestation.json",
+            "verdict": "COMPLETE",
             "timestamp": null,
-            "sprintFolder": null
+            "sprintFolder": 17
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },

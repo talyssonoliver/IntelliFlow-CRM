@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-03-10T01:45:11.330Z",
+  "generated_at": "2026-04-12T09:50:41.668Z",
   "tool_version": "1.0.0",
   "routes": [
     {
       "route": "/",
-      "file_path": "apps/web/src/app/(public)/page.tsx",
+      "file_path": "apps/web/src/app/(public)/(home)/page.tsx",
       "access_tier": "public",
       "metadata": {
         "title": {
@@ -57,8 +57,10 @@
       "response_time_ms": null,
       "http_measurement_method": "pending-runtime",
       "stale_content": {
-        "classification": "none",
-        "patterns_found": [],
+        "classification": "stale",
+        "patterns_found": [
+          "todo-marker"
+        ],
         "data_sources": []
       },
       "ghost_links": [],
@@ -68,7 +70,7 @@
     {
       "route": "/404",
       "file_path": "apps/web/src/app/404/page.tsx",
-      "access_tier": "developer",
+      "access_tier": "auth-gated",
       "metadata": {
         "title": {
           "value": "Page Not Found | IntelliFlow CRM",
@@ -77,7 +79,7 @@
         "description": {
           "value": "Recover from missing links with guided next steps and real IntelliFlow destinations.",
           "source": "page",
-          "length": 82
+          "length": 84
         },
         "og_title": {
           "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
@@ -120,8 +122,10 @@
       "response_time_ms": null,
       "http_measurement_method": "pending-runtime",
       "stale_content": {
-        "classification": "none",
-        "patterns_found": [],
+        "classification": "static-by-design-dated",
+        "patterns_found": [
+          "percentage"
+        ],
         "data_sources": []
       },
       "ghost_links": [],
@@ -320,6 +324,195 @@
       "notes": ""
     },
     {
+      "route": "/accounts/account-settings",
+      "file_path": "apps/web/src/app/accounts/(list)/account-settings/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Accounts",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/accounts/account-tiers",
+      "file_path": "apps/web/src/app/accounts/(list)/account-tiers/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Accounts",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/accounts/territory-mapping",
+      "file_path": "apps/web/src/app/accounts/(list)/territory-mapping/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Accounts",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
       "route": "/activity",
       "file_path": "apps/web/src/app/activity/page.tsx",
       "access_tier": "auth-gated",
@@ -374,8 +567,10 @@
       "response_time_ms": null,
       "http_measurement_method": "pending-runtime",
       "stale_content": {
-        "classification": "none",
-        "patterns_found": [],
+        "classification": "stale",
+        "patterns_found": [
+          "placeholder"
+        ],
         "data_sources": []
       },
       "ghost_links": [],
@@ -641,6 +836,132 @@
     {
       "route": "/agent-approvals/ai-search",
       "file_path": "apps/web/src/app/agent-approvals/ai-search/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "AI Agent Approvals",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/agent-approvals/ai-settings",
+      "file_path": "apps/web/src/app/agent-approvals/ai-settings/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "AI Agent Approvals",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/agent-approvals/approval-policies",
+      "file_path": "apps/web/src/app/agent-approvals/approval-policies/page.tsx",
       "access_tier": "auth-gated",
       "metadata": {
         "title": {
@@ -1275,6 +1596,69 @@
       "notes": ""
     },
     {
+      "route": "/agent-approvals/model-config",
+      "file_path": "apps/web/src/app/agent-approvals/model-config/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "AI Agent Approvals",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
       "route": "/agent-approvals/preview",
       "file_path": "apps/web/src/app/agent-approvals/preview/page.tsx",
       "access_tier": "auth-gated",
@@ -1596,6 +1980,384 @@
       "notes": ""
     },
     {
+      "route": "/analytics/report-settings",
+      "file_path": "apps/web/src/app/analytics/report-settings/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Analytics",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/analytics/report-templates",
+      "file_path": "apps/web/src/app/analytics/report-templates/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Analytics",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/analytics/saved/monthly",
+      "file_path": "apps/web/src/app/analytics/(list)/saved/monthly/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Analytics",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/analytics/saved/quarterly",
+      "file_path": "apps/web/src/app/analytics/(list)/saved/quarterly/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Analytics",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/analytics/saved/weekly",
+      "file_path": "apps/web/src/app/analytics/(list)/saved/weekly/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Analytics",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/analytics/scheduled-reports",
+      "file_path": "apps/web/src/app/analytics/scheduled-reports/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Analytics",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
       "route": "/auth/callback",
       "file_path": "apps/web/src/app/(public)/auth/callback/page.tsx",
       "access_tier": "public",
@@ -1661,6 +2423,69 @@
     {
       "route": "/billing",
       "file_path": "apps/web/src/app/billing/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Billing",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/billing/cancel",
+      "file_path": "apps/web/src/app/billing/cancel/page.tsx",
       "access_tier": "auth-gated",
       "metadata": {
         "title": {
@@ -1974,6 +2799,69 @@
       "notes": ""
     },
     {
+      "route": "/billing/plans",
+      "file_path": "apps/web/src/app/billing/plans/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Billing",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
       "route": "/billing/receipts",
       "file_path": "apps/web/src/app/billing/receipts/page.tsx",
       "access_tier": "auth-gated",
@@ -2037,8 +2925,197 @@
       "notes": ""
     },
     {
+      "route": "/billing/settings",
+      "file_path": "apps/web/src/app/billing/settings/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Billing",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
       "route": "/billing/subscriptions",
       "file_path": "apps/web/src/app/billing/subscriptions/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Billing",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/billing/upgrade",
+      "file_path": "apps/web/src/app/billing/upgrade/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Billing",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/billing/usage",
+      "file_path": "apps/web/src/app/billing/usage/page.tsx",
       "access_tier": "auth-gated",
       "metadata": {
         "title": {
@@ -2299,6 +3376,195 @@
     {
       "route": "/calendar/[id]",
       "file_path": "apps/web/src/app/calendar/[id]/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Calendar",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/calendar/availability",
+      "file_path": "apps/web/src/app/calendar/availability/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Calendar",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/calendar/calendar-settings",
+      "file_path": "apps/web/src/app/calendar/calendar-settings/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Calendar",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/calendar/event-types",
+      "file_path": "apps/web/src/app/calendar/event-types/page.tsx",
       "access_tier": "auth-gated",
       "metadata": {
         "title": {
@@ -2628,6 +3894,195 @@
           "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
           "source": "root-layout",
           "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/cases/case-settings",
+      "file_path": "apps/web/src/app/cases/case-settings/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Cases",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/cases/case-types",
+      "file_path": "apps/web/src/app/cases/case-types/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Cases",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/cases/case-workflows",
+      "file_path": "apps/web/src/app/cases/case-workflows/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Case Workflows | IntelliFlow CRM",
+          "source": "page"
+        },
+        "description": {
+          "value": "Configure escalation and resolution workflows for cases.",
+          "source": "page",
+          "length": 56
         },
         "og_title": {
           "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
@@ -3060,6 +4515,195 @@
       "notes": ""
     },
     {
+      "route": "/contacts/contact-settings",
+      "file_path": "apps/web/src/app/contacts/(list)/contact-settings/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Contacts",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/contacts/contact-types",
+      "file_path": "apps/web/src/app/contacts/(list)/contact-types/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Contacts",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/contacts/import-export",
+      "file_path": "apps/web/src/app/contacts/(list)/import-export/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Contacts",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
       "route": "/contacts/new",
       "file_path": "apps/web/src/app/contacts/(list)/new/page.tsx",
       "access_tier": "auth-gated",
@@ -3118,6 +4762,69 @@
         "patterns_found": [
           "placeholder"
         ],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/cookies",
+      "file_path": "apps/web/src/app/(public)/cookies/page.tsx",
+      "access_tier": "public",
+      "metadata": {
+        "title": {
+          "value": "Cookie Policy | IntelliFlow CRM",
+          "source": "page"
+        },
+        "description": {
+          "value": "Review how IntelliFlow CRM uses cookies, how consent works, and how to manage cookie preferences across the public site and product.",
+          "source": "page",
+          "length": 132
+        },
+        "og_title": {
+          "value": "Cookie Policy | IntelliFlow CRM",
+          "source": "page"
+        },
+        "og_description": {
+          "value": "Read the IntelliFlow CRM Cookie Policy, including cookie categories, third-party providers, retention, and how to manage preferences.",
+          "source": "page"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com/cookies",
+          "source": "page"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "page"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary",
+          "source": "page"
+        },
+        "twitter_title": {
+          "value": "Cookie Policy | IntelliFlow CRM",
+          "source": "page"
+        },
+        "twitter_description": {
+          "value": "Learn how IntelliFlow CRM uses cookies, obtains consent, and lets you manage preferences.",
+          "source": "page"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": 90,
+      "in_sitemap": true,
+      "sitemap_last_modified_method": "STATIC_LAST_MODIFIED",
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
         "data_sources": []
       },
       "ghost_links": [],
@@ -3433,11 +5140,9 @@
       "response_time_ms": null,
       "http_measurement_method": "pending-runtime",
       "stale_content": {
-        "classification": "stale",
+        "classification": "static-by-design-dated",
         "patterns_found": [
-          "percentage",
-          "year-reference",
-          "placeholder"
+          "percentage"
         ],
         "data_sources": []
       },
@@ -3572,8 +5277,323 @@
       "notes": ""
     },
     {
+      "route": "/deals/deal-automation",
+      "file_path": "apps/web/src/app/deals/deal-automation/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Deals",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/deals/deal-settings",
+      "file_path": "apps/web/src/app/deals/deal-settings/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Deals",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/deals/deal-stages",
+      "file_path": "apps/web/src/app/deals/deal-stages/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Deals",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
       "route": "/deals/forecast",
       "file_path": "apps/web/src/app/deals/forecast/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Deals",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/deals/new",
+      "file_path": "apps/web/src/app/deals/(list)/new/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Deals",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/deals/trash",
+      "file_path": "apps/web/src/app/deals/(list)/trash/page.tsx",
       "access_tier": "auth-gated",
       "metadata": {
         "title": {
@@ -4647,6 +6667,132 @@
       "notes": ""
     },
     {
+      "route": "/documents/document-settings",
+      "file_path": "apps/web/src/app/documents/document-settings/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Documents",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/documents/document-types",
+      "file_path": "apps/web/src/app/documents/document-types/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Documents",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
       "route": "/documents/new",
       "file_path": "apps/web/src/app/documents/(list)/new/page.tsx",
       "access_tier": "auth-gated",
@@ -4705,6 +6851,69 @@
         "patterns_found": [
           "placeholder"
         ],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/documents/storage-policies",
+      "file_path": "apps/web/src/app/documents/storage-policies/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Documents",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
         "data_sources": []
       },
       "ghost_links": [],
@@ -4838,6 +7047,258 @@
       "notes": ""
     },
     {
+      "route": "/email/compose",
+      "file_path": "apps/web/src/app/email/compose/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Compose Email | IntelliFlow CRM",
+          "source": "page"
+        },
+        "description": {
+          "value": "Compose a new email or reply to a conversation",
+          "source": "page",
+          "length": 46
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/email/email-settings",
+      "file_path": "apps/web/src/app/email/email-settings/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Email",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/email/signatures",
+      "file_path": "apps/web/src/app/email/signatures/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Email",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/email/templates",
+      "file_path": "apps/web/src/app/email/templates/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Email",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
       "route": "/features",
       "file_path": "apps/web/src/app/(public)/features/page.tsx",
       "access_tier": "public",
@@ -4910,29 +7371,29 @@
       "access_tier": "public",
       "metadata": {
         "title": {
-          "value": "IntelliFlow CRM - AI-Powered Customer Relationship Management",
-          "source": "root-layout"
+          "value": "Forgot Password",
+          "source": "layout"
         },
         "description": {
-          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
-          "source": "root-layout",
-          "length": 155
+          "value": "Reset your IntelliFlow CRM password. Enter your email to receive a secure password reset link valid for one hour.",
+          "source": "layout",
+          "length": 113
         },
         "og_title": {
-          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
-          "source": "root-layout"
+          "value": "Reset Your IntelliFlow CRM Password",
+          "source": "layout"
         },
         "og_description": {
-          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
-          "source": "root-layout"
+          "value": "Forgot your password? Request a secure reset link to regain access to your IntelliFlow CRM account.",
+          "source": "layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
-          "source": "root-layout"
+          "value": "https://intelliflow-crm.com/forgot-password",
+          "source": "layout"
         },
         "og_site_name": {
           "value": "IntelliFlow CRM",
-          "source": "root-layout"
+          "source": "layout"
         },
         "og_image": {
           "value": null,
@@ -4940,19 +7401,19 @@
         },
         "twitter_card": {
           "value": "summary_large_image",
-          "source": "root-layout"
+          "source": "layout"
         },
         "twitter_title": {
-          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
-          "source": "root-layout"
+          "value": "Reset Your IntelliFlow CRM Password",
+          "source": "layout"
         },
         "twitter_description": {
-          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
-          "source": "root-layout"
+          "value": "Request a secure password reset link for your IntelliFlow CRM account. Link valid for one hour.",
+          "source": "layout"
         },
         "robots_noindex": false
       },
-      "seo_score": 60,
+      "seo_score": 80,
       "in_sitemap": false,
       "sitemap_last_modified_method": null,
       "http_status": null,
@@ -5295,6 +7756,195 @@
     {
       "route": "/governance/quality-reports/[reportId]",
       "file_path": "apps/web/src/app/governance/quality-reports/[reportId]/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Governance",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/governance/quality-reports/coverage",
+      "file_path": "apps/web/src/app/governance/quality-reports/coverage/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Governance",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/governance/quality-reports/lighthouse",
+      "file_path": "apps/web/src/app/governance/quality-reports/lighthouse/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Governance",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/governance/quality-reports/performance",
+      "file_path": "apps/web/src/app/governance/quality-reports/performance/page.tsx",
       "access_tier": "auth-gated",
       "metadata": {
         "title": {
@@ -5805,6 +8455,69 @@
       "notes": ""
     },
     {
+      "route": "/leads/lead-settings",
+      "file_path": "apps/web/src/app/leads/(list)/lead-settings/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Leads",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
       "route": "/leads/new",
       "file_path": "apps/web/src/app/leads/(list)/new/page.tsx",
       "access_tier": "auth-gated",
@@ -5864,6 +8577,132 @@
           "currency",
           "placeholder"
         ],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/leads/pipeline",
+      "file_path": "apps/web/src/app/leads/(list)/pipeline/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Leads",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/leads/routing",
+      "file_path": "apps/web/src/app/leads/(list)/routing/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Leads",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
         "data_sources": []
       },
       "ghost_links": [],
@@ -6192,6 +9031,132 @@
       "notes": ""
     },
     {
+      "route": "/notifications/channels",
+      "file_path": "apps/web/src/app/notifications/channels/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Notifications",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/notifications/quiet-hours",
+      "file_path": "apps/web/src/app/notifications/quiet-hours/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Notifications",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
       "route": "/notifications/settings",
       "file_path": "apps/web/src/app/notifications/settings/page.tsx",
       "access_tier": "auth-gated",
@@ -6246,10 +9211,8 @@
       "response_time_ms": null,
       "http_measurement_method": "pending-runtime",
       "stale_content": {
-        "classification": "stale",
-        "patterns_found": [
-          "placeholder"
-        ],
+        "classification": "none",
+        "patterns_found": [],
         "data_sources": []
       },
       "ghost_links": [],
@@ -6594,7 +9557,7 @@
       "access_tier": "auth-gated",
       "metadata": {
         "title": {
-          "value": "Profile",
+          "value": "Profile Settings",
           "source": "layout"
         },
         "description": {
@@ -6643,10 +9606,8 @@
       "response_time_ms": null,
       "http_measurement_method": "pending-runtime",
       "stale_content": {
-        "classification": "static-by-design-dated",
-        "patterns_found": [
-          "year-reference"
-        ],
+        "classification": "none",
+        "patterns_found": [],
         "data_sources": []
       },
       "ghost_links": [],
@@ -6975,8 +9936,386 @@
       "notes": ""
     },
     {
-      "route": "/settings/ai",
-      "file_path": "apps/web/src/app/settings/ai/page.tsx",
+      "route": "/settings/accounts",
+      "file_path": "apps/web/src/app/settings/accounts/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Settings",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/settings/appointments",
+      "file_path": "apps/web/src/app/settings/appointments/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Settings",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/settings/billing",
+      "file_path": "apps/web/src/app/settings/billing/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Settings",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/settings/cases",
+      "file_path": "apps/web/src/app/settings/cases/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Settings",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/settings/contacts",
+      "file_path": "apps/web/src/app/settings/contacts/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Settings",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/settings/deals",
+      "file_path": "apps/web/src/app/settings/deals/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Settings",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/settings/documents",
+      "file_path": "apps/web/src/app/settings/documents/page.tsx",
       "access_tier": "auth-gated",
       "metadata": {
         "title": {
@@ -7040,6 +10379,69 @@
     {
       "route": "/settings/integrations",
       "file_path": "apps/web/src/app/settings/integrations/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Settings",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/settings/leads",
+      "file_path": "apps/web/src/app/settings/leads/page.tsx",
       "access_tier": "auth-gated",
       "metadata": {
         "title": {
@@ -7227,6 +10629,69 @@
       "notes": ""
     },
     {
+      "route": "/settings/reports",
+      "file_path": "apps/web/src/app/settings/reports/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Settings",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
       "route": "/settings/routing",
       "file_path": "apps/web/src/app/settings/routing/page.tsx",
       "access_tier": "auth-gated",
@@ -7344,10 +10809,8 @@
       "response_time_ms": null,
       "http_measurement_method": "pending-runtime",
       "stale_content": {
-        "classification": "stale",
-        "patterns_found": [
-          "placeholder"
-        ],
+        "classification": "none",
+        "patterns_found": [],
         "data_sources": []
       },
       "ghost_links": [],
@@ -7420,8 +10883,134 @@
       "notes": ""
     },
     {
+      "route": "/settings/tasks",
+      "file_path": "apps/web/src/app/settings/tasks/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Settings",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
       "route": "/settings/team",
       "file_path": "apps/web/src/app/settings/team/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Settings",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/settings/tickets",
+      "file_path": "apps/web/src/app/settings/tickets/page.tsx",
       "access_tier": "auth-gated",
       "metadata": {
         "title": {
@@ -7492,25 +11081,25 @@
           "source": "layout"
         },
         "description": {
-          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
-          "source": "root-layout",
-          "length": 155
+          "value": "Create your IntelliFlow CRM account. Start a 14-day free trial with AI-powered lead scoring, pipeline management, and team collaboration tools.",
+          "source": "layout",
+          "length": 143
         },
         "og_title": {
-          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
-          "source": "root-layout"
+          "value": "Sign Up for IntelliFlow CRM — Free 14-Day Trial",
+          "source": "layout"
         },
         "og_description": {
-          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
-          "source": "root-layout"
+          "value": "Get started with AI-powered CRM. Lead scoring, deal tracking, workflow automation, and enterprise-grade security. No credit card required.",
+          "source": "layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
-          "source": "root-layout"
+          "value": "https://intelliflow-crm.com/signup",
+          "source": "layout"
         },
         "og_site_name": {
           "value": "IntelliFlow CRM",
-          "source": "root-layout"
+          "source": "layout"
         },
         "og_image": {
           "value": null,
@@ -7518,15 +11107,15 @@
         },
         "twitter_card": {
           "value": "summary_large_image",
-          "source": "root-layout"
+          "source": "layout"
         },
         "twitter_title": {
-          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
-          "source": "root-layout"
+          "value": "Sign Up for IntelliFlow CRM — Free 14-Day Trial",
+          "source": "layout"
         },
         "twitter_description": {
-          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
-          "source": "root-layout"
+          "value": "AI-powered CRM with lead scoring, pipeline management, and team collaboration. Start free for 14 days.",
+          "source": "layout"
         },
         "robots_noindex": false
       },
@@ -7555,25 +11144,25 @@
           "source": "layout"
         },
         "description": {
-          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
-          "source": "root-layout",
-          "length": 155
+          "value": "Create your IntelliFlow CRM account. Start a 14-day free trial with AI-powered lead scoring, pipeline management, and team collaboration tools.",
+          "source": "layout",
+          "length": 143
         },
         "og_title": {
-          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
-          "source": "root-layout"
+          "value": "Sign Up for IntelliFlow CRM — Free 14-Day Trial",
+          "source": "layout"
         },
         "og_description": {
-          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
-          "source": "root-layout"
+          "value": "Get started with AI-powered CRM. Lead scoring, deal tracking, workflow automation, and enterprise-grade security. No credit card required.",
+          "source": "layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
-          "source": "root-layout"
+          "value": "https://intelliflow-crm.com/signup",
+          "source": "layout"
         },
         "og_site_name": {
           "value": "IntelliFlow CRM",
-          "source": "root-layout"
+          "source": "layout"
         },
         "og_image": {
           "value": null,
@@ -7581,15 +11170,15 @@
         },
         "twitter_card": {
           "value": "summary_large_image",
-          "source": "root-layout"
+          "source": "layout"
         },
         "twitter_title": {
-          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
-          "source": "root-layout"
+          "value": "Sign Up for IntelliFlow CRM — Free 14-Day Trial",
+          "source": "layout"
         },
         "twitter_description": {
-          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
-          "source": "root-layout"
+          "value": "AI-powered CRM with lead scoring, pipeline management, and team collaboration. Start free for 14 days.",
+          "source": "layout"
         },
         "robots_noindex": false
       },
@@ -8060,6 +11649,258 @@
       "notes": ""
     },
     {
+      "route": "/tasks/automation",
+      "file_path": "apps/web/src/app/tasks/(list)/automation/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Tasks",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/tasks/task-settings",
+      "file_path": "apps/web/src/app/tasks/(list)/task-settings/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Tasks",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/tasks/task-types",
+      "file_path": "apps/web/src/app/tasks/(list)/task-types/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Tasks",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/terms",
+      "file_path": "apps/web/src/app/(public)/terms/page.tsx",
+      "access_tier": "public",
+      "metadata": {
+        "title": {
+          "value": "Terms of Service | IntelliFlow CRM",
+          "source": "page"
+        },
+        "description": {
+          "value": "Review the IntelliFlow CRM Terms of Service, including acceptable use, account obligations, intellectual property, and governing law.",
+          "source": "page",
+          "length": 133
+        },
+        "og_title": {
+          "value": "Terms of Service | IntelliFlow CRM",
+          "source": "page"
+        },
+        "og_description": {
+          "value": "Read the IntelliFlow CRM Terms of Service, including subscription terms, prohibited activities, disclaimers, and limitation of liability.",
+          "source": "page"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com/terms",
+          "source": "page"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "page"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary",
+          "source": "page"
+        },
+        "twitter_title": {
+          "value": "Terms of Service | IntelliFlow CRM",
+          "source": "page"
+        },
+        "twitter_description": {
+          "value": "Learn about the terms governing your use of IntelliFlow CRM, including rights, obligations, and dispute resolution.",
+          "source": "page"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": 80,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
       "route": "/tickets",
       "file_path": "apps/web/src/app/tickets/(list)/page.tsx",
       "access_tier": "auth-gated",
@@ -8188,8 +12029,197 @@
       "notes": ""
     },
     {
+      "route": "/tickets/automations",
+      "file_path": "apps/web/src/app/tickets/automations/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Tickets",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
       "route": "/tickets/new",
       "file_path": "apps/web/src/app/tickets/new/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Tickets",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/tickets/sla-policies",
+      "file_path": "apps/web/src/app/tickets/sla-policies/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Tickets",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/tickets/types",
+      "file_path": "apps/web/src/app/tickets/types/page.tsx",
       "access_tier": "auth-gated",
       "metadata": {
         "title": {
@@ -8324,29 +12354,29 @@
       "access_tier": "public",
       "metadata": {
         "title": {
-          "value": "IntelliFlow CRM - AI-Powered Customer Relationship Management",
-          "source": "root-layout"
+          "value": "Verify Email",
+          "source": "layout"
         },
         "description": {
-          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
-          "source": "root-layout",
-          "length": 155
+          "value": "Verify your email address to activate your IntelliFlow CRM account. Check your inbox for the verification link.",
+          "source": "layout",
+          "length": 111
         },
         "og_title": {
-          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
-          "source": "root-layout"
+          "value": "Verify Your Email — IntelliFlow CRM",
+          "source": "layout"
         },
         "og_description": {
-          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
-          "source": "root-layout"
+          "value": "Complete your IntelliFlow CRM registration by verifying your email address. Secure account activation.",
+          "source": "layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
-          "source": "root-layout"
+          "value": "https://intelliflow-crm.com/verify-email",
+          "source": "layout"
         },
         "og_site_name": {
           "value": "IntelliFlow CRM",
-          "source": "root-layout"
+          "source": "layout"
         },
         "og_image": {
           "value": null,
@@ -8354,19 +12384,19 @@
         },
         "twitter_card": {
           "value": "summary_large_image",
-          "source": "root-layout"
+          "source": "layout"
         },
         "twitter_title": {
-          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
-          "source": "root-layout"
+          "value": "Verify Your Email — IntelliFlow CRM",
+          "source": "layout"
         },
         "twitter_description": {
-          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
-          "source": "root-layout"
+          "value": "Verify your email to activate your IntelliFlow CRM account. Secure, one-click activation link.",
+          "source": "layout"
         },
         "robots_noindex": false
       },
-      "seo_score": 60,
+      "seo_score": 80,
       "in_sitemap": false,
       "sitemap_last_modified_method": null,
       "http_status": null,
@@ -8387,29 +12417,29 @@
       "access_tier": "public",
       "metadata": {
         "title": {
-          "value": "IntelliFlow CRM - AI-Powered Customer Relationship Management",
-          "source": "root-layout"
+          "value": "Verify Email",
+          "source": "layout"
         },
         "description": {
-          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
-          "source": "root-layout",
-          "length": 155
+          "value": "Verify your email address to activate your IntelliFlow CRM account. Check your inbox for the verification link.",
+          "source": "layout",
+          "length": 111
         },
         "og_title": {
-          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
-          "source": "root-layout"
+          "value": "Verify Your Email — IntelliFlow CRM",
+          "source": "layout"
         },
         "og_description": {
-          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
-          "source": "root-layout"
+          "value": "Complete your IntelliFlow CRM registration by verifying your email address. Secure account activation.",
+          "source": "layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
-          "source": "root-layout"
+          "value": "https://intelliflow-crm.com/verify-email",
+          "source": "layout"
         },
         "og_site_name": {
           "value": "IntelliFlow CRM",
-          "source": "root-layout"
+          "source": "layout"
         },
         "og_image": {
           "value": null,
@@ -8417,19 +12447,19 @@
         },
         "twitter_card": {
           "value": "summary_large_image",
-          "source": "root-layout"
+          "source": "layout"
         },
         "twitter_title": {
-          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
-          "source": "root-layout"
+          "value": "Verify Your Email — IntelliFlow CRM",
+          "source": "layout"
         },
         "twitter_description": {
-          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
-          "source": "root-layout"
+          "value": "Verify your email to activate your IntelliFlow CRM account. Secure, one-click activation link.",
+          "source": "layout"
         },
         "robots_noindex": false
       },
-      "seo_score": 60,
+      "seo_score": 80,
       "in_sitemap": false,
       "sitemap_last_modified_method": null,
       "http_status": null,
@@ -8446,38 +12476,18 @@
     }
   ],
   "summary": {
-    "total_routes": 132,
-    "public_routes": 28,
-    "auth_gated_routes": 89,
-    "developer_routes": 15,
-    "routes_with_seo_score": 28,
-    "routes_pending_runtime_measurement": 131,
-    "average_seo_score_public": 75,
-    "legal_pages_missing": [
-      "terms",
-      "cookies"
-    ],
-    "ghost_link_count": 28
+    "total_routes": 196,
+    "public_routes": 30,
+    "auth_gated_routes": 152,
+    "developer_routes": 14,
+    "routes_with_seo_score": 30,
+    "routes_pending_runtime_measurement": 196,
+    "average_seo_score_public": 78,
+    "legal_pages_missing": [],
+    "ghost_link_count": 4
   },
   "findings": {
-    "critical": [
-      {
-        "id": "LEGAL-TERMS",
-        "type": "missing-legal-page",
-        "severity": "critical",
-        "description": "Required legal page /terms does not exist",
-        "route": "/terms",
-        "remediation": "Create apps/web/src/app/(public)/terms/page.tsx"
-      },
-      {
-        "id": "LEGAL-COOKIES",
-        "type": "missing-legal-page",
-        "severity": "critical",
-        "description": "Required legal page /cookies does not exist",
-        "route": "/cookies",
-        "remediation": "Create apps/web/src/app/(public)/cookies/page.tsx"
-      }
-    ],
+    "critical": [],
     "high": [
       {
         "id": "CONTENT-PRESS-404",
@@ -8510,102 +12520,11 @@
     "low": [],
     "ghost_links": [
       {
-        "ghost_link_id": "G-01",
-        "severity": "high",
-        "planned_task": "PG-172",
-        "description": "Sidebar link to /billing/usage, no page exists",
-        "route": "/billing/usage"
-      },
-      {
-        "ghost_link_id": "G-02",
-        "severity": "high",
-        "planned_task": "PG-172",
-        "description": "Sidebar + in-page links to /billing/plans, no page exists",
-        "route": "/billing/plans"
-      },
-      {
-        "ghost_link_id": "G-03",
-        "severity": "high",
-        "planned_task": "PG-172",
-        "description": "Sidebar link to /billing/upgrade, no page exists",
-        "route": "/billing/upgrade"
-      },
-      {
-        "ghost_link_id": "G-04",
-        "severity": "medium",
-        "planned_task": "PG-172",
-        "description": "In-page link to /billing/cancel, no page exists",
-        "route": "/billing/cancel"
-      },
-      {
-        "ghost_link_id": "G-05",
-        "severity": "medium",
-        "planned_task": "PG-172",
-        "description": "In-page link to /billing/settings, no page exists",
-        "route": "/billing/settings"
-      },
-      {
-        "ghost_link_id": "G-06",
-        "severity": "medium",
-        "planned_task": "PG-173",
-        "description": "Sidebar link to /tickets/sla-policies, no page exists",
-        "route": "/tickets/sla-policies"
-      },
-      {
-        "ghost_link_id": "G-07",
-        "severity": "medium",
-        "planned_task": "PG-173",
-        "description": "Sidebar link to /tickets/types, no page exists",
-        "route": "/tickets/types"
-      },
-      {
-        "ghost_link_id": "G-08",
-        "severity": "medium",
-        "planned_task": "PG-173",
-        "description": "Sidebar link to /tickets/automations, no page exists",
-        "route": "/tickets/automations"
-      },
-      {
-        "ghost_link_id": "G-09",
-        "severity": "medium",
-        "planned_task": "PG-174",
-        "description": "Sidebar link to /notifications/channels, no page exists",
-        "route": "/notifications/channels"
-      },
-      {
-        "ghost_link_id": "G-10",
-        "severity": "medium",
-        "planned_task": "PG-174",
-        "description": "Sidebar link to /notifications/quiet-hours, no page exists",
-        "route": "/notifications/quiet-hours"
-      },
-      {
         "ghost_link_id": "G-11",
         "severity": "low",
         "planned_task": "PG-175",
         "description": "Sidebar link to /deals/trash, no page exists",
         "route": "/deals/trash"
-      },
-      {
-        "ghost_link_id": "G-12",
-        "severity": "low",
-        "planned_task": "PG-176",
-        "description": "Sidebar link to /governance/quality-reports/lighthouse, no page exists",
-        "route": "/governance/quality-reports/lighthouse"
-      },
-      {
-        "ghost_link_id": "G-13",
-        "severity": "low",
-        "planned_task": "PG-176",
-        "description": "Sidebar link to /governance/quality-reports/coverage, no page exists",
-        "route": "/governance/quality-reports/coverage"
-      },
-      {
-        "ghost_link_id": "G-14",
-        "severity": "low",
-        "planned_task": "PG-176",
-        "description": "Sidebar link to /governance/quality-reports/performance, no page exists",
-        "route": "/governance/quality-reports/performance"
       },
       {
         "ghost_link_id": "G-15",
@@ -8627,83 +12546,6 @@
         "planned_task": "PG-177",
         "description": "Sidebar link to /analytics/saved/quarterly, no page exists",
         "route": "/analytics/saved/quarterly"
-      },
-      {
-        "ghost_link_id": "G-18",
-        "severity": "low",
-        "planned_task": "PG-178",
-        "description": "settingsHref link, showSettings: false — never rendered",
-        "route": "/settings/appointments"
-      },
-      {
-        "ghost_link_id": "G-19",
-        "severity": "low",
-        "planned_task": "PG-178",
-        "description": "settingsHref link, showSettings: false — never rendered",
-        "route": "/settings/cases"
-      },
-      {
-        "ghost_link_id": "G-20",
-        "severity": "low",
-        "planned_task": "PG-178",
-        "description": "settingsHref link, showSettings: false — never rendered",
-        "route": "/settings/tasks"
-      },
-      {
-        "ghost_link_id": "G-21",
-        "severity": "low",
-        "planned_task": "PG-178",
-        "description": "Settings footer link to /settings/leads, no page exists",
-        "route": "/settings/leads"
-      },
-      {
-        "ghost_link_id": "G-22",
-        "severity": "low",
-        "planned_task": "PG-178",
-        "description": "Settings footer link to /settings/contacts, no page exists",
-        "route": "/settings/contacts"
-      },
-      {
-        "ghost_link_id": "G-23",
-        "severity": "low",
-        "planned_task": "PG-178",
-        "description": "Settings footer link to /settings/accounts, no page exists",
-        "route": "/settings/accounts"
-      },
-      {
-        "ghost_link_id": "G-24",
-        "severity": "low",
-        "planned_task": "PG-178",
-        "description": "Settings footer link to /settings/deals, no page exists",
-        "route": "/settings/deals"
-      },
-      {
-        "ghost_link_id": "G-25",
-        "severity": "low",
-        "planned_task": "PG-178",
-        "description": "Settings footer link to /settings/tickets, no page exists",
-        "route": "/settings/tickets"
-      },
-      {
-        "ghost_link_id": "G-26",
-        "severity": "low",
-        "planned_task": "PG-178",
-        "description": "Settings footer link to /settings/documents, no page exists",
-        "route": "/settings/documents"
-      },
-      {
-        "ghost_link_id": "G-27",
-        "severity": "low",
-        "planned_task": "PG-178",
-        "description": "Settings footer link to /settings/reports, no page exists",
-        "route": "/settings/reports"
-      },
-      {
-        "ghost_link_id": "G-28",
-        "severity": "low",
-        "planned_task": "PG-178",
-        "description": "In-page Upgrade Plan CTA link to /settings/billing, no page exists",
-        "route": "/settings/billing"
       }
     ]
   }
