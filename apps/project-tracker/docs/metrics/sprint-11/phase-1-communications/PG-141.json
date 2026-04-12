@@ -1,0 +1,209 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "PG-141",
+  "section": "Communications",
+  "description": "Email Compose & History Page - Thread view compose attachments templates",
+  "owner": "Frontend Dev (STOA-Domain)",
+  "sprint": "sprint-11",
+  "phase": "phase-1-communications",
+  "dependencies": {
+    "required": [
+      "IFC-144"
+    ],
+    "verified_at": "2026-04-12T20:40:14.054Z",
+    "all_satisfied": true
+  },
+  "dependencies_resolved": [
+    "IFC-144"
+  ],
+  "status": "DONE",
+  "started_at": "2026-02-16T22:34:39Z",
+  "completed_at": "2026-02-19T22:50:00Z",
+  "actual_duration_minutes": 300,
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2025-12-29T00:00:00Z",
+      "note": "Initial status"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-16T22:34:39Z",
+      "note": "Spec session started via /full-pipeline PG-141"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-16T23:10:00Z",
+      "note": "Spec session completed — 4 agents (Frontend-Lead, Domain-Expert, Test-Engineer, A11y-Expert), 109 test cases planned"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-16T23:58:00Z",
+      "note": "Plan session completed — 48 TDD steps, 25 files planned"
+    },
+    {
+      "status": "Validating",
+      "at": "2026-02-17T00:00:00Z",
+      "note": "Exec session — 11 components implemented, 154 tests passing"
+    },
+    {
+      "status": "Completed",
+      "at": "2026-02-19T18:31:00Z",
+      "note": "All 8 completion gates passed; compliance check PASS; coverage 93.79% stmts / 91.93% funcs"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-19T22:00:00Z",
+      "note": "UX Fixes session: wired unread counts (getUnreadCounts API), markAsRead with 800ms delay, EmailCompose moved to Sheet bottom panel, draft auto-save with 2s debounce and discard guard"
+    },
+    {
+      "status": "Completed",
+      "at": "2026-02-19T22:50:00Z",
+      "note": "UX fixes complete; 193 tests pass (160 web + 33 API); coverage 93.62% stmts / 83.47% branches / 90.84% funcs / 94.49% lines; compliance PASS"
+    }
+  ],
+  "execution": {
+    "executor": "Claude Code (Sonnet 4.6)",
+    "agents": [
+      "Frontend-Lead",
+      "Domain-Expert",
+      "Test-Engineer",
+      "A11y-Expert"
+    ],
+    "retry_count": 0
+  },
+  "artifacts": {
+    "created": [
+      {
+        "path": ".specify/sprints/sprint-11/specifications/PG-141-spec.md",
+        "sha256": "41fcf694da4031859b44ad9e6e9adf70629aec911bf90f0bc17a212cee7a290c",
+        "created_at": "2026-02-16T23:10:00Z"
+      },
+      {
+        "path": ".specify/sprints/sprint-11/planning/PG-141-plan.md",
+        "sha256": "d03177167501c78d15d035287f33060ccd2762e6f9b403f855d9b43f9653cf16",
+        "created_at": "2026-02-16T23:58:00Z"
+      },
+      {
+        "path": "packages/validators/src/email.ts",
+        "sha256": "9271312715589047e422dccd5f76c4bc134f0f046bb4945c6e32c67ec3b58d5a",
+        "created_at": "2026-02-19T22:05:00Z"
+      },
+      {
+        "path": "packages/db/prisma/migrations/20260219000000_add_email_is_read/migration.sql",
+        "sha256": "6d3c3500e1c6ee733bdc244baa076283ee082608c5dcbd6cf5fb4cfcb4801f71",
+        "created_at": "2026-02-19T22:05:00Z"
+      },
+      {
+        "path": "apps/web/src/components/email/EmailPage.tsx",
+        "sha256": "347720a3ac2f45a66c4ea3956417d9ccdeb7f13c1d5d2b8115f1a9135eecaa94",
+        "created_at": "2026-02-17T00:05:00Z"
+      },
+      {
+        "path": "apps/web/src/components/email/EmailList.tsx",
+        "sha256": "a5ab76d146f8e13e21c0bd79391d6e0f4606f42af095f6b3e68d0cf8d773ade1",
+        "created_at": "2026-02-17T00:05:00Z"
+      },
+      {
+        "path": "apps/web/src/components/email/EmailCompose.tsx",
+        "sha256": "cd93272133214d144a1d464253857d6853d59f13d06c1d7f6ff41445988b260c",
+        "created_at": "2026-02-17T00:05:00Z"
+      },
+      {
+        "path": "apps/web/src/components/email/AttachmentManager.tsx",
+        "sha256": "6e8f90041959a69b0ce8e6d3ea3967de32770e2489c3e9f8fbddeb1d47c0cd41",
+        "created_at": "2026-02-17T00:05:00Z"
+      },
+      {
+        "path": "apps/web/src/app/email/page.tsx",
+        "sha256": "7459029a9f5c9835ae658c5f828387224ee651fd0bb19ee7bb93f1954b48e1f0",
+        "created_at": "2026-02-17T00:05:00Z"
+      },
+      {
+        "path": "apps/web/src/app/email/[id]/page.tsx",
+        "sha256": "d6b3473a30bc484571785ba39d5365409c2f7391cecad9a354b33522f6714102",
+        "created_at": "2026-02-17T00:05:00Z"
+      },
+      {
+        "path": "apps/web/src/components/email/__tests__/AttachmentManager.test.tsx",
+        "sha256": "a784b3fa7cee81c8ebe025576ab7b79e661ea0b1693d21417a634b15aa525ec1",
+        "created_at": "2026-02-19T18:20:00Z"
+      },
+      {
+        "path": "apps/web/src/components/email/__tests__/email-coverage.supplementary.test.tsx",
+        "sha256": "3f7e4ff4e706b14c2b2bff6008be3327bfa9f93ab100dbfb1ebfaaa3e16a137b",
+        "created_at": "2026-02-17T18:10:00Z"
+      }
+    ]
+  },
+  "validations": [
+    {
+      "name": "TypeScript",
+      "command": "npx tsc --project tsconfig.json --noEmit (email-scoped: 0 errors)",
+      "executed_at": "2026-02-19T22:44:00Z",
+      "exit_code": 0,
+      "duration_ms": 18000,
+      "passed": true
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run src/components/email/__tests__ --coverage (160 web + 33 api = 193 total)",
+      "executed_at": "2026-02-19T22:43:36Z",
+      "exit_code": 0,
+      "duration_ms": 10330,
+      "passed": true
+    },
+    {
+      "name": "Lint",
+      "command": "npx eslint src/components/email/ src/modules/email/ --max-warnings=0",
+      "executed_at": "2026-02-19T22:44:30Z",
+      "exit_code": 0,
+      "duration_ms": 8000,
+      "passed": true
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/validators build && pnpm --filter @intelliflow/api build",
+      "executed_at": "2026-02-19T22:30:00Z",
+      "exit_code": 0,
+      "duration_ms": 45000,
+      "passed": true
+    }
+  ],
+  "kpis": {
+    "test_count": {
+      "target": ">=117",
+      "actual": "193",
+      "met": true,
+      "unit": "tests"
+    },
+    "coverage_statements": {
+      "target": ">=90%",
+      "actual": "93.62%",
+      "met": true
+    },
+    "coverage_branches": {
+      "target": ">=80%",
+      "actual": "83.47%",
+      "met": true
+    },
+    "coverage_functions": {
+      "target": ">=90%",
+      "actual": "90.84%",
+      "met": true
+    },
+    "coverage_lines": {
+      "target": ">=90%",
+      "actual": "94.49%",
+      "met": true
+    },
+    "lint_errors": {
+      "target": "0",
+      "actual": "0",
+      "met": true,
+      "unit": "errors"
+    }
+  },
+  "blockers": [],
+  "notes": "Email Compose & History Page + UX Fixes: 3-column layout (FolderSidebar, EmailList, EmailThread). UX fixes: (1) getUnreadCounts API wired to FolderSidebar with 30s polling, (2) markAsRead mutation with 800ms delay on email selection, (3) EmailCompose moved to Sheet bottom panel (h-55vh), (4) draft auto-save with 2s debounce + discard guard. Prisma migration adds isRead/readAt to EmailRecord. Validators email.ts adds Zod schemas for markAsRead + getUnreadCounts. 11 web components, 10 web test files + 2 API test files = 193 tests total. Coverage (V8): 93.62% stmts / 83.47% branches / 90.84% funcs / 94.49% lines. All thresholds met. Compliance check: PASS."
+}

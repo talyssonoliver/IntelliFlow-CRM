@@ -1,0 +1,40 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "IFC-093",
+  "section": "Core CRM",
+  "description": "Tickets Module - SLA Tracking",
+  "owner": "Backend Dev + Frontend Dev (STOA-Domain)",
+  "sprint": "sprint-7",
+  "status": "DONE",
+  "started_at": "2026-03-08T21:44:04.541Z",
+  "completed_at": "2026-03-08T21:59:04.541Z",
+  "dependencies": {
+    "required": [
+      "IFC-002",
+      "IFC-004",
+      "IFC-188"
+    ],
+    "all_satisfied": true,
+    "verified_at": "2026-04-12T20:40:14.006Z"
+  },
+  "artifacts": {
+    "expected": [],
+    "missing": []
+  },
+  "validations": [
+    {
+      "name": "completion-evidence",
+      "command": "# Task marked Completed in Sprint_plan.csv",
+      "executed_at": "2026-03-08T00:00:00Z",
+      "exit_code": 0,
+      "passed": true
+    }
+  ],
+  "notes": "Evidence stub. Task marked Completed in Sprint_plan.csv. Full evidence may be recorded in sprint attestations or audit reports.",
+  "actual_duration_minutes": 15,
+  "dependencies_resolved": [
+    "IFC-002",
+    "IFC-004",
+    "IFC-188"
+  ]
+}

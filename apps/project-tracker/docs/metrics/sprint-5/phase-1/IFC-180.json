@@ -1,0 +1,121 @@
+{
+  "$schema": "../../../schemas/task-status.schema.json",
+  "task_id": "IFC-180",
+  "section": "AI Foundation",
+  "description": "AI Output Review - tRPC Router (API endpoints)",
+  "owner": "Backend Dev (STOA-Quality)",
+  "status": "DONE",
+  "started_at": "2026-02-05T14:00:00.000Z",
+  "completed_at": "2026-02-05T22:57:00.000Z",
+  "target_duration_minutes": 195,
+  "actual_duration_minutes": 57,
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-01-01T00:00:00.000Z",
+      "note": "Initial status"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-05T14:00:00.000Z",
+      "note": "spec session started"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-05T22:30:00.000Z",
+      "note": "exec session started - TDD implementation"
+    },
+    {
+      "status": "Completed",
+      "at": "2026-02-05T22:57:00.000Z",
+      "note": "exec completed - 76 tests pass, 7 endpoints, all 4 gates PASS"
+    }
+  ],
+  "dependencies": {
+    "required": [
+      "IFC-179"
+    ],
+    "all_satisfied": true,
+    "verified_at": "2026-04-12T20:40:14.098Z"
+  },
+  "execution": {
+    "started_at": "2026-02-05T22:30:00.000Z",
+    "completed_at": "2026-02-05T22:57:00.000Z",
+    "duration_minutes": 27,
+    "executor": "Claude Code /exec",
+    "agents": [
+      "Foundation",
+      "Security",
+      "Quality",
+      "Domain"
+    ],
+    "retry_count": 0,
+    "last_error": null
+  },
+  "artifacts": {
+    "expected": [
+      "apps/api/src/modules/ai-review/ai-review.router.ts",
+      "apps/api/src/modules/ai-review/__tests__/ai-review.router.test.ts"
+    ],
+    "created": [
+      "apps/api/src/modules/ai-review/ai-review.router.ts",
+      "apps/api/src/modules/ai-review/__tests__/ai-review.router.test.ts"
+    ],
+    "missing": []
+  },
+  "validations": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter api typecheck",
+      "executed_at": "2026-02-05T22:56:20.000Z",
+      "exit_code": 0,
+      "duration_ms": 3000,
+      "passed": true
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run src/modules/ai-review/__tests__/ai-review.router.test.ts",
+      "executed_at": "2026-02-05T22:56:36.000Z",
+      "exit_code": 0,
+      "duration_ms": 666,
+      "passed": true
+    },
+    {
+      "name": "Lint",
+      "command": "npx eslint src/modules/ai-review/",
+      "executed_at": "2026-02-05T22:57:10.000Z",
+      "exit_code": 0,
+      "duration_ms": 2000,
+      "passed": true
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter api build",
+      "executed_at": "2026-02-05T22:56:50.000Z",
+      "exit_code": 0,
+      "duration_ms": 5000,
+      "passed": true
+    }
+  ],
+  "kpis": {
+    "endpoints_working": {
+      "target": 7,
+      "actual": 7,
+      "met": true
+    },
+    "auth_enforced": {
+      "target": true,
+      "actual": true,
+      "met": true
+    },
+    "response_time_ms": {
+      "target": 200,
+      "actual": 1,
+      "met": true
+    }
+  },
+  "blockers": [],
+  "dependencies_resolved": [
+    "IFC-179"
+  ]
+}

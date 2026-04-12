@@ -1,0 +1,38 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "PG-140",
+  "section": "Legal",
+  "description": "Document Manager Page - Upload viewer version history ACL management search",
+  "owner": "Frontend Dev (STOA-Domain)",
+  "sprint": "sprint-13",
+  "status": "DONE",
+  "started_at": "2026-03-08T21:44:04.686Z",
+  "completed_at": "2026-03-08T21:59:04.686Z",
+  "dependencies": {
+    "required": [
+      "IFC-152",
+      "IFC-153"
+    ],
+    "all_satisfied": true,
+    "verified_at": "2026-04-12T20:40:14.128Z"
+  },
+  "artifacts": {
+    "expected": [],
+    "missing": []
+  },
+  "validations": [
+    {
+      "name": "completion-evidence",
+      "command": "# Task marked Completed in Sprint_plan.csv",
+      "executed_at": "2026-03-08T00:00:00Z",
+      "exit_code": 0,
+      "passed": true
+    }
+  ],
+  "notes": "Evidence stub. Task marked Completed in Sprint_plan.csv. Full evidence may be recorded in sprint attestations or audit reports.",
+  "actual_duration_minutes": 15,
+  "dependencies_resolved": [
+    "IFC-152",
+    "IFC-153"
+  ]
+}

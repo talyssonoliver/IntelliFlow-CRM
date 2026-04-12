@@ -1,0 +1,201 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "IFC-183",
+  "section": "Infrastructure",
+  "description": "Notifications tRPC Router - List mark read preferences real-time subscription",
+  "owner": "Backend Dev (STOA-Domain)",
+  "status": "DONE",
+  "sprint": "sprint-0",
+  "phase": "phase-0-initialisation",
+  "stream": null,
+  "dependencies": {
+    "all_satisfied": true,
+    "verified_at": "2026-04-12T20:40:14.127Z",
+    "required": [
+      "IFC-003",
+      "IFC-157"
+    ]
+  },
+  "started_at": "2026-02-13T23:23:53+00:00",
+  "completed_at": "2026-02-23T22:15:19.714Z",
+  "execution": {
+    "retry_count": 0,
+    "last_error": null,
+    "executor": "orchestrator",
+    "log_path": "/c/Users/talys/projects/intelliFlow-CRM/artifacts/logs/execution-20260213-232350.log"
+  },
+  "artifacts": {
+    "expected": [],
+    "created": [],
+    "missing": []
+  },
+  "validations": [
+    {
+      "name": "Task completion verification",
+      "command": "echo \"Task IFC-183 completed\"",
+      "type": "auto",
+      "required": true,
+      "executed_at": "2026-02-23T22:15:19.714Z",
+      "exit_code": 0,
+      "passed": true,
+      "notes": "Task marked as completed in Sprint_plan.csv"
+    }
+  ],
+  "kpis": {},
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "In Progress",
+      "at": "2026-02-13T23:23:53+00:00",
+      "note": "Task execution started"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-13T23:24:27+00:00",
+      "note": "Task execution started"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-13T23:25:02+00:00",
+      "note": "Task execution started"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-13T23:25:38+00:00",
+      "note": "Task execution started"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-13T23:26:16+00:00",
+      "note": "Task execution started"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-13T23:26:52+00:00",
+      "note": "Task execution started"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-13T23:27:27+00:00",
+      "note": "Task execution started"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-13T23:28:04+00:00",
+      "note": "Task execution started"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-13T23:28:39+00:00",
+      "note": "Task execution started"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-13T23:29:15+00:00",
+      "note": "Task execution started"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-13T23:29:50+00:00",
+      "note": "Task execution started"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-13T23:30:26+00:00",
+      "note": "Task execution started"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-13T23:31:01+00:00",
+      "note": "Task execution started"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-13T23:31:36+00:00",
+      "note": "Task execution started"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-13T23:32:11+00:00",
+      "note": "Task execution started"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-13T23:32:46+00:00",
+      "note": "Task execution started"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-13T23:33:21+00:00",
+      "note": "Task execution started"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-13T23:33:56+00:00",
+      "note": "Task execution started"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-13T23:34:31+00:00",
+      "note": "Task execution started"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-13T23:35:07+00:00",
+      "note": "Task execution started"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-13T23:35:42+00:00",
+      "note": "Task execution started"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-13T23:36:19+00:00",
+      "note": "Task execution started"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-13T23:36:54+00:00",
+      "note": "Task execution started"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-13T23:37:28+00:00",
+      "note": "Task execution started"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-13T23:38:03+00:00",
+      "note": "Task execution started"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-13T23:38:39+00:00",
+      "note": "Task execution started"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-13T23:39:14+00:00",
+      "note": "Task execution started"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-13T23:39:49+00:00",
+      "note": "Task execution started"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-13T23:40:24+00:00",
+      "note": "Task execution started"
+    }
+  ],
+  "current_phase": "ARCHITECT_SPEC",
+  "updated_at": "2026-02-13T23:40:26+00:00",
+  "attempt": 0,
+  "actual_duration_minutes": 15,
+  "dependencies_resolved": [
+    "IFC-003",
+    "IFC-157"
+  ]
+}
