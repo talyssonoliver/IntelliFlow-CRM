@@ -143,16 +143,16 @@ To manually trigger a rollback:
 
 ### Required Endpoints
 
-| Endpoint               | Purpose         | Expected Response                     |
-| ---------------------- | --------------- | ------------------------------------- |
-| `/health`              | Basic health    | `200 OK` with `{"status": "healthy"}` |
-| `/health/ready`        | Readiness probe | `200 OK` when ready to serve traffic  |
-| `/health/live`         | Liveness probe  | `200 OK` when process is alive        |
-| `/health/detailed`     | Full status     | `200 OK` with component status        |
+| Endpoint           | Purpose         | Expected Response                     |
+| ------------------ | --------------- | ------------------------------------- |
+| `/health`          | Basic health    | `200 OK` with `{"status": "healthy"}` |
+| `/health/ready`    | Readiness probe | `200 OK` when ready to serve traffic  |
+| `/health/live`     | Liveness probe  | `200 OK` when process is alive        |
+| `/health/detailed` | Full status     | `200 OK` with component status        |
 
-Compatibility note: `/api/health`, `/api/health/ready`, `/api/health/live`,
-and `/api/health/detailed` are still served as legacy aliases. Use `/health*`
-for new infra configuration and rollback automation.
+Compatibility note: `/api/health`, `/api/health/ready`, `/api/health/live`, and
+`/api/health/detailed` are still served as legacy aliases. Use `/health*` for
+new infra configuration and rollback automation.
 
 ### Health Check Implementation
 

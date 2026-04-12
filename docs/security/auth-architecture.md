@@ -410,7 +410,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
 
 ## Related Documentation
 
-- [SECURITY.md](./SECURITY.md) - Security policies and practices
+- [SECURITY.md](../../SECURITY.md) - Security policies and practices
 - [ADR-020](../planning/adr/ADR-020-public-site-auth.md) - Public site auth
   decision
 - [zero-trust-design.md](./zero-trust-design.md) - Zero trust architecture

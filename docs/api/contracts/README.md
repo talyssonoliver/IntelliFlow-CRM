@@ -72,9 +72,9 @@
 | upload   | protectedProcedure | No           | upload, getUploadStatus                                                                    |
 | cases    | tenantProcedure    | N/A          | _STUB - pending Prisma schema_                                                             |
 
-Health router note: infra probes should target the HTTP endpoints
-`/health`, `/health/ready`, `/health/live`, `/health/detailed`, and `/health/db`.
-The `health.*` procedures are the typed/internal diagnostics surface. Legacy
+Health router note: infra probes should target the HTTP endpoints `/health`,
+`/health/ready`, `/health/live`, `/health/detailed`, and `/health/db`. The
+`health.*` procedures are the typed/internal diagnostics surface. Legacy
 `/api/health*` aliases remain available for compatibility.
 
 ---

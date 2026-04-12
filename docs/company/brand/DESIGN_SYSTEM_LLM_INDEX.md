@@ -108,7 +108,8 @@ Logo Code**:
    Contact links + Sign In / Start Free Trial CTAs. Sticky with backdrop blur.
    - Location: `apps/web/src/components/public/PublicHeader.tsx`
 3. **PublicFooter**: Marketing footer with 5-column grid (Brand, Product,
-   Company, Resources, Legal), social links, copyright bar. Hidden on auth pages.
+   Company, Resources, Legal), social links, copyright bar. Hidden on auth
+   pages.
    - Location: `apps/web/src/components/public/PublicFooter.tsx`
 4. **AppSidebar**: Unified collapsible left sidebar with expand-on-hover
    (MANDATORY for all modules). `56px` collapsed, `240px` expanded.
@@ -120,8 +121,8 @@ Logo Code**:
    AI & Agents, etc. 200ms slide, 100ms content crossfade.
    - Location: `apps/web/src/components/shared/complementary-sidebar.tsx`
    - Hook: `apps/web/src/hooks/useComplementarySidebar.ts`
-6. **EntityActionSheet**: Right-side Sheet overlay for entity row actions
-   (Pin, Share, Export + custom actions). Modal with dark backdrop.
+6. **EntityActionSheet**: Right-side Sheet overlay for entity row actions (Pin,
+   Share, Export + custom actions). Modal with dark backdrop.
    - Location: `apps/web/src/components/shared/entity-action-sheet.tsx`
 7. **Breadcrumb**: Navigation trail (basic and with icons)
 8. **Pagination**: Page navigation (basic and with info)
@@ -163,7 +164,8 @@ import { leadsSidebarConfig } from '@/components/sidebar';
 ### Page Structure (3 components)
 
 1. **PageHeader**: MANDATORY for all list/collection pages. Title + breadcrumbs
-   + description + action buttons. Location: `apps/web/src/components/shared/page-header.tsx`
+   - description + action buttons. Location:
+     `apps/web/src/components/shared/page-header.tsx`
 2. **EntityHeader**: For detail pages (Contact/[id], Deal/[id], etc.). Title +
    ID badge + status/priority badges + actions. Location:
    `apps/web/src/components/shared/entity-header.tsx`
@@ -395,6 +397,7 @@ When implementing UI from this design system:
 
 ## Related Documents
 
-- `docs/design/UI_DEVELOPMENT_PROMPT.md`: UI development session guide (primary reference)
+- `docs/design/UI_DEVELOPMENT_PROMPT.md`: UI development session guide (primary
+  reference)
 - `docs/design/sitemap.md`: Page structure and routes
 - `Sprint_plan.csv`: Task breakdown and implementation order

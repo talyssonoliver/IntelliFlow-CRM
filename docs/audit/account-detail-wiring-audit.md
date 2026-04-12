@@ -110,8 +110,8 @@ AccountService has no updateOwner method.
 | Edit                   | Wired               | —          | Navigates to edit route (but edit form doesn't exist — see §10)                                               |
 | Merge Account          | **Partially Wired** | F-03       | Toast stub: `toast({ title: 'Merge initiated', description: 'This feature will be available with IFC-044' })` |
 | Archive                | **Partially Wired** | F-04       | Toast stub referencing IFC-044, same pattern as merge                                                         |
-| Create Deal (overview) | Wired               | F-05       | Opens `OpportunityCreateSheet` with accountId pre-filled (IFC-267)                                             |
-| Add Contact (overview) | Wired               | F-06       | Opens `ContactAddSheet` with accountId pre-filled (IFC-267)                                                    |
+| Create Deal (overview) | Wired               | F-05       | Opens `OpportunityCreateSheet` with accountId pre-filled (IFC-267)                                            |
+| Add Contact (overview) | Wired               | F-06       | Opens `ContactAddSheet` with accountId pre-filled (IFC-267)                                                   |
 
 ### Finding F-05 ~~(CRITICAL)~~ RESOLVED — "Create Deal" Button Wired
 
@@ -184,13 +184,13 @@ AccountContactsList.tsx lines 81-83:
 
 API: `account.getOpportunities` returns opportunities list — real data.
 
-| Feature                                   | Status        | Finding ID | Notes                                                                  |
-| ----------------------------------------- | ------------- | ---------- | ---------------------------------------------------------------------- |
-| Opportunity list                          | Wired         | —          | Real API data via `api.account.getOpportunities.useQuery` (line 27-32) |
-| Opportunity search                        | Wired         | —          | Client-side filter working                                             |
+| Feature                                   | Status        | Finding ID | Notes                                                                         |
+| ----------------------------------------- | ------------- | ---------- | ----------------------------------------------------------------------------- |
+| Opportunity list                          | Wired         | —          | Real API data via `api.account.getOpportunities.useQuery` (line 27-32)        |
+| Opportunity search                        | Wired         | —          | Client-side filter working                                                    |
 | "Create Opportunity" button (header)      | Wired         | F-10       | Calls `onCreateOpportunity` callback → opens OpportunityCreateSheet (IFC-267) |
 | "Create Opportunity" button (empty state) | Wired         | F-11       | Calls `onCreateOpportunity` callback → opens OpportunityCreateSheet (IFC-267) |
-| Stage filter options                      | **Not Wired** | F-12       | Hardcoded 6 stage values as inline strings, not from domain enum       |
+| Stage filter options                      | **Not Wired** | F-12       | Hardcoded 6 stage values as inline strings, not from domain enum              |
 
 ### Finding F-10 ~~(CRITICAL)~~ RESOLVED — "Create Opportunity" Header Button Wired
 
@@ -494,16 +494,16 @@ No archive mutation or status change.
 
 Several account findings share patterns with Lead/Contact audits:
 
-| Pattern              | Account                       | Lead                          | Contact                       |
-| -------------------- | ----------------------------- | ----------------------------- | ----------------------------- |
-| No-op action buttons | ~~6 buttons~~ 0 (F-05–F-11 resolved by IFC-267) | 8+ buttons           | 6 buttons                     |
-| Owner display wrong  | Static text (F-01)            | Hardcoded "Account Executive" | Hardcoded "Account Executive" |
-| Missing delete event | No AccountDeletedEvent (D-01) | —                             | No ContactDeletedEvent        |
-| Event worker gaps    | Zero handlers (W-01, W-02)    | —                             | Zero handlers                 |
-| Schema key mismatch  | data vs accounts (B-09)       | —                             | data vs contacts              |
-| No audit logging     | Zero calls (B-07)             | —                             | —                             |
-| No create/edit forms | Both missing (F-16, F-17)     | —                             | No create form                |
-| Stub activity data   | Synthetic activities (F-13)   | —                             | —                             |
+| Pattern              | Account                                         | Lead                          | Contact                       |
+| -------------------- | ----------------------------------------------- | ----------------------------- | ----------------------------- |
+| No-op action buttons | ~~6 buttons~~ 0 (F-05–F-11 resolved by IFC-267) | 8+ buttons                    | 6 buttons                     |
+| Owner display wrong  | Static text (F-01)                              | Hardcoded "Account Executive" | Hardcoded "Account Executive" |
+| Missing delete event | No AccountDeletedEvent (D-01)                   | —                             | No ContactDeletedEvent        |
+| Event worker gaps    | Zero handlers (W-01, W-02)                      | —                             | Zero handlers                 |
+| Schema key mismatch  | data vs accounts (B-09)                         | —                             | data vs contacts              |
+| No audit logging     | Zero calls (B-07)                               | —                             | —                             |
+| No create/edit forms | Both missing (F-16, F-17)                       | —                             | No create form                |
+| Stub activity data   | Synthetic activities (F-13)                     | —                             | —                             |
 
 ---
 
@@ -526,13 +526,13 @@ Several account findings share patterns with Lead/Contact audits:
 
 ### Test Gaps
 
-| Gap                       | Finding ID | Notes                                                              |
-| ------------------------- | ---------- | ------------------------------------------------------------------ |
-| No contract test          | T-01       | Accounts is the ONLY entity without a contract test file           |
-| ~~No-op buttons untested~~| ~~T-02~~   | RESOLVED by IFC-267: All 6 buttons tested (36 tests across 5 test files) |
-| Tenant isolation untested | T-03       | Router tests don't verify tenant isolation                         |
-| No E2E tests              | T-04       | No Playwright tests for account CRUD flow                          |
-| Owner display untested    | T-05       | Tests don't verify owner name/title rendering                      |
+| Gap                        | Finding ID | Notes                                                                    |
+| -------------------------- | ---------- | ------------------------------------------------------------------------ |
+| No contract test           | T-01       | Accounts is the ONLY entity without a contract test file                 |
+| ~~No-op buttons untested~~ | ~~T-02~~   | RESOLVED by IFC-267: All 6 buttons tested (36 tests across 5 test files) |
+| Tenant isolation untested  | T-03       | Router tests don't verify tenant isolation                               |
+| No E2E tests               | T-04       | No Playwright tests for account CRUD flow                                |
+| Owner display untested     | T-05       | Tests don't verify owner name/title rendering                            |
 
 ---
 
@@ -557,26 +557,26 @@ These areas are properly wired and require no remediation:
 
 ## Priority Fixes
 
-| Priority | Finding IDs                                    | Task    | Description                                                                        |
-| -------- | ---------------------------------------------- | ------- | ---------------------------------------------------------------------------------- |
+| Priority | Finding IDs                                    | Task    | Description                                                                                      |
+| -------- | ---------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------ |
 | ~~P0~~   | ~~F-05, F-06, F-07, F-08, F-10, F-11~~         | IFC-267 | ~~Wire 6 no-op action buttons~~ RESOLVED (2026-03-12) — OpportunityCreateSheet + ContactAddSheet |
-| P0       | B-01, B-02, B-03, B-04, B-05, B-07             | IFC-269 | Fix filterOptions tenant isolation, repository tenant filters, audit logging       |
-| P1       | F-01, F-02                                     | IFC-268 | Fix owner display and add owner assignment                                         |
-| P1       | B-08, B-09, B-10, B-11, B-12, B-13             | IFC-270 | Fix router update procedure, schema mismatch, expose domain commands               |
-| P1       | D-01, B-15, B-16, B-06                         | IFC-271 | Domain model fixes: AccountDeletedEvent, toJSON, Result handling                   |
-| P1       | W-01, W-02, W-03                               | IFC-272 | Add account event handlers to events worker (depends on IFC-271)                   |
-| P1       | F-13                                           | IFC-274 | Replace stub activity data with real timeline                                      |
-| P1       | F-16, F-17                                     | IFC-275 | Create account create and edit forms (depends on IFC-270)                          |
-| P2       | L-01, L-02, L-04, F-09, F-12                   | IFC-273 | Type safety fixes, domain enum usage for filters                                   |
-| P2       | T-01, T-02, T-03, T-04, T-05                   | IFC-276 | Contract test, button click tests, tenant tests, E2E (depends on IFC-267, IFC-268) |
-| P3       | F-03, F-04, F-14, F-15, F-18, B-14, D-02, D-03 | IFC-277 | Stub toasts, NaN guard, dead code cleanup                                          |
+| P0       | B-01, B-02, B-03, B-04, B-05, B-07             | IFC-269 | Fix filterOptions tenant isolation, repository tenant filters, audit logging                     |
+| P1       | F-01, F-02                                     | IFC-268 | Fix owner display and add owner assignment                                                       |
+| P1       | B-08, B-09, B-10, B-11, B-12, B-13             | IFC-270 | Fix router update procedure, schema mismatch, expose domain commands                             |
+| P1       | D-01, B-15, B-16, B-06                         | IFC-271 | Domain model fixes: AccountDeletedEvent, toJSON, Result handling                                 |
+| P1       | W-01, W-02, W-03                               | IFC-272 | Add account event handlers to events worker (depends on IFC-271)                                 |
+| P1       | F-13                                           | IFC-274 | Replace stub activity data with real timeline                                                    |
+| P1       | F-16, F-17                                     | IFC-275 | Create account create and edit forms (depends on IFC-270)                                        |
+| P2       | L-01, L-02, L-04, F-09, F-12                   | IFC-273 | Type safety fixes, domain enum usage for filters                                                 |
+| P2       | T-01, T-02, T-03, T-04, T-05                   | IFC-276 | Contract test, button click tests, tenant tests, E2E (depends on IFC-267, IFC-268)               |
+| P3       | F-03, F-04, F-14, F-15, F-18, B-14, D-02, D-03 | IFC-277 | Stub toasts, NaN guard, dead code cleanup                                                        |
 
 ---
 
 ## Changes Log
 
-| Date       | Change                                                                      |
-| ---------- | --------------------------------------------------------------------------- |
-| 2026-03-05 | Created — 43 findings (7 CRITICAL, 12 HIGH, 10 MEDIUM, 9 LOW, 5 test gaps)  |
-| 2026-03-05 | Tasks assigned: IFC-267 to IFC-277 (11 tasks across sprints 16/18/20/22/24) |
+| Date       | Change                                                                                                                    |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------- |
+| 2026-03-05 | Created — 43 findings (7 CRITICAL, 12 HIGH, 10 MEDIUM, 9 LOW, 5 test gaps)                                                |
+| 2026-03-05 | Tasks assigned: IFC-267 to IFC-277 (11 tasks across sprints 16/18/20/22/24)                                               |
 | 2026-03-13 | IFC-267 RESOLVED: F-05–F-11 (6 CRITICAL no-op buttons) all wired. T-02 resolved. Grand total 43→36 findings, CRITICAL 7→1 |

@@ -199,17 +199,17 @@ Each route entry uses this standard table format:
 
 ### 404 Not Found (`/404`)
 
-| Field          | Value                                                     |
-| -------------- | --------------------------------------------------------- |
-| **Task ID**    | PG-055                                                    |
-| **File Path**  | `apps/web/src/app/404/page.tsx`                           |
-| **Layout**     | `apps/web/src/app/layout.tsx`                             |
-| **API Router** | N/A                                                       |
-| **E2E Test**   | None                                                      |
-| **Unit Tests** | `apps/web/src/app/404/__tests__/page.test.tsx`            |
-| **KPI**        | Lighthouse >=90; Response <200ms; noindex route           |
-| **Status**     | Implemented                                               |
-| **RACI**       | R: Frontend / A: SRE / C: Product / I: QA                 |
+| Field          | Value                                           |
+| -------------- | ----------------------------------------------- |
+| **Task ID**    | PG-055                                          |
+| **File Path**  | `apps/web/src/app/404/page.tsx`                 |
+| **Layout**     | `apps/web/src/app/layout.tsx`                   |
+| **API Router** | N/A                                             |
+| **E2E Test**   | None                                            |
+| **Unit Tests** | `apps/web/src/app/404/__tests__/page.test.tsx`  |
+| **KPI**        | Lighthouse >=90; Response <200ms; noindex route |
+| **Status**     | Implemented                                     |
+| **RACI**       | R: Frontend / A: SRE / C: Product / I: QA       |
 
 ### Blog (`/blog`)
 
@@ -1466,18 +1466,18 @@ Each route entry uses this standard table format:
 
 ### MFA Management (`/settings/security/mfa`)
 
-| Field          | Value                                                                       |
-| -------------- | --------------------------------------------------------------------------- |
-| **Task ID**    | PG-125                                                                      |
-| **File Path**  | `apps/web/src/app/settings/security/mfa/page.tsx`                           |
-| **Layout**     | `apps/web/src/app/settings/layout.tsx`                                      |
-| **API Router** | `apps/api/src/modules/auth/auth.router.ts`                                  |
+| Field          | Value                                                                      |
+| -------------- | -------------------------------------------------------------------------- |
+| **Task ID**    | PG-125                                                                     |
+| **File Path**  | `apps/web/src/app/settings/security/mfa/page.tsx`                          |
+| **Layout**     | `apps/web/src/app/settings/layout.tsx`                                     |
+| **API Router** | `apps/api/src/modules/auth/auth.router.ts`                                 |
 | **E2E Test**   | `tests/e2e/mfa.spec.ts`                                                    |
-| **Unit Tests** | `apps/web/src/app/settings/security/mfa/__tests__/management.test.tsx`      |
-| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s; Server <200ms                          |
-| **Status**     | Implemented                                                                 |
-| **RACI**       | R: Frontend / A: Security / C: Backend / I: QA                              |
-| **Components** | "use client", Card, Badge, AlertDialog, Alert, useMfaStatus, useDisableMfa  |
+| **Unit Tests** | `apps/web/src/app/settings/security/mfa/__tests__/management.test.tsx`     |
+| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s; Server <200ms                         |
+| **Status**     | Implemented                                                                |
+| **RACI**       | R: Frontend / A: Security / C: Backend / I: QA                             |
+| **Components** | "use client", Card, Badge, AlertDialog, Alert, useMfaStatus, useDisableMfa |
 
 ### MFA Setup Wizard (`/settings/security/mfa/setup`)
 
@@ -1733,33 +1733,33 @@ Each route entry uses this standard table format:
 
 ### Notification Channels (`/notifications/channels`)
 
-| Field          | Value                                                                       |
-| -------------- | --------------------------------------------------------------------------- |
-| **Task ID**    | PG-174                                                                      |
-| **File Path**  | `apps/web/src/app/notifications/channels/page.tsx`                          |
-| **Layout**     | `apps/web/src/app/notifications/layout.tsx`                                 |
-| **API Router** | `apps/api/src/modules/notifications/notifications.router.ts`                |
-| **E2E Test**   | None                                                                        |
-| **Unit Tests** | `apps/web/src/components/notifications/__tests__/ChannelManager.test.tsx`    |
-| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s                                         |
-| **Status**     | Implemented                                                                 |
-| **RACI**       | R: Frontend / A: Product / C: Backend / I: QA                               |
-| **Components** | "use client", PageHeader, ChannelManager, useRequireAuth                    |
+| Field          | Value                                                                     |
+| -------------- | ------------------------------------------------------------------------- |
+| **Task ID**    | PG-174                                                                    |
+| **File Path**  | `apps/web/src/app/notifications/channels/page.tsx`                        |
+| **Layout**     | `apps/web/src/app/notifications/layout.tsx`                               |
+| **API Router** | `apps/api/src/modules/notifications/notifications.router.ts`              |
+| **E2E Test**   | None                                                                      |
+| **Unit Tests** | `apps/web/src/components/notifications/__tests__/ChannelManager.test.tsx` |
+| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s                                       |
+| **Status**     | Implemented                                                               |
+| **RACI**       | R: Frontend / A: Product / C: Backend / I: QA                             |
+| **Components** | "use client", PageHeader, ChannelManager, useRequireAuth                  |
 
 ### Quiet Hours (`/notifications/quiet-hours`)
 
-| Field          | Value                                                                       |
-| -------------- | --------------------------------------------------------------------------- |
-| **Task ID**    | PG-174                                                                      |
-| **File Path**  | `apps/web/src/app/notifications/quiet-hours/page.tsx`                       |
-| **Layout**     | `apps/web/src/app/notifications/layout.tsx`                                 |
-| **API Router** | `apps/api/src/modules/notifications/notifications.router.ts`                |
-| **E2E Test**   | None                                                                        |
+| Field          | Value                                                                          |
+| -------------- | ------------------------------------------------------------------------------ |
+| **Task ID**    | PG-174                                                                         |
+| **File Path**  | `apps/web/src/app/notifications/quiet-hours/page.tsx`                          |
+| **Layout**     | `apps/web/src/app/notifications/layout.tsx`                                    |
+| **API Router** | `apps/api/src/modules/notifications/notifications.router.ts`                   |
+| **E2E Test**   | None                                                                           |
 | **Unit Tests** | `apps/web/src/components/notifications/__tests__/QuietHoursScheduler.test.tsx` |
-| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s                                         |
-| **Status**     | Implemented                                                                 |
-| **RACI**       | R: Frontend / A: Product / C: Backend / I: QA                               |
-| **Components** | "use client", PageHeader, QuietHoursScheduler, useRequireAuth               |
+| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s                                            |
+| **Status**     | Implemented                                                                    |
+| **RACI**       | R: Frontend / A: Product / C: Backend / I: QA                                  |
+| **Components** | "use client", PageHeader, QuietHoursScheduler, useRequireAuth                  |
 
 ---
 
@@ -1817,10 +1817,10 @@ Each route entry uses this standard table format:
 | **Procedures** | `ticket.getById`, `ticket.update`, `ticket.addResponse`, `ticket.assignees`, `auth.session` |
 | **E2E Test**   | None                                                                                        |
 | **Unit Tests** | `src/app/support/tickets/[id]/__tests__/page.test.tsx` (16 tests)                           |
-| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s                                                        |
+| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s                                                         |
 | **Status**     | Implemented                                                                                 |
 | **RACI**       | R: Frontend / A: Product / C: Backend / I: QA                                               |
-| **Components** | TicketDetail, TicketThread, StatusUpdater, mapTicketToDetailData                             |
+| **Components** | TicketDetail, TicketThread, StatusUpdater, mapTicketToDetailData                            |
 
 ---
 
@@ -1828,21 +1828,21 @@ Each route entry uses this standard table format:
 
 ### `/help-center/[article]` — Help Article
 
-| Field          | Value                                                         |
-| -------------- | ------------------------------------------------------------- |
-| **Route**      | `/help-center/[article]`                                      |
-| **Task ID**    | PG-045                                                        |
-| **Sprint**     | 15                                                            |
-| **File**       | `apps/web/src/app/help-center/[article]/page.tsx`             |
-| **Layout**     | `apps/web/src/app/help-center/[article]/layout.tsx`           |
-| **API Router** | N/A                                                           |
-| **Procedures** | N/A                                                           |
-| **E2E Test**   | None                                                          |
-| **Unit Tests** | None                                                          |
-| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s                           |
-| **Status**     | Implemented                                                   |
-| **RACI**       | R: Frontend / A: Product / C: Backend / I: QA                 |
-| **Components** | HelpArticleDetail, ArticleBreadcrumb, RelatedArticles         |
+| Field          | Value                                                 |
+| -------------- | ----------------------------------------------------- |
+| **Route**      | `/help-center/[article]`                              |
+| **Task ID**    | PG-045                                                |
+| **Sprint**     | 15                                                    |
+| **File**       | `apps/web/src/app/help-center/[article]/page.tsx`     |
+| **Layout**     | `apps/web/src/app/help-center/[article]/layout.tsx`   |
+| **API Router** | N/A                                                   |
+| **Procedures** | N/A                                                   |
+| **E2E Test**   | None                                                  |
+| **Unit Tests** | None                                                  |
+| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s                   |
+| **Status**     | Implemented                                           |
+| **RACI**       | R: Frontend / A: Product / C: Backend / I: QA         |
+| **Components** | HelpArticleDetail, ArticleBreadcrumb, RelatedArticles |
 
 ---
 

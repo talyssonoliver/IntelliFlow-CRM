@@ -14,9 +14,9 @@ IntelliFlow CRM is a multi-tenant CRM with users primarily based in London
 (Europe/London as system default). The Legal Module introduces
 jurisdiction-aware timestamp requirements: a paralegal in London working a New
 York case must see court deadlines displayed in New York time, not London time.
-Previously, timestamps were stored as PostgreSQL `timestamp` (without time
-zone) and displayed using browser or server local time. How should the system
-store, transmit, and display timestamps to be unambiguous across timezones,
+Previously, timestamps were stored as PostgreSQL `timestamp` (without time zone)
+and displayed using browser or server local time. How should the system store,
+transmit, and display timestamps to be unambiguous across timezones,
 jurisdictions, and deployment environments?
 
 ## Decision Drivers
@@ -28,8 +28,8 @@ jurisdictions, and deployment environments?
 - Email reminders were displaying server time rather than recipient time
 - ICS calendar events must encode the correct timezone for external calendar
   clients
-- ESLint enforcement is needed to prevent bare `toLocaleDateString()` calls
-  from regressing
+- ESLint enforcement is needed to prevent bare `toLocaleDateString()` calls from
+  regressing
 
 ## Considered Options
 
@@ -45,8 +45,8 @@ jurisdictions, and deployment environments?
 
 Chosen option: "UTC storage + three-timezone display model", because it is the
 only option that correctly handles the Legal Module requirement for
-jurisdiction-aware deadlines, eliminates server-TZ/client-TZ boundary bugs,
-and provides a clean, auditable canonical form for all timestamps.
+jurisdiction-aware deadlines, eliminates server-TZ/client-TZ boundary bugs, and
+provides a clean, auditable canonical form for all timestamps.
 
 ### Positive Consequences
 
@@ -62,9 +62,9 @@ and provides a clean, auditable canonical form for all timestamps.
 
 ### Negative Consequences
 
-- Existing `timestamp` (without time zone) columns require a future migration
-  to `timestamptz`; this is non-breaking because Prisma handles both
-  identically at the JS layer, but the migration must still be scheduled
+- Existing `timestamp` (without time zone) columns require a future migration to
+  `timestamptz`; this is non-breaking because Prisma handles both identically at
+  the JS layer, but the migration must still be scheduled
 - Every new date-formatting call requires a conscious timezone decision;
   developers cannot rely on implicit local-time defaults
 - Three-timezone model adds conceptual surface area for onboarding new
@@ -76,8 +76,8 @@ and provides a clean, auditable canonical form for all timestamps.
 
 - Good, because UTC is the only unambiguous canonical form across DST
   transitions and deployment environments
-- Good, because entity-level timezone satisfies the Legal Module
-  jurisdiction requirement without coupling it to user preference
+- Good, because entity-level timezone satisfies the Legal Module jurisdiction
+  requirement without coupling it to user preference
 - Good, because `User.timezone` gives each user independent display control
 - Good, because ESLint rules make the constraint enforceable at CI time
 - Bad, because it introduces three timezone concepts that developers must
@@ -106,8 +106,8 @@ and provides a clean, auditable canonical form for all timestamps.
 - Bad, because it cannot satisfy the Legal Module requirement: a London
   paralegal viewing a New York case deadline must see it in US-Eastern time,
   regardless of their own `User.timezone`
-- Bad, because ICS events and email reminders for appointments would display
-  in user timezone rather than the event's actual local time
+- Bad, because ICS events and email reminders for appointments would display in
+  user timezone rather than the event's actual local time
 
 ## Links
 
@@ -124,11 +124,11 @@ and provides a clean, auditable canonical form for all timestamps.
 ### Three-Timezone Model
 
 1. **User Timezone** (`User.timezone`): IANA timezone string (e.g.,
-   `"Europe/London"`). Controls display of all general dates in the UI.
-   Defaults to `Europe/London` when not set.
-2. **Entity Timezone** (`Appointment.timezone`, `Case.timezone`): IANA
-   timezone string attached to specific records. Appointments display in the
-   event's timezone; cases display deadlines in the jurisdiction's timezone.
+   `"Europe/London"`). Controls display of all general dates in the UI. Defaults
+   to `Europe/London` when not set.
+2. **Entity Timezone** (`Appointment.timezone`, `Case.timezone`): IANA timezone
+   string attached to specific records. Appointments display in the event's
+   timezone; cases display deadlines in the jurisdiction's timezone.
 3. **Jurisdiction** (`Case.jurisdiction`): Legal jurisdiction code (e.g.,
    `"US-NY"`, `"UK-England"`). Drives court-time display for legal workflows.
 
@@ -141,9 +141,8 @@ and provides a clean, auditable canonical form for all timestamps.
 
 ### Display Rules
 
-- All `toLocaleDateString` / `toLocaleTimeString` calls MUST include an
-  explicit `timeZone` option — bare calls are blocked by ESLint
-  `no-restricted-syntax`
+- All `toLocaleDateString` / `toLocaleTimeString` calls MUST include an explicit
+  `timeZone` option — bare calls are blocked by ESLint `no-restricted-syntax`
 - Server-side "today"/"this month" boundaries use
   `startOfDayInTimezone(userTimezone)` from
   `apps/api/src/lib/timezone-utils.ts`; never use

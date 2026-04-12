@@ -19,8 +19,9 @@ has a `SendGridProvider` implementation and a `MockEmailProvider`, but:
 
 1. Neither `EmailServiceAdapter` nor `OutboundEmailService` is registered in
    `apps/api/src/container.ts`
-2. The `NotificationService` delegates email delivery to `NotificationServicePort`,
-   which currently only has a `MockNotificationServiceAdapter`
+2. The `NotificationService` delegates email delivery to
+   `NotificationServicePort`, which currently only has a
+   `MockNotificationServiceAdapter`
 3. The `SendGridProvider.getDeliverabilityStats()` and `checkBounce()` are stubs
 4. The factory `createOutboundEmailService()` defaults to mock in development
 5. Environment variables (`EMAIL_PROVIDER`, `EMAIL_API_KEY`) exist but are not
@@ -39,15 +40,16 @@ actually dispatch in production.
 
 ## Considered Options
 
-1. **Wire existing SendGrid provider** — use current `SendGridProvider` + env-based config
+1. **Wire existing SendGrid provider** — use current `SendGridProvider` +
+   env-based config
 2. **Replace with Resend** — modern email API with better DX
 3. **Use nodemailer SMTP** — direct SMTP connection to any provider
 
 ## Decision Outcome
 
 **Option 1: Wire existing SendGrid provider** — the code is already written and
-tested. The task scope is wiring, not rewriting. Add env-based provider selection
-and register in container.
+tested. The task scope is wiring, not rewriting. Add env-based provider
+selection and register in container.
 
 ### Consequences
 
@@ -62,10 +64,13 @@ and register in container.
 - Register `EmailServiceAdapter` in `container.ts` with env-based config
 - Create `RealNotificationServiceAdapter` that bridges `NotificationServicePort`
   to `EmailServiceAdapter` for the email channel
-- Wire `NotificationService` → `RealNotificationServiceAdapter` → `EmailServiceAdapter` → `SendGridProvider`
+- Wire `NotificationService` → `RealNotificationServiceAdapter` →
+  `EmailServiceAdapter` → `SendGridProvider`
 - Keep `MockNotificationServiceAdapter` for test/dev environments
 
 ## Known Gaps
 
-- `NotificationService.processRetries()` polling is not scheduled in the API container. This is a known gap deferred to a follow-up task.
-- In-memory rate limiter (`EmailRateLimiter`) is ineffective across pods. Replace with Redis-backed limiter in follow-up task.
+- `NotificationService.processRetries()` polling is not scheduled in the API
+  container. This is a known gap deferred to a follow-up task.
+- In-memory rate limiter (`EmailRateLimiter`) is ineffective across pods.
+  Replace with Redis-backed limiter in follow-up task.

@@ -11,14 +11,14 @@ The **Core CRM** domain covers 6 primary entities: Lead, Contact, Account,
 Opportunity/Deal, Task, and Ticket. Analysis reveals significant gaps in router
 and frontend layers.
 
-| Entity      | Domain  | Database | Adapter | Router  | Frontend | Status   |
-| ----------- | ------- | -------- | ------- | ------- | -------- | -------- |
-| Lead        | IFC-101 | IFC-017  | IFC-107 | IFC-013 | IFC-004  | COMPLETE |
+| Entity      | Domain  | Database | Adapter | Router  | Frontend | Status                                      |
+| ----------- | ------- | -------- | ------- | ------- | -------- | ------------------------------------------- |
+| Lead        | IFC-101 | IFC-017  | IFC-107 | IFC-013 | IFC-004  | COMPLETE                                    |
 | Contact     | IFC-102 | IFC-017  | IFC-107 | MISSING | MISSING  | ORPHAN (Security: IFC-252 tenant isolation) |
-| Account     | IFC-103 | IFC-017  | IFC-107 | MISSING | MISSING  | ORPHAN   |
-| Opportunity | IFC-104 | IFC-017  | IFC-107 | MISSING | PG-131\* | PARTIAL  |
-| Task        | IFC-105 | IFC-017  | IFC-107 | IFC-187 | MISSING  | PARTIAL  |
-| Ticket      | IFC-188 | IFC-017  | IFC-107 | IFC-189 | PG-137✅ | COMPLETE |
+| Account     | IFC-103 | IFC-017  | IFC-107 | MISSING | MISSING  | ORPHAN                                      |
+| Opportunity | IFC-104 | IFC-017  | IFC-107 | MISSING | PG-131\* | PARTIAL                                     |
+| Task        | IFC-105 | IFC-017  | IFC-107 | IFC-187 | MISSING  | PARTIAL                                     |
+| Ticket      | IFC-188 | IFC-017  | IFC-107 | IFC-189 | PG-137✅ | COMPLETE                                    |
 
 \*PG-131 is Deal Forecast only, no list/detail page
 

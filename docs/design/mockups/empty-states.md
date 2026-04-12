@@ -1,4 +1,3 @@
-
 ---
 
 # **Generate Shared CRM Empty‑State Components**
@@ -17,18 +16,20 @@ The components must follow these rules:
 ---
 
 ## **1. Component Purpose**
-Create a **SharedEmptyState** component that can be reused across all CRM entities:
 
-- Notes  
-- Tasks  
-- Chats  
-- Appointments  
-- Files  
-- Emails  
-- Timeline  
-- Activity  
-- Documents  
-- Any future module  
+Create a **SharedEmptyState** component that can be reused across all CRM
+entities:
+
+- Notes
+- Tasks
+- Chats
+- Appointments
+- Files
+- Emails
+- Timeline
+- Activity
+- Documents
+- Any future module
 
 The component must support **progressive empty‑state micro‑iterations**.
 
@@ -39,37 +40,48 @@ The component must support **progressive empty‑state micro‑iterations**.
 The component must support these states and transitions:
 
 ### **1. Passive State**
-- Full illustration  
-- Title  
-- Short description  
-- No CTA visible yet  
+
+- Full illustration
+- Title
+- Short description
+- No CTA visible yet
 
 ### **2. Soft CTA State**
+
 Triggered by:
-- Hover  
-- Focus  
-- Scroll into view  
+
+- Hover
+- Focus
+- Scroll into view
 
 Behavior:
-- Illustration fades slightly (opacity 100% → 80%)  
-- CTA animates in (fade + slight upward motion)  
+
+- Illustration fades slightly (opacity 100% → 80%)
+- CTA animates in (fade + slight upward motion)
 
 ### **3. Inline Composer State**
+
 Triggered by:
-- Clicking the CTA  
+
+- Clicking the CTA
 - Pressing a hotkey (e.g., “N” for note, “T” for task)
 
 Behavior:
-- Illustration collapses or shifts aside  
-- Inline composer appears (textarea, quick-create row, or message input depending on entity)  
+
+- Illustration collapses or shifts aside
+- Inline composer appears (textarea, quick-create row, or message input
+  depending on entity)
 
 ### **4. Smart Suggestions State**
+
 Triggered by:
-- User creates the first item  
+
+- User creates the first item
 
 Behavior:
-- Illustration disappears entirely  
-- Show contextual suggestions (e.g., “Add due date?”, “Assign?”, “Attach file?”)  
+
+- Illustration disappears entirely
+- Show contextual suggestions (e.g., “Add due date?”, “Assign?”, “Attach file?”)
 
 ---
 
@@ -79,16 +91,16 @@ The component must be configurable via props:
 
 ```ts
 interface SharedEmptyStateProps {
-  entity: 
-    | "notes"
-    | "tasks"
-    | "chats"
-    | "appointments"
-    | "files"
-    | "emails"
-    | "timeline"
-    | "activity"
-    | "documents";
+  entity:
+    | 'notes'
+    | 'tasks'
+    | 'chats'
+    | 'appointments'
+    | 'files'
+    | 'emails'
+    | 'timeline'
+    | 'activity'
+    | 'documents';
 
   title: string;
   description: string;
@@ -109,14 +121,15 @@ interface SharedEmptyStateProps {
 ## **4. Component Architecture Requirements**
 
 ### **A. State Machine**
+
 Implement a simple internal state machine:
 
 ```ts
 type EmptyStatePhase =
-  | "passive"
-  | "soft-cta"
-  | "inline-composer"
-  | "smart-suggestions";
+  | 'passive'
+  | 'soft-cta'
+  | 'inline-composer'
+  | 'smart-suggestions';
 ```
 
 Transitions:
@@ -128,6 +141,7 @@ Transitions:
 ---
 
 ### **B. Animation Requirements**
+
 Use CSS transitions or Framer Motion:
 
 - Illustration fade: `opacity 1 → 0.8`
@@ -138,6 +152,7 @@ Use CSS transitions or Framer Motion:
 ---
 
 ### **C. Design System Integration**
+
 Use IntelliFlow’s design tokens:
 
 - Spacing: `--space-*`
@@ -150,32 +165,36 @@ Use IntelliFlow’s design tokens:
 ---
 
 ## **5. Output Requirements**
+
 Produce:
 
-1. `SharedEmptyState.tsx` — main component  
-2. `useEmptyStateMachine.ts` — hook for transitions  
-3. `entityEmptyStateConfig.ts` — mapping of entity → default illustration, title, description, CTA  
-4. Example usage for Notes, Tasks, Chats  
-5. Optional: Fallback skeleton for when illustrations are missing  
+1. `SharedEmptyState.tsx` — main component
+2. `useEmptyStateMachine.ts` — hook for transitions
+3. `entityEmptyStateConfig.ts` — mapping of entity → default illustration,
+   title, description, CTA
+4. Example usage for Notes, Tasks, Chats
+5. Optional: Fallback skeleton for when illustrations are missing
 
 ---
 
 ## **6. Coding Style**
-- React + TypeScript  
-- Functional components  
-- No external UI libraries  
-- Use IntelliFlow design tokens  
-- Clean, readable, production‑ready code  
+
+- React + TypeScript
+- Functional components
+- No external UI libraries
+- Use IntelliFlow design tokens
+- Clean, readable, production‑ready code
 
 ---
 
 ## **7. Deliverables**
+
 Return:
 
-- Full component code  
-- Hook code  
-- Config file  
-- Example usage  
-- Explanation of how to extend to new entities  
+- Full component code
+- Hook code
+- Config file
+- Example usage
+- Explanation of how to extend to new entities
 
 ---

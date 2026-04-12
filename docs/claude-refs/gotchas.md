@@ -55,4 +55,4 @@
   on vi.fn()
 - **Stale `SESSION_CONTEXT.md`** — regenerate after any `Sprint_plan.csv` edit
   or task status change
-  (`npx tsx apps/project-tracker/scripts/generate-context.ts` or `/resume`)
+  (`npx tsx apps/project-tracker/scripts/generate-context.ts` or `/refresh-context`)

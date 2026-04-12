@@ -2,15 +2,15 @@
 
 ## Overview
 
-| Field             | Value                                                  |
-| ----------------- | ------------------------------------------------------ |
-| **Feature Name**  | Ticket Configuration Pages                             |
-| **Owner**         | Frontend Dev (STOA-Domain)                             |
-| **Status**        | Implementing                                           |
-| **Target Sprint** | 16                                                     |
-| **Created Date**  | 2026-03-10                                             |
-| **Last Updated**  | 2026-03-10                                             |
-| **Related Tasks** | PG-173                                                 |
+| Field             | Value                      |
+| ----------------- | -------------------------- |
+| **Feature Name**  | Ticket Configuration Pages |
+| **Owner**         | Frontend Dev (STOA-Domain) |
+| **Status**        | Implementing               |
+| **Target Sprint** | 16                         |
+| **Created Date**  | 2026-03-10                 |
+| **Last Updated**  | 2026-03-10                 |
+| **Related Tasks** | PG-173                     |
 
 ## Problem Statement
 
@@ -73,7 +73,8 @@ appropriate service levels for different customer tiers.
 **Acceptance Criteria:**
 
 - [ ] List view shows categories with name, description, color, and sort order
-- [ ] Create form with name, description, parent category, color, icon, SLA policy
+- [ ] Create form with name, description, parent category, color, icon, SLA
+      policy
 - [ ] Hierarchical display (parent/child categories)
 - [ ] Active/inactive toggle
 - [ ] Link to default SLA policy per category

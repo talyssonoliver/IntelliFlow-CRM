@@ -2,14 +2,14 @@
 
 ## Overview
 
-| Field             | Value                                                                                                       |
-| ----------------- | ----------------------------------------------------------------------------------------------------------- |
-| **Feature Name**  | Home Page (Public & Authenticated)                                                                          |
-| **Owner**         | Growth Lead, CRM FE Lead                                                                                    |
-| **Status**        | In Progress                                                                                                 |
-| **Target Sprint** | 13-14                                                                                                       |
-| **Created Date**  | 2026-02-03                                                                                                  |
-| **Last Updated**  | 2026-03-10                                                                                                  |
+| Field             | Value                                                                                                                                |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| **Feature Name**  | Home Page (Public & Authenticated)                                                                                                   |
+| **Owner**         | Growth Lead, CRM FE Lead                                                                                                             |
+| **Status**        | In Progress                                                                                                                          |
+| **Target Sprint** | 13-14                                                                                                                                |
+| **Created Date**  | 2026-02-03                                                                                                                           |
+| **Last Updated**  | 2026-03-10                                                                                                                           |
 | **Related Tasks** | IFC-182, PG-001, PG-129, IFC-069, IFC-183, PG-165, IFC-195, IFC-202, IFC-211, PG-156, PG-157, PG-158, PG-159, PG-166, PG-167, PG-161 |
 
 ## Problem Statement

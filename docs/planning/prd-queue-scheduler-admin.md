@@ -2,25 +2,30 @@
 
 ## Overview
 
-| Field             | Value                                             |
-| ----------------- | ------------------------------------------------- |
-| **Feature Name**  | Queue Scheduler Administration                    |
-| **Owner**         | Backend Dev + Frontend Dev                        |
-| **Status**        | In Progress                                       |
-| **Target Sprint** | 15                                                |
-| **Created Date**  | 2026-03-08                                        |
-| **Last Updated**  | 2026-03-08                                        |
-| **Related Tasks** | IFC-296                                           |
+| Field             | Value                          |
+| ----------------- | ------------------------------ |
+| **Feature Name**  | Queue Scheduler Administration |
+| **Owner**         | Backend Dev + Frontend Dev     |
+| **Status**        | In Progress                    |
+| **Target Sprint** | 15                             |
+| **Created Date**  | 2026-03-08                     |
+| **Last Updated**  | 2026-03-08                     |
+| **Related Tasks** | IFC-296                        |
 
 ## Problem Statement
 
 ### Background
 
-IntelliFlow CRM uses BullMQ queues (ai-scoring, ai-prediction, ai-insights) for AI background processing. The ai-worker registers cron-based job schedulers for recurring AI operations (insight refresh every 6h, lead scoring every 4h). Currently, the `queuesAdmin` tRPC router returns empty stub data, providing no visibility or control over queue operations.
+IntelliFlow CRM uses BullMQ queues (ai-scoring, ai-prediction, ai-insights) for
+AI background processing. The ai-worker registers cron-based job schedulers for
+recurring AI operations (insight refresh every 6h, lead scoring every 4h).
+Currently, the `queuesAdmin` tRPC router returns empty stub data, providing no
+visibility or control over queue operations.
 
 ### Problem Description
 
 Operations staff and administrators have no way to:
+
 - View live queue statistics (waiting, active, completed, failed job counts)
 - See registered scheduler cron patterns and next execution times
 - Pause/resume queues during maintenance or incidents
@@ -48,11 +53,14 @@ Operations staff and administrators have no way to:
 
 ### Primary User Story
 
-**As a** CRM administrator **I want to** view live queue statistics and scheduler status **So that** I can monitor AI processing pipeline health from the dashboard.
+**As a** CRM administrator **I want to** view live queue statistics and
+scheduler status **So that** I can monitor AI processing pipeline health from
+the dashboard.
 
 **Acceptance Criteria:**
 
-- [ ] All 3 AI queues (ai-scoring, ai-prediction, ai-insights) visible with live counts
+- [ ] All 3 AI queues (ai-scoring, ai-prediction, ai-insights) visible with live
+      counts
 - [ ] Scheduler cron patterns displayed with next execution time
 - [ ] Queue paused/active status clearly indicated
 - [ ] Data refreshes automatically (polling)
@@ -61,7 +69,8 @@ Operations staff and administrators have no way to:
 
 #### Story 2
 
-**As a** CRM administrator **I want to** pause and resume queues **So that** I can perform maintenance without stopping the entire system.
+**As a** CRM administrator **I want to** pause and resume queues **So that** I
+can perform maintenance without stopping the entire system.
 
 **Acceptance Criteria:**
 
@@ -71,7 +80,9 @@ Operations staff and administrators have no way to:
 
 #### Story 3
 
-**As a** CRM administrator **I want to** retry failed jobs and manage schedulers **So that** I can recover from transient errors and manage recurring job schedules.
+**As a** CRM administrator **I want to** retry failed jobs and manage schedulers
+**So that** I can recover from transient errors and manage recurring job
+schedules.
 
 **Acceptance Criteria:**
 
@@ -101,12 +112,12 @@ export const queuesAdminRouter = router({
 
 ## Success Metrics
 
-| Metric              | Target  | Measurement Method |
-| ------------------- | ------- | ------------------ |
-| API Response Time   | <200ms  | OpenTelemetry      |
-| Test Coverage       | >90%    | Vitest coverage    |
-| Queues Visible      | 3       | Manual verification|
-| CRUD Operations     | All functional | Integration test |
+| Metric            | Target         | Measurement Method  |
+| ----------------- | -------------- | ------------------- |
+| API Response Time | <200ms         | OpenTelemetry       |
+| Test Coverage     | >90%           | Vitest coverage     |
+| Queues Visible    | 3              | Manual verification |
+| CRUD Operations   | All functional | Integration test    |
 
 ## Dependencies
 

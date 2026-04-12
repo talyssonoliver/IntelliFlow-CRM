@@ -47,9 +47,9 @@ These ADRs cover advanced topics for later sprints:
 
 ### Auth & Security ADRs
 
-| ADR                                          | Title                               | Status      | Date       | Sprint | Technical Story |
-| -------------------------------------------- | ----------------------------------- | ----------- | ---------- | ------ | --------------- |
-| [ADR-039](./ADR-039-saml-sso-integration.md) | SAML SSO Integration for Enterprise | ⏳ Proposed | 2026-02-25 | 15     | PG-124          |
+| ADR                                                    | Title                                   | Status      | Date       | Sprint | Technical Story |
+| ------------------------------------------------------ | --------------------------------------- | ----------- | ---------- | ------ | --------------- |
+| [ADR-039](./ADR-039-saml-sso-integration.md)           | SAML SSO Integration for Enterprise     | ⏳ Proposed | 2026-02-25 | 15     | PG-124          |
 | [ADR-045](./ADR-045-entity-detail-componentization.md) | CRM Entity Detail Page Componentization | ⏳ Proposed | 2026-03-16 | 19     | IFC-305         |
 
 ## ADR Relationships

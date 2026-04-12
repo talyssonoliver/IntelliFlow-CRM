@@ -1153,14 +1153,14 @@ The authenticated header renders automatically for all non-public routes.
 
 **Sub-components** (in `apps/web/src/components/header/`):
 
-| Component | File | Purpose |
-|---|---|---|
-| `Logo` | `logo.tsx` | Brand mark + "IntelliFlow CRM" text |
-| `MainNav` | `main-nav.tsx` | Desktop top-level navigation links |
-| `MobileNav` | `mobile-nav.tsx` | Slide-down mobile menu |
-| `SearchBar` | `search-bar.tsx` | Global search input (`w-64`) |
-| `Notifications` | `notifications.tsx` | Bell icon with unread count |
-| `UserMenu` | `user-menu.tsx` | Avatar dropdown (profile, settings, sign out) |
+| Component       | File                | Purpose                                       |
+| --------------- | ------------------- | --------------------------------------------- |
+| `Logo`          | `logo.tsx`          | Brand mark + "IntelliFlow CRM" text           |
+| `MainNav`       | `main-nav.tsx`      | Desktop top-level navigation links            |
+| `MobileNav`     | `mobile-nav.tsx`    | Slide-down mobile menu                        |
+| `SearchBar`     | `search-bar.tsx`    | Global search input (`w-64`)                  |
+| `Notifications` | `notifications.tsx` | Bell icon with unread count                   |
+| `UserMenu`      | `user-menu.tsx`     | Avatar dropdown (profile, settings, sign out) |
 
 **Behavior**:
 
@@ -1171,8 +1171,8 @@ The authenticated header renders automatically for all non-public routes.
   hides/shows nav items dynamically (IFC-210)
 - Mobile: hamburger button toggles `MobileNav`
 
-**Layout rule**: The authenticated header is rendered in the root layout.
-All module layouts assume `top-16` offset for sticky/fixed child elements.
+**Layout rule**: The authenticated header is rendered in the root layout. All
+module layouts assume `top-16` offset for sticky/fixed child elements.
 
 **❌ NEVER create custom headers per module**:
 
@@ -1191,15 +1191,15 @@ export function SettingsHeader() { ... }
 
 **Rendering logic** (in `apps/web/src/app/(public)/layout.tsx`):
 
-| Condition | PublicHeader | PublicFooter |
-|---|---|---|
-| Auth pages (`/login`, `/signup`, etc.) | Shown | **Hidden** |
-| Marketing pages (`/features`, `/pricing`, etc.) | Shown | Shown |
-| Authenticated user on public page | Hidden | Shown |
+| Condition                                       | PublicHeader | PublicFooter |
+| ----------------------------------------------- | ------------ | ------------ |
+| Auth pages (`/login`, `/signup`, etc.)          | Shown        | **Hidden**   |
+| Marketing pages (`/features`, `/pricing`, etc.) | Shown        | Shown        |
+| Authenticated user on public page               | Hidden       | Shown        |
 
-**Auth pages suppressing footer** (`AUTH_PAGES_NO_FOOTER`): `/login`,
-`/signup`, `/forgot-password`, `/reset-password`, `/logout`, `/verify-email`,
-`/mfa`, `/auth/callback`, `/sso`
+**Auth pages suppressing footer** (`AUTH_PAGES_NO_FOOTER`): `/login`, `/signup`,
+`/forgot-password`, `/reset-password`, `/logout`, `/verify-email`, `/mfa`,
+`/auth/callback`, `/sso`
 
 **PublicHeader**: Sticky, semi-transparent with `backdrop-blur`. Links:
 Features, Pricing, About, Contact. CTA: "Sign In" (ghost) + "Start Free Trial"
@@ -1233,10 +1233,7 @@ actions.
 import { EntityHeader } from '@/components/shared';
 
 <EntityHeader
-  breadcrumbs={[
-    { label: 'Tickets', href: '/tickets' },
-    { label: 'T-10924' },
-  ]}
+  breadcrumbs={[{ label: 'Tickets', href: '/tickets' }, { label: 'T-10924' }]}
   title="System Outage: West Region"
   entityId="T-10924"
   badges={[
@@ -1245,27 +1242,32 @@ import { EntityHeader } from '@/components/shared';
   ]}
   actions={[
     { label: 'Edit', icon: 'edit', variant: 'secondary', onClick: handleEdit },
-    { label: 'Resolve', icon: 'check_circle', variant: 'primary', onClick: handleResolve },
+    {
+      label: 'Resolve',
+      icon: 'check_circle',
+      variant: 'primary',
+      onClick: handleResolve,
+    },
   ]}
   endContent={<MoreActionsButton onClick={openSheet} />}
 >
   <p className="text-sm text-muted-foreground mt-2">
     Opened 3 days ago by Sarah Chen
   </p>
-</EntityHeader>
+</EntityHeader>;
 ```
 
 **When to use which header**:
 
-| Component | Use for |
-|---|---|
-| `PageHeader` | List pages, dashboards, settings — any page showing a collection |
-| `EntityHeader` | Detail pages showing a single record with ID + status badges |
+| Component      | Use for                                                          |
+| -------------- | ---------------------------------------------------------------- |
+| `PageHeader`   | List pages, dashboards, settings — any page showing a collection |
+| `EntityHeader` | Detail pages showing a single record with ID + status badges     |
 
 **EntityHeaderProps**: | Prop | Type | Description |
 |------|------|-------------| | `breadcrumbs` | `BreadcrumbItem[]?` | Navigation
-breadcrumbs (reuses PageHeader's type) | | `title` | `string` | Entity name
-(h1) | | `entityId` | `string?` | Displayed as `#ID` badge | | `badges` |
+breadcrumbs (reuses PageHeader's type) | | `title` | `string` | Entity name (h1)
+| | `entityId` | `string?` | Displayed as `#ID` badge | | `badges` |
 `EntityBadge[]?` | Status/priority badges after title | | `actions` |
 `PageAction[]?` | Action buttons (reuses PageHeader's type) | | `endContent` |
 `ReactNode?` | Content after actions (e.g., MoreActionsButton) | | `children` |
@@ -1280,18 +1282,21 @@ Additional CSS classes |
 ### EntityActionSheet Pattern (Row/Card Actions)
 
 A right-side slide-over sheet for entity row actions. Uses the shared `Sheet`
-component from `@intelliflow/ui`. Includes built-in Pin/Unpin, Share, and
-Export actions.
+component from `@intelliflow/ui`. Includes built-in Pin/Unpin, Share, and Export
+actions.
 
 **Location**: `apps/web/src/components/shared/entity-action-sheet.tsx`
 
 **✅ CORRECT Pattern**:
 
 ```tsx
-import { EntityActionSheet, type EntityActionSheetEntity } from '@/components/shared';
+import {
+  EntityActionSheet,
+  type EntityActionSheetEntity,
+} from '@/components/shared';
 
 const entity: EntityActionSheetEntity = {
-  type: 'lead',           // EntityType for pin system
+  type: 'lead', // EntityType for pin system
   id: lead.id,
   title: lead.name,
   subtitle: lead.company,
@@ -1305,9 +1310,14 @@ const entity: EntityActionSheetEntity = {
   entity={entity}
   extraActions={[
     { label: 'Convert to Deal', icon: 'swap_horiz', onClick: handleConvert },
-    { label: 'Delete', icon: 'delete', onClick: handleDelete, destructive: true },
+    {
+      label: 'Delete',
+      icon: 'delete',
+      onClick: handleDelete,
+      destructive: true,
+    },
   ]}
-/>
+/>;
 ```
 
 **Built-in actions**: Pin/Unpin to Home, Share, Export. Separator before extra
@@ -1323,17 +1333,17 @@ Entity URL for pin link |
 **ExtraAction Props**: | Prop | Type | Description |
 |------|------|-------------| | `label` | `string` | Action button text | |
 `icon` | `string` | Material Symbol icon name | | `onClick` | `() => void` |
-Click handler | | `destructive` | `boolean?` | Red styling for dangerous
-actions |
+Click handler | | `destructive` | `boolean?` | Red styling for dangerous actions
+|
 
 ---
 
 ### ComplementarySidebar Pattern (Detail Panel)
 
-A fixed-position detail panel that slides in from the right edge for
-two-column layouts where the main content occupies 70-80% and the panel
-overlays 20-30% **without causing layout shift**. Used in modules with multiple
-views (Settings, AI & Agents, etc.) to show selected item details.
+A fixed-position detail panel that slides in from the right edge for two-column
+layouts where the main content occupies 70-80% and the panel overlays 20-30%
+**without causing layout shift**. Used in modules with multiple views (Settings,
+AI & Agents, etc.) to show selected item details.
 
 **Location**: `apps/web/src/components/shared/complementary-sidebar.tsx`
 **Hook**: `apps/web/src/hooks/useComplementarySidebar.ts`
@@ -1382,39 +1392,38 @@ const sidebar = useComplementarySidebar<Agent>();
 
 **Behavior**:
 
-| Event | Behavior |
-|---|---|
-| Item click | Panel slides in (200ms ease-out), row highlights |
-| Same item click | Panel closes (toggle) |
-| Different item click | Content crossfades (100ms fade-in via key remount) |
-| Tab switch | Panel persists, content updates via `contentKey` change |
-| Escape key | Panel closes |
-| Loading | Shows skeleton loader, then crossfades to content |
+| Event                | Behavior                                                |
+| -------------------- | ------------------------------------------------------- |
+| Item click           | Panel slides in (200ms ease-out), row highlights        |
+| Same item click      | Panel closes (toggle)                                   |
+| Different item click | Content crossfades (100ms fade-in via key remount)      |
+| Tab switch           | Panel persists, content updates via `contentKey` change |
+| Escape key           | Panel closes                                            |
+| Loading              | Shows skeleton loader, then crossfades to content       |
 
 **Position**: `fixed top-16 right-0 bottom-0 z-20` — sits below the header,
 overlays the right edge. Width: `w-80` / `lg:w-[340px]` / `xl:w-[380px]`.
 
 **ComplementarySidebar vs EntityActionSheet**:
 
-| Feature | ComplementarySidebar | EntityActionSheet |
-|---|---|---|
-| Purpose | Show detail content for selected item | Quick actions menu |
-| Trigger | Row/card click (toggle) | "More" button click |
-| Duration | Stays open while browsing list | Closes after action |
-| Content | Rich detail view (text, cards, data) | Action button list |
-| Persistence | Persists across tab switches | Closes on action |
-| Overlay | No backdrop | Dark backdrop overlay |
+| Feature     | ComplementarySidebar                  | EntityActionSheet     |
+| ----------- | ------------------------------------- | --------------------- |
+| Purpose     | Show detail content for selected item | Quick actions menu    |
+| Trigger     | Row/card click (toggle)               | "More" button click   |
+| Duration    | Stays open while browsing list        | Closes after action   |
+| Content     | Rich detail view (text, cards, data)  | Action button list    |
+| Persistence | Persists across tab switches          | Closes on action      |
+| Overlay     | No backdrop                           | Dark backdrop overlay |
 
 **ComplementarySidebarProps**: | Prop | Type | Description |
 |------|------|-------------| | `isOpen` | `boolean` | Controls visibility | |
 `onClose` | `() => void` | Called on close button or Escape | | `title` |
-`string?` | Header title (also used as `aria-label`) | | `subtitle` |
-`string?` | Secondary text below title | | `isLoading` | `boolean?` | Shows
-skeleton loader | | `contentKey` | `string?` | Change to trigger crossfade
-animation | | `children` | `ReactNode` | Panel body content | | `skeleton` |
-`ReactNode?` | Custom skeleton (falls back to default) | | `headerActions` |
-`ReactNode?` | Buttons in header row | | `className` | `string?` | Additional
-CSS classes |
+`string?` | Header title (also used as `aria-label`) | | `subtitle` | `string?`
+| Secondary text below title | | `isLoading` | `boolean?` | Shows skeleton
+loader | | `contentKey` | `string?` | Change to trigger crossfade animation | |
+`children` | `ReactNode` | Panel body content | | `skeleton` | `ReactNode?` |
+Custom skeleton (falls back to default) | | `headerActions` | `ReactNode?` |
+Buttons in header row | | `className` | `string?` | Additional CSS classes |
 
 **useComplementarySidebar<T>** return: | Field | Type | Description |
 |------|------|-------------| | `isOpen` | `boolean` | Current visibility | |
@@ -1441,8 +1450,8 @@ rather than at layout level. Currently used by: **Cases**, **Calendar**,
 - `SidebarPortalTarget` — Render target (used by sidebar infrastructure)
 
 **When to use**: When different pages under the same layout need **different**
-sidebar configurations. If all pages in a module share the same sidebar, use
-the static `AppSidebar config={...}` pattern instead.
+sidebar configurations. If all pages in a module share the same sidebar, use the
+static `AppSidebar config={...}` pattern instead.
 
 **✅ CORRECT Pattern**:
 
@@ -1458,7 +1467,7 @@ export default function TicketsPage() {
 
 ---
 
-### _layout-shell.tsx Pattern (RSC + Client Split)
+### \_layout-shell.tsx Pattern (RSC + Client Split)
 
 Used when a module layout needs both Server Component capabilities (metadata
 export, server-side data fetching) and client-side sidebar state management.
@@ -1475,9 +1484,8 @@ app/module/
 ```
 
 **When to use**: When the module's `layout.tsx` needs to export `metadata` (a
-Server Component feature) but also needs `SidebarProvider` (a client
-component). The shell file is prefixed with `_` to indicate it's not a route
-segment.
+Server Component feature) but also needs `SidebarProvider` (a client component).
+The shell file is prefixed with `_` to indicate it's not a route segment.
 
 ---
 
@@ -1506,12 +1514,12 @@ Three distinct right-side patterns exist. Use the correct one:
 └─────────────────────────────────────────────────────────┘
 ```
 
-| Layer | z-index | Position | Backdrop |
-|---|---|---|---|
-| Navigation header | 50 | `sticky top-0` | No |
-| AppSidebar (left) | 30 | `fixed top-16 left-0` | Mobile only |
-| ComplementarySidebar (right) | 20 | `fixed top-16 right-0` | No |
-| EntityActionSheet | 50 | Sheet overlay (Radix Portal) | Yes (`bg-black/80`) |
+| Layer                        | z-index | Position                     | Backdrop            |
+| ---------------------------- | ------- | ---------------------------- | ------------------- |
+| Navigation header            | 50      | `sticky top-0`               | No                  |
+| AppSidebar (left)            | 30      | `fixed top-16 left-0`        | Mobile only         |
+| ComplementarySidebar (right) | 20      | `fixed top-16 right-0`       | No                  |
+| EntityActionSheet            | 50      | Sheet overlay (Radix Portal) | Yes (`bg-black/80`) |
 
 ---
 

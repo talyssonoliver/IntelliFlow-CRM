@@ -30,8 +30,10 @@ makes the codebase harder to audit for tenant isolation compliance.
 
 ## Considered Options
 
-- **Option 1**: Migrate all routers to `tenantProcedure` and remove manual helpers
-- **Option 2**: Create a shared `getTenantId` utility function (keep protectedProcedure)
+- **Option 1**: Migrate all routers to `tenantProcedure` and remove manual
+  helpers
+- **Option 2**: Create a shared `getTenantId` utility function (keep
+  protectedProcedure)
 - **Option 3**: Leave as-is with documentation guidance
 
 ## Decision Outcome
@@ -59,14 +61,14 @@ mandates tenant isolation at every layer.
 
 ### Routers Requiring Migration
 
-| Router | Helper Functions | Call Count | Current Procedure |
-|--------|-----------------|------------|-------------------|
-| `analytics.router.ts` | `getTenantId` | 13 | `protectedProcedure` |
-| `home.router.ts` | `getTenantId`, `getUserId` | 7+10 | `protectedProcedure` |
-| `activity-feed.router.ts` | `getTenantId` | 4 | `protectedProcedure` |
-| `feedbackSurvey.router.ts` | `getTenantId` | 4 | `protectedProcedure` |
-| `ticket.router.ts` | `getTenantId` (async) | 7 | Mixed |
-| `notifications.router.ts` | `getUserId` | 9 | `tenantProcedure` (partial) |
+| Router                     | Helper Functions           | Call Count | Current Procedure           |
+| -------------------------- | -------------------------- | ---------- | --------------------------- |
+| `analytics.router.ts`      | `getTenantId`              | 13         | `protectedProcedure`        |
+| `home.router.ts`           | `getTenantId`, `getUserId` | 7+10       | `protectedProcedure`        |
+| `activity-feed.router.ts`  | `getTenantId`              | 4          | `protectedProcedure`        |
+| `feedbackSurvey.router.ts` | `getTenantId`              | 4          | `protectedProcedure`        |
+| `ticket.router.ts`         | `getTenantId` (async)      | 7          | Mixed                       |
+| `notifications.router.ts`  | `getUserId`                | 9          | `tenantProcedure` (partial) |
 
 ### Migration Pattern
 
@@ -91,12 +93,14 @@ const userId = ctx.tenant.userId;
 ### Rollback Plan
 
 Revert the procedure change from `tenantProcedure` back to `protectedProcedure`
-and restore the helper functions. Since the underlying auth and tenant validation
-logic is unchanged, rollback is low-risk.
+and restore the helper functions. Since the underlying auth and tenant
+validation logic is unchanged, rollback is low-risk.
 
 ## Links
 
 - Refines [ADR-004: Multi-tenancy Architecture](./ADR-004-multi-tenancy.md)
-- Related: [ADR-025: Tenant ID Normalization](./ADR-025-tenant-id-normalization.md)
+- Related:
+  [ADR-025: Tenant ID Normalization](./ADR-025-tenant-id-normalization.md)
 - Related: [ADR-003: Type-Safe API Design](./ADR-003-type-safe-api-design.md)
-- Task: [IFC-194](../../apps/project-tracker/docs/metrics/_global/Sprint_plan.csv)
+- Task:
+  [IFC-194](../../apps/project-tracker/docs/metrics/_global/Sprint_plan.csv)

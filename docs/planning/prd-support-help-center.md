@@ -2,14 +2,14 @@
 
 ## Overview
 
-| Field             | Value                                          |
-| ----------------- | ---------------------------------------------- |
-| **Feature Name**  | Support Help Center & Support Tickets          |
-| **Owner**         | Support Engineering                            |
-| **Status**        | In Progress                                    |
-| **Target Sprint** | 16                                             |
-| **Created Date**  | 2026-02-28                                     |
-| **Last Updated**  | 2026-03-08                                     |
+| Field             | Value                                                                                                                         |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| **Feature Name**  | Support Help Center & Support Tickets                                                                                         |
+| **Owner**         | Support Engineering                                                                                                           |
+| **Status**        | In Progress                                                                                                                   |
+| **Target Sprint** | 16                                                                                                                            |
+| **Created Date**  | 2026-02-28                                                                                                                    |
+| **Last Updated**  | 2026-03-08                                                                                                                    |
 | **Related Tasks** | PG-043, PG-044, PG-045, PG-046, PG-047, PG-048, IFC-298, IFC-299, IFC-300, IFC-301, IFC-302, IFC-303, IFC-304, PG-180, PG-181 |
 
 ## Problem Statement
@@ -200,7 +200,8 @@ workflow.
 
 **Acceptance Criteria:**
 
-- [ ] New ticket page loads at `/support/tickets/new` with the ticket creation form
+- [ ] New ticket page loads at `/support/tickets/new` with the ticket creation
+      form
 - [ ] Form validates required fields: subject, contact name, contact email
 - [ ] Form includes priority selector, category selector, and description field
 - [ ] File attachment upload component allows drag-and-drop and click-to-browse
@@ -208,7 +209,8 @@ workflow.
 - [ ] File size limit enforced (max 10MB per file, max 5 files)
 - [ ] On successful submission, user is redirected to `/support/tickets/{id}`
 - [ ] Success toast notification is displayed after ticket creation
-- [ ] Error handling shows validation errors inline and submission errors as toast
+- [ ] Error handling shows validation errors inline and submission errors as
+      toast
 - [ ] Page is reachable from sidebar Quick Links "New Ticket" entry
 - [ ] Breadcrumbs show Support > Tickets > New Ticket
 - [ ] Cancel button returns to `/support/tickets`
@@ -224,13 +226,13 @@ section **So that** I can respond to and manage individual tickets in context.
       from `ticket.getById` tRPC endpoint
 - [ ] Page displays ticket metadata (status, priority, category, channel, SLA,
       timestamps), customer info, and assignee
-- [ ] Conversation thread shows all activities (messages, agent replies, internal
-      notes, system events) in chronological order
+- [ ] Conversation thread shows all activities (messages, agent replies,
+      internal notes, system events) in chronological order
 - [ ] Reply composer allows sending public replies and internal notes
-- [ ] Status updater shows current status with valid transition actions (based on
-      `VALID_TICKET_TRANSITIONS` from domain)
-- [ ] SLA display uses dual-track `SLADisplay` component (from PG-046) for
-      first response and resolution tracking
+- [ ] Status updater shows current status with valid transition actions (based
+      on `VALID_TICKET_TRANSITIONS` from domain)
+- [ ] SLA display uses dual-track `SLADisplay` component (from PG-046) for first
+      response and resolution tracking
 - [ ] Quick actions available: Resolve, Close, Assign, Change Priority, Change
       Status — no Delete or Archive (support agent context)
 - [ ] Breadcrumbs show Support > Tickets > {Ticket Subject}
@@ -251,13 +253,13 @@ section **So that** I can respond to and manage individual tickets in context.
 
 ## Timeline
 
-| Milestone            | Date       | Owner       | Status      |
-| -------------------- | ---------- | ----------- | ----------- |
-| PRD Draft            | 2026-02-28 | Support Eng | Complete    |
-| Spec Session         | 2026-02-28 | Support Eng | Complete    |
-| IFC-298 DB Models    | 2026-03-10 | Support Eng | Complete    |
-| Implementation Start | TBD        | Support Eng | Pending     |
-| Feature Complete     | TBD        | Support Eng | Pending     |
+| Milestone            | Date       | Owner       | Status   |
+| -------------------- | ---------- | ----------- | -------- |
+| PRD Draft            | 2026-02-28 | Support Eng | Complete |
+| Spec Session         | 2026-02-28 | Support Eng | Complete |
+| IFC-298 DB Models    | 2026-03-10 | Support Eng | Complete |
+| Implementation Start | TBD        | Support Eng | Pending  |
+| Feature Complete     | TBD        | Support Eng | Pending  |
 
 ## References
 

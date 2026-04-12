@@ -113,22 +113,22 @@ Legend:
 
 ### Public Pages (26 routes) — All reachable via PublicHeader/PublicFooter
 
-| Route                                                     | Status | Notes                    |
-| --------------------------------------------------------- | ------ | ------------------------ |
-| `/` (public)                                              | OK     | Public home              |
-| `/about`                                                  | OK     | Footer link              |
-| `/blog`, `/blog/[slug]`                                   | OK     | Header/footer links      |
-| `/careers`, `/careers/[id]`                               | OK     | Footer link              |
-| `/contact`                                                | OK     | Header/footer link       |
-| `/features`                                               | OK     | Header link              |
+| Route                                                     | Status | Notes                               |
+| --------------------------------------------------------- | ------ | ----------------------------------- |
+| `/` (public)                                              | OK     | Public home                         |
+| `/about`                                                  | OK     | Footer link                         |
+| `/blog`, `/blog/[slug]`                                   | OK     | Header/footer links                 |
+| `/careers`, `/careers/[id]`                               | OK     | Footer link                         |
+| `/contact`                                                | OK     | Header/footer link                  |
+| `/features`                                               | OK     | Header link                         |
 | `/privacy`                                                | OK     | Footer, signup, home, cookie banner |
-| `/login`, `/signup`, `/signup/success`                    | OK     | Header CTA               |
-| `/forgot-password`, `/reset-password/*`                   | OK     | Login page link          |
-| `/mfa/verify`                                             | OK     | Login flow               |
-| `/verify-email/*`                                         | OK     | Signup flow              |
-| `/logout`                                                 | OK     | Auth flow                |
-| `/lp/[slug]`                                              | OK     | Marketing campaign links |
-| `/partners`, `/press`, `/pricing`, `/security`, `/status` | OK     | Footer links             |
+| `/login`, `/signup`, `/signup/success`                    | OK     | Header CTA                          |
+| `/forgot-password`, `/reset-password/*`                   | OK     | Login page link                     |
+| `/mfa/verify`                                             | OK     | Login flow                          |
+| `/verify-email/*`                                         | OK     | Signup flow                         |
+| `/logout`                                                 | OK     | Auth flow                           |
+| `/lp/[slug]`                                              | OK     | Marketing campaign links            |
+| `/partners`, `/press`, `/pricing`, `/security`, `/status` | OK     | Footer links                        |
 
 ### Dashboard (3 routes)
 

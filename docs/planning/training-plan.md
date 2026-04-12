@@ -259,7 +259,7 @@ stack components.
 | Resource  | Location                                    | Purpose                 |
 | --------- | ------------------------------------------- | ----------------------- |
 | ADR-001   | `docs/planning/adr/ADR-001-modern-stack.md` | Architecture decisions  |
-| Framework | `artifacts/sprint0/codex-run/Framework.md`  | STOA governance         |
+| Framework | `.specify/memory/Framework.md`              | STOA governance         |
 | POC Code  | `apps/`                                     | Working implementations |
 
 ---

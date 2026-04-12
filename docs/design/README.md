@@ -91,40 +91,40 @@ Pipeline Kanban). Root cause analysis revealed:
 
 ## Design Mockup Mapping
 
-| Mockup | Tasks | Description |
-| --- | --- | --- |
-| `account-list` | IFC-100 | Account list view with search and filters |
-| `ai-review-queue` | PG-148 | AI agent review/approval queue |
-| `billing-portal` | PG-045 | Billing portal with subscription management |
-| `calendar-detail` | IFC-082 | Calendar event detail page |
-| `case_list` | IFC-133 | Case list view with search and filters |
-| `case-detail` | IFC-134 | Case detail page |
-| `case-new` | IFC-134 | New case creation form |
-| `compliance-dashboard-mockup` | GOV-001 | Compliance/governance dashboard |
-| `contact-360-view` | IFC-090 | Contact detail page with tabs, AI insights, tasks |
-| `contact-list` | IFC-092 | Contact list view with search, filters, and bulk actions |
-| `create-new-contact` | IFC-092 | New contact creation form |
-| `create-new-lead` | IFC-096 | New lead creation form (alternate design) |
-| `create-new-record` | — | Generic new record creation pattern |
-| `customize-dashboard` | IFC-091 | Dashboard customization/widget editor |
-| `dashboard-overview` | IFC-091 | Dashboard with pipeline stages, charts |
-| `deal-forecast` | IFC-093 | Deal forecasting dashboard with predictive analytics |
-| `deals-detail` | IFC-094 | Individual deal detail page with stages, activities, and notes |
-| `deals-kanban` | IFC-095 | Deals displayed in Kanban board format by pipeline stages |
-| `edit-pinned-home-authenticated` | PG-025 | Home page pinned items editor |
-| `email-compose` | IFC-079 | Email composition view |
-| `home-authenticated` | PG-025 | Authenticated home/dashboard page |
-| `lead-360-view` | IFC-097 | Lead 360 detail page with scoring and conversion data |
-| `lead_list` / `lead-list` | IFC-097 | Lead list view with conversion tracking and scoring |
-| `lead-new` | IFC-096 | New lead creation form with qualification fields |
-| `lead-settings` | PG-178 | Lead module settings page |
-| `notification-page` | IFC-044 | Notification center / inbox |
-| `notification-settings` | PG-174 | Notification settings and channel management |
-| `right-side-home-authenticated` | PG-025 | Home page right sidebar (upcoming events, quick actions) |
-| `sentiment-analysis` | IFC-116 | Sentiment analysis dashboard |
-| `ticket-datail` | IFC-098 | Ticket detail page (note: filename typo "datail") |
-| `tickets-sla` | IFC-098 | Support tickets with SLA monitoring and escalation alerts |
-| `workflow-progress-panel` | PG-193 | Real-time N/N step progress tracker for agent workflow runs — progress bar, per-step status icons (pending/running/completed/failed), integrated into /agent-approvals/agents and /agent-approvals/logs |
+| Mockup                           | Tasks   | Description                                                                                                                                                                                             |
+| -------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `account-list`                   | IFC-100 | Account list view with search and filters                                                                                                                                                               |
+| `ai-review-queue`                | PG-148  | AI agent review/approval queue                                                                                                                                                                          |
+| `billing-portal`                 | PG-045  | Billing portal with subscription management                                                                                                                                                             |
+| `calendar-detail`                | IFC-082 | Calendar event detail page                                                                                                                                                                              |
+| `case_list`                      | IFC-133 | Case list view with search and filters                                                                                                                                                                  |
+| `case-detail`                    | IFC-134 | Case detail page                                                                                                                                                                                        |
+| `case-new`                       | IFC-134 | New case creation form                                                                                                                                                                                  |
+| `compliance-dashboard-mockup`    | GOV-001 | Compliance/governance dashboard                                                                                                                                                                         |
+| `contact-360-view`               | IFC-090 | Contact detail page with tabs, AI insights, tasks                                                                                                                                                       |
+| `contact-list`                   | IFC-092 | Contact list view with search, filters, and bulk actions                                                                                                                                                |
+| `create-new-contact`             | IFC-092 | New contact creation form                                                                                                                                                                               |
+| `create-new-lead`                | IFC-096 | New lead creation form (alternate design)                                                                                                                                                               |
+| `create-new-record`              | —       | Generic new record creation pattern                                                                                                                                                                     |
+| `customize-dashboard`            | IFC-091 | Dashboard customization/widget editor                                                                                                                                                                   |
+| `dashboard-overview`             | IFC-091 | Dashboard with pipeline stages, charts                                                                                                                                                                  |
+| `deal-forecast`                  | IFC-093 | Deal forecasting dashboard with predictive analytics                                                                                                                                                    |
+| `deals-detail`                   | IFC-094 | Individual deal detail page with stages, activities, and notes                                                                                                                                          |
+| `deals-kanban`                   | IFC-095 | Deals displayed in Kanban board format by pipeline stages                                                                                                                                               |
+| `edit-pinned-home-authenticated` | PG-025  | Home page pinned items editor                                                                                                                                                                           |
+| `email-compose`                  | IFC-079 | Email composition view                                                                                                                                                                                  |
+| `home-authenticated`             | PG-025  | Authenticated home/dashboard page                                                                                                                                                                       |
+| `lead-360-view`                  | IFC-097 | Lead 360 detail page with scoring and conversion data                                                                                                                                                   |
+| `lead_list` / `lead-list`        | IFC-097 | Lead list view with conversion tracking and scoring                                                                                                                                                     |
+| `lead-new`                       | IFC-096 | New lead creation form with qualification fields                                                                                                                                                        |
+| `lead-settings`                  | PG-178  | Lead module settings page                                                                                                                                                                               |
+| `notification-page`              | IFC-044 | Notification center / inbox                                                                                                                                                                             |
+| `notification-settings`          | PG-174  | Notification settings and channel management                                                                                                                                                            |
+| `right-side-home-authenticated`  | PG-025  | Home page right sidebar (upcoming events, quick actions)                                                                                                                                                |
+| `sentiment-analysis`             | IFC-116 | Sentiment analysis dashboard                                                                                                                                                                            |
+| `ticket-datail`                  | IFC-098 | Ticket detail page (note: filename typo "datail")                                                                                                                                                       |
+| `tickets-sla`                    | IFC-098 | Support tickets with SLA monitoring and escalation alerts                                                                                                                                               |
+| `workflow-progress-panel`        | PG-193  | Real-time N/N step progress tracker for agent workflow runs — progress bar, per-step status icons (pending/running/completed/failed), integrated into /agent-approvals/agents and /agent-approvals/logs |
 
 ## UI Components Required (from designs)
 

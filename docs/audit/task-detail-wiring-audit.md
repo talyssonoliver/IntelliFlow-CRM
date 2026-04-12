@@ -16,30 +16,30 @@ Component**: `apps/web/src/components/tasks/TaskForm.tsx` **API**:
 
 ## Summary
 
-| Category               | Wired  | Partially Wired | Not Wired |
-| ---------------------- | ------ | --------------- | --------- |
-| Task Detail — Fields   | 13     | 0               | 0         |
-| Task Detail — Actions  | 5      | 0               | 0         |
-| Task List — Core       | 9      | 0               | 0         |
-| Task List — Bulk Ops   | 3      | 0               | 0         |
-| Task Calendar          | 1      | 0               | 0         |
-| Task Create / Edit     | 2      | 0               | 0         |
-| Entity Linking         | 1      | 0               | 1         |
-| Reminders              | 1      | 0               | 0         |
-| **Total**              | **35** | **0**           | **1**     |
+| Category              | Wired  | Partially Wired | Not Wired |
+| --------------------- | ------ | --------------- | --------- |
+| Task Detail — Fields  | 13     | 0               | 0         |
+| Task Detail — Actions | 5      | 0               | 0         |
+| Task List — Core      | 9      | 0               | 0         |
+| Task List — Bulk Ops  | 3      | 0               | 0         |
+| Task Calendar         | 1      | 0               | 0         |
+| Task Create / Edit    | 2      | 0               | 0         |
+| Entity Linking        | 1      | 0               | 1         |
+| Reminders             | 1      | 0               | 0         |
+| **Total**             | **35** | **0**           | **1**     |
 
 ### Comprehensive Flow Analysis
 
-| Category                  | CRITICAL | HIGH   | MEDIUM | LOW    | Test Gaps |
-| ------------------------- | -------- | ------ | ------ | ------ | --------- |
-| Frontend — Detail Page    | 0        | 0 (3F) | 0 (4F) | 0 (3F) | —         |
-| Frontend — List Page      | 0        | 0 (3F) | 0 (4F) | 0 (2F) | —         |
-| Backend Security          | 0        | 0 (1F) | 0 (2F) | 0      | —         |
-| Backend Logic             | 0        | 0 (3F) | 0 (2F) | 0 (1F) 1DOC 1D | —   |
-| Events / Integration      | 0 (2F)   | 0 (1F) | 0 (1F) | 0      | —         |
-| Security / RBAC           | 0 (1F)   | 0      | 0      | 0      | —         |
-| Test Coverage             | —        | —      | —      | —      | 0 (1F)    |
-| **Total**                 | **0**    | **0**  | **0**  | **0**  | **0**     |
+| Category               | CRITICAL | HIGH   | MEDIUM | LOW            | Test Gaps |
+| ---------------------- | -------- | ------ | ------ | -------------- | --------- |
+| Frontend — Detail Page | 0        | 0 (3F) | 0 (4F) | 0 (3F)         | —         |
+| Frontend — List Page   | 0        | 0 (3F) | 0 (4F) | 0 (2F)         | —         |
+| Backend Security       | 0        | 0 (1F) | 0 (2F) | 0              | —         |
+| Backend Logic          | 0        | 0 (3F) | 0 (2F) | 0 (1F) 1DOC 1D | —         |
+| Events / Integration   | 0 (2F)   | 0 (1F) | 0 (1F) | 0              | —         |
+| Security / RBAC        | 0 (1F)   | 0      | 0      | 0              | —         |
+| Test Coverage          | —        | —      | —      | —              | 0 (1F)    |
+| **Total**              | **0**    | **0**  | **0**  | **0**          | **0**     |
 
 (F = Fixed, D = Deferred)
 
@@ -50,10 +50,10 @@ The Task domain is now **well-wired**. All CRITICAL and HIGH findings fixed.
 Core CRUD, state machine enforcement (start/cancel procedures), RBAC, audit
 logging, event handlers (7/7), URL filter params, pagination, calendar view
 toggle, activity timeline, and bulk operations all functional. E2E Playwright
-tests added (T-03). Remaining items logged as debt:
-B-09 dead endpoints documented (WIRE-TASK-B09-001), B-10 optimistic locking
-deferred with ADR recommendation (WIRE-TASK-B10-001), F-05 account entity
-linking deferred as 6-layer change (WIRE-TASK-F05-001).
+tests added (T-03). Remaining items logged as debt: B-09 dead endpoints
+documented (WIRE-TASK-B09-001), B-10 optimistic locking deferred with ADR
+recommendation (WIRE-TASK-B10-001), F-05 account entity linking deferred as
+6-layer change (WIRE-TASK-F05-001).
 
 ---
 
@@ -148,21 +148,21 @@ icon and disabled state during mutation execution.
 
 ## 2. Task Detail Data Wiring
 
-| Field         | Source                                       | Real? |
-| ------------- | -------------------------------------------- | ----- |
-| Title         | `api.task.getById` → `task.title`            | YES   |
-| Description   | `api.task.getById` → `task.description`      | YES   |
-| Status        | `api.task.getById` → `task.status`           | YES   |
-| Priority      | `api.task.getById` → `task.priority`         | YES   |
-| Due Date      | `api.task.getById` → `task.dueDate`          | YES   |
-| Created At    | `api.task.getById` → `task.createdAt`        | YES   |
-| Updated At    | `api.task.getById` → `task.updatedAt`        | YES   |
-| Owner         | `api.task.getById` → includes `owner`        | YES   |
-| Entity Link   | `api.task.getById` → lead/contact/opp data   | YES   |
-| Completed At  | `api.task.getById` → `task.completedAt`      | YES (FIXED) |
-| Related Tasks | `RelatedTasksCard` with `entityId`           | YES   |
-| Activity Feed | ActivityFeed (entityType=task, entityId)       | YES (FIXED)   |
-| Calendar Link | `calendarId` in type but not displayed       | NO    |
+| Field         | Source                                     | Real?       |
+| ------------- | ------------------------------------------ | ----------- |
+| Title         | `api.task.getById` → `task.title`          | YES         |
+| Description   | `api.task.getById` → `task.description`    | YES         |
+| Status        | `api.task.getById` → `task.status`         | YES         |
+| Priority      | `api.task.getById` → `task.priority`       | YES         |
+| Due Date      | `api.task.getById` → `task.dueDate`        | YES         |
+| Created At    | `api.task.getById` → `task.createdAt`      | YES         |
+| Updated At    | `api.task.getById` → `task.updatedAt`      | YES         |
+| Owner         | `api.task.getById` → includes `owner`      | YES         |
+| Entity Link   | `api.task.getById` → lead/contact/opp data | YES         |
+| Completed At  | `api.task.getById` → `task.completedAt`    | YES (FIXED) |
+| Related Tasks | `RelatedTasksCard` with `entityId`         | YES         |
+| Activity Feed | ActivityFeed (entityType=task, entityId)   | YES (FIXED) |
+| Calendar Link | `calendarId` in type but not displayed     | NO          |
 
 ---
 
@@ -389,15 +389,15 @@ Consistent with other state-changing methods.
 
 ## 7. Cross-Entity References
 
-| From Entity    | To Tasks                     | Status              |
-| -------------- | ---------------------------- | ------------------- |
-| Lead detail    | RelatedTasksCard             | Wired               |
-| Contact detail | RelatedTasksCard             | Wired               |
-| Deal detail    | RelatedTasksCard             | Wired               |
-| Account detail | RelatedTasksCard             | Graceful empty (F-05 ACCEPTED) |
-| Task → Lead    | Entity link with `<Link>`    | Wired (FIXED F-09)  |
-| Task → Contact | Entity link with `<Link>`    | Wired (FIXED F-09)  |
-| Task → Deal    | Entity link with `<Link>`    | Wired (FIXED F-09)  |
+| From Entity    | To Tasks                  | Status                         |
+| -------------- | ------------------------- | ------------------------------ |
+| Lead detail    | RelatedTasksCard          | Wired                          |
+| Contact detail | RelatedTasksCard          | Wired                          |
+| Deal detail    | RelatedTasksCard          | Wired                          |
+| Account detail | RelatedTasksCard          | Graceful empty (F-05 ACCEPTED) |
+| Task → Lead    | Entity link with `<Link>` | Wired (FIXED F-09)             |
+| Task → Contact | Entity link with `<Link>` | Wired (FIXED F-09)             |
+| Task → Deal    | Entity link with `<Link>` | Wired (FIXED F-09)             |
 
 ---
 
@@ -405,29 +405,29 @@ Consistent with other state-changing methods.
 
 ### Test Files
 
-| File                                         | Lines | Coverage                                     |
-| -------------------------------------------- | ----- | -------------------------------------------- |
-| **API Router**                               |       |                                              |
-| `task.router.test.ts`                        | ~580  | create, getById, list, update, delete, archive, complete |
-| **Contract**                                 |       |                                              |
-| `task.contract.test.ts`                      | ~420  | Input/output schemas for all procedures      |
-| **Components**                               |       |                                              |
-| `TaskCalendar.test.tsx`                      | ~147  | Calendar rendering, month navigation         |
-| `TaskForm.test.tsx`                          | ~210  | Form validation, entity selection            |
-| **Pages**                                    |       |                                              |
-| `tasks/[id]/__tests__/page.test.tsx`         | ~190  | Detail page: mutations, ActivityFeed, states (FIXED T-01) |
-| `tasks/(list)/__tests__/page.test.tsx`       | ~220  | List page: filters, pagination, view toggle (FIXED T-02) |
+| File                                   | Lines | Coverage                                                  |
+| -------------------------------------- | ----- | --------------------------------------------------------- |
+| **API Router**                         |       |                                                           |
+| `task.router.test.ts`                  | ~580  | create, getById, list, update, delete, archive, complete  |
+| **Contract**                           |       |                                                           |
+| `task.contract.test.ts`                | ~420  | Input/output schemas for all procedures                   |
+| **Components**                         |       |                                                           |
+| `TaskCalendar.test.tsx`                | ~147  | Calendar rendering, month navigation                      |
+| `TaskForm.test.tsx`                    | ~210  | Form validation, entity selection                         |
+| **Pages**                              |       |                                                           |
+| `tasks/[id]/__tests__/page.test.tsx`   | ~190  | Detail page: mutations, ActivityFeed, states (FIXED T-01) |
+| `tasks/(list)/__tests__/page.test.tsx` | ~220  | List page: filters, pagination, view toggle (FIXED T-02)  |
 
-**Total: ~7 test files, ~1,870 lines** — router, contract, page-level, and
-E2E coverage all present. E2E Playwright tests added (T-03 FIXED).
+**Total: ~7 test files, ~1,870 lines** — router, contract, page-level, and E2E
+coverage all present. E2E Playwright tests added (T-03 FIXED).
 
 ### Test Gaps
 
-| Gap                               | Finding ID | Notes                                                               |
-| --------------------------------- | ---------- | ------------------------------------------------------------------- |
-| ~~No task detail page test~~      | T-01       | FIXED 2026-03-08: 10 tests (mutations, ActivityFeed, states)        |
-| ~~No task list page test~~        | T-02       | FIXED 2026-03-08: 9 tests (filters, pagination, view toggle)       |
-| ~~No E2E Playwright tests~~       | T-03       | FIXED 2026-03-08: 10 tests in `tests/e2e/tasks.spec.ts` (navigation, UI elements, responsive, performance) |
+| Gap                          | Finding ID | Notes                                                                                                      |
+| ---------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------- |
+| ~~No task detail page test~~ | T-01       | FIXED 2026-03-08: 10 tests (mutations, ActivityFeed, states)                                               |
+| ~~No task list page test~~   | T-02       | FIXED 2026-03-08: 9 tests (filters, pagination, view toggle)                                               |
+| ~~No E2E Playwright tests~~  | T-03       | FIXED 2026-03-08: 10 tests in `tests/e2e/tasks.spec.ts` (navigation, UI elements, responsive, performance) |
 
 ---
 
@@ -440,8 +440,8 @@ E2E coverage all present. E2E Playwright tests added (T-03 FIXED).
 3. **Confirmation dialogs**: Delete and Archive have proper ConfirmationDialog
    components with warning text
 4. **Auth guard**: `useRequireAuth()` gates both detail and list pages
-5. **Cache invalidation**: All mutations correctly invalidate both `task.getById`
-   and `task.list` queries
+5. **Cache invalidation**: All mutations correctly invalidate both
+   `task.getById` and `task.list` queries
 6. **Tenant isolation (router level)**: `tenantProcedure` on all endpoints,
    `createTenantWhereClause` in read queries
 7. **Entity validation**: `validateEntityReferences` checks tenant ownership
@@ -451,7 +451,8 @@ E2E coverage all present. E2E Playwright tests added (T-03 FIXED).
 9. **Domain model**: Task entity has proper state machine
    (VALID_TASK_TRANSITIONS), value objects, and domain events
 10. **Search**: List page has working search with debounced input
-11. **Sort/Filter**: Multiple sort options and status/priority filters functional
+11. **Sort/Filter**: Multiple sort options and status/priority filters
+    functional
 12. **Error states**: Both pages have error display with retry buttons
 
 ---
@@ -460,47 +461,47 @@ E2E coverage all present. E2E Playwright tests added (T-03 FIXED).
 
 Based on this audit, the wiring status for Task-related features:
 
-| Feature (Group)                       | Wiring Status | Rationale                                                     |
-| ------------------------------------- | ------------- | ------------------------------------------------------------- |
-| Task calendar view (Calendar)         | verified      | FIXED: View toggle wired, TaskCalendar renders in calendar mode |
+| Feature (Group)                       | Wiring Status | Rationale                                                        |
+| ------------------------------------- | ------------- | ---------------------------------------------------------------- |
+| Task calendar view (Calendar)         | verified      | FIXED: View toggle wired, TaskCalendar renders in calendar mode  |
 | Task tRPC Router (Calendar)           | verified      | FIXED: Tenant isolation, state machine, audit, RBAC all enforced |
-| Task Aggregate + Value Objects (Plat) | verified      | Domain layer properly constructed with state machine          |
-| Task assignments (Platform)           | verified      | FIXED: Entity re-assignment wired in edit; create includes all |
-| Task entity linking (Platform)        | verified      | FIXED: Edit sends entity IDs, old links properly nulled       |
-| Task list view (Platform)             | verified      | FIXED: URL params, pagination, calendar view all wired        |
-| Task reminders (Platform)             | verified      | FIXED: Dead query removed, client-side counts functional      |
+| Task Aggregate + Value Objects (Plat) | verified      | Domain layer properly constructed with state machine             |
+| Task assignments (Platform)           | verified      | FIXED: Entity re-assignment wired in edit; create includes all   |
+| Task entity linking (Platform)        | verified      | FIXED: Edit sends entity IDs, old links properly nulled          |
+| Task list view (Platform)             | verified      | FIXED: URL params, pagination, calendar view all wired           |
+| Task reminders (Platform)             | verified      | FIXED: Dead query removed, client-side counts functional         |
 
-Events: verified (7/7 handlers)
-Security: verified (RBAC enforced, audit logging on all procedures)
+Events: verified (7/7 handlers) Security: verified (RBAC enforced, audit logging
+on all procedures)
 
 ---
 
 ## Priority Fixes
 
-| Priority | Finding IDs                  | Description                                                          | Status    |
-| -------- | ---------------------------- | -------------------------------------------------------------------- | --------- |
-| P0       | E-01, E-02                   | Wire 6 missing event handlers; enforce RBAC in task router           | ALL FIXED |
-| P0       | B-06, B-07                   | Route status changes through domain state machine; add start/cancel  | ALL FIXED |
-| P1       | B-01, B-02, B-03             | Fix tenant where clause in update; add audit logging                 | ALL FIXED |
-| P1       | F-01, F-02, F-06             | Fix dueDate edit bug; wire calendarId + entity re-assignment         | ALL FIXED |
-| P1       | F-11, F-12, F-13             | Wire sidebar URL params; add pagination; render TaskCalendar         | ALL FIXED |
-| P1       | B-04, B-05                   | Fix error code mapping (complete → 409, archive → 400)              | ALL FIXED |
-| P2       | F-03, F-04, F-07             | Guard Complete for PENDING; add Start button; add activity timeline  | ALL FIXED |
-| P2       | F-14, F-15, F-16, F-17       | Fix reminder filter; wire calendarId; batch ops; remove dead query   | ALL FIXED |
-| P2       | E-03, E-04                   | Define task.updated/deleted events; emit event in updateTaskInfo     | ALL FIXED |
-| P3       | F-05, F-08, F-09, F-10       | Account entity; completedAt display; `<Link>`; button loading        | 3 FIXED, 1 ACCEPTED-WITH-DEBT |
-| P3       | B-09, B-10, F-18, F-19       | Wire 3 dead endpoints; optimistic locking; pagination UI      | 3 FIXED, 1 DEFERRED-WITH-DEBT |
-| P3       | T-01, T-02, T-03             | Detail page test, list page test, E2E Playwright tests              | ALL FIXED |
+| Priority | Finding IDs            | Description                                                         | Status                        |
+| -------- | ---------------------- | ------------------------------------------------------------------- | ----------------------------- |
+| P0       | E-01, E-02             | Wire 6 missing event handlers; enforce RBAC in task router          | ALL FIXED                     |
+| P0       | B-06, B-07             | Route status changes through domain state machine; add start/cancel | ALL FIXED                     |
+| P1       | B-01, B-02, B-03       | Fix tenant where clause in update; add audit logging                | ALL FIXED                     |
+| P1       | F-01, F-02, F-06       | Fix dueDate edit bug; wire calendarId + entity re-assignment        | ALL FIXED                     |
+| P1       | F-11, F-12, F-13       | Wire sidebar URL params; add pagination; render TaskCalendar        | ALL FIXED                     |
+| P1       | B-04, B-05             | Fix error code mapping (complete → 409, archive → 400)              | ALL FIXED                     |
+| P2       | F-03, F-04, F-07       | Guard Complete for PENDING; add Start button; add activity timeline | ALL FIXED                     |
+| P2       | F-14, F-15, F-16, F-17 | Fix reminder filter; wire calendarId; batch ops; remove dead query  | ALL FIXED                     |
+| P2       | E-03, E-04             | Define task.updated/deleted events; emit event in updateTaskInfo    | ALL FIXED                     |
+| P3       | F-05, F-08, F-09, F-10 | Account entity; completedAt display; `<Link>`; button loading       | 3 FIXED, 1 ACCEPTED-WITH-DEBT |
+| P3       | B-09, B-10, F-18, F-19 | Wire 3 dead endpoints; optimistic locking; pagination UI            | 3 FIXED, 1 DEFERRED-WITH-DEBT |
+| P3       | T-01, T-02, T-03       | Detail page test, list page test, E2E Playwright tests              | ALL FIXED                     |
 
 ---
 
 ## Changes Log
 
-| Date       | Change                                                                       |
-| ---------- | ---------------------------------------------------------------------------- |
-| 2026-03-07 | Created — 37 findings (3 CRITICAL, 11 HIGH, 13 MEDIUM, 7 LOW, 3 test gaps)  |
-| 2026-03-07 | Fixed 18 findings: F-01, F-02, F-06, F-08, F-09, F-10, F-14, F-15, F-16, F-17, B-01, B-02, B-03, B-04, B-05, B-06, E-02, E-03, E-04 |
-| 2026-03-08 | Fixed 11 more: F-03, F-04, F-11, F-12, F-13, F-18, F-19, B-07, B-08, E-01. Total: 29/37 fixed, 5 deferred, 3 test gaps remaining |
-| 2026-03-08 | Session 3 re-audit: verified all 29 FIXED items present. Fixed F-07 (ActivityFeed existed but was falsely deferred), T-01 (10 tests), T-02 (9 tests). Total: 32/37 fixed, 4 deferred, 1 test gap |
+| Date       | Change                                                                                                                                                                                                                                                                                                                                    |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-03-07 | Created — 37 findings (3 CRITICAL, 11 HIGH, 13 MEDIUM, 7 LOW, 3 test gaps)                                                                                                                                                                                                                                                                |
+| 2026-03-07 | Fixed 18 findings: F-01, F-02, F-06, F-08, F-09, F-10, F-14, F-15, F-16, F-17, B-01, B-02, B-03, B-04, B-05, B-06, E-02, E-03, E-04                                                                                                                                                                                                       |
+| 2026-03-08 | Fixed 11 more: F-03, F-04, F-11, F-12, F-13, F-18, F-19, B-07, B-08, E-01. Total: 29/37 fixed, 5 deferred, 3 test gaps remaining                                                                                                                                                                                                          |
+| 2026-03-08 | Session 3 re-audit: verified all 29 FIXED items present. Fixed F-07 (ActivityFeed existed but was falsely deferred), T-01 (10 tests), T-02 (9 tests). Total: 32/37 fixed, 4 deferred, 1 test gap                                                                                                                                          |
 | 2026-03-08 | Session 4 remaining items: T-03 FIXED (10 E2E Playwright tests in tests/e2e/tasks.spec.ts). B-09 DOCUMENTED (3 dead endpoints with line numbers). F-05, B-10 logged as debt (WIRE-TASK-F05-001, WIRE-TASK-B09-001, WIRE-TASK-B10-001 in docs/debt-ledger.yaml). Final: 33 FIXED, 1 DOCUMENTED, 2 DEFERRED-WITH-DEBT, 1 ACCEPTED-WITH-DEBT |
-| 2026-03-08 | Session 5: B-09 FIXED — wired all 3 dead endpoints (task.stats → TaskStatsBar on list page, task.assign → assign panel on detail page, task.reschedule → inline date picker on detail page). Final: 34 FIXED, 0 DOCUMENTED, 1 DEFERRED-WITH-DEBT, 1 ACCEPTED-WITH-DEBT |
+| 2026-03-08 | Session 5: B-09 FIXED — wired all 3 dead endpoints (task.stats → TaskStatsBar on list page, task.assign → assign panel on detail page, task.reschedule → inline date picker on detail page). Final: 34 FIXED, 0 DOCUMENTED, 1 DEFERRED-WITH-DEBT, 1 ACCEPTED-WITH-DEBT                                                                    |

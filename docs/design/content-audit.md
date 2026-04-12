@@ -363,13 +363,13 @@ Quarterly review covering:
 > **Last verified**: 2026-03-19. Fixed findings removed; see git history for
 > original full table.
 
-| Severity     | Finding   | Description                                                                              | Sprint | Task             | Status          |
-| ------------ | --------- | ---------------------------------------------------------------------------------------- | ------ | ---------------- | --------------- |
-| **Critical** | F-002/F-003 | Missing legal pages (`/terms`, `/cookies`) — GDPR Art. 12 risk                         | 17     | PG-051, PG-052   | Backlog         |
-| **High**     | F-005     | Lighthouse SEO at `warn` not `error` — no CI enforcement                                 | 21     | IFC-208          | Backlog         |
-| **High**     | F-006     | No `og:image` on any page — degrades social sharing                                      | 21     | IFC-208          | Backlog         |
-| **Medium**   | F-009     | `/press/[id]` dynamic routes missing from sitemap (4 public press release detail pages)  | 15     | IFC-209          | Fixed           |
-| **Low**      | F-012     | `/signup`, `/forgot-password`, `/verify-email` still missing metadata                    | 15     | IFC-210          | Fixed           |
+| Severity     | Finding     | Description                                                                             | Sprint | Task           | Status  |
+| ------------ | ----------- | --------------------------------------------------------------------------------------- | ------ | -------------- | ------- |
+| **Critical** | F-002/F-003 | Missing legal pages (`/terms`, `/cookies`) — GDPR Art. 12 risk                          | 17     | PG-051, PG-052 | Backlog |
+| **High**     | F-005       | Lighthouse SEO at `warn` not `error` — no CI enforcement                                | 21     | IFC-208        | Backlog |
+| **High**     | F-006       | No `og:image` on any page — degrades social sharing                                     | 21     | IFC-208        | Backlog |
+| **Medium**   | F-009       | `/press/[id]` dynamic routes missing from sitemap (4 public press release detail pages) | 15     | IFC-209        | Fixed   |
+| **Low**      | F-012       | `/signup`, `/forgot-password`, `/verify-email` still missing metadata                   | 15     | IFC-210        | Fixed   |
 
 ### Audit Automation
 

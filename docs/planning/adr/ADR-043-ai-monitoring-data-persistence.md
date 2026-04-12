@@ -13,9 +13,9 @@
 IntelliFlow CRM's AI monitoring system (drift detection, latency tracking,
 hallucination checking, ROI tracking) uses in-memory singletons in the ai-worker
 process. In a multi-process deployment (separate API and ai-worker), the API
-process gets empty singleton instances — dashboards show all zeros. How should we
-persist AI monitoring data so it's accessible across processes while maintaining
-acceptable write latency?
+process gets empty singleton instances — dashboards show all zeros. How should
+we persist AI monitoring data so it's accessible across processes while
+maintaining acceptable write latency?
 
 ## Decision Drivers
 
@@ -24,7 +24,8 @@ acceptable write latency?
 - Write latency on the AI hot path must stay under 100ms
 - Monitoring data is time-series in nature with natural retention windows
 - Must support tenant-scoped queries for multi-tenant deployment
-- Existing `PerformanceMetric` model is too generic for structured AI monitoring data
+- Existing `PerformanceMetric` model is too generic for structured AI monitoring
+  data
 - Must not break existing singleton-based monitoring within ai-worker
 
 ## Considered Options
@@ -45,7 +46,8 @@ ai-worker, while the flush service periodically drains to PostgreSQL.
 ### Positive Consequences
 
 - Single table simplifies queries, indexes, and retention policies
-- Flush service decouples DB writes from AI hot path (no latency impact on chains)
+- Flush service decouples DB writes from AI hot path (no latency impact on
+  chains)
 - Existing singleton behavior preserved within ai-worker process
 - Router queries DB directly — works across any number of processes
 - Natural fit with existing Prisma/PostgreSQL infrastructure
@@ -133,6 +135,7 @@ model AIMonitoringEvent {
 ### Rollback Plan
 
 If DB persistence causes issues:
+
 1. Re-enable singleton-based router endpoints (code still exists)
 2. Disable flush service via env var
 3. Revert migration if needed
