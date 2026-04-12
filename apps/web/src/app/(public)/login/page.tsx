@@ -431,8 +431,8 @@ export default function LoginPage() {
               <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center gap-2">
                 <span className="material-symbols-outlined text-lg" aria-hidden="true">
                   lock_clock
-                </span>
-                {' '}Account temporarily locked. Try again in {rateLimitInfo.timeRemaining}s
+                </span>{' '}
+                Account temporarily locked. Try again in {rateLimitInfo.timeRemaining}s
               </div>
             )}
 

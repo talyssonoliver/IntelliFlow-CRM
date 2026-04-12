@@ -39,7 +39,7 @@ export default function PrivacyPage() {
               <span className="material-symbols-outlined text-base" aria-hidden="true">
                 verified_user
               </span>
-              Transparency and privacy-by-design
+              {' '}Transparency and privacy-by-design
             </div>
 
             <h1 className="mt-6 text-4xl font-bold text-slate-900 dark:text-white lg:text-5xl">
@@ -64,7 +64,10 @@ export default function PrivacyPage() {
               </h2>
               <ul className="mt-4 space-y-3">
                 {policy.metadata.summary.map((item) => (
-                  <li key={item} className="flex items-start gap-3 text-sm text-slate-600 dark:text-slate-300">
+                  <li
+                    key={item}
+                    className="flex items-start gap-3 text-sm text-slate-600 dark:text-slate-300"
+                  >
                     <span
                       className="material-symbols-outlined mt-0.5 text-base text-[#137fec]"
                       aria-hidden="true"
@@ -91,7 +94,10 @@ export default function PrivacyPage() {
                 <div>
                   <dt className="text-slate-300">Privacy contact</dt>
                   <dd className="mt-1">
-                    <a href={`mailto:${policy.metadata.contactEmail}`} className="text-[#7cc4ff] hover:underline">
+                    <a
+                      href={`mailto:${policy.metadata.contactEmail}`}
+                      className="text-[#7cc4ff] hover:underline"
+                    >
                       {policy.metadata.contactEmail}
                     </a>
                   </dd>
@@ -139,7 +145,10 @@ export default function PrivacyPage() {
                   </h2>
                   <div className="mt-4 space-y-4">
                     {section.body.map((paragraph) => (
-                      <p key={paragraph} className="text-base leading-7 text-slate-600 dark:text-slate-300">
+                      <p
+                        key={paragraph}
+                        className="text-base leading-7 text-slate-600 dark:text-slate-300"
+                      >
                         {paragraph}
                       </p>
                     ))}

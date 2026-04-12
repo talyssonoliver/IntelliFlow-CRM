@@ -67,7 +67,7 @@ export function PublicHeader() {
               </Button>
             )}
             {pathname !== '/signup' && (
-              <Button asChild className="bg-[#137fec] hover:bg-[#0e6ac7]">
+              <Button asChild className="bg-[#0e6ac7] hover:bg-[#0b5ba8] font-semibold">
                 <Link href="/signup">Start Free Trial</Link>
               </Button>
             )}
@@ -130,7 +130,7 @@ export function PublicHeader() {
                   </Button>
                   <Button
                     asChild
-                    className="w-full bg-[#137fec] hover:bg-[#0e6ac7]"
+                    className="w-full bg-[#0e6ac7] hover:bg-[#0b5ba8] font-semibold"
                     onClick={() => setMobileOpen(false)}
                   >
                     <Link href="/signup">Start Free Trial</Link>

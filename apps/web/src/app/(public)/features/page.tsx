@@ -124,8 +124,8 @@ export default function FeaturesPage() {
                       className="inline-flex items-center gap-1 text-[#137fec] text-sm font-medium hover:gap-2 transition-all"
                       aria-label={`Learn more about ${feature.title}`}
                     >
-                      Learn more
-                      {' '}<span className="material-symbols-outlined text-base">arrow_forward</span>
+                      Learn more{' '}
+                      <span className="material-symbols-outlined text-base">arrow_forward</span>
                     </Link>
                   </Card>
                 ))}

@@ -53,7 +53,9 @@ export default function PublicHomeLoading() {
           <div className="h-4 w-1/2 bg-slate-200 rounded" />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {Array.from({ length: 3 }).map((_, idx) => (
-              <div key={idx} className="p-6 bg-white rounded-xl border border-slate-200 space-y-4"> {/* NOSONAR typescript:S6479 */}
+              <div key={idx} className="p-6 bg-white rounded-xl border border-slate-200 space-y-4">
+                {' '}
+                {/* NOSONAR typescript:S6479 */}
                 <div className="h-12 w-12 bg-slate-200 rounded-lg" />
                 <div className="h-6 w-2/3 bg-slate-200 rounded" />
                 <div className="h-4 w-full bg-slate-200 rounded" />

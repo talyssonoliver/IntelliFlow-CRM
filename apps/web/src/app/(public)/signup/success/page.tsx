@@ -245,7 +245,7 @@ function SuccessContent() {
                 <div>
                   <p className="text-sm text-slate-200 font-medium">Verification email sent</p>
                   <p className="text-sm text-slate-300 mt-0.5">
-                    We sent a verification link to{' '}<span className="text-white">{maskedEmail}</span>
+                    We sent a verification link to <span className="text-white">{maskedEmail}</span>
                     {'. Please check your inbox.'}
                   </p>
                 </div>
@@ -310,8 +310,8 @@ function SuccessContent() {
                 'focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:ring-offset-2 focus:ring-offset-slate-900'
               )}
             >
-              Go to Dashboard
-              {' '}<span className="material-symbols-outlined text-lg" aria-hidden="true">
+              Go to Dashboard{' '}
+              <span className="material-symbols-outlined text-lg" aria-hidden="true">
                 arrow_forward
               </span>
             </Link>
@@ -324,8 +324,8 @@ function SuccessContent() {
                 'focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 focus:ring-offset-slate-900'
               )}
             >
-              Complete Profile
-              {' '}<span className="material-symbols-outlined text-lg" aria-hidden="true">
+              Complete Profile{' '}
+              <span className="material-symbols-outlined text-lg" aria-hidden="true">
                 person
               </span>
             </Link>

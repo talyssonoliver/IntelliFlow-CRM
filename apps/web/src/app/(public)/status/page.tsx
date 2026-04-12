@@ -154,13 +154,11 @@ export default function StatusPage() {
     <main id="main-content" className="bg-slate-50 dark:bg-slate-900 min-h-screen">
       {/* Hero Section */}
       <section
-        className={`py-12 ${
-          (() => {
-            if (overall.color === 'green') return 'bg-green-600';
-            if (overall.color === 'yellow') return 'bg-yellow-500';
-            return 'bg-red-600';
-          })()
-        }`}
+        className={`py-12 ${(() => {
+          if (overall.color === 'green') return 'bg-green-600';
+          if (overall.color === 'yellow') return 'bg-yellow-500';
+          return 'bg-red-600';
+        })()}`}
       >
         <div className="container px-4 lg:px-6 mx-auto max-w-4xl text-center">
           <div className="flex items-center justify-center gap-3 mb-4">
@@ -205,14 +203,12 @@ export default function StatusPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <span
-                      className={`w-3 h-3 rounded-full ${
-                        (() => {
-                          if (service.status === 'operational') return 'bg-green-500';
-                          if (service.status === 'degraded') return 'bg-yellow-500';
-                          if (service.status === 'partial_outage') return 'bg-orange-500';
-                          return 'bg-red-500';
-                        })()
-                      }`}
+                      className={`w-3 h-3 rounded-full ${(() => {
+                        if (service.status === 'operational') return 'bg-green-500';
+                        if (service.status === 'degraded') return 'bg-yellow-500';
+                        if (service.status === 'partial_outage') return 'bg-orange-500';
+                        return 'bg-red-500';
+                      })()}`}
                       aria-hidden="true"
                     />
                     <div>
@@ -224,13 +220,13 @@ export default function StatusPage() {
                   </div>
                   <div className="text-right">
                     <span
-                      className={`text-sm font-medium capitalize ${
-                        (() => {
-                          if (service.status === 'operational') return 'text-green-600 dark:text-green-400';
-                          if (service.status === 'degraded') return 'text-yellow-600 dark:text-yellow-400';
-                          return 'text-red-600 dark:text-red-400';
-                        })()
-                      }`}
+                      className={`text-sm font-medium capitalize ${(() => {
+                        if (service.status === 'operational')
+                          return 'text-green-600 dark:text-green-400';
+                        if (service.status === 'degraded')
+                          return 'text-yellow-600 dark:text-yellow-400';
+                        return 'text-red-600 dark:text-red-400';
+                      })()}`}
                     >
                       {service.status.replaceAll('_', ' ')}
                     </span>
@@ -271,14 +267,15 @@ export default function StatusPage() {
                     <div>
                       <div className="flex items-center gap-2 mb-1">
                         <span
-                          className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                            (() => {
-                              if (incident.severity === 'maintenance') return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
-                              if (incident.severity === 'minor') return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
-                              if (incident.severity === 'major') return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400';
-                              return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
-                            })()
-                          }`}
+                          className={`px-2 py-0.5 rounded-full text-xs font-medium ${(() => {
+                            if (incident.severity === 'maintenance')
+                              return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
+                            if (incident.severity === 'minor')
+                              return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
+                            if (incident.severity === 'major')
+                              return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400';
+                            return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+                          })()}`}
                         >
                           {incident.severity}
                         </span>
@@ -304,7 +301,9 @@ export default function StatusPage() {
 
                   <div className="border-l-2 border-slate-200 dark:border-slate-700 pl-4 space-y-3">
                     {incident.updates.map((update, idx) => (
-                      <div key={idx} className="text-sm"> {/* NOSONAR typescript:S6479 */}
+                      <div key={idx} className="text-sm">
+                        {' '}
+                        {/* NOSONAR typescript:S6479 */}
                         <p className="text-slate-500 dark:text-slate-400 text-xs mb-1">
                           {formatDate(update.time)}
                         </p>

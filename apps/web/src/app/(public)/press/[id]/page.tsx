@@ -47,7 +47,9 @@ export async function generateMetadata({
   };
 }
 
-export default async function PressReleasePage({ params }: Readonly<{ params: Promise<{ id: string }> }>) {
+export default async function PressReleasePage({
+  params,
+}: Readonly<{ params: Promise<{ id: string }> }>) {
   const { id } = await params;
   const release = releaseMap[id];
 

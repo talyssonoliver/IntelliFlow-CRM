@@ -58,8 +58,10 @@ export default function SsoPageClient() {
           {/* Resolution announcement for screen readers */}
           <div aria-live="polite" className="sr-only">
             {(() => {
-              if (resolution?.found) return `SSO provider found: ${resolution.config.provider_name}. Redirecting...`;
-              if (resolution && !resolution.found) return 'No SSO provider found for your organization.';
+              if (resolution?.found)
+                return `SSO provider found: ${resolution.config.provider_name}. Redirecting...`;
+              if (resolution && !resolution.found)
+                return 'No SSO provider found for your organization.';
               return '';
             })()}
           </div>
@@ -69,8 +71,8 @@ export default function SsoPageClient() {
             <div className="mt-4 p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-green-400 text-sm flex items-center gap-2 animate-in fade-in duration-200">
               <span className="material-symbols-outlined text-base" aria-hidden="true">
                 check_circle
-              </span>
-              {' '}Redirecting to {resolution.config.provider_name}...
+              </span>{' '}
+              Redirecting to {resolution.config.provider_name}...
             </div>
           )}
         </AuthCard>

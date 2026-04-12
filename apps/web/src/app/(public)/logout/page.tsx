@@ -257,8 +257,8 @@ function LogoutContent() {
                     'focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:ring-offset-2 focus:ring-offset-slate-900'
                   )}
                 >
-                  Sign in again
-                  {' '}<span className="material-symbols-outlined text-lg" aria-hidden="true">
+                  Sign in again{' '}
+                  <span className="material-symbols-outlined text-lg" aria-hidden="true">
                     arrow_forward
                   </span>
                 </Link>

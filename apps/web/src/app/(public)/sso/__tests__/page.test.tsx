@@ -17,7 +17,11 @@ vi.mock('next/navigation', () => ({
 
 // Mock next/link
 vi.mock('next/link', () => ({
-  default: ({ children, href, ...props }: Readonly<{ children: React.ReactNode; href: string }>) => (
+  default: ({
+    children,
+    href,
+    ...props
+  }: Readonly<{ children: React.ReactNode; href: string }>) => (
     <a href={href} {...props}>
       {children}
     </a>
