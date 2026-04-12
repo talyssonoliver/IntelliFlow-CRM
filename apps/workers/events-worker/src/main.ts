@@ -297,9 +297,10 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
         leadId,
         type: 'SCORE_UPDATE',
         title: `Lead score updated to ${score} (${scoreLabel})`,
-        description: previousScore !== undefined
-          ? `Score changed from ${previousScore} to ${score} via ${scoringModel || 'AI scoring'}.`
-          : `Initial score set to ${score} via ${scoringModel || 'AI scoring'}.`,
+        description:
+          previousScore !== undefined
+            ? `Score changed from ${previousScore} to ${score} via ${scoringModel || 'AI scoring'}.`
+            : `Initial score set to ${score} via ${scoringModel || 'AI scoring'}.`,
         userName: 'System',
         sentiment,
         metadata: { score, previousScore, scoringModel, scoreLabel },
@@ -321,7 +322,12 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
           category: 'ALERTS',
           sourceType: 'lead_scored',
           sourceId: leadId,
-          metadata: { notificationType: 'lead_scored', score, previousScore, actionUrl: `/leads/${leadId}` },
+          metadata: {
+            notificationType: 'lead_scored',
+            score,
+            previousScore,
+            actionUrl: `/leads/${leadId}`,
+          },
         },
       });
     }
@@ -340,7 +346,12 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
           category: 'ALERTS',
           sourceType: 'ai_recommendation',
           sourceId: leadId,
-          metadata: { notificationType: 'lead_scored', score, previousScore, actionUrl: `/leads/${leadId}` },
+          metadata: {
+            notificationType: 'lead_scored',
+            score,
+            previousScore,
+            actionUrl: `/leads/${leadId}`,
+          },
         },
       });
     }
@@ -410,7 +421,10 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
             );
           } catch (notifError) {
             this.logger.warn(
-              { leadId, error: notifError instanceof Error ? notifError.message : String(notifError) },
+              {
+                leadId,
+                error: notifError instanceof Error ? notifError.message : String(notifError),
+              },
               'Failed to create lead score notification/activity — non-blocking'
             );
           }
@@ -581,7 +595,10 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
           newStatus?: string;
           changedBy?: string;
         };
-        this.logger.info({ taskId, previousStatus, newStatus, changedBy }, 'Task status changed event handled');
+        this.logger.info(
+          { taskId, previousStatus, newStatus, changedBy },
+          'Task status changed event handled'
+        );
       }),
       'task-status-changed-handler'
     );
@@ -597,9 +614,15 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
           changedBy?: string;
         };
         if (newPriority === 'URGENT') {
-          this.logger.info({ taskId, changedBy }, 'Task escalated to URGENT — triggering notification');
+          this.logger.info(
+            { taskId, changedBy },
+            'Task escalated to URGENT — triggering notification'
+          );
         }
-        this.logger.info({ taskId, previousPriority, newPriority }, 'Task priority changed event handled');
+        this.logger.info(
+          { taskId, previousPriority, newPriority },
+          'Task priority changed event handled'
+        );
       }),
       'task-priority-changed-handler'
     );
@@ -614,7 +637,10 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
           newDueDate?: string;
           changedBy?: string;
         };
-        this.logger.info({ taskId, previousDueDate, newDueDate, changedBy }, 'Task due date changed event handled');
+        this.logger.info(
+          { taskId, previousDueDate, newDueDate, changedBy },
+          'Task due date changed event handled'
+        );
       }),
       'task-due-date-changed-handler'
     );

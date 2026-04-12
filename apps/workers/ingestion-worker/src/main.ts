@@ -28,7 +28,11 @@ interface AgentStatusCtx {
 
 interface AgentStatusFns {
   markAgentActive: (ctx: AgentStatusCtx) => Promise<void>;
-  markAgentIdle: (ctx: AgentStatusCtx, summary?: string, meta?: { durationMs: number; result?: Record<string, unknown> }) => Promise<void>;
+  markAgentIdle: (
+    ctx: AgentStatusCtx,
+    summary?: string,
+    meta?: { durationMs: number; result?: Record<string, unknown> }
+  ) => Promise<void>;
   markAgentError: (ctx: AgentStatusCtx, error: string, durationMs?: number) => Promise<void>;
 }
 
@@ -36,7 +40,7 @@ let agentStatusFns: AgentStatusFns | null = null;
 
 async function getAgentStatusFns(): Promise<AgentStatusFns> {
   if (agentStatusFns) return agentStatusFns;
-  const m = await import('@intelliflow/ai-worker') as any;
+  const m = (await import('@intelliflow/ai-worker')) as any;
   if (m.markAgentActive) {
     agentStatusFns = {
       markAgentActive: m.markAgentActive,
@@ -72,6 +76,47 @@ interface IngestionWorkerConfig {
   enableOCR?: boolean;
   /** Enable embedding generation queue */
   enableEmbeddings?: boolean;
+}
+
+// ============================================================================
+// Agent Status Helpers
+// ============================================================================
+
+async function reportTextExtractionStatus(
+  fns: AgentStatusFns,
+  statusCtx: AgentStatusCtx,
+  result: TextExtractionResult,
+  durationMs: number
+): Promise<void> {
+  if (result.status === 'failed') {
+    await fns.markAgentError(statusCtx, result.error || 'Extraction failed', durationMs);
+  } else {
+    await fns.markAgentIdle(statusCtx, undefined, {
+      durationMs,
+      result: { wordCount: result.wordCount, format: result.metadata.format },
+    });
+  }
+}
+
+async function reportOcrStatus(
+  fns: AgentStatusFns,
+  statusCtx: AgentStatusCtx,
+  ocrResult: { status: string; error?: string; pageCount: number; confidence: number },
+  normalizedText: string,
+  durationMs: number
+): Promise<void> {
+  if (ocrResult.status === 'failed') {
+    await fns.markAgentError(statusCtx, ocrResult.error || 'OCR failed', durationMs);
+  } else {
+    await fns.markAgentIdle(statusCtx, undefined, {
+      durationMs,
+      result: {
+        pages: ocrResult.pageCount,
+        confidence: ocrResult.confidence,
+        wordCount: normalizedText.split(/\s+/).filter((w: string) => w.length > 0).length,
+      },
+    });
+  }
 }
 
 // ============================================================================
@@ -201,9 +246,15 @@ export class IngestionWorker extends BaseWorker<IngestionJobData, IngestionJobRe
   ): Promise<TextExtractionResult> {
     const data = job.data;
     const fns = await getAgentStatusFns().catch(() => null);
-    const statusCtx = data.tenantId && data.userId
-      ? { tenantId: data.tenantId, userId: data.userId, agentType: 'indexer', taskDescription: `Text extraction for document ${data.documentId}` }
-      : null;
+    const statusCtx =
+      data.tenantId && data.userId
+        ? {
+            tenantId: data.tenantId,
+            userId: data.userId,
+            agentType: 'indexer',
+            taskDescription: `Text extraction for document ${data.documentId}`,
+          }
+        : null;
 
     if (fns && statusCtx) {
       await fns.markAgentActive(statusCtx);
@@ -215,22 +266,17 @@ export class IngestionWorker extends BaseWorker<IngestionJobData, IngestionJobRe
       this.processedByType['text-extraction']++;
 
       if (fns && statusCtx) {
-        const durationMs = Date.now() - startMs;
-        if (result.status === 'failed') {
-          await fns.markAgentError(statusCtx, result.error || 'Extraction failed', durationMs);
-        } else {
-          await fns.markAgentIdle(statusCtx, undefined, {
-            durationMs,
-            result: { wordCount: result.wordCount, format: result.metadata.format },
-          });
-        }
+        await reportTextExtractionStatus(fns, statusCtx, result, Date.now() - startMs);
       }
 
       return result;
     } catch (error) {
       if (fns && statusCtx) {
-        const durationMs = Date.now() - startMs;
-        await fns.markAgentError(statusCtx, error instanceof Error ? error.message : String(error), durationMs);
+        await fns.markAgentError(
+          statusCtx,
+          error instanceof Error ? error.message : String(error),
+          Date.now() - startMs
+        );
       }
       throw error;
     }
@@ -244,9 +290,15 @@ export class IngestionWorker extends BaseWorker<IngestionJobData, IngestionJobRe
     // Track as "ocr" agent on the Active Agents dashboard
     const input = job.data as TextExtractionInput;
     const fns = await getAgentStatusFns().catch(() => null);
-    const statusCtx = input.tenantId && input.userId
-      ? { tenantId: input.tenantId, userId: input.userId, agentType: 'ocr', taskDescription: `OCR extraction for document ${input.documentId}` }
-      : null;
+    const statusCtx =
+      input.tenantId && input.userId
+        ? {
+            tenantId: input.tenantId,
+            userId: input.userId,
+            agentType: 'ocr',
+            taskDescription: `OCR extraction for document ${input.documentId}`,
+          }
+        : null;
 
     if (fns && statusCtx) {
       await fns.markAgentActive(statusCtx);
@@ -277,14 +329,7 @@ export class IngestionWorker extends BaseWorker<IngestionJobData, IngestionJobRe
 
       const durationMs = Date.now() - startTime;
       if (fns && statusCtx) {
-        if (ocrResult.status === 'failed') {
-          await fns.markAgentError(statusCtx, ocrResult.error || 'OCR failed', durationMs);
-        } else {
-          await fns.markAgentIdle(statusCtx, undefined, {
-            durationMs,
-            result: { pages: ocrResult.pageCount, confidence: ocrResult.confidence, wordCount: normalizedText.split(/\s+/).filter((w: string) => w.length > 0).length },
-          });
-        }
+        await reportOcrStatus(fns, statusCtx, ocrResult, normalizedText, durationMs);
       }
 
       return {

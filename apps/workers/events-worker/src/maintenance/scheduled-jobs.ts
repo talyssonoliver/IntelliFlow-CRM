@@ -39,7 +39,7 @@ export interface MaintenanceConfig {
 }
 
 const DEFAULT_CONFIG: MaintenanceConfig = {
-  slaCheckIntervalMs: 60_000,           // every 60s
+  slaCheckIntervalMs: 60_000, // every 60s
   followUpCheckIntervalMs: 15 * 60_000, // every 15 min
   staleDealCheckIntervalMs: 60 * 60_000, // every 1 hour
   sessionCleanupIntervalMs: 30 * 60_000, // every 30 min
@@ -71,22 +71,40 @@ export class MaintenanceScheduler {
     this.logger.info('Starting maintenance scheduler');
 
     this.intervals.push(
-      setInterval(() => this.runSafe('sla-breach-check', () => this.checkSLABreaches()), this.config.slaCheckIntervalMs),
-      setInterval(() => this.runSafe('follow-up-reminders', () => this.checkFollowUpReminders()), this.config.followUpCheckIntervalMs),
-      setInterval(() => this.runSafe('stale-deal-scan', () => this.checkStaleDeal()), this.config.staleDealCheckIntervalMs),
-      setInterval(() => this.runSafe('session-cleanup', () => this.cleanupSessions()), this.config.sessionCleanupIntervalMs),
-      setInterval(() => this.runSafe('appointment-reminders', () => this.checkAppointmentReminders()), this.config.appointmentReminderIntervalMs),
+      setInterval(
+        () => this.runSafe('sla-breach-check', () => this.checkSLABreaches()),
+        this.config.slaCheckIntervalMs
+      ),
+      setInterval(
+        () => this.runSafe('follow-up-reminders', () => this.checkFollowUpReminders()),
+        this.config.followUpCheckIntervalMs
+      ),
+      setInterval(
+        () => this.runSafe('stale-deal-scan', () => this.checkStaleDeal()),
+        this.config.staleDealCheckIntervalMs
+      ),
+      setInterval(
+        () => this.runSafe('session-cleanup', () => this.cleanupSessions()),
+        this.config.sessionCleanupIntervalMs
+      ),
+      setInterval(
+        () => this.runSafe('appointment-reminders', () => this.checkAppointmentReminders()),
+        this.config.appointmentReminderIntervalMs
+      )
     );
 
-    this.logger.info({
-      jobs: [
-        `sla-breach-check (every ${this.config.slaCheckIntervalMs / 1000}s)`,
-        `follow-up-reminders (every ${this.config.followUpCheckIntervalMs / 60000}min)`,
-        `stale-deal-scan (every ${this.config.staleDealCheckIntervalMs / 60000}min)`,
-        `session-cleanup (every ${this.config.sessionCleanupIntervalMs / 60000}min)`,
-        `appointment-reminders (every ${this.config.appointmentReminderIntervalMs / 60000}min)`,
-      ],
-    }, 'Maintenance scheduler started with 5 jobs');
+    this.logger.info(
+      {
+        jobs: [
+          `sla-breach-check (every ${this.config.slaCheckIntervalMs / 1000}s)`,
+          `follow-up-reminders (every ${this.config.followUpCheckIntervalMs / 60000}min)`,
+          `stale-deal-scan (every ${this.config.staleDealCheckIntervalMs / 60000}min)`,
+          `session-cleanup (every ${this.config.sessionCleanupIntervalMs / 60000}min)`,
+          `appointment-reminders (every ${this.config.appointmentReminderIntervalMs / 60000}min)`,
+        ],
+      },
+      'Maintenance scheduler started with 5 jobs'
+    );
   }
 
   /**
@@ -186,7 +204,9 @@ export class MaintenanceScheduler {
       });
 
       if (ticket.assigneeId) {
-        const minutesLeft = Math.round((ticket.slaResolutionDue.getTime() - now.getTime()) / 60_000);
+        const minutesLeft = Math.round(
+          (ticket.slaResolutionDue.getTime() - now.getTime()) / 60_000
+        );
         await (this.prisma as any).notification.create({
           data: {
             tenantId: ticket.tenantId,
@@ -240,7 +260,9 @@ export class MaintenanceScheduler {
     for (const lead of staleLeads) {
       if (!lead.ownerId) continue;
 
-      const daysSinceUpdate = Math.round((now.getTime() - lead.updatedAt.getTime()) / (24 * 60 * 60_000));
+      const daysSinceUpdate = Math.round(
+        (now.getTime() - lead.updatedAt.getTime()) / (24 * 60 * 60_000)
+      );
 
       // Deduplicate: check if we already sent a stale reminder recently (within 24h)
       const recentReminder = await (this.prisma as any).notification.findFirst({
@@ -371,7 +393,9 @@ export class MaintenanceScheduler {
       });
       if (recentReminder) continue;
 
-      const daysSinceUpdate = Math.round((now.getTime() - deal.updatedAt.getTime()) / (24 * 60 * 60_000));
+      const daysSinceUpdate = Math.round(
+        (now.getTime() - deal.updatedAt.getTime()) / (24 * 60 * 60_000)
+      );
       await (this.prisma as any).notification.create({
         data: {
           tenantId: deal.tenantId,
@@ -471,7 +495,9 @@ export class MaintenanceScheduler {
           recipientId: appt.organizerId,
           channel: 'IN_APP',
           subject: `Upcoming: ${appt.title}`,
-          body: `Your appointment "${appt.title}" starts in ${minutesUntilStart} minutes.` + (appt.location ? ` Location: ${appt.location}` : ''),
+          body:
+            `Your appointment "${appt.title}" starts in ${minutesUntilStart} minutes.` +
+            (appt.location ? ` Location: ${appt.location}` : ''),
           priority: 'HIGH',
           status: 'PENDING',
           category: 'REMINDERS',

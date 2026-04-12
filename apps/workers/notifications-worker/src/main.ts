@@ -667,7 +667,8 @@ async function main(): Promise<void> {
 
 // Run if executed directly
 if (require.main === module) {
-  main().catch((error) => { // NOSONAR typescript:S7785 — CJS entry point, top-level await requires ESM migration
+  main().catch((error) => {
+    // NOSONAR typescript:S7785 — CJS entry point, top-level await requires ESM migration
     console.error('Fatal error:', error);
     process.exit(1);
   });
@@ -679,4 +680,8 @@ export type { EmailPayload, EmailDeliveryResult } from './channels/email';
 export { SMSChannel, createSMSChannel } from './channels/sms';
 export type { SMSPayload, SMSDeliveryResult, SMSChannelConfig } from './channels/sms';
 export { WebhookChannel, createWebhookChannel } from './channels/webhook';
-export type { WebhookPayload, WebhookDeliveryResult, WebhookChannelConfig } from './channels/webhook';
+export type {
+  WebhookPayload,
+  WebhookDeliveryResult,
+  WebhookChannelConfig,
+} from './channels/webhook';

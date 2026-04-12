@@ -49,7 +49,9 @@ vi.mock('@intelliflow/worker-shared', () => {
 // Mock nodemailer to prevent email channel from failing
 vi.mock('nodemailer', () => ({
   createTransport: vi.fn().mockReturnValue({
-    sendMail: vi.fn().mockResolvedValue({ messageId: 'mock-email-id', accepted: ['test@test.com'], rejected: [] }),
+    sendMail: vi
+      .fn()
+      .mockResolvedValue({ messageId: 'mock-email-id', accepted: ['test@test.com'], rejected: [] }),
     verify: vi.fn().mockResolvedValue(true),
     close: vi.fn(),
   }),
