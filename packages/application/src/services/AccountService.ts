@@ -355,7 +355,8 @@ export class AccountService {
     ownerId?: string,
     tenantId?: string
   ): Promise<Account[]> {
-    const accounts = ownerId && tenantId ? await this.accountRepository.findByOwnerId(ownerId, tenantId) : [];
+    const accounts =
+      ownerId && tenantId ? await this.accountRepository.findByOwnerId(ownerId, tenantId) : [];
 
     return accounts.filter((a) => (a.revenue ?? 0) >= minRevenue);
   }
@@ -370,7 +371,10 @@ export class AccountService {
   /**
    * Get account with full context (contacts, opportunities)
    */
-  async getAccountWithContext(accountId: string, tenantId: string): Promise<
+  async getAccountWithContext(
+    accountId: string,
+    tenantId: string
+  ): Promise<
     Result<
       {
         account: Account;
@@ -418,14 +422,18 @@ export class AccountService {
   /**
    * Get account statistics
    */
-  async getAccountStatistics(ownerId?: string, tenantId?: string): Promise<{
+  async getAccountStatistics(
+    ownerId?: string,
+    tenantId?: string
+  ): Promise<{
     total: number;
     byTier: Record<AccountTier, number>;
     byIndustry: Record<string, number>;
     totalRevenue: number;
     averageRevenue: number;
   }> {
-    const accounts = ownerId && tenantId ? await this.accountRepository.findByOwnerId(ownerId, tenantId) : [];
+    const accounts =
+      ownerId && tenantId ? await this.accountRepository.findByOwnerId(ownerId, tenantId) : [];
 
     const byTier: Record<AccountTier, number> = {
       ENTERPRISE: 0,

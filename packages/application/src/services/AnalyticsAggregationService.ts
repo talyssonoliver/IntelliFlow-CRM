@@ -161,8 +161,14 @@ export class AnalyticsAggregationService {
       const date = new Date(now);
       date.setUTCMonth(date.getUTCMonth() - i);
 
-      const startOfMonth = AnalyticsAggregationService.utcStartOfMonth(date.getUTCFullYear(), date.getUTCMonth());
-      const endOfMonth = AnalyticsAggregationService.utcEndOfMonth(date.getUTCFullYear(), date.getUTCMonth());
+      const startOfMonth = AnalyticsAggregationService.utcStartOfMonth(
+        date.getUTCFullYear(),
+        date.getUTCMonth()
+      );
+      const endOfMonth = AnalyticsAggregationService.utcEndOfMonth(
+        date.getUTCFullYear(),
+        date.getUTCMonth()
+      );
 
       monthRanges.push({
         label: AnalyticsAggregationService.utcMonthLabel(date),
@@ -609,14 +615,26 @@ export class AnalyticsAggregationService {
     const current = new Date(dateRange.startDate);
 
     while (current <= dateRange.endDate) {
-      const startOfMonth = AnalyticsAggregationService.utcStartOfMonth(current.getUTCFullYear(), current.getUTCMonth());
-      const endOfMonth = AnalyticsAggregationService.utcEndOfMonth(current.getUTCFullYear(), current.getUTCMonth());
+      const startOfMonth = AnalyticsAggregationService.utcStartOfMonth(
+        current.getUTCFullYear(),
+        current.getUTCMonth()
+      );
+      const endOfMonth = AnalyticsAggregationService.utcEndOfMonth(
+        current.getUTCFullYear(),
+        current.getUTCMonth()
+      );
 
       // Clamp to actual date range
-      const effectiveStart = new Date(Math.max(startOfMonth.getTime(), dateRange.startDate.getTime()));
+      const effectiveStart = new Date(
+        Math.max(startOfMonth.getTime(), dateRange.startDate.getTime())
+      );
       const effectiveEnd = new Date(Math.min(endOfMonth.getTime(), dateRange.endDate.getTime()));
 
-      const label = current.toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' });
+      const label = current.toLocaleDateString('en-US', {
+        month: 'short',
+        year: 'numeric',
+        timeZone: 'UTC',
+      });
 
       ranges.push({
         label,
@@ -649,28 +667,32 @@ export class AnalyticsAggregationService {
       switch (granularity) {
         case 'day': {
           bucketEnd = new Date(
-            current.getFullYear(),
-            current.getMonth(),
-            current.getDate(),
-            23,
-            59,
-            59,
-            999
+            Date.UTC(
+              current.getUTCFullYear(),
+              current.getUTCMonth(),
+              current.getUTCDate(),
+              23,
+              59,
+              59,
+              999
+            )
           );
-          label = current.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          label = current.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
           break;
         }
         case 'week': {
           bucketEnd = new Date(current);
-          bucketEnd.setDate(bucketEnd.getDate() + 6);
-          bucketEnd.setHours(23, 59, 59, 999);
-          label = `Week of ${current.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+          bucketEnd.setUTCDate(bucketEnd.getUTCDate() + 6);
+          bucketEnd.setUTCHours(23, 59, 59, 999);
+          label = `Week of ${current.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })}`;
           break;
         }
         case 'month':
         default: {
-          bucketEnd = new Date(current.getFullYear(), current.getMonth() + 1, 0, 23, 59, 59, 999);
-          label = current.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+          bucketEnd = new Date(
+            Date.UTC(current.getUTCFullYear(), current.getUTCMonth() + 1, 0, 23, 59, 59, 999)
+          );
+          label = current.toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' });
           break;
         }
       }
@@ -684,14 +706,14 @@ export class AnalyticsAggregationService {
 
       switch (granularity) {
         case 'day':
-          current.setDate(current.getDate() + 1);
+          current.setUTCDate(current.getUTCDate() + 1);
           break;
         case 'week':
-          current.setDate(current.getDate() + 7);
+          current.setUTCDate(current.getUTCDate() + 7);
           break;
         case 'month':
-          current.setMonth(current.getMonth() + 1);
-          current.setDate(1);
+          current.setUTCMonth(current.getUTCMonth() + 1);
+          current.setUTCDate(1);
           break;
       }
     }
@@ -726,7 +748,9 @@ export class AnalyticsAggregationService {
       if (data.length === 0) return '';
       const flat = data.map((item) => this.flattenObject(item));
       const headers = Object.keys(flat[0]);
-      const rows = flat.map((row) => headers.map((h) => (row[h] as string | null | undefined) ?? '').join(','));
+      const rows = flat.map((row) =>
+        headers.map((h) => (row[h] as string | null | undefined) ?? '').join(',')
+      );
       return [headers.join(','), ...rows].join('\n');
     }
 

@@ -117,7 +117,11 @@ export class TaskService {
     }
 
     if (props.opportunityId) {
-      const validation = await this.validateAssignment('opportunity', props.opportunityId, props.tenantId);
+      const validation = await this.validateAssignment(
+        'opportunity',
+        props.opportunityId,
+        props.tenantId
+      );
       if (!validation.isValid) {
         return Result.fail(
           new ValidationError(validation.reason ?? 'Invalid opportunity assignment')
@@ -535,10 +539,7 @@ export class TaskService {
   /**
    * Get tasks by entity (lead, contact, or opportunity)
    */
-  async getTasksByEntity(
-    entityType: TaskEntityType,
-    entityId: string
-  ): Promise<Task[]> {
+  async getTasksByEntity(entityType: TaskEntityType, entityId: string): Promise<Task[]> {
     switch (entityType) {
       case 'lead':
         return this.taskRepository.findByLeadId(entityId);
@@ -795,7 +796,10 @@ export class TaskService {
     return { entityType, entityId, isValid: true };
   }
 
-  private async validateOpportunityAssignment(entityId: string, tenantId?: string): Promise<TaskAssignmentValidation> {
+  private async validateOpportunityAssignment(
+    entityId: string,
+    tenantId?: string
+  ): Promise<TaskAssignmentValidation> {
     const entityType = 'opportunity' as const;
     const oppIdResult = OpportunityId.create(entityId);
     if (oppIdResult.isFailure) {

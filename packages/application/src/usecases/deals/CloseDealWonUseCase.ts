@@ -46,7 +46,11 @@ export class CloseDealWonUseCase {
   async execute(input: CloseDealWonInput): Promise<Result<Opportunity, DomainError>> {
     // 1. Delegate domain transition to OpportunityService.markAsWon()
     // This handles: validation, stage change, persistence, and base domain events
-    const result = await this.opportunityService.markAsWon(input.opportunityId, input.closedBy, input.tenantId);
+    const result = await this.opportunityService.markAsWon(
+      input.opportunityId,
+      input.closedBy,
+      input.tenantId
+    );
 
     if (result.isFailure) {
       return result;

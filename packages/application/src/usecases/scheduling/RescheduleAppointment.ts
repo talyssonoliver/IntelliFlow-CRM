@@ -67,7 +67,9 @@ export class RescheduleAppointmentUseCase {
 
   private async fetchConflicts(
     appointment: Appointment,
-    appointmentId: ReturnType<typeof AppointmentId.create> extends Result<infer V, unknown> ? V : never,
+    appointmentId: ReturnType<typeof AppointmentId.create> extends Result<infer V, unknown>
+      ? V
+      : never,
     input: RescheduleAppointmentInput
   ): Promise<Result<Appointment[], DomainError>> {
     try {

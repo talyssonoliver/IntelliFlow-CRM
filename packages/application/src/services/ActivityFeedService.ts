@@ -147,7 +147,9 @@ export class ActivityFeedService {
     });
 
     // Apply type filter if provided (entity feed may not filter at DB level)
-    const filtered = types?.length ? dedupedItems.filter((item) => types.includes(item.type)) : dedupedItems;
+    const filtered = types?.length
+      ? dedupedItems.filter((item) => types.includes(item.type))
+      : dedupedItems;
 
     const hasMore = filtered.length > limit;
     const pageItems = filtered.slice(0, limit);
@@ -180,11 +182,13 @@ export class ActivityFeedService {
       ? `${(filters.sources || []).join(',')}:${filters.entityType || ''}`
       : '';
     const cacheKey = `activity-stats:${tenantId}:${timeWindow}:${filterHash}`;
-    const cached = await this.cache.get<{
-      timeWindow: ActivityFeedTimeWindow;
-      windowStart: Date | null;
-      windowEnd: Date;
-    } & ActivityFeedStats>(cacheKey);
+    const cached = await this.cache.get<
+      {
+        timeWindow: ActivityFeedTimeWindow;
+        windowStart: Date | null;
+        windowEnd: Date;
+      } & ActivityFeedStats
+    >(cacheKey);
     if (cached) return cached;
 
     const stats = await this.feedRepository.getStats(
@@ -223,13 +227,7 @@ export class ActivityFeedService {
   ): Promise<ActivityFeedPage> {
     const cursor = cursorStr ? decodeCursor(cursorStr) : null;
 
-    const items = await this.feedRepository.searchFeed(
-      tenantId,
-      query,
-      limit + 1,
-      cursor,
-      filters
-    );
+    const items = await this.feedRepository.searchFeed(tenantId, query, limit + 1, cursor, filters);
 
     // Deduplicate by ID and content (same event from different source tables)
     const seen = new Set<string>();
@@ -302,10 +300,7 @@ function decodeCursor(cursorStr: string): ActivityFeedCursor {
  * Resolve a time window enum to a start Date (or null for 'all').
  * Server-side date math — clients send only the window name.
  */
-function resolveWindowStart(
-  timeWindow: ActivityFeedTimeWindow,
-  windowEnd: Date
-): Date | null {
+function resolveWindowStart(timeWindow: ActivityFeedTimeWindow, windowEnd: Date): Date | null {
   const MS_PER_HOUR = 3600_000;
   const MS_PER_DAY = 24 * MS_PER_HOUR;
 
@@ -326,10 +321,7 @@ function resolveWindowStart(
  * Items with the query appearing in the title sort before items
  * where it only appears in description/other fields.
  */
-function boostTitleMatches(
-  items: UnifiedActivityItem[],
-  query: string
-): UnifiedActivityItem[] {
+function boostTitleMatches(items: UnifiedActivityItem[], query: string): UnifiedActivityItem[] {
   if (items.length <= 1) return items;
 
   const lowerQuery = query.toLowerCase();

@@ -120,9 +120,7 @@ describe('ActivityFeedService.search', () => {
   });
 
   it('returns hasMore=false when results <= limit', async () => {
-    const items = [
-      makeItem({ id: 'item-1', timestamp: new Date('2026-01-15') }),
-    ];
+    const items = [makeItem({ id: 'item-1', timestamp: new Date('2026-01-15') })];
     (mockRepo.searchFeed as ReturnType<typeof vi.fn>).mockResolvedValue(items);
 
     const result = await service.search(tenantId, 'test', 20, null, {});

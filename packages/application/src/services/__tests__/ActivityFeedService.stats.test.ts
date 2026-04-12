@@ -148,12 +148,10 @@ describe('ActivityFeedService.getStats', () => {
       entityType: 'LEAD',
     });
 
-    expect(mockRepo.getStats).toHaveBeenCalledWith(
-      TENANT_ID,
-      expect.any(Date),
-      expect.any(Date),
-      { sources: ['LEAD_ACTIVITY', 'EMAIL'], entityType: 'LEAD' }
-    );
+    expect(mockRepo.getStats).toHaveBeenCalledWith(TENANT_ID, expect.any(Date), expect.any(Date), {
+      sources: ['LEAD_ACTIVITY', 'EMAIL'],
+      entityType: 'LEAD',
+    });
   });
 
   it('passes tenantId to repository.getStats', async () => {
