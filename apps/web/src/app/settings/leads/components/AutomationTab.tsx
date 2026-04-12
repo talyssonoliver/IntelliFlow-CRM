@@ -18,7 +18,8 @@ const AUTOMATION_ITEMS = [
   {
     key: 'autoAssignment' as const,
     title: 'Auto-assignment',
-    description: 'Automatically distribute new leads to available team members based on workload and expertise.',
+    description:
+      'Automatically distribute new leads to available team members based on workload and expertise.',
   },
   {
     key: 'instantNotifications' as const,
@@ -28,14 +29,12 @@ const AUTOMATION_ITEMS = [
   {
     key: 'leadRecurrence' as const,
     title: 'Lead Recurrence Detection',
-    description: 'Detect and flag potential duplicate lead entries based on email and phone matching.',
+    description:
+      'Detect and flag potential duplicate lead entries based on email and phone matching.',
   },
 ];
 
-export function AutomationTab({
-  settings,
-  onSettingsChange,
-}: Readonly<AutomationTabProps>) {
+export function AutomationTab({ settings, onSettingsChange }: Readonly<AutomationTabProps>) {
   const handleToggle = useCallback(
     (key: keyof AutomationSettings, value: boolean) => {
       onSettingsChange({ ...settings, [key]: value });
@@ -54,10 +53,7 @@ export function AutomationTab({
 
       <div className="space-y-6">
         {AUTOMATION_ITEMS.map((item) => (
-          <div
-            key={item.key}
-            className="flex items-center justify-between gap-4"
-          >
+          <div key={item.key} className="flex items-center justify-between gap-4">
             <div className="flex-1">
               <label
                 htmlFor={`automation-${item.key}`}
@@ -65,9 +61,7 @@ export function AutomationTab({
               >
                 {item.title}
               </label>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                {item.description}
-              </p>
+              <p className="text-sm text-muted-foreground mt-0.5">{item.description}</p>
             </div>
             <Switch
               id={`automation-${item.key}`}

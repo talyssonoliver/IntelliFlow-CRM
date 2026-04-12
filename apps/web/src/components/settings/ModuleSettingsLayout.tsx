@@ -116,28 +116,23 @@ export function ModuleSettingsLayout({
         <div className="lg:col-span-1">
           <div className="sticky top-4 space-y-4">
             <Card className="p-4 space-y-4">
-              <Button
-                onClick={onSave}
-                disabled={!isDirty || isSaving}
-                className="w-full"
-              >
+              <Button onClick={onSave} disabled={!isDirty || isSaving} className="w-full">
                 {isSaving ? (
                   <span className="flex items-center gap-2">
-                    <span className="material-symbols-outlined animate-spin text-sm" aria-hidden="true">
+                    <span
+                      className="material-symbols-outlined animate-spin text-sm"
+                      aria-hidden="true"
+                    >
                       progress_activity
                     </span>
-                    Saving...
+                    {' '}Saving...
                   </span>
                 ) : (
                   'Save Changes'
                 )}
               </Button>
 
-              <Button
-                variant="outline"
-                onClick={() => setResetDialogOpen(true)}
-                className="w-full"
-              >
+              <Button variant="outline" onClick={() => setResetDialogOpen(true)} className="w-full">
                 Reset to Defaults
               </Button>
 

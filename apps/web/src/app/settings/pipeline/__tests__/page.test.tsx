@@ -75,6 +75,18 @@ vi.mock('@intelliflow/ui', async () => {
   };
 });
 
+vi.mock('@/components/shared/page-header', () => ({
+  PageHeader: ({ title, description, actions }: any) => (
+    <div data-testid="page-header">
+      <h1>{title}</h1>
+      {description && <p>{description}</p>}
+      {actions?.map((a: any, i: number) => (
+        <button key={i} onClick={a.onClick} disabled={a.disabled}>{a.label}</button>
+      ))}
+    </div>
+  ),
+}));
+
 // Import after mocks - test the content component directly (bypasses next/dynamic SSR wrapper)
 import PipelineSettingsContent from '../PipelineSettingsContent';
 
@@ -91,9 +103,9 @@ describe('Pipeline Settings Page', () => {
   it('renders pipeline stages header', async () => {
     render(<PipelineSettingsContent />);
 
-    expect(screen.getByText('Pipeline Stages')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Pipeline Stages');
     expect(
-      screen.getByText('Customize your deal pipeline stages, colors, and order')
+      screen.getByText(/Customize your deal pipeline stages, colors, and order/)
     ).toBeInTheDocument();
   });
 

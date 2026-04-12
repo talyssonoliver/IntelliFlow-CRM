@@ -97,10 +97,7 @@ vi.mock('../components/LeadStagesTab', () => ({
   LeadStagesTab: ({ stages, onStagesChange }: any) => (
     <div data-testid="stages-tab">
       Stages: {stages?.length ?? 0}
-      <button
-        data-testid="trigger-stages-change"
-        onClick={() => onStagesChange(stages)}
-      >
+      <button data-testid="trigger-stages-change" onClick={() => onStagesChange(stages)}>
         TriggerStagesChange
       </button>
     </div>
@@ -111,10 +108,7 @@ vi.mock('../components/ScoringRulesTab', () => ({
   ScoringRulesTab: ({ rules, onRulesChange }: any) => (
     <div data-testid="scoring-tab">
       Rules: {rules?.length ?? 0}
-      <button
-        data-testid="trigger-rules-change"
-        onClick={() => onRulesChange(rules)}
-      >
+      <button data-testid="trigger-rules-change" onClick={() => onRulesChange(rules)}>
         TriggerRulesChange
       </button>
     </div>
@@ -133,14 +127,13 @@ vi.mock('../components/CustomFieldsTab', () => ({
       </button>
       <button
         data-testid="trigger-update"
-        onClick={() => onUpdate({ id: 'f1', fieldName: 'Updated', dataType: 'text', isRequired: false })}
+        onClick={() =>
+          onUpdate({ id: 'f1', fieldName: 'Updated', dataType: 'text', isRequired: false })
+        }
       >
         TriggerUpdate
       </button>
-      <button
-        data-testid="trigger-delete"
-        onClick={() => onDelete('f1')}
-      >
+      <button data-testid="trigger-delete" onClick={() => onDelete('f1')}>
         TriggerDelete
       </button>
     </div>
@@ -153,7 +146,13 @@ vi.mock('../components/AutomationTab', () => ({
       autoAssignment: {String(settings?.autoAssignment)}
       <button
         data-testid="trigger-automation-change"
-        onClick={() => onSettingsChange({ autoAssignment: false, instantNotifications: true, leadRecurrence: false })}
+        onClick={() =>
+          onSettingsChange({
+            autoAssignment: false,
+            instantNotifications: true,
+            leadRecurrence: false,
+          })
+        }
       >
         TriggerAutomationChange
       </button>
@@ -552,9 +551,7 @@ describe('LeadSettingsContent', () => {
     const { onSuccess } = mutateCall[1];
     onSuccess();
 
-    expect(mockToast).toHaveBeenCalledWith(
-      expect.objectContaining({ title: 'Field created' })
-    );
+    expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Field created' }));
   });
 
   it('handleFieldCreate onError callback calls toast with error message', async () => {
@@ -628,9 +625,7 @@ describe('LeadSettingsContent', () => {
     const { onSuccess } = mutateCall[1];
     onSuccess();
 
-    expect(mockToast).toHaveBeenCalledWith(
-      expect.objectContaining({ title: 'Field updated' })
-    );
+    expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Field updated' }));
   });
 
   it('handleFieldDelete onSuccess callback calls toast with field deleted message', async () => {
@@ -644,9 +639,7 @@ describe('LeadSettingsContent', () => {
     const { onSuccess } = mutateCall[1];
     onSuccess();
 
-    expect(mockToast).toHaveBeenCalledWith(
-      expect.objectContaining({ title: 'Field deleted' })
-    );
+    expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Field deleted' }));
   });
 
   it('handleAutomationChange sets isDirty and updates localAutomation', () => {

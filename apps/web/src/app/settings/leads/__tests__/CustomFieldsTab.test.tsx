@@ -14,7 +14,16 @@ import type { CustomField } from '../components/CustomFieldsTab';
 // ─── @intelliflow/ui mock ───────────────────────────────────────────────────
 vi.mock('@intelliflow/ui', () => ({
   Card: ({ children, className }: any) => <div className={className}>{children}</div>,
-  Button: ({ children, onClick, disabled, variant, size, className, 'aria-label': ariaLabel, ...props }: any) => (
+  Button: ({
+    children,
+    onClick,
+    disabled,
+    variant,
+    size,
+    className,
+    'aria-label': ariaLabel,
+    ...props
+  }: any) => (
     <button
       onClick={onClick}
       disabled={disabled}
@@ -39,9 +48,9 @@ vi.mock('@intelliflow/ui', () => ({
   ),
   Dialog: ({ children, open, onOpenChange }: any) =>
     open ? (
-      <div data-testid="dialog" role="dialog">
+      <dialog data-testid="dialog">
         {typeof children === 'function' ? children({ onOpenChange }) : children}
-      </div>
+      </dialog>
     ) : null,
   DialogContent: ({ children }: any) => <div data-testid="dialog-content">{children}</div>,
   DialogHeader: ({ children }: any) => <div>{children}</div>,
@@ -49,9 +58,7 @@ vi.mock('@intelliflow/ui', () => ({
   DialogFooter: ({ children }: any) => <div data-testid="dialog-footer">{children}</div>,
   Select: ({ children, value, onValueChange }: any) => (
     <div data-testid="select" data-value={value}>
-      {React.Children.map(children, (child: any) =>
-        React.cloneElement(child, { onValueChange })
-      )}
+      {React.Children.map(children, (child: any) => React.cloneElement(child, { onValueChange }))}
     </div>
   ),
   SelectTrigger: ({ children, id }: any) => (
@@ -62,23 +69,22 @@ vi.mock('@intelliflow/ui', () => ({
   SelectValue: ({ placeholder }: any) => <span>{placeholder}</span>,
   SelectContent: ({ children, onValueChange }: any) => (
     <div data-testid="select-content">
-      {React.Children.map(children, (child: any) =>
-        React.cloneElement(child, { onValueChange })
-      )}
+      {React.Children.map(children, (child: any) => React.cloneElement(child, { onValueChange }))}
     </div>
   ),
   SelectItem: ({ children, value, onValueChange }: any) => (
-    <div
+    <option
       data-testid="select-item"
       data-value={value}
-      role="option"
       aria-selected={false}
       tabIndex={0}
       onClick={() => onValueChange?.(value)}
-      onKeyDown={(e: any) => { if (e.key === 'Enter') onValueChange?.(value); }}
+      onKeyDown={(e: any) => {
+        if (e.key === 'Enter') onValueChange?.(value);
+      }}
     >
       {children}
-    </div>
+    </option>
   ),
   ConfirmationDialog: ({ open, onConfirm, title, onOpenChange }: any) =>
     open ? (
@@ -479,9 +485,9 @@ describe('CustomFieldsTab', () => {
 
     // The Select mock now passes onValueChange down through SelectContent to SelectItem.
     // Clicking the 'number' option fires onValueChange('number').
-    const numberItem = screen.getAllByRole('option').find(
-      (el) => el.getAttribute('data-value') === 'number'
-    );
+    const numberItem = screen
+      .getAllByRole('option')
+      .find((el) => el.getAttribute('data-value') === 'number');
     expect(numberItem).toBeTruthy();
     fireEvent.click(numberItem!);
 

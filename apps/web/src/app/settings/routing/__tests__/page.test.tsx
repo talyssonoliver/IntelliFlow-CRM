@@ -51,6 +51,12 @@ vi.mock('@intelliflow/ui', () => ({
   cn: (...args: any[]) => args.filter(Boolean).join(' '),
 }));
 
+vi.mock('@/components/shared/page-header', () => ({
+  PageHeader: ({ title, description }: any) => (
+    <div data-testid="page-header"><h1>{title}</h1>{description && <p>{description}</p>}</div>
+  ),
+}));
+
 // Import RoutingContent directly (page.tsx uses dynamic import)
 import RoutingContent from '../RoutingContent';
 
@@ -62,7 +68,7 @@ describe('Routing Page', () => {
   it('renders page title', () => {
     render(<RoutingContent />);
 
-    expect(screen.getByText('Lead Routing')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Lead Routing');
   });
 
   it('renders all 5 tab triggers', () => {

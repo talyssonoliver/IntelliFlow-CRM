@@ -10,7 +10,12 @@ import {
 } from '@/components/settings/ModuleSettingsLayout';
 import { LeadStagesTab } from './components/LeadStagesTab';
 import { ScoringRulesTab, type ScoringRule } from './components/ScoringRulesTab';
-import { CustomFieldsTab, type CustomField, type CreateFieldData, type UpdateFieldData } from './components/CustomFieldsTab';
+import {
+  CustomFieldsTab,
+  type CustomField,
+  type CreateFieldData,
+  type UpdateFieldData,
+} from './components/CustomFieldsTab';
 import { AutomationTab, type AutomationSettings } from './components/AutomationTab';
 import type { StageItem } from './components/SortableStageItem';
 import { LeadSettingsLoading } from './LeadSettingsLoading';
@@ -124,8 +129,10 @@ export default function LeadSettingsContent() {
   const handleFieldCreate = useCallback(
     (data: CreateFieldData) => {
       fieldCreate.mutate(data as Parameters<typeof fieldCreate.mutate>[0], {
-        onSuccess: () => toast({ title: 'Field created', description: `"${data.fieldName}" has been added.` }),
-        onError: (err) => toast({ title: 'Error', description: err.message, variant: 'destructive' }),
+        onSuccess: () =>
+          toast({ title: 'Field created', description: `"${data.fieldName}" has been added.` }),
+        onError: (err) =>
+          toast({ title: 'Error', description: err.message, variant: 'destructive' }),
       });
     },
     [fieldCreate]
@@ -135,7 +142,8 @@ export default function LeadSettingsContent() {
     (data: UpdateFieldData) => {
       fieldUpdate.mutate(data as Parameters<typeof fieldUpdate.mutate>[0], {
         onSuccess: () => toast({ title: 'Field updated' }),
-        onError: (err) => toast({ title: 'Error', description: err.message, variant: 'destructive' }),
+        onError: (err) =>
+          toast({ title: 'Error', description: err.message, variant: 'destructive' }),
       });
     },
     [fieldUpdate]
@@ -143,18 +151,19 @@ export default function LeadSettingsContent() {
 
   const handleFieldDelete = useCallback(
     (id: string) => {
-      fieldDelete.mutate({ id }, {
-        onSuccess: () => toast({ title: 'Field deleted' }),
-        onError: (err) => toast({ title: 'Error', description: err.message, variant: 'destructive' }),
-      });
+      fieldDelete.mutate(
+        { id },
+        {
+          onSuccess: () => toast({ title: 'Field deleted' }),
+          onError: (err) =>
+            toast({ title: 'Error', description: err.message, variant: 'destructive' }),
+        }
+      );
     },
     [fieldDelete]
   );
 
-  const isSaving =
-    stagesUpdate.isPending ||
-    scoringUpdate.isPending ||
-    automationUpdate.isPending;
+  const isSaving = stagesUpdate.isPending || scoringUpdate.isPending || automationUpdate.isPending;
 
   const handleSave = useCallback(async () => {
     try {
@@ -176,12 +185,12 @@ export default function LeadSettingsContent() {
 
   const handleReset = useCallback(async () => {
     try {
-      await Promise.all([
-        stagesReset.mutateAsync(),
-        scoringReset.mutateAsync(),
-      ]);
+      await Promise.all([stagesReset.mutateAsync(), scoringReset.mutateAsync()]);
       setIsDirty(false);
-      toast({ title: 'Settings reset', description: 'Lead settings have been restored to defaults.' });
+      toast({
+        title: 'Settings reset',
+        description: 'Lead settings have been restored to defaults.',
+      });
     } catch (err) {
       toast({
         title: 'Error resetting settings',
@@ -200,18 +209,13 @@ export default function LeadSettingsContent() {
     automationQuery.isLoading;
 
   const error =
-    stagesQuery.error ||
-    scoringQuery.error ||
-    fieldsQuery.error ||
-    automationQuery.error;
+    stagesQuery.error || scoringQuery.error || fieldsQuery.error || automationQuery.error;
 
   // ─── Last Updated ───────────────────────────────────────────────────────
   const lastUpdated = useMemo(() => {
     const dates = [
       ...(stagesQuery.data?.map((s) => new Date(s.updatedAt)) ?? []),
-      automationQuery.data?.updatedAt
-        ? new Date(automationQuery.data.updatedAt)
-        : null,
+      automationQuery.data?.updatedAt ? new Date(automationQuery.data.updatedAt) : null,
     ].filter(Boolean) as Date[];
     if (dates.length === 0) return null;
     return new Date(Math.max(...dates.map((d) => d.getTime())));
@@ -223,22 +227,12 @@ export default function LeadSettingsContent() {
       {
         value: 'stages',
         label: 'Lead Stages',
-        content: (
-          <LeadStagesTab
-            stages={localStages}
-            onStagesChange={handleStagesChange}
-          />
-        ),
+        content: <LeadStagesTab stages={localStages} onStagesChange={handleStagesChange} />,
       },
       {
         value: 'scoring',
         label: 'Scoring Rules',
-        content: (
-          <ScoringRulesTab
-            rules={localRules}
-            onRulesChange={handleRulesChange}
-          />
-        ),
+        content: <ScoringRulesTab rules={localRules} onRulesChange={handleRulesChange} />,
       },
       {
         value: 'custom-fields',
@@ -256,10 +250,7 @@ export default function LeadSettingsContent() {
         value: 'automation',
         label: 'Automation',
         content: (
-          <AutomationTab
-            settings={localAutomation}
-            onSettingsChange={handleAutomationChange}
-          />
+          <AutomationTab settings={localAutomation} onSettingsChange={handleAutomationChange} />
         ),
       },
     ],
@@ -283,9 +274,7 @@ export default function LeadSettingsContent() {
   if (error) {
     return (
       <div className="max-w-7xl text-center py-12">
-        <p className="text-destructive mb-4">
-          Failed to load settings: {error.message}
-        </p>
+        <p className="text-destructive mb-4">Failed to load settings: {error.message}</p>
         <button
           onClick={() => {
             stagesQuery.refetch();

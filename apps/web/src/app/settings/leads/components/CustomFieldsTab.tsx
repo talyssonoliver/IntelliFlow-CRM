@@ -162,9 +162,7 @@ export function CustomFieldsTab({
               {fields.map((field) => (
                 <tr key={field.id} className="border-t">
                   <td className="p-3 text-sm font-medium">{field.fieldName}</td>
-                  <td className="p-3 text-sm text-muted-foreground capitalize">
-                    {field.dataType}
-                  </td>
+                  <td className="p-3 text-sm text-muted-foreground capitalize">{field.dataType}</td>
                   <td className="p-3 text-sm text-muted-foreground">
                     {field.isRequired ? 'Yes' : 'No'}
                   </td>
@@ -207,9 +205,7 @@ export function CustomFieldsTab({
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>
-              {formState.id ? 'Edit Custom Field' : 'Add Custom Field'}
-            </DialogTitle>
+            <DialogTitle>{formState.id ? 'Edit Custom Field' : 'Add Custom Field'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
@@ -219,9 +215,7 @@ export function CustomFieldsTab({
               <Input
                 id="field-name"
                 value={formState.fieldName}
-                onChange={(e) =>
-                  setFormState((s) => ({ ...s, fieldName: e.target.value }))
-                }
+                onChange={(e) => setFormState((s) => ({ ...s, fieldName: e.target.value }))}
                 placeholder="e.g., Company Size"
               />
             </div>
@@ -231,9 +225,7 @@ export function CustomFieldsTab({
               </label>
               <Select
                 value={formState.dataType}
-                onValueChange={(value) =>
-                  setFormState((s) => ({ ...s, dataType: value }))
-                }
+                onValueChange={(value) => setFormState((s) => ({ ...s, dataType: value }))}
               >
                 <SelectTrigger id="field-type">
                   <SelectValue placeholder="Select type" />
@@ -252,10 +244,7 @@ export function CustomFieldsTab({
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
               Cancel
             </Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={!formState.fieldName.trim()}
-            >
+            <Button onClick={handleSubmit} disabled={!formState.fieldName.trim()}>
               {formState.id ? 'Update' : 'Create'}
             </Button>
           </DialogFooter>

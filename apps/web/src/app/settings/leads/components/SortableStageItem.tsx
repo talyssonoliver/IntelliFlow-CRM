@@ -20,9 +20,16 @@ interface SortableStageItemProps {
 }
 
 const STAGE_COLORS = [
-  '#3B82F6', '#F59E0B', '#22C55E', '#6366F1',
-  '#64748B', '#EF4444', '#9CA3AF', '#EC4899',
-  '#14B8A6', '#8B5CF6',
+  '#3B82F6',
+  '#F59E0B',
+  '#22C55E',
+  '#6366F1',
+  '#64748B',
+  '#EF4444',
+  '#9CA3AF',
+  '#EC4899',
+  '#14B8A6',
+  '#8B5CF6',
 ];
 
 export function SortableStageItem({
@@ -31,14 +38,9 @@ export function SortableStageItem({
   onUpdate,
   onSetDefault,
 }: Readonly<SortableStageItemProps>) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: stage.stageKey });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: stage.stageKey,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),

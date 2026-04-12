@@ -121,8 +121,7 @@ export function SettingsSidebar() {
           href="/dashboard"
           className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
-          <span className="material-symbols-outlined text-lg">arrow_back</span>{' '}
-          Back to Dashboard
+          <span className="material-symbols-outlined text-lg">arrow_back</span> Back to Dashboard
         </Link>
       </div>
     </aside>

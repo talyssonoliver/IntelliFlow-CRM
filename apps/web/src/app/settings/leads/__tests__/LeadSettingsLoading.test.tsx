@@ -51,8 +51,8 @@ describe('LeadSettingsLoading', () => {
     render(<LeadSettingsLoading />);
 
     const skeletons = screen.getAllByTestId('skeleton');
-    const breadcrumbSkeleton = skeletons.find((el) =>
-      el.className.includes('h-4') && el.className.includes('w-48')
+    const breadcrumbSkeleton = skeletons.find(
+      (el) => el.className.includes('h-4') && el.className.includes('w-48')
     );
     expect(breadcrumbSkeleton).toBeTruthy();
   });
@@ -61,8 +61,8 @@ describe('LeadSettingsLoading', () => {
     render(<LeadSettingsLoading />);
 
     const skeletons = screen.getAllByTestId('skeleton');
-    const headerSkeleton = skeletons.find((el) =>
-      el.className.includes('h-8') && el.className.includes('w-56')
+    const headerSkeleton = skeletons.find(
+      (el) => el.className.includes('h-8') && el.className.includes('w-56')
     );
     expect(headerSkeleton).toBeTruthy();
   });

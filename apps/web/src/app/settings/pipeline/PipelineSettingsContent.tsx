@@ -16,9 +16,9 @@
  */
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Card, Button, Skeleton } from '@intelliflow/ui';
+import { PageHeader } from '@/components/shared/page-header';
 import { usePipelineConfig, type PipelineStage } from '@/hooks/usePipelineConfig';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 
@@ -203,29 +203,30 @@ export default function PipelineSettingsContent() {
       <div className="max-w-3xl">
         {/* Header */}
         <div className="mb-8">
-          <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-            <Link href="/settings" className="hover:text-primary">
-              Settings
-            </Link>
-            <span>/</span>
-            <span className="text-foreground font-medium">Pipeline</span>
-          </nav>
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Pipeline Stages</h1>
-              <p className="text-muted-foreground mt-1">
-                Customize your deal pipeline stages, colors, and order
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={handleReset} disabled={isSaving || isResetting}>
-                {isResetting ? 'Resetting...' : 'Reset'}
-              </Button>
-              <Button onClick={handleSave} disabled={!hasChanges || isSaving}>
-                {isSaving ? 'Saving...' : 'Save Changes'}
-              </Button>
-            </div>
-          </div>
+          <PageHeader
+            breadcrumbs={[
+              { label: 'Dashboard', href: '/' },
+              { label: 'Settings', href: '/settings' },
+              { label: 'Pipeline' },
+            ]}
+            title="Pipeline Stages"
+            description="Customize your deal pipeline stages, colors, and order."
+            actions={[
+              {
+                label: isResetting ? 'Resetting...' : 'Reset',
+                variant: 'secondary',
+                onClick: handleReset,
+                disabled: isSaving || isResetting,
+              },
+              {
+                label: isSaving ? 'Saving...' : 'Save Changes',
+                variant: 'primary',
+                onClick: handleSave,
+                disabled: !hasChanges || isSaving,
+                loading: isSaving,
+              },
+            ]}
+          />
         </div>
 
         {/* Stage List */}
@@ -386,11 +387,11 @@ export default function PipelineSettingsContent() {
                     </div>
 
                     {/* Color Picker */}
-                    <div
-                      className="flex flex-wrap gap-1 max-w-[140px]"
-                      role="group" // NOSONAR typescript:S6819 — ARIA group for color palette buttons; <fieldset> would require <legend> and changes layout
+                    <fieldset
+                      className="flex flex-wrap gap-1 max-w-[140px] border-0 p-0 m-0"
                       aria-label={`Color selection for ${stage.displayName}`}
                     >
+                      <legend className="sr-only">{`Color selection for ${stage.displayName}`}</legend>
                       {COLOR_PALETTE.map((color) => (
                         <button
                           key={color}
@@ -403,7 +404,7 @@ export default function PipelineSettingsContent() {
                           aria-pressed={stage.color === color}
                         />
                       ))}
-                    </div>
+                    </fieldset>
                   </div>
                 </div>
               );
@@ -420,7 +421,7 @@ export default function PipelineSettingsContent() {
             <li>Default probability is auto-assigned when deals enter a stage</li>
             <li>Inactive stages are hidden from the pipeline view</li>
             <li>
-              <strong>Protected stages</strong>{' '}(Closed Won, Closed Lost) cannot be deactivated
+              <strong>Protected stages</strong> (Closed Won, Closed Lost) cannot be deactivated
             </li>
           </ul>
         </div>

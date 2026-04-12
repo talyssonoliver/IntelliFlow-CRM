@@ -5,6 +5,8 @@ export const metadata: Metadata = {
   title: 'Settings',
 };
 
-export default function SettingsLayout({ children }: Readonly<{ readonly children: React.ReactNode }>) {
+export default function SettingsLayout({
+  children,
+}: Readonly<{ readonly children: React.ReactNode }>) {
   return <SettingsLayoutShell>{children}</SettingsLayoutShell>;
 }

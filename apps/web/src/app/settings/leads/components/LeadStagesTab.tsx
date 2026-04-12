@@ -25,9 +25,16 @@ interface LeadStagesTabProps {
 }
 
 const STAGE_COLORS = [
-  '#3B82F6', '#F59E0B', '#22C55E', '#6366F1',
-  '#64748B', '#EF4444', '#9CA3AF', '#EC4899',
-  '#14B8A6', '#8B5CF6',
+  '#3B82F6',
+  '#F59E0B',
+  '#22C55E',
+  '#6366F1',
+  '#64748B',
+  '#EF4444',
+  '#9CA3AF',
+  '#EC4899',
+  '#14B8A6',
+  '#8B5CF6',
 ];
 
 export function LeadStagesTab({ stages, onStagesChange }: Readonly<LeadStagesTabProps>) {
@@ -72,9 +79,7 @@ export function LeadStagesTab({ stages, onStagesChange }: Readonly<LeadStagesTab
   const handleRemoveStage = useCallback(
     (stageKey: string) => {
       onStagesChange(
-        stages
-          .filter((s) => s.stageKey !== stageKey)
-          .map((s, i) => ({ ...s, sortOrder: i }))
+        stages.filter((s) => s.stageKey !== stageKey).map((s, i) => ({ ...s, sortOrder: i }))
       );
     },
     [stages, onStagesChange]
@@ -82,9 +87,7 @@ export function LeadStagesTab({ stages, onStagesChange }: Readonly<LeadStagesTab
 
   const handleUpdateStage = useCallback(
     (stageKey: string, updates: Partial<StageItem>) => {
-      onStagesChange(
-        stages.map((s) => (s.stageKey === stageKey ? { ...s, ...updates } : s))
-      );
+      onStagesChange(stages.map((s) => (s.stageKey === stageKey ? { ...s, ...updates } : s)));
     },
     [stages, onStagesChange]
   );
@@ -114,20 +117,16 @@ export function LeadStagesTab({ stages, onStagesChange }: Readonly<LeadStagesTab
           <span className="material-symbols-outlined text-sm mr-1" aria-hidden="true">
             add
           </span>
-          Add Stage
+          {' '}Add Stage
         </Button>
       </div>
 
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
-      >
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext
           items={stages.map((s) => s.stageKey)}
           strategy={verticalListSortingStrategy}
         >
-          <div className="space-y-2" role="list" aria-label="Lead stages">
+          <ul className="space-y-2" aria-label="Lead stages">
             {stages.map((stage) => (
               <SortableStageItem
                 key={stage.stageKey}
@@ -137,7 +136,7 @@ export function LeadStagesTab({ stages, onStagesChange }: Readonly<LeadStagesTab
                 onSetDefault={() => handleSetDefault(stage.stageKey)}
               />
             ))}
-          </div>
+          </ul>
         </SortableContext>
       </DndContext>
     </Card>

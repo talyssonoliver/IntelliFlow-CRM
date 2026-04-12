@@ -14,17 +14,7 @@ import type { ScoringRule } from '../components/ScoringRulesTab';
 // ─── @intelliflow/ui mock ───────────────────────────────────────────────────
 vi.mock('@intelliflow/ui', () => ({
   Card: ({ children, className }: any) => <div className={className}>{children}</div>,
-  Input: ({
-    value,
-    onChange,
-    id,
-    type,
-    min,
-    max,
-    step,
-    className,
-    ...props
-  }: any) => (
+  Input: ({ value, onChange, id, type, min, max, step, className, ...props }: any) => (
     <input
       id={id}
       value={value}
@@ -162,9 +152,7 @@ describe('ScoringRulesTab', () => {
   });
 
   it('renders unknown activity type key as fallback label', () => {
-    const rulesWithUnknown: ScoringRule[] = [
-      { activityType: 'UNKNOWN_TYPE', points: 7 },
-    ];
+    const rulesWithUnknown: ScoringRule[] = [{ activityType: 'UNKNOWN_TYPE', points: 7 }];
     render(<ScoringRulesTab rules={rulesWithUnknown} onRulesChange={onRulesChange} />);
 
     // Unknown type falls back to the raw key
