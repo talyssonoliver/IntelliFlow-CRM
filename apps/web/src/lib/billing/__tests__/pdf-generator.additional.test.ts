@@ -18,7 +18,12 @@ const mocks = vi.hoisted(() => ({
 
 // We must set up globals in beforeEach because unstubGlobals: true cleans them
 function setupGlobals() {
-  mocks.createElement.mockReturnValue({ href: '', download: '', click: mocks.click, remove: vi.fn() });
+  mocks.createElement.mockReturnValue({
+    href: '',
+    download: '',
+    click: mocks.click,
+    remove: vi.fn(),
+  });
 
   (globalThis as any).fetch = mocks.fetch;
   (globalThis as any).URL = class MockURL {
@@ -30,11 +35,13 @@ function setupGlobals() {
       ) {
         throw new TypeError('Invalid URL');
       }
-      this.protocol = url.startsWith('https')
-        ? 'https:'
-        : url.startsWith('http')
-          ? 'http:'
-          : 'ftp:';
+      if (url.startsWith('https')) {
+        this.protocol = 'https:';
+      } else if (url.startsWith('http')) {
+        this.protocol = 'http:';
+      } else {
+        this.protocol = 'ftp:';
+      }
     }
     static createObjectURL = mocks.createObjectURL;
     static revokeObjectURL = mocks.revokeObjectURL;

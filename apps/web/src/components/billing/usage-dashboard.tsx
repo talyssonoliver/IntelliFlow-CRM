@@ -317,7 +317,12 @@ export function UsageDashboard() {
           <StatCard title="Accounts" icon="business" value={crm.accounts} href="/accounts" />
           <StatCard title="Deals" icon="handshake" value={crm.deals} href="/deals" />
           <StatCard title="Tasks" icon="task_alt" value={crm.tasks} href="/tasks" />
-          <StatCard title="Tickets" icon="confirmation_number" value={crm.tickets} href="/tickets" />
+          <StatCard
+            title="Tickets"
+            icon="confirmation_number"
+            value={crm.tickets}
+            href="/tickets"
+          />
           <StatCard title="Cases" icon="gavel" value={crm.cases} />
         </div>
       </div>

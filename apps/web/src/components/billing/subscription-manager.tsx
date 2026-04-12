@@ -173,7 +173,7 @@ function CurrentPlanCard({
               onClick={onReactivate}
               className="mt-3 border-green-300 text-green-700 hover:bg-green-50 dark:border-green-700 dark:text-green-400 dark:hover:bg-green-900/20"
             >
-              <span className="material-symbols-outlined mr-2 text-lg">refresh</span>{' '}Reactivate
+              <span className="material-symbols-outlined mr-2 text-lg">refresh</span> Reactivate
               Subscription
             </Button>
           </div>
@@ -186,7 +186,7 @@ function CurrentPlanCard({
             onClick={onCancelClick}
             className="text-slate-600 hover:text-red-600 dark:text-slate-400 dark:hover:text-red-400"
           >
-            <span className="material-symbols-outlined mr-2 text-lg">cancel</span>{' '}Cancel
+            <span className="material-symbols-outlined mr-2 text-lg">cancel</span> Cancel
             Subscription
           </Button>
         )}
@@ -273,7 +273,9 @@ function PlanCard({
 
         <ul className="space-y-2">
           {plan.features.map((feature, index) => (
-            <li key={index} className="flex items-start gap-2 text-sm"> {/* NOSONAR typescript:S6479 */}
+            <li key={index} className="flex items-start gap-2 text-sm">
+              {' '}
+              {/* NOSONAR typescript:S6479 */}
               <span
                 className={`material-symbols-outlined text-lg ${
                   feature.included
@@ -424,9 +426,7 @@ function ChangePlanDialog({
                   priceColorClass = '';
                 }
                 return (
-                  <span className={`font-semibold ${priceColorClass}`}>
-                    {priceDiff.formatted}
-                  </span>
+                  <span className={`font-semibold ${priceColorClass}`}>{priceDiff.formatted}</span>
                 );
               })()}
             </div>
@@ -447,8 +447,12 @@ function ChangePlanDialog({
               </h4>
               <ul className="space-y-1">
                 {gainedFeatures.map((f, i) => (
-                  <li key={i} className="flex items-center gap-2 text-sm"> {/* NOSONAR typescript:S6479 */}
-                    <span className="material-symbols-outlined text-green-600">add_circle</span>{' '}
+                  <li key={i} className="flex items-center gap-2 text-sm">
+                    {' '}
+                    {/* NOSONAR typescript:S6479 */}
+                    <span className="material-symbols-outlined text-green-600">
+                      add_circle
+                    </span>{' '}
                     {f.name}
                   </li>
                 ))}
@@ -463,8 +467,12 @@ function ChangePlanDialog({
               </h4>
               <ul className="space-y-1">
                 {lostFeatures.map((f, i) => (
-                  <li key={i} className="flex items-center gap-2 text-sm"> {/* NOSONAR typescript:S6479 */}
-                    <span className="material-symbols-outlined text-amber-600">remove_circle</span>{' '}
+                  <li key={i} className="flex items-center gap-2 text-sm">
+                    {' '}
+                    {/* NOSONAR typescript:S6479 */}
+                    <span className="material-symbols-outlined text-amber-600">
+                      remove_circle
+                    </span>{' '}
                     {f.name}
                   </li>
                 ))}
@@ -539,8 +547,7 @@ function CancelDialog({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-red-600">
-            <span className="material-symbols-outlined">warning</span>{' '}
-            Cancel Subscription
+            <span className="material-symbols-outlined">warning</span> Cancel Subscription
           </DialogTitle>
           <DialogDescription>Are you sure you want to cancel your subscription?</DialogDescription>
         </DialogHeader>
@@ -643,8 +650,7 @@ function NoSubscriptionState({ onSelectPlan }: Readonly<{ onSelectPlan: () => vo
         <EmptyState entity="subscriptions" phase="passive" />
         <div className="flex justify-center mt-4">
           <Button onClick={onSelectPlan} className="bg-[#137fec] hover:bg-[#0e6ac7]">
-            <span className="material-symbols-outlined mr-2">rocket_launch</span>{' '}
-            View Plans
+            <span className="material-symbols-outlined mr-2">rocket_launch</span> View Plans
           </Button>
         </div>
       </CardContent>

@@ -68,7 +68,10 @@ interface PlanSelectionViewProps {
   subscriptionQuantity: number;
 }
 
-function PlanSelectionView({ currentPlanId, subscriptionQuantity }: Readonly<PlanSelectionViewProps>) {
+function PlanSelectionView({
+  currentPlanId,
+  subscriptionQuantity,
+}: Readonly<PlanSelectionViewProps>) {
   const [interval, setInterval] = React.useState<'monthly' | 'annual'>('annual');
 
   return (
@@ -99,9 +102,7 @@ function PlanSelectionView({ currentPlanId, subscriptionQuantity }: Readonly<Pla
             )}
           >
             Annual{' '}
-            <span className="text-xs bg-[#10b981] text-white px-2 py-0.5 rounded">
-              Save 17%
-            </span>
+            <span className="text-xs bg-[#10b981] text-white px-2 py-0.5 rounded">Save 17%</span>
           </button>
         </div>
       </div>
@@ -202,9 +203,7 @@ function ConfirmView({
       : null;
   const daysRemaining = periodEnd ? getDaysRemainingInPeriod(periodEnd) : 0;
   const prorationAmount =
-    currentPlan && !isSamePlan
-      ? estimateProration(currentPlan, targetPlan, daysRemaining, 30)
-      : 0;
+    currentPlan && !isSamePlan ? estimateProration(currentPlan, targetPlan, daysRemaining, 30) : 0;
   const priceDiff = comparison
     ? formatPriceDifference(comparison.priceDifference, currentPlan?.currency ?? 'GBP')
     : null;
@@ -271,9 +270,7 @@ function ConfirmView({
           <div className="flex items-center justify-between">
             <div>
               <p className="font-semibold text-lg">{targetPlan.name}</p>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                {targetPlan.description}
-              </p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">{targetPlan.description}</p>
             </div>
             <p className="text-2xl font-bold text-slate-900 dark:text-white">
               {formatCurrency(targetPlan.priceMonthly, targetPlan.currency)}{' '}
@@ -311,8 +308,7 @@ function ConfirmView({
                 New plan ({targetPlan.name})
               </span>
               <span className="font-medium">
-                {formatCurrency(targetPlan.priceMonthly, targetPlan.currency)}{' '}
-                <span>/mo</span>
+                {formatCurrency(targetPlan.priceMonthly, targetPlan.currency)} <span>/mo</span>
               </span>
             </div>
             {priceDiff && (
@@ -324,9 +320,7 @@ function ConfirmView({
               </div>
             )}
             <div className="flex justify-between text-sm border-t pt-3 border-slate-200 dark:border-slate-700">
-              <span className="text-slate-600 dark:text-slate-400">
-                Estimated prorated charge
-              </span>
+              <span className="text-slate-600 dark:text-slate-400">Estimated prorated charge</span>
               <span className="font-semibold">
                 {formatCurrency(Math.abs(prorationAmount), currentPlan?.currency ?? 'GBP')}
               </span>
@@ -348,10 +342,7 @@ function ConfirmView({
                 .map((feature) => {
                   const badge = getFeatureChangeBadge(feature.change);
                   return (
-                    <li
-                      key={feature.name}
-                      className="flex items-center justify-between text-sm"
-                    >
+                    <li key={feature.name} className="flex items-center justify-between text-sm">
                       <span>{feature.name}</span>
                       <Badge
                         variant="outline"
@@ -360,10 +351,7 @@ function ConfirmView({
                           badge.variant === 'warning' && 'text-amber-700 border-amber-300'
                         )}
                       >
-                        <span
-                          className="material-symbols-outlined text-sm mr-1"
-                          aria-hidden="true"
-                        >
+                        <span className="material-symbols-outlined text-sm mr-1" aria-hidden="true">
                           {badge.icon}
                         </span>{' '}
                         {badge.label}

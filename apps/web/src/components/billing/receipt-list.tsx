@@ -62,7 +62,9 @@ function ReceiptListSkeleton() {
   return (
     <div className="space-y-3" aria-label="Loading receipts">
       {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="flex items-center justify-between py-3"> {/* NOSONAR typescript:S6479 */}
+        <div key={i} className="flex items-center justify-between py-3">
+          {' '}
+          {/* NOSONAR typescript:S6479 */}
           <div className="flex items-center gap-4">
             <Skeleton className="h-4 w-24" />
             <Skeleton className="h-4 w-32" />
@@ -200,8 +202,7 @@ export function ReceiptList({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-xl text-primary">receipt</span>{' '}
-            Receipts
+            <span className="material-symbols-outlined text-xl text-primary">receipt</span> Receipts
           </CardTitle>
           <CardDescription>Loading your receipts...</CardDescription>
         </CardHeader>
@@ -217,8 +218,7 @@ export function ReceiptList({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-xl text-primary">receipt</span>{' '}
-            Receipts
+            <span className="material-symbols-outlined text-xl text-primary">receipt</span> Receipts
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -285,8 +285,8 @@ export function ReceiptList({
                 </>
               ) : (
                 <>
-                  <span className="material-symbols-outlined mr-2 text-lg">expand_more</span>{' '}
-                  Load More
+                  <span className="material-symbols-outlined mr-2 text-lg">expand_more</span> Load
+                  More
                 </>
               )}
             </Button>

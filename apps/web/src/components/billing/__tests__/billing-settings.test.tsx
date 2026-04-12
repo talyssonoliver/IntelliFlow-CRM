@@ -27,12 +27,18 @@ vi.mock('@/lib/trpc', () => ({
   trpc: {
     billing: {
       getBillingInformation: { useQuery: () => mockGetBillingInfo() },
-      updateBillingInformation: { useMutation: (opts?: Record<string, unknown>) => ({
-        mutate: (...args: unknown[]) => { mockUpdateMutate(...args); if (opts && typeof (opts as Record<string, unknown>).onSuccess === 'function') (opts as { onSuccess: () => void }).onSuccess(); },
-        isPending: false,
-        isSuccess: false,
-        error: null,
-      })},
+      updateBillingInformation: {
+        useMutation: (opts?: Record<string, unknown>) => ({
+          mutate: (...args: unknown[]) => {
+            mockUpdateMutate(...args);
+            if (opts && typeof (opts as Record<string, unknown>).onSuccess === 'function')
+              (opts as { onSuccess: () => void }).onSuccess();
+          },
+          isPending: false,
+          isSuccess: false,
+          error: null,
+        }),
+      },
     },
   },
 }));

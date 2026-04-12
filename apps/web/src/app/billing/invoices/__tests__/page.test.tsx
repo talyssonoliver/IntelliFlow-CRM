@@ -23,6 +23,29 @@ vi.mock('@/lib/trpc', () => ({
   },
 }));
 
+vi.mock('@/components/shared/page-header', () => ({
+  PageHeader: ({ title, description }: { title: string; description?: string }) => (
+    <div data-testid="page-header"><h1>{title}</h1>{description && <p>{description}</p>}</div>
+  ),
+}));
+
+vi.mock('@/components/billing/invoice-list', () => ({
+  InvoiceList: ({ invoices, total, hasMore, onLoadMore, isLoading, isLoadingMore }: any) => (
+    <div data-testid="invoice-list">
+      {isLoading ? (
+        <div>Loading...</div>
+      ) : (
+        <>
+          <p>Showing {invoices?.length ?? 0} of {total} invoices</p>
+          {invoices?.map((inv: any) => <div key={inv.id} data-testid={`invoice-${inv.id}`}>{inv.id}</div>)}
+          {hasMore && !isLoadingMore && <button onClick={onLoadMore}>Load More</button>}
+          {isLoadingMore && <div>Loading more...</div>}
+        </>
+      )}
+    </div>
+  ),
+}));
+
 // Lazy import after mock is in place
 const { default: InvoicesPage } = await import('../page');
 
@@ -55,7 +78,7 @@ describe('InvoicesPage', () => {
     render(<InvoicesPage />);
     // Page heading is an h1; InvoiceList also has "Invoices" in a CardTitle
     expect(screen.getByRole('heading', { level: 1, name: 'Invoices' })).toBeInTheDocument();
-    expect(screen.getByText('View and download your billing history')).toBeInTheDocument();
+    expect(screen.getByText(/View and download your billing history/)).toBeInTheDocument();
   });
 
   it('calls trpc.billing.listInvoices.useQuery with { page: 1, limit: 10 }', () => {

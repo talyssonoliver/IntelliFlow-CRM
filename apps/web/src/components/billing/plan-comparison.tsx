@@ -14,11 +14,7 @@ import * as React from 'react';
 import { cn } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
 import { useAuth } from '@/lib/auth/AuthContext';
-import {
-  PLANS,
-  getPlanByPriceId,
-  getAnnualSavingsPercent,
-} from '@/lib/billing/stripe-portal';
+import { PLANS, getPlanByPriceId, getAnnualSavingsPercent } from '@/lib/billing/stripe-portal';
 import {
   getPlanPriceForInterval,
   getPlanChangeDirection,
@@ -102,11 +98,7 @@ export function PlanComparison() {
           const directionDisplay = getPlanChangeDirectionDisplay(direction);
           const priceInfo = getPlanPriceForInterval(plan, interval);
           const savings = getAnnualSavingsPercent(plan);
-          const changeCheck = canChangeToPlan(
-            currentPlanId,
-            plan.id,
-            subscription?.quantity ?? 0
-          );
+          const changeCheck = canChangeToPlan(currentPlanId, plan.id, subscription?.quantity ?? 0);
 
           return (
             <PlanCard
@@ -148,9 +140,7 @@ export function PlanComparison() {
               description={customTier.description}
               priceFormatted="Contact Sales"
               priceSubtext={
-                interval === 'annual'
-                  ? 'Volume discounts on annual contracts'
-                  : undefined
+                interval === 'annual' ? 'Volume discounts on annual contracts' : undefined
               }
               savingsBadge={interval === 'annual' ? 'Custom annual pricing' : undefined}
               features={[]}

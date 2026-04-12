@@ -73,18 +73,13 @@ export function PlanComparisonTable({ className }: PlanComparisonTableProps) {
 
                   {/* Features */}
                   {category.features.map((feature, featIndex) => (
-                    <tr
-                      key={featIndex}
-                      className="border-t border-slate-200 dark:border-slate-700"
-                    >
+                    <tr key={featIndex} className="border-t border-slate-200 dark:border-slate-700">
                       <td className="p-4 text-slate-600 dark:text-slate-400">{feature.name}</td>
                       <td className="p-4 text-center">{renderFeatureValue(feature.starter)}</td>
                       <td className="p-4 text-center">
                         {renderFeatureValue(feature.professional)}
                       </td>
-                      <td className="p-4 text-center">
-                        {renderFeatureValue(feature.enterprise)}
-                      </td>
+                      <td className="p-4 text-center">{renderFeatureValue(feature.enterprise)}</td>
                       <td className="p-4 text-center">{renderFeatureValue(feature.custom)}</td>
                     </tr>
                   ))}

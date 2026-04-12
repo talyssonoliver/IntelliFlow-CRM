@@ -205,7 +205,9 @@ function InvoiceDetailSkeleton() {
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="space-y-2"> {/* NOSONAR typescript:S6479 */}
+              <div key={i} className="space-y-2">
+                {' '}
+                {/* NOSONAR typescript:S6479 */}
                 <Skeleton className="h-4 w-20" />
                 <Skeleton className="h-6 w-28" />
               </div>
@@ -222,7 +224,9 @@ function InvoiceDetailSkeleton() {
         <CardContent>
           <div className="space-y-3">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="flex justify-between py-3"> {/* NOSONAR typescript:S6479 */}
+              <div key={i} className="flex justify-between py-3">
+                {' '}
+                {/* NOSONAR typescript:S6479 */}
                 <Skeleton className="h-4 w-48" />
                 <Skeleton className="h-4 w-24" />
               </div>
@@ -293,7 +297,10 @@ function NotFoundState() {
 // Line Items Table
 // ============================================
 
-function LineItemsTable({ items, currency }: Readonly<{ items: InvoiceLineItem[]; currency: string }>) {
+function LineItemsTable({
+  items,
+  currency,
+}: Readonly<{ items: InvoiceLineItem[]; currency: string }>) {
   if (items.length === 0) {
     return <EmptyState entity="invoices" phase="passive" className="py-4" />;
   }
@@ -440,7 +447,12 @@ function TotalsSection({ invoice }: Readonly<{ invoice: InvoiceDetailData }>) {
 // Main Component
 // ============================================
 
-export function InvoiceDetail({ invoice, isLoading, error, onPayNow }: Readonly<InvoiceDetailProps>) {
+export function InvoiceDetail({
+  invoice,
+  isLoading,
+  error,
+  onPayNow,
+}: Readonly<InvoiceDetailProps>) {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<{
     type: 'success' | 'error';
@@ -551,8 +563,7 @@ export function InvoiceDetail({ invoice, isLoading, error, onPayNow }: Readonly<
         href="/billing/invoices"
         className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors"
       >
-        <span className="material-symbols-outlined text-lg">arrow_back</span>{' '}
-        Back to Invoices
+        <span className="material-symbols-outlined text-lg">arrow_back</span> Back to Invoices
       </Link>
 
       {/* Invoice Header */}

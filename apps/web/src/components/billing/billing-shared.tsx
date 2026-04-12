@@ -8,10 +8,21 @@
  * @implements PG-172 (Billing Ghost Pages)
  */
 
-import { Card, CardHeader, CardContent, Skeleton, EmptyState as SharedEmptyState, type EmptyStateEntity } from '@intelliflow/ui';
+import {
+  Card,
+  CardHeader,
+  CardContent,
+  Skeleton,
+  EmptyState as SharedEmptyState,
+  type EmptyStateEntity,
+} from '@intelliflow/ui';
 
 /** Standard empty state following design system — delegates to shared EmptyState. */
-export function EmptyState({ icon: _icon, message, entity = 'invoices' }: Readonly<{ icon: string; message?: string; entity?: EmptyStateEntity }>) {
+export function EmptyState({
+  icon: _icon,
+  message,
+  entity = 'invoices',
+}: Readonly<{ icon: string; message?: string; entity?: EmptyStateEntity }>) {
   return <SharedEmptyState entity={entity} phase="passive" description={message} />;
 }
 

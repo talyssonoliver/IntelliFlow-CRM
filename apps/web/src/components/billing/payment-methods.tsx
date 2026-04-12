@@ -472,7 +472,7 @@ function RemoveCardDialog({
           </div>
           <AlertDialogTitle>Remove Payment Method?</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to remove{' '}<strong>{displayString}</strong>?
+            Are you sure you want to remove <strong>{displayString}</strong>?
           </AlertDialogDescription>
         </AlertDialogHeader>
 

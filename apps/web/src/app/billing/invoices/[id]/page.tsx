@@ -14,6 +14,7 @@
 import { useParams } from 'next/navigation';
 import { useCallback } from 'react';
 import { InvoiceDetail } from '@/components/billing/invoice-detail';
+import { PageHeader } from '@/components/shared/page-header';
 import { trpc } from '@/lib/trpc';
 
 export default function InvoiceDetailPage() {
@@ -39,13 +40,15 @@ export default function InvoiceDetailPage() {
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Invoice Details</h1>
-        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          View and manage invoice information
-        </p>
-      </div>
+      <PageHeader
+        breadcrumbs={[
+          { label: 'Billing', href: '/billing' },
+          { label: 'Invoices', href: '/billing/invoices' },
+          { label: `Invoice ${invoiceId ? `#${invoiceId.slice(0, 8)}` : ''}` },
+        ]}
+        title="Invoice Details"
+        description="View and manage invoice information."
+      />
 
       {/* Invoice Detail Component */}
       <InvoiceDetail

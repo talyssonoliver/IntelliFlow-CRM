@@ -91,13 +91,11 @@ function StatusBadge({ status }: Readonly<{ status: string }>) {
 
 function InvoiceListSkeleton() {
   return (
-    <output
-      className="space-y-3"
-      aria-busy="true"
-      aria-live="polite"
-    >
+    <output className="space-y-3" aria-busy="true" aria-live="polite">
       {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="flex items-center justify-between py-3"> {/* NOSONAR typescript:S6479 */}
+        <div key={i} className="flex items-center justify-between py-3">
+          {' '}
+          {/* NOSONAR typescript:S6479 */}
           <div className="flex items-center gap-4">
             <Skeleton className="h-4 w-24" aria-hidden="true" />
             <Skeleton className="h-4 w-32" aria-hidden="true" />

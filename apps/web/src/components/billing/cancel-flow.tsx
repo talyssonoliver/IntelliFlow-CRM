@@ -13,7 +13,15 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { Card, CardHeader, CardTitle, CardContent, CardFooter, Badge, Button } from '@intelliflow/ui';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardFooter,
+  Badge,
+  Button,
+} from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { getPlanByPriceId, formatBillingDate, type PlanFeature } from '@/lib/billing/stripe-portal';
@@ -49,14 +57,10 @@ const STEPS: Step[] = [
 // ============================================
 
 const FEATURE_LOSS_DESCRIPTIONS: Record<string, string> = {
-  'Up to 5 users':
-    'Your team members will lose access to their accounts and all shared data.',
-  'Up to 25 users':
-    'Your team members will lose access to their accounts and all shared data.',
-  'Unlimited users':
-    'Your team members will lose access to their accounts and all shared data.',
-  '1,000 contacts':
-    'You will lose access to your contact database and all enrichment data.',
+  'Up to 5 users': 'Your team members will lose access to their accounts and all shared data.',
+  'Up to 25 users': 'Your team members will lose access to their accounts and all shared data.',
+  'Unlimited users': 'Your team members will lose access to their accounts and all shared data.',
+  '1,000 contacts': 'You will lose access to your contact database and all enrichment data.',
   '10,000 contacts':
     'You will lose access to your contact database, enrichment data, and lead profiles.',
   'Unlimited contacts':
@@ -73,12 +77,10 @@ const FEATURE_LOSS_DESCRIPTIONS: Record<string, string> = {
     'AI predictions for deal outcomes, lead conversion, and revenue forecasting will stop immediately.',
   'Unlimited AI predictions':
     'All AI predictions including deal outcomes, lead conversion, and revenue forecasting will stop immediately.',
-  'Email support':
-    'You will lose access to customer support channels.',
+  'Email support': 'You will lose access to customer support channels.',
   'Priority support (4h response)':
     'Priority support with 4-hour response time will be downgraded.',
-  '24/7 priority support':
-    '24/7 dedicated priority support will no longer be available.',
+  '24/7 priority support': '24/7 dedicated priority support will no longer be available.',
   'Workflow automation':
     'All active workflows, email sequences, and automated lead routing rules will be deactivated immediately.',
   'Advanced workflow automation':
@@ -173,23 +175,35 @@ interface PlanStepProps {
   includedFeatures: PlanFeature[];
 }
 
-function PlanStep({ planName, periodEnd, retentionOffer, includedFeatures }: Readonly<PlanStepProps>) {
+function PlanStep({
+  planName,
+  periodEnd,
+  retentionOffer,
+  includedFeatures,
+}: Readonly<PlanStepProps>) {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-bold text-slate-900 dark:text-white">Your Current Plan</h3>
-          <Badge variant="outline" className="text-green-700 border-green-300">Active</Badge>
+          <Badge variant="outline" className="text-green-700 border-green-300">
+            Active
+          </Badge>
         </div>
         <div>
           <p className="text-xl font-bold text-slate-900 dark:text-white">{planName}</p>
-          <p className="text-sm text-slate-500 dark:text-slate-400">Active until {formatBillingDate(periodEnd)}</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Active until {formatBillingDate(periodEnd)}
+          </p>
         </div>
       </div>
 
       {retentionOffer && (
         <div className="flex items-start gap-4 p-4 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20">
-          <span className="material-symbols-outlined text-2xl text-blue-600 dark:text-blue-400" aria-hidden="true">
+          <span
+            className="material-symbols-outlined text-2xl text-blue-600 dark:text-blue-400"
+            aria-hidden="true"
+          >
             local_offer
           </span>
           <div>
@@ -213,7 +227,9 @@ function PlanStep({ planName, periodEnd, retentionOffer, includedFeatures }: Rea
                 className="flex items-start gap-4 bg-white dark:bg-slate-900 p-4 rounded-xl border border-red-100 dark:border-red-900/30 shadow-sm"
               >
                 <div className="flex items-center justify-center rounded-lg bg-red-50 dark:bg-red-900/20 text-red-500 shrink-0 size-10 mt-0.5">
-                  <span className="material-symbols-outlined text-xl" aria-hidden="true">warning</span>
+                  <span className="material-symbols-outlined text-xl" aria-hidden="true">
+                    warning
+                  </span>
                 </div>
                 <div className="flex flex-col">
                   <p className="text-sm font-bold text-slate-900 dark:text-white leading-normal">
@@ -244,7 +260,12 @@ interface ReasonStepProps {
   onFeedbackChange: (value: string) => void;
 }
 
-function ReasonStep({ reason, feedback, onReasonChange, onFeedbackChange }: Readonly<ReasonStepProps>) {
+function ReasonStep({
+  reason,
+  feedback,
+  onReasonChange,
+  onFeedbackChange,
+}: Readonly<ReasonStepProps>) {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
@@ -278,7 +299,10 @@ function ReasonStep({ reason, feedback, onReasonChange, onFeedbackChange }: Read
       </fieldset>
 
       <div className="space-y-1.5">
-        <label htmlFor="cancel-feedback" className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
+        <label
+          htmlFor="cancel-feedback"
+          className="block text-sm font-semibold text-slate-700 dark:text-slate-300"
+        >
           Additional feedback (optional)
         </label>
         <textarea
@@ -305,26 +329,29 @@ function ConfirmStep({ planName, periodEnd, reason, feedback }: Readonly<Confirm
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-start gap-4 p-5 rounded-xl border border-red-200 dark:border-red-800 bg-red-50/50 dark:bg-red-900/10">
-        <span className="material-symbols-outlined text-2xl text-red-600 dark:text-red-400 mt-0.5" aria-hidden="true">
+        <span
+          className="material-symbols-outlined text-2xl text-red-600 dark:text-red-400 mt-0.5"
+          aria-hidden="true"
+        >
           warning
         </span>
         <div className="flex flex-col gap-1">
           <p className="font-semibold text-red-800 dark:text-red-300">Confirm Cancellation</p>
           <p className="text-sm text-red-700 dark:text-red-400" aria-live="polite">
-            Your subscription will remain active until{' '}
-            {formatBillingDate(periodEnd)}. After that, you&apos;ll lose access to all {planName} features.
+            Your subscription will remain active until {formatBillingDate(periodEnd)}. After that,
+            you&apos;ll lose access to all {planName} features.
           </p>
         </div>
       </div>
 
       {reason && (
         <div className="text-sm text-slate-600 dark:text-slate-400">
-          <span className="font-medium text-slate-700 dark:text-slate-300">Reason:{' '}</span>
+          <span className="font-medium text-slate-700 dark:text-slate-300">Reason: </span>
           {CANCELLATION_REASON_LABELS[reason as (typeof CANCELLATION_REASONS)[number]]}
           {feedback && (
             <>
               <br />
-              <span className="font-medium text-slate-700 dark:text-slate-300">Feedback:{' '}</span>
+              <span className="font-medium text-slate-700 dark:text-slate-300">Feedback: </span>
               {feedback}
             </>
           )}
@@ -547,8 +574,8 @@ export function CancelFlow() {
         </CardHeader>
         <CardContent>
           <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
-            Your subscription will end on {formatBillingDate(subscription.currentPeriodEnd)}.
-            You can reactivate to keep your plan active.
+            Your subscription will end on {formatBillingDate(subscription.currentPeriodEnd)}. You
+            can reactivate to keep your plan active.
           </p>
         </CardContent>
         <CardFooter>

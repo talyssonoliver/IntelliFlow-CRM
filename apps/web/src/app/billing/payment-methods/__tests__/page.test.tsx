@@ -54,7 +54,7 @@ describe('PaymentMethodsPage', () => {
   it('renders subtitle text', () => {
     render(<PaymentMethodsPage />);
     expect(
-      screen.getByText('Manage your saved payment methods and set your default card')
+      screen.getByText(/Manage your saved payment methods and set your default card/)
     ).toBeInTheDocument();
   });
 

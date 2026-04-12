@@ -11,6 +11,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { InvoiceList } from '@/components/billing/invoice-list';
+import { PageHeader } from '@/components/shared/page-header';
 import { trpc } from '@/lib/trpc';
 import type { inferRouterOutputs } from '@trpc/server';
 import type { AppRouter } from '@intelliflow/api-client';
@@ -62,15 +63,14 @@ export default function InvoicesPage() {
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Invoices</h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            View and download your billing history
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        breadcrumbs={[
+          { label: 'Billing', href: '/billing' },
+          { label: 'Invoices' },
+        ]}
+        title="Invoices"
+        description="View and download your billing history."
+      />
 
       {/* Invoice List */}
       <InvoiceList

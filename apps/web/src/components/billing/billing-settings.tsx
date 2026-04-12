@@ -77,12 +77,15 @@ export function BillingSettings() {
             <span className="material-symbols-outlined text-primary" aria-hidden="true">
               business
             </span>
-            Organization Details
+            {' '}Organization Details
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <label htmlFor="org-name" className="text-sm font-medium text-slate-700 dark:text-slate-300 block mb-1">
+            <label
+              htmlFor="org-name"
+              className="text-sm font-medium text-slate-700 dark:text-slate-300 block mb-1"
+            >
               Organization Name
             </label>
             <input
@@ -95,7 +98,10 @@ export function BillingSettings() {
             />
           </div>
           <div>
-            <label htmlFor="billing-email" className="text-sm font-medium text-slate-700 dark:text-slate-300 block mb-1">
+            <label
+              htmlFor="billing-email"
+              className="text-sm font-medium text-slate-700 dark:text-slate-300 block mb-1"
+            >
               Billing Email
             </label>
             <input
@@ -129,7 +135,7 @@ export function BillingSettings() {
             <span className="material-symbols-outlined text-primary" aria-hidden="true">
               location_on
             </span>
-            Billing Address
+            {' '}Billing Address
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -137,24 +143,28 @@ export function BillingSettings() {
             <div className="space-y-2 text-sm text-slate-700 dark:text-slate-300">
               <p>{address.line1}</p>
               {address.line2 && <p>{address.line2}</p>}
-              <p>
-                {[address.city, address.state, address.postalCode].filter(Boolean).join(', ')}
-              </p>
+              <p>{[address.city, address.state, address.postalCode].filter(Boolean).join(', ')}</p>
               <p>{address.country}</p>
             </div>
           ) : (
             <p className="text-sm text-slate-500 dark:text-slate-400">No address on file.</p>
           )}
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-4 flex items-center gap-1">
-            <span className="material-symbols-outlined text-sm" aria-hidden="true">info</span>
-            Contact support to update your billing address.
+            <span className="material-symbols-outlined text-sm" aria-hidden="true">
+              info
+            </span>
+            {' '}Contact support to update your billing address.
           </p>
         </CardContent>
       </Card>
 
       {/* Success/error feedback */}
       {updateMutation.isSuccess && (
-        <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-sm text-green-700 dark:text-green-400" role="alert" aria-live="polite">
+        <div
+          className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-sm text-green-700 dark:text-green-400"
+          role="alert"
+          aria-live="polite"
+        >
           Billing information updated successfully.
         </div>
       )}

@@ -444,8 +444,8 @@ function BillingHistoryTable() {
             href="/billing/invoices"
             className="text-sm font-medium text-primary hover:text-primary-hover flex items-center gap-1"
           >
-            View All
-            {' '}<span className="material-symbols-outlined text-sm" aria-hidden="true">
+            View All{' '}
+            <span className="material-symbols-outlined text-sm" aria-hidden="true">
               arrow_forward
             </span>
           </Link>

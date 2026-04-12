@@ -12,7 +12,16 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { Card, CardHeader, CardTitle, CardContent, CardFooter, Badge, Button, cn } from '@intelliflow/ui';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardFooter,
+  Badge,
+  Button,
+  cn,
+} from '@intelliflow/ui';
 
 // ============================================
 // Types
@@ -120,8 +129,7 @@ function PublicPlanCard({
         ) : (
           <>
             <div className="text-4xl font-bold text-slate-900 dark:text-white">
-              {price}{' '}
-              <span className="text-lg text-slate-600 dark:text-slate-400">/user/mo</span>
+              {price} <span className="text-lg text-slate-600 dark:text-slate-400">/user/mo</span>
             </div>
             {priceSubtext && (
               <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">{priceSubtext}</p>
@@ -132,10 +140,7 @@ function PublicPlanCard({
 
       <ul className="space-y-3 mb-8 flex-1">
         {features.map((feature, i) => (
-          <li
-            key={i}
-            className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400"
-          >
+          <li key={i} className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400">
             <span className="material-symbols-outlined text-[#137fec] text-base mt-0.5 flex-shrink-0">
               check_circle
             </span>

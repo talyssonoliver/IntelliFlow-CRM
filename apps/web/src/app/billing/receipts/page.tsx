@@ -13,6 +13,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import { ReceiptList, type Receipt } from '@/components/billing/receipt-list';
 import { sendReceiptEmail } from '@/lib/billing/receipt-emailer';
+import { PageHeader } from '@/components/shared/page-header';
 import { useToast } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
 
@@ -96,14 +97,14 @@ export default function ReceiptsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Receipts</h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            Your payment receipts and transaction history
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        breadcrumbs={[
+          { label: 'Billing', href: '/billing' },
+          { label: 'Receipts' },
+        ]}
+        title="Receipts"
+        description="Your payment receipts and transaction history."
+      />
 
       <ReceiptList
         receipts={receipts}
