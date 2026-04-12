@@ -148,6 +148,87 @@ describe('Tenant Context', () => {
         else process.env.NODE_ENV = prevNodeEnv;
       }
     });
+
+    it('should issue SET at most once per client instance (RLS SET storm fix)', async () => {
+      // Verify the $allOperations callback only issues SET on the first query.
+      // We capture the callback passed to $extends and invoke it directly,
+      // simulating multiple Prisma queries within the same request.
+      const prevVitest = process.env.VITEST;
+      const prevNodeEnv = process.env.NODE_ENV;
+      delete process.env.VITEST;
+      process.env.NODE_ENV = 'production';
+
+      try {
+        const tenant: TenantContext = {
+          tenantId: TEST_TENANT_ID,
+          tenantType: 'user',
+          userId: TEST_USER_ID,
+          role: 'ADMIN',
+          canAccessAllTenantData: true,
+        };
+
+        // Capture the query extension config passed to $extends
+        let capturedQueryConfig: Record<string, unknown> | null = null;
+        mockPrisma.$extends.mockImplementation((config: unknown) => {
+          capturedQueryConfig = (config as { query: Record<string, unknown> }).query;
+          return mockPrisma; // return the mock itself as the "extended" client
+        });
+
+        createTenantScopedPrisma(mockPrisma as any, tenant);
+
+        expect(capturedQueryConfig).not.toBeNull();
+
+        // Extract and invoke the $allOperations callback directly
+        const allModels = (capturedQueryConfig as unknown as Record<string, unknown>)['$allModels'] as Record<string, unknown>;
+        const allOperations = allModels['$allOperations'] as (opts: { args: unknown; query: (a: unknown) => Promise<unknown> }) => Promise<unknown>;
+
+        const mockQuery = vi.fn().mockResolvedValue('result');
+        mockPrisma.$executeRawUnsafe.mockResolvedValue(undefined);
+
+        // Simulate 3 sequential queries within the same request
+        await allOperations({ args: {}, query: mockQuery });
+        await allOperations({ args: {}, query: mockQuery });
+        await allOperations({ args: {}, query: mockQuery });
+
+        // SET must be issued only once — not before every query
+        expect(mockPrisma.$executeRawUnsafe).toHaveBeenCalledTimes(1);
+        expect(mockPrisma.$executeRawUnsafe).toHaveBeenCalledWith(
+          `SET app.current_tenant_id = '${TEST_TENANT_ID}'`
+        );
+        // All 3 queries must still be called
+        expect(mockQuery).toHaveBeenCalledTimes(3);
+      } finally {
+        if (prevVitest === undefined) delete process.env.VITEST;
+        else process.env.VITEST = prevVitest;
+        if (prevNodeEnv === undefined) delete process.env.NODE_ENV;
+        else process.env.NODE_ENV = prevNodeEnv;
+      }
+    });
+
+    it('should reject invalid tenantId format to prevent SQL injection', () => {
+      const prevVitest = process.env.VITEST;
+      const prevNodeEnv = process.env.NODE_ENV;
+      delete process.env.VITEST;
+      process.env.NODE_ENV = 'production';
+      try {
+        const tenant: TenantContext = {
+          tenantId: "'; DROP TABLE users; --",
+          tenantType: 'user',
+          userId: TEST_USER_ID,
+          role: 'ADMIN',
+          canAccessAllTenantData: true,
+        };
+
+        expect(() =>
+          createTenantScopedPrisma(mockPrisma as any, tenant)
+        ).toThrow(/invalid tenantId format/);
+      } finally {
+        if (prevVitest === undefined) delete process.env.VITEST;
+        else process.env.VITEST = prevVitest;
+        if (prevNodeEnv === undefined) delete process.env.NODE_ENV;
+        else process.env.NODE_ENV = prevNodeEnv;
+      }
+    });
   });
 
   describe('tenantContextMiddleware', () => {

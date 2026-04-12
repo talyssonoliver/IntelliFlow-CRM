@@ -1,6 +1,20 @@
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import path from 'node:path';
+import { existsSync } from 'node:fs';
+
+// When running from a git worktree without its own node_modules (e.g. .claude/worktrees/),
+// vite cannot resolve Next.js or UI packages via the standard node_modules walk.
+// These aliases point at checked-in stubs so tests can run in that context.
+// In the main project (where apps/web/node_modules exists) these aliases are skipped.
+const hasLocalNodeModules = existsSync(path.resolve(__dirname, './node_modules'));
+const worktreeStubAliases = hasLocalNodeModules
+  ? []
+  : [
+      { find: /^next\/link$/, replacement: path.resolve(__dirname, './src/test/__mocks__/next-link-stub.tsx') },
+      { find: /^@intelliflow\/ui$/, replacement: path.resolve(__dirname, './src/test/__mocks__/intelliflow-ui-stub.tsx') },
+      { find: /^server-only$/, replacement: path.resolve(__dirname, './src/test/__mocks__/empty.ts') },
+    ];
 
 export default defineConfig({
   // Type assertion needed due to vite version mismatch between
@@ -104,6 +118,7 @@ export default defineConfig({
         find: /^@intelliflow\/api-client$/,
         replacement: path.resolve(__dirname, './src/test/__mocks__/empty.ts'),
       },
+      ...worktreeStubAliases,
       { find: '@/components', replacement: path.resolve(__dirname, './src/components') },
       { find: '@/lib', replacement: path.resolve(__dirname, './src/lib') },
       { find: '@', replacement: path.resolve(__dirname, './src') },
