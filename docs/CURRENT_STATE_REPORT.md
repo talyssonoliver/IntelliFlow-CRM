@@ -1,20 +1,21 @@
 # Current State Report
-_Generated: 2026-04-11T22:55:26.942Z_
+_Generated: 2026-04-12T15:10:41.219Z_
 
 > Built dynamically from `.specify/sprints/**/attestations/*/attestation.json` for task evidence, the canonical `Sprint_plan.csv` for task ownership and fallback DoD, and existing sprint summary files for sprint titles when available.
 
 ## Current State
 
 - Numbered sprint scope: 30 sprints (0-29) plus 5 continuous tasks.
-- Overall progress: 368/569 tasks completed (64.67%), 201 backlog, 0 blocked, 0 in progress.
-- Numbered sprint progress alone: 363/564 tasks completed or attested inside numbered sprints.
+- Overall progress: 370/569 tasks completed (65.03%), 198 backlog, 0 blocked, 0 in progress.
+- Numbered sprint progress alone: 366/564 tasks completed or attested inside numbered sprints.
 - Blocking issue: none currently marked `Blocked` in the sprint plan.
-- Ready-to-start work: IFC-031 (Sprint 17), IFC-196 (Sprint 17), IFC-300 (Sprint 17), PG-051 (Sprint 17), PG-052 (Sprint 17).
+- Ready-to-start work: IFC-196 (Sprint 17), IFC-300 (Sprint 17), PG-051 (Sprint 17), PG-053 (Sprint 17), PG-054 (Sprint 17).
 - Active focus band: Sprints 17, 18, 19, 20 carry the earliest remaining backlog.
 
 ## Source Health
 
 - `.specify` sprint summary coverage is complete for the numbered sprint set.
+- Attested but not completed in CSV: PG-052 (Needs Human).
 
 ## Continuous Work
 
@@ -249,23 +250,23 @@ _Generated: 2026-04-11T22:55:26.942Z_
 
 ## Sprint 17 - Sprint 17
 
-- Status: 6/21 completed, 15 backlog, 0 blocked.
+- Status: 8/21 completed, 12 backlog, 0 blocked.
 - Primary focus areas: Legal Pages (5), Settings (5), Support (4).
-- Evidence coverage: 6/6 completed tasks have canonical `attestation.json` evidence.
+- Evidence coverage: 8/8 completed tasks have canonical `attestation.json` evidence.
 
 **Accomplished**
 - **PG-050** — Privacy Policy. : Fixed content-audit-results.json (added missing /404 route, updated counts 131→132/14→15). Fixed 26%→82.6% by adding consent-tracker unit tests. Fixed 5 pre-existing lint errors (unused imports in billing components and privacy test).......
 - **IFC-299** — Help Article CRUD tRPC Router. Help Article CRUD tRPC router with 9 tenant-scoped procedures (list, getBySlug, getByCategory, getRelated, create, update, delete, publish, unpublish). 49 tests pass, coverage meets all thresholds.......
 - **IFC-030** — PHASE-005: Smart Lead Routing. LeadRoutingService implements 3-strategy cascade (rule→skill→load_balance). CRITICAL: writes only schema-valid fields to RoutingAudit (no phantom-field bug). 62 service tests + 33 router tests + 15 container tests = 110 total. Coverage:......
 - **IFC-298** — HelpArticle Prisma Model + Migration. Schema-only task — 3 models (HelpArticle, ArticleSection, ArticleFeedback) + 1 enum (ArticleStatus) + migration. No runtime behavior changes. IFC-299/300/303 consume these models downstream.... HelpArticle, ArticleSection, ArticleFeedback Prisma models;...
-- **IFC-303** — Article Feedback tRPC Mutation. Added submitFeedback mutation and getFeedbackStats query to existing help-article router (created by IFC-299). Wired FeedbackWidget to call tRPC mutation with onSuccess/onError error handling. Post-audit fixes:......
+- **PG-056** — 500 Error. Implementation was completed in a prior session. This session: verified all artifacts, updated sitemap-fixes.test.ts count (28→29, pre-existing drift from /status static route addition), ran all validations, checked plan checkboxes (14/14),......
 
 **Open Work**
-- **IFC-031** — PHASE-005: Workflow Builder UI (React Flow). Visual workflow creation, node-based editor
 - **PG-051** — Terms of Service. response under 200ms, Lighthouse 90, terms displayed
-- **PG-052** — Cookie Policy. response under 200ms, Lighthouse 90, policy shown
 - **PG-053** — Data Processing Addendum. response under 200ms, Lighthouse 90, DPA available
 - **PG-054** — Acceptable Use Policy. response under 200ms, Lighthouse 90, AUP displayed
+- **PG-057** — Maintenance. response under 200ms, Lighthouse 90, status shown
+- **PG-126** — Add in‑app onboarding, guided product tours and feedback collection. Users see guided tours on first login; ability to replay; feedback widget integrated
 
 ## Sprint 18 - Sprint 18
 

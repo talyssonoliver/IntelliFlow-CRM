@@ -51,8 +51,10 @@ intelliflow.com
 │   ├── /security                         [PG-008]
 │   ├── /status                           [PG-014]
 │   ├── /404                              [PG-055] Direct missing-page route (noindex)
+│   ├── /500                              [PG-056] Direct error-page route (noindex)
 │   ├── /privacy                          [PG-050] Privacy policy
 │   ├── /terms                            [PG-051] Terms of service
+│   ├── /cookies                          [PG-052] Cookie policy
 │   │
 │   ├── /blog                             [PG-009]
 │   │   └── /blog/[slug]                  [PG-010] Dynamic blog post
@@ -305,10 +307,11 @@ only** — no authenticated routes.
 | `/security`                            | 0.6      | monthly          |
 | `/status`                              | 0.4      | hourly           |
 | `/privacy`                             | 0.5      | monthly          |
+| `/cookies`                             | 0.5      | monthly          |
 | `/blog/ai-lead-scoring-best-practices` | 0.6      | monthly          |
 | `/blog/governance-ready-automation`    | 0.6      | monthly          |
 
-**Excluded:** All 78 authenticated routes, `/404`, auth flow pages, dynamic
+**Excluded:** All 78 authenticated routes, `/404`, `/500`, auth flow pages, dynamic
 `[id]`/`[token]` routes, API routes, redirect-only paths.
 
 ### `apps/web/src/app/robots.ts`
@@ -540,8 +543,10 @@ apps/web/src/app/
 │   ├── security/page.tsx         # /security
 │   ├── status/page.tsx           # /status
 │   ├── 404/page.tsx              # /404
+│   ├── 500/page.tsx              # /500
 │   ├── privacy/page.tsx          # /privacy
 │   ├── terms/page.tsx            # /terms
+│   ├── cookies/page.tsx          # /cookies
 │   ├── blog/
 │   │   ├── page.tsx              # /blog
 │   │   └── [slug]/page.tsx       # /blog/[slug]

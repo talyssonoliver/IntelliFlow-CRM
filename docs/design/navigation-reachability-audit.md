@@ -122,6 +122,7 @@ Legend:
 | `/contact`                                                | OK     | Header/footer link                  |
 | `/features`                                               | OK     | Header link                         |
 | `/privacy`                                                | OK     | Footer, signup, home, cookie banner |
+| `/cookies`                                                | OK     | Footer (2x), cookie banner          |
 | `/login`, `/signup`, `/signup/success`                    | OK     | Header CTA                          |
 | `/forgot-password`, `/reset-password/*`                   | OK     | Login page link                     |
 | `/mfa/verify`                                             | OK     | Login flow                          |

@@ -19,7 +19,7 @@ partially supported on the `/deals` pipeline view.
 
 ## 2. Scope
 
-This statement covers the IntelliFlow CRM web application across all 89
+This statement covers the IntelliFlow CRM web application across all 90
 user-facing routes (excluding developer portal). Dynamic segment routes (e.g.,
 `/contacts/[id]`) inherit conformance status from their parent static route and
 are not listed separately.
@@ -59,6 +59,7 @@ are not listed separately.
   `/settings/integrations`, `/settings/leads`, `/settings/notifications`,
   `/settings/pipeline`, `/settings/routing`, `/settings/security/mfa`,
   `/settings/team`
+- **System pages (1):** `/500`
 
 ---
 
@@ -73,8 +74,8 @@ are not listed separately.
 | Level A: Not Applicable          | 4                  |
 | Level AA: Supports               | 16                 |
 | Level AA: Not Applicable         | 4                  |
-| Routes fully conformant          | 88 of 89           |
-| Routes partially conformant      | 1 of 89 (`/deals`) |
+| Routes fully conformant          | 89 of 90           |
+| Routes partially conformant      | 1 of 90 (`/deals`) |
 
 ---
 
@@ -223,3 +224,4 @@ Users who encounter accessibility barriers can report issues via:
 | 1.2.0   | 2026-03-10 | Engineering (PG-173)  | Added 3 ticket config routes (sla-policies, types, automations) — scope now 85 routes |
 | 1.3.0   | 2026-03-11 | Engineering (PG-174)  | Added 2 notification config routes (channels, quiet-hours) — scope now 87 routes      |
 | 1.4.0   | 2026-04-10 | Engineering (PG-051, IFC-031) | Added `/terms` (PG-051) and `/cases/case-workflows` (IFC-031) — scope now 89 routes |
+| 1.5.0   | 2026-04-12 | Engineering (PG-056)          | Added `/500` system error page — scope now 90 routes; `h1` heading, keyboard-accessible recovery actions, semantic error badge |

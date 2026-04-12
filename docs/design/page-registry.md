@@ -2,8 +2,8 @@
 
 > **Location**: `docs/design/page-registry.md` **Purpose**: Central registry of
 > all UI pages with task IDs, KPIs, file paths, components, API routers, test
-> paths, and RACI assignments **Last Updated**: 2026-02-24 (as of Sprint 14)
-> **Total Pages**: 143
+> paths, and RACI assignments **Last Updated**: 2026-04-12 (as of Sprint 17)
+> **Total Pages**: 197
 
 ---
 
@@ -141,6 +141,20 @@ Each route entry uses this standard table format:
 | **Status**     | Implemented                                                 |
 | **RACI**       | R: Frontend / A: Legal Counsel / C: Compliance / I: QA      |
 
+### Cookie Policy (`/cookies`)
+
+| Field          | Value                                                       |
+| -------------- | ----------------------------------------------------------- |
+| **Task ID**    | PG-052                                                      |
+| **File Path**  | `apps/web/src/app/(public)/cookies/page.tsx`                |
+| **Layout**     | `apps/web/src/app/(public)/layout.tsx`                      |
+| **API Router** | N/A                                                         |
+| **E2E Test**   | None                                                        |
+| **Unit Tests** | `apps/web/src/app/(public)/cookies/__tests__/page.test.tsx`, `apps/web/src/lib/legal/__tests__/cookie-policy-tracker.test.ts` |
+| **KPI**        | Lighthouse >=90; Response <200ms; SEO >=90                  |
+| **Status**     | Implemented                                                 |
+| **RACI**       | R: Frontend / A: Legal Counsel / C: Compliance / I: QA      |
+
 ### Partners (`/partners`)
 
 | Field          | Value                                                        |
@@ -207,6 +221,20 @@ Each route entry uses this standard table format:
 | **API Router** | N/A                                             |
 | **E2E Test**   | None                                            |
 | **Unit Tests** | `apps/web/src/app/404/__tests__/page.test.tsx`  |
+| **KPI**        | Lighthouse >=90; Response <200ms; noindex route |
+| **Status**     | Implemented                                     |
+| **RACI**       | R: Frontend / A: SRE / C: Product / I: QA       |
+
+### 500 Server Error (`/500`)
+
+| Field          | Value                                           |
+| -------------- | ----------------------------------------------- |
+| **Task ID**    | PG-056                                          |
+| **File Path**  | `apps/web/src/app/500/page.tsx`                 |
+| **Layout**     | `apps/web/src/app/layout.tsx`                   |
+| **API Router** | N/A                                             |
+| **E2E Test**   | None                                            |
+| **Unit Tests** | `apps/web/src/app/500/__tests__/page.test.tsx`  |
 | **KPI**        | Lighthouse >=90; Response <200ms; noindex route |
 | **Status**     | Implemented                                     |
 | **RACI**       | R: Frontend / A: SRE / C: Product / I: QA       |
