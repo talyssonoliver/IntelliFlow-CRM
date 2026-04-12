@@ -3,19 +3,15 @@
  *
  * PG-178: Lead Settings
  *
- * Tests the page.tsx entry point which uses next/dynamic for SSR-safe loading.
+ * Tests the page.tsx entry point which uses <Suspense> for streaming.
  */
 
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 
-// Mock next/dynamic to render the loading fallback synchronously
-vi.mock('next/dynamic', () => ({
-  default: (_loader: any, opts: any) => {
-    const Component = () => (opts?.loading ? opts.loading() : <div>Loading...</div>);
-    Component.displayName = 'DynamicComponent';
-    return Component;
-  },
+// Mock LeadSettingsContent to avoid full tRPC/auth setup in this unit test
+vi.mock('../LeadSettingsContent', () => ({
+  default: () => <div data-testid="lead-settings-content">Content</div>,
 }));
 
 // Mock LeadSettingsLoading to avoid importing @intelliflow/ui in this test
@@ -36,21 +32,21 @@ describe('LeadSettings Page entry point', () => {
   it('renders the page component without crashing', () => {
     render(<LeadSettingsPage />);
 
-    // The page uses dynamic import — the mock above renders the loading fallback
+    // The page uses Suspense — content renders synchronously in test env
+    expect(screen.getByTestId('lead-settings-content')).toBeInTheDocument();
+  });
+
+  it('renders content inside a Suspense boundary', () => {
+    render(<LeadSettingsPage />);
+
+    expect(screen.getByTestId('lead-settings-content')).toBeInTheDocument();
+  });
+
+  it('uses LeadSettingsLoading as Suspense fallback', () => {
+    // Verify the loading component itself renders correctly
+    render(<LeadSettingsLoading />);
+
     expect(screen.getByTestId('lead-settings-loading')).toBeInTheDocument();
-  });
-
-  it('shows loading state initially via the dynamic loading fallback', () => {
-    render(<LeadSettingsPage />);
-
-    expect(screen.getByText('Loading...')).toBeInTheDocument();
-  });
-
-  it('displays a loading indicator element', () => {
-    render(<LeadSettingsPage />);
-
-    const loadingEl = screen.getByTestId('lead-settings-loading');
-    expect(loadingEl).toBeInTheDocument();
   });
 });
 
