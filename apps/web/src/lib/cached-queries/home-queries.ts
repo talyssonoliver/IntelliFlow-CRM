@@ -2,7 +2,7 @@
 
 import { cacheLife, cacheTag } from 'next/cache';
 import { createCallerFromToken } from '@/lib/trpc-server';
-import { DASHBOARD } from '@/lib/cache-tags';
+import { DASHBOARD, userTag } from '@/lib/cache-tags';
 import { DASHBOARD_STATS } from '@/lib/cache-profiles';
 
 /**
@@ -12,9 +12,10 @@ import { DASHBOARD_STATS } from '@/lib/cache-profiles';
  *
  * 60-second cache matches the client-side React Query staleTime for the same endpoint.
  */
-export async function fetchWelcomeSummary(token: string | null) {
+export async function fetchWelcomeSummary(token: string | null, userId?: string | null) {
   cacheLife(DASHBOARD_STATS);
   cacheTag(DASHBOARD);
+  if (userId) cacheTag(userTag(userId));
 
   const caller = await createCallerFromToken(token);
   return caller.home.getWelcomeSummary();
