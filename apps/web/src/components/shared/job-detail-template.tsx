@@ -171,10 +171,8 @@ export function JobDetailTemplate({ job, relatedJobs = [] }: Readonly<JobDetailT
                 What You&apos;ll Do
               </h2>
               <ul className="space-y-3">
-                {job.responsibilities.map((item, idx) => (
-                  <li key={idx} className="flex items-start gap-3">
-                    {' '}
-                    {/* NOSONAR typescript:S6479 */}
+                {job.responsibilities.map((item) => (
+                  <li key={item} className="flex items-start gap-3">
                     <span
                       className="material-symbols-outlined text-[#137fec] mt-0.5"
                       aria-hidden="true"
@@ -196,10 +194,8 @@ export function JobDetailTemplate({ job, relatedJobs = [] }: Readonly<JobDetailT
                 What We&apos;re Looking For
               </h2>
               <ul className="space-y-3">
-                {job.requirements.map((item, idx) => (
-                  <li key={idx} className="flex items-start gap-3">
-                    {' '}
-                    {/* NOSONAR typescript:S6479 */}
+                {job.requirements.map((item) => (
+                  <li key={item} className="flex items-start gap-3">
                     <span
                       className="material-symbols-outlined text-slate-400 mt-0.5"
                       aria-hidden="true"
@@ -222,10 +218,8 @@ export function JobDetailTemplate({ job, relatedJobs = [] }: Readonly<JobDetailT
                   Nice to Have
                 </h2>
                 <ul className="space-y-3">
-                  {job.niceToHave.map((item, idx) => (
-                    <li key={idx} className="flex items-start gap-3">
-                      {' '}
-                      {/* NOSONAR typescript:S6479 */}
+                  {job.niceToHave.map((item) => (
+                    <li key={item} className="flex items-start gap-3">
                       <span
                         className="material-symbols-outlined text-amber-500 mt-0.5"
                         aria-hidden="true"
@@ -249,9 +243,9 @@ export function JobDetailTemplate({ job, relatedJobs = [] }: Readonly<JobDetailT
                   Benefits & Perks
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {job.benefits.map((item, idx) => (
+                  {job.benefits.map((item) => (
                     <div
-                      key={idx} // NOSONAR typescript:S6479
+                      key={item}
                       className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800"
                     >
                       <span className="material-symbols-outlined text-[#137fec]" aria-hidden="true">

@@ -322,16 +322,16 @@ export function MfaVerification({
       {/* Loading indicator (for test) */}
       {verifyMfaMutation.isPending && (
          
-        <div
+        <output
           data-testid="loading-indicator"
-          className="absolute inset-0 bg-slate-900/50 flex items-center justify-center z-10"
-          role="progressbar" // NOSONAR typescript:S6819
+          className="absolute inset-0 bg-slate-900/50 flex items-center justify-center z-10 block"
+          role="status"
           aria-label="Verifying code"
         >
           <span className="material-symbols-outlined animate-spin text-3xl text-primary">
             progress_activity
           </span>
-        </div>
+        </output>
       )}
 
       {/* MFA Challenge Component */}

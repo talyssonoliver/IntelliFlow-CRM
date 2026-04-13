@@ -4,7 +4,7 @@ import { Card } from '@intelliflow/ui';
 import {
   PieChart,
   Pie,
-  Cell, // NOSONAR typescript:S1874
+  Cell,
   BarChart,
   Bar,
   XAxis,

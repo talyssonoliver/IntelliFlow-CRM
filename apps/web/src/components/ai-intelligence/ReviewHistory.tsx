@@ -61,6 +61,9 @@ const SORT_OPTIONS = [
 
 const BUCKET_ORDER = ['Today', 'Yesterday', 'Last 7 Days', 'Last 30 Days', 'Older'];
 
+const HISTORY_GRID_SKELETON_KEYS = ['hist-grid-0', 'hist-grid-1', 'hist-grid-2', 'hist-grid-3'] as const;
+const HISTORY_LIST_SKELETON_KEYS = ['hist-list-0', 'hist-list-1', 'hist-list-2'] as const;
+
 // ============================================
 // Utility Functions
 // ============================================
@@ -395,14 +398,14 @@ export function ReviewHistory() {
       <div className="flex flex-col gap-6">
         <Skeleton className="h-8 w-64" />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-20 rounded-lg" data-testid="skeleton" /> // NOSONAR typescript:S6479
+          {HISTORY_GRID_SKELETON_KEYS.map((key) => (
+            <Skeleton key={key} className="h-20 rounded-lg" data-testid="skeleton" />
           ))}
         </div>
         <Skeleton className="h-12 w-full rounded-lg" data-testid="skeleton" />
         <div className="space-y-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-32 w-full rounded-lg" data-testid="skeleton" /> // NOSONAR typescript:S6479
+          {HISTORY_LIST_SKELETON_KEYS.map((key) => (
+            <Skeleton key={key} className="h-32 w-full rounded-lg" data-testid="skeleton" />
           ))}
         </div>
       </div>

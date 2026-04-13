@@ -272,10 +272,8 @@ function PlanCard({
         )}
 
         <ul className="space-y-2">
-          {plan.features.map((feature, index) => (
-            <li key={index} className="flex items-start gap-2 text-sm">
-              {' '}
-              {/* NOSONAR typescript:S6479 */}
+          {plan.features.map((feature) => (
+            <li key={feature.name} className="flex items-start gap-2 text-sm">
               <span
                 className={`material-symbols-outlined text-lg ${
                   feature.included
@@ -446,10 +444,8 @@ function ChangePlanDialog({
                 Features You'll Gain
               </h4>
               <ul className="space-y-1">
-                {gainedFeatures.map((f, i) => (
-                  <li key={i} className="flex items-center gap-2 text-sm">
-                    {' '}
-                    {/* NOSONAR typescript:S6479 */}
+                {gainedFeatures.map((f) => (
+                  <li key={f.name} className="flex items-center gap-2 text-sm">
                     <span className="material-symbols-outlined text-green-600">
                       add_circle
                     </span>{' '}
@@ -466,10 +462,8 @@ function ChangePlanDialog({
                 Features You'll Lose
               </h4>
               <ul className="space-y-1">
-                {lostFeatures.map((f, i) => (
-                  <li key={i} className="flex items-center gap-2 text-sm">
-                    {' '}
-                    {/* NOSONAR typescript:S6479 */}
+                {lostFeatures.map((f) => (
+                  <li key={f.name} className="flex items-center gap-2 text-sm">
                     <span className="material-symbols-outlined text-amber-600">
                       remove_circle
                     </span>{' '}

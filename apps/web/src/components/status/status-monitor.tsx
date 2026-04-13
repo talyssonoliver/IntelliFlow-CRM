@@ -126,19 +126,18 @@ export function StatusMonitor({ services, refreshInterval = 30000 }: Readonly<St
                   </span>
                 </div>
                 { }
-                <div
+                <figure
                   className="flex gap-0.5"
-                  role="img" // NOSONAR typescript:S6819 — uptime chart built from bar divs; <img> cannot contain dynamic bar elements
                   aria-label={`${service.name} uptime chart: ${service.uptime}% over 90 days`}
                 >
-                  {bars.map((bar, idx) => (
+                  {bars.map((bar) => (
                     <div
-                      key={idx} // NOSONAR typescript:S6479
+                      key={bar.day}
                       className={`h-8 w-1 rounded-sm ${getStatusColor(bar.status)} opacity-80 hover:opacity-100 transition-opacity`}
-                      title={`Day ${90 - idx}: ${bar.status.replaceAll('_', ' ')}`}
+                      title={`Day ${bar.day}: ${bar.status.replaceAll('_', ' ')}`}
                     />
                   ))}
-                </div>
+                </figure>
               </div>
             );
           })}

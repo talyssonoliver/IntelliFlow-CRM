@@ -29,6 +29,9 @@ const ExperimentResultsPanel = lazy(() => import('./ExperimentResultsPanel'));
 
 const BREADCRUMBS = [{ label: 'AI & Agents', href: '/agent-approvals' }, { label: 'Experiments' }];
 
+const EXP_GRID_SKELETON_KEYS = ['exp-grid-0', 'exp-grid-1', 'exp-grid-2', 'exp-grid-3', 'exp-grid-4'] as const;
+const EXP_LIST_SKELETON_KEYS = ['exp-list-0', 'exp-list-1', 'exp-list-2'] as const;
+
 // ============================================
 // Internal StatCard (defined within file, following LeadScoringDashboard pattern)
 // ============================================
@@ -168,14 +171,14 @@ export function ExperimentsDashboard() {
       <div data-testid="experiments-loading">
         <PageHeader breadcrumbs={BREADCRUMBS} title="A/B Experiments" />
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mt-6">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-24 rounded-xl" /> // NOSONAR typescript:S6479
+          {EXP_GRID_SKELETON_KEYS.map((key) => (
+            <Skeleton key={key} className="h-24 rounded-xl" />
           ))}
         </div>
         <Skeleton className="h-14 w-full rounded-xl mt-6" />
         <div className="space-y-3 mt-4">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-36 w-full rounded-lg" /> // NOSONAR typescript:S6479
+          {EXP_LIST_SKELETON_KEYS.map((key) => (
+            <Skeleton key={key} className="h-36 w-full rounded-lg" />
           ))}
         </div>
       </div>

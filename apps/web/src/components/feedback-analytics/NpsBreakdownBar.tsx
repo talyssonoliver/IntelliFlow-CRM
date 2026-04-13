@@ -10,7 +10,7 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
-  Cell, // NOSONAR typescript:S1874
+  Cell,
   XAxis,
   YAxis,
   CartesianGrid,

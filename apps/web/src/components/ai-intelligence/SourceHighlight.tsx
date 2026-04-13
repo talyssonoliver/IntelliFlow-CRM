@@ -33,13 +33,12 @@ export function SourceHighlight({ text, query, maxLength = 300 }: Readonly<Sourc
     <span>
       {parts.map((part, i) =>
         part.highlight ? (
-          <mark key={i} className="bg-yellow-200 dark:bg-yellow-800 rounded px-0.5">
+          <mark key={`hl-${part.text}-${i}`} className="bg-yellow-200 dark:bg-yellow-800 rounded px-0.5">
             {' '}
-            {/* NOSONAR typescript:S6479 */}
             {part.text}
           </mark>
         ) : (
-          <span key={i}>{part.text}</span> // NOSONAR typescript:S6479
+          <span key={`txt-${part.text}-${i}`}>{part.text}</span>
         )
       )}
     </span>

@@ -62,7 +62,7 @@ export function EmailListItem({ email, isSelected, onSelect }: Readonly<EmailLis
       align="start"
     >
       { }
-      <li // NOSONAR typescript:S6842
+      <li
         role="option"
         aria-selected={isSelected}
         tabIndex={-1}

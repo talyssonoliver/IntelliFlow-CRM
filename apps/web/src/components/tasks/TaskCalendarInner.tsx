@@ -50,10 +50,11 @@ function MonthGridEvent({ calendarEvent }: Readonly<{ calendarEvent: Record<stri
   const custom = calendarEvent._custom as { priority: string } | undefined;
   const chipColor =
     PRIORITY_CHIP_COLORS[custom?.priority ?? 'MEDIUM'] ?? PRIORITY_CHIP_COLORS.MEDIUM;
+  const chipClass = `w-full text-left rounded px-1 py-0.5 text-[10px] truncate ${chipColor}`;
 
   return (
     <div
-      className={`w-full text-left rounded px-1 py-0.5 text-[10px] truncate ${chipColor}`} // NOSONAR typescript:S4624 — single template literal with variable interpolation, not nested
+      className={chipClass}
       data-testid="calendar-task-chip"
     >
       {calendarEvent.title as string}

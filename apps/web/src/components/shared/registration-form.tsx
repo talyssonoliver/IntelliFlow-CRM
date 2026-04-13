@@ -153,13 +153,13 @@ function PasswordStrengthIndicator({
       </div>
       <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
         { }
-        <div
+        <span
           className={cn(
-            'h-full rounded-full transition-all duration-300',
+            'h-full rounded-full transition-all duration-300 block',
             strengthColors[strength],
             strengthWidths[strength]
           )}
-          role="progressbar" // NOSONAR typescript:S6819
+          role="progressbar"
           aria-valuenow={Math.round((calculatePasswordStrength(password).score / 6) * 100)}
           aria-valuemin={0}
           aria-valuemax={100}

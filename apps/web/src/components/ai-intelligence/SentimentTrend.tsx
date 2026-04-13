@@ -35,9 +35,8 @@ export default function SentimentTrend({ trends }: Readonly<SentimentTrendProps>
   }));
 
   return (
-    <div
+    <figure
       aria-label="Sentiment trend chart"
-      role="img" // NOSONAR typescript:S6819 — Recharts wrapper div; <img> cannot contain Recharts SVG components
       className="w-full h-64"
     >
       <ResponsiveContainer width="100%" height="100%">
@@ -87,6 +86,6 @@ export default function SentimentTrend({ trends }: Readonly<SentimentTrendProps>
           />
         </AreaChart>
       </ResponsiveContainer>
-    </div>
+    </figure>
   );
 }

@@ -12,6 +12,8 @@ import type {
   DocumentFilters,
 } from './types';
 
+const DOCUMENT_SKELETON_KEYS = ['doc-0', 'doc-1', 'doc-2', 'doc-3', 'doc-4'] as const;
+
 // =============================================================================
 // Sub-components and column factory (module-level — fixes S6478)
 // =============================================================================
@@ -362,8 +364,8 @@ export function DocumentList({
   if (isLoading) {
     return (
       <output className="space-y-4" aria-label="Loading documents">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="h-16 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" /> // NOSONAR typescript:S6479
+        {DOCUMENT_SKELETON_KEYS.map((key) => (
+          <div key={key} className="h-16 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" />
         ))}
       </output>
     );

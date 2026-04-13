@@ -80,23 +80,66 @@ vi.mock('../EscalationAlert', () => ({
   },
 }));
 
-// Mock @intelliflow/ui components
-vi.mock('@intelliflow/ui', () => ({
-  Card: ({ children, className }: any) => <div className={className}>{children}</div>,
-  toast: vi.fn(),
-  AlertDialog: ({ children, open }: any) => (open ? <div>{children}</div> : null),
-  AlertDialogContent: ({ children }: any) => <div>{children}</div>,
-  AlertDialogHeader: ({ children }: any) => <div>{children}</div>,
-  AlertDialogTitle: ({ children }: any) => <h2>{children}</h2>,
-  AlertDialogDescription: ({ children }: any) => <p>{children}</p>,
-  AlertDialogFooter: ({ children }: any) => <div>{children}</div>,
-  AlertDialogCancel: ({ children }: any) => <button>{children}</button>,
-  AlertDialogAction: ({ children, onClick, className }: any) => (
-    <button onClick={onClick} className={className}>
+// Mock @intelliflow/ui components — Proxy catches unknown imports as passthrough wrappers.
+vi.mock('@intelliflow/ui', () => {
+  const Passthrough = ({ children, ...props }: any) => <div {...props}>{children}</div>;
+  const explicit: Record<string, any> = {
+    Card: ({ children, className }: any) => <div className={className}>{children}</div>,
+  Button: ({ children, onClick, ...props }: any) => (
+    <button onClick={onClick} {...props}>
       {children}
     </button>
   ),
-}));
+  Badge: ({ children, ...props }: any) => <span {...props}>{children}</span>,
+  Skeleton: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+  Separator: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+  HoverCard: ({ children, open }: any) => (open === false ? null : <div>{children}</div>),
+  HoverCardTrigger: ({ children }: any) => <div>{children}</div>,
+  HoverCardContent: ({ children }: any) => <div>{children}</div>,
+  EmptyState: ({ title, description, children }: any) => (
+    <div data-testid="empty-state">
+      {title}
+      {description}
+      {children}
+    </div>
+  ),
+  DropdownMenu: ({ children }: any) => <div>{children}</div>,
+  DropdownMenuTrigger: ({ children }: any) => <div>{children}</div>,
+  DropdownMenuContent: ({ children }: any) => <div>{children}</div>,
+  DropdownMenuItem: ({ children, onClick }: any) => <button onClick={onClick}>{children}</button>,
+  DropdownMenuSeparator: () => <hr />,
+  Tabs: ({ children }: any) => <div>{children}</div>,
+  TabsList: ({ children }: any) => <div role="tablist">{children}</div>,
+  TabsTrigger: ({ children, value }: any) => <button role="tab" data-value={value}>{children}</button>,
+  TabsContent: ({ children }: any) => <div>{children}</div>,
+    cn: (...classes: any[]) => classes.filter(Boolean).join(' '),
+    toast: Object.assign(vi.fn(), {
+      success: vi.fn(),
+      error: vi.fn(),
+      info: vi.fn(),
+      warning: vi.fn(),
+    }),
+    AlertDialog: ({ children, open }: any) => (open ? <div>{children}</div> : null),
+    AlertDialogContent: ({ children }: any) => <div>{children}</div>,
+    AlertDialogHeader: ({ children }: any) => <div>{children}</div>,
+    AlertDialogTitle: ({ children }: any) => <h2>{children}</h2>,
+    AlertDialogDescription: ({ children }: any) => <p>{children}</p>,
+    AlertDialogFooter: ({ children }: any) => <div>{children}</div>,
+    AlertDialogCancel: ({ children }: any) => <button>{children}</button>,
+    AlertDialogAction: ({ children, onClick, className }: any) => (
+      <button onClick={onClick} className={className}>
+        {children}
+      </button>
+    ),
+  };
+  return new Proxy(explicit, {
+    get(target, prop: string) {
+      if (prop in target) return target[prop];
+      if (prop === '__esModule') return true;
+      return Passthrough;
+    },
+  });
+});
 
 describe('TicketDetail', () => {
   const mockTicket = {

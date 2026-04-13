@@ -1,34 +1,47 @@
 'use client';
 
 /**
- * ReactFlowComponent — IFC-031
+ * ReactFlowComponent
  *
  * The inner browser-only component containing the actual React Flow canvas.
  * NEVER import this file directly — always use WorkflowCanvas.tsx which
  * wraps it with `dynamic({ ssr: false })` to prevent SSR breakage.
  *
  * Architecture:
- * - DndContext wraps the full layout (palette + canvas)
- * - ReactFlowProvider provides useReactFlow() to WorkflowToolbar
- * - ReactFlow is the actual canvas
- * - NodePalette is the drag source
- * - NodeConfigPanel opens as a Sheet when a node is clicked
+ *   ReactFlowComponent (outer)
+ *     └─ ReactFlowProvider
+ *         └─ CanvasInner
+ *              ├─ useReactFlow() for screenToFlowPosition etc.
+ *              └─ DndContext
+ *                   ├─ NodePalette                 (drag source)
+ *                   └─ DroppableCanvasArea         (drop target)
+ *                        └─ ReactFlow + controls + toolbar + minimap
  */
 
-import { useState, useCallback, useMemo, useRef } from 'react';
+import { useState, useCallback, useMemo } from 'react';
+import type { ReactNode } from 'react';
 import {
   ReactFlow,
   Background,
   Controls,
   MiniMap,
   ReactFlowProvider,
+  useReactFlow,
   Panel,
   type Node,
   type Edge,
   type OnConnect,
   type NodeTypes,
 } from '@xyflow/react';
-import { DndContext, type DragEndEvent } from '@dnd-kit/core';
+import {
+  DndContext,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  useDroppable,
+  type DragEndEvent,
+} from '@dnd-kit/core';
 import { useWorkflowCanvas, type CanvasNode, type CanvasEdge } from '@/hooks/useWorkflowCanvas';
 import { useWorkflowMutations } from '@/hooks/useWorkflowMutations';
 import { api } from '@/lib/api';
@@ -36,6 +49,7 @@ import { workflowNodeTypes } from './WorkflowNodeCard';
 import { NodeConfigPanel } from './NodeConfigPanel';
 import { NodePalette } from './NodePalette';
 import { WorkflowToolbar } from './WorkflowToolbar';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import type { WorkflowNodeType, WorkflowNodeConfig } from '@/lib/workflow-types';
 
 // ---------------------------------------------------------------------------
@@ -64,11 +78,149 @@ export interface ReactFlowComponentProps {
 const EMPTY_NODES: CanvasNode[] = [];
 const EMPTY_EDGES: CanvasEdge[] = [];
 
+/** Shared id for the ReactFlow pane droppable — referenced by tests + guards. */
+const CANVAS_DROP_ZONE_ID = 'canvas-drop-zone';
+
+/**
+ * Map legacy persisted node types to the canonical 5 used by the
+ * NodeConfigPanel + registry. Returns the canonical type, a possibly
+ * augmented config (e.g. legacy `notify` gets `actionType: send_notification`)
+ * and the display label the node card should show.
+ *
+ * Legacy types persist because IFC-028 and earlier seeded workflows with
+ * action-style strings directly as `type` ("notify", "approval", "condition"…).
+ * We keep the visual label but normalize the structural type so the
+ * per-variant config form renders.
+ */
+function normalizeLegacyNodeType(
+  rawType: string,
+  rawConfig: Record<string, unknown>,
+): { canonicalType: string; canonicalConfig: Record<string, unknown>; displayLabel: string } {
+  const label = rawType.charAt(0).toUpperCase() + rawType.slice(1);
+  switch (rawType) {
+    case 'notify':
+    case 'send_notification':
+      return {
+        canonicalType: 'action',
+        canonicalConfig: { actionType: 'send_notification', ...rawConfig },
+        displayLabel: rawType === 'notify' ? 'Notify' : 'Send notification',
+      };
+    case 'log':
+    case 'log_event':
+      return {
+        canonicalType: 'action',
+        canonicalConfig: { actionType: 'log_event', ...rawConfig },
+        displayLabel: 'Log',
+      };
+    case 'task':
+    case 'create_task':
+      return {
+        canonicalType: 'action',
+        canonicalConfig: { actionType: 'create_task', ...rawConfig },
+        displayLabel: 'Create task',
+      };
+    case 'webhook':
+    case 'call_webhook':
+      return {
+        canonicalType: 'action',
+        canonicalConfig: { actionType: 'call_webhook', ...rawConfig },
+        displayLabel: 'Webhook',
+      };
+    case 'update_field':
+      return {
+        canonicalType: 'action',
+        canonicalConfig: { actionType: 'update_field', ...rawConfig },
+        displayLabel: 'Update field',
+      };
+    case 'trigger_workflow':
+      return {
+        canonicalType: 'action',
+        canonicalConfig: { actionType: 'trigger_workflow', ...rawConfig },
+        displayLabel: 'Trigger workflow',
+      };
+    case 'approval':
+      return { canonicalType: 'human', canonicalConfig: rawConfig, displayLabel: 'Approval' };
+    case 'condition':
+      return { canonicalType: 'decision', canonicalConfig: rawConfig, displayLabel: 'Condition' };
+    default:
+      // Already canonical or unknown — pass through.
+      return { canonicalType: rawType, canonicalConfig: rawConfig, displayLabel: label };
+  }
+}
+
 // ---------------------------------------------------------------------------
-// Component
+// Drop-zone wrapper — makes the canvas area a valid dnd-kit target.
 // ---------------------------------------------------------------------------
 
-export function ReactFlowComponent({
+function DroppableCanvasArea({ children }: { children: ReactNode }) {
+  const { setNodeRef, isOver } = useDroppable({ id: CANVAS_DROP_ZONE_ID });
+  return (
+    <div
+      ref={setNodeRef}
+      data-testid="canvas-drop-zone"
+      className={[
+        'flex-1 relative h-full min-h-[600px]',
+        isOver ? 'ring-2 ring-primary/40 ring-inset' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+    >
+      {children}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Coordinate helper (extracted for unit-testability)
+// ---------------------------------------------------------------------------
+
+/**
+ * Convert a dnd-kit DragEndEvent into screen coordinates suitable for
+ * `useReactFlow().screenToFlowPosition`. Handles mouse and touch activator
+ * events; returns null if no useable pointer info is attached.
+ */
+export function screenCoordsFromDragEvent(event: DragEndEvent): { x: number; y: number } | null {
+  const activatorEvent = event.activatorEvent as MouseEvent | TouchEvent | PointerEvent | undefined;
+  if (!activatorEvent) return null;
+
+  let clientX: number | undefined;
+  let clientY: number | undefined;
+
+  if ('clientX' in activatorEvent && typeof activatorEvent.clientX === 'number') {
+    clientX = activatorEvent.clientX;
+    clientY = activatorEvent.clientY;
+  } else if ('touches' in activatorEvent) {
+    const touch = (activatorEvent as TouchEvent).touches?.[0];
+    clientX = touch?.clientX;
+    clientY = touch?.clientY;
+  }
+
+  if (clientX == null || clientY == null) return null;
+  return {
+    x: clientX + event.delta.x,
+    y: clientY + event.delta.y,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Outer component — just sets up the ReactFlowProvider context.
+// All stateful work happens in CanvasInner so it can use useReactFlow().
+// ---------------------------------------------------------------------------
+
+export function ReactFlowComponent(props: ReactFlowComponentProps) {
+  return (
+    <ReactFlowProvider>
+      <CanvasInner {...props} />
+    </ReactFlowProvider>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Inner component — runs inside ReactFlowProvider, so it can call
+// useReactFlow() and map screen→flow coords for dropped palette items.
+// ---------------------------------------------------------------------------
+
+function CanvasInner({
   workflowId,
   initialNodes = EMPTY_NODES,
   initialEdges = EMPTY_EDGES,
@@ -80,6 +232,22 @@ export function ReactFlowComponent({
   onConnect: externalOnConnect,
   onSave: externalOnSave,
 }: ReactFlowComponentProps) {
+  const { screenToFlowPosition } = useReactFlow();
+  const isMobile = useIsMobile();
+
+  // Sensor setup — PointerSensor handles mouse + pen, TouchSensor is
+  // a separate activation path for finger input. Both get a small
+  // activation delay/distance so a tap-to-scroll isn't hijacked into a
+  // drag. These thresholds were tuned on a Pixel 7 emulation.
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 5 },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 150, tolerance: 5 },
+    }),
+  );
+
   // ── Hydrate existing workflow when editing ──────────────────────────
   const workflowQuery = api.workflow.getById.useQuery(
     { id: workflowId! },
@@ -97,28 +265,35 @@ export function ReactFlowComponent({
   const hydratedNodes = useMemo<CanvasNode[]>(() => {
     if (externalNodes) return externalNodes;
     if (!existingSteps) return initialNodes;
-    // Detect envelope vs legacy flat array
     const nodeArray = Array.isArray(existingSteps)
-      ? existingSteps // legacy: steps is a flat array
-      : (existingSteps as Record<string, unknown>)?.nodes; // new envelope
+      ? existingSteps
+      : (existingSteps as Record<string, unknown>)?.nodes;
     if (!Array.isArray(nodeArray)) return initialNodes;
     return nodeArray.map(
-      (step: { id?: number; type?: string; config?: Record<string, unknown>; position?: { x: number; y: number } }, idx: number) => ({
-        id: `node-${step.id ?? idx}`,
-        type: (step.type ?? 'action') as string,
-        position: step.position ?? { x: 250, y: 80 + idx * 120 },
-        data: {
-          label: (step.type ?? 'action').charAt(0).toUpperCase() + (step.type ?? 'action').slice(1),
-          config: (step.config ?? {}) as WorkflowNodeConfig,
-        },
-      }),
+      (step: { id?: number; type?: string; config?: Record<string, unknown>; position?: { x: number; y: number } }, idx: number) => {
+        const rawType = (step.type ?? 'action') as string;
+        // Normalize legacy type names → canonical 5. Seeded workflows (IFC-028)
+        // persisted types like "notify", "approval", "condition", etc. We keep
+        // the original label for display so the card still reads "Notify" but
+        // the canonical `type` drives the per-variant NodeConfigPanel form.
+        const { canonicalType, canonicalConfig, displayLabel } =
+          normalizeLegacyNodeType(rawType, (step.config ?? {}) as Record<string, unknown>);
+        return {
+          id: `node-${step.id ?? idx}`,
+          type: canonicalType,
+          position: step.position ?? { x: 250, y: 80 + idx * 120 },
+          data: {
+            label: displayLabel,
+            config: canonicalConfig as WorkflowNodeConfig,
+          },
+        };
+      },
     );
   }, [externalNodes, existingSteps, initialNodes]);
 
   const hydratedEdges = useMemo<CanvasEdge[]>(() => {
     if (externalEdges) return externalEdges;
     if (!existingSteps) return initialEdges;
-    // Legacy flat arrays had no edges
     if (Array.isArray(existingSteps)) return initialEdges;
     const edgeArray = (existingSteps as Record<string, unknown>)?.edges;
     if (!Array.isArray(edgeArray)) return initialEdges;
@@ -134,13 +309,10 @@ export function ReactFlowComponent({
 
   const canvas = useWorkflowCanvas(hydratedNodes, hydratedEdges);
 
-  // All hooks MUST be called before any early return (React rules of hooks)
   const { createMutation, updateMutation } = useWorkflowMutations();
-  const canvasContainerRef = useRef<HTMLDivElement>(null);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const selectedNode = canvas.nodes.find((n) => n.id === selectedNodeId) ?? null;
 
-  // When a node is clicked, open config panel
   const handleNodeClick = useCallback(
     (_event: React.MouseEvent, node: Node) => {
       setSelectedNodeId(node.id);
@@ -149,46 +321,37 @@ export function ReactFlowComponent({
     [externalOnNodeClick],
   );
 
-  // When pane (background) is clicked, deselect
   const handlePaneClick = useCallback(() => {
     setSelectedNodeId(null);
   }, []);
 
-  // Handle drag-and-drop from NodePalette onto canvas
+  // Drag-and-drop: NodePalette (draggable) → CanvasDropZone (droppable).
+  // We map the activator's screen coords THROUGH screenToFlowPosition so
+  // the dropped node lands at the pointer even after the viewport has been
+  // panned or zoomed.
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
-      const { active, over } = event;
-      if (!over) return;
+      const { active, over, delta } = event;
+      if (!over || over.id !== CANVAS_DROP_ZONE_ID) return;
 
       const nodeType = active.data.current?.nodeType as WorkflowNodeType | undefined;
       if (!nodeType) return;
 
-      // Convert drag-end coordinates to canvas-relative position
-      const containerRect = canvasContainerRef.current?.getBoundingClientRect();
-      const activatorEvent = event.activatorEvent as MouseEvent | TouchEvent | undefined;
-      let position: { x: number; y: number };
-
-      if (containerRect && activatorEvent) {
-        // Compute where the pointer actually ended up, relative to the canvas container
-        const clientX = 'clientX' in activatorEvent
-          ? activatorEvent.clientX
-          : activatorEvent.touches?.[0]?.clientX ?? 0;
-        const clientY = 'clientY' in activatorEvent
-          ? activatorEvent.clientY
-          : activatorEvent.touches?.[0]?.clientY ?? 0;
-        position = {
-          x: clientX + event.delta.x - containerRect.left,
-          y: clientY + event.delta.y - containerRect.top,
-        };
-      } else {
-        // Fallback: stack nodes vertically based on count
+      const screenCoords = screenCoordsFromDragEvent(event);
+      if (!screenCoords) {
+        // Fallback: stack vertically if we can't resolve the pointer.
         const nodeCount = canvas.nodes.length;
-        position = { x: 250, y: 80 + nodeCount * 120 };
+        canvas.addNode(nodeType, { x: 250, y: 80 + nodeCount * 120 });
+        return;
       }
 
-      canvas.addNode(nodeType, position);
+      const flowPos = screenToFlowPosition(screenCoords);
+      canvas.addNode(nodeType, flowPos);
+      // Silence unused-var for delta — dnd-kit exposes delta on the event
+      // for tests/debugging; screenCoordsFromDragEvent already factors it in.
+      void delta;
     },
-    [canvas],
+    [canvas, screenToFlowPosition],
   );
 
   // Save — create new workflow or update existing
@@ -198,8 +361,6 @@ export function ReactFlowComponent({
       return;
     }
 
-    // Build stable step IDs and a mapping from canvas IDs → persisted IDs
-    // so that edge endpoints stay consistent with node identifiers.
     const canvasIdToStepId = new Map<string, number>();
     const stepsPayload = canvas.nodes.map((n, idx) => {
       const stepId = idx + 1;
@@ -212,8 +373,6 @@ export function ReactFlowComponent({
       };
     });
 
-    // Remap edge source/target from canvas IDs to the `node-{stepId}` format
-    // that the server validator and hydration path both expect.
     const edgesPayload = canvas.edges.map((e) => {
       const sourceStepId = canvasIdToStepId.get(e.source);
       const targetStepId = canvasIdToStepId.get(e.target);
@@ -243,7 +402,6 @@ export function ReactFlowComponent({
     }
   }, [canvas.nodes, canvas.edges, workflowId, createMutation, updateMutation, externalOnSave]);
 
-  // Save node config from panel
   const handleNodeConfigSave = useCallback(
     (newConfig: WorkflowNodeConfig) => {
       if (selectedNodeId) {
@@ -256,7 +414,6 @@ export function ReactFlowComponent({
 
   const isSaving = createMutation.isPending || updateMutation.isPending;
 
-  // Show loading state while fetching existing workflow (after all hooks)
   if (workflowId && isLoadingWorkflow) {
     return (
       <div className="flex h-full items-center justify-center bg-muted/20">
@@ -269,61 +426,67 @@ export function ReactFlowComponent({
   }
 
   return (
-    <DndContext onDragEnd={handleDragEnd}>
+    <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
       <div className="flex h-full w-full overflow-hidden min-h-[600px]">
         <NodePalette />
 
-        <ReactFlowProvider>
-          <div ref={canvasContainerRef} className="flex-1 relative h-full min-h-[600px]">
-            {canvas.nodes.length === 0 && (
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-                <p className="text-muted-foreground text-sm">
-                  Drag nodes from the palette to start building
-                </p>
-              </div>
-            )}
-
-            <ReactFlow
-              nodes={canvas.nodes}
-              edges={canvas.edges}
-              nodeTypes={workflowNodeTypes as NodeTypes}
-              onNodesChange={externalOnNodesChange ?? canvas.onNodesChange}
-              onEdgesChange={externalOnEdgesChange ?? canvas.onEdgesChange}
-              onConnect={externalOnConnect ?? canvas.onConnect}
-              onNodeClick={handleNodeClick}
-              onPaneClick={handlePaneClick}
-              fitView
-              className="bg-muted/20 h-full w-full"
-              style={{ minHeight: 600 }}
-              proOptions={{ hideAttribution: true }}
-            >
-              <Background />
-              <Controls />
-              <MiniMap />
-              <Panel position="top-right">
-                <WorkflowToolbar
-                  onSave={handleSave}
-                  isValid={canvas.isValid}
-                  isSaving={isSaving}
-                  canUndo={canvas.canUndo}
-                  canRedo={canvas.canRedo}
-                  onUndo={canvas.undo}
-                  onRedo={canvas.redo}
-                />
-              </Panel>
-            </ReactFlow>
-          </div>
-
-          {selectedNode && (
-            <NodeConfigPanel
-              nodeType={(selectedNode.type ?? 'action') as WorkflowNodeType}
-              config={(selectedNode.data.config as WorkflowNodeConfig) ?? {}}
-              onSave={handleNodeConfigSave}
-              onClose={() => setSelectedNodeId(null)}
-              open={true}
-            />
+        <DroppableCanvasArea>
+          {canvas.nodes.length === 0 && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+              <p className="text-muted-foreground text-sm">
+                Drag nodes from the palette to start building
+              </p>
+            </div>
           )}
-        </ReactFlowProvider>
+
+          <ReactFlow
+            nodes={canvas.nodes}
+            edges={canvas.edges}
+            nodeTypes={workflowNodeTypes as NodeTypes}
+            onNodesChange={externalOnNodesChange ?? canvas.onNodesChange}
+            onEdgesChange={externalOnEdgesChange ?? canvas.onEdgesChange}
+            onConnect={externalOnConnect ?? canvas.onConnect}
+            onNodeClick={handleNodeClick}
+            onPaneClick={handlePaneClick}
+            fitView
+            className="bg-muted/20 h-full w-full"
+            style={{ minHeight: 600 }}
+            proOptions={{ hideAttribution: true }}
+            // Mobile: disable mouse-wheel zoom (lets the page scroll naturally),
+            // keep pinch-to-zoom (default). Desktop: wheel zoom on.
+            zoomOnScroll={!isMobile}
+            zoomOnPinch
+            panOnScroll={!isMobile}
+            minZoom={0.2}
+            maxZoom={3}
+          >
+            <Background />
+            <Controls />
+            {!isMobile && <MiniMap />}
+            <Panel position="top-right">
+              <WorkflowToolbar
+                onSave={handleSave}
+                isValid={canvas.isValid}
+                isSaving={isSaving}
+                validationError={canvas.validationErrors?.[0]}
+                canUndo={canvas.canUndo}
+                canRedo={canvas.canRedo}
+                onUndo={canvas.undo}
+                onRedo={canvas.redo}
+              />
+            </Panel>
+          </ReactFlow>
+        </DroppableCanvasArea>
+
+        {selectedNode && (
+          <NodeConfigPanel
+            nodeType={(selectedNode.type ?? 'action') as WorkflowNodeType}
+            config={(selectedNode.data.config as WorkflowNodeConfig) ?? {}}
+            onSave={handleNodeConfigSave}
+            onClose={() => setSelectedNodeId(null)}
+            open={true}
+          />
+        )}
       </div>
     </DndContext>
   );

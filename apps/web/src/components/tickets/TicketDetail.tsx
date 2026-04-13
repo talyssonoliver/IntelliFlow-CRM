@@ -1172,7 +1172,7 @@ export function TicketDetail({
                     <div className="space-y-2">
                       {ticket.aiInsights.suggestedSolutions.map((solution, i) => (
                         <div
-                          key={i} // NOSONAR typescript:S6479
+                          key={solution}
                           className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg"
                         >
                           <span className="text-[#137fec] font-bold text-sm">{i + 1}.</span>

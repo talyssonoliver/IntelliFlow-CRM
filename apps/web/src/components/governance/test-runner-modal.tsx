@@ -438,9 +438,7 @@ export function TestRunnerModal({ isOpen, onClose, onComplete }: Readonly<TestRu
                     return skipOrDefaultClass;
                   })();
                   return (
-                    <div key={i} className={logColorClass}>
-                      {' '}
-                      {/* NOSONAR typescript:S6479 */}
+                    <div key={`log-${i}-${log.type}`} className={logColorClass}>
                       {log.type === 'pass' && '  '}
                       {log.type === 'fail' && '  '}
                       {log.type === 'skip' && '  '}

@@ -51,16 +51,16 @@ export function ConfidenceIndicator({
   const label = getConfidenceLabel(clamped);
 
   return (
-    <div
+    <span
       className={`inline-flex flex-col ${size === 'sm' ? 'gap-0.5' : 'gap-1'}`}
       data-testid="confidence-indicator"
-      role="meter" // NOSONAR typescript:S6819 — composite confidence display with label and bar; <meter> cannot contain child elements
+      role="meter"
       aria-valuenow={percentage}
       aria-valuemin={0}
       aria-valuemax={100}
       aria-label="Data confidence"
     >
-      <div className="flex items-center gap-2">
+      <span className="flex items-center gap-2">
         <span
           className={`font-semibold ${size === 'sm' ? 'text-sm' : 'text-base'} ${colorClass}`}
           data-testid="confidence-value"
@@ -70,18 +70,18 @@ export function ConfidenceIndicator({
         <span className={`text-xs ${colorClass}`} data-testid="confidence-label">
           {label} confidence
         </span>
-      </div>
+      </span>
       {lastUpdatedAt && (
         <span className="text-xs text-muted-foreground" data-testid="last-updated">
           Updated {formatRelativeTime(lastUpdatedAt)}
         </span>
       )}
       {showDescription && (
-        <p className="text-xs text-muted-foreground" data-testid="confidence-description">
+        <span className="text-xs text-muted-foreground block" data-testid="confidence-description">
           Based on activity frequency, manual probability updates, contact engagement, and close
           date presence.
-        </p>
+        </span>
       )}
-    </div>
+    </span>
   );
 }

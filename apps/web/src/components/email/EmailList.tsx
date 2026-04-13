@@ -1,6 +1,8 @@
 'use client';
 
 import { useCallback, useRef } from 'react';
+
+const EMAIL_LIST_SKELETON_KEYS = ['em-skel-0', 'em-skel-1', 'em-skel-2', 'em-skel-3', 'em-skel-4'] as const;
 import { AlertCircle, RotateCcw } from 'lucide-react';
 import { EmptyState } from '@intelliflow/ui';
 import { cn } from '@/lib/utils';
@@ -104,10 +106,8 @@ export function EmailList({
           <div className="h-9 rounded-md bg-muted animate-pulse" />
         </div>
         <div className="space-y-1 p-2">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="flex gap-3 rounded-lg p-3">
-              {' '}
-              {/* NOSONAR typescript:S6479 */}
+          {EMAIL_LIST_SKELETON_KEYS.map((key) => (
+            <div key={key} className="flex gap-3 rounded-lg p-3">
               <div className="h-9 w-9 rounded-full bg-muted animate-pulse" />
               <div className="flex-1 space-y-1.5">
                 <div className="h-4 w-3/4 rounded bg-muted animate-pulse" />

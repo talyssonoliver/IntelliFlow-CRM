@@ -167,7 +167,6 @@ export function ActivityFeedFilters({
       {/* Type filter chips */}
       <div
         className="flex flex-wrap gap-1.5"
-        role="group" // NOSONAR typescript:S6819 — ARIA group for filter chips; <fieldset> would require <legend> and changes layout
         aria-label="Filter by activity type"
       >
         {ACTIVITY_FEED_TYPES.map((type) => {
@@ -194,7 +193,6 @@ export function ActivityFeedFilters({
       {showSources && (
         <div
           className="flex flex-wrap gap-1.5"
-          role="group" // NOSONAR typescript:S6819 — ARIA group for filter chips; <fieldset> would require <legend> and changes layout
           aria-label="Filter by source"
         >
           {ACTIVITY_FEED_SOURCES.map((source) => {

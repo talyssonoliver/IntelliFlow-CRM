@@ -18,7 +18,11 @@ function makeProxy(): Record<string, unknown> {
   return new Proxy(
     {},
     {
-      get(_target, _prop) {
+      get(_target, prop) {
+        if (prop === 'then') return undefined;
+        if (prop === Symbol.toPrimitive) return () => '';
+        if (prop === Symbol.iterator) return undefined;
+        if (prop === 'toString' || prop === 'valueOf') return () => '';
         return makeProxy();
       },
       apply() {

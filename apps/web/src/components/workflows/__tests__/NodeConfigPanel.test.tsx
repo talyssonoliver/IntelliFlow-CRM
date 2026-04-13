@@ -53,15 +53,18 @@ describe('NodeConfigPanel', () => {
     expect(screen.getByText('Conditions')).toBeInTheDocument();
   });
 
-  it('renders timeout input + instruction textarea when node type is human', () => {
+  it('renders deadline input + instruction textarea when node type is human', () => {
     render(
       <NodeConfigPanel
         {...baseProps}
         nodeType="human"
-        config={{ timeout: 3600 }}
+        config={{ deadlineInHours: 24 }}
       />,
     );
-    expect(screen.getByLabelText(/timeout/i)).toBeInTheDocument();
+    // IFC-031 Phase E: human nodes now use "Deadline (hours)" instead of
+    // the old "Timeout (seconds)" label. Hours align with the domain model
+    // and give approvers a more humane unit than seconds.
+    expect(screen.getByLabelText(/deadline/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/instruction/i)).toBeInTheDocument();
   });
 
@@ -168,20 +171,20 @@ describe('NodeConfigPanel', () => {
     expect(input).toBeInTheDocument();
   });
 
-  it('updates timeout value when number input changes', () => {
+  it('updates deadlineInHours value when number input changes', () => {
     render(
       <NodeConfigPanel
         {...baseProps}
         nodeType="human"
-        config={{ timeout: 100, instructions: 'Review this' }}
+        config={{ deadlineInHours: 4, instructions: 'Review this' }}
       />,
     );
-    const input = screen.getByLabelText(/timeout/i);
-    fireEvent.change(input, { target: { value: '300' } });
-    // Save with new timeout
+    const input = screen.getByLabelText(/deadline/i);
+    fireEvent.change(input, { target: { value: '8' } });
+    // Save with new deadline
     fireEvent.click(screen.getByRole('button', { name: /save/i }));
     expect(mockOnSave).toHaveBeenCalledWith(
-      expect.objectContaining({ timeout: 300 }),
+      expect.objectContaining({ deadlineInHours: 8 }),
     );
   });
 

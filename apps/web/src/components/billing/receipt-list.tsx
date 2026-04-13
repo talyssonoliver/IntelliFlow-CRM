@@ -58,13 +58,13 @@ export interface ReceiptListProps {
 // Loading Skeleton
 // ============================================
 
+const RECEIPT_SKELETON_KEYS = ['rcpt-skel-0', 'rcpt-skel-1', 'rcpt-skel-2', 'rcpt-skel-3', 'rcpt-skel-4'] as const;
+
 function ReceiptListSkeleton() {
   return (
     <div className="space-y-3" aria-label="Loading receipts">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="flex items-center justify-between py-3">
-          {' '}
-          {/* NOSONAR typescript:S6479 */}
+      {RECEIPT_SKELETON_KEYS.map((key) => (
+        <div key={key} className="flex items-center justify-between py-3">
           <div className="flex items-center gap-4">
             <Skeleton className="h-4 w-24" />
             <Skeleton className="h-4 w-32" />

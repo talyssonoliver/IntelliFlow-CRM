@@ -71,6 +71,7 @@ export interface MfaChallengeProps {
 const CODE_LENGTH = 6;
 const BACKUP_CODE_LENGTH = 8;
 const RESEND_COOLDOWN_SECONDS = 60;
+const OTP_SLOTS = ['d0', 'd1', 'd2', 'd3', 'd4', 'd5'] as const;
 
 const METHOD_CONFIG = {
   totp: {
@@ -355,7 +356,7 @@ export function MfaChallenge({
           <div className="flex justify-center gap-2">
             {code.map((digit, index) => (
               <input
-                key={index} // NOSONAR typescript:S6479
+                key={OTP_SLOTS[index]}
                 ref={(el) => {
                   inputRefs.current[index] = el;
                 }}

@@ -23,7 +23,15 @@ import {
   SelectValue,
 } from '@intelliflow/ui';
 import { validateNodeConfig } from '@/lib/workflow-builder/validation';
-import type { WorkflowNodeType, WorkflowNodeConfig, ActionType } from '@/lib/workflow-types';
+import type {
+  WorkflowNodeType,
+  WorkflowNodeConfig,
+  ActionType,
+  WorkflowEntityRef,
+} from '@/lib/workflow-types';
+import { PrioritySelect } from '@/components/shared/priority-select';
+import { EntitySearchField } from '@/components/tasks/EntitySearchField';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -70,6 +78,7 @@ export function NodeConfigPanel({
 }: NodeConfigPanelProps) {
   const [config, setConfig] = useState<WorkflowNodeConfig>(initialConfig);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const isMobile = useIsMobile();
 
   // Sync config when the selected node changes
   useEffect(() => {
@@ -94,7 +103,14 @@ export function NodeConfigPanel({
   return (
     /* istanbul ignore next -- Radix Sheet's onOpenChange is triggered by Radix Portal, not directly testable */
     <Sheet open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose(); }}>
-      <SheetContent side="right" className="w-[380px] sm:w-[420px]">
+      <SheetContent
+        side={isMobile ? 'bottom' : 'right'}
+        className={
+          isMobile
+            ? 'h-[85vh] w-full rounded-t-xl'
+            : 'w-[380px] sm:w-[420px]'
+        }
+      >
         <SheetHeader>
           <SheetTitle>
             Configure{' '}
@@ -105,24 +121,157 @@ export function NodeConfigPanel({
         <div className="flex flex-col gap-4 mt-4 flex-1 overflow-y-auto">
           {/* ── Action ───────────────────────────────────────────────── */}
           {nodeType === 'action' && (
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="actionType">Action Type</Label>
-              <Select
-                value={config.actionType ?? ''}
-                onValueChange={(v) => update({ actionType: v as ActionType })}
-              >
-                <SelectTrigger id="actionType">
-                  <SelectValue placeholder="Select action…" />
-                </SelectTrigger>
-                <SelectContent>
-                  {ACTION_TYPES.map((a) => (
-                    <SelectItem key={a.value} value={a.value}>
-                      {a.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="actionType">Action type</Label>
+                <Select
+                  value={config.actionType ?? ''}
+                  onValueChange={(v) => update({ actionType: v as ActionType })}
+                >
+                  <SelectTrigger id="actionType">
+                    <SelectValue placeholder="Select action…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ACTION_TYPES.map((a) => (
+                      <SelectItem key={a.value} value={a.value}>
+                        {a.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Priority — applies to notify / create_task action variants */}
+              {(config.actionType === 'send_notification' ||
+                config.actionType === 'create_task') && (
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="priority">Priority</Label>
+                  <PrioritySelect
+                    value={config.priority}
+                    onChange={(p) => update({ priority: p })}
+                    ariaLabel="Workflow action priority"
+                  />
+                </div>
+              )}
+
+              {/* Message — notify / log */}
+              {(config.actionType === 'send_notification' ||
+                config.actionType === 'log_event') && (
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="action-message">Message</Label>
+                  <textarea
+                    id="action-message"
+                    className="w-full rounded-md border border-input px-3 py-2 text-sm min-h-[80px] resize-y"
+                    aria-label="Action message"
+                    value={config.message ?? ''}
+                    onChange={(e) => update({ message: e.target.value })}
+                    placeholder="Message body — use {{trigger.entity.field}} tokens for interpolation."
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Tip: tokens like <code>{'{{trigger.lead.name}}'}</code> get substituted at run time.
+                  </p>
+                </div>
+              )}
+
+              {/* Create-task specific fields */}
+              {config.actionType === 'create_task' && (
+                <>
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="task-title">Task title</Label>
+                    <Input
+                      id="task-title"
+                      value={config.title ?? ''}
+                      onChange={(e) => update({ title: e.target.value })}
+                      placeholder="Short summary"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="task-description">Description</Label>
+                    <textarea
+                      id="task-description"
+                      className="w-full rounded-md border border-input px-3 py-2 text-sm min-h-[60px] resize-y"
+                      aria-label="Task description"
+                      value={config.description ?? ''}
+                      onChange={(e) => update({ description: e.target.value })}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <Label>Linked CRM entity</Label>
+                    <Select
+                      value={config.linkedEntity?.kind ?? ''}
+                      onValueChange={(kind) => {
+                        const k = kind as WorkflowEntityRef['kind'];
+                        // Keep the linked id/label if the kind matches, else reset
+                        update({
+                          linkedEntity:
+                            config.linkedEntity?.kind === k
+                              ? config.linkedEntity
+                              : { kind: k, id: '', label: '' },
+                        });
+                      }}
+                    >
+                      <SelectTrigger aria-label="Linked entity kind">
+                        <SelectValue placeholder="Pick an entity kind…" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="lead">Lead</SelectItem>
+                        <SelectItem value="contact">Contact</SelectItem>
+                        <SelectItem value="account">Account</SelectItem>
+                        <SelectItem value="opportunity">Deal</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {config.linkedEntity?.kind &&
+                      (['lead', 'contact', 'account', 'opportunity'] as const).includes(
+                        config.linkedEntity.kind as 'lead' | 'contact' | 'account' | 'opportunity',
+                      ) && (
+                        <EntitySearchField
+                          entityType={
+                            config.linkedEntity.kind as
+                              | 'lead'
+                              | 'contact'
+                              | 'account'
+                              | 'opportunity'
+                          }
+                          value={config.linkedEntity.id}
+                          valueName={config.linkedEntity.label ?? ''}
+                          onChange={(id, label) =>
+                            update({
+                              linkedEntity: {
+                                kind: config.linkedEntity!.kind,
+                                id,
+                                label,
+                              },
+                            })
+                          }
+                        />
+                      )}
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="task-flag">Flag (optional)</Label>
+                    <Input
+                      id="task-flag"
+                      value={config.flag ?? ''}
+                      onChange={(e) => update({ flag: e.target.value })}
+                      placeholder="e.g. needs-review, urgent-follow-up"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="task-due">Due in (hours)</Label>
+                    <Input
+                      id="task-due"
+                      type="number"
+                      min={1}
+                      value={config.dueInHours ?? ''}
+                      onChange={(e) =>
+                        update({
+                          dueInHours: e.target.value ? Number(e.target.value) : undefined,
+                        })
+                      }
+                    />
+                  </div>
+                </>
+              )}
+            </>
           )}
 
           {/* ── Decision ─────────────────────────────────────────────── */}
@@ -172,23 +321,37 @@ export function NodeConfigPanel({
           {nodeType === 'human' && (
             <>
               <div className="flex flex-col gap-2">
-                <Label htmlFor="timeout">Timeout (seconds)</Label>
-                <Input
-                  id="timeout"
-                  type="number"
-                  min={1}
-                  value={config.timeout ?? ''}
-                  onChange={(e) => update({ timeout: Number(e.target.value) })}
+                <Label htmlFor="human-priority">Approval priority</Label>
+                <PrioritySelect
+                  value={config.priority}
+                  onChange={(p) => update({ priority: p })}
+                  ariaLabel="Approval priority"
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor="instructions">Instructions</Label>
+                <Label htmlFor="instructions">Instructions for approver</Label>
                 <textarea
                   id="instructions"
                   className="w-full rounded-md border border-input px-3 py-2 text-sm min-h-[80px] resize-y"
                   aria-label="Instructions"
                   value={config.instructions ?? ''}
                   onChange={(e) => update({ instructions: e.target.value })}
+                  placeholder="What should the approver decide? Tokens like {{trigger.deal.value}} are substituted at run time."
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="human-deadline">Deadline (hours)</Label>
+                <Input
+                  id="human-deadline"
+                  type="number"
+                  min={1}
+                  value={config.deadlineInHours ?? config.timeout ?? ''}
+                  onChange={(e) =>
+                    update({
+                      deadlineInHours: e.target.value ? Number(e.target.value) : undefined,
+                    })
+                  }
+                  placeholder="Auto-escalate if no decision within this window"
                 />
               </div>
             </>

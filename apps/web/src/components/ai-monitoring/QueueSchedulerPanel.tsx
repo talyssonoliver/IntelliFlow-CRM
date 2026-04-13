@@ -42,12 +42,13 @@ const STATUS_COLORS = {
 // Loading skeleton
 // ---------------------------------------------------------------------------
 
+const QUEUE_SKELETON_KEYS = ['queue-0', 'queue-1', 'queue-2'] as const;
+
 function PanelSkeleton() {
   return (
     <div className="space-y-3">
-      {/* NOSONAR typescript:S6479 */}
-      {Array.from({ length: 3 }).map((_, i) => (
-        <Skeleton key={i} className="h-24 w-full rounded-lg" /> // NOSONAR typescript:S6479
+      {QUEUE_SKELETON_KEYS.map((key) => (
+        <Skeleton key={key} className="h-24 w-full rounded-lg" />
       ))}
     </div>
   );

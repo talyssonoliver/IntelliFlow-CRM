@@ -111,23 +111,23 @@ export function SLAIndicator({
     <div className="flex flex-col gap-1">
       {/* Timer Badge */}
       {showTimer && (
-        <div
+        <output
           className={`inline-flex items-center font-mono font-bold rounded w-fit ${sizeClasses[size]} ${config.bg} ${config.text} ${
             isBreachedOrAtRisk ? 'animate-pulse' : ''
           }`}
-          role="status" // NOSONAR typescript:S6819 — SLA timer badge; <output> is for form computation results, not status indicators
+          role="status"
           aria-label={`SLA ${config.label}: ${formatSLATime(remaining)} remaining`}
         >
           <span className={`material-symbols-outlined ${iconSizes[size]}`}>{config.icon}</span>
           {formatSLATime(remaining)}
-        </div>
+        </output>
       )}
 
       {/* Status Badge (no timer) */}
       {!showTimer && (
         <span
           className={`inline-flex items-center rounded text-xs font-bold px-2 py-0.5 w-fit ${config.bg} ${config.text}`}
-          role="status" // NOSONAR typescript:S6819 — SLA status badge; <output> is for form computation results, not status indicators
+          role="status"
           aria-label={`SLA status: ${config.label}`}
         >
           {config.label}

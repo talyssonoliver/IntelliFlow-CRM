@@ -33,6 +33,8 @@ import type { ChainVersionAuditAction } from '@intelliflow/domain';
 import { CHAIN_VERSION_AUDIT_ACTIONS } from '@intelliflow/domain';
 import type { ChainVersionAudit } from '@intelliflow/validators';
 
+const AUDIT_LOG_SKELETON_KEYS = ['audit-0', 'audit-1', 'audit-2', 'audit-3', 'audit-4'] as const;
+
 interface VersionAuditLogProps {
   auditLog: ChainVersionAudit[] | undefined;
   isLoading: boolean;
@@ -76,8 +78,8 @@ export function VersionAuditLog({ auditLog, isLoading }: Readonly<VersionAuditLo
       <Card className="p-6">
         <div className="space-y-4">
           <Skeleton className="h-10 w-40" />
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-14 w-full" /> // NOSONAR typescript:S6479 — static skeleton placeholder, no data identity
+          {AUDIT_LOG_SKELETON_KEYS.map((key) => (
+            <Skeleton key={key} className="h-14 w-full" />
           ))}
         </div>
       </Card>

@@ -179,29 +179,28 @@ export function DocumentSearch({
           </span>
         </Button>
         {isOpen && (
-          <div
-            className="absolute top-full left-0 mt-1 w-56 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg z-20 py-2"
-            role="listbox" // NOSONAR typescript:S6819 — custom dropdown filter listbox; <select> cannot be positioned absolutely or contain custom checkbox items
+          <ul
+            className="absolute top-full left-0 mt-1 w-56 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg z-20 py-2 list-none m-0 p-0"
+            role="listbox"
             aria-label={`${label} filter options`}
           >
             {options.map((opt) => {
               const isActive = activeValues?.includes(opt.value) ?? false;
               return (
-                <label
-                  key={opt.value}
-                  className="flex items-center gap-3 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer"
-                >
-                  <input
-                    type="checkbox"
-                    checked={isActive}
-                    onChange={() => onToggle(opt.value)}
-                    className="rounded border-slate-300"
-                  />
-                  <span className="text-sm text-slate-700 dark:text-slate-300">{opt.label}</span>
-                </label>
+                <li key={opt.value} role="option" aria-selected={isActive}>
+                  <label className="flex items-center gap-3 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={isActive}
+                      onChange={() => onToggle(opt.value)}
+                      className="rounded border-slate-300"
+                    />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">{opt.label}</span>
+                  </label>
+                </li>
               );
             })}
-          </div>
+          </ul>
         )}
       </div>
     );

@@ -49,6 +49,13 @@ import {
 } from '@/lib/billing/invoice-actions';
 
 // ============================================
+// Skeleton keys
+// ============================================
+
+const INVOICE_META_SKELETON_KEYS = ['inv-meta-0', 'inv-meta-1', 'inv-meta-2', 'inv-meta-3'] as const;
+const INVOICE_LINE_SKELETON_KEYS = ['inv-line-0', 'inv-line-1', 'inv-line-2'] as const;
+
+// ============================================
 // Types
 // ============================================
 
@@ -204,10 +211,8 @@ function InvoiceDetailSkeleton() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="space-y-2">
-                {' '}
-                {/* NOSONAR typescript:S6479 */}
+            {INVOICE_META_SKELETON_KEYS.map((key) => (
+              <div key={key} className="space-y-2">
                 <Skeleton className="h-4 w-20" />
                 <Skeleton className="h-6 w-28" />
               </div>
@@ -223,10 +228,8 @@ function InvoiceDetailSkeleton() {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="flex justify-between py-3">
-                {' '}
-                {/* NOSONAR typescript:S6479 */}
+            {INVOICE_LINE_SKELETON_KEYS.map((key) => (
+              <div key={key} className="flex justify-between py-3">
                 <Skeleton className="h-4 w-48" />
                 <Skeleton className="h-4 w-24" />
               </div>

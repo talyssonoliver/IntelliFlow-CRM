@@ -196,9 +196,7 @@ export function ChangelogDisplay({
             <p className="text-sm text-muted-foreground mt-1 mb-3">{entry.title}</p>
             <ul className="flex flex-col gap-2">
               {entry.changes.map((change, ci) => (
-                <li key={ci} className="flex items-start gap-2">
-                  {' '}
-                  {/* NOSONAR typescript:S6479 */}
+                <li key={`${change.type}-${ci}`} className="flex items-start gap-2">
                   <Badge variant={BADGE_VARIANT_MAP[change.type]} className="shrink-0 mt-0.5">
                     {change.type}
                   </Badge>

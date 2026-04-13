@@ -112,10 +112,8 @@ export function PressReleaseDetail({
               Executive Commentary
             </h2>
             <div className="space-y-6">
-              {release.quotes.map((quote, index) => (
-                <blockquote key={index} className="border-l-4 border-primary pl-6 py-2">
-                  {' '}
-                  {/* NOSONAR typescript:S6479 */}
+              {release.quotes.map((quote) => (
+                <blockquote key={quote.attribution} className="border-l-4 border-primary pl-6 py-2">
                   <p className="text-lg text-slate-700 dark:text-slate-300 italic mb-2">
                     &ldquo;{quote.text}&rdquo;
                   </p>

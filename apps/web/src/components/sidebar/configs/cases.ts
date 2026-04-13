@@ -1,15 +1,16 @@
 import type { SidebarConfig, SidebarItem } from '../sidebar-types';
 
-/** Settings items shown when on a case settings page */
+/**
+ * Settings items shown when on a case-settings-only page.
+ *
+ * Note: `case-workflows` deliberately lives in `VIEW_SECTIONS` (under
+ * Automation), not here. Workflows are a first-class sub-section of Cases,
+ * not a settings concern — the module sidebar is what users expect on that
+ * page, and `isCaseSettingsPage()` returning false for it is the contract.
+ */
 export const CASE_SETTINGS_ITEMS: SidebarItem[] = [
   { id: 'case-settings', label: 'Case Settings', icon: 'tune', href: '/cases/case-settings' },
   { id: 'case-types', label: 'Case Types', icon: 'category', href: '/cases/case-types' },
-  {
-    id: 'case-workflows',
-    label: 'Case Workflows',
-    icon: 'account_tree',
-    href: '/cases/case-workflows',
-  },
 ];
 
 const SETTINGS_PATHS = CASE_SETTINGS_ITEMS.map(

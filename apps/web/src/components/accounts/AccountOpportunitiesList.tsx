@@ -7,6 +7,9 @@ import { api } from '@/lib/api';
 import type { OpportunityStage } from '@intelliflow/domain';
 import { formatCurrency } from '@/lib/pricing/calculator';
 
+const OPP_GRID_SKELETON_KEYS = ['opp-grid-0', 'opp-grid-1', 'opp-grid-2'] as const;
+const OPP_LIST_SKELETON_KEYS = ['opp-list-0', 'opp-list-1', 'opp-list-2', 'opp-list-3', 'opp-list-4'] as const;
+
 interface AccountOpportunity {
   id: string;
   name: string;
@@ -39,12 +42,12 @@ export function AccountOpportunitiesList({
     return (
       <div className="space-y-3">
         <div className="grid grid-cols-3 gap-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-20 w-full" /> // NOSONAR typescript:S6479 — static skeleton placeholder, no data identity
+          {OPP_GRID_SKELETON_KEYS.map((key) => (
+            <Skeleton key={key} className="h-20 w-full" />
           ))}
         </div>
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={i} className="h-12 w-full" /> // NOSONAR typescript:S6479 — static skeleton placeholder, no data identity
+        {OPP_LIST_SKELETON_KEYS.map((key) => (
+          <Skeleton key={key} className="h-12 w-full" />
         ))}
       </div>
     );

@@ -96,13 +96,12 @@ export function MfaQrGenerator({
       {/* QR Code Section */}
       <div className="flex flex-col items-center">
         { }
-        <div
+        <figure
           className="bg-white p-4 rounded-lg"
-          role="img" // NOSONAR typescript:S6819
           aria-label={`QR code for setting up two-factor authentication for ${accountName}`}
         >
           <QRCodeSVG value={otpauthUrl} size={200} level="M" marginSize={0} />
-        </div>
+        </figure>
         <p className="mt-3 text-sm text-slate-400 text-center max-w-xs">
           Scan this QR code with your authenticator app (Google Authenticator, Authy, 1Password,
           etc.)

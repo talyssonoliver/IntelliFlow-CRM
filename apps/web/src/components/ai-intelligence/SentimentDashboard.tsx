@@ -47,6 +47,8 @@ const BREADCRUMBS = [
   { label: 'Sentiment Analysis' },
 ];
 
+const SENTIMENT_SKELETON_KEYS = ['senti-0', 'senti-1', 'senti-2'] as const;
+
 // ============================================
 // Stats Card (internal)
 // ============================================
@@ -483,8 +485,8 @@ export function SentimentDashboard() {
         if (isLoading)
           return (
             <div className="space-y-3">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <Skeleton key={i} className="h-36 w-full rounded-lg" /> // NOSONAR typescript:S6479
+              {SENTIMENT_SKELETON_KEYS.map((key) => (
+                <Skeleton key={key} className="h-36 w-full rounded-lg" />
               ))}
             </div>
           );

@@ -6,7 +6,7 @@
  * Pie chart showing positive/neutral/negative sentiment breakdown.
  */
 
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts'; // NOSONAR typescript:S1874
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import { EmptyState } from '@intelliflow/ui';
 import type { SentimentDistributionChartProps } from '@/lib/feedback-survey/types';
 

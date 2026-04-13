@@ -320,23 +320,17 @@ export function DocumentUpload({
       {/* Upload Progress */}
       { }
       {isUploading && (
-        <div
-          className="space-y-2"
-          role="progressbar" // NOSONAR typescript:S6819
-          aria-valuenow={uploadProgress}
-          aria-valuemin={0}
-          aria-valuemax={100}
-        >
+        <div className="space-y-2">
           <div className="flex justify-between text-sm text-slate-600 dark:text-slate-400">
             <span>Uploading...</span>
             <span>{uploadProgress}%</span>
           </div>
-          <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
-            <div
-              className="bg-primary h-2 rounded-full transition-all"
-              style={{ width: `${uploadProgress}%` }}
-            />
-          </div>
+          <progress
+            value={uploadProgress}
+            max={100}
+            aria-label="Upload progress"
+            className="w-full h-2 rounded-full appearance-none [&::-webkit-progress-bar]:rounded-full [&::-webkit-progress-bar]:bg-slate-200 dark:[&::-webkit-progress-bar]:bg-slate-700 [&::-webkit-progress-value]:rounded-full [&::-webkit-progress-value]:bg-primary [&::-moz-progress-bar]:bg-primary"
+          />
         </div>
       )}
       { }

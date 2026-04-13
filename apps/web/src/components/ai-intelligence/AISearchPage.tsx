@@ -36,6 +36,8 @@ import type {
 
 const BREADCRUMBS = [{ label: 'AI & Agents', href: '/agent-approvals' }, { label: 'AI Search' }];
 
+const SEARCH_SKELETON_KEYS = ['search-skel-0', 'search-skel-1', 'search-skel-2'] as const;
+
 // ============================================
 // Stats Card
 // ============================================
@@ -432,10 +434,8 @@ export function AISearchPage() {
 
       {hasQuery && isLoading && (
         <div className="space-y-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Card key={i}>
-              {' '}
-              {/* NOSONAR typescript:S6479 */}
+          {SEARCH_SKELETON_KEYS.map((key) => (
+            <Card key={key}>
               <CardContent className="p-4 space-y-3">
                 <Skeleton className="h-5 w-2/3" />
                 <Skeleton className="h-4 w-full" />

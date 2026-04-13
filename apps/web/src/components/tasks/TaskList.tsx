@@ -6,6 +6,8 @@ import { DataTable, TableRowActions, type BulkAction, Skeleton, EmptyState } fro
 import type { TaskStatus, TaskPriority } from '@intelliflow/domain';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
 
+const TASK_LIST_SKELETON_KEYS = ['task-0', 'task-1', 'task-2', 'task-3', 'task-4'] as const;
+
 type DateStringNull = Date | string | null;
 
 export interface TaskListItem {
@@ -309,8 +311,8 @@ export function TaskList({
   if (isLoading) {
     return (
       <div className="space-y-3" data-testid="task-list-skeleton">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={i} className="h-12 w-full rounded" /> // NOSONAR typescript:S6479
+        {TASK_LIST_SKELETON_KEYS.map((key) => (
+          <Skeleton key={key} className="h-12 w-full rounded" />
         ))}
       </div>
     );

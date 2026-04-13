@@ -7,6 +7,8 @@ import { AppAvatar } from './app-avatar';
 import { normalizeAvatarSource } from '@/lib/shared/avatar-utils';
 import { api } from '@/lib/api';
 
+const UPCOMING_EVENTS_SKELETON_KEYS = ['event-0', 'event-1', 'event-2'] as const;
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -167,8 +169,8 @@ export function UpcomingEventsCard({
           <Skeleton className="h-5 w-24" />
         </div>
         <div className="space-y-3">
-          {Array.from({ length: Math.min(maxItems, 3) }).map((_, i) => (
-            <Skeleton key={i} className="h-14 w-full rounded-lg" /> // NOSONAR typescript:S6479
+          {UPCOMING_EVENTS_SKELETON_KEYS.slice(0, Math.min(maxItems, 3)).map((key) => (
+            <Skeleton key={key} className="h-14 w-full rounded-lg" />
           ))}
         </div>
       </Wrapper>
@@ -272,7 +274,7 @@ export function UpcomingEventsCard({
                       <div className="flex -space-x-1.5">
                         {attendeeAvatars.map((avatar, idx) => (
                           <AppAvatar
-                            key={idx} // NOSONAR typescript:S6479
+                            key={`${avatar.name}-${idx}`}
                             name={avatar.name}
                             src={avatar.src}
                             fallbackText={avatar.name.charAt(0)}

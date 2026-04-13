@@ -35,6 +35,8 @@ const LeadScoringTrendChart = lazy(() => import('./LeadScoringTrendChart'));
 
 const BREADCRUMBS = [{ label: 'AI & Agents', href: '/agent-approvals' }, { label: 'Lead Scoring' }];
 
+const LEAD_SCORING_SKELETON_KEYS = ['lead-score-0', 'lead-score-1', 'lead-score-2'] as const;
+
 // ============================================
 // Tier styling helpers
 // ============================================
@@ -492,8 +494,8 @@ export function LeadScoringDashboard() {
         if (isLoading)
           return (
             <div className="space-y-4">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <Skeleton key={i} className="h-36 w-full rounded-xl" /> // NOSONAR typescript:S6479
+              {LEAD_SCORING_SKELETON_KEYS.map((key) => (
+                <Skeleton key={key} className="h-36 w-full rounded-xl" />
               ))}
             </div>
           );

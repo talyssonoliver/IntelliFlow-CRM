@@ -98,6 +98,7 @@ vi.mock('@dnd-kit/core', () => ({
   }: {
     children: React.ReactNode;
     onDragEnd?: (event: unknown) => void;
+    sensors?: unknown;
   }) => {
     capturedOnDragEnd = onDragEnd;
     return <>{children}</>;
@@ -111,6 +112,13 @@ vi.mock('@dnd-kit/core', () => ({
     rect: { current: null },
     id,
   }),
+  // Sensor primitives — exported as noop descriptors for test purposes.
+  // Phase H added real PointerSensor + TouchSensor in the production
+  // component; these mocks just need to exist so the module loads.
+  PointerSensor: function PointerSensor() {},
+  TouchSensor: function TouchSensor() {},
+  useSensor: () => ({}),
+  useSensors: () => [],
 }));
 
 // ---------------------------------------------------------------------------
@@ -462,7 +470,7 @@ describe('ReactFlowComponent', () => {
     act(() => {
       capturedOnDragEnd?.({
         active: { data: { current: { nodeType: 'action' } } },
-        over: { id: 'canvas' },
+        over: { id: 'canvas-drop-zone' },
         delta: { x: 0, y: 0 },
         activatorEvent: undefined,
       });
@@ -481,7 +489,7 @@ describe('ReactFlowComponent', () => {
     act(() => {
       capturedOnDragEnd?.({
         active: { data: { current: { nodeType: 'action' } } },
-        over: { id: 'canvas' },
+        over: { id: 'canvas-drop-zone' },
         delta: { x: 10, y: 20 },
         activatorEvent: { clientX: 100, clientY: 200 },
       });
@@ -517,7 +525,7 @@ describe('ReactFlowComponent', () => {
     act(() => {
       capturedOnDragEnd?.({
         active: { data: { current: {} } },
-        over: { id: 'canvas' },
+        over: { id: 'canvas-drop-zone' },
         delta: { x: 0, y: 0 },
         activatorEvent: undefined,
       });
@@ -546,5 +554,80 @@ describe('ReactFlowComponent', () => {
     );
     // WorkflowCanvas must NOT have direct @xyflow/react imports
     expect(canvasSource).not.toMatch(/from ['"]@xyflow\/react['"]/);
+  });
+
+  // -------------------------------------------------------------------------
+  // C.1 — DnD must use screenToFlowPosition so drops land at the pointer
+  //       after the ReactFlow viewport has been panned/zoomed. Raw
+  //       container coords produce a drop at the wrong canvas coordinate.
+  // -------------------------------------------------------------------------
+
+  it('drag-end invokes addNode with screenToFlowPosition output (identity transform)', () => {
+    mockScreenToFlowPosition.mockImplementation(({ x, y }) => ({ x, y }));
+    const canvas = defaultCanvasReturn();
+    mockUseWorkflowCanvas.mockReturnValue(canvas);
+
+    render(<ReactFlowComponent />);
+
+    // Simulate a drop at screen coord (500, 300) with zero delta.
+    act(() => {
+      capturedOnDragEnd?.({
+        active: { data: { current: { nodeType: 'action' } } },
+        over: { id: 'canvas-drop-zone' },
+        delta: { x: 0, y: 0 },
+        activatorEvent: { clientX: 500, clientY: 300 },
+      });
+    });
+
+    expect(mockScreenToFlowPosition).toHaveBeenCalledWith({ x: 500, y: 300 });
+    expect(canvas.addNode).toHaveBeenCalledWith('action', { x: 500, y: 300 });
+  });
+
+  it('drag-end with pan/zoom maps screen coords through screenToFlowPosition', () => {
+    // Mimic a ReactFlow viewport of translate(600, -69) scale(1.14).
+    // Input screen (500, 300) → flow ((500-600)/1.14, (300+69)/1.14)
+    mockScreenToFlowPosition.mockImplementation(({ x, y }) => ({
+      x: (x - 600) / 1.14,
+      y: (y + 69) / 1.14,
+    }));
+    const canvas = defaultCanvasReturn();
+    mockUseWorkflowCanvas.mockReturnValue(canvas);
+
+    render(<ReactFlowComponent />);
+
+    act(() => {
+      capturedOnDragEnd?.({
+        active: { data: { current: { nodeType: 'start' } } },
+        over: { id: 'canvas-drop-zone' },
+        delta: { x: 0, y: 0 },
+        activatorEvent: { clientX: 500, clientY: 300 },
+      });
+    });
+
+    expect(mockScreenToFlowPosition).toHaveBeenCalledWith({ x: 500, y: 300 });
+    const call = (canvas.addNode as ReturnType<typeof vi.fn>).mock.calls[0];
+    expect(call[0]).toBe('start');
+    expect(call[1].x).toBeCloseTo((500 - 600) / 1.14, 3);
+    expect(call[1].y).toBeCloseTo((300 + 69) / 1.14, 3);
+  });
+
+  it('drag-end includes delta in the screen coord passed to screenToFlowPosition', () => {
+    mockScreenToFlowPosition.mockImplementation(({ x, y }) => ({ x, y }));
+    const canvas = defaultCanvasReturn();
+    mockUseWorkflowCanvas.mockReturnValue(canvas);
+
+    render(<ReactFlowComponent />);
+
+    // Activator was at (100, 100); delta was (+40, +25); drop = (140, 125)
+    act(() => {
+      capturedOnDragEnd?.({
+        active: { data: { current: { nodeType: 'decision' } } },
+        over: { id: 'canvas-drop-zone' },
+        delta: { x: 40, y: 25 },
+        activatorEvent: { clientX: 100, clientY: 100 },
+      });
+    });
+
+    expect(mockScreenToFlowPosition).toHaveBeenCalledWith({ x: 140, y: 125 });
   });
 });

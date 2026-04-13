@@ -14,6 +14,10 @@ interface ApplyButtonProps {
   showIcon?: boolean;
 }
 
+function saveButtonLabel(isSaved: boolean, jobTitle: string): string {
+  return isSaved ? `Remove ${jobTitle} from saved jobs` : `Save ${jobTitle} for later`;
+}
+
 /**
  * ApplyButton - Primary CTA for job applications
  *
@@ -132,7 +136,7 @@ export function SaveJobButton({ jobId, jobTitle, className }: Readonly<SaveJobBu
         className
       )}
       aria-pressed={isSaved}
-      aria-label={isSaved ? `Remove ${jobTitle} from saved jobs` : `Save ${jobTitle} for later`} // NOSONAR typescript:S4624 — ternary between two sibling template literals, not a nested template
+      aria-label={saveButtonLabel(isSaved, jobTitle)}
     >
       <span className="material-symbols-outlined text-lg" aria-hidden="true">
         {isSaved ? 'bookmark' : 'bookmark_border'}

@@ -42,8 +42,12 @@ export function GrowthTrendsWidget(_props: Readonly<WidgetProps>) {
   const months = trendData.map((d: GrowthTrendData) => d.month);
   const yoyChange = trendData[trendData.length - 1]?.yoyChange || 0;
   const lineSegments = dataPoints
-    .map((p: number, i: number) => `L${(i / (dataPoints.length - 1)) * 300},${100 - p}`)
-    .join(' '); // NOSONAR typescript:S4624 — arithmetic expressions inside template literal, not nested template
+    .map((p: number, i: number) => {
+      const x = (i / (dataPoints.length - 1)) * 300;
+      const y = 100 - p;
+      return `L${x},${y}`;
+    })
+    .join(' ');
 
   return (
     <div className="p-5 h-full flex flex-col">

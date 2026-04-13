@@ -95,25 +95,18 @@ function SLATrack({
 
       <div className="flex items-center gap-2">
         { }
-        <div
-          role="progressbar" // NOSONAR typescript:S6819 — custom styled progress bar with overflow:hidden child; <progress> cannot contain child elements
-          aria-valuenow={progressPct}
-          aria-valuemin={0}
-          aria-valuemax={100}
+        <progress
+          value={progressPct}
+          max={100}
           aria-valuetext={`${label} SLA: ${config.label}, ${timeText}`}
-          className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden"
-        >
-          <div
-            className={`h-full rounded-full transition-all ${(() => {
-              if (slaStatus === 'BREACHED') return 'bg-red-500';
-              if (slaStatus === 'AT_RISK') return 'bg-yellow-500';
-              if (slaStatus === 'MET') return 'bg-green-500';
-              if (slaStatus === 'PAUSED') return 'bg-slate-400';
-              return 'bg-emerald-500';
-            })()}`}
-            style={{ width: `${progressPct}%` }}
-          />
-        </div>
+          className={`flex-1 h-1.5 rounded-full appearance-none overflow-hidden [&::-webkit-progress-bar]:rounded-full [&::-webkit-progress-bar]:bg-muted [&::-webkit-progress-value]:rounded-full [&::-webkit-progress-value]:transition-all ${(() => {
+            if (slaStatus === 'BREACHED') return '[&::-webkit-progress-value]:bg-red-500 [&::-moz-progress-bar]:bg-red-500';
+            if (slaStatus === 'AT_RISK') return '[&::-webkit-progress-value]:bg-yellow-500 [&::-moz-progress-bar]:bg-yellow-500';
+            if (slaStatus === 'MET') return '[&::-webkit-progress-value]:bg-green-500 [&::-moz-progress-bar]:bg-green-500';
+            if (slaStatus === 'PAUSED') return '[&::-webkit-progress-value]:bg-slate-400 [&::-moz-progress-bar]:bg-slate-400';
+            return '[&::-webkit-progress-value]:bg-emerald-500 [&::-moz-progress-bar]:bg-emerald-500';
+          })()}`}
+        />
         <span className="text-xs font-mono text-muted-foreground whitespace-nowrap">
           {timeText}
         </span>

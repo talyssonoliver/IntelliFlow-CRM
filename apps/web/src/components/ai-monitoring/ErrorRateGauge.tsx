@@ -56,13 +56,13 @@ export function ErrorRateGauge({ driftResult, isLoading }: Readonly<ErrorRateGau
           <Skeleton className="h-24 w-40" />
         ) : (
           <>
-            <div
-              role="meter" // NOSONAR typescript:S6819 — composite SVG gauge with label; <meter> cannot contain child SVG elements
+            <span
+              role="meter"
               aria-valuenow={clampedScore}
               aria-valuemin={0}
               aria-valuemax={1}
               aria-label={`Error rate drift gauge: ${formatDriftScore(clampedScore)}`}
-              className="relative"
+              className="relative block"
             >
               <svg width="160" height="90" viewBox="0 0 160 90" aria-hidden="true">
                 <path
@@ -91,7 +91,7 @@ export function ErrorRateGauge({ driftResult, isLoading }: Readonly<ErrorRateGau
                   {formatDriftScore(clampedScore)}
                 </span>
               </div>
-            </div>
+            </span>
             <p className="text-xs text-muted-foreground mt-1">
               {driftResult ? driftResult.metric : 'No data'}
             </p>

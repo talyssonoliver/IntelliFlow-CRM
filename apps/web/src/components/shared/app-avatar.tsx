@@ -69,7 +69,7 @@ export function AppAvatar({
   const fallbackLabel = trimmedFallback || sourceFallback || initials;
 
   return (
-    <div
+    <span
       className={cn(
         'relative flex shrink-0 items-center justify-center overflow-hidden rounded-full',
         showImage
@@ -78,7 +78,7 @@ export function AppAvatar({
         !showImage && fallbackClassName,
         className
       )}
-      role="img" // NOSONAR typescript:S6819 — div-based avatar with dynamic content (image or initials); <img> cannot contain text fallback children
+      role="img"
       aria-label={alt ?? `Avatar for ${name}`}
       {...props}
     >
@@ -93,6 +93,6 @@ export function AppAvatar({
         />
       ) : null}
       {showImage ? null : <span className="font-semibold">{fallbackLabel}</span>}
-    </div>
+    </span>
   );
 }

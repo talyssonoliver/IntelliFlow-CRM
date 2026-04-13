@@ -40,11 +40,28 @@ interface WorkflowRow {
   version: number;
   createdAt: Date | string;
   updatedAt: Date | string;
+  /** Count of step nodes — surfaced in the list row so a save is visible */
+  stepCount?: number;
 }
 
 export interface WorkflowListProps {
   onEdit: (id: string) => void;
   onCreateNew?: () => void;
+}
+
+/** Format an ISO date as a short, human-readable relative string. */
+function formatRelative(date: Date | string): string {
+  const d = new Date(date);
+  const ms = Date.now() - d.getTime();
+  const sec = Math.round(ms / 1000);
+  if (sec < 60) return 'just now';
+  const min = Math.round(sec / 60);
+  if (min < 60) return `${min} minute${min === 1 ? '' : 's'} ago`;
+  const hr = Math.round(min / 60);
+  if (hr < 24) return `${hr} hour${hr === 1 ? '' : 's'} ago`;
+  const day = Math.round(hr / 24);
+  if (day < 30) return `${day} day${day === 1 ? '' : 's'} ago`;
+  return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
 // ---------------------------------------------------------------------------
@@ -85,7 +102,23 @@ export function WorkflowList({ onEdit, onCreateNew }: WorkflowListProps) {
     return <ListSkeleton />;
   }
 
-  const rows: WorkflowRow[] = data?.items ?? [];
+  // Project server rows into WorkflowRow shape, deriving stepCount from the
+  // `steps` payload so the list row can show "{N} steps".
+  // Shape of `steps` comes from IFC-028:
+  //   - envelope  { nodes: [...], edges: [...] }  (post-2026-04 workflows)
+  //   - flat      [...]                           (legacy)
+  const rawRows = (data?.items ?? []) as Array<WorkflowRow & { steps?: unknown }>;
+  const rows: WorkflowRow[] = rawRows.map((row) => {
+    const steps = row.steps;
+    let stepCount = 0;
+    if (Array.isArray(steps)) {
+      stepCount = steps.length;
+    } else if (steps && typeof steps === 'object') {
+      const envelope = (steps as Record<string, unknown>).nodes;
+      stepCount = Array.isArray(envelope) ? envelope.length : 0;
+    }
+    return { ...row, stepCount };
+  });
 
   // Derive unique categories for the filter dropdown
   const uniqueCategories = Array.from(new Set(rows.map((wf) => wf.category))).sort();
@@ -176,19 +209,22 @@ export function WorkflowList({ onEdit, onCreateNew }: WorkflowListProps) {
                 key={wf.id}
                 className="flex items-center gap-3 px-4 py-3 hover:bg-muted/40 transition-colors"
               >
-                {/* Name + category + created date */}
+                {/* Name + category + step count + updated-relative */}
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm truncate" data-testid="workflow-name">{wf.name}</p>
                   <p className="text-xs text-muted-foreground">
-                    {wf.category}
+                    <span data-testid="workflow-category">{wf.category}</span>
                     <span className="mx-1">&middot;</span>
-                    <time dateTime={new Date(wf.createdAt).toISOString()}>
-                      {new Date(wf.createdAt).toLocaleDateString('en-GB', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                      })}
-                    </time>
+                    <span data-testid="workflow-step-count">
+                      {wf.stepCount ?? 0} step{(wf.stepCount ?? 0) === 1 ? '' : 's'}
+                    </span>
+                    <span className="mx-1">&middot;</span>
+                    <span data-testid="workflow-updated">
+                      Updated{' '}
+                      <time dateTime={new Date(wf.updatedAt).toISOString()}>
+                        {formatRelative(wf.updatedAt)}
+                      </time>
+                    </span>
                   </p>
                 </div>
 

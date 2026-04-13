@@ -460,9 +460,9 @@ export const TrashList = React.memo(function TrashList() {
       {/* Loading State */}
       {isLoading && (
         <div className="space-y-3">
-          {[...new Array(5)].map((_, i) => (
+          {(['sk-0', 'sk-1', 'sk-2', 'sk-3', 'sk-4'] as const).map((skKey) => (
             <div
-              key={`skeleton-${i}`} // NOSONAR typescript:S6479
+              key={skKey}
               className="flex items-center gap-4 p-4 bg-card rounded-lg border border-border"
             >
               <div className="flex-1 space-y-2">

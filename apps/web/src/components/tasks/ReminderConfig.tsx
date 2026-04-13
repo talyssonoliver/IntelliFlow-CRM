@@ -21,9 +21,9 @@ export function ReminderConfig({
   const hasDueToday = dueTodayCount > 0;
 
   return (
-    <div
+    <output
       className="space-y-3"
-      role={hasOverdue ? 'alert' : 'status'} // NOSONAR typescript:S6819 — alert for overdue tasks, status region for due-today reminders
+      role={hasOverdue ? 'alert' : 'status'}
       aria-live={hasOverdue ? 'assertive' : 'polite'}
       aria-label="Task reminders"
     >
@@ -85,6 +85,6 @@ export function ReminderConfig({
           </div>
         </div>
       )}
-    </div>
+    </output>
   );
 }

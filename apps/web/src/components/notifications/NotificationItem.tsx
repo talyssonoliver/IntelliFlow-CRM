@@ -80,14 +80,12 @@ export const NotificationItem = React.memo(function NotificationItem({
     [activateItem]
   );
 
-  // NOSONAR typescript:S6819,S6842 — notification item is a styled div that conditionally acts as a link or button
   let divRole: 'link' | 'button' | undefined;
   if (actionLink) divRole = 'link';
   else if (isClickable) divRole = 'button';
 
   return (
-     
-    <div // NOSONAR typescript:S6845,S6848
+    <div
       onClick={handleItemClick}
       onKeyDown={handleKeyDown}
       role={divRole}

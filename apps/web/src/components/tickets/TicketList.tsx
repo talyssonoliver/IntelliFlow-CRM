@@ -41,6 +41,10 @@ import {
 import { getPriorityConfig } from '@/lib/tickets/ticket-utils';
 import type { TicketListItem, TicketStats, TicketFilterOptions, BulkActionType } from './types';
 
+const STATS_SKELETON_KEYS = ['stats-0', 'stats-1', 'stats-2', 'stats-3'] as const;
+const FILTER_SKELETON_KEYS = ['filter-0', 'filter-1', 'filter-2', 'filter-3', 'filter-4'] as const;
+const TABLE_SKELETON_KEYS = ['row-0', 'row-1', 'row-2', 'row-3', 'row-4', 'row-5', 'row-6', 'row-7'] as const;
+
 // =============================================================================
 // Props Interface
 // =============================================================================
@@ -575,10 +579,8 @@ export function TicketList({
       <div className="space-y-4">
         {/* Stats Cards Skeleton */}
         <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Card key={i} className="p-4">
-              {' '}
-              {/* NOSONAR typescript:S6479 */}
+          {STATS_SKELETON_KEYS.map((key) => (
+            <Card key={key} className="p-4">
               <div className="flex items-center gap-3">
                 <Skeleton className="w-10 h-10 rounded-lg" />
                 <div className="space-y-2 flex-1">
@@ -594,8 +596,8 @@ export function TicketList({
         <div className="space-y-2">
           <Skeleton className="h-10 w-full" />
           <div className="flex gap-2">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton key={i} className="h-8 w-20" /> // NOSONAR typescript:S6479
+            {FILTER_SKELETON_KEYS.map((key) => (
+              <Skeleton key={key} className="h-8 w-20" />
             ))}
           </div>
         </div>
@@ -603,8 +605,8 @@ export function TicketList({
         {/* Table Skeleton */}
         <Card className="p-6">
           <div className="space-y-3">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <Skeleton key={i} className="h-16 w-full" /> // NOSONAR typescript:S6479
+            {TABLE_SKELETON_KEYS.map((key) => (
+              <Skeleton key={key} className="h-16 w-full" />
             ))}
           </div>
         </Card>

@@ -89,13 +89,13 @@ function StatusBadge({ status }: Readonly<{ status: string }>) {
 // Loading Skeleton
 // ============================================
 
+const INVOICE_LIST_SKELETON_KEYS = ['inv-skel-0', 'inv-skel-1', 'inv-skel-2', 'inv-skel-3', 'inv-skel-4'] as const;
+
 function InvoiceListSkeleton() {
   return (
     <output className="space-y-3" aria-busy="true" aria-live="polite">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="flex items-center justify-between py-3">
-          {' '}
-          {/* NOSONAR typescript:S6479 */}
+      {INVOICE_LIST_SKELETON_KEYS.map((key) => (
+        <div key={key} className="flex items-center justify-between py-3">
           <div className="flex items-center gap-4">
             <Skeleton className="h-4 w-24" aria-hidden="true" />
             <Skeleton className="h-4 w-32" aria-hidden="true" />

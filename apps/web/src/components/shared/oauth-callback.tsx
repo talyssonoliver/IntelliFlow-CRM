@@ -278,9 +278,9 @@ export function OAuthCallback({
           <div className="absolute inset-0 bg-gradient-to-br from-white/[0.07] via-transparent to-[#137fec]/[0.03]" />
 
           { }
-          <div
-            className="relative p-8 text-center space-y-6"
-            role="status" // NOSONAR typescript:S6819
+          <output
+            className="relative p-8 text-center space-y-6 block"
+            role="status"
             aria-live="assertive"
           >
             {/* Status icon */}
@@ -359,7 +359,7 @@ export function OAuthCallback({
                 <p className="text-xs text-slate-400">Redirecting to dashboard in a moment...</p>
               </div>
             )}
-          </div>
+          </output>
 
           {/* Security badge */}
           <div className="bg-white/[0.03] border-t border-white/10 px-8 py-4">

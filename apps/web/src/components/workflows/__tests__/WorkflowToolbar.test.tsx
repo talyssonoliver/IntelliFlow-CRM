@@ -45,6 +45,27 @@ vi.mock('@intelliflow/ui', () => ({
       {children}
     </button>
   ),
+  // Lightweight mocks for the Tooltip primitives — we care about behaviour
+  // (button state, click handlers) in these tests, not tooltip rendering.
+  TooltipProvider: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
+  Tooltip: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
+  TooltipTrigger: ({ children }: { children?: React.ReactNode; asChild?: boolean }) => <>{children}</>,
+  TooltipContent: ({ children }: { children?: React.ReactNode }) => (
+    <span data-testid="tooltip-content">{children}</span>
+  ),
+}));
+
+// lucide-react icons render to SVG; stub them to simple spans for the
+// aria-label assertions (names come from the Button's aria-label, not the
+// icon, so this is just to silence react-dom warnings about unknown elements).
+vi.mock('lucide-react', () => ({
+  Save: () => <span>icon-save</span>,
+  Undo2: () => <span>icon-undo</span>,
+  Redo2: () => <span>icon-redo</span>,
+  ZoomIn: () => <span>icon-zoom-in</span>,
+  ZoomOut: () => <span>icon-zoom-out</span>,
+  Maximize: () => <span>icon-fit</span>,
+  Loader2: () => <span>icon-loader</span>,
 }));
 
 const { WorkflowToolbar } = await import('../WorkflowToolbar');
@@ -82,7 +103,10 @@ describe('WorkflowToolbar', () => {
 
   it('shows "Saving..." text when isSaving=true', () => {
     render(<WorkflowToolbar {...defaultProps} isSaving={true} />);
-    expect(screen.getByText(/saving/i)).toBeInTheDocument();
+    // The word appears twice: on the Save button AND in its tooltip.
+    // Assert at least one match and that the button reflects the saving state.
+    expect(screen.getAllByText(/saving/i).length).toBeGreaterThan(0);
+    expect(screen.getByRole('button', { name: /save workflow/i })).toBeDisabled();
   });
 
   it('Undo button disabled when canUndo=false, enabled otherwise', () => {

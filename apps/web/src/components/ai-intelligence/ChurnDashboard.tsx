@@ -43,6 +43,8 @@ const ChurnTrendChart = lazy(() => import('./ChurnTrendChart'));
 
 const BREADCRUMBS = [{ label: 'AI & Agents', href: '/agent-approvals' }, { label: 'Churn Risk' }];
 
+const CHURN_SKELETON_KEYS = ['churn-0', 'churn-1', 'churn-2'] as const;
+
 // ============================================
 // Stats Card (internal)
 // ============================================
@@ -332,8 +334,8 @@ export function ChurnDashboard() {
   if (isLoading) {
     customerListContent = (
       <div className="space-y-3">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <Skeleton key={i} className="h-36 w-full rounded-lg" /> // NOSONAR typescript:S6479
+        {CHURN_SKELETON_KEYS.map((key) => (
+          <Skeleton key={key} className="h-36 w-full rounded-lg" />
         ))}
       </div>
     );

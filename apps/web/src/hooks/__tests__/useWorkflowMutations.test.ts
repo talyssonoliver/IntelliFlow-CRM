@@ -14,6 +14,7 @@ import { renderHook, act } from '@testing-library/react';
 
 const mockPush = vi.fn();
 const mockInvalidate = vi.fn().mockResolvedValue(undefined);
+const mockGetByIdInvalidate = vi.fn().mockResolvedValue(undefined);
 const mockToast = vi.fn();
 
 // Store onSuccess/onError callbacks for each mutation so we can trigger them
@@ -32,6 +33,7 @@ vi.mock('@/lib/api', () => ({
     useUtils: () => ({
       workflow: {
         list: { invalidate: mockInvalidate },
+        getById: { invalidate: mockGetByIdInvalidate },
       },
     }),
     workflow: {
@@ -130,14 +132,22 @@ describe('useWorkflowMutations', () => {
     );
   });
 
-  it('update onSuccess invalidates list and shows "Workflow saved" toast', () => {
+  it('update onSuccess invalidates list and getById, shows "Workflow saved" toast', () => {
     renderHook(() => useWorkflowMutations());
 
     act(() => {
-      mutationCallbacks.update?.onSuccess?.();
+      (
+        mutationCallbacks.update?.onSuccess as unknown as
+          | ((data: unknown, vars: { id: string }) => void)
+          | undefined
+      )?.(undefined, { id: 'wf-42' });
     });
 
+    // C.4: list cache invalidates so the row re-renders with new stepCount...
     expect(mockInvalidate).toHaveBeenCalled();
+    // ...AND the single-workflow cache invalidates so the edit screen,
+    // if opened again, doesn't show the pre-save graph.
+    expect(mockGetByIdInvalidate).toHaveBeenCalledWith({ id: 'wf-42' });
     expect(mockToast).toHaveBeenCalledWith(
       expect.objectContaining({ title: 'Workflow saved' }),
     );

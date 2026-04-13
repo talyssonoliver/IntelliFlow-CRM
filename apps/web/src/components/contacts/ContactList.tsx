@@ -357,9 +357,9 @@ export function ContactList({
     return (
       <div aria-live="polite" aria-busy="true" className="space-y-3">
         <span className="sr-only">Loading contacts...</span>
-        {[...new Array(5)].map((_, i) => (
+        {(['contact-sk-0', 'contact-sk-1', 'contact-sk-2', 'contact-sk-3', 'contact-sk-4'] as const).map((skKey) => (
           <div
-            key={i} // NOSONAR typescript:S6479
+            key={skKey}
             className="flex items-center gap-4 p-4 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700"
           >
             <Skeleton className="size-10 rounded-full" />

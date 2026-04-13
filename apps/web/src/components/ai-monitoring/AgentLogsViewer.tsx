@@ -27,6 +27,8 @@ import { WorkflowProgressPanel } from './WorkflowProgressPanel';
 
 const BREADCRUMBS = [{ label: 'AI & Agents', href: '/agent-approvals' }, { label: 'Agent Logs' }];
 
+const LOGS_SKELETON_KEYS = ['log-0', 'log-1', 'log-2'] as const;
+
 const SORT_OPTIONS = [
   { value: 'newest', label: 'Newest First' },
   { value: 'oldest', label: 'Oldest First' },
@@ -327,8 +329,8 @@ function LogEntryCard({ log, isExpanded, onToggle }: Readonly<LogEntryCardProps>
 function LogsSkeleton() {
   return (
     <div className="space-y-3">
-      {Array.from({ length: 3 }).map((_, i) => (
-        <Skeleton key={i} className="h-24 w-full rounded-lg animate-pulse" /> // NOSONAR typescript:S6479 — static skeleton placeholder, no data identity
+      {LOGS_SKELETON_KEYS.map((key) => (
+        <Skeleton key={key} className="h-24 w-full rounded-lg animate-pulse" />
       ))}
     </div>
   );

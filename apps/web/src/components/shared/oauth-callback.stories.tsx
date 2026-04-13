@@ -93,9 +93,9 @@ const MockOAuthCallback = ({
         <div className="relative overflow-hidden border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl rounded-2xl">
           <div className="absolute inset-0 bg-gradient-to-br from-white/[0.07] via-transparent to-[#137fec]/[0.03]" />
 
-          <div
-            className="relative p-8 text-center space-y-6"
-            role="status" // NOSONAR typescript:S6819 — OAuth callback status region in story; <output> is for form computation results
+          <output
+            className="relative p-8 text-center space-y-6 block"
+            role="status"
             aria-live="polite"
           >
             <div
@@ -155,7 +155,7 @@ const MockOAuthCallback = ({
                 <p className="text-xs text-slate-400">Redirecting to dashboard in a moment...</p>
               </div>
             )}
-          </div>
+          </output>
 
           <div className="bg-white/[0.03] border-t border-white/10 px-8 py-4">
             <div className="flex items-center justify-center gap-2 text-xs text-slate-400">

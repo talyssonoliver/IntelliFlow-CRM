@@ -6,6 +6,8 @@ import { Button, EmptyState, Skeleton, Badge } from '@intelliflow/ui';
 import { api } from '@/lib/api';
 import type { ContactStatus } from '@intelliflow/domain';
 
+const CONTACTS_SKELETON_KEYS = ['contact-0', 'contact-1', 'contact-2', 'contact-3', 'contact-4'] as const;
+
 interface AccountContact {
   id: string;
   firstName: string;
@@ -37,8 +39,8 @@ export function AccountContactsList({
   if (isLoading) {
     return (
       <div className="space-y-3">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={i} className="h-12 w-full" /> // NOSONAR typescript:S6479 — static skeleton placeholder, no data identity
+        {CONTACTS_SKELETON_KEYS.map((key) => (
+          <Skeleton key={key} className="h-12 w-full" />
         ))}
       </div>
     );

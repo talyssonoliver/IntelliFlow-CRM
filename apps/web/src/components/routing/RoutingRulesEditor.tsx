@@ -57,6 +57,8 @@ import {
 import { useRouting } from '@/app/settings/routing/hooks/useRouting';
 import type { RoutingCondition, RoutingAction } from '@intelliflow/validators';
 
+const ROUTING_SKELETON_KEYS = ['rule-0', 'rule-1', 'rule-2'] as const;
+
 interface RoutingRule {
   id: string;
   name: string;
@@ -135,9 +137,9 @@ function SortableRule({
 
   const actionsSummary = actions
     .map((a) => {
-      const targetPart = a.target ? `: ${a.target}` : '';
-      return `${a.type}${targetPart}`;
-    }) // NOSONAR typescript:S4624 — two sibling template literals on one line, not nested
+      const targetPart = a.target ? ': ' + a.target : '';
+      return a.type + targetPart;
+    })
     .join(' → ');
 
   return (
@@ -330,8 +332,8 @@ export function RoutingRulesEditor() {
     return (
       <Card>
         <CardContent className="p-6 space-y-4">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-16 w-full" /> // NOSONAR typescript:S6479 — static skeleton placeholder, no data identity
+          {ROUTING_SKELETON_KEYS.map((key) => (
+            <Skeleton key={key} className="h-16 w-full" />
           ))}
         </CardContent>
       </Card>
@@ -382,8 +384,6 @@ export function RoutingRulesEditor() {
                 <div className="space-y-2 mt-2">
                   {formData.conditions.map((condition, i) => (
                     <div key={`condition-${i}`} className="flex gap-2 items-start">
-                      {' '}
-                      {/* NOSONAR typescript:S6479 */}
                       <Select
                         value={condition.field}
                         onValueChange={(v) => updateCondition(i, 'field', v)}
@@ -445,8 +445,6 @@ export function RoutingRulesEditor() {
                 <div className="space-y-2 mt-2">
                   {formData.actions.map((action, i) => (
                     <div key={`action-${i}`} className="flex gap-2 items-start">
-                      {' '}
-                      {/* NOSONAR typescript:S6479 */}
                       <Select value={action.type} onValueChange={(v) => updateAction(i, 'type', v)}>
                         <SelectTrigger className="w-[160px]" aria-label="Action type">
                           <SelectValue />

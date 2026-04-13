@@ -44,8 +44,12 @@ export function useWorkflowMutations() {
     steps?: Array<{ id: number; type: string; config?: Record<string, unknown>; position?: { x: number; y: number } }>;
     edges?: Array<{ id: string; source: string; target: string; label?: string }>;
   }> = api.workflow.update.useMutation({
-    onSuccess: () => {
+    // Invalidate BOTH the list (so the row re-renders with the new step
+    // count / updatedAt) AND the single-workflow cache (so revisiting the
+    // edit screen reflects the just-saved graph, not the stale one).
+    onSuccess: (_data: unknown, variables: { id: string }) => {
       void utils.workflow.list.invalidate();
+      void utils.workflow.getById.invalidate({ id: variables.id });
       toast({ title: 'Workflow saved' });
     },
     onError: (error: { message?: string }) => {

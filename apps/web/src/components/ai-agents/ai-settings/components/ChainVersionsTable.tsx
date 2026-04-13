@@ -35,6 +35,8 @@ import type { ChainType, ChainVersionStatus } from '@intelliflow/domain';
 import { CHAIN_TYPES, CHAIN_VERSION_STATUSES } from '@intelliflow/domain';
 import type { ChainVersionSummary } from '@intelliflow/validators';
 
+const CHAIN_VERSION_SKELETON_KEYS = ['chain-ver-0', 'chain-ver-1', 'chain-ver-2', 'chain-ver-3', 'chain-ver-4'] as const;
+
 interface ChainVersionsTableProps {
   versions: ChainVersionSummary[];
   isLoading: boolean;
@@ -117,8 +119,8 @@ export function ChainVersionsTable({
             <Skeleton className="h-10 w-40" />
           </div>
           {/* Table skeletons */}
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-16 w-full" /> // NOSONAR typescript:S6479
+          {CHAIN_VERSION_SKELETON_KEYS.map((key) => (
+            <Skeleton key={key} className="h-16 w-full" />
           ))}
         </div>
       </Card>

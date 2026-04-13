@@ -52,6 +52,8 @@ export type ActivityFeedProps = ActivityFeedInternalProps | ActivityFeedExternal
 /** Estimated height of each feed item in pixels (for virtualizer) — increased for mockup layout */
 const ESTIMATED_ITEM_SIZE = 120;
 
+const FEED_SKELETON_KEYS = ['feed-skel-0', 'feed-skel-1', 'feed-skel-2', 'feed-skel-3'] as const;
+
 interface ResolvedFeedData {
   items: ActivityFeedItemProps[];
   isLoading: boolean;
@@ -152,10 +154,8 @@ export function ActivityFeed(props: Readonly<ActivityFeedProps>) {
   if (isLoading) {
     return (
       <div className={`divide-y divide-[#e2e8f0] dark:divide-[#334155] ${className}`}>
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="animate-pulse flex gap-3 p-5">
-            {' '}
-            {/* NOSONAR typescript:S6479 */}
+        {FEED_SKELETON_KEYS.map((key) => (
+          <div key={key} className="animate-pulse flex gap-3 p-5">
             <div className="size-10 rounded-full bg-slate-200 dark:bg-slate-700 shrink-0" />
             <div className="flex-1 space-y-2">
               <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4" />

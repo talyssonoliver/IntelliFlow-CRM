@@ -7,6 +7,8 @@ import { api } from '@/lib/api';
 import { formatCurrency } from '@/lib/pricing/calculator';
 import { getAccountTier, TIER_CONFIG } from './AccountCard';
 
+const HIERARCHY_SKELETON_KEYS = ['hier-0', 'hier-1', 'hier-2', 'hier-3'] as const;
+
 interface HierarchyNode {
   id: string;
   name: string;
@@ -62,7 +64,7 @@ function TreeNode({
   const tierConfig = TIER_CONFIG[tier];
 
   return (
-    <li // NOSONAR typescript:S6842 — treeitem role is the correct ARIA pattern for nodes in a tree widget; replacing with a div would break semantics
+    <li
       ref={(el) => {
         if (el) nodeRefs.current.set(node.id, el);
       }}
@@ -311,8 +313,8 @@ export function AccountHierarchy({ accountId }: Readonly<AccountHierarchyProps>)
   if (isLoading) {
     return (
       <div className="space-y-3">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-10 w-full" /> // NOSONAR typescript:S6479
+        {HIERARCHY_SKELETON_KEYS.map((key) => (
+          <Skeleton key={key} className="h-10 w-full" />
         ))}
       </div>
     );
@@ -359,8 +361,6 @@ export function AccountHierarchy({ accountId }: Readonly<AccountHierarchyProps>)
       {hasHierarchy ? (
         <Card className="p-4">
           <ul role="tree" aria-label="Account hierarchy" onKeyDown={handleKeyDown}>
-            {' '}
-            {/* NOSONAR typescript:S6842 — tree role is required for ARIA tree widget pattern */}
             <TreeNode
               node={data.current}
               currentId={accountId}

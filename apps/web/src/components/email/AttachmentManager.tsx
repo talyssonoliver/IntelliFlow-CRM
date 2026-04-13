@@ -76,8 +76,9 @@ export function AttachmentManager({
   return (
     <div className={cn('space-y-2', className)}>
       {/* Drop zone */}
-      { }
-      <div // NOSONAR typescript:S6848
+      <div
+        role="region"
+        aria-label="File drop zone"
         data-testid="drop-zone"
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}

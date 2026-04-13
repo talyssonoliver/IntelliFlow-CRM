@@ -37,6 +37,9 @@ const BREADCRUMBS = [
   { label: 'Active Agents' },
 ];
 
+const AGENTS_GRID_SKELETON_KEYS = ['agent-grid-0', 'agent-grid-1', 'agent-grid-2', 'agent-grid-3', 'agent-grid-4'] as const;
+const AGENTS_LIST_SKELETON_KEYS = ['agent-list-0', 'agent-list-1', 'agent-list-2'] as const;
+
 const TYPE_CHIPS = [
   { id: 'all', label: 'All' },
   { id: 'qualification', label: 'Qualification' },
@@ -234,15 +237,15 @@ function DashboardSkeleton() {
   return (
     <div className="flex flex-col gap-6">
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={i} className="h-20 rounded-lg animate-pulse" data-testid="skeleton" /> // NOSONAR typescript:S6479
+        {AGENTS_GRID_SKELETON_KEYS.map((key) => (
+          <Skeleton key={key} className="h-20 rounded-lg animate-pulse" data-testid="skeleton" />
         ))}
       </div>
       <Skeleton className="h-10 w-full rounded-lg animate-pulse" data-testid="skeleton" />
       <div className="space-y-3">
-        {Array.from({ length: 3 }).map((_, i) => (
+        {AGENTS_LIST_SKELETON_KEYS.map((key) => (
           <Skeleton
-            key={i} // NOSONAR typescript:S6479
+            key={key}
             className="h-24 w-full rounded-lg animate-pulse"
             data-testid="skeleton"
           />

@@ -39,19 +39,19 @@ export function RiskIndicators({ distribution, total }: Readonly<RiskIndicatorsP
               >
                 {level}
               </span>
-              <div
-                className="flex-1 h-2 rounded-full bg-muted overflow-hidden"
-                role="progressbar" // NOSONAR typescript:S6819 — custom styled progress with inner fill child; <progress> cannot contain child elements
+              <span
+                role="progressbar"
                 aria-valuenow={pct}
                 aria-valuemin={0}
                 aria-valuemax={100}
                 aria-label={`${level}: ${pct}%`}
+                className="flex-1 h-2 rounded-full bg-muted overflow-hidden block"
               >
-                <div
-                  className={`h-full rounded-full transition-all ${LEVEL_COLORS[level] ?? 'bg-slate-500'}`}
+                <span
+                  className={`h-full rounded-full transition-all block ${LEVEL_COLORS[level] ?? 'bg-slate-500'}`}
                   style={{ width: `${pct}%` }}
                 />
-              </div>
+              </span>
               <span className="text-xs text-muted-foreground w-16 text-right">
                 {count} ({pct}%)
               </span>

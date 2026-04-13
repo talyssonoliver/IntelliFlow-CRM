@@ -1,31 +1,83 @@
 'use client';
 
 /**
- * WorkflowToolbar — IFC-031
+ * WorkflowToolbar
  *
- * Toolbar rendered inside ReactFlowProvider (Panel component).
- * Provides save, zoom, fit-view, undo/redo controls.
- * Must be rendered as a child of ReactFlowProvider — uses useReactFlow().
+ * Toolbar rendered inside ReactFlowProvider (Panel component). Provides
+ * save, undo/redo, zoom+, zoom-, and fit-view. Uses the design-system
+ * Button + Tooltip primitives and lucide icons so it matches the rest
+ * of the app and so disabled states explain themselves on hover.
  */
 
 import { useReactFlow } from '@xyflow/react';
-import { Button } from '@intelliflow/ui';
+import {
+  Save,
+  Undo2,
+  Redo2,
+  ZoomIn,
+  ZoomOut,
+  Maximize,
+  Loader2,
+} from 'lucide-react';
+import {
+  Button,
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@intelliflow/ui';
 
 export interface WorkflowToolbarProps {
   onSave: () => void;
   onAutoLayout?: () => void;
   isValid: boolean;
   isSaving: boolean;
+  /** First validation error, shown on the Save tooltip when !isValid */
+  validationError?: string;
   canUndo: boolean;
   canRedo: boolean;
   onUndo: () => void;
   onRedo: () => void;
 }
 
+interface IconActionProps {
+  label: string;
+  icon: React.ReactNode;
+  onClick: () => void;
+  disabled?: boolean;
+  disabledReason?: string;
+}
+
+function IconAction({ label, icon, onClick, disabled, disabledReason }: IconActionProps) {
+  const hoverText = disabled && disabledReason ? disabledReason : label;
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        {/* span wrapper keeps the tooltip target clickable even when the
+            inner button is disabled (disabled buttons don't fire events) */}
+        <span className="inline-flex">
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={onClick}
+            disabled={disabled}
+            aria-label={label}
+            className="h-8 w-8 p-0"
+          >
+            {icon}
+          </Button>
+        </span>
+      </TooltipTrigger>
+      <TooltipContent side="bottom">{hoverText}</TooltipContent>
+    </Tooltip>
+  );
+}
+
 export function WorkflowToolbar({
   onSave,
   isValid,
   isSaving,
+  validationError,
   canUndo,
   canRedo,
   onUndo,
@@ -33,73 +85,76 @@ export function WorkflowToolbar({
 }: WorkflowToolbarProps) {
   const { zoomIn, zoomOut, fitView } = useReactFlow();
 
+  const saveDisabled = !isValid || isSaving;
+  const saveTooltip = isSaving
+    ? 'Saving…'
+    : !isValid
+      ? validationError ?? 'Connect every node between a Start and an End before saving.'
+      : 'Save workflow';
+
   return (
-    <div className="flex items-center gap-1 bg-background/90 backdrop-blur-sm border rounded-lg px-2 py-1 shadow-sm">
-      {/* Save */}
-      <Button
-        size="sm"
-        onClick={onSave}
-        disabled={!isValid || isSaving}
-        aria-label="Save workflow"
-        className="gap-1.5"
-      >
-        {isSaving ? 'Saving…' : 'Save'}
-      </Button>
+    <TooltipProvider delayDuration={200}>
+      <div className="flex items-center gap-1 bg-background/95 backdrop-blur-sm border border-border rounded-lg px-1.5 py-1 shadow-sm">
+        {/* Save */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="inline-flex">
+              <Button
+                size="sm"
+                onClick={onSave}
+                disabled={saveDisabled}
+                aria-label="Save workflow"
+                className="gap-1.5 h-8"
+              >
+                {isSaving ? (
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                ) : (
+                  <Save className="h-4 w-4" aria-hidden="true" />
+                )}
+                {isSaving ? 'Saving…' : 'Save'}
+              </Button>
+            </span>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">{saveTooltip}</TooltipContent>
+        </Tooltip>
 
-      <div className="w-px h-5 bg-border mx-1" />
+        <div className="w-px h-5 bg-border mx-1" aria-hidden="true" />
 
-      {/* Undo / Redo */}
-      <Button
-        size="sm"
-        variant="ghost"
-        onClick={onUndo}
-        disabled={!canUndo}
-        aria-label="Undo"
-        title="Undo"
-      >
-        ↩
-      </Button>
-      <Button
-        size="sm"
-        variant="ghost"
-        onClick={onRedo}
-        disabled={!canRedo}
-        aria-label="Redo"
-        title="Redo"
-      >
-        ↪
-      </Button>
+        {/* Undo / Redo */}
+        <IconAction
+          label="Undo"
+          icon={<Undo2 className="h-4 w-4" aria-hidden="true" />}
+          onClick={onUndo}
+          disabled={!canUndo}
+          disabledReason="Nothing to undo"
+        />
+        <IconAction
+          label="Redo"
+          icon={<Redo2 className="h-4 w-4" aria-hidden="true" />}
+          onClick={onRedo}
+          disabled={!canRedo}
+          disabledReason="Nothing to redo"
+        />
 
-      <div className="w-px h-5 bg-border mx-1" />
+        <div className="w-px h-5 bg-border mx-1" aria-hidden="true" />
 
-      {/* Zoom controls */}
-      <Button
-        size="sm"
-        variant="ghost"
-        onClick={() => void zoomIn()}
-        aria-label="Zoom in"
-        title="Zoom in"
-      >
-        +
-      </Button>
-      <Button
-        size="sm"
-        variant="ghost"
-        onClick={() => void zoomOut()}
-        aria-label="Zoom out"
-        title="Zoom out"
-      >
-        −
-      </Button>
-      <Button
-        size="sm"
-        variant="ghost"
-        onClick={() => void fitView()}
-        aria-label="Fit view"
-        title="Fit view"
-      >
-        ⊞
-      </Button>
-    </div>
+        {/* Zoom controls */}
+        <IconAction
+          label="Zoom in"
+          icon={<ZoomIn className="h-4 w-4" aria-hidden="true" />}
+          onClick={() => void zoomIn()}
+        />
+        <IconAction
+          label="Zoom out"
+          icon={<ZoomOut className="h-4 w-4" aria-hidden="true" />}
+          onClick={() => void zoomOut()}
+        />
+        <IconAction
+          label="Fit view"
+          icon={<Maximize className="h-4 w-4" aria-hidden="true" />}
+          onClick={() => void fitView()}
+        />
+      </div>
+    </TooltipProvider>
   );
 }

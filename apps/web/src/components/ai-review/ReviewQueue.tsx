@@ -28,6 +28,8 @@ import { ReviewCard } from './ReviewCard';
 import type { ReviewListFilter, ReviewResponse } from '@intelliflow/validators/ai-review';
 import { REVIEW_STATUSES, AI_OUTPUT_TYPES } from '@intelliflow/domain';
 
+const REVIEW_QUEUE_SKELETON_KEYS = ['review-0', 'review-1', 'review-2', 'review-3', 'review-4'] as const;
+
 // ============================================
 // Stats Card (internal)
 // ============================================
@@ -332,8 +334,8 @@ export function ReviewQueue() {
         if (isLoading)
           return (
             <div className="space-y-3">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Skeleton key={i} className="h-36 w-full rounded-lg" /> // NOSONAR typescript:S6479
+              {REVIEW_QUEUE_SKELETON_KEYS.map((key) => (
+                <Skeleton key={key} className="h-36 w-full rounded-lg" />
               ))}
             </div>
           );

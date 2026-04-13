@@ -94,13 +94,13 @@ export function PasswordStrengthIndicator({
 
       {/* Progress bar */}
       <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
-        <div
+        <span
           className={cn(
-            'h-full rounded-full transition-all duration-300',
+            'h-full rounded-full transition-all duration-300 block',
             config.color,
             config.width
           )}
-          role="progressbar" // NOSONAR typescript:S6819 — inner fill bar; <progress> cannot be positioned inside overflow:hidden container
+          role="progressbar"
           aria-valuenow={result.percentage}
           aria-valuemin={0}
           aria-valuemax={100}

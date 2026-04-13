@@ -32,6 +32,8 @@ import { CostTracker } from './CostTracker';
 
 const ModelPerformanceChart = lazy(() => import('./ModelPerformanceChart'));
 
+const DRIFT_SKELETON_KEYS = ['drift-0', 'drift-1', 'drift-2'] as const;
+
 const BREADCRUMBS = [
   { label: 'AI & Agents', href: '/agent-approvals' },
   { label: 'Drift Detection' },
@@ -291,8 +293,8 @@ export function DriftDashboard() {
               if (isLoading)
                 return (
                   <div className="space-y-3">
-                    {Array.from({ length: 3 }).map((_, i) => (
-                      <Skeleton key={i} className="h-20 w-full rounded-lg" /> // NOSONAR typescript:S6479 — static skeleton placeholder, no data identity
+                    {DRIFT_SKELETON_KEYS.map((key) => (
+                      <Skeleton key={key} className="h-20 w-full rounded-lg" />
                     ))}
                   </div>
                 );

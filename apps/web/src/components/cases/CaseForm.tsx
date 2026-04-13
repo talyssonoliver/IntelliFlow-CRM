@@ -384,13 +384,13 @@ export function CaseForm({
             {/* ── Dropdown results ── */}
             { }
             {clientDropdownOpen && !formData.clientId && debouncedClientSearch.length >= 2 && (
-              <div
+              <ul
                 id="client-listbox"
-                className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-background shadow-lg max-h-56 overflow-y-auto"
-                role="listbox" // NOSONAR typescript:S6819
+                className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-background shadow-lg max-h-56 overflow-y-auto list-none m-0 p-0"
+                role="listbox"
               >
                 {contactQuery.isLoading && (
-                  <div className="flex items-center gap-2 px-3 py-3 text-sm text-muted-foreground">
+                  <li className="flex items-center gap-2 px-3 py-3 text-sm text-muted-foreground">
                     <span
                       className="material-symbols-outlined text-[16px] animate-spin"
                       aria-hidden="true"
@@ -398,22 +398,20 @@ export function CaseForm({
                       progress_activity
                     </span>{' '}
                     Searching...
-                  </div>
+                  </li>
                 )}
                 {!contactQuery.isLoading && clientResults.length === 0 && (
-                  <div className="px-3 py-3 text-sm text-muted-foreground">
+                  <li className="px-3 py-3 text-sm text-muted-foreground">
                     No clients found for &quot;{debouncedClientSearch}&quot;
-                  </div>
+                  </li>
                 )}
                 {!contactQuery.isLoading &&
                   clientResults.map((client) => (
+                    <li key={client.id} role="option" aria-selected={false}>
                     <button
-                      key={client.id}
                       type="button"
                       onClick={() => handleClientSelect(client.id, client.name)}
                       className="w-full text-left px-3 py-2.5 hover:bg-accent transition-colors flex items-center gap-3"
-                      role="option" // NOSONAR typescript:S6819
-                      aria-selected={false}
                     >
                       <span
                         className="material-symbols-outlined text-muted-foreground text-xl shrink-0"
@@ -432,8 +430,9 @@ export function CaseForm({
                         )}
                       </div>
                     </button>
+                    </li>
                   ))}
-              </div>
+              </ul>
             )}
             { }
 

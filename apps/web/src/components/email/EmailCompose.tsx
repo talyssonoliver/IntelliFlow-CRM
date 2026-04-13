@@ -237,7 +237,7 @@ export function EmailCompose({
         // No URL provided — ignore
         return;
       } else {
-        document.execCommand(command, false); // NOSONAR typescript:S1874
+        document.execCommand(command, false);
       }
 
       // Update active formats immediately after command

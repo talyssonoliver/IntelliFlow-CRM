@@ -14,6 +14,8 @@ import {
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useEnabledModules } from '@/hooks/useEnabledModules';
 
+const NAV_SKELETON_KEYS = ['nav-0', 'nav-1', 'nav-2', 'nav-3', 'nav-4', 'nav-5'] as const;
+
 // Public routes that should not show the authenticated navigation
 const PUBLIC_ROUTES = [
   '/login',
@@ -68,8 +70,8 @@ export function Navigation() {
         {/* Desktop Navigation */}
         {modulesLoading && !modulesError ? (
           <nav className="hidden lg:flex items-center gap-1">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="h-8 w-20 rounded-lg bg-muted animate-pulse" /> // NOSONAR typescript:S6479
+            {NAV_SKELETON_KEYS.map((key) => (
+              <div key={key} className="h-8 w-20 rounded-lg bg-muted animate-pulse" />
             ))}
           </nav>
         ) : (
