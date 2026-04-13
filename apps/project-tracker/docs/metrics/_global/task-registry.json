@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-04-13T01:23:27.425Z",
+  "last_updated": "2026-04-13T22:40:46.266Z",
   "tasks_by_status": {
     "DONE": [
       "EXC-INIT-001",
@@ -154,6 +154,7 @@
       "PG-050",
       "PG-051",
       "PG-052",
+      "PG-053",
       "PG-055",
       "PG-056",
       "DOC-001",
@@ -291,6 +292,7 @@
       "IFC-193",
       "IFC-194",
       "IFC-195",
+      "IFC-196",
       "IFC-197",
       "PG-148",
       "PG-149",
@@ -375,8 +377,11 @@
       "PG-193"
     ],
     "IN_PROGRESS": [
-      "IFC-031",
-      "PG-054"
+      "PG-054",
+      "PG-057",
+      "IFC-300",
+      "PG-182",
+      "PG-183"
     ],
     "VALIDATING": [],
     "BLOCKED": [],
@@ -407,8 +412,6 @@
       "IFC-084",
       "IFC-087",
       "PG-049",
-      "PG-053",
-      "PG-057",
       "PG-058",
       "PG-059",
       "PG-060",
@@ -484,7 +487,6 @@
       "IFC-175",
       "PG-145",
       "PG-147",
-      "IFC-196",
       "IFC-199",
       "IFC-201",
       "IFC-204",
@@ -557,14 +559,11 @@
       "IFC-293",
       "IFC-294",
       "IFC-295",
-      "IFC-300",
       "PG-180",
       "IFC-301",
       "PG-181",
       "IFC-302",
       "IFC-304",
-      "PG-182",
-      "PG-183",
       "PG-184",
       "PG-185",
       "PG-186",
@@ -582,7 +581,9 @@
       "IFC-309"
     ],
     "FAILED": [],
-    "NEEDS_HUMAN": [],
+    "NEEDS_HUMAN": [
+      "IFC-031"
+    ],
     "IN_REVIEW": []
   },
   "task_details": {
@@ -1375,7 +1376,7 @@
         "IFC-013"
       ],
       "artifacts": [
-        "ARTIFACT:packages/db/src/client.ts;ARTIFACT:artifacts/benchmarks/query-performance.csv;ARTIFACT:artifacts/misc/pgvector-test.sql;ARTIFACT:apps/project-tracker/docs/metrics/_global/flows/FLOW-002.md;ARTIFACT:apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-002-validation.md;EVIDENCE:.specify/sprints/sprint-6/attestations/IFC-017/context_ack.json"
+        "ARTIFACT:packages/db/src/client.ts;ARTIFACT:artifacts/misc/pgvector-test.sql;ARTIFACT:apps/project-tracker/docs/metrics/_global/flows/FLOW-002.md;ARTIFACT:apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-002-validation.md;EVIDENCE:.specify/sprints/sprint-6/attestations/IFC-017/context_ack.json"
       ],
       "kpis": "Zero data loss, queries <20ms",
       "definition_of_done": "Type-safe database queries, pgvector configured; targets: <20ms, zero errors",
@@ -1449,7 +1450,7 @@
         "IFC-020"
       ],
       "artifacts": [
-        "ARTIFACT:artifacts/misc/crew-config.yaml;ARTIFACT:artifacts/logs/agent-interaction-logs.json;ARTIFACT:apps/api/src/agent/orchestration.test.ts;EVIDENCE:.specify/sprints/sprint-6/attestations/IFC-021/context_ack.json"
+        "ARTIFACT:artifacts/misc/crew-config.yaml;ARTIFACT:apps/api/src/agent/orchestration.test.ts;EVIDENCE:.specify/sprints/sprint-6/attestations/IFC-021/context_ack.json"
       ],
       "kpis": "Agents cooperating, tasks orchestrated",
       "definition_of_done": "Lead qualifier, email writer, follow-up agents; artifacts: crew-config.yaml, agent-interaction-logs.json, orchestration.test.ts; verified by: pnpm test",
@@ -1558,7 +1559,7 @@
         "IFC-026"
       ],
       "artifacts": [
-        "ARTIFACT:artifacts/reports/investment-gate-2-analysis.md;ARTIFACT:artifacts/reports/ai-roi-report.md;ARTIFACT:artifacts/misc/customer-feedback.md;ARTIFACT:artifacts/misc/board-presentation.md;EVIDENCE:.specify/sprints/sprint-15/attestations/IFC-027/context_ack.json"
+        "ARTIFACT:artifacts/reports/investment-gate-2-analysis.md;ARTIFACT:artifacts/misc/customer-feedback.md;ARTIFACT:artifacts/misc/board-presentation.md;EVIDENCE:.specify/sprints/sprint-15/attestations/IFC-027/context_ack.json"
       ],
       "kpis": "AI adds measurable value, ROI positive",
       "definition_of_done": "Expand/maintain decision on AI features; artifacts: investment-gate-2-analysis.md, ai-roi-report.md, customer-feedback.md",
@@ -1624,7 +1625,7 @@
       "section": "Automation",
       "description": "PHASE-005: Workflow Builder UI (React Flow)",
       "owner": "Frontend Dev + UX (STOA-Domain)",
-      "status": "IN_PROGRESS",
+      "status": "NEEDS_HUMAN",
       "sprint": 17,
       "dependencies": [
         "IFC-028"
@@ -1889,7 +1890,7 @@
         "ENV-010-AI"
       ],
       "artifacts": [
-        "ARTIFACT:vitest.config.ts;ARTIFACT:artifacts/logs/test-execution-time.log;ARTIFACT:artifacts/metrics/tdd-compliance.csv;ARTIFACT:artifacts/reports/mutation-test.json;EVIDENCE:.specify/sprints/sprint-0/attestations/IFC-044/context_ack.json"
+        "ARTIFACT:vitest.config.ts;ARTIFACT:artifacts/metrics/tdd-compliance.csv;EVIDENCE:.specify/sprints/sprint-0/attestations/IFC-044/context_ack.json"
       ],
       "kpis": "Coverage >90%, tests fast (<30s)",
       "definition_of_done": "90%+ coverage, all business logic tested; artifacts: lcov.info, test-execution-time.log, tdd-compliance.csv; gates: coverage-gte-90",
@@ -2120,7 +2121,7 @@
         "IFC-011"
       ],
       "artifacts": [
-        "ARTIFACT:docs/shared/vendor-abstraction-layers.md;ARTIFACT:artifacts/misc/migration-test-plan.yaml;ARTIFACT:artifacts/logs/portability-test.log;ARTIFACT:artifacts/reports/alternatives.csv;EVIDENCE:.specify/sprints/sprint-9/attestations/IFC-057/context_ack.json"
+        "ARTIFACT:docs/shared/vendor-abstraction-layers.md;ARTIFACT:artifacts/misc/migration-test-plan.yaml;ARTIFACT:artifacts/reports/alternatives.csv;EVIDENCE:.specify/sprints/sprint-9/attestations/IFC-057/context_ack.json"
       ],
       "kpis": "Migration tested, <1 week effort (actual: 3-5 days)",
       "definition_of_done": "Can migrate from Supabase/Vercel if needed; artifacts: vendor-abstraction-layers.md, migration-test-plan.yaml, portability-test.log",
@@ -2459,7 +2460,7 @@
         "IFC-001"
       ],
       "artifacts": [
-        "ARTIFACT:infra/terraform/modules/supabase/main.tf;ARTIFACT:artifacts/misc/drift-detection-config.yaml;ARTIFACT:artifacts/logs/destroy-rebuild-test.log;ARTIFACT:artifacts/misc/architecture-spike/README.md;ARTIFACT:artifacts/misc/architecture-spike/performance-test.ts;ARTIFACT:artifacts/misc/architecture-spike/type-safety-validation.ts;ARTIFACT:artifacts/reports/IFC-075-implementation-summary.md;EVIDENCE:.specify/sprints/sprint-1/attestations/IFC-075/context_ack.json"
+        "ARTIFACT:infra/terraform/modules/supabase/main.tf;ARTIFACT:artifacts/misc/drift-detection-config.yaml;ARTIFACT:artifacts/misc/architecture-spike/README.md;ARTIFACT:artifacts/misc/architecture-spike/performance-test.ts;ARTIFACT:artifacts/misc/architecture-spike/type-safety-validation.ts;ARTIFACT:artifacts/reports/IFC-075-implementation-summary.md;EVIDENCE:.specify/sprints/sprint-1/attestations/IFC-075/context_ack.json"
       ],
       "kpis": "100% reproducible, drift detection active",
       "definition_of_done": "Supabase + Vercel + Railway provisioned via code; artifacts: main.tf, drift-detection-config.yaml, destroy-rebuild-test.log; targets: >=100%",
@@ -2716,7 +2717,7 @@
         "IFC-102"
       ],
       "artifacts": [
-        "ARTIFACT:apps/api/src/modules/contact/contact.router.ts;EVIDENCE:.specify/sprints/sprint-5/attestations/IFC-089/context_ack.json;ARTIFACT:docs/planning/adr/ADR-019-core-crm-foundation.md;ARTIFACT:docs/planning/prd-core-crm.md;ARTIFACT:packages/adapters/src/calendar/__tests__/CalendarAdapter.test.ts;ARTIFACT:packages/adapters/src/calendar/__tests__/CalendarIntegration.test.ts;ARTIFACT:packages/adapters/src/calendar/__tests__/IdempotencyManager.test.ts;ARTIFACT:packages/adapters/src/calendar/__tests__/RetryHandler.test.ts"
+        "ARTIFACT:apps/api/src/modules/contact/contact.router.ts;EVIDENCE:.specify/sprints/sprint-5/attestations/IFC-089/context_ack.json;ARTIFACT:docs/planning/adr/ADR-019-core-crm-foundation.md;ARTIFACT:docs/planning/prd-core-crm.md;ARTIFACT:packages/adapters/src/calendar/__tests__/IdempotencyManager.test.ts;ARTIFACT:packages/adapters/src/calendar/__tests__/RetryHandler.test.ts"
       ],
       "kpis": "Contacts CRUD working, search <200ms",
       "definition_of_done": "Contacts CRUD working, search <200ms",
@@ -2734,7 +2735,7 @@
         "IFC-089"
       ],
       "artifacts": [
-        "ARTIFACT:artifacts/lighthouse/lighthouse-360-report.html;EVIDENCE:.specify/sprints/sprint-6/attestations/IFC-090/context_ack.json;ARTIFACT:docs/planning/adr/ADR-019-core-crm-foundation.md;ARTIFACT:docs/planning/prd-core-crm.md"
+        "ARTIFACT:artifacts/lighthouse/lighthouse-report.html;EVIDENCE:.specify/sprints/sprint-6/attestations/IFC-090/context_ack.json;ARTIFACT:docs/planning/adr/ADR-019-core-crm-foundation.md;ARTIFACT:docs/planning/prd-core-crm.md"
       ],
       "kpis": "360 page functional with >90 Lighthouse score",
       "definition_of_done": "360 page functional with >90 Lighthouse score matching design mockup; artifacts: lighthouse-360-report.html, context_ack.json; gates: lighthouse-gte-90",
@@ -2816,7 +2817,7 @@
       "kpis": "",
       "definition_of_done": "Contracts signed electronically, preview inline; artifacts: e-signature-test.pdf, context_ack.json",
       "validation": "AUDIT:code-review",
-      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Integration with DocuSign/Adobe Sign;ENV:version history;ENV:inline previews;FILE:artifacts/lighthouse/lighthouse-360-report.html;FILE:docs/architecture/hex-boundaries.md",
+      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Integration with DocuSign/Adobe Sign;ENV:version history;ENV:inline previews;FILE:artifacts/lighthouse/lighthouse-report.html;FILE:docs/architecture/hex-boundaries.md",
       "cadence": ""
     },
     "IFC-095": {
@@ -2836,7 +2837,7 @@
       "kpis": "AI predictions <2s (actual: 1.2s), accuracy >80% (actual: 85.2%), full-stack integration complete (API router, UI components, 360 views)",
       "definition_of_done": "AI predictions <2s, accuracy >80%; artifacts: model-evaluation.ipynb, context_ack.json; processChurnRisk/processNextBestAction/processQualification must call real AI chains, not return hardcoded mock values",
       "validation": "GATE:no-hardcoded-predictions;VALIDATE:pnpm --filter @intelliflow/api typecheck;VALIDATE:pnpm --filter @intelliflow/api test --run",
-      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:ML pipeline for churn risk;ENV:recommendations in Contact 360;FILE:apps/ai-worker/src/chains/scoring.chain.ts;FILE:artifacts/lighthouse/lighthouse-360-report.html",
+      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:ML pipeline for churn risk;ENV:recommendations in Contact 360;FILE:apps/ai-worker/src/chains/scoring.chain.ts;FILE:artifacts/lighthouse/lighthouse-report.html",
       "cadence": ""
     },
     "IFC-096": {
@@ -2945,7 +2946,7 @@
         "BRAND-001"
       ],
       "artifacts": [
-        "SPEC:.specify/sprints/sprint-11/specifications/PG-001-spec.md;PLAN:.specify/sprints/sprint-11/planning/PG-001-plan.md;EVIDENCE:.specify/sprints/sprint-11/attestations/PG-001/context_pack.md;EVIDENCE:.specify/sprints/sprint-11/attestations/PG-001/context_ack.json;ARTIFACT:apps/web/src/app/(public)/page.tsx;ARTIFACT:apps/web/src/components/home/PublicHomePage.tsx;ARTIFACT:apps/web/src/app/(public)/loading.tsx;ARTIFACT:apps/web/src/app/(public)/error.tsx;ARTIFACT:artifacts/misc/seo-meta.json;ARTIFACT:docs/planning/adr/ADR-020-public-site-auth.md;ARTIFACT:docs/planning/prd-public-site-auth.md;ARTIFACT:docs/planning/prd-home-page.md;SPEC:docs/specs/HOME-PAGE-SPEC.md"
+        "SPEC:.specify/sprints/sprint-11/specifications/PG-001-spec.md;PLAN:.specify/sprints/sprint-11/planning/PG-001-plan.md;EVIDENCE:.specify/sprints/sprint-11/attestations/PG-001/context_pack.md;EVIDENCE:.specify/sprints/sprint-11/attestations/PG-001/context_ack.json;ARTIFACT:apps/web/src/app/(public)/(home)/page.tsx;ARTIFACT:apps/web/src/components/home/PublicHomePage.tsx;ARTIFACT:apps/web/src/app/(public)/loading.tsx;ARTIFACT:apps/web/src/app/(public)/error.tsx;ARTIFACT:artifacts/misc/seo-meta.json;ARTIFACT:docs/planning/adr/ADR-020-public-site-auth.md;ARTIFACT:docs/planning/prd-public-site-auth.md;ARTIFACT:docs/planning/prd-home-page.md;SPEC:docs/specs/HOME-PAGE-SPEC.md"
       ],
       "kpis": "Page live, performance met, SEO indexed",
       "definition_of_done": "Response <200ms, Lighthouse ≥90, SEO optimized; artifacts: page.tsx, PublicHomePage.tsx, loading.tsx, error.tsx; gates: lighthouse-gte-90",
@@ -2970,7 +2971,7 @@
       "kpis": "Page live, features showcased, CTA working",
       "definition_of_done": "Response <200ms, Lighthouse ≥90, conversion optimized; artifacts: page.tsx, features-content.json, conversion-tracking.js",
       "validation": "GATE:lighthouse-gte-90;VALIDATE:pnpm --filter @intelliflow/web typecheck;VALIDATE:pnpm --filter @intelliflow/web test --run",
-      "prerequisites": "FILE:docs/design/page-registry.md;FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;POLICY:Feature list defined;ENV:benefits clear;FILE:apps/web/src/app/(public)/page.tsx;FILE:docs/company/messaging/positioning.md;FILE:docs/company/brand/visual-identity.md;FILE:docs/company/brand/style-guide.md;FILE:docs/company/brand/dos-and-donts.md;FILE:docs/company/brand/accessibility-patterns.md",
+      "prerequisites": "FILE:docs/design/page-registry.md;FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;POLICY:Feature list defined;ENV:benefits clear;FILE:docs/company/messaging/positioning.md;FILE:docs/company/brand/visual-identity.md;FILE:docs/company/brand/style-guide.md;FILE:docs/company/brand/dos-and-donts.md;FILE:docs/company/brand/accessibility-patterns.md",
       "cadence": ""
     },
     "PG-003": {
@@ -2990,7 +2991,7 @@
       "kpis": "Pricing clear, calculator working, Stripe ready",
       "definition_of_done": "Response <200ms, Lighthouse ≥90, calculator functional; artifacts: page.tsx, pricing-calculator.tsx, stripe-integration.ts",
       "validation": "GATE:lighthouse-gte-90;VALIDATE:pnpm --filter @intelliflow/web typecheck;VALIDATE:pnpm --filter @intelliflow/web test --run",
-      "prerequisites": "FILE:docs/design/page-registry.md;FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;POLICY:Pricing tiers defined;ENV:calculator ready;FILE:docs/shared/review-checklist.md;FILE:docs/operations/quality-gates.md;FILE:docs/operations/pr-checklist.md;FILE:apps/web/src/app/(public)/page.tsx;FILE:docs/company/messaging/positioning.md;FILE:docs/company/brand/visual-identity.md;FILE:docs/company/brand/style-guide.md;FILE:docs/company/brand/dos-and-donts.md;FILE:docs/company/brand/accessibility-patterns.md",
+      "prerequisites": "FILE:docs/design/page-registry.md;FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;POLICY:Pricing tiers defined;ENV:calculator ready;FILE:docs/shared/review-checklist.md;FILE:docs/operations/quality-gates.md;FILE:docs/operations/pr-checklist.md;FILE:docs/company/messaging/positioning.md;FILE:docs/company/brand/visual-identity.md;FILE:docs/company/brand/style-guide.md;FILE:docs/company/brand/dos-and-donts.md;FILE:docs/company/brand/accessibility-patterns.md",
       "cadence": ""
     },
     "PG-004": {
@@ -3010,7 +3011,7 @@
       "kpis": "Story told, team showcased, culture visible",
       "definition_of_done": "Response <200ms, Lighthouse ≥90, team displayed; artifacts: page.tsx, team-data.json, about-content.md",
       "validation": "GATE:lighthouse-gte-90;VALIDATE:pnpm --filter @intelliflow/web typecheck;VALIDATE:pnpm --filter @intelliflow/web test --run",
-      "prerequisites": "FILE:docs/design/page-registry.md;FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Company story written;ENV:team photos ready;FILE:apps/web/src/app/(public)/page.tsx;FILE:docs/company/messaging/positioning.md;FILE:docs/company/brand/visual-identity.md;FILE:docs/company/brand/style-guide.md;FILE:docs/company/brand/dos-and-donts.md;FILE:docs/company/brand/accessibility-patterns.md",
+      "prerequisites": "FILE:docs/design/page-registry.md;FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Company story written;ENV:team photos ready;FILE:docs/company/messaging/positioning.md;FILE:docs/company/brand/visual-identity.md;FILE:docs/company/brand/style-guide.md;FILE:docs/company/brand/dos-and-donts.md;FILE:docs/company/brand/accessibility-patterns.md",
       "cadence": ""
     },
     "PG-005": {
@@ -3030,7 +3031,7 @@
       "kpis": "Form submitting, validation working, emails sent",
       "definition_of_done": "Response <200ms, Lighthouse ≥90, form working; artifacts: page.tsx, contact-form.tsx, email-handler.ts",
       "validation": "GATE:lighthouse-gte-90;VALIDATE:pnpm --filter @intelliflow/web typecheck;VALIDATE:pnpm --filter @intelliflow/web test --run",
-      "prerequisites": "FILE:docs/design/page-registry.md;FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Contact form designed;ENV:validation rules;FILE:apps/web/src/app/(public)/page.tsx;FILE:docs/company/messaging/positioning.md;FILE:docs/company/brand/visual-identity.md;FILE:docs/company/brand/style-guide.md;FILE:docs/company/brand/dos-and-donts.md;FILE:docs/company/brand/accessibility-patterns.md",
+      "prerequisites": "FILE:docs/design/page-registry.md;FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Contact form designed;ENV:validation rules;FILE:docs/company/messaging/positioning.md;FILE:docs/company/brand/visual-identity.md;FILE:docs/company/brand/style-guide.md;FILE:docs/company/brand/dos-and-donts.md;FILE:docs/company/brand/accessibility-patterns.md",
       "cadence": ""
     },
     "PG-006": {
@@ -3050,7 +3051,7 @@
       "kpis": "Partners showcased, benefits clear, CTAs working",
       "definition_of_done": "Response <200ms, Lighthouse ≥90, logos displayed; artifacts: page.tsx, partner-benefits.json, context_ack.json",
       "validation": "GATE:lighthouse-gte-90;VALIDATE:pnpm --filter @intelliflow/web typecheck;VALIDATE:pnpm --filter @intelliflow/web test --run",
-      "prerequisites": "FILE:docs/design/page-registry.md;FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Partner logos;ENV:benefits outlined;FILE:apps/web/src/app/(public)/page.tsx;FILE:docs/company/messaging/positioning.md;FILE:docs/company/brand/visual-identity.md;FILE:docs/company/brand/style-guide.md;FILE:docs/company/brand/dos-and-donts.md;FILE:docs/company/brand/accessibility-patterns.md",
+      "prerequisites": "FILE:docs/design/page-registry.md;FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Partner logos;ENV:benefits outlined;FILE:docs/company/messaging/positioning.md;FILE:docs/company/brand/visual-identity.md;FILE:docs/company/brand/style-guide.md;FILE:docs/company/brand/dos-and-donts.md;FILE:docs/company/brand/accessibility-patterns.md",
       "cadence": ""
     },
     "PG-007": {
@@ -3070,7 +3071,7 @@
       "kpis": "Press releases live, media kit downloadable",
       "definition_of_done": "Response <200ms, Lighthouse ≥90, downloads working; artifacts: page.tsx, media-kit.zip, context_ack.json",
       "validation": "GATE:lighthouse-gte-90;VALIDATE:pnpm --filter @intelliflow/web typecheck;VALIDATE:pnpm --filter @intelliflow/web test --run",
-      "prerequisites": "FILE:docs/design/page-registry.md;FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Press releases;ENV:media kit ready;FILE:docs/shared/review-checklist.md;FILE:docs/operations/pr-checklist.md;FILE:apps/web/src/app/(public)/page.tsx;FILE:docs/company/messaging/positioning.md;FILE:docs/company/brand/visual-identity.md;FILE:docs/company/brand/style-guide.md;FILE:docs/company/brand/dos-and-donts.md;FILE:docs/company/brand/accessibility-patterns.md",
+      "prerequisites": "FILE:docs/design/page-registry.md;FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Press releases;ENV:media kit ready;FILE:docs/shared/review-checklist.md;FILE:docs/operations/pr-checklist.md;FILE:docs/company/messaging/positioning.md;FILE:docs/company/brand/visual-identity.md;FILE:docs/company/brand/style-guide.md;FILE:docs/company/brand/dos-and-donts.md;FILE:docs/company/brand/accessibility-patterns.md",
       "cadence": ""
     },
     "PG-008": {
@@ -3090,7 +3091,7 @@
       "kpis": "Security explained, badges displayed, trust built",
       "definition_of_done": "Response <200ms, Lighthouse ≥90, trust signals; artifacts: page.tsx, security-features.json, context_ack.json",
       "validation": "GATE:lighthouse-gte-90;VALIDATE:pnpm --filter @intelliflow/web typecheck;VALIDATE:pnpm --filter @intelliflow/web test --run",
-      "prerequisites": "FILE:docs/design/page-registry.md;FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;POLICY:Security features documented;ENV:badges ready;FILE:docs/security/zero-trust-design.md;FILE:apps/web/src/app/(public)/page.tsx;FILE:docs/company/messaging/positioning.md;FILE:docs/company/brand/visual-identity.md;FILE:docs/company/brand/style-guide.md;FILE:docs/company/brand/dos-and-donts.md;FILE:docs/company/brand/accessibility-patterns.md",
+      "prerequisites": "FILE:docs/design/page-registry.md;FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;POLICY:Security features documented;ENV:badges ready;FILE:docs/security/zero-trust-design.md;FILE:docs/company/messaging/positioning.md;FILE:docs/company/brand/visual-identity.md;FILE:docs/company/brand/style-guide.md;FILE:docs/company/brand/dos-and-donts.md;FILE:docs/company/brand/accessibility-patterns.md",
       "cadence": ""
     },
     "PG-009": {
@@ -3105,12 +3106,12 @@
         "BRAND-001"
       ],
       "artifacts": [
-        "ARTIFACT:apps/web/src/app/(public)/blog/page.tsx;ARTIFACT:apps/web/src/components/blog/blog-pagination.tsx;ARTIFACT:artifacts/logs/blog-categories.json;EVIDENCE:.specify/sprints/sprint-12/attestations/PG-009/context_ack.json;ARTIFACT:docs/planning/adr/ADR-020-public-site-auth.md;ARTIFACT:docs/planning/prd-public-site-auth.md"
+        "ARTIFACT:apps/web/src/app/(public)/blog/page.tsx;ARTIFACT:apps/web/src/components/blog/blog-pagination.tsx;EVIDENCE:.specify/sprints/sprint-12/attestations/PG-009/context_ack.json;ARTIFACT:docs/planning/adr/ADR-020-public-site-auth.md;ARTIFACT:docs/planning/prd-public-site-auth.md"
       ],
       "kpis": "Blog listing live, pagination working, SEO optimized",
       "definition_of_done": "Response <200ms, Lighthouse ≥90, pagination working; artifacts: page.tsx, blog-pagination.tsx, blog-categories.json",
       "validation": "GATE:lighthouse-gte-90;VALIDATE:pnpm --filter @intelliflow/web typecheck;VALIDATE:pnpm --filter @intelliflow/web test --run",
-      "prerequisites": "FILE:docs/design/page-registry.md;FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;POLICY:Blog structure defined;ENV:categories set;FILE:apps/web/src/app/(public)/page.tsx;FILE:docs/company/messaging/positioning.md;FILE:docs/company/brand/visual-identity.md;FILE:docs/company/brand/style-guide.md;FILE:docs/company/brand/dos-and-donts.md;FILE:docs/company/brand/accessibility-patterns.md",
+      "prerequisites": "FILE:docs/design/page-registry.md;FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;POLICY:Blog structure defined;ENV:categories set;FILE:docs/company/messaging/positioning.md;FILE:docs/company/brand/visual-identity.md;FILE:docs/company/brand/style-guide.md;FILE:docs/company/brand/dos-and-donts.md;FILE:docs/company/brand/accessibility-patterns.md",
       "cadence": ""
     },
     "PG-010": {
@@ -3150,7 +3151,7 @@
       "kpis": "Jobs listed, applications submitting, ATS integrated",
       "definition_of_done": "Response <200ms, Lighthouse ≥90, applications working; artifacts: page.tsx, job-listings.json, application-form.tsx",
       "validation": "GATE:lighthouse-gte-90;VALIDATE:pnpm --filter @intelliflow/web typecheck;VALIDATE:pnpm --filter @intelliflow/web test --run",
-      "prerequisites": "FILE:docs/design/page-registry.md;FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Job listings ready;ENV:application form;FILE:apps/web/src/app/(public)/page.tsx;FILE:docs/company/messaging/positioning.md;FILE:docs/company/brand/visual-identity.md;FILE:docs/company/brand/style-guide.md;FILE:docs/company/brand/dos-and-donts.md;FILE:docs/company/brand/accessibility-patterns.md",
+      "prerequisites": "FILE:docs/design/page-registry.md;FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Job listings ready;ENV:application form;FILE:docs/company/messaging/positioning.md;FILE:docs/company/brand/visual-identity.md;FILE:docs/company/brand/style-guide.md;FILE:docs/company/brand/dos-and-donts.md;FILE:docs/company/brand/accessibility-patterns.md",
       "cadence": ""
     },
     "PG-012": {
@@ -3190,7 +3191,7 @@
       "kpis": "Landing pages generating, A/B tests running",
       "definition_of_done": "Response <200ms, Lighthouse ≥90, conversions tracked; artifacts: page.tsx, landing-builder.tsx, ab-test-framework.ts; verified by: pnpm test",
       "validation": "VALIDATE:pnpm test;GATE:lighthouse-gte-90",
-      "prerequisites": "FILE:docs/design/page-registry.md;FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Landing page builder;ENV:A/B testing ready;FILE:apps/web/src/app/(public)/page.tsx;FILE:docs/company/messaging/positioning.md;FILE:docs/company/brand/visual-identity.md;FILE:docs/company/brand/style-guide.md;FILE:docs/company/brand/dos-and-donts.md;FILE:docs/company/brand/accessibility-patterns.md",
+      "prerequisites": "FILE:docs/design/page-registry.md;FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Landing page builder;ENV:A/B testing ready;FILE:docs/company/messaging/positioning.md;FILE:docs/company/brand/visual-identity.md;FILE:docs/company/brand/style-guide.md;FILE:docs/company/brand/dos-and-donts.md;FILE:docs/company/brand/accessibility-patterns.md",
       "cadence": ""
     },
     "PG-014": {
@@ -3210,7 +3211,7 @@
       "kpis": "Status displayed, incidents shown, updates real-time",
       "definition_of_done": "Response <200ms, Lighthouse ≥90, real-time updates; artifacts: page.tsx, status-monitor.tsx, incident-tracker.ts",
       "validation": "GATE:lighthouse-gte-90;VALIDATE:pnpm --filter @intelliflow/web typecheck;VALIDATE:pnpm --filter @intelliflow/web test --run",
-      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Status monitoring integrated;ENV:incidents tracked;FILE:apps/web/src/app/(public)/page.tsx;FILE:docs/company/messaging/positioning.md;FILE:docs/company/brand/visual-identity.md",
+      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Status monitoring integrated;ENV:incidents tracked;FILE:docs/company/messaging/positioning.md;FILE:docs/company/brand/visual-identity.md",
       "cadence": ""
     },
     "PG-015": {
@@ -3893,7 +3894,7 @@
       "kpis": "Terms published, acceptance tracked, updates notified",
       "definition_of_done": "Response <200ms, Lighthouse ≥90, terms displayed; artifacts: page.tsx, terms-content.md, acceptance-tracker.ts",
       "validation": "GATE:lighthouse-gte-90;VALIDATE:pnpm --filter @intelliflow/web typecheck;VALIDATE:pnpm --filter @intelliflow/web test --run",
-      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;POLICY:Terms approved;ENV:acceptance tracking;FILE:docs/architecture/hex-boundaries.md;FILE:apps/web/src/app/(legal)/privacy/page.tsx",
+      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;POLICY:Terms approved;ENV:acceptance tracking;FILE:docs/architecture/hex-boundaries.md;FILE:apps/web/src/app/(public)/privacy/page.tsx",
       "cadence": ""
     },
     "PG-052": {
@@ -3906,19 +3907,19 @@
         "PG-050"
       ],
       "artifacts": [
-        "ARTIFACT:apps/web/src/app/(public)/cookie-policy/page.tsx;ARTIFACT:docs/shared/cookie-content.md;ARTIFACT:apps/web/src/components/legal/cookie-banner.tsx;EVIDENCE:.specify/sprints/sprint-17/attestations/PG-052/context_ack.json"
+        "ARTIFACT:apps/web/src/app/(public)/cookies/page.tsx;ARTIFACT:docs/shared/cookie-content.md;EVIDENCE:.specify/sprints/sprint-17/attestations/PG-052/context_ack.json"
       ],
       "kpis": "Policy displayed, banner working, preferences saved",
       "definition_of_done": "Response <200ms, Lighthouse ≥90, policy shown; artifacts: page.tsx, cookie-content.md, cookie-banner.tsx",
       "validation": "GATE:lighthouse-gte-90;VALIDATE:pnpm --filter @intelliflow/web typecheck;VALIDATE:pnpm --filter @intelliflow/web test --run",
-      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Cookie policy written;ENV:banner ready;FILE:apps/web/src/app/(legal)/privacy/page.tsx",
+      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Cookie policy written;ENV:banner ready;FILE:apps/web/src/app/(public)/privacy/page.tsx",
       "cadence": ""
     },
     "PG-053": {
       "section": "Legal Pages",
       "description": "Data Processing Addendum",
       "owner": "Legal Counsel (STOA-Foundation)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 17,
       "dependencies": [
         "PG-050",
@@ -3948,7 +3949,7 @@
       "kpis": "AUP published, violations tracked, enforcement ready",
       "definition_of_done": "Response <200ms, Lighthouse ≥90, AUP displayed; artifacts: page.tsx, aup-content.md, violation-tracker.ts",
       "validation": "GATE:lighthouse-gte-90;VALIDATE:pnpm --filter @intelliflow/web typecheck;VALIDATE:pnpm --filter @intelliflow/web test --run",
-      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:AUP content;ENV:violation process;FILE:apps/web/src/app/(legal)/privacy/page.tsx",
+      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:AUP content;ENV:violation process;FILE:apps/web/src/app/(public)/privacy/page.tsx",
       "cadence": ""
     },
     "PG-055": {
@@ -3984,20 +3985,20 @@
       "kpis": "Error page shown, incidents created, team notified",
       "definition_of_done": "Response <200ms, Lighthouse ≥90, errors logged; artifacts: page.tsx, incident-creator.ts, error-notifier.ts",
       "validation": "GATE:lighthouse-gte-90;VALIDATE:pnpm --filter @intelliflow/web typecheck;VALIDATE:pnpm --filter @intelliflow/web test --run",
-      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Error page;ENV:incident creation;FILE:apps/web/src/app/(system)/404/page.tsx",
+      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Error page;ENV:incident creation;FILE:apps/web/src/app/404/page.tsx",
       "cadence": ""
     },
     "PG-057": {
       "section": "System Pages",
       "description": "Maintenance",
       "owner": "SRE (STOA-Foundation)",
-      "status": "BACKLOG",
+      "status": "IN_PROGRESS",
       "sprint": 17,
       "dependencies": [
         "PG-055"
       ],
       "artifacts": [
-        "ARTIFACT:apps/web/src/app/maintenance/page.tsx;ARTIFACT:apps/web/src/lib/status/maintenance-mode.ts;ARTIFACT:apps/web/src/lib/status/status-updater.ts;EVIDENCE:.specify/sprints/sprint-17/attestations/PG-057/context_ack.json"
+        "ARTIFACT:apps/web/src/app/maintenance/page.tsx;ARTIFACT:apps/web/src/lib/status/maintenance-mode.ts;ARTIFACT:apps/web/src/lib/status/status-updater.ts;EVIDENCE:.specify/sprints/sprint-17/attestations/PG-057/context_ack.json;SPEC:.specify/sprints/sprint-17/specifications/PG-057-spec.md;PLAN:.specify/sprints/sprint-17/planning/PG-057-plan.md"
       ],
       "kpis": "Maintenance page active, updates displayed, ETA shown",
       "definition_of_done": "Response <200ms, Lighthouse ≥90, status shown; artifacts: page.tsx, maintenance-mode.ts, status-updater.ts",
@@ -5422,7 +5423,7 @@
         "IFC-002"
       ],
       "artifacts": [
-        "ARTIFACT:packages/adapters/src/repositories/PrismaLeadRepository.ts;ARTIFACT:packages/domain/src/**;ARTIFACT:apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-039-validation.md;EVIDENCE:.specify/sprints/sprint-2/attestations/IFC-101/context_ack.json;ARTIFACT:docs/planning/adr/ADR-019-core-crm-foundation.md;ARTIFACT:docs/planning/prd-core-crm.md;ARTIFACT:packages/domain/src/shared/__tests__/AggregateRoot.test.ts;ARTIFACT:packages/domain/src/shared/__tests__/DomainEvent.test.ts;ARTIFACT:packages/domain/src/shared/__tests__/Entity.test.ts;ARTIFACT:packages/domain/src/shared/__tests__/ValueObject.test.ts;ARTIFACT:packages/domain/src/shared/__tests__/Guard.test.ts;ARTIFACT:packages/domain/src/shared/__tests__/Result.test.ts"
+        "ARTIFACT:packages/adapters/src/repositories/PrismaLeadRepository.ts;ARTIFACT:packages/domain/src/**;ARTIFACT:apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-039-validation.md;EVIDENCE:.specify/sprints/sprint-2/attestations/IFC-101/context_ack.json;ARTIFACT:docs/planning/adr/ADR-019-core-crm-foundation.md;ARTIFACT:docs/planning/prd-core-crm.md;ARTIFACT:packages/domain/src/shared/__tests__/AggregateRoot.test.ts;ARTIFACT:packages/domain/src/shared/__tests__/DomainEvent.test.ts;ARTIFACT:packages/domain/src/shared/__tests__/Entity.test.ts;ARTIFACT:packages/domain/src/shared/__tests__/ValueObject.test.ts;ARTIFACT:packages/domain/src/shared/__tests__/Result.test.ts"
       ],
       "kpis": "Design approved, unit tests ≥90% coverage, repository API stable",
       "definition_of_done": "Lead aggregate, value objects, repository interfaces and domain services implemented; artifacts: PrismaLeadRepository.ts, context_ack.json; targets: >=90%; verified by: pnpm test, pnpm test:integration",
@@ -5987,7 +5988,7 @@
         "IFC-072"
       ],
       "artifacts": [
-        "SPEC:.specify/sprints/sprint-5/specifications/IFC-127-spec.md;PLAN:.specify/sprints/sprint-5/planning/IFC-127-plan.md;EVIDENCE:.specify/sprints/sprint-5/attestations/IFC-127/context_pack.md;EVIDENCE:.specify/sprints/sprint-5/attestations/IFC-127/context_ack.json;ARTIFACT:infra/supabase/migrations/20250124000000_rls_policies.sql;ARTIFACT:infra/supabase/migrations/20260103000000_add_tenant_isolation.sql;ARTIFACT:apps/api/src/security/tenant-context.ts;ARTIFACT:packages/db/prisma/migrations/add-multi-tenancy-diff.sql;ARTIFACT:packages/db/prisma/migrations/add_multi_tenancy_manual.sql;ARTIFACT:packages/db/prisma/migrations/tenant-rls.sql"
+        "SPEC:.specify/sprints/sprint-5/specifications/IFC-127-spec.md;PLAN:.specify/sprints/sprint-5/planning/IFC-127-plan.md;EVIDENCE:.specify/sprints/sprint-5/attestations/IFC-127/context_pack.md;EVIDENCE:.specify/sprints/sprint-5/attestations/IFC-127/context_ack.json;ARTIFACT:infra/supabase/migrations/20250124000000_rls_policies.sql;ARTIFACT:infra/supabase/migrations/20260103000000_add_tenant_isolation.sql;ARTIFACT:apps/api/src/security/tenant-context.ts;ARTIFACT:packages/db/prisma/_archived_migrations/add-multi-tenancy-diff.sql;ARTIFACT:packages/db/prisma/_archived_migrations/add_multi_tenancy_manual.sql;ARTIFACT:packages/db/prisma/_archived_migrations/tenant-rls.sql"
       ],
       "kpis": "No cross‑tenant data access; isolation tests pass",
       "definition_of_done": "Row‑level security policies applied; tenant context enforced in services; per‑tenant resource limits; artifacts: rls-policies.sql, tenant-context.ts, context_ack.json; verified by: pnpm test",
@@ -6291,7 +6292,7 @@
         "IFC-139"
       ],
       "artifacts": [
-        "SPEC:.specify/sprints/sprint-11/specifications/IFC-143-spec.md;PLAN:.specify/sprints/sprint-11/planning/IFC-143-plan.md;EVIDENCE:.specify/sprints/sprint-11/attestations/IFC-143/context_pack.md;EVIDENCE:.specify/sprints/sprint-11/attestations/IFC-143/context_ack.json;ARTIFACT:docs/security/threat-model.puml;ARTIFACT:docs/security/abuse-cases.md;ARTIFACT:artifacts/reports/pen-test-scope.md;ARTIFACT:artifacts/logs/mitigation-backlog.csv;ARTIFACT:packages/ui/src/components/cookie-consent/cookie-consent.tsx"
+        "SPEC:.specify/sprints/sprint-11/specifications/IFC-143-spec.md;PLAN:.specify/sprints/sprint-11/planning/IFC-143-plan.md;EVIDENCE:.specify/sprints/sprint-11/attestations/IFC-143/context_pack.md;EVIDENCE:.specify/sprints/sprint-11/attestations/IFC-143/context_ack.json;ARTIFACT:docs/security/threat-model.puml;ARTIFACT:docs/security/abuse-cases.md;ARTIFACT:artifacts/reports/pen-test-scope.md;ARTIFACT:packages/ui/src/components/cookie-consent/cookie-consent.tsx"
       ],
       "kpis": "All critical threats mitigated; pen test high severity issues <5; cookie compliance tests pass",
       "definition_of_done": "Threat model documented; abuse cases enumerated; mitigation tasks created; penetration test executed and findings triaged; cookie consent banner implemented; compliance checks passed",
@@ -6351,7 +6352,7 @@
         "ENV-018-AI"
       ],
       "artifacts": [
-        "ARTIFACT:docs/planning/prd-template.md;ARTIFACT:docs/planning/user-journey-template.md;ARTIFACT:docs/planning/definition-of-ready.md;ARTIFACT:artifacts/reports/traceability-matrix.md;ARTIFACT:artifacts/logs/backlog-updates-log.csv;EVIDENCE:.specify/sprints/sprint-2/attestations/IFC-146/context_ack.json;ARTIFACT:artifacts/reports/traceability-matrix.json"
+        "ARTIFACT:docs/planning/prd-template.md;ARTIFACT:docs/planning/user-journey-template.md;ARTIFACT:docs/planning/definition-of-ready.md;ARTIFACT:artifacts/reports/traceability-matrix.md;EVIDENCE:.specify/sprints/sprint-2/attestations/IFC-146/context_ack.json;ARTIFACT:artifacts/reports/traceability-matrix.json"
       ],
       "kpis": "100% new stories include PRD and meet DoR; traceability coverage >=90%; backlog management efficiency improved",
       "definition_of_done": "PRD templates available and used; user journey mapping methodology defined; DoR criteria documented and adopted; traceability matrix tool or document created and applied to backlog; backlog items updated; targets: >=100%, >=90%",
@@ -6523,7 +6524,7 @@
         "IFC-153"
       ],
       "artifacts": [
-        "ARTIFACT:artifacts/benchmarks/ocr-quality-benchmarks.csv;ARTIFACT:artifacts/misc/extracted-text-schema.json;EVIDENCE:.specify/sprints/sprint-6/attestations/IFC-154/context_ack.json"
+        "ARTIFACT:artifacts/misc/extracted-text-schema.json;EVIDENCE:.specify/sprints/sprint-6/attestations/IFC-154/context_ack.json"
       ],
       "kpis": "OCR throughput >= X pages/min baseline; extraction accuracy benchmarked; failure rate <1%",
       "definition_of_done": "OCR worker processes supported formats; stores extracted text with provenance; handles retries; quality metrics recorded; tests; artifacts: ocr-quality-benchmarks.csv, extracted-text-schema.json, context_ack.json; targets: >=1%",
@@ -6548,7 +6549,7 @@
       "kpis": "Retrieval latency p95 <200ms; zero cross-tenant leakage; relevance eval >=80% on test set",
       "definition_of_done": "FTS index and vector embeddings built; retrieval APIs enforce tenant/case ACL; re-index job; purge on DSAR rules; tests; targets: >=80%, <200ms, zero errors; gates: latency-check; generateEmbedding() must return real embeddings from embedding chain, not null placeholder",
       "validation": "VALIDATE:pnpm test;GATE:latency-check;GATE:real-embedding-generation",
-      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:pgvector enabled; ACL model implemented; extracted text available;FILE:docs/planning/adr/ADR-004-multi-tenancy.md;FILE:artifacts/benchmarks/ocr-quality-benchmarks.csv;FILE:infra/supabase/migrations/20250124000000_rls_policies.sql;FILE:infra/supabase/config.toml",
+      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:pgvector enabled; ACL model implemented; extracted text available;FILE:docs/planning/adr/ADR-004-multi-tenancy.md;FILE:infra/supabase/migrations/20250124000000_rls_policies.sql;FILE:infra/supabase/config.toml",
       "cadence": ""
     },
     "IFC-156": {
@@ -6630,7 +6631,7 @@
       "kpis": "Timeline load <1s; user task completion improved; 0 unauthorized events visible",
       "definition_of_done": "Timeline shows unified chronological events (tasks/deadlines/docs/comms/agent actions); filters; permissions enforced; E2E tests; targets: <1s",
       "validation": "VALIDATE:pnpm test;VALIDATE:pnpm --filter @intelliflow/api test --run",
-      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Timeline UI exists; ingestion pipeline available; comms and agent actions recorded;FILE:docs/planning/adr/ADR-006-agent-tools.md;FILE:docs/shared/review-checklist.md;FILE:docs/operations/pr-checklist.md;FILE:apps/web/src/app/cases/timeline/page.tsx;FILE:docs/operations/runbooks/ingestion.md;FILE:packages/adapters/src/messaging/email/outbound.ts;FILE:apps/web/src/app/agent-approvals/page.tsx;FILE:packages/db/prisma/migrations/20260131000000_init/migration.sql;FILE:docs/design/sitemap.md;FILE:docs/design/ui-flow-mapping.md;FILE:docs/design/page-registry.md;FILE:apps/project-tracker/docs/metrics/_global/flows/flow-index.md",
+      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Timeline UI exists; ingestion pipeline available; comms and agent actions recorded;FILE:docs/planning/adr/ADR-006-agent-tools.md;FILE:docs/shared/review-checklist.md;FILE:docs/operations/pr-checklist.md;FILE:apps/web/src/app/cases/timeline/page.tsx;FILE:docs/operations/runbooks/ingestion.md;FILE:packages/adapters/src/messaging/email/outbound.ts;FILE:apps/web/src/app/agent-approvals/page.tsx;FILE:packages/db/prisma/_archived_migrations/20260131000000_init/migration.sql;FILE:docs/design/sitemap.md;FILE:docs/design/ui-flow-mapping.md;FILE:docs/design/page-registry.md;FILE:apps/project-tracker/docs/metrics/_global/flows/flow-index.md",
       "cadence": ""
     },
     "IFC-160": {
@@ -6644,7 +6645,7 @@
         "ENV-002-AI"
       ],
       "artifacts": [
-        "ARTIFACT:docs/architecture/repo-layout.md;ARTIFACT:docs/architecture/artifact-conventions.md;ARTIFACT:tools/lint/artifact-paths.ts;ARTIFACT:.github/workflows/artifact-lint.yml;ARTIFACT:scripts/migration/artifact-move-map.csv;ARTIFACT:scripts/validate-artifact-paths.sh;ARTIFACT:scripts/compare-tree-to-sprint-plan.js;ARTIFACT:artifacts/reports/artifact-containment-analysis.md;ARTIFACT:artifacts/reports/ARTIFACT-CONTAINMENT-SUMMARY.md;ARTIFACT:artifacts/reports/runtime-path-linter-design.md;ARTIFACT:artifacts/reports/plan-lint-report.json;EVIDENCE:.specify/sprints/sprint-0/attestations/IFC-160/context_ack.json;ARTIFACT:docs/planning/adr/ADR-021-governance-ops-release.md;ARTIFACT:docs/planning/prd-release-governance.md;ARTIFACT:docs/attestation-schema.yaml;ARTIFACT:docs/evidence-pack-schema.yaml"
+        "ARTIFACT:docs/architecture/repo-layout.md;ARTIFACT:docs/architecture/artifact-conventions.md;ARTIFACT:tools/lint/artifact-paths.ts;ARTIFACT:.github/workflows/artifact-lint.yml;ARTIFACT:artifacts/reports/artifact-containment-analysis.md;ARTIFACT:scripts/validate-artifact-paths.sh;ARTIFACT:scripts/compare-tree-to-sprint-plan.js;ARTIFACT:artifacts/reports/artifact-containment-analysis.md;ARTIFACT:artifacts/reports/ARTIFACT-CONTAINMENT-SUMMARY.md;ARTIFACT:artifacts/reports/runtime-path-linter-design.md;ARTIFACT:artifacts/reports/plan-lint-report.json;EVIDENCE:.specify/sprints/sprint-0/attestations/IFC-160/context_ack.json;ARTIFACT:docs/planning/adr/ADR-021-governance-ops-release.md;ARTIFACT:docs/planning/prd-release-governance.md;ARTIFACT:docs/attestation-schema.yaml;ARTIFACT:docs/evidence-pack-schema.yaml"
       ],
       "kpis": "0 artifact path violations on main; lint runtime <60s; 100% new PRs checked",
       "definition_of_done": "Repo artifact conventions documented; artifact-path linter added; CI blocks non-canonical artifact paths; move-map template provided; targets: >=100%, <60s; verified by: pnpm lint",
@@ -7150,7 +7151,7 @@
         "IFC-168"
       ],
       "artifacts": [
-        "ARTIFACT:artifacts/benchmarks/accuracy-benchmarks.json;ARTIFACT:artifacts/reports/ollama-real-benchmark-report.json;ARTIFACT:scripts/run-ollama-benchmark.ts;EVIDENCE:.specify/sprints/sprint-14/attestations/IFC-174/context_ack.json"
+        "ARTIFACT:artifacts/benchmarks/accuracy-benchmarks.json;ARTIFACT:scripts/run-ollama-benchmark.ts;EVIDENCE:.specify/sprints/sprint-14/attestations/IFC-174/context_ack.json"
       ],
       "kpis": "Real accuracy data captured; benchmark script passes; cost reduction verified",
       "definition_of_done": "Replace simulated accuracy-benchmarks.json with real measured data; run actual scoring tests with Ollama; document real cost savings; verified by benchmark script",
@@ -7168,7 +7169,7 @@
         "IFC-086"
       ],
       "artifacts": [
-        "ARTIFACT:apps/web/src/app/settings/ai/page.tsx;ARTIFACT:apps/web/src/app/settings/ai/components/ChainVersionsDashboard.tsx;ARTIFACT:apps/web/src/app/settings/ai/components/ChainVersionsTable.tsx;ARTIFACT:apps/web/src/app/settings/ai/components/ChainVersionEditor.tsx;ARTIFACT:apps/web/src/app/settings/ai/components/VersionComparisonView.tsx;ARTIFACT:apps/web/src/app/settings/ai/components/ZepBudgetGauge.tsx;ARTIFACT:apps/web/src/app/settings/ai/components/VersionAuditLog.tsx;ARTIFACT:apps/web/src/app/settings/ai/hooks/useChainVersions.ts;EVIDENCE:.specify/sprints/sprint-14/attestations/PG-128/context_ack.json"
+        "ARTIFACT:apps/web/src/app/agent-approvals/ai-settings/page.tsx;ARTIFACT:apps/web/src/components/ai-agents/ai-settings/components/ChainVersionsDashboard.tsx;ARTIFACT:apps/web/src/components/ai-agents/ai-settings/components/ChainVersionsTable.tsx;ARTIFACT:apps/web/src/components/ai-agents/ai-settings/components/ChainVersionEditor.tsx;ARTIFACT:apps/web/src/components/ai-agents/ai-settings/components/VersionComparisonView.tsx;ARTIFACT:apps/web/src/components/ai-agents/ai-settings/components/ZepBudgetGauge.tsx;ARTIFACT:apps/web/src/components/ai-agents/ai-settings/components/VersionAuditLog.tsx;ARTIFACT:apps/web/src/components/ai-agents/ai-settings/hooks/useChainVersions.ts;EVIDENCE:.specify/sprints/sprint-14/attestations/PG-128/context_ack.json"
       ],
       "kpis": "Page loads <500ms; all tRPC endpoints connected; admin actions working; Zep budget visible; audit log functional; Lighthouse >=90",
       "definition_of_done": "AI Settings page with chain version management; version list/create/activate/rollback; Zep budget gauge; A/B test config; version comparison; audit log; Response <500ms, Lighthouse >=90; targets: 100% tRPC endpoints wired",
@@ -7337,7 +7338,7 @@
         "IFC-095"
       ],
       "artifacts": [
-        "ARTIFACT:apps/web/src/app/(public)/page.tsx;ARTIFACT:apps/web/src/components/home/AuthenticatedHomePage.tsx;ARTIFACT:apps/web/src/components/home/PublicHomePage.tsx;ARTIFACT:apps/web/src/components/home/HomePageContent.tsx;ARTIFACT:docs/planning/prd-home-page.md;SPEC:docs/specs/HOME-PAGE-SPEC.md;EVIDENCE:.specify/sprints/sprint-14/attestations/PG-129/context_ack.json"
+        "ARTIFACT:apps/web/src/app/(public)/(home)/page.tsx;ARTIFACT:apps/web/src/components/home/AuthenticatedHomePage.tsx;ARTIFACT:apps/web/src/components/home/PublicHomePage.tsx;ARTIFACT:apps/web/src/components/home/HomePageContent.tsx;ARTIFACT:docs/planning/prd-home-page.md;SPEC:docs/specs/HOME-PAGE-SPEC.md;EVIDENCE:.specify/sprints/sprint-14/attestations/PG-129/context_ack.json"
       ],
       "kpis": "Page loads <500ms; activity feed real-time via WebSocket; AI insights displayed; pins draggable",
       "definition_of_done": "Response <500ms, Lighthouse >=90, real-time feed working; InsightsSection, FeedSection, GoalSection, PinnedSection, QuickActions components; verified by: pnpm test",
@@ -7549,7 +7550,7 @@
         "IFC-184"
       ],
       "artifacts": [
-        "ARTIFACT:apps/web/src/app/contacts/(list)/page.tsx;ARTIFACT:apps/web/src/app/contacts/[id]/page.tsx;ARTIFACT:apps/web/src/components/contacts/ContactList.tsx;ARTIFACT:apps/web/src/components/contacts/ContactCard.tsx;ARTIFACT:apps/web/src/components/contacts/ContactDetail.tsx;ARTIFACT:apps/web/src/components/contacts/ContactForm.tsx;EVIDENCE:.specify/sprints/sprint-5/attestations/PG-133/context_ack.json"
+        "ARTIFACT:apps/web/src/app/contacts/(list)/page.tsx;ARTIFACT:apps/web/src/app/contacts/[id]/page.tsx;ARTIFACT:apps/web/src/components/contacts/ContactList.tsx;ARTIFACT:apps/web/src/components/contacts/ContactCard.tsx;ARTIFACT:apps/web/src/app/contacts/[id]/page.tsx;ARTIFACT:apps/web/src/components/contacts/ContactForm.tsx;EVIDENCE:.specify/sprints/sprint-5/attestations/PG-133/context_ack.json"
       ],
       "kpis": "List loads <500ms; search works; relationships visualized; Lighthouse >=90",
       "definition_of_done": "Response <500ms, Lighthouse >=90; ContactList, ContactCard, ContactDetail, ContactForm, RelationshipGraph, ActivityTimeline components; verified by: pnpm test",
@@ -7657,7 +7658,7 @@
         "IFC-137"
       ],
       "artifacts": [
-        "ARTIFACT:apps/web/src/app/calendar/(list)/page.tsx;ARTIFACT:apps/web/src/app/calendar/[id]/page.tsx;ARTIFACT:apps/web/src/components/appointments/AppointmentCalendar.tsx;ARTIFACT:apps/web/src/components/appointments/AppointmentForm.tsx;ARTIFACT:apps/web/src/components/appointments/ConflictWarning.tsx;ARTIFACT:apps/web/src/components/appointments/RecurrenceEditor.tsx;EVIDENCE:.specify/sprints/sprint-7/attestations/PG-139/context_ack.json"
+        "ARTIFACT:apps/web/src/app/calendar/(list)/page.tsx;ARTIFACT:apps/web/src/app/appointments/[id]/page.tsx;ARTIFACT:apps/web/src/components/appointments/AppointmentCalendar.tsx;ARTIFACT:apps/web/src/components/appointments/AppointmentForm.tsx;ARTIFACT:apps/web/src/components/appointments/ConflictWarning.tsx;ARTIFACT:apps/web/src/components/appointments/RecurrenceEditor.tsx;EVIDENCE:.specify/sprints/sprint-7/attestations/PG-139/context_ack.json"
       ],
       "kpis": "Calendar loads <500ms; conflicts highlighted; case links work; reminders configurable; Lighthouse >=90",
       "definition_of_done": "Response <500ms, Lighthouse >=90; AppointmentCalendar, AppointmentForm, ConflictWarning, CaseLinkSelector, ReminderConfig, RecurrenceEditor components; verified by: pnpm test",
@@ -7912,7 +7913,7 @@
       "section": "Performance",
       "description": "Home Page Response Caching - Redis caching for getWelcomeSummary with event-driven invalidation",
       "owner": "Backend Dev (STOA-Foundation)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 17,
       "dependencies": [
         "IFC-182",
@@ -8681,7 +8682,7 @@
         "IFC-068"
       ],
       "artifacts": [
-        "ARTIFACT:apps/web/src/app/analytics/saved/weekly/page.tsx;ARTIFACT:apps/web/src/app/analytics/saved/monthly/page.tsx;ARTIFACT:apps/web/src/app/analytics/saved/quarterly/page.tsx;ARTIFACT:apps/web/src/components/analytics/SavedReportView.tsx;ARTIFACT:apps/web/src/components/analytics/__tests__/SavedReportView.test.tsx;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-177/context_ack.json"
+        "ARTIFACT:apps/web/src/app/analytics/(list)/saved/weekly/page.tsx;ARTIFACT:apps/web/src/app/analytics/(list)/saved/monthly/page.tsx;ARTIFACT:apps/web/src/app/analytics/(list)/saved/quarterly/page.tsx;ARTIFACT:apps/web/src/components/analytics/SavedReportView.tsx;ARTIFACT:apps/web/src/components/analytics/__tests__/SavedReportView.test.tsx;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-177/context_ack.json"
       ],
       "kpis": "All 3 saved report routes resolve; weekly/monthly/quarterly data renders; period selector works; Lighthouse >=90",
       "definition_of_done": "Pages at /analytics/saved/weekly (last 7 days metrics: revenue leads tickets closed with trend indicators) /analytics/saved/monthly (last 30 days revenue breakdown by product and region) /analytics/saved/quarterly (Q4 performance summary with YoY comparison); sidebar Saved Reports links resolve; Lighthouse >=90; verified by: pnpm test",
@@ -8700,7 +8701,7 @@
         "IFC-076"
       ],
       "artifacts": [
-        "ARTIFACT:apps/web/src/app/settings/leads/page.tsx;ARTIFACT:apps/web/src/app/settings/leads/LeadSettingsContent.tsx;ARTIFACT:apps/web/src/app/settings/leads/components/LeadStagesTab.tsx;ARTIFACT:apps/web/src/app/settings/leads/components/ScoringRulesTab.tsx;ARTIFACT:apps/web/src/app/settings/leads/components/CustomFieldsTab.tsx;ARTIFACT:apps/web/src/app/settings/leads/components/AutomationTab.tsx;ARTIFACT:apps/web/src/components/settings/ModuleSettingsLayout.tsx;ARTIFACT:apps/web/src/components/settings/__tests__/ModuleSettingsLayout.test.tsx;ARTIFACT:apps/api/src/modules/lead/lead-settings.router.ts;ARTIFACT:packages/validators/src/lead-settings.ts;ARTIFACT:packages/db/prisma/migrations/20260311_lead_settings/migration.sql;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-178/context_ack.json"
+        "ARTIFACT:apps/web/src/app/settings/leads/page.tsx;ARTIFACT:apps/web/src/app/settings/leads/LeadSettingsContent.tsx;ARTIFACT:apps/web/src/app/settings/leads/components/LeadStagesTab.tsx;ARTIFACT:apps/web/src/app/settings/leads/components/ScoringRulesTab.tsx;ARTIFACT:apps/web/src/app/settings/leads/components/CustomFieldsTab.tsx;ARTIFACT:apps/web/src/app/settings/leads/components/AutomationTab.tsx;ARTIFACT:apps/web/src/components/settings/ModuleSettingsLayout.tsx;ARTIFACT:apps/web/src/components/settings/__tests__/ModuleSettingsLayout.test.tsx;ARTIFACT:apps/api/src/modules/lead/lead-settings.router.ts;ARTIFACT:packages/validators/src/lead-settings.ts;ARTIFACT:packages/db/prisma/_archived_migrations/20260311_lead_settings/migration.sql;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-178/context_ack.json"
       ],
       "kpis": "All 11 module settings routes resolve; form fields render and save; breadcrumb navigation works; Lighthouse >=90",
       "definition_of_done": "Pages at /settings/leads (scoring thresholds assignment auto-qual) /settings/contacts (duplicate detection required fields tags) /settings/accounts (hierarchy industry custom fields) /settings/deals (pipeline stages win-loss reasons scoring) /settings/tickets (default SLA auto-close notification triggers) /settings/documents (file types size limits antivirus retention) /settings/reports (default range currency scheduled delivery) /settings/billing (billing address tax ID invoice contact) /settings/appointments (duration buffer calendar integration) /settings/cases (case prefix default priority auto-assign) /settings/tasks (due-date offset reminder templates); all settingsHref and ModulePaywall links resolve; follows settings/account pattern; Lighthouse >=90; verified by: pnpm test",
@@ -8807,7 +8808,7 @@
       "sprint": 14,
       "dependencies": [],
       "artifacts": [
-        "ARTIFACT:docs/compliance/accessibility-gap-assessment.md;ARTIFACT:artifacts/reports/accessibility-audit-results.json"
+        "ARTIFACT:docs/compliance/accessibility-gap-assessment.md"
       ],
       "kpis": "All 26 URLs audited; all WCAG 2.1 AA failures documented; remediation plan with priorities",
       "definition_of_done": "Accessibility gap report produced; Lighthouse audit run on all 27 URLs; WCAG failures categorized by level (A/AA) and severity; remediation priority list created; verified by: pnpm run lighthouse",
@@ -9795,7 +9796,7 @@
       "sprint": 16,
       "dependencies": [],
       "artifacts": [
-        "ARTIFACT:apps/web/src/app/contacts/[id]/page.tsx;ARTIFACT:apps/web/src/app/contacts/(list)/new/page.tsx;ARTIFACT:apps/web/src/components/contacts/ContactCard.tsx;ARTIFACT:apps/web/src/components/contacts/ContactList.tsx;ARTIFACT:apps/web/src/components/contacts/ContactDetail.tsx"
+        "ARTIFACT:apps/web/src/app/contacts/[id]/page.tsx;ARTIFACT:apps/web/src/app/contacts/(list)/new/page.tsx;ARTIFACT:apps/web/src/components/contacts/ContactCard.tsx;ARTIFACT:apps/web/src/components/contacts/ContactList.tsx;ARTIFACT:apps/web/src/app/contacts/[id]/page.tsx"
       ],
       "kpis": "No NaN renders; auth guard on create; no crash on unknown status",
       "definition_of_done": "Open Rate handles 0/0 gracefully; create page has useRequireAuth; ContactStatusBadge handles all 5 domain statuses with fallback; tests >=90%",
@@ -10546,7 +10547,7 @@
         "PG-045"
       ],
       "artifacts": [
-        "ARTIFACT:packages/db/prisma/schema.prisma;ARTIFACT:packages/db/prisma/migrations/20260311000000_add_help_article_models/migration.sql;EVIDENCE:.specify/sprints/sprint-17/attestations/IFC-298/context_ack.json;EVIDENCE:.specify/sprints/sprint-17/attestations/IFC-298/attestation.json;SPEC:.specify/sprints/sprint-17/specifications/IFC-298-spec.md;PLAN:.specify/sprints/sprint-17/planning/IFC-298-plan.md"
+        "ARTIFACT:packages/db/prisma/schema.prisma;ARTIFACT:packages/db/prisma/_archived_migrations/20260311000000_add_help_article_models/migration.sql;EVIDENCE:.specify/sprints/sprint-17/attestations/IFC-298/context_ack.json;EVIDENCE:.specify/sprints/sprint-17/attestations/IFC-298/attestation.json;SPEC:.specify/sprints/sprint-17/specifications/IFC-298-spec.md;PLAN:.specify/sprints/sprint-17/planning/IFC-298-plan.md"
       ],
       "kpis": "3 models + 1 enum + migration + 14 tests; all 4 validations pass",
       "definition_of_done": "HelpArticle, ArticleSection, ArticleFeedback Prisma models; migration applied; fields match HelpArticle TS interface; status enum (draft/published); verified by: pnpm test",
@@ -10576,13 +10577,13 @@
       "section": "Support",
       "description": "Help Article Seed Script — Static to DB Migration",
       "owner": "Backend Dev (STOA-Foundation)",
-      "status": "BACKLOG",
+      "status": "IN_PROGRESS",
       "sprint": 17,
       "dependencies": [
         "IFC-298"
       ],
       "artifacts": [
-        "ARTIFACT:packages/db/prisma/seed-help-articles.ts;EVIDENCE:.specify/sprints/sprint-17/attestations/IFC-300/context_ack.json"
+        "ARTIFACT:packages/db/prisma/seed-help-articles.ts;EVIDENCE:.specify/sprints/sprint-17/attestations/IFC-300/context_ack.json;SPEC:.specify/sprints/sprint-17/specifications/IFC-300-spec.md;PLAN:.specify/sprints/sprint-17/planning/IFC-300-plan.md"
       ],
       "kpis": "17 articles seeded, idempotent re-run passes",
       "definition_of_done": "Seed script migrates DEFAULT_HELP_ARTICLES into DB; idempotent (skip existing slugs); validates data integrity post-seed; verified by: pnpm test",
@@ -10704,13 +10705,13 @@
       "section": "Settings",
       "description": "Module Settings - Contacts (/contacts/contact-settings)",
       "owner": "Frontend Dev (STOA-Foundation)",
-      "status": "BACKLOG",
+      "status": "IN_PROGRESS",
       "sprint": 17,
       "dependencies": [
         "PG-178"
       ],
       "artifacts": [
-        "ARTIFACT:apps/web/src/app/contacts/(list)/contact-settings/page.tsx"
+        "ARTIFACT:apps/web/src/app/contacts/(list)/contact-settings/page.tsx;SPEC:.specify/sprints/sprint-17/specifications/PG-182-spec.md;PLAN:.specify/sprints/sprint-17/planning/PG-182-plan.md"
       ],
       "kpis": "All form fields render and save; sidebar settings nav works; Lighthouse >=90",
       "definition_of_done": "Contact settings page at /contacts/contact-settings with duplicate detection, required fields, tags config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
@@ -10722,7 +10723,7 @@
       "section": "Settings",
       "description": "Module Settings - Accounts (/accounts/account-settings)",
       "owner": "Frontend Dev (STOA-Foundation)",
-      "status": "BACKLOG",
+      "status": "IN_PROGRESS",
       "sprint": 17,
       "dependencies": [
         "PG-178"
@@ -10734,7 +10735,7 @@
       "definition_of_done": "Account settings page at /accounts/account-settings with hierarchy, industry, custom fields config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
       "validation": "VALIDATE:pnpm test",
       "prerequisites": "FILE:apps/web/src/components/sidebar/configs/accounts.ts;FILE:apps/web/src/components/accounts/AccountSettingsSidebarNav.tsx",
-      "cadence": ""
+      "cadence": "SPEC:.specify/sprints/sprint-17/specifications/PG-183-spec.md;PLAN:.specify/sprints/sprint-17/planning/PG-183-plan.md"
     },
     "PG-184": {
       "section": "Settings",
@@ -10914,7 +10915,7 @@
       "kpis": "Progress panel renders <200ms; step states accurate; accessible (WCAG AA); Lighthouse >=90; test coverage >=90%",
       "definition_of_done": "WorkflowProgressPanel component created; integrated into ActiveAgentsDashboard agent detail expand and AgentLogsViewer log detail view; reads currentStep and stepResults from WorkflowExecution via tRPC; renders progress bar + per-step status with checkmarks; WCAG AA accessible; Lighthouse >=90; verified by: pnpm test. NOTE: 3 follow-ups for whoever touches workflow next — (1) workflow.getExecution procedure has no production caller yet (wire a deep-link page or remove); (2) KNOWN_ENTITY_TYPES in workflow.router.ts is hardcoded (update when adding new entity kinds or derive from @intelliflow/domain); (3) entityId-only fallback returns most-recent workflow per entity which is ambiguous for multi-workflow entities (long-term: add workflowExecutionId FK on ConversationRecord). See memory/project_pg193_follow_ups.md",
       "validation": "VALIDATE:pnpm --filter @intelliflow/web typecheck;VALIDATE:pnpm --filter @intelliflow/web test --run",
-      "prerequisites": "DESIGN:docs/design/mockups/workflow-progress-panel.png;FILE:apps/web/src/components/ai-monitoring/ActiveAgentsDashboard.tsx;FILE:apps/web/src/components/ai-monitoring/AgentLogsViewer.tsx;FILE:packages/db/generated/prisma/models/WorkflowExecution.ts",
+      "prerequisites": "DESIGN:docs/design/mockups/workflow-progress-panel.png;FILE:apps/web/src/components/ai-monitoring/ActiveAgentsDashboard.tsx;FILE:apps/web/src/components/ai-monitoring/AgentLogsViewer.tsx;FILE:packages/db/prisma/schema.prisma",
       "cadence": ""
     },
     "IFC-305": {

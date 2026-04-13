@@ -7,10 +7,10 @@
   "phases": [],
   "task_summary": {
     "total": 22,
-    "done": 9,
-    "in_progress": 2,
-    "blocked": 0,
-    "not_started": 11,
+    "done": 11,
+    "in_progress": 5,
+    "blocked": 1,
+    "not_started": 5,
     "failed": 0
   },
   "completed_tasks": [
@@ -45,22 +45,32 @@
       "duration_minutes": 12
     },
     {
+      "task_id": "IFC-196",
+      "completed_at": "2026-04-13T20:19:17.292Z",
+      "duration_minutes": 15
+    },
+    {
       "task_id": "PG-052",
-      "completed_at": "2026-04-13T01:23:27.747Z",
+      "completed_at": "2026-04-13T22:40:46.905Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "PG-053",
+      "completed_at": "2026-04-13T22:40:46.905Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-055",
-      "completed_at": "2026-04-13T01:23:27.747Z",
+      "completed_at": "2026-04-13T22:40:46.905Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-056",
-      "completed_at": "2026-04-13T01:23:27.747Z",
+      "completed_at": "2026-04-13T22:40:46.905Z",
       "duration_minutes": 15
     }
   ],
-  "notes": "9/22 tasks DONE (41%). Last synced: 2026-04-13T01:23:27.747Z",
+  "notes": "11/22 tasks DONE (50%). Last synced: 2026-04-13T22:40:46.905Z",
   "schedule": {
     "sprint_start_date": null,
     "sprint_end_date": null,
@@ -74,14 +84,14 @@
         "PG-195"
       ],
       "total_duration_minutes": 650,
-      "completion_percentage": 10,
-      "bottleneck_task_id": "PG-050"
+      "completion_percentage": 70,
+      "bottleneck_task_id": "PG-195"
     },
     "schedule_variance": {
-      "sv_minutes": -2860,
-      "spi": 0.29,
+      "sv_minutes": -1638,
+      "spi": 0.59,
       "status": "critical"
     },
-    "calculated_at": "2026-04-13T01:23:28.125Z"
+    "calculated_at": "2026-04-13T22:40:47.454Z"
   }
 }

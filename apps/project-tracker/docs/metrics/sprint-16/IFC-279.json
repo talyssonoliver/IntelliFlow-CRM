@@ -11,7 +11,7 @@
   "dependencies": {
     "required": [],
     "all_satisfied": true,
-    "verified_at": "2026-04-13T01:23:27.721Z"
+    "verified_at": "2026-04-13T22:40:46.832Z"
   },
   "dependencies_resolved": [],
   "started_at": "2026-03-17T07:36:47.608Z",
@@ -38,11 +38,10 @@
     ],
     "created": [
       "apps/web/src/app/deals/(list)/new/page.tsx",
-      "apps/web/src/components/deals/DealForm.tsx"
-    ],
-    "missing": [
+      "apps/web/src/components/deals/DealForm.tsx",
       ".specify/sprints/sprint-16/attestations/IFC-279/context_ack.json"
-    ]
+    ],
+    "missing": []
   },
   "validations": [
     {

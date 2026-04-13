@@ -4,7 +4,7 @@
   "section": "Support",
   "description": "Help Article Seed Script — Static to DB Migration",
   "owner": "Backend Dev (STOA-Foundation)",
-  "status": "BACKLOG",
+  "status": "IN_PROGRESS",
   "sprint": "sprint-17",
   "phase": "",
   "stream": null,
@@ -13,7 +13,7 @@
       "IFC-298"
     ],
     "all_satisfied": true,
-    "verified_at": "2026-04-13T01:23:27.741Z"
+    "verified_at": "2026-04-13T22:40:46.899Z"
   },
   "started_at": null,
   "completed_at": null,
@@ -25,10 +25,10 @@
     "expected": [
       "packages/db/prisma/seed-help-articles.ts"
     ],
-    "created": [],
-    "missing": [
+    "created": [
       "packages/db/prisma/seed-help-articles.ts"
-    ]
+    ],
+    "missing": []
   },
   "validations": [],
   "kpis": {},

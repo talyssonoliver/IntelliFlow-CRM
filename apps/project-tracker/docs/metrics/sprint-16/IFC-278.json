@@ -11,7 +11,7 @@
   "dependencies": {
     "required": [],
     "all_satisfied": true,
-    "verified_at": "2026-04-13T01:23:27.720Z"
+    "verified_at": "2026-04-13T22:40:46.831Z"
   },
   "dependencies_resolved": [],
   "started_at": "2026-03-17T23:18:59.978Z",
@@ -36,11 +36,10 @@
       ".specify/sprints/sprint-16/attestations/IFC-278/context_ack.json"
     ],
     "created": [
-      "apps/web/src/app/deals/[id]/page.tsx"
-    ],
-    "missing": [
+      "apps/web/src/app/deals/[id]/page.tsx",
       ".specify/sprints/sprint-16/attestations/IFC-278/context_ack.json"
-    ]
+    ],
+    "missing": []
   },
   "validations": [
     {

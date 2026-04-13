@@ -131,106 +131,106 @@
     },
     {
       "task_id": "IFC-028",
-      "completed_at": "2026-04-13T01:23:27.729Z",
+      "completed_at": "2026-04-13T22:40:46.838Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-043",
-      "completed_at": "2026-04-13T01:23:27.729Z",
+      "completed_at": "2026-04-13T22:40:46.838Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-044",
-      "completed_at": "2026-04-13T01:23:27.729Z",
+      "completed_at": "2026-04-13T22:40:46.838Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-046",
-      "completed_at": "2026-04-13T01:23:27.729Z",
+      "completed_at": "2026-04-13T22:40:46.838Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-047",
-      "completed_at": "2026-04-13T01:23:27.729Z",
+      "completed_at": "2026-04-13T22:40:46.838Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-048",
-      "completed_at": "2026-04-13T01:23:27.729Z",
+      "completed_at": "2026-04-13T22:40:46.838Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-125",
-      "completed_at": "2026-04-13T01:23:27.729Z",
+      "completed_at": "2026-04-13T22:40:46.838Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-161",
-      "completed_at": "2026-04-13T01:23:27.729Z",
+      "completed_at": "2026-04-13T22:40:46.838Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-162",
-      "completed_at": "2026-04-13T01:23:27.729Z",
+      "completed_at": "2026-04-13T22:40:46.838Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-167",
-      "completed_at": "2026-04-13T01:23:27.729Z",
+      "completed_at": "2026-04-13T22:40:46.838Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-172",
-      "completed_at": "2026-04-13T01:23:27.729Z",
+      "completed_at": "2026-04-13T22:40:46.838Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-173",
-      "completed_at": "2026-04-13T01:23:27.729Z",
+      "completed_at": "2026-04-13T22:40:46.838Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-174",
-      "completed_at": "2026-04-13T01:23:27.729Z",
+      "completed_at": "2026-04-13T22:40:46.838Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-175",
-      "completed_at": "2026-04-13T01:23:27.729Z",
+      "completed_at": "2026-04-13T22:40:46.838Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-176",
-      "completed_at": "2026-04-13T01:23:27.729Z",
+      "completed_at": "2026-04-13T22:40:46.838Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-177",
-      "completed_at": "2026-04-13T01:23:27.729Z",
+      "completed_at": "2026-04-13T22:40:46.838Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-178",
-      "completed_at": "2026-04-13T01:23:27.729Z",
+      "completed_at": "2026-04-13T22:40:46.838Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-297",
-      "completed_at": "2026-04-13T01:23:27.729Z",
+      "completed_at": "2026-04-13T22:40:46.838Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-192",
-      "completed_at": "2026-04-13T01:23:27.729Z",
+      "completed_at": "2026-04-13T22:40:46.838Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-193",
-      "completed_at": "2026-04-13T01:23:27.729Z",
+      "completed_at": "2026-04-13T22:40:46.838Z",
       "duration_minutes": 15
     }
   ],
-  "notes": "43/43 tasks DONE (100%). Last synced: 2026-04-13T01:23:27.729Z",
+  "notes": "43/43 tasks DONE (100%). Last synced: 2026-04-13T22:40:46.838Z",
   "schedule": {
     "sprint_start_date": null,
     "sprint_end_date": null,
@@ -247,10 +247,10 @@
       "bottleneck_task_id": null
     },
     "schedule_variance": {
-      "sv_minutes": -572,
-      "spi": 0.93,
-      "status": "behind"
+      "sv_minutes": 0,
+      "spi": 1,
+      "status": "on_track"
     },
-    "calculated_at": "2026-04-13T01:23:28.124Z"
+    "calculated_at": "2026-04-13T22:40:47.453Z"
   }
 }

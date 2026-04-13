@@ -4,13 +4,13 @@
   "section": "Automation",
   "description": "PHASE-005: Workflow Builder UI (React Flow)",
   "owner": "Frontend Dev + UX (STOA-Domain)",
-  "status": "IN_PROGRESS",
+  "status": "NEEDS_HUMAN",
   "sprint": "sprint-17",
   "phase": "phase-0-initialisation",
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-04-13T01:23:27.732Z",
+    "verified_at": "2026-04-13T22:40:46.858Z",
     "required": [
       "IFC-028"
     ]

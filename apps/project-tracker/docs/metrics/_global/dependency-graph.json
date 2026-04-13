@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/dependency-graph.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-04-13T01:23:28.106Z",
+  "last_updated": "2026-04-13T22:40:47.437Z",
   "description": "Cross-sprint dependency tracking for all tasks",
   "nodes": {
     "EXC-INIT-001": {
@@ -792,7 +792,7 @@
     "IFC-031": {
       "task_id": "IFC-031",
       "sprint": 17,
-      "status": "IN_PROGRESS",
+      "status": "BLOCKED",
       "dependencies": [
         "IFC-028"
       ],
@@ -2278,7 +2278,7 @@
     "PG-053": {
       "task_id": "PG-053",
       "sprint": 17,
-      "status": "BACKLOG",
+      "status": "DONE",
       "dependencies": [
         "PG-050",
         "PG-051"
@@ -2320,7 +2320,7 @@
     "PG-057": {
       "task_id": "PG-057",
       "sprint": 17,
-      "status": "BACKLOG",
+      "status": "IN_PROGRESS",
       "dependencies": [
         "PG-055"
       ],
@@ -4766,7 +4766,7 @@
     "IFC-196": {
       "task_id": "IFC-196",
       "sprint": 17,
-      "status": "BACKLOG",
+      "status": "DONE",
       "dependencies": [
         "IFC-182",
         "IFC-075"
@@ -6155,7 +6155,7 @@
     "IFC-300": {
       "task_id": "IFC-300",
       "sprint": 17,
-      "status": "BACKLOG",
+      "status": "IN_PROGRESS",
       "dependencies": [
         "IFC-298"
       ],
@@ -6228,7 +6228,7 @@
     "PG-182": {
       "task_id": "PG-182",
       "sprint": 17,
-      "status": "BACKLOG",
+      "status": "IN_PROGRESS",
       "dependencies": [
         "PG-178"
       ],
@@ -6237,7 +6237,7 @@
     "PG-183": {
       "task_id": "PG-183",
       "sprint": 17,
-      "status": "BACKLOG",
+      "status": "IN_PROGRESS",
       "dependencies": [
         "PG-178"
       ],
@@ -10717,6 +10717,7 @@
     }
   ],
   "blocked_tasks": [
+    "IFC-031",
     "PG-060",
     "PG-061",
     "PG-062",
@@ -10797,13 +10798,7 @@
     "PG-120"
   ],
   "ready_to_start": [
-    "PG-053",
-    "PG-057",
     "PG-126",
-    "IFC-196",
-    "IFC-300",
-    "PG-182",
-    "PG-183",
     "PG-184",
     "PG-185",
     "PG-186",

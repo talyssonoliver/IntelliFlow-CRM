@@ -9,15 +9,11 @@
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
-    "required": [
-      "DOC-009"
-    ],
+    "required": ["DOC-009"],
     "all_satisfied": true,
     "verified_at": "2026-03-07T22:02:09.239Z"
   },
-  "dependencies_resolved": [
-    "DOC-009"
-  ],
+  "dependencies_resolved": ["DOC-009"],
   "started_at": null,
   "completed_at": null,
   "target_duration_minutes": null,
@@ -40,13 +36,8 @@
       "apps/web/src/app/layout.tsx",
       "public/og-image.png"
     ],
-    "created": [
-      "lighthouserc.js",
-      "apps/web/src/app/layout.tsx"
-    ],
-    "missing": [
-      "public/og-image.png"
-    ]
+    "created": ["lighthouserc.js", "apps/web/src/app/layout.tsx"],
+    "missing": ["public/og-image.png"]
   },
   "validations": [],
   "blockers": [],
