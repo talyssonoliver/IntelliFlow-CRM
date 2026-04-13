@@ -416,7 +416,7 @@ export class Opportunity extends AggregateRoot {
   private calculateTotalValue(): Money {
     return this.lineItems.reduce(
       (total, item) => total.add(item.getTotal()),
-      Money.zero('USD')
+      Money.zero('GBP')
     );
   }
 

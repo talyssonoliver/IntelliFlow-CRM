@@ -4,12 +4,18 @@ version: v2026.08
 effectiveDate: 2026-08-13
 contactEmail: legal@intelliflow-crm.com
 summary:
-  - IntelliFlow acts as a data processor under GDPR Article 28
-  - Processing occurs only on documented instructions from the controller
-  - Sub-processors are listed and subject to equivalent obligations
-  - Data subjects may exercise rights through the controller
-  - Data is returned or deleted upon agreement termination
-  - Security measures align with ISO/IEC 27001 standards
+  - IntelliFlow acts as a data processor under GDPR Article 28 on behalf of the
+    customer as controller.
+  - Processing occurs only on documented instructions from the controller and
+    for the duration of the service agreement.
+  - Sub-processors are listed and subject to equivalent contractual obligations
+    to those in this DPA.
+  - Data subjects may exercise rights through the controller, with IntelliFlow
+    providing reasonable technical assistance.
+  - Data is returned or deleted upon agreement termination, except where
+    retention is required by law.
+  - Security measures align with ISO/IEC 27001 standards and the technical and
+    organisational measures set out herein.
 ---
 
 ## Introduction and Parties

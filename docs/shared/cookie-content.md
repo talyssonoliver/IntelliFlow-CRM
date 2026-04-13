@@ -4,10 +4,14 @@ version: v2026.04
 effectiveDate: 2026-04-12
 contactEmail: privacy@intelliflow-crm.com
 summary:
-  - Necessary cookies keep the site working, authenticate sessions, and remember your cookie choices; they cannot be turned off.
-  - Analytics, marketing, and preference cookies are off by default and only run after you opt in through the consent banner.
-  - You can change your preferences at any time from the cookie banner, which links back to this policy.
-  - We list every cookie, its provider, duration, and purpose so you can make an informed choice.
+  - Necessary cookies keep the site working, authenticate sessions, and remember
+    your cookie choices; they cannot be turned off.
+  - Analytics, marketing, and preference cookies are off by default and only run
+    after you opt in through the consent banner.
+  - You can change your preferences at any time from the cookie banner, which
+    links back to this policy.
+  - We list every cookie, its provider, duration, and purpose so you can make an
+    informed choice.
 ---
 
 ## What Are Cookies

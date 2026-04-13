@@ -9,8 +9,8 @@
 | **Status** | Draft |
 | **Target Sprint** | Sprint 17 |
 | **Created Date** | 2026-03-08 |
-| **Last Updated** | 2026-04-12 |
-| **Related Tasks** | PG-050, PG-051, PG-052, PG-053, PG-054 |
+| **Last Updated** | 2026-04-13 |
+| **Related Tasks** | PG-050, PG-051, PG-052, PG-053, PG-054, IFC-309 |
 
 ## Problem Statement
 
@@ -49,8 +49,15 @@ IntelliFlow CRM exposes privacy, terms, and cookie-policy links from public rout
 - A public `/terms` route exists and is reachable from the public footer and sign-up flow (links already present).
 - The page renders terms sections from `docs/shared/terms-content.md` using frontmatter + markdown format (same pattern as privacy).
 - The page displays terms version metadata, effective date, and legal contact.
-- A client-side acceptance tracker (`acceptance-tracker.ts`) records when a user has reviewed the current version in localStorage.
-- When a user returns after a version change, a visual indicator alerts them that terms have been updated.
+- ~~A client-side acceptance tracker (`acceptance-tracker.ts`) records when a user has reviewed the current version in localStorage.~~ **Amended 2026-04-13**: client-only localStorage acceptance was removed as a misleading legal-compliance signal (not verifiable server-side, user-clearable, single-browser-scoped). Server-side acceptance persistence moves to **IFC-309**.
+- ~~When a user returns after a version change, a visual indicator alerts them that terms have been updated.~~ **Amended 2026-04-13**: version-drift UX re-scoped under IFC-309 (authenticated-user Confirm UI that calls `trpc.legal.acceptTerms` and hides when stored acceptance matches current version).
+
+### IFC-309 — Server-Side Terms Acceptance
+- A tenant-scoped `TermsAcceptance` audit record persists per `(userId, termsVersion, acceptedAt, ipAddress, userAgent, route)` with no UPDATE/DELETE paths.
+- `trpc.legal.acceptTerms` mutation is idempotent per `(userId, termsVersion)`.
+- `trpc.legal.getAcceptance` query returns the latest record per user.
+- Supabase RLS scopes reads/writes by `tenantId`.
+- The `/terms` Confirm UI calls the mutation for authenticated users only and hides once the stored acceptance matches the current version; anonymous visitors see the terms copy without a Confirm affordance.
 - The implementation reuses public-site visual patterns (hero, sticky sidebar nav, section cards).
 - The route is covered by unit tests and `PAGE_MAP_AND_FLOWS.md` is updated.
 

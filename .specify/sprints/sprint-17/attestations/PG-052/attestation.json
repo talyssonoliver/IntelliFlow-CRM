@@ -21,7 +21,8 @@
     {
       "id": "PG-050",
       "status": "Completed",
-      "evidence": ".specify/sprints/sprint-17/attestations/PG-050/attestation.json verdict=COMPLETE; apps/web/src/app/(public)/privacy/page.tsx; apps/web/src/lib/legal/legal-content-parser.ts"
+      "evidence": ".specify/sprints/sprint-17/attestations/PG-050/attestation.json verdict=COMPLETE; apps/web/src/app/(public)/privacy/page.tsx; docs/shared/privacy-content.md",
+      "correction_2026-04-13": "Original evidence also listed apps/web/src/lib/legal/legal-content-parser.ts as a PG-050 artifact. That file was actually delivered by PG-051 (commit 31eaed98). Corrected here; PG-050's real deliverables are the /privacy route, consent-tracker.ts, and docs/shared/privacy-content.md."
     }
   ],
   "validation_results": [
@@ -141,5 +142,9 @@
     "new_tests_passing": 9,
     "regression_tests_passing": 46
   },
-  "notes": "All Tier-1 gates PASS after baseline @xyflow/react dep was installed. Cookie Policy page ships at /cookies (matching CookieConsentBanner at layout.tsx:105 + PublicFooter.tsx:48,136), reuses @intelliflow/ui::CookieConsentBanner (DRY - did not create CSV-listed duplicate cookie-banner.tsx), reuses legal-content-parser.ts from PG-050, and sources copy from docs/shared/cookie-content.md. 5 design/inventory docs updated plus content-audit JSON regenerated. All 8 new tests + 46 regression tests pass; 100% scoped coverage on new files; build succeeds with /cookies listed as a static route. Post-review fixes: (F1) rewrote cookie-content.md summary bullets as single lines to avoid the shared parser's multi-line YAML continuation bug (same bug affects PG-050/051 content; scope for a separate parser fix); (F2) removed unreachable buildCookieConsentRecord export — will re-introduce alongside the real banner-telemetry consumer."
+  "notes": "All Tier-1 gates PASS after baseline @xyflow/react dep was installed. Cookie Policy page ships at /cookies (matching CookieConsentBanner at layout.tsx:105 + PublicFooter.tsx:48,136), reuses @intelliflow/ui::CookieConsentBanner (DRY - did not create CSV-listed duplicate cookie-banner.tsx), reuses legal-content-parser.ts (from PG-051, commit 31eaed98), and sources copy from docs/shared/cookie-content.md. 5 design/inventory docs updated plus content-audit JSON regenerated. All 8 new tests + 46 regression tests pass; 100% scoped coverage on new files; build succeeds with /cookies listed as a static route. Post-review fixes: (F1) rewrote cookie-content.md summary bullets as single lines to avoid the shared parser's multi-line YAML continuation bug (same bug affects PG-050/051 content; scope for a separate parser fix); (F2) removed unreachable buildCookieConsentRecord export — will re-introduce alongside the real banner-telemetry consumer.",
+  "corrections_2026-04-13": [
+    "Original notes said 'reuses legal-content-parser.ts from PG-050' — false attribution. legal-content-parser.ts was delivered by PG-051 (commit 31eaed98: 'feat(web/legal): add PG-051 legal content parser and acceptance tracker libs'), not PG-050. PG-050 delivered consent-tracker.ts and docs/shared/privacy-content.md. This correction also applies to the dependencies_verified[id=PG-050].evidence field.",
+    "PG-052's shipping commit cab4e850 modified apps/web/src/lib/legal/consent-tracker.ts (added applyFrontmatterLine helper, CRLF→LF normalization, parse-loop rewrite) without declaring that file in spec or plan. A 2026-04-13 follow-up refactor migrated consent-tracker.ts to a thin delegating wrapper over legal-content-parser.ts (same pattern as acceptance-tracker.ts / cookie-policy-tracker.ts), eliminating ~110 lines of duplicated parser logic. Public API preserved; 8/8 privacy-page tests still pass. This is recorded here rather than by re-hashing the original artifact_hashes — those remain historical evidence at time of attestation."
+  ]
 }

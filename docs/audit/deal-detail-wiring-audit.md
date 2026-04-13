@@ -474,7 +474,7 @@ Domain entity gets value=0 without error propagation.
 
 ```
 forecast-algorithm.ts line 269:
-toLocaleString('en-US', { month: 'short' })
+toLocaleString('en-GB', { month: 'short' })
 On servers with non-en-US locale this could produce unexpected month names.
 ```
 
