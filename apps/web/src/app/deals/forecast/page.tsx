@@ -89,13 +89,13 @@ function formatCurrency(value: number): string {
   if (value >= 1000) {
     return `$${Math.round(value / 1000)}K`;
   }
-  return `$${value.toLocaleString('en-US')}`;
+  return `$${value.toLocaleString('en-GB')}`;
 }
 
 function formatFullCurrency(value: number): string {
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat('en-GB', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'GBP',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(value);
@@ -401,7 +401,7 @@ function OpportunitiesAtRiskTable({ deals }: Readonly<{ deals: ForecastDeal[] }>
                 </td>
                 <td className="px-6 py-4">
                   <p className="text-sm text-slate-600 dark:text-slate-400">
-                    {new Date(deal.expectedCloseDate).toLocaleDateString('en-US', {
+                    {new Date(deal.expectedCloseDate).toLocaleDateString('en-GB', {
                       month: 'short',
                       day: 'numeric',
                       year: 'numeric',
@@ -511,7 +511,7 @@ function buildForecastCSV(
   );
 
   for (const deal of deals) {
-    const closeDate = new Date(deal.expectedCloseDate).toLocaleDateString('en-US', {
+    const closeDate = new Date(deal.expectedCloseDate).toLocaleDateString('en-GB', {
       timeZone: timezone,
     });
     const row = [
@@ -683,7 +683,7 @@ export default function DealForecastPage() {
                 }),
             },
             {
-              label: 'USD',
+              label: 'GBP',
               icon: 'attach_money',
               variant: 'secondary',
               onClick: () =>

@@ -209,7 +209,7 @@ export default function CustomizeDashboardPage() {
     const diffMins = Math.floor(diffMs / 60000);
     if (diffMins < 1) return 'Just now';
     if (diffMins < 60) return `${diffMins} min ago`;
-    return lastSaved.toLocaleTimeString('en-US', {
+    return lastSaved.toLocaleTimeString('en-GB', {
       hour: 'numeric',
       minute: '2-digit',
       timeZone: timezone,

@@ -202,7 +202,7 @@ export default function QualityReportDetailClient() {
                 <div>
                   <p className="text-sm text-muted-foreground">Generated</p>
                   <p className="font-semibold text-foreground">
-                    {new Date(report.generatedAt).toLocaleDateString('en-US', {
+                    {new Date(report.generatedAt).toLocaleDateString('en-GB', {
                       month: 'short',
                       day: 'numeric',
                       hour: '2-digit',
@@ -271,7 +271,7 @@ export default function QualityReportDetailClient() {
                   </div>
                 </div>
               )}
-              {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- onLoad is a standard iframe load event, not a mouse/keyboard interaction */}
+              { }
               <iframe
                 src={`/api/quality-reports/view?report=${reportId}`}
                 className="w-full h-full border-0"

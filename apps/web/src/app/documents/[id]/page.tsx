@@ -84,7 +84,7 @@ function mapAuditEntry(entry: RawAuditEntry, index: number, total: number): Audi
 }
 
 function formatDateTime(dateString: string, timezone: string = 'Europe/London'): string {
-  return new Date(dateString).toLocaleDateString('en-US', {
+  return new Date(dateString).toLocaleDateString('en-GB', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',

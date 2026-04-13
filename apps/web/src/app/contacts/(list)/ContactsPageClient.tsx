@@ -10,6 +10,7 @@ import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { CONTACT_STATUSES } from '@intelliflow/domain';
 import { useContactFilterOptions, isValidUUID } from '@/hooks/use-dynamic-filters';
 import { invalidateContactsCache } from './actions';
+import { revalidateContactCaches } from '../actions';
 
 /**
  * Contacts List Client Island
@@ -96,7 +97,7 @@ export default function ContactsPageClient({
   const pageSize = 10;
 
   // Require authentication - redirects to login if not authenticated
-  const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
+  const { isLoading: authLoading, isAuthenticated, user } = useRequireAuth();
 
   // Debounce search for 300ms to avoid excessive API calls
   const debouncedSearch = useDebounce(searchQuery, 300);
@@ -202,6 +203,7 @@ export default function ContactsPageClient({
       utils.contact.list.invalidate();
       utils.contact.stats.invalidate();
       invalidateContactsCache();
+      if (user?.id) revalidateContactCaches(user.id).catch(() => {});
     },
   });
 
@@ -211,6 +213,7 @@ export default function ContactsPageClient({
       utils.contact.list.invalidate();
       utils.contact.stats.invalidate();
       invalidateContactsCache();
+      if (user?.id) revalidateContactCaches(user.id).catch(() => {});
       toast({
         title: 'Contact Deleted',
         description: 'The contact has been successfully deleted.',
@@ -451,7 +454,7 @@ export default function ContactsPageClient({
           onDelete={(contact) => deleteMutation.mutate({ id: contact.id })}
           onCreateDeal={(contact) => router.push(`/deals/new?contactId=${contact.id}`)}
           onCreateTicket={(contact) => router.push(`/tickets/new?contactId=${contact.id}`)}
-          onScheduleMeeting={(contact) => router.push(`/calendar/new?contactId=${contact.id}`)}
+          onScheduleMeeting={(contact) => router.push(`/appointments/new?contactId=${contact.id}`)}
           onBulkEmail={handleBulkEmail}
           onBulkExport={handleBulkExport}
           onBulkDelete={(ids) => {

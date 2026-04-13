@@ -166,9 +166,9 @@ export default function DealForecastDetailPage() {
             <div>
               <dt className="text-muted-foreground">Value</dt>
               <dd className="font-medium">
-                {new Intl.NumberFormat('en-US', {
+                {new Intl.NumberFormat('en-GB', {
                   style: 'currency',
-                  currency: 'USD',
+                  currency: 'GBP',
                   minimumFractionDigits: 0,
                 }).format(data.deal.value)}
               </dd>
@@ -185,7 +185,7 @@ export default function DealForecastDetailPage() {
               <dt className="text-muted-foreground">Expected Close</dt>
               <dd className="font-medium">
                 {data.deal.expectedCloseDate
-                  ? new Date(data.deal.expectedCloseDate).toLocaleDateString('en-US', {
+                  ? new Date(data.deal.expectedCloseDate).toLocaleDateString('en-GB', {
                       month: 'short',
                       day: 'numeric',
                       year: 'numeric',

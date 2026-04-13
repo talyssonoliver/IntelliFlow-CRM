@@ -84,9 +84,9 @@ const ACTIVE_STAGES: OpportunityStage[] = [
 // =============================================================================
 
 function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat('en-GB', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'GBP',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(value);
@@ -182,7 +182,7 @@ function AboutDealCard({ deal }: Readonly<{ deal: DealDetail }>) {
           <div className="flex items-center gap-2 text-slate-900 dark:text-slate-200 font-medium">
             <Icon name="calendar_today" className="text-base text-slate-400" />
             {deal.expectedCloseDate
-              ? new Date(deal.expectedCloseDate).toLocaleDateString('en-US', {
+              ? new Date(deal.expectedCloseDate).toLocaleDateString('en-GB', {
                   month: 'short',
                   day: 'numeric',
                   year: 'numeric',

@@ -140,6 +140,62 @@ describe('Pattern Conformance — Team 4: UNION enum casts in $queryRaw', () => 
 });
 
 // ============================================================================
+// Mutation Swarm: every exported cache tag must have a revalidateTag callsite
+// ============================================================================
+
+describe('Pattern Conformance — Mutation Swarm: cache tags must have revalidators', () => {
+  const CACHE_TAGS_FILE = join(WEB_ROOT, 'lib', 'cache-tags.ts');
+  const APP_DIR = join(WEB_ROOT, 'app');
+  const LIB_DIR = join(WEB_ROOT, 'lib');
+
+  it('every list/stats/forecast cache tag must be referenced in at least one revalidateTag() call', () => {
+    const cacheTagsContent = readTextFile(CACHE_TAGS_FILE);
+
+    // Extract every exported string constant value (e.g. 'leads:list')
+    const tagValues: Array<{ name: string; value: string }> = [];
+    const exportRegex = /export\s+const\s+(\w+)\s*=\s*['"]([^'"]+)['"]/g;
+    let match;
+    while ((match = exportRegex.exec(cacheTagsContent)) !== null) {
+      tagValues.push({ name: match[1], value: match[2] });
+    }
+
+    // Scan app + lib trees for revalidateTag usages
+    const scanFiles = [...listSourceFiles(APP_DIR), ...listSourceFiles(LIB_DIR)];
+    const revalidateCorpus = scanFiles
+      .filter((f) => !f.includes('cache-tags.ts') && !f.includes('pattern-conformance.test.ts'))
+      .map(readTextFile)
+      .join('\n');
+
+    const violations: string[] = [];
+    for (const tag of tagValues) {
+      // A revalidator may reference either the literal value or the constant name
+      const literalHit = revalidateCorpus.includes(`revalidateTag('${tag.value}')`) ||
+                         revalidateCorpus.includes(`revalidateTag("${tag.value}")`);
+      const constantHit = new RegExp(`revalidateTag\\s*\\(\\s*${tag.name}\\b`).test(revalidateCorpus);
+
+      // Allow opt-out for tags that are intentionally never invalidated (e.g. truly global public data)
+      // Opt-out lives inline in cache-tags.ts: a comment `// @no-revalidator: <reason>` on the line above the export
+      const tagLineIndex = cacheTagsContent.indexOf(`export const ${tag.name}`);
+      const precedingText = cacheTagsContent.substring(Math.max(0, tagLineIndex - 200), tagLineIndex);
+      const hasOptOut = /@no-revalidator:/.test(precedingText);
+
+      if (!literalHit && !constantHit && !hasOptOut) {
+        violations.push(
+          `${tag.name} ('${tag.value}'): no revalidateTag() callsite found. ` +
+            `Add a server action that calls revalidateTag('${tag.value}') in the relevant mutation onSuccess handler, ` +
+            `or mark with // @no-revalidator: <reason> above the export if this tag is intentionally static.`
+        );
+      }
+    }
+
+    expect(
+      violations,
+      `${violations.length} cache tag(s) without revalidator:\n  ${violations.join('\n  ')}`
+    ).toEqual([]);
+  });
+});
+
+// ============================================================================
 // Team 5: dynamic({ ssr: false }) pages must have a sibling loading.tsx
 // ============================================================================
 

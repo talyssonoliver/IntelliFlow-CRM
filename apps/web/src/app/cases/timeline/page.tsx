@@ -303,7 +303,7 @@ const formatDate = (date: Date, timezone: string = 'Europe/London'): string => {
   if (diffDays > 0 && diffDays <= 7) return `In ${diffDays} days`;
   if (diffDays < 0 && diffDays >= -7) return `${Math.abs(diffDays)} days ago`;
 
-  return date.toLocaleDateString('en-US', {
+  return date.toLocaleDateString('en-GB', {
     month: 'short',
     day: 'numeric',
     year: date.getFullYear() === now.getFullYear() ? undefined : 'numeric',
@@ -313,7 +313,7 @@ const formatDate = (date: Date, timezone: string = 'Europe/London'): string => {
 
 // Format time for display
 const formatTime = (date: Date, timezone: string = 'Europe/London'): string => {
-  return date.toLocaleTimeString('en-US', {
+  return date.toLocaleTimeString('en-GB', {
     hour: 'numeric',
     minute: '2-digit',
     timeZone: timezone,
@@ -843,7 +843,7 @@ function CaseTimeline({
           className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
         >
           <Icon name="event_available" className="text-base" />
-          Schedule Appointment
+          New Appointment
         </button>
       </div>
     </div>
@@ -1033,11 +1033,11 @@ function CaseTimelinePageContent() {
   };
 
   const handleAddTask = () => {
-    console.log('Add task clicked');
+    router.push('/tasks');
   };
 
   const handleAddAppointment = () => {
-    console.log('Add appointment clicked');
+    router.push('/appointments/new');
   };
 
   // Loading state

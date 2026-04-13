@@ -11,11 +11,14 @@ import { useRouter } from 'next/navigation';
 import { Card, toast } from '@intelliflow/ui';
 import { TicketForm } from '@/components/tickets';
 import { api } from '@/lib/api';
+import { invalidateTicketsCache } from '@/app/tickets/actions';
 
 export default function NewTicketPage() {
   const router = useRouter();
   const createMutation = api.ticket.create.useMutation({
     onSuccess: (data: { id: string }) => {
+      // ticket.create has a contactEmail side-effect that writes to ContactActivity
+      invalidateTicketsCache(undefined, true).catch(() => {});
       toast({
         title: 'Ticket Created',
         description: 'Your ticket has been submitted successfully.',

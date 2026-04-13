@@ -148,7 +148,7 @@ function RiskDetailTooltip({ risks, onClose }: Readonly<RiskDetailTooltipProps>)
               {risk.dueDate && (
                 <p className="text-xs text-muted-foreground mt-1">
                   Due:{' '}
-                  {new Date(risk.dueDate).toLocaleDateString('en-US', {
+                  {new Date(risk.dueDate).toLocaleDateString('en-GB', {
                     month: 'short',
                     day: 'numeric',
                     year: 'numeric',
@@ -238,7 +238,7 @@ export function RiskHeatMap() {
         <div className="text-xs text-muted-foreground">
           Last updated:{' '}
           {data?.lastUpdated
-            ? new Date(data.lastUpdated).toLocaleTimeString('en-US', {
+            ? new Date(data.lastUpdated).toLocaleTimeString('en-GB', {
                 hour: 'numeric',
                 minute: '2-digit',
                 timeZone: timezone,

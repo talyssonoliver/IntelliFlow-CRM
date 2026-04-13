@@ -11,10 +11,10 @@ import {
   SidebarPortalTarget,
 } from '@/components/sidebar';
 import {
-  createAppointmentsSidebarConfig,
-  createAppointmentsSettingsSidebarConfig,
+  createCalendarSidebarConfig,
+  createCalendarSettingsSidebarConfig,
   isCalendarSettingsPage,
-} from '@/components/sidebar/configs/appointments';
+} from '@/components/sidebar/configs/calendar';
 import { CalendarVisibilityProvider } from '@/hooks/useCalendarVisibility';
 import { CalendarSettingsPanel } from '@/components/calendar/CalendarSettingsPanel';
 import { CalendarSettingsSidebarNav } from '@/components/calendar/CalendarSettingsSidebarNav';
@@ -27,11 +27,11 @@ export default function CalendarLayoutShell({ children }: Readonly<{ children: R
 
   const sidebarConfig = useMemo(() => {
     if (onSettingsPage) {
-      return createAppointmentsSettingsSidebarConfig(({ isExpanded }: { isExpanded: boolean }) => (
+      return createCalendarSettingsSidebarConfig(({ isExpanded }: { isExpanded: boolean }) => (
         <CalendarSettingsSidebarNav isExpanded={isExpanded} />
       ));
     }
-    return createAppointmentsSidebarConfig(() => setSettingsOpen((prev) => !prev));
+    return createCalendarSidebarConfig(() => setSettingsOpen((prev) => !prev));
   }, [onSettingsPage]);
 
   return (

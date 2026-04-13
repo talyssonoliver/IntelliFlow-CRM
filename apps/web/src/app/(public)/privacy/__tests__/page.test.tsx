@@ -84,6 +84,10 @@ describe('consent-tracker', () => {
     expect(policy.metadata.version).toBe('v2026.03');
     expect(policy.metadata.contactEmail).toBe('privacy@intelliflow-crm.com');
     expect(policy.metadata.summary.length).toBeGreaterThanOrEqual(4);
+    for (const bullet of policy.metadata.summary) {
+      expect(bullet).toMatch(/[.!?]$/);
+    }
+    expect(policy.metadata.summary[0]).toMatch(/operate IntelliFlow CRM\.$/);
     expect(policy.sections.length).toBeGreaterThanOrEqual(6);
     expect(policy.sections[0].id).toBe('information-we-collect');
     expect(policy.sections[0].body.length).toBeGreaterThanOrEqual(1);

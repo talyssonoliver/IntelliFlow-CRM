@@ -15,7 +15,7 @@ const mockUseFormUnsavedChanges = vi.fn();
 
 const validFormData = {
   name: 'Enterprise License',
-  value: { amount: 50000, currency: 'USD' },
+  value: { amount: 50000, currency: 'GBP' },
   stage: 'PROPOSAL' as const,
   probability: 60,
   expectedCloseDate: '2026-06-15',
@@ -167,7 +167,7 @@ describe('NewDealPage', () => {
 
     expect(mockCreateMutation.mutate).toHaveBeenCalledWith({
       name: 'Enterprise License',
-      value: { amount: 50000, currency: 'USD' },
+      value: { amount: 50000, currency: 'GBP' },
       stage: 'PROPOSAL',
       probability: 60,
       expectedCloseDate: new Date('2026-06-15'),

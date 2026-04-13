@@ -147,7 +147,7 @@ function addTimelineSection(
   doc.setFont('helvetica', 'normal');
   for (const event of upcomingEvents) {
     checkNewPage(15);
-    const eventDate = new Date(event.date).toLocaleDateString('en-US', {
+    const eventDate = new Date(event.date).toLocaleDateString('en-GB', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
@@ -200,7 +200,7 @@ export function ExportReportButton({ className }: Readonly<ExportReportButtonPro
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(128, 128, 128);
       doc.text(
-        `Generated: ${new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: timezone })}`,
+        `Generated: ${new Date().toLocaleString('en-GB', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: timezone })}`,
         pageWidth / 2,
         yPosRef.value,
         { align: 'center' }

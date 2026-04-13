@@ -133,7 +133,7 @@ function EventDetailModal({ event, onClose }: Readonly<EventDetailModalProps>) {
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-muted-foreground">calendar_today</span>
             <span className="text-sm text-foreground">
-              {new Date(event.date).toLocaleDateString('en-US', {
+              {new Date(event.date).toLocaleDateString('en-GB', {
                 weekday: 'long',
                 year: 'numeric',
                 month: 'long',
@@ -330,7 +330,7 @@ export function ComplianceTimeline() {
           <span className="material-symbols-outlined">chevron_left</span>
         </button>
         <h3 className="text-lg font-medium text-foreground">
-          {currentDate.toLocaleDateString('en-US', {
+          {currentDate.toLocaleDateString('en-GB', {
             month: 'long',
             year: 'numeric',
             timeZone: timezone,
@@ -399,7 +399,7 @@ export function ComplianceTimeline() {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground truncate">{event.title}</p>
                     <p className="text-xs text-muted-foreground">
-                      {new Date(event.date).toLocaleDateString('en-US', {
+                      {new Date(event.date).toLocaleDateString('en-GB', {
                         month: 'short',
                         day: 'numeric',
                         timeZone: timezone,

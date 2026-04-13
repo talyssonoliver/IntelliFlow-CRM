@@ -168,7 +168,7 @@ function HistoryChart({ scores }: Readonly<HistoryChartProps>) {
             className="fill-muted-foreground text-[7px]"
             textAnchor="middle"
           >
-            {new Date(p.date).toLocaleDateString('en-US', { month: 'short', timeZone: timezone })}
+            {new Date(p.date).toLocaleDateString('en-GB', { month: 'short', timeZone: timezone })}
           </text>
         ))}
       </svg>
@@ -290,7 +290,7 @@ export function ComplianceDetailPanel({
                       <div>
                         <p className="text-muted-foreground">Next Audit</p>
                         <p className="font-medium text-foreground">
-                          {new Date(detail.nextAuditDate).toLocaleDateString('en-US', {
+                          {new Date(detail.nextAuditDate).toLocaleDateString('en-GB', {
                             month: 'short',
                             day: 'numeric',
                             year: 'numeric',
@@ -303,7 +303,7 @@ export function ComplianceDetailPanel({
                       <div>
                         <p className="text-muted-foreground">Cert. Expiry</p>
                         <p className="font-medium text-foreground">
-                          {new Date(detail.certificationExpiry).toLocaleDateString('en-US', {
+                          {new Date(detail.certificationExpiry).toLocaleDateString('en-GB', {
                             month: 'short',
                             day: 'numeric',
                             year: 'numeric',
@@ -378,7 +378,7 @@ export function ComplianceDetailPanel({
                                 )}
                                 <p className="text-xs text-muted-foreground mt-1">
                                   Last assessed:{' '}
-                                  {new Date(control.lastAssessed).toLocaleDateString('en-US', {
+                                  {new Date(control.lastAssessed).toLocaleDateString('en-GB', {
                                     month: 'short',
                                     day: 'numeric',
                                     year: 'numeric',
@@ -409,7 +409,7 @@ export function ComplianceDetailPanel({
                               className="flex items-center justify-between py-2 border-b border-border last:border-0"
                             >
                               <span className="text-sm text-muted-foreground">
-                                {new Date(score.date).toLocaleDateString('en-US', {
+                                {new Date(score.date).toLocaleDateString('en-GB', {
                                   month: 'long',
                                   year: 'numeric',
                                   timeZone: timezone,
@@ -439,7 +439,7 @@ export function ComplianceDetailPanel({
                           <div className="pb-4">
                             <p className="text-sm font-medium text-foreground">{change.action}</p>
                             <p className="text-xs text-muted-foreground mt-1">
-                              {new Date(change.date).toLocaleDateString('en-US', {
+                              {new Date(change.date).toLocaleDateString('en-GB', {
                                 month: 'short',
                                 day: 'numeric',
                                 year: 'numeric',

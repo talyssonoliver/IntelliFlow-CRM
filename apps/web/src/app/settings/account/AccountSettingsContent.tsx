@@ -53,7 +53,7 @@ export default function AccountSettingsContent() {
   const [location, setLocation] = useState('');
   const [website, setWebsite] = useState('');
   const [timezone, setTimezone] = useState('Europe/London');
-  const [language, setLanguage] = useState('en-US');
+  const [language, setLanguage] = useState('en-GB');
   const [dateFormat, setDateFormat] = useState('MM/DD/YYYY');
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [desktopNotifications, setDesktopNotifications] = useState(true);
@@ -82,7 +82,7 @@ export default function AccountSettingsContent() {
       setLocation(data.location ?? '');
       setWebsite(data.website ?? '');
       setTimezone(data.timezone ?? 'Europe/London');
-      setLanguage(data.locale ?? 'en-US');
+      setLanguage(data.locale ?? 'en-GB');
     }
   }, [profileQuery.data]);
 
@@ -150,7 +150,7 @@ export default function AccountSettingsContent() {
       setLocation(data.location ?? '');
       setWebsite(data.website ?? '');
       setTimezone(data.timezone ?? 'Europe/London');
-      setLanguage(data.locale ?? 'en-US');
+      setLanguage(data.locale ?? 'en-GB');
       setIsDirty(false);
     }
   }, [profileQuery.data]);
@@ -312,7 +312,7 @@ export default function AccountSettingsContent() {
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Member since</span>
                   <span className="text-sm font-medium text-foreground">
-                    {new Date(memberSince).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                    {new Date(memberSince).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}
                   </span>
                 </div>
               )}

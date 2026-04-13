@@ -37,6 +37,7 @@ function getEditingTaskDueDate(task: TaskListItem | null): string {
 }
 import { TaskForm, type TaskFormData } from '@/components/tasks/TaskForm';
 import { ReminderConfig } from '@/components/tasks/ReminderConfig';
+import { invalidateTasksCache } from '@/app/tasks/actions';
 
 // Custom hook for debounced value
 function useDebounce<T>(value: T, delay: number): T {
@@ -139,6 +140,7 @@ export default function TasksPage() {
     onSuccess: () => {
       utils.task.list.invalidate();
       utils.task.stats.invalidate();
+      invalidateTasksCache(undefined, true).catch(() => {});
       toast({ title: 'Task Created', description: 'The task has been created successfully.' });
       setShowCreateForm(false);
     },
@@ -151,6 +153,7 @@ export default function TasksPage() {
     onSuccess: () => {
       utils.task.list.invalidate();
       utils.task.stats.invalidate();
+      invalidateTasksCache().catch(() => {});
       toast({ title: 'Task Updated', description: 'The task has been updated successfully.' });
       setEditingTask(null);
     },
@@ -163,6 +166,8 @@ export default function TasksPage() {
     onSuccess: () => {
       utils.task.list.invalidate();
       utils.task.stats.invalidate();
+      // task.complete fires task_completed to activity:feed (Team M4 cross-entity)
+      invalidateTasksCache(undefined, true).catch(() => {});
       toast({ title: 'Task Completed', description: 'The task has been marked as complete.' });
     },
     onError: (err) => {
@@ -174,6 +179,7 @@ export default function TasksPage() {
     onSuccess: () => {
       utils.task.list.invalidate();
       utils.task.stats.invalidate();
+      invalidateTasksCache().catch(() => {});
       toast({ title: 'Task Deleted', description: 'The task has been deleted.' });
     },
     onError: (err) => {
@@ -185,6 +191,7 @@ export default function TasksPage() {
     onSuccess: () => {
       utils.task.list.invalidate();
       utils.task.stats.invalidate();
+      invalidateTasksCache().catch(() => {});
       toast({ title: 'Task Archived', description: 'The task has been archived.' });
     },
     onError: (err) => {

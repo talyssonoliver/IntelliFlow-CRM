@@ -68,7 +68,9 @@ const recordTypes = [
     title: 'New Task',
     description: 'Create a to-do item to track work and follow-ups.',
     icon: 'check_circle',
-    href: '/tasks/new',
+    // /tasks/new does not exist — the tasks list page opens the create sheet
+    // inline. Linking there is the closest equivalent without restructuring.
+    href: '/tasks',
     bgColor: 'bg-emerald-50 dark:bg-emerald-900/20',
     iconColor: 'text-emerald-600 dark:text-emerald-400',
     hoverBorder: 'hover:border-emerald-400/50',
@@ -122,10 +124,10 @@ const otherActions = [
   },
   {
     id: 'meeting',
-    title: 'Schedule Meeting',
-    description: 'Set up a calendar event',
+    title: 'New Appointment',
+    description: 'Schedule a meeting, call, or consultation',
     icon: 'event',
-    href: '/calendar/new',
+    href: '/appointments/new',
     bgColor: 'bg-purple-50 dark:bg-purple-900/20',
     iconColor: 'text-purple-600 dark:text-purple-400',
   },

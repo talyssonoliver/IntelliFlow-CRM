@@ -1,9 +1,9 @@
 'use client';
 
 /**
- * Appointment Detail Page — tRPC integration wrapper (PG-139)
+ * Appointment Detail Page
  *
- * Route: /calendar/[id]
+ * Route: /appointments/[id]
  */
 
 import { useParams, useRouter } from 'next/navigation';
@@ -15,6 +15,7 @@ import type { AppointmentDetailData } from '@/components/appointments/types';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { api } from '@/lib/api';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
+import { revalidateCalendar } from '@/app/calendar/actions';
 import {
   getTypeConfig,
   formatTimeRange,
@@ -22,7 +23,7 @@ import {
 } from '@/lib/appointments/appointment-utils';
 
 export default function AppointmentDetailPage() {
-  const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
+  const { isLoading: authLoading, isAuthenticated, user } = useRequireAuth();
   const { timezone } = useTimezoneContext();
   const params = useParams();
   const router = useRouter();
@@ -30,17 +31,16 @@ export default function AppointmentDetailPage() {
 
   const utils = api.useUtils();
 
-  // tRPC queries — using typed client directly
   const { data: appointmentData, isLoading } = api.appointments.getById.useQuery({
     id: appointmentId,
   });
 
-  // Mutations with cache invalidation
   const invalidateAll = useCallback(() => {
     utils.appointments.getById.invalidate({ id: appointmentId });
     utils.appointments.list.invalidate();
     utils.appointments.stats.invalidate();
-  }, [utils, appointmentId]);
+    if (user?.id) revalidateCalendar(user.id).catch(() => {});
+  }, [utils, appointmentId, user]);
 
   const confirmMutation = api.appointments.confirm.useMutation({ onSuccess: invalidateAll });
   const completeMutation = api.appointments.complete.useMutation({ onSuccess: invalidateAll });
@@ -122,7 +122,6 @@ export default function AppointmentDetailPage() {
 
   const detailData = useMemo((): AppointmentDetailData | null => {
     if (!appointmentData) return null;
-    // tRPC returns properly typed data — map dates from serialized strings
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const d = appointmentData as any;
     return {
@@ -142,7 +141,7 @@ export default function AppointmentDetailPage() {
     }
 
     const appointmentTypeLabel = getTypeConfig(detailData.appointmentType).label;
-    const dateLabel = detailData.startTime.toLocaleDateString('en-US', {
+    const dateLabel = detailData.startTime.toLocaleDateString('en-GB', {
       weekday: 'long',
       month: 'short',
       day: 'numeric',
@@ -157,23 +156,23 @@ export default function AppointmentDetailPage() {
     <PageHeader
       breadcrumbs={[
         { label: 'Dashboard', href: '/dashboard' },
-        { label: 'Calendar', href: '/calendar' },
+        { label: 'Appointments', href: '/appointments' },
         { label: 'Appointment Detail' },
       ]}
       title={detailData?.title ?? 'Appointment Detail'}
       description={headerDescription}
       actions={[
         {
-          label: 'Back to Calendar',
+          label: 'Back to Appointments',
           icon: 'arrow_back',
           variant: 'secondary',
-          href: '/calendar',
+          href: '/appointments',
         },
         {
           label: 'New Appointment',
           icon: 'add',
           variant: 'primary',
-          href: '/calendar/new',
+          href: '/appointments/new',
         },
       ]}
     />
@@ -217,10 +216,10 @@ export default function AppointmentDetailPage() {
           </span>
           <p className="text-muted-foreground">Appointment not found</p>
           <button
-            onClick={() => router.push('/calendar')}
+            onClick={() => router.push('/appointments')}
             className="mt-4 text-primary hover:underline text-sm font-medium"
           >
-            Back to Calendar
+            Back to Appointments
           </button>
         </Card>
       </div>

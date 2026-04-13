@@ -21,6 +21,7 @@ import { api } from '@/lib/api';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import { invalidateLeadsCache } from './actions';
+import { revalidateLeadCaches, revalidateLeadConversionCaches } from '../actions';
 
 /**
  * Lead List Client Island - IFC-014: PHASE-002 Next.js 16.0.10 App Router UI
@@ -99,7 +100,7 @@ function formatDate(date: Date | string, timezone: string = 'Europe/London'): st
   if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
   if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
 
-  return d.toLocaleDateString('en-US', {
+  return d.toLocaleDateString('en-GB', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -355,7 +356,7 @@ export default function LeadsPageClient({ initialData: serverData }: LeadsPageCl
   const pageSize = 10;
 
   // Require authentication - redirects to login if not authenticated
-  const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
+  const { isLoading: authLoading, isAuthenticated, user } = useRequireAuth();
 
   // Debounce search for 300ms to avoid excessive API calls
   const debouncedSearch = useDebounce(searchQuery, 300);
@@ -424,6 +425,7 @@ export default function LeadsPageClient({ initialData: serverData }: LeadsPageCl
       utils.lead.list.invalidate();
       utils.lead.stats.invalidate();
       invalidateLeadsCache();
+      if (user?.id) revalidateLeadConversionCaches(user.id).catch(() => {});
     },
   });
   const bulkUpdateStatusMutation = api.lead.bulkUpdateStatus.useMutation({
@@ -431,6 +433,7 @@ export default function LeadsPageClient({ initialData: serverData }: LeadsPageCl
       utils.lead.list.invalidate();
       utils.lead.stats.invalidate();
       invalidateLeadsCache();
+      if (user?.id) revalidateLeadCaches(user.id).catch(() => {});
     },
   });
   const bulkArchiveMutation = api.lead.bulkArchive.useMutation({
@@ -438,6 +441,7 @@ export default function LeadsPageClient({ initialData: serverData }: LeadsPageCl
       utils.lead.list.invalidate();
       utils.lead.stats.invalidate();
       invalidateLeadsCache();
+      if (user?.id) revalidateLeadCaches(user.id).catch(() => {});
     },
   });
   const bulkDeleteMutation = api.lead.bulkDelete.useMutation({
@@ -445,6 +449,7 @@ export default function LeadsPageClient({ initialData: serverData }: LeadsPageCl
       utils.lead.list.invalidate();
       utils.lead.stats.invalidate();
       invalidateLeadsCache();
+      if (user?.id) revalidateLeadCaches(user.id).catch(() => {});
     },
   });
 
@@ -454,6 +459,7 @@ export default function LeadsPageClient({ initialData: serverData }: LeadsPageCl
       utils.lead.list.invalidate();
       utils.lead.stats.invalidate();
       invalidateLeadsCache();
+      if (user?.id) revalidateLeadCaches(user.id).catch(() => {});
       toast({
         title: 'Lead Deleted',
         description: 'The lead has been successfully deleted.',
@@ -473,6 +479,7 @@ export default function LeadsPageClient({ initialData: serverData }: LeadsPageCl
       utils.lead.list.invalidate();
       utils.lead.stats.invalidate();
       invalidateLeadsCache();
+      if (user?.id) revalidateLeadCaches(user.id).catch(() => {});
       toast({
         title: 'Lead Qualified',
         description: 'The lead has been qualified successfully.',
@@ -492,6 +499,7 @@ export default function LeadsPageClient({ initialData: serverData }: LeadsPageCl
       utils.lead.list.invalidate();
       utils.lead.stats.invalidate();
       invalidateLeadsCache();
+      if (user?.id) revalidateLeadConversionCaches(user.id).catch(() => {});
       toast({
         title: 'Lead Converted',
         description: 'The lead has been converted to a contact.',
@@ -511,6 +519,7 @@ export default function LeadsPageClient({ initialData: serverData }: LeadsPageCl
       utils.lead.list.invalidate();
       utils.lead.stats.invalidate();
       invalidateLeadsCache();
+      if (user?.id) revalidateLeadCaches(user.id).catch(() => {});
       toast({
         title: 'Lead Scored',
         description: `New score: ${result.score} (confidence: ${Math.round(result.confidence * 100)}%)`,

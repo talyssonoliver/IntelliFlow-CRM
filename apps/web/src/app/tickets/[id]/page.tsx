@@ -24,6 +24,7 @@ import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { normalizeAvatarSource } from '@/lib/shared/avatar-utils';
 import { mapTicketToDetailData } from '@/lib/tickets/ticket-detail-mapper';
+import { invalidateTicketsCache } from '@/app/tickets/actions';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const CUID_RE = /^c[a-z0-9]{8,}$/;
@@ -56,6 +57,7 @@ export default function TicketDetailPage() {
       utils.ticket.getById.invalidate({ id: ticketId });
       utils.ticket.list.invalidate();
       utils.ticket.stats.invalidate();
+      invalidateTicketsCache().catch(() => {});
     },
     onError: (error) => {
       toast({ title: 'Update failed', description: error.message, variant: 'destructive' });
@@ -80,6 +82,7 @@ export default function TicketDetailPage() {
     onSuccess: () => {
       utils.ticket.list.invalidate();
       utils.ticket.stats.invalidate();
+      invalidateTicketsCache().catch(() => {});
       toast({ title: 'Ticket Deleted', description: 'The ticket has been permanently deleted.' });
       router.push('/tickets');
     },
@@ -93,6 +96,7 @@ export default function TicketDetailPage() {
       utils.ticket.getById.invalidate({ id: ticketId });
       utils.ticket.list.invalidate();
       utils.ticket.stats.invalidate();
+      invalidateTicketsCache().catch(() => {});
       toast({ title: 'Ticket Archived', description: 'The ticket has been archived.' });
       router.push('/tickets');
     },

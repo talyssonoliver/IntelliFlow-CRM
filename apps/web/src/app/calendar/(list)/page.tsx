@@ -1,26 +1,20 @@
 'use client';
 
 /**
- * Calendar/Appointments List Page — tRPC integration wrapper (PG-139)
+ * Calendar Page — unified visual calendar grid (month/week/day).
  *
- * Thin wrapper that fetches data via tRPC and delegates rendering
- * to AppointmentList and AppointmentCalendar components.
- * Supports toggling between calendar and list view modes.
+ * Renders appointments + tasks-due side by side in the Schedule-X calendar.
+ * The list/table view lives at /appointments (separate page, separate sidebar).
  *
  * Route: /calendar
- *
- * @implements AC-01 (Monthly calendar view with CSS Grid)
- * @implements AC-09 (List view with sortable columns)
- * @implements AC-29 (Calendar/list view toggle)
  */
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { Skeleton } from '@intelliflow/ui';
 import { PageHeader } from '@/components/shared';
-import { AppointmentList, AppointmentCalendar } from '@/components/appointments';
+import { AppointmentCalendar } from '@/components/appointments';
 import type {
-  AppointmentStats,
   AppointmentListItem,
   AppointmentType,
   AppointmentStatus,
@@ -32,14 +26,6 @@ import { useAppointmentFilters } from '@/hooks/useAppointmentFilters';
 import { useCalendarVisibility } from '@/hooks/useCalendarVisibility';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { api } from '@/lib/api';
-
-const defaultStats: AppointmentStats = {
-  total: 0,
-  byStatus: {},
-  byType: {},
-  upcoming: 0,
-  overdue: 0,
-};
 
 /**
  * Compute the visible date range for a calendar view.
@@ -53,15 +39,13 @@ function getCalendarRange(
   const from = new Date(date);
   const to = new Date(date);
   if (view === 'month') {
-    // First of month minus 7 days → last of month plus 7 days (covers grid overflow)
     from.setDate(1);
     from.setDate(from.getDate() - 7);
     from.setHours(0, 0, 0, 0);
-    to.setMonth(to.getMonth() + 1, 0); // last day of current month
+    to.setMonth(to.getMonth() + 1, 0);
     to.setDate(to.getDate() + 7);
     to.setHours(23, 59, 59, 999);
   } else if (view === 'week') {
-    // Start of ISO week (Sun) → end of week (Sat)
     const day = from.getDay();
     from.setDate(from.getDate() - day);
     from.setHours(0, 0, 0, 0);
@@ -77,19 +61,7 @@ function getCalendarRange(
 export default function CalendarPage() {
   const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
   const router = useRouter();
-  const {
-    filters,
-    queryParams,
-    setSearch,
-    setStatusFilter,
-    setTypeFilter,
-    setDateRange,
-    setCaseFilter,
-    setSort,
-    setPage,
-    setViewMode,
-    setCalendarView,
-  } = useAppointmentFilters();
+  const { filters, queryParams, setCalendarView } = useAppointmentFilters();
   const { isVisible: isCalendarVisible, setOnlyVisible } = useCalendarVisibility();
   const searchParams = useSearchParams();
 
@@ -103,63 +75,33 @@ export default function CalendarPage() {
       setOnlyVisible(ids);
     }
   }, [searchParams, setOnlyVisible]);
+
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const [showTaskCreate, setShowTaskCreate] = useState(false);
   const [taskCreateDefaultDate, setTaskCreateDefaultDate] = useState<string>('');
 
   /**
-   * When in calendar mode, expand the query range to cover the visible grid
-   * and raise the pagination limit so appointments in the current view actually
-   * reach the calendar. Without this, the default list query returns only the
-   * 20 oldest appointments (sort=startTime ASC, limit=20) — which almost never
-   * overlap with today's month.
+   * Expand the query range to cover the visible grid and raise the pagination
+   * limit so appointments in the current view actually reach the calendar.
+   * Without this, the default filter query returns only the 20 oldest
+   * appointments — which rarely overlap with the month being viewed.
    */
   const calendarQueryParams = useMemo(() => {
-    if (filters.viewMode !== 'calendar') return queryParams;
     const range = getCalendarRange(currentDate, filters.calendarView);
     return {
       ...queryParams,
       startTimeFrom: range.from.toISOString(),
       startTimeTo: range.to.toISOString(),
-      // Calendar mode: max allowed by listAppointmentsSchema. The narrow date
-      // window (visible grid) means 100 is enough for typical usage.
       limit: 100,
       page: 1,
     };
-  }, [queryParams, filters.viewMode, filters.calendarView, currentDate]);
+  }, [queryParams, filters.calendarView, currentDate]);
 
-  // tRPC queries — cast to simplified type to avoid TS2589 (excessively deep instantiation)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, isLoading } = api.appointments.list.useQuery(calendarQueryParams, {
     staleTime: 30_000,
-  }) as any as {
+  }) as unknown as {
     data: { appointments?: Record<string, unknown>[]; total?: number } | undefined;
     isLoading: boolean;
-  };
-
-  const { data: rawStats } = api.appointments.stats.useQuery(undefined, {
-    staleTime: 5 * 60_000,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-  });
-
-  // Task stats — merged into KPI cards so the Calendar page shows combined
-  // counts (appointments + tasks), matching what users see in the calendar grid.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: rawTaskStats } = (api as any).task.stats.useQuery(undefined, {
-    staleTime: 5 * 60_000,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-  }) as {
-    data:
-      | {
-          total?: number;
-          byStatus?: Record<string, number>;
-          byPriority?: Record<string, number>;
-          overdue?: number;
-          dueToday?: number;
-        }
-      | undefined;
   };
 
   const appointments: AppointmentListItem[] = useMemo(() => {
@@ -188,35 +130,6 @@ export default function CalendarPage() {
     });
   }, [data]);
 
-  const total = data?.total ?? 0;
-
-  const stats: AppointmentStats = useMemo(() => {
-    const apptStats = (rawStats as AppointmentStats | undefined) ?? defaultStats;
-    const taskStats = rawTaskStats ?? {};
-    const taskByStatus = taskStats.byStatus ?? {};
-    const totalTasks = taskStats.total ?? 0;
-    const completedTasks = taskByStatus.COMPLETED ?? 0;
-    const cancelledTasks = taskByStatus.CANCELLED ?? 0;
-    const inProgressTasks = taskByStatus.IN_PROGRESS ?? 0;
-    const overdueTasks = taskStats.overdue ?? 0;
-    // "Upcoming tasks" = active tasks that aren't overdue.
-    const upcomingTasks = Math.max(
-      0,
-      totalTasks - completedTasks - cancelledTasks - overdueTasks
-    );
-
-    return {
-      ...apptStats,
-      upcoming: apptStats.upcoming + upcomingTasks,
-      overdue: apptStats.overdue + overdueTasks,
-      byStatus: {
-        ...apptStats.byStatus,
-        CONFIRMED: (apptStats.byStatus?.CONFIRMED ?? 0) + inProgressTasks,
-        COMPLETED: (apptStats.byStatus?.COMPLETED ?? 0) + completedTasks,
-      },
-    };
-  }, [rawStats, rawTaskStats]);
-
   const calendarAppointments = useMemo((): CalendarAppointment[] => {
     return appointments
       .filter((a) => {
@@ -241,14 +154,14 @@ export default function CalendarPage() {
       }));
   }, [appointments, isCalendarVisible]);
 
-  const handleRowClick = useCallback(
+  const handleAppointmentClick = useCallback(
     (id: string) => {
-      router.push(`/calendar/${id}`);
+      router.push(`/appointments/${id}`);
     },
     [router]
   );
 
-  // Task query
+  // Task query — calendar shows tasks-due alongside appointments
   const { data: taskData } = api.task.list.useQuery(
     {},
     { enabled: isAuthenticated && !authLoading, staleTime: 30_000 }
@@ -260,7 +173,6 @@ export default function CalendarPage() {
     return taskList
       .filter((t) => t.dueDate != null)
       .filter((t) => {
-        // calendarId may be present on extended task models
         const cid = (t as { calendarId?: string | null }).calendarId;
         if (cid) {
           return isCalendarVisible(cid);
@@ -276,7 +188,6 @@ export default function CalendarPage() {
       }));
   }, [taskData, isCalendarVisible]);
 
-  // Task create mutation
   const taskCreateMutation = api.task.create.useMutation({
     onSuccess: () => {
       setShowTaskCreate(false);
@@ -296,7 +207,7 @@ export default function CalendarPage() {
         start: startTime.toISOString(),
         end: endTime.toISOString(),
       });
-      router.push(`/calendar/new?${params.toString()}`);
+      router.push(`/appointments/new?${params.toString()}`);
     },
     [router]
   );
@@ -339,12 +250,7 @@ export default function CalendarPage() {
     return (
       <div className="flex flex-col gap-6">
         <Skeleton className="h-20 w-full rounded-xl" />
-        <div className="grid grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-28 rounded-xl" />
-          ))}
-        </div>
-        <Skeleton className="h-64 w-full rounded-xl" />
+        <Skeleton className="h-96 w-full rounded-xl" />
       </div>
     );
   }
@@ -354,75 +260,38 @@ export default function CalendarPage() {
       <PageHeader
         breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Calendar' }]}
         title="Calendar"
-        description="Manage appointments and tasks in one view"
+        description="Visualise appointments and tasks due in a unified calendar grid"
         actions={[
           {
-            label: filters.viewMode === 'calendar' ? 'List View' : 'Calendar View',
-            icon: filters.viewMode === 'calendar' ? 'view_list' : 'calendar_month',
+            label: 'Appointments List',
+            icon: 'view_list',
             variant: 'secondary',
-            onClick: () => setViewMode(filters.viewMode === 'calendar' ? 'list' : 'calendar'),
+            href: '/appointments',
           },
           {
             label: 'New Appointment',
             icon: 'add',
             variant: 'primary',
-            href: '/calendar/new',
+            href: '/appointments/new',
           },
         ]}
       />
 
-      {filters.viewMode === 'calendar' ? (
-        <AppointmentCalendar
-          appointments={calendarAppointments}
-          tasks={calendarTasks}
-          isLoading={isLoading}
-          view={filters.calendarView}
-          currentDate={currentDate}
-          onViewChange={setCalendarView}
-          onDateChange={setCurrentDate}
-          onAppointmentClick={handleRowClick}
-          onTaskClick={handleTaskClick}
-          onCreateWithSlot={handleCreateWithSlot}
-          onCreateWithDate={handleCreateWithDate}
-          onMoreClick={handleMoreClick}
-        />
-      ) : (
-        <AppointmentList
-          appointments={appointments}
-          total={total}
-          isLoading={isLoading}
-          stats={stats}
-          tasks={calendarTasks}
-          onTaskClick={handleTaskClick}
-          onRowClick={handleRowClick}
-          pagination={{
-            page: filters.page,
-            limit: filters.limit,
-            onPageChange: setPage,
-          }}
-          filters={filters}
-          onFilterChange={(partial) => {
-            if (partial.search !== undefined) setSearch(partial.search);
-            if (partial.status !== undefined) setStatusFilter(partial.status);
-            if (partial.appointmentType !== undefined) setTypeFilter(partial.appointmentType);
-            // Use `in` operator so we can distinguish "field not touched" from
-            // "field explicitly cleared to undefined". When only one date is
-            // changed, keep the other from current state instead of wiping it.
-            const fromTouched = 'startTimeFrom' in partial;
-            const toTouched = 'startTimeTo' in partial;
-            if (fromTouched || toTouched) {
-              setDateRange(
-                fromTouched ? partial.startTimeFrom : filters.startTimeFrom,
-                toTouched ? partial.startTimeTo : filters.startTimeTo
-              );
-            }
-            if (partial.caseId !== undefined) setCaseFilter(partial.caseId);
-            if (partial.sortBy !== undefined) setSort(partial.sortBy, partial.sortOrder);
-          }}
-        />
-      )}
+      <AppointmentCalendar
+        appointments={calendarAppointments}
+        tasks={calendarTasks}
+        isLoading={isLoading}
+        view={filters.calendarView}
+        currentDate={currentDate}
+        onViewChange={setCalendarView}
+        onDateChange={setCurrentDate}
+        onAppointmentClick={handleAppointmentClick}
+        onTaskClick={handleTaskClick}
+        onCreateWithSlot={handleCreateWithSlot}
+        onCreateWithDate={handleCreateWithDate}
+        onMoreClick={handleMoreClick}
+      />
 
-      {/* Task Create Form (from month-cell click) */}
       <TaskForm
         open={showTaskCreate}
         onClose={() => setShowTaskCreate(false)}

@@ -13,6 +13,7 @@ import { api } from '@/lib/api';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { useAccountFilterOptions } from '@/hooks/use-dynamic-filters';
 import { invalidateAccountsCache } from './actions';
+import { revalidateAccountCaches } from '../actions';
 
 /**
  * Accounts List Client Island
@@ -76,9 +77,9 @@ function getSortParams(sortOrder: string): {
 // =============================================================================
 
 function formatCompactValue(value: number): string {
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat('en-GB', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'GBP',
     notation: 'compact',
     maximumFractionDigits: 1,
   }).format(value);
@@ -199,7 +200,7 @@ export default function AccountsPageClient({
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 20;
 
-  const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
+  const { isLoading: authLoading, isAuthenticated, user } = useRequireAuth();
   const utils = api.useUtils();
 
   const deleteMutation = api.account.delete.useMutation({
@@ -207,6 +208,7 @@ export default function AccountsPageClient({
       utils.account.list.invalidate();
       utils.account.stats.invalidate();
       invalidateAccountsCache();
+      if (user?.id) revalidateAccountCaches(user.id).catch(() => {});
     },
   });
 
@@ -308,7 +310,7 @@ export default function AccountsPageClient({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Total Accounts"
-          value={stats ? stats.total.toLocaleString('en-US') : '\u2014'}
+          value={stats ? stats.total.toLocaleString('en-GB') : '\u2014'}
           isLoading={statsLoading}
         />
         <StatCard
@@ -324,7 +326,7 @@ export default function AccountsPageClient({
         />
         <StatCard
           title="With Opportunities"
-          value={withOpportunities == null ? '\u2014' : withOpportunities.toLocaleString('en-US')}
+          value={withOpportunities == null ? '\u2014' : withOpportunities.toLocaleString('en-GB')}
           detail={oppShare > 0 ? `${oppShare}% share` : undefined}
           isLoading={statsLoading}
         />

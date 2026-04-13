@@ -39,6 +39,7 @@ import {
 import { api } from '@/lib/api';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
+import { revalidateLeadCaches, revalidateLeadConversionCaches } from '../actions';
 import { EntityActionSheet } from '@/components/shared/entity-action-sheet';
 import { MoreActionsButton } from '@/components/shared/more-actions-button';
 import { PinButton } from '@/components/home/PinButton';
@@ -462,7 +463,7 @@ function formatRelativeTime(dateString: string, timezone: string = 'Europe/Londo
   if (diffHours < 24) return `${diffHours}h ago`;
   if (diffDays === 1) return 'Yesterday';
   if (diffDays < 7) return `${diffDays} days ago`;
-  return new Date(dateString).toLocaleDateString('en-US', {
+  return new Date(dateString).toLocaleDateString('en-GB', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -511,7 +512,7 @@ function getOwnerTitle(role: string | undefined): string {
 }
 
 function formatDate(dateString: string, timezone: string): string {
-  return new Date(dateString).toLocaleDateString('en-US', {
+  return new Date(dateString).toLocaleDateString('en-GB', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -2655,6 +2656,7 @@ export default function Lead360Page() {
   // Mutations
   const deleteMutation = api.lead.delete.useMutation({
     onSuccess: () => {
+      if (user?.id) revalidateLeadCaches(user.id).catch(() => {});
       toast({ title: 'Lead deleted', description: 'The lead has been permanently deleted.' });
       router.push('/leads');
     },
@@ -2665,6 +2667,7 @@ export default function Lead360Page() {
 
   const archiveMutation = api.lead.update.useMutation({
     onSuccess: () => {
+      if (user?.id) revalidateLeadCaches(user.id).catch(() => {});
       toast({ title: 'Lead archived', description: 'The lead has been moved to Lost status.' });
       utils.lead.getById.invalidate({ id: leadId });
     },
@@ -2675,6 +2678,7 @@ export default function Lead360Page() {
 
   const convertMutation = api.lead.convert.useMutation({
     onSuccess: (data) => {
+      if (user?.id) revalidateLeadConversionCaches(user.id).catch(() => {});
       setConvertConfirmOpen(false);
       toast({ title: 'Lead converted', description: 'Lead has been converted to a contact.' });
       router.push(`/contacts/${data.contactId}`);
@@ -2690,6 +2694,7 @@ export default function Lead360Page() {
 
   const scoreWithAIMutation = api.lead.scoreWithAI.useMutation({
     onSuccess: () => {
+      if (user?.id) revalidateLeadCaches(user.id).catch(() => {});
       toast({ title: 'AI analysis complete', description: 'Lead has been scored by AI.' });
       utils.lead.getById.invalidate({ id: leadId });
     },

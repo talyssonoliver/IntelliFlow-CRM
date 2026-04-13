@@ -21,6 +21,7 @@ import {
 import { api } from '@/lib/api';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
+import { revalidateContactCaches } from '../actions';
 import { EntityActionSheet } from '@/components/shared/entity-action-sheet';
 import { MoreActionsButton } from '@/components/shared/more-actions-button';
 import { PinButton } from '@/components/home/PinButton';
@@ -662,7 +663,7 @@ function ContactAiSummaryCard({
 // ─── Module-level pure helpers (extracted to reduce cognitive complexity of Contact360Page) ───
 
 function formatContactDate(dateString: string, timezone: string): string {
-  return new Date(dateString).toLocaleDateString('en-US', {
+  return new Date(dateString).toLocaleDateString('en-GB', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -1311,6 +1312,7 @@ export default function Contact360Page() {
   const ensureInsightReviewMutation = api.home.ensureInsightReview.useMutation();
   const logActivityMutation = api.contact.logActivity.useMutation({
     onSuccess: () => {
+      if (user?.id) revalidateContactCaches(user.id).catch(() => {});
       toast({ title: 'Activity logged', description: 'Activity has been recorded.' });
       utils.contact.getById.invalidate({ id: contactId });
       utils.activityFeed.getUnifiedFeed.invalidate();
@@ -1332,6 +1334,7 @@ export default function Contact360Page() {
   });
   const scoreWithAIMutation = api.contact.scoreWithAI.useMutation({
     onSuccess: (() => {
+      if (user?.id) revalidateContactCaches(user.id).catch(() => {});
       toast({ title: 'AI analysis complete', description: 'Contact has been analyzed by AI.' });
       utils.contact.getById.invalidate({ id: contactId });
     }) as () => void,

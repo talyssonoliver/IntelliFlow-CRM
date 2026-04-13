@@ -108,7 +108,7 @@ export const jobListings: Record<string, JobListing> = {
       '25+ days PTO',
       'Direct access to frontier AI models',
     ],
-    salary: { min: 100000, max: 150000, currency: 'USD' },
+    salary: { min: 100000, max: 150000, currency: 'GBP' },
     postedAt: '2025-12-10',
   },
   'product-designer': {
@@ -196,7 +196,7 @@ export const jobListings: Record<string, JobListing> = {
       '25+ days PTO',
       'Co-working space membership',
     ],
-    salary: { min: 85000, max: 120000, currency: 'USD' },
+    salary: { min: 85000, max: 120000, currency: 'GBP' },
     postedAt: '2025-12-12',
   },
   'security-engineer': {

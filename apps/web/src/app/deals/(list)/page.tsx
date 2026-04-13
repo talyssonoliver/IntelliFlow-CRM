@@ -19,6 +19,7 @@ import { OPPORTUNITY_STAGES, type OpportunityStage } from '@intelliflow/domain';
 import { PageHeader } from '@/components/shared';
 import { trpc } from '@/lib/trpc';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
+import { revalidateDealCaches } from '@/app/deals/actions';
 
 import {
   PipelineBoard,
@@ -224,7 +225,7 @@ function DealsPageContent() {
   const [filters, setFilters] = useState<DealFiltersValue>({});
 
   // Require authentication
-  const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
+  const { isLoading: authLoading, isAuthenticated, user } = useRequireAuth();
 
   // Fetch opportunities from API (only for pipeline view — list view fetches its own data)
   const {
@@ -272,6 +273,7 @@ function DealsPageContent() {
   // Mutation for stage change (IFC-064: uses moveStage endpoint)
   const moveStage = trpc.opportunity.moveStage.useMutation({
     onSuccess: () => {
+      revalidateDealCaches(user?.id ?? null).catch(() => {});
       setPendingDealId(null);
       refetch();
       toast({ title: 'Deal stage updated successfully' });

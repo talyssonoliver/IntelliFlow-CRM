@@ -33,14 +33,15 @@ export default function EditContactPage() {
 
   const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
 
-  const {
-    data: record,
-    isLoading,
-    error,
-  } = api.contact.getById.useQuery(
+  const query = api.contact.getById.useQuery(
     { id: contactId },
     { enabled: isAuthenticated && !authLoading && !!contactId }
   );
+  const isLoading = query.isLoading;
+  const error = query.error;
+  // Narrow tRPC's deeply-generic output to a flat record type at the boundary
+  // to avoid TS2589 "excessively deep" when consumed in effects/JSX below.
+  const record = query.data as unknown as Record<string, unknown> | undefined;
 
   const [formData, setFormData] = useState<Partial<ContactFormData> | null>(null);
   const [seeded, setSeeded] = useState(false);
@@ -54,30 +55,32 @@ export default function EditContactPage() {
   // Seed form from fetched contact data
   useEffect(() => {
     if (record && !seeded) {
+      const r = record as unknown as Record<string, unknown>;
+      const phoneRaw = r.phone;
       const phone =
-        typeof record.phone === 'string'
-          ? record.phone
-          : ((record.phone as { value?: string } | null)?.value ?? '');
+        typeof phoneRaw === 'string'
+          ? phoneRaw
+          : ((phoneRaw as { value?: string } | null)?.value ?? '');
+      const tagsRaw = r.tags;
 
-      setFormData({
-        firstName: record.firstName ?? '',
-        lastName: record.lastName ?? '',
-        email: record.email ?? '',
+      const next: Partial<ContactFormData> = {
+        firstName: (r.firstName as string | null) ?? '',
+        lastName: (r.lastName as string | null) ?? '',
+        email: (r.email as string | null) ?? '',
         phone,
-        streetAddress: ((record as Record<string, unknown>).streetAddress as string) ?? '',
-        city: ((record as Record<string, unknown>).city as string) ?? '',
-        zipCode: ((record as Record<string, unknown>).zipCode as string) ?? '',
-        company: ((record as Record<string, unknown>).company as string) ?? '',
-        jobTitle: record.title ?? '',
-        department: record.department ?? '',
-        linkedIn: ((record as Record<string, unknown>).linkedInUrl as string) ?? '',
-        contactType: ((record as Record<string, unknown>).contactType as string) ?? '',
-        status: (record.status as ContactFormData['status']) ?? 'ACTIVE',
-        tags: Array.isArray((record as Record<string, unknown>).tags)
-          ? ((record as Record<string, unknown>).tags as string[]).join(', ')
-          : '',
-        notes: ((record as Record<string, unknown>).contactNotes as string) ?? '',
-      });
+        streetAddress: (r.streetAddress as string | null) ?? '',
+        city: (r.city as string | null) ?? '',
+        zipCode: (r.zipCode as string | null) ?? '',
+        company: (r.company as string | null) ?? '',
+        jobTitle: (r.title as string | null) ?? '',
+        department: (r.department as string | null) ?? '',
+        linkedIn: (r.linkedInUrl as string | null) ?? '',
+        contactType: (r.contactType as string | null) ?? '',
+        status: (r.status as ContactFormData['status']) ?? 'ACTIVE',
+        tags: Array.isArray(tagsRaw) ? (tagsRaw as string[]).join(', ') : '',
+        notes: (r.contactNotes as string | null) ?? '',
+      };
+      setFormData(next);
       setSeeded(true);
     }
   }, [record, seeded]);
@@ -189,7 +192,10 @@ export default function EditContactPage() {
     );
   }
 
-  const contactName = [record.firstName, record.lastName].filter(Boolean).join(' ') || 'Contact';
+  const contactName =
+    [record.firstName as string | null, record.lastName as string | null]
+      .filter(Boolean)
+      .join(' ') || 'Contact';
 
   return (
     <ToastProvider>
@@ -235,7 +241,7 @@ export default function EditContactPage() {
             </span>
             <div className="flex items-center gap-2 px-3 h-10 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 max-w-sm">
               <span className="material-symbols-outlined !text-[16px] text-slate-400">lock</span>
-              <span className="truncate">{record.email}</span>
+              <span className="truncate">{record.email as string}</span>
             </div>
           </div>
         </Card>

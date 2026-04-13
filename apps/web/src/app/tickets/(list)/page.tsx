@@ -21,6 +21,7 @@ import type { BulkActionType, TicketStats, TicketFilterOptions } from '@/compone
 import { useTicketFilters } from '@/hooks/useTicketFilters';
 import { api } from '@/lib/api';
 import { mapTicketListItems } from '@/lib/tickets/ticket-detail-mapper';
+import { invalidateTicketsCache } from '@/app/tickets/actions';
 
 const defaultStats: TicketStats = { open: 0, inProgress: 0, breached: 0, resolvedToday: 0 };
 const defaultFilterOptions: TicketFilterOptions = {
@@ -74,30 +75,35 @@ export default function TicketsPage() {
     onSuccess: () => {
       utils.ticket.list.invalidate();
       utils.ticket.stats.invalidate();
+      invalidateTicketsCache().catch(() => {});
     },
   });
   const bulkUpdateStatusMutation = api.ticket.bulkUpdateStatus.useMutation({
     onSuccess: () => {
       utils.ticket.list.invalidate();
       utils.ticket.stats.invalidate();
+      invalidateTicketsCache().catch(() => {});
     },
   });
   const bulkResolveMutation = api.ticket.bulkResolve.useMutation({
     onSuccess: () => {
       utils.ticket.list.invalidate();
       utils.ticket.stats.invalidate();
+      invalidateTicketsCache().catch(() => {});
     },
   });
   const bulkEscalateMutation = api.ticket.bulkEscalate.useMutation({
     onSuccess: () => {
       utils.ticket.list.invalidate();
       utils.ticket.stats.invalidate();
+      invalidateTicketsCache().catch(() => {});
     },
   });
   const bulkCloseMutation = api.ticket.bulkClose.useMutation({
     onSuccess: () => {
       utils.ticket.list.invalidate();
       utils.ticket.stats.invalidate();
+      invalidateTicketsCache().catch(() => {});
     },
   });
 

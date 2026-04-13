@@ -151,7 +151,7 @@ describe('AccountSettingsContent', () => {
       avatarUrl: null,
       role: 'ADMIN',
       timezone: 'America/New_York',
-      locale: 'en-US',
+      locale: 'en-GB',
       phone: null,
       company: null,
       department: null,

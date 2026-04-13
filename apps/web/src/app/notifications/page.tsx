@@ -17,6 +17,7 @@ import { trpc } from '@/lib/trpc';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { useDebounce } from '@/hooks/useDebounce';
 import { NotificationList, NotificationFilters } from '@/components/notifications';
+import { revalidateNotifications } from './actions';
 
 /** Map URL ?filter= and ?priority= values to filter state */
 function getInitialFilters(searchParams: URLSearchParams): {
@@ -55,7 +56,7 @@ export default function NotificationsPage() {
   const searchParams = useSearchParams();
   const initialFilters = getInitialFilters(searchParams);
 
-  useRequireAuth();
+  const { user } = useRequireAuth();
 
   // Filter state
   const [searchQuery, setSearchQuery] = useState('');
@@ -79,6 +80,9 @@ export default function NotificationsPage() {
     onSuccess: () => {
       utils.notifications.list.invalidate();
       utils.notifications.getUnreadCount.invalidate();
+      if (user?.id) {
+        revalidateNotifications(user.id);
+      }
     },
   });
 
@@ -86,6 +90,9 @@ export default function NotificationsPage() {
     onSuccess: () => {
       utils.notifications.list.invalidate();
       utils.notifications.getUnreadCount.invalidate();
+      if (user?.id) {
+        revalidateNotifications(user.id);
+      }
     },
   });
 

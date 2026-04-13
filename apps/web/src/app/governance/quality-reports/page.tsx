@@ -966,7 +966,7 @@ export default function QualityReportsPage() {
                     })()}
                   </span>
                   <span>
-                    {new Date(report.generatedAt).toLocaleDateString('en-US', {
+                    {new Date(report.generatedAt).toLocaleDateString('en-GB', {
                       month: 'short',
                       day: 'numeric',
                       year: 'numeric',

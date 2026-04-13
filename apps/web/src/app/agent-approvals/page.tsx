@@ -1357,7 +1357,7 @@ function AgentApprovalsContent() {
           </div>
           <div className="text-xs text-slate-500 dark:text-slate-400" suppressHydrationWarning>
             Last refresh:{' '}
-            {new Date().toLocaleTimeString('en-US', {
+            {new Date().toLocaleTimeString('en-GB', {
               hour: 'numeric',
               minute: '2-digit',
               timeZone: timezone,

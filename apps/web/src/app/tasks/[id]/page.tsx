@@ -9,6 +9,7 @@ import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { TaskDetail, type TaskDetailData } from '@/components/tasks/TaskDetail';
 import { TaskForm, type TaskFormData } from '@/components/tasks/TaskForm';
 import { ActivityFeed } from '@/components/shared/activity-feed';
+import { invalidateTasksCache } from '@/app/tasks/actions';
 
 function getEntityName(task: TaskDetailData): string {
   if (task.lead) return `${task.lead.firstName} ${task.lead.lastName}`;
@@ -73,6 +74,8 @@ export default function TaskDetailPage() {
     onSuccess: () => {
       utils.task.getById.invalidate({ id: params.id });
       utils.task.list.invalidate();
+      // task.complete fires task_completed to activity:feed (Team M4 cross-entity)
+      invalidateTasksCache(undefined, true).catch(() => {});
       toast({ title: 'Task Completed', description: 'The task has been marked as complete.' });
     },
     onError: (err) => {
@@ -84,6 +87,7 @@ export default function TaskDetailPage() {
     onSuccess: () => {
       utils.task.getById.invalidate({ id: params.id });
       utils.task.list.invalidate();
+      invalidateTasksCache().catch(() => {});
       toast({ title: 'Task Updated', description: 'The task has been updated successfully.' });
       setEditingTask(null);
     },
@@ -95,6 +99,7 @@ export default function TaskDetailPage() {
   const deleteMutation = api.task.delete.useMutation({
     onSuccess: () => {
       utils.task.list.invalidate();
+      invalidateTasksCache().catch(() => {});
       toast({ title: 'Task Deleted', description: 'The task has been deleted.' });
       router.push('/tasks');
     },
@@ -107,6 +112,7 @@ export default function TaskDetailPage() {
     onSuccess: () => {
       utils.task.getById.invalidate({ id: params.id });
       utils.task.list.invalidate();
+      invalidateTasksCache().catch(() => {});
       toast({ title: 'Task Started', description: 'The task is now in progress.' });
     },
     onError: (err) => {
@@ -119,6 +125,7 @@ export default function TaskDetailPage() {
       utils.task.getById.invalidate({ id: params.id });
       utils.task.list.invalidate();
       utils.task.stats.invalidate();
+      invalidateTasksCache().catch(() => {});
       toast({ title: 'Task Archived', description: 'The task has been archived.' });
       router.push('/tasks');
     },
@@ -132,6 +139,7 @@ export default function TaskDetailPage() {
       utils.task.getById.invalidate({ id: params.id });
       utils.task.list.invalidate();
       utils.task.stats.invalidate();
+      invalidateTasksCache().catch(() => {});
       toast({ title: 'Task Assigned', description: 'The task has been assigned to the entity.' });
     },
     onError: (err) => {
@@ -144,6 +152,7 @@ export default function TaskDetailPage() {
       utils.task.getById.invalidate({ id: params.id });
       utils.task.list.invalidate();
       utils.task.stats.invalidate();
+      invalidateTasksCache().catch(() => {});
       toast({ title: 'Task Rescheduled', description: 'The due date has been updated.' });
     },
     onError: (err) => {

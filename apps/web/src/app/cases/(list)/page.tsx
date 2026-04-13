@@ -92,6 +92,13 @@ export default function CasesPage() {
         description="Manage and track all legal service cases across your organization"
         actions={[
           {
+            label: 'Workflows',
+            icon: 'account_tree',
+            variant: 'secondary',
+            href: '/cases/case-workflows',
+            hideOnMobile: true,
+          },
+          {
             label: 'Export',
             icon: 'file_download',
             variant: 'secondary',

@@ -8,7 +8,6 @@
 
 import '@xyflow/react/dist/style.css';
 import type { Metadata } from 'next';
-import { PageHeader } from '@/components/shared/page-header';
 import { WorkflowBuilder } from '@/components/workflows/WorkflowBuilder';
 
 export const metadata: Metadata = {
@@ -17,19 +16,11 @@ export const metadata: Metadata = {
 };
 
 export default function CaseWorkflowsPage() {
+  // WorkflowBuilder owns its own PageHeader so it can switch
+  // breadcrumbs + actions between list and canvas views.
   return (
     <div className="flex flex-col h-full">
-      <PageHeader
-        breadcrumbs={[
-          { label: 'Cases', href: '/cases' },
-          { label: 'Case Workflows' },
-        ]}
-        title="Case Workflows"
-        description="Configure escalation and resolution flows."
-      />
-      <div className="flex-1 overflow-hidden">
-        <WorkflowBuilder />
-      </div>
+      <WorkflowBuilder />
     </div>
   );
 }

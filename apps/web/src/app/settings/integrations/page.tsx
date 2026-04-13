@@ -1,8 +1,11 @@
 'use client';
 
 import Link from 'next/link';
+import { useCallback } from 'react';
 import { Card, Badge, Button } from '@intelliflow/ui';
 import { PageHeader } from '@/components/shared/page-header';
+import { useAuth } from '@/lib/auth/AuthContext';
+import { revalidateModuleAccess, revalidateAllDashboardCaches } from '@/app/settings/actions';
 
 const integrations = [
   { name: 'Slack', description: 'Team communication and notifications', icon: 'chat', connected: true, category: 'communication' },
@@ -14,8 +17,35 @@ const integrations = [
 ];
 
 export default function IntegrationsPage() {
+  const { user } = useAuth();
   const connected = integrations.filter((i) => i.connected);
   const available = integrations.filter((i) => !i.connected);
+
+  const handleDisconnect = useCallback(
+    (name: string) => {
+      // Disconnecting an integration may revoke module access entitlements.
+      // Invalidate MODULE_ACCESS + DASHBOARD so cached feature flags refresh.
+      if (user?.id) {
+        revalidateModuleAccess(user.id).catch(() => {});
+        revalidateAllDashboardCaches(user.id).catch(() => {});
+      }
+      // TODO: wire to real trpc.integrations.disconnect mutation when available.
+      console.info(`[integrations] disconnect requested for: ${name}`);
+    },
+    [user]
+  );
+
+  const handleConnect = useCallback(
+    (name: string) => {
+      // Connecting an integration may grant new module access entitlements.
+      if (user?.id) {
+        revalidateModuleAccess(user.id).catch(() => {});
+        revalidateAllDashboardCaches(user.id).catch(() => {});
+      }
+      console.info(`[integrations] connect requested for: ${name}`);
+    },
+    [user]
+  );
 
   return (
     <div className="pb-10">
@@ -65,7 +95,7 @@ export default function IntegrationsPage() {
                     <p className="text-sm text-muted-foreground">{integration.description}</p>
                   </div>
                 </div>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" onClick={() => handleDisconnect(integration.name)}>
                   Disconnect
                 </Button>
               </div>
@@ -157,7 +187,7 @@ export default function IntegrationsPage() {
                   <p className="font-medium text-foreground text-sm">{integration.name}</p>
                   <p className="text-xs text-muted-foreground">{integration.description}</p>
                 </div>
-                <Button size="sm">
+                <Button size="sm" onClick={() => handleConnect(integration.name)}>
                   Connect
                 </Button>
               </div>

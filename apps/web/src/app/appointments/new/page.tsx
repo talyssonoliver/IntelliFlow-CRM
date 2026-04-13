@@ -1,10 +1,11 @@
 'use client';
 
 /**
- * New Appointment Page — tRPC integration wrapper (PG-139)
+ * New Appointment Page
  *
- * Route: /calendar/new
- * Accessed from: Dashboard "Schedule Meeting" button, Calendar "New Appointment" button
+ * Route: /appointments/new
+ * Accessed from: calendar page, appointments list, dashboard quick actions,
+ * contact/lead/case panels, entity hover card, etc.
  */
 
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -15,9 +16,10 @@ import { AppointmentForm } from '@/components/appointments';
 import type { AppointmentFormInput } from '@/components/appointments/types';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { api } from '@/lib/api';
+import { revalidateCalendar } from '@/app/calendar/actions';
 
 export default function NewAppointmentPage() {
-  const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
+  const { isLoading: authLoading, isAuthenticated, user } = useRequireAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -41,13 +43,13 @@ export default function NewAppointmentPage() {
     onSuccess: () => {
       utils.appointments.list.invalidate();
       utils.appointments.stats.invalidate();
-      router.push('/calendar');
+      if (user?.id) revalidateCalendar(user.id).catch(() => {});
+      router.push('/appointments');
     },
   });
 
   const handleSubmit = useCallback(
     async (data: AppointmentFormInput) => {
-      // Convert null recurrence to undefined for the tRPC schema
       const { recurrence, calendarId, ...rest } = data;
       await createMutation.mutateAsync({
         ...rest,
@@ -59,7 +61,7 @@ export default function NewAppointmentPage() {
   );
 
   const handleCancel = useCallback(() => {
-    router.push('/calendar');
+    router.push('/appointments');
   }, [router]);
 
   if (authLoading || !isAuthenticated) {
@@ -76,11 +78,11 @@ export default function NewAppointmentPage() {
       <PageHeader
         breadcrumbs={[
           { label: 'Dashboard', href: '/dashboard' },
-          { label: 'Calendar', href: '/calendar' },
+          { label: 'Appointments', href: '/appointments' },
           { label: 'New Appointment' },
         ]}
-        title="Schedule Appointment"
-        description="Create a new appointment, hearing, or consultation"
+        title="New Appointment"
+        description="Schedule a meeting, call, hearing, or consultation"
       />
       <AppointmentForm
         defaultStartTime={defaultStartTime}

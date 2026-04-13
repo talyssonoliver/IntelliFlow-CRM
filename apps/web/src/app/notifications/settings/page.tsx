@@ -288,7 +288,9 @@ export default function NotificationSettingsPage() {
   const [preferences, setPreferences] = useState<PrefItem[]>([]);
   const [prefsInitialized, setPrefsInitialized] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
-  const [priorityFilter, setPriorityFilter] = useState((data as any)?.priorityFilter || 'normal');
+  const [priorityFilter, setPriorityFilter] = useState(
+    (data as { priorityFilter?: string } | undefined)?.priorityFilter || 'normal'
+  );
 
   if (data && !prefsInitialized) {
     setPreferences(toPrefItems((data.preferences as Array<Record<string, unknown>>) || []));

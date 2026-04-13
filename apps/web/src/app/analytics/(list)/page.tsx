@@ -8,12 +8,13 @@ import { trpc } from '@/lib/trpc';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { downloadCSV } from '@/lib/export/csv';
 import { useAnalyticsDateRange, type PeriodKey } from '@/hooks/useAnalyticsDateRange';
+import { refreshAnalyticsCache } from '@/app/analytics/actions';
 
 export default function AnalyticsPage() {
   const [selectedPeriod, setSelectedPeriod] = useState<PeriodKey>('30d');
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
   const exportMenuRef = useRef<HTMLDivElement>(null);
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isAuthenticated, isLoading: authLoading, user } = useAuth();
   const dateRange = useAnalyticsDateRange(selectedPeriod);
   const enabled = isAuthenticated && !authLoading;
 
@@ -74,6 +75,10 @@ export default function AnalyticsPage() {
     [dateRange, utils]
   );
 
+  const handleRefreshAnalytics = useCallback(() => {
+    if (user?.id) refreshAnalyticsCache(user.id).catch(() => {});
+  }, [user]);
+
   const isLoading = overviewLoading || authLoading;
 
   return (
@@ -108,6 +113,16 @@ export default function AnalyticsPage() {
             <option value="90d">Last 90 days</option>
             <option value="ytd">Year to date</option>
           </select>
+
+          {/* Analytics cache refresh */}
+          <button
+            onClick={handleRefreshAnalytics}
+            className="inline-flex items-center gap-2 border border-border hover:bg-muted text-foreground font-medium py-2.5 px-4 rounded-lg transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            aria-label="Refresh analytics data"
+          >
+            <span className="material-symbols-outlined text-lg">refresh</span>
+            Refresh
+          </button>
 
           {/* Export Dropdown */}
           <div className="relative" ref={exportMenuRef}>
@@ -317,7 +332,7 @@ function formatRelativeTime(date: Date | string, timezone: string = 'Europe/Lond
   if (diffHours < 24) return `${diffHours}h ago`;
   const diffDays = Math.floor(diffHours / 24);
   if (diffDays < 7) return `${diffDays}d ago`;
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: timezone });
+  return d.toLocaleDateString('en-GB', { month: 'short', day: 'numeric', timeZone: timezone });
 }
 
 // --- Sub-components ---

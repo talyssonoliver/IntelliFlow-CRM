@@ -12,6 +12,7 @@ import {
 } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
+import { revalidateDealCaches } from '@/app/deals/actions';
 import { useFormUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import { PageHeader } from '@/components/shared/page-header';
 import { DealForm, type DealFormData } from '@/components/deals/DealForm';
@@ -24,7 +25,7 @@ interface ToastState {
 }
 
 export default function NewDealPage() {
-  useRequireAuth();
+  const { user } = useRequireAuth();
   const router = useRouter();
   const [isDirty, setIsDirty] = useState(false);
   const [toast, setToast] = useState<ToastState>({
@@ -41,6 +42,7 @@ export default function NewDealPage() {
 
   const createMutation = trpc.opportunity.create.useMutation({
     onSuccess: (data) => {
+      revalidateDealCaches(user?.id ?? null).catch(() => {});
       setIsDirty(false);
       setToast({
         open: true,
