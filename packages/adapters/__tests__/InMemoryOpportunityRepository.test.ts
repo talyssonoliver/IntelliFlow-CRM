@@ -10,6 +10,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { InMemoryOpportunityRepository } from '../src/repositories/InMemoryOpportunityRepository';
 import { Opportunity, OpportunityId } from '@intelliflow/domain';
+import { TEST_TENANT_ID } from '@intelliflow/test-fixtures';
 
 describe('InMemoryOpportunityRepository', () => {
   let repository: InMemoryOpportunityRepository;
@@ -30,7 +31,7 @@ describe('InMemoryOpportunityRepository', () => {
       expectedCloseDate: new Date(2025, 2, 15), // March 15
       description: 'Large enterprise software deal',
       ownerId: 'owner-123',
-      tenantId: 'tenant-123',
+      tenantId: TEST_TENANT_ID,
     });
 
     testOpportunity = opportunityResult.value;
@@ -81,7 +82,7 @@ describe('InMemoryOpportunityRepository', () => {
         value: 10000,
         accountId: 'account-456',
         ownerId: 'owner-123',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       const opp3Result = Opportunity.create({
@@ -89,7 +90,7 @@ describe('InMemoryOpportunityRepository', () => {
         value: 5000,
         accountId: 'account-789',
         ownerId: 'owner-456',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       await repository.save(testOpportunity);
@@ -134,7 +135,7 @@ describe('InMemoryOpportunityRepository', () => {
         value: 25000,
         accountId: 'account-456',
         ownerId: 'owner-123',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       await repository.save(testOpportunity);
@@ -155,7 +156,7 @@ describe('InMemoryOpportunityRepository', () => {
         value: 20000,
         accountId: 'account-456',
         ownerId: 'owner-123',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       const opp3Result = Opportunity.create({
@@ -163,7 +164,7 @@ describe('InMemoryOpportunityRepository', () => {
         value: 30000,
         accountId: 'account-789',
         ownerId: 'owner-123',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       await repository.save(testOpportunity);
@@ -190,7 +191,7 @@ describe('InMemoryOpportunityRepository', () => {
         value: 15000,
         accountId: 'account-456',
         ownerId: 'owner-456',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       await repository.save(testOpportunity);
@@ -210,7 +211,7 @@ describe('InMemoryOpportunityRepository', () => {
         value: 20000,
         accountId: 'account-456',
         ownerId: 'owner-123',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       vi.advanceTimersByTime(1000);
@@ -220,7 +221,7 @@ describe('InMemoryOpportunityRepository', () => {
         value: 30000,
         accountId: 'account-789',
         ownerId: 'owner-123',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       await repository.save(testOpportunity);
@@ -242,7 +243,7 @@ describe('InMemoryOpportunityRepository', () => {
         value: 20000,
         accountId: 'account-123',
         ownerId: 'owner-456',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       await repository.save(testOpportunity);
@@ -268,7 +269,7 @@ describe('InMemoryOpportunityRepository', () => {
         value: 15000,
         accountId: 'account-456',
         ownerId: 'owner-123',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       await repository.save(testOpportunity);
@@ -288,7 +289,7 @@ describe('InMemoryOpportunityRepository', () => {
         value: 20000,
         accountId: 'account-123',
         ownerId: 'owner-456',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       vi.advanceTimersByTime(1000);
@@ -298,7 +299,7 @@ describe('InMemoryOpportunityRepository', () => {
         value: 30000,
         accountId: 'account-123',
         ownerId: 'owner-789',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       await repository.save(testOpportunity);
@@ -320,7 +321,7 @@ describe('InMemoryOpportunityRepository', () => {
         value: 20000,
         accountId: 'account-456',
         ownerId: 'owner-123',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       await repository.save(testOpportunity);
@@ -338,7 +339,7 @@ describe('InMemoryOpportunityRepository', () => {
         value: 20000,
         accountId: 'account-456',
         ownerId: 'owner-456',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       await repository.save(testOpportunity);
@@ -375,7 +376,7 @@ describe('InMemoryOpportunityRepository', () => {
         value: 10000,
         accountId: 'account-456',
         ownerId: 'owner-123',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       const opp3Result = Opportunity.create({
@@ -383,7 +384,7 @@ describe('InMemoryOpportunityRepository', () => {
         value: 100000,
         accountId: 'account-789',
         ownerId: 'owner-123',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       await repository.save(testOpportunity);
@@ -406,7 +407,7 @@ describe('InMemoryOpportunityRepository', () => {
         accountId: 'account-456',
         contactId: 'contact-456',
         ownerId: 'owner-123',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       await repository.save(testOpportunity);
@@ -432,7 +433,7 @@ describe('InMemoryOpportunityRepository', () => {
         value: 15000,
         accountId: 'account-456',
         ownerId: 'owner-123',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       await repository.save(testOpportunity);
@@ -453,7 +454,7 @@ describe('InMemoryOpportunityRepository', () => {
         accountId: 'account-456',
         contactId: 'contact-456',
         ownerId: 'owner-123',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       await repository.save(testOpportunity);
@@ -469,16 +470,18 @@ describe('InMemoryOpportunityRepository', () => {
     it('should delete an existing opportunity', async () => {
       await repository.save(testOpportunity);
 
-      await repository.delete(testOpportunityId);
+      await repository.delete(testOpportunityId, TEST_TENANT_ID);
 
       const found = await repository.findById(testOpportunityId);
       expect(found).toBeNull();
     });
 
-    it('should not throw when deleting non-existent opportunity', async () => {
+    it('should throw when deleting non-existent opportunity', async () => {
       const nonExistentId = OpportunityId.generate();
 
-      await expect(repository.delete(nonExistentId)).resolves.toBeUndefined();
+      await expect(repository.delete(nonExistentId, TEST_TENANT_ID)).rejects.toThrow(
+        /not found or tenant mismatch/
+      );
     });
 
     it('should only delete specified opportunity', async () => {
@@ -487,13 +490,13 @@ describe('InMemoryOpportunityRepository', () => {
         value: 20000,
         accountId: 'account-456',
         ownerId: 'owner-123',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       await repository.save(testOpportunity);
       await repository.save(opp2Result.value);
 
-      await repository.delete(testOpportunityId);
+      await repository.delete(testOpportunityId, TEST_TENANT_ID);
 
       const found1 = await repository.findById(testOpportunityId);
       const found2 = await repository.findById(opp2Result.value.id);
@@ -504,7 +507,7 @@ describe('InMemoryOpportunityRepository', () => {
 
     it('should allow re-adding a deleted opportunity', async () => {
       await repository.save(testOpportunity);
-      await repository.delete(testOpportunityId);
+      await repository.delete(testOpportunityId, TEST_TENANT_ID);
 
       await repository.save(testOpportunity);
 
@@ -544,7 +547,7 @@ describe('InMemoryOpportunityRepository', () => {
         accountId: 'account-456',
         expectedCloseDate: new Date(2025, 1, 15), // Feb 15
         ownerId: 'owner-456',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       await repository.save(testOpportunity);
@@ -571,7 +574,7 @@ describe('InMemoryOpportunityRepository', () => {
         value: 25000,
         accountId: 'account-456',
         ownerId: 'owner-123',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       await repository.save(oppWithoutDate.value);
@@ -588,7 +591,7 @@ describe('InMemoryOpportunityRepository', () => {
         accountId: 'account-456',
         expectedCloseDate: new Date(2025, 1, 1), // Feb 1
         ownerId: 'owner-123',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       const opp3Result = Opportunity.create({
@@ -597,7 +600,7 @@ describe('InMemoryOpportunityRepository', () => {
         accountId: 'account-789',
         expectedCloseDate: new Date(2025, 2, 1), // March 1
         ownerId: 'owner-123',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       await repository.save(testOpportunity);
@@ -626,7 +629,7 @@ describe('InMemoryOpportunityRepository', () => {
         value: 10000,
         accountId: 'account-456',
         ownerId: 'owner-123',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       await repository.save(testOpportunity);
@@ -653,7 +656,7 @@ describe('InMemoryOpportunityRepository', () => {
         value: 100000,
         accountId: 'account-456',
         ownerId: 'owner-456',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       await repository.save(testOpportunity);
@@ -680,7 +683,7 @@ describe('InMemoryOpportunityRepository', () => {
         value: 200000,
         accountId: 'account-456',
         ownerId: 'owner-123',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       const opp3Result = Opportunity.create({
@@ -688,7 +691,7 @@ describe('InMemoryOpportunityRepository', () => {
         value: 100000,
         accountId: 'account-789',
         ownerId: 'owner-123',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       await repository.save(testOpportunity);
@@ -747,7 +750,7 @@ describe('InMemoryOpportunityRepository', () => {
           value: 20000,
           accountId: 'account-456',
           ownerId: 'owner-123',
-          tenantId: 'tenant-123',
+          tenantId: TEST_TENANT_ID,
         });
 
         await repository.save(testOpportunity);
@@ -817,7 +820,7 @@ describe('InMemoryOpportunityRepository', () => {
         value: 30000,
         accountId: 'account-1',
         ownerId: 'owner-1',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       const owner1Opp2 = Opportunity.create({
@@ -825,7 +828,7 @@ describe('InMemoryOpportunityRepository', () => {
         value: 40000,
         accountId: 'account-2',
         ownerId: 'owner-1',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       const owner2Opp1 = Opportunity.create({
@@ -833,7 +836,7 @@ describe('InMemoryOpportunityRepository', () => {
         value: 50000,
         accountId: 'account-1',
         ownerId: 'owner-2',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       await repository.save(owner1Opp1.value);
@@ -857,7 +860,7 @@ describe('InMemoryOpportunityRepository', () => {
         value: 35000,
         accountId: 'account-456',
         ownerId: 'owner-123',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       // Simulate concurrent saves
@@ -913,7 +916,7 @@ describe('InMemoryOpportunityRepository', () => {
         accountId: 'account-1',
         expectedCloseDate: new Date(2025, 1, 15),
         ownerId: 'owner-123',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       const lowValueClosingSoon = Opportunity.create({
@@ -922,7 +925,7 @@ describe('InMemoryOpportunityRepository', () => {
         accountId: 'account-1',
         expectedCloseDate: new Date(2025, 1, 10),
         ownerId: 'owner-123',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       const highValueLater = Opportunity.create({
@@ -931,7 +934,7 @@ describe('InMemoryOpportunityRepository', () => {
         accountId: 'account-1',
         expectedCloseDate: new Date(2025, 6, 15),
         ownerId: 'owner-123',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       await repository.save(highValueClosingSoon.value);

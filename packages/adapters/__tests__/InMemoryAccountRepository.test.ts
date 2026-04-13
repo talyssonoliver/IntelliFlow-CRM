@@ -10,6 +10,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { InMemoryAccountRepository } from '../src/repositories/InMemoryAccountRepository';
 import { Account, AccountId } from '@intelliflow/domain';
+import { TEST_TENANT_ID } from '@intelliflow/test-fixtures';
 
 describe('InMemoryAccountRepository', () => {
   let repository: InMemoryAccountRepository;
@@ -30,7 +31,7 @@ describe('InMemoryAccountRepository', () => {
       revenue: 50000000,
       description: 'Enterprise software company',
       ownerId: 'owner-123',
-      tenantId: 'tenant-123',
+      tenantId: TEST_TENANT_ID,
     });
 
     testAccount = accountResult.value;
@@ -45,7 +46,7 @@ describe('InMemoryAccountRepository', () => {
     it('should save a new account', async () => {
       await repository.save(testAccount);
 
-      const found = await repository.findById(testAccountId);
+      const found = await repository.findById(testAccountId, TEST_TENANT_ID);
       expect(found).not.toBeNull();
       expect(found?.id).toBe(testAccountId);
       expect(found?.name).toBe('Acme Corporation');
@@ -58,7 +59,7 @@ describe('InMemoryAccountRepository', () => {
       testAccount.updateAccountInfo({ name: 'Acme Inc' }, 'user-123');
       await repository.save(testAccount);
 
-      const found = await repository.findById(testAccountId);
+      const found = await repository.findById(testAccountId, TEST_TENANT_ID);
       expect(found).not.toBeNull();
       expect(found?.name).toBe('Acme Inc');
     });
@@ -81,14 +82,14 @@ describe('InMemoryAccountRepository', () => {
         name: 'TechCorp',
         industry: 'Technology',
         ownerId: 'owner-123',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       const account3Result = Account.create({
         name: 'HealthCo',
         industry: 'Healthcare',
         ownerId: 'owner-456',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       await repository.save(testAccount);
@@ -104,7 +105,7 @@ describe('InMemoryAccountRepository', () => {
     it('should return account when exists', async () => {
       await repository.save(testAccount);
 
-      const found = await repository.findById(testAccountId);
+      const found = await repository.findById(testAccountId, TEST_TENANT_ID);
 
       expect(found).not.toBeNull();
       expect(found?.id).toBe(testAccountId);
@@ -116,13 +117,13 @@ describe('InMemoryAccountRepository', () => {
     it('should return null when account does not exist', async () => {
       const nonExistentId = AccountId.generate();
 
-      const found = await repository.findById(nonExistentId);
+      const found = await repository.findById(nonExistentId, TEST_TENANT_ID);
 
       expect(found).toBeNull();
     });
 
     it('should return null for empty repository', async () => {
-      const found = await repository.findById(testAccountId);
+      const found = await repository.findById(testAccountId, TEST_TENANT_ID);
 
       expect(found).toBeNull();
     });
@@ -131,14 +132,14 @@ describe('InMemoryAccountRepository', () => {
       const account2Result = Account.create({
         name: 'Other Company',
         ownerId: 'owner-123',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       await repository.save(testAccount);
       await repository.save(account2Result.value);
 
-      const found1 = await repository.findById(testAccountId);
-      const found2 = await repository.findById(account2Result.value.id);
+      const found1 = await repository.findById(testAccountId, TEST_TENANT_ID);
+      const found2 = await repository.findById(account2Result.value.id, TEST_TENANT_ID);
 
       expect(found1?.name).toBe('Acme Corporation');
       expect(found2?.name).toBe('Other Company');
@@ -150,20 +151,20 @@ describe('InMemoryAccountRepository', () => {
       const account2Result = Account.create({
         name: 'Acme Industries',
         ownerId: 'owner-123',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       const account3Result = Account.create({
         name: 'TechCorp',
         ownerId: 'owner-123',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       await repository.save(testAccount);
       await repository.save(account2Result.value);
       await repository.save(account3Result.value);
 
-      const accounts = await repository.findByName('Acme');
+      const accounts = await repository.findByName('Acme', TEST_TENANT_ID);
 
       expect(accounts).toHaveLength(2);
       expect(accounts.every((a) => a.name.toLowerCase().includes('acme'))).toBe(true);
@@ -172,7 +173,7 @@ describe('InMemoryAccountRepository', () => {
     it('should handle case insensitive search', async () => {
       await repository.save(testAccount);
 
-      const accounts = await repository.findByName('ACME');
+      const accounts = await repository.findByName('ACME', TEST_TENANT_ID);
 
       expect(accounts).toHaveLength(1);
       expect(accounts[0].name).toBe('Acme Corporation');
@@ -181,7 +182,7 @@ describe('InMemoryAccountRepository', () => {
     it('should return empty array when no accounts match', async () => {
       await repository.save(testAccount);
 
-      const accounts = await repository.findByName('NonExistent');
+      const accounts = await repository.findByName('NonExistent', TEST_TENANT_ID);
 
       expect(accounts).toHaveLength(0);
     });
@@ -190,20 +191,20 @@ describe('InMemoryAccountRepository', () => {
       const account2Result = Account.create({
         name: 'Beta Corp',
         ownerId: 'owner-123',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       const account3Result = Account.create({
         name: 'Alpha Inc',
         ownerId: 'owner-123',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       await repository.save(testAccount);
       await repository.save(account2Result.value);
       await repository.save(account3Result.value);
 
-      const accounts = await repository.findByName('');
+      const accounts = await repository.findByName('', TEST_TENANT_ID);
 
       expect(accounts[0].name).toBe('Acme Corporation');
       expect(accounts[1].name).toBe('Alpha Inc');
@@ -213,14 +214,14 @@ describe('InMemoryAccountRepository', () => {
     it('should match partial names', async () => {
       await repository.save(testAccount);
 
-      const accounts = await repository.findByName('Corp');
+      const accounts = await repository.findByName('Corp', TEST_TENANT_ID);
 
       expect(accounts).toHaveLength(1);
       expect(accounts[0].name).toBe('Acme Corporation');
     });
 
     it('should return empty array for empty repository', async () => {
-      const accounts = await repository.findByName('Any');
+      const accounts = await repository.findByName('Any', TEST_TENANT_ID);
 
       expect(accounts).toHaveLength(0);
     });
@@ -231,20 +232,20 @@ describe('InMemoryAccountRepository', () => {
       const account2Result = Account.create({
         name: 'Second Company',
         ownerId: 'owner-123',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       const account3Result = Account.create({
         name: 'Third Company',
         ownerId: 'owner-123',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       await repository.save(testAccount);
       await repository.save(account2Result.value);
       await repository.save(account3Result.value);
 
-      const accounts = await repository.findByOwnerId('owner-123');
+      const accounts = await repository.findByOwnerId('owner-123', TEST_TENANT_ID);
 
       expect(accounts).toHaveLength(3);
       expect(accounts.every((a) => a.ownerId === 'owner-123')).toBe(true);
@@ -253,7 +254,7 @@ describe('InMemoryAccountRepository', () => {
     it('should return empty array when owner has no accounts', async () => {
       await repository.save(testAccount);
 
-      const accounts = await repository.findByOwnerId('owner-999');
+      const accounts = await repository.findByOwnerId('owner-999', TEST_TENANT_ID);
 
       expect(accounts).toHaveLength(0);
     });
@@ -262,13 +263,13 @@ describe('InMemoryAccountRepository', () => {
       const account2Result = Account.create({
         name: 'Other Owner Account',
         ownerId: 'owner-456',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       await repository.save(testAccount);
       await repository.save(account2Result.value);
 
-      const accounts = await repository.findByOwnerId('owner-123');
+      const accounts = await repository.findByOwnerId('owner-123', TEST_TENANT_ID);
 
       expect(accounts).toHaveLength(1);
       expect(accounts[0].ownerId).toBe('owner-123');
@@ -280,7 +281,7 @@ describe('InMemoryAccountRepository', () => {
       const account2Result = Account.create({
         name: 'Second Company',
         ownerId: 'owner-123',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       vi.advanceTimersByTime(1000);
@@ -288,14 +289,14 @@ describe('InMemoryAccountRepository', () => {
       const account3Result = Account.create({
         name: 'Third Company',
         ownerId: 'owner-123',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       await repository.save(testAccount);
       await repository.save(account2Result.value);
       await repository.save(account3Result.value);
 
-      const accounts = await repository.findByOwnerId('owner-123');
+      const accounts = await repository.findByOwnerId('owner-123', TEST_TENANT_ID);
 
       // Most recent first
       expect(accounts[0].createdAt >= accounts[1].createdAt).toBe(true);
@@ -309,21 +310,21 @@ describe('InMemoryAccountRepository', () => {
         name: 'TechCorp',
         industry: 'Technology',
         ownerId: 'owner-456',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       const account3Result = Account.create({
         name: 'HealthCo',
         industry: 'Healthcare',
         ownerId: 'owner-123',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       await repository.save(testAccount);
       await repository.save(account2Result.value);
       await repository.save(account3Result.value);
 
-      const accounts = await repository.findByIndustry('Technology');
+      const accounts = await repository.findByIndustry('Technology', TEST_TENANT_ID);
 
       expect(accounts).toHaveLength(2);
       expect(accounts.every((a) => a.industry === 'Technology')).toBe(true);
@@ -332,7 +333,7 @@ describe('InMemoryAccountRepository', () => {
     it('should return empty array when no accounts in industry', async () => {
       await repository.save(testAccount);
 
-      const accounts = await repository.findByIndustry('Finance');
+      const accounts = await repository.findByIndustry('Finance', TEST_TENANT_ID);
 
       expect(accounts).toHaveLength(0);
     });
@@ -341,13 +342,13 @@ describe('InMemoryAccountRepository', () => {
       const accountWithoutIndustry = Account.create({
         name: 'No Industry Corp',
         ownerId: 'owner-123',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       await repository.save(testAccount);
       await repository.save(accountWithoutIndustry.value);
 
-      const accounts = await repository.findByIndustry('Technology');
+      const accounts = await repository.findByIndustry('Technology', TEST_TENANT_ID);
 
       expect(accounts).toHaveLength(1);
       expect(accounts[0].industry).toBe('Technology');
@@ -360,7 +361,7 @@ describe('InMemoryAccountRepository', () => {
         name: 'TechCorp',
         industry: 'Technology',
         ownerId: 'owner-456',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       vi.advanceTimersByTime(1000);
@@ -369,14 +370,14 @@ describe('InMemoryAccountRepository', () => {
         name: 'TechStart',
         industry: 'Technology',
         ownerId: 'owner-789',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       await repository.save(testAccount);
       await repository.save(account2Result.value);
       await repository.save(account3Result.value);
 
-      const accounts = await repository.findByIndustry('Technology');
+      const accounts = await repository.findByIndustry('Technology', TEST_TENANT_ID);
 
       expect(accounts[0].createdAt >= accounts[1].createdAt).toBe(true);
       expect(accounts[1].createdAt >= accounts[2].createdAt).toBe(true);
@@ -386,7 +387,7 @@ describe('InMemoryAccountRepository', () => {
       await repository.save(testAccount);
 
       // Should not match partial industry
-      const accounts = await repository.findByIndustry('Tech');
+      const accounts = await repository.findByIndustry('Tech', TEST_TENANT_ID);
 
       expect(accounts).toHaveLength(0);
     });
@@ -396,32 +397,32 @@ describe('InMemoryAccountRepository', () => {
     it('should delete an existing account', async () => {
       await repository.save(testAccount);
 
-      await repository.delete(testAccountId);
+      await repository.delete(testAccountId, TEST_TENANT_ID);
 
-      const found = await repository.findById(testAccountId);
+      const found = await repository.findById(testAccountId, TEST_TENANT_ID);
       expect(found).toBeNull();
     });
 
     it('should not throw when deleting non-existent account', async () => {
       const nonExistentId = AccountId.generate();
 
-      await expect(repository.delete(nonExistentId)).resolves.toBeUndefined();
+      await expect(repository.delete(nonExistentId, TEST_TENANT_ID)).resolves.toBeUndefined();
     });
 
     it('should only delete specified account', async () => {
       const account2Result = Account.create({
         name: 'Second Company',
         ownerId: 'owner-123',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       await repository.save(testAccount);
       await repository.save(account2Result.value);
 
-      await repository.delete(testAccountId);
+      await repository.delete(testAccountId, TEST_TENANT_ID);
 
-      const found1 = await repository.findById(testAccountId);
-      const found2 = await repository.findById(account2Result.value.id);
+      const found1 = await repository.findById(testAccountId, TEST_TENANT_ID);
+      const found2 = await repository.findById(account2Result.value.id, TEST_TENANT_ID);
 
       expect(found1).toBeNull();
       expect(found2).not.toBeNull();
@@ -429,11 +430,11 @@ describe('InMemoryAccountRepository', () => {
 
     it('should allow re-adding a deleted account', async () => {
       await repository.save(testAccount);
-      await repository.delete(testAccountId);
+      await repository.delete(testAccountId, TEST_TENANT_ID);
 
       await repository.save(testAccount);
 
-      const found = await repository.findById(testAccountId);
+      const found = await repository.findById(testAccountId, TEST_TENANT_ID);
       expect(found).not.toBeNull();
       expect(found?.id).toBe(testAccountId);
     });
@@ -443,13 +444,13 @@ describe('InMemoryAccountRepository', () => {
     it('should return true when name exists', async () => {
       await repository.save(testAccount);
 
-      const exists = await repository.existsByName('Acme Corporation');
+      const exists = await repository.existsByName('Acme Corporation', TEST_TENANT_ID);
 
       expect(exists).toBe(true);
     });
 
     it('should return false when name does not exist', async () => {
-      const exists = await repository.existsByName('NonExistent Company');
+      const exists = await repository.existsByName('NonExistent Company', TEST_TENANT_ID);
 
       expect(exists).toBe(false);
     });
@@ -457,7 +458,7 @@ describe('InMemoryAccountRepository', () => {
     it('should handle case insensitive matching', async () => {
       await repository.save(testAccount);
 
-      const exists = await repository.existsByName('ACME CORPORATION');
+      const exists = await repository.existsByName('ACME CORPORATION', TEST_TENANT_ID);
 
       expect(exists).toBe(true);
     });
@@ -465,8 +466,8 @@ describe('InMemoryAccountRepository', () => {
     it('should require exact name match (not substring)', async () => {
       await repository.save(testAccount);
 
-      const existsPartial = await repository.existsByName('Acme');
-      const existsExact = await repository.existsByName('Acme Corporation');
+      const existsPartial = await repository.existsByName('Acme', TEST_TENANT_ID);
+      const existsExact = await repository.existsByName('Acme Corporation', TEST_TENANT_ID);
 
       expect(existsPartial).toBe(false);
       expect(existsExact).toBe(true);
@@ -474,15 +475,15 @@ describe('InMemoryAccountRepository', () => {
 
     it('should return false after account is deleted', async () => {
       await repository.save(testAccount);
-      await repository.delete(testAccountId);
+      await repository.delete(testAccountId, TEST_TENANT_ID);
 
-      const exists = await repository.existsByName('Acme Corporation');
+      const exists = await repository.existsByName('Acme Corporation', TEST_TENANT_ID);
 
       expect(exists).toBe(false);
     });
 
     it('should return false for empty repository', async () => {
-      const exists = await repository.existsByName('Any Company');
+      const exists = await repository.existsByName('Any Company', TEST_TENANT_ID);
 
       expect(exists).toBe(false);
     });
@@ -494,21 +495,21 @@ describe('InMemoryAccountRepository', () => {
         name: 'TechCorp',
         industry: 'Technology',
         ownerId: 'owner-456',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       const account3Result = Account.create({
         name: 'HealthCo',
         industry: 'Healthcare',
         ownerId: 'owner-123',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       await repository.save(testAccount);
       await repository.save(account2Result.value);
       await repository.save(account3Result.value);
 
-      const counts = await repository.countByIndustry();
+      const counts = await repository.countByIndustry(TEST_TENANT_ID);
 
       expect(counts['Technology']).toBe(2);
       expect(counts['Healthcare']).toBe(1);
@@ -518,20 +519,20 @@ describe('InMemoryAccountRepository', () => {
       const accountWithoutIndustry = Account.create({
         name: 'No Industry Corp',
         ownerId: 'owner-123',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       await repository.save(testAccount);
       await repository.save(accountWithoutIndustry.value);
 
-      const counts = await repository.countByIndustry();
+      const counts = await repository.countByIndustry(TEST_TENANT_ID);
 
       expect(counts['Technology']).toBe(1);
       expect(counts['Uncategorized']).toBe(1);
     });
 
     it('should return empty object for empty repository', async () => {
-      const counts = await repository.countByIndustry();
+      const counts = await repository.countByIndustry(TEST_TENANT_ID);
 
       expect(counts).toEqual({});
     });
@@ -544,12 +545,12 @@ describe('InMemoryAccountRepository', () => {
           name: `${industry} Company`,
           industry,
           ownerId: 'owner-123',
-          tenantId: 'tenant-123',
+          tenantId: TEST_TENANT_ID,
         });
         await repository.save(accountResult.value);
       }
 
-      const counts = await repository.countByIndustry();
+      const counts = await repository.countByIndustry(TEST_TENANT_ID);
 
       expect(Object.keys(counts)).toHaveLength(4);
       expect(counts['Technology']).toBe(1);
@@ -564,12 +565,12 @@ describe('InMemoryAccountRepository', () => {
           name: `Tech Company ${i}`,
           industry: 'Technology',
           ownerId: 'owner-123',
-          tenantId: 'tenant-123',
+          tenantId: TEST_TENANT_ID,
         });
         await repository.save(accountResult.value);
       }
 
-      const counts = await repository.countByIndustry();
+      const counts = await repository.countByIndustry(TEST_TENANT_ID);
 
       expect(counts['Technology']).toBe(5);
     });
@@ -602,7 +603,7 @@ describe('InMemoryAccountRepository', () => {
         const account2Result = Account.create({
           name: 'Second Company',
           ownerId: 'owner-123',
-          tenantId: 'tenant-123',
+          tenantId: TEST_TENANT_ID,
         });
 
         await repository.save(testAccount);
@@ -636,7 +637,7 @@ describe('InMemoryAccountRepository', () => {
       await repository.save(testAccount);
 
       // Find by name
-      const accountsByName = await repository.findByName('Acme');
+      const accountsByName = await repository.findByName('Acme', TEST_TENANT_ID);
       expect(accountsByName).toHaveLength(1);
 
       // Update account info
@@ -644,7 +645,7 @@ describe('InMemoryAccountRepository', () => {
       await repository.save(testAccount);
 
       // Verify update
-      const updated = await repository.findById(testAccountId);
+      const updated = await repository.findById(testAccountId, TEST_TENANT_ID);
       expect(updated?.website?.value).toBe('https://acme-new.com');
 
       // Update revenue
@@ -652,22 +653,22 @@ describe('InMemoryAccountRepository', () => {
       await repository.save(testAccount);
 
       // Verify revenue update
-      const withNewRevenue = await repository.findById(testAccountId);
+      const withNewRevenue = await repository.findById(testAccountId, TEST_TENANT_ID);
       expect(withNewRevenue?.revenue).toBe(75000000);
 
       // Find by industry
-      const techAccounts = await repository.findByIndustry('Technology');
+      const techAccounts = await repository.findByIndustry('Technology', TEST_TENANT_ID);
       expect(techAccounts).toHaveLength(1);
 
       // Check counts
-      const counts = await repository.countByIndustry();
+      const counts = await repository.countByIndustry(TEST_TENANT_ID);
       expect(counts['Technology']).toBe(1);
 
       // Delete account
-      await repository.delete(testAccountId);
+      await repository.delete(testAccountId, TEST_TENANT_ID);
 
       // Verify deletion
-      const deleted = await repository.findById(testAccountId);
+      const deleted = await repository.findById(testAccountId, TEST_TENANT_ID);
       expect(deleted).toBeNull();
     });
 
@@ -676,38 +677,38 @@ describe('InMemoryAccountRepository', () => {
         name: 'Owner1 Tech',
         industry: 'Technology',
         ownerId: 'owner-1',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       const owner1Account2 = Account.create({
         name: 'Owner1 Health',
         industry: 'Healthcare',
         ownerId: 'owner-1',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       const owner2Account1 = Account.create({
         name: 'Owner2 Tech',
         industry: 'Technology',
         ownerId: 'owner-2',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       await repository.save(owner1Account1.value);
       await repository.save(owner1Account2.value);
       await repository.save(owner2Account1.value);
 
-      const owner1Accounts = await repository.findByOwnerId('owner-1');
-      const owner2Accounts = await repository.findByOwnerId('owner-2');
-      const techAccounts = await repository.findByIndustry('Technology');
-      const healthAccounts = await repository.findByIndustry('Healthcare');
+      const owner1Accounts = await repository.findByOwnerId('owner-1', TEST_TENANT_ID);
+      const owner2Accounts = await repository.findByOwnerId('owner-2', TEST_TENANT_ID);
+      const techAccounts = await repository.findByIndustry('Technology', TEST_TENANT_ID);
+      const healthAccounts = await repository.findByIndustry('Healthcare', TEST_TENANT_ID);
 
       expect(owner1Accounts).toHaveLength(2);
       expect(owner2Accounts).toHaveLength(1);
       expect(techAccounts).toHaveLength(2);
       expect(healthAccounts).toHaveLength(1);
 
-      const counts = await repository.countByIndustry();
+      const counts = await repository.countByIndustry(TEST_TENANT_ID);
       expect(counts['Technology']).toBe(2);
       expect(counts['Healthcare']).toBe(1);
     });
@@ -717,7 +718,7 @@ describe('InMemoryAccountRepository', () => {
         name: 'Concurrent Company',
         industry: 'Finance',
         ownerId: 'owner-123',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       // Simulate concurrent saves
@@ -727,8 +728,8 @@ describe('InMemoryAccountRepository', () => {
       expect(allAccounts).toHaveLength(2);
 
       // Verify both accounts are findable
-      const found1 = await repository.findById(testAccount.id);
-      const found2 = await repository.findById(account2Result.value.id);
+      const found1 = await repository.findById(testAccount.id, TEST_TENANT_ID);
+      const found2 = await repository.findById(account2Result.value.id, TEST_TENANT_ID);
 
       expect(found1).not.toBeNull();
       expect(found2).not.toBeNull();
@@ -738,7 +739,7 @@ describe('InMemoryAccountRepository', () => {
       await repository.save(testAccount);
 
       // Initially in Technology
-      let counts = await repository.countByIndustry();
+      let counts = await repository.countByIndustry(TEST_TENANT_ID);
       expect(counts['Technology']).toBe(1);
 
       // Change industry
@@ -746,7 +747,7 @@ describe('InMemoryAccountRepository', () => {
       await repository.save(testAccount);
 
       // Should now be in Software
-      counts = await repository.countByIndustry();
+      counts = await repository.countByIndustry(TEST_TENANT_ID);
       expect(counts['Technology']).toBeUndefined();
       expect(counts['Software']).toBe(1);
     });
@@ -755,13 +756,13 @@ describe('InMemoryAccountRepository', () => {
       const accountWithSpecialName = Account.create({
         name: 'ABC & Partners Ltd.',
         ownerId: 'owner-123',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       await repository.save(testAccount);
       await repository.save(accountWithSpecialName.value);
 
-      const accounts = await repository.findByName('&');
+      const accounts = await repository.findByName('&', TEST_TENANT_ID);
 
       expect(accounts).toHaveLength(1);
       expect(accounts[0].name).toBe('ABC & Partners Ltd.');
@@ -771,12 +772,12 @@ describe('InMemoryAccountRepository', () => {
       const minimalAccount = Account.create({
         name: 'Minimal Corp',
         ownerId: 'owner-123',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       await repository.save(minimalAccount.value);
 
-      const found = await repository.findById(minimalAccount.value.id);
+      const found = await repository.findById(minimalAccount.value.id, TEST_TENANT_ID);
       expect(found).not.toBeNull();
       expect(found?.name).toBe('Minimal Corp');
       expect(found?.industry).toBeUndefined();
@@ -789,13 +790,13 @@ describe('InMemoryAccountRepository', () => {
       const account2Result = Account.create({
         name: 'Another Company',
         ownerId: 'owner-123',
-        tenantId: 'tenant-123',
+        tenantId: TEST_TENANT_ID,
       });
 
       await repository.save(testAccount);
       await repository.save(account2Result.value);
 
-      const accounts = await repository.findByName('');
+      const accounts = await repository.findByName('', TEST_TENANT_ID);
 
       expect(accounts).toHaveLength(2);
     });

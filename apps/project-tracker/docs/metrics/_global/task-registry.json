@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-04-13T22:40:46.266Z",
+  "last_updated": "2026-04-13T22:50:33.489Z",
   "tasks_by_status": {
     "DONE": [
       "EXC-INIT-001",
@@ -385,7 +385,9 @@
     ],
     "VALIDATING": [],
     "BLOCKED": [],
-    "PLANNED": [],
+    "PLANNED": [
+      "PG-195"
+    ],
     "BACKLOG": [
       "IFC-032",
       "IFC-033",
@@ -577,7 +579,6 @@
       "PG-194",
       "IFC-307",
       "IFC-308",
-      "PG-195",
       "IFC-309"
     ],
     "FAILED": [],
@@ -11016,7 +11017,7 @@
       "section": "Performance",
       "description": "Subset Material Symbols font to unblock Lighthouse Performance >=90 gate — reduces 3.5 MB MaterialSymbolsOutlined.woff2 shipped by root layout to every route (PG-056 Lighthouse=63 baseline). Audit the 1,421 .material-symbols-outlined call sites, build a subsetter script that extracts the exact glyph set, regenerate a smaller woff2 (<500 KB target), add CI guard so new glyphs are added to the audit list.",
       "owner": "Growth FE (STOA-Foundation)",
-      "status": "BACKLOG",
+      "status": "PLANNED",
       "sprint": 17,
       "dependencies": [
         "PG-056"

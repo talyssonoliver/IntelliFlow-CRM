@@ -5884,7 +5884,7 @@
       "Dependencies": "PG-056",
       "Pre-requisites": "FILE:apps/web/src/app/layout.tsx;FILE:apps/web/src/app/globals.css;FILE:apps/web/public/fonts/MaterialSymbolsOutlined.woff2;FILE:.specify/sprints/sprint-17/attestations/PG-056/attestation.json;FILE:artifacts/lighthouse/pg-056-500-r1.json;FILE:docs/claude-refs/nonfunctional.md;POLICY:Lighthouse >=90 per apps/web/CLAUDE.md",
       "Definition of Done": "Subsetted font replaces full Material Symbols woff2 (<500 KB); Lighthouse Performance >=90 for /404 and /500 on desktop production build; zero visual regressions across the 1,421 .material-symbols-outlined call sites; subsetter script committed + reproducible; glyph-audit JSON enumerates the used glyph set; artifacts: subsetted woff2, glyph-audit.json, subset script, updated layout.tsx",
-      "Status": "Backlog",
+      "Status": "Specifying",
       "KPIs": "Font transfer <500 KB (from 3473 KB); Lighthouse Perf /500 >=90; Lighthouse Perf /404 >=90; Glyph coverage 100% (zero tofu); Total page byte-weight /500 <1 MB",
       "Target Sprint": "17",
       "Artifacts To Track": "ARTIFACT:apps/web/public/fonts/MaterialSymbolsOutlined.woff2;ARTIFACT:tools/scripts/subset-material-symbols.mjs;ARTIFACT:artifacts/perf/material-symbols-glyph-audit.json;ARTIFACT:apps/web/src/app/layout.tsx;EVIDENCE:.specify/sprints/sprint-17/attestations/PG-195/context_ack.json;EVIDENCE:artifacts/lighthouse/pg-195-post-subset-500.json;EVIDENCE:artifacts/lighthouse/pg-195-post-subset-404.json",

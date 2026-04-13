@@ -191,6 +191,20 @@ export const ActionLogConfigSchema = z
   })
   .passthrough();
 
+/**
+ * Custom action — points at a tenant-registered CustomActionHandler via
+ * `customActionId`. The engine POSTs `params` (filtered by the handler's
+ * `inputSchema`) to the handler's `endpointUrl`. See FU-012.
+ */
+export const ActionCustomConfigSchema = z
+  .object({
+    type: z.literal('action'),
+    actionType: z.literal('custom'),
+    customActionId: z.string().min(1),
+    params: z.record(z.string(), z.unknown()).default({}),
+  })
+  .passthrough();
+
 export const ActionConfigSchema = z.discriminatedUnion('actionType', [
   ActionNotifyConfigSchema,
   ActionCreateTaskConfigSchema,
@@ -198,6 +212,7 @@ export const ActionConfigSchema = z.discriminatedUnion('actionType', [
   ActionCallWebhookConfigSchema,
   ActionTriggerWorkflowConfigSchema,
   ActionLogConfigSchema,
+  ActionCustomConfigSchema,
 ]);
 export type ActionConfig = z.infer<typeof ActionConfigSchema>;
 /**
@@ -385,4 +400,175 @@ export function defaultConfigForType(type: NodeTypeId): WorkflowNodeConfig {
 /** True if the string is a registered node type — use as a type guard. */
 export function isNodeTypeId(v: string): v is NodeTypeId {
   return (NODE_TYPE_IDS as readonly string[]).includes(v);
+}
+
+// ---------------------------------------------------------------------------
+// Custom Node Types + Action Handlers (FU-011 / FU-012)
+// ---------------------------------------------------------------------------
+
+/**
+ * Field descriptor — a declarative way to describe a form field without
+ * committing to a runtime Zod shape. Stored in Prisma as JSONB and
+ * reconstructed into a Zod schema at parse time via buildZodFromDescriptors.
+ *
+ * Kept intentionally narrow: only the primitives that can be safely rendered
+ * by the generic form builder and round-tripped through JSON.
+ */
+export const FIELD_DESCRIPTOR_TYPES = [
+  'string',
+  'number',
+  'boolean',
+  'entity',
+  'enum',
+] as const;
+export type FieldDescriptorType = (typeof FIELD_DESCRIPTOR_TYPES)[number];
+
+export const FieldDescriptorSchema = z
+  .object({
+    key: z
+      .string()
+      .min(1)
+      .regex(/^[a-z][a-z0-9_]*$/i, 'key must be a simple identifier'),
+    label: z.string().min(1),
+    type: z.enum(FIELD_DESCRIPTOR_TYPES),
+    required: z.boolean().default(false),
+    description: z.string().optional(),
+    /** Required when type === 'enum' */
+    enumValues: z.array(z.string().min(1)).optional(),
+    /** Optional hint for type === 'entity' (narrows the picker). */
+    entityKind: WorkflowEntityKindSchema.optional(),
+  })
+  .superRefine((v, ctx) => {
+    if (v.type === 'enum' && (!v.enumValues || v.enumValues.length === 0)) {
+      ctx.addIssue({
+        code: 'custom',
+        message: "enumValues is required when type === 'enum'",
+        path: ['enumValues'],
+      });
+    }
+  });
+export type FieldDescriptor = z.infer<typeof FieldDescriptorSchema>;
+
+export const FieldDescriptorArraySchema = z.array(FieldDescriptorSchema);
+
+/**
+ * Rebuild a `z.object({...})` schema from a FieldDescriptor[] at runtime.
+ *
+ * The resulting schema is `.passthrough()` so unknown keys survive (matches
+ * the rest of the node catalog). Each field is validated against its
+ * descriptor type; unknown types fail closed.
+ */
+export function buildZodFromDescriptors(
+  descriptors: readonly FieldDescriptor[]
+): z.ZodObject<Record<string, z.ZodTypeAny>> {
+  const shape: Record<string, z.ZodTypeAny> = {};
+  for (const d of descriptors) {
+    let field: z.ZodTypeAny;
+    switch (d.type) {
+      case 'string':
+        field = z.string();
+        break;
+      case 'number':
+        field = z.number();
+        break;
+      case 'boolean':
+        field = z.boolean();
+        break;
+      case 'entity':
+        field = EntityRefSchema;
+        break;
+      case 'enum':
+        if (!d.enumValues || d.enumValues.length === 0) {
+          field = z.never();
+        } else {
+          field = z.enum([d.enumValues[0], ...d.enumValues.slice(1)] as [string, ...string[]]);
+        }
+        break;
+      default:
+        field = z.never();
+    }
+    shape[d.key] = d.required ? field : field.optional();
+  }
+  return z.object(shape).passthrough();
+}
+
+/**
+ * Descriptor for a tenant-registered custom workflow node type. Mirrors
+ * the Prisma `CustomNodeType` model shape (minus the db bookkeeping fields).
+ */
+export const CustomNodeTypeDescriptorSchema = z.object({
+  id: z.string().optional(),
+  tenantId: z.string().optional(),
+  typeId: z
+    .string()
+    .min(1)
+    .regex(/^[a-z][a-z0-9_-]*$/i, 'typeId must be a lowercase slug'),
+  label: z.string().min(1),
+  description: z.string().optional(),
+  iconKey: z.string().default('extension'),
+  accentClass: z.string().default('border-slate-500/60 bg-slate-500/5'),
+  configSchema: FieldDescriptorArraySchema.default([]),
+  isActive: z.boolean().default(true),
+});
+export type CustomNodeTypeDescriptor = z.infer<typeof CustomNodeTypeDescriptorSchema>;
+
+/**
+ * Descriptor for a tenant-registered custom action handler (webhook-based).
+ */
+export const CustomActionHandlerDescriptorSchema = z.object({
+  id: z.string().optional(),
+  tenantId: z.string().optional(),
+  actionTypeId: z
+    .string()
+    .min(1)
+    .regex(/^[a-z][a-z0-9_-]*$/i, 'actionTypeId must be a lowercase slug'),
+  label: z.string().min(1),
+  description: z.string().optional(),
+  endpointUrl: z.string().url(),
+  authHeader: z.string().optional(),
+  timeoutMs: z.number().int().positive().max(120_000).default(30_000),
+  inputSchema: FieldDescriptorArraySchema.default([]),
+  outputSchema: FieldDescriptorArraySchema.default([]),
+  isActive: z.boolean().default(true),
+});
+export type CustomActionHandlerDescriptor = z.infer<typeof CustomActionHandlerDescriptorSchema>;
+
+/** RBAC permission constants for admin-only custom-registry management. */
+export const PERMISSION_MANAGE_CUSTOM_NODE_TYPES = 'workflow:manage_custom_node_types' as const;
+export const PERMISSION_MANAGE_CUSTOM_ACTIONS = 'workflow:manage_custom_actions' as const;
+
+/**
+ * SSRF guard — reject URLs that target loopback, link-local, or private IP
+ * ranges. Webhook-based action handlers run from the server so they MUST
+ * only hit public endpoints.
+ */
+export function isPublicHttpUrl(raw: string): boolean {
+  let url: URL;
+  try {
+    url = new URL(raw);
+  } catch {
+    return false;
+  }
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') return false;
+  const host = url.hostname.toLowerCase();
+  if (
+    host === 'localhost' ||
+    host === '0.0.0.0' ||
+    host === '127.0.0.1' ||
+    host === '::1' ||
+    host.endsWith('.localhost')
+  ) {
+    return false;
+  }
+  // Block RFC1918 + link-local IPv4 ranges
+  const ipv4 = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(host);
+  if (ipv4) {
+    const [a, b] = [Number(ipv4[1]), Number(ipv4[2])];
+    if (a === 10) return false;
+    if (a === 127) return false;
+    if (a === 169 && b === 254) return false;
+    if (a === 172 && b >= 16 && b <= 31) return false;
+    if (a === 192 && b === 168) return false;
+  }
+  return true;
 }

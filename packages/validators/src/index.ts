@@ -98,5 +98,11 @@ export * from './calendar';
 // Lead Settings Schemas (PG-178)
 export * from './lead-settings';
 
+// Contact Settings Schemas (PG-182)
+export * from './contact-settings';
+
+// Account Settings Schemas (PG-183)
+export * from './account-settings';
+
 // Help Article Schemas (IFC-299)
 export * from './help-article';

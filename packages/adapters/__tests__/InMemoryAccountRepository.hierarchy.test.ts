@@ -7,8 +7,9 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { InMemoryAccountRepository } from '../src/repositories/InMemoryAccountRepository';
 import { Account, AccountId } from '@intelliflow/domain';
+import { TEST_TENANT_ID } from '@intelliflow/test-fixtures';
 
-const TENANT = 'tenant-001';
+const TENANT = TEST_TENANT_ID;
 const OWNER = 'owner-001';
 
 function createAccount(overrides: {

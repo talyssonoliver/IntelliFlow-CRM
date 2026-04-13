@@ -134,7 +134,13 @@ model Tenant {
   leadScoringRules       LeadScoringRule[]        @ignore
   leadCustomFields       LeadCustomField[]        @ignore
   leadAutomationSettings LeadAutomationSetting[]  @ignore
+  contactDuplicateRules  ContactDuplicateRule[]   @ignore
+  contactRequiredFields  ContactRequiredField[]   @ignore
+  contactTags            ContactTag[]             @ignore
+  contactAutomationSettings ContactAutomationSetting[] @ignore
   aiMonitoringEvents     AIMonitoringEvent[]      @ignore
+  customNodeTypes        CustomNodeType[]         @ignore
+  customActionHandlers   CustomActionHandler[]    @ignore
 
   @@index([slug])
   @@index([status])
@@ -558,6 +564,56 @@ model Account {
   @@index([tenantId])
   @@index([parentAccountId])
   @@map("accounts")
+}
+
+// ─── PG-183: Account Settings ───────────────────────────────────────────────
+
+/// Tenant-wide account hierarchy rules. One row per tenant.
+model AccountHierarchyConfig {
+  id                    String   @id @default(cuid())
+  tenantId              String   @unique
+  maxDepth              Int      @default(5)
+  requireParentForTiers String[] @default([])
+  preventCycles         Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@map("account_hierarchy_config")
+}
+
+/// Admin-configurable industry taxonomy for accounts.
+model AccountIndustryOption {
+  id        String   @id @default(cuid())
+  tenantId  String
+  label     String
+  key       String
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tenantId, key])
+  @@index([tenantId, sortOrder])
+  @@map("account_industry_options")
+}
+
+/// Admin-configurable custom fields for the Account entity (schema only).
+model AccountCustomField {
+  id         String   @id @default(cuid())
+  tenantId   String
+  fieldName  String
+  fieldKey   String
+  dataType   String
+  options    Json?
+  isRequired Boolean  @default(false)
+  sortOrder  Int      @default(0)
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([tenantId, fieldKey])
+  @@index([tenantId, sortOrder])
+  @@map("account_custom_fields")
 }
 
 model Opportunity {
@@ -4615,4 +4671,123 @@ model LeadAutomationSetting {
   tenant                Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@map("lead_automation_settings")
+}
+
+// ─── Contact Settings (PG-182) ───────────────────────────────────────────────
+
+model ContactDuplicateRule {
+  id            String   @id @default(cuid())
+  field         String
+  matchStrategy String
+  threshold     Int      @default(100)
+  isActive      Boolean  @default(true)
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  tenantId      String
+  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, field, matchStrategy])
+  @@index([tenantId])
+  @@map("contact_duplicate_rules")
+}
+
+model ContactRequiredField {
+  id         String   @id @default(cuid())
+  fieldKey   String
+  isRequired Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  tenantId   String
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, fieldKey])
+  @@index([tenantId])
+  @@map("contact_required_fields")
+}
+
+model ContactTag {
+  id          String   @id @default(cuid())
+  name        String
+  colorToken  String   @default("slate")
+  description String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+  @@map("contact_tags")
+}
+
+model ContactAutomationSetting {
+  id                          String   @id @default(cuid())
+  autoMergeOnExactEmail       Boolean  @default(false)
+  notifyOnDuplicate           Boolean  @default(true)
+  restrictTagCreationToAdmins Boolean  @default(false)
+  createdAt                   DateTime @default(now())
+  updatedAt                   DateTime @updatedAt
+
+  tenantId                    String   @unique
+  tenant                      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("contact_automation_settings")
+}
+
+// ─── Workflow Custom Extensions (IFC-031 FU-011 / FU-012) ────────────────────
+
+/// Tenant-registered custom workflow node type. The `configSchema` column
+/// stores a `FieldDescriptor[]` (see packages/domain/src/workflow/node-catalog.ts)
+/// that is reconstructed into a Zod schema at runtime by the workflow engine.
+model CustomNodeType {
+  id           String   @id @default(cuid())
+  typeId       String
+  label        String
+  description  String?
+  iconKey      String   @default("extension")
+  accentClass  String   @default("border-slate-500/60 bg-slate-500/5")
+  configSchema Json     @default("[]")
+  isActive     Boolean  @default(true)
+  createdBy    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  tenantId     String
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, typeId])
+  @@index([tenantId])
+  @@map("custom_node_types")
+}
+
+/// Tenant-registered custom workflow action handler. When a workflow step has
+/// `actionType: 'custom'` with a matching `customActionId`, the execution
+/// engine POSTs the step config (filtered by `inputSchema`) to `endpointUrl`.
+model CustomActionHandler {
+  id            String   @id @default(cuid())
+  actionTypeId  String
+  label         String
+  description   String?
+  endpointUrl   String
+  authHeader    String?
+  timeoutMs     Int      @default(30000)
+  inputSchema   Json     @default("[]")
+  outputSchema  Json     @default("[]")
+  isActive      Boolean  @default(true)
+  createdBy     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  tenantId      String
+  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, actionTypeId])
+  @@index([tenantId])
+  @@map("custom_action_handlers")
 }

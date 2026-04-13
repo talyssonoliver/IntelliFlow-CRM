@@ -9,7 +9,9 @@ import { createTRPCRouter } from './trpc';
 import { leadRouter } from './modules/lead/lead.router';
 import { leadSettingsRouter } from './modules/lead/lead-settings.router';
 import { contactRouter } from './modules/contact/contact.router';
+import { contactSettingsRouter } from './modules/contact/contact-settings.router';
 import { accountRouter } from './modules/account/account.router';
+import { accountSettingsRouter } from './modules/account/account-settings.router';
 import { opportunityRouter } from './modules/opportunity/opportunity.router';
 import { pipelineConfigRouter } from './modules/opportunity/pipeline-config.router';
 import { taskRouter } from './modules/task/task.router';
@@ -120,6 +122,8 @@ export const appRouter = createTRPCRouter({
   ticketRouting: ticketRoutingRouter, // IFC-067: Automatic Ticket Routing
   ticketConfig: ticketConfigRouter, // PG-173: Ticket Configuration Pages
   leadSettings: leadSettingsRouter, // PG-178: Lead Settings Configuration
+  contactSettings: contactSettingsRouter, // PG-182: Contact Settings Configuration
+  accountSettings: accountSettingsRouter, // PG-183: Account Settings Configuration
 
   // Analytics & Reporting
   analytics: analyticsRouter,
