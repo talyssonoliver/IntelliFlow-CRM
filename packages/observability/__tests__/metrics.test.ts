@@ -587,11 +587,11 @@ describe('Metrics Module', () => {
       });
     });
 
-    describe('recordCacheAccess', () => {
+    describe('recordCacheHit / recordCacheMiss', () => {
       it('should record cache hit', async () => {
         const { metricHelpers } = await import('../src/metrics.js');
 
-        metricHelpers.recordCacheAccess(true, 'user:123');
+        metricHelpers.recordCacheHit('user:123');
 
         expect(mockCounter.add).toHaveBeenCalledWith(1, { key: 'user:123' });
       });
@@ -599,7 +599,7 @@ describe('Metrics Module', () => {
       it('should record cache miss', async () => {
         const { metricHelpers } = await import('../src/metrics.js');
 
-        metricHelpers.recordCacheAccess(false, 'user:456');
+        metricHelpers.recordCacheMiss('user:456');
 
         expect(mockCounter.add).toHaveBeenCalledWith(1, { key: 'user:456' });
       });
@@ -607,7 +607,7 @@ describe('Metrics Module', () => {
       it('should record cache access without key', async () => {
         const { metricHelpers } = await import('../src/metrics.js');
 
-        metricHelpers.recordCacheAccess(true);
+        metricHelpers.recordCacheHit();
 
         expect(mockCounter.add).toHaveBeenCalledWith(1, undefined);
       });

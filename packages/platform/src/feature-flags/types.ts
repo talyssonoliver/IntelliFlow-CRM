@@ -1,4 +1,9 @@
-export type FeatureFlagKey = string; // NOSONAR typescript:S6564 — exported as part of the public API for type-safe feature flag key usage
+/**
+ * Feature flag key — a branded string subtype. Plain string literals remain
+ * assignable (the brand property is optional), but APIs that accept
+ * `FeatureFlagKey` document intent and allow future nominal narrowing.
+ */
+export type FeatureFlagKey = string & { readonly __featureFlagKey?: never };
 
 export interface FeatureFlagContext {
   /**

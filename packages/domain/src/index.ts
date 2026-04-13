@@ -140,3 +140,10 @@ export * from './crm/ticket';
 
 // Automation Domain - Routing (PG-132)
 export * from './automation/RoutingConstants';
+
+// Automation Domain - Workflow Node Catalog (IFC-031)
+// Single source of truth for workflow node types, per-variant zod schemas,
+// and display metadata. Consumed by both the tRPC workflow router (for
+// server-side steps[].config validation) and the React workflow builder
+// (for palette entries + per-type config forms).
+export * from './workflow/node-catalog';

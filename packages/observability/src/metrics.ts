@@ -475,15 +475,17 @@ export const metricHelpers = {
   },
 
   /**
-   * Record cache hit/miss
+   * Record a cache hit
    */
-  // NOSONAR typescript:S2301 — boolean parameter is part of the public API; splitting into recordCacheHit/recordCacheMiss would require callers to change conditionals
-  recordCacheAccess: (hit: boolean, key?: string) => {
-    if (hit) {
-      incrementCounter(metrics.cacheHitCount, 1, key ? { key } : undefined);
-    } else {
-      incrementCounter(metrics.cacheMissCount, 1, key ? { key } : undefined);
-    }
+  recordCacheHit: (key?: string) => {
+    incrementCounter(metrics.cacheHitCount, 1, key ? { key } : undefined);
+  },
+
+  /**
+   * Record a cache miss
+   */
+  recordCacheMiss: (key?: string) => {
+    incrementCounter(metrics.cacheMissCount, 1, key ? { key } : undefined);
   },
 
   /**
