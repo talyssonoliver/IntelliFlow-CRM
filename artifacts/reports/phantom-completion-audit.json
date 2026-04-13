@@ -1,16 +1,17 @@
 {
   "audit_metadata": {
-    "generated_at": "2026-02-28T00:36:35.085Z",
+    "generated_at": "2026-04-13T20:19:55.994Z",
     "audit_type": "PHANTOM_COMPLETION_DETECTION",
     "sprint_scope": "all",
     "severity": "CRITICAL"
   },
   "summary": {
-    "total_completed_tasks": 298,
-    "verified_completions": 194,
-    "phantom_completions": 104,
-    "integrity_score": "65%",
-    "conclusion": "104 tasks marked as Completed but missing artifacts or unverifiable DOD"
+    "total_completed_tasks": 373,
+    "verified_completions": 198,
+    "phantom_completions": 175,
+    "sprint_path_mismatches": 0,
+    "integrity_score": "53%",
+    "conclusion": "175 tasks marked as Completed but missing artifacts or unverifiable DOD"
   },
   "verified_tasks": [
     {
@@ -47,17 +48,6 @@
       "artifacts_verified": [
         "artifacts/misc/sandbox-security.json",
         "artifacts/metrics/response-metrics.csv",
-        "apps/ai-worker/src/agents/base.agent.ts",
-        "apps/ai-worker/src/agents/base.agent.test.ts",
-        "apps/ai-worker/src/agents/crew.ts",
-        "apps/ai-worker/src/agents/crew.test.ts",
-        "apps/ai-worker/src/agents/qualification.agent.ts",
-        "apps/ai-worker/src/agents/qualification.agent.test.ts",
-        "apps/ai-worker/src/chains/embedding.chain.ts",
-        "apps/ai-worker/src/chains/embedding.chain.test.ts",
-        "apps/ai-worker/README.md",
-        "apps/ai-worker/QUICKSTART.md",
-        "apps/ai-worker/STRUCTURE.txt",
         ".specify/sprints/sprint-0/attestations/AI-SETUP-003/context_ack.json"
       ]
     },
@@ -107,7 +97,11 @@
         "artifacts/misc/commitlint.config.js",
         "artifacts/misc/lint-results.json",
         "artifacts/misc/env-validation-results.json",
-        ".specify/sprints/sprint-0/attestations/ENV-002-AI/context_ack.json"
+        ".specify/sprints/sprint-0/attestations/ENV-002-AI/context_ack.json",
+        "packages/ai/tsconfig.json",
+        "packages/search/tsconfig.json",
+        "tests/utils/test-helpers.ts",
+        "artifacts/reports/code-analysis/knip-report.json"
       ]
     },
     {
@@ -116,7 +110,11 @@
       "artifacts_verified": [
         "docker-compose.yml",
         "artifacts/misc/health-check.yaml",
-        ".specify/sprints/sprint-0/attestations/ENV-003-AI/context_ack.json"
+        ".specify/sprints/sprint-0/attestations/ENV-003-AI/context_ack.json",
+        "apps/workers/events-worker/Dockerfile",
+        "apps/workers/ingestion-worker/Dockerfile",
+        "apps/workers/notifications-worker/Dockerfile",
+        "docs/setup/docker-compose-overlays.md"
       ]
     },
     {
@@ -124,7 +122,10 @@
       "description": "Supabase Integration with Automated Schema Design",
       "artifacts_verified": [
         "infra/supabase/config.toml",
-        ".specify/sprints/sprint-0/attestations/ENV-004-AI/context_ack.json"
+        ".specify/sprints/sprint-0/attestations/ENV-004-AI/context_ack.json",
+        "packages/db/.env.example",
+        "scripts/reset-test-db.ps1",
+        "scripts/reset-test-db.sh"
       ]
     },
     {
@@ -141,8 +142,6 @@
       "task_id": "ENV-006-AI",
       "description": "Prisma Schema with Generated Optimizations",
       "artifacts_verified": [
-        "packages/db/prisma/schema.prisma",
-        "packages/db/prisma/seed.ts",
         ".specify/sprints/sprint-0/attestations/ENV-006-AI/context_ack.json"
       ]
     },
@@ -172,7 +171,8 @@
       "task_id": "ENV-009-AI",
       "description": "Frontend with Generated Components and Optimization",
       "artifacts_verified": [
-        ".specify/sprints/sprint-0/attestations/ENV-009-AI/context_ack.json"
+        ".specify/sprints/sprint-0/attestations/ENV-009-AI/context_ack.json",
+        "docs/setup/sonarqube-setup.md"
       ]
     },
     {
@@ -274,7 +274,8 @@
         "infra/monitoring/loki-config.yml",
         "artifacts/monitoring-config-hashes.txt",
         "docs/operations/monitoring-runbook.md",
-        ".specify/sprints/sprint-0/attestations/EP-001-AI/context_ack.json"
+        ".specify/sprints/sprint-0/attestations/EP-001-AI/context_ack.json",
+        "docs/operations/easypanel-runbook.md"
       ]
     },
     {
@@ -289,7 +290,24 @@
         "artifacts/misc/agent-coordination/README.md",
         "artifacts/misc/agent-coordination/routing-rules.json",
         "artifacts/misc/agents-actions-logs/agent-actions.log",
-        ".specify/sprints/sprint-0/attestations/AUTOMATION-001/context_ack.json"
+        "tools/scripts/verify-dod.ts",
+        "tools/scripts/lib/sprint/types.ts",
+        "tools/scripts/lib/contract-parser.ts",
+        "scripts/debt-analyzer.js",
+        "scripts/sonarqube-metrics.js",
+        "scripts/prioritize-reviews.js",
+        ".specify/sprints/sprint-0/attestations/AUTOMATION-001/context_ack.json",
+        "tools/audit/policies/QUICK-REFERENCE.md",
+        "tools/scripts/attest-sprint.ts",
+        "tools/scripts/detect-phantom-completions.ts",
+        "tools/scripts/quality-report.ts",
+        "tools/plan-linter/package.json",
+        "tools/scripts/lib/stoa/waiver.ts",
+        "tools/scripts/lib/context-ack-gatekeeper.test.ts",
+        "tools/scripts/lib/context-pack-builder.test.ts",
+        "tools/scripts/lib/validation-utils.test.ts",
+        "docs/plan-change-log.md",
+        "docs/plan-governance.md"
       ]
     },
     {
@@ -465,7 +483,7 @@
         "artifacts/misc/axe-audit-results.json",
         "apps/project-tracker/docs/metrics/_global/flows/FLOW-002.md",
         "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-002-validation.md",
-        ".specify/sprints/sprint-7/attestations/IFC-014/context_ack.json"
+        ".specify/sprints/sprint-6/attestations/IFC-014/context_ack.json"
       ]
     },
     {
@@ -474,31 +492,18 @@
       "artifacts_verified": [
         "artifacts/misc/bull-board-screenshot.png",
         "artifacts/metrics/job-metrics.json",
-        "packages/platform/src/queues/queue-factory.ts",
         "packages/platform/src/queues/retry-strategy.ts",
-        ".specify/sprints/sprint-7/attestations/IFC-015/context_ack.json"
+        ".specify/sprints/sprint-6/attestations/IFC-015/context_ack.json"
       ]
     },
     {
       "task_id": "IFC-016",
       "description": "PHASE-002: Real-time Subscriptions",
       "artifacts_verified": [
-        "apps/web/hooks/use-subscription.ts",
-        "apps/web/hooks/use-subscription.test.ts",
+        "apps/web/src/hooks/use-trpc-subscriptions.ts",
+        "apps/web/src/hooks/__tests__/use-trpc-subscriptions.test.ts",
         "artifacts/misc/websocket-test-results.json",
-        ".specify/sprints/sprint-7/attestations/IFC-016/context_ack.json"
-      ]
-    },
-    {
-      "task_id": "IFC-017",
-      "description": "PHASE-002: Prisma + Supabase Data Layer",
-      "artifacts_verified": [
-        "packages/db/src/client.ts",
-        "artifacts/benchmarks/query-performance.csv",
-        "artifacts/misc/pgvector-test.sql",
-        "apps/project-tracker/docs/metrics/_global/flows/FLOW-002.md",
-        "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-002-validation.md",
-        ".specify/sprints/sprint-6/attestations/IFC-017/context_ack.json"
+        ".specify/sprints/sprint-6/attestations/IFC-016/context_ack.json"
       ]
     },
     {
@@ -508,17 +513,7 @@
         "vitest.config.ts",
         "artifacts/reports/test-report.html",
         "artifacts/misc/ci-test-results.xml",
-        ".specify/sprints/sprint-7/attestations/IFC-018/context_ack.json"
-      ]
-    },
-    {
-      "task_id": "IFC-021",
-      "description": "PHASE-011: CrewAI Agent Framework",
-      "artifacts_verified": [
-        "artifacts/misc/crew-config.yaml",
-        "artifacts/logs/agent-interaction-logs.json",
-        "apps/api/src/agent/orchestration.test.ts",
-        ".specify/sprints/sprint-13/attestations/IFC-021/IFC-021-context_ack.json"
+        ".specify/sprints/sprint-6/attestations/IFC-018/context_ack.json"
       ]
     },
     {
@@ -527,18 +522,7 @@
       "artifacts_verified": [
         "apps/api/src/shared/output-validation.test.ts",
         "artifacts/misc/confidence-calibration.json",
-        ".specify/sprints/sprint-13/attestations/IFC-022/IFC-022-context_ack.json"
-      ]
-    },
-    {
-      "task_id": "IFC-044",
-      "description": "Unit Tests (Vitest + TDD)",
-      "artifacts_verified": [
-        "vitest.config.ts",
-        "artifacts/logs/test-execution-time.log",
-        "artifacts/metrics/tdd-compliance.csv",
-        "artifacts/reports/mutation-test.json",
-        ".specify/sprints/sprint-0/attestations/IFC-044/context_ack.json"
+        ".specify/sprints/sprint-13/attestations/IFC-022/context_ack.json"
       ]
     },
     {
@@ -549,7 +533,9 @@
         "apps/web/src/test/mocks/handlers.ts",
         "apps/web/src/test/mocks/server.ts",
         "apps/web/src/app/governance/quality-reports/__tests__/integration.test.tsx",
-        ".specify/sprints/sprint-14/attestations/IFC-045/context_ack.json"
+        ".specify/sprints/sprint-14/attestations/IFC-045/context_ack.json",
+        "tests/integration/api.test.ts",
+        "tests/integration/README.md"
       ]
     },
     {
@@ -618,7 +604,8 @@
       "artifacts_verified": [
         "artifacts/reports/gdpr-compliance.md",
         "artifacts/reports/risk-matrix.md",
-        ".specify/sprints/sprint-2/attestations/IFC-073/context_ack.json"
+        ".specify/sprints/sprint-2/attestations/IFC-073/context_ack.json",
+        "artifacts/misc/compliance-calendar.json"
       ]
     },
     {
@@ -635,21 +622,8 @@
         "packages/observability/src/metrics.ts",
         "packages/observability/src/logging.ts",
         "packages/observability/src/tracer.ts",
-        ".specify/sprints/sprint-1/attestations/IFC-074/context_ack.json"
-      ]
-    },
-    {
-      "task_id": "IFC-075",
-      "description": "IaC with Terraform",
-      "artifacts_verified": [
-        "infra/terraform/modules/supabase/main.tf",
-        "artifacts/misc/drift-detection-config.yaml",
-        "artifacts/logs/destroy-rebuild-test.log",
-        "artifacts/misc/architecture-spike/README.md",
-        "artifacts/misc/architecture-spike/performance-test.ts",
-        "artifacts/misc/architecture-spike/type-safety-validation.ts",
-        "artifacts/reports/IFC-075-implementation-summary.md",
-        ".specify/sprints/sprint-1/attestations/IFC-075/context_ack.json"
+        ".specify/sprints/sprint-1/attestations/IFC-074/context_ack.json",
+        "apps/api/src/tracing/example.ts"
       ]
     },
     {
@@ -737,16 +711,6 @@
       ]
     },
     {
-      "task_id": "IFC-090",
-      "description": "Contact 360 Page - Full Detail View",
-      "artifacts_verified": [
-        "artifacts/lighthouse/lighthouse-360-report.html",
-        ".specify/sprints/sprint-6/attestations/IFC-090/context_ack.json",
-        "docs/planning/adr/ADR-019-core-crm-foundation.md",
-        "docs/planning/prd-core-crm.md"
-      ]
-    },
-    {
       "task_id": "IFC-091",
       "description": "Deals Pipeline - Kanban Board",
       "artifacts_verified": [
@@ -820,7 +784,11 @@
         "packages/adapters/src/messaging/WebhookServiceAdapter.ts",
         "packages/webhooks/package.json",
         ".specify/sprints/sprint-10/attestations/IFC-099/context_ack.json",
-        "docs/planning/prd-erp-connectors.md"
+        "docs/planning/prd-erp-connectors.md",
+        "tests/integration/connectors/email.test.ts",
+        "tests/integration/connectors/erp.test.ts",
+        "tests/integration/connectors/messaging.test.ts",
+        "tests/integration/connectors/payments.test.ts"
       ]
     },
     {
@@ -829,7 +797,7 @@
       "artifacts_verified": [
         "docs/shared/adr-index.md",
         "artifacts/misc/compliance-dashboard-mockup.md",
-        ".specify/sprints/sprint-10/attestations/IFC-100/context_ack.json"
+        ".specify/sprints/sprint-6/attestations/IFC-100/context_ack.json"
       ]
     },
     {
@@ -888,7 +856,8 @@
         "artifacts/misc/partner-benefits.json",
         ".specify/sprints/sprint-11/attestations/PG-006/context_ack.json",
         "docs/planning/adr/ADR-020-public-site-auth.md",
-        "docs/planning/prd-public-site-auth.md"
+        "docs/planning/prd-public-site-auth.md",
+        "apps/web/src/data/partner-benefits.json"
       ]
     },
     {
@@ -909,18 +878,6 @@
         "apps/web/src/app/(public)/security/page.tsx",
         "apps/web/src/data/security-features.json",
         ".specify/sprints/sprint-11/attestations/PG-008/attestation.json",
-        "docs/planning/adr/ADR-020-public-site-auth.md",
-        "docs/planning/prd-public-site-auth.md"
-      ]
-    },
-    {
-      "task_id": "PG-009",
-      "description": "Blog Index",
-      "artifacts_verified": [
-        "apps/web/src/app/(public)/blog/page.tsx",
-        "apps/web/src/components/blog/blog-pagination.tsx",
-        "artifacts/logs/blog-categories.json",
-        ".specify/sprints/sprint-12/attestations/PG-009/context_ack.json",
         "docs/planning/adr/ADR-020-public-site-auth.md",
         "docs/planning/prd-public-site-auth.md"
       ]
@@ -1288,14 +1245,59 @@
       ]
     },
     {
+      "task_id": "PG-043",
+      "description": "Help Center Index",
+      "artifacts_verified": [
+        "apps/web/src/app/help-center/(list)/page.tsx",
+        "apps/web/src/components/support/help-categories.tsx",
+        "apps/web/src/components/support/help-search.tsx",
+        ".specify/sprints/sprint-16/attestations/PG-043/context_ack.json"
+      ]
+    },
+    {
+      "task_id": "PG-050",
+      "description": "Privacy Policy",
+      "artifacts_verified": [
+        "apps/web/src/app/(public)/privacy/page.tsx",
+        "docs/shared/privacy-content.md",
+        "apps/web/src/lib/legal/consent-tracker.ts",
+        ".specify/sprints/sprint-17/attestations/PG-050/context_ack.json"
+      ]
+    },
+    {
+      "task_id": "PG-051",
+      "description": "Terms of Service",
+      "artifacts_verified": [
+        "apps/web/src/app/(public)/terms/page.tsx",
+        "docs/shared/terms-content.md",
+        "apps/web/src/lib/legal/acceptance-tracker.ts",
+        ".specify/sprints/sprint-17/attestations/PG-051/context_ack.json"
+      ]
+    },
+    {
+      "task_id": "PG-053",
+      "description": "Data Processing Addendum",
+      "artifacts_verified": [
+        "apps/web/src/app/(public)/dpa/page.tsx",
+        "artifacts/reports/dpa-template.pdf",
+        "apps/web/src/lib/legal/signature-handler.ts",
+        ".specify/sprints/sprint-17/attestations/PG-053/context_ack.json"
+      ]
+    },
+    {
+      "task_id": "PG-055",
+      "description": "404 Not Found",
+      "artifacts_verified": [
+        "apps/web/src/app/404/page.tsx",
+        "apps/web/src/components/status/search-suggestions.tsx",
+        "apps/web/src/lib/status/error-analytics.ts",
+        ".specify/sprints/sprint-17/attestations/PG-055/context_ack.json"
+      ]
+    },
+    {
       "task_id": "DOC-001",
       "description": "Company & Product Master Brief (single source of truth)",
       "artifacts_verified": [
-        "docs/company/master-brief.md",
-        "docs/company/product/product-vision.md",
-        "docs/company/go-to-market/icp-personas.md",
-        "docs/company/messaging/tone-of-voice.md",
-        "docs/company/brand/visual-identity.md",
         ".specify/sprints/sprint-0/attestations/DOC-001/context_ack.json"
       ]
     },
@@ -1307,7 +1309,9 @@
         "docs/company/brand/palette.tokens.json",
         "docs/company/brand/typography.tokens.json",
         "docs/company/brand/spacing.tokens.json",
-        ".specify/sprints/sprint-0/attestations/BRAND-001/context_ack.json"
+        ".specify/sprints/sprint-0/attestations/BRAND-001/context_ack.json",
+        "docs/company/brand/design-system-preview.html",
+        "apps/web/public/fonts/MaterialSymbolsOutlined.woff2"
       ]
     },
     {
@@ -1420,17 +1424,6 @@
       ]
     },
     {
-      "task_id": "IFC-101",
-      "description": "PHASE-039: Lead Aggregate and Value Objects",
-      "artifacts_verified": [
-        "packages/adapters/src/repositories/PrismaLeadRepository.ts",
-        "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-039-validation.md",
-        ".specify/sprints/sprint-2/attestations/IFC-101/context_ack.json",
-        "docs/planning/adr/ADR-019-core-crm-foundation.md",
-        "docs/planning/prd-core-crm.md"
-      ]
-    },
-    {
       "task_id": "IFC-102",
       "description": "PHASE-039: Contact Aggregate and Value Objects",
       "artifacts_verified": [
@@ -1481,7 +1474,11 @@
         "docs/architecture/hex-boundaries.md",
         "docs/architecture/repo-layout.md",
         "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-039-validation.md",
-        ".specify/sprints/sprint-1/attestations/IFC-106/context_ack.json"
+        ".specify/sprints/sprint-1/attestations/IFC-106/context_ack.json",
+        "packages/application/src/errors/ApplicationErrors.ts",
+        "docs/architecture/adr/001-hexagonal-architecture.md",
+        "docs/architecture/overview.md",
+        "tests/architecture/dependency-rules.ts"
       ]
     },
     {
@@ -1568,7 +1565,8 @@
         "artifacts/misc/alerts-config.yaml",
         "infra/monitoring/ai-grafana-dashboard.json",
         "infra/monitoring/ai-prometheus-rules.yaml",
-        ".specify/sprints/sprint-10/attestations/IFC-117/context_ack.json"
+        "apps/ai-worker/src/metrics/prometheus-exporter.ts",
+        ".specify/sprints/sprint-6/attestations/IFC-117/context_ack.json"
       ]
     },
     {
@@ -1622,7 +1620,7 @@
       "artifacts_verified": [
         "docs/dev-guide.md",
         "artifacts/misc/adr-index.csv",
-        ".specify/sprints/sprint-12/attestations/IFC-126/context_ack.json"
+        ".specify/sprints/sprint-7/attestations/IFC-126/context_ack.json"
       ]
     },
     {
@@ -1780,7 +1778,7 @@
         "packages/adapters/src/ics/IcsGenerationService.ts",
         "artifacts/misc/webhooks/framework.ts",
         "artifacts/misc/api-spec/openapi-v1.yaml",
-        ".specify/sprints/sprint-10/attestations/IFC-144/attestation.json",
+        ".specify/sprints/sprint-6/attestations/IFC-144/attestation.json",
         "docs/planning/adr/ADR-023-communications-inbox.md",
         "docs/planning/prd-communications-inbox.md"
       ]
@@ -1798,18 +1796,6 @@
       ]
     },
     {
-      "task_id": "IFC-146",
-      "description": "Define PRD and user journey templates; create Definition of ",
-      "artifacts_verified": [
-        "docs/planning/prd-template.md",
-        "docs/planning/user-journey-template.md",
-        "docs/planning/definition-of-ready.md",
-        "artifacts/reports/traceability-matrix.md",
-        "artifacts/logs/backlog-updates-log.csv",
-        ".specify/sprints/sprint-2/attestations/IFC-146/context_ack.json"
-      ]
-    },
-    {
       "task_id": "IFC-148",
       "description": "Implement conversation record entity: store chat transcripts",
       "artifacts_verified": [
@@ -1818,7 +1804,7 @@
         "packages/application/src/services/ConversationSearchService.ts",
         "infra/supabase/migrations/20260104000000_conversation_rls.sql",
         "artifacts/misc/data-retention-config.yaml",
-        ".specify/sprints/sprint-12/attestations/IFC-148/context_ack.json"
+        ".specify/sprints/sprint-7/attestations/IFC-148/context_ack.json"
       ]
     },
     {
@@ -1847,7 +1833,7 @@
       "description": "Event consumers framework: retries + DLQ + backoff + observa",
       "artifacts_verified": [
         "docs/operations/runbooks/dlq-triage.md",
-        ".specify/sprints/sprint-9/attestations/IFC-151/context_ack.json"
+        ".specify/sprints/sprint-6/attestations/IFC-151/context_ack.json"
       ]
     },
     {
@@ -1857,16 +1843,7 @@
         "packages/domain/src/legal/cases/case-document.ts",
         "infra/supabase/migrations/20260104000001_case_document_fts_embeddings.sql",
         "apps/api/src/modules/legal/documents.router.ts",
-        ".specify/sprints/sprint-11/attestations/IFC-152/context_ack.json"
-      ]
-    },
-    {
-      "task_id": "IFC-154",
-      "description": "OCR + text extraction worker for scanned PDFs/images; normal",
-      "artifacts_verified": [
-        "artifacts/benchmarks/ocr-quality-benchmarks.csv",
-        "artifacts/misc/extracted-text-schema.json",
-        ".specify/sprints/sprint-12/attestations/IFC-154/context_ack.json"
+        ".specify/sprints/sprint-6/attestations/IFC-152/context_ack.json"
       ]
     },
     {
@@ -1875,7 +1852,7 @@
       "artifacts_verified": [
         "packages/ai/tools/retrieve-case-context.ts",
         "docs/agent/case-rag.md",
-        ".specify/sprints/sprint-13/attestations/IFC-156/IFC-156-context_ack.json"
+        ".specify/sprints/sprint-6/attestations/IFC-156/context_ack.json"
       ]
     },
     {
@@ -1886,38 +1863,12 @@
       ]
     },
     {
-      "task_id": "IFC-160",
-      "description": "Artifact path conventions + CI lint to prevent repo drift",
-      "artifacts_verified": [
-        "docs/architecture/repo-layout.md",
-        "docs/architecture/artifact-conventions.md",
-        "tools/lint/artifact-paths.ts",
-        ".github/workflows/artifact-lint.yml",
-        "scripts/migration/artifact-move-map.csv",
-        "scripts/validate-artifact-paths.sh",
-        "scripts/compare-tree-to-sprint-plan.js",
-        "artifacts/reports/artifact-containment-analysis.md",
-        "artifacts/reports/ARTIFACT-CONTAINMENT-SUMMARY.md",
-        "artifacts/reports/runtime-path-linter-design.md",
-        "artifacts/reports/plan-lint-report.json",
-        ".specify/sprints/sprint-0/attestations/IFC-160/context_ack.json",
-        "docs/planning/adr/ADR-021-governance-ops-release.md",
-        "docs/planning/prd-release-governance.md"
-      ]
-    },
-    {
       "task_id": "IFC-163",
       "description": "Standardize worker runtime under apps/workers (events, inges",
       "artifacts_verified": [
-        "apps/workers/events-worker/src/main.ts",
-        "apps/workers/events-worker/src/outbox/pollOutbox.ts",
-        "apps/workers/ingestion-worker/src/main.ts",
-        "apps/workers/ingestion-worker/src/jobs/extractText.job.ts",
-        "apps/workers/notifications-worker/src/main.ts",
-        "apps/workers/notifications-worker/src/channels/email.ts",
         "infra/monitoring/dashboards/workers.json",
         "docs/operations/workers-runbook.md",
-        ".specify/sprints/sprint-13/attestations/IFC-163/IFC-163-context_ack.json"
+        ".specify/sprints/sprint-13/attestations/IFC-163/context_ack.json"
       ]
     },
     {
@@ -1957,31 +1908,6 @@
         "artifacts/reports/turbo-validation.json",
         "artifacts/reports/audit-report.json",
         ".specify/sprints/sprint-0/attestations/EXP-REPORTS-005/context_ack.json"
-      ]
-    },
-    {
-      "task_id": "IFC-174",
-      "description": "Run REAL Ollama benchmarks - Follow-up to IFC-085",
-      "artifacts_verified": [
-        "artifacts/benchmarks/accuracy-benchmarks.json",
-        "artifacts/reports/ollama-real-benchmark-report.json",
-        "scripts/run-ollama-benchmark.ts",
-        ".specify/sprints/sprint-14/attestations/IFC-174/context_ack.json"
-      ]
-    },
-    {
-      "task_id": "PG-128",
-      "description": "FLOW-045: AI Chain Versioning Admin UI - Wire IFC-086 Backen",
-      "artifacts_verified": [
-        "apps/web/src/app/settings/ai/page.tsx",
-        "apps/web/src/app/settings/ai/components/ChainVersionsDashboard.tsx",
-        "apps/web/src/app/settings/ai/components/ChainVersionsTable.tsx",
-        "apps/web/src/app/settings/ai/components/ChainVersionEditor.tsx",
-        "apps/web/src/app/settings/ai/components/VersionComparisonView.tsx",
-        "apps/web/src/app/settings/ai/components/ZepBudgetGauge.tsx",
-        "apps/web/src/app/settings/ai/components/VersionAuditLog.tsx",
-        "apps/web/src/app/settings/ai/hooks/useChainVersions.ts",
-        ".specify/sprints/sprint-14/attestations/PG-128/context_ack.json"
       ]
     },
     {
@@ -2030,19 +1956,6 @@
         "apps/web/src/components/cases/PartyManager.tsx",
         "apps/web/src/components/cases/DeadlineTracker.tsx",
         ".specify/sprints/sprint-7/attestations/PG-138/context_ack.json"
-      ]
-    },
-    {
-      "task_id": "PG-139",
-      "description": "Appointment Scheduling Page - Calendar view conflict detecti",
-      "artifacts_verified": [
-        "apps/web/src/app/calendar/(list)/page.tsx",
-        "apps/web/src/app/calendar/[id]/page.tsx",
-        "apps/web/src/components/appointments/AppointmentCalendar.tsx",
-        "apps/web/src/components/appointments/AppointmentForm.tsx",
-        "apps/web/src/components/appointments/ConflictWarning.tsx",
-        "apps/web/src/components/appointments/RecurrenceEditor.tsx",
-        ".specify/sprints/sprint-7/attestations/PG-139/context_ack.json"
       ]
     },
     {
@@ -2108,7 +2021,7 @@
         "packages/domain/src/crm/billing/Receipt.ts",
         "packages/application/src/services/BillingDomainService.ts",
         "packages/application/src/services/__tests__/BillingDomainService.test.ts",
-        ".specify/sprints/sprint-29/attestations/IFC-198/context_ack.json",
+        ".specify/sprints/sprint-13/attestations/IFC-198/context_ack.json",
         "docs/planning/prd-billing-domain.md"
       ]
     },
@@ -2120,8 +2033,17 @@
         "packages/application/src/services/AnalyticsAggregationService.ts",
         "apps/api/src/modules/analytics/analytics.router.ts",
         "apps/api/src/modules/analytics/__tests__/analytics.router.test.ts",
-        ".specify/sprints/sprint-29/attestations/IFC-200/context_ack.json",
+        ".specify/sprints/sprint-13/attestations/IFC-200/context_ack.json",
         "docs/planning/prd-analytics-adapter.md"
+      ]
+    },
+    {
+      "task_id": "IFC-202",
+      "description": "Activity Feed Stats Endpoint - getStats aggregation with cou",
+      "artifacts_verified": [
+        "apps/api/src/modules/misc/__tests__/activity-feed-stats.router.test.ts",
+        ".specify/sprints/sprint-16/attestations/IFC-202/context_ack.json",
+        ".specify/sprints/sprint-16/attestations/IFC-202/attestation.json"
       ]
     },
     {
@@ -2141,6 +2063,22 @@
         "apps/api/src/modules/ticket/ticket.router.ts",
         "apps/api/src/modules/ticket/__tests__/ticket-stats.test.ts",
         ".specify/sprints/sprint-6/attestations/IFC-206/attestation.json"
+      ]
+    },
+    {
+      "task_id": "PG-166",
+      "description": "Lighthouse audit on authenticated home page - verify NFR tar",
+      "artifacts_verified": [
+        "artifacts/benchmarks/home-page-lighthouse.json"
+      ]
+    },
+    {
+      "task_id": "PG-169",
+      "description": "Developer Guides Page",
+      "artifacts_verified": [
+        "apps/web/src/app/(developer)/docs/guides/page.tsx",
+        "apps/web/src/components/developer/guides-list.tsx",
+        ".specify/sprints/sprint-15/attestations/PG-169/context_ack.json"
       ]
     },
     {
@@ -2190,14 +2128,6 @@
       ]
     },
     {
-      "task_id": "DOC-007",
-      "description": "Conduct full accessibility compliance gap assessment: Lighth",
-      "artifacts_verified": [
-        "docs/compliance/accessibility-gap-assessment.md",
-        "artifacts/reports/accessibility-audit-results.json"
-      ]
-    },
-    {
       "task_id": "DOC-008",
       "description": "Create VPAT 2.5 document, WCAG 2.1 AA conformance statement,",
       "artifacts_verified": [
@@ -2207,6 +2137,88 @@
         "tests/a11y/vitest.config.ts",
         "tests/a11y/setup.ts",
         "docs/planning/adr/ADR-038-accessibility-architecture.md"
+      ]
+    },
+    {
+      "task_id": "DOC-010",
+      "description": "Create route reconciliation script comparing conformance-sta",
+      "artifacts_verified": [
+        "tools/scripts/a11y-route-reconcile.ts",
+        "tools/scripts/a11y-route-reconcile.test.ts"
+      ]
+    },
+    {
+      "task_id": "DOC-011",
+      "description": "Add compliance-check Section 11 requiring VPAT/conformance r",
+      "artifacts_verified": [
+        ".claude/skills/compliance-check/references/accessibility-doc-gate.md",
+        ".claude/skills/compliance-check/SKILL.md"
+      ]
+    },
+    {
+      "task_id": "DOC-012",
+      "description": "Establish quarterly accessibility documentation review caden",
+      "artifacts_verified": [
+        "docs/compliance/quarterly-a11y-review-template.md"
+      ]
+    },
+    {
+      "task_id": "DOC-013",
+      "description": "Amend ADR-038 with Documentation Maintenance section mandati",
+      "artifacts_verified": [
+        "docs/planning/adr/ADR-038-accessibility-architecture.md",
+        ".specify/sprints/sprint-15/specifications/DOC-013-spec.md",
+        ".specify/sprints/sprint-15/planning/DOC-013-plan.md"
+      ]
+    },
+    {
+      "task_id": "IFC-209",
+      "description": "Fix sitemap.ts defects - replace new Date() lastModified wit",
+      "artifacts_verified": [
+        "apps/web/src/app/sitemap.ts",
+        "apps/web/src/app/__tests__/sitemap-fixes.test.ts"
+      ]
+    },
+    {
+      "task_id": "DOC-014",
+      "description": "Automated content audit script - TypeScript CLI that scans p",
+      "artifacts_verified": [
+        "tools/scripts/content-audit.ts",
+        ".github/workflows/content-audit.yml",
+        "tools/scripts/__tests__/content-audit.test.ts"
+      ]
+    },
+    {
+      "task_id": "IFC-213",
+      "description": "Replace Math.random connector health checks with adapter-bac",
+      "artifacts_verified": [
+        "apps/api/src/modules/integrations/integrations.router.ts",
+        "apps/api/src/modules/integrations/__tests__/integrations.router.test.ts"
+      ]
+    },
+    {
+      "task_id": "IFC-239",
+      "description": "Lead Router Data Integrity Fixes. Fix 5 HIGH issues: (1) upd",
+      "artifacts_verified": [
+        "apps/api/src/modules/lead/lead.router.ts",
+        "packages/validators/src/lead.ts",
+        "packages/domain/src/crm/lead/LeadScore.ts"
+      ]
+    },
+    {
+      "task_id": "IFC-254",
+      "description": "Contact Router Data Integrity Fixes. (1) Raw SQL in getTimel",
+      "artifacts_verified": [
+        "apps/api/src/modules/contact/contact.router.ts",
+        "packages/validators/src/contact.ts"
+      ]
+    },
+    {
+      "task_id": "PG-193",
+      "description": "Workflow Step Progress Panel — Add real-time N/N step progre",
+      "artifacts_verified": [
+        "apps/web/src/components/ai-monitoring/WorkflowProgressPanel.tsx",
+        "apps/web/src/components/ai-monitoring/__tests__/WorkflowProgressPanel.test.tsx"
       ]
     }
   ],
@@ -2249,6 +2261,18 @@
       ]
     },
     {
+      "task_id": "IFC-017",
+      "description": "PHASE-002: Prisma + Supabase Data Layer",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 1 artifact(s)"
+      ],
+      "missing_artifacts": [
+        "artifacts/benchmarks/query-performance.csv"
+      ],
+      "dod_issues": []
+    },
+    {
       "task_id": "IFC-019",
       "description": "PHASE-001: Gate 1 Review - £500 Investment",
       "status_claimed": "Completed",
@@ -2257,8 +2281,8 @@
         "DOD has no measurable or testable criteria"
       ],
       "missing_artifacts": [
-        "SPEC:.specify/sprints/sprint-8/specifications/IFC-019-spec.md",
-        "PLAN:.specify/sprints/sprint-8/planning/IFC-019-plan.md"
+        "SPEC:.specify/sprints/sprint-6/specifications/IFC-019-spec.md",
+        "PLAN:.specify/sprints/sprint-6/planning/IFC-019-plan.md"
       ],
       "dod_issues": [
         "DOD has no measurable or testable criteria"
@@ -2275,6 +2299,18 @@
       "dod_issues": [
         "DOD has no measurable or testable criteria"
       ]
+    },
+    {
+      "task_id": "IFC-021",
+      "description": "PHASE-011: CrewAI Agent Framework",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 1 artifact(s)"
+      ],
+      "missing_artifacts": [
+        "artifacts/logs/agent-interaction-logs.json"
+      ],
+      "dod_issues": []
     },
     {
       "task_id": "IFC-023",
@@ -2329,9 +2365,12 @@
       "description": "PHASE-001: Gate 2 Review - £2000 Investment",
       "status_claimed": "Completed",
       "issues": [
+        "Missing 1 artifact(s)",
         "DOD has no measurable or testable criteria"
       ],
-      "missing_artifacts": [],
+      "missing_artifacts": [
+        "artifacts/reports/ai-roi-report.md"
+      ],
       "dod_issues": [
         "DOD has no measurable or testable criteria"
       ]
@@ -2362,6 +2401,19 @@
       "dod_issues": []
     },
     {
+      "task_id": "IFC-030",
+      "description": "PHASE-005: Smart Lead Routing",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 2 artifact(s)"
+      ],
+      "missing_artifacts": [
+        "SPEC:.specify/sprints/sprint-17/specifications/IFC-030-spec.md",
+        "PLAN:.specify/sprints/sprint-17/planning/IFC-030-plan.md"
+      ],
+      "dod_issues": []
+    },
+    {
       "task_id": "IFC-039",
       "description": "Advanced AI Features (RAG)",
       "status_claimed": "Completed",
@@ -2370,9 +2422,9 @@
         "DOD has no measurable or testable criteria"
       ],
       "missing_artifacts": [
-        "PLAN:.specify/sprints/sprint-23/planning/IFC-039-plan.md",
-        "CONTEXT:.specify/sprints/sprint-23/context/IFC-039/hydrated-context.md",
-        "SPEC:.specify/sprints/sprint-23/specifications/IFC-039-spec.md"
+        "PLAN:.specify/sprints/sprint-6/planning/IFC-039-plan.md",
+        "CONTEXT:.specify/sprints/sprint-6/context/IFC-039/hydrated-context.md",
+        "SPEC:.specify/sprints/sprint-6/specifications/IFC-039-spec.md"
       ],
       "dod_issues": [
         "DOD has no measurable or testable criteria"
@@ -2389,6 +2441,19 @@
       "dod_issues": [
         "DOD has no measurable or testable criteria"
       ]
+    },
+    {
+      "task_id": "IFC-044",
+      "description": "Unit Tests (Vitest + TDD)",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 2 artifact(s)"
+      ],
+      "missing_artifacts": [
+        "artifacts/logs/test-execution-time.log",
+        "artifacts/reports/mutation-test.json"
+      ],
+      "dod_issues": []
     },
     {
       "task_id": "IFC-055",
@@ -2420,9 +2485,12 @@
       "description": "Vendor Lock-in Mitigation",
       "status_claimed": "Completed",
       "issues": [
+        "Missing 1 artifact(s)",
         "DOD has no measurable or testable criteria"
       ],
-      "missing_artifacts": [],
+      "missing_artifacts": [
+        "artifacts/logs/portability-test.log"
+      ],
       "dod_issues": [
         "DOD has no measurable or testable criteria"
       ]
@@ -2513,6 +2581,18 @@
       "dod_issues": []
     },
     {
+      "task_id": "IFC-075",
+      "description": "IaC with Terraform",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 1 artifact(s)"
+      ],
+      "missing_artifacts": [
+        "artifacts/logs/destroy-rebuild-test.log"
+      ],
+      "dod_issues": []
+    },
+    {
       "task_id": "IFC-076",
       "description": "Component Library (shadcn/ui)",
       "status_claimed": "Completed",
@@ -2566,12 +2646,28 @@
       "description": "FLOW-005-A, FLOW-006, FLOW-014, FLOW-010-A: Contacts Module ",
       "status_claimed": "Completed",
       "issues": [
+        "Missing 2 artifact(s)",
         "DOD has no artifact reference"
       ],
-      "missing_artifacts": [],
+      "missing_artifacts": [
+        "packages/adapters/src/calendar/__tests__/CalendarAdapter.test.ts",
+        "packages/adapters/src/calendar/__tests__/CalendarIntegration.test.ts"
+      ],
       "dod_issues": [
         "DOD has no artifact reference"
       ]
+    },
+    {
+      "task_id": "IFC-090",
+      "description": "Contact 360 Page - Full Detail View",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 1 artifact(s)"
+      ],
+      "missing_artifacts": [
+        "artifacts/lighthouse/lighthouse-360-report.html"
+      ],
+      "dod_issues": []
     },
     {
       "task_id": "IFC-094",
@@ -2597,8 +2693,8 @@
         "Missing 2 artifact(s)"
       ],
       "missing_artifacts": [
-        "SPEC:.specify/sprints/sprint-8/specifications/IFC-095-spec.md",
-        "PLAN:.specify/sprints/sprint-8/planning/IFC-095-plan.md"
+        "SPEC:.specify/sprints/sprint-6/specifications/IFC-095-spec.md",
+        "PLAN:.specify/sprints/sprint-6/planning/IFC-095-plan.md"
       ],
       "dod_issues": []
     },
@@ -2607,12 +2703,129 @@
       "description": "Home Page (Public)",
       "status_claimed": "Completed",
       "issues": [
-        "Missing 3 artifact(s)"
+        "Missing 4 artifact(s)"
       ],
       "missing_artifacts": [
         "SPEC:.specify/sprints/sprint-11/specifications/PG-001-spec.md",
         "PLAN:.specify/sprints/sprint-11/planning/PG-001-plan.md",
+        "apps/web/src/app/(public)/page.tsx",
         "SPEC:docs/specs/HOME-PAGE-SPEC.md"
+      ],
+      "dod_issues": []
+    },
+    {
+      "task_id": "PG-009",
+      "description": "Blog Index",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 1 artifact(s)"
+      ],
+      "missing_artifacts": [
+        "artifacts/logs/blog-categories.json"
+      ],
+      "dod_issues": []
+    },
+    {
+      "task_id": "PG-044",
+      "description": "Help Search",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 2 artifact(s)"
+      ],
+      "missing_artifacts": [
+        "SPEC:.specify/sprints/sprint-16/specifications/PG-044-spec.md",
+        "PLAN:.specify/sprints/sprint-16/planning/PG-044-plan.md"
+      ],
+      "dod_issues": []
+    },
+    {
+      "task_id": "PG-045",
+      "description": "Help Article",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 2 artifact(s)"
+      ],
+      "missing_artifacts": [
+        "SPEC:.specify/sprints/sprint-16/specifications/PG-045-spec.md",
+        "PLAN:.specify/sprints/sprint-16/planning/PG-045-plan.md"
+      ],
+      "dod_issues": []
+    },
+    {
+      "task_id": "PG-046",
+      "description": "Support Tickets",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 2 artifact(s)"
+      ],
+      "missing_artifacts": [
+        "SPEC:.specify/sprints/sprint-16/specifications/PG-046-spec.md",
+        "PLAN:.specify/sprints/sprint-16/planning/PG-046-plan.md"
+      ],
+      "dod_issues": []
+    },
+    {
+      "task_id": "PG-047",
+      "description": "New Ticket",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 2 artifact(s)"
+      ],
+      "missing_artifacts": [
+        "SPEC:.specify/sprints/sprint-16/specifications/PG-047-spec.md",
+        "PLAN:.specify/sprints/sprint-16/planning/PG-047-plan.md"
+      ],
+      "dod_issues": []
+    },
+    {
+      "task_id": "PG-048",
+      "description": "Ticket Detail",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 3 artifact(s)"
+      ],
+      "missing_artifacts": [
+        "SPEC:.specify/sprints/sprint-16/specifications/PG-048-spec.md",
+        "PLAN:.specify/sprints/sprint-16/planning/PG-048-plan.md",
+        "ATTESTATION:.specify/sprints/sprint-16/attestations/PG-048/attestation.json"
+      ],
+      "dod_issues": []
+    },
+    {
+      "task_id": "PG-052",
+      "description": "Cookie Policy",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 2 artifact(s)"
+      ],
+      "missing_artifacts": [
+        "apps/web/src/app/(public)/cookie-policy/page.tsx",
+        "apps/web/src/components/legal/cookie-banner.tsx"
+      ],
+      "dod_issues": []
+    },
+    {
+      "task_id": "PG-056",
+      "description": "500 Error",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 2 artifact(s)"
+      ],
+      "missing_artifacts": [
+        "SPEC:.specify/sprints/sprint-17/specifications/PG-056-spec.md",
+        "PLAN:.specify/sprints/sprint-17/planning/PG-056-plan.md"
+      ],
+      "dod_issues": []
+    },
+    {
+      "task_id": "IFC-101",
+      "description": "PHASE-039: Lead Aggregate and Value Objects",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 1 artifact(s)"
+      ],
+      "missing_artifacts": [
+        "packages/domain/src/shared/__tests__/Guard.test.ts"
       ],
       "dod_issues": []
     },
@@ -2631,6 +2844,18 @@
     {
       "task_id": "IFC-120",
       "description": "Implement password reset and email verification flows",
+      "status_claimed": "Completed",
+      "issues": [
+        "DOD has no artifact reference"
+      ],
+      "missing_artifacts": [],
+      "dod_issues": [
+        "DOD has no artifact reference"
+      ]
+    },
+    {
+      "task_id": "PG-125",
+      "description": "Add MFA using TOTP or SMS and allow users to enable/disable ",
       "status_claimed": "Completed",
       "issues": [
         "DOD has no artifact reference"
@@ -2672,8 +2897,8 @@
         "Missing 2 artifact(s)"
       ],
       "missing_artifacts": [
-        "SPEC:.specify/sprints/sprint-11/specifications/IFC-125-spec.md",
-        "PLAN:.specify/sprints/sprint-11/planning/IFC-125-plan.md"
+        "SPEC:.specify/sprints/sprint-6/specifications/IFC-125-spec.md",
+        "PLAN:.specify/sprints/sprint-6/planning/IFC-125-plan.md"
       ],
       "dod_issues": []
     },
@@ -2682,11 +2907,14 @@
       "description": "Implement tenant isolation at database and application layer",
       "status_claimed": "Completed",
       "issues": [
-        "Missing 2 artifact(s)"
+        "Missing 5 artifact(s)"
       ],
       "missing_artifacts": [
-        "SPEC:.specify/sprints/sprint-10/specifications/IFC-127-spec.md",
-        "PLAN:.specify/sprints/sprint-10/planning/IFC-127-plan.md"
+        "SPEC:.specify/sprints/sprint-5/specifications/IFC-127-spec.md",
+        "PLAN:.specify/sprints/sprint-5/planning/IFC-127-plan.md",
+        "packages/db/prisma/migrations/add-multi-tenancy-diff.sql",
+        "packages/db/prisma/migrations/add_multi_tenancy_manual.sql",
+        "packages/db/prisma/migrations/tenant-rls.sql"
       ],
       "dod_issues": []
     },
@@ -2744,11 +2972,24 @@
       "description": "Perform threat modeling and abuse-case analysis for multi-te",
       "status_claimed": "Completed",
       "issues": [
-        "Missing 2 artifact(s)"
+        "Missing 3 artifact(s)"
       ],
       "missing_artifacts": [
         "SPEC:.specify/sprints/sprint-11/specifications/IFC-143-spec.md",
-        "PLAN:.specify/sprints/sprint-11/planning/IFC-143-plan.md"
+        "PLAN:.specify/sprints/sprint-11/planning/IFC-143-plan.md",
+        "artifacts/logs/mitigation-backlog.csv"
+      ],
+      "dod_issues": []
+    },
+    {
+      "task_id": "IFC-146",
+      "description": "Define PRD and user journey templates; create Definition of ",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 1 artifact(s)"
+      ],
+      "missing_artifacts": [
+        "artifacts/logs/backlog-updates-log.csv"
       ],
       "dod_issues": []
     },
@@ -2772,8 +3013,8 @@
         "Missing 2 artifact(s)"
       ],
       "missing_artifacts": [
-        "SPEC:.specify/sprints/sprint-8/specifications/IFC-150-spec.md",
-        "PLAN:.specify/sprints/sprint-8/planning/IFC-150-plan.md"
+        "SPEC:.specify/sprints/sprint-5/specifications/IFC-150-spec.md",
+        "PLAN:.specify/sprints/sprint-5/planning/IFC-150-plan.md"
       ],
       "dod_issues": []
     },
@@ -2788,6 +3029,18 @@
       "dod_issues": [
         "DOD has no artifact reference"
       ]
+    },
+    {
+      "task_id": "IFC-154",
+      "description": "OCR + text extraction worker for scanned PDFs/images; normal",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 1 artifact(s)"
+      ],
+      "missing_artifacts": [
+        "artifacts/benchmarks/ocr-quality-benchmarks.csv"
+      ],
+      "dod_issues": []
     },
     {
       "task_id": "IFC-155",
@@ -2825,6 +3078,18 @@
       "dod_issues": [
         "DOD has no artifact reference"
       ]
+    },
+    {
+      "task_id": "IFC-160",
+      "description": "Artifact path conventions + CI lint to prevent repo drift",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 1 artifact(s)"
+      ],
+      "missing_artifacts": [
+        "scripts/migration/artifact-move-map.csv"
+      ],
+      "dod_issues": []
     },
     {
       "task_id": "EXP-ARTIFACTS-002",
@@ -3055,6 +3320,37 @@
       ]
     },
     {
+      "task_id": "IFC-174",
+      "description": "Run REAL Ollama benchmarks - Follow-up to IFC-085",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 1 artifact(s)"
+      ],
+      "missing_artifacts": [
+        "artifacts/reports/ollama-real-benchmark-report.json"
+      ],
+      "dod_issues": []
+    },
+    {
+      "task_id": "PG-128",
+      "description": "FLOW-045: AI Chain Versioning Admin UI - Wire IFC-086 Backen",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 8 artifact(s)"
+      ],
+      "missing_artifacts": [
+        "apps/web/src/app/settings/ai/page.tsx",
+        "apps/web/src/app/settings/ai/components/ChainVersionsDashboard.tsx",
+        "apps/web/src/app/settings/ai/components/ChainVersionsTable.tsx",
+        "apps/web/src/app/settings/ai/components/ChainVersionEditor.tsx",
+        "apps/web/src/app/settings/ai/components/VersionComparisonView.tsx",
+        "apps/web/src/app/settings/ai/components/ZepBudgetGauge.tsx",
+        "apps/web/src/app/settings/ai/components/VersionAuditLog.tsx",
+        "apps/web/src/app/settings/ai/hooks/useChainVersions.ts"
+      ],
+      "dod_issues": []
+    },
+    {
       "task_id": "IFC-177",
       "description": "AI Output Review - Application Layer (use cases and ports)",
       "status_claimed": "Completed",
@@ -3153,10 +3449,11 @@
       "description": "Authenticated Home Page - Welcome summary activity feed AI i",
       "status_claimed": "Completed",
       "issues": [
-        "Missing 1 artifact(s)",
+        "Missing 2 artifact(s)",
         "DOD has no artifact reference"
       ],
       "missing_artifacts": [
+        "apps/web/src/app/(public)/page.tsx",
         "SPEC:docs/specs/HOME-PAGE-SPEC.md"
       ],
       "dod_issues": [
@@ -3287,9 +3584,12 @@
       "description": "Contact List & Detail Pages - Search filters relationship vi",
       "status_claimed": "Completed",
       "issues": [
+        "Missing 1 artifact(s)",
         "DOD has no artifact reference"
       ],
-      "missing_artifacts": [],
+      "missing_artifacts": [
+        "apps/web/src/components/contacts/ContactDetail.tsx"
+      ],
       "dod_issues": [
         "DOD has no artifact reference"
       ]
@@ -3329,6 +3629,18 @@
       "dod_issues": [
         "DOD has no artifact reference"
       ]
+    },
+    {
+      "task_id": "PG-139",
+      "description": "Appointment Scheduling Page - Calendar view conflict detecti",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 1 artifact(s)"
+      ],
+      "missing_artifacts": [
+        "apps/web/src/app/calendar/[id]/page.tsx"
+      ],
+      "dod_issues": []
     },
     {
       "task_id": "PG-142",
@@ -3405,8 +3717,49 @@
       "dod_issues": []
     },
     {
+      "task_id": "IFC-193",
+      "description": "Activity Feed Type Registry - Enum-based mapping from AuditL",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 2 artifact(s)",
+        "DOD has no artifact reference"
+      ],
+      "missing_artifacts": [
+        "SPEC:.specify/sprints/sprint-16/specifications/IFC-193-spec.md",
+        "PLAN:.specify/sprints/sprint-16/planning/IFC-193-plan.md"
+      ],
+      "dod_issues": [
+        "DOD has no artifact reference"
+      ]
+    },
+    {
+      "task_id": "IFC-194",
+      "description": "Router Middleware Standardization - Migrate all routers from",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 2 artifact(s)"
+      ],
+      "missing_artifacts": [
+        "SPEC:.specify/sprints/sprint-16/specifications/IFC-194-spec.md",
+        "PLAN:.specify/sprints/sprint-16/planning/IFC-194-plan.md"
+      ],
+      "dod_issues": []
+    },
+    {
       "task_id": "IFC-195",
       "description": "Customizable Daily Goals - Multi-type goal support (revenue ",
+      "status_claimed": "Completed",
+      "issues": [
+        "DOD has no artifact reference"
+      ],
+      "missing_artifacts": [],
+      "dod_issues": [
+        "DOD has no artifact reference"
+      ]
+    },
+    {
+      "task_id": "IFC-196",
+      "description": "Home Page Response Caching - Redis caching for getWelcomeSum",
       "status_claimed": "Completed",
       "issues": [
         "DOD has no artifact reference"
@@ -3465,6 +3818,18 @@
       ]
     },
     {
+      "task_id": "IFC-203",
+      "description": "Activity Feed Full-Text Search - search endpoint with text q",
+      "status_claimed": "Completed",
+      "issues": [
+        "DOD has no artifact reference"
+      ],
+      "missing_artifacts": [],
+      "dod_issues": [
+        "DOD has no artifact reference"
+      ]
+    },
+    {
       "task_id": "IFC-207",
       "description": "Ticket Query Performance Tracking - add queryDurationMs to t",
       "status_claimed": "Completed",
@@ -3501,6 +3866,129 @@
       ]
     },
     {
+      "task_id": "PG-156",
+      "description": "Customizable Daily Goals - settings UI + home.updateDailyGoa",
+      "status_claimed": "Completed",
+      "issues": [
+        "DOD has no artifact reference",
+        "DOD has no measurable or testable criteria"
+      ],
+      "missing_artifacts": [],
+      "dod_issues": [
+        "DOD has no artifact reference",
+        "DOD has no measurable or testable criteria"
+      ]
+    },
+    {
+      "task_id": "PG-157",
+      "description": "Visible Pin to Home buttons on entity list items and detail ",
+      "status_claimed": "Completed",
+      "issues": [
+        "DOD has no artifact reference",
+        "DOD has no measurable or testable criteria"
+      ],
+      "missing_artifacts": [],
+      "dod_issues": [
+        "DOD has no artifact reference",
+        "DOD has no measurable or testable criteria"
+      ]
+    },
+    {
+      "task_id": "PG-158",
+      "description": "Drag and drop pinned items reorder - backend API exists (hom",
+      "status_claimed": "Completed",
+      "issues": [
+        "DOD has no artifact reference",
+        "DOD has no measurable or testable criteria"
+      ],
+      "missing_artifacts": [],
+      "dod_issues": [
+        "DOD has no artifact reference",
+        "DOD has no measurable or testable criteria"
+      ]
+    },
+    {
+      "task_id": "PG-159",
+      "description": "Stale pin handling - deleted or inaccessible pinned entities",
+      "status_claimed": "Completed",
+      "issues": [
+        "DOD has no artifact reference"
+      ],
+      "missing_artifacts": [],
+      "dod_issues": [
+        "DOD has no artifact reference"
+      ]
+    },
+    {
+      "task_id": "PG-160",
+      "description": "View All AI Insights page - /insights route with getAllInsig",
+      "status_claimed": "Completed",
+      "issues": [
+        "DOD has no artifact reference",
+        "DOD has no measurable or testable criteria"
+      ],
+      "missing_artifacts": [],
+      "dod_issues": [
+        "DOD has no artifact reference",
+        "DOD has no measurable or testable criteria"
+      ]
+    },
+    {
+      "task_id": "PG-161",
+      "description": "Notifications integration on home page - bell icon header ba",
+      "status_claimed": "Completed",
+      "issues": [
+        "DOD has no artifact reference",
+        "DOD has no measurable or testable criteria"
+      ],
+      "missing_artifacts": [],
+      "dod_issues": [
+        "DOD has no artifact reference",
+        "DOD has no measurable or testable criteria"
+      ]
+    },
+    {
+      "task_id": "PG-162",
+      "description": "AI Insights from ML model - LangChain chain for generating d",
+      "status_claimed": "Completed",
+      "issues": [
+        "DOD has no measurable or testable criteria"
+      ],
+      "missing_artifacts": [],
+      "dod_issues": [
+        "DOD has no measurable or testable criteria"
+      ]
+    },
+    {
+      "task_id": "PG-163",
+      "description": "Home page integration tests - test home.router endpoints aga",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 2 artifact(s)"
+      ],
+      "missing_artifacts": [
+        "SPEC:.specify/sprints/sprint-15/specifications/PG-163-spec.md",
+        "PLAN:.specify/sprints/sprint-15/planning/PG-163-plan.md"
+      ],
+      "dod_issues": []
+    },
+    {
+      "task_id": "PG-164",
+      "description": "Home page E2E tests - 5 Playwright scenarios: public page au",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 2 artifact(s)",
+        "DOD has no artifact reference"
+      ],
+      "missing_artifacts": [
+        "SPEC:.specify/sprints/sprint-15/specifications/PG-164-spec.md",
+        "PLAN:.specify/sprints/sprint-15/planning/PG-164-plan.md"
+      ],
+      "dod_issues": [
+        "DOD has no artifact reference"
+      ]
+    },
+    {
       "task_id": "PG-165",
       "description": "Update PRD checkboxes for home page - mark completed accepta",
       "status_claimed": "Completed",
@@ -3513,6 +4001,138 @@
       ]
     },
     {
+      "task_id": "PG-167",
+      "description": "Analytics tracking plan for home page - define and implement",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 3 artifact(s)"
+      ],
+      "missing_artifacts": [
+        "SPEC:.specify/sprints/sprint-16/specifications/PG-167-spec.md",
+        "PLAN:.specify/sprints/sprint-16/planning/PG-167-plan.md",
+        "ATTESTATION:.specify/sprints/sprint-16/attestations/PG-167/attestation.json"
+      ],
+      "dod_issues": []
+    },
+    {
+      "task_id": "PG-170",
+      "description": "Architecture Docs Page",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 2 artifact(s)"
+      ],
+      "missing_artifacts": [
+        "SPEC:.specify/sprints/sprint-15/specifications/PG-170-spec.md",
+        "PLAN:.specify/sprints/sprint-15/planning/PG-170-plan.md"
+      ],
+      "dod_issues": []
+    },
+    {
+      "task_id": "PG-172",
+      "description": "Billing Ghost Pages - Usage Plans Upgrade Cancel and Setting",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 2 artifact(s)"
+      ],
+      "missing_artifacts": [
+        "SPEC:.specify/sprints/sprint-16/specifications/PG-172-spec.md",
+        "PLAN:.specify/sprints/sprint-16/planning/PG-172-plan.md"
+      ],
+      "dod_issues": []
+    },
+    {
+      "task_id": "PG-173",
+      "description": "Ticket Configuration Pages - SLA Policies Types and Automati",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 2 artifact(s)"
+      ],
+      "missing_artifacts": [
+        "SPEC:.specify/sprints/sprint-16/specifications/PG-173-spec.md",
+        "PLAN:.specify/sprints/sprint-16/planning/PG-173-plan.md"
+      ],
+      "dod_issues": []
+    },
+    {
+      "task_id": "PG-174",
+      "description": "Notification Configuration Pages - Channels and Quiet Hours",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 1 artifact(s)"
+      ],
+      "missing_artifacts": [
+        "SPEC:.specify/sprints/sprint-16/specifications/PG-174-spec.md"
+      ],
+      "dod_issues": []
+    },
+    {
+      "task_id": "PG-175",
+      "description": "Deals Trash Page - Soft-deleted deals list with restore and ",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 2 artifact(s)",
+        "DOD has no artifact reference"
+      ],
+      "missing_artifacts": [
+        "SPEC:.specify/sprints/sprint-16/specifications/PG-175-spec.md",
+        "PLAN:.specify/sprints/sprint-16/planning/PG-175-plan.md"
+      ],
+      "dod_issues": [
+        "DOD has no artifact reference"
+      ]
+    },
+    {
+      "task_id": "PG-176",
+      "description": "Governance Quality Report Sub-Pages - Lighthouse Coverage an",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 2 artifact(s)"
+      ],
+      "missing_artifacts": [
+        "SPEC:.specify/sprints/sprint-16/specifications/PG-176-spec.md",
+        "PLAN:.specify/sprints/sprint-16/planning/PG-176-plan.md"
+      ],
+      "dod_issues": []
+    },
+    {
+      "task_id": "PG-177",
+      "description": "Analytics Saved Report Pages - Weekly Monthly and Quarterly ",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 3 artifact(s)"
+      ],
+      "missing_artifacts": [
+        "apps/web/src/app/analytics/saved/weekly/page.tsx",
+        "apps/web/src/app/analytics/saved/monthly/page.tsx",
+        "apps/web/src/app/analytics/saved/quarterly/page.tsx"
+      ],
+      "dod_issues": []
+    },
+    {
+      "task_id": "PG-178",
+      "description": "Module Settings Pages - 11 per-module configuration pages at",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 1 artifact(s)"
+      ],
+      "missing_artifacts": [
+        "packages/db/prisma/migrations/20260311_lead_settings/migration.sql"
+      ],
+      "dod_issues": []
+    },
+    {
+      "task_id": "DOC-007",
+      "description": "Conduct full accessibility compliance gap assessment: Lighth",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 1 artifact(s)"
+      ],
+      "missing_artifacts": [
+        "artifacts/reports/accessibility-audit-results.json"
+      ],
+      "dod_issues": []
+    },
+    {
       "task_id": "DOC-009",
       "description": "Create content audit framework and perform initial audit: qu",
       "status_claimed": "Completed",
@@ -3523,8 +4143,375 @@
       "dod_issues": [
         "DOD has no artifact reference"
       ]
+    },
+    {
+      "task_id": "PG-179",
+      "description": "Press Release Detail Page - dynamic /press/[id] route for in",
+      "status_claimed": "Completed",
+      "issues": [
+        "DOD has no artifact reference"
+      ],
+      "missing_artifacts": [],
+      "dod_issues": [
+        "DOD has no artifact reference"
+      ]
+    },
+    {
+      "task_id": "IFC-210",
+      "description": "Fill SEO metadata gaps on public pages - add description OG ",
+      "status_claimed": "Completed",
+      "issues": [
+        "DOD has no artifact reference"
+      ],
+      "missing_artifacts": [],
+      "dod_issues": [
+        "DOD has no artifact reference"
+      ]
+    },
+    {
+      "task_id": "IFC-220",
+      "description": "AI Insight Null-State UX (Contact)  -  Add Run AI Analysis b",
+      "status_claimed": "Completed",
+      "issues": [
+        "DOD has no artifact reference"
+      ],
+      "missing_artifacts": [],
+      "dod_issues": [
+        "DOD has no artifact reference"
+      ]
+    },
+    {
+      "task_id": "IFC-222",
+      "description": "Implement real Twilio SMS SDK calls (Resolves R-006)",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 3 artifact(s)",
+        "DOD has no artifact reference"
+      ],
+      "missing_artifacts": [
+        "SPEC:.specify/sprints/sprint-14/specifications/IFC-222-spec.md",
+        "PLAN:.specify/sprints/sprint-14/planning/IFC-222-plan.md",
+        "ATTESTATION:.specify/sprints/sprint-14/attestations/IFC-222/attestation.json"
+      ],
+      "dod_issues": [
+        "DOD has no artifact reference"
+      ]
+    },
+    {
+      "task_id": "IFC-223",
+      "description": "Wire actual Email Outbound Adapter (Resolves R-018)",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 3 artifact(s)",
+        "DOD has no artifact reference"
+      ],
+      "missing_artifacts": [
+        "SPEC:.specify/sprints/sprint-14/specifications/IFC-223-spec.md",
+        "PLAN:.specify/sprints/sprint-14/planning/IFC-223-plan.md",
+        "ATTESTATION:.specify/sprints/sprint-14/attestations/IFC-223/attestation.json"
+      ],
+      "dod_issues": [
+        "DOD has no artifact reference"
+      ]
+    },
+    {
+      "task_id": "IFC-224",
+      "description": "Implement Calendar Webhook Ingestion Routes (Resolves R-008)",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 3 artifact(s)"
+      ],
+      "missing_artifacts": [
+        "SPEC:.specify/sprints/sprint-14/specifications/IFC-224-spec.md",
+        "PLAN:.specify/sprints/sprint-14/planning/IFC-224-plan.md",
+        "ATTESTATION:.specify/sprints/sprint-14/attestations/IFC-224/attestation.json"
+      ],
+      "dod_issues": []
+    },
+    {
+      "task_id": "IFC-225",
+      "description": "Convert Lead UX Fix - Backend requires QUALIFIED status but ",
+      "status_claimed": "Completed",
+      "issues": [
+        "DOD has no artifact reference"
+      ],
+      "missing_artifacts": [],
+      "dod_issues": [
+        "DOD has no artifact reference"
+      ]
+    },
+    {
+      "task_id": "IFC-226",
+      "description": "Lead Detail Null-State UX - Fix engagement/churn/sentiment s",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 2 artifact(s)",
+        "DOD has no artifact reference"
+      ],
+      "missing_artifacts": [
+        "SPEC:.specify/sprints/sprint-16/specifications/IFC-226-spec.md",
+        "PLAN:.specify/sprints/sprint-16/planning/IFC-226-plan.md"
+      ],
+      "dod_issues": [
+        "DOD has no artifact reference"
+      ]
+    },
+    {
+      "task_id": "IFC-232",
+      "description": "Sidebar Broken Links Cleanup - 1 remaining broken navigation",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 2 artifact(s)",
+        "DOD has no artifact reference"
+      ],
+      "missing_artifacts": [
+        "SPEC:.specify/sprints/sprint-16/specifications/IFC-232-spec.md",
+        "PLAN:.specify/sprints/sprint-16/planning/IFC-232-plan.md"
+      ],
+      "dod_issues": [
+        "DOD has no artifact reference"
+      ]
+    },
+    {
+      "task_id": "IFC-236",
+      "description": "Recent Activity Empty State CTA - Overview tab shows generic",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 2 artifact(s)",
+        "DOD has no artifact reference"
+      ],
+      "missing_artifacts": [
+        "SPEC:.specify/sprints/sprint-16/specifications/IFC-236-spec.md",
+        "PLAN:.specify/sprints/sprint-16/planning/IFC-236-plan.md"
+      ],
+      "dod_issues": [
+        "DOD has no artifact reference"
+      ]
+    },
+    {
+      "task_id": "IFC-237",
+      "description": "Lead Router Security - Tenant Isolation & Domain Bypass. Fix",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 2 artifact(s)"
+      ],
+      "missing_artifacts": [
+        "SPEC:.specify/sprints/sprint-16/specifications/IFC-237-spec.md",
+        "PLAN:.specify/sprints/sprint-16/planning/IFC-237-plan.md"
+      ],
+      "dod_issues": []
+    },
+    {
+      "task_id": "IFC-238",
+      "description": "Lead Detail Status Type Fix + Auth Guard. Fix 2 CRITICAL iss",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 2 artifact(s)",
+        "DOD has no artifact reference"
+      ],
+      "missing_artifacts": [
+        "SPEC:.specify/sprints/sprint-16/specifications/IFC-238-spec.md",
+        "PLAN:.specify/sprints/sprint-16/planning/IFC-238-plan.md"
+      ],
+      "dod_issues": [
+        "DOD has no artifact reference"
+      ]
+    },
+    {
+      "task_id": "IFC-252",
+      "description": "Contact Router Security — Tenant Isolation Fixes. CRITICAL: ",
+      "status_claimed": "Completed",
+      "issues": [
+        "DOD has no artifact reference"
+      ],
+      "missing_artifacts": [],
+      "dod_issues": [
+        "DOD has no artifact reference"
+      ]
+    },
+    {
+      "task_id": "IFC-253",
+      "description": "Contact Detail NaN Fix + Auth Guard + Status Enum. CRITICAL:",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 1 artifact(s)",
+        "DOD has no artifact reference"
+      ],
+      "missing_artifacts": [
+        "apps/web/src/components/contacts/ContactDetail.tsx"
+      ],
+      "dod_issues": [
+        "DOD has no artifact reference"
+      ]
+    },
+    {
+      "task_id": "IFC-267",
+      "description": "Account Detail No-Op Action Buttons. Wire 6 non-functional b",
+      "status_claimed": "Completed",
+      "issues": [
+        "DOD has no artifact reference"
+      ],
+      "missing_artifacts": [],
+      "dod_issues": [
+        "DOD has no artifact reference"
+      ]
+    },
+    {
+      "task_id": "IFC-268",
+      "description": "Account Owner Display & Assignment. (1) Owner card shows lit",
+      "status_claimed": "Completed",
+      "issues": [
+        "DOD has no artifact reference"
+      ],
+      "missing_artifacts": [],
+      "dod_issues": [
+        "DOD has no artifact reference"
+      ]
+    },
+    {
+      "task_id": "IFC-269",
+      "description": "Account Backend Tenant Isolation & Security. (1) CRITICAL: f",
+      "status_claimed": "Completed",
+      "issues": [
+        "DOD has no artifact reference"
+      ],
+      "missing_artifacts": [],
+      "dod_issues": [
+        "DOD has no artifact reference"
+      ]
+    },
+    {
+      "task_id": "IFC-278",
+      "description": "Deal Detail Page — Replace SAMPLE_DEAL with Real API Data. C",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 1 artifact(s)",
+        "DOD has no artifact reference"
+      ],
+      "missing_artifacts": [
+        "PLAN:.specify/sprints/sprint-16/planning/IFC-278-plan.md"
+      ],
+      "dod_issues": [
+        "DOD has no artifact reference"
+      ]
+    },
+    {
+      "task_id": "IFC-279",
+      "description": "Deal Create Form + /deals/new Route. No deal creation form e",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 2 artifact(s)",
+        "DOD has no artifact reference"
+      ],
+      "missing_artifacts": [
+        "SPEC:.specify/sprints/sprint-16/specifications/IFC-279-spec.md",
+        "PLAN:.specify/sprints/sprint-16/planning/IFC-279-plan.md"
+      ],
+      "dod_issues": [
+        "DOD has no artifact reference"
+      ]
+    },
+    {
+      "task_id": "IFC-281",
+      "description": "Deal Backend Tenant Isolation & Audit Logging. (1) CRITICAL:",
+      "status_claimed": "Completed",
+      "issues": [
+        "DOD has no artifact reference"
+      ],
+      "missing_artifacts": [],
+      "dod_issues": [
+        "DOD has no artifact reference"
+      ]
+    },
+    {
+      "task_id": "IFC-296",
+      "description": "Queue Scheduler Administration — Implement queuesAdmin tRPC ",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 2 artifact(s)"
+      ],
+      "missing_artifacts": [
+        "SPEC:.specify/sprints/sprint-15/specifications/IFC-296-spec.md",
+        "PLAN:.specify/sprints/sprint-15/planning/IFC-296-plan.md"
+      ],
+      "dod_issues": []
+    },
+    {
+      "task_id": "IFC-297",
+      "description": "AI Monitoring Data Persistence — Replace in-memory singleton",
+      "status_claimed": "Completed",
+      "issues": [
+        "DOD has no artifact reference"
+      ],
+      "missing_artifacts": [],
+      "dod_issues": [
+        "DOD has no artifact reference"
+      ]
+    },
+    {
+      "task_id": "IFC-298",
+      "description": "HelpArticle Prisma Model + Migration",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 3 artifact(s)",
+        "DOD has no artifact reference"
+      ],
+      "missing_artifacts": [
+        "packages/db/prisma/migrations/20260311000000_add_help_article_models/migration.sql",
+        "SPEC:.specify/sprints/sprint-17/specifications/IFC-298-spec.md",
+        "PLAN:.specify/sprints/sprint-17/planning/IFC-298-plan.md"
+      ],
+      "dod_issues": [
+        "DOD has no artifact reference"
+      ]
+    },
+    {
+      "task_id": "IFC-299",
+      "description": "Help Article CRUD tRPC Router",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 2 artifact(s)",
+        "DOD has no artifact reference"
+      ],
+      "missing_artifacts": [
+        "SPEC:.specify/sprints/sprint-17/specifications/IFC-299-spec.md",
+        "PLAN:.specify/sprints/sprint-17/planning/IFC-299-plan.md"
+      ],
+      "dod_issues": [
+        "DOD has no artifact reference"
+      ]
+    },
+    {
+      "task_id": "IFC-303",
+      "description": "Article Feedback tRPC Mutation",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 2 artifact(s)",
+        "DOD has no artifact reference"
+      ],
+      "missing_artifacts": [
+        "SPEC:.specify/sprints/sprint-17/specifications/IFC-303-spec.md",
+        "PLAN:.specify/sprints/sprint-17/planning/IFC-303-plan.md"
+      ],
+      "dod_issues": [
+        "DOD has no artifact reference"
+      ]
+    },
+    {
+      "task_id": "PG-192",
+      "description": "Fix missing /agent-approvals/logs page — PG-152 regression; ",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 2 artifact(s)"
+      ],
+      "missing_artifacts": [
+        "SPEC:.specify/sprints/sprint-16/specifications/PG-192-spec.md",
+        "PLAN:.specify/sprints/sprint-16/planning/PG-192-plan.md"
+      ],
+      "dod_issues": []
     }
   ],
+  "sprint_path_mismatches": [],
   "recommendations": [
     {
       "priority": "HIGH",

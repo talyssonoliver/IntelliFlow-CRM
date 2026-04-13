@@ -1,26 +1,15 @@
 {
-  "projects_green": ["packages/domain", "packages/db"],
-  "packages/application": {
-    "baseline_total": 1293,
-    "baseline_failed": 12,
-    "baseline_failed_suites": 6,
+  "projects_green": ["packages/domain", "packages/db", "packages/application", "packages/adapters"],
+  "packages/adapters": {
+    "baseline_failed": 45,
+    "final_failed": 0,
     "clusters": [
-      { "id": "app-scheduling-import-path-drift", "label": "schema-drift", "status": "resolved", "failures_before": 5 },
-      { "id": "app-lead-service-integration-missing", "label": "schema-drift", "status": "resolved", "failures_before": 1 },
-      { "id": "app-notification-service-getDomainEvents", "label": "test-bug", "status": "resolved", "failures_before": 1 },
       {
-        "id": "app-account-service-assertions",
-        "label": "test-bug",
+        "id": "adapters-repo-tenantid-missing-REAPPLIED",
+        "label": "schema-drift",
         "status": "resolved",
-        "failures_before": 6,
-        "failures_after": 0,
-        "fix": "Root cause: AccountService.getAccountStatistics/getHighValueAccounts require BOTH ownerId AND tenantId (multi-tenancy enforcement). Tests predated this and passed only ownerId. Added tenantId='tenant-1' to Account.create calls and to service calls (AccountService.test.ts + additional.test.ts, 5 tests). Hierarchy test assertion corrected: cross-tenant parent lookup correctly returns 'Parent account not found' (tenant isolation — parent is invisible), not 'different tenant' message."
-      },
-      {
-        "id": "app-opportunity-service-assertions",
-        "label": "regression-or-mock-drift",
-        "status": "pending",
-        "signature": "OpportunityService + integration forecast — result.isSuccess false and totalPipelineValue=0 (5 failures total). Likely same tenantId pattern — investigate next iteration."
+        "failures_before": 45,
+        "fix": "Re-applied iteration-8 fix after state revert: script-driven tenantId arg addition to repo method call sites across InMemoryAccountRepository.{test,hierarchy.test}.ts (findById/findByName/findByOwnerId/findByIndustry/delete/existsByName/countByIndustry/findWithChildren/findAncestors/getHierarchyDepth) and InMemoryOpportunityRepository.test.ts (delete). Migrated 'tenant-123'/'tenant-001' literals to TEST_TENANT_ID from @intelliflow/test-fixtures. Also retargeted 'should not throw when deleting non-existent opportunity' to match production's intentional throw behavior (both in-memory and Prisma)."
       }
     ]
   }

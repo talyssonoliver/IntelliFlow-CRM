@@ -1,0 +1,39 @@
+{
+  "task": "IFC-196",
+  "generatedAt": "2026-04-13T20:16:28.847Z",
+  "env": {
+    "node": "v25.2.1",
+    "simulatedComputeMs": 120
+  },
+  "thresholds": {
+    "p95Hit": 50,
+    "p99Hit": 100
+  },
+  "results": {
+    "cold": {
+      "label": "miss (no cache)",
+      "iterations": 50,
+      "p50": 125.14560000000006,
+      "p95": 136.98210000000017,
+      "p99": 141.7905999999998,
+      "mean": 126.93350200000005
+    },
+    "warm": {
+      "label": "hit (warmed)",
+      "iterations": 200,
+      "p50": 0.001299999999901047,
+      "p95": 0.0020000000004074536,
+      "p99": 0.03080000000045402,
+      "mean": 0.6305400000000873
+    }
+  },
+  "metrics": {
+    "hits": 199,
+    "misses": 2,
+    "errors": 0,
+    "invalidations": 0
+  },
+  "hitRatePercent": 99,
+  "passed": true,
+  "notes": "Synthetic cache-layer micro-benchmark. Measures HomeCacheService.getWelcomeSummary end-to-end latency with an in-memory CachePort. Miss path simulated via setTimeout to mimic the ~120ms baseline from the IFC-182 12-query Promise.all. Independent of Postgres / Redis availability."
+}

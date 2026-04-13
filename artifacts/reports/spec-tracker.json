@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-04-13T01:23:29.801Z",
+  "generated_at": "2026-04-13T22:36:30.521Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
-    "total_specs_analyzed": 373,
-    "completed": 371,
-    "partially_done": 1,
+    "total_specs_analyzed": 380,
+    "completed": 373,
+    "partially_done": 5,
     "spec_only": 1,
-    "uncertain": 0
+    "uncertain": 1
   },
   "status_legend": {
     "COMPLETED": "All evidence confirms task is done: attestation present, CSV=Completed, plan checkboxes done",
@@ -14,50 +14,7 @@
     "SPEC_ONLY": "Spec exists but no execution evidence (no attestation, no plan completion, CSV=Backlog)",
     "UNCERTAIN": "Conflicting signals between evidence sources"
   },
-  "issues": [
-    {
-      "task_id": "IFC-194",
-      "severity": "MEDIUM",
-      "issue": "Attestation confirms completion but CSV shows only 50% complete. Likely a CSV update lag.",
-      "recommendation": "Update CSV to 100% to match attestation and metric evidence."
-    },
-    {
-      "task_id": "IFC-269",
-      "severity": "MEDIUM",
-      "issue": "Attestation confirms completion but CSV shows only 0% complete. Likely a CSV update lag.",
-      "recommendation": "Update CSV to 100% to match attestation and metric evidence."
-    },
-    {
-      "task_id": "PG-050",
-      "severity": "MEDIUM",
-      "issue": "Attestation confirms completion but CSV shows only 0% complete. Likely a CSV update lag.",
-      "recommendation": "Update CSV to 100% to match attestation and metric evidence."
-    },
-    {
-      "task_id": "PG-051",
-      "severity": "MEDIUM",
-      "issue": "Attestation confirms completion but CSV shows only 50% complete. Likely a CSV update lag.",
-      "recommendation": "Update CSV to 100% to match attestation and metric evidence."
-    },
-    {
-      "task_id": "PG-166",
-      "severity": "MEDIUM",
-      "issue": "Attestation confirms completion but CSV shows only 85% complete. Likely a CSV update lag.",
-      "recommendation": "Update CSV to 100% to match attestation and metric evidence."
-    },
-    {
-      "task_id": "PG-175",
-      "severity": "MEDIUM",
-      "issue": "Attestation confirms completion but CSV shows only 10% complete. Likely a CSV update lag.",
-      "recommendation": "Update CSV to 100% to match attestation and metric evidence."
-    },
-    {
-      "task_id": "PG-176",
-      "severity": "MEDIUM",
-      "issue": "Attestation confirms completion but CSV shows only 50% complete. Likely a CSV update lag.",
-      "recommendation": "Update CSV to 100% to match attestation and metric evidence."
-    }
-  ],
+  "issues": [],
   "tasks": [
     {
       "task_id": "AI-SETUP-001",
@@ -1474,8 +1431,8 @@
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
-      "csv_status": "In Progress",
-      "metric_status": "IN_PROGRESS",
+      "csv_status": "Needs Human",
+      "metric_status": "NEEDS_HUMAN",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-028"
@@ -3709,6 +3666,23 @@
       "real_status": "COMPLETED"
     },
     {
+      "task_id": "IFC-196",
+      "title": "Home Page Response Caching - Redis caching for getWelcomeSummary with event-driven invalidation",
+      "sprint": 17,
+      "spec_path": ".specify/sprints/sprint-17/specifications/IFC-196-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-182",
+        "IFC-075"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
       "task_id": "IFC-197",
       "title": "AI Monitoring tRPC Router - Expose drift detection latency metrics hallucination checks ROI tracking and agent status via tRPC endpoints",
       "sprint": 7,
@@ -4243,6 +4217,22 @@
         "IFC-298"
       ],
       "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-300",
+      "title": "Help Article Seed Script — Static to DB Migration",
+      "sprint": 17,
+      "spec_path": ".specify/sprints/sprint-17/specifications/IFC-300-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "In Progress",
+      "metric_status": "IN_PROGRESS",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-298"
+      ],
+      "real_status": "PARTIALLY_DONE"
     },
     {
       "task_id": "IFC-303",
@@ -5122,6 +5112,39 @@
       "real_status": "COMPLETED"
     },
     {
+      "task_id": "PG-053",
+      "title": "Data Processing Addendum",
+      "sprint": 17,
+      "spec_path": ".specify/sprints/sprint-17/specifications/PG-053-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-050",
+        "PG-051"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-054",
+      "title": "Acceptable Use Policy",
+      "sprint": 17,
+      "spec_path": ".specify/sprints/sprint-17/specifications/PG-054-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "In Progress",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-050"
+      ],
+      "real_status": "UNCERTAIN"
+    },
+    {
       "task_id": "PG-055",
       "title": "404 Not Found",
       "sprint": 17,
@@ -5152,6 +5175,22 @@
         "PG-055"
       ],
       "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-057",
+      "title": "Maintenance",
+      "sprint": 17,
+      "spec_path": ".specify/sprints/sprint-17/specifications/PG-057-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": false,
+      "csv_status": "In Progress",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-055"
+      ],
+      "real_status": "PARTIALLY_DONE"
     },
     {
       "task_id": "PG-104",
@@ -6013,6 +6052,38 @@
         "PG-007"
       ],
       "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-182",
+      "title": "Module Settings - Contacts (/contacts/contact-settings)",
+      "sprint": 17,
+      "spec_path": ".specify/sprints/sprint-17/specifications/PG-182-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": false,
+      "csv_status": "In Progress",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-178"
+      ],
+      "real_status": "PARTIALLY_DONE"
+    },
+    {
+      "task_id": "PG-183",
+      "title": "Module Settings - Accounts (/accounts/account-settings)",
+      "sprint": 17,
+      "spec_path": ".specify/sprints/sprint-17/specifications/PG-183-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": false,
+      "csv_status": "Plan Complete",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-178"
+      ],
+      "real_status": "PARTIALLY_DONE"
     },
     {
       "task_id": "PG-192",

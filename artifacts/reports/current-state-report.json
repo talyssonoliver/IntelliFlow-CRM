@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-12T15:10:41.219Z",
+  "generatedAt": "2026-04-13T20:21:03.392Z",
   "sources": {
     "metricsDir": "apps/project-tracker/docs/metrics",
     "specifySprintsDir": ".specify/sprints",
@@ -305,11 +305,15 @@
       ".specify/sprints/sprint-16/attestations/PG-193/attestation.json",
       ".specify/sprints/sprint-17/attestations/IFC-030/attestation.json",
       ".specify/sprints/sprint-17/attestations/IFC-031/attestation.json",
+      ".specify/sprints/sprint-17/attestations/IFC-196/attestation.json",
       ".specify/sprints/sprint-17/attestations/IFC-298/attestation.json",
       ".specify/sprints/sprint-17/attestations/IFC-299/attestation.json",
       ".specify/sprints/sprint-17/attestations/IFC-303/attestation.json",
       ".specify/sprints/sprint-17/attestations/PG-050/attestation.json",
+      ".specify/sprints/sprint-17/attestations/PG-051/attestation.json",
       ".specify/sprints/sprint-17/attestations/PG-052/attestation.json",
+      ".specify/sprints/sprint-17/attestations/PG-053/attestation.json",
+      ".specify/sprints/sprint-17/attestations/PG-054/attestation.json",
       ".specify/sprints/sprint-17/attestations/PG-055/attestation.json",
       ".specify/sprints/sprint-17/attestations/PG-056/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-070/attestation.json",
@@ -444,14 +448,14 @@
   "overview": {
     "numberedSprintCount": 30,
     "numberedSprintRange": "0-29",
-    "totalTasks": 569,
-    "totalNumberedSprintTasks": 564,
+    "totalTasks": 571,
+    "totalNumberedSprintTasks": 566,
     "continuousTaskCount": 5,
-    "completedTasks": 370,
-    "backlogTasks": 198,
+    "completedTasks": 373,
+    "backlogTasks": 196,
     "blockedTasks": 0,
-    "completionPercentage": 65.03,
-    "inProgressTasks": 0,
+    "completionPercentage": 65.32,
+    "inProgressTasks": 1,
     "otherTasks": 1
   },
   "inconsistencies": {
@@ -460,10 +464,16 @@
     "completedWithoutCanonicalAttestation": [],
     "attestedButNotCompletedInCsv": [
       {
-        "taskId": "PG-052",
+        "taskId": "IFC-031",
         "status": "Needs Human",
         "sprint": 17,
-        "attestationPath": ".specify/sprints/sprint-17/attestations/PG-052/attestation.json"
+        "attestationPath": ".specify/sprints/sprint-17/attestations/IFC-031/attestation.json"
+      },
+      {
+        "taskId": "PG-054",
+        "status": "In Progress",
+        "sprint": 17,
+        "attestationPath": ".specify/sprints/sprint-17/attestations/PG-054/attestation.json"
       }
     ],
     "duplicateCanonicalAttestations": [],
@@ -625,39 +635,6 @@
     "blockedTasks": [],
     "readyToStart": [
       {
-        "taskId": "IFC-196",
-        "sprint": 17,
-        "status": "Backlog",
-        "section": "Performance",
-        "title": "Home Page Response Caching - Redis caching for getWelcomeSummary with event-driven invalidation",
-        "description": "Home Page Response Caching - Redis caching for getWelcomeSummary with event-driven invalidation",
-        "summary": "getWelcomeSummary cached in Redis with 5-minute TTL; cache key: tenant:userId:home:summary; invalidated on lead/opportunity/task mutations via domain events; graceful fallback to direct queries when Redis unavailable",
-        "definitionOfDone": "getWelcomeSummary cached in Redis with 5-minute TTL; cache key: tenant:userId:home:summary; invalidated on lead/opportunity/task mutations via domain events; graceful fallback to direct queries when Redis unavailable; verified by: pnpm test",
-        "definitionOfDoneSnapshot": "getWelcomeSummary cached in Redis with 5-minute TTL; cache key: tenant:userId:home:summary; invalidated on lead/opportunity/task mutations via domain events; graceful fallback to direct queries when Redis unavailable",
-        "dependencies": [
-          "IFC-182",
-          "IFC-075"
-        ],
-        "attestation": {
-          "exists": false,
-          "path": null,
-          "verdict": null,
-          "timestamp": null,
-          "sprintFolder": null
-        },
-        "validationSummary": {
-          "total": 0,
-          "passed": 0,
-          "failed": 0,
-          "failingNames": []
-        },
-        "kpiSummary": {
-          "total": 0,
-          "met": 0,
-          "missed": 0
-        }
-      },
-      {
         "taskId": "IFC-300",
         "sprint": 17,
         "status": "Backlog",
@@ -669,102 +646,6 @@
         "definitionOfDoneSnapshot": "Seed script migrates DEFAULT_HELP_ARTICLES into DB; idempotent (skip existing slugs); validates data integrity post-seed",
         "dependencies": [
           "IFC-298"
-        ],
-        "attestation": {
-          "exists": false,
-          "path": null,
-          "verdict": null,
-          "timestamp": null,
-          "sprintFolder": null
-        },
-        "validationSummary": {
-          "total": 0,
-          "passed": 0,
-          "failed": 0,
-          "failingNames": []
-        },
-        "kpiSummary": {
-          "total": 0,
-          "met": 0,
-          "missed": 0
-        }
-      },
-      {
-        "taskId": "PG-051",
-        "sprint": 17,
-        "status": "Backlog",
-        "section": "Legal Pages",
-        "title": "Terms of Service",
-        "description": "Terms of Service",
-        "summary": "response under 200ms, Lighthouse 90, terms displayed",
-        "definitionOfDone": "Response <200ms, Lighthouse ≥90, terms displayed; artifacts: page.tsx, terms-content.md, acceptance-tracker.ts",
-        "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, terms displayed",
-        "dependencies": [
-          "PG-050"
-        ],
-        "attestation": {
-          "exists": false,
-          "path": null,
-          "verdict": null,
-          "timestamp": null,
-          "sprintFolder": null
-        },
-        "validationSummary": {
-          "total": 0,
-          "passed": 0,
-          "failed": 0,
-          "failingNames": []
-        },
-        "kpiSummary": {
-          "total": 0,
-          "met": 0,
-          "missed": 0
-        }
-      },
-      {
-        "taskId": "PG-053",
-        "sprint": 17,
-        "status": "Backlog",
-        "section": "Legal Pages",
-        "title": "Data Processing Addendum",
-        "description": "Data Processing Addendum",
-        "summary": "response under 200ms, Lighthouse 90, DPA available",
-        "definitionOfDone": "Response <200ms, Lighthouse ≥90, DPA available; artifacts: page.tsx, dpa-template.pdf, signature-handler.ts",
-        "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, DPA available",
-        "dependencies": [
-          "PG-050"
-        ],
-        "attestation": {
-          "exists": false,
-          "path": null,
-          "verdict": null,
-          "timestamp": null,
-          "sprintFolder": null
-        },
-        "validationSummary": {
-          "total": 0,
-          "passed": 0,
-          "failed": 0,
-          "failingNames": []
-        },
-        "kpiSummary": {
-          "total": 0,
-          "met": 0,
-          "missed": 0
-        }
-      },
-      {
-        "taskId": "PG-054",
-        "sprint": 17,
-        "status": "Backlog",
-        "section": "Legal Pages",
-        "title": "Acceptable Use Policy",
-        "description": "Acceptable Use Policy",
-        "summary": "response under 200ms, Lighthouse 90, AUP displayed",
-        "definitionOfDone": "Response <200ms, Lighthouse ≥90, AUP displayed; artifacts: page.tsx, aup-content.md, violation-tracker.ts",
-        "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, AUP displayed",
-        "dependencies": [
-          "PG-050"
         ],
         "attestation": {
           "exists": false,
@@ -926,6 +807,136 @@
         "definitionOfDoneSnapshot": "Deal settings page at /deals/deal-settings with pipeline stages, win-loss reasons, scoring config; uses in-module settings sidebar pattern; Lighthouse >=90",
         "dependencies": [
           "PG-178"
+        ],
+        "attestation": {
+          "exists": false,
+          "path": null,
+          "verdict": null,
+          "timestamp": null,
+          "sprintFolder": null
+        },
+        "validationSummary": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0,
+          "failingNames": []
+        },
+        "kpiSummary": {
+          "total": 0,
+          "met": 0,
+          "missed": 0
+        }
+      },
+      {
+        "taskId": "PG-185",
+        "sprint": 17,
+        "status": "Backlog",
+        "section": "Settings",
+        "title": "Module Settings - Tickets (/tickets/sla-policies)",
+        "description": "Module Settings - Tickets (/tickets/sla-policies)",
+        "summary": "Ticket settings page at /tickets/sla-policies with default SLA, auto-close, notification triggers config; uses in-module settings sidebar pattern; Lighthouse >=90",
+        "definitionOfDone": "Ticket settings page at /tickets/sla-policies with default SLA, auto-close, notification triggers config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
+        "definitionOfDoneSnapshot": "Ticket settings page at /tickets/sla-policies with default SLA, auto-close, notification triggers config; uses in-module settings sidebar pattern; Lighthouse >=90",
+        "dependencies": [
+          "PG-178"
+        ],
+        "attestation": {
+          "exists": false,
+          "path": null,
+          "verdict": null,
+          "timestamp": null,
+          "sprintFolder": null
+        },
+        "validationSummary": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0,
+          "failingNames": []
+        },
+        "kpiSummary": {
+          "total": 0,
+          "met": 0,
+          "missed": 0
+        }
+      },
+      {
+        "taskId": "PG-186",
+        "sprint": 17,
+        "status": "Backlog",
+        "section": "Settings",
+        "title": "Module Settings - Documents (/documents/document-settings)",
+        "description": "Module Settings - Documents (/documents/document-settings)",
+        "summary": "Document settings page at /documents/document-settings with file types, size limits, antivirus, retention config; uses in-module settings sidebar pattern; Lighthouse >=90",
+        "definitionOfDone": "Document settings page at /documents/document-settings with file types, size limits, antivirus, retention config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
+        "definitionOfDoneSnapshot": "Document settings page at /documents/document-settings with file types, size limits, antivirus, retention config; uses in-module settings sidebar pattern; Lighthouse >=90",
+        "dependencies": [
+          "PG-178"
+        ],
+        "attestation": {
+          "exists": false,
+          "path": null,
+          "verdict": null,
+          "timestamp": null,
+          "sprintFolder": null
+        },
+        "validationSummary": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0,
+          "failingNames": []
+        },
+        "kpiSummary": {
+          "total": 0,
+          "met": 0,
+          "missed": 0
+        }
+      },
+      {
+        "taskId": "PG-195",
+        "sprint": 17,
+        "status": "Backlog",
+        "section": "Performance",
+        "title": "Subset Material Symbols font to unblock Lighthouse Performance >=90 gate — reduces 3.5 MB MaterialSymbolsOutlined.woff2 shipped by root layout to every route (PG-056 Lighthouse=63 baseline). Audit the 1,421 .material-symbols-outlined call sites, build a subsetter script that extracts the exact glyph set, regenerate a smaller woff2 (<500 KB target), add CI guard so new glyphs are added to the audit list.",
+        "description": "Subset Material Symbols font to unblock Lighthouse Performance >=90 gate — reduces 3.5 MB MaterialSymbolsOutlined.woff2 shipped by root layout to every route (PG-056 Lighthouse=63 baseline). Audit the 1,421 .material-symbols-outlined call sites, build a subsetter script that extracts the exact glyph set, regenerate a smaller woff2 (<500 KB target), add CI guard so new glyphs are added to the audit list.",
+        "summary": "Subsetted font replaces full Material Symbols woff2 (<500 KB); Lighthouse Performance >=90 for /404 and /500 on desktop production build; zero visual regressions across the 1,421 .material-symbols-outlined call sites;...",
+        "definitionOfDone": "Subsetted font replaces full Material Symbols woff2 (<500 KB); Lighthouse Performance >=90 for /404 and /500 on desktop production build; zero visual regressions across the 1,421 .material-symbols-outlined call sites; subsetter script committed + reproducible; glyph-audit JSON enumerates the used glyph set; artifacts: subsetted woff2, glyph-audit.json, subset script, updated layout.tsx",
+        "definitionOfDoneSnapshot": "Subsetted font replaces full Material Symbols woff2 (<500 KB); Lighthouse Performance >=90 for /404 and /500 on desktop production build; zero visual regressions across the 1,421 .material-symbols-outlined call sites;...",
+        "dependencies": [
+          "PG-056"
+        ],
+        "attestation": {
+          "exists": false,
+          "path": null,
+          "verdict": null,
+          "timestamp": null,
+          "sprintFolder": null
+        },
+        "validationSummary": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0,
+          "failingNames": []
+        },
+        "kpiSummary": {
+          "total": 0,
+          "met": 0,
+          "missed": 0
+        }
+      },
+      {
+        "taskId": "DOC-015",
+        "sprint": 18,
+        "status": "Backlog",
+        "section": "Documentation",
+        "title": "Docs Integrity Reconciliation - Regenerate and sync conflicting design-document route totals from filesystem source of truth",
+        "description": "Docs Integrity Reconciliation - Regenerate and sync conflicting design-document route totals from filesystem source of truth",
+        "summary": "All conflicting route and summary totals are regenerated from apps/web/src/app/**/page.tsx and synchronized across sitemap.md, page-registry.md, PAGE_MAP_AND_FLOWS.md, ui-flow-mapping.md, navigation-reachability-audit.md, information-archit...",
+        "definitionOfDone": "All conflicting route and summary totals are regenerated from apps/web/src/app/**/page.tsx and synchronized across sitemap.md, page-registry.md, PAGE_MAP_AND_FLOWS.md, ui-flow-mapping.md, navigation-reachability-audit.md, information-architecture.md, and content-audit.md; stale references (68/101/103/118 mismatches) are removed or explicitly reconciled; each updated doc includes canonical counting rule and verification timestamp; verified by: npx tsx tools/scripts/content-audit.ts && pnpm lint",
+        "definitionOfDoneSnapshot": "All conflicting route and summary totals are regenerated from apps/web/src/app/**/page.tsx and synchronized across sitemap.md, page-registry.md, PAGE_MAP_AND_FLOWS.md, ui-flow-mapping.md, navigation-reachability-audit.md, information-archit...",
+        "dependencies": [
+          "DOC-014",
+          "IFC-209",
+          "IFC-210"
         ],
         "attestation": {
           "exists": false,
@@ -16482,12 +16493,12 @@
       "sprint": 17,
       "name": "Sprint 17",
       "summarySource": "specify",
-      "totalTasks": 21,
-      "completedTasks": 8,
-      "backlogTasks": 12,
+      "totalTasks": 22,
+      "completedTasks": 11,
+      "backlogTasks": 9,
       "blockedTasks": 0,
-      "inProgressTasks": 0,
-      "attestedCompletedTasks": 8,
+      "inProgressTasks": 1,
+      "attestedCompletedTasks": 11,
       "missingCompletedAttestations": [],
       "context": "Primary focus areas: Legal Pages (5), Settings (5), Support (4).",
       "notableCompleted": [
@@ -16520,6 +16531,39 @@
           "kpiSummary": {
             "total": 4,
             "met": 4,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "IFC-196",
+          "sprint": 17,
+          "status": "Completed",
+          "section": "Performance",
+          "title": "Home Page Response Caching - Redis caching for getWelcomeSummary with event-driven invalidation",
+          "description": "Home Page Response Caching - Redis caching for getWelcomeSummary with event-driven invalidation",
+          "summary": "Cache key simplified from {tenantId}:{userId} to {userId} because domain events do not carry tenantId.... getWelcomeSummary cached in Redis with 5-minute TTL; cache key: tenant:userId:home:summary;...",
+          "definitionOfDone": "getWelcomeSummary cached in Redis with 5-minute TTL; cache key: tenant:userId:home:summary; invalidated on lead/opportunity/task mutations via domain events; graceful fallback to direct queries when Redis unavailable; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "getWelcomeSummary cached in Redis with 5-minute TTL; cache key: tenant:userId:home:summary; invalidated on lead/opportunity/task mutations via domain events; graceful fallback to direct queries when Redis unavailable",
+          "dependencies": [
+            "IFC-182",
+            "IFC-075"
+          ],
+          "attestation": {
+            "exists": true,
+            "path": ".specify/sprints/sprint-17/attestations/IFC-196/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-04-13T21:25:00Z",
+            "sprintFolder": 17
+          },
+          "validationSummary": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 6,
+            "met": 6,
             "missed": 0
           }
         },
@@ -16618,135 +16662,41 @@
             "met": 0,
             "missed": 0
           }
-        },
-        {
-          "taskId": "PG-056",
-          "sprint": 17,
-          "status": "Completed",
-          "section": "System Pages",
-          "title": "500 Error",
-          "description": "500 Error",
-          "summary": "Implementation was completed in a prior session. This session: verified all artifacts, updated sitemap-fixes.test.ts count (28→29, pre-existing drift from /status static route addition), ran all validations, checked plan checkboxes (14/14),......",
-          "definitionOfDone": "Response <200ms, Lighthouse ≥90, errors logged; artifacts: page.tsx, incident-creator.ts, error-notifier.ts",
-          "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, errors logged",
-          "dependencies": [
-            "PG-055"
-          ],
-          "attestation": {
-            "exists": true,
-            "path": ".specify/sprints/sprint-17/attestations/PG-056/attestation.json",
-            "verdict": "COMPLETE",
-            "timestamp": null,
-            "sprintFolder": 17
-          },
-          "validationSummary": {
-            "total": 4,
-            "passed": 4,
-            "failed": 0,
-            "failingNames": []
-          },
-          "kpiSummary": {
-            "total": 0,
-            "met": 0,
-            "missed": 0
-          }
         }
       ],
       "openTasks": [
         {
-          "taskId": "PG-051",
-          "sprint": 17,
-          "status": "Backlog",
-          "section": "Legal Pages",
-          "title": "Terms of Service",
-          "description": "Terms of Service",
-          "summary": "response under 200ms, Lighthouse 90, terms displayed",
-          "definitionOfDone": "Response <200ms, Lighthouse ≥90, terms displayed; artifacts: page.tsx, terms-content.md, acceptance-tracker.ts",
-          "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, terms displayed",
-          "dependencies": [
-            "PG-050"
-          ],
-          "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
-          },
-          "validationSummary": {
-            "total": 0,
-            "passed": 0,
-            "failed": 0,
-            "failingNames": []
-          },
-          "kpiSummary": {
-            "total": 0,
-            "met": 0,
-            "missed": 0
-          }
-        },
-        {
-          "taskId": "PG-053",
-          "sprint": 17,
-          "status": "Backlog",
-          "section": "Legal Pages",
-          "title": "Data Processing Addendum",
-          "description": "Data Processing Addendum",
-          "summary": "response under 200ms, Lighthouse 90, DPA available",
-          "definitionOfDone": "Response <200ms, Lighthouse ≥90, DPA available; artifacts: page.tsx, dpa-template.pdf, signature-handler.ts",
-          "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, DPA available",
-          "dependencies": [
-            "PG-050"
-          ],
-          "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
-          },
-          "validationSummary": {
-            "total": 0,
-            "passed": 0,
-            "failed": 0,
-            "failingNames": []
-          },
-          "kpiSummary": {
-            "total": 0,
-            "met": 0,
-            "missed": 0
-          }
-        },
-        {
           "taskId": "PG-054",
           "sprint": 17,
-          "status": "Backlog",
+          "status": "In Progress",
           "section": "Legal Pages",
           "title": "Acceptable Use Policy",
           "description": "Acceptable Use Policy",
-          "summary": "response under 200ms, Lighthouse 90, AUP displayed",
+          "summary": "PG-054 scope is code-complete: 44/44 AUP tests pass; 16/16 acceptance criteria satisfied; runtime wiring verified end-to-end (getAup -> aup/page.tsx; buildViolationRecord -> violation-tracker.test.ts MVP consumer;......",
           "definitionOfDone": "Response <200ms, Lighthouse ≥90, AUP displayed; artifacts: page.tsx, aup-content.md, violation-tracker.ts",
           "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, AUP displayed",
           "dependencies": [
             "PG-050"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
+            "exists": true,
+            "path": ".specify/sprints/sprint-17/attestations/PG-054/attestation.json",
+            "verdict": "COMPLETE",
             "timestamp": null,
-            "sprintFolder": null
+            "sprintFolder": 17
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
-            "failed": 0,
-            "failingNames": []
+            "total": 4,
+            "passed": 3,
+            "failed": 1,
+            "failingNames": [
+              "Tests"
+            ]
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
-            "missed": 0
+            "total": 7,
+            "met": 6,
+            "missed": 1
           }
         },
         {
@@ -16813,14 +16763,78 @@
             "met": 0,
             "missed": 0
           }
+        },
+        {
+          "taskId": "IFC-300",
+          "sprint": 17,
+          "status": "Backlog",
+          "section": "Support",
+          "title": "Help Article Seed Script — Static to DB Migration",
+          "description": "Help Article Seed Script — Static to DB Migration",
+          "summary": "Seed script migrates DEFAULT_HELP_ARTICLES into DB; idempotent (skip existing slugs); validates data integrity post-seed",
+          "definitionOfDone": "Seed script migrates DEFAULT_HELP_ARTICLES into DB; idempotent (skip existing slugs); validates data integrity post-seed; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Seed script migrates DEFAULT_HELP_ARTICLES into DB; idempotent (skip existing slugs); validates data integrity post-seed",
+          "dependencies": [
+            "IFC-298"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "PG-182",
+          "sprint": 17,
+          "status": "Backlog",
+          "section": "Settings",
+          "title": "Module Settings - Contacts (/contacts/contact-settings)",
+          "description": "Module Settings - Contacts (/contacts/contact-settings)",
+          "summary": "Contact settings page at /contacts/contact-settings with duplicate detection, required fields, tags config; uses in-module settings sidebar pattern; Lighthouse >=90",
+          "definitionOfDone": "Contact settings page at /contacts/contact-settings with duplicate detection, required fields, tags config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Contact settings page at /contacts/contact-settings with duplicate detection, required fields, tags config; uses in-module settings sidebar pattern; Lighthouse >=90",
+          "dependencies": [
+            "PG-178"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
         }
       ],
       "sectionSummary": [
         {
           "section": "Legal Pages",
           "total": 5,
-          "completed": 1,
-          "open": 4
+          "completed": 4,
+          "open": 1
         },
         {
           "section": "Settings",
@@ -16843,13 +16857,13 @@
         {
           "section": "Automation",
           "total": 2,
-          "completed": 2,
-          "open": 0
+          "completed": 1,
+          "open": 1
         },
         {
           "section": "Performance",
-          "total": 1,
-          "completed": 0,
+          "total": 2,
+          "completed": 1,
           "open": 1
         },
         {
@@ -16895,11 +16909,11 @@
         {
           "taskId": "IFC-031",
           "sprint": 17,
-          "status": "Completed",
+          "status": "Needs Human",
           "section": "Automation",
           "title": "PHASE-005: Workflow Builder UI (React Flow)",
           "description": "PHASE-005: Workflow Builder UI (React Flow)",
-          "summary": "Build gate shows FAIL due to pre-existing privacy page frontmatter bug (/(public)/privacy/page.tsx) — completely unrelated to IFC-031. All IFC-031 files compile clean in typecheck.... Visual workflow creation, node-based editor",
+          "summary": "Verdict is NEEDS_HUMAN (not COMPLETE) because two pre-existing repo-wide issues gate the full-repo TypeScript/Lint/Build runs:... Visual workflow creation, node-based editor",
           "definitionOfDone": "Visual workflow creation, node-based editor; artifacts: usability-test-video.mp4, context_ack.json; verified by: pnpm build",
           "definitionOfDoneSnapshot": "Visual workflow creation, node-based editor",
           "dependencies": [
@@ -16908,15 +16922,17 @@
           "attestation": {
             "exists": true,
             "path": ".specify/sprints/sprint-17/attestations/IFC-031/attestation.json",
-            "verdict": "COMPLETE",
-            "timestamp": "2026-04-12T15:20:00Z",
+            "verdict": "NEEDS_HUMAN",
+            "timestamp": "2026-04-13T18:20:00Z",
             "sprintFolder": 17
           },
           "validationSummary": {
             "total": 4,
-            "passed": 3,
-            "failed": 1,
+            "passed": 1,
+            "failed": 3,
             "failingNames": [
+              "TypeScript",
+              "Lint",
               "Build"
             ]
           },
@@ -16961,43 +16977,43 @@
         {
           "taskId": "PG-051",
           "sprint": 17,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Legal Pages",
           "title": "Terms of Service",
           "description": "Terms of Service",
-          "summary": "response under 200ms, Lighthouse 90, terms displayed",
+          "summary": "PG-051 Terms of Service public page at /terms, server-rendered from docs/shared/terms-content.md via getTermsOfService() + formatTermsDate() in apps/web/src/lib/legal/acceptance-tracker.ts. Scope corrections applied post-audit (2026-04-13):......",
           "definitionOfDone": "Response <200ms, Lighthouse ≥90, terms displayed; artifacts: page.tsx, terms-content.md, acceptance-tracker.ts",
           "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, terms displayed",
           "dependencies": [
             "PG-050"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
+            "exists": true,
+            "path": ".specify/sprints/sprint-17/attestations/PG-051/attestation.json",
+            "verdict": "COMPLETE",
             "timestamp": null,
-            "sprintFolder": null
+            "sprintFolder": 17
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 6,
+            "met": 6,
             "missed": 0
           }
         },
         {
           "taskId": "PG-052",
           "sprint": 17,
-          "status": "Needs Human",
+          "status": "Completed",
           "section": "Legal Pages",
           "title": "Cookie Policy",
           "description": "Cookie Policy",
-          "summary": "All PG-052-scoped validation passes (9 new tests + 37 regression tests + 100% scoped coverage + audit-schema + sitemap-reconciliation). Tier-1 gates (typecheck/lint/build) FAIL for pre-existing baseline reasons unrelated to PG-052:......",
+          "summary": "All Tier-1 gates PASS after baseline @xyflow/react dep was installed. Cookie Policy page ships at /cookies (matching CookieConsentBanner at layout.tsx:105 + PublicFooter.tsx:48,136), reuses @intelliflow/ui::CookieConsentBanner (DRY - did no......",
           "definitionOfDone": "Response <200ms, Lighthouse ≥90, policy shown; artifacts: page.tsx, cookie-content.md, cookie-banner.tsx",
           "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, policy shown",
           "dependencies": [
@@ -17006,19 +17022,15 @@
           "attestation": {
             "exists": true,
             "path": ".specify/sprints/sprint-17/attestations/PG-052/attestation.json",
-            "verdict": "NEEDS_HUMAN",
-            "timestamp": "2026-04-12T10:55:00Z",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-04-12T11:38:00Z",
             "sprintFolder": 17
           },
           "validationSummary": {
             "total": 4,
-            "passed": 1,
-            "failed": 3,
-            "failingNames": [
-              "TypeScript",
-              "Lint",
-              "Build"
-            ]
+            "passed": 4,
+            "failed": 0,
+            "failingNames": []
           },
           "kpiSummary": {
             "total": 4,
@@ -17029,65 +17041,73 @@
         {
           "taskId": "PG-053",
           "sprint": 17,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Legal Pages",
           "title": "Data Processing Addendum",
           "description": "Data Processing Addendum",
-          "summary": "response under 200ms, Lighthouse 90, DPA available",
+          "summary": "PG-053 scope is code-complete: 34/34 DPA tests pass; 17/17 acceptance criteria satisfied; runtime wiring verified end-to-end (getDpa -> page.tsx -> DpaSignaturePanel -> signature-handler.client).... response under 200ms, Lighthouse 90, DPA available",
           "definitionOfDone": "Response <200ms, Lighthouse ≥90, DPA available; artifacts: page.tsx, dpa-template.pdf, signature-handler.ts",
           "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, DPA available",
           "dependencies": [
-            "PG-050"
+            "PG-050",
+            "PG-051"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
+            "exists": true,
+            "path": ".specify/sprints/sprint-17/attestations/PG-053/attestation.json",
+            "verdict": "COMPLETE",
             "timestamp": null,
-            "sprintFolder": null
+            "sprintFolder": 17
           },
           "validationSummary": {
-            "total": 0,
+            "total": 4,
             "passed": 0,
-            "failed": 0,
-            "failingNames": []
+            "failed": 4,
+            "failingNames": [
+              "TypeScript",
+              "Tests",
+              "Lint",
+              "Build"
+            ]
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
-            "missed": 0
+            "total": 3,
+            "met": 2,
+            "missed": 1
           }
         },
         {
           "taskId": "PG-054",
           "sprint": 17,
-          "status": "Backlog",
+          "status": "In Progress",
           "section": "Legal Pages",
           "title": "Acceptable Use Policy",
           "description": "Acceptable Use Policy",
-          "summary": "response under 200ms, Lighthouse 90, AUP displayed",
+          "summary": "PG-054 scope is code-complete: 44/44 AUP tests pass; 16/16 acceptance criteria satisfied; runtime wiring verified end-to-end (getAup -> aup/page.tsx; buildViolationRecord -> violation-tracker.test.ts MVP consumer;......",
           "definitionOfDone": "Response <200ms, Lighthouse ≥90, AUP displayed; artifacts: page.tsx, aup-content.md, violation-tracker.ts",
           "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, AUP displayed",
           "dependencies": [
             "PG-050"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
+            "exists": true,
+            "path": ".specify/sprints/sprint-17/attestations/PG-054/attestation.json",
+            "verdict": "COMPLETE",
             "timestamp": null,
-            "sprintFolder": null
+            "sprintFolder": 17
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
-            "failed": 0,
-            "failingNames": []
+            "total": 4,
+            "passed": 3,
+            "failed": 1,
+            "failingNames": [
+              "Tests"
+            ]
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
-            "missed": 0
+            "total": 7,
+            "met": 6,
+            "missed": 1
           }
         },
         {
@@ -17222,11 +17242,11 @@
         {
           "taskId": "IFC-196",
           "sprint": 17,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Performance",
           "title": "Home Page Response Caching - Redis caching for getWelcomeSummary with event-driven invalidation",
           "description": "Home Page Response Caching - Redis caching for getWelcomeSummary with event-driven invalidation",
-          "summary": "getWelcomeSummary cached in Redis with 5-minute TTL; cache key: tenant:userId:home:summary; invalidated on lead/opportunity/task mutations via domain events; graceful fallback to direct queries when Redis unavailable",
+          "summary": "Cache key simplified from {tenantId}:{userId} to {userId} because domain events do not carry tenantId.... getWelcomeSummary cached in Redis with 5-minute TTL; cache key: tenant:userId:home:summary;...",
           "definitionOfDone": "getWelcomeSummary cached in Redis with 5-minute TTL; cache key: tenant:userId:home:summary; invalidated on lead/opportunity/task mutations via domain events; graceful fallback to direct queries when Redis unavailable; verified by: pnpm test",
           "definitionOfDoneSnapshot": "getWelcomeSummary cached in Redis with 5-minute TTL; cache key: tenant:userId:home:summary; invalidated on lead/opportunity/task mutations via domain events; graceful fallback to direct queries when Redis unavailable",
           "dependencies": [
@@ -17234,21 +17254,21 @@
             "IFC-075"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-17/attestations/IFC-196/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-04-13T21:25:00Z",
+            "sprintFolder": 17
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 6,
+            "met": 6,
             "missed": 0
           }
         },
@@ -17539,6 +17559,38 @@
             "met": 0,
             "missed": 0
           }
+        },
+        {
+          "taskId": "PG-195",
+          "sprint": 17,
+          "status": "Backlog",
+          "section": "Performance",
+          "title": "Subset Material Symbols font to unblock Lighthouse Performance >=90 gate — reduces 3.5 MB MaterialSymbolsOutlined.woff2 shipped by root layout to every route (PG-056 Lighthouse=63 baseline). Audit the 1,421 .material-symbols-outlined call sites, build a subsetter script that extracts the exact glyph set, regenerate a smaller woff2 (<500 KB target), add CI guard so new glyphs are added to the audit list.",
+          "description": "Subset Material Symbols font to unblock Lighthouse Performance >=90 gate — reduces 3.5 MB MaterialSymbolsOutlined.woff2 shipped by root layout to every route (PG-056 Lighthouse=63 baseline). Audit the 1,421 .material-symbols-outlined call sites, build a subsetter script that extracts the exact glyph set, regenerate a smaller woff2 (<500 KB target), add CI guard so new glyphs are added to the audit list.",
+          "summary": "Subsetted font replaces full Material Symbols woff2 (<500 KB); Lighthouse Performance >=90 for /404 and /500 on desktop production build; zero visual regressions across the 1,421 .material-symbols-outlined call sites;...",
+          "definitionOfDone": "Subsetted font replaces full Material Symbols woff2 (<500 KB); Lighthouse Performance >=90 for /404 and /500 on desktop production build; zero visual regressions across the 1,421 .material-symbols-outlined call sites; subsetter script committed + reproducible; glyph-audit JSON enumerates the used glyph set; artifacts: subsetted woff2, glyph-audit.json, subset script, updated layout.tsx",
+          "definitionOfDoneSnapshot": "Subsetted font replaces full Material Symbols woff2 (<500 KB); Lighthouse Performance >=90 for /404 and /500 on desktop production build; zero visual regressions across the 1,421 .material-symbols-outlined call sites;...",
+          "dependencies": [
+            "PG-056"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
         }
       ]
     },
@@ -17546,9 +17598,9 @@
       "sprint": 18,
       "name": "Sprint 18",
       "summarySource": "specify",
-      "totalTasks": 43,
+      "totalTasks": 44,
       "completedTasks": 3,
-      "backlogTasks": 40,
+      "backlogTasks": 41,
       "blockedTasks": 0,
       "inProgressTasks": 0,
       "attestedCompletedTasks": 3,
@@ -17852,6 +17904,12 @@
           "total": 2,
           "completed": 0,
           "open": 2
+        },
+        {
+          "section": "Compliance",
+          "total": 1,
+          "completed": 0,
+          "open": 1
         },
         {
           "section": "Infrastructure",
@@ -19214,6 +19272,40 @@
           "definitionOfDoneSnapshot": "Task settings page at /tasks/task-settings with due-date offset, reminder, templates config; uses in-module settings sidebar pattern; Lighthouse >=90",
           "dependencies": [
             "PG-178"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "IFC-309",
+          "sprint": 18,
+          "status": "Backlog",
+          "section": "Compliance",
+          "title": "Server-side terms acceptance — persist immutable TermsAcceptance audit record (tenantId, userId, termsVersion, acceptedAt, ipAddress, userAgent, route) via tRPC legal.acceptTerms mutation and legal.getAcceptance query; wire Confirm UI on /terms for authenticated users only; replaces client-only localStorage tracker removed from PG-051 as a misleading legal-compliance signal.",
+          "description": "Server-side terms acceptance — persist immutable TermsAcceptance audit record (tenantId, userId, termsVersion, acceptedAt, ipAddress, userAgent, route) via tRPC legal.acceptTerms mutation and legal.getAcceptance query; wire Confirm UI on /terms for authenticated users only; replaces client-only localStorage tracker removed from PG-051 as a misleading legal-compliance signal.",
+          "summary": "TermsAcceptance Prisma model (tenantId, userId, termsVersion, acceptedAt, ipAddress, userAgent, route) with no UPDATE/DELETE paths; tRPC legal.acceptTerms mutation idempotent per (userId, termsVersion);...",
+          "definitionOfDone": "TermsAcceptance Prisma model (tenantId, userId, termsVersion, acceptedAt, ipAddress, userAgent, route) with no UPDATE/DELETE paths; tRPC legal.acceptTerms mutation idempotent per (userId, termsVersion); legal.getAcceptance query returns latest record per user; RLS policy scoped by tenantId; Confirm UI on /terms (authenticated users only) calls mutation and hides when current version already accepted; DB migration reviewed; >=90% scoped coverage; all 4 validations pass",
+          "definitionOfDoneSnapshot": "TermsAcceptance Prisma model (tenantId, userId, termsVersion, acceptedAt, ipAddress, userAgent, route) with no UPDATE/DELETE paths; tRPC legal.acceptTerms mutation idempotent per (userId, termsVersion);...",
+          "dependencies": [
+            "PG-051",
+            "IFC-058",
+            "IFC-124"
           ],
           "attestation": {
             "exists": false,
