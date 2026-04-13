@@ -27,7 +27,7 @@ export function mapToCustomer(data: Record<string, unknown>): StripeCustomer {
           | undefined) ?? '')
       : undefined,
     balance: Number(data.balance ?? 0),
-    currency: (data.currency as string | null | undefined) ?? 'usd',
+    currency: (data.currency as string | null | undefined) ?? 'GBP',
     created: new Date(Number(data.created ?? 0) * 1000),
   };
 }
@@ -83,7 +83,7 @@ export function mapToPaymentIntent(data: Record<string, unknown>): StripePayment
   return {
     id: (data.id as string | null | undefined) ?? '',
     amount: Number(data.amount ?? 0),
-    currency: (data.currency as string | null | undefined) ?? 'usd',
+    currency: (data.currency as string | null | undefined) ?? 'GBP',
     status: ((data.status as string | null | undefined) ??
       'requires_payment_method') as StripePaymentIntent['status'],
     customerId: data.customer ? (data.customer as string) : undefined,
@@ -102,7 +102,7 @@ export function mapToRefund(data: Record<string, unknown>): StripeRefund {
     id: (data.id as string | null | undefined) ?? '',
     paymentIntentId: (data.payment_intent as string | null | undefined) ?? '',
     amount: Number(data.amount ?? 0),
-    currency: (data.currency as string | null | undefined) ?? 'usd',
+    currency: (data.currency as string | null | undefined) ?? 'GBP',
     status: ((data.status as string | null | undefined) ?? 'pending') as StripeRefund['status'],
     reason: data.reason ? (data.reason as string as StripeRefund['reason']) : undefined,
     receiptNumber: data.receipt_number ? (data.receipt_number as string) : undefined,
@@ -123,7 +123,7 @@ export function mapToSubscription(data: Record<string, unknown>): StripeSubscrip
       'incomplete') as StripeSubscription['status'],
     priceId: price ? ((price.id as string | null | undefined) ?? '') : '',
     quantity: Number(firstItem.quantity ?? 1),
-    currency: (data.currency as string | null | undefined) ?? 'usd',
+    currency: (data.currency as string | null | undefined) ?? 'GBP',
     currentPeriodStart: new Date(Number(data.current_period_start ?? 0) * 1000),
     currentPeriodEnd: new Date(Number(data.current_period_end ?? 0) * 1000),
     cancelAtPeriodEnd: Boolean(data.cancel_at_period_end),
@@ -166,7 +166,7 @@ function mapInvoiceLineItems(data: Record<string, unknown>): StripeInvoiceLineIt
     currency:
       (item.currency as string | null | undefined) ??
       (data.currency as string | null | undefined) ??
-      'usd',
+      'GBP',
   }));
 }
 
@@ -209,7 +209,7 @@ export function mapToInvoice(data: Record<string, unknown>): StripeInvoice {
     amountDue: Number(data.amount_due ?? 0),
     amountPaid: Number(data.amount_paid ?? 0),
     amountRemaining: Number(data.amount_remaining ?? 0),
-    currency: (data.currency as string | null | undefined) ?? 'usd',
+    currency: (data.currency as string | null | undefined) ?? 'GBP',
     dueDate: data.due_date ? new Date(Number(data.due_date) * 1000) : undefined,
     paidAt: data.status_transitions
       ? new Date(Number((data.status_transitions as Record<string, unknown>).paid_at ?? 0) * 1000)

@@ -6,7 +6,7 @@ ALTER TABLE "users" ADD COLUMN "givenName" TEXT;
 ALTER TABLE "users" ADD COLUMN "familyName" TEXT;
 
 -- AlterTable: locale (default to en-US for existing users)
-ALTER TABLE "users" ADD COLUMN "locale" TEXT DEFAULT 'en-US';
+ALTER TABLE "users" ADD COLUMN "locale" TEXT DEFAULT 'en-GB';
 
 -- AlterTable: profile contact info
 ALTER TABLE "users" ADD COLUMN "phone" TEXT;

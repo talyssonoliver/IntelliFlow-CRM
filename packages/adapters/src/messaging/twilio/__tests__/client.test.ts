@@ -89,7 +89,7 @@ describe('TwilioClient', () => {
         body: 'Hi',
         numSegments: '1',
         price: '0.01',
-        priceUnit: 'USD',
+        priceUnit: 'GBP',
         dateCreated: new Date(),
         errorCode: 30001,
         errorMessage: 'Queue full',
@@ -173,11 +173,11 @@ describe('TwilioClient', () => {
 
   describe('getAccountBalance', () => {
     it('returns balance', async () => {
-      mockBalanceFetch.mockResolvedValue({ balance: '42.50', currency: 'USD' });
+      mockBalanceFetch.mockResolvedValue({ balance: '42.50', currency: 'GBP' });
       const client = await getClient();
       const r = await client.getAccountBalance();
       expect(r.balance).toBe('42.50');
-      expect(r.currency).toBe('USD');
+      expect(r.currency).toBe('GBP');
     });
 
     it('returns defaults on error', async () => {
@@ -185,7 +185,7 @@ describe('TwilioClient', () => {
       const client = await getClient();
       const r = await client.getAccountBalance();
       expect(r.balance).toBe('0');
-      expect(r.currency).toBe('USD');
+      expect(r.currency).toBe('GBP');
     });
   });
 });

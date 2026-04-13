@@ -29,7 +29,7 @@ const config: StripeConfig = { secretKey: 'sk_test_123' };
 const mockPI: StripePaymentIntent = {
   id: 'pi_123',
   amount: 5000,
-  currency: 'usd',
+  currency: 'GBP',
   status: 'requires_payment_method',
   clientSecret: 'pi_secret',
   created: new Date('2025-01-01'),
@@ -44,7 +44,7 @@ describe('payment-intents handler', () => {
   describe('createPaymentIntent', () => {
     it('should create with required params', async () => {
       mockMakeRequest.mockResolvedValue(Result.ok({ id: 'pi_123' }));
-      const r = await createPaymentIntent(config, { amount: 5000, currency: 'usd' });
+      const r = await createPaymentIntent(config, { amount: 5000, currency: 'GBP' });
       expect(r.isSuccess).toBe(true);
       expect(r.value).toEqual(mockPI);
       expect(mockMakeRequest).toHaveBeenCalledWith(
@@ -59,7 +59,7 @@ describe('payment-intents handler', () => {
       mockMakeRequest.mockResolvedValue(Result.ok({ id: 'pi_123' }));
       await createPaymentIntent(config, {
         amount: 5000,
-        currency: 'usd',
+        currency: 'GBP',
         customerId: 'cus_1',
         paymentMethodId: 'pm_1',
         description: 'Desc',
@@ -78,14 +78,14 @@ describe('payment-intents handler', () => {
       mockMakeRequest.mockResolvedValue(
         Result.fail({ message: 'err', code: 'STRIPE_INVALID_REQUEST' } as any)
       );
-      expect((await createPaymentIntent(config, { amount: 5000, currency: 'usd' })).isFailure).toBe(
+      expect((await createPaymentIntent(config, { amount: 5000, currency: 'GBP' })).isFailure).toBe(
         true
       );
     });
 
     it('should handle thrown Error', async () => {
       mockMakeRequest.mockRejectedValue(new Error('Network failure'));
-      const r = await createPaymentIntent(config, { amount: 5000, currency: 'usd' });
+      const r = await createPaymentIntent(config, { amount: 5000, currency: 'GBP' });
       expect(r.isFailure).toBe(true);
       expect((r.error as any).message).toBe('Network failure');
     });
@@ -93,7 +93,7 @@ describe('payment-intents handler', () => {
     it('should handle thrown non-Error', async () => {
       mockMakeRequest.mockRejectedValue('str');
       expect(
-        ((await createPaymentIntent(config, { amount: 5000, currency: 'usd' })).error as any)
+        ((await createPaymentIntent(config, { amount: 5000, currency: 'GBP' })).error as any)
           .message
       ).toBe('Unknown error');
     });

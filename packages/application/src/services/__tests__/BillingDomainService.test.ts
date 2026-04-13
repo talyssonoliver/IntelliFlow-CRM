@@ -104,7 +104,7 @@ function validCreateProps(overrides: Partial<CreateInvoiceProps> = {}): CreateIn
       },
     ],
     billingEmail: 'billing@example.com',
-    currency: 'USD',
+    currency: 'GBP',
     taxRate: 20,
     taxType: 'VAT' as const,
     dueDate: new Date(Date.now() + 30 * 86400000),
@@ -188,7 +188,7 @@ describe('BillingDomainService', () => {
       const created = (await service.createInvoice(validCreateProps())).value;
       await service.issueInvoice(created.id.value);
 
-      const amount = Money.fromCents(created.amountDue.cents, 'USD').value;
+      const amount = Money.fromCents(created.amountDue.cents, 'GBP').value;
       const result = await service.recordPayment(created.id.value, amount, 'CARD', 'txn_123');
 
       expect(result.isSuccess).toBe(true);
@@ -200,7 +200,7 @@ describe('BillingDomainService', () => {
       const created = (await service.createInvoice(validCreateProps())).value;
       await service.issueInvoice(created.id.value);
 
-      const amount = Money.fromCents(5000, 'USD').value;
+      const amount = Money.fromCents(5000, 'GBP').value;
       await service.recordPayment(created.id.value, amount, 'CARD');
 
       expect(receiptRepo.getAll().length).toBe(1);
@@ -211,7 +211,7 @@ describe('BillingDomainService', () => {
       await service.issueInvoice(created.id.value);
       eventBus.published = [];
 
-      const amount = Money.fromCents(created.amountDue.cents, 'USD').value;
+      const amount = Money.fromCents(created.amountDue.cents, 'GBP').value;
       await service.recordPayment(created.id.value, amount, 'CARD');
 
       expect(eventBus.published.some((e) => e.eventType === 'invoice.payment_recorded')).toBe(true);
@@ -219,7 +219,7 @@ describe('BillingDomainService', () => {
     });
 
     it('should return Result.fail if invoice not found', async () => {
-      const amount = Money.fromCents(1000, 'USD').value;
+      const amount = Money.fromCents(1000, 'GBP').value;
       const result = await service.recordPayment(
         '00000000-0000-0000-0000-000000000000',
         amount,
@@ -232,7 +232,7 @@ describe('BillingDomainService', () => {
       const created = (await service.createInvoice(validCreateProps())).value;
       await service.issueInvoice(created.id.value);
 
-      const amount = Money.fromCents(0, 'USD').value;
+      const amount = Money.fromCents(0, 'GBP').value;
       const result = await service.recordPayment(created.id.value, amount, 'CARD');
       expect(result.isFailure).toBe(true);
     });
@@ -250,7 +250,7 @@ describe('BillingDomainService', () => {
       const created = (await service.createInvoice(validCreateProps())).value;
       await service.issueInvoice(created.id.value);
 
-      const amount = Money.fromCents(5000, 'USD').value;
+      const amount = Money.fromCents(5000, 'GBP').value;
       const result = await service.recordPayment(created.id.value, amount, 'CARD');
       expect(result.isSuccess).toBe(true);
       expect(result.value.invoice.status).toBe('OPEN');
@@ -261,7 +261,7 @@ describe('BillingDomainService', () => {
       const created = (await service.createInvoice(validCreateProps())).value;
       await service.issueInvoice(created.id.value);
 
-      const amount = Money.fromCents(created.amountDue.cents, 'USD').value;
+      const amount = Money.fromCents(created.amountDue.cents, 'GBP').value;
       const result = await service.recordPayment(created.id.value, amount, 'CARD');
       expect(result.isSuccess).toBe(true);
       expect(result.value.invoice.status).toBe('PAID');
@@ -272,10 +272,10 @@ describe('BillingDomainService', () => {
     it('should process refund and persist', async () => {
       const created = (await service.createInvoice(validCreateProps())).value;
       await service.issueInvoice(created.id.value);
-      const pay = Money.fromCents(5000, 'USD').value;
+      const pay = Money.fromCents(5000, 'GBP').value;
       await service.recordPayment(created.id.value, pay, 'CARD');
 
-      const refund = Money.fromCents(2000, 'USD').value;
+      const refund = Money.fromCents(2000, 'GBP').value;
       const result = await service.processRefund(created.id.value, refund, 'CUSTOMER_REQUEST');
       expect(result.isSuccess).toBe(true);
       expect(result.value.amountRefunded.cents).toBe(2000);
@@ -284,17 +284,17 @@ describe('BillingDomainService', () => {
     it('should publish InvoiceRefundedEvent', async () => {
       const created = (await service.createInvoice(validCreateProps())).value;
       await service.issueInvoice(created.id.value);
-      const pay = Money.fromCents(5000, 'USD').value;
+      const pay = Money.fromCents(5000, 'GBP').value;
       await service.recordPayment(created.id.value, pay, 'CARD');
       eventBus.published = [];
 
-      const refund = Money.fromCents(1000, 'USD').value;
+      const refund = Money.fromCents(1000, 'GBP').value;
       await service.processRefund(created.id.value, refund, 'BILLING_ERROR');
       expect(eventBus.published.some((e) => e.eventType === 'invoice.refunded')).toBe(true);
     });
 
     it('should return Result.fail if not found', async () => {
-      const refund = Money.fromCents(1000, 'USD').value;
+      const refund = Money.fromCents(1000, 'GBP').value;
       const result = await service.processRefund(
         '00000000-0000-0000-0000-000000000000',
         refund,
@@ -306,10 +306,10 @@ describe('BillingDomainService', () => {
     it('should return Result.fail if refund > amountPaid', async () => {
       const created = (await service.createInvoice(validCreateProps())).value;
       await service.issueInvoice(created.id.value);
-      const pay = Money.fromCents(5000, 'USD').value;
+      const pay = Money.fromCents(5000, 'GBP').value;
       await service.recordPayment(created.id.value, pay, 'CARD');
 
-      const refund = Money.fromCents(6000, 'USD').value;
+      const refund = Money.fromCents(6000, 'GBP').value;
       const result = await service.processRefund(created.id.value, refund, 'CUSTOMER_REQUEST');
       expect(result.isFailure).toBe(true);
     });
@@ -317,10 +317,10 @@ describe('BillingDomainService', () => {
     it('should handle partial refund', async () => {
       const created = (await service.createInvoice(validCreateProps())).value;
       await service.issueInvoice(created.id.value);
-      const pay = Money.fromCents(created.amountDue.cents, 'USD').value;
+      const pay = Money.fromCents(created.amountDue.cents, 'GBP').value;
       await service.recordPayment(created.id.value, pay, 'CARD');
 
-      const refund = Money.fromCents(1000, 'USD').value;
+      const refund = Money.fromCents(1000, 'GBP').value;
       const result = await service.processRefund(created.id.value, refund, 'BILLING_ERROR');
       expect(result.isSuccess).toBe(true);
       expect(result.value.paymentStatus).toBe('PARTIALLY_REFUNDED');
@@ -350,7 +350,7 @@ describe('BillingDomainService', () => {
     it('should return Result.fail if has payments', async () => {
       const created = (await service.createInvoice(validCreateProps())).value;
       await service.issueInvoice(created.id.value);
-      const pay = Money.fromCents(1000, 'USD').value;
+      const pay = Money.fromCents(1000, 'GBP').value;
       await service.recordPayment(created.id.value, pay, 'CARD');
 
       const result = await service.voidInvoice(created.id.value);
@@ -428,7 +428,7 @@ describe('BillingDomainService', () => {
     it('should return receipts for invoice', async () => {
       const created = (await service.createInvoice(validCreateProps())).value;
       await service.issueInvoice(created.id.value);
-      const pay = Money.fromCents(5000, 'USD').value;
+      const pay = Money.fromCents(5000, 'GBP').value;
       await service.recordPayment(created.id.value, pay, 'CARD');
 
       const result = await service.getReceiptsForInvoice(created.id.value, 'tenant-001');

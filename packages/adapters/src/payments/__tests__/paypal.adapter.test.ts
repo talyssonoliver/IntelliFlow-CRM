@@ -95,7 +95,7 @@ describe('PayPalAdapter', () => {
         purchase_units: [
           {
             reference_id: 'unit-0',
-            amount: { currency_code: 'USD', value: '100.00' },
+            amount: { currency_code: 'GBP', value: '100.00' },
           },
         ],
         create_time: new Date().toISOString(),
@@ -115,7 +115,7 @@ describe('PayPalAdapter', () => {
         intent: 'CAPTURE',
         purchaseUnits: [
           {
-            currencyCode: 'USD',
+            currencyCode: 'GBP',
             amount: '100.00',
             description: 'Test order',
           },
@@ -159,7 +159,7 @@ describe('PayPalAdapter', () => {
         intent: 'CAPTURE',
         purchaseUnits: [
           {
-            currencyCode: 'USD',
+            currencyCode: 'GBP',
             amount: 'invalid',
           },
         ],
@@ -194,13 +194,13 @@ describe('PayPalAdapter', () => {
         purchase_units: [
           {
             reference_id: 'unit-0',
-            amount: { currency_code: 'USD', value: '100.00' },
+            amount: { currency_code: 'GBP', value: '100.00' },
             payments: {
               captures: [
                 {
                   id: 'CAP123',
                   status: 'COMPLETED',
-                  amount: { currency_code: 'USD', value: '100.00' },
+                  amount: { currency_code: 'GBP', value: '100.00' },
                   final_capture: true,
                   create_time: new Date().toISOString(),
                   update_time: new Date().toISOString(),
@@ -248,7 +248,7 @@ describe('PayPalAdapter', () => {
       const mockRefundResponse = {
         id: 'REF123',
         status: 'COMPLETED',
-        amount: { currency_code: 'USD', value: '50.00' },
+        amount: { currency_code: 'GBP', value: '50.00' },
         note_to_payer: 'Partial refund',
         create_time: new Date().toISOString(),
         update_time: new Date().toISOString(),
@@ -261,7 +261,7 @@ describe('PayPalAdapter', () => {
 
       const result = await adapter.refundCapture(
         'CAP123',
-        { currencyCode: 'USD', value: '50.00' },
+        { currencyCode: 'GBP', value: '50.00' },
         'Partial refund'
       );
 
@@ -456,7 +456,7 @@ describe('PayPalAdapter', () => {
         intent: 'CAPTURE',
         purchaseUnits: [
           {
-            currencyCode: 'USD',
+            currencyCode: 'GBP',
             amount: '100.00',
           },
         ],

@@ -27,7 +27,7 @@ const mockInv: StripeInvoice = {
   amountDue: 5000,
   amountPaid: 0,
   amountRemaining: 5000,
-  currency: 'usd',
+  currency: 'GBP',
   created: new Date('2025-01-01'),
 };
 

@@ -25,7 +25,7 @@ const mockCust: StripeCustomer = {
   email: 'john@example.com',
   name: 'John Doe',
   balance: 0,
-  currency: 'usd',
+  currency: 'GBP',
   created: new Date('2025-01-01'),
 };
 

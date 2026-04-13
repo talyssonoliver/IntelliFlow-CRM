@@ -174,7 +174,7 @@ describe('formatValue utility', () => {
   });
 
   it('should format currency', () => {
-    expect(formatValue(125000, 'currency', 'USD')).toBe('$125,000');
+    expect(formatValue(125000, 'currency', 'GBP')).toBe('$125,000');
   });
 
   it('should format percentage', () => {

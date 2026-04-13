@@ -860,7 +860,7 @@ export class SAPAdapter implements ERPServicePort {
       status: this.mapStatusFromSAP(
         (data.OverallSDProcessStatus as string | null | undefined) ?? ''
       ),
-      currency: (data.TransactionCurrency as string | null | undefined) ?? 'USD',
+      currency: (data.TransactionCurrency as string | null | undefined) ?? 'GBP',
       netAmount: Number(data.TotalNetAmount ?? 0),
       taxAmount: Number(data.TotalTaxAmount ?? 0),
       totalAmount: Number(data.TotalNetAmount ?? 0) + Number(data.TotalTaxAmount ?? 0),
@@ -909,7 +909,7 @@ export class SAPAdapter implements ERPServicePort {
         (data.PaymentDueDate as string | null | undefined) ?? new Date().toISOString()
       ),
       status: this.mapInvoiceStatus((data.PaymentStatus as string | null | undefined) ?? ''),
-      currency: (data.TransactionCurrency as string | null | undefined) ?? 'USD',
+      currency: (data.TransactionCurrency as string | null | undefined) ?? 'GBP',
       netAmount: Number(data.NetAmount ?? 0),
       taxAmount: Number(data.TaxAmount ?? 0),
       totalAmount: Number(data.GrossAmount ?? 0),

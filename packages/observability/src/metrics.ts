@@ -222,7 +222,7 @@ function createMetrics(): void {
 
   metrics.opportunityValue = meter.createHistogram('intelliflow.opportunity.value', {
     description: 'Distribution of opportunity values',
-    unit: 'USD',
+    unit: 'GBP',
   });
 
   // AI metrics
@@ -238,7 +238,7 @@ function createMetrics(): void {
 
   metrics.aiInferenceCost = meter.createHistogram('intelliflow.ai.inference.cost', {
     description: 'Cost of AI inference',
-    unit: 'USD',
+    unit: 'GBP',
   });
 
   metrics.aiConfidence = meter.createHistogram('intelliflow.ai.confidence', {

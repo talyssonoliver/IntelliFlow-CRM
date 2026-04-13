@@ -37,7 +37,7 @@ describe('StripeAdapter', () => {
         email: 'test@example.com',
         name: 'Test Customer',
         balance: 0,
-        currency: 'usd',
+        currency: 'GBP',
         created: Math.floor(Date.now() / 1000),
       };
 
@@ -108,7 +108,7 @@ describe('StripeAdapter', () => {
         object: 'customer',
         email: 'test@example.com',
         balance: 5000,
-        currency: 'usd',
+        currency: 'GBP',
         created: Math.floor(Date.now() / 1000),
       };
 
@@ -149,7 +149,7 @@ describe('StripeAdapter', () => {
         id: 'pi_test123',
         object: 'payment_intent',
         amount: 5000,
-        currency: 'usd',
+        currency: 'GBP',
         status: 'requires_payment_method',
         client_secret: 'pi_test123_secret_abc',
         created: Math.floor(Date.now() / 1000),
@@ -162,7 +162,7 @@ describe('StripeAdapter', () => {
 
       const result = await adapter.createPaymentIntent({
         amount: 5000,
-        currency: 'usd',
+        currency: 'GBP',
         description: 'Test payment',
       });
 
@@ -170,7 +170,7 @@ describe('StripeAdapter', () => {
       if (result.isSuccess) {
         expect(result.value.id).toBe('pi_test123');
         expect(result.value.amount).toBe(5000);
-        expect(result.value.currency).toBe('usd');
+        expect(result.value.currency).toBe('GBP');
         expect(result.value.status).toBe('requires_payment_method');
         expect(result.value.clientSecret).toBe('pi_test123_secret_abc');
       }
@@ -191,7 +191,7 @@ describe('StripeAdapter', () => {
 
       const result = await adapter.createPaymentIntent({
         amount: 5000,
-        currency: 'usd',
+        currency: 'GBP',
       });
 
       expect(result.isFailure).toBe(true);
@@ -207,7 +207,7 @@ describe('StripeAdapter', () => {
         id: 're_test123',
         object: 'refund',
         amount: 2500,
-        currency: 'usd',
+        currency: 'GBP',
         payment_intent: 'pi_test123',
         status: 'succeeded',
         reason: 'requested_by_customer',
@@ -238,7 +238,7 @@ describe('StripeAdapter', () => {
         object: 'subscription',
         customer: 'cus_test123',
         status: 'active',
-        currency: 'usd',
+        currency: 'GBP',
         current_period_start: Math.floor(Date.now() / 1000),
         current_period_end: Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60,
         cancel_at_period_end: false,
@@ -281,7 +281,7 @@ describe('StripeAdapter', () => {
         json: () =>
           Promise.resolve({
             object: 'balance',
-            available: [{ amount: 10000, currency: 'usd' }],
+            available: [{ amount: 10000, currency: 'GBP' }],
           }),
       });
 

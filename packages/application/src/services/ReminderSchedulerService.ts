@@ -261,7 +261,7 @@ export class ReminderSchedulerService {
    * Format date/time for display
    */
   private formatDateTime(date: Date, timezone: string = 'Europe/London'): string {
-    return date.toLocaleString('en-US', {
+    return date.toLocaleString('en-GB', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',

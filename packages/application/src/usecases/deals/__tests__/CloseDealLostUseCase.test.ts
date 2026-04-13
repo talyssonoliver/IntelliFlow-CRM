@@ -34,7 +34,7 @@ function createMockOpportunity(
   const defaults = {
     name: 'Enterprise Deal',
     value: 50000,
-    currency: 'USD',
+    currency: 'GBP',
     stage: 'CLOSED_LOST' as const,
     probability: 0,
     accountId: 'account-123',
@@ -159,7 +159,7 @@ describe('CloseDealLostUseCase', () => {
       expect(publishedEvent).toBeInstanceOf(DealLostEnrichedEvent);
       expect(publishedEvent.eventType).toBe('opportunity.deal_lost_enriched');
       expect(publishedEvent.value).toBe(50000);
-      expect(publishedEvent.currency).toBe('USD');
+      expect(publishedEvent.currency).toBe('GBP');
       expect(publishedEvent.accountId).toBe('account-123');
       expect(publishedEvent.ownerId).toBe('owner-789');
       expect(publishedEvent.tenantId).toBe('tenant-001');
@@ -370,7 +370,7 @@ describe('CloseDealLostUseCase', () => {
 
       const publishedEvent = mockEventBus.publish.mock.calls[0][0] as DealLostEnrichedEvent;
       expect(publishedEvent.value).toBe(50000);
-      expect(publishedEvent.currency).toBe('USD');
+      expect(publishedEvent.currency).toBe('GBP');
     });
 
     it('enriched event carries lossReason matching input reason', async () => {

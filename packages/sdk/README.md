@@ -321,7 +321,7 @@ await createOpportunity.mutateAsync({
   name: 'Enterprise Deal - Acme',
   stage: 'QUALIFICATION',
   amount: 75000,
-  currency: 'USD',
+  currency: 'GBP',
   probability: 25,
   closeDate: new Date('2024-06-30'),
   accountId: 'account_123',

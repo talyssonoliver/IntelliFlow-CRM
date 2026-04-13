@@ -52,7 +52,7 @@ export function mapToPurchaseUnit(data: Record<string, unknown>): PayPalPurchase
     customId: data.custom_id ? (data.custom_id as string) : undefined,
     invoiceId: data.invoice_id ? (data.invoice_id as string) : undefined,
     amount: {
-      currencyCode: (amount.currency_code as string | null | undefined) ?? 'USD',
+      currencyCode: (amount.currency_code as string | null | undefined) ?? 'GBP',
       value: (amount.value as string | null | undefined) ?? '0.00',
       breakdown: breakdown ? mapBreakdown(breakdown) : undefined,
     },
@@ -80,7 +80,7 @@ function mapBreakdown(breakdown: Record<string, unknown>) {
             ((breakdown.item_total as Record<string, unknown>).currency_code as
               | string
               | null
-              | undefined) ?? 'USD',
+              | undefined) ?? 'GBP',
           value:
             ((breakdown.item_total as Record<string, unknown>).value as
               | string
@@ -94,7 +94,7 @@ function mapBreakdown(breakdown: Record<string, unknown>) {
             ((breakdown.shipping as Record<string, unknown>).currency_code as
               | string
               | null
-              | undefined) ?? 'USD',
+              | undefined) ?? 'GBP',
           value:
             ((breakdown.shipping as Record<string, unknown>).value as string | null | undefined) ??
             '0.00',
@@ -106,7 +106,7 @@ function mapBreakdown(breakdown: Record<string, unknown>) {
             ((breakdown.tax_total as Record<string, unknown>).currency_code as
               | string
               | null
-              | undefined) ?? 'USD',
+              | undefined) ?? 'GBP',
           value:
             ((breakdown.tax_total as Record<string, unknown>).value as string | null | undefined) ??
             '0.00',
@@ -121,7 +121,7 @@ export function mapToItem(data: Record<string, unknown>): PayPalItem {
   return {
     name: (data.name as string | null | undefined) ?? '',
     unitAmount: {
-      currencyCode: (unitAmount.currency_code as string | null | undefined) ?? 'USD',
+      currencyCode: (unitAmount.currency_code as string | null | undefined) ?? 'GBP',
       value: (unitAmount.value as string | null | undefined) ?? '0.00',
     },
     quantity: (data.quantity as string | null | undefined) ?? '1',
@@ -202,7 +202,7 @@ export function mapToCapture(data: Record<string, unknown>): PayPalCapture {
     id: (data.id as string | null | undefined) ?? '',
     status: ((data.status as string | null | undefined) ?? 'PENDING') as PayPalCapture['status'],
     amount: {
-      currencyCode: (amount.currency_code as string | null | undefined) ?? 'USD',
+      currencyCode: (amount.currency_code as string | null | undefined) ?? 'GBP',
       value: (amount.value as string | null | undefined) ?? '0.00',
     },
     finalCapture: Boolean(data.final_capture),
@@ -229,7 +229,7 @@ export function mapToAuthorization(data: Record<string, unknown>): PayPalAuthori
     status: ((data.status as string | null | undefined) ??
       'PENDING') as PayPalAuthorization['status'],
     amount: {
-      currencyCode: (amount.currency_code as string | null | undefined) ?? 'USD',
+      currencyCode: (amount.currency_code as string | null | undefined) ?? 'GBP',
       value: (amount.value as string | null | undefined) ?? '0.00',
     },
     expirationTime: data.expiration_time ? new Date(data.expiration_time as string) : undefined,
@@ -249,7 +249,7 @@ export function mapToRefund(data: Record<string, unknown>): PayPalRefund {
     id: (data.id as string | null | undefined) ?? '',
     status: ((data.status as string | null | undefined) ?? 'PENDING') as PayPalRefund['status'],
     amount: {
-      currencyCode: (amount.currency_code as string | null | undefined) ?? 'USD',
+      currencyCode: (amount.currency_code as string | null | undefined) ?? 'GBP',
       value: (amount.value as string | null | undefined) ?? '0.00',
     },
     invoiceId: data.invoice_id ? (data.invoice_id as string) : undefined,
@@ -298,7 +298,7 @@ function mapBillingInfo(billingInfo: Record<string, unknown>) {
             ((billingInfo.outstanding_balance as Record<string, unknown>).currency_code as
               | string
               | null
-              | undefined) ?? 'USD',
+              | undefined) ?? 'GBP',
           value:
             ((billingInfo.outstanding_balance as Record<string, unknown>).value as
               | string
@@ -315,7 +315,7 @@ function mapBillingInfo(billingInfo: Record<string, unknown>) {
                   string,
                   unknown
                 >
-              )?.currency_code as string | undefined) ?? 'USD',
+              )?.currency_code as string | undefined) ?? 'GBP',
             value:
               ((
                 (billingInfo.last_payment as Record<string, unknown>).amount as Record<

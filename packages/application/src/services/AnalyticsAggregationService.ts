@@ -90,7 +90,7 @@ export class AnalyticsAggregationService {
 
   /** UTC short month label (e.g. "Mar") */
   private static utcMonthLabel(date: Date): string {
-    return date.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' });
+    return date.toLocaleDateString('en-GB', { month: 'short', timeZone: 'UTC' });
   }
 
   /**
@@ -630,7 +630,7 @@ export class AnalyticsAggregationService {
       );
       const effectiveEnd = new Date(Math.min(endOfMonth.getTime(), dateRange.endDate.getTime()));
 
-      const label = current.toLocaleDateString('en-US', {
+      const label = current.toLocaleDateString('en-GB', {
         month: 'short',
         year: 'numeric',
         timeZone: 'UTC',
@@ -677,14 +677,14 @@ export class AnalyticsAggregationService {
               999
             )
           );
-          label = current.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+          label = current.toLocaleDateString('en-GB', { month: 'short', day: 'numeric', timeZone: 'UTC' });
           break;
         }
         case 'week': {
           bucketEnd = new Date(current);
           bucketEnd.setUTCDate(bucketEnd.getUTCDate() + 6);
           bucketEnd.setUTCHours(23, 59, 59, 999);
-          label = `Week of ${current.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })}`;
+          label = `Week of ${current.toLocaleDateString('en-GB', { month: 'short', day: 'numeric', timeZone: 'UTC' })}`;
           break;
         }
         case 'month':
@@ -692,7 +692,7 @@ export class AnalyticsAggregationService {
           bucketEnd = new Date(
             Date.UTC(current.getUTCFullYear(), current.getUTCMonth() + 1, 0, 23, 59, 59, 999)
           );
-          label = current.toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' });
+          label = current.toLocaleDateString('en-GB', { month: 'short', year: 'numeric', timeZone: 'UTC' });
           break;
         }
       }

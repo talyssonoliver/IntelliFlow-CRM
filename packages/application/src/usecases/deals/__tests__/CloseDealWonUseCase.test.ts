@@ -35,7 +35,7 @@ function createMockOpportunity(
   const defaults = {
     name: 'Enterprise Deal',
     value: 50000,
-    currency: 'USD',
+    currency: 'GBP',
     stage: 'CLOSED_WON' as const,
     probability: 100,
     accountId: 'account-123',
@@ -152,7 +152,7 @@ describe('CloseDealWonUseCase', () => {
       expect(publishedEvent).toBeInstanceOf(DealWonEnrichedEvent);
       expect(publishedEvent.eventType).toBe('opportunity.deal_won_enriched');
       expect(publishedEvent.value).toBe(50000);
-      expect(publishedEvent.currency).toBe('USD');
+      expect(publishedEvent.currency).toBe('GBP');
       expect(publishedEvent.accountId).toBe('account-123');
       expect(publishedEvent.ownerId).toBe('owner-789');
       expect(publishedEvent.tenantId).toBe('tenant-001');
@@ -328,7 +328,7 @@ describe('CloseDealWonUseCase', () => {
 
       const publishedEvent = mockEventBus.publish.mock.calls[0][0] as DealWonEnrichedEvent;
       expect(publishedEvent.value).toBe(50000);
-      expect(publishedEvent.currency).toBe('USD');
+      expect(publishedEvent.currency).toBe('GBP');
     });
 
     it('should include tenantId in DealWonEnrichedEvent for multi-tenant aggregation', async () => {

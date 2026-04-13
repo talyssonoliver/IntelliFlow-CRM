@@ -27,7 +27,7 @@ export interface MetricCardProps extends React.HTMLAttributes<HTMLDivElement> {
   value: string | number;
   /** Format for displaying the value */
   format?: MetricFormat;
-  /** Currency code for currency format (default: 'USD') */
+  /** Currency code for currency format (default: 'GBP') */
   currency?: string;
   /** Change indicator */
   change?: MetricChange;
@@ -50,13 +50,13 @@ export interface MetricCardProps extends React.HTMLAttributes<HTMLDivElement> {
 function formatValue(
   value: string | number,
   format: MetricFormat = 'number',
-  currency: string = 'USD'
+  currency: string = 'GBP'
 ): string {
   if (typeof value === 'string') return value;
 
   switch (format) {
     case 'currency':
-      return new Intl.NumberFormat('en-US', {
+      return new Intl.NumberFormat('en-GB', {
         style: 'currency',
         currency,
         minimumFractionDigits: 0,
@@ -67,14 +67,14 @@ function formatValue(
       return `${value}%`;
 
     case 'compact':
-      return new Intl.NumberFormat('en-US', {
+      return new Intl.NumberFormat('en-GB', {
         notation: 'compact',
         maximumFractionDigits: 1,
       }).format(value);
 
     case 'number':
     default:
-      return value.toLocaleString('en-US');
+      return value.toLocaleString('en-GB');
   }
 }
 
@@ -129,7 +129,7 @@ const MetricCard = React.forwardRef<HTMLDivElement, MetricCardProps>(
       title,
       value,
       format = 'number',
-      currency = 'USD',
+      currency = 'GBP',
       change,
       icon,
       iconBgClass = 'bg-primary/10',

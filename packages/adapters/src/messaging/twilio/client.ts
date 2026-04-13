@@ -198,13 +198,13 @@ export class TwilioClient {
 
       return {
         balance: balance.balance ?? '0',
-        currency: balance.currency ?? 'USD',
+        currency: balance.currency ?? 'GBP',
       };
     } catch {
       // Fallback: return default values if balance API unavailable
       return {
         balance: '0',
-        currency: 'USD',
+        currency: 'GBP',
       };
     }
   }

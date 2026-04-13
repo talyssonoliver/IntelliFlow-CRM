@@ -365,7 +365,7 @@ describe('Logging Module', () => {
 
     it('should log business metrics', () => {
       expect(() => logBusinessMetric('leads-converted', 42, 'count')).not.toThrow();
-      expect(() => logBusinessMetric('monthly-revenue', 125000, 'USD')).not.toThrow();
+      expect(() => logBusinessMetric('monthly-revenue', 125000, 'GBP')).not.toThrow();
       expect(() => logBusinessMetric('conversion-rate', 23.5, 'percent')).not.toThrow();
     });
 

@@ -102,7 +102,7 @@ describe('StripeAdapter', () => {
   });
 
   it('should delegate createPaymentIntent to handler', () => {
-    const params = { amount: 1000, currency: 'usd', customerId: 'cus_123' } as any;
+    const params = { amount: 1000, currency: 'GBP', customerId: 'cus_123' } as any;
     mockHandlers.createPaymentIntent.mockReturnValue('result');
     const result = adapter.createPaymentIntent(params);
     expect(mockHandlers.createPaymentIntent).toHaveBeenCalledWith(config, params);
