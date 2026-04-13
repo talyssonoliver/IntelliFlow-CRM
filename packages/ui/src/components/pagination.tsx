@@ -289,7 +289,7 @@ const Pagination = React.forwardRef<HTMLElement, PaginationProps>(
             {pages.map((page, index) =>
               page === 'ellipsis' ? (
                 <span
-                  key={`ellipsis-${index}`} // NOSONAR typescript:S6479
+                  key={`ellipsis-after-${pages[index - 1] ?? 'start'}`}
                   className="flex items-center justify-center px-2 text-slate-400 dark:text-slate-500"
                   aria-hidden="true"
                 >

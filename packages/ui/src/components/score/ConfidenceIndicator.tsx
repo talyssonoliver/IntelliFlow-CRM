@@ -72,20 +72,20 @@ function ConfidenceIndicator({
       </div>
 
       {/* Progress Bar */}
-      <div
-        className={cn('w-full bg-muted rounded-full overflow-hidden mt-1', barHeight)}
-        role="progressbar" // NOSONAR typescript:S6819 — custom styled progress with inner fill child; <progress> cannot contain child elements
+      <span
+        className={cn('w-full bg-muted rounded-full overflow-hidden mt-1 block', barHeight)}
+        role="progressbar"
         aria-label={`AI confidence: ${percentage}%`}
         aria-valuenow={percentage}
         aria-valuemin={0}
         aria-valuemax={100}
       >
-        <div
+        <span
           data-level={config.level}
-          className={cn('h-full rounded-full transition-all duration-300', config.bgColor)}
+          className={cn('h-full rounded-full transition-all duration-300 block', config.bgColor)}
           style={{ width: `${percentage}%` }}
         />
-      </div>
+      </span>
 
       {/* Description */}
       {showDescription && (

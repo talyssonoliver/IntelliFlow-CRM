@@ -148,10 +148,8 @@ function ScoreBadge({
               </div>
             )}
             <div className="space-y-2">
-              {factors.slice(0, 5).map((factor, index) => (
-                <div key={index} className="flex items-center justify-between text-sm">
-                  {' '}
-                  {/* NOSONAR typescript:S6479 */}
+              {factors.slice(0, 5).map((factor) => (
+                <div key={factor.name} className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground truncate max-w-[180px]">
                     {factor.name}
                   </span>

@@ -414,8 +414,8 @@ export function CookieConsentBanner({
     <>
       {/* Main Banner */}
       {showBanner && !settingsOpen ? (
-        <div
-          role="dialog" // NOSONAR typescript:S6819 — cookie consent banner uses custom fixed positioning; <dialog> lacks consistent CSS layout support
+        <dialog
+          open
           aria-modal="true"
           aria-labelledby="cookie-consent-title"
           aria-describedby="cookie-consent-description"
@@ -482,7 +482,7 @@ export function CookieConsentBanner({
               </div>
             </div>
           </div>
-        </div>
+        </dialog>
       ) : null}
 
       {/* Settings Panel (Modal) */}

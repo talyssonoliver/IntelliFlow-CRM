@@ -132,7 +132,7 @@ export interface EntityAvatarProps
 // EntityAvatar Component
 // ============================================
 
-const EntityAvatar = React.forwardRef<HTMLDivElement, EntityAvatarProps>(
+const EntityAvatar = React.forwardRef<HTMLSpanElement, EntityAvatarProps>(
   (
     {
       name,
@@ -160,7 +160,7 @@ const EntityAvatar = React.forwardRef<HTMLDivElement, EntityAvatarProps>(
     const showImage = imageUrl && !imageError;
 
     return (
-      <div
+      <span
         ref={ref}
         className={cn(
           entityAvatarVariants({ size, shape }),
@@ -168,7 +168,7 @@ const EntityAvatar = React.forwardRef<HTMLDivElement, EntityAvatarProps>(
           showImage && 'bg-muted',
           className
         )}
-        role="img" // NOSONAR typescript:S6819 — div-based avatar with dynamic content (image or initials fallback); <img> cannot contain text children
+        role="img"
         aria-label={alt || `Avatar for ${name}`}
         {...props}
       >
@@ -185,7 +185,7 @@ const EntityAvatar = React.forwardRef<HTMLDivElement, EntityAvatarProps>(
           if (fallback) return fallback;
           return <span aria-hidden="true">{initials}</span>;
         })()}
-      </div>
+      </span>
     );
   }
 );

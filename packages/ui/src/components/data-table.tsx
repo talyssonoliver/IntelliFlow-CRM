@@ -99,15 +99,17 @@ export function TableRowActions<T>({
   const hasDropdown = menuItems.length > 0;
 
   return (
-    <div // NOSONAR typescript:S6848 — wrapper div prevents click/key event bubbling to table row selection; all interactive content is inside proper <button> elements
+    <div
+      role="toolbar"
+      aria-label="Row actions"
       className="flex items-center justify-end gap-1"
       onClick={(e) => e.stopPropagation()}
       onKeyDown={(e) => e.stopPropagation()}
     >
       {/* Quick action buttons (icon only) */}
-      {quickActions?.map((action, index) => (
+      {quickActions?.map((action) => (
         <button
-          key={index} // NOSONAR typescript:S6479
+          key={action.label}
           onClick={action.onClick}
           className="p-1.5 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-colors"
           aria-label={action.label}
@@ -119,9 +121,9 @@ export function TableRowActions<T>({
       ))}
 
       {/* Legacy actions */}
-      {actions?.map((action, index) => (
+      {actions?.map((action) => (
         <Button
-          key={index} // NOSONAR typescript:S6479
+          key={action.label}
           variant={action.variant === 'destructive' ? 'destructive' : 'ghost'}
           size="sm"
           onClick={() => row && action.onClick(row)}
@@ -259,7 +261,6 @@ function SelectRowCell<TData>({ row }: Readonly<{ row: Row<TData> }>) {
           e.stopPropagation();
         }
       }}
-      role="presentation" // NOSONAR typescript:S6819 — wrapper div prevents click bubbling to row; presentation role correctly marks it as non-semantic
     >
       <Checkbox
         checked={row.getIsSelected()}
