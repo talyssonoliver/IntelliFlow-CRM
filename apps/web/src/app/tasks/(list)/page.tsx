@@ -10,8 +10,8 @@ import { api } from '@/lib/api';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { TaskList, type TaskListItem } from '@/components/tasks/TaskList';
 
-function formatFullName(first: string, last: string): string {
-  return `${first} ${last}`;
+function formatFullName(first: string | null | undefined, last: string | null | undefined): string {
+  return `${first ?? ''} ${last ?? ''}`.trim();
 }
 
 function getEntityName(task: TaskListItem): string {

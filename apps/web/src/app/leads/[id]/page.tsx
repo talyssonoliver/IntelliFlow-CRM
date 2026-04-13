@@ -2714,20 +2714,22 @@ export default function Lead360Page() {
     },
   });
 
+  const logActivityOnSuccess = () => {
+    toast({ title: 'Activity logged', description: 'Activity has been recorded.' });
+    setActivityNote('');
+    setLogCallOpen(false);
+    setLogCallTitle('');
+    setLogCallDescription('');
+    utils.lead.getById.invalidate({ id: leadId });
+    utils.activityFeed.getUnifiedFeed.invalidate();
+    utils.activityFeed.getEntityFeed.invalidate();
+  };
+  const logActivityOnError = (err: { message: string }) => {
+    toast({ title: 'Failed to log activity', description: err.message, variant: 'destructive' });
+  };
   const logActivityMutation = api.lead.logActivity.useMutation({
-    onSuccess: () => {
-      toast({ title: 'Activity logged', description: 'Activity has been recorded.' });
-      setActivityNote('');
-      setLogCallOpen(false);
-      setLogCallTitle('');
-      setLogCallDescription('');
-      utils.lead.getById.invalidate({ id: leadId });
-      utils.activityFeed.getUnifiedFeed.invalidate();
-      utils.activityFeed.getEntityFeed.invalidate();
-    },
-    onError: (err) => {
-      toast({ title: 'Failed to log activity', description: err.message, variant: 'destructive' });
-    },
+    onSuccess: logActivityOnSuccess,
+    onError: logActivityOnError,
   });
 
   // Transform API data to UI format

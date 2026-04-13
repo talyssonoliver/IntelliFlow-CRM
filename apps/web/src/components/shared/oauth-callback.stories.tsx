@@ -95,7 +95,6 @@ const MockOAuthCallback = ({
 
           <output
             className="relative p-8 text-center space-y-6 block"
-            role="status"
             aria-live="polite"
           >
             <div

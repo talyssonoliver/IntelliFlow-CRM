@@ -115,7 +115,6 @@ export function SLAIndicator({
           className={`inline-flex items-center font-mono font-bold rounded w-fit ${sizeClasses[size]} ${config.bg} ${config.text} ${
             isBreachedOrAtRisk ? 'animate-pulse' : ''
           }`}
-          role="status"
           aria-label={`SLA ${config.label}: ${formatSLATime(remaining)} remaining`}
         >
           <span className={`material-symbols-outlined ${iconSizes[size]}`}>{config.icon}</span>
