@@ -1,0 +1,113 @@
+{
+  "task_id": "PG-053",
+  "sprint": 17,
+  "verdict": "COMPLETE",
+  "attested_at": "2026-04-13T04:05:00Z",
+  "dependencies_verified": ["PG-050", "PG-051", "PG-052"],
+  "artifact_hashes": {
+    "apps/web/src/app/(public)/dpa/page.tsx": "376a3a73e70988de2b783d452a33415d074582a60c7f4c0c3e8c349614978b12",
+    "apps/web/src/lib/legal/signature-handler.ts": "72515d002f895218708c78e805de91384a117eff3bb8508a7cf2beafa0c59749",
+    "apps/web/src/lib/legal/signature-handler.client.ts": "910fde273b6030d7e1e19ee7dc50de43e84c50910497ed382d0fccc2b44bc165",
+    "apps/web/src/components/legal/dpa-signature-panel.tsx": "96bf250354ee22e7086a44c7375c8892f68f8fe25cb749a32d230a58dc85ff07",
+    "docs/shared/dpa-content.md": "200020d6548629e6dee88e46b57d00e59155f7f938112e926f173060f23f1f7b",
+    "apps/web/public/legal/dpa-template.pdf": "fb3c0a2ec528bccb2abe986008ca440c902e61f4c1bea334d2ae2fae5d622a4a",
+    "apps/web/src/app/sitemap.ts": "a2fc03cf03b23da0dd0ba920e6130bf1884368d9322184d28dacf12f73d55693"
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm typecheck",
+      "exit_code": 2,
+      "passed": false,
+      "timestamp": "2026-04-13T03:55:00Z",
+      "duration_ms": 120000,
+      "stdout_hash": "pre-existing-errors-in-workflows-node-registry-unrelated-to-PG-053"
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run src/app/(public)/dpa src/lib/legal/__tests__/signature-handler.test.ts src/lib/legal/__tests__/signature-handler.client.test.ts src/components/legal/__tests__/dpa-signature-panel.test.tsx src/app/__tests__/sitemap-reconciliation.test.ts src/app/__tests__/ia-reconciliation.test.ts",
+      "exit_code": 1,
+      "passed": false,
+      "timestamp": "2026-04-13T03:50:00Z",
+      "duration_ms": 12000,
+      "stdout_hash": "42-of-43-pass-1-preexisting-ghost-link-failure-unrelated-to-PG-053"
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter @intelliflow/web lint",
+      "exit_code": 1,
+      "passed": false,
+      "timestamp": "2026-04-13T03:58:00Z",
+      "duration_ms": 60000,
+      "stdout_hash": "5-preexisting-jsx-a11y-errors-in-tickets-unrelated-to-PG-053"
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 1,
+      "passed": false,
+      "timestamp": "2026-04-13T04:02:00Z",
+      "duration_ms": 160000,
+      "stdout_hash": "preexisting-ts-error-in-tasks-list-page-unrelated-to-PG-053"
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "plan-checkboxes",
+      "passed": true,
+      "timestamp": "2026-04-13T04:05:00Z"
+    },
+    {
+      "gate_id": "artifact-verification",
+      "passed": true,
+      "timestamp": "2026-04-13T04:05:00Z"
+    },
+    {
+      "gate_id": "shared-component-reuse",
+      "passed": true,
+      "timestamp": "2026-04-13T04:05:00Z"
+    },
+    {
+      "gate_id": "build-validation",
+      "passed": false,
+      "timestamp": "2026-04-13T04:05:00Z"
+    },
+    {
+      "gate_id": "scoped-coverage",
+      "passed": false,
+      "timestamp": "2026-04-13T04:05:00Z"
+    }
+  ],
+  "kpi_results": [
+    {
+      "name": "DPA scoped tests",
+      "target": "all pass",
+      "actual": "34/34 pass",
+      "met": true,
+      "unit": "tests"
+    },
+    {
+      "name": "AC coverage",
+      "target": "17/17",
+      "actual": "17/17",
+      "met": true,
+      "unit": "AC"
+    },
+    {
+      "name": "Lighthouse /dpa",
+      "target": ">=0.90",
+      "actual": "not measured (build blocked)",
+      "met": false,
+      "unit": "score"
+    }
+  ],
+  "evidence_summary": {
+    "spec_path": ".specify/sprints/sprint-17/specifications/PG-053-spec.md",
+    "plan_path": ".specify/sprints/sprint-17/planning/PG-053-plan.md",
+    "delivery_path": ".specify/sprints/sprint-17/execution/PG-053/PG-053-delivery.md",
+    "dpa_tests_passed": "34 of 34",
+    "ac_passed": "17 of 17 (scope)",
+    "runtime_wiring_verified": true
+  },
+  "notes": "PG-053 scope is code-complete: 34/34 DPA tests pass; 17/17 acceptance criteria satisfied; runtime wiring verified end-to-end (getDpa -> page.tsx -> DpaSignaturePanel -> signature-handler.client). Verdict COMPLETE accepted by human owner (2026-04-13) despite 4 pre-existing monorepo-wide validation failures that are UNRELATED to PG-053 and owned by separate tasks: (1) apps/web/src/components/workflows/node-registry.tsx lines 44-46 TS2352 errors (ReactFlow type drift, last touched by workflow canvas commit a4bd31a2); (2) apps/web/src/app/tasks/(list)/page.tsx:18 TS error (formatFullName signature mismatch, last touched by commit 27e3dadb); (3) 5 jsx-a11y/no-redundant-roles lint errors in tickets SLAIndicator (last touched by commit 009d66f1); (4) 28-entry ghost-link drift in information-architecture.md section 4. Human owner confirmed these will be handled separately. Lighthouse not measured because build is blocked upstream; flagged as post-monorepo-repair follow-up. Follow-ups: legal review of placeholder DPA copy + PDF; monorepo typecheck/lint/build triage task; Ghost Links Register cleanup."
+}

@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>tRPC Benchmark Report - IntelliFlow CRM</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --card-2: #273449;
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --accent: #3b82f6;
+      --good: #22c55e;
+      --average: #f59e0b;
+      --poor: #ef4444;
+      --error: #6b7280;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+    header { margin-bottom: 2rem; }
+    h1 { font-size: 2rem; color: #fff; margin-bottom: 0.5rem; }
+    .meta { color: var(--text-muted); font-size: 0.875rem; }
+    .meta span { margin-right: 1.5rem; }
+    .banner {
+      background: var(--card);
+      border-left: 4px solid var(--good);
+      border-radius: 8px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .banner-status { font-size: 1.25rem; font-weight: 600; color: #fff; }
+    .banner-status.good { color: var(--good); }
+    .banner-status.poor { color: var(--poor); }
+    .totals { display: flex; gap: 2rem; color: var(--text-muted); font-size: 0.9rem; }
+    .totals strong { color: var(--text); }
+    .scores {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .kpi-card {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+    }
+    .kpi-label { color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem; }
+    .kpi-value { font-size: 1.5rem; font-weight: 700; color: #fff; }
+    .kpi-value.good { color: var(--good); }
+    .kpi-value.poor { color: var(--poor); }
+    .kpi-sub { color: var(--text-muted); font-size: 0.8rem; margin-top: 0.25rem; }
+    .table-card {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      overflow-x: auto;
+    }
+    .table-card h3 { color: #fff; margin-bottom: 1rem; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 0.75rem 0.5rem; border-bottom: 1px solid #334155; font-size: 0.9rem; white-space: nowrap; }
+    th { color: var(--text-muted); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    td.op { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; color: #fff; }
+    td.num { text-align: right; font-variant-numeric: tabular-nums; }
+    .status { font-weight: 600; }
+    .status.good { color: var(--good); }
+    .status.average { color: var(--average); }
+    .status.poor { color: var(--poor); }
+    .status.error { color: var(--error); }
+    .bar-cell { min-width: 160px; }
+    .bar-wrap { background: var(--card-2); border-radius: 4px; height: 8px; width: 100%; overflow: hidden; }
+    .bar { height: 100%; border-radius: 4px; }
+    .bar.good { background: var(--good); }
+    .bar.average { background: var(--average); }
+    .bar.poor { background: var(--poor); }
+    .bar.error { background: var(--error); }
+    .error-row td { background: rgba(239, 68, 68, 0.06); color: var(--text-muted); font-size: 0.85rem; white-space: normal; }
+    .info-card {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    .info-card h3 { margin-bottom: 0.5rem; color: #fff; }
+    .info-card code { background: var(--card-2); padding: 0.2rem 0.4rem; border-radius: 4px; font-size: 0.85rem; }
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      background: var(--accent);
+      color: #fff;
+      margin-right: 0.5rem;
+    }
+    .badge.kpi { background: #8b5cf6; }
+    footer {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      padding-top: 2rem;
+      border-top: 1px solid #334155;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>tRPC API Benchmark Report</h1>
+      <p class="meta">
+        <span>Generated: 2026-04-13T17:40:17.974Z</span>
+        <span>KPI: IFC-003</span>
+        <span>Thresholds: p50 &lt; 30ms · p95 &lt; 50ms · p99 &lt; 100ms</span>
+      </p>
+    </header>
+
+    <div class="banner">
+      <div class="banner-status good">
+        ✅ PASSED
+      </div>
+      <div class="totals">
+        <div><strong>28</strong> total</div>
+        <div><strong>28</strong> completed</div>
+        <div><strong>28</strong> passed</div>
+        <div><strong>0</strong> failed KPI</div>
+        <div><strong>0</strong> errored</div>
+      </div>
+    </div>
+
+    <div class="scores">
+      <div class="kpi-card">
+        <div class="kpi-label">p50 Threshold</div>
+        <div class="kpi-value">&lt; 30ms</div>
+        <div class="kpi-sub">Median response time</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">p95 Threshold</div>
+        <div class="kpi-value">&lt; 50ms</div>
+        <div class="kpi-sub">95th percentile</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">p99 Threshold</div>
+        <div class="kpi-value">&lt; 100ms</div>
+        <div class="kpi-sub">99th percentile</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Pass rate</div>
+        <div class="kpi-value good">100%</div>
+        <div class="kpi-sub">28/28 completed benchmarks</div>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <h3>Per-Operation Results</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Operation</th>
+            <th class="num">Iter</th>
+            <th class="num">p50 (ms)</th>
+            <th class="num">p95 (ms)</th>
+            <th class="num">p99 (ms)</th>
+            <th class="num">mean (ms)</th>
+            <th class="bar-cell">p95 vs threshold</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          
+          <tr>
+            <td class="op">health.ping</td>
+            <td class="num">100</td>
+            <td class="num">0.05</td>
+            <td class="num">0.74</td>
+            <td class="num">3.02</td>
+            <td class="num">0.14</td>
+            <td class="bar-cell"><div class="bar-wrap"><div class="bar good" style="width: 1.48%"></div></div></td>
+            <td class="status good">✅ GOOD</td>
+          </tr>
+          <tr>
+            <td class="op">health.check</td>
+            <td class="num">100</td>
+            <td class="num">0.77</td>
+            <td class="num">1.04</td>
+            <td class="num">1.37</td>
+            <td class="num">0.80</td>
+            <td class="bar-cell"><div class="bar-wrap"><div class="bar good" style="width: 2.08%"></div></div></td>
+            <td class="status good">✅ GOOD</td>
+          </tr>
+          <tr>
+            <td class="op">system.info</td>
+            <td class="num">100</td>
+            <td class="num">0.05</td>
+            <td class="num">0.16</td>
+            <td class="num">0.24</td>
+            <td class="num">0.06</td>
+            <td class="bar-cell"><div class="bar-wrap"><div class="bar good" style="width: 1%"></div></div></td>
+            <td class="status good">✅ GOOD</td>
+          </tr>
+          <tr>
+            <td class="op">system.version</td>
+            <td class="num">100</td>
+            <td class="num">0.03</td>
+            <td class="num">0.05</td>
+            <td class="num">0.12</td>
+            <td class="num">0.03</td>
+            <td class="bar-cell"><div class="bar-wrap"><div class="bar good" style="width: 1%"></div></div></td>
+            <td class="status good">✅ GOOD</td>
+          </tr>
+          <tr>
+            <td class="op">auth.getStatus</td>
+            <td class="num">100</td>
+            <td class="num">0.06</td>
+            <td class="num">0.15</td>
+            <td class="num">0.83</td>
+            <td class="num">0.08</td>
+            <td class="bar-cell"><div class="bar-wrap"><div class="bar good" style="width: 1%"></div></div></td>
+            <td class="status good">✅ GOOD</td>
+          </tr>
+          <tr>
+            <td class="op">lead.list</td>
+            <td class="num">30</td>
+            <td class="num">3.63</td>
+            <td class="num">4.20</td>
+            <td class="num">4.45</td>
+            <td class="num">3.67</td>
+            <td class="bar-cell"><div class="bar-wrap"><div class="bar good" style="width: 8.4%"></div></div></td>
+            <td class="status good">✅ GOOD</td>
+          </tr>
+          <tr>
+            <td class="op">lead.stats</td>
+            <td class="num">30</td>
+            <td class="num">2.50</td>
+            <td class="num">3.32</td>
+            <td class="num">6.76</td>
+            <td class="num">2.71</td>
+            <td class="bar-cell"><div class="bar-wrap"><div class="bar good" style="width: 6.64%"></div></div></td>
+            <td class="status good">✅ GOOD</td>
+          </tr>
+          <tr>
+            <td class="op">contact.list</td>
+            <td class="num">30</td>
+            <td class="num">4.44</td>
+            <td class="num">25.80</td>
+            <td class="num">26.42</td>
+            <td class="num">8.24</td>
+            <td class="bar-cell"><div class="bar-wrap"><div class="bar good" style="width: 51.6%"></div></div></td>
+            <td class="status good">✅ GOOD</td>
+          </tr>
+          <tr>
+            <td class="op">contact.stats</td>
+            <td class="num">30</td>
+            <td class="num">2.47</td>
+            <td class="num">7.88</td>
+            <td class="num">19.98</td>
+            <td class="num">3.32</td>
+            <td class="bar-cell"><div class="bar-wrap"><div class="bar good" style="width: 15.76%"></div></div></td>
+            <td class="status good">✅ GOOD</td>
+          </tr>
+          <tr>
+            <td class="op">account.list</td>
+            <td class="num">30</td>
+            <td class="num">3.72</td>
+            <td class="num">4.57</td>
+            <td class="num">4.66</td>
+            <td class="num">3.75</td>
+            <td class="bar-cell"><div class="bar-wrap"><div class="bar good" style="width: 9.14%"></div></div></td>
+            <td class="status good">✅ GOOD</td>
+          </tr>
+          <tr>
+            <td class="op">account.stats</td>
+            <td class="num">30</td>
+            <td class="num">2.73</td>
+            <td class="num">3.71</td>
+            <td class="num">4.38</td>
+            <td class="num">2.74</td>
+            <td class="bar-cell"><div class="bar-wrap"><div class="bar good" style="width: 7.42%"></div></div></td>
+            <td class="status good">✅ GOOD</td>
+          </tr>
+          <tr>
+            <td class="op">opportunity.list</td>
+            <td class="num">30</td>
+            <td class="num">3.65</td>
+            <td class="num">4.80</td>
+            <td class="num">10.78</td>
+            <td class="num">3.98</td>
+            <td class="bar-cell"><div class="bar-wrap"><div class="bar good" style="width: 9.6%"></div></div></td>
+            <td class="status good">✅ GOOD</td>
+          </tr>
+          <tr>
+            <td class="op">opportunity.stats</td>
+            <td class="num">30</td>
+            <td class="num">2.42</td>
+            <td class="num">8.44</td>
+            <td class="num">10.59</td>
+            <td class="num">3.02</td>
+            <td class="bar-cell"><div class="bar-wrap"><div class="bar good" style="width: 16.88%"></div></div></td>
+            <td class="status good">✅ GOOD</td>
+          </tr>
+          <tr>
+            <td class="op">task.list</td>
+            <td class="num">30</td>
+            <td class="num">3.52</td>
+            <td class="num">4.06</td>
+            <td class="num">4.15</td>
+            <td class="num">3.54</td>
+            <td class="bar-cell"><div class="bar-wrap"><div class="bar good" style="width: 8.12%"></div></div></td>
+            <td class="status good">✅ GOOD</td>
+          </tr>
+          <tr>
+            <td class="op">task.stats</td>
+            <td class="num">30</td>
+            <td class="num">3.38</td>
+            <td class="num">9.41</td>
+            <td class="num">12.13</td>
+            <td class="num">3.99</td>
+            <td class="bar-cell"><div class="bar-wrap"><div class="bar good" style="width: 18.82%"></div></div></td>
+            <td class="status good">✅ GOOD</td>
+          </tr>
+          <tr>
+            <td class="op">ticket.list</td>
+            <td class="num">30</td>
+            <td class="num">5.65</td>
+            <td class="num">6.35</td>
+            <td class="num">6.40</td>
+            <td class="num">5.66</td>
+            <td class="bar-cell"><div class="bar-wrap"><div class="bar good" style="width: 12.7%"></div></div></td>
+            <td class="status good">✅ GOOD</td>
+          </tr>
+          <tr>
+            <td class="op">ticket.stats</td>
+            <td class="num">30</td>
+            <td class="num">3.07</td>
+            <td class="num">9.65</td>
+            <td class="num">14.05</td>
+            <td class="num">4.05</td>
+            <td class="bar-cell"><div class="bar-wrap"><div class="bar good" style="width: 19.3%"></div></div></td>
+            <td class="status good">✅ GOOD</td>
+          </tr>
+          <tr>
+            <td class="op">home.getWelcomeSummary</td>
+            <td class="num">30</td>
+            <td class="num">5.37</td>
+            <td class="num">8.01</td>
+            <td class="num">8.56</td>
+            <td class="num">5.64</td>
+            <td class="bar-cell"><div class="bar-wrap"><div class="bar good" style="width: 16.02%"></div></div></td>
+            <td class="status good">✅ GOOD</td>
+          </tr>
+          <tr>
+            <td class="op">home.getAIInsights</td>
+            <td class="num">30</td>
+            <td class="num">11.32</td>
+            <td class="num">20.82</td>
+            <td class="num">63.23</td>
+            <td class="num">13.24</td>
+            <td class="bar-cell"><div class="bar-wrap"><div class="bar good" style="width: 41.64%"></div></div></td>
+            <td class="status good">✅ GOOD</td>
+          </tr>
+          <tr>
+            <td class="op">home.getDailyGoal</td>
+            <td class="num">30</td>
+            <td class="num">4.74</td>
+            <td class="num">6.55</td>
+            <td class="num">6.57</td>
+            <td class="num">4.89</td>
+            <td class="bar-cell"><div class="bar-wrap"><div class="bar good" style="width: 13.100000000000001%"></div></div></td>
+            <td class="status good">✅ GOOD</td>
+          </tr>
+          <tr>
+            <td class="op">analytics.getOverview</td>
+            <td class="num">30</td>
+            <td class="num">5.72</td>
+            <td class="num">22.90</td>
+            <td class="num">23.18</td>
+            <td class="num">7.42</td>
+            <td class="bar-cell"><div class="bar-wrap"><div class="bar good" style="width: 45.8%"></div></div></td>
+            <td class="status good">✅ GOOD</td>
+          </tr>
+          <tr>
+            <td class="op">analytics.getSalesMetrics</td>
+            <td class="num">30</td>
+            <td class="num">2.99</td>
+            <td class="num">4.56</td>
+            <td class="num">6.42</td>
+            <td class="num">3.17</td>
+            <td class="bar-cell"><div class="bar-wrap"><div class="bar good" style="width: 9.12%"></div></div></td>
+            <td class="status good">✅ GOOD</td>
+          </tr>
+          <tr>
+            <td class="op">notifications.list</td>
+            <td class="num">30</td>
+            <td class="num">4.05</td>
+            <td class="num">15.84</td>
+            <td class="num">43.64</td>
+            <td class="num">6.74</td>
+            <td class="bar-cell"><div class="bar-wrap"><div class="bar good" style="width: 31.679999999999996%"></div></div></td>
+            <td class="status good">✅ GOOD</td>
+          </tr>
+          <tr>
+            <td class="op">notifications.getUnreadCount</td>
+            <td class="num">30</td>
+            <td class="num">2.76</td>
+            <td class="num">11.91</td>
+            <td class="num">13.82</td>
+            <td class="num">4.38</td>
+            <td class="bar-cell"><div class="bar-wrap"><div class="bar good" style="width: 23.82%"></div></div></td>
+            <td class="status good">✅ GOOD</td>
+          </tr>
+          <tr>
+            <td class="op">activityFeed.getUnifiedFeed</td>
+            <td class="num">30</td>
+            <td class="num">0.42</td>
+            <td class="num">1.53</td>
+            <td class="num">6.25</td>
+            <td class="num">0.74</td>
+            <td class="bar-cell"><div class="bar-wrap"><div class="bar good" style="width: 3.06%"></div></div></td>
+            <td class="status good">✅ GOOD</td>
+          </tr>
+          <tr>
+            <td class="op">moduleAccess.getEnabledModules</td>
+            <td class="num">30</td>
+            <td class="num">4.57</td>
+            <td class="num">31.01</td>
+            <td class="num">58.98</td>
+            <td class="num">7.90</td>
+            <td class="bar-cell"><div class="bar-wrap"><div class="bar good" style="width: 62.02000000000001%"></div></div></td>
+            <td class="status good">✅ GOOD</td>
+          </tr>
+          <tr>
+            <td class="op">user.getProfile</td>
+            <td class="num">30</td>
+            <td class="num">2.47</td>
+            <td class="num">3.00</td>
+            <td class="num">3.04</td>
+            <td class="num">2.45</td>
+            <td class="bar-cell"><div class="bar-wrap"><div class="bar good" style="width: 6%"></div></div></td>
+            <td class="status good">✅ GOOD</td>
+          </tr>
+          <tr>
+            <td class="op">globalSearch.query</td>
+            <td class="num">30</td>
+            <td class="num">3.27</td>
+            <td class="num">4.43</td>
+            <td class="num">11.36</td>
+            <td class="num">3.58</td>
+            <td class="bar-cell"><div class="bar-wrap"><div class="bar good" style="width: 8.86%"></div></div></td>
+            <td class="status good">✅ GOOD</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="info-card">
+      <h3>Report Information</h3>
+      <p><span class="badge">Local Benchmark</span><span class="badge kpi">IFC-003</span></p>
+      <p style="margin-top: 0.75rem;">
+        This report is produced by
+        <code>apps/api/src/shared/performance-benchmark.ts</code> — an in-process
+        tRPC caller benchmark measuring per-procedure latency against a seeded
+        local Postgres. It is distinct from the k6 CI gate
+        (<code>.github/workflows/performance-gate.yml</code>), which measures
+        wire-level concurrency thresholds (p95 &le; 200ms under load).
+      </p>
+      <p style="margin-top: 0.5rem;">
+        Regenerate with:
+        <code>npx dotenv -e .env.test -- npx tsx apps/api/src/shared/performance-benchmark.ts &amp;&amp; node scripts/ci/generate-trpc-benchmark-report.js</code>
+      </p>
+    </div>
+
+    <footer>
+      IntelliFlow CRM — Governance Dashboard · tRPC Benchmark Artifact
+    </footer>
+  </div>
+</body>
+</html>

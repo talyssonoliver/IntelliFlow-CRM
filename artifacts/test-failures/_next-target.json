@@ -1,0 +1,5 @@
+{
+  "next_project": "packages/application",
+  "cluster_id": "app-opportunity-service-assertions",
+  "reason": "Last remaining cluster in packages/application. 5 failures. AccountService pattern suggests OpportunityService may have same tenantId enforcement gap in tests."
+}
