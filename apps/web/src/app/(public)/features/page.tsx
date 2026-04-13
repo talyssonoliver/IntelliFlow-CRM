@@ -105,9 +105,9 @@ export default function FeaturesPage() {
 
                     {/* Benefits List */}
                     <ul className="space-y-2 mb-4">
-                      {feature.benefits.map((benefit, index) => (
+                      {feature.benefits.map((benefit) => (
                         <li
-                          key={index} // NOSONAR typescript:S6479
+                          key={benefit}
                           className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400"
                         >
                           <span className="material-symbols-outlined text-[#137fec] text-base mt-0.5 flex-shrink-0">

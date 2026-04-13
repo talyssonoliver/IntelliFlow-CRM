@@ -706,7 +706,6 @@ function getPrincipalTypeIcon(principalType: string): string {
 }
 
 export default function DocumentDetailPage() {
-  // NOSONAR typescript:S3776
   const params = useParams();
   const router = useRouter();
   const documentId = params.id as string;

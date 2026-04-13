@@ -237,11 +237,17 @@ export function ComplianceDetailPanel({
         {(() => {
           if (loading)
             return (
-              <div className="flex items-center justify-center h-full">
-                <span className="material-symbols-outlined text-4xl text-muted-foreground animate-spin">
-                  progress_activity
-                </span>
-              </div>
+              <>
+                <SheetHeader className="sr-only">
+                  <SheetTitle>Loading compliance details</SheetTitle>
+                  <SheetDescription>Please wait while the compliance breakdown loads.</SheetDescription>
+                </SheetHeader>
+                <div className="flex items-center justify-center h-full">
+                  <span className="material-symbols-outlined text-4xl text-muted-foreground animate-spin">
+                    progress_activity
+                  </span>
+                </div>
+              </>
             );
           if (detail)
             return (
@@ -456,9 +462,15 @@ export function ComplianceDetailPanel({
               </>
             );
           return (
-            <div className="flex items-center justify-center h-full text-muted-foreground">
-              Select a compliance standard to view details
-            </div>
+            <>
+              <SheetHeader className="sr-only">
+                <SheetTitle>Compliance details</SheetTitle>
+                <SheetDescription>Select a compliance standard to view details.</SheetDescription>
+              </SheetHeader>
+              <div className="flex items-center justify-center h-full text-muted-foreground">
+                Select a compliance standard to view details
+              </div>
+            </>
           );
         })()}
       </SheetContent>

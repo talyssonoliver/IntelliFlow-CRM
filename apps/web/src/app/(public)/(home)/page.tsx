@@ -3,6 +3,7 @@ import { getAccessToken } from '@/lib/trpc-server';
 import { decodeJwtPayload } from '@/lib/auth/jwt';
 import { fetchWelcomeSummary } from '@/lib/cached-queries/home-queries';
 import { fetchAIInsights } from '@/lib/cached-queries/ai-insights-queries';
+import { serializeForClient } from '@/lib/shared/serialize-for-client';
 import { HomePagePublicWithAuthFallback } from '@/components/home/HomePagePublicWithAuthFallback';
 import { AuthenticatedHomePage } from '@/components/home/AuthenticatedHomePage';
 
@@ -60,7 +61,7 @@ export default async function HomePage() {
   let initialWelcomeData: unknown = null;
   try {
     const raw = await fetchWelcomeSummary(token, userId);
-    initialWelcomeData = JSON.parse(JSON.stringify(raw)); // NOSONAR typescript:S7784 — intentional JSON roundtrip for RSC→client boundary
+    initialWelcomeData = serializeForClient(raw);
   } catch {
     // Silently fall through — client-side React Query will fetch
   }

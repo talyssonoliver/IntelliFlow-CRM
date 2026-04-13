@@ -2100,9 +2100,7 @@ function LeadAIInsightsTab({
         </h3>
         <ul className="space-y-3">
           {aiInsights.recommendations.map((rec, index) => (
-            <li key={`rec-${index}`} className="flex items-start gap-3">
-              {' '}
-              {/* NOSONAR typescript:S6479 */}
+            <li key={`rec-${index}-${rec.slice(0, 20)}`} className="flex items-start gap-3">
               <div className="w-6 h-6 rounded-full bg-[#137fec]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
                 <span className="text-xs font-medium text-[#137fec]">{index + 1}</span>
               </div>
@@ -2908,7 +2906,7 @@ export default function Lead360Page() {
   // Transform AI insights to NextBestActionData format (IFC-095)
   const nextBestActionData: NextBestActionData | null = useMemo(() => {
     const insight = apiLead?.aiInsight;
-    if (!insight || !insight.nextBestAction) return null; // NOSONAR typescript:S6582 — cannot use optional chain here as TS narrows both insight and nextBestAction
+    if (!insight?.nextBestAction) return null;
 
     const actionType = resolveNBAActionType(insight.nextBestAction.toUpperCase());
     const priority = resolveNBAPriority(insight.churnRisk, insight.conversionProbability);

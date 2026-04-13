@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+
+const LEAD_EDIT_SKELETON_KEYS = ['le-skel-0', 'le-skel-1', 'le-skel-2', 'le-skel-3', 'le-skel-4', 'le-skel-5'] as const;
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import {
@@ -185,10 +187,8 @@ export default function EditLeadPage() {
       <div className="mx-auto max-w-2xl px-4 pt-8 pb-16">
         <Skeleton className="h-8 w-48 mb-6" />
         <Card className="p-6 space-y-6">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="space-y-2">
-              {' '}
-              {/* NOSONAR typescript:S6479 */}
+          {LEAD_EDIT_SKELETON_KEYS.map((key) => (
+            <div key={key} className="space-y-2">
               <Skeleton className="h-4 w-24" />
               <Skeleton className="h-10 w-full" />
             </div>

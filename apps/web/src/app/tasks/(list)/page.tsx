@@ -10,9 +10,13 @@ import { api } from '@/lib/api';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { TaskList, type TaskListItem } from '@/components/tasks/TaskList';
 
+function formatFullName(first: string, last: string): string {
+  return `${first} ${last}`;
+}
+
 function getEntityName(task: TaskListItem): string {
-  if (task.lead) return `${task.lead.firstName} ${task.lead.lastName}`; // NOSONAR typescript:S4624 — independent template literals in separate if-branches, not nested
-  if (task.contact) return `${task.contact.firstName} ${task.contact.lastName}`;
+  if (task.lead) return formatFullName(task.lead.firstName, task.lead.lastName);
+  if (task.contact) return formatFullName(task.contact.firstName, task.contact.lastName);
   if (task.opportunity) return task.opportunity.name;
   return '';
 }

@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+
+const CONTACT_EDIT_SKELETON_KEYS = ['ce-skel-0', 'ce-skel-1', 'ce-skel-2', 'ce-skel-3', 'ce-skel-4', 'ce-skel-5'] as const;
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import {
@@ -158,10 +160,8 @@ export default function EditContactPage() {
       <div className="mx-auto max-w-3xl px-4 pt-8 pb-16">
         <Skeleton className="h-8 w-48 mb-6" />
         <Card className="p-6 space-y-6">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="space-y-2">
-              {' '}
-              {/* NOSONAR typescript:S6479 */}
+          {CONTACT_EDIT_SKELETON_KEYS.map((key) => (
+            <div key={key} className="space-y-2">
               <Skeleton className="h-4 w-24" />
               <Skeleton className="h-10 w-full" />
             </div>

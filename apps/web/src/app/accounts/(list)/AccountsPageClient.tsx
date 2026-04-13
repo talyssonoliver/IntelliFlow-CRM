@@ -15,6 +15,8 @@ import { useAccountFilterOptions } from '@/hooks/use-dynamic-filters';
 import { invalidateAccountsCache } from './actions';
 import { revalidateAccountCaches } from '../actions';
 
+const ACCOUNTS_SKELETON_KEYS = ['row-0', 'row-1', 'row-2', 'row-3', 'row-4', 'row-5', 'row-6', 'row-7'] as const;
+
 /**
  * Accounts List Client Island
  *
@@ -144,8 +146,8 @@ function AccountsContent({
   if (isLoading) {
     return (
       <div className="space-y-3">
-        {Array.from({ length: 8 }).map((_, i) => (
-          <Skeleton key={i} className="h-14 w-full" /> // NOSONAR typescript:S6479
+        {ACCOUNTS_SKELETON_KEYS.map((key) => (
+          <Skeleton key={key} className="h-14 w-full" />
         ))}
       </div>
     );

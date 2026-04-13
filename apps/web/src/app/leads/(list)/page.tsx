@@ -10,6 +10,7 @@
 
 import { getAccessToken } from '@/lib/trpc-server';
 import { fetchLeadsFirstPage } from '@/lib/cached-queries/lead-queries';
+import { serializeForClient } from '@/lib/shared/serialize-for-client';
 import LeadsPageClient from './LeadsPageClient';
 
 export default async function LeadsPage() {
@@ -21,7 +22,7 @@ export default async function LeadsPage() {
   let initialData: unknown = null;
   try {
     const raw = await fetchLeadsFirstPage(token);
-    initialData = JSON.parse(JSON.stringify(raw)); // NOSONAR typescript:S7784 — intentional JSON roundtrip to serialize Date→string for RSC→client boundary
+    initialData = serializeForClient(raw);
   } catch {
     // Silently fall through — client-side React Query will fetch
   }

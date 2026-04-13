@@ -154,10 +154,24 @@ describe('validateNodeConfig', () => {
     expect(result.errors.some((e: string) => e.toLowerCase().includes('condition'))).toBe(true);
   });
 
-  it('human node missing timeout → returns error', () => {
+  it('human node missing deadline → returns error', () => {
+    // IFC-031 Phase E: humans now use `deadlineInHours` instead of `timeout`.
+    // Validator accepts either, so missing BOTH should fail.
     const result = validateNodeConfig('human', { instructions: 'Review this' });
     expect(result.valid).toBe(false);
-    expect(result.errors.some((e: string) => e.toLowerCase().includes('timeout'))).toBe(true);
+    expect(
+      result.errors.some((e: string) => e.toLowerCase().includes('deadline')),
+    ).toBe(true);
+  });
+
+  it('human node with deadlineInHours → passes', () => {
+    const result = validateNodeConfig('human', { deadlineInHours: 24 });
+    expect(result.valid).toBe(true);
+  });
+
+  it('human node with legacy timeout → still passes (backward-compat)', () => {
+    const result = validateNodeConfig('human', { timeout: 3600 });
+    expect(result.valid).toBe(true);
   });
 
   it('start node with valid trigger config → passes', () => {

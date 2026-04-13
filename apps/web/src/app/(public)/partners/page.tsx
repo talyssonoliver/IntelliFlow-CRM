@@ -195,9 +195,9 @@ export default function PartnersPage() {
                 Technology Partners
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {benefits.technology.map((benefit, index) => (
+                {benefits.technology.map((benefit) => (
                   <Card
-                    key={index} // NOSONAR typescript:S6479
+                    key={benefit.title}
                     className="p-6 border border-slate-200 dark:border-slate-700 bg-slate-50
                       dark:bg-slate-900"
                   >
@@ -238,9 +238,9 @@ export default function PartnersPage() {
                 Reseller Partners
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {benefits.reseller.map((benefit, index) => (
+                {benefits.reseller.map((benefit) => (
                   <Card
-                    key={index} // NOSONAR typescript:S6479
+                    key={benefit.title}
                     className="p-6 border border-slate-200 dark:border-slate-700 bg-slate-50
                       dark:bg-slate-900"
                   >
@@ -281,9 +281,9 @@ export default function PartnersPage() {
                 Consultant Partners
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {benefits.consultant.map((benefit, index) => (
+                {benefits.consultant.map((benefit) => (
                   <Card
-                    key={index} // NOSONAR typescript:S6479
+                    key={benefit.title}
                     className="p-6 border border-slate-200 dark:border-slate-700 bg-slate-50
                       dark:bg-slate-900"
                   >
@@ -361,9 +361,9 @@ export default function PartnersPage() {
           </h2>
 
           <div className="space-y-4">
-            {faqs.map((faq, index) => (
+            {faqs.map((faq) => (
               <details
-                key={index} // NOSONAR typescript:S6479
+                key={faq.question}
                 className="group bg-white dark:bg-slate-800 rounded-lg border border-slate-200
                   dark:border-slate-700"
               >

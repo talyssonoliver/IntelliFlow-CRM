@@ -213,9 +213,9 @@ export default function PressPage() {
               </h2>
 
               <div className="grid grid-cols-2 gap-4">
-                {companyFacts.map((fact, index) => (
+                {companyFacts.map((fact) => (
                   <Card
-                    key={index} // NOSONAR typescript:S6479
+                    key={fact.label}
                     className="p-4 text-center border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900"
                   >
                     <p className="text-2xl font-bold text-primary mb-1">{fact.value}</p>

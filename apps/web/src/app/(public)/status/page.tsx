@@ -301,9 +301,7 @@ export default function StatusPage() {
 
                   <div className="border-l-2 border-slate-200 dark:border-slate-700 pl-4 space-y-3">
                     {incident.updates.map((update, idx) => (
-                      <div key={idx} className="text-sm">
-                        {' '}
-                        {/* NOSONAR typescript:S6479 */}
+                      <div key={`${update.time}-${idx}`} className="text-sm">
                         <p className="text-slate-500 dark:text-slate-400 text-xs mb-1">
                           {formatDate(update.time)}
                         </p>

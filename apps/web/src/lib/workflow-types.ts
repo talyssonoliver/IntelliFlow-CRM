@@ -24,15 +24,57 @@ export type ActionType =
   | 'log_event'
   | 'call_webhook';
 
+/**
+ * Reference to a CRM record.
+ *
+ * Mirrors `EntityRef` in `@intelliflow/domain` → `node-catalog.ts` so
+ * server-side validation stays in sync with the UI config shape.
+ */
+export interface WorkflowEntityRef {
+  kind: 'lead' | 'contact' | 'account' | 'opportunity' | 'deal' | 'case' | 'task' | 'user' | 'team';
+  id: string;
+  label?: string;
+}
+
+/** Priority aligned with TaskPriority / CasePriority. */
+export type WorkflowPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+
 export interface WorkflowNodeConfig {
   // start
   triggerType?: 'event' | 'schedule' | 'manual' | 'webhook';
   eventName?: string;
   cronExpression?: string;
+  triggerEntity?: WorkflowEntityRef['kind'];
 
   // action
   actionType?: ActionType;
   actionParams?: Record<string, unknown>;
+
+  // action: notify / create_task / log
+  recipients?: WorkflowEntityRef[];
+  priority?: WorkflowPriority;
+  message?: string;
+
+  // action: create_task
+  title?: string;
+  description?: string;
+  assignee?: WorkflowEntityRef;
+  linkedEntity?: WorkflowEntityRef;
+  flag?: string;
+  dueInHours?: number;
+
+  // action: update_field
+  target?: WorkflowEntityRef;
+  fieldName?: string;
+  newValue?: string;
+
+  // action: call_webhook
+  url?: string;
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+  body?: string;
+
+  // action: trigger_workflow
+  workflowId?: string;
 
   // decision
   conditions?: string[];
@@ -42,6 +84,8 @@ export interface WorkflowNodeConfig {
   timeout?: number; // seconds
   instructions?: string;
   assigneeType?: 'user' | 'role' | 'round_robin';
+  approvers?: WorkflowEntityRef[];
+  deadlineInHours?: number;
 
   // end
   completionStatus?: string;
@@ -96,38 +140,26 @@ export interface PaletteItem {
   iconName: string; // lucide icon name
 }
 
-export const PALETTE_ITEMS: PaletteItem[] = [
-  {
-    nodeType: 'start',
-    label: 'Start',
-    description: 'Trigger that begins the workflow',
-    iconName: 'Play',
-  },
-  {
-    nodeType: 'action',
-    label: 'Action',
-    description: 'Perform an automated action',
-    iconName: 'Zap',
-  },
-  {
-    nodeType: 'decision',
-    label: 'Decision',
-    description: 'Branch based on conditions',
-    iconName: 'GitFork',
-  },
-  {
-    nodeType: 'human',
-    label: 'Human',
-    description: 'Wait for manual human review',
-    iconName: 'User',
-  },
-  {
-    nodeType: 'end',
-    label: 'End',
-    description: 'Terminal node — workflow completes',
-    iconName: 'Square',
-  },
-];
+/**
+ * Palette entries derived from the domain node catalog
+ * (`@intelliflow/domain` → NODE_DISPLAY_META). Kept as a `const` export for
+ * backward compatibility — consumers can still import `PALETTE_ITEMS`
+ * directly, but the upstream source of truth is the catalog.
+ */
+import {
+  NODE_TYPE_IDS as CATALOG_IDS,
+  NODE_DISPLAY_META as CATALOG_META,
+} from '@intelliflow/domain';
+
+export const PALETTE_ITEMS: PaletteItem[] = CATALOG_IDS.map((id) => {
+  const meta = CATALOG_META[id];
+  return {
+    nodeType: id as WorkflowNodeType,
+    label: meta.label,
+    description: meta.description,
+    iconName: meta.lucideIcon,
+  };
+});
 
 // ---------------------------------------------------------------------------
 // Validation result types (used by validation.ts + components)

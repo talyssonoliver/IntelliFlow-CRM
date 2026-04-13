@@ -8,6 +8,7 @@
 
 import { getAccessToken } from '@/lib/trpc-server';
 import { fetchAccountStats } from '@/lib/cached-queries/account-queries';
+import { serializeForClient } from '@/lib/shared/serialize-for-client';
 import AccountsPageClient from './AccountsPageClient';
 
 export default async function AccountsPage() {
@@ -19,7 +20,7 @@ export default async function AccountsPage() {
   let initialStats: unknown = null;
   try {
     const raw = await fetchAccountStats(token);
-    initialStats = JSON.parse(JSON.stringify(raw)); // NOSONAR typescript:S7784 — intentional JSON roundtrip to serialize Date→string for RSC→client boundary
+    initialStats = serializeForClient(raw);
   } catch {
     // Silently fall through — client-side React Query will fetch
   }

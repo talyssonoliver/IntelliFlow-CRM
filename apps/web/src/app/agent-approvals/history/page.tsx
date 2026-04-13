@@ -12,19 +12,22 @@ import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { ReviewHistory } from '@/components/ai-intelligence/ReviewHistory';
 import { Skeleton } from '@intelliflow/ui';
 
+const GRID_SKELETON_KEYS = ['grid-0', 'grid-1', 'grid-2', 'grid-3'] as const;
+const LIST_SKELETON_KEYS = ['list-0', 'list-1', 'list-2'] as const;
+
 function LoadingSkeleton() {
   return (
     <div className="flex flex-col gap-6">
       <Skeleton className="h-8 w-64" />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-20 rounded-lg" /> // NOSONAR typescript:S6479 — static skeleton placeholder, no data identity
+        {GRID_SKELETON_KEYS.map((key) => (
+          <Skeleton key={key} className="h-20 rounded-lg" />
         ))}
       </div>
       <Skeleton className="h-12 w-full rounded-lg" />
       <div className="space-y-3">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <Skeleton key={i} className="h-32 w-full rounded-lg" /> // NOSONAR typescript:S6479 — static skeleton placeholder, no data identity
+        {LIST_SKELETON_KEYS.map((key) => (
+          <Skeleton key={key} className="h-32 w-full rounded-lg" />
         ))}
       </div>
     </div>

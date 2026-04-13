@@ -114,10 +114,8 @@ function CheckoutContent() {
                 {plan.features
                   .filter((f) => f.included)
                   .slice(0, 5)
-                  .map((feature, idx) => (
-                    <li key={idx} className="flex items-center gap-2 text-sm">
-                      {' '}
-                      {/* NOSONAR typescript:S6479 */}
+                  .map((feature) => (
+                    <li key={feature.name} className="flex items-center gap-2 text-sm">
                       <span
                         className="material-symbols-outlined text-base text-green-500"
                         aria-hidden="true"

@@ -243,22 +243,20 @@ function escapeHTML(str: string): string {
 export function exportToPDF(sections: ReportSection[], options: PDFExportOptions = {}): void {
   const html = generatePDFHTML(sections, options);
 
-  // Open in new window for printing
-  const printWindow = window.open('', '_blank');
+  // Open in new window for printing via Blob URL (avoids deprecated document.write)
+  const blob = new Blob([html], { type: 'text/html' });
+  const blobUrl = URL.createObjectURL(blob);
+  const printWindow = window.open(blobUrl, '_blank');
   if (!printWindow) {
+    URL.revokeObjectURL(blobUrl);
     console.error('Could not open print window. Please allow popups.');
     return;
   }
 
-  printWindow.document.write(html); // NOSONAR typescript:S1874
-  printWindow.document.close();
-
-  // Wait for content to load, then trigger print
   printWindow.onload = () => {
     printWindow.focus();
     printWindow.print();
-    // Close window after printing (optional - some browsers don't allow this)
-    // printWindow.close();
+    URL.revokeObjectURL(blobUrl);
   };
 }
 

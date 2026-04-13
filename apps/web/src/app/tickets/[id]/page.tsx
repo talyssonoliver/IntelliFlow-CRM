@@ -29,6 +29,9 @@ import { invalidateTicketsCache } from '@/app/tickets/actions';
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const CUID_RE = /^c[a-z0-9]{8,}$/;
 
+const LEFT_META_SKELETON_KEYS = ['meta-0', 'meta-1', 'meta-2', 'meta-3', 'meta-4', 'meta-5'] as const;
+const TAB_SKELETON_KEYS = ['tab-0', 'tab-1', 'tab-2', 'tab-3', 'tab-4'] as const;
+
 function isValidEntityId(id: string): boolean {
   return UUID_RE.test(id) || CUID_RE.test(id);
 }
@@ -282,8 +285,8 @@ function TicketDetailSkeleton() {
           <aside className="lg:col-span-3 flex flex-col gap-6">
             <Card className="p-5 space-y-3">
               <Skeleton className="h-5 w-32" />
-              {Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={`left-meta-${i}`} className="h-4 w-full" /> // NOSONAR typescript:S6479
+              {LEFT_META_SKELETON_KEYS.map((key) => (
+                <Skeleton key={key} className="h-4 w-full" />
               ))}
             </Card>
             <Card className="p-5 space-y-4">
@@ -304,8 +307,8 @@ function TicketDetailSkeleton() {
             <Card className="p-0 overflow-hidden">
               <div className="border-b border-slate-200 dark:border-slate-800 px-4 py-4">
                 <div className="flex gap-3">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Skeleton key={`tab-${i}`} className="h-6 w-20" /> // NOSONAR typescript:S6479
+                  {TAB_SKELETON_KEYS.map((key) => (
+                    <Skeleton key={key} className="h-6 w-20" />
                   ))}
                 </div>
               </div>

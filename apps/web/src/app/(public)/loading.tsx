@@ -1,3 +1,9 @@
+const LOADING_LOGOS = ['logo-0', 'logo-1', 'logo-2', 'logo-3', 'logo-4', 'logo-5'] as const;
+const LOADING_FEATURES_A = ['feat-a-0', 'feat-a-1', 'feat-a-2'] as const;
+const LOADING_FEATURES_B = ['feat-b-0', 'feat-b-1', 'feat-b-2'] as const;
+const LOADING_FEATURES_C = ['feat-c-0', 'feat-c-1', 'feat-c-2'] as const;
+const LOADING_TESTIMONIALS = ['test-0', 'test-1', 'test-2'] as const;
+
 export default function PublicHomeLoading() {
   return (
     <div className="min-h-screen bg-[#0f172a] text-slate-50 animate-pulse">
@@ -40,8 +46,8 @@ export default function PublicHomeLoading() {
         <div className="container px-4 lg:px-6 mx-auto max-w-6xl">
           <div className="h-4 w-48 bg-slate-200 rounded mb-4" />
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
-            {Array.from({ length: 6 }).map((_, idx) => (
-              <div key={idx} className="h-10 bg-slate-100 rounded-lg" /> // NOSONAR typescript:S6479 — static skeleton placeholder, no data identity
+            {LOADING_LOGOS.map((k) => (
+              <div key={k} className="h-10 bg-slate-100 rounded-lg" />
             ))}
           </div>
         </div>
@@ -52,10 +58,8 @@ export default function PublicHomeLoading() {
           <div className="h-10 w-2/3 bg-slate-200 rounded" />
           <div className="h-4 w-1/2 bg-slate-200 rounded" />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {Array.from({ length: 3 }).map((_, idx) => (
-              <div key={idx} className="p-6 bg-white rounded-xl border border-slate-200 space-y-4">
-                {' '}
-                {/* NOSONAR typescript:S6479 */}
+            {LOADING_FEATURES_A.map((k) => (
+              <div key={k} className="p-6 bg-white rounded-xl border border-slate-200 space-y-4">
                 <div className="h-12 w-12 bg-slate-200 rounded-lg" />
                 <div className="h-6 w-2/3 bg-slate-200 rounded" />
                 <div className="h-4 w-full bg-slate-200 rounded" />
@@ -71,9 +75,9 @@ export default function PublicHomeLoading() {
           <div className="h-10 w-2/3 bg-slate-200 rounded" />
           <div className="h-4 w-1/2 bg-slate-200 rounded" />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {Array.from({ length: 3 }).map((_, idx) => (
+            {LOADING_FEATURES_B.map((k) => (
               <div
-                key={idx} // NOSONAR typescript:S6479
+                key={k}
                 className="p-6 bg-slate-50 rounded-xl border border-slate-200 space-y-4"
               >
                 <div className="h-12 w-12 bg-slate-200 rounded-lg" />
@@ -91,9 +95,9 @@ export default function PublicHomeLoading() {
           <div className="h-10 w-2/3 bg-white/20 rounded" />
           <div className="h-4 w-1/2 bg-white/20 rounded" />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {Array.from({ length: 3 }).map((_, idx) => (
+            {LOADING_FEATURES_C.map((k) => (
               <div
-                key={idx} // NOSONAR typescript:S6479
+                key={k}
                 className="p-6 bg-white/10 rounded-xl border border-white/10 space-y-4"
               >
                 <div className="h-10 w-10 bg-white/20 rounded-full" />
@@ -111,9 +115,9 @@ export default function PublicHomeLoading() {
           <div className="h-10 w-2/3 bg-slate-200 rounded" />
           <div className="h-4 w-1/2 bg-slate-200 rounded" />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {Array.from({ length: 3 }).map((_, idx) => (
+            {LOADING_TESTIMONIALS.map((k) => (
               <div
-                key={idx} // NOSONAR typescript:S6479
+                key={k}
                 className="p-6 bg-slate-50 rounded-xl border border-slate-200 space-y-4"
               >
                 <div className="h-6 w-16 bg-slate-200 rounded" />

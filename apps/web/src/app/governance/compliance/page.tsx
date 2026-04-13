@@ -122,10 +122,8 @@ function ComplianceCard({
       </div>
 
       <div className="grid grid-cols-2 gap-4 text-sm border-t border-border pt-4">
-        {details.map((detail, index) => (
-          <div key={index}>
-            {' '}
-            {/* NOSONAR typescript:S6479 */}
+        {details.map((detail) => (
+          <div key={detail.label}>
             <p className="text-muted-foreground mb-0.5">{detail.label}</p>
             <p className="font-semibold text-foreground">{detail.value}</p>
           </div>

@@ -265,18 +265,21 @@ function ToolCard({ tool, requiresApproval, isExpanded, onToggle }: Readonly<Too
 // Loading Skeleton
 // ---------------------------------------------------------------------------
 
+const GRID_SKELETON_KEYS = ['grid-0', 'grid-1', 'grid-2', 'grid-3'] as const;
+const LIST_SKELETON_KEYS = ['list-0', 'list-1', 'list-2', 'list-3', 'list-4'] as const;
+
 function LoadingSkeleton() {
   return (
     <div className="flex flex-col gap-6">
       <Skeleton className="h-8 w-48" />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-20 rounded-lg" /> // NOSONAR typescript:S6479
+        {GRID_SKELETON_KEYS.map((key) => (
+          <Skeleton key={key} className="h-20 rounded-lg" />
         ))}
       </div>
       <div className="space-y-3">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={i} className="h-20 w-full rounded-lg" /> // NOSONAR typescript:S6479
+        {LIST_SKELETON_KEYS.map((key) => (
+          <Skeleton key={key} className="h-20 w-full rounded-lg" />
         ))}
       </div>
     </div>

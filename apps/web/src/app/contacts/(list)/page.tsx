@@ -8,6 +8,7 @@
 
 import { getAccessToken } from '@/lib/trpc-server';
 import { fetchContactsFirstPage } from '@/lib/cached-queries/contact-queries';
+import { serializeForClient } from '@/lib/shared/serialize-for-client';
 import ContactsPageClient from './ContactsPageClient';
 
 export default async function ContactsPage() {
@@ -19,7 +20,7 @@ export default async function ContactsPage() {
   let initialData: unknown = null;
   try {
     const raw = await fetchContactsFirstPage(token);
-    initialData = JSON.parse(JSON.stringify(raw)); // NOSONAR typescript:S7784 — intentional JSON roundtrip to serialize Date→string for RSC→client boundary
+    initialData = serializeForClient(raw);
   } catch {
     // Silently fall through — client-side React Query will fetch
   }

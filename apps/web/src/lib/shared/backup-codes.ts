@@ -222,15 +222,19 @@ export function printBackupCodes(codes: string[], email: string, generatedAt: Da
     </html>
   `;
 
-  const printWindow = window.open('', '_blank');
+  const blob = new Blob([printContent], { type: 'text/html' });
+  const blobUrl = URL.createObjectURL(blob);
+  const printWindow = window.open(blobUrl, '_blank');
   if (!printWindow) {
+    URL.revokeObjectURL(blobUrl);
     console.error('Could not open print window');
     return;
   }
 
-  printWindow.document.write(printContent); // NOSONAR typescript:S1874
-  printWindow.document.close();
-  printWindow.print();
+  printWindow.addEventListener('load', () => {
+    printWindow.print();
+    URL.revokeObjectURL(blobUrl);
+  });
 }
 
 /**

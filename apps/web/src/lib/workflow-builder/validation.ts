@@ -202,11 +202,17 @@ export function validateNodeConfig(
     }
 
     case 'human': {
-      // timeout must be a positive number
-      if (config.timeout === undefined || config.timeout === null) {
-        errors.push('Human node requires a timeout value');
-      } else if (typeof config.timeout !== 'number' || config.timeout <= 0) {
-        errors.push('Human node timeout must be a positive number');
+      // Accept EITHER the new `deadlineInHours` (hours) OR the legacy
+      // `timeout` (seconds). Phase E renamed the UI control but saved
+      // workflows may still carry `timeout`. At least one must be > 0.
+      const legacyTimeout = config.timeout;
+      const deadlineHours = (config as { deadlineInHours?: number }).deadlineInHours;
+
+      const legacyValid = typeof legacyTimeout === 'number' && legacyTimeout > 0;
+      const deadlineValid = typeof deadlineHours === 'number' && deadlineHours > 0;
+
+      if (!legacyValid && !deadlineValid) {
+        errors.push('Human node requires a deadline (hours)');
       }
       break;
     }

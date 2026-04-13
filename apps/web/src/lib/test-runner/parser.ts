@@ -22,9 +22,12 @@ const PATTERNS = {
   testSkip: /^[ \t]*[↓⊘○][ \t]+([^\n]{1,500}?)(?:[ \t]+\[skipped\])?$/, // NOSONAR S5852
   // Coverage table header: "All files |   85.5 |   72.3 |   91.2 |   84.1"
   coverageTable: /^\s*All files\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)/,
-  // Test counts: "Tests  12 passed | 2 failed (14)"
-  testCounts:
-    /Tests?\s+(\d+)\s+passed(?:\s*\|\s*(\d+)\s+failed)?(?:\s*\|\s*(\d+)\s+skipped)?\s*\((\d+)\)/, // NOSONAR typescript:S5843 — complexity required to parse optional fail/skip fields in Vitest output
+  // Test counts — parsed via multiple simpler regexes (see parseTestCounts).
+  // Pattern: "Tests  12 passed | 2 failed | 1 skipped (14)"
+  testCountsPassed: /Tests?\s+(\d+)\s+passed/,
+  testCountsFailed: /\|\s*(\d+)\s+failed/,
+  testCountsSkipped: /\|\s*(\d+)\s+skipped/,
+  testCountsTotal: /\((\d+)\)\s*$/,
   // Duration: "Duration  1.23s"
   duration: /Duration\s+([\d.]+)s/,
   // File running: "RUN  packages/domain/src/__tests__/Lead.test.ts"
@@ -109,18 +112,22 @@ function parseCoverageTable(line: string, runId: string): TestRunProgress | null
 }
 
 function parseTestCounts(line: string, runId: string): TestRunProgress | null {
-  const m = PATTERNS.testCounts.exec(line);
-  if (!m) return null;
-  const [, passed, failed, skipped, total] = m;
+  const passedMatch = PATTERNS.testCountsPassed.exec(line);
+  const totalMatch = PATTERNS.testCountsTotal.exec(line);
+  if (!passedMatch || !totalMatch) return null;
+
+  const failedMatch = PATTERNS.testCountsFailed.exec(line);
+  const skippedMatch = PATTERNS.testCountsSkipped.exec(line);
+
   return {
     runId,
     type: 'complete',
     timestamp: new Date().toISOString(),
     data: {
-      testsPassed: Number.parseInt(passed, 10),
-      testsFailed: failed ? Number.parseInt(failed, 10) : 0,
-      testsSkipped: skipped ? Number.parseInt(skipped, 10) : 0,
-      testsRun: Number.parseInt(total, 10),
+      testsPassed: Number.parseInt(passedMatch[1], 10),
+      testsFailed: failedMatch ? Number.parseInt(failedMatch[1], 10) : 0,
+      testsSkipped: skippedMatch ? Number.parseInt(skippedMatch[1], 10) : 0,
+      testsRun: Number.parseInt(totalMatch[1], 10),
     },
   };
 }

@@ -836,9 +836,9 @@ export default function LeadsPageClient({ initialData: serverData }: LeadsPageCl
       {/* Loading State */}
       {isLoading && (
         <div className="space-y-3">
-          {[...new Array(5)].map((_, i) => (
+          {(['lead-sk-0', 'lead-sk-1', 'lead-sk-2', 'lead-sk-3', 'lead-sk-4'] as const).map((skKey) => (
             <div
-              key={i} // NOSONAR typescript:S6479
+              key={skKey}
               className="flex items-center gap-4 p-4 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700"
             >
               <Skeleton className="size-10 rounded-full" />

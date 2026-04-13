@@ -325,9 +325,9 @@ function UpgradePageContent() {
 
                 {/* Features */}
                 <ul className="space-y-2 mb-6 flex-1">
-                  {tier.features.slice(0, 6).map((feature, i) => (
+                  {tier.features.slice(0, 6).map((feature) => (
                     <li
-                      key={i} // NOSONAR typescript:S6479
+                      key={feature}
                       className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400"
                     >
                       <span

@@ -35,6 +35,33 @@ type TabView = 'list' | 'index' | 'graph';
 
 const VALID_STATUSES = ['Proposed', 'Accepted', 'Rejected', 'Deprecated', 'Superseded'];
 
+function StatusUpdateButton({
+  adrId,
+  status,
+  disabled,
+  active,
+  onSelect,
+}: {
+  adrId: string;
+  status: string;
+  disabled: boolean;
+  active: boolean;
+  onSelect: (adrId: string, status: string) => void;
+}) {
+  const handleClick = () => onSelect(adrId, status);
+  return (
+    <button
+      onClick={handleClick}
+      disabled={disabled}
+      className={`text-left px-2 py-1 text-xs rounded hover:bg-accent transition-colors ${
+        active ? 'font-bold' : ''
+      }`}
+    >
+      {status}
+    </button>
+  );
+}
+
 export default function ADRRegistryPage() {
   const [activeTab, setActiveTab] = useState<TabView>('list');
   const [adrs, setAdrs] = useState<ADRMetadata[]>([]);
@@ -493,16 +520,14 @@ export default function ADRRegistryPage() {
                               {selectedAdr === adr.id ? (
                                 <div className="flex flex-col gap-1">
                                   {VALID_STATUSES.map((status) => (
-                                    <button
+                                    <StatusUpdateButton
                                       key={status}
-                                      onClick={() => handleStatusUpdate(adr.id, status)} // NOSONAR typescript:S2004 — inline callback is idiomatic React; extracted named function adds complexity for trivial use
+                                      adrId={adr.id}
+                                      status={status}
                                       disabled={statusUpdating === adr.id}
-                                      className={`text-left px-2 py-1 text-xs rounded hover:bg-accent transition-colors ${
-                                        adr.status.includes(status) ? 'font-bold' : ''
-                                      }`}
-                                    >
-                                      {status}
-                                    </button>
+                                      active={adr.status.includes(status)}
+                                      onSelect={handleStatusUpdate}
+                                    />
                                   ))}
                                   <button
                                     onClick={() => setSelectedAdr(null)}
