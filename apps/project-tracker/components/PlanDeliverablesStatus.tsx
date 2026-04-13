@@ -106,7 +106,7 @@ function DeliverablesSection({ data, expanded, onToggle }: Readonly<Deliverables
       {expanded ? (
         <div className="px-4 pb-3">
           <div className="bg-gray-50 rounded-lg p-2 font-mono text-xs space-y-1 max-h-48 overflow-y-auto">
-            {data.deliverables.items.map((file, idx) => {
+            {data.deliverables.items.map((file) => {
               const present = isFilePresent(file.status);
               return (
                 <div

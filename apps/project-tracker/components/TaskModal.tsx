@@ -1047,7 +1047,7 @@ function ValidationTab({
           </button>
           {expandedPanels.dod && (
             <div className="p-4 space-y-2">
-              {validationSummary.dod.items.map((item, idx) => (
+              {validationSummary.dod.items.map((item) => (
                 <div
                   key={item.criterion}
                   className={clsx(

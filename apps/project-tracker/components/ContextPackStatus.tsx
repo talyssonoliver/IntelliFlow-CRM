@@ -174,7 +174,7 @@ export default function ContextPackStatus({
               {data.filesRead.length === 0 ? (
                 <div className="text-gray-500 italic">No files recorded</div>
               ) : (
-                data.filesRead.map((file, idx) => (
+                data.filesRead.map((file) => (
                   <div
                     key={file.path}
                     className="flex items-center justify-between py-1 px-2 rounded hover:bg-gray-100"

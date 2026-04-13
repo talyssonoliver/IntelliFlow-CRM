@@ -76,7 +76,7 @@ export default function TrendSparkline({
       />
       {/* Dots along the sparkline — key is positional (stable render order) */}
       {showDots &&
-        points.map((p, i) => (
+        points.map((p) => (
           <circle key={`${p.x}-${p.y}`} cx={p.x} cy={p.y} r={2} fill={color} />
         ))}
     </svg>
