@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { CheckConflictsUseCase } from '../../../src/usecases/scheduling/CheckConflicts';
-import { InMemoryAppointmentRepository } from '../../../../adapters/src/repositories/InMemoryAppointmentRepository';
+import { CheckConflictsUseCase } from '../CheckConflicts';
+import { InMemoryAppointmentRepository } from '../../../../../adapters/src/repositories/InMemoryAppointmentRepository';
 import { Appointment } from '@intelliflow/domain';
 
 describe('CheckConflictsUseCase', () => {

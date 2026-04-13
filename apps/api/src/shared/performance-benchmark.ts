@@ -78,6 +78,8 @@ console.log(
 );
 
 import { performance } from 'node:perf_hooks';
+import { writeFileSync, mkdirSync, existsSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import { createContext } from '../context';
 import { appRouter } from '../router';
 
@@ -335,17 +337,89 @@ async function runBenchmarks() {
     const AUTHN_ITERATIONS = 30;
     const AUTHN_PAUSE_MS = 50;
 
+    const LIST_ARGS = { page: 1, limit: 20 } as const;
+
+    // CRM core entity hot paths — list + stats for every top-level resource
     results.push(
-      await safeBenchmark('lead.list', () => caller.lead.list({ page: 1, limit: 20 }), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
+      await safeBenchmark('lead.list', () => caller.lead.list(LIST_ARGS), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
     );
     results.push(
       await safeBenchmark('lead.stats', () => caller.lead.stats(), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
     );
     results.push(
-      await safeBenchmark('contact.list', () => caller.contact.list({ page: 1, limit: 20 }), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
+      await safeBenchmark('contact.list', () => caller.contact.list(LIST_ARGS), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
     );
     results.push(
       await safeBenchmark('contact.stats', () => caller.contact.stats(), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
+    );
+    results.push(
+      await safeBenchmark('account.list', () => caller.account.list(LIST_ARGS), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
+    );
+    results.push(
+      await safeBenchmark('account.stats', () => caller.account.stats(), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
+    );
+    results.push(
+      await safeBenchmark('opportunity.list', () => caller.opportunity.list(LIST_ARGS), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
+    );
+    results.push(
+      await safeBenchmark('opportunity.stats', () => caller.opportunity.stats(), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
+    );
+    results.push(
+      await safeBenchmark('task.list', () => caller.task.list(LIST_ARGS), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
+    );
+    results.push(
+      await safeBenchmark('task.stats', () => caller.task.stats(), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
+    );
+    results.push(
+      await safeBenchmark('ticket.list', () => caller.ticket.list(LIST_ARGS), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
+    );
+    results.push(
+      await safeBenchmark('ticket.stats', () => caller.ticket.stats({ timeWindow: 'all' }), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
+    );
+
+    // Home dashboard — hit on every authenticated landing
+    results.push(
+      await safeBenchmark('home.getWelcomeSummary', () => caller.home.getWelcomeSummary(), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
+    );
+    results.push(
+      await safeBenchmark('home.getAIInsights', () => caller.home.getAIInsights(), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
+    );
+    results.push(
+      await safeBenchmark('home.getDailyGoal', () => caller.home.getDailyGoal(), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
+    );
+
+    // Analytics — frequent aggregates
+    results.push(
+      await safeBenchmark('analytics.getOverview', () => caller.analytics.getOverview({}), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
+    );
+    results.push(
+      await safeBenchmark('analytics.getSalesMetrics', () => caller.analytics.getSalesMetrics({}), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
+    );
+
+    // Notifications — polled by the nav bell
+    results.push(
+      await safeBenchmark('notifications.list', () => caller.notifications.list({}), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
+    );
+    results.push(
+      await safeBenchmark('notifications.getUnreadCount', () => caller.notifications.getUnreadCount(), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
+    );
+
+    // Activity feed — unified entity timeline
+    results.push(
+      await safeBenchmark('activityFeed.getUnifiedFeed', () => caller.activityFeed.getUnifiedFeed({}), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
+    );
+
+    // Gates / identity — called on every protected route render
+    results.push(
+      await safeBenchmark('moduleAccess.getEnabledModules', () => caller.moduleAccess.getEnabledModules(), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
+    );
+    results.push(
+      await safeBenchmark('user.getProfile', () => caller.user.getProfile(), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
+    );
+
+    // Global search — uses a seeded term guaranteed to match at least one row
+    results.push(
+      await safeBenchmark('globalSearch.query', () => caller.globalSearch.query({ query: 'sarah', limit: 5 }), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
     );
 
     // Print summary
@@ -377,6 +451,70 @@ async function runBenchmarks() {
     }
 
     console.log('\n═══════════════════════════════════════════');
+
+    // Persist JSON output for the governance dashboard (mirrors the
+    // lighthouse-summary.json / performance-report.html artifact pattern).
+    // Two files written:
+    //   1. trpc-benchmark.json         — raw per-operation results
+    //   2. trpc-benchmark-summary.json — compact summary for the dashboard
+    try {
+      // __dirname = <repo>/apps/api/src/shared → up 4 = <repo>
+      const repoRoot = resolve(__dirname, '..', '..', '..', '..');
+      const outDir = join(repoRoot, 'artifacts', 'benchmarks');
+      if (!existsSync(outDir)) mkdirSync(outDir, { recursive: true });
+
+      const timestamp = new Date().toISOString();
+      const detailPath = join(outDir, 'trpc-benchmark.json');
+      const summaryPath = join(outDir, 'trpc-benchmark-summary.json');
+
+      const thresholds = { p50: 30, p95: 50, p99: 100 };
+      const detail = {
+        generatedAt: timestamp,
+        source: 'apps/api/src/shared/performance-benchmark.ts',
+        kpi: 'IFC-003',
+        thresholds,
+        databaseUrlSource: process.env.TEST_DATABASE_URL
+          ? 'TEST_DATABASE_URL'
+          : process.env.DIRECT_URL
+            ? 'DIRECT_URL'
+            : 'DATABASE_URL',
+        results,
+      };
+      const summary = {
+        generatedAt: timestamp,
+        kpi: 'IFC-003',
+        thresholds,
+        totals: {
+          total: totalTests,
+          completed: measured.length,
+          passed: passedTests,
+          failedKpi: failedMeasured,
+          errored,
+        },
+        operations: results.map((r) => ({
+          operation: r.operation,
+          iterations: r.iterations,
+          p50: Number.isFinite(r.median) ? Number(r.median.toFixed(2)) : null,
+          p95: Number.isFinite(r.p95) ? Number(r.p95.toFixed(2)) : null,
+          p99: Number.isFinite(r.p99) ? Number(r.p99.toFixed(2)) : null,
+          mean: Number.isFinite(r.mean) ? Number(r.mean.toFixed(2)) : null,
+          min: Number.isFinite(r.min) ? Number(r.min.toFixed(2)) : null,
+          max: Number.isFinite(r.max) ? Number(r.max.toFixed(2)) : null,
+          passed: r.passed,
+          error: r.error ?? null,
+        })),
+        passed: measured.length > 0 && failedMeasured === 0,
+      };
+
+      writeFileSync(detailPath, JSON.stringify(detail, null, 2));
+      writeFileSync(summaryPath, JSON.stringify(summary, null, 2));
+      console.log(`  📄 Wrote ${detailPath}`);
+      console.log(`  📄 Wrote ${summaryPath}\n`);
+    } catch (writeErr) {
+      console.warn(
+        `  ⚠️  Could not write JSON outputs: ${writeErr instanceof Error ? writeErr.message : String(writeErr)}`
+      );
+    }
 
     // Exit code policy:
     //  - 0: all COMPLETED benchmarks pass KPI (infra errors don't count)

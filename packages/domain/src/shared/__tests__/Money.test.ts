@@ -206,7 +206,7 @@ describe('Money', () => {
       const money = Money.create(10, 'GBP').value;
       const formatted = money.formatted;
 
-      expect(formatted).toContain('$');
+      expect(formatted).toContain('£');
     });
   });
 
@@ -253,7 +253,7 @@ describe('Money', () => {
 
     it('should fail when subtracting different currencies', () => {
       const m1 = Money.create(10, 'GBP').value;
-      const m2 = Money.create(5, 'GBP').value;
+      const m2 = Money.create(5, 'EUR').value;
       const result = m1.subtract(m2);
 
       expect(result.isFailure).toBe(true);
@@ -367,7 +367,7 @@ describe('Money', () => {
 
     it('should throw when comparing different currencies', () => {
       const m1 = Money.create(10, 'GBP').value;
-      const m2 = Money.create(10, 'GBP').value;
+      const m2 = Money.create(10, 'EUR').value;
 
       expect(() => m1.lessThan(m2)).toThrow('Cannot compare different currencies');
     });

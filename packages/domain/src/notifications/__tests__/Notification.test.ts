@@ -209,8 +209,9 @@ describe('Notification', () => {
       expect(events[0]).toBeInstanceOf(NotificationReadEvent);
     });
 
-    it('should throw if not delivered first', () => {
+    it('should throw if notification already failed', () => {
       const notification = createTestNotification();
+      notification.markAsFailed('Delivery failed');
 
       expect(() => notification.markAsRead()).toThrow(
         'Cannot mark as read a notification that was not delivered'

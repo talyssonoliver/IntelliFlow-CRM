@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { CancelAppointmentUseCase } from '../../../src/usecases/scheduling/CancelAppointment';
-import { InMemoryAppointmentRepository } from '../../../../adapters/src/repositories/InMemoryAppointmentRepository';
+import { CancelAppointmentUseCase } from '../CancelAppointment';
+import { InMemoryAppointmentRepository } from '../../../../../adapters/src/repositories/InMemoryAppointmentRepository';
 import { Appointment } from '@intelliflow/domain';
 
 describe('CancelAppointmentUseCase', () => {
