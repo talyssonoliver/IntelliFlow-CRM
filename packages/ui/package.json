@@ -51,12 +51,12 @@
   },
   "devDependencies": {
     "@storybook/addon-a11y": "^8.6.15",
-    "@storybook/addon-essentials": "^8.6.15",
-    "@storybook/addon-interactions": "^8.6.15",
+    "@storybook/addon-essentials": "^8.6.18",
+    "@storybook/addon-interactions": "^8.6.18",
     "@storybook/addon-links": "^8.6.15",
     "@storybook/addon-onboarding": "^8.6.15",
     "@storybook/react": "^8.6.15",
-    "@storybook/react-vite": "^10.2.13",
+    "@storybook/react-vite": "^10.3.5",
     "@storybook/test": "^8.6.15",
     "@testing-library/jest-dom": "^6.1.5",
     "@testing-library/react": "^16.3.2",
@@ -64,12 +64,12 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.0.0",
-    "@vitest/coverage-v8": "^4.0.16",
-    "axe-core": "^4.8.4",
+    "@vitest/coverage-v8": "^4.1.4",
+    "axe-core": "^4.11.2",
     "jsdom": "^28.1.0",
-    "storybook": "^10.2.13",
+    "storybook": "^10.3.5",
     "typescript": "^5.3.3",
-    "vitest": "^4.0.16",
+    "vitest": "^4.1.4",
     "vitest-axe": "^0.1.0"
   }
 }

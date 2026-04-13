@@ -56,11 +56,11 @@
   "devDependencies": {
     "@intelliflow/typescript-config": "workspace:*",
     "@supabase/supabase-js": "^2.98.0",
-    "@types/node": "^25.3.2",
-    "prisma": "^7.4.2",
+    "@types/node": "^25.6.0",
+    "prisma": "^7.7.0",
     "tsup": "^8.0.0",
     "tsx": "^4.7.0",
     "typescript": "^5.3.0",
-    "vitest": "^4.0.16"
+    "vitest": "^4.1.4"
   }
 }
