@@ -154,14 +154,18 @@ const nextConfig = {
         destination: '/',
         permanent: true,
       },
+      // Legacy /calendar/new and /calendar/[id] → /appointments/... after the
+      // appointments/calendar split migration. Settings sub-routes
+      // (availability, calendar-settings, event-types) remain under /calendar.
       {
-        source: '/appointments',
-        destination: '/calendar',
+        source: '/calendar/new',
+        destination: '/appointments/new',
         permanent: true,
       },
       {
-        source: '/appointments/:path*',
-        destination: '/calendar/:path*',
+        source:
+          '/calendar/:id((?!new$|availability$|calendar-settings$|event-types$)[^/]+)',
+        destination: '/appointments/:id',
         permanent: true,
       },
     ];

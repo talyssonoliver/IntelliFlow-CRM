@@ -93,6 +93,75 @@ describe('parseLegalFrontmatter', () => {
     const { metadata } = parseLegalFrontmatter(noSummary, 'Test');
     expect(metadata.summary).toEqual([]);
   });
+
+  it('concatenates YAML continuation lines onto the preceding summary bullet', () => {
+    const multiLineSummary = [
+      '---',
+      'title: Multi',
+      'version: v1.0',
+      'effectiveDate: 2026-04-13',
+      'contactEmail: a@b.com',
+      'summary:',
+      '  - We collect account, product usage, and support interaction data needed to',
+      '    operate IntelliFlow CRM.',
+      '  - We retain information according to contractual, security, and legal',
+      '    retention requirements.',
+      '---',
+      '',
+      'Body.',
+    ].join('\n');
+    const { metadata } = parseLegalFrontmatter(multiLineSummary, 'Test');
+    expect(metadata.summary).toEqual([
+      'We collect account, product usage, and support interaction data needed to operate IntelliFlow CRM.',
+      'We retain information according to contractual, security, and legal retention requirements.',
+    ]);
+    for (const bullet of metadata.summary) {
+      expect(bullet).toMatch(/[.!?]$/);
+    }
+  });
+
+  it('preserves single-line bullets when mixed with multi-line bullets', () => {
+    const mixed = [
+      '---',
+      'title: Mixed',
+      'version: v1.0',
+      'effectiveDate: 2026-04-13',
+      'contactEmail: a@b.com',
+      'summary:',
+      '  - Single-line bullet ends here.',
+      '  - Multi-line bullet starts here',
+      '    and continues here.',
+      '  - Another single-line bullet.',
+      '---',
+      '',
+      'Body.',
+    ].join('\n');
+    const { metadata } = parseLegalFrontmatter(mixed, 'Test');
+    expect(metadata.summary).toEqual([
+      'Single-line bullet ends here.',
+      'Multi-line bullet starts here and continues here.',
+      'Another single-line bullet.',
+    ]);
+  });
+
+  it('ignores blank lines inside the summary list without merging bullets', () => {
+    const withBlanks = [
+      '---',
+      'title: Blanks',
+      'version: v1.0',
+      'effectiveDate: 2026-04-13',
+      'contactEmail: a@b.com',
+      'summary:',
+      '  - First bullet.',
+      '',
+      '  - Second bullet.',
+      '---',
+      '',
+      'Body.',
+    ].join('\n');
+    const { metadata } = parseLegalFrontmatter(withBlanks, 'Test');
+    expect(metadata.summary).toEqual(['First bullet.', 'Second bullet.']);
+  });
 });
 
 describe('parseLegalSections', () => {

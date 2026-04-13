@@ -19,6 +19,15 @@ describe('getDpa', () => {
     expect(dpa.metadata.summary).toHaveLength(2);
   });
 
+  it('concatenates multi-line YAML continuation bullets from fixture without truncation', () => {
+    const dpa = getDpa([FIXTURE_PATH]);
+    for (const bullet of dpa.metadata.summary) {
+      expect(bullet).toMatch(/[.!?]$/);
+    }
+    expect(dpa.metadata.summary[0]).toMatch(/customer as controller\.$/);
+    expect(dpa.metadata.summary[1]).toMatch(/duration of the service agreement\.$/);
+  });
+
   it('returns non-empty sections array from fixture file', () => {
     const dpa = getDpa([FIXTURE_PATH]);
     expect(dpa.sections.length).toBeGreaterThan(0);
@@ -27,6 +36,16 @@ describe('getDpa', () => {
 
   it('throws when no candidate path resolves', () => {
     expect(() => getDpa(['/no/such/file.md', '/also/missing.md'])).toThrow();
+  });
+
+  it('parses the canonical docs/shared/dpa-content.md with all bullets complete', () => {
+    const dpa = getDpa();
+    expect(dpa.metadata.title).toBe('Data Processing Addendum');
+    expect(dpa.metadata.summary.length).toBeGreaterThanOrEqual(6);
+    for (const bullet of dpa.metadata.summary) {
+      expect(bullet).toMatch(/[.!?]$/);
+    }
+    expect(dpa.metadata.summary[0]).toMatch(/customer as controller\.$/);
   });
 });
 

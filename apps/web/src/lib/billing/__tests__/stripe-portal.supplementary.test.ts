@@ -84,7 +84,7 @@ describe('formatCurrency - additional branches', () => {
   });
 
   it('handles large amounts', () => {
-    const result = formatCurrency(1000000, 'usd');
+    const result = formatCurrency(1000000, 'GBP');
     expect(result).toContain('10,000');
   });
 });

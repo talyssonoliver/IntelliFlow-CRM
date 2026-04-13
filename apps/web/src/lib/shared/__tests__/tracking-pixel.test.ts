@@ -271,7 +271,7 @@ describe('tracking-pixel', () => {
       trackConversion({
         name: 'purchase',
         conversionId: 'conv_123',
-        currency: 'USD',
+        currency: 'GBP',
         transactionId: 'txn_456',
         value: 99.99,
       });
@@ -279,7 +279,7 @@ describe('tracking-pixel', () => {
       expect(globalThis.dataLayer[0]).toMatchObject({
         event: 'purchase',
         conversion_id: 'conv_123',
-        currency: 'USD',
+        currency: 'GBP',
         transaction_id: 'txn_456',
         eventValue: 99.99,
       });

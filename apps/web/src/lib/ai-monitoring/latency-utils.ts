@@ -10,7 +10,7 @@ import type { LatencyPhase } from './types';
 export function formatLatencyMs(ms: number): string {
   if (ms < 0) return '< 1ms';
   if (ms < 1) return '< 1ms';
-  return `${Math.round(ms).toLocaleString()}ms`;
+  return `${Math.round(ms).toLocaleString('en-GB')}ms`;
 }
 
 export function getSLOBadgeClass(compliant: boolean): string {

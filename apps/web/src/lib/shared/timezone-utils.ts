@@ -35,7 +35,7 @@ export function formatDate(
   options?: Partial<Pick<Intl.DateTimeFormatOptions, 'weekday' | 'year' | 'month' | 'day'>>
 ): string {
   const date = toDate(input);
-  return date.toLocaleDateString('en-US', {
+  return date.toLocaleDateString('en-GB', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -60,7 +60,7 @@ export function formatTime(
   options?: Partial<Pick<Intl.DateTimeFormatOptions, 'hour12' | 'second'>>
 ): string {
   const date = toDate(input);
-  return date.toLocaleTimeString('en-US', {
+  return date.toLocaleTimeString('en-GB', {
     hour: 'numeric',
     minute: '2-digit',
     ...options,
@@ -81,7 +81,7 @@ export function formatDateTime(
   options?: Partial<Intl.DateTimeFormatOptions>
 ): string {
   const date = toDate(input);
-  return date.toLocaleString('en-US', {
+  return date.toLocaleString('en-GB', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -101,7 +101,7 @@ export function formatDateTime(
  */
 export function formatDateShort(input: DateInput, timezone: string = 'Europe/London'): string {
   const date = toDate(input);
-  return date.toLocaleDateString('en-US', {
+  return date.toLocaleDateString('en-GB', {
     year: 'numeric',
     month: 'numeric',
     day: 'numeric',
@@ -148,7 +148,7 @@ export function startOfDay(timezone: string = 'Europe/London', referenceDate?: D
 
   // Compute the UTC offset at the reference time in the target timezone,
   // then construct midnight local as a UTC timestamp.
-  const formatter = new Intl.DateTimeFormat('en-US', {
+  const formatter = new Intl.DateTimeFormat('en-GB', {
     timeZone: timezone,
     year: 'numeric',
     month: '2-digit',
@@ -160,7 +160,7 @@ export function startOfDay(timezone: string = 'Europe/London', referenceDate?: D
   });
 
   // Find the UTC offset by comparing what "ref" looks like in UTC vs the timezone
-  const utcParts = new Intl.DateTimeFormat('en-US', {
+  const utcParts = new Intl.DateTimeFormat('en-GB', {
     timeZone: 'UTC',
     year: 'numeric',
     month: '2-digit',
@@ -223,7 +223,7 @@ export function getHourInTimezone(
   referenceDate?: DateInput
 ): number {
   const ref = referenceDate ? toDate(referenceDate) : new Date();
-  const parts = new Intl.DateTimeFormat('en-US', {
+  const parts = new Intl.DateTimeFormat('en-GB', {
     timeZone: timezone,
     hour: 'numeric',
     hour12: false,
@@ -269,7 +269,7 @@ export function getTimezoneAbbreviation(
   referenceDate?: DateInput
 ): string {
   const ref = referenceDate ? toDate(referenceDate) : new Date();
-  const parts = new Intl.DateTimeFormat('en-US', {
+  const parts = new Intl.DateTimeFormat('en-GB', {
     timeZone: timezone,
     timeZoneName: 'short',
   }).formatToParts(ref);
@@ -289,7 +289,7 @@ export function getTimezoneLabel(timezone: string): string {
     const now = new Date();
     const abbr = getTimezoneAbbreviation(timezone, now);
     const longName =
-      new Intl.DateTimeFormat('en-US', {
+      new Intl.DateTimeFormat('en-GB', {
         timeZone: timezone,
         timeZoneName: 'long',
       })

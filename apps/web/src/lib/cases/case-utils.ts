@@ -97,7 +97,7 @@ export function formatDeadline(
 ): string {
   if (!deadline) return 'No deadline';
   const d = new Date(deadline);
-  return d.toLocaleDateString('en-US', {
+  return d.toLocaleDateString('en-GB', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -112,8 +112,8 @@ export function formatDeadlineShort(
   if (!deadline) return null;
   const d = new Date(deadline);
   return {
-    month: d.toLocaleDateString('en-US', { month: 'short', timeZone: timezone }).toUpperCase(),
-    day: d.toLocaleDateString('en-US', { day: 'numeric', timeZone: timezone }),
+    month: d.toLocaleDateString('en-GB', { month: 'short', timeZone: timezone }).toUpperCase(),
+    day: d.toLocaleDateString('en-GB', { day: 'numeric', timeZone: timezone }),
   };
 }
 
@@ -144,7 +144,7 @@ export function timeAgo(date: Date | string, timezone: string = 'Europe/London')
   const days = Math.floor(hours / 24);
   if (days === 1) return 'Yesterday';
   if (days < 7) return `${days} days ago`;
-  return d.toLocaleDateString('en-US', {
+  return d.toLocaleDateString('en-GB', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',

@@ -92,7 +92,7 @@ export function formatTimeRange(
   const s = new Date(start);
   const e = new Date(end);
   const fmt = (d: Date) =>
-    d.toLocaleTimeString('en-US', {
+    d.toLocaleTimeString('en-GB', {
       hour: 'numeric',
       minute: '2-digit',
       hour12: true,
@@ -118,7 +118,7 @@ export function isOverdue(endTime: Date | string, status: string): boolean {
 
 export function formatDateShort(date: Date | string, timezone: string = 'Europe/London'): string {
   const d = new Date(date);
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: timezone });
+  return d.toLocaleDateString('en-GB', { month: 'short', day: 'numeric', timeZone: timezone });
 }
 
 export function timeAgo(date: Date | string, timezone: string = 'Europe/London'): string {
@@ -134,7 +134,7 @@ export function timeAgo(date: Date | string, timezone: string = 'Europe/London')
   const days = Math.floor(hours / 24);
   if (days === 1) return 'Yesterday';
   if (days < 7) return `${days} days ago`;
-  return d.toLocaleDateString('en-US', {
+  return d.toLocaleDateString('en-GB', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -189,7 +189,7 @@ export function formatRecurrence(
 
   if (pattern.endDate) {
     const d = new Date(pattern.endDate);
-    text += ` until ${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: timezone })}`;
+    text += ` until ${d.toLocaleDateString('en-GB', { month: 'short', day: 'numeric', year: 'numeric', timeZone: timezone })}`;
   } else if (pattern.occurrenceCount) {
     text += ` for ${pattern.occurrenceCount} occurrences`;
   }

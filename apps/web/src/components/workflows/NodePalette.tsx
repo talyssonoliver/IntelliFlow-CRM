@@ -1,13 +1,24 @@
 'use client';
 
 /**
- * NodePalette — IFC-031
+ * NodePalette
  *
  * Left-side drag source palette for workflow canvas.
- * Each item uses @dnd-kit/core useDraggable with { nodeType } data.
+ * Each entry uses @dnd-kit/core useDraggable with { nodeType } data.
+ *
+ * Wraps the draggable list in the shared Card primitive and uses
+ * CardHeader/CardTitle/CardDescription for consistent header styling —
+ * no hand-rolled chrome.
  */
 
 import { useDraggable } from '@dnd-kit/core';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from '@intelliflow/ui';
 import { PALETTE_ITEMS, type PaletteItem } from '@/lib/workflow-types';
 
 // ---------------------------------------------------------------------------
@@ -55,17 +66,24 @@ function PaletteItem({ item }: { item: PaletteItem }) {
 export function NodePalette() {
   return (
     <aside
-      className="w-48 flex-shrink-0 border-r bg-muted/30 p-3 overflow-y-auto"
+      className="w-56 flex-shrink-0 p-3 overflow-y-auto"
       aria-label="Node palette"
     >
-      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-        Nodes
-      </p>
-      <ul className="flex flex-col gap-2">
-        {PALETTE_ITEMS.map((item) => (
-          <PaletteItem key={item.nodeType} item={item} />
-        ))}
-      </ul>
+      <Card className="h-fit">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm">Nodes</CardTitle>
+          <CardDescription className="text-xs">
+            Drag onto the canvas to build the flow.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ul className="flex flex-col gap-2">
+            {PALETTE_ITEMS.map((item) => (
+              <PaletteItem key={item.nodeType} item={item} />
+            ))}
+          </ul>
+        </CardContent>
+      </Card>
     </aside>
   );
 }

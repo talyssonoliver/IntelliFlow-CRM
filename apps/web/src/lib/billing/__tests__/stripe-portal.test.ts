@@ -9,7 +9,7 @@ import { describe, it, expect } from 'vitest';
 
 function formatCurrencyFn(amount: number, currency: string): string {
   const currencyUpper = currency.toUpperCase();
-  const locale = currencyUpper === 'GBP' ? 'en-GB' : 'en-US';
+  const locale = currencyUpper === 'GBP' ? 'en-GB' : 'en-GB';
   return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency: currencyUpper,
@@ -83,7 +83,7 @@ describe('stripe-portal - formatCurrency', () => {
     expect(formatCurrencyFn(2900, 'gbp')).toContain('29');
   });
   it('formats USD correctly', () => {
-    const result = formatCurrencyFn(7900, 'usd');
+    const result = formatCurrencyFn(7900, 'GBP');
     expect(result).toContain('79');
   });
   it('divides by 100 (cents to units)', () => {

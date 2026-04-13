@@ -5,7 +5,7 @@
 
 /** Format an ISO date string as "Month Day, Year" in UTC. */
 export function formatPressDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString('en-US', {
+  return new Date(dateString).toLocaleDateString('en-GB', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',

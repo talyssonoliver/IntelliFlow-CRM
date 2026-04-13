@@ -567,12 +567,12 @@ export const DEFAULT_HELP_ARTICLES: readonly HelpArticle[] = [
       {
         heading: 'Scheduling Meetings',
         content:
-          'From any contact or deal page, click "Schedule Meeting" to create a calendar event. IntelliFlow checks availability and sends invitations automatically.',
+          'From any contact or deal page, click "New Appointment" to create a calendar event. IntelliFlow checks availability and sends invitations automatically.',
         blocks: [
           {
             type: 'steps',
             items: [
-              'Open a contact or deal page and click "Schedule Meeting"',
+              'Open a contact or deal page and click "New Appointment"',
               'Select a date and time — IntelliFlow shows your availability',
               'Add attendees (contacts are auto-suggested)',
               'Choose a meeting type: Video Call, Phone Call, or In-Person',

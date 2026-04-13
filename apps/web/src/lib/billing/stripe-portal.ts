@@ -102,7 +102,7 @@ export interface UsageMetrics {
  */
 export function formatCurrency(amount: number, currency: string): string {
   const currencyUpper = currency.toUpperCase();
-  const locale = currencyUpper === 'GBP' ? 'en-GB' : 'en-US';
+  const locale = currencyUpper === 'GBP' ? 'en-GB' : 'en-GB';
 
   return new Intl.NumberFormat(locale, {
     style: 'currency',

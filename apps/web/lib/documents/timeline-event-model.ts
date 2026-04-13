@@ -306,7 +306,7 @@ export function groupEventsByDate(events: TimelineEvent[]): TimelineDateGroup[] 
       } else if (date.getTime() === yesterday.getTime()) {
         label = 'Yesterday';
       } else {
-        label = date.toLocaleDateString('en-US', {
+        label = date.toLocaleDateString('en-GB', {
           month: 'short',
           day: 'numeric',
           year: 'numeric',

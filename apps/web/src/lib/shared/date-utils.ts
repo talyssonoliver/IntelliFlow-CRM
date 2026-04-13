@@ -33,7 +33,7 @@ export function formatTimeAgo(date: Date | string, timezone: string = 'Europe/Lo
   if (diffSeconds < WEEK) return `${Math.floor(diffSeconds / DAY)} days ago`;
   if (diffSeconds < 2 * WEEK) return '1 week ago';
   if (diffSeconds < MONTH) return `${Math.floor(diffSeconds / WEEK)} weeks ago`;
-  return d.toLocaleDateString('en-US', {
+  return d.toLocaleDateString('en-GB', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',

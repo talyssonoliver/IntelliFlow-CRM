@@ -267,7 +267,7 @@ export function trackEvent(
  *   name: 'signup_complete',
  *   category: 'registration',
  *   value: 0,
- *   currency: 'USD',
+ *   currency: 'GBP',
  *   transactionId: 'user-123',
  *   properties: {
  *     method: 'email',

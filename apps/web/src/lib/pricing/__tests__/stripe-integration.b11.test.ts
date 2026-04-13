@@ -90,7 +90,7 @@ describe('stripe-integration (b11 coverage)', () => {
         status: 'active',
         priceId: 'price_pro_monthly',
         quantity: 5,
-        currency: 'usd',
+        currency: 'GBP',
         currentPeriodStart: '2026-01-01T00:00:00.000Z',
         currentPeriodEnd: '2026-02-01T00:00:00.000Z',
         cancelAtPeriodEnd: false,

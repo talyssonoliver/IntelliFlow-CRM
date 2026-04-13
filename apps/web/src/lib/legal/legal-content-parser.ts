@@ -67,6 +67,16 @@ function parseFrontmatterLine(
   }
   if (currentListKey === 'summary' && line.trim().startsWith('- ')) {
     metadata.summary.push(line.trim().slice(2).trim());
+    return currentListKey;
+  }
+  if (
+    currentListKey === 'summary' &&
+    metadata.summary.length > 0 &&
+    line.startsWith(' ') &&
+    line.trim().length > 0
+  ) {
+    const lastIndex = metadata.summary.length - 1;
+    metadata.summary[lastIndex] = `${metadata.summary[lastIndex]} ${line.trim()}`;
   }
   return currentListKey;
 }
