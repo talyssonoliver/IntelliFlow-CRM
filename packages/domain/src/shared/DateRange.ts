@@ -213,7 +213,7 @@ export class DateRange extends ValueObject<DateRangeProps> {
   /**
    * Format the date range as a string
    */
-  format(locale = 'en-US', options?: Intl.DateTimeFormatOptions): string {
+  format(locale = 'en-GB', options?: Intl.DateTimeFormatOptions): string {
     const defaultOptions: Intl.DateTimeFormatOptions = {
       year: 'numeric',
       month: 'short',

@@ -8,7 +8,7 @@ function validReceiptProps(overrides: Partial<CreateReceiptProps> = {}): CreateR
     customerId: 'cust-001',
     tenantId: 'tenant-001',
     amountCents: 10000,
-    currency: 'USD',
+    currency: 'GBP',
     paymentMethod: 'CARD',
     transactionId: 'txn_abc123',
     ...overrides,

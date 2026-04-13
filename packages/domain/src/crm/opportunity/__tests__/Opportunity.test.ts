@@ -790,7 +790,7 @@ describe('Opportunity Aggregate', () => {
       const expectedCloseDate = new Date('2024-12-31');
 
       // Create proper value objects for reconstitute
-      const moneyResult = Money.create(100000, 'USD');
+      const moneyResult = Money.create(100000, 'GBP');
       const probabilityResult = Percentage.create(60);
       expect(moneyResult.isSuccess).toBe(true);
       expect(probabilityResult.isSuccess).toBe(true);
@@ -827,7 +827,7 @@ describe('Opportunity Aggregate', () => {
       const closedAt = new Date();
 
       // Create proper value objects for reconstitute
-      const moneyResult = Money.create(200000, 'USD');
+      const moneyResult = Money.create(200000, 'GBP');
       const probabilityResult = Percentage.create(100);
       expect(moneyResult.isSuccess).toBe(true);
       expect(probabilityResult.isSuccess).toBe(true);
@@ -856,7 +856,7 @@ describe('Opportunity Aggregate', () => {
     it('should reconstitute with deletedAt and expose isDeleted', () => {
       const id = OpportunityId.generate();
       const deletedAt = new Date('2026-03-10T00:00:00Z');
-      const moneyResult = Money.create(50000, 'USD');
+      const moneyResult = Money.create(50000, 'GBP');
       const probabilityResult = Percentage.create(40);
       expect(moneyResult.isSuccess).toBe(true);
       expect(probabilityResult.isSuccess).toBe(true);
@@ -880,7 +880,7 @@ describe('Opportunity Aggregate', () => {
 
     it('should return isDeleted false when deletedAt is null', () => {
       const id = OpportunityId.generate();
-      const moneyResult = Money.create(50000, 'USD');
+      const moneyResult = Money.create(50000, 'GBP');
       const probabilityResult = Percentage.create(40);
       expect(moneyResult.isSuccess).toBe(true);
       expect(probabilityResult.isSuccess).toBe(true);
@@ -905,7 +905,7 @@ describe('Opportunity Aggregate', () => {
     it('should include deletedAt in toJSON output', () => {
       const id = OpportunityId.generate();
       const deletedAt = new Date('2026-03-10T00:00:00Z');
-      const moneyResult = Money.create(50000, 'USD');
+      const moneyResult = Money.create(50000, 'GBP');
       const probabilityResult = Percentage.create(40);
       expect(moneyResult.isSuccess).toBe(true);
       expect(probabilityResult.isSuccess).toBe(true);
@@ -930,7 +930,7 @@ describe('Opportunity Aggregate', () => {
 
     it('should return isDeleted false when deletedAt is undefined', () => {
       const id = OpportunityId.generate();
-      const moneyResult = Money.create(50000, 'USD');
+      const moneyResult = Money.create(50000, 'GBP');
       const probabilityResult = Percentage.create(40);
       expect(moneyResult.isSuccess).toBe(true);
       expect(probabilityResult.isSuccess).toBe(true);

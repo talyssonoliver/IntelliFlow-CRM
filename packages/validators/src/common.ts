@@ -46,7 +46,7 @@ export const phoneSchema = z
 export const moneySchema = z
   .object({
     amount: z.number().min(0, 'Amount must be non-negative'),
-    currency: z.string().default('USD'),
+    currency: z.string().default('GBP'),
   })
   .transform((val, ctx) => {
     const result = Money.create(val.amount, val.currency);

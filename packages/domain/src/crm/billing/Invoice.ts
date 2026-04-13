@@ -214,7 +214,7 @@ export class Invoice extends AggregateRoot<InvoiceId> {
   // ── Factory methods ──
 
   static create(props: CreateInvoiceProps): Result<Invoice, InvalidInvoiceError> {
-    const currency = props.currency ?? 'USD';
+    const currency = props.currency ?? 'GBP';
 
     const validationError = Invoice.validateRequiredFields(props);
     if (validationError) return Result.fail(validationError);

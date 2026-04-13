@@ -193,7 +193,7 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
           new InvalidOpportunityValueError('Opportunity value must be greater than zero')
         );
       }
-      const moneyResult = Money.create(props.value, props.currency || 'USD');
+      const moneyResult = Money.create(props.value, props.currency || 'GBP');
       if (moneyResult.isFailure) {
         return Result.fail(new InvalidOpportunityValueError(moneyResult.error.message));
       }

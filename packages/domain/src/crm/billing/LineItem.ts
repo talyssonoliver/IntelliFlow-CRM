@@ -64,7 +64,7 @@ export class LineItem extends ValueObject<LineItemProps> {
       );
     }
 
-    const currency = props.currency ?? 'USD';
+    const currency = props.currency ?? 'GBP';
     const unitPriceResult = Money.fromCents(props.unitPriceCents, currency);
     if (unitPriceResult.isFailure) {
       return Result.fail(

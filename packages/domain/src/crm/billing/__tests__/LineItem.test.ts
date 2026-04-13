@@ -8,7 +8,7 @@ describe('LineItem', () => {
         description: 'Monthly subscription',
         quantity: 1,
         unitPriceCents: 2999,
-        currency: 'USD',
+        currency: 'GBP',
         type: 'SUBSCRIPTION',
       });
       expect(result.isSuccess).toBe(true);
@@ -23,7 +23,7 @@ describe('LineItem', () => {
         description: 'Hours of service',
         quantity: 5,
         unitPriceCents: 10000,
-        currency: 'USD',
+        currency: 'GBP',
         type: 'USAGE',
       });
       expect(result.isSuccess).toBe(true);
@@ -66,7 +66,7 @@ describe('LineItem', () => {
         description: '1.5 hours',
         quantity: 1.5,
         unitPriceCents: 10000,
-        currency: 'USD',
+        currency: 'GBP',
         type: 'USAGE',
       });
       expect(result.isSuccess).toBe(true);
@@ -158,7 +158,7 @@ describe('LineItem', () => {
         description: 'Test',
         quantity: 2,
         unitPriceCents: 5000,
-        currency: 'USD',
+        currency: 'GBP',
         type: 'SUBSCRIPTION',
       }).value;
 
@@ -167,7 +167,7 @@ describe('LineItem', () => {
       expect(val.quantity).toBe(2);
       expect(val.unitPriceCents).toBe(5000);
       expect(val.totalCents).toBe(10000);
-      expect(val.currency).toBe('USD');
+      expect(val.currency).toBe('GBP');
       expect(val.type).toBe('SUBSCRIPTION');
     });
   });

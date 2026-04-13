@@ -27,10 +27,10 @@ interface MoneyProps {
  * Encapsulates monetary values with currency tracking
  *
  * Stores value as integer cents to avoid floating-point precision errors
- * Example: $12.50 is stored as { cents: 1250, currency: 'USD' }
+ * Example: $12.50 is stored as { cents: 1250, currency: 'GBP' }
  */
 export class Money extends ValueObject<MoneyProps> {
-  private static readonly SUPPORTED_CURRENCIES = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY'];
+  private static readonly SUPPORTED_CURRENCIES = ['GBP', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY'];
   private static readonly ZERO_DECIMAL_CURRENCIES = ['JPY', 'KRW']; // No decimal places
 
   private constructor(props: MoneyProps) {
@@ -57,9 +57,9 @@ export class Money extends ValueObject<MoneyProps> {
 
   /**
    * Create Money from decimal amount
-   * Example: Money.create(12.50, 'USD') → { cents: 1250, currency: 'USD' }
+   * Example: Money.create(12.50, 'GBP') → { cents: 1250, currency: 'GBP' }
    */
-  static create(amount: number, currency: string = 'USD'): Result<Money, InvalidMoneyError> {
+  static create(amount: number, currency: string = 'GBP'): Result<Money, InvalidMoneyError> {
     // Validate amount
     if (!Number.isFinite(amount)) {
       return Result.fail(new InvalidMoneyError('Amount must be a finite number'));
@@ -93,7 +93,7 @@ export class Money extends ValueObject<MoneyProps> {
   /**
    * Create Money from cents (for database storage)
    */
-  static fromCents(cents: number, currency: string = 'USD'): Result<Money, InvalidMoneyError> {
+  static fromCents(cents: number, currency: string = 'GBP'): Result<Money, InvalidMoneyError> {
     if (!Number.isInteger(cents)) {
       return Result.fail(new InvalidMoneyError('Cents must be an integer'));
     }
@@ -113,7 +113,7 @@ export class Money extends ValueObject<MoneyProps> {
   /**
    * Create zero money
    */
-  static zero(currency: string = 'USD'): Money {
+  static zero(currency: string = 'GBP'): Money {
     return new Money({ cents: 0, currency: currency.toUpperCase() });
   }
 
@@ -193,10 +193,10 @@ export class Money extends ValueObject<MoneyProps> {
 
   /**
    * Format as currency string
-   * Example: Money.create(1234.56, 'USD').formatted → "$1,234.56"
+   * Example: Money.create(1234.56, 'GBP').formatted → "$1,234.56"
    */
   get formatted(): string {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-GB', {
       style: 'currency',
       currency: this.props.currency,
     }).format(this.amount);

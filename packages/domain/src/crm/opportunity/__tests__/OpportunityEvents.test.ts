@@ -255,7 +255,7 @@ describe('DealWonEnrichedEvent', () => {
     const event = new DealWonEnrichedEvent(
       opportunityId,
       50000,
-      'USD',
+      'GBP',
       'account-123',
       'contact-456',
       'owner-789',
@@ -275,7 +275,7 @@ describe('DealWonEnrichedEvent', () => {
     const event = new DealWonEnrichedEvent(
       opportunityId,
       50000,
-      'USD',
+      'GBP',
       'account-123',
       'contact-456',
       'owner-789',
@@ -289,7 +289,7 @@ describe('DealWonEnrichedEvent', () => {
 
     expect(payload.opportunityId).toBe(opportunityId.value);
     expect(payload.value).toBe(50000);
-    expect(payload.currency).toBe('USD');
+    expect(payload.currency).toBe('GBP');
     expect(payload.accountId).toBe('account-123');
     expect(payload.contactId).toBe('contact-456');
     expect(payload.ownerId).toBe('owner-789');
@@ -305,7 +305,7 @@ describe('DealWonEnrichedEvent', () => {
     const event = new DealWonEnrichedEvent(
       opportunityId,
       50000,
-      'USD',
+      'GBP',
       'account-123',
       undefined,
       'owner-789',
@@ -331,7 +331,7 @@ describe('DealLostEnrichedEvent', () => {
     const event = new DealLostEnrichedEvent(
       opportunityId,
       50000,
-      'USD',
+      'GBP',
       'account-123',
       'contact-456',
       'owner-789',
@@ -353,7 +353,7 @@ describe('DealLostEnrichedEvent', () => {
     const event = new DealLostEnrichedEvent(
       opportunityId,
       50000,
-      'USD',
+      'GBP',
       'account-123',
       'contact-456',
       'owner-789',
@@ -369,7 +369,7 @@ describe('DealLostEnrichedEvent', () => {
 
     expect(payload.opportunityId).toBe(opportunityId.value);
     expect(payload.value).toBe(50000);
-    expect(payload.currency).toBe('USD');
+    expect(payload.currency).toBe('GBP');
     expect(payload.accountId).toBe('account-123');
     expect(payload.contactId).toBe('contact-456');
     expect(payload.ownerId).toBe('owner-789');
@@ -387,7 +387,7 @@ describe('DealLostEnrichedEvent', () => {
     const event = new DealLostEnrichedEvent(
       opportunityId,
       50000,
-      'USD',
+      'GBP',
       'account-123',
       undefined,
       'owner-789',

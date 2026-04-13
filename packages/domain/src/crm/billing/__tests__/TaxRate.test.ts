@@ -38,21 +38,21 @@ describe('TaxRate', () => {
   describe('TaxRate.calculate', () => {
     it('should calculate 20% of $100 → $20', () => {
       const taxRate = TaxRate.create(20, 'VAT').value;
-      const subtotal = Money.create(100, 'USD').value;
+      const subtotal = Money.create(100, 'GBP').value;
       const tax = taxRate.calculate(subtotal);
       expect(tax.cents).toBe(2000);
     });
 
     it('should calculate 0% → $0', () => {
       const taxRate = TaxRate.create(0, 'NONE').value;
-      const subtotal = Money.create(100, 'USD').value;
+      const subtotal = Money.create(100, 'GBP').value;
       const tax = taxRate.calculate(subtotal);
       expect(tax.cents).toBe(0);
     });
 
     it('should calculate 7.25% of $150 → $10.88 (rounded)', () => {
       const taxRate = TaxRate.create(7.25, 'SALES_TAX', 'US-CA').value;
-      const subtotal = Money.create(150, 'USD').value;
+      const subtotal = Money.create(150, 'GBP').value;
       const tax = taxRate.calculate(subtotal);
       // 15000 * 0.0725 = 1087.5 → rounded to 1088
       expect(tax.cents).toBe(1088);
@@ -60,14 +60,14 @@ describe('TaxRate', () => {
 
     it('should handle zero subtotal → $0', () => {
       const taxRate = TaxRate.create(20, 'VAT').value;
-      const subtotal = Money.zero('USD');
+      const subtotal = Money.zero('GBP');
       const tax = taxRate.calculate(subtotal);
       expect(tax.cents).toBe(0);
     });
 
     it('should handle large amounts without overflow', () => {
       const taxRate = TaxRate.create(20, 'VAT').value;
-      const subtotal = Money.create(999999.99, 'USD').value;
+      const subtotal = Money.create(999999.99, 'GBP').value;
       const tax = taxRate.calculate(subtotal);
       expect(tax.cents).toBeGreaterThan(0);
     });

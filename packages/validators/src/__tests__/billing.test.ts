@@ -366,7 +366,7 @@ describe('Billing Validators', () => {
     });
 
     it('should accept currency at exactly 3 characters', () => {
-      expect(subscriptionSchema.safeParse({ ...validSub, currency: 'USD' }).success).toBe(true);
+      expect(subscriptionSchema.safeParse({ ...validSub, currency: 'GBP' }).success).toBe(true);
       expect(subscriptionSchema.safeParse({ ...validSub, currency: 'EUR' }).success).toBe(true);
     });
 
@@ -648,14 +648,14 @@ describe('Billing Validators', () => {
       const plan = {
         ...validPlan,
         description: 'Best for growing teams.',
-        currency: 'USD',
+        currency: 'GBP',
         popular: true,
       };
       const result = planSchema.safeParse(plan);
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.popular).toBe(true);
-        expect(result.data.currency).toBe('USD');
+        expect(result.data.currency).toBe('GBP');
       }
     });
 

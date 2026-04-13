@@ -31,7 +31,7 @@ function createOpp(overrides: Record<string, unknown> = {}) {
 describe('Opportunity - b11 branch coverage', () => {
   describe('create with Money object', () => {
     it('should create when Money object has valid amount', () => {
-      const money = Money.create(5000, 'USD').value;
+      const money = Money.create(5000, 'GBP').value;
       const result = Opportunity.create({
         name: 'Deal with Money',
         value: money,
@@ -41,13 +41,13 @@ describe('Opportunity - b11 branch coverage', () => {
       });
       expect(result.isSuccess).toBe(true);
       expect(result.value.value.amount).toBe(5000);
-      expect(result.value.value.currency).toBe('USD');
+      expect(result.value.value.currency).toBe('GBP');
     });
 
     it('should fail when Money object has zero amount', () => {
       // Money.create(0) may succeed since Money itself allows 0
       // But Opportunity checks amount <= 0
-      const money = Money.create(0, 'USD');
+      const money = Money.create(0, 'GBP');
       if (money.isSuccess) {
         const result = Opportunity.create({
           name: 'Zero Money',
@@ -61,7 +61,7 @@ describe('Opportunity - b11 branch coverage', () => {
     });
 
     it('should fail when Money object has negative amount', () => {
-      const money = Money.create(-100, 'USD');
+      const money = Money.create(-100, 'GBP');
       if (money.isSuccess) {
         const result = Opportunity.create({
           name: 'Negative Money',
@@ -94,7 +94,7 @@ describe('Opportunity - b11 branch coverage', () => {
   describe('updateValue with Money object', () => {
     it('should update when Money object has valid amount', () => {
       const opp = createOpp().value;
-      const newMoney = Money.create(25000, 'USD').value;
+      const newMoney = Money.create(25000, 'GBP').value;
       const result = opp.updateValue(newMoney, 'user_1');
       expect(result.isSuccess).toBe(true);
       expect(opp.value.amount).toBe(25000);
@@ -102,7 +102,7 @@ describe('Opportunity - b11 branch coverage', () => {
 
     it('should fail when Money object has zero amount', () => {
       const opp = createOpp().value;
-      const zeroMoney = Money.create(0, 'USD');
+      const zeroMoney = Money.create(0, 'GBP');
       if (zeroMoney.isSuccess) {
         const result = opp.updateValue(zeroMoney.value, 'user_1');
         expect(result.isFailure).toBe(true);
@@ -111,7 +111,7 @@ describe('Opportunity - b11 branch coverage', () => {
 
     it('should fail when Money object has negative amount', () => {
       const opp = createOpp().value;
-      const negMoney = Money.create(-1, 'USD');
+      const negMoney = Money.create(-1, 'GBP');
       if (negMoney.isSuccess) {
         const result = opp.updateValue(negMoney.value, 'user_1');
         expect(result.isFailure).toBe(true);
@@ -123,7 +123,7 @@ describe('Opportunity - b11 branch coverage', () => {
     it('should not update value when closed', () => {
       const opp = createOpp().value;
       opp.markAsWon('user_1');
-      const money = Money.create(30000, 'USD').value;
+      const money = Money.create(30000, 'GBP').value;
       expect(opp.updateValue(money, 'user_1').isFailure).toBe(true);
     });
   });
@@ -157,7 +157,7 @@ describe('Opportunity - b11 branch coverage', () => {
   describe('reconstitute', () => {
     it('should reconstitute from persistence data', () => {
       const id = OpportunityId.generate();
-      const money = Money.create(5000, 'USD').value;
+      const money = Money.create(5000, 'GBP').value;
       const pct = Percentage.create(50).value;
       const now = new Date();
 

@@ -24,7 +24,7 @@ function validInvoiceProps(overrides: Partial<CreateInvoiceProps> = {}): CreateI
       },
     ],
     billingEmail: 'billing@example.com',
-    currency: 'USD',
+    currency: 'GBP',
     taxRate: 20,
     taxType: 'VAT',
     dueDate: new Date(Date.now() + 30 * 86400000),
@@ -155,7 +155,7 @@ describe('Invoice', () => {
 
     it('should reject if already PAID', () => {
       const invoice = createOpenInvoice();
-      const amount = Money.fromCents(invoice.amountDue.cents, 'USD').value;
+      const amount = Money.fromCents(invoice.amountDue.cents, 'GBP').value;
       invoice.recordPayment(amount);
       const result = invoice.issue();
       expect(result.isFailure).toBe(true);
@@ -172,7 +172,7 @@ describe('Invoice', () => {
   describe('Invoice.recordPayment', () => {
     it('should record full payment on OPEN invoice', () => {
       const invoice = createOpenInvoice();
-      const amount = Money.fromCents(invoice.amountDue.cents, 'USD').value;
+      const amount = Money.fromCents(invoice.amountDue.cents, 'GBP').value;
       const result = invoice.recordPayment(amount);
       expect(result.isSuccess).toBe(true);
       expect(invoice.amountDue.cents).toBe(0);
@@ -180,14 +180,14 @@ describe('Invoice', () => {
 
     it('should transition to PAID when amountDue = 0', () => {
       const invoice = createOpenInvoice();
-      const amount = Money.fromCents(invoice.amountDue.cents, 'USD').value;
+      const amount = Money.fromCents(invoice.amountDue.cents, 'GBP').value;
       invoice.recordPayment(amount);
       expect(invoice.status).toBe('PAID');
     });
 
     it('should emit InvoicePaidEvent on full payment', () => {
       const invoice = createOpenInvoice();
-      const amount = Money.fromCents(invoice.amountDue.cents, 'USD').value;
+      const amount = Money.fromCents(invoice.amountDue.cents, 'GBP').value;
       invoice.recordPayment(amount);
       expect(invoice.domainEvents.some((e) => e instanceof InvoicePaidEvent)).toBe(true);
     });
@@ -195,7 +195,7 @@ describe('Invoice', () => {
     it('should record partial payment (50%)', () => {
       const invoice = createOpenInvoice();
       const halfCents = Math.floor(invoice.amountDue.cents / 2);
-      const amount = Money.fromCents(halfCents, 'USD').value;
+      const amount = Money.fromCents(halfCents, 'GBP').value;
       const result = invoice.recordPayment(amount);
       expect(result.isSuccess).toBe(true);
       expect(invoice.amountPaid.cents).toBe(halfCents);
@@ -204,14 +204,14 @@ describe('Invoice', () => {
 
     it('should set paymentStatus = PARTIALLY_PAID', () => {
       const invoice = createOpenInvoice();
-      const amount = Money.fromCents(1000, 'USD').value;
+      const amount = Money.fromCents(1000, 'GBP').value;
       invoice.recordPayment(amount);
       expect(invoice.paymentStatus).toBe('PARTIALLY_PAID');
     });
 
     it('should emit InvoicePaymentRecordedEvent', () => {
       const invoice = createOpenInvoice();
-      const amount = Money.fromCents(1000, 'USD').value;
+      const amount = Money.fromCents(1000, 'GBP').value;
       invoice.recordPayment(amount);
       expect(invoice.domainEvents.some((e) => e instanceof InvoicePaymentRecordedEvent)).toBe(true);
     });
@@ -219,10 +219,10 @@ describe('Invoice', () => {
     it('should handle second partial payment completing total', () => {
       const invoice = createOpenInvoice();
       const totalCents = invoice.amountDue.cents;
-      const firstPayment = Money.fromCents(Math.floor(totalCents / 2), 'USD').value;
+      const firstPayment = Money.fromCents(Math.floor(totalCents / 2), 'GBP').value;
       invoice.recordPayment(firstPayment);
 
-      const remaining = Money.fromCents(invoice.amountDue.cents, 'USD').value;
+      const remaining = Money.fromCents(invoice.amountDue.cents, 'GBP').value;
       invoice.recordPayment(remaining);
       expect(invoice.status).toBe('PAID');
       expect(invoice.amountDue.cents).toBe(0);
@@ -230,7 +230,7 @@ describe('Invoice', () => {
 
     it('should reject payment on DRAFT invoice', () => {
       const invoice = Invoice.create(validInvoiceProps()).value;
-      const amount = Money.fromCents(1000, 'USD').value;
+      const amount = Money.fromCents(1000, 'GBP').value;
       const result = invoice.recordPayment(amount);
       expect(result.isFailure).toBe(true);
     });
@@ -238,30 +238,30 @@ describe('Invoice', () => {
     it('should reject payment on VOID invoice', () => {
       const invoice = Invoice.create(validInvoiceProps()).value;
       invoice.void();
-      const amount = Money.fromCents(1000, 'USD').value;
+      const amount = Money.fromCents(1000, 'GBP').value;
       const result = invoice.recordPayment(amount);
       expect(result.isFailure).toBe(true);
     });
 
     it('should reject payment on PAID invoice', () => {
       const invoice = createOpenInvoice();
-      const fullAmount = Money.fromCents(invoice.amountDue.cents, 'USD').value;
+      const fullAmount = Money.fromCents(invoice.amountDue.cents, 'GBP').value;
       invoice.recordPayment(fullAmount);
-      const extra = Money.fromCents(100, 'USD').value;
+      const extra = Money.fromCents(100, 'GBP').value;
       const result = invoice.recordPayment(extra);
       expect(result.isFailure).toBe(true);
     });
 
     it('should reject payment amount <= 0', () => {
       const invoice = createOpenInvoice();
-      const amount = Money.fromCents(0, 'USD').value;
+      const amount = Money.fromCents(0, 'GBP').value;
       const result = invoice.recordPayment(amount);
       expect(result.isFailure).toBe(true);
     });
 
     it('should reject payment exceeding amountDue', () => {
       const invoice = createOpenInvoice();
-      const amount = Money.fromCents(invoice.amountDue.cents + 100, 'USD').value;
+      const amount = Money.fromCents(invoice.amountDue.cents + 100, 'GBP').value;
       const result = invoice.recordPayment(amount);
       expect(result.isFailure).toBe(true);
     });
@@ -277,11 +277,11 @@ describe('Invoice', () => {
   describe('Invoice.processRefund', () => {
     it('should process refund on OPEN invoice with payments', () => {
       const invoice = createOpenInvoice();
-      const payAmount = Money.fromCents(5000, 'USD').value;
+      const payAmount = Money.fromCents(5000, 'GBP').value;
       invoice.recordPayment(payAmount);
       invoice.clearDomainEvents();
 
-      const refundAmount = Money.fromCents(2000, 'USD').value;
+      const refundAmount = Money.fromCents(2000, 'GBP').value;
       const result = invoice.processRefund(refundAmount, 'CUSTOMER_REQUEST');
       expect(result.isSuccess).toBe(true);
       expect(invoice.amountRefunded.cents).toBe(2000);
@@ -289,10 +289,10 @@ describe('Invoice', () => {
 
     it('should process partial refund', () => {
       const invoice = createOpenInvoice();
-      const payAmount = Money.fromCents(invoice.amountDue.cents, 'USD').value;
+      const payAmount = Money.fromCents(invoice.amountDue.cents, 'GBP').value;
       invoice.recordPayment(payAmount);
 
-      const refund = Money.fromCents(1000, 'USD').value;
+      const refund = Money.fromCents(1000, 'GBP').value;
       const result = invoice.processRefund(refund, 'BILLING_ERROR');
       expect(result.isSuccess).toBe(true);
       expect(invoice.paymentStatus).toBe('PARTIALLY_REFUNDED');
@@ -300,9 +300,9 @@ describe('Invoice', () => {
 
     it('should update amountRefunded', () => {
       const invoice = createOpenInvoice();
-      const payAmount = Money.fromCents(5000, 'USD').value;
+      const payAmount = Money.fromCents(5000, 'GBP').value;
       invoice.recordPayment(payAmount);
-      const refund = Money.fromCents(3000, 'USD').value;
+      const refund = Money.fromCents(3000, 'GBP').value;
       invoice.processRefund(refund, 'CUSTOMER_REQUEST');
       expect(invoice.amountRefunded.cents).toBe(3000);
     });
@@ -310,47 +310,47 @@ describe('Invoice', () => {
     it('should update amountDue (increase by refund amount)', () => {
       const invoice = createOpenInvoice();
       const totalDue = invoice.amountDue.cents;
-      const payAmount = Money.fromCents(5000, 'USD').value;
+      const payAmount = Money.fromCents(5000, 'GBP').value;
       invoice.recordPayment(payAmount);
       const dueBefore = invoice.amountDue.cents;
 
-      const refund = Money.fromCents(2000, 'USD').value;
+      const refund = Money.fromCents(2000, 'GBP').value;
       invoice.processRefund(refund, 'CUSTOMER_REQUEST');
       expect(invoice.amountDue.cents).toBe(dueBefore + 2000);
     });
 
     it('should emit InvoiceRefundedEvent', () => {
       const invoice = createOpenInvoice();
-      const payAmount = Money.fromCents(5000, 'USD').value;
+      const payAmount = Money.fromCents(5000, 'GBP').value;
       invoice.recordPayment(payAmount);
       invoice.clearDomainEvents();
 
-      const refund = Money.fromCents(1000, 'USD').value;
+      const refund = Money.fromCents(1000, 'GBP').value;
       invoice.processRefund(refund, 'CUSTOMER_REQUEST');
       expect(invoice.domainEvents.some((e) => e instanceof InvoiceRefundedEvent)).toBe(true);
     });
 
     it('should reject refund amount <= 0', () => {
       const invoice = createOpenInvoice();
-      const payAmount = Money.fromCents(5000, 'USD').value;
+      const payAmount = Money.fromCents(5000, 'GBP').value;
       invoice.recordPayment(payAmount);
-      const refund = Money.fromCents(0, 'USD').value;
+      const refund = Money.fromCents(0, 'GBP').value;
       const result = invoice.processRefund(refund, 'CUSTOMER_REQUEST');
       expect(result.isFailure).toBe(true);
     });
 
     it('should reject refund exceeding amountPaid', () => {
       const invoice = createOpenInvoice();
-      const payAmount = Money.fromCents(5000, 'USD').value;
+      const payAmount = Money.fromCents(5000, 'GBP').value;
       invoice.recordPayment(payAmount);
-      const refund = Money.fromCents(6000, 'USD').value;
+      const refund = Money.fromCents(6000, 'GBP').value;
       const result = invoice.processRefund(refund, 'CUSTOMER_REQUEST');
       expect(result.isFailure).toBe(true);
     });
 
     it('should reject refund on DRAFT invoice', () => {
       const invoice = Invoice.create(validInvoiceProps()).value;
-      const refund = Money.fromCents(1000, 'USD').value;
+      const refund = Money.fromCents(1000, 'GBP').value;
       const result = invoice.processRefund(refund, 'CUSTOMER_REQUEST');
       expect(result.isFailure).toBe(true);
     });
@@ -358,21 +358,21 @@ describe('Invoice', () => {
     it('should reject refund on VOID invoice', () => {
       const invoice = Invoice.create(validInvoiceProps()).value;
       invoice.void();
-      const refund = Money.fromCents(1000, 'USD').value;
+      const refund = Money.fromCents(1000, 'GBP').value;
       const result = invoice.processRefund(refund, 'CUSTOMER_REQUEST');
       expect(result.isFailure).toBe(true);
     });
 
     it('should allow multiple refunds summing to amountPaid', () => {
       const invoice = createOpenInvoice();
-      const payAmount = Money.fromCents(6000, 'USD').value;
+      const payAmount = Money.fromCents(6000, 'GBP').value;
       invoice.recordPayment(payAmount);
 
-      const r1 = Money.fromCents(2000, 'USD').value;
+      const r1 = Money.fromCents(2000, 'GBP').value;
       expect(invoice.processRefund(r1, 'CUSTOMER_REQUEST').isSuccess).toBe(true);
-      const r2 = Money.fromCents(2000, 'USD').value;
+      const r2 = Money.fromCents(2000, 'GBP').value;
       expect(invoice.processRefund(r2, 'BILLING_ERROR').isSuccess).toBe(true);
-      const r3 = Money.fromCents(2000, 'USD').value;
+      const r3 = Money.fromCents(2000, 'GBP').value;
       expect(invoice.processRefund(r3, 'OTHER').isSuccess).toBe(true);
 
       expect(invoice.amountRefunded.cents).toBe(6000);
@@ -410,7 +410,7 @@ describe('Invoice', () => {
 
     it('should reject void on PAID invoice', () => {
       const invoice = createOpenInvoice();
-      const amount = Money.fromCents(invoice.amountDue.cents, 'USD').value;
+      const amount = Money.fromCents(invoice.amountDue.cents, 'GBP').value;
       invoice.recordPayment(amount);
       const result = invoice.void();
       expect(result.isFailure).toBe(true);
@@ -418,7 +418,7 @@ describe('Invoice', () => {
 
     it('should reject void on OPEN invoice with payments', () => {
       const invoice = createOpenInvoice();
-      const amount = Money.fromCents(1000, 'USD').value;
+      const amount = Money.fromCents(1000, 'GBP').value;
       invoice.recordPayment(amount);
       const result = invoice.void();
       expect(result.isFailure).toBe(true);
@@ -455,7 +455,7 @@ describe('Invoice', () => {
 
     it('should reject on PAID', () => {
       const invoice = createOpenInvoice();
-      const amount = Money.fromCents(invoice.amountDue.cents, 'USD').value;
+      const amount = Money.fromCents(invoice.amountDue.cents, 'GBP').value;
       invoice.recordPayment(amount);
       const result = invoice.markUncollectible();
       expect(result.isFailure).toBe(true);
@@ -561,7 +561,7 @@ describe('Invoice', () => {
 
     it('isPaid should be true for PAID', () => {
       const invoice = createOpenInvoice();
-      const amount = Money.fromCents(invoice.amountDue.cents, 'USD').value;
+      const amount = Money.fromCents(invoice.amountDue.cents, 'GBP').value;
       invoice.recordPayment(amount);
       expect(invoice.isPaid).toBe(true);
     });
@@ -584,7 +584,7 @@ describe('Invoice', () => {
 
     it('hasPayments should be true when amountPaid > 0', () => {
       const invoice = createOpenInvoice();
-      const amount = Money.fromCents(1000, 'USD').value;
+      const amount = Money.fromCents(1000, 'GBP').value;
       invoice.recordPayment(amount);
       expect(invoice.hasPayments).toBe(true);
     });
@@ -619,16 +619,16 @@ describe('Invoice', () => {
 
     it('amountPaid never exceeds totalAmount', () => {
       const invoice = createOpenInvoice();
-      const overAmount = Money.fromCents(invoice.totalAmount.cents + 1, 'USD').value;
+      const overAmount = Money.fromCents(invoice.totalAmount.cents + 1, 'GBP').value;
       const result = invoice.recordPayment(overAmount);
       expect(result.isFailure).toBe(true);
     });
 
     it('amountRefunded never exceeds amountPaid', () => {
       const invoice = createOpenInvoice();
-      const pay = Money.fromCents(5000, 'USD').value;
+      const pay = Money.fromCents(5000, 'GBP').value;
       invoice.recordPayment(pay);
-      const overRefund = Money.fromCents(5001, 'USD').value;
+      const overRefund = Money.fromCents(5001, 'GBP').value;
       const result = invoice.processRefund(overRefund, 'CUSTOMER_REQUEST');
       expect(result.isFailure).toBe(true);
     });

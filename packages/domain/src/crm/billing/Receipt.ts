@@ -99,7 +99,7 @@ export class Receipt extends AggregateRoot<ReceiptId> {
       return Result.fail(new InvalidReceiptError('Receipt amount must be greater than zero'));
     }
 
-    const currency = props.currency ?? 'USD';
+    const currency = props.currency ?? 'GBP';
     const amountResult = Money.fromCents(props.amountCents, currency);
     if (amountResult.isFailure) {
       return Result.fail(new InvalidReceiptError(`Invalid amount: ${amountResult.error.message}`));
