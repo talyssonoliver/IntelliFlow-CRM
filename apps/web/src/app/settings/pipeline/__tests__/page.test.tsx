@@ -81,7 +81,9 @@ vi.mock('@/components/shared/page-header', () => ({
       <h1>{title}</h1>
       {description && <p>{description}</p>}
       {actions?.map((a: any, i: number) => (
-        <button key={i} onClick={a.onClick} disabled={a.disabled}>{a.label}</button>
+        <button key={i} onClick={a.onClick} disabled={a.disabled}>
+          {a.label}
+        </button>
       ))}
     </div>
   ),

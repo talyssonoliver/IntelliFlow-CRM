@@ -64,10 +64,7 @@ export default function InvoicesPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        breadcrumbs={[
-          { label: 'Billing', href: '/billing' },
-          { label: 'Invoices' },
-        ]}
+        breadcrumbs={[{ label: 'Billing', href: '/billing' }, { label: 'Invoices' }]}
         title="Invoices"
         description="View and download your billing history."
       />

@@ -271,7 +271,7 @@ export default function QualityReportDetailClient() {
                   </div>
                 </div>
               )}
-              { }
+              {}
               <iframe
                 src={`/api/quality-reports/view?report=${reportId}`}
                 className="w-full h-full border-0"

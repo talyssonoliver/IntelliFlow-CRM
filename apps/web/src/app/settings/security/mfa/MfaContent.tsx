@@ -53,17 +53,19 @@ function MfaMethodRow({
     >
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
-          <span className="material-symbols-outlined text-slate-500 dark:text-slate-400 text-[20px]">{icon}</span>
+          <span className="material-symbols-outlined text-slate-500 dark:text-slate-400 text-[20px]">
+            {icon}
+          </span>
         </div>
         <div>
           <span className="text-sm font-medium text-foreground">{name}</span>
-          {comingSoon && (
-            <p className="text-xs text-muted-foreground">Coming soon</p>
-          )}
+          {comingSoon && <p className="text-xs text-muted-foreground">Coming soon</p>}
         </div>
       </div>
       {comingSoon ? (
-        <Badge variant="secondary" className="text-xs">Unavailable</Badge>
+        <Badge variant="secondary" className="text-xs">
+          Unavailable
+        </Badge>
       ) : (
         <Badge variant={enabled ? 'default' : 'secondary'}>
           {enabled ? 'Active' : 'Not configured'}
@@ -125,9 +127,11 @@ export default function MfaContent() {
     <div className="pb-10">
       <PageHeader
         title="Two-Factor Authentication"
-        description={isEnabled
-          ? 'Your account is protected with multi-factor authentication.'
-          : 'Add an extra layer of security to your account.'}
+        description={
+          isEnabled
+            ? 'Your account is protected with multi-factor authentication.'
+            : 'Add an extra layer of security to your account.'
+        }
         breadcrumbs={[
           { label: 'Dashboard', href: '/' },
           { label: 'Settings', href: '/settings' },
@@ -138,13 +142,14 @@ export default function MfaContent() {
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-
         {/* ─── Status & Methods Card ─────────────────────────────────── */}
         <Card className="lg:col-span-7 p-6 md:p-8">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                <span className="material-symbols-outlined text-blue-600 dark:text-blue-400 text-[18px]">security</span>
+                <span className="material-symbols-outlined text-blue-600 dark:text-blue-400 text-[18px]">
+                  security
+                </span>
               </div>
               <h3 className="text-lg font-semibold text-foreground">Status & Methods</h3>
             </div>
@@ -159,8 +164,18 @@ export default function MfaContent() {
               enabled={mfaStatus?.methods.totp ?? false}
               icon="key"
             />
-            <MfaMethodRow name="SMS" enabled={mfaStatus?.methods.sms ?? false} icon="sms" comingSoon />
-            <MfaMethodRow name="Email" enabled={mfaStatus?.methods.email ?? false} icon="email" comingSoon />
+            <MfaMethodRow
+              name="SMS"
+              enabled={mfaStatus?.methods.sms ?? false}
+              icon="sms"
+              comingSoon
+            />
+            <MfaMethodRow
+              name="Email"
+              enabled={mfaStatus?.methods.email ?? false}
+              icon="email"
+              comingSoon
+            />
           </div>
 
           {/* Add method link */}
@@ -169,7 +184,9 @@ export default function MfaContent() {
               href="/settings/security/mfa/setup"
               className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
             >
-              <span className="material-symbols-outlined text-[16px]" aria-hidden="true">add_circle</span>
+              <span className="material-symbols-outlined text-[16px]" aria-hidden="true">
+                add_circle
+              </span>
               <span className="underline-offset-4 hover:underline">
                 {isEnabled ? 'Add another method' : 'Get started with setup'}
               </span>
@@ -181,7 +198,9 @@ export default function MfaContent() {
         <Card className="lg:col-span-5 p-6 md:p-8">
           <div className="flex items-center gap-2 mb-6">
             <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-              <span className="material-symbols-outlined text-amber-600 dark:text-amber-400 text-[18px]">vpn_key</span>
+              <span className="material-symbols-outlined text-amber-600 dark:text-amber-400 text-[18px]">
+                vpn_key
+              </span>
             </div>
             <h3 className="text-lg font-semibold text-foreground">Backup Codes</h3>
           </div>
@@ -210,7 +229,9 @@ export default function MfaContent() {
                 onClick={() => downloadBackupCodes(newCodes, '', new Date())}
                 className="w-full"
               >
-                <span className="material-symbols-outlined text-[16px] mr-1.5" aria-hidden="true">download</span>
+                <span className="material-symbols-outlined text-[16px] mr-1.5" aria-hidden="true">
+                  download
+                </span>
                 Download codes
               </Button>
             </div>
@@ -230,7 +251,12 @@ export default function MfaContent() {
                     data-testid="regen-backup-btn"
                     className="w-full"
                   >
-                    <span className="material-symbols-outlined text-[16px] mr-1.5" aria-hidden="true">refresh</span>
+                    <span
+                      className="material-symbols-outlined text-[16px] mr-1.5"
+                      aria-hidden="true"
+                    >
+                      refresh
+                    </span>
                     Regenerate backup codes
                   </Button>
                 </AlertDialogTrigger>
@@ -238,7 +264,8 @@ export default function MfaContent() {
                   <AlertDialogHeader>
                     <AlertDialogTitle>Regenerate Backup Codes</AlertDialogTitle>
                     <AlertDialogDescription>
-                      This will invalidate all existing backup codes. Enter your authenticator code to continue.
+                      This will invalidate all existing backup codes. Enter your authenticator code
+                      to continue.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <div className="py-4 space-y-2">
@@ -254,11 +281,18 @@ export default function MfaContent() {
                       data-testid="regen-totp-input"
                     />
                     {regenerateBackupCodes.error && (
-                      <p className="text-sm text-destructive">{regenerateBackupCodes.error.message}</p>
+                      <p className="text-sm text-destructive">
+                        {regenerateBackupCodes.error.message}
+                      </p>
                     )}
                   </div>
                   <AlertDialogFooter>
-                    <AlertDialogCancel onClick={() => { setRegenTotpCode(''); regenBtnRef.current?.focus(); }}>
+                    <AlertDialogCancel
+                      onClick={() => {
+                        setRegenTotpCode('');
+                        regenBtnRef.current?.focus();
+                      }}
+                    >
                       Cancel
                     </AlertDialogCancel>
                     <AlertDialogAction
@@ -278,7 +312,9 @@ export default function MfaContent() {
         <Card className="lg:col-span-6 p-6 md:p-8">
           <div className="flex items-center gap-2 mb-4">
             <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-              <span className="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-[18px]">shield</span>
+              <span className="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-[18px]">
+                shield
+              </span>
             </div>
             <h3 className="text-lg font-semibold text-foreground">
               {isEnabled ? 'Add Another Method' : 'Set Up Two-Factor Authentication'}
@@ -304,7 +340,9 @@ export default function MfaContent() {
           <Card className="lg:col-span-6 p-6 md:p-8 border-destructive/30">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-8 h-8 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-                <span className="material-symbols-outlined text-red-600 dark:text-red-400 text-[18px]">warning</span>
+                <span className="material-symbols-outlined text-red-600 dark:text-red-400 text-[18px]">
+                  warning
+                </span>
               </div>
               <h3 className="text-lg font-semibold text-foreground">Danger Zone</h3>
             </div>
@@ -323,7 +361,9 @@ export default function MfaContent() {
                   size="sm"
                   data-testid="disable-mfa-btn"
                 >
-                  <span className="material-symbols-outlined text-[16px] mr-1.5" aria-hidden="true">shield_lock</span>
+                  <span className="material-symbols-outlined text-[16px] mr-1.5" aria-hidden="true">
+                    shield_lock
+                  </span>
                   Disable two-factor authentication
                 </Button>
               </AlertDialogTrigger>
@@ -331,7 +371,8 @@ export default function MfaContent() {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Disable Two-Factor Authentication</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This will remove all MFA methods and invalidate your backup codes. Verify your identity to continue.
+                    This will remove all MFA methods and invalidate your backup codes. Verify your
+                    identity to continue.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <div className="py-4 space-y-4">
@@ -360,7 +401,12 @@ export default function MfaContent() {
                         inputMode="numeric"
                         maxLength={6}
                         value={disableInput.totpCode}
-                        onChange={(e) => setDisableInput({ ...disableInput, totpCode: e.target.value.replaceAll(/\D/g, '') })}
+                        onChange={(e) =>
+                          setDisableInput({
+                            ...disableInput,
+                            totpCode: e.target.value.replaceAll(/\D/g, ''),
+                          })
+                        }
                         placeholder="000000"
                         data-testid="disable-totp-input"
                       />
@@ -372,7 +418,9 @@ export default function MfaContent() {
                         id="disable-password"
                         type="password"
                         value={disableInput.password}
-                        onChange={(e) => setDisableInput({ ...disableInput, password: e.target.value })}
+                        onChange={(e) =>
+                          setDisableInput({ ...disableInput, password: e.target.value })
+                        }
                         placeholder="Enter your password"
                         data-testid="disable-password-input"
                       />
@@ -383,7 +431,12 @@ export default function MfaContent() {
                   )}
                 </div>
                 <AlertDialogFooter>
-                  <AlertDialogCancel onClick={() => { setDisableInput({ totpCode: '', password: '' }); disableBtnRef.current?.focus(); }}>
+                  <AlertDialogCancel
+                    onClick={() => {
+                      setDisableInput({ totpCode: '', password: '' });
+                      disableBtnRef.current?.focus();
+                    }}
+                  >
                     Cancel
                   </AlertDialogCancel>
                   <AlertDialogAction
@@ -406,13 +459,23 @@ export default function MfaContent() {
         {/* ─── Footer ────────────────────────────────────────────────── */}
         <div className="lg:col-span-12 flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 border-t border-slate-200 dark:border-slate-700 mt-1">
           <div className="flex items-center gap-4">
-            <Link href="/settings/account" className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 transition-colors">
-              <span className="material-symbols-outlined text-[16px]" aria-hidden="true">person</span>
+            <Link
+              href="/settings/account"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
+            >
+              <span className="material-symbols-outlined text-[16px]" aria-hidden="true">
+                person
+              </span>
               <span className="underline-offset-4 hover:underline">Profile Settings</span>
             </Link>
             <span className="text-slate-300 dark:text-slate-600">|</span>
-            <Link href="/notifications/settings" className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 transition-colors">
-              <span className="material-symbols-outlined text-[16px]" aria-hidden="true">notifications</span>
+            <Link
+              href="/notifications/settings"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
+            >
+              <span className="material-symbols-outlined text-[16px]" aria-hidden="true">
+                notifications
+              </span>
               <span className="underline-offset-4 hover:underline">Notification Preferences</span>
             </Link>
           </div>

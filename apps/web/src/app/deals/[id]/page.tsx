@@ -152,7 +152,10 @@ function StageProgress({
         {/* Stage dividers */}
         <div className="absolute top-0 left-0 w-full h-full flex justify-between px-[10%]">
           {ACTIVE_STAGES.slice(0, -1).map((stage) => (
-            <div key={`divider-${stage}`} className="w-0.5 h-full bg-white dark:bg-slate-900 opacity-50" />
+            <div
+              key={`divider-${stage}`}
+              className="w-0.5 h-full bg-white dark:bg-slate-900 opacity-50"
+            />
           ))}
         </div>
       </div>

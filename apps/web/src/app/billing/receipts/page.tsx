@@ -98,10 +98,7 @@ export default function ReceiptsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        breadcrumbs={[
-          { label: 'Billing', href: '/billing' },
-          { label: 'Receipts' },
-        ]}
+        breadcrumbs={[{ label: 'Billing', href: '/billing' }, { label: 'Receipts' }]}
         title="Receipts"
         description="Your payment receipts and transaction history."
       />

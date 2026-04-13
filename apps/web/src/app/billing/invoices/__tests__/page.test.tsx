@@ -25,7 +25,10 @@ vi.mock('@/lib/trpc', () => ({
 
 vi.mock('@/components/shared/page-header', () => ({
   PageHeader: ({ title, description }: { title: string; description?: string }) => (
-    <div data-testid="page-header"><h1>{title}</h1>{description && <p>{description}</p>}</div>
+    <div data-testid="page-header">
+      <h1>{title}</h1>
+      {description && <p>{description}</p>}
+    </div>
   ),
 }));
 
@@ -36,8 +39,14 @@ vi.mock('@/components/billing/invoice-list', () => ({
         <div>Loading...</div>
       ) : (
         <>
-          <p>Showing {invoices?.length ?? 0} of {total} invoices</p>
-          {invoices?.map((inv: any) => <div key={inv.id} data-testid={`invoice-${inv.id}`}>{inv.id}</div>)}
+          <p>
+            Showing {invoices?.length ?? 0} of {total} invoices
+          </p>
+          {invoices?.map((inv: any) => (
+            <div key={inv.id} data-testid={`invoice-${inv.id}`}>
+              {inv.id}
+            </div>
+          ))}
           {hasMore && !isLoadingMore && <button onClick={onLoadMore}>Load More</button>}
           {isLoadingMore && <div>Loading more...</div>}
         </>

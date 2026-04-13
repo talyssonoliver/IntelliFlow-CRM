@@ -240,7 +240,9 @@ export function ComplianceDetailPanel({
               <>
                 <SheetHeader className="sr-only">
                   <SheetTitle>Loading compliance details</SheetTitle>
-                  <SheetDescription>Please wait while the compliance breakdown loads.</SheetDescription>
+                  <SheetDescription>
+                    Please wait while the compliance breakdown loads.
+                  </SheetDescription>
                 </SheetHeader>
                 <div className="flex items-center justify-center h-full">
                   <span className="material-symbols-outlined text-4xl text-muted-foreground animate-spin">

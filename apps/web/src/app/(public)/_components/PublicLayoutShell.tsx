@@ -44,8 +44,7 @@ export function PublicLayoutShell({
   // trust the client once it has resolved (i.e. no longer loading). This
   // corrects the post-login race where the cookie was written just before the
   // redirect and the server's `cookies()` read missed it.
-  const effectiveAuthenticated =
-    serverIsAuthenticated || (!authLoading && clientIsAuthenticated);
+  const effectiveAuthenticated = serverIsAuthenticated || (!authLoading && clientIsAuthenticated);
 
   const showPublicHeader = !isAuthPage && !effectiveAuthenticated;
 

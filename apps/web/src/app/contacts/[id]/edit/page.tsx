@@ -2,7 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 
-const CONTACT_EDIT_SKELETON_KEYS = ['ce-skel-0', 'ce-skel-1', 'ce-skel-2', 'ce-skel-3', 'ce-skel-4', 'ce-skel-5'] as const;
+const CONTACT_EDIT_SKELETON_KEYS = [
+  'ce-skel-0',
+  'ce-skel-1',
+  'ce-skel-2',
+  'ce-skel-3',
+  'ce-skel-4',
+  'ce-skel-5',
+] as const;
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import {

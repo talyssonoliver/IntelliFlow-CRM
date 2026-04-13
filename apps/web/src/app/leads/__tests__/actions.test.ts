@@ -11,13 +11,7 @@ const { revalidateTagMock } = vi.hoisted(() => ({ revalidateTagMock: vi.fn() }))
 vi.mock('next/cache', () => ({ revalidateTag: revalidateTagMock }));
 
 import { revalidateLeadCaches, revalidateLeadConversionCaches } from '../actions';
-import {
-  LEADS_LIST,
-  LEADS_STATS,
-  HOME_AI_INSIGHTS,
-  DASHBOARD,
-  userTag,
-} from '@/lib/cache-tags';
+import { LEADS_LIST, LEADS_STATS, HOME_AI_INSIGHTS, DASHBOARD, userTag } from '@/lib/cache-tags';
 
 describe('leads/actions', () => {
   beforeEach(() => {

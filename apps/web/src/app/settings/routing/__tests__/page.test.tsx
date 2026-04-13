@@ -53,7 +53,10 @@ vi.mock('@intelliflow/ui', () => ({
 
 vi.mock('@/components/shared/page-header', () => ({
   PageHeader: ({ title, description }: any) => (
-    <div data-testid="page-header"><h1>{title}</h1>{description && <p>{description}</p>}</div>
+    <div data-testid="page-header">
+      <h1>{title}</h1>
+      {description && <p>{description}</p>}
+    </div>
   ),
 }));
 

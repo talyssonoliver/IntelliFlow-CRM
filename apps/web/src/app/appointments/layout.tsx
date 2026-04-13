@@ -5,8 +5,6 @@ export const metadata: Metadata = {
   title: 'Appointments',
 };
 
-export default function AppointmentsLayout({
-  children,
-}: Readonly<{ children: React.ReactNode }>) {
+export default function AppointmentsLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return <AppointmentsShell>{children}</AppointmentsShell>;
 }

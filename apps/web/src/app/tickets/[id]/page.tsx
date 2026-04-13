@@ -29,7 +29,14 @@ import { invalidateTicketsCache } from '@/app/tickets/actions';
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const CUID_RE = /^c[a-z0-9]{8,}$/;
 
-const LEFT_META_SKELETON_KEYS = ['meta-0', 'meta-1', 'meta-2', 'meta-3', 'meta-4', 'meta-5'] as const;
+const LEFT_META_SKELETON_KEYS = [
+  'meta-0',
+  'meta-1',
+  'meta-2',
+  'meta-3',
+  'meta-4',
+  'meta-5',
+] as const;
 const TAB_SKELETON_KEYS = ['tab-0', 'tab-1', 'tab-2', 'tab-3', 'tab-4'] as const;
 
 function isValidEntityId(id: string): boolean {

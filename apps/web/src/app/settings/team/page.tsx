@@ -6,7 +6,12 @@ import { AppAvatar } from '@/components/shared/app-avatar';
 
 const teamMembers = [
   { name: 'Alex Johnson', email: 'alex@intelliflow.ai', role: 'Admin', status: 'Active' },
-  { name: 'Jane Anderson', email: 'jane@intelliflow.ai', role: 'Compliance Officer', status: 'Active' },
+  {
+    name: 'Jane Anderson',
+    email: 'jane@intelliflow.ai',
+    role: 'Compliance Officer',
+    status: 'Active',
+  },
   { name: 'Mike Chen', email: 'mike@intelliflow.ai', role: 'Developer', status: 'Active' },
   { name: 'Sarah Wilson', email: 'sarah@intelliflow.ai', role: 'Sales', status: 'Active' },
 ];
@@ -39,10 +44,14 @@ export default function TeamPage() {
           <div className="p-6 pb-0">
             <div className="flex items-center gap-2 mb-6">
               <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                <span className="material-symbols-outlined text-blue-600 dark:text-blue-400 text-[18px]">group</span>
+                <span className="material-symbols-outlined text-blue-600 dark:text-blue-400 text-[18px]">
+                  group
+                </span>
               </div>
               <h3 className="text-lg font-semibold text-foreground">Members</h3>
-              <Badge variant="secondary" className="ml-1">{teamMembers.length}</Badge>
+              <Badge variant="secondary" className="ml-1">
+                {teamMembers.length}
+              </Badge>
             </div>
           </div>
 
@@ -50,23 +59,38 @@ export default function TeamPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50/80 dark:bg-slate-800/30">
-                  <th scope="col" className="text-left px-6 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  <th
+                    scope="col"
+                    className="text-left px-6 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
+                  >
                     Member
                   </th>
-                  <th scope="col" className="text-left px-6 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  <th
+                    scope="col"
+                    className="text-left px-6 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
+                  >
                     Role
                   </th>
-                  <th scope="col" className="text-left px-6 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  <th
+                    scope="col"
+                    className="text-left px-6 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
+                  >
                     Status
                   </th>
-                  <th scope="col" className="text-right px-6 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  <th
+                    scope="col"
+                    className="text-right px-6 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
+                  >
                     Actions
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
                 {teamMembers.map((member) => (
-                  <tr key={member.email} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                  <tr
+                    key={member.email}
+                    className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                  >
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <AppAvatar name={member.name} className="w-10 h-10 text-sm" />
@@ -78,12 +102,17 @@ export default function TeamPage() {
                     </td>
                     <td className="px-6 py-4 text-sm text-foreground">{member.role}</td>
                     <td className="px-6 py-4">
-                      <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800">
+                      <Badge
+                        variant="secondary"
+                        className="bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800"
+                      >
                         {member.status}
                       </Badge>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <Button variant="ghost" size="sm">Edit</Button>
+                      <Button variant="ghost" size="sm">
+                        Edit
+                      </Button>
                     </td>
                   </tr>
                 ))}
@@ -97,9 +126,13 @@ export default function TeamPage() {
           <Card className="p-6">
             <div className="flex items-center gap-2 mb-5">
               <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                <span className="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-[18px]">analytics</span>
+                <span className="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-[18px]">
+                  analytics
+                </span>
               </div>
-              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">Overview</h3>
+              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">
+                Overview
+              </h3>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -108,11 +141,15 @@ export default function TeamPage() {
                 <p className="text-xs text-muted-foreground">Total Members</p>
               </div>
               <div className="text-center p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
-                <p className="text-2xl font-bold text-foreground">{teamMembers.filter(m => m.status === 'Active').length}</p>
+                <p className="text-2xl font-bold text-foreground">
+                  {teamMembers.filter((m) => m.status === 'Active').length}
+                </p>
                 <p className="text-xs text-muted-foreground">Active</p>
               </div>
               <div className="text-center p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
-                <p className="text-2xl font-bold text-foreground">{new Set(teamMembers.map(m => m.role)).size}</p>
+                <p className="text-2xl font-bold text-foreground">
+                  {new Set(teamMembers.map((m) => m.role)).size}
+                </p>
                 <p className="text-xs text-muted-foreground">Roles</p>
               </div>
               <div className="text-center p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
@@ -125,16 +162,22 @@ export default function TeamPage() {
           <Card className="p-6">
             <div className="flex items-center gap-2 mb-5">
               <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-                <span className="material-symbols-outlined text-amber-600 dark:text-amber-400 text-[18px]">shield</span>
+                <span className="material-symbols-outlined text-amber-600 dark:text-amber-400 text-[18px]">
+                  shield
+                </span>
               </div>
-              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">Roles</h3>
+              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">
+                Roles
+              </h3>
             </div>
 
             <div className="space-y-3">
               {['Admin', 'Compliance Officer', 'Developer', 'Sales'].map((role) => (
                 <div key={role} className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">{role}</span>
-                  <Badge variant="secondary">{teamMembers.filter(m => m.role === role).length}</Badge>
+                  <Badge variant="secondary">
+                    {teamMembers.filter((m) => m.role === role).length}
+                  </Badge>
                 </div>
               ))}
             </div>

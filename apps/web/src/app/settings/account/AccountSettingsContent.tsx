@@ -4,7 +4,20 @@ import { useState, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { trpc } from '@/lib/trpc';
-import { Card, Input, Label, Badge, Button, Switch, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, toast } from '@intelliflow/ui';
+import {
+  Card,
+  Input,
+  Label,
+  Badge,
+  Button,
+  Switch,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  toast,
+} from '@intelliflow/ui';
 import { useTheme } from 'next-themes';
 import { TimezoneSelector } from '@/components/settings/TimezoneSelector';
 import { AppAvatar } from '@/components/shared/app-avatar';
@@ -128,8 +141,17 @@ export default function AccountSettingsContent() {
       });
     }
   }, [
-    firstName, lastName, phone, company, department, location, website,
-    language, timezone, updateProfileMutation, updateTimezoneMutation,
+    firstName,
+    lastName,
+    phone,
+    company,
+    department,
+    location,
+    website,
+    language,
+    timezone,
+    updateProfileMutation,
+    updateTimezoneMutation,
   ]);
 
   const handleCancel = useCallback(() => {
@@ -162,7 +184,9 @@ export default function AccountSettingsContent() {
     return (
       <div className="text-center py-16">
         <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-          <span className="material-symbols-outlined text-red-600 dark:text-red-400 text-2xl">error</span>
+          <span className="material-symbols-outlined text-red-600 dark:text-red-400 text-2xl">
+            error
+          </span>
         </div>
         <p className="text-lg font-semibold text-foreground mb-2">Failed to load profile</p>
         <p className="text-muted-foreground mb-6">{error.message}</p>
@@ -193,7 +217,6 @@ export default function AccountSettingsContent() {
           Row 5: Footer (12)
           ═══════════════════════════════════════════════════════════════════ */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-
         {/* ─── Row 1, Left: Profile Card ─────────────────────────────── */}
         <Card className="lg:col-span-8 overflow-hidden">
           <div className="h-28 bg-gradient-to-r from-blue-500/20 via-primary/15 to-blue-400/10 dark:from-blue-900/40 dark:via-primary/20 dark:to-slate-800" />
@@ -224,29 +247,45 @@ export default function AccountSettingsContent() {
                   <p className="text-muted-foreground text-sm">{role}</p>
                 </div>
               </div>
-              <Button variant="outline" size="sm" className="self-start sm:self-end shrink-0" onClick={() => setPhotoDialogOpen(true)}>
-                <span className="material-symbols-outlined text-[16px] mr-1.5" aria-hidden="true">upload</span>Upload New Photo
+              <Button
+                variant="outline"
+                size="sm"
+                className="self-start sm:self-end shrink-0"
+                onClick={() => setPhotoDialogOpen(true)}
+              >
+                <span className="material-symbols-outlined text-[16px] mr-1.5" aria-hidden="true">
+                  upload
+                </span>
+                Upload New Photo
               </Button>
             </div>
 
             {/* Contact info rows — same pattern as Contact detail page */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
-              {([
-                { icon: 'mail', label: 'Email', value: email },
-                { icon: 'call', label: 'Phone', value: phone || null },
-                { icon: 'apartment', label: 'Company', value: company || null },
-                { icon: 'work', label: 'Department', value: department || null },
-                { icon: 'location_on', label: 'Location', value: location || null },
-                { icon: 'language', label: 'Website', value: website || null },
-              ] as const).map((field) => (
+              {(
+                [
+                  { icon: 'mail', label: 'Email', value: email },
+                  { icon: 'call', label: 'Phone', value: phone || null },
+                  { icon: 'apartment', label: 'Company', value: company || null },
+                  { icon: 'work', label: 'Department', value: department || null },
+                  { icon: 'location_on', label: 'Location', value: location || null },
+                  { icon: 'language', label: 'Website', value: website || null },
+                ] as const
+              ).map((field) => (
                 <div key={field.label} className="flex items-start gap-3">
-                  <span className="material-symbols-outlined text-slate-400 dark:text-slate-500 text-[20px] mt-0.5">{field.icon}</span>
+                  <span className="material-symbols-outlined text-slate-400 dark:text-slate-500 text-[20px] mt-0.5">
+                    {field.icon}
+                  </span>
                   <div className="min-w-0">
-                    <span className="text-xs text-slate-400 uppercase font-semibold tracking-wider">{field.label}</span>
+                    <span className="text-xs text-slate-400 uppercase font-semibold tracking-wider">
+                      {field.label}
+                    </span>
                     {field.value ? (
                       <p className="text-sm text-foreground truncate">{field.value}</p>
                     ) : (
-                      <p className="text-sm text-muted-foreground italic">Add your {field.label.toLowerCase()}</p>
+                      <p className="text-sm text-muted-foreground italic">
+                        Add your {field.label.toLowerCase()}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -260,16 +299,25 @@ export default function AccountSettingsContent() {
           <div>
             <div className="flex items-center gap-2 mb-5">
               <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
-                <span className="material-symbols-outlined text-indigo-600 dark:text-indigo-400 text-[18px]">shield_person</span>
+                <span className="material-symbols-outlined text-indigo-600 dark:text-indigo-400 text-[18px]">
+                  shield_person
+                </span>
               </div>
-              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">Account</h3>
+              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">
+                Account
+              </h3>
             </div>
 
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Role</span>
-                <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 dark:bg-primary/20">
-                  <span className="material-symbols-outlined text-[12px] mr-1" aria-hidden="true">shield_person</span>
+                <Badge
+                  variant="secondary"
+                  className="bg-primary/10 text-primary border-primary/20 dark:bg-primary/20"
+                >
+                  <span className="material-symbols-outlined text-[12px] mr-1" aria-hidden="true">
+                    shield_person
+                  </span>
                   {role}
                 </Badge>
               </div>
@@ -279,21 +327,33 @@ export default function AccountSettingsContent() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Timezone</span>
-                <span className="text-sm font-medium text-foreground truncate ml-2 max-w-[140px]" title={timezone}>
+                <span
+                  className="text-sm font-medium text-foreground truncate ml-2 max-w-[140px]"
+                  title={timezone}
+                >
                   {timezone.split('/').pop()?.replaceAll('_', ' ')}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Status</span>
-                <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800">
+                <Badge
+                  variant="secondary"
+                  className="bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800"
+                >
                   Active
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Plan</span>
                 <Link href="/billing">
-                  <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 dark:bg-primary/20 hover:bg-primary/20 dark:hover:bg-primary/30 cursor-pointer transition-colors">
-                    <span className="material-symbols-outlined text-[12px] mr-1" aria-hidden="true">workspace_premium</span>Professional
+                  <Badge
+                    variant="secondary"
+                    className="bg-primary/10 text-primary border-primary/20 dark:bg-primary/20 hover:bg-primary/20 dark:hover:bg-primary/30 cursor-pointer transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-[12px] mr-1" aria-hidden="true">
+                      workspace_premium
+                    </span>
+                    Professional
                   </Badge>
                 </Link>
               </div>
@@ -302,7 +362,11 @@ export default function AccountSettingsContent() {
                   <span className="text-sm text-muted-foreground">Signed in with</span>
                   <Badge variant="secondary" className="capitalize">
                     <span className="material-symbols-outlined text-[12px] mr-1" aria-hidden="true">
-                      {provider === 'google' ? 'g_translate' : provider === 'github' ? 'code' : 'login'}
+                      {provider === 'google'
+                        ? 'g_translate'
+                        : provider === 'github'
+                          ? 'code'
+                          : 'login'}
                     </span>
                     {provider}
                   </Badge>
@@ -312,7 +376,10 @@ export default function AccountSettingsContent() {
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Member since</span>
                   <span className="text-sm font-medium text-foreground">
-                    {new Date(memberSince).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}
+                    {new Date(memberSince).toLocaleDateString('en-GB', {
+                      month: 'short',
+                      year: 'numeric',
+                    })}
                   </span>
                 </div>
               )}
@@ -320,23 +387,36 @@ export default function AccountSettingsContent() {
           </div>
 
           <div className="mt-5 pt-4 border-t border-slate-200 dark:border-slate-700 px-6 pb-6">
-            <p className="text-xs text-muted-foreground mb-3">
-              {getRoleMessage(role)}
-            </p>
+            <p className="text-xs text-muted-foreground mb-3">{getRoleMessage(role)}</p>
             <div className="flex items-center justify-between gap-4">
               {role === 'ADMIN' ? (
-                <Link href="/settings/team" className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 transition-colors">
-                  <span className="material-symbols-outlined text-[16px]" aria-hidden="true">group</span>
+                <Link
+                  href="/settings/team"
+                  className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[16px]" aria-hidden="true">
+                    group
+                  </span>
                   <span className="underline-offset-4 hover:underline">Team Settings</span>
                 </Link>
               ) : (
-                <Link href="/settings/security/mfa" className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 transition-colors">
-                  <span className="material-symbols-outlined text-[16px]" aria-hidden="true">lock</span>
+                <Link
+                  href="/settings/security/mfa"
+                  className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[16px]" aria-hidden="true">
+                    lock
+                  </span>
                   <span className="underline-offset-4 hover:underline">Security</span>
                 </Link>
               )}
-              <Link href="/billing" className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 transition-colors">
-                <span className="material-symbols-outlined text-[16px]" aria-hidden="true">credit_card</span>
+              <Link
+                href="/billing"
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
+              >
+                <span className="material-symbols-outlined text-[16px]" aria-hidden="true">
+                  credit_card
+                </span>
                 <span className="underline-offset-4 hover:underline">Billing</span>
               </Link>
             </div>
@@ -347,41 +427,63 @@ export default function AccountSettingsContent() {
         <Card className="lg:col-span-8 p-6 md:p-8">
           <div className="flex items-center gap-2 mb-6">
             <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-              <span className="material-symbols-outlined text-blue-600 dark:text-blue-400 text-[18px]">badge</span>
+              <span className="material-symbols-outlined text-blue-600 dark:text-blue-400 text-[18px]">
+                badge
+              </span>
             </div>
             <h3 className="text-lg font-semibold text-foreground">Basic Information</h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
             <div className="space-y-2">
-              <Label htmlFor="account-first-name" className="text-slate-700 dark:text-slate-300">First Name</Label>
+              <Label htmlFor="account-first-name" className="text-slate-700 dark:text-slate-300">
+                First Name
+              </Label>
               <Input
                 id="account-first-name"
                 type="text"
                 value={firstName}
-                onChange={(e) => { setFirstName(e.target.value); markDirty(); }}
+                onChange={(e) => {
+                  setFirstName(e.target.value);
+                  markDirty();
+                }}
                 disabled={isSaving}
                 className="h-11"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="account-last-name" className="text-slate-700 dark:text-slate-300">Last Name</Label>
+              <Label htmlFor="account-last-name" className="text-slate-700 dark:text-slate-300">
+                Last Name
+              </Label>
               <Input
                 id="account-last-name"
                 type="text"
                 value={lastName}
-                onChange={(e) => { setLastName(e.target.value); markDirty(); }}
+                onChange={(e) => {
+                  setLastName(e.target.value);
+                  markDirty();
+                }}
                 disabled={isSaving}
                 className="h-11"
               />
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="account-email" className="text-slate-700 dark:text-slate-300">Email Address</Label>
+                <Label htmlFor="account-email" className="text-slate-700 dark:text-slate-300">
+                  Email Address
+                </Label>
                 <div className="flex items-center gap-1.5">
                   {emailVerified && (
-                    <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800 text-[10px] h-5">
-                      <span className="material-symbols-outlined text-[12px] mr-0.5" aria-hidden="true">verified</span>
+                    <Badge
+                      variant="secondary"
+                      className="bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800 text-[10px] h-5"
+                    >
+                      <span
+                        className="material-symbols-outlined text-[12px] mr-0.5"
+                        aria-hidden="true"
+                      >
+                        verified
+                      </span>
                       Verified
                     </Badge>
                   )}
@@ -408,7 +510,9 @@ export default function AccountSettingsContent() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="account-phone" className="text-slate-700 dark:text-slate-300">Phone Number</Label>
+              <Label htmlFor="account-phone" className="text-slate-700 dark:text-slate-300">
+                Phone Number
+              </Label>
               <div className="relative">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                   <span className="material-symbols-outlined text-slate-400 text-[18px]">call</span>
@@ -418,31 +522,43 @@ export default function AccountSettingsContent() {
                   type="tel"
                   placeholder="Add your phone number"
                   value={phone}
-                  onChange={(e) => { setPhone(e.target.value); markDirty(); }}
+                  onChange={(e) => {
+                    setPhone(e.target.value);
+                    markDirty();
+                  }}
                   disabled={isSaving}
                   className="h-11 pl-10"
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="account-company" className="text-slate-700 dark:text-slate-300">Company</Label>
+              <Label htmlFor="account-company" className="text-slate-700 dark:text-slate-300">
+                Company
+              </Label>
               <div className="relative">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                  <span className="material-symbols-outlined text-slate-400 text-[18px]">apartment</span>
+                  <span className="material-symbols-outlined text-slate-400 text-[18px]">
+                    apartment
+                  </span>
                 </div>
                 <Input
                   id="account-company"
                   type="text"
                   placeholder="Add your company"
                   value={company}
-                  onChange={(e) => { setCompany(e.target.value); markDirty(); }}
+                  onChange={(e) => {
+                    setCompany(e.target.value);
+                    markDirty();
+                  }}
                   disabled={isSaving}
                   className="h-11 pl-10"
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="account-department" className="text-slate-700 dark:text-slate-300">Department</Label>
+              <Label htmlFor="account-department" className="text-slate-700 dark:text-slate-300">
+                Department
+              </Label>
               <div className="relative">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                   <span className="material-symbols-outlined text-slate-400 text-[18px]">work</span>
@@ -452,41 +568,58 @@ export default function AccountSettingsContent() {
                   type="text"
                   placeholder="Add your department"
                   value={department}
-                  onChange={(e) => { setDepartment(e.target.value); markDirty(); }}
+                  onChange={(e) => {
+                    setDepartment(e.target.value);
+                    markDirty();
+                  }}
                   disabled={isSaving}
                   className="h-11 pl-10"
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="account-location" className="text-slate-700 dark:text-slate-300">Location</Label>
+              <Label htmlFor="account-location" className="text-slate-700 dark:text-slate-300">
+                Location
+              </Label>
               <div className="relative">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                  <span className="material-symbols-outlined text-slate-400 text-[18px]">location_on</span>
+                  <span className="material-symbols-outlined text-slate-400 text-[18px]">
+                    location_on
+                  </span>
                 </div>
                 <Input
                   id="account-location"
                   type="text"
                   placeholder="Add your location"
                   value={location}
-                  onChange={(e) => { setLocation(e.target.value); markDirty(); }}
+                  onChange={(e) => {
+                    setLocation(e.target.value);
+                    markDirty();
+                  }}
                   disabled={isSaving}
                   className="h-11 pl-10"
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="account-website" className="text-slate-700 dark:text-slate-300">Website</Label>
+              <Label htmlFor="account-website" className="text-slate-700 dark:text-slate-300">
+                Website
+              </Label>
               <div className="relative">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                  <span className="material-symbols-outlined text-slate-400 text-[18px]">language</span>
+                  <span className="material-symbols-outlined text-slate-400 text-[18px]">
+                    language
+                  </span>
                 </div>
                 <Input
                   id="account-website"
                   type="url"
                   placeholder="Add your website"
                   value={website}
-                  onChange={(e) => { setWebsite(e.target.value); markDirty(); }}
+                  onChange={(e) => {
+                    setWebsite(e.target.value);
+                    markDirty();
+                  }}
                   disabled={isSaving}
                   className="h-11 pl-10"
                 />
@@ -499,7 +632,9 @@ export default function AccountSettingsContent() {
         <Card className="lg:col-span-4 p-6">
           <div className="flex items-center gap-2 mb-6">
             <div className="w-8 h-8 rounded-lg bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center">
-              <span className="material-symbols-outlined text-violet-600 dark:text-violet-400 text-[18px]">palette</span>
+              <span className="material-symbols-outlined text-violet-600 dark:text-violet-400 text-[18px]">
+                palette
+              </span>
             </div>
             <h3 className="text-lg font-semibold text-foreground">Appearance</h3>
           </div>
@@ -520,9 +655,7 @@ export default function AccountSettingsContent() {
                         : 'border-slate-200 dark:border-slate-700 text-muted-foreground hover:border-slate-300 dark:hover:border-slate-600'
                     }`}
                   >
-                    <span className="material-symbols-outlined text-[20px]">
-                      {getThemeIcon(t)}
-                    </span>
+                    <span className="material-symbols-outlined text-[20px]">{getThemeIcon(t)}</span>
                     {t.charAt(0).toUpperCase() + t.slice(1)}
                   </button>
                 ))}
@@ -532,7 +665,13 @@ export default function AccountSettingsContent() {
             {/* Language */}
             <div className="space-y-2">
               <Label className="text-slate-700 dark:text-slate-300">Language</Label>
-              <Select value={language} onValueChange={(v) => { setLanguage(v); markDirty(); }}>
+              <Select
+                value={language}
+                onValueChange={(v) => {
+                  setLanguage(v);
+                  markDirty();
+                }}
+              >
                 <SelectTrigger className="h-10">
                   <SelectValue />
                 </SelectTrigger>
@@ -551,10 +690,12 @@ export default function AccountSettingsContent() {
             <div className="space-y-3">
               <Label className="text-slate-700 dark:text-slate-300">Density</Label>
               <div className="grid grid-cols-2 gap-2">
-                {([
-                  { value: 'comfortable', icon: 'view_agenda', label: 'Comfortable' },
-                  { value: 'compact', icon: 'view_headline', label: 'Compact' },
-                ] as const).map((d) => (
+                {(
+                  [
+                    { value: 'comfortable', icon: 'view_agenda', label: 'Comfortable' },
+                    { value: 'compact', icon: 'view_headline', label: 'Compact' },
+                  ] as const
+                ).map((d) => (
                   <button
                     key={d.value}
                     type="button"
@@ -591,7 +732,9 @@ export default function AccountSettingsContent() {
         <Card className="lg:col-span-6 p-6 md:p-8">
           <div className="flex items-center gap-2 mb-6">
             <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-              <span className="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-[18px]">public</span>
+              <span className="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-[18px]">
+                public
+              </span>
             </div>
             <h3 className="text-lg font-semibold text-foreground">Regional Preferences</h3>
           </div>
@@ -604,14 +747,23 @@ export default function AccountSettingsContent() {
               </p>
               <TimezoneSelector
                 value={timezone}
-                onChange={(tz) => { setTimezone(tz); markDirty(); }}
+                onChange={(tz) => {
+                  setTimezone(tz);
+                  markDirty();
+                }}
                 disabled={isSaving}
               />
             </div>
 
             <div className="space-y-2">
               <Label className="text-slate-700 dark:text-slate-300">Date Format</Label>
-              <Select value={dateFormat} onValueChange={(v) => { setDateFormat(v); markDirty(); }}>
+              <Select
+                value={dateFormat}
+                onValueChange={(v) => {
+                  setDateFormat(v);
+                  markDirty();
+                }}
+              >
                 <SelectTrigger className="h-10">
                   <SelectValue />
                 </SelectTrigger>
@@ -631,20 +783,29 @@ export default function AccountSettingsContent() {
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-rose-100 dark:bg-rose-900/30 flex items-center justify-center">
-                <span className="material-symbols-outlined text-rose-600 dark:text-rose-400 text-[18px]">notifications</span>
+                <span className="material-symbols-outlined text-rose-600 dark:text-rose-400 text-[18px]">
+                  notifications
+                </span>
               </div>
               <h3 className="text-lg font-semibold text-foreground">Notifications</h3>
             </div>
-            <Link href="/notifications/settings" className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary/80 transition-colors">
+            <Link
+              href="/notifications/settings"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
+            >
               <span className="underline-offset-4 hover:underline">All settings</span>
-              <span className="material-symbols-outlined text-[14px]" aria-hidden="true">arrow_forward</span>
+              <span className="material-symbols-outlined text-[14px]" aria-hidden="true">
+                arrow_forward
+              </span>
             </Link>
           </div>
 
           <div className="space-y-1">
             <div className="flex items-center justify-between py-3">
               <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-slate-400 dark:text-slate-500 text-[20px]">mail</span>
+                <span className="material-symbols-outlined text-slate-400 dark:text-slate-500 text-[20px]">
+                  mail
+                </span>
                 <div>
                   <p className="text-sm font-medium text-foreground">Email Notifications</p>
                   <p className="text-xs text-muted-foreground">Receive updates via email</p>
@@ -652,13 +813,18 @@ export default function AccountSettingsContent() {
               </div>
               <Switch
                 checked={emailNotifications}
-                onCheckedChange={(v) => { setEmailNotifications(v); markDirty(); }}
+                onCheckedChange={(v) => {
+                  setEmailNotifications(v);
+                  markDirty();
+                }}
               />
             </div>
             <div className="border-t border-slate-200 dark:border-slate-700" />
             <div className="flex items-center justify-between py-3">
               <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-slate-400 dark:text-slate-500 text-[20px]">computer</span>
+                <span className="material-symbols-outlined text-slate-400 dark:text-slate-500 text-[20px]">
+                  computer
+                </span>
                 <div>
                   <p className="text-sm font-medium text-foreground">Desktop Notifications</p>
                   <p className="text-xs text-muted-foreground">Show browser push notifications</p>
@@ -666,13 +832,18 @@ export default function AccountSettingsContent() {
               </div>
               <Switch
                 checked={desktopNotifications}
-                onCheckedChange={(v) => { setDesktopNotifications(v); markDirty(); }}
+                onCheckedChange={(v) => {
+                  setDesktopNotifications(v);
+                  markDirty();
+                }}
               />
             </div>
             <div className="border-t border-slate-200 dark:border-slate-700" />
             <div className="flex items-center justify-between py-3">
               <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-slate-400 dark:text-slate-500 text-[20px]">volume_up</span>
+                <span className="material-symbols-outlined text-slate-400 dark:text-slate-500 text-[20px]">
+                  volume_up
+                </span>
                 <div>
                   <p className="text-sm font-medium text-foreground">Sound Alerts</p>
                   <p className="text-xs text-muted-foreground">Play sound on new notifications</p>
@@ -687,7 +858,9 @@ export default function AccountSettingsContent() {
         <Card className="lg:col-span-12 p-6 md:p-8">
           <div className="flex items-center gap-2 mb-6">
             <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-              <span className="material-symbols-outlined text-amber-600 dark:text-amber-400 text-[18px]">lock</span>
+              <span className="material-symbols-outlined text-amber-600 dark:text-amber-400 text-[18px]">
+                lock
+              </span>
             </div>
             <h3 className="text-lg font-semibold text-foreground">Security</h3>
           </div>
@@ -695,7 +868,9 @@ export default function AccountSettingsContent() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="flex items-center gap-3 p-4 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
               <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-slate-500 dark:text-slate-400 text-[20px]">key</span>
+                <span className="material-symbols-outlined text-slate-500 dark:text-slate-400 text-[20px]">
+                  key
+                </span>
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-foreground text-sm">Password</p>
@@ -707,7 +882,9 @@ export default function AccountSettingsContent() {
             </div>
             <div className="flex items-center gap-3 p-4 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
               <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-slate-500 dark:text-slate-400 text-[20px]">smartphone</span>
+                <span className="material-symbols-outlined text-slate-500 dark:text-slate-400 text-[20px]">
+                  smartphone
+                </span>
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-foreground text-sm">Two-Factor Auth</p>
@@ -719,7 +896,9 @@ export default function AccountSettingsContent() {
             </div>
             <div className="flex items-center gap-3 p-4 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
               <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-slate-500 dark:text-slate-400 text-[20px]">devices</span>
+                <span className="material-symbols-outlined text-slate-500 dark:text-slate-400 text-[20px]">
+                  devices
+                </span>
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-foreground text-sm">Active Sessions</p>
@@ -735,18 +914,33 @@ export default function AccountSettingsContent() {
         {/* ─── Row 5: Footer Actions (full width) ───────────────────── */}
         <div className="lg:col-span-12 flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 border-t border-slate-200 dark:border-slate-700 mt-1">
           <div className="flex items-center gap-4">
-            <Link href="/settings/security/mfa" className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 transition-colors">
-              <span className="material-symbols-outlined text-[16px]" aria-hidden="true">lock</span>
+            <Link
+              href="/settings/security/mfa"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
+            >
+              <span className="material-symbols-outlined text-[16px]" aria-hidden="true">
+                lock
+              </span>
               <span className="underline-offset-4 hover:underline">Security &amp; Password</span>
             </Link>
             <span className="text-slate-300 dark:text-slate-600">|</span>
-            <Link href="/notifications/settings" className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 transition-colors">
-              <span className="material-symbols-outlined text-[16px]" aria-hidden="true">notifications</span>
+            <Link
+              href="/notifications/settings"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
+            >
+              <span className="material-symbols-outlined text-[16px]" aria-hidden="true">
+                notifications
+              </span>
               <span className="underline-offset-4 hover:underline">Notification Preferences</span>
             </Link>
             <span className="text-slate-300 dark:text-slate-600">|</span>
-            <Link href="/settings/team" className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 transition-colors">
-              <span className="material-symbols-outlined text-[16px]" aria-hidden="true">group</span>
+            <Link
+              href="/settings/team"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
+            >
+              <span className="material-symbols-outlined text-[16px]" aria-hidden="true">
+                group
+              </span>
               <span className="underline-offset-4 hover:underline">Team Settings</span>
             </Link>
           </div>
@@ -767,7 +961,13 @@ export default function AccountSettingsContent() {
             >
               {isSaving ? (
                 <span className="flex items-center gap-2">
-                  <span className="material-symbols-outlined animate-spin text-sm" aria-hidden="true">progress_activity</span>Saving...
+                  <span
+                    className="material-symbols-outlined animate-spin text-sm"
+                    aria-hidden="true"
+                  >
+                    progress_activity
+                  </span>
+                  Saving...
                 </span>
               ) : (
                 'Save Changes'

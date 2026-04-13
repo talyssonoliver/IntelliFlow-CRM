@@ -15,10 +15,7 @@ export default function SubscriptionsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        breadcrumbs={[
-          { label: 'Billing', href: '/billing' },
-          { label: 'Subscriptions' },
-        ]}
+        breadcrumbs={[{ label: 'Billing', href: '/billing' }, { label: 'Subscriptions' }]}
         title="Manage Subscription"
         description="View your current plan and explore upgrade options."
       />

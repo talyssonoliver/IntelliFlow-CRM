@@ -19,10 +19,7 @@ export default function CaseWorkflowsPage() {
   return (
     <>
       <PageHeader
-        breadcrumbs={[
-          { label: 'Cases', href: '/cases' },
-          { label: 'Case Workflows' },
-        ]}
+        breadcrumbs={[{ label: 'Cases', href: '/cases' }, { label: 'Case Workflows' }]}
         title="Case Workflows"
         description="Configure escalation and resolution flows."
         actions={[

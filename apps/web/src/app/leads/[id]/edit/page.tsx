@@ -2,7 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 
-const LEAD_EDIT_SKELETON_KEYS = ['le-skel-0', 'le-skel-1', 'le-skel-2', 'le-skel-3', 'le-skel-4', 'le-skel-5'] as const;
+const LEAD_EDIT_SKELETON_KEYS = [
+  'le-skel-0',
+  'le-skel-1',
+  'le-skel-2',
+  'le-skel-3',
+  'le-skel-4',
+  'le-skel-5',
+] as const;
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import {

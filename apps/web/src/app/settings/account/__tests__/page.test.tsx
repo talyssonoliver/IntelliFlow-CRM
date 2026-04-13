@@ -66,28 +66,74 @@ vi.mock('next-themes', () => ({
 // Mock @intelliflow/ui
 vi.mock('@intelliflow/ui', () => ({
   Card: ({ children, className }: { children: React.ReactNode; className?: string }) => (
-    <div data-testid="card" className={className}>{children}</div>
+    <div data-testid="card" className={className}>
+      {children}
+    </div>
   ),
   Input: (props: React.InputHTMLAttributes<HTMLInputElement>) => <input {...props} />,
-  Label: ({ children, htmlFor, className }: { children: React.ReactNode; htmlFor?: string; className?: string }) => (
-    <label htmlFor={htmlFor} className={className}>{children}</label>
+  Label: ({
+    children,
+    htmlFor,
+    className,
+  }: {
+    children: React.ReactNode;
+    htmlFor?: string;
+    className?: string;
+  }) => (
+    <label htmlFor={htmlFor} className={className}>
+      {children}
+    </label>
   ),
   Badge: ({ children, className }: { children: React.ReactNode; className?: string }) => (
     <span className={className}>{children}</span>
   ),
-  Button: ({ children, onClick, disabled, variant, className, asChild: _asChild }: {
-    children: React.ReactNode; onClick?: () => void; disabled?: boolean; variant?: string; className?: string; asChild?: boolean;
+  Button: ({
+    children,
+    onClick,
+    disabled,
+    variant,
+    className,
+    asChild: _asChild,
+  }: {
+    children: React.ReactNode;
+    onClick?: () => void;
+    disabled?: boolean;
+    variant?: string;
+    className?: string;
+    asChild?: boolean;
   }) => (
-    <button onClick={onClick} disabled={disabled} data-variant={variant} className={className}>{children}</button>
+    <button onClick={onClick} disabled={disabled} data-variant={variant} className={className}>
+      {children}
+    </button>
   ),
-  Switch: ({ checked, onCheckedChange, defaultChecked }: {
-    checked?: boolean; onCheckedChange?: (v: boolean) => void; defaultChecked?: boolean;
+  Switch: ({
+    checked,
+    onCheckedChange,
+    defaultChecked,
+  }: {
+    checked?: boolean;
+    onCheckedChange?: (v: boolean) => void;
+    defaultChecked?: boolean;
   }) => (
-    <button data-testid="switch" role="switch" aria-checked={checked ?? defaultChecked ?? false}
-      onClick={() => onCheckedChange?.(!checked)} />
+    <button
+      data-testid="switch"
+      role="switch"
+      aria-checked={checked ?? defaultChecked ?? false}
+      onClick={() => onCheckedChange?.(!checked)}
+    />
   ),
-  Select: ({ children, value, onValueChange: _onValueChange }: { children: React.ReactNode; value?: string; onValueChange?: (v: string) => void }) => (
-    <div data-testid="select" data-value={value}>{children}</div>
+  Select: ({
+    children,
+    value,
+    onValueChange: _onValueChange,
+  }: {
+    children: React.ReactNode;
+    value?: string;
+    onValueChange?: (v: string) => void;
+  }) => (
+    <div data-testid="select" data-value={value}>
+      {children}
+    </div>
   ),
   SelectTrigger: ({ children, className }: { children: React.ReactNode; className?: string }) => (
     <div className={className}>{children}</div>
@@ -97,8 +143,11 @@ vi.mock('@intelliflow/ui', () => ({
   SelectItem: ({ children, value }: { children: React.ReactNode; value: string }) => (
     <div data-value={value}>{children}</div>
   ),
-  Skeleton: ({ className }: { className?: string }) => <div data-testid="skeleton" className={className} />,
-  Dialog: ({ children, open }: { children: React.ReactNode; open?: boolean }) => open ? <div data-testid="dialog">{children}</div> : null,
+  Skeleton: ({ className }: { className?: string }) => (
+    <div data-testid="skeleton" className={className} />
+  ),
+  Dialog: ({ children, open }: { children: React.ReactNode; open?: boolean }) =>
+    open ? <div data-testid="dialog">{children}</div> : null,
   DialogContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   DialogHeader: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   DialogTitle: ({ children }: { children: React.ReactNode }) => <h2>{children}</h2>,
@@ -109,11 +158,19 @@ vi.mock('@intelliflow/ui', () => ({
 
 // Mock TimezoneSelector
 vi.mock('@/components/settings/TimezoneSelector', () => ({
-  TimezoneSelector: ({ value, onChange, disabled }: {
-    value: string; onChange: (v: string) => void; disabled?: boolean;
+  TimezoneSelector: ({
+    value,
+    onChange,
+    disabled,
+  }: {
+    value: string;
+    onChange: (v: string) => void;
+    disabled?: boolean;
   }) => (
     <div data-testid="timezone-selector" data-value={value} data-disabled={disabled}>
-      <button data-testid="tz-change" onClick={() => onChange('Asia/Tokyo')}>Change TZ</button>
+      <button data-testid="tz-change" onClick={() => onChange('Asia/Tokyo')}>
+        Change TZ
+      </button>
     </div>
   ),
 }));
@@ -127,13 +184,25 @@ vi.mock('@/components/shared/app-avatar', () => ({
 
 // Mock PageHeader
 vi.mock('@/components/shared/page-header', () => ({
-  PageHeader: ({ title, description, breadcrumbs, className }: {
-    title: string; description?: string; breadcrumbs?: Array<{ label: string; href?: string }>; className?: string;
+  PageHeader: ({
+    title,
+    description,
+    breadcrumbs,
+    className,
+  }: {
+    title: string;
+    description?: string;
+    breadcrumbs?: Array<{ label: string; href?: string }>;
+    className?: string;
   }) => (
     <div data-testid="page-header" className={className}>
       <h1>{title}</h1>
       {description && <p>{description}</p>}
-      {breadcrumbs?.map((b) => <span key={b.label} data-href={b.href}>{b.label}</span>)}
+      {breadcrumbs?.map((b) => (
+        <span key={b.label} data-href={b.href}>
+          {b.label}
+        </span>
+      ))}
     </div>
   ),
 }));

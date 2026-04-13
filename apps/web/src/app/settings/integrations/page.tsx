@@ -8,12 +8,48 @@ import { useAuth } from '@/lib/auth/AuthContext';
 import { revalidateModuleAccess, revalidateAllDashboardCaches } from '@/app/settings/actions';
 
 const integrations = [
-  { name: 'Slack', description: 'Team communication and notifications', icon: 'chat', connected: true, category: 'communication' },
-  { name: 'Google Calendar', description: 'Calendar sync and scheduling', icon: 'calendar_today', connected: true, category: 'productivity' },
-  { name: 'Salesforce', description: 'CRM data synchronization', icon: 'cloud', connected: false, category: 'crm' },
-  { name: 'HubSpot', description: 'Marketing automation platform', icon: 'hub', connected: false, category: 'marketing' },
-  { name: 'Mailchimp', description: 'Email campaigns and newsletters', icon: 'mail', connected: false, category: 'marketing' },
-  { name: 'Zapier', description: 'Workflow automation and triggers', icon: 'bolt', connected: true, category: 'automation' },
+  {
+    name: 'Slack',
+    description: 'Team communication and notifications',
+    icon: 'chat',
+    connected: true,
+    category: 'communication',
+  },
+  {
+    name: 'Google Calendar',
+    description: 'Calendar sync and scheduling',
+    icon: 'calendar_today',
+    connected: true,
+    category: 'productivity',
+  },
+  {
+    name: 'Salesforce',
+    description: 'CRM data synchronization',
+    icon: 'cloud',
+    connected: false,
+    category: 'crm',
+  },
+  {
+    name: 'HubSpot',
+    description: 'Marketing automation platform',
+    icon: 'hub',
+    connected: false,
+    category: 'marketing',
+  },
+  {
+    name: 'Mailchimp',
+    description: 'Email campaigns and newsletters',
+    icon: 'mail',
+    connected: false,
+    category: 'marketing',
+  },
+  {
+    name: 'Zapier',
+    description: 'Workflow automation and triggers',
+    icon: 'bolt',
+    connected: true,
+    category: 'automation',
+  },
 ];
 
 export default function IntegrationsPage() {
@@ -66,7 +102,9 @@ export default function IntegrationsPage() {
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                <span className="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-[18px]">check_circle</span>
+                <span className="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-[18px]">
+                  check_circle
+                </span>
               </div>
               <h3 className="text-lg font-semibold text-foreground">Connected</h3>
               <Badge variant="secondary">{connected.length}</Badge>
@@ -88,14 +126,21 @@ export default function IntegrationsPage() {
                   <div>
                     <div className="flex items-center gap-2">
                       <h4 className="font-medium text-foreground">{integration.name}</h4>
-                      <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-[10px]">
+                      <Badge
+                        variant="secondary"
+                        className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-[10px]"
+                      >
                         Connected
                       </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground">{integration.description}</p>
                   </div>
                 </div>
-                <Button variant="outline" size="sm" onClick={() => handleDisconnect(integration.name)}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleDisconnect(integration.name)}
+                >
                   Disconnect
                 </Button>
               </div>
@@ -108,9 +153,13 @@ export default function IntegrationsPage() {
           <Card className="p-6">
             <div className="flex items-center gap-2 mb-5">
               <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                <span className="material-symbols-outlined text-blue-600 dark:text-blue-400 text-[18px]">extension</span>
+                <span className="material-symbols-outlined text-blue-600 dark:text-blue-400 text-[18px]">
+                  extension
+                </span>
               </div>
-              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">Overview</h3>
+              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">
+                Overview
+              </h3>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -119,7 +168,9 @@ export default function IntegrationsPage() {
                 <p className="text-xs text-muted-foreground">Available</p>
               </div>
               <div className="text-center p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
-                <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{connected.length}</p>
+                <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                  {connected.length}
+                </p>
                 <p className="text-xs text-muted-foreground">Connected</p>
               </div>
             </div>
@@ -129,7 +180,9 @@ export default function IntegrationsPage() {
                 href="/developers/apps"
                 className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
               >
-                <span className="material-symbols-outlined text-[16px]" aria-hidden="true">code</span>
+                <span className="material-symbols-outlined text-[16px]" aria-hidden="true">
+                  code
+                </span>
                 <span className="underline-offset-4 hover:underline">Developer Portal</span>
               </Link>
             </div>
@@ -138,22 +191,48 @@ export default function IntegrationsPage() {
           <Card className="p-6">
             <div className="flex items-center gap-2 mb-5">
               <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-                <span className="material-symbols-outlined text-amber-600 dark:text-amber-400 text-[18px]">category</span>
+                <span className="material-symbols-outlined text-amber-600 dark:text-amber-400 text-[18px]">
+                  category
+                </span>
               </div>
-              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">Categories</h3>
+              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">
+                Categories
+              </h3>
             </div>
 
             <div className="space-y-3">
               {[
-                { label: 'Communication', icon: 'chat', count: integrations.filter(i => i.category === 'communication').length },
-                { label: 'Productivity', icon: 'schedule', count: integrations.filter(i => i.category === 'productivity').length },
-                { label: 'CRM', icon: 'contacts', count: integrations.filter(i => i.category === 'crm').length },
-                { label: 'Marketing', icon: 'campaign', count: integrations.filter(i => i.category === 'marketing').length },
-                { label: 'Automation', icon: 'bolt', count: integrations.filter(i => i.category === 'automation').length },
+                {
+                  label: 'Communication',
+                  icon: 'chat',
+                  count: integrations.filter((i) => i.category === 'communication').length,
+                },
+                {
+                  label: 'Productivity',
+                  icon: 'schedule',
+                  count: integrations.filter((i) => i.category === 'productivity').length,
+                },
+                {
+                  label: 'CRM',
+                  icon: 'contacts',
+                  count: integrations.filter((i) => i.category === 'crm').length,
+                },
+                {
+                  label: 'Marketing',
+                  icon: 'campaign',
+                  count: integrations.filter((i) => i.category === 'marketing').length,
+                },
+                {
+                  label: 'Automation',
+                  icon: 'bolt',
+                  count: integrations.filter((i) => i.category === 'automation').length,
+                },
               ].map((cat) => (
                 <div key={cat.label} className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="material-symbols-outlined text-slate-400 text-[16px]">{cat.icon}</span>
+                    <span className="material-symbols-outlined text-slate-400 text-[16px]">
+                      {cat.icon}
+                    </span>
                     <span className="text-sm text-muted-foreground">{cat.label}</span>
                   </div>
                   <Badge variant="secondary">{cat.count}</Badge>
@@ -167,7 +246,9 @@ export default function IntegrationsPage() {
         <Card className="lg:col-span-12 p-6 md:p-8">
           <div className="flex items-center gap-2 mb-6">
             <div className="w-8 h-8 rounded-lg bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center">
-              <span className="material-symbols-outlined text-violet-600 dark:text-violet-400 text-[18px]">add_circle</span>
+              <span className="material-symbols-outlined text-violet-600 dark:text-violet-400 text-[18px]">
+                add_circle
+              </span>
             </div>
             <h3 className="text-lg font-semibold text-foreground">Available Integrations</h3>
           </div>

@@ -32,10 +32,7 @@ import { api } from '@/lib/api';
  * Adds padding so appointments in the grid's overflow days (e.g. days of the
  * previous/next month shown in a month grid) are still fetched.
  */
-function getCalendarRange(
-  date: Date,
-  view: 'month' | 'week' | 'day'
-): { from: Date; to: Date } {
+function getCalendarRange(date: Date, view: 'month' | 'week' | 'day'): { from: Date; to: Date } {
   const from = new Date(date);
   const to = new Date(date);
   if (view === 'month') {

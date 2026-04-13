@@ -35,9 +35,7 @@ import { CaseSettingsSidebarNav } from '@/components/cases/CaseSettingsSidebarNa
 
 const LIST_ROUTE = '/cases/case-workflows';
 
-export default function CaseWorkflowsLayout({
-  children,
-}: Readonly<{ children: React.ReactNode }>) {
+export default function CaseWorkflowsLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const pathname = usePathname();
 
   // Canvas mode = any route deeper than the list root (e.g. /new, /{id}).
@@ -46,9 +44,7 @@ export default function CaseWorkflowsLayout({
   if (isCanvasMode) {
     // Fullscreen canvas — no module sidebar, no padded container. The child
     // page owns its own PageHeader + the ReactFlow canvas filling the rest.
-    return (
-      <div className="flex flex-col min-h-[calc(100vh-4rem)] bg-background">{children}</div>
-    );
+    return <div className="flex flex-col min-h-[calc(100vh-4rem)] bg-background">{children}</div>;
   }
 
   return <WorkflowsListShell pathname={pathname}>{children}</WorkflowsListShell>;

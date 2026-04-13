@@ -99,7 +99,17 @@ vi.mock('@intelliflow/ui', async () => {
       if (asChild && React.isValidElement(children)) {
         return React.cloneElement(children as React.ReactElement<any>, { className, ...props });
       }
-      return <button onClick={onClick} disabled={disabled} data-variant={variant} className={className} {...props}>{children}</button>;
+      return (
+        <button
+          onClick={onClick}
+          disabled={disabled}
+          data-variant={variant}
+          className={className}
+          {...props}
+        >
+          {children}
+        </button>
+      );
     },
     Input: (props: any) => <input {...props} />,
     Label: ({ children, htmlFor }: any) => <label htmlFor={htmlFor}>{children}</label>,

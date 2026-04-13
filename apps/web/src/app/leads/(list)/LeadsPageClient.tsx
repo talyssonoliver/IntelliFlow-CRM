@@ -836,20 +836,22 @@ export default function LeadsPageClient({ initialData: serverData }: LeadsPageCl
       {/* Loading State */}
       {isLoading && (
         <div className="space-y-3">
-          {(['lead-sk-0', 'lead-sk-1', 'lead-sk-2', 'lead-sk-3', 'lead-sk-4'] as const).map((skKey) => (
-            <div
-              key={skKey}
-              className="flex items-center gap-4 p-4 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700"
-            >
-              <Skeleton className="size-10 rounded-full" />
-              <div className="flex-1 space-y-2">
-                <Skeleton className="h-4 w-1/3" />
-                <Skeleton className="h-3 w-1/4" />
+          {(['lead-sk-0', 'lead-sk-1', 'lead-sk-2', 'lead-sk-3', 'lead-sk-4'] as const).map(
+            (skKey) => (
+              <div
+                key={skKey}
+                className="flex items-center gap-4 p-4 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700"
+              >
+                <Skeleton className="size-10 rounded-full" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-1/3" />
+                  <Skeleton className="h-3 w-1/4" />
+                </div>
+                <Skeleton className="h-6 w-16" />
+                <Skeleton className="h-6 w-20" />
               </div>
-              <Skeleton className="h-6 w-16" />
-              <Skeleton className="h-6 w-20" />
-            </div>
-          ))}
+            )
+          )}
         </div>
       )}
 

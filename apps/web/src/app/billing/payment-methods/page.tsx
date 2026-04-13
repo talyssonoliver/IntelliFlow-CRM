@@ -15,10 +15,7 @@ export default function PaymentMethodsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        breadcrumbs={[
-          { label: 'Billing', href: '/billing' },
-          { label: 'Payment Methods' },
-        ]}
+        breadcrumbs={[{ label: 'Billing', href: '/billing' }, { label: 'Payment Methods' }]}
         title="Payment Methods"
         description="Manage your saved payment methods and set your default card."
       />

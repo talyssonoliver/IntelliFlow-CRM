@@ -15,7 +15,16 @@ import { useAccountFilterOptions } from '@/hooks/use-dynamic-filters';
 import { invalidateAccountsCache } from './actions';
 import { revalidateAccountCaches } from '../actions';
 
-const ACCOUNTS_SKELETON_KEYS = ['row-0', 'row-1', 'row-2', 'row-3', 'row-4', 'row-5', 'row-6', 'row-7'] as const;
+const ACCOUNTS_SKELETON_KEYS = [
+  'row-0',
+  'row-1',
+  'row-2',
+  'row-3',
+  'row-4',
+  'row-5',
+  'row-6',
+  'row-7',
+] as const;
 
 /**
  * Accounts List Client Island

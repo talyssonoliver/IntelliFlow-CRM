@@ -684,7 +684,8 @@ async function generateTRPCBenchmarkReport(
         totals?: { passed: number; completed: number; failedKpi: number; errored: number };
       };
       const t = summary.totals;
-      if (t) detail = ` (${t.passed}/${t.completed} passed, ${t.failedKpi} failed KPI, ${t.errored} errored)`;
+      if (t)
+        detail = ` (${t.passed}/${t.completed} passed, ${t.failedKpi} failed KPI, ${t.errored} errored)`;
     } catch {
       // summary missing — don't mask the generator's own success signal
     }

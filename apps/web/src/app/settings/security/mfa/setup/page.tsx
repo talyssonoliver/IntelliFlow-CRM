@@ -84,13 +84,20 @@ function StepProgress({ currentStep }: Readonly<{ currentStep: WizardStep }>) {
               )}
             >
               {isPast ? (
-                <span className="material-symbols-outlined text-[16px]" aria-hidden="true">check</span>
+                <span className="material-symbols-outlined text-[16px]" aria-hidden="true">
+                  check
+                </span>
               ) : (
                 i + 1
               )}
             </div>
             {i < STEPS.length - 1 && (
-              <div className={cn('w-8 lg:w-14 h-0.5 mx-1', isPast ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-700')} />
+              <div
+                className={cn(
+                  'w-8 lg:w-14 h-0.5 mx-1',
+                  isPast ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-700'
+                )}
+              />
             )}
           </div>
         );
@@ -125,8 +132,19 @@ function MethodCard({
       )}
     >
       <div className="flex items-start gap-3">
-        <div className={cn('w-10 h-10 rounded-lg flex items-center justify-center shrink-0', selected ? 'bg-primary' : 'bg-slate-100 dark:bg-slate-800')}>
-          <span className={cn('material-symbols-outlined text-[20px]', selected ? 'text-primary-foreground' : 'text-slate-500 dark:text-slate-400')} aria-hidden="true">
+        <div
+          className={cn(
+            'w-10 h-10 rounded-lg flex items-center justify-center shrink-0',
+            selected ? 'bg-primary' : 'bg-slate-100 dark:bg-slate-800'
+          )}
+        >
+          <span
+            className={cn(
+              'material-symbols-outlined text-[20px]',
+              selected ? 'text-primary-foreground' : 'text-slate-500 dark:text-slate-400'
+            )}
+            aria-hidden="true"
+          >
             {method.icon}
           </span>
         </div>
@@ -134,15 +152,30 @@ function MethodCard({
           <div className="flex items-center gap-2">
             <span className="font-medium text-foreground">{method.name}</span>
             {method.recommended && (
-              <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-[10px]">
+              <Badge
+                variant="secondary"
+                className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-[10px]"
+              >
                 Recommended
               </Badge>
             )}
           </div>
           <p className="text-sm text-muted-foreground mt-1">{method.description}</p>
         </div>
-        <div className={cn('w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5', selected ? 'border-primary bg-primary' : 'border-slate-300 dark:border-slate-600')}>
-          {selected && <span className="material-symbols-outlined text-[12px] text-primary-foreground" aria-hidden="true">check</span>}
+        <div
+          className={cn(
+            'w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5',
+            selected ? 'border-primary bg-primary' : 'border-slate-300 dark:border-slate-600'
+          )}
+        >
+          {selected && (
+            <span
+              className="material-symbols-outlined text-[12px] text-primary-foreground"
+              aria-hidden="true"
+            >
+              check
+            </span>
+          )}
         </div>
       </div>
     </button>
@@ -177,15 +210,22 @@ function VerificationInput({
           maxLength={6}
           value={value}
           onChange={(e) => onChange(e.target.value.replaceAll(/\D/g, ''))}
-          onKeyDown={(e) => { if (e.key === 'Enter' && value.length === 6) onSubmit(); }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && value.length === 6) onSubmit();
+          }}
           placeholder="000000"
-          className={cn('text-center text-2xl font-mono tracking-[0.5em] h-14', error && 'border-destructive')}
+          className={cn(
+            'text-center text-2xl font-mono tracking-[0.5em] h-14',
+            error && 'border-destructive'
+          )}
           aria-describedby={error ? 'verification-error' : undefined}
           aria-invalid={!!error}
         />
         {error && (
           <p id="verification-error" className="text-sm text-destructive flex items-center gap-1">
-            <span className="material-symbols-outlined text-sm" aria-hidden="true">error</span>
+            <span className="material-symbols-outlined text-sm" aria-hidden="true">
+              error
+            </span>
             {error}
           </p>
         )}
@@ -193,12 +233,16 @@ function VerificationInput({
       <Button onClick={onSubmit} disabled={value.length !== 6 || loading} className="w-full h-12">
         {loading ? (
           <span className="flex items-center gap-2">
-            <span className="material-symbols-outlined animate-spin text-sm" aria-hidden="true">progress_activity</span>
+            <span className="material-symbols-outlined animate-spin text-sm" aria-hidden="true">
+              progress_activity
+            </span>
             Verifying...
           </span>
         ) : (
           <span className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-lg" aria-hidden="true">verified</span>
+            <span className="material-symbols-outlined text-lg" aria-hidden="true">
+              verified
+            </span>
             Verify Code
           </span>
         )}
@@ -256,7 +300,10 @@ export default function MfaSetupPage() {
   const handleVerification = useCallback(async () => {
     setVerificationError('');
     try {
-      const result = await confirmMfaMutation.mutateAsync({ method: selectedMethod, code: verificationCode });
+      const result = await confirmMfaMutation.mutateAsync({
+        method: selectedMethod,
+        code: verificationCode,
+      });
       if (result.success) {
         const backupResult = await getBackupCodesMutation.mutateAsync();
         setBackupCodes(backupResult.codes);
@@ -264,7 +311,9 @@ export default function MfaSetupPage() {
         setStep('backup');
       }
     } catch (error) {
-      setVerificationError(error instanceof Error ? error.message : 'Invalid verification code. Please try again.');
+      setVerificationError(
+        error instanceof Error ? error.message : 'Invalid verification code. Please try again.'
+      );
     }
   }, [verificationCode, selectedMethod, confirmMfaMutation, getBackupCodesMutation]);
 
@@ -273,14 +322,41 @@ export default function MfaSetupPage() {
 
   const getStepInfo = () => {
     switch (step) {
-      case 'method': return { title: 'Choose Authentication Method', description: 'Select how you want to receive verification codes', icon: 'key' };
-      case 'setup': return {
-        title: selectedMethod === 'totp' ? 'Set Up Authenticator App' : selectedMethod === 'sms' ? 'Set Up SMS Verification' : 'Set Up Email Verification',
-        description: 'Follow the instructions below to complete setup', icon: 'qr_code_scanner',
-      };
-      case 'verify': return { title: 'Verify Your Setup', description: 'Enter the 6-digit code to confirm everything is working', icon: 'verified' };
-      case 'backup': return { title: 'Save Backup Codes', description: 'These codes will help you access your account if you lose your device', icon: 'vpn_key' };
-      case 'complete': return { title: 'Setup Complete!', description: 'Two-factor authentication is now enabled on your account', icon: 'check_circle' };
+      case 'method':
+        return {
+          title: 'Choose Authentication Method',
+          description: 'Select how you want to receive verification codes',
+          icon: 'key',
+        };
+      case 'setup':
+        return {
+          title:
+            selectedMethod === 'totp'
+              ? 'Set Up Authenticator App'
+              : selectedMethod === 'sms'
+                ? 'Set Up SMS Verification'
+                : 'Set Up Email Verification',
+          description: 'Follow the instructions below to complete setup',
+          icon: 'qr_code_scanner',
+        };
+      case 'verify':
+        return {
+          title: 'Verify Your Setup',
+          description: 'Enter the 6-digit code to confirm everything is working',
+          icon: 'verified',
+        };
+      case 'backup':
+        return {
+          title: 'Save Backup Codes',
+          description: 'These codes will help you access your account if you lose your device',
+          icon: 'vpn_key',
+        };
+      case 'complete':
+        return {
+          title: 'Setup Complete!',
+          description: 'Two-factor authentication is now enabled on your account',
+          icon: 'check_circle',
+        };
     }
   };
 
@@ -306,7 +382,9 @@ export default function MfaSetupPage() {
         <Card className="lg:col-span-8 p-6 md:p-8">
           <div className="flex items-center gap-2 mb-6">
             <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-              <span className="material-symbols-outlined text-blue-600 dark:text-blue-400 text-[18px]">{stepInfo.icon}</span>
+              <span className="material-symbols-outlined text-blue-600 dark:text-blue-400 text-[18px]">
+                {stepInfo.icon}
+              </span>
             </div>
             <div>
               <h3 className="text-lg font-semibold text-foreground">{stepInfo.title}</h3>
@@ -339,14 +417,18 @@ export default function MfaSetupPage() {
                     placeholder="Add your phone number"
                     className="h-11"
                   />
-                  <p className="text-xs text-muted-foreground">Enter in E.164 format (e.g., +14155551234)</p>
+                  <p className="text-xs text-muted-foreground">
+                    Enter in E.164 format (e.g., +14155551234)
+                  </p>
                 </div>
               )}
 
               {verificationError && step === 'method' && (
                 <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-3">
                   <p className="text-sm text-destructive flex items-center gap-2">
-                    <span className="material-symbols-outlined text-lg" aria-hidden="true">error</span>
+                    <span className="material-symbols-outlined text-lg" aria-hidden="true">
+                      error
+                    </span>
                     {verificationError}
                   </p>
                 </div>
@@ -359,12 +441,19 @@ export default function MfaSetupPage() {
               >
                 {setupMfaMutation.isPending ? (
                   <span className="flex items-center gap-2">
-                    <span className="material-symbols-outlined animate-spin text-sm" aria-hidden="true">progress_activity</span>
+                    <span
+                      className="material-symbols-outlined animate-spin text-sm"
+                      aria-hidden="true"
+                    >
+                      progress_activity
+                    </span>
                     Setting up...
                   </span>
                 ) : (
                   <span className="flex items-center gap-2">
-                    <span className="material-symbols-outlined text-lg" aria-hidden="true">arrow_forward</span>
+                    <span className="material-symbols-outlined text-lg" aria-hidden="true">
+                      arrow_forward
+                    </span>
                     Continue with {MFA_METHODS.find((m) => m.id === selectedMethod)?.name}
                   </span>
                 )}
@@ -373,14 +462,17 @@ export default function MfaSetupPage() {
           )}
 
           {/* TOTP Setup */}
-          {step === 'setup' && setupData?.method === 'totp' && setupData.qrCodeUrl && setupData.secret && (
-            <MfaQrGenerator
-              otpauthUrl={setupData.qrCodeUrl}
-              secret={setupData.secret}
-              accountName={userEmail}
-              onConfirm={handleSetupComplete}
-            />
-          )}
+          {step === 'setup' &&
+            setupData?.method === 'totp' &&
+            setupData.qrCodeUrl &&
+            setupData.secret && (
+              <MfaQrGenerator
+                otpauthUrl={setupData.qrCodeUrl}
+                secret={setupData.secret}
+                accountName={userEmail}
+                onConfirm={handleSetupComplete}
+              />
+            )}
 
           {/* SMS/Email Setup */}
           {step === 'setup' && (setupData?.method === 'sms' || setupData?.method === 'email') && (
@@ -394,7 +486,9 @@ export default function MfaSetupPage() {
                 <Input type="tel" placeholder="Add your phone number" className="h-11" />
               )}
               <Button onClick={handleSetupComplete} className="w-full h-12">
-                <span className="material-symbols-outlined text-lg mr-1.5" aria-hidden="true">send</span>
+                <span className="material-symbols-outlined text-lg mr-1.5" aria-hidden="true">
+                  send
+                </span>
                 Send Code
               </Button>
             </div>
@@ -425,18 +519,25 @@ export default function MfaSetupPage() {
           {step === 'complete' && (
             <div className="text-center space-y-6 py-4">
               <div className="w-16 h-16 mx-auto bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center">
-                <span className="material-symbols-outlined text-4xl text-emerald-600 dark:text-emerald-400" aria-hidden="true">
+                <span
+                  className="material-symbols-outlined text-4xl text-emerald-600 dark:text-emerald-400"
+                  aria-hidden="true"
+                >
                   verified_user
                 </span>
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-foreground">Two-Factor Authentication Enabled</h3>
+                <h3 className="text-lg font-semibold text-foreground">
+                  Two-Factor Authentication Enabled
+                </h3>
                 <p className="text-muted-foreground mt-2">
                   Your account is now protected with an additional layer of security.
                 </p>
               </div>
               <Button onClick={handleComplete} className="w-full h-12">
-                <span className="material-symbols-outlined text-lg mr-1.5" aria-hidden="true">arrow_back</span>
+                <span className="material-symbols-outlined text-lg mr-1.5" aria-hidden="true">
+                  arrow_back
+                </span>
                 Return to Account Settings
               </Button>
             </div>
@@ -447,7 +548,9 @@ export default function MfaSetupPage() {
         <Card className="lg:col-span-4 p-6 h-fit">
           <div className="flex items-center gap-2 mb-4">
             <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-              <span className="material-symbols-outlined text-amber-600 dark:text-amber-400 text-[18px]">help</span>
+              <span className="material-symbols-outlined text-amber-600 dark:text-amber-400 text-[18px]">
+                help
+              </span>
             </div>
             <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">Help</h3>
           </div>
@@ -456,30 +559,44 @@ export default function MfaSetupPage() {
             <div>
               <p className="font-medium text-foreground mb-1">What is 2FA?</p>
               <p className="text-muted-foreground text-xs">
-                Two-factor authentication adds a second verification step when signing in, keeping your account secure even if your password is compromised.
+                Two-factor authentication adds a second verification step when signing in, keeping
+                your account secure even if your password is compromised.
               </p>
             </div>
             <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
               <p className="font-medium text-foreground mb-1">Recommended apps</p>
               <ul className="text-xs text-muted-foreground space-y-1">
                 <li className="flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[14px] text-slate-400">check</span>
+                  <span className="material-symbols-outlined text-[14px] text-slate-400">
+                    check
+                  </span>
                   Google Authenticator
                 </li>
                 <li className="flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[14px] text-slate-400">check</span>
+                  <span className="material-symbols-outlined text-[14px] text-slate-400">
+                    check
+                  </span>
                   Authy
                 </li>
                 <li className="flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[14px] text-slate-400">check</span>
+                  <span className="material-symbols-outlined text-[14px] text-slate-400">
+                    check
+                  </span>
                   1Password
                 </li>
               </ul>
             </div>
             <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
-              <Link href="/settings/security/mfa" className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors">
-                <span className="material-symbols-outlined text-[14px]" aria-hidden="true">arrow_back</span>
-                <span className="underline-offset-4 hover:underline">Back to security settings</span>
+              <Link
+                href="/settings/security/mfa"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
+              >
+                <span className="material-symbols-outlined text-[14px]" aria-hidden="true">
+                  arrow_back
+                </span>
+                <span className="underline-offset-4 hover:underline">
+                  Back to security settings
+                </span>
               </Link>
             </div>
           </div>
@@ -488,8 +605,13 @@ export default function MfaSetupPage() {
         {/* ─── Cancel Link (not on complete step) ────────────────────── */}
         {step !== 'complete' && (
           <div className="lg:col-span-12 pt-2 border-t border-slate-200 dark:border-slate-700 mt-1">
-            <Link href="/settings/account" className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors">
-              <span className="material-symbols-outlined text-[16px]" aria-hidden="true">arrow_back</span>
+            <Link
+              href="/settings/account"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <span className="material-symbols-outlined text-[16px]" aria-hidden="true">
+                arrow_back
+              </span>
               <span>Cancel and return to settings</span>
             </Link>
           </div>

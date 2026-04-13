@@ -116,8 +116,8 @@ export function LeadStagesTab({ stages, onStagesChange }: Readonly<LeadStagesTab
         <Button onClick={handleAddStage} size="sm">
           <span className="material-symbols-outlined text-sm mr-1" aria-hidden="true">
             add
-          </span>
-          {' '}Add Stage
+          </span>{' '}
+          Add Stage
         </Button>
       </div>
 

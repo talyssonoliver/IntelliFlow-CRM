@@ -34,18 +34,16 @@ describe('CookiePage', () => {
     const nav = screen.getByRole('navigation', { name: /cookie policy sections/i });
     expect(nav).toBeInTheDocument();
 
-    expect(
-      screen.getByRole('link', { name: /what are cookies/i })
-    ).toHaveAttribute('href', '#what-are-cookies');
-    expect(
-      screen.getByRole('link', { name: /categories we use/i })
-    ).toHaveAttribute('href', '#categories-we-use');
-    expect(
-      screen.getByRole('heading', { name: /managing your preferences/i })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('heading', { name: /third-party cookies/i })
-    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /what are cookies/i })).toHaveAttribute(
+      'href',
+      '#what-are-cookies'
+    );
+    expect(screen.getByRole('link', { name: /categories we use/i })).toHaveAttribute(
+      'href',
+      '#categories-we-use'
+    );
+    expect(screen.getByRole('heading', { name: /managing your preferences/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /third-party cookies/i })).toBeInTheDocument();
 
     // Exactly one h1, at least 6 h2s
     expect(container.querySelectorAll('h1').length).toBe(1);
@@ -54,12 +52,12 @@ describe('CookiePage', () => {
 
   it('renders summary bullets sourced from frontmatter', () => {
     render(<CookiePage />);
-    expect(
-      screen.getByText(/necessary cookies keep the site working/i)
-    ).toBeInTheDocument();
+    expect(screen.getByText(/necessary cookies keep the site working/i)).toBeInTheDocument();
     // Frontmatter bullets appear in the "Policy at a glance" list; allow duplicates
     // in section bodies but ensure the glance copy is present.
-    const matches = screen.getAllByText(/you can change your preferences at any time from the cookie banner/i);
+    const matches = screen.getAllByText(
+      /you can change your preferences at any time from the cookie banner/i
+    );
     expect(matches.length).toBeGreaterThanOrEqual(1);
   });
 

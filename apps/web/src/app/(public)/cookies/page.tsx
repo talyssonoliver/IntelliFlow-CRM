@@ -38,8 +38,8 @@ export default function CookiePage() {
             <div className="inline-flex items-center gap-2 rounded-full bg-[#137fec]/10 px-4 py-2 text-sm font-medium text-[#137fec]">
               <span className="material-symbols-outlined text-base" aria-hidden="true">
                 cookie
-              </span>
-              {' '}How IntelliFlow CRM uses cookies
+              </span>{' '}
+              How IntelliFlow CRM uses cookies
             </div>
 
             <h1 className="mt-6 text-4xl font-bold text-slate-900 dark:text-white lg:text-5xl">

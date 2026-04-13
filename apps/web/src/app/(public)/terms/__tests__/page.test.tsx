@@ -25,9 +25,7 @@ describe('TermsPage', () => {
   it('renders the page heading and terms summary content', () => {
     render(<TermsPage />);
 
-    expect(
-      screen.getByRole('heading', { name: /terms of service/i })
-    ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /terms of service/i })).toBeInTheDocument();
     // version badge appears at least once
     expect(screen.getAllByText(/v2026\.08/).length).toBeGreaterThanOrEqual(1);
     // At least one summary bullet from frontmatter
@@ -53,9 +51,10 @@ describe('TermsPage', () => {
     const main = screen.getByRole('main');
     expect(main).toHaveAttribute('id', 'main-content');
 
-    expect(
-      screen.getByRole('link', { name: /acceptance of terms/i })
-    ).toHaveAttribute('href', '#acceptance-of-terms');
+    expect(screen.getByRole('link', { name: /acceptance of terms/i })).toHaveAttribute(
+      'href',
+      '#acceptance-of-terms'
+    );
 
     const nav = screen.getByRole('navigation', { name: /terms sections/i });
     expect(nav).toBeInTheDocument();

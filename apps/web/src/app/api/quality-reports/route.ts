@@ -109,18 +109,20 @@ const lighthouseScoresShape = z.object({
   seo: z.number(),
 });
 
-const lighthouseVitalsShape = z.object({
-  fcp: z.number().nullable().optional(),
-  lcp: z.number().nullable().optional(),
-  tbt: z.number().nullable().optional(),
-  cls: z.number().nullable().optional(),
-  tti: z.number().nullable().optional(),
-  si: z.number().nullable().optional(),
-  serverResponse: z.number().nullable().optional(),
-  jsBytes: z.number().nullable().optional(),
-  totalBytes: z.number().nullable().optional(),
-  url: z.string().nullable().optional(),
-}).optional();
+const lighthouseVitalsShape = z
+  .object({
+    fcp: z.number().nullable().optional(),
+    lcp: z.number().nullable().optional(),
+    tbt: z.number().nullable().optional(),
+    cls: z.number().nullable().optional(),
+    tti: z.number().nullable().optional(),
+    si: z.number().nullable().optional(),
+    serverResponse: z.number().nullable().optional(),
+    jsBytes: z.number().nullable().optional(),
+    totalBytes: z.number().nullable().optional(),
+    url: z.string().nullable().optional(),
+  })
+  .optional();
 
 const lighthouseSummaryFormat = z.object({
   scores: lighthouseScoresShape,
@@ -139,7 +141,11 @@ const lighthouseRawFormat = z.object({
   fetchTime: z.string().optional(),
 });
 
-function parseLighthouseScores(data: unknown): { scores: LighthouseScores; generatedAt: string; vitals?: Record<string, number | string | null | undefined> } {
+function parseLighthouseScores(data: unknown): {
+  scores: LighthouseScores;
+  generatedAt: string;
+  vitals?: Record<string, number | string | null | undefined>;
+} {
   // Try summary format first
   const summaryResult = lighthouseSummaryFormat.safeParse(data);
   if (summaryResult.success) {
@@ -189,22 +195,33 @@ function findDirectory(relativePath: string): string | null {
     try {
       const full = path.join(base, relativePath);
       if (fs.existsSync(full) && fs.statSync(full).isDirectory()) return full;
-    } catch { /* skip */ }
+    } catch {
+      /* skip */
+    }
   }
   return null;
 }
 
 function loadLighthouseWebVitals(): LighthouseWebVitals {
   const empty: LighthouseWebVitals = {
-    fcp: null, lcp: null, tbt: null, cls: null, tti: null, si: null,
-    serverResponse: null, jsBytes: null, totalBytes: null, url: null,
+    fcp: null,
+    lcp: null,
+    tbt: null,
+    cls: null,
+    tti: null,
+    si: null,
+    serverResponse: null,
+    jsBytes: null,
+    totalBytes: null,
+    url: null,
   };
 
   const lhciDir = findDirectory('.lighthouseci');
   if (!lhciDir) return empty;
 
   try {
-    const files = fs.readdirSync(lhciDir)
+    const files = fs
+      .readdirSync(lhciDir)
       .filter((f) => f.endsWith('.json') && f.startsWith('lhr-'))
       .sort();
     if (files.length === 0) return empty;
@@ -217,8 +234,12 @@ function loadLighthouseWebVitals(): LighthouseWebVitals {
     const runs: LhrRun[] = files.map((f) => {
       const d = JSON.parse(fs.readFileSync(path.join(lhciDir, f), 'utf8'));
       const resourceItems = d.audits?.['resource-summary']?.details?.items ?? [];
-      const scriptItem = resourceItems.find((i: { resourceType: string }) => i.resourceType === 'script');
-      const totalItem = resourceItems.find((i: { resourceType: string }) => i.resourceType === 'total');
+      const scriptItem = resourceItems.find(
+        (i: { resourceType: string }) => i.resourceType === 'script'
+      );
+      const totalItem = resourceItems.find(
+        (i: { resourceType: string }) => i.resourceType === 'total'
+      );
       return {
         perf: d.categories?.performance?.score ?? 0,
         data: {
@@ -664,8 +685,7 @@ function getTRPCBenchmarkReport(): QualityReport {
           : 'failing';
 
     // Score = share of completed benchmarks that passed KPI, scaled 0–100.
-    const score =
-      totals.completed > 0 ? Math.round((totals.passed / totals.completed) * 100) : 0;
+    const score = totals.completed > 0 ? Math.round((totals.passed / totals.completed) * 100) : 0;
 
     return {
       id: 'trpc-benchmark',

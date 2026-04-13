@@ -148,9 +148,7 @@ export function ProfilePhotoDialog({
             </span>
             <div
               className={`relative w-20 h-20 rounded-full border-2 border-dashed overflow-hidden shrink-0 flex items-center justify-center ${
-                preview
-                  ? 'border-primary'
-                  : 'border-slate-300 dark:border-slate-600'
+                preview ? 'border-primary' : 'border-slate-300 dark:border-slate-600'
               }`}
             >
               {preview ? (
@@ -176,7 +174,9 @@ export function ProfilePhotoDialog({
             </p>
             {fileName && (
               <div className="mt-2 flex items-center gap-1.5 overflow-hidden">
-                <span className="material-symbols-outlined text-primary text-[14px] shrink-0">check_circle</span>
+                <span className="material-symbols-outlined text-primary text-[14px] shrink-0">
+                  check_circle
+                </span>
                 <span className="text-xs text-primary font-medium truncate block" title={fileName}>
                   {fileName}
                 </span>
@@ -211,12 +211,8 @@ export function ProfilePhotoDialog({
           >
             <span className="material-symbols-outlined text-[24px]">cloud_upload</span>
           </div>
-          <p className="text-sm font-medium text-foreground">
-            Drag and drop your photo here
-          </p>
-          <p className="text-xs text-muted-foreground">
-            or click to browse from your computer
-          </p>
+          <p className="text-sm font-medium text-foreground">Drag and drop your photo here</p>
+          <p className="text-xs text-muted-foreground">or click to browse from your computer</p>
         </div>
 
         <input
@@ -260,9 +256,7 @@ export function ProfilePhotoDialog({
           <span className="material-symbols-outlined text-slate-400 text-[14px]" aria-hidden="true">
             lock
           </span>
-          <p className="text-[11px] text-muted-foreground">
-            Your data is encrypted and secure.
-          </p>
+          <p className="text-[11px] text-muted-foreground">Your data is encrypted and secure.</p>
         </div>
       </DialogContent>
     </Dialog>

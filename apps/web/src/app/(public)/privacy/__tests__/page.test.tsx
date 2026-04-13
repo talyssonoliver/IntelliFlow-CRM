@@ -33,12 +33,11 @@ describe('PrivacyPage', () => {
     const main = screen.getByRole('main');
     expect(main).toHaveAttribute('id', 'main-content');
 
-    expect(
-      screen.getByRole('link', { name: /information we collect/i })
-    ).toHaveAttribute('href', '#information-we-collect');
-    expect(
-      screen.getByRole('heading', { name: /your rights/i })
-    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /information we collect/i })).toHaveAttribute(
+      'href',
+      '#information-we-collect'
+    );
+    expect(screen.getByRole('heading', { name: /your rights/i })).toBeInTheDocument();
   });
 
   it('exports metadata for the canonical privacy route', () => {

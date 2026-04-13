@@ -15,10 +15,7 @@ vi.mock('@/lib/cache-tags', () => ({
 }));
 
 // Import after mocks are established
-import {
-  revalidateNotifications,
-  revalidateActivityFeed,
-} from '../actions';
+import { revalidateNotifications, revalidateActivityFeed } from '../actions';
 
 describe('revalidateNotifications', () => {
   beforeEach(() => {
