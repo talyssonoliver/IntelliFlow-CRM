@@ -1,0 +1,53 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "IFC-261",
+  "section": "Core CRM",
+  "description": "Contact Event Pipeline — Worker Handlers + Event Types. (1) Zero contact event handlers in events worker (W-02). (2) Only 2/8 contact event types in DOMAIN_EVENT_TYPES — missing deleted, account_associated, account_disassociated, converted_from_lead, linked_to_lead, interacted (W-04). (3) No webhook routing for contact events (W-05). (4) No notifications for contact events (W-11). Cross-ref: W-01 (InMemoryEventBus) shared with IFC-250. Audit: docs/audit/contact-detail-wiring-audit.md §17.",
+  "owner": "Backend Dev (STOA-Domain)",
+  "sprint": "sprint-22",
+  "phase": "",
+  "stream": null,
+  "status": "BACKLOG",
+  "dependencies": {
+    "required": [],
+    "all_satisfied": true,
+    "verified_at": "2026-04-13T01:23:27.880Z"
+  },
+  "dependencies_resolved": [],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": 240,
+  "actual_duration_minutes": null,
+  "kpis": {
+    "audit_findings_resolved": {
+      "target": "Resolve findings: W-02,W-04,W-05,W-11",
+      "actual": "",
+      "met": false
+    },
+    "test_coverage": {
+      "target": ">=90%",
+      "actual": "",
+      "met": false
+    }
+  },
+  "artifacts": {
+    "expected": [
+      "apps/workers/events-worker/src/main.ts",
+      "apps/workers/events-worker/src/outbox/event-dispatcher.ts"
+    ],
+    "created": [
+      "apps/workers/events-worker/src/main.ts",
+      "apps/workers/events-worker/src/outbox/event-dispatcher.ts"
+    ],
+    "missing": []
+  },
+  "validations": [],
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-03-05T00:00:00Z"
+    }
+  ],
+  "notes": "Contact audit finding: W-02,W-04,W-05,W-11. See docs/audit/contact-detail-wiring-audit.md"
+}

@@ -1,0 +1,71 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "IFC-223",
+  "section": "Notifications",
+  "description": "Wire actual Email Outbound Adapter (Resolves R-018)",
+  "owner": "Backend Dev (STOA-Domain)",
+  "dependencies": {
+    "required": [
+      "IFC-157"
+    ],
+    "all_satisfied": true,
+    "verified_at": "2026-04-13T01:23:27.642Z"
+  },
+  "prerequisites": [
+    "FILE:packages/adapters/src/messaging/email/outbound.ts"
+  ],
+  "definition_of_done": "Email outbound connects to real SMTP/API provider; verified by: pnpm test",
+  "kpis": {},
+  "status": "DONE",
+  "target_sprint": 14,
+  "artifacts_to_track": [
+    "ARTIFACT:packages/adapters/src/messaging/email/outbound.ts",
+    "EVIDENCE:.specify/sprints/sprint-14/attestations/IFC-223/context_ack.json",
+    "SPEC:.specify/sprints/sprint-14/specifications/IFC-223-spec.md",
+    "PLAN:.specify/sprints/sprint-14/planning/IFC-223-plan.md",
+    "ATTESTATION:.specify/sprints/sprint-14/attestations/IFC-223/attestation.json"
+  ],
+  "validation_method": [
+    "VALIDATE:pnpm test"
+  ],
+  "estimate": "60/120/240",
+  "percent_complete": 100,
+  "created_at": "2026-03-04T23:51:20.000Z",
+  "updated_at": "2026-03-04T23:51:20.000Z",
+  "dependencies_resolved": [
+    "IFC-157"
+  ],
+  "completed_at": "2026-03-07T00:33:31.202Z",
+  "started_at": "2026-03-07T00:18:31.202Z",
+  "actual_duration_minutes": 15,
+  "validations": [
+    {
+      "name": "TypeScript",
+      "command": "npx tsc --noEmit --project packages/adapters/tsconfig.json",
+      "executed_at": "2026-03-07T00:30:00.000Z",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run packages/adapters/src/external/__tests__/RealNotificationServiceAdapter.test.ts packages/adapters/src/messaging/email/__tests__/outbound.test.ts",
+      "executed_at": "2026-03-07T00:33:00.000Z",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter @intelliflow/adapters lint",
+      "executed_at": "2026-03-07T00:30:30.000Z",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/adapters build && pnpm --filter @intelliflow/api build",
+      "executed_at": "2026-03-07T00:29:00.000Z",
+      "exit_code": 0,
+      "passed": true
+    }
+  ]
+}

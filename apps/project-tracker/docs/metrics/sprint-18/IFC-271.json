@@ -1,0 +1,58 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "IFC-271",
+  "section": "Core CRM",
+  "description": "Account Domain Model Fixes. (1) No AccountDeletedEvent — deletions produce no domain event; audit handler has mapping but event never emitted (D-01). (2) Account.toJSON() omits tenantId (B-15). (3) updateAccountInfo return value (Result) discarded by service — silent validation failures (B-16). (4) user!.userId non-null assertion in router (B-06). Audit: docs/audit/account-detail-wiring-audit.md sections 11-13.",
+  "owner": "Backend Dev (STOA-Domain)",
+  "sprint": "sprint-18",
+  "phase": "",
+  "stream": null,
+  "status": "BACKLOG",
+  "dependencies": {
+    "required": [],
+    "all_satisfied": true,
+    "verified_at": "2026-04-13T01:23:27.779Z"
+  },
+  "dependencies_resolved": [],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": 120,
+  "actual_duration_minutes": null,
+  "kpis": {
+    "wiring_complete": {
+      "target": "Delete emits event; zero silent failures",
+      "actual": "",
+      "met": false
+    },
+    "test_coverage": {
+      "target": ">=90%",
+      "actual": "",
+      "met": false
+    }
+  },
+  "artifacts": {
+    "expected": [
+      "packages/domain/src/crm/account/Account.ts",
+      "packages/domain/src/crm/account/AccountEvents.ts",
+      "packages/application/src/services/AccountService.ts",
+      ".specify/sprints/sprint-18/attestations/IFC-271/context_ack.json"
+    ],
+    "created": [
+      "packages/domain/src/crm/account/Account.ts",
+      "packages/domain/src/crm/account/AccountEvents.ts",
+      "packages/application/src/services/AccountService.ts"
+    ],
+    "missing": [
+      ".specify/sprints/sprint-18/attestations/IFC-271/context_ack.json"
+    ]
+  },
+  "validations": [],
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-03-05T00:00:00Z"
+    }
+  ],
+  "notes": "Account domain wiring audit finding. See docs/audit/account-detail-wiring-audit.md."
+}

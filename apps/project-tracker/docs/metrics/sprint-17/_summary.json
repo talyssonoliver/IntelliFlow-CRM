@@ -1,0 +1,87 @@
+{
+  "sprint": "sprint-17",
+  "name": "Sprint 17",
+  "target_date": null,
+  "started_at": null,
+  "completed_at": null,
+  "phases": [],
+  "task_summary": {
+    "total": 22,
+    "done": 9,
+    "in_progress": 2,
+    "blocked": 0,
+    "not_started": 11,
+    "failed": 0
+  },
+  "completed_tasks": [
+    {
+      "task_id": "IFC-030",
+      "completed_at": "2026-03-03T00:58:50.290Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "PG-050",
+      "completed_at": "2026-03-10T20:54:00Z",
+      "duration_minutes": 22
+    },
+    {
+      "task_id": "IFC-298",
+      "completed_at": "2026-03-10T21:11:22.672Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "IFC-299",
+      "completed_at": "2026-03-19T00:22:57.642Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "IFC-303",
+      "completed_at": "2026-03-19T00:28:57.314Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "PG-051",
+      "completed_at": "2026-04-12T21:56:25Z",
+      "duration_minutes": 12
+    },
+    {
+      "task_id": "PG-052",
+      "completed_at": "2026-04-13T01:23:27.747Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "PG-055",
+      "completed_at": "2026-04-13T01:23:27.747Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "PG-056",
+      "completed_at": "2026-04-13T01:23:27.747Z",
+      "duration_minutes": 15
+    }
+  ],
+  "notes": "9/22 tasks DONE (41%). Last synced: 2026-04-13T01:23:27.747Z",
+  "schedule": {
+    "sprint_start_date": null,
+    "sprint_end_date": null,
+    "working_hours_per_day": 8,
+    "working_days_per_week": 5,
+    "critical_path": {
+      "task_ids": [
+        "PG-050",
+        "PG-051",
+        "PG-053",
+        "PG-195"
+      ],
+      "total_duration_minutes": 650,
+      "completion_percentage": 10,
+      "bottleneck_task_id": "PG-050"
+    },
+    "schedule_variance": {
+      "sv_minutes": -2860,
+      "spi": 0.29,
+      "status": "critical"
+    },
+    "calculated_at": "2026-04-13T01:23:28.125Z"
+  }
+}

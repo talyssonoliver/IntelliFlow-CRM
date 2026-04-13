@@ -1,0 +1,84 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "DOC-004",
+  "section": "Documentation",
+  "description": "Update ui-flow-mapping.md cross-reference matrix to 103 routes, verify API router procedure counts (39 routers, 366 procedures), update implementation and backend integration status",
+  "owner": "DevRel (STOA-Foundation)",
+  "sprint": "sprint-14",
+  "phase": "phase-1",
+  "stream": null,
+  "status": "DONE",
+  "dependencies": {
+    "required": [
+      "DOC-002"
+    ],
+    "all_satisfied": true,
+    "verified_at": "2026-04-13T01:23:27.632Z"
+  },
+  "dependencies_resolved": [
+    "DOC-002"
+  ],
+  "started_at": "2026-02-23T12:00:00Z",
+  "completed_at": "2026-02-24T01:15:00Z",
+  "target_duration_minutes": null,
+  "actual_duration_minutes": 15,
+  "kpis": {},
+  "artifacts": {
+    "expected": [
+      "docs/design/ui-flow-mapping.md",
+      "apps/web/src/app/__tests__/ui-flow-mapping-reconciliation.test.ts"
+    ],
+    "created": [
+      "docs/design/ui-flow-mapping.md",
+      "apps/web/src/app/__tests__/ui-flow-mapping-reconciliation.test.ts"
+    ],
+    "missing": []
+  },
+  "validations": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "executed_at": "2026-02-24T21:09:30.000Z",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "name": "Tests",
+      "command": "cd apps/web && npx vitest run ui-flow-mapping-reconciliation",
+      "executed_at": "2026-02-24T21:09:47.000Z",
+      "exit_code": 0,
+      "duration_ms": 825,
+      "passed": true
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter @intelliflow/web lint",
+      "executed_at": "2026-02-24T21:09:50.000Z",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/web build",
+      "executed_at": "2026-02-24T21:09:55.000Z",
+      "exit_code": 0,
+      "passed": true
+    }
+  ],
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-02-23T00:00:00Z"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-23T12:00:00Z"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-23T12:30:00Z"
+    }
+  ],
+  "notes": "Exec completed. ui-flow-mapping.md updated v2.0.0→v3.0.0: 68→103 routes, 25→39 routers, 232→366 procedures. 12/12 AC passed, 3/3 NF passed. STOA Foundation AUDIT:manual-review PASS. Compliance check PASS. Attestation at .specify/sprints/sprint-14/attestations/DOC-004/attestation.json."
+}

@@ -1,0 +1,59 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "IFC-249",
+  "section": "Core CRM",
+  "description": "Lead Edit Page Tests + E2E. Fix remaining test gaps: (1) Edit page onSuccess/onError callbacks untested, as any cast hides type errors [T9]. (2) No E2E tests for complete lead CRUD flow (create -> view -> edit -> delete) [T6]. Write: (1) Edit page component tests with mutation mocking. (2) Playwright E2E test for full lead lifecycle. E2E should cover: create lead with required fields, view on detail page, edit fields, archive/delete.",
+  "owner": "Frontend Dev (STOA-Quality)",
+  "sprint": "sprint-20",
+  "phase": "",
+  "stream": null,
+  "status": "BACKLOG",
+  "dependencies": {
+    "required": [],
+    "all_satisfied": true,
+    "verified_at": "2026-04-13T01:23:27.839Z"
+  },
+  "dependencies_resolved": [],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": 240,
+  "actual_duration_minutes": null,
+  "kpis": {
+    "primary_kpi": {
+      "target": ">=8 edit page tests",
+      "actual": "",
+      "met": false
+    },
+    "kpi_2": {
+      "target": "1 E2E test with >=5 assertions",
+      "actual": "",
+      "met": false
+    },
+    "test_coverage": {
+      "target": ">=90%",
+      "actual": "",
+      "met": false
+    }
+  },
+  "artifacts": {
+    "expected": [
+      "apps/web/src/app/leads/[id]/edit/__tests__/page.test.tsx",
+      "tests/e2e/lead-crud.spec.ts"
+    ],
+    "created": [
+      "apps/web/src/app/leads/[id]/edit/__tests__/page.test.tsx"
+    ],
+    "missing": [
+      "tests/e2e/lead-crud.spec.ts"
+    ]
+  },
+  "validations": [],
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-03-05T00:00:00Z"
+    }
+  ],
+  "notes": "Comprehensive flow analysis findings: T6,T9"
+}

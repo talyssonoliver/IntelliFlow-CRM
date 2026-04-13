@@ -1,0 +1,59 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "IFC-276",
+  "section": "Core CRM",
+  "description": "Account Contract Test + Test Gaps. (1) Accounts is the ONLY entity without a contract test file (T-01). (2) No-op buttons untested — 6 CRITICAL no-op buttons have no click behavior tests (T-02). (3) Tenant isolation untested in router tests (T-03). (4) No E2E Playwright tests for account CRUD flow (T-04). (5) Owner display untested — tests don't verify owner name/title rendering (T-05). Audit: docs/audit/account-detail-wiring-audit.md section 19.",
+  "owner": "Frontend Dev (STOA-Quality)",
+  "sprint": "sprint-20",
+  "phase": "",
+  "stream": null,
+  "status": "BACKLOG",
+  "dependencies": {
+    "required": [
+      "IFC-267:FS;IFC-268:FS"
+    ],
+    "all_satisfied": false,
+    "verified_at": "2026-04-13T01:23:27.847Z"
+  },
+  "dependencies_resolved": [],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": 480,
+  "actual_duration_minutes": null,
+  "kpis": {
+    "wiring_complete": {
+      "target": "Contract test passing; E2E CRUD flow passing; >=90% coverage",
+      "actual": "",
+      "met": false
+    },
+    "test_coverage": {
+      "target": ">=90%",
+      "actual": "",
+      "met": false
+    }
+  },
+  "artifacts": {
+    "expected": [
+      "apps/api/src/__tests__/contract/account.contract.test.ts",
+      "apps/web/src/components/accounts/__tests__/AccountDetail.buttons.test.tsx",
+      "tests/e2e/account-crud.spec.ts",
+      ".specify/sprints/sprint-20/attestations/IFC-276/context_ack.json"
+    ],
+    "created": [],
+    "missing": [
+      "apps/api/src/__tests__/contract/account.contract.test.ts",
+      "apps/web/src/components/accounts/__tests__/AccountDetail.buttons.test.tsx",
+      "tests/e2e/account-crud.spec.ts",
+      ".specify/sprints/sprint-20/attestations/IFC-276/context_ack.json"
+    ]
+  },
+  "validations": [],
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-03-05T00:00:00Z"
+    }
+  ],
+  "notes": "Account domain wiring audit finding. See docs/audit/account-detail-wiring-audit.md."
+}

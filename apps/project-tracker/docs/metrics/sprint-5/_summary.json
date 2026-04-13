@@ -13,11 +13,11 @@
     "not_started": 0,
     "failed": 0
   },
-  "notes": "16/16 tasks DONE (100%). Last synced: 2026-04-12T20:40:14.108Z",
+  "notes": "16/16 tasks DONE (100%). Last synced: 2026-04-13T01:23:28.046Z",
   "completed_tasks": [
     {
       "task_id": "IFC-150",
-      "completed_at": "2026-02-01T20:30:00.000Z",
+      "completed_at": "2026-02-01T20:30:00Z",
       "duration_minutes": 15
     },
     {
@@ -37,7 +37,7 @@
     },
     {
       "task_id": "PG-133",
-      "completed_at": "2026-02-07T15:00:00.000Z",
+      "completed_at": "2026-02-07T15:00:00Z",
       "duration_minutes": 180
     },
     {
@@ -115,6 +115,6 @@
       "spi": 1,
       "status": "on_track"
     },
-    "calculated_at": "2026-04-12T20:40:14.204Z"
+    "calculated_at": "2026-04-13T01:23:28.142Z"
   }
 }

@@ -1,0 +1,99 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "DOC-006",
+  "section": "Documentation",
+  "description": "Create unified IA reference combining reachability audit route inventory with flow mapping user journey context, linking routes to flows to components to APIs to nav layers",
+  "owner": "DevRel (STOA-Foundation)",
+  "sprint": "sprint-14",
+  "phase": "phase-1",
+  "stream": null,
+  "status": "DONE",
+  "dependencies": {
+    "required": [
+      "DOC-002",
+      "DOC-003",
+      "DOC-004",
+      "DOC-005"
+    ],
+    "all_satisfied": true,
+    "verified_at": "2026-04-13T01:23:27.634Z"
+  },
+  "dependencies_resolved": [
+    "DOC-002",
+    "DOC-003",
+    "DOC-004",
+    "DOC-005"
+  ],
+  "started_at": "2026-02-24T12:00:00Z",
+  "completed_at": "2026-02-24T21:22:00Z",
+  "target_duration_minutes": 240,
+  "actual_duration_minutes": 160,
+  "kpis": {},
+  "artifacts": {
+    "expected": [
+      "docs/design/information-architecture.md"
+    ],
+    "created": [
+      "docs/design/information-architecture.md"
+    ],
+    "missing": []
+  },
+  "validations": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "executed_at": "2026-02-24T21:21:00Z",
+      "duration_ms": 8000
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run src/app/__tests__/",
+      "exit_code": 0,
+      "passed": true,
+      "executed_at": "2026-02-24T21:21:30Z",
+      "duration_ms": 1790
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter @intelliflow/web lint",
+      "exit_code": 0,
+      "passed": true,
+      "executed_at": "2026-02-24T21:21:45Z",
+      "duration_ms": 5000
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "executed_at": "2026-02-24T21:22:00Z",
+      "duration_ms": 30000
+    }
+  ],
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-02-23T00:00:00Z"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-24T12:00:00Z"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-24T12:30:00Z"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-24T21:13:00Z"
+    },
+    {
+      "status": "Completed",
+      "at": "2026-02-24T21:22:00Z"
+    }
+  ],
+  "notes": "Unified IA reference created with 103 routes across 20 module sections, 28 ghost links, 5 conflict resolutions. 4 reconciliation tests pass (TC-IA-01/03/04/05). Shared test helper extracted from 2 existing test files."
+}

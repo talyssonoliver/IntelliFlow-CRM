@@ -1,0 +1,56 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "IFC-227",
+  "section": "Core CRM",
+  "description": "Company-to-Account Navigation Link - Lead detail page shows company name as plain <span> in profile card (line 1352) and info panel (line 1656). Replace with Next.js Link component navigating to /accounts/[accountId]. Requires accountId in lead transform/query. Apply same pattern to Contact and Deal detail pages.",
+  "owner": "Frontend Dev (STOA-Quality)",
+  "sprint": "sprint-18",
+  "phase": "",
+  "stream": null,
+  "status": "BACKLOG",
+  "dependencies": {
+    "required": [],
+    "all_satisfied": true,
+    "verified_at": "2026-04-13T01:23:27.760Z"
+  },
+  "dependencies_resolved": [],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": 120,
+  "actual_duration_minutes": null,
+  "kpis": {
+    "navigation_works": {
+      "target": "Company name clickable on 3 pages",
+      "actual": "",
+      "met": false
+    },
+    "test_coverage": {
+      "target": ">=90%",
+      "actual": "",
+      "met": false
+    }
+  },
+  "artifacts": {
+    "expected": [
+      "apps/web/src/app/leads/[id]/page.tsx",
+      "apps/web/src/app/contacts/[id]/page.tsx",
+      ".specify/sprints/sprint-18/attestations/IFC-227/context_ack.json"
+    ],
+    "created": [
+      "apps/web/src/app/leads/[id]/page.tsx",
+      "apps/web/src/app/contacts/[id]/page.tsx"
+    ],
+    "missing": [
+      ".specify/sprints/sprint-18/attestations/IFC-227/context_ack.json"
+    ]
+  },
+  "validations": [],
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-03-05T00:00:00Z"
+    }
+  ],
+  "notes": "Wiring debt: Company name is plain <span> with no navigation to Account page."
+}

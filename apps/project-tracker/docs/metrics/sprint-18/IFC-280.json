@@ -1,0 +1,56 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "IFC-280",
+  "section": "Core CRM",
+  "description": "Deal Detail Action Buttons — Wire 14 No-Ops. (1) EntityHeader 6 no-ops all with onClick: () => {} (F-08): Won → moveStage CLOSED_WON with success dialog; Lost → moveStage CLOSED_LOST with LossReasonModal (reuse from list page); Edit → navigate to edit form or open inline edit; Clone → duplicate mutation; Archive → set archived status; Delete → AlertDialog confirmation + delete mutation. (2) Stakeholder/Product/File 8 no-ops (F-09): Edit stakeholders → open edit dialog; Account icons → navigate to /accounts/[id] and website; Contact icons → mailto: and tel: links; Add Product → product association dialog; File upload → upload mutation; File links → presigned URL download. Depends on IFC-278 (real data needed for mutations). Audit: docs/audit/deal-detail-wiring-audit.md section 2.",
+  "owner": "Frontend Dev (STOA-Quality)",
+  "sprint": "sprint-18",
+  "phase": "",
+  "stream": null,
+  "status": "BACKLOG",
+  "dependencies": {
+    "required": [
+      "IFC-278:FS"
+    ],
+    "all_satisfied": false,
+    "verified_at": "2026-04-13T01:23:27.782Z"
+  },
+  "dependencies_resolved": [],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": 480,
+  "actual_duration_minutes": null,
+  "kpis": {
+    "wiring_complete": {
+      "target": "14/14 buttons functional; confirmation dialogs for destructive actions",
+      "actual": "",
+      "met": false
+    },
+    "test_coverage": {
+      "target": ">=90%",
+      "actual": "",
+      "met": false
+    }
+  },
+  "artifacts": {
+    "expected": [
+      "apps/web/src/app/deals/[id]/page.tsx",
+      ".specify/sprints/sprint-18/attestations/IFC-280/context_ack.json"
+    ],
+    "created": [
+      "apps/web/src/app/deals/[id]/page.tsx"
+    ],
+    "missing": [
+      ".specify/sprints/sprint-18/attestations/IFC-280/context_ack.json"
+    ]
+  },
+  "validations": [],
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-03-06T00:00:00Z"
+    }
+  ],
+  "notes": "Deal/opportunity domain wiring audit finding. See docs/audit/deal-detail-wiring-audit.md."
+}

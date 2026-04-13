@@ -1,0 +1,61 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "IFC-308",
+  "section": "AI & Intelligence",
+  "description": "Scheduled Report Generation — BullMQ cron job that generates daily/weekly analytics snapshots and emails summary reports to team leads. Includes: report template system (pipeline summary, lead conversion, revenue trends, SLA compliance), PDF/HTML report rendering, email delivery via notifications worker, configurable schedule per tenant, report archive storage",
+  "owner": "Tech Lead (STOA-Domain)",
+  "sprint": "sprint-24",
+  "phase": "",
+  "stream": null,
+  "status": "BACKLOG",
+  "dependencies": {
+    "required": [
+      "IFC-168",
+      "IFC-024"
+    ],
+    "all_satisfied": true,
+    "verified_at": "2026-04-13T01:23:28.098Z"
+  },
+  "dependencies_resolved": [
+    "IFC-168",
+    "IFC-024"
+  ],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": 600,
+  "actual_duration_minutes": null,
+  "kpis": {
+    "report_types": {
+      "target": ">=4 report templates (pipeline, leads, revenue, SLA)",
+      "actual": "",
+      "met": false
+    },
+    "delivery_reliability": {
+      "target": ">=99% scheduled reports delivered on time",
+      "actual": "",
+      "met": false
+    },
+    "generation_time": {
+      "target": "p95 <30s per report",
+      "actual": "",
+      "met": false
+    },
+    "test_coverage": {
+      "target": ">=90%",
+      "actual": "",
+      "met": false
+    }
+  },
+  "artifacts": {
+    "required": [
+      "apps/ai-worker/src/jobs/report-generation.job.ts",
+      "apps/api/src/modules/analytics/report-templates.ts",
+      "apps/api/src/modules/analytics/report-scheduler.ts"
+    ],
+    "created": [],
+    "verified_at": null
+  },
+  "validation_results": [],
+  "gate_results": [],
+  "notes": "Depends on analytics router (IFC-024) for data queries and ai-worker queue infrastructure (IFC-168) for job processing. Reports delivered via existing notifications-worker email channel. Consider tenant-configurable schedules (daily/weekly/monthly)."
+}

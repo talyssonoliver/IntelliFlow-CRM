@@ -1,0 +1,127 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "DOC-002",
+  "section": "Documentation",
+  "description": "Update sitemap.md to reflect actual 101 page.tsx files, add app/sitemap.ts XML generator, app/robots.ts, reconcile against navigation-reachability-audit.md",
+  "owner": "DevRel (STOA-Foundation)",
+  "sprint": "sprint-14",
+  "phase": "phase-1",
+  "stream": null,
+  "status": "DONE",
+  "dependencies": {
+    "required": [],
+    "all_satisfied": true,
+    "verified_at": "2026-04-13T01:23:27.630Z"
+  },
+  "dependencies_resolved": [],
+  "started_at": "2026-02-23T00:00:00Z",
+  "completed_at": "2026-02-23T21:00:00Z",
+  "target_duration_minutes": 120,
+  "actual_duration_minutes": 120,
+  "kpis": {
+    "test_count": {
+      "target": "30",
+      "actual": "32",
+      "met": true
+    },
+    "coverage_statements": {
+      "target": "90",
+      "actual": "100",
+      "met": true,
+      "unit": "%"
+    },
+    "coverage_branches": {
+      "target": "80",
+      "actual": "100",
+      "met": true,
+      "unit": "%"
+    },
+    "coverage_functions": {
+      "target": "90",
+      "actual": "100",
+      "met": true,
+      "unit": "%"
+    },
+    "coverage_lines": {
+      "target": "90",
+      "actual": "100",
+      "met": true,
+      "unit": "%"
+    }
+  },
+  "artifacts": {
+    "expected": [
+      "docs/design/sitemap.md",
+      "apps/web/src/app/sitemap.ts",
+      "apps/web/src/app/robots.ts"
+    ],
+    "created": [
+      "docs/design/sitemap.md",
+      "apps/web/src/app/sitemap.ts",
+      "apps/web/src/app/robots.ts"
+    ],
+    "missing": []
+  },
+  "validations": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "executed_at": "2026-02-23T20:57:00Z",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run apps/web/src/app/__tests__/sitemap.test.ts apps/web/src/app/__tests__/robots.test.ts apps/web/src/app/__tests__/sitemap-reconciliation.test.ts",
+      "executed_at": "2026-02-23T20:58:00Z",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter @intelliflow/web lint",
+      "executed_at": "2026-02-23T20:57:00Z",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/web build",
+      "executed_at": "2026-02-23T20:58:00Z",
+      "exit_code": 0,
+      "passed": true
+    }
+  ],
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-02-23T00:00:00Z"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-23T18:00:00Z"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-23T19:00:00Z"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-23T19:30:00Z"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-23T20:00:00Z"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-23T20:15:00Z"
+    },
+    {
+      "status": "Completed",
+      "at": "2026-02-23T21:00:00Z"
+    }
+  ],
+  "notes": "32 tests (15 sitemap + 11 robots + 6 reconciliation). 100% coverage on all metrics. Foundation STOA: PASS (6/6 gates). Quality STOA: PASS (5/5 gates). sitemap.md updated 68→102 pages (v3.0). /sitemap.xml and /robots.txt confirmed in build output."
+}

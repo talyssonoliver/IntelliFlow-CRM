@@ -1,0 +1,63 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "IFC-243",
+  "section": "Core CRM",
+  "description": "Lead Frontend Consistency - StatusBadge, Toast, window.prompt. Fix 3 MEDIUM issues: (1) window.prompt() used for note input at line 1951 - blocks UI, no multi-line, poor UX [F5]. Replace with Dialog/Sheet component. (2) Two different StatusBadge implementations - inline LeadStatusBadge vs shared component with different color schemes [F6]. Consolidate to shared component. (3) Two Toast patterns - sonner toast.success() vs shadcn useToast() used inconsistently across lead pages [F7]. Standardize to one pattern.",
+  "owner": "Frontend Dev (STOA-Quality)",
+  "sprint": "sprint-20",
+  "phase": "",
+  "stream": null,
+  "status": "BACKLOG",
+  "dependencies": {
+    "required": [],
+    "all_satisfied": true,
+    "verified_at": "2026-04-13T01:23:27.830Z"
+  },
+  "dependencies_resolved": [],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": 240,
+  "actual_duration_minutes": null,
+  "kpis": {
+    "primary_kpi": {
+      "target": "0 window.prompt() calls",
+      "actual": "",
+      "met": false
+    },
+    "kpi_2": {
+      "target": "1 StatusBadge implementation",
+      "actual": "",
+      "met": false
+    },
+    "kpi_3": {
+      "target": "1 Toast pattern",
+      "actual": "",
+      "met": false
+    },
+    "test_coverage": {
+      "target": ">=90%",
+      "actual": "",
+      "met": false
+    }
+  },
+  "artifacts": {
+    "expected": [
+      "apps/web/src/app/leads/[id]/page.tsx",
+      "apps/web/src/components/shared/"
+    ],
+    "created": [
+      "apps/web/src/app/leads/[id]/page.tsx",
+      "apps/web/src/components/shared/"
+    ],
+    "missing": []
+  },
+  "validations": [],
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-03-05T00:00:00Z"
+    }
+  ],
+  "notes": "Comprehensive flow analysis findings: F5,F6,F7"
+}

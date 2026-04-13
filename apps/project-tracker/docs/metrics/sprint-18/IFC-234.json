@@ -1,0 +1,65 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "IFC-234",
+  "section": "Core CRM",
+  "description": "Settings Pages Wiring - 4 settings pages with hardcoded data and inert buttons. Team: hardcoded 4-person array, inert Invite/Remove/Role buttons. Integrations: hardcoded provider list, inert Connect/Disconnect buttons. Notifications: hardcoded const, no useState, no onClick on toggles. Account: profile name/email has no save mutation, 3 security buttons (Change Password, Enable 2FA, Download Data) have no onClick. Wire all to real tRPC mutations and queries.",
+  "owner": "Frontend Dev (STOA-Quality)",
+  "sprint": "sprint-18",
+  "phase": "",
+  "stream": null,
+  "status": "BACKLOG",
+  "dependencies": {
+    "required": [],
+    "all_satisfied": true,
+    "verified_at": "2026-04-13T01:23:27.763Z"
+  },
+  "dependencies_resolved": [],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": 120,
+  "actual_duration_minutes": null,
+  "kpis": {
+    "all_settings_functional": {
+      "target": "All 4 settings pages load real data",
+      "actual": "",
+      "met": false
+    },
+    "mutation_latency": {
+      "target": "<500ms",
+      "actual": "",
+      "met": false
+    },
+    "test_coverage": {
+      "target": ">=90%",
+      "actual": "",
+      "met": false
+    }
+  },
+  "artifacts": {
+    "expected": [
+      "apps/web/src/app/settings/team/page.tsx",
+      "apps/web/src/app/settings/integrations/page.tsx",
+      "apps/web/src/app/settings/notifications/page.tsx",
+      "apps/web/src/app/settings/account/page.tsx",
+      ".specify/sprints/sprint-18/attestations/IFC-234/context_ack.json"
+    ],
+    "created": [
+      "apps/web/src/app/settings/team/page.tsx",
+      "apps/web/src/app/settings/integrations/page.tsx",
+      "apps/web/src/app/settings/notifications/page.tsx",
+      "apps/web/src/app/settings/account/page.tsx"
+    ],
+    "missing": [
+      ".specify/sprints/sprint-18/attestations/IFC-234/context_ack.json"
+    ]
+  },
+  "validations": [],
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-03-05T00:00:00Z"
+    }
+  ],
+  "notes": "Wiring debt: 4 settings pages have hardcoded data and inert buttons."
+}

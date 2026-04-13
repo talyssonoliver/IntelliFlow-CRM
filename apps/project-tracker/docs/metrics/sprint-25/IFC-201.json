@@ -1,0 +1,55 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "IFC-201",
+  "section": "Settings",
+  "description": "Settings Control Plane Foundations - domain models, adapters, and router for users/teams/roles/permissions/audit/integrations/webhooks/security",
+  "owner": "Platform BE + Security Eng (STOA-Domain)",
+  "status": "BACKLOG",
+  "sprint": "sprint-0",
+  "phase": "phase-0-initialisation",
+  "stream": null,
+  "dependencies": {
+    "all_satisfied": true,
+    "verified_at": "2026-04-13T01:23:27.895Z",
+    "required": [
+      "IFC-072",
+      "IFC-098",
+      "IFC-099",
+      "IFC-106",
+      "IFC-124"
+    ]
+  },
+  "started_at": "2026-02-13T23:42:10+00:00",
+  "completed_at": null,
+  "execution": {
+    "retry_count": 0,
+    "last_error": null,
+    "executor": "orchestrator",
+    "log_path": "/c/Users/talys/projects/intelliFlow-CRM/artifacts/logs/execution-20260213-234206.log"
+  },
+  "artifacts": {
+    "expected": [],
+    "created": [],
+    "missing": []
+  },
+  "validations": [],
+  "kpis": {},
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "In Progress",
+      "at": "2026-02-13T23:42:10+00:00",
+      "note": "Task execution started"
+    }
+  ],
+  "current_phase": "ARCHITECT_SPEC",
+  "updated_at": "2026-02-13T23:42:12+00:00",
+  "attempt": 0,
+  "dependencies_resolved": [
+    "IFC-072",
+    "IFC-098",
+    "IFC-099",
+    "IFC-106",
+    "IFC-124"
+  ]
+}

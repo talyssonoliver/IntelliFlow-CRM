@@ -1,0 +1,49 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "IFC-083",
+  "section": "Documentation",
+  "description": "RAG Integration for Docs",
+  "owner": "AI Specialist + Tech Writer (STOA-Intelligence)",
+  "status": "BACKLOG",
+  "sprint": "sprint-0",
+  "phase": "phase-0-initialisation",
+  "stream": null,
+  "dependencies": {
+    "all_satisfied": true,
+    "verified_at": "2026-04-13T01:23:27.923Z",
+    "required": [
+      "IFC-039",
+      "IFC-082"
+    ]
+  },
+  "started_at": "2026-02-13T23:22:40+00:00",
+  "completed_at": null,
+  "execution": {
+    "retry_count": 0,
+    "last_error": null,
+    "executor": "orchestrator",
+    "log_path": "/c/Users/talys/projects/intelliFlow-CRM/artifacts/logs/execution-20260213-232237.log"
+  },
+  "artifacts": {
+    "expected": [],
+    "created": [],
+    "missing": []
+  },
+  "validations": [],
+  "kpis": {},
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "In Progress",
+      "at": "2026-02-13T23:22:40+00:00",
+      "note": "Task execution started"
+    }
+  ],
+  "current_phase": "ARCHITECT_SPEC",
+  "updated_at": "2026-02-13T23:22:42+00:00",
+  "attempt": 0,
+  "dependencies_resolved": [
+    "IFC-039",
+    "IFC-082"
+  ]
+}

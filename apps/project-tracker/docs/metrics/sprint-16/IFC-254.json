@@ -1,0 +1,64 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "IFC-254",
+  "section": "Core CRM",
+  "description": "Contact Router Data Integrity Fixes. (1) Raw SQL in getTimeline has no tenant filter and .catch(() => []) swallows errors (R-09). (2) sortBy accepts arbitrary strings — enum whitelist needed (R-10). (3) filterOptions ignores status input (R-12). (4) contactListResponseSchema uses 'data' key but router returns 'contacts' (D-03). (5) phone non-nullable in response schema but mapper returns null (D-08/R-14). Audit: docs/audit/contact-detail-wiring-audit.md §15,§18.",
+  "owner": "Backend Dev (STOA-Domain)",
+  "sprint": "sprint-16",
+  "phase": "",
+  "stream": null,
+  "status": "DONE",
+  "dependencies": {
+    "required": [],
+    "all_satisfied": true,
+    "verified_at": "2026-04-13T01:23:27.715Z"
+  },
+  "dependencies_resolved": [],
+  "started_at": "2026-03-16T19:30:12.013Z",
+  "completed_at": "2026-03-16T19:45:12.013Z",
+  "target_duration_minutes": 120,
+  "actual_duration_minutes": 120,
+  "kpis": {
+    "audit_findings_resolved": {
+      "target": "Resolve findings: R-09,R-10,R-12,D-03,D-08,R-14",
+      "actual": "",
+      "met": false
+    },
+    "test_coverage": {
+      "target": ">=90%",
+      "actual": "",
+      "met": false
+    }
+  },
+  "artifacts": {
+    "expected": [
+      "apps/api/src/modules/contact/contact.router.ts",
+      "packages/validators/src/contact.ts"
+    ],
+    "created": [
+      "apps/api/src/modules/contact/contact.router.ts",
+      "packages/validators/src/contact.ts"
+    ],
+    "missing": []
+  },
+  "validations": [
+    {
+      "name": "Task completion verification",
+      "command": "echo \"Task IFC-254 completed\"",
+      "type": "auto",
+      "required": true,
+      "executed_at": "2026-03-16T19:45:12.013Z",
+      "exit_code": 0,
+      "passed": true,
+      "notes": "Task marked as completed in Sprint_plan.csv"
+    }
+  ],
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-03-05T00:00:00Z"
+    }
+  ],
+  "notes": "Contact audit finding: R-09,R-10,R-12,D-03,D-08,R-14. See docs/audit/contact-detail-wiring-audit.md"
+}

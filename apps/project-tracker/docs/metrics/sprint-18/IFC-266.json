@@ -1,0 +1,53 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "IFC-266",
+  "section": "Core CRM",
+  "description": "Contact List/Create Page Tests + E2E. (1) Contact list page has ZERO page tests (T-02). (2) Contact create page has ZERO page tests — auth guard gap F-07 would be caught (T-03). (3) Bulk selection (select all, bulk email, bulk export) untested (T-05). (4) Contract tests missing for bulkEmail, bulkExport, bulkDelete (T-09). (5) No E2E Playwright tests for contact CRUD flow (T-10). Audit: docs/audit/contact-detail-wiring-audit.md §19.",
+  "owner": "Frontend Dev (STOA-Quality)",
+  "sprint": "sprint-18",
+  "phase": "",
+  "stream": null,
+  "status": "BACKLOG",
+  "dependencies": {
+    "required": [],
+    "all_satisfied": true,
+    "verified_at": "2026-04-13T01:23:27.776Z"
+  },
+  "dependencies_resolved": [],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": 480,
+  "actual_duration_minutes": null,
+  "kpis": {
+    "audit_findings_resolved": {
+      "target": "Resolve findings: T-02,T-03,T-05,T-09,T-10",
+      "actual": "",
+      "met": false
+    },
+    "test_coverage": {
+      "target": ">=90%",
+      "actual": "",
+      "met": false
+    }
+  },
+  "artifacts": {
+    "expected": [
+      "apps/web/src/app/contacts/(list)/__tests__/page.test.tsx",
+      "tests/e2e/contact-crud.spec.ts"
+    ],
+    "created": [],
+    "missing": [
+      "apps/web/src/app/contacts/(list)/__tests__/page.test.tsx",
+      "tests/e2e/contact-crud.spec.ts"
+    ]
+  },
+  "validations": [],
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-03-05T00:00:00Z"
+    }
+  ],
+  "notes": "Contact audit finding: T-02,T-03,T-05,T-09,T-10. See docs/audit/contact-detail-wiring-audit.md"
+}

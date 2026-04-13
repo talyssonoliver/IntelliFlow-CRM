@@ -1,0 +1,48 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "IFC-304",
+  "section": "Support",
+  "description": "Article Analytics Dashboard",
+  "owner": "Support Eng (STOA-Domain)",
+  "status": "BACKLOG",
+  "sprint": "sprint-19",
+  "phase": "",
+  "stream": null,
+  "dependencies": {
+    "required": [
+      "IFC-303",
+      "PG-180"
+    ],
+    "all_satisfied": false,
+    "verified_at": "2026-04-13T01:23:27.812Z"
+  },
+  "started_at": null,
+  "completed_at": null,
+  "execution": {
+    "retry_count": 0,
+    "last_error": null
+  },
+  "artifacts": {
+    "expected": [
+      "apps/web/src/components/support/article-analytics.tsx",
+      "apps/api/src/modules/help-article/help-article.router.ts"
+    ],
+    "created": [
+      "apps/api/src/modules/help-article/help-article.router.ts"
+    ],
+    "missing": [
+      "apps/web/src/components/support/article-analytics.tsx"
+    ]
+  },
+  "validations": [],
+  "kpis": {},
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-03-08T18:00:00Z",
+      "note": "Task created — Article analytics with views, feedback stats, search insights"
+    }
+  ],
+  "notes": "Analytics section in help article admin showing article views, feedback stats (helpful %, not helpful %), most/least helpful articles, search terms with no results. Uses tRPC helpArticle.getAnalytics."
+}

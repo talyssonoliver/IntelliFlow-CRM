@@ -1,0 +1,49 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "PG-180",
+  "section": "Support Pages",
+  "description": "Help Article Admin List Page",
+  "owner": "Support Eng (STOA-Domain)",
+  "status": "BACKLOG",
+  "sprint": "sprint-18",
+  "phase": "",
+  "stream": null,
+  "dependencies": {
+    "required": [
+      "IFC-299"
+    ],
+    "all_satisfied": true,
+    "verified_at": "2026-04-13T01:23:27.785Z"
+  },
+  "started_at": null,
+  "completed_at": null,
+  "execution": {
+    "retry_count": 0,
+    "last_error": null
+  },
+  "artifacts": {
+    "expected": [
+      "apps/web/src/app/settings/help-center/articles/page.tsx",
+      "apps/web/src/components/support/article-admin-list.tsx"
+    ],
+    "created": [],
+    "missing": [
+      "apps/web/src/app/settings/help-center/articles/page.tsx",
+      "apps/web/src/components/support/article-admin-list.tsx"
+    ]
+  },
+  "validations": [],
+  "kpis": {},
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-03-08T18:00:00Z",
+      "note": "Task created — Admin page for managing help articles"
+    }
+  ],
+  "notes": "Admin page at /settings/help-center/articles with article list, status badges (draft/published), category filters, search, create/edit/delete actions.",
+  "dependencies_resolved": [
+    "IFC-299"
+  ]
+}

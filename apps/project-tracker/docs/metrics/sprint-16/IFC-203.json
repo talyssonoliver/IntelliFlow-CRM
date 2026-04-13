@@ -1,0 +1,61 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "IFC-203",
+  "section": "Core CRM",
+  "description": "Activity Feed Full-Text Search - search endpoint with text query across titles descriptions and actor names",
+  "owner": "Backend Dev (STOA-Domain)",
+  "status": "DONE",
+  "sprint": "sprint-0",
+  "phase": "phase-0-initialisation",
+  "stream": null,
+  "dependencies": {
+    "all_satisfied": true,
+    "verified_at": "2026-04-13T01:23:27.701Z",
+    "required": [
+      "IFC-069",
+      "IFC-155"
+    ]
+  },
+  "started_at": "2026-02-13T23:42:14+00:00",
+  "completed_at": "2026-03-10T23:26:51.773Z",
+  "execution": {
+    "retry_count": 0,
+    "last_error": null,
+    "executor": "orchestrator",
+    "log_path": "/c/Users/talys/projects/intelliFlow-CRM/artifacts/logs/execution-20260213-234210.log"
+  },
+  "artifacts": {
+    "expected": [],
+    "created": [],
+    "missing": []
+  },
+  "validations": [
+    {
+      "name": "Task completion verification",
+      "command": "echo \"Task IFC-203 completed\"",
+      "type": "auto",
+      "required": true,
+      "executed_at": "2026-03-10T23:26:51.774Z",
+      "exit_code": 0,
+      "passed": true,
+      "notes": "Task marked as completed in Sprint_plan.csv"
+    }
+  ],
+  "kpis": {},
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "In Progress",
+      "at": "2026-02-13T23:42:14+00:00",
+      "note": "Task execution started"
+    }
+  ],
+  "current_phase": "ARCHITECT_SPEC",
+  "updated_at": "2026-02-13T23:42:16+00:00",
+  "attempt": 0,
+  "dependencies_resolved": [
+    "IFC-069",
+    "IFC-155"
+  ],
+  "actual_duration_minutes": 15
+}

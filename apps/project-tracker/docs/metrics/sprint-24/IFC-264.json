@@ -1,0 +1,53 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "IFC-264",
+  "section": "Core CRM",
+  "description": "Contact Bulk Import & Service Layer Fixes. (1) No CSV upload or bulk create for contacts (W-08). (2) listContacts service returns empty array as default when no ownerId/accountId — latent bug for future callers (W-15). (3) getContactStatistics returns empty for undefined ownerId (W-16). Audit: docs/audit/contact-detail-wiring-audit.md §17.",
+  "owner": "Backend Dev (STOA-Domain)",
+  "sprint": "sprint-24",
+  "phase": "",
+  "stream": null,
+  "status": "BACKLOG",
+  "dependencies": {
+    "required": [],
+    "all_satisfied": true,
+    "verified_at": "2026-04-13T01:23:28.092Z"
+  },
+  "dependencies_resolved": [],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": 240,
+  "actual_duration_minutes": null,
+  "kpis": {
+    "audit_findings_resolved": {
+      "target": "Resolve findings: W-08,W-15,W-16",
+      "actual": "",
+      "met": false
+    },
+    "test_coverage": {
+      "target": ">=90%",
+      "actual": "",
+      "met": false
+    }
+  },
+  "artifacts": {
+    "expected": [
+      "apps/api/src/modules/contact/contact.router.ts",
+      "packages/application/src/services/ContactService.ts"
+    ],
+    "created": [
+      "apps/api/src/modules/contact/contact.router.ts",
+      "packages/application/src/services/ContactService.ts"
+    ],
+    "missing": []
+  },
+  "validations": [],
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-03-05T00:00:00Z"
+    }
+  ],
+  "notes": "Contact audit finding: W-08,W-15,W-16. See docs/audit/contact-detail-wiring-audit.md"
+}

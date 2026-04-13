@@ -1,0 +1,56 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "IFC-259",
+  "section": "Core CRM",
+  "description": "Contact Dead UI Fields & Unused Components. (1) location/timezone always empty (F-10). (2) isOnline/isVIP always false — dead badges (F-11). (3) tags always empty array (F-12). (4) ContactDetail.tsx component unused by page — 597 lines with tests but never imported (F-14). (5) ContactCard.tsx unused by list page (F-28). (6) emailsOpened always 0 (F-20). Decision needed: wire to real data, show placeholder states, or remove dead UI. Audit: docs/audit/contact-detail-wiring-audit.md §16.",
+  "owner": "Frontend Dev (STOA-Quality)",
+  "sprint": "sprint-20",
+  "phase": "",
+  "stream": null,
+  "status": "BACKLOG",
+  "dependencies": {
+    "required": [],
+    "all_satisfied": true,
+    "verified_at": "2026-04-13T01:23:27.842Z"
+  },
+  "dependencies_resolved": [],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": 240,
+  "actual_duration_minutes": null,
+  "kpis": {
+    "audit_findings_resolved": {
+      "target": "Resolve findings: F-10,F-11,F-12,F-14,F-28,F-20",
+      "actual": "",
+      "met": false
+    },
+    "test_coverage": {
+      "target": ">=90%",
+      "actual": "",
+      "met": false
+    }
+  },
+  "artifacts": {
+    "expected": [
+      "apps/web/src/app/contacts/[id]/page.tsx",
+      "apps/web/src/components/contacts/ContactDetail.tsx",
+      "apps/web/src/components/contacts/ContactCard.tsx"
+    ],
+    "created": [
+      "apps/web/src/app/contacts/[id]/page.tsx",
+      "apps/web/src/components/contacts/ContactCard.tsx"
+    ],
+    "missing": [
+      "apps/web/src/components/contacts/ContactDetail.tsx"
+    ]
+  },
+  "validations": [],
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-03-05T00:00:00Z"
+    }
+  ],
+  "notes": "Contact audit finding: F-10,F-11,F-12,F-14,F-28,F-20. See docs/audit/contact-detail-wiring-audit.md"
+}

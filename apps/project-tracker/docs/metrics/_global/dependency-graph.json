@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/dependency-graph.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-04-12T22:57:33.119Z",
+  "last_updated": "2026-04-13T01:23:28.106Z",
   "description": "Cross-sprint dependency tracking for all tasks",
   "nodes": {
     "EXC-INIT-001": {
@@ -792,7 +792,7 @@
     "IFC-031": {
       "task_id": "IFC-031",
       "sprint": 17,
-      "status": "DONE",
+      "status": "IN_PROGRESS",
       "dependencies": [
         "IFC-028"
       ],
@@ -1114,7 +1114,8 @@
         "PG-118",
         "PG-119",
         "PG-122",
-        "PG-123"
+        "PG-123",
+        "IFC-309"
       ]
     },
     "IFC-059": {
@@ -2256,16 +2257,19 @@
     "PG-051": {
       "task_id": "PG-051",
       "sprint": 17,
-      "status": "PLANNED",
+      "status": "DONE",
       "dependencies": [
         "PG-050"
       ],
-      "dependents": []
+      "dependents": [
+        "PG-053",
+        "IFC-309"
+      ]
     },
     "PG-052": {
       "task_id": "PG-052",
       "sprint": 17,
-      "status": "BLOCKED",
+      "status": "DONE",
       "dependencies": [
         "PG-050"
       ],
@@ -2276,7 +2280,8 @@
       "sprint": 17,
       "status": "BACKLOG",
       "dependencies": [
-        "PG-050"
+        "PG-050",
+        "PG-051"
       ],
       "dependents": []
     },
@@ -3493,7 +3498,8 @@
       ],
       "dependents": [
         "PG-112",
-        "IFC-201"
+        "IFC-201",
+        "IFC-309"
       ]
     },
     "PG-126": {
@@ -6384,14 +6390,48 @@
     "PG-195": {
       "task_id": "PG-195",
       "sprint": 17,
-      "status": "Backlog",
+      "status": "BACKLOG",
       "dependencies": [
         "PG-056"
+      ],
+      "dependents": []
+    },
+    "IFC-309": {
+      "task_id": "IFC-309",
+      "sprint": 18,
+      "status": "BACKLOG",
+      "dependencies": [
+        "PG-051",
+        "IFC-058",
+        "IFC-124"
       ],
       "dependents": []
     }
   },
   "critical_paths": [
+    {
+      "name": "Path to IFC-031",
+      "tasks": [
+        "IFC-000",
+        "IFC-001",
+        "IFC-010",
+        "IFC-012",
+        "IFC-013",
+        "IFC-014",
+        "IFC-018",
+        "IFC-019",
+        "IFC-020",
+        "IFC-021",
+        "IFC-022",
+        "IFC-026",
+        "IFC-027",
+        "IFC-028",
+        "IFC-031"
+      ],
+      "total_duration_estimate_minutes": 225,
+      "completion_percentage": 93.3,
+      "blocking_status": "IFC-031"
+    },
     {
       "name": "Path to IFC-038",
       "tasks": [
@@ -6472,21 +6512,6 @@
       "total_duration_estimate_minutes": 240,
       "completion_percentage": 81.3,
       "blocking_status": "IFC-048"
-    },
-    {
-      "name": "Path to IFC-053",
-      "tasks": [
-        "IFC-000",
-        "IFC-001",
-        "IFC-008",
-        "IFC-046",
-        "IFC-040",
-        "IFC-052",
-        "IFC-053"
-      ],
-      "total_duration_estimate_minutes": 105,
-      "completion_percentage": 42.9,
-      "blocking_status": "IFC-046"
     }
   ],
   "cross_sprint_dependencies": [
@@ -10668,10 +10693,30 @@
       "from_sprint": 14,
       "to_sprint": 24,
       "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "PG-051",
+      "to_task": "IFC-309",
+      "from_sprint": 17,
+      "to_sprint": 18,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-058",
+      "to_task": "IFC-309",
+      "from_sprint": 11,
+      "to_sprint": 18,
+      "dependency_type": "REQUIRED"
+    },
+    {
+      "from_task": "IFC-124",
+      "to_task": "IFC-309",
+      "from_sprint": 9,
+      "to_sprint": 18,
+      "dependency_type": "REQUIRED"
     }
   ],
   "blocked_tasks": [
-    "PG-052",
     "PG-060",
     "PG-061",
     "PG-062",
@@ -10752,7 +10797,6 @@
     "PG-120"
   ],
   "ready_to_start": [
-    "PG-051",
     "PG-053",
     "PG-057",
     "PG-126",
@@ -10763,6 +10807,7 @@
     "PG-184",
     "PG-185",
     "PG-186",
+    "PG-195",
     "IFC-032",
     "PG-058",
     "PG-059",
@@ -10794,6 +10839,7 @@
     "PG-189",
     "PG-190",
     "PG-191",
+    "IFC-309",
     "PG-064",
     "PG-065",
     "PG-069",
@@ -10942,12 +10988,6 @@
     "sprint-16": {},
     "sprint-17": {
       "group-1": [
-        "PG-051",
-        "PG-052",
-        "PG-053",
-        "PG-054"
-      ],
-      "group-2": [
         "PG-182",
         "PG-183",
         "PG-184",
