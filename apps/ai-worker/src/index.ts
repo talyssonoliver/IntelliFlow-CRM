@@ -396,14 +396,10 @@ const isDirectExecution =
   );
 
 if (isDirectExecution) {
-  (async () => {
-    try {
-      await main();
-    } catch (error: unknown) {
-      console.error('Fatal error:', error);
-      process.exit(1);
-    }
-  })().catch(() => {}); // NOSONAR typescript:S7785 — top-level await unavailable in CJS modules; async IIFE is the correct pattern
+  main().catch((error: unknown) => {
+    console.error('Fatal error:', error);
+    process.exit(1);
+  });
 }
 
 // Export initialize function for programmatic use

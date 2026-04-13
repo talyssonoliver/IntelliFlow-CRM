@@ -232,7 +232,6 @@ async function runBenchmarks() {
 
 // Run benchmarks
 runBenchmarks().catch((error) => {
-  // NOSONAR typescript:S7785 — top-level await unavailable in CJS modules
   console.error('Fatal error:', error);
   process.exit(1);
 });

@@ -267,7 +267,7 @@ export class RAGContextChain {
     // Fall back to mock only in test mode or if explicitly enabled
     if (this.useMockFallback) {
       logger.warn('Using mock retrieval - RetrievalService not configured');
-      return this.performMockRetrieval(input); // NOSONAR typescript:S1874 — intentional test-fallback call
+      return this.performFallbackRetrieval(input);
     }
 
     // In production without RetrievalService, throw error
@@ -360,10 +360,11 @@ export class RAGContextChain {
   }
 
   /**
-   * Mock retrieval for testing only
-   * @deprecated Use real RetrievalService in production
+   * Fallback retrieval used only when `useMockFallback` is enabled and no
+   * RetrievalService has been wired in (test mode). Production code paths
+   * always use `performRealRetrieval` via an injected RetrievalService.
    */
-  private async performMockRetrieval(input: RAGContextInput): Promise<ContextItem[]> {
+  private async performFallbackRetrieval(input: RAGContextInput): Promise<ContextItem[]> {
     // Simulate database query delay
     await new Promise((resolve) => setTimeout(resolve, 50));
 
