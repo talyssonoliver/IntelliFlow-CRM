@@ -105,9 +105,4 @@ export function getConfigForm(type: NodeTypeId): ConfigFormComponent | null {
 // Re-exports from the domain catalog (convenience)
 // ---------------------------------------------------------------------------
 
-export {
-  NODE_TYPE_IDS,
-  NODE_DISPLAY_META,
-  defaultConfigForType,
-  type NodeTypeId,
-};
+export { NODE_TYPE_IDS, NODE_DISPLAY_META, defaultConfigForType, type NodeTypeId };

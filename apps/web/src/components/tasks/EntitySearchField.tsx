@@ -3,8 +3,18 @@
 import { useState, useRef, useEffect, useCallback, useId } from 'react';
 import { api } from '@/lib/api';
 
+export type EntitySearchKind =
+  | 'lead'
+  | 'contact'
+  | 'opportunity'
+  | 'account'
+  | 'user'
+  | 'team'
+  | 'case'
+  | 'task';
+
 export interface EntitySearchFieldProps {
-  readonly entityType: 'lead' | 'contact' | 'opportunity' | 'account';
+  readonly entityType: EntitySearchKind;
   readonly value: string;
   readonly valueName: string;
   readonly onChange: (id: string, name: string) => void;
@@ -21,11 +31,15 @@ function useDebounce(value: string, delay: number): string {
   return debouncedValue;
 }
 
-const ENTITY_LABELS: Record<string, string> = {
+const ENTITY_LABELS: Record<EntitySearchKind, string> = {
   lead: 'Lead',
   contact: 'Contact',
   opportunity: 'Deal',
   account: 'Account',
+  user: 'User',
+  team: 'Team',
+  case: 'Case',
+  task: 'Task',
 };
 
 export function EntitySearchField({
@@ -75,6 +89,22 @@ export function EntitySearchField({
     { search: debouncedSearch, limit: 5, page: 1 },
     { enabled: entityType === 'account' && open && debouncedSearch.length > 0 }
   );
+  const userQuery = api.user.list.useQuery(
+    { search: debouncedSearch, limit: 5 },
+    { enabled: entityType === 'user' && open && debouncedSearch.length > 0 }
+  );
+  const teamQuery = api.team.list.useQuery(
+    { search: debouncedSearch, limit: 5 },
+    { enabled: entityType === 'team' && open && debouncedSearch.length > 0 }
+  );
+  const caseQuery = api.cases.list.useQuery(
+    { search: debouncedSearch, limit: 5, page: 1 } as never,
+    { enabled: entityType === 'case' && open && debouncedSearch.length > 0 }
+  );
+  const taskQuery = api.task.list.useQuery(
+    { search: debouncedSearch, limit: 5, page: 1 } as never,
+    { enabled: entityType === 'task' && open && debouncedSearch.length > 0 }
+  );
 
   const getResults = useCallback((): Array<{ id: string; name: string }> => {
     if (entityType === 'lead' && leadQuery.data) {
@@ -109,20 +139,55 @@ export function EntitySearchField({
         })) ?? []
       );
     }
+    if (entityType === 'user' && userQuery.data) {
+      return (
+        userQuery.data.users?.map((u: { id: string; name: string }) => ({
+          id: u.id,
+          name: u.name,
+        })) ?? []
+      );
+    }
+    if (entityType === 'team' && teamQuery.data) {
+      return (
+        teamQuery.data.teams?.map((t: { id: string; name: string }) => ({
+          id: t.id,
+          name: t.name,
+        })) ?? []
+      );
+    }
+    if (entityType === 'case' && caseQuery.data) {
+      const casesData = (caseQuery.data as { cases?: Array<{ id: string; title: string }> }).cases;
+      return casesData?.map((c) => ({ id: c.id, name: c.title })) ?? [];
+    }
+    if (entityType === 'task' && taskQuery.data) {
+      const tasksData = (taskQuery.data as { tasks?: Array<{ id: string; title: string }> }).tasks;
+      return tasksData?.map((t) => ({ id: t.id, name: t.title })) ?? [];
+    }
     return [];
-  }, [entityType, leadQuery.data, contactQuery.data, opportunityQuery.data, accountQuery.data]);
+  }, [
+    entityType,
+    leadQuery.data,
+    contactQuery.data,
+    opportunityQuery.data,
+    accountQuery.data,
+    userQuery.data,
+    teamQuery.data,
+    caseQuery.data,
+    taskQuery.data,
+  ]);
 
   const results = getResults();
-  let isLoading: boolean;
-  if (entityType === 'lead') {
-    isLoading = leadQuery.isLoading;
-  } else if (entityType === 'contact') {
-    isLoading = contactQuery.isLoading;
-  } else if (entityType === 'account') {
-    isLoading = accountQuery.isLoading;
-  } else {
-    isLoading = opportunityQuery.isLoading;
-  }
+  const loadingByType: Record<EntitySearchKind, boolean> = {
+    lead: leadQuery.isLoading,
+    contact: contactQuery.isLoading,
+    opportunity: opportunityQuery.isLoading,
+    account: accountQuery.isLoading,
+    user: userQuery.isLoading,
+    team: teamQuery.isLoading,
+    case: caseQuery.isLoading,
+    task: taskQuery.isLoading,
+  };
+  const isLoading = loadingByType[entityType] ?? false;
 
   function handleSelect(id: string, name: string) {
     onChange(id, name);

@@ -321,7 +321,6 @@ export function MfaVerification({
 
       {/* Loading indicator (for test) */}
       {verifyMfaMutation.isPending && (
-         
         <output
           data-testid="loading-indicator"
           className="absolute inset-0 bg-slate-900/50 flex items-center justify-center z-10 block"

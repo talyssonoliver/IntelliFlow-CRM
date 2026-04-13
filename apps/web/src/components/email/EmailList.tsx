@@ -2,7 +2,13 @@
 
 import { useCallback, useRef } from 'react';
 
-const EMAIL_LIST_SKELETON_KEYS = ['em-skel-0', 'em-skel-1', 'em-skel-2', 'em-skel-3', 'em-skel-4'] as const;
+const EMAIL_LIST_SKELETON_KEYS = [
+  'em-skel-0',
+  'em-skel-1',
+  'em-skel-2',
+  'em-skel-3',
+  'em-skel-4',
+] as const;
 import { AlertCircle, RotateCcw } from 'lucide-react';
 import { EmptyState } from '@intelliflow/ui';
 import { cn } from '@/lib/utils';

@@ -84,7 +84,9 @@ vi.mock('@/components/shared/search-filter-bar', () => ({
           aria-label={f.label}
         >
           {f.options.map((opt) => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
           ))}
         </select>
       ))}
@@ -93,9 +95,7 @@ vi.mock('@/components/shared/search-filter-bar', () => ({
 }));
 
 vi.mock('@intelliflow/ui', () => ({
-  EmptyState: ({ title }: { title: string }) => (
-    <div data-testid="empty-state">{title}</div>
-  ),
+  EmptyState: ({ title }: { title: string }) => <div data-testid="empty-state">{title}</div>,
   StatusBadge: ({ status }: { status: string }) => (
     <span data-testid={`status-badge-${status}`}>{status}</span>
   ),
@@ -118,51 +118,60 @@ vi.mock('@intelliflow/ui', () => ({
       onClick={() => onCheckedChange(!checked)}
     />
   ),
-  Button: ({ children, onClick, 'aria-label': ariaLabel, variant: _variant, size: _size }: {
-    children?: React.ReactNode;
-    onClick?: () => void;
-    'aria-label'?: string;
+  // TableRowActions — quick actions render as inline buttons; dropdown
+  // actions become a "More actions" trigger that, when clicked, exposes
+  // each item as its own button. Tests can target by the action's label.
+  TableRowActions: ({
+    quickActions,
+    dropdownActions,
+  }: {
+    quickActions?: Array<{ icon: string; label: string; onClick: () => void }>;
+    dropdownActions?: Array<{ id?: string; label: string; onClick: () => void; variant?: string }>;
+  }) => (
+    <div data-testid="row-actions">
+      {quickActions?.map((a) => (
+        <button key={a.label} aria-label={a.label} onClick={a.onClick}>
+          {a.label}
+        </button>
+      ))}
+      {dropdownActions?.map((a) => (
+        <button key={a.id ?? a.label} aria-label={a.label} onClick={a.onClick}>
+          {a.label}
+        </button>
+      ))}
+    </div>
+  ),
+  // ConfirmationDialog — single shared dialog at list level.
+  ConfirmationDialog: ({
+    open,
+    onOpenChange,
+    title,
+    description,
+    confirmLabel,
+    onConfirm,
+  }: {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    title: string;
+    description?: string;
+    confirmLabel?: string;
+    onConfirm: () => void;
     variant?: string;
-    size?: string;
-  }) => (
-    <button onClick={onClick} aria-label={ariaLabel}>{children}</button>
-  ),
-  AlertDialog: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="alert-dialog-root">{children}</div>
-  ),
-  AlertDialogTrigger: ({ children }: { children: React.ReactNode }) =>
-    children,
-  AlertDialogContent: ({ children }: { children: React.ReactNode }) => (
-    <div role="alertdialog">{children}</div>
-  ),
-  AlertDialogHeader: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  AlertDialogTitle: ({ children }: { children: React.ReactNode }) => <h2>{children}</h2>,
-  AlertDialogDescription: ({ children }: { children: React.ReactNode }) => (
-    <p>{children}</p>
-  ),
-  AlertDialogFooter: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  AlertDialogCancel: ({
-    children,
-    onClick,
-  }: {
-    children: React.ReactNode;
-    onClick?: () => void;
-  }) => (
-    <button onClick={onClick} aria-label="cancel">
-      {children}
-    </button>
-  ),
-  AlertDialogAction: ({
-    children,
-    onClick,
-  }: {
-    children: React.ReactNode;
-    onClick?: () => void;
-  }) => (
-    <button onClick={onClick} aria-label="confirm">
-      {children}
-    </button>
-  ),
+  }) => {
+    if (!open) return null;
+    return (
+      <div role="alertdialog">
+        <h2>{title}</h2>
+        {description ? <p>{description}</p> : null}
+        <button aria-label="cancel" onClick={() => onOpenChange(false)}>
+          Cancel
+        </button>
+        <button aria-label="confirm" onClick={onConfirm}>
+          {confirmLabel ?? 'Confirm'}
+        </button>
+      </div>
+    );
+  },
 }));
 
 const { WorkflowList } = await import('../WorkflowList');
@@ -359,15 +368,19 @@ describe('WorkflowList', () => {
     expect(mockOnEdit).toHaveBeenCalledWith('wf-1');
   });
 
-  it('renders + Create Workflow button and calls onCreateNew when provided', () => {
+  it('does NOT render its own + Create Workflow button (page header owns the CTA)', () => {
+    // Per the canonical CRM list pattern (Leads / Contacts / Cases), the
+    // primary "create" action lives in the page-level PageHeader, not in
+    // the list body. WorkflowList no longer renders an inline create
+    // button even when `onCreateNew` is provided — the prop is kept for
+    // back-compat but no longer surfaces a duplicate button.
     const mockCreateNew = vi.fn();
     mockListQuery.mockReturnValue({
       data: { items: [activeWorkflow] },
       isLoading: false,
     });
     render(<WorkflowList onEdit={vi.fn()} onCreateNew={mockCreateNew} />);
-    const createBtn = screen.getByRole('button', { name: /create workflow/i });
-    fireEvent.click(createBtn);
-    expect(mockCreateNew).toHaveBeenCalled();
+    expect(screen.queryByRole('button', { name: /create workflow/i })).not.toBeInTheDocument();
+    expect(mockCreateNew).not.toHaveBeenCalled();
   });
 });

@@ -29,6 +29,7 @@ vi.mock('@xyflow/react', () => ({
     children,
     nodes,
     onNodeClick,
+    onNodeDoubleClick,
     onPaneClick,
   }: {
     children?: React.ReactNode;
@@ -39,19 +40,28 @@ vi.mock('@xyflow/react', () => ({
     onEdgesChange?: unknown;
     onConnect?: unknown;
     onNodeClick?: (event: React.MouseEvent, node: { id: string }) => void;
+    onNodeDoubleClick?: (event: React.MouseEvent, node: { id: string }) => void;
     onPaneClick?: () => void;
     fitView?: boolean;
     className?: string;
   }) => (
     <div data-testid="react-flow">
       {nodes?.map((n) => (
-        <button
-          key={n.id}
-          data-testid={`rf-node-${n.id}`}
-          onClick={(e) => onNodeClick?.(e, n as never)}
-        >
-          {n.id}
-        </button>
+        // Per-node test harness: a single-click button (existing tests use
+        // it to verify selection / config-open behaviour) PLUS a separate
+        // double-click button so tests can target the new "double-click
+        // opens config" gesture without relying on jsdom's flaky dblclick.
+        <div key={n.id}>
+          <button data-testid={`rf-node-${n.id}`} onClick={(e) => onNodeClick?.(e, n as never)}>
+            {n.id}
+          </button>
+          <button
+            data-testid={`rf-node-${n.id}-dblclick`}
+            onClick={(e) => onNodeDoubleClick?.(e, n as never)}
+          >
+            dblclick {n.id}
+          </button>
+        </div>
       ))}
       <button data-testid="pane" onClick={onPaneClick}>
         pane
@@ -63,12 +73,9 @@ vi.mock('@xyflow/react', () => ({
   Background: () => <div data-testid="rf-background" />,
   Controls: () => <div data-testid="rf-controls" />,
   MiniMap: () => <div data-testid="rf-minimap" />,
-  Panel: ({
-    children,
-  }: {
-    children: React.ReactNode;
-    position?: string;
-  }) => <div data-testid="rf-panel">{children}</div>,
+  Panel: ({ children }: { children: React.ReactNode; position?: string }) => (
+    <div data-testid="rf-panel">{children}</div>
+  ),
   useReactFlow: () => ({
     zoomIn: vi.fn(),
     zoomOut: vi.fn(),
@@ -80,9 +87,7 @@ vi.mock('@xyflow/react', () => ({
 // Hoisted so vi.mock() factory above can reference it without TDZ errors.
 // Default implementation = identity transform; tests override per-case.
 const { mockScreenToFlowPosition } = vi.hoisted(() => ({
-  mockScreenToFlowPosition: vi.fn(
-    ({ x, y }: { x: number; y: number }) => ({ x, y })
-  ),
+  mockScreenToFlowPosition: vi.fn(({ x, y }: { x: number; y: number }) => ({ x, y })),
 }));
 
 // ---------------------------------------------------------------------------
@@ -205,11 +210,7 @@ vi.mock('../WorkflowToolbar', () => ({
     onRedo: () => void;
   }) => (
     <div data-testid="workflow-toolbar">
-      <button
-        onClick={onSave}
-        disabled={!isValid || isSaving}
-        data-testid="toolbar-save"
-      >
+      <button onClick={onSave} disabled={!isValid || isSaving} data-testid="toolbar-save">
         Save
       </button>
     </div>
@@ -217,13 +218,9 @@ vi.mock('../WorkflowToolbar', () => ({
 }));
 
 vi.mock('@intelliflow/ui', () => ({
-  Button: ({
-    children,
-    onClick,
-  }: {
-    children?: React.ReactNode;
-    onClick?: () => void;
-  }) => <button onClick={onClick}>{children}</button>,
+  Button: ({ children, onClick }: { children?: React.ReactNode; onClick?: () => void }) => (
+    <button onClick={onClick}>{children}</button>
+  ),
   toast: vi.fn(),
 }));
 
@@ -241,7 +238,12 @@ const { ReactFlowComponent } = await import('../ReactFlowComponent');
 function defaultCanvasReturn() {
   return {
     nodes: [
-      { id: 'node-1', type: 'start', position: { x: 0, y: 0 }, data: { label: 'Start', config: {} } },
+      {
+        id: 'node-1',
+        type: 'start',
+        position: { x: 0, y: 0 },
+        data: { label: 'Start', config: {} },
+      },
       { id: 'node-2', type: 'end', position: { x: 200, y: 0 }, data: { label: 'End', config: {} } },
     ],
     edges: [{ id: 'e1', source: 'node-1', target: 'node-2' }],
@@ -295,7 +297,36 @@ describe('ReactFlowComponent', () => {
     expect(hydratedNodes[0].position).toEqual({ x: 10, y: 20 });
   });
 
-  it('hydrates nodes from legacy flat array (no edges)', () => {
+  it('does NOT auto-synthesize edges when an envelope persists edges:[] (Codex P1 regression)', () => {
+    // A user can deliberately save a draft with disconnected nodes —
+    // envelope-shape `{ nodes, edges: [] }` means "no transitions". The
+    // hydrator MUST trust that empty array and not overwrite it with
+    // auto-edges, otherwise the next save persists unintended links.
+    mockWorkflowQuery.mockReturnValue({
+      data: {
+        steps: {
+          nodes: [
+            { id: 1, type: 'start', config: {}, position: { x: 0, y: 0 } },
+            { id: 2, type: 'end', config: {}, position: { x: 0, y: 200 } },
+          ],
+          edges: [],
+        },
+      },
+      isLoading: false,
+    });
+
+    render(<ReactFlowComponent workflowId="wf-empty-edges" />);
+
+    const callArgs = mockUseWorkflowCanvas.mock.calls[0];
+    const hydratedEdges = callArgs[1];
+    expect(hydratedEdges).toEqual([]);
+  });
+
+  it('hydrates nodes from legacy flat array AND auto-synthesizes sequential edges', () => {
+    // Phase E v3 fix: legacy seeded workflows (Ticket Auto-Routing,
+    // Lead Qualification) persist a flat steps array with no edges. The
+    // hydrator now synthesizes top-to-bottom sequential edges so the
+    // graph displays as a connected chain, not orphaned silos.
     mockWorkflowQuery.mockReturnValue({
       data: {
         steps: [
@@ -312,10 +343,13 @@ describe('ReactFlowComponent', () => {
     const hydratedNodes = callArgs[0];
     const hydratedEdges = callArgs[1];
     expect(hydratedNodes).toHaveLength(2);
-    // Legacy format gets fallback positions
     expect(hydratedNodes[1].position).toEqual({ x: 250, y: 200 });
-    // No edges in legacy format
-    expect(hydratedEdges).toEqual([]);
+
+    // Auto-synthesized edges connect node-1 → node-2
+    expect(hydratedEdges).toHaveLength(1);
+    expect(hydratedEdges[0].source).toBe('node-1');
+    expect(hydratedEdges[0].target).toBe('node-2');
+    expect(hydratedEdges[0].id).toMatch(/^auto-edge-/);
   });
 
   it('renders empty canvas with guidance when no steps exist', () => {
@@ -335,8 +369,18 @@ describe('ReactFlowComponent', () => {
   it('save on new workflow calls createMutation with sequential IDs and remapped edges', async () => {
     const canvas = defaultCanvasReturn();
     canvas.nodes = [
-      { id: 'node-1700000001', type: 'start', position: { x: 0, y: 0 }, data: { label: 'Start', config: {} } },
-      { id: 'node-1700000002', type: 'end', position: { x: 200, y: 0 }, data: { label: 'End', config: {} } },
+      {
+        id: 'node-1700000001',
+        type: 'start',
+        position: { x: 0, y: 0 },
+        data: { label: 'Start', config: {} },
+      },
+      {
+        id: 'node-1700000002',
+        type: 'end',
+        position: { x: 200, y: 0 },
+        data: { label: 'End', config: {} },
+      },
     ];
     canvas.edges = [{ id: 'e1', source: 'node-1700000001', target: 'node-1700000002' }];
     mockUseWorkflowCanvas.mockReturnValue(canvas);
@@ -373,14 +417,14 @@ describe('ReactFlowComponent', () => {
     });
   });
 
-  it('clicking a node opens NodeConfigPanel', () => {
+  it('double-clicking a node opens NodeConfigPanel (single click only selects)', () => {
     render(<ReactFlowComponent />);
 
     // Config panel should not be visible initially
     expect(screen.queryByTestId('node-config-panel')).not.toBeInTheDocument();
 
     // Click a node
-    fireEvent.click(screen.getByTestId('rf-node-node-1'));
+    fireEvent.click(screen.getByTestId('rf-node-node-1-dblclick'));
 
     // Config panel should now be visible
     expect(screen.getByTestId('node-config-panel')).toBeInTheDocument();
@@ -402,14 +446,16 @@ describe('ReactFlowComponent', () => {
     render(<ReactFlowComponent />);
 
     // Click a node to open config panel
-    fireEvent.click(screen.getByTestId('rf-node-node-1'));
+    fireEvent.click(screen.getByTestId('rf-node-node-1-dblclick'));
     expect(screen.getByTestId('node-config-panel')).toBeInTheDocument();
 
     // Save config
     fireEvent.click(screen.getByTestId('config-save'));
 
     // updateNodeConfig should be called
-    expect(canvas.updateNodeConfig).toHaveBeenCalledWith('node-1', { actionType: 'send_notification' });
+    expect(canvas.updateNodeConfig).toHaveBeenCalledWith('node-1', {
+      actionType: 'send_notification',
+    });
 
     // Panel should close
     expect(screen.queryByTestId('node-config-panel')).not.toBeInTheDocument();
@@ -419,7 +465,7 @@ describe('ReactFlowComponent', () => {
     render(<ReactFlowComponent />);
 
     // Open panel
-    fireEvent.click(screen.getByTestId('rf-node-node-1'));
+    fireEvent.click(screen.getByTestId('rf-node-node-1-dblclick'));
     expect(screen.getByTestId('node-config-panel')).toBeInTheDocument();
 
     // Close it
@@ -432,7 +478,7 @@ describe('ReactFlowComponent', () => {
     render(<ReactFlowComponent />);
 
     // Open panel
-    fireEvent.click(screen.getByTestId('rf-node-node-1'));
+    fireEvent.click(screen.getByTestId('rf-node-node-1-dblclick'));
     expect(screen.getByTestId('node-config-panel')).toBeInTheDocument();
 
     // Click pane (background)
@@ -443,16 +489,16 @@ describe('ReactFlowComponent', () => {
 
   it('uses externalNodes/externalEdges when provided', () => {
     const externalNodes = [
-      { id: 'ext-1', type: 'start', position: { x: 0, y: 0 }, data: { label: 'External Start', config: {} } },
+      {
+        id: 'ext-1',
+        type: 'start',
+        position: { x: 0, y: 0 },
+        data: { label: 'External Start', config: {} },
+      },
     ];
     const externalEdges = [{ id: 'ext-e1', source: 'ext-1', target: 'ext-2' }];
 
-    render(
-      <ReactFlowComponent
-        nodes={externalNodes as never}
-        edges={externalEdges as never}
-      />,
-    );
+    render(<ReactFlowComponent nodes={externalNodes as never} edges={externalEdges as never} />);
 
     // useWorkflowCanvas should receive the external nodes/edges
     const callArgs = mockUseWorkflowCanvas.mock.calls[0];
@@ -495,7 +541,10 @@ describe('ReactFlowComponent', () => {
       });
     });
 
-    expect(canvas.addNode).toHaveBeenCalledWith('action', expect.objectContaining({ x: expect.any(Number), y: expect.any(Number) }));
+    expect(canvas.addNode).toHaveBeenCalledWith(
+      'action',
+      expect.objectContaining({ x: expect.any(Number), y: expect.any(Number) })
+    );
   });
 
   it('DnD drag end does nothing when over is null', () => {
@@ -548,10 +597,7 @@ describe('ReactFlowComponent', () => {
   });
 
   it('WorkflowCanvas.tsx does NOT import from @xyflow/react (SSR invariant)', () => {
-    const canvasSource = readFileSync(
-      resolve(__dirname, '../WorkflowCanvas.tsx'),
-      'utf-8',
-    );
+    const canvasSource = readFileSync(resolve(__dirname, '../WorkflowCanvas.tsx'), 'utf-8');
     // WorkflowCanvas must NOT have direct @xyflow/react imports
     expect(canvasSource).not.toMatch(/from ['"]@xyflow\/react['"]/);
   });

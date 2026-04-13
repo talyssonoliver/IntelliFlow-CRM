@@ -126,14 +126,14 @@ export function PauseSubscriptionModal({
             <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
               <span className="material-symbols-outlined text-lg text-[#137fec]" aria-hidden="true">
                 shield
-              </span>
-              {' '}CRM Data securely stored and accessible upon return.
+              </span>{' '}
+              CRM Data securely stored and accessible upon return.
             </div>
             <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
               <span className="material-symbols-outlined text-lg text-[#137fec]" aria-hidden="true">
                 model_training
-              </span>
-              {' '}AI model progress and configurations saved.
+              </span>{' '}
+              AI model progress and configurations saved.
             </div>
           </div>
         </div>
@@ -175,8 +175,8 @@ export function PauseSubscriptionModal({
               <>
                 <span className="material-symbols-outlined text-lg" aria-hidden="true">
                   pause_circle
-                </span>
-                {' '}Pause Subscription
+                </span>{' '}
+                Pause Subscription
               </>
             )}
           </Button>

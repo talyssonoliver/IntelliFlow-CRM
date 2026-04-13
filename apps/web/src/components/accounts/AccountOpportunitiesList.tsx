@@ -8,7 +8,13 @@ import type { OpportunityStage } from '@intelliflow/domain';
 import { formatCurrency } from '@/lib/pricing/calculator';
 
 const OPP_GRID_SKELETON_KEYS = ['opp-grid-0', 'opp-grid-1', 'opp-grid-2'] as const;
-const OPP_LIST_SKELETON_KEYS = ['opp-list-0', 'opp-list-1', 'opp-list-2', 'opp-list-3', 'opp-list-4'] as const;
+const OPP_LIST_SKELETON_KEYS = [
+  'opp-list-0',
+  'opp-list-1',
+  'opp-list-2',
+  'opp-list-3',
+  'opp-list-4',
+] as const;
 
 interface AccountOpportunity {
   id: string;

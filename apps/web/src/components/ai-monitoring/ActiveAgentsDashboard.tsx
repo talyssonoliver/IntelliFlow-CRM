@@ -37,7 +37,13 @@ const BREADCRUMBS = [
   { label: 'Active Agents' },
 ];
 
-const AGENTS_GRID_SKELETON_KEYS = ['agent-grid-0', 'agent-grid-1', 'agent-grid-2', 'agent-grid-3', 'agent-grid-4'] as const;
+const AGENTS_GRID_SKELETON_KEYS = [
+  'agent-grid-0',
+  'agent-grid-1',
+  'agent-grid-2',
+  'agent-grid-3',
+  'agent-grid-4',
+] as const;
 const AGENTS_LIST_SKELETON_KEYS = ['agent-list-0', 'agent-list-1', 'agent-list-2'] as const;
 
 const TYPE_CHIPS = [
@@ -185,15 +191,15 @@ function AgentCard({
               >
                 <span className="material-symbols-outlined text-sm">
                   {isExpanded ? 'expand_less' : 'expand_more'}
-                </span>
-                {' '}Workflow
+                </span>{' '}
+                Workflow
               </button>
             )}
             <Link
               href={`/agent-approvals/logs/${agentId}`}
               className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs hover:bg-muted transition-colors"
             >
-              <span className="material-symbols-outlined text-sm">description</span>{' '}Logs
+              <span className="material-symbols-outlined text-sm">description</span> Logs
             </Link>
             {agent.status === 'error' && (
               <Button

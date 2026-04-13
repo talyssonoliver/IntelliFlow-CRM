@@ -244,20 +244,19 @@ export function TaskDetail({
                 {formatDate(task.dueDate, timezone)}
                 {dueStatus === 'overdue' && <span className="ml-1 text-xs">(overdue)</span>}
               </p>
-              {onReschedule &&
-                isTaskActive(task.status) && (
-                  <button
-                    type="button"
-                    onClick={() => setShowReschedule((v) => !v)}
-                    disabled={isRescheduling}
-                    className="text-muted-foreground hover:text-foreground disabled:opacity-50"
-                    aria-label="Reschedule task"
-                  >
-                    <span className="material-symbols-outlined text-base" aria-hidden="true">
-                      {isRescheduling ? 'hourglass_empty' : 'calendar_month'}
-                    </span>
-                  </button>
-                )}
+              {onReschedule && isTaskActive(task.status) && (
+                <button
+                  type="button"
+                  onClick={() => setShowReschedule((v) => !v)}
+                  disabled={isRescheduling}
+                  className="text-muted-foreground hover:text-foreground disabled:opacity-50"
+                  aria-label="Reschedule task"
+                >
+                  <span className="material-symbols-outlined text-base" aria-hidden="true">
+                    {isRescheduling ? 'hourglass_empty' : 'calendar_month'}
+                  </span>
+                </button>
+              )}
             </div>
             {showReschedule && onReschedule && (
               <input
@@ -396,21 +395,21 @@ export function TaskDetail({
           </button>
         )}
         {isTaskActive(task.status) && (
-            <button
-              type="button"
-              onClick={() => setShowDeleteConfirm(true)}
-              disabled={isDeleting}
-              className="px-4 py-2 text-sm rounded-md border border-destructive text-destructive hover:bg-destructive/10 disabled:opacity-50 disabled:cursor-not-allowed"
-              aria-label="Delete task"
-            >
-              <span className="inline-flex items-center gap-1">
-                <span className="material-symbols-outlined text-base" aria-hidden="true">
-                  {isDeleting ? 'hourglass_empty' : 'delete'}
-                </span>{' '}
-                {isDeleting ? 'Deleting...' : 'Delete'}
-              </span>
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => setShowDeleteConfirm(true)}
+            disabled={isDeleting}
+            className="px-4 py-2 text-sm rounded-md border border-destructive text-destructive hover:bg-destructive/10 disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label="Delete task"
+          >
+            <span className="inline-flex items-center gap-1">
+              <span className="material-symbols-outlined text-base" aria-hidden="true">
+                {isDeleting ? 'hourglass_empty' : 'delete'}
+              </span>{' '}
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </span>
+          </button>
+        )}
       </div>
 
       {/* Assign Panel */}

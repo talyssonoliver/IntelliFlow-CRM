@@ -61,7 +61,7 @@ export function EmailListItem({ email, isSelected, onSelect }: Readonly<EmailLis
       side="right"
       align="start"
     >
-      { }
+      {}
       <li
         role="option"
         aria-selected={isSelected}

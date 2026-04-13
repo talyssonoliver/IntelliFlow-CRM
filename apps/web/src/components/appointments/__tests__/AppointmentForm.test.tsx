@@ -2,10 +2,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 
 vi.mock('@/hooks/useCalendarVisibility', () => ({
-  useCalendarVisibility: () => ({
+  useCalendarVisibilityOptional: () => ({
     calendars: [],
     toggle: vi.fn(),
     isVisible: () => true,
+    setOnlyVisible: vi.fn(),
     addCalendar: vi.fn(),
     removeCalendar: vi.fn(),
     dbCalendars: [],

@@ -259,7 +259,7 @@ export function WorkflowProgressPanel({
         </header>
 
         {/* Progress bar */}
-        { }
+        {}
         <Progress
           value={completedPercent}
           className="h-1.5 mb-4"

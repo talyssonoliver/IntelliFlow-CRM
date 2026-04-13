@@ -43,7 +43,16 @@ import type { TicketListItem, TicketStats, TicketFilterOptions, BulkActionType }
 
 const STATS_SKELETON_KEYS = ['stats-0', 'stats-1', 'stats-2', 'stats-3'] as const;
 const FILTER_SKELETON_KEYS = ['filter-0', 'filter-1', 'filter-2', 'filter-3', 'filter-4'] as const;
-const TABLE_SKELETON_KEYS = ['row-0', 'row-1', 'row-2', 'row-3', 'row-4', 'row-5', 'row-6', 'row-7'] as const;
+const TABLE_SKELETON_KEYS = [
+  'row-0',
+  'row-1',
+  'row-2',
+  'row-3',
+  'row-4',
+  'row-5',
+  'row-6',
+  'row-7',
+] as const;
 
 // =============================================================================
 // Props Interface

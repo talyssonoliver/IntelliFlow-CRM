@@ -95,7 +95,7 @@ export function MfaQrGenerator({
     <div className={cn('space-y-6', className)}>
       {/* QR Code Section */}
       <div className="flex flex-col items-center">
-        { }
+        {}
         <figure
           className="bg-white p-4 rounded-lg"
           aria-label={`QR code for setting up two-factor authentication for ${accountName}`}

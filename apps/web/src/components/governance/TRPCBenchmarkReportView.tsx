@@ -292,11 +292,10 @@ export default function TRPCBenchmarkReportView() {
             No tRPC Benchmark Available
           </h3>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            {report?.placeholderReason ||
-              'No benchmark generated yet. Run the CLI to produce one.'}
+            {report?.placeholderReason || 'No benchmark generated yet. Run the CLI to produce one.'}
           </p>
           <pre className="mt-4 inline-block text-left text-xs bg-muted p-3 rounded-lg font-mono">
-{`npx dotenv -e .env.test -- npx tsx apps/api/src/shared/performance-benchmark.ts
+            {`npx dotenv -e .env.test -- npx tsx apps/api/src/shared/performance-benchmark.ts
 node scripts/ci/generate-trpc-benchmark-report.js`}
           </pre>
         </Card>
@@ -368,7 +367,9 @@ node scripts/ci/generate-trpc-benchmark-report.js`}
               <p className="text-xs text-muted-foreground mt-1">Median response</p>
             </Card>
             <Card className="p-4">
-              <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">p95 (KPI)</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
+                p95 (KPI)
+              </p>
               <p className="text-2xl font-bold text-foreground">&lt; {details.thresholds.p95}ms</p>
               <p className="text-xs text-muted-foreground mt-1">95th percentile</p>
             </Card>
@@ -378,7 +379,9 @@ node scripts/ci/generate-trpc-benchmark-report.js`}
               <p className="text-xs text-muted-foreground mt-1">99th percentile</p>
             </Card>
             <Card className="p-4" role="region" aria-label="Pass rate">
-              <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Pass Rate</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
+                Pass Rate
+              </p>
               <p
                 className={`text-2xl font-bold ${
                   (report.score ?? 0) >= 90

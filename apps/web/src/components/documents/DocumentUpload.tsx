@@ -249,7 +249,7 @@ export function DocumentUpload({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Drop Zone */}
-      { }
+      {}
       <div // NOSONAR — file drop zone with nested interactive elements (Remove button); drag events require div wrapper
         role="button"
         tabIndex={0}
@@ -318,7 +318,7 @@ export function DocumentUpload({
       </div>
 
       {/* Upload Progress */}
-      { }
+      {}
       {isUploading && (
         <div className="space-y-2">
           <div className="flex justify-between text-sm text-slate-600 dark:text-slate-400">
@@ -333,7 +333,7 @@ export function DocumentUpload({
           />
         </div>
       )}
-      { }
+      {}
 
       {/* Metadata Form */}
       <Card className="p-6 space-y-4">

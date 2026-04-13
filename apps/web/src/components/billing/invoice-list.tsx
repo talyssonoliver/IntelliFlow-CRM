@@ -89,7 +89,13 @@ function StatusBadge({ status }: Readonly<{ status: string }>) {
 // Loading Skeleton
 // ============================================
 
-const INVOICE_LIST_SKELETON_KEYS = ['inv-skel-0', 'inv-skel-1', 'inv-skel-2', 'inv-skel-3', 'inv-skel-4'] as const;
+const INVOICE_LIST_SKELETON_KEYS = [
+  'inv-skel-0',
+  'inv-skel-1',
+  'inv-skel-2',
+  'inv-skel-3',
+  'inv-skel-4',
+] as const;
 
 function InvoiceListSkeleton() {
   return (

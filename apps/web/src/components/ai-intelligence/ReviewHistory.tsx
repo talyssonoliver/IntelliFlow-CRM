@@ -61,7 +61,12 @@ const SORT_OPTIONS = [
 
 const BUCKET_ORDER = ['Today', 'Yesterday', 'Last 7 Days', 'Last 30 Days', 'Older'];
 
-const HISTORY_GRID_SKELETON_KEYS = ['hist-grid-0', 'hist-grid-1', 'hist-grid-2', 'hist-grid-3'] as const;
+const HISTORY_GRID_SKELETON_KEYS = [
+  'hist-grid-0',
+  'hist-grid-1',
+  'hist-grid-2',
+  'hist-grid-3',
+] as const;
 const HISTORY_LIST_SKELETON_KEYS = ['hist-list-0', 'hist-list-1', 'hist-list-2'] as const;
 
 // ============================================

@@ -175,8 +175,8 @@ export function ModulePaywall({ moduleId, className, accessError }: Readonly<Mod
             >
               <span className="material-symbols-outlined text-lg" aria-hidden="true">
                 upgrade
-              </span>
-              {' '}Upgrade Plan
+              </span>{' '}
+              Upgrade Plan
             </Link>
 
             {/* Admin shortcut: direct to subscription management */}
@@ -187,8 +187,8 @@ export function ModulePaywall({ moduleId, className, accessError }: Readonly<Mod
               >
                 <span className="material-symbols-outlined text-lg" aria-hidden="true">
                   credit_card
-                </span>
-                {' '}Manage Subscription
+                </span>{' '}
+                Manage Subscription
               </Link>
             ) : (
               <Link

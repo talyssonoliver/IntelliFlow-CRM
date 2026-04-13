@@ -43,7 +43,11 @@ interface SidebarSettingsFooterProps {
   hasFooterContent: boolean;
 }
 
-function SidebarSettingsFooter({ config, isExpanded, hasFooterContent }: Readonly<SidebarSettingsFooterProps>) {
+function SidebarSettingsFooter({
+  config,
+  isExpanded,
+  hasFooterContent,
+}: Readonly<SidebarSettingsFooterProps>) {
   if (config.showSettings === false) return null;
   if (!config.settingsHref && !config.onSettingsClick) return null;
 
@@ -57,12 +61,16 @@ function SidebarSettingsFooter({ config, isExpanded, hasFooterContent }: Readonl
     <div className={cn('border-t border-border p-2', !hasFooterContent && 'mt-auto')}>
       {config.onSettingsClick ? (
         <button type="button" onClick={config.onSettingsClick} className={cn(itemClass, 'w-full')}>
-          <span className="material-symbols-outlined text-xl transition-colors group-hover:text-primary">settings</span>
+          <span className="material-symbols-outlined text-xl transition-colors group-hover:text-primary">
+            settings
+          </span>
           {isExpanded && <span className="font-medium">Module Settings</span>}
         </button>
       ) : (
         <Link href={config.settingsHref!} className={itemClass}>
-          <span className="material-symbols-outlined text-xl transition-colors group-hover:text-primary">settings</span>
+          <span className="material-symbols-outlined text-xl transition-colors group-hover:text-primary">
+            settings
+          </span>
           {isExpanded && <span className="font-medium">Module Settings</span>}
         </Link>
       )}
@@ -135,7 +143,6 @@ export function AppSidebar({
   );
 
   return (
-     
     <nav
       className={cn(
         'fixed left-0 top-16 bottom-0 z-30 flex flex-col bg-card border-r border-border',
@@ -243,7 +250,11 @@ export function AppSidebar({
       )}
 
       {/* Settings Footer */}
-      <SidebarSettingsFooter config={config} isExpanded={isExpanded} hasFooterContent={!!config.footerContent} />
+      <SidebarSettingsFooter
+        config={config}
+        isExpanded={isExpanded}
+        hasFooterContent={!!config.footerContent}
+      />
     </nav>
   );
 }

@@ -518,7 +518,9 @@ export function CaseList({
 
       {isLoading ? (
         <div className="space-y-3" data-testid="case-list-loading">
-          {(['case-sk-0', 'case-sk-1', 'case-sk-2', 'case-sk-3', 'case-sk-4', 'case-sk-5'] as const).map((skKey) => (
+          {(
+            ['case-sk-0', 'case-sk-1', 'case-sk-2', 'case-sk-3', 'case-sk-4', 'case-sk-5'] as const
+          ).map((skKey) => (
             <div
               key={skKey}
               className="flex items-center gap-4 p-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900"

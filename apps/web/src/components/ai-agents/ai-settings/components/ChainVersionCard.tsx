@@ -113,7 +113,6 @@ export function ChainVersionCard({
   const canEdit = status === 'DRAFT';
 
   return (
-     
     <Card
       className={`p-4 transition-all cursor-pointer hover:border-primary/50 ${
         isSelected ? 'border-primary ring-1 ring-primary' : ''

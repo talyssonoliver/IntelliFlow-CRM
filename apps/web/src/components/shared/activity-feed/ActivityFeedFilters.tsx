@@ -165,10 +165,7 @@ export function ActivityFeedFilters({
       )}
 
       {/* Type filter chips */}
-      <div
-        className="flex flex-wrap gap-1.5"
-        aria-label="Filter by activity type"
-      >
+      <div className="flex flex-wrap gap-1.5" aria-label="Filter by activity type">
         {ACTIVITY_FEED_TYPES.map((type) => {
           const isActive = current.types.includes(type);
           return (
@@ -191,10 +188,7 @@ export function ActivityFeedFilters({
 
       {/* Source filter chips (optional) */}
       {showSources && (
-        <div
-          className="flex flex-wrap gap-1.5"
-          aria-label="Filter by source"
-        >
+        <div className="flex flex-wrap gap-1.5" aria-label="Filter by source">
           {ACTIVITY_FEED_SOURCES.map((source) => {
             const isActive = current.sources.includes(source);
             return (

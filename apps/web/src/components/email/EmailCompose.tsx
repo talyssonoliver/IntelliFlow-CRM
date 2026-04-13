@@ -494,7 +494,7 @@ export function EmailCompose({
         <label className="sr-only" htmlFor="compose-body">
           Message body
         </label>
-        { }
+        {}
         <div // NOSONAR — contentEditable rich-text editor; role="textbox" is the correct ARIA pattern
           ref={bodyRef}
           id="compose-body"

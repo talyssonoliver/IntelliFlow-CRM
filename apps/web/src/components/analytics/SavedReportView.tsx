@@ -287,8 +287,8 @@ export default function SavedReportView({ config }: Readonly<SavedReportViewProp
                 aria-hidden="true"
               >
                 download
-              </span>
-              {' '}Export
+              </span>{' '}
+              Export
               <span
                 className={`material-symbols-outlined text-sm transition-transform ${exportMenuOpen ? 'rotate-180' : ''}`}
                 aria-hidden="true"
@@ -313,8 +313,8 @@ export default function SavedReportView({ config }: Readonly<SavedReportViewProp
                       aria-hidden="true"
                     >
                       table_chart
-                    </span>
-                    {' '}Export CSV
+                    </span>{' '}
+                    Export CSV
                   </button>
                   <button
                     role="menuitem"
@@ -326,8 +326,8 @@ export default function SavedReportView({ config }: Readonly<SavedReportViewProp
                       aria-hidden="true"
                     >
                       picture_as_pdf
-                    </span>
-                    {' '}Export PDF
+                    </span>{' '}
+                    Export PDF
                   </button>
                 </div>
               </div>
@@ -596,7 +596,6 @@ function RevenueBarChart({
     );
   }
   return (
-     
     <div className="h-64" role="img" aria-label="Revenue bar chart">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
@@ -651,7 +650,6 @@ function GrowthTrendChart({
     );
   }
   return (
-     
     <div className="h-64" role="img" aria-label="12-month revenue trend line chart">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
@@ -711,7 +709,6 @@ function LeadSourceChart({
     );
   }
   return (
-     
     <div className="h-64" role="img" aria-label="Lead source distribution chart">
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>

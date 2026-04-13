@@ -111,7 +111,6 @@ function WebVitalsSection({ vitals }: { vitals: LighthouseVitals }) {
   if (rows.length === 0) return null;
 
   return (
-     
     <Card className="p-4 mb-6" role="region" aria-label="Core Web Vitals">
       <h3 className="font-semibold text-foreground mb-4">Core Web Vitals</h3>
       <div className="overflow-x-auto">
@@ -128,7 +127,9 @@ function WebVitalsSection({ vitals }: { vitals: LighthouseVitals }) {
             {rows.map((r) => (
               <tr key={r.key} className="border-b border-border/30">
                 <td className="py-2.5 pr-3 text-foreground">{r.label}</td>
-                <td className={`py-2.5 pr-3 text-right font-mono text-xs font-medium ${r.passing ? 'text-emerald-500' : 'text-red-500'}`}>
+                <td
+                  className={`py-2.5 pr-3 text-right font-mono text-xs font-medium ${r.passing ? 'text-emerald-500' : 'text-red-500'}`}
+                >
                   {formatVital(r.value, r.target.unit)}
                 </td>
                 <td className="py-2.5 pr-3 text-right text-muted-foreground font-mono text-xs">
@@ -169,7 +170,6 @@ function ResourceBudgetsSection({ vitals }: { vitals: LighthouseVitals }) {
   if (rows.length === 0) return null;
 
   return (
-     
     <Card className="p-4 mb-6" role="region" aria-label="Resource budgets">
       <h3 className="font-semibold text-foreground mb-4">Resource Budgets</h3>
       <div className="space-y-3">
@@ -323,7 +323,7 @@ export default function LighthouseReportView() {
       {!loading && !error && report && !isPlaceholder && details && (
         <>
           {/* ── Section 1: Overall Summary Banner ── */}
-          { }
+          {}
           <Card className="p-4 mb-6" role="region" aria-label="Overall Lighthouse summary">
             <div className="flex items-center gap-4">
               <div
@@ -355,7 +355,7 @@ export default function LighthouseReportView() {
           </Card>
 
           {/* ── Section 2: Category Score Cards ── */}
-          { }
+          {}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
             {categories.map(({ key, label }) => {
               const score = details[key];
@@ -377,7 +377,9 @@ export default function LighthouseReportView() {
                     className={`h-2 ${getProgressColor(score)}`}
                     aria-label={`${label} score: ${score} out of 100`}
                   />
-                  <p className="text-xs text-muted-foreground mt-2">Threshold: &ge;{SCORE_THRESHOLD}</p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Threshold: &ge;{SCORE_THRESHOLD}
+                  </p>
                 </Card>
               );
             })}
@@ -414,7 +416,7 @@ export default function LighthouseReportView() {
               )}
             </div>
           </Card>
-          { }
+          {}
         </>
       )}
     </>

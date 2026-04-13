@@ -53,7 +53,7 @@ export function EmailMessage({
   return (
     <article className="rounded-lg border border-border">
       {/* Header — always visible (div instead of button to allow nested interactive elements) */}
-      { }
+      {}
       <div
         role="button"
         tabIndex={0}

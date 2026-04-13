@@ -12,17 +12,8 @@
  * needs to set a priority.
  */
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@intelliflow/ui';
-import {
-  WORKFLOW_PRIORITIES,
-  type WorkflowPriority,
-} from '@intelliflow/domain';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@intelliflow/ui';
+import { WORKFLOW_PRIORITIES, type WorkflowPriority } from '@intelliflow/domain';
 
 export interface PrioritySelectProps {
   value?: WorkflowPriority;

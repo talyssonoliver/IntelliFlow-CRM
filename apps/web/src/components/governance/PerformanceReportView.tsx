@@ -101,10 +101,12 @@ function MetricCard({
 }) {
   const ms = parseDurationMs(value);
   const passing = ms !== null && ms <= targetMs;
-  const score = ms !== null ? Math.max(0, Math.min(100, Math.round(100 * (1 - Math.max(0, ms - targetMs) / targetMs)))) : 0;
+  const score =
+    ms !== null
+      ? Math.max(0, Math.min(100, Math.round(100 * (1 - Math.max(0, ms - targetMs) / targetMs))))
+      : 0;
 
   return (
-     
     <Card className="p-4" role="region" aria-label={ariaLabel}>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
@@ -113,9 +115,7 @@ function MetricCard({
         </div>
         <PassFailPill passing={passing} />
       </div>
-      <p className={`text-3xl font-bold mb-2 ${getValueColor(passing, ms, targetMs)}`}>
-        {value}
-      </p>
+      <p className={`text-3xl font-bold mb-2 ${getValueColor(passing, ms, targetMs)}`}>{value}</p>
       <Progress
         value={Math.max(0, Math.min(100, score))}
         className={`h-2 mb-2 ${getProgressColor(score)}`}
@@ -139,7 +139,6 @@ function EndpointHealthCard({
   const allPass = failing === 0;
 
   return (
-     
     <Card className="p-4" role="region" aria-label="Endpoint health">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
@@ -171,7 +170,6 @@ function LoadTestCard({
   duration: string | null;
 }) {
   return (
-     
     <Card className="p-4" role="region" aria-label="Load test results">
       <div className="flex items-center gap-2 mb-3">
         <span className="material-symbols-outlined text-base text-muted-foreground">groups</span>
@@ -233,7 +231,6 @@ function EndpointDetailTable({
   const hasMore = sorted.length > 5;
 
   return (
-     
     <Card className="p-4 mb-6" role="region" aria-label="Per-endpoint performance detail">
       <div className="flex items-center justify-between mb-4">
         <div>
@@ -256,11 +253,15 @@ function EndpointDetailTable({
           <thead>
             <tr className="border-b border-border">
               <th className="text-left py-2 pr-3 font-medium text-muted-foreground">Endpoint</th>
-              <th className="text-left py-2 pr-3 font-medium text-muted-foreground hidden sm:table-cell">Description</th>
+              <th className="text-left py-2 pr-3 font-medium text-muted-foreground hidden sm:table-cell">
+                Description
+              </th>
               <th className="text-right py-2 pr-3 font-medium text-muted-foreground">p50</th>
               <th className="text-right py-2 pr-3 font-medium text-muted-foreground">p95</th>
               <th className="text-right py-2 pr-3 font-medium text-muted-foreground">p99</th>
-              <th className="text-right py-2 pr-3 font-medium text-muted-foreground hidden md:table-cell">Iters</th>
+              <th className="text-right py-2 pr-3 font-medium text-muted-foreground hidden md:table-cell">
+                Iters
+              </th>
               <th className="text-center py-2 font-medium text-muted-foreground">Status</th>
             </tr>
           </thead>
@@ -279,12 +280,20 @@ function EndpointDetailTable({
                   <td className="py-2 pr-3 text-muted-foreground text-xs hidden sm:table-cell">
                     {ep.description.replace(' endpoint response time', '')}
                   </td>
-                  <td className="py-2 pr-3 text-right font-mono text-xs text-foreground">{ep.p50}ms</td>
-                  <td className={`py-2 pr-3 text-right font-mono text-xs font-medium ${slow ? 'text-red-500' : 'text-foreground'}`}>
+                  <td className="py-2 pr-3 text-right font-mono text-xs text-foreground">
+                    {ep.p50}ms
+                  </td>
+                  <td
+                    className={`py-2 pr-3 text-right font-mono text-xs font-medium ${slow ? 'text-red-500' : 'text-foreground'}`}
+                  >
                     {ep.p95}ms
                   </td>
-                  <td className="py-2 pr-3 text-right font-mono text-xs text-foreground">{ep.p99}ms</td>
-                  <td className="py-2 pr-3 text-right text-xs text-muted-foreground hidden md:table-cell">{ep.iterations}</td>
+                  <td className="py-2 pr-3 text-right font-mono text-xs text-foreground">
+                    {ep.p99}ms
+                  </td>
+                  <td className="py-2 pr-3 text-right text-xs text-muted-foreground hidden md:table-cell">
+                    {ep.iterations}
+                  </td>
                   <td className="py-2 text-center">
                     <PassFailPill passing={passing} />
                   </td>
@@ -434,7 +443,7 @@ export default function PerformanceReportView() {
       {!loading && !error && report && !isPlaceholder && metrics && (
         <>
           {/* ── Section 1: Overall Health Banner ── */}
-          { }
+          {}
           <Card className="p-4 mb-6" role="region" aria-label="Overall performance status">
             <div className="flex items-center gap-4">
               <div
@@ -454,11 +463,14 @@ export default function PerformanceReportView() {
               </div>
               <div className="flex-1">
                 <h3 className="font-semibold text-foreground">
-                  {metrics.all_targets_met ? 'All Performance Targets Met' : 'Performance Budget Exceeded'}
+                  {metrics.all_targets_met
+                    ? 'All Performance Targets Met'
+                    : 'Performance Budget Exceeded'}
                 </h3>
                 <p className="text-sm text-muted-foreground">
                   {metrics.endpoints_passing} of {metrics.endpoints_tested} endpoints passing
-                  {metrics.violations.length > 0 && ` \u00b7 ${metrics.violations.length} budget violation${metrics.violations.length > 1 ? 's' : ''}`}
+                  {metrics.violations.length > 0 &&
+                    ` \u00b7 ${metrics.violations.length} budget violation${metrics.violations.length > 1 ? 's' : ''}`}
                 </p>
               </div>
               {report.score != null && (
@@ -504,32 +516,60 @@ export default function PerformanceReportView() {
           <ViolationsSection violations={metrics.violations} />
 
           {/* ── Section 4: Detailed Metrics ── */}
-          { }
+          {}
           <Card className="p-4 mb-6" role="region" aria-label="Detailed performance metrics">
             <h3 className="font-semibold text-foreground mb-4">Response Time Breakdown</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border">
-                    <th className="text-left py-2 pr-4 font-medium text-muted-foreground">Metric</th>
-                    <th className="text-left py-2 pr-4 font-medium text-muted-foreground">Actual</th>
-                    <th className="text-left py-2 pr-4 font-medium text-muted-foreground">Target</th>
+                    <th className="text-left py-2 pr-4 font-medium text-muted-foreground">
+                      Metric
+                    </th>
+                    <th className="text-left py-2 pr-4 font-medium text-muted-foreground">
+                      Actual
+                    </th>
+                    <th className="text-left py-2 pr-4 font-medium text-muted-foreground">
+                      Target
+                    </th>
                     <th className="text-left py-2 font-medium text-muted-foreground">Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {[
-                    { label: 'p50 Median', value: metrics.p50_median, target: metrics.p95_target ? `<${P50_TARGET_MS}ms` : '<50ms', targetMs: P50_TARGET_MS },
-                    { label: 'p95 Median', value: metrics.p95_median, target: `<${metrics.p95_target || '100ms'}`, targetMs: P95_TARGET_MS },
-                    { label: 'p95 Average', value: metrics.p95_avg, target: `<${metrics.p95_target || '100ms'}`, targetMs: P95_TARGET_MS },
-                    { label: 'p99 Median', value: metrics.p99_median, target: `<${metrics.p99_target || '200ms'}`, targetMs: P99_TARGET_MS },
+                    {
+                      label: 'p50 Median',
+                      value: metrics.p50_median,
+                      target: metrics.p95_target ? `<${P50_TARGET_MS}ms` : '<50ms',
+                      targetMs: P50_TARGET_MS,
+                    },
+                    {
+                      label: 'p95 Median',
+                      value: metrics.p95_median,
+                      target: `<${metrics.p95_target || '100ms'}`,
+                      targetMs: P95_TARGET_MS,
+                    },
+                    {
+                      label: 'p95 Average',
+                      value: metrics.p95_avg,
+                      target: `<${metrics.p95_target || '100ms'}`,
+                      targetMs: P95_TARGET_MS,
+                    },
+                    {
+                      label: 'p99 Median',
+                      value: metrics.p99_median,
+                      target: `<${metrics.p99_target || '200ms'}`,
+                      targetMs: P99_TARGET_MS,
+                    },
                   ].map((row) => {
                     const ms = parseDurationMs(row.value);
                     const passing = ms !== null && ms <= row.targetMs;
                     return (
                       <tr key={row.label} className="border-b border-border/50">
                         <td className="py-2.5 pr-4 text-foreground">{row.label}</td>
-                        <td className={`py-2.5 pr-4 font-medium ${passing ? 'text-emerald-500' : 'text-red-500'}`}>
+                        <td
+                          className={`py-2.5 pr-4 font-medium ${passing ? 'text-emerald-500' : 'text-red-500'}`}
+                        >
                           {row.value}
                         </td>
                         <td className="py-2.5 pr-4 text-muted-foreground">{row.target}</td>
@@ -557,7 +597,7 @@ export default function PerformanceReportView() {
           <FullReportSection htmlPath={report.htmlPath} />
 
           {/* ── Section 7: Test Configuration & Metadata ── */}
-          { }
+          {}
           <Card className="p-4" role="region" aria-label="Test configuration">
             <h3 className="font-semibold text-foreground mb-3">Test Configuration</h3>
             <div className="grid gap-x-8 gap-y-2 sm:grid-cols-2 text-sm">
@@ -576,7 +616,9 @@ export default function PerformanceReportView() {
               {metrics.load_test_vus != null && (
                 <div className="flex justify-between py-1.5 border-b border-border/30">
                   <span className="text-muted-foreground">Load Test</span>
-                  <span className="text-foreground">{metrics.load_test_vus} VUs / {metrics.load_test_duration}</span>
+                  <span className="text-foreground">
+                    {metrics.load_test_vus} VUs / {metrics.load_test_duration}
+                  </span>
                 </div>
               )}
               <div className="flex justify-between py-1.5 border-b border-border/30 sm:col-span-2">

@@ -37,14 +37,10 @@ describe('ServerIncidentReporter', () => {
   });
 
   it('calls notifyTeam with the returned payload', () => {
-    render(
-      <ServerIncidentReporter error={new Error('test')} path="/test" />
-    );
+    render(<ServerIncidentReporter error={new Error('test')} path="/test" />);
 
     expect(notifyTeam).toHaveBeenCalledOnce();
-    expect(notifyTeam).toHaveBeenCalledWith(
-      expect.objectContaining({ event: 'incident_created' })
-    );
+    expect(notifyTeam).toHaveBeenCalledWith(expect.objectContaining({ event: 'incident_created' }));
   });
 
   it('does not throw when helpers throw internally', () => {
@@ -96,17 +92,13 @@ describe('ServerIncidentReporter', () => {
       );
       expect(createIncident).toHaveBeenCalledTimes(1);
 
-      rerender(
-        <ServerIncidentReporter error={new Error('second')} path="/boundary" />
-      );
+      rerender(<ServerIncidentReporter error={new Error('second')} path="/boundary" />);
       expect(createIncident).toHaveBeenCalledTimes(2);
     });
 
     it('does not re-fire when the same error identity rerenders', () => {
       const err = new Error('stable');
-      const { rerender } = render(
-        <ServerIncidentReporter error={err} path="/boundary" />
-      );
+      const { rerender } = render(<ServerIncidentReporter error={err} path="/boundary" />);
       rerender(<ServerIncidentReporter error={err} path="/boundary" />);
       expect(createIncident).toHaveBeenCalledTimes(1);
     });

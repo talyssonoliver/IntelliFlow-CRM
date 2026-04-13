@@ -157,8 +157,8 @@ function TableOfContents({ sections }: Readonly<{ sections: readonly { heading: 
           aria-hidden="true"
         >
           list
-        </span>
-        {' '}In this article
+        </span>{' '}
+        In this article
       </h2>
       <ul className="space-y-2 list-none p-0 m-0">
         {sections.map((section) => {

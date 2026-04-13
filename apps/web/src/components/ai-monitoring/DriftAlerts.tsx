@@ -80,7 +80,10 @@ export function DriftAlerts({ alerts }: Readonly<DriftAlertsProps>) {
                 {alert.recommendations.length > 0 && (
                   <ul className="text-xs space-y-1" data-testid="alert-recommendations">
                     {alert.recommendations.map((rec, ridx) => (
-                      <li key={`rec-${ridx}-${rec.slice(0, 20)}`} className="flex items-start gap-1.5">
+                      <li
+                        key={`rec-${ridx}-${rec.slice(0, 20)}`}
+                        className="flex items-start gap-1.5"
+                      >
                         <span
                           className="material-symbols-outlined text-xs mt-0.5"
                           aria-hidden="true"

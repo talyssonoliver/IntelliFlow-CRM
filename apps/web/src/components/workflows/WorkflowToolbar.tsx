@@ -9,23 +9,10 @@
  * of the app and so disabled states explain themselves on hover.
  */
 
-import { useReactFlow } from '@xyflow/react';
-import {
-  Save,
-  Undo2,
-  Redo2,
-  ZoomIn,
-  ZoomOut,
-  Maximize,
-  Loader2,
-} from 'lucide-react';
-import {
-  Button,
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@intelliflow/ui';
+import { Panel, useReactFlow } from '@xyflow/react';
+import { Save, Undo2, Redo2, ZoomIn, ZoomOut, Maximize, Loader2 } from 'lucide-react';
+import { Button, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@intelliflow/ui';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 export interface WorkflowToolbarProps {
   onSave: () => void;
@@ -84,17 +71,22 @@ export function WorkflowToolbar({
   onRedo,
 }: WorkflowToolbarProps) {
   const { zoomIn, zoomOut, fitView } = useReactFlow();
+  const isMobile = useIsMobile();
 
   const saveDisabled = !isValid || isSaving;
   const saveTooltip = isSaving
     ? 'Saving…'
     : !isValid
-      ? validationError ?? 'Connect every node between a Start and an End before saving.'
+      ? (validationError ?? 'Connect every node between a Start and an End before saving.')
       : 'Save workflow';
 
-  return (
+  const pillContent = (
     <TooltipProvider delayDuration={200}>
-      <div className="flex items-center gap-1 bg-background/95 backdrop-blur-sm border border-border rounded-lg px-1.5 py-1 shadow-sm">
+      <div
+        className="flex items-center gap-1 bg-background/95 backdrop-blur-sm border border-border rounded-full px-1.5 py-1 shadow-lg"
+        data-testid="workflow-toolbar"
+        data-variant={isMobile ? 'mobile' : 'desktop'}
+      >
         {/* Save */}
         <Tooltip>
           <TooltipTrigger asChild>
@@ -157,4 +149,20 @@ export function WorkflowToolbar({
       </div>
     </TooltipProvider>
   );
+
+  if (isMobile) {
+    // Floating bottom-center FAB row. Render outside the ReactFlow
+    // <Panel> so it escapes the canvas padding and lives above the
+    // keyboard/drawer layer on small screens.
+    return (
+      <div
+        className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 pointer-events-auto"
+        data-testid="workflow-toolbar-mobile-wrap"
+      >
+        {pillContent}
+      </div>
+    );
+  }
+
+  return <Panel position="top-right">{pillContent}</Panel>;
 }

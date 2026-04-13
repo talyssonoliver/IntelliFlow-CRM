@@ -23,7 +23,10 @@ export function ErrorPageContent({
           <div className="space-y-6 text-center">
             {/* Badge */}
             <div className="inline-flex items-center gap-2 rounded-full border border-red-500/20 bg-red-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-red-600 dark:text-red-400">
-              <span className="material-symbols-outlined text-base" aria-hidden="true">report</span>Server error
+              <span className="material-symbols-outlined text-base" aria-hidden="true">
+                report
+              </span>
+              Server error
             </div>
 
             {/* Heading */}
@@ -59,21 +62,30 @@ export function ErrorPageContent({
                   onClick={onReset}
                   className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#137fec] px-5 py-3 font-semibold text-white transition-colors hover:bg-[#0e6ac7] focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:ring-offset-2"
                 >
-                  <span className="material-symbols-outlined text-lg" aria-hidden="true">refresh</span>Try again
+                  <span className="material-symbols-outlined text-lg" aria-hidden="true">
+                    refresh
+                  </span>
+                  Try again
                 </button>
               ) : (
                 <Link
                   href="/dashboard"
                   className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#137fec] px-5 py-3 font-semibold text-white transition-colors hover:bg-[#0e6ac7] focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:ring-offset-2"
                 >
-                  <span className="material-symbols-outlined text-lg" aria-hidden="true">dashboard</span>Go to Dashboard
+                  <span className="material-symbols-outlined text-lg" aria-hidden="true">
+                    dashboard
+                  </span>
+                  Go to Dashboard
                 </Link>
               )}
               <Link
                 href="/"
                 className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-800 transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:ring-offset-2 dark:border-slate-600 dark:text-slate-100 dark:hover:bg-slate-800"
               >
-                <span className="material-symbols-outlined text-lg" aria-hidden="true">home</span>Back to Home
+                <span className="material-symbols-outlined text-lg" aria-hidden="true">
+                  home
+                </span>
+                Back to Home
               </Link>
             </div>
 

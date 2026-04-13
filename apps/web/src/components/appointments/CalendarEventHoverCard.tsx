@@ -129,9 +129,7 @@ function Footer({ href, label }: Readonly<{ href: string; label: string }>) {
   );
 }
 
-function AppointmentHoverBody({
-  data,
-}: Readonly<{ data: CalendarEventHoverCardAppointment }>) {
+function AppointmentHoverBody({ data }: Readonly<{ data: CalendarEventHoverCardAppointment }>) {
   const typeConfig = getTypeConfig(data.appointmentType);
   const statusConfig = getStatusConfig(data.status);
   const startDate = new Date(data.startTime);

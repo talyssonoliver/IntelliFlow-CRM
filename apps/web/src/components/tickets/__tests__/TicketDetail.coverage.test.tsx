@@ -80,7 +80,11 @@ vi.mock('@intelliflow/ui', () => ({
   DropdownMenuSeparator: () => <hr />,
   Tabs: ({ children }: any) => <div>{children}</div>,
   TabsList: ({ children }: any) => <div role="tablist">{children}</div>,
-  TabsTrigger: ({ children, value }: any) => <button role="tab" data-value={value}>{children}</button>,
+  TabsTrigger: ({ children, value }: any) => (
+    <button role="tab" data-value={value}>
+      {children}
+    </button>
+  ),
   TabsContent: ({ children }: any) => <div>{children}</div>,
   cn: (...classes: any[]) => classes.filter(Boolean).join(' '),
   toast: vi.fn(),

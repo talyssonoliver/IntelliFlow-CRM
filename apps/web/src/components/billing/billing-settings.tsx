@@ -76,8 +76,8 @@ export function BillingSettings() {
           <CardTitle className="text-lg font-semibold flex items-center gap-2">
             <span className="material-symbols-outlined text-primary" aria-hidden="true">
               business
-            </span>
-            {' '}Organization Details
+            </span>{' '}
+            Organization Details
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -134,8 +134,8 @@ export function BillingSettings() {
           <CardTitle className="text-lg font-semibold flex items-center gap-2">
             <span className="material-symbols-outlined text-primary" aria-hidden="true">
               location_on
-            </span>
-            {' '}Billing Address
+            </span>{' '}
+            Billing Address
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -152,8 +152,8 @@ export function BillingSettings() {
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-4 flex items-center gap-1">
             <span className="material-symbols-outlined text-sm" aria-hidden="true">
               info
-            </span>
-            {' '}Contact support to update your billing address.
+            </span>{' '}
+            Contact support to update your billing address.
           </p>
         </CardContent>
       </Card>

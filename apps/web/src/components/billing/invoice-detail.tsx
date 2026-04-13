@@ -52,7 +52,12 @@ import {
 // Skeleton keys
 // ============================================
 
-const INVOICE_META_SKELETON_KEYS = ['inv-meta-0', 'inv-meta-1', 'inv-meta-2', 'inv-meta-3'] as const;
+const INVOICE_META_SKELETON_KEYS = [
+  'inv-meta-0',
+  'inv-meta-1',
+  'inv-meta-2',
+  'inv-meta-3',
+] as const;
 const INVOICE_LINE_SKELETON_KEYS = ['inv-line-0', 'inv-line-1', 'inv-line-2'] as const;
 
 // ============================================

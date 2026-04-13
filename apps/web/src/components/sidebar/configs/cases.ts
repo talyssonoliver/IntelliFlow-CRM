@@ -21,7 +21,7 @@ export const CASE_SETTINGS_ITEMS: SidebarItem[] = [
 ];
 
 const SETTINGS_PATHS = CASE_SETTINGS_ITEMS.map(
-  (item) => new URL(item.href, 'http://localhost').pathname,
+  (item) => new URL(item.href, 'http://localhost').pathname
 );
 
 /** True when the pathname is a case-settings sub-page. */
@@ -94,7 +94,7 @@ export function createCasesSidebarConfig(onSettingsClick: () => void): SidebarCo
  * `beforeContent`, with the same view sections still available below.
  */
 export function createCasesSettingsSidebarConfig(
-  beforeContent: SidebarConfig['beforeContent'],
+  beforeContent: SidebarConfig['beforeContent']
 ): SidebarConfig {
   return {
     moduleId: 'cases',

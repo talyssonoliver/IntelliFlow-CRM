@@ -20,7 +20,7 @@ import type {
   RecurrencePattern,
   AppointmentType,
 } from './types';
-import { useCalendarVisibility } from '@/hooks/useCalendarVisibility';
+import { useCalendarVisibilityOptional } from '@/hooks/useCalendarVisibility';
 
 export interface AppointmentFormProps {
   appointment?: AppointmentDetailData;
@@ -46,7 +46,7 @@ export function AppointmentForm({
   const isEdit = !!appointment;
   const router = useRouter();
   const conflictCheckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const { dbCalendars } = useCalendarVisibility();
+  const { dbCalendars } = useCalendarVisibilityOptional();
 
   const [title, setTitle] = useState(appointment?.title || '');
   const [description, setDescription] = useState(appointment?.description || '');
@@ -66,9 +66,7 @@ export function AppointmentForm({
   const [location, setLocation] = useState(appointment?.location || '');
   const { timezone: userTimezone } = useTimezoneContext();
   const [eventTimezone, setEventTimezone] = useState(
-    (appointment as { timezone?: string } | undefined)?.timezone ||
-      userTimezone ||
-      'Europe/London'
+    (appointment as { timezone?: string } | undefined)?.timezone || userTimezone || 'Europe/London'
   );
   const [attendeeIds] = useState<string[]>(appointment?.attendees?.map((a) => a.userId) || []);
   const [linkedCaseIds] = useState<string[]>(appointment?.linkedCases?.map((c) => c.caseId) || []);

@@ -36,13 +36,7 @@ vi.mock('../WorkflowList', () => ({
 }));
 
 vi.mock('../WorkflowCanvas', () => ({
-  WorkflowCanvas: ({
-    workflowId,
-    onBack,
-  }: {
-    workflowId?: string | null;
-    onBack?: () => void;
-  }) => (
+  WorkflowCanvas: ({ workflowId, onBack }: { workflowId?: string | null; onBack?: () => void }) => (
     <div data-testid="workflow-canvas" data-workflow-id={workflowId ?? ''}>
       <button onClick={onBack} data-testid="canvas-back-btn">
         Back

@@ -51,10 +51,7 @@ export function WorkflowBuilder() {
           ]}
         />
         <div className="flex-1 overflow-hidden">
-          <WorkflowCanvas
-            workflowId={editingWorkflowId}
-            onBack={goToList}
-          />
+          <WorkflowCanvas workflowId={editingWorkflowId} onBack={goToList} />
         </div>
       </>
     );

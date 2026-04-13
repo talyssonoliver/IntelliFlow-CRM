@@ -28,7 +28,13 @@ import { ReviewCard } from './ReviewCard';
 import type { ReviewListFilter, ReviewResponse } from '@intelliflow/validators/ai-review';
 import { REVIEW_STATUSES, AI_OUTPUT_TYPES } from '@intelliflow/domain';
 
-const REVIEW_QUEUE_SKELETON_KEYS = ['review-0', 'review-1', 'review-2', 'review-3', 'review-4'] as const;
+const REVIEW_QUEUE_SKELETON_KEYS = [
+  'review-0',
+  'review-1',
+  'review-2',
+  'review-3',
+  'review-4',
+] as const;
 
 // ============================================
 // Stats Card (internal)

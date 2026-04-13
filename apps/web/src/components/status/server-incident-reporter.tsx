@@ -31,7 +31,6 @@ export function ServerIncidentReporter({
     // Preserve dev DevTools visibility — Next's overlay may be suppressed in
     // Storybook/Playwright runs, and tests still assert no console noise in prod.
     if (process.env.NODE_ENV !== 'production') {
-       
       console.error('[IntelliFlow] runtime error captured:', error);
     }
 

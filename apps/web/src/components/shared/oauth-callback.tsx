@@ -277,11 +277,8 @@ export function OAuthCallback({
           {/* Card gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-br from-white/[0.07] via-transparent to-[#137fec]/[0.03]" />
 
-          { }
-          <output
-            className="relative p-8 text-center space-y-6 block"
-            aria-live="assertive"
-          >
+          {}
+          <output className="relative p-8 text-center space-y-6 block" aria-live="assertive">
             {/* Status icon */}
             <div
               className={cn(

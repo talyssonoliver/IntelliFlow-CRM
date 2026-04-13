@@ -94,16 +94,20 @@ function SLATrack({
       </div>
 
       <div className="flex items-center gap-2">
-        { }
+        {}
         <progress
           value={progressPct}
           max={100}
           aria-valuetext={`${label} SLA: ${config.label}, ${timeText}`}
           className={`flex-1 h-1.5 rounded-full appearance-none overflow-hidden [&::-webkit-progress-bar]:rounded-full [&::-webkit-progress-bar]:bg-muted [&::-webkit-progress-value]:rounded-full [&::-webkit-progress-value]:transition-all ${(() => {
-            if (slaStatus === 'BREACHED') return '[&::-webkit-progress-value]:bg-red-500 [&::-moz-progress-bar]:bg-red-500';
-            if (slaStatus === 'AT_RISK') return '[&::-webkit-progress-value]:bg-yellow-500 [&::-moz-progress-bar]:bg-yellow-500';
-            if (slaStatus === 'MET') return '[&::-webkit-progress-value]:bg-green-500 [&::-moz-progress-bar]:bg-green-500';
-            if (slaStatus === 'PAUSED') return '[&::-webkit-progress-value]:bg-slate-400 [&::-moz-progress-bar]:bg-slate-400';
+            if (slaStatus === 'BREACHED')
+              return '[&::-webkit-progress-value]:bg-red-500 [&::-moz-progress-bar]:bg-red-500';
+            if (slaStatus === 'AT_RISK')
+              return '[&::-webkit-progress-value]:bg-yellow-500 [&::-moz-progress-bar]:bg-yellow-500';
+            if (slaStatus === 'MET')
+              return '[&::-webkit-progress-value]:bg-green-500 [&::-moz-progress-bar]:bg-green-500';
+            if (slaStatus === 'PAUSED')
+              return '[&::-webkit-progress-value]:bg-slate-400 [&::-moz-progress-bar]:bg-slate-400';
             return '[&::-webkit-progress-value]:bg-emerald-500 [&::-moz-progress-bar]:bg-emerald-500';
           })()}`}
         />

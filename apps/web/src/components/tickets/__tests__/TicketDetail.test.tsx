@@ -85,33 +85,37 @@ vi.mock('@intelliflow/ui', () => {
   const Passthrough = ({ children, ...props }: any) => <div {...props}>{children}</div>;
   const explicit: Record<string, any> = {
     Card: ({ children, className }: any) => <div className={className}>{children}</div>,
-  Button: ({ children, onClick, ...props }: any) => (
-    <button onClick={onClick} {...props}>
-      {children}
-    </button>
-  ),
-  Badge: ({ children, ...props }: any) => <span {...props}>{children}</span>,
-  Skeleton: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-  Separator: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-  HoverCard: ({ children, open }: any) => (open === false ? null : <div>{children}</div>),
-  HoverCardTrigger: ({ children }: any) => <div>{children}</div>,
-  HoverCardContent: ({ children }: any) => <div>{children}</div>,
-  EmptyState: ({ title, description, children }: any) => (
-    <div data-testid="empty-state">
-      {title}
-      {description}
-      {children}
-    </div>
-  ),
-  DropdownMenu: ({ children }: any) => <div>{children}</div>,
-  DropdownMenuTrigger: ({ children }: any) => <div>{children}</div>,
-  DropdownMenuContent: ({ children }: any) => <div>{children}</div>,
-  DropdownMenuItem: ({ children, onClick }: any) => <button onClick={onClick}>{children}</button>,
-  DropdownMenuSeparator: () => <hr />,
-  Tabs: ({ children }: any) => <div>{children}</div>,
-  TabsList: ({ children }: any) => <div role="tablist">{children}</div>,
-  TabsTrigger: ({ children, value }: any) => <button role="tab" data-value={value}>{children}</button>,
-  TabsContent: ({ children }: any) => <div>{children}</div>,
+    Button: ({ children, onClick, ...props }: any) => (
+      <button onClick={onClick} {...props}>
+        {children}
+      </button>
+    ),
+    Badge: ({ children, ...props }: any) => <span {...props}>{children}</span>,
+    Skeleton: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+    Separator: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+    HoverCard: ({ children, open }: any) => (open === false ? null : <div>{children}</div>),
+    HoverCardTrigger: ({ children }: any) => <div>{children}</div>,
+    HoverCardContent: ({ children }: any) => <div>{children}</div>,
+    EmptyState: ({ title, description, children }: any) => (
+      <div data-testid="empty-state">
+        {title}
+        {description}
+        {children}
+      </div>
+    ),
+    DropdownMenu: ({ children }: any) => <div>{children}</div>,
+    DropdownMenuTrigger: ({ children }: any) => <div>{children}</div>,
+    DropdownMenuContent: ({ children }: any) => <div>{children}</div>,
+    DropdownMenuItem: ({ children, onClick }: any) => <button onClick={onClick}>{children}</button>,
+    DropdownMenuSeparator: () => <hr />,
+    Tabs: ({ children }: any) => <div>{children}</div>,
+    TabsList: ({ children }: any) => <div role="tablist">{children}</div>,
+    TabsTrigger: ({ children, value }: any) => (
+      <button role="tab" data-value={value}>
+        {children}
+      </button>
+    ),
+    TabsContent: ({ children }: any) => <div>{children}</div>,
     cn: (...classes: any[]) => classes.filter(Boolean).join(' '),
     toast: Object.assign(vi.fn(), {
       success: vi.fn(),

@@ -446,9 +446,7 @@ function ChangePlanDialog({
               <ul className="space-y-1">
                 {gainedFeatures.map((f) => (
                   <li key={f.name} className="flex items-center gap-2 text-sm">
-                    <span className="material-symbols-outlined text-green-600">
-                      add_circle
-                    </span>{' '}
+                    <span className="material-symbols-outlined text-green-600">add_circle</span>{' '}
                     {f.name}
                   </li>
                 ))}
@@ -464,9 +462,7 @@ function ChangePlanDialog({
               <ul className="space-y-1">
                 {lostFeatures.map((f) => (
                   <li key={f.name} className="flex items-center gap-2 text-sm">
-                    <span className="material-symbols-outlined text-amber-600">
-                      remove_circle
-                    </span>{' '}
+                    <span className="material-symbols-outlined text-amber-600">remove_circle</span>{' '}
                     {f.name}
                   </li>
                 ))}

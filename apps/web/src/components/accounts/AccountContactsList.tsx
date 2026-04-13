@@ -6,7 +6,13 @@ import { Button, EmptyState, Skeleton, Badge } from '@intelliflow/ui';
 import { api } from '@/lib/api';
 import type { ContactStatus } from '@intelliflow/domain';
 
-const CONTACTS_SKELETON_KEYS = ['contact-0', 'contact-1', 'contact-2', 'contact-3', 'contact-4'] as const;
+const CONTACTS_SKELETON_KEYS = [
+  'contact-0',
+  'contact-1',
+  'contact-2',
+  'contact-3',
+  'contact-4',
+] as const;
 
 interface AccountContact {
   id: string;

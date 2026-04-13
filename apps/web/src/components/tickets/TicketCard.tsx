@@ -27,7 +27,6 @@ export function TicketCard({
   const priorityConfig = getPriorityConfig(ticket.priority);
 
   return (
-     
     <Card
       className="p-4 hover:shadow-md transition-shadow cursor-pointer group bg-card border-border"
       onClick={onClick}

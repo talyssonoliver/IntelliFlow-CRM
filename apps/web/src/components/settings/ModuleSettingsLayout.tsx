@@ -124,8 +124,8 @@ export function ModuleSettingsLayout({
                       aria-hidden="true"
                     >
                       progress_activity
-                    </span>
-                    {' '}Saving...
+                    </span>{' '}
+                    Saving...
                   </span>
                 ) : (
                   'Save Changes'

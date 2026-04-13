@@ -11,9 +11,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Pencil } from 'lucide-react';
-import { Input } from '@intelliflow/ui';
-import { PageHeader } from '@/components/shared/page-header';
+import { Input, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@intelliflow/ui';
 import { WorkflowCanvas } from './WorkflowCanvas';
 import { api } from '@/lib/api';
 
@@ -30,7 +28,7 @@ export function CanvasScreen({ workflowId }: CanvasScreenProps) {
   // The query is `enabled` only when we have an id; disabled for /new.
   const workflowQuery = api.workflow.getById.useQuery(
     { id: workflowId! },
-    { enabled: !!workflowId },
+    { enabled: !!workflowId }
   );
   const remoteName = (workflowQuery.data as { name?: string } | undefined)?.name;
 
@@ -45,55 +43,45 @@ export function CanvasScreen({ workflowId }: CanvasScreenProps) {
     }
   }, [remoteName, name]);
 
-  const displayName = name.trim().length > 0
-    ? name.trim()
-    : isNew
-      ? 'New workflow'
-      : (remoteName ?? 'Workflow');
+  const displayName =
+    name.trim().length > 0 ? name.trim() : isNew ? 'New workflow' : (remoteName ?? 'Workflow');
 
   const goToList = () => router.push('/cases/case-workflows');
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] w-full bg-background">
       <div className="flex-shrink-0 px-4 sm:px-6 py-4 border-b border-border">
-        <PageHeader
-          breadcrumbs={[
-            { label: 'Cases', href: '/cases' },
-            { label: 'Case Workflows', href: '/cases/case-workflows' },
-            { label: displayName },
-          ]}
-          // PageHeader title is just the literal string; the editable input
-          // below sits inside `children` so it shares the same row layout.
-          title={editing ? '' : displayName}
-          description={
-            isNew
-              ? 'Drag nodes from the palette onto the canvas, then connect them to define the flow.'
-              : 'Update the workflow graph. Changes take effect on save.'
-          }
-          actions={[
-            {
-              label: 'Back to workflows',
-              icon: 'arrow_back',
-              variant: 'secondary',
-              onClick: goToList,
-            },
-          ]}
+        {/* Custom header — the title itself is the click target for rename
+            (matches Notion / Figma / Linear convention). PageHeader's
+            structured `title` prop forces a static h1 so we render the
+            row by hand to keep the same density. */}
+        <nav
+          aria-label="Breadcrumb"
+          className="flex items-center gap-2 text-sm text-muted-foreground mb-1"
         >
-          {editing ? (
-            <div className="mt-2 flex items-center gap-2">
-              <label htmlFor="workflow-name" className="sr-only">
-                Workflow name
-              </label>
+          <a href="/cases" className="hover:text-foreground transition-colors">
+            Cases
+          </a>
+          <span aria-hidden="true">/</span>
+          <a href="/cases/case-workflows" className="hover:text-foreground transition-colors">
+            Case Workflows
+          </a>
+          <span aria-hidden="true">/</span>
+          <span aria-current="page" className="text-foreground font-medium truncate">
+            {displayName}
+          </span>
+        </nav>
+
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0 flex-1">
+            {editing ? (
               <Input
-                id="workflow-name"
                 autoFocus
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                onBlur={() => {
-                  if (name.trim().length > 0) setEditing(false);
-                }}
+                onBlur={() => setEditing(false)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' && name.trim().length > 0) {
+                  if (e.key === 'Enter') {
                     e.preventDefault();
                     setEditing(false);
                   }
@@ -101,30 +89,46 @@ export function CanvasScreen({ workflowId }: CanvasScreenProps) {
                     setEditing(false);
                   }
                 }}
-                placeholder={isNew ? 'Untitled workflow' : displayName}
-                className="text-2xl md:text-3xl font-bold tracking-tight max-w-xl"
+                placeholder="Untitled workflow"
+                className="text-2xl md:text-3xl font-bold tracking-tight h-auto py-1 max-w-xl"
                 aria-label="Workflow name"
               />
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setEditing(true)}
-              aria-label="Edit workflow name"
-              className="mt-1 inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <Pencil className="h-4 w-4" aria-hidden="true" />
-              <span className="text-sm">Rename</span>
-            </button>
-          )}
-        </PageHeader>
+            ) : (
+              <TooltipProvider delayDuration={200}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={() => setEditing(true)}
+                      className="text-2xl md:text-3xl font-bold tracking-tight text-foreground text-left hover:bg-muted/40 rounded px-1 -mx-1 transition-colors max-w-full truncate"
+                      aria-label="Rename workflow"
+                    >
+                      {displayName}
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">Click to rename</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+            <p className="text-muted-foreground mt-1">
+              {isNew
+                ? 'Drag nodes from the palette onto the canvas, then connect them to define the flow.'
+                : 'Update the workflow graph. Changes take effect on save.'}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={goToList}
+            className="shrink-0 inline-flex items-center gap-2 px-3 sm:px-5 py-2 sm:py-2.5 text-sm rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-all active:scale-95"
+            aria-label="Back to workflows"
+          >
+            <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+            <span className="hidden sm:inline">Back to workflows</span>
+          </button>
+        </div>
       </div>
       <div className="flex-1 overflow-hidden">
-        <WorkflowCanvas
-          workflowId={workflowId}
-          workflowName={name}
-          onBack={goToList}
-        />
+        <WorkflowCanvas workflowId={workflowId} workflowName={name} onBack={goToList} />
       </div>
     </div>
   );

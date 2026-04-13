@@ -15,10 +15,7 @@ import {
   formatDuration,
 } from '@/lib/appointments/appointment-utils';
 import type { CalendarAppointment, CalendarTask } from './types';
-import {
-  CalendarEventHoverCard,
-  type CalendarEventHoverCardData,
-} from './CalendarEventHoverCard';
+import { CalendarEventHoverCard, type CalendarEventHoverCardData } from './CalendarEventHoverCard';
 
 export interface AppointmentCalendarInnerProps {
   appointments: CalendarAppointment[];
@@ -231,10 +228,7 @@ function TimeGridEvent({ calendarEvent }: Readonly<{ calendarEvent: Record<strin
           data-testid="calendar-task-chip"
         >
           <div className="flex items-center gap-1">
-            <span
-              className="material-symbols-outlined text-[12px] shrink-0"
-              aria-hidden="true"
-            >
+            <span className="material-symbols-outlined text-[12px] shrink-0" aria-hidden="true">
               task_alt
             </span>
             <span className="text-xs font-medium truncate">{calendarEvent.title as string}</span>

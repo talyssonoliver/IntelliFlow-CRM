@@ -82,7 +82,7 @@ export function StatusUpdater({
         )}
       </button>
 
-      { }
+      {}
       {isOpen && !isDisabled && (
         <div
           role="listbox"
@@ -115,7 +115,7 @@ export function StatusUpdater({
           })}
         </div>
       )}
-      { }
+      {}
     </div>
   );
 }

@@ -13,14 +13,9 @@ import { render, screen } from '@testing-library/react';
 // ---------------------------------------------------------------------------
 
 vi.mock('@xyflow/react', () => ({
-  Handle: ({
-    type,
-    position,
-  }: {
-    type: string;
-    position: string;
-    className?: string;
-  }) => <div data-testid={`handle-${type}-${position}`} />,
+  Handle: ({ type, position }: { type: string; position: string; className?: string }) => (
+    <div data-testid={`handle-${type}-${position}`} />
+  ),
   Position: {
     Top: 'top',
     Bottom: 'bottom',
@@ -83,11 +78,14 @@ describe('WorkflowNodeCard', () => {
     ['decision', 'Decision', '⑂'],
     ['human', 'Human', '👤'],
     ['end', 'End', '■'],
-  ] as const)('renders correct label and emoji for %s node type', (type, expectedLabel, expectedEmoji) => {
-    renderNode(type);
-    expect(screen.getByText(expectedLabel)).toBeInTheDocument();
-    expect(screen.getByText(expectedEmoji)).toBeInTheDocument();
-  });
+  ] as const)(
+    'renders correct label and emoji for %s node type',
+    (type, expectedLabel, expectedEmoji) => {
+      renderNode(type);
+      expect(screen.getByText(expectedLabel)).toBeInTheDocument();
+      expect(screen.getByText(expectedEmoji)).toBeInTheDocument();
+    }
+  );
 
   it.each([
     ['start', 'bg-green-100'],
@@ -119,7 +117,7 @@ describe('WorkflowNodeCard', () => {
       renderNode(type);
       expect(screen.getByTestId('handle-target-top')).toBeInTheDocument();
       expect(screen.getByTestId('handle-source-bottom')).toBeInTheDocument();
-    },
+    }
   );
 
   it('aria-label includes node type label and data label', () => {
@@ -159,7 +157,7 @@ describe('WorkflowNodeCard', () => {
       focusable: undefined,
       measured: undefined,
     };
-     
+
     const { container } = render(<WorkflowNodeCard {...(props as any)} />);
     const card = container.querySelector('[role="figure"]');
     // Should fall back to action styling

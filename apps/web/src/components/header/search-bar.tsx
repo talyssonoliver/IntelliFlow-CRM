@@ -155,8 +155,8 @@ export function SearchBar({ placeholder = 'Search...', className = '' }: Readonl
             <div className="px-4 py-3 text-xs text-muted-foreground text-center">
               <span className="material-symbols-outlined text-sm animate-spin mr-1 align-middle">
                 progress_activity
-              </span>
-              {' '}Searching...
+              </span>{' '}
+              Searching...
             </div>
           )}
 

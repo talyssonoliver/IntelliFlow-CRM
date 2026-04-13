@@ -271,7 +271,7 @@ function GoalSection({ isLoading, goal }: Readonly<GoalSectionProps>) {
   return (
     <>
       <div className="relative w-32 h-32 mx-auto mb-4">
-        { }
+        {}
         <svg
           className="size-full -rotate-90"
           viewBox="0 0 36 36"

@@ -35,7 +35,13 @@ import type { ChainType, ChainVersionStatus } from '@intelliflow/domain';
 import { CHAIN_TYPES, CHAIN_VERSION_STATUSES } from '@intelliflow/domain';
 import type { ChainVersionSummary } from '@intelliflow/validators';
 
-const CHAIN_VERSION_SKELETON_KEYS = ['chain-ver-0', 'chain-ver-1', 'chain-ver-2', 'chain-ver-3', 'chain-ver-4'] as const;
+const CHAIN_VERSION_SKELETON_KEYS = [
+  'chain-ver-0',
+  'chain-ver-1',
+  'chain-ver-2',
+  'chain-ver-3',
+  'chain-ver-4',
+] as const;
 
 interface ChainVersionsTableProps {
   versions: ChainVersionSummary[];

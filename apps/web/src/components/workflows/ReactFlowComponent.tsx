@@ -27,7 +27,6 @@ import {
   MiniMap,
   ReactFlowProvider,
   useReactFlow,
-  Panel,
   type Node,
   type Edge,
   type OnConnect,
@@ -97,7 +96,7 @@ const CANVAS_DROP_ZONE_ID = 'canvas-drop-zone';
  */
 function normalizeLegacyNodeType(
   rawType: string,
-  rawConfig: Record<string, unknown>,
+  rawConfig: Record<string, unknown>
 ): { canonicalType: string; canonicalConfig: Record<string, unknown>; displayLabel: string } {
   const label = rawType.charAt(0).toUpperCase() + rawType.slice(1);
   switch (rawType) {
@@ -249,13 +248,13 @@ function CanvasInner({
     }),
     useSensor(TouchSensor, {
       activationConstraint: { delay: 150, tolerance: 5 },
-    }),
+    })
   );
 
   // ── Hydrate existing workflow when editing ──────────────────────────
   const workflowQuery = api.workflow.getById.useQuery(
     { id: workflowId! },
-    { enabled: !!workflowId },
+    { enabled: !!workflowId }
   );
   // Break deep tRPC type inference chain to avoid TS2589
   const existingWorkflow = workflowQuery.data as { steps?: unknown } | undefined;
@@ -274,14 +273,24 @@ function CanvasInner({
       : (existingSteps as Record<string, unknown>)?.nodes;
     if (!Array.isArray(nodeArray)) return initialNodes;
     return nodeArray.map(
-      (step: { id?: number; type?: string; config?: Record<string, unknown>; position?: { x: number; y: number } }, idx: number) => {
+      (
+        step: {
+          id?: number;
+          type?: string;
+          config?: Record<string, unknown>;
+          position?: { x: number; y: number };
+        },
+        idx: number
+      ) => {
         const rawType = (step.type ?? 'action') as string;
         // Normalize legacy type names → canonical 5. Seeded workflows (IFC-028)
         // persisted types like "notify", "approval", "condition", etc. We keep
         // the original label for display so the card still reads "Notify" but
         // the canonical `type` drives the per-variant NodeConfigPanel form.
-        const { canonicalType, canonicalConfig, displayLabel } =
-          normalizeLegacyNodeType(rawType, (step.config ?? {}) as Record<string, unknown>);
+        const { canonicalType, canonicalConfig, displayLabel } = normalizeLegacyNodeType(
+          rawType,
+          (step.config ?? {}) as Record<string, unknown>
+        );
         return {
           id: `node-${step.id ?? idx}`,
           type: canonicalType,
@@ -291,39 +300,82 @@ function CanvasInner({
             config: canonicalConfig as WorkflowNodeConfig,
           },
         };
-      },
+      }
     );
   }, [externalNodes, existingSteps, initialNodes]);
 
   const hydratedEdges = useMemo<CanvasEdge[]>(() => {
     if (externalEdges) return externalEdges;
     if (!existingSteps) return initialEdges;
-    if (Array.isArray(existingSteps)) return initialEdges;
-    const edgeArray = (existingSteps as Record<string, unknown>)?.edges;
-    if (!Array.isArray(edgeArray)) return initialEdges;
-    return edgeArray.map(
-      (e: { id?: string; source: string; target: string; label?: string }, idx: number) => ({
+
+    const isLegacyArray = Array.isArray(existingSteps);
+
+    if (isLegacyArray) {
+      // Legacy persistence (a flat steps array with no edges concept) —
+      // the seeded "Ticket Auto-Routing" / "Lead Qualification" workflows.
+      // Synthesize sequential edges so users see a connected chain
+      // instead of disconnected silos. Safe because the legacy shape
+      // never carried user-authored edges, so we cannot overwrite intent.
+      const nodeArray = existingSteps as Array<{ id?: number; type?: string }>;
+      if (nodeArray.length > 1) {
+        const synthesized: CanvasEdge[] = [];
+        for (let i = 0; i < nodeArray.length - 1; i++) {
+          const sourceId = `node-${nodeArray[i].id ?? i}`;
+          const targetId = `node-${nodeArray[i + 1].id ?? i + 1}`;
+          synthesized.push({
+            id: `auto-edge-${i}`,
+            source: sourceId,
+            target: targetId,
+          });
+        }
+        return synthesized;
+      }
+      return initialEdges;
+    }
+
+    // Envelope persistence ({ nodes, edges }) — trust whatever the user
+    // saved. An explicitly empty edges array means "no transitions" and
+    // MUST NOT be silently overwritten with synthesized links (Codex
+    // review P1: the previous version corrupted user-saved drafts that
+    // had two or more disconnected nodes).
+    const envelope = existingSteps as Record<string, unknown>;
+    const persistedEdges = envelope.edges as
+      | Array<{ id?: string; source: string; target: string; label?: string }>
+      | undefined;
+    if (Array.isArray(persistedEdges)) {
+      return persistedEdges.map((e, idx) => ({
         id: e.id ?? `edge-${idx}`,
         source: e.source,
         target: e.target,
         label: e.label,
-      }),
-    );
+      }));
+    }
+
+    return initialEdges;
   }, [externalEdges, existingSteps, initialEdges]);
 
   const canvas = useWorkflowCanvas(hydratedNodes, hydratedEdges);
 
   const { createMutation, updateMutation } = useWorkflowMutations();
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  // `selectedNode` is the node whose ConfigPanel is open (separate from
+  // React Flow's visual selection — see handleNodeClick / handleNodeDoubleClick).
   const selectedNode = canvas.nodes.find((n) => n.id === selectedNodeId) ?? null;
 
+  // Single-click only forwards to external listeners; React Flow's own
+  // selection handling reveals the resize affordance via CSS hover/select.
+  // Double-click is the heavier "open config" gesture — heavier action,
+  // heavier gesture.
   const handleNodeClick = useCallback(
     (_event: React.MouseEvent, node: Node) => {
-      setSelectedNodeId(node.id);
       externalOnNodeClick?.(node.id);
     },
-    [externalOnNodeClick],
+    [externalOnNodeClick]
   );
+
+  const handleNodeDoubleClick = useCallback((_event: React.MouseEvent, node: Node) => {
+    setSelectedNodeId(node.id);
+  }, []);
 
   const handlePaneClick = useCallback(() => {
     setSelectedNodeId(null);
@@ -355,7 +407,7 @@ function CanvasInner({
       // for tests/debugging; screenCoordsFromDragEvent already factors it in.
       void delta;
     },
-    [canvas, screenToFlowPosition],
+    [canvas, screenToFlowPosition]
   );
 
   // Save — create new workflow or update existing
@@ -411,7 +463,15 @@ function CanvasInner({
         edges: edgesPayload,
       });
     }
-  }, [canvas.nodes, canvas.edges, workflowId, workflowName, createMutation, updateMutation, externalOnSave]);
+  }, [
+    canvas.nodes,
+    canvas.edges,
+    workflowId,
+    workflowName,
+    createMutation,
+    updateMutation,
+    externalOnSave,
+  ]);
 
   const handleNodeConfigSave = useCallback(
     (newConfig: WorkflowNodeConfig) => {
@@ -420,7 +480,7 @@ function CanvasInner({
         setSelectedNodeId(null);
       }
     },
-    [selectedNodeId, canvas],
+    [selectedNodeId, canvas]
   );
 
   const isSaving = createMutation.isPending || updateMutation.isPending;
@@ -464,6 +524,7 @@ function CanvasInner({
             onEdgesChange={externalOnEdgesChange ?? canvas.onEdgesChange}
             onConnect={externalOnConnect ?? canvas.onConnect}
             onNodeClick={handleNodeClick}
+            onNodeDoubleClick={handleNodeDoubleClick}
             onPaneClick={handlePaneClick}
             // Allow keyboard delete on selected edge (Backspace + Delete)
             deleteKeyCode={['Backspace', 'Delete']}
@@ -483,18 +544,16 @@ function CanvasInner({
             <Background />
             <Controls />
             {!isMobile && <MiniMap />}
-            <Panel position="top-right">
-              <WorkflowToolbar
-                onSave={handleSave}
-                isValid={canvas.isValid}
-                isSaving={isSaving}
-                validationError={canvas.validationErrors?.[0]}
-                canUndo={canvas.canUndo}
-                canRedo={canvas.canRedo}
-                onUndo={canvas.undo}
-                onRedo={canvas.redo}
-              />
-            </Panel>
+            <WorkflowToolbar
+              onSave={handleSave}
+              isValid={canvas.isValid}
+              isSaving={isSaving}
+              validationError={canvas.validationErrors?.[0]}
+              canUndo={canvas.canUndo}
+              canRedo={canvas.canRedo}
+              onUndo={canvas.undo}
+              onRedo={canvas.redo}
+            />
           </ReactFlow>
         </DroppableCanvasArea>
 

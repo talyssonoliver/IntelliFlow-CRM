@@ -93,10 +93,7 @@ const MockOAuthCallback = ({
         <div className="relative overflow-hidden border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl rounded-2xl">
           <div className="absolute inset-0 bg-gradient-to-br from-white/[0.07] via-transparent to-[#137fec]/[0.03]" />
 
-          <output
-            className="relative p-8 text-center space-y-6 block"
-            aria-live="polite"
-          >
+          <output className="relative p-8 text-center space-y-6 block" aria-live="polite">
             <div
               className={`inline-flex items-center justify-center w-20 h-20 rounded-full ${config.bgColor}`}
             >

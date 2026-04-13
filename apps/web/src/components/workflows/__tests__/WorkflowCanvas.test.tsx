@@ -25,16 +25,12 @@ const { MockReactFlowComponent } = vi.hoisted(() => {
     }) => (
       <div data-testid="react-flow-mock">
         {nodes.map((n) => (
-          <button
-            key={n.id}
-            data-testid={`node-${n.id}`}
-            onClick={() => onNodeClick?.(n.id)}
-          >
+          <button key={n.id} data-testid={`node-${n.id}`} onClick={() => onNodeClick?.(n.id)}>
             {n.id}
           </button>
         ))}
       </div>
-    ),
+    )
   );
   return { MockReactFlowComponent };
 });
@@ -63,7 +59,7 @@ describe('WorkflowCanvas', () => {
         onNodesChange={vi.fn()}
         onEdgesChange={vi.fn()}
         onConnect={vi.fn()}
-      />,
+      />
     );
     expect(screen.getByRole('status')).toBeInTheDocument();
   });
@@ -78,7 +74,7 @@ describe('WorkflowCanvas', () => {
         onNodesChange={vi.fn()}
         onEdgesChange={vi.fn()}
         onConnect={vi.fn()}
-      />,
+      />
     );
     expect(screen.getByText(/drag.*node/i)).toBeInTheDocument();
   });
@@ -94,7 +90,7 @@ describe('WorkflowCanvas', () => {
         onNodesChange={vi.fn()}
         onEdgesChange={vi.fn()}
         onConnect={vi.fn()}
-      />,
+      />
     );
     fireEvent.click(screen.getByTestId('node-n1'));
     expect(onNodeClick).toHaveBeenCalledWith('n1');
@@ -110,7 +106,7 @@ describe('WorkflowCanvas', () => {
         onNodesChange={vi.fn()}
         onEdgesChange={vi.fn()}
         onConnect={vi.fn()}
-      />,
+      />
     );
     expect(screen.getByTestId('react-flow-mock')).toBeInTheDocument();
   });

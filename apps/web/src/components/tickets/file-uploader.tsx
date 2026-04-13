@@ -147,7 +147,8 @@ export function FileUploader({
 
   let dropZoneClass: string;
   if (disabled) {
-    dropZoneClass = 'cursor-not-allowed border-slate-200 dark:border-slate-700 bg-slate-100/50 dark:bg-slate-800/30 opacity-60';
+    dropZoneClass =
+      'cursor-not-allowed border-slate-200 dark:border-slate-700 bg-slate-100/50 dark:bg-slate-800/30 opacity-60';
   } else if (isDragOver) {
     dropZoneClass = 'border-[#137fec] bg-[#137fec]/5';
   } else {
@@ -164,7 +165,7 @@ export function FileUploader({
       </label>
 
       {/* Drop zone */}
-      { }
+      {}
       <section
         aria-label="File upload area"
         onDragOver={handleDragOver}

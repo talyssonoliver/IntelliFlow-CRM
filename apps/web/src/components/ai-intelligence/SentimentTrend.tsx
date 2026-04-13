@@ -35,10 +35,7 @@ export default function SentimentTrend({ trends }: Readonly<SentimentTrendProps>
   }));
 
   return (
-    <figure
-      aria-label="Sentiment trend chart"
-      className="w-full h-64"
-    >
+    <figure aria-label="Sentiment trend chart" className="w-full h-64">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
           <XAxis

@@ -93,8 +93,7 @@ export function CaseForm({
       userTimezone ??
       'Europe/London',
     jurisdiction:
-      (initialData as { timezone?: string; jurisdiction?: string } | undefined)?.jurisdiction ??
-      '',
+      (initialData as { timezone?: string; jurisdiction?: string } | undefined)?.jurisdiction ?? '',
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof CaseFormData, string>>>({});
@@ -382,7 +381,7 @@ export function CaseForm({
             )}
 
             {/* ── Dropdown results ── */}
-            { }
+            {}
             {clientDropdownOpen && !formData.clientId && debouncedClientSearch.length >= 2 && (
               <ul
                 id="client-listbox"
@@ -408,33 +407,33 @@ export function CaseForm({
                 {!contactQuery.isLoading &&
                   clientResults.map((client) => (
                     <li key={client.id} role="option" aria-selected={false}>
-                    <button
-                      type="button"
-                      onClick={() => handleClientSelect(client.id, client.name)}
-                      className="w-full text-left px-3 py-2.5 hover:bg-accent transition-colors flex items-center gap-3"
-                    >
-                      <span
-                        className="material-symbols-outlined text-muted-foreground text-xl shrink-0"
-                        aria-hidden="true"
+                      <button
+                        type="button"
+                        onClick={() => handleClientSelect(client.id, client.name)}
+                        className="w-full text-left px-3 py-2.5 hover:bg-accent transition-colors flex items-center gap-3"
                       >
-                        person
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <div className="text-sm font-medium text-foreground truncate">
-                          {client.name}
-                        </div>
-                        {(client.email || client.company) && (
-                          <div className="text-xs text-muted-foreground truncate">
-                            {[client.email, client.company].filter(Boolean).join(' · ')}
+                        <span
+                          className="material-symbols-outlined text-muted-foreground text-xl shrink-0"
+                          aria-hidden="true"
+                        >
+                          person
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <div className="text-sm font-medium text-foreground truncate">
+                            {client.name}
                           </div>
-                        )}
-                      </div>
-                    </button>
+                          {(client.email || client.company) && (
+                            <div className="text-xs text-muted-foreground truncate">
+                              {[client.email, client.company].filter(Boolean).join(' · ')}
+                            </div>
+                          )}
+                        </div>
+                      </button>
                     </li>
                   ))}
               </ul>
             )}
-            { }
+            {}
 
             {errors.clientSearch ? (
               <p id="client-error" className="text-xs text-destructive mt-1">

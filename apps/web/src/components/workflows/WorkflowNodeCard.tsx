@@ -92,7 +92,10 @@ const ACTION_LABEL: Record<string, string> = {
  * "what kind of action" to "who/where" to "constraints". Returns at most
  * 4 chips so a node card stays compact at typical zoom levels.
  */
-function configChips(nodeType: WFNodeType, cfg: WorkflowNodeConfig): Array<{ key: string; text: string; className: string }> {
+function configChips(
+  nodeType: WFNodeType,
+  cfg: WorkflowNodeConfig
+): Array<{ key: string; text: string; className: string }> {
   const chips: Array<{ key: string; text: string; className: string }> = [];
 
   if (nodeType === 'action' && cfg.actionType) {
@@ -193,7 +196,7 @@ function configPreview(cfg: WorkflowNodeConfig): string | null {
 }
 
 function WorkflowNodeCardInner(props: NodeProps) {
-  const nodeType = ((props.type ?? 'action') as WFNodeType);
+  const nodeType = (props.type ?? 'action') as WFNodeType;
   const data = props.data as unknown as WorkflowNodeData;
   const cfg = NODE_TYPE_CONFIG[nodeType] ?? NODE_TYPE_CONFIG.action;
   const chips = configChips(nodeType, data.config ?? {});
@@ -221,11 +224,7 @@ function WorkflowNodeCardInner(props: NodeProps) {
       />
       {/* Incoming handle (not on start node) */}
       {nodeType !== 'start' && (
-        <Handle
-          type="target"
-          position={Position.Top}
-          className="w-3 h-3 !bg-gray-400"
-        />
+        <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-gray-400" />
       )}
 
       {/* Node header */}
@@ -233,9 +232,7 @@ function WorkflowNodeCardInner(props: NodeProps) {
         <span className="text-sm select-none" aria-hidden="true">
           {cfg.emoji}
         </span>
-        <span className="text-xs font-semibold uppercase tracking-wide">
-          {cfg.label}
-        </span>
+        <span className="text-xs font-semibold uppercase tracking-wide">{cfg.label}</span>
       </div>
 
       {/* Node display label */}
@@ -268,11 +265,7 @@ function WorkflowNodeCardInner(props: NodeProps) {
 
       {/* Outgoing handle (not on end node) */}
       {nodeType !== 'end' && (
-        <Handle
-          type="source"
-          position={Position.Bottom}
-          className="w-3 h-3 !bg-gray-400"
-        />
+        <Handle type="source" position={Position.Bottom} className="w-3 h-3 !bg-gray-400" />
       )}
     </div>
   );

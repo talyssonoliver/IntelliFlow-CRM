@@ -22,6 +22,14 @@ vi.mock('@xyflow/react', () => ({
     zoomOut: mockZoomOut,
     fitView: mockFitView,
   }),
+  Panel: ({ children }: { children?: React.ReactNode; position?: string }) => (
+    <div data-testid="rf-panel">{children}</div>
+  ),
+}));
+
+const mockIsMobile = vi.fn<() => boolean>(() => false);
+vi.mock('@/hooks/useIsMobile', () => ({
+  useIsMobile: () => mockIsMobile(),
 }));
 
 vi.mock('@intelliflow/ui', () => ({
@@ -49,7 +57,9 @@ vi.mock('@intelliflow/ui', () => ({
   // (button state, click handlers) in these tests, not tooltip rendering.
   TooltipProvider: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
   Tooltip: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
-  TooltipTrigger: ({ children }: { children?: React.ReactNode; asChild?: boolean }) => <>{children}</>,
+  TooltipTrigger: ({ children }: { children?: React.ReactNode; asChild?: boolean }) => (
+    <>{children}</>
+  ),
   TooltipContent: ({ children }: { children?: React.ReactNode }) => (
     <span data-testid="tooltip-content">{children}</span>
   ),
@@ -87,6 +97,7 @@ describe('WorkflowToolbar', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockIsMobile.mockReturnValue(false);
   });
 
   it('renders Save button disabled when isValid=false', () => {
@@ -142,6 +153,30 @@ describe('WorkflowToolbar', () => {
     fireEvent.click(screen.getByRole('button', { name: /redo/i }));
     expect(onUndo).toHaveBeenCalledOnce();
     expect(onRedo).toHaveBeenCalledOnce();
+  });
+
+  it('renders inside a ReactFlow Panel on desktop (FU-009)', () => {
+    mockIsMobile.mockReturnValue(false);
+    const { container } = render(<WorkflowToolbar {...defaultProps} />);
+    expect(container.querySelector('[data-testid="rf-panel"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="workflow-toolbar-mobile-wrap"]')).toBeNull();
+    expect(
+      container.querySelector('[data-testid="workflow-toolbar"]')?.getAttribute('data-variant'),
+    ).toBe('desktop');
+  });
+
+  it('renders a floating bottom-center wrap on mobile (FU-009)', () => {
+    mockIsMobile.mockReturnValue(true);
+    const { container } = render(<WorkflowToolbar {...defaultProps} />);
+    const wrap = container.querySelector('[data-testid="workflow-toolbar-mobile-wrap"]');
+    expect(wrap).not.toBeNull();
+    expect(wrap?.className).toMatch(/fixed/);
+    expect(wrap?.className).toMatch(/bottom-4/);
+    expect(wrap?.className).toMatch(/left-1\/2/);
+    expect(container.querySelector('[data-testid="rf-panel"]')).toBeNull();
+    expect(
+      container.querySelector('[data-testid="workflow-toolbar"]')?.getAttribute('data-variant'),
+    ).toBe('mobile');
   });
 
   it('zoom controls call useReactFlow methods', () => {

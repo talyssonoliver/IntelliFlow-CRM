@@ -53,10 +53,7 @@ function MonthGridEvent({ calendarEvent }: Readonly<{ calendarEvent: Record<stri
   const chipClass = `w-full text-left rounded px-1 py-0.5 text-[10px] truncate ${chipColor}`;
 
   return (
-    <div
-      className={chipClass}
-      data-testid="calendar-task-chip"
-    >
+    <div className={chipClass} data-testid="calendar-task-chip">
       {calendarEvent.title as string}
     </div>
   );

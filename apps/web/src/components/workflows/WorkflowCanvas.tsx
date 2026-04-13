@@ -40,7 +40,7 @@ function CanvasLoading() {
 const _dynamicImportFn = () =>
   import('./ReactFlowComponent').then(
     /* istanbul ignore next */
-    (mod) => ({ default: mod.ReactFlowComponent }),
+    (mod) => ({ default: mod.ReactFlowComponent })
   );
 
 /* istanbul ignore next */

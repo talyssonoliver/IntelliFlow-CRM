@@ -296,14 +296,9 @@ export const TrashList = React.memo(function TrashList() {
       probability: item.probability ?? 0,
       expectedCloseDate: item.expectedCloseDate?.toString() ?? null,
       accountName: item.account?.name ?? 'Unknown Account',
-      contactName: item.contact
-        ? `${item.contact.firstName} ${item.contact.lastName}`
-        : null,
+      contactName: item.contact ? `${item.contact.firstName} ${item.contact.lastName}` : null,
       ownerId: item.ownerId ?? '',
-      ownerName:
-        item.owner?.name ??
-        item.owner?.email ??
-        'Unknown',
+      ownerName: item.owner?.name ?? item.owner?.email ?? 'Unknown',
       createdAt: item.createdAt?.toString() ?? '',
       deletedAt: item.deletedAt?.toString() ?? '',
     }));
@@ -375,11 +370,22 @@ export const TrashList = React.memo(function TrashList() {
       const succeeded = results.filter((r) => r.status === 'fulfilled').length;
       const failed = results.filter((r) => r.status === 'rejected').length;
       if (failed === 0) {
-        toast({ title: 'Deals Restored', description: `${succeeded} deal(s) restored successfully.` });
+        toast({
+          title: 'Deals Restored',
+          description: `${succeeded} deal(s) restored successfully.`,
+        });
       } else if (succeeded === 0) {
-        toast({ title: 'Bulk Restore Failed', description: `All ${failed} deal(s) failed to restore.`, variant: 'destructive' });
+        toast({
+          title: 'Bulk Restore Failed',
+          description: `All ${failed} deal(s) failed to restore.`,
+          variant: 'destructive',
+        });
       } else {
-        toast({ title: 'Partial Restore', description: `${succeeded} restored, ${failed} failed.`, variant: 'destructive' });
+        toast({
+          title: 'Partial Restore',
+          description: `${succeeded} restored, ${failed} failed.`,
+          variant: 'destructive',
+        });
       }
     } finally {
       isBulkOperationRef.current = false;
@@ -400,11 +406,22 @@ export const TrashList = React.memo(function TrashList() {
       const succeeded = results.filter((r) => r.status === 'fulfilled').length;
       const failed = results.filter((r) => r.status === 'rejected').length;
       if (failed === 0) {
-        toast({ title: 'Deals Permanently Deleted', description: `${succeeded} deal(s) permanently removed.` });
+        toast({
+          title: 'Deals Permanently Deleted',
+          description: `${succeeded} deal(s) permanently removed.`,
+        });
       } else if (succeeded === 0) {
-        toast({ title: 'Bulk Delete Failed', description: `All ${failed} deal(s) failed to delete.`, variant: 'destructive' });
+        toast({
+          title: 'Bulk Delete Failed',
+          description: `All ${failed} deal(s) failed to delete.`,
+          variant: 'destructive',
+        });
       } else {
-        toast({ title: 'Partial Delete', description: `${succeeded} deleted, ${failed} failed.`, variant: 'destructive' });
+        toast({
+          title: 'Partial Delete',
+          description: `${succeeded} deleted, ${failed} failed.`,
+          variant: 'destructive',
+        });
       }
     } finally {
       isBulkOperationRef.current = false;

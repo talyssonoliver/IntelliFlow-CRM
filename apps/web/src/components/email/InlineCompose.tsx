@@ -172,7 +172,7 @@ export function InlineCompose({
 
       {/* Body */}
       <div className="px-3 py-2">
-        { }
+        {}
         <div
           ref={bodyRef}
           role="textbox"

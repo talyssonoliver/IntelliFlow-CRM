@@ -47,8 +47,7 @@ export function EmailComposeButton({ isExpanded }: Readonly<{ isExpanded: boolea
       )}
       aria-label="Compose new email"
     >
-      <span className="material-symbols-outlined text-lg">edit</span>
-      {' '}Compose
+      <span className="material-symbols-outlined text-lg">edit</span> Compose
     </Link>
   );
 }

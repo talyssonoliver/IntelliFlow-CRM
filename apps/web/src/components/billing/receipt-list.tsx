@@ -58,7 +58,13 @@ export interface ReceiptListProps {
 // Loading Skeleton
 // ============================================
 
-const RECEIPT_SKELETON_KEYS = ['rcpt-skel-0', 'rcpt-skel-1', 'rcpt-skel-2', 'rcpt-skel-3', 'rcpt-skel-4'] as const;
+const RECEIPT_SKELETON_KEYS = [
+  'rcpt-skel-0',
+  'rcpt-skel-1',
+  'rcpt-skel-2',
+  'rcpt-skel-3',
+  'rcpt-skel-4',
+] as const;
 
 function ReceiptListSkeleton() {
   return (

@@ -120,7 +120,7 @@ export default function CoverageReportView() {
       {!loading && !error && report && !isPlaceholder && details && (
         <>
           {/* Metric Cards */}
-          { }
+          {}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
             {metrics.map(({ key, label, threshold }) => {
               const value = details[key] as number;
@@ -205,7 +205,7 @@ export default function CoverageReportView() {
               </div>
             </Card>
           )}
-          { }
+          {}
 
           {/* Metadata */}
           <Card className="p-4">

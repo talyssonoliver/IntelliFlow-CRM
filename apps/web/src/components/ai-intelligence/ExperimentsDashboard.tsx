@@ -29,7 +29,13 @@ const ExperimentResultsPanel = lazy(() => import('./ExperimentResultsPanel'));
 
 const BREADCRUMBS = [{ label: 'AI & Agents', href: '/agent-approvals' }, { label: 'Experiments' }];
 
-const EXP_GRID_SKELETON_KEYS = ['exp-grid-0', 'exp-grid-1', 'exp-grid-2', 'exp-grid-3', 'exp-grid-4'] as const;
+const EXP_GRID_SKELETON_KEYS = [
+  'exp-grid-0',
+  'exp-grid-1',
+  'exp-grid-2',
+  'exp-grid-3',
+  'exp-grid-4',
+] as const;
 const EXP_LIST_SKELETON_KEYS = ['exp-list-0', 'exp-list-1', 'exp-list-2'] as const;
 
 // ============================================
