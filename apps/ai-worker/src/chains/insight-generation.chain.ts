@@ -321,7 +321,7 @@ ANALYSIS INSTRUCTIONS:
                 (d) =>
                   `- ${sanitizeStringField(d.name, 200)} (ID: ${d.id}): ${d.daysSinceUpdate} days since last update` +
                   (d.stage ? `, stage: ${sanitizeStringField(d.stage, 100)}` : '') +
-                  (d.value ? `, value: $${d.value.toLocaleString('en-US')}` : '')
+                  (d.value ? `, value: $${d.value.toLocaleString('en-GB')}` : '')
               )
               .join('\n')
           : 'No deals at risk';

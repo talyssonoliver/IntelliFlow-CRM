@@ -410,7 +410,7 @@ ENTITY CONTEXT:
 - Title: ${context.title || 'Unknown'}
 - Score: ${context.score ?? 'Not scored'}
 - Stage: ${context.stage || 'Unknown'}
-- Value: ${context.value ? `$${context.value.toLocaleString('en-US')}` : 'Unknown'}
+- Value: ${context.value ? `$${context.value.toLocaleString('en-GB')}` : 'Unknown'}
 - Days since last contact: ${context.daysSinceLastContact ?? 'Unknown'}
 - Total interactions: ${context.totalInteractions ?? 0}
 `;
@@ -623,7 +623,7 @@ Valid ACTION_TYPES: ${ACTION_TYPES.join(', ')}
     if (context.company) parts.push(`at ${context.company}`);
     if (context.title) parts.push(`(${context.title})`);
     if (context.stage) parts.push(`- Stage: ${context.stage}`);
-    if (context.value) parts.push(`- Value: $${context.value.toLocaleString('en-US')}`);
+    if (context.value) parts.push(`- Value: $${context.value.toLocaleString('en-GB')}`);
     if (context.score !== undefined) parts.push(`- Score: ${context.score}`);
 
     return parts.join(' ') || `${context.entityType} ${context.entityId}`;

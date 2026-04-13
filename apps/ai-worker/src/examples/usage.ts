@@ -191,8 +191,8 @@ async function example4_CostTracking() {
   console.log(`  Total Operations: ${stats.totalOperations}`);
   console.log(`  Total Cost: $${stats.totalCost.toFixed(4)}`);
   console.log(`  Average Cost per Operation: $${stats.averageCostPerOperation.toFixed(6)}`);
-  console.log(`  Total Input Tokens: ${stats.totalInputTokens.toLocaleString('en-US')}`);
-  console.log(`  Total Output Tokens: ${stats.totalOutputTokens.toLocaleString('en-US')}\n`);
+  console.log(`  Total Input Tokens: ${stats.totalInputTokens.toLocaleString('en-GB')}`);
+  console.log(`  Total Output Tokens: ${stats.totalOutputTokens.toLocaleString('en-GB')}\n`);
 
   console.log('Cost by Model:');
   Object.entries(stats.costByModel).forEach(([model, cost]) => {
