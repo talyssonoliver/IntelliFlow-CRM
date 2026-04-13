@@ -36,6 +36,28 @@ export const WORKFLOW_PRIORITIES = ['LOW', 'MEDIUM', 'HIGH', 'URGENT'] as const;
 export type WorkflowPriority = (typeof WORKFLOW_PRIORITIES)[number];
 export const WorkflowPrioritySchema = z.enum(WORKFLOW_PRIORITIES);
 
+/**
+ * Canonical workflow flag values.
+ *
+ * Flags are short human-readable labels attached to a node's output (a
+ * created task, an approval request, a notification) so downstream
+ * automation and reports can group / route by intent. Values were chosen
+ * to cover the most common CRM follow-up signals; the schema still
+ * accepts free strings for forward-compat with bespoke labels but the
+ * UI surfaces the canonical set as Select options first.
+ */
+export const WORKFLOW_FLAGS = [
+  'needs_review',
+  'urgent_follow_up',
+  'high_value',
+  'at_risk',
+  'blocked',
+  'archived',
+] as const;
+export type WorkflowFlag = (typeof WORKFLOW_FLAGS)[number];
+/** Schema variant that ONLY accepts canonical flags. */
+export const WorkflowFlagSchema = z.enum(WORKFLOW_FLAGS);
+
 /** CRM entity kinds a workflow node can reference. */
 export const WORKFLOW_ENTITY_KINDS = [
   'lead',
@@ -78,9 +100,7 @@ export type EntityRef = z.infer<typeof EntityRefSchema>;
 export const StartConfigSchema = z
   .object({
     type: z.literal('start'),
-    triggerType: z
-      .enum(['event', 'schedule', 'manual', 'webhook'])
-      .default('manual'),
+    triggerType: z.enum(['event', 'schedule', 'manual', 'webhook']).default('manual'),
     triggerEntity: WorkflowEntityKindSchema.optional(),
     /** Cron string — required when triggerType === 'schedule' */
     schedule: z.string().optional(),
