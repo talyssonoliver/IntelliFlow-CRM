@@ -271,7 +271,7 @@ function GoalSection({ isLoading, goal }: Readonly<GoalSectionProps>) {
   return (
     <>
       <div className="relative w-32 h-32 mx-auto mb-4">
-        {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- SVG element; role="img" is the correct ARIA pattern for SVG used as an image */}
+        { }
         <svg
           className="size-full -rotate-90"
           viewBox="0 0 36 36"

@@ -40,7 +40,7 @@ const metrics: { key: keyof CoverageDetails; label: string; threshold: number }[
 ];
 
 function formatNumber(n: number): string {
-  return n.toLocaleString('en-US');
+  return n.toLocaleString('en-GB');
 }
 
 export default function CoverageReportView() {
@@ -120,7 +120,7 @@ export default function CoverageReportView() {
       {!loading && !error && report && !isPlaceholder && details && (
         <>
           {/* Metric Cards */}
-          {/* eslint-disable jsx-a11y/prefer-tag-over-role -- shadcn Card renders a div; role="region" provides correct landmark semantics */}
+          { }
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
             {metrics.map(({ key, label, threshold }) => {
               const value = details[key] as number;
@@ -205,7 +205,7 @@ export default function CoverageReportView() {
               </div>
             </Card>
           )}
-          {/* eslint-enable jsx-a11y/prefer-tag-over-role */}
+          { }
 
           {/* Metadata */}
           <Card className="p-4">
@@ -213,7 +213,7 @@ export default function CoverageReportView() {
               <span className="material-symbols-outlined text-base">schedule</span>
               <span>
                 Generated:{' '}
-                {new Date(report.generatedAt).toLocaleDateString('en-US', {
+                {new Date(report.generatedAt).toLocaleDateString('en-GB', {
                   month: 'short',
                   day: 'numeric',
                   year: 'numeric',

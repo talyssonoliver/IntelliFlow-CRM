@@ -295,6 +295,7 @@ export function ReactFlowComponent({
               fitView
               className="bg-muted/20 h-full w-full"
               style={{ minHeight: 600 }}
+              proOptions={{ hideAttribution: true }}
             >
               <Background />
               <Controls />

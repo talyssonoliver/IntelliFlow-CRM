@@ -27,7 +27,7 @@ export function TicketCard({
   const priorityConfig = getPriorityConfig(ticket.priority);
 
   return (
-    // eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- shadcn Card renders as a styled div; converting to <article> would lose Card styling
+     
     <Card
       className="p-4 hover:shadow-md transition-shadow cursor-pointer group bg-card border-border"
       onClick={onClick}

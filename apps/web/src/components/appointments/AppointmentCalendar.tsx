@@ -71,14 +71,14 @@ export function AppointmentCalendar({
 
   const headerText =
     view === 'day'
-      ? currentDate.toLocaleDateString('en-US', {
+      ? currentDate.toLocaleDateString('en-GB', {
           weekday: 'long',
           month: 'long',
           day: 'numeric',
           year: 'numeric',
           timeZone: timezone,
         })
-      : currentDate.toLocaleDateString('en-US', {
+      : currentDate.toLocaleDateString('en-GB', {
           month: 'long',
           year: 'numeric',
           timeZone: timezone,

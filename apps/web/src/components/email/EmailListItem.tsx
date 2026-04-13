@@ -61,7 +61,7 @@ export function EmailListItem({ email, isSelected, onSelect }: Readonly<EmailLis
       side="right"
       align="start"
     >
-      {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- custom listbox option item; <option> cannot contain rich visual content and requires <select> parent */}
+      { }
       <li // NOSONAR typescript:S6842
         role="option"
         aria-selected={isSelected}

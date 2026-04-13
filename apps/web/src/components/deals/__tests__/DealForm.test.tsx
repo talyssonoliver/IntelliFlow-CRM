@@ -209,7 +209,7 @@ describe('DealForm', () => {
 
     expect(onSubmit).toHaveBeenCalledWith({
       name: 'Enterprise Expansion',
-      value: { amount: 50000, currency: 'USD' },
+      value: { amount: 50000, currency: 'GBP' },
       stage: 'PROSPECTING',
       probability: 10,
       expectedCloseDate: '2026-07-01',

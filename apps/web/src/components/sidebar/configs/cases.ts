@@ -40,6 +40,18 @@ const VIEW_SECTIONS: SidebarConfig['sections'] = [
     ],
   },
   {
+    id: 'automation',
+    title: 'Automation',
+    items: [
+      {
+        id: 'workflows',
+        label: 'Workflows',
+        icon: 'account_tree',
+        href: '/cases/case-workflows',
+      },
+    ],
+  },
+  {
     id: 'priority',
     title: 'By Priority',
     items: [

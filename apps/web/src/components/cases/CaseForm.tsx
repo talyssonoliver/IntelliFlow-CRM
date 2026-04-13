@@ -88,8 +88,13 @@ export function CaseForm({
     clientName: '',
     assigneeId: initialData?.assigneeId ?? 'me',
     deadline: initialData?.deadline ?? '',
-    timezone: (initialData as any)?.timezone ?? userTimezone ?? 'Europe/London',
-    jurisdiction: (initialData as any)?.jurisdiction ?? '',
+    timezone:
+      (initialData as { timezone?: string; jurisdiction?: string } | undefined)?.timezone ??
+      userTimezone ??
+      'Europe/London',
+    jurisdiction:
+      (initialData as { timezone?: string; jurisdiction?: string } | undefined)?.jurisdiction ??
+      '',
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof CaseFormData, string>>>({});
@@ -377,7 +382,7 @@ export function CaseForm({
             )}
 
             {/* ── Dropdown results ── */}
-            {/* eslint-disable jsx-a11y/prefer-tag-over-role -- custom autocomplete widget; <select>/<option> cannot contain custom-styled items */}
+            { }
             {clientDropdownOpen && !formData.clientId && debouncedClientSearch.length >= 2 && (
               <div
                 id="client-listbox"
@@ -430,7 +435,7 @@ export function CaseForm({
                   ))}
               </div>
             )}
-            {/* eslint-enable jsx-a11y/prefer-tag-over-role */}
+            { }
 
             {errors.clientSearch ? (
               <p id="client-error" className="text-xs text-destructive mt-1">

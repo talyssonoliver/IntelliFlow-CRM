@@ -135,7 +135,7 @@ export function AppSidebar({
   );
 
   return (
-    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- onMouseEnter/Leave control sidebar hover-expand behavior; this is a valid UX pattern for nav elements
+     
     <nav
       className={cn(
         'fixed left-0 top-16 bottom-0 z-30 flex flex-col bg-card border-r border-border',

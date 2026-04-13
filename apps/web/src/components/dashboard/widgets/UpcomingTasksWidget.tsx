@@ -27,7 +27,7 @@ function formatDueDate(date: Date | string | null, timezone: string = 'Europe/Lo
   if (diffDays < 0) return 'Overdue';
   if (diffDays === 0) return 'Due Today';
   if (diffDays === 1) return 'Due Tomorrow';
-  return `Due ${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: timezone })}`;
+  return `Due ${d.toLocaleDateString('en-GB', { month: 'short', day: 'numeric', timeZone: timezone })}`;
 }
 
 function getDueDateColor(date: Date | string | null): string {

@@ -139,7 +139,7 @@ export function ModuleSettingsLayout({
               {lastUpdated && (
                 <p className="text-xs text-muted-foreground text-center">
                   Last updated{' '}
-                  {lastUpdated.toLocaleDateString('en-US', {
+                  {lastUpdated.toLocaleDateString('en-GB', {
                     month: 'short',
                     day: 'numeric',
                     year: 'numeric',

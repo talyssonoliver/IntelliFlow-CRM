@@ -16,7 +16,8 @@ export interface UpcomingEventsCardProps {
   readonly entityType?: 'lead' | 'contact' | 'case' | 'deal';
   /** Entity ID to filter appointments for. Required when entityType is set. */
   readonly entityId?: string;
-  /** Card title */
+  /** Card title. Defaults to "Upcoming Appointments" — this card shows
+   * appointments only. For tasks use `UpcomingTasksWidget`. */
   readonly title?: string;
   /** Maximum number of events to display */
   readonly maxItems?: number;
@@ -39,11 +40,9 @@ interface CalendarEvent {
   id: string;
   title: string;
   startTime: Date;
-  eventType: 'appointment' | 'task';
   appointmentType?: string;
   status: string;
   location?: string | null;
-  priority?: string;
   attendees?: Array<{ user?: { name?: string | null; avatarUrl?: string | null } | null }>;
 }
 
@@ -60,17 +59,13 @@ const TYPE_ICONS: Record<string, { icon: string; color: string }> = {
   DEADLINE: { icon: 'schedule', color: 'text-red-500 bg-red-100 dark:bg-red-900/20' },
 };
 
-const TASK_ICON = {
-  icon: 'task_alt',
-  color: 'text-indigo-500 bg-indigo-100 dark:bg-indigo-900/20',
-};
 const DEFAULT_ICON = { icon: 'event', color: 'text-slate-500 bg-slate-100 dark:bg-slate-800' };
 
 function formatEventDate(date: Date, timezone: string = 'Europe/London') {
   return {
-    month: date.toLocaleDateString('en-US', { month: 'short', timeZone: timezone }),
+    month: date.toLocaleDateString('en-GB', { month: 'short', timeZone: timezone }),
     day: date.getUTCDate().toString(),
-    time: date.toLocaleTimeString('en-US', {
+    time: date.toLocaleTimeString('en-GB', {
       hour: 'numeric',
       minute: '2-digit',
       timeZone: timezone,
@@ -80,9 +75,9 @@ function formatEventDate(date: Date, timezone: string = 'Europe/London') {
 
 function getAddHref(entityType?: string, entityId?: string): string {
   if (entityType && entityId) {
-    return `/calendar/new?linkTo=${entityType}&linkId=${entityId}`;
+    return `/appointments/new?linkTo=${entityType}&linkId=${entityId}`;
   }
-  return '/calendar/new';
+  return '/appointments/new';
 }
 
 // =============================================================================
@@ -92,7 +87,7 @@ function getAddHref(entityType?: string, entityId?: string): string {
 export function UpcomingEventsCard({
   entityType,
   entityId,
-  title = 'Upcoming Events',
+  title = 'Upcoming Appointments',
   maxItems = 3,
   showAddButton = true,
   compact = false,
@@ -107,10 +102,14 @@ export function UpcomingEventsCard({
   // Query upcoming appointments via tRPC.
   // Include all non-terminal statuses so in-progress and newly scheduled
   // appointments both surface. COMPLETED/CANCELLED/NO_SHOW are excluded.
+  //
+  // Scope: this card shows APPOINTMENTS ONLY. For tasks, use
+  // UpcomingTasksWidget. Keeping the two widgets single-purpose prevents the
+  // same record surfacing in both on the dashboard.
   const {
     data: appointmentData,
-    isLoading: appointmentsLoading,
-    error: appointmentsError,
+    isLoading,
+    error,
   } = api.appointments.list.useQuery(
     {
       status: ['SCHEDULED', 'CONFIRMED', 'IN_PROGRESS'],
@@ -123,70 +122,29 @@ export function UpcomingEventsCard({
     { enabled: true }
   );
 
-  // Query upcoming tasks with due dates
-  const {
-    data: taskData,
-    isLoading: tasksLoading,
-    error: tasksError,
-  } = api.task.list.useQuery(
-    {
-      status: ['PENDING', 'IN_PROGRESS'],
-      sortBy: 'dueDate',
-      sortOrder: 'asc' as const,
-      limit: maxItems + 1,
-      dueDateFrom: nowIso,
-    },
-    { enabled: true }
-  );
-
-  const isLoading = appointmentsLoading || tasksLoading;
-  const error = appointmentsError || tasksError;
-
-  // Merge appointments and tasks into a single sorted list
   const events: CalendarEvent[] = useMemo(() => {
-    const merged: CalendarEvent[] = [];
-
-    // Add appointments
     const appointments = (appointmentData?.appointments ?? []) as unknown as Array<
       Record<string, unknown>
     >;
-    for (const a of appointments) {
-      merged.push({
-        id: a.id as string,
-        title: a.title as string,
-        startTime: new Date(a.startTime as string),
-        eventType: 'appointment',
-        appointmentType: a.appointmentType as string,
-        status: a.status as string,
-        location: a.location as string | null | undefined,
-        attendees: a.attendees as CalendarEvent['attendees'],
-      });
-    }
-
-    // Add tasks with due dates
-    for (const t of taskData?.tasks ?? []) {
-      if (!t.dueDate) continue;
-      merged.push({
-        id: t.id,
-        title: t.title,
-        startTime: new Date(t.dueDate as string | Date),
-        eventType: 'task',
-        status: t.status,
-        priority: t.priority,
-      });
-    }
-
-    // Sort by startTime ascending, take maxItems
-    merged.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
-    return merged.slice(0, maxItems);
-  }, [appointmentData, taskData, maxItems]);
+    return appointments
+      .map(
+        (a): CalendarEvent => ({
+          id: a.id as string,
+          title: a.title as string,
+          startTime: new Date(a.startTime as string),
+          appointmentType: a.appointmentType as string,
+          status: a.status as string,
+          location: a.location as string | null | undefined,
+          attendees: a.attendees as CalendarEvent['attendees'],
+        })
+      )
+      .sort((a, b) => a.startTime.getTime() - b.startTime.getTime())
+      .slice(0, maxItems);
+  }, [appointmentData, maxItems]);
 
   const hasMore = useMemo(() => {
-    const totalAvailable =
-      (appointmentData?.appointments?.length ?? 0) +
-      (taskData?.tasks?.filter((t) => t.dueDate).length ?? 0);
-    return totalAvailable > maxItems;
-  }, [appointmentData, taskData, maxItems]);
+    return (appointmentData?.appointments?.length ?? 0) > maxItems;
+  }, [appointmentData, maxItems]);
 
   const calendarHref =
     entityType && entityId ? `/calendar?entity=${entityType}&entityId=${entityId}` : '/calendar';
@@ -271,12 +229,8 @@ export function UpcomingEventsCard({
         <div className={`${compact ? 'space-y-2' : 'space-y-1'} flex-1`}>
           {events.map((event) => {
             const { month, day, time } = formatEventDate(event.startTime);
-            const typeInfo =
-              event.eventType === 'task'
-                ? TASK_ICON
-                : (TYPE_ICONS[event.appointmentType ?? ''] ?? DEFAULT_ICON);
-            const href =
-              event.eventType === 'task' ? `/tasks?id=${event.id}` : `/calendar/${event.id}`;
+            const typeInfo = TYPE_ICONS[event.appointmentType ?? ''] ?? DEFAULT_ICON;
+            const href = `/appointments/${event.id}`;
             const attendeeAvatars = (event.attendees ?? [])
               .map((a) => ({
                 name: a.user?.name ?? 'Attendee',

@@ -154,7 +154,7 @@ describe('WorkflowNodeCard', () => {
       focusable: undefined,
       measured: undefined,
     };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const { container } = render(<WorkflowNodeCard {...(props as any)} />);
     const card = container.querySelector('[role="figure"]');
     // Should fall back to action styling

@@ -135,7 +135,7 @@ function AppointmentHoverBody({
   const typeConfig = getTypeConfig(data.appointmentType);
   const statusConfig = getStatusConfig(data.status);
   const startDate = new Date(data.startTime);
-  const dateLabel = startDate.toLocaleDateString('en-US', {
+  const dateLabel = startDate.toLocaleDateString('en-GB', {
     weekday: 'long',
     month: 'long',
     day: 'numeric',
@@ -232,7 +232,7 @@ function AppointmentHoverBody({
         )}
       </div>
 
-      <Footer href={`/calendar/${data.id}`} label="Open appointment" />
+      <Footer href={`/appointments/${data.id}`} label="Open appointment" />
     </>
   );
 }
@@ -242,7 +242,7 @@ function TaskHoverBody({ data }: Readonly<{ data: CalendarEventHoverCardTask }>)
   const priorityAccent = PRIORITY_ACCENT[priority] ?? PRIORITY_ACCENT.MEDIUM;
   const priorityStripe = PRIORITY_STRIPE[priority] ?? PRIORITY_STRIPE.MEDIUM;
   const due = new Date(data.dueDate);
-  const dueLabel = due.toLocaleDateString('en-US', {
+  const dueLabel = due.toLocaleDateString('en-GB', {
     weekday: 'long',
     month: 'long',
     day: 'numeric',

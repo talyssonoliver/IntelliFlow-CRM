@@ -217,13 +217,13 @@ export function ChainVersionsTable({
                     <TableCell className="text-muted-foreground">{version.createdBy}</TableCell>
                     <TableCell className="text-muted-foreground">
                       {typeof version.createdAt === 'string'
-                        ? new Date(version.createdAt).toLocaleDateString('en-US', {
+                        ? new Date(version.createdAt).toLocaleDateString('en-GB', {
                             month: 'short',
                             day: 'numeric',
                             year: 'numeric',
                             timeZone: timezone,
                           })
-                        : version.createdAt.toLocaleDateString('en-US', {
+                        : version.createdAt.toLocaleDateString('en-GB', {
                             month: 'short',
                             day: 'numeric',
                             year: 'numeric',

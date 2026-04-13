@@ -40,7 +40,6 @@ describe('useAppointmentFilters', () => {
     expect(result.current.filters.appointmentType).toBe('');
     expect(result.current.filters.page).toBe(1);
     expect(result.current.filters.limit).toBe(20);
-    expect(result.current.filters.viewMode).toBe('calendar');
     expect(result.current.filters.calendarView).toBe('month');
   });
 
@@ -80,17 +79,6 @@ describe('useAppointmentFilters', () => {
     expect(result.current.filters.appointmentType).toBe('HEARING');
   });
 
-  it('updates view mode and persists to localStorage', () => {
-    const { result } = renderHook(() => useAppointmentFilters());
-    act(() => {
-      result.current.setViewMode('list');
-    });
-    expect(result.current.filters.viewMode).toBe('list');
-    expect(localStorageMock.setItem).toHaveBeenCalledWith(
-      'appointment-viewMode',
-      JSON.stringify('list')
-    );
-  });
 
   it('updates calendar view and persists to localStorage', () => {
     const { result } = renderHook(() => useAppointmentFilters());

@@ -86,7 +86,7 @@ export const NotificationItem = React.memo(function NotificationItem({
   else if (isClickable) divRole = 'button';
 
   return (
-    // eslint-disable-next-line jsx-a11y/prefer-tag-over-role, jsx-a11y/no-static-element-interactions -- notification item conditionally acts as a link or button; <a> cannot contain interactive child action buttons
+     
     <div // NOSONAR typescript:S6845,S6848
       onClick={handleItemClick}
       onKeyDown={handleKeyDown}

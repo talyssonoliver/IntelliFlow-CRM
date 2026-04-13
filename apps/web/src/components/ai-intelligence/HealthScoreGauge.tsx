@@ -52,7 +52,7 @@ export function HealthScoreGauge({
         <CardTitle className="text-base">{label}</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col items-center pb-4">
-        {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- SVG gauge; <meter> cannot contain SVG children; role="meter" is the correct ARIA pattern */}
+        { }
         <div // NOSONAR — SVG gauge; role="meter" is the correct ARIA pattern, no native HTML equivalent for SVG-based meters
           role="meter"
           aria-valuenow={clampedScore}

@@ -52,7 +52,7 @@ export function TaskCalendar({
     setCurrentDate(new Date());
   }, []);
 
-  const monthLabel = currentDate.toLocaleDateString('en-US', {
+  const monthLabel = currentDate.toLocaleDateString('en-GB', {
     month: 'long',
     year: 'numeric',
     timeZone: timezone,

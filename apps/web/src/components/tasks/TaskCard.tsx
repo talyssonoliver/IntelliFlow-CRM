@@ -39,7 +39,7 @@ function formatDueDate(date: DateStringNull, timezone: string = 'Europe/London')
   if (!date) return null;
   const d = typeof date === 'string' ? new Date(date) : date;
   if (Number.isNaN(d.getTime())) return null;
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: timezone });
+  return d.toLocaleDateString('en-GB', { month: 'short', day: 'numeric', timeZone: timezone });
 }
 
 function getDueDateStatus(date: DateStringNull): 'overdue' | 'today' | 'normal' {

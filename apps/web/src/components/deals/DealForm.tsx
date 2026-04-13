@@ -68,7 +68,7 @@ const STAGE_DISPLAY_NAMES: Record<string, string> = {
 
 const DEFAULT_FORM_DATA: DealFormData = {
   name: '',
-  value: { amount: 0, currency: 'USD' },
+  value: { amount: 0, currency: 'GBP' },
   stage: 'PROSPECTING',
   probability: 10,
   expectedCloseDate: '',

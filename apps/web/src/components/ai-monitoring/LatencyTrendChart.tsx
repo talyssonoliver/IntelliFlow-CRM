@@ -67,7 +67,7 @@ export default function LatencyTrendChart({
               <YAxis fontSize={11} />
               <Tooltip
                 labelFormatter={(ts) =>
-                  new Date(ts as string).toLocaleTimeString('en-US', {
+                  new Date(ts as string).toLocaleTimeString('en-GB', {
                     hour: 'numeric',
                     minute: '2-digit',
                     timeZone: timezone,

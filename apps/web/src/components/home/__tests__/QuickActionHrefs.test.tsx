@@ -202,8 +202,8 @@ describe('QuickActionHrefs — Data Layer', () => {
   });
 
   // TC-04
-  it('action-meeting has href /calendar/new', () => {
-    expect(findAction('action-meeting').href).toBe('/calendar/new');
+  it('action-meeting has href /appointments/new', () => {
+    expect(findAction('action-meeting').href).toBe('/appointments/new');
   });
 
   // TC-05
@@ -276,9 +276,9 @@ describe('QuickActionHrefs — DOM Layer', () => {
     expect(emailLink).toHaveAttribute('href', '/email');
 
     // action-meeting (non-comingSoon) should be a link
-    const meetingLink = screen.getByText('Schedule Meeting').closest('a');
+    const meetingLink = screen.getByText('New Appointment').closest('a');
     expect(meetingLink).not.toBeNull();
-    expect(meetingLink).toHaveAttribute('href', '/calendar/new');
+    expect(meetingLink).toHaveAttribute('href', '/appointments/new');
 
     // action-task (non-comingSoon) should be a link
     const taskLink = screen.getByText('Create Task').closest('a');
@@ -331,7 +331,7 @@ describe('QuickActionHrefs — DOM Layer', () => {
     // All 4 default actions should be visible
     expect(screen.getByText('Log Call')).toBeInTheDocument();
     expect(screen.getByText('Send Email')).toBeInTheDocument();
-    expect(screen.getByText('Schedule Meeting')).toBeInTheDocument();
+    expect(screen.getByText('New Appointment')).toBeInTheDocument();
     expect(screen.getByText('Create Task')).toBeInTheDocument();
   });
 
@@ -339,7 +339,7 @@ describe('QuickActionHrefs — DOM Layer', () => {
   it('all visible Quick Actions have accessible label text', () => {
     render(<AuthenticatedHomePage />);
 
-    const labels = ['Log Call', 'Send Email', 'Schedule Meeting', 'Create Task'];
+    const labels = ['Log Call', 'Send Email', 'New Appointment', 'Create Task'];
     for (const label of labels) {
       const el = screen.getByText(label);
       expect(el).toBeInTheDocument();

@@ -468,7 +468,7 @@ describe('JobDetailTemplate', () => {
     it('should format USD salary correctly', () => {
       const jobWithUSD = {
         ...mockJob,
-        salary: { min: 100000, max: 150000, currency: 'USD' },
+        salary: { min: 100000, max: 150000, currency: 'GBP' },
       };
       render(<JobDetailTemplate job={jobWithUSD} />);
 

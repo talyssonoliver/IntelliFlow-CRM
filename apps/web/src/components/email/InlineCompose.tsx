@@ -172,7 +172,7 @@ export function InlineCompose({
 
       {/* Body */}
       <div className="px-3 py-2">
-        {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- contentEditable rich-text editor; <textarea> does not support contentEditable with rich formatting */}
+        { }
         <div
           ref={bodyRef}
           role="textbox"

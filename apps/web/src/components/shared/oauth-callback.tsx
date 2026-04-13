@@ -277,7 +277,7 @@ export function OAuthCallback({
           {/* Card gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-br from-white/[0.07] via-transparent to-[#137fec]/[0.03]" />
 
-          {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- OAuth callback status region; <output> is for form computation results, not auth status */}
+          { }
           <div
             className="relative p-8 text-center space-y-6"
             role="status" // NOSONAR typescript:S6819

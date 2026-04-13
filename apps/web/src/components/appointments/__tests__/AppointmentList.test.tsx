@@ -12,7 +12,6 @@ const defaultFilters: AppointmentFilters = {
   sortOrder: 'asc',
   page: 1,
   limit: 20,
-  viewMode: 'list',
   calendarView: 'month',
 };
 

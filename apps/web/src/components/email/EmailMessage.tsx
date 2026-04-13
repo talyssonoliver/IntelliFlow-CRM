@@ -53,7 +53,7 @@ export function EmailMessage({
   return (
     <article className="rounded-lg border border-border">
       {/* Header — always visible (div instead of button to allow nested interactive elements) */}
-      {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- contains nested interactive HoverCard elements; <button> cannot contain other interactive elements */}
+      { }
       <div
         role="button"
         tabIndex={0}
@@ -113,7 +113,7 @@ export function EmailMessage({
 
         {/* Timestamp */}
         <time dateTime={message.receivedAt} className="shrink-0 text-xs text-muted-foreground">
-          {new Date(message.receivedAt).toLocaleString('en-US', {
+          {new Date(message.receivedAt).toLocaleString('en-GB', {
             month: 'short',
             day: 'numeric',
             year: 'numeric',

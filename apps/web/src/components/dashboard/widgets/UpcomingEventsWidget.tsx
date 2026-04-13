@@ -6,9 +6,9 @@ import { UpcomingEventsCard } from '@/components/shared';
 export function UpcomingEventsWidget(_props: Readonly<WidgetProps>) {
   return (
     <UpcomingEventsCard
-      title="Upcoming Events"
+      title="Upcoming Appointments"
       maxItems={3}
-      viewAllHref="/calendar"
+      viewAllHref="/appointments"
       standalone={false}
     />
   );

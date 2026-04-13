@@ -101,11 +101,23 @@ export function AutomationRuleBuilder() {
   const [formData, setFormData] = useState<RuleFormData>(defaultFormData);
 
   const utils = trpc.useUtils();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- tRPC deep type instantiation workaround
-  const { data: rulesData, isLoading } = (trpc.routing.list as any).useQuery({ limit: 100 }) as {
-    data: any;
-    isLoading: boolean;
+  type AutomationRule = {
+    id: string;
+    name: string;
+    description?: string | null;
+    priority: number;
+    isActive?: boolean;
+    conditions?: unknown;
+    actions?: unknown;
   };
+  const { data: rulesData, isLoading } = (
+    trpc.routing.list as unknown as {
+      useQuery: (input: { limit: number }) => {
+        data: { items?: AutomationRule[] } | undefined;
+        isLoading: boolean;
+      };
+    }
+  ).useQuery({ limit: 100 });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- tRPC deep type instantiation workaround
   const createMutation = (trpc.routing.create as any).useMutation({
@@ -182,10 +194,10 @@ export function AutomationRuleBuilder() {
     if (!formData.name.trim()) return;
     const conditions = formData.conditions
       .filter((c) => c.value)
-      .map((c) => ({ field: c.field as any, operator: c.operator as any, value: c.value }));
+      .map((c) => ({ field: c.field, operator: c.operator, value: c.value }));
     const actions = formData.actions
       .filter((a) => a.target)
-      .map((a) => ({ type: a.type as any, target: a.target }));
+      .map((a) => ({ type: a.type, target: a.target }));
     const payload = {
       name: formData.name,
       description: formData.description || undefined,
@@ -251,7 +263,7 @@ export function AutomationRuleBuilder() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {rules.map((rule: any) => {
+          {rules.map((rule: AutomationRule) => {
             const conditions = Array.isArray(rule.conditions)
               ? (rule.conditions as Array<Record<string, unknown>>)
               : [];

@@ -34,7 +34,7 @@ function formatDueDate(
   if (!date) return null;
   const d = typeof date === 'string' ? new Date(date) : date;
   if (Number.isNaN(d.getTime())) return null;
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: timezone });
+  return d.toLocaleDateString('en-GB', { month: 'short', day: 'numeric', timeZone: timezone });
 }
 
 function getDueDateColor(date: Date | string | null): string {

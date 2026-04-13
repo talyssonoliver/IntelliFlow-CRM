@@ -635,7 +635,7 @@ describe('AuthenticatedHomePage', () => {
       render(<AuthenticatedHomePage />);
       expect(screen.getByText('Log Call')).toBeInTheDocument();
       expect(screen.getByText('Send Email')).toBeInTheDocument();
-      expect(screen.getByText('Schedule Meeting')).toBeInTheDocument();
+      expect(screen.getByText('New Appointment')).toBeInTheDocument();
       expect(screen.getByText('Create Task')).toBeInTheDocument();
     });
 
@@ -664,10 +664,10 @@ describe('AuthenticatedHomePage', () => {
       expect(taskLink).toHaveAttribute('href', '/tasks');
     });
 
-    it('renders Schedule Meeting as link with href /calendar/new (PG-155)', () => {
+    it('renders New Appointment as link with href /appointments/new (PG-155)', () => {
       render(<AuthenticatedHomePage />);
-      const meetingLink = screen.getByText('Schedule Meeting').closest('a');
-      expect(meetingLink).toHaveAttribute('href', '/calendar/new');
+      const meetingLink = screen.getByText('New Appointment').closest('a');
+      expect(meetingLink).toHaveAttribute('href', '/appointments/new');
     });
 
     it('opens Edit Quick Actions sheet on settings click', () => {

@@ -249,7 +249,7 @@ export function DocumentUpload({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Drop Zone */}
-      {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- file drop zone contains nested <Button>; using <button> here would create invalid nested buttons */}
+      { }
       <div // NOSONAR — file drop zone with nested interactive elements (Remove button); drag events require div wrapper
         role="button"
         tabIndex={0}
@@ -318,7 +318,7 @@ export function DocumentUpload({
       </div>
 
       {/* Upload Progress */}
-      {/* eslint-disable jsx-a11y/prefer-tag-over-role -- custom multi-part progress display; <progress> cannot contain nested elements */}
+      { }
       {isUploading && (
         <div
           className="space-y-2"
@@ -339,7 +339,7 @@ export function DocumentUpload({
           </div>
         </div>
       )}
-      {/* eslint-enable jsx-a11y/prefer-tag-over-role */}
+      { }
 
       {/* Metadata Form */}
       <Card className="p-6 space-y-4">

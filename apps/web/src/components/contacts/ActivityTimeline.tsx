@@ -97,7 +97,7 @@ function formatRelativeTime(dateString: string, timezone: string = 'Europe/Londo
   if (diffDays === 1) return 'Yesterday';
   if (diffDays < 7) return `${diffDays} days ago`;
   if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
-  return date.toLocaleDateString('en-US', {
+  return date.toLocaleDateString('en-GB', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',

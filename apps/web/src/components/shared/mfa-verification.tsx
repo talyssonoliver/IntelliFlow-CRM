@@ -321,7 +321,7 @@ export function MfaVerification({
 
       {/* Loading indicator (for test) */}
       {verifyMfaMutation.isPending && (
-        // eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- indeterminate loading overlay with spinner icon; <progress> cannot contain child elements
+         
         <div
           data-testid="loading-indicator"
           className="absolute inset-0 bg-slate-900/50 flex items-center justify-center z-10"

@@ -71,7 +71,7 @@ function formatDueDate(date: DateStringNull, timezone: string = 'Europe/London')
   if (!date) return '—';
   const d = typeof date === 'string' ? new Date(date) : date;
   if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: timezone });
+  return d.toLocaleDateString('en-GB', { month: 'short', day: 'numeric', timeZone: timezone });
 }
 
 function getEntityInfo(

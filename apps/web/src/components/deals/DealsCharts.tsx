@@ -94,7 +94,7 @@ export default function DealsCharts({ pieChartData, barChartData }: Readonly<Dea
             <Tooltip
               formatter={(value) => {
                 const numValue = typeof value === 'number' ? value : 0;
-                return [`$${numValue.toLocaleString()}`, 'Revenue'];
+                return [`$${numValue.toLocaleString('en-GB')}`, 'Revenue'];
               }}
             />
             <Bar dataKey="revenue" radius={[4, 4, 0, 0]}>
@@ -116,7 +116,7 @@ export default function DealsCharts({ pieChartData, barChartData }: Readonly<Dea
             {barChartData.map((entry) => (
               <tr key={`bar-sr-${entry.name}`}>
                 <td>{entry.name}</td>
-                <td>${entry.revenue.toLocaleString()}</td>
+                <td>${entry.revenue.toLocaleString('en-GB')}</td>
               </tr>
             ))}
           </tbody>

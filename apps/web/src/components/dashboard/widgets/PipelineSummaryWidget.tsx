@@ -46,9 +46,9 @@ export function PipelineSummaryWidget(_props: Readonly<WidgetProps>) {
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium text-foreground">{stage.displayName}</span>
                     <span className="text-sm text-muted-foreground">
-                      {stageValue.toLocaleString('en-US', {
+                      {stageValue.toLocaleString('en-GB', {
                         style: 'currency',
-                        currency: 'USD',
+                        currency: 'GBP',
                         maximumFractionDigits: 0,
                       })}{' '}
                       ({stage.count} Deals)

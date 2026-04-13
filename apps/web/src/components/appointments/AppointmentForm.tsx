@@ -66,7 +66,9 @@ export function AppointmentForm({
   const [location, setLocation] = useState(appointment?.location || '');
   const { timezone: userTimezone } = useTimezoneContext();
   const [eventTimezone, setEventTimezone] = useState(
-    (appointment as any)?.timezone || userTimezone || 'Europe/London'
+    (appointment as { timezone?: string } | undefined)?.timezone ||
+      userTimezone ||
+      'Europe/London'
   );
   const [attendeeIds] = useState<string[]>(appointment?.attendees?.map((a) => a.userId) || []);
   const [linkedCaseIds] = useState<string[]>(appointment?.linkedCases?.map((c) => c.caseId) || []);
@@ -393,7 +395,7 @@ export function AppointmentForm({
       {conflicts?.hasConflicts && (
         <ConflictWarning
           conflicts={conflicts.conflicts}
-          onViewConflict={(appointmentId) => router.push(`/calendar/${appointmentId}`)}
+          onViewConflict={(appointmentId) => router.push(`/appointments/${appointmentId}`)}
           onOverride={() => setForceOverrideConflicts(!forceOverrideConflicts)}
         />
       )}

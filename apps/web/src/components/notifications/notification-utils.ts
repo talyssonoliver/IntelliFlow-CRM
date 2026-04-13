@@ -456,7 +456,7 @@ export function formatRelativeTime(
   const diffDays = Math.floor(diffMs / 86400000);
   if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
 
-  return date.toLocaleDateString('en-US', {
+  return date.toLocaleDateString('en-GB', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',

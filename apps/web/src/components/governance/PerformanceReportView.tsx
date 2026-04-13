@@ -104,7 +104,7 @@ function MetricCard({
   const score = ms !== null ? Math.max(0, Math.min(100, Math.round(100 * (1 - Math.max(0, ms - targetMs) / targetMs)))) : 0;
 
   return (
-    // eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- shadcn Card renders a div; role="region" provides correct landmark semantics
+     
     <Card className="p-4" role="region" aria-label={ariaLabel}>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
@@ -139,7 +139,7 @@ function EndpointHealthCard({
   const allPass = failing === 0;
 
   return (
-    // eslint-disable-next-line jsx-a11y/prefer-tag-over-role
+     
     <Card className="p-4" role="region" aria-label="Endpoint health">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
@@ -171,7 +171,7 @@ function LoadTestCard({
   duration: string | null;
 }) {
   return (
-    // eslint-disable-next-line jsx-a11y/prefer-tag-over-role
+     
     <Card className="p-4" role="region" aria-label="Load test results">
       <div className="flex items-center gap-2 mb-3">
         <span className="material-symbols-outlined text-base text-muted-foreground">groups</span>
@@ -233,7 +233,7 @@ function EndpointDetailTable({
   const hasMore = sorted.length > 5;
 
   return (
-    // eslint-disable-next-line jsx-a11y/prefer-tag-over-role
+     
     <Card className="p-4 mb-6" role="region" aria-label="Per-endpoint performance detail">
       <div className="flex items-center justify-between mb-4">
         <div>
@@ -434,7 +434,7 @@ export default function PerformanceReportView() {
       {!loading && !error && report && !isPlaceholder && metrics && (
         <>
           {/* ── Section 1: Overall Health Banner ── */}
-          {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role */}
+          { }
           <Card className="p-4 mb-6" role="region" aria-label="Overall performance status">
             <div className="flex items-center gap-4">
               <div
@@ -504,7 +504,7 @@ export default function PerformanceReportView() {
           <ViolationsSection violations={metrics.violations} />
 
           {/* ── Section 4: Detailed Metrics ── */}
-          {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role */}
+          { }
           <Card className="p-4 mb-6" role="region" aria-label="Detailed performance metrics">
             <h3 className="font-semibold text-foreground mb-4">Response Time Breakdown</h3>
             <div className="overflow-x-auto">
@@ -557,7 +557,7 @@ export default function PerformanceReportView() {
           <FullReportSection htmlPath={report.htmlPath} />
 
           {/* ── Section 7: Test Configuration & Metadata ── */}
-          {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role */}
+          { }
           <Card className="p-4" role="region" aria-label="Test configuration">
             <h3 className="font-semibold text-foreground mb-3">Test Configuration</h3>
             <div className="grid gap-x-8 gap-y-2 sm:grid-cols-2 text-sm">
@@ -584,7 +584,7 @@ export default function PerformanceReportView() {
                   <span className="material-symbols-outlined text-base">schedule</span>
                   <span>
                     Generated:{' '}
-                    {new Date(report.generatedAt).toLocaleDateString('en-US', {
+                    {new Date(report.generatedAt).toLocaleDateString('en-GB', {
                       month: 'short',
                       day: 'numeric',
                       year: 'numeric',

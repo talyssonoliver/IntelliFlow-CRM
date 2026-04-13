@@ -116,7 +116,6 @@ export interface AppointmentFilters {
   sortOrder: 'asc' | 'desc';
   page: number;
   limit: number;
-  viewMode: 'calendar' | 'list';
   calendarView: 'month' | 'week' | 'day';
 }
 

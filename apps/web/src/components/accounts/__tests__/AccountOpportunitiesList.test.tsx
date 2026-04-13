@@ -23,7 +23,7 @@ vi.mock('@/lib/api', () => ({
 }));
 
 vi.mock('@/lib/pricing/calculator', () => ({
-  formatCurrency: (v: number) => `$${v.toLocaleString('en-US')}`,
+  formatCurrency: (v: number) => `$${v.toLocaleString('en-GB')}`,
 }));
 
 vi.mock('@intelliflow/ui', () => ({

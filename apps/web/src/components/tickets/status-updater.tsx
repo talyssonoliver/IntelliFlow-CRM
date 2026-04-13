@@ -82,7 +82,7 @@ export function StatusUpdater({
         )}
       </button>
 
-      {/* eslint-disable jsx-a11y/prefer-tag-over-role -- custom combobox widget: listbox/option roles on div/button for styled status picker */}
+      { }
       {isOpen && !isDisabled && (
         <div
           role="listbox"
@@ -115,7 +115,7 @@ export function StatusUpdater({
           })}
         </div>
       )}
-      {/* eslint-enable jsx-a11y/prefer-tag-over-role */}
+      { }
     </div>
   );
 }

@@ -9,6 +9,11 @@ vi.mock('@/lib/api', () => ({
     appointments: {
       list: { useQuery: (...args: any[]) => mockUseQuery(...args) },
     },
+    task: {
+      list: {
+        useQuery: () => ({ data: { tasks: [], total: 0 }, isLoading: false, error: null }),
+      },
+    },
   },
 }));
 
@@ -115,18 +120,18 @@ describe('UpcomingEventsCard', () => {
     );
   });
 
-  it('links add button to /calendar/new with entity params', () => {
+  it('links add button to /appointments/new with entity params', () => {
     mockUseQuery.mockReturnValue({ data: apiResponse([]), isLoading: false, error: null });
     render(<UpcomingEventsCard entityType="contact" entityId="c-1" />);
     const addLink = screen.getByLabelText('Schedule event');
-    expect(addLink).toHaveAttribute('href', '/calendar/new?linkTo=contact&linkId=c-1');
+    expect(addLink).toHaveAttribute('href', '/appointments/new?linkTo=contact&linkId=c-1');
   });
 
-  it('links add button to /calendar/new without params for global view', () => {
+  it('links add button to /appointments/new without params for global view', () => {
     mockUseQuery.mockReturnValue({ data: apiResponse([]), isLoading: false, error: null });
     render(<UpcomingEventsCard />);
     const addLink = screen.getByLabelText('Schedule event');
-    expect(addLink).toHaveAttribute('href', '/calendar/new');
+    expect(addLink).toHaveAttribute('href', '/appointments/new');
   });
 
   it('links events to calendar detail page', () => {
@@ -137,7 +142,7 @@ describe('UpcomingEventsCard', () => {
     });
     render(<UpcomingEventsCard />);
     const eventLink = screen.getByText('Product Demo').closest('a');
-    expect(eventLink).toHaveAttribute('href', '/calendar/appt-1');
+    expect(eventLink).toHaveAttribute('href', '/appointments/appt-1');
   });
 
   it('respects maxItems prop', () => {

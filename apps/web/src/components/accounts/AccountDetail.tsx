@@ -90,7 +90,7 @@ function resolveWebsite(website: unknown): { href: string; display: string } | n
 function formatDate(date: string | Date, timezone: string = 'Europe/London'): string {
   const d = typeof date === 'string' ? new Date(date) : date;
   if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('en-US', {
+  return d.toLocaleDateString('en-GB', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',

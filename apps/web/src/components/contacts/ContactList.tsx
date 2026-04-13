@@ -66,7 +66,7 @@ function formatDate(date: Date | string, timezone: string = 'Europe/London'): st
   if (diffHours < 1) return 'Just now';
   if (diffHours < 24) return `${diffHours}h ago`;
   if (diffDays < 7) return `${diffDays}d ago`;
-  return d.toLocaleDateString('en-US', {
+  return d.toLocaleDateString('en-GB', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -225,7 +225,7 @@ function ContactActionsCell({
           ? [
               {
                 icon: 'event',
-                label: 'Schedule Meeting',
+                label: 'New Appointment',
                 onClick: () => onScheduleMeeting(contact),
               },
             ]

@@ -80,7 +80,7 @@ export interface AccountRowHandlers {
 function formatDate(date: Date | string, timezone: string = 'Europe/London'): string {
   const d = typeof date === 'string' ? new Date(date) : date;
   if (Number.isNaN(d.getTime())) return 'Invalid date';
-  return d.toLocaleDateString('en-US', {
+  return d.toLocaleDateString('en-GB', {
     month: 'short',
     day: '2-digit',
     year: 'numeric',
@@ -89,16 +89,16 @@ function formatDate(date: Date | string, timezone: string = 'Europe/London'): st
 }
 
 function formatCompactCurrency(value: number): string {
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat('en-GB', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'GBP',
     notation: 'compact',
     maximumFractionDigits: 1,
   }).format(value);
 }
 
 function formatEmployees(count: number): string {
-  return count.toLocaleString('en-US');
+  return count.toLocaleString('en-GB');
 }
 
 function getInitials(name: string): string {

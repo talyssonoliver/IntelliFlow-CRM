@@ -43,7 +43,7 @@ function formatReminder(minutes?: number): string {
 }
 
 function formatTimelineDate(date: Readonly<Date>, timezone: string = 'Europe/London'): string {
-  return date.toLocaleString('en-US', {
+  return date.toLocaleString('en-GB', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',

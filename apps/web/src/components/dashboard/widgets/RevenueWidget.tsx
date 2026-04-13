@@ -48,9 +48,9 @@ export function RevenueWidget({ config }: Readonly<WidgetProps>) {
             <span className="text-2xl font-bold text-slate-900 dark:text-white">
               {isLoading
                 ? '...'
-                : totalRevenue.toLocaleString('en-US', {
+                : totalRevenue.toLocaleString('en-GB', {
                     style: 'currency',
-                    currency: 'USD',
+                    currency: 'GBP',
                     maximumFractionDigits: 0,
                   })}
             </span>

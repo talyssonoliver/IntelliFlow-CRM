@@ -76,7 +76,7 @@ export function AttachmentManager({
   return (
     <div className={cn('space-y-2', className)}>
       {/* Drop zone */}
-      {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- drop zone; drag events (onDragOver/onDrop) are valid on any element per HTML spec */}
+      { }
       <div // NOSONAR typescript:S6848
         data-testid="drop-zone"
         onDragOver={handleDragOver}

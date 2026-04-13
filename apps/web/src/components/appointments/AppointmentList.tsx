@@ -449,7 +449,7 @@ export function AppointmentList({
                         </div>
                       </td>
                       <td className="px-4 py-3 text-gray-600">
-                        {due.toLocaleDateString('en-US', {
+                        {due.toLocaleDateString('en-GB', {
                           weekday: 'short',
                           month: 'short',
                           day: 'numeric',

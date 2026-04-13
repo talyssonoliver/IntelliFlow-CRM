@@ -144,7 +144,7 @@ function EnvironmentBadge({ environment }: Readonly<{ environment: DeveloperApp[
 }
 
 function formatDate(isoString: string, timezone: string = 'Europe/London'): string {
-  return new Date(isoString).toLocaleDateString('en-US', {
+  return new Date(isoString).toLocaleDateString('en-GB', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -153,7 +153,7 @@ function formatDate(isoString: string, timezone: string = 'Europe/London'): stri
 }
 
 function formatTimestamp(isoString: string, timezone: string = 'Europe/London'): string {
-  return new Date(isoString).toLocaleString('en-US', {
+  return new Date(isoString).toLocaleString('en-GB', {
     month: 'short',
     day: 'numeric',
     hour: '2-digit',

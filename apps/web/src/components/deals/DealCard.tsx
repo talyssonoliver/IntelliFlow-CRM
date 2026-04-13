@@ -27,7 +27,7 @@ interface DealCardProps {
 
 function formatDate(dateStr: string | null, timezone: string = 'Europe/London'): string {
   if (!dateStr) return 'No date';
-  return new Date(dateStr).toLocaleDateString('en-US', {
+  return new Date(dateStr).toLocaleDateString('en-GB', {
     month: 'short',
     day: 'numeric',
     timeZone: timezone,

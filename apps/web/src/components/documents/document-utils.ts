@@ -33,7 +33,7 @@ export function formatFileSize(bytes: number): string {
  */
 export function formatDate(dateString: string, timezone: string = 'Europe/London'): string {
   try {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString('en-GB', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',

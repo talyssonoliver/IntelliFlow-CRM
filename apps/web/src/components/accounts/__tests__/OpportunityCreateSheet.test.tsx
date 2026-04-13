@@ -181,7 +181,7 @@ describe('OpportunityCreateSheet', () => {
       expect(mutateFn).toHaveBeenCalledWith(
         expect.objectContaining({
           name: 'Big Deal',
-          value: { amount: 50000, currency: 'USD' },
+          value: { amount: 50000, currency: 'GBP' },
           stage: 'PROSPECTING',
           probability: 10,
           accountId: TEST_ACCOUNT_ID,
@@ -314,7 +314,7 @@ describe('OpportunityCreateSheet', () => {
       expect(mutateFn).toHaveBeenCalledWith(
         expect.objectContaining({
           name: 'Full Deal',
-          value: { amount: 25000, currency: 'USD' },
+          value: { amount: 25000, currency: 'GBP' },
           stage: 'NEGOTIATION',
           description: 'Important deal',
         })

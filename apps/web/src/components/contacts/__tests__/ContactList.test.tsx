@@ -453,7 +453,7 @@ describe('ContactList', () => {
         />
       );
 
-      expect(screen.getByText('Schedule Meeting')).toBeInTheDocument();
+      expect(screen.getByText('New Appointment')).toBeInTheDocument();
     });
 
     it('always renders delete action', () => {

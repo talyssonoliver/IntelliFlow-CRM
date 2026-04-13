@@ -23,6 +23,8 @@ import {
 import { OPPORTUNITY_STAGES, type OpportunityStage } from '@intelliflow/domain';
 import { SearchFilterBar, type FilterOption } from '@/components/shared';
 import { trpc } from '@/lib/trpc';
+import { useAuth } from '@/lib/auth/AuthContext';
+import { revalidateDealCaches } from '@/app/deals/actions';
 import { type Deal, PIPELINE_STAGE_CONFIG, formatCurrencyFull, transformDeals } from './types';
 
 // =============================================================================
@@ -66,7 +68,7 @@ function formatDate(dateStr: string | null, timezone: string = 'Europe/London'):
   if (!dateStr) return '-';
   const d = new Date(dateStr);
   if (Number.isNaN(d.getTime())) return '-';
-  return d.toLocaleDateString('en-US', {
+  return d.toLocaleDateString('en-GB', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -84,7 +86,7 @@ function formatRelativeDate(dateStr: string, timezone: string = 'Europe/London')
   if (diffHours < 1) return 'Just now';
   if (diffHours < 24) return `${diffHours}h ago`;
   if (diffDays < 7) return `${diffDays}d ago`;
-  return d.toLocaleDateString('en-US', {
+  return d.toLocaleDateString('en-GB', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -309,6 +311,7 @@ function createColumns(
 
 export const DealListView = React.memo(function DealListView() {
   const { timezone } = useTimezoneContext();
+  const { user } = useAuth();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [stageFilter, setStageFilter] = useState<string>('');
@@ -352,6 +355,7 @@ export const DealListView = React.memo(function DealListView() {
   // Mutations
   const updateMutation = trpc.opportunity.update.useMutation({
     onSuccess: () => {
+      revalidateDealCaches(user?.id ?? null).catch(() => {});
       utils.opportunity.list.invalidate();
       utils.opportunity.stats.invalidate();
     },
@@ -359,6 +363,7 @@ export const DealListView = React.memo(function DealListView() {
 
   const deleteMutation = trpc.opportunity.delete.useMutation({
     onSuccess: () => {
+      revalidateDealCaches(user?.id ?? null).catch(() => {});
       utils.opportunity.list.invalidate();
       utils.opportunity.stats.invalidate();
       toast({ title: 'Deal Deleted', description: 'The deal has been removed.' });

@@ -284,7 +284,7 @@ describe('InvoiceList', () => {
     it('formats USD amounts correctly', () => {
       render(
         <InvoiceList
-          invoices={[createMockInvoice({ amountDue: 9999, currency: 'usd' })]}
+          invoices={[createMockInvoice({ amountDue: 9999, currency: 'GBP' })]}
           isLoading={false}
           hasMore={false}
           onLoadMore={vi.fn()}

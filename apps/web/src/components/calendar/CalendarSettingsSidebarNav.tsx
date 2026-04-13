@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@intelliflow/ui';
-import { CALENDAR_SETTINGS_ITEMS } from '@/components/sidebar/configs/appointments';
+import { CALENDAR_SETTINGS_ITEMS } from '@/components/sidebar/configs/calendar';
 
 interface CalendarSettingsSidebarNavProps {
   isExpanded: boolean;

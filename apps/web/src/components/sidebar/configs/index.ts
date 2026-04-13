@@ -69,10 +69,11 @@ export {
   CASE_SETTINGS_ITEMS,
 } from './cases';
 export {
-  createAppointmentsSidebarConfig,
-  createAppointmentsSettingsSidebarConfig,
+  createCalendarSidebarConfig,
+  createCalendarSettingsSidebarConfig,
   isCalendarSettingsPage,
-} from './appointments';
+} from './calendar';
+export { createAppointmentsSidebarConfig } from './appointments';
 export {
   createEmailSidebarConfig,
   createEmailSettingsSidebarConfig,

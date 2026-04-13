@@ -107,13 +107,13 @@ export function RollbackConfirmDialog({
                 <span className="text-muted-foreground">Created:</span>
                 <span className="ml-2 font-medium">
                   {typeof targetVersion.createdAt === 'string'
-                    ? new Date(targetVersion.createdAt).toLocaleDateString('en-US', {
+                    ? new Date(targetVersion.createdAt).toLocaleDateString('en-GB', {
                         month: 'short',
                         day: 'numeric',
                         year: 'numeric',
                         timeZone: timezone,
                       })
-                    : targetVersion.createdAt.toLocaleDateString('en-US', {
+                    : targetVersion.createdAt.toLocaleDateString('en-GB', {
                         month: 'short',
                         day: 'numeric',
                         year: 'numeric',

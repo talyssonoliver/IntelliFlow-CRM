@@ -239,7 +239,7 @@ function CommentCard({
   onCancelReply,
   isSubmitting,
 }: Readonly<CommentCardProps>) {
-  const formattedDate = new Date(comment.createdAt).toLocaleDateString('en-US', {
+  const formattedDate = new Date(comment.createdAt).toLocaleDateString('en-GB', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -342,7 +342,7 @@ function CommentCard({
                         {reply.author.name}
                       </span>
                       <span className="text-xs text-slate-500 dark:text-slate-400">
-                        {new Date(reply.createdAt).toLocaleDateString('en-US', {
+                        {new Date(reply.createdAt).toLocaleDateString('en-GB', {
                           month: 'short',
                           day: 'numeric',
                           timeZone: 'UTC',

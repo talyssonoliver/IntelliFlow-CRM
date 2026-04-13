@@ -33,7 +33,7 @@ function formatRelativeTime(dateStr: string, timezone: string = 'Europe/London')
   if (diffMins < 60) return `${diffMins}m ago`;
   if (diffHours < 24) return `${diffHours}h ago`;
   if (diffDays < 30) return `${diffDays}d ago`;
-  return date.toLocaleDateString('en-US', {
+  return date.toLocaleDateString('en-GB', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -87,7 +87,7 @@ export function CitationDisplay({
 
       <span
         className="text-xs"
-        title={new Date(createdAt).toLocaleString('en-US', {
+        title={new Date(createdAt).toLocaleString('en-GB', {
           month: 'short',
           day: 'numeric',
           year: 'numeric',

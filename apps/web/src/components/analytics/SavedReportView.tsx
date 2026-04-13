@@ -88,7 +88,7 @@ const CHART_COLORS = [
 function formatCurrency(value: number): string {
   if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
   if (value >= 1_000) return `$${(value / 1_000).toFixed(1)}k`;
-  return `$${value.toLocaleString('en-US')}`;
+  return `$${value.toLocaleString('en-GB')}`;
 }
 
 function toMetricChange(delta: number, label = 'vs prev period'): MetricChange {
@@ -596,7 +596,7 @@ function RevenueBarChart({
     );
   }
   return (
-    // eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- Recharts container cannot be an <img>; role="img" is the correct ARIA pattern
+     
     <div className="h-64" role="img" aria-label="Revenue bar chart">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
@@ -651,7 +651,7 @@ function GrowthTrendChart({
     );
   }
   return (
-    // eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- Recharts container cannot be an <img>; role="img" is the correct ARIA pattern
+     
     <div className="h-64" role="img" aria-label="12-month revenue trend line chart">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
@@ -711,7 +711,7 @@ function LeadSourceChart({
     );
   }
   return (
-    // eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- Recharts container cannot be an <img>; role="img" is the correct ARIA pattern
+     
     <div className="h-64" role="img" aria-label="Lead source distribution chart">
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>

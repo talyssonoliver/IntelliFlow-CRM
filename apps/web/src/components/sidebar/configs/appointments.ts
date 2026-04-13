@@ -1,46 +1,32 @@
-import type { SidebarConfig, SidebarItem } from '../sidebar-types';
-import { CalendarTogglesSection } from '../CalendarTogglesSection';
+import type { SidebarConfig } from '../sidebar-types';
 
-/** Settings items shown when on a calendar settings page */
-export const CALENDAR_SETTINGS_ITEMS: SidebarItem[] = [
-  {
-    id: 'calendar-settings',
-    label: 'Calendar Settings',
-    icon: 'tune',
-    href: '/calendar/calendar-settings',
-  },
-  { id: 'event-types', label: 'Event Types', icon: 'category', href: '/calendar/event-types' },
-  {
-    id: 'availability',
-    label: 'Availability',
-    icon: 'event_available',
-    href: '/calendar/availability',
-  },
-];
-
-const SETTINGS_PATHS = CALENDAR_SETTINGS_ITEMS.map(
-  (item) => new URL(item.href, 'http://localhost').pathname
-);
-
-/** Check if the pathname is a calendar settings page */
-export function isCalendarSettingsPage(pathname: string): boolean {
-  return SETTINGS_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'));
-}
+/** Sidebar configuration for `/appointments` — the appointments table page. */
 
 const VIEW_SECTIONS: SidebarConfig['sections'] = [
   {
     id: 'views',
-    title: 'Calendar Views',
+    title: 'Appointment Views',
     items: [
-      { id: 'all', label: 'All Events', icon: 'calendar_month', href: '/calendar' },
-      { id: 'upcoming', label: 'Upcoming', icon: 'schedule', href: '/calendar?view=upcoming' },
-      { id: 'today', label: 'Today', icon: 'today', href: '/calendar?view=today' },
+      { id: 'all', label: 'All Appointments', icon: 'event', href: '/appointments' },
+      {
+        id: 'upcoming',
+        label: 'Upcoming',
+        icon: 'schedule',
+        href: '/appointments?view=upcoming',
+      },
+      { id: 'today', label: 'Today', icon: 'today', href: '/appointments?view=today' },
       {
         id: 'conflicts',
         label: 'Conflicts',
         icon: 'warning',
         color: 'text-destructive',
-        href: '/calendar?view=conflicts',
+        href: '/appointments?view=conflicts',
+      },
+      {
+        id: 'appointment-calendar',
+        label: 'Calendar View',
+        icon: 'calendar_month',
+        href: '/calendar',
       },
     ],
   },
@@ -48,47 +34,32 @@ const VIEW_SECTIONS: SidebarConfig['sections'] = [
     id: 'type',
     title: 'By Type',
     items: [
-      { id: 'hearings', label: 'Hearings', icon: 'gavel', href: '/calendar?type=HEARING' },
+      { id: 'meetings', label: 'Meetings', icon: 'videocam', href: '/appointments?type=MEETING' },
+      { id: 'calls', label: 'Calls', icon: 'call', href: '/appointments?type=CALL' },
       {
         id: 'consultations',
         label: 'Consultations',
         icon: 'forum',
-        href: '/calendar?type=CONSULTATION',
+        href: '/appointments?type=CONSULTATION',
       },
+      { id: 'hearings', label: 'Hearings', icon: 'gavel', href: '/appointments?type=HEARING' },
       {
         id: 'depositions',
         label: 'Depositions',
         icon: 'description',
-        href: '/calendar?type=DEPOSITION',
+        href: '/appointments?type=DEPOSITION',
       },
     ],
   },
 ];
 
-/** List mode — filters inline + Module Settings button + calendar toggles */
-export function createAppointmentsSidebarConfig(onSettingsClick: () => void): SidebarConfig {
+/** Sidebar shown on `/appointments` (the table list page). */
+export function createAppointmentsSidebarConfig(): SidebarConfig {
   return {
-    moduleId: 'calendar',
-    moduleTitle: 'Calendar',
-    moduleIcon: 'calendar_month',
-    onSettingsClick,
-    showSettings: true,
-    afterContent: CalendarTogglesSection,
-    sections: VIEW_SECTIONS,
-  };
-}
-
-/** Settings mode — settings items inline at top, views & types below, calendar toggles at bottom */
-export function createAppointmentsSettingsSidebarConfig(
-  beforeContent: SidebarConfig['beforeContent']
-): SidebarConfig {
-  return {
-    moduleId: 'calendar',
-    moduleTitle: 'Calendar',
-    moduleIcon: 'calendar_month',
+    moduleId: 'appointments',
+    moduleTitle: 'Appointments',
+    moduleIcon: 'event',
     showSettings: false,
-    beforeContent,
-    afterContent: CalendarTogglesSection,
     sections: VIEW_SECTIONS,
   };
 }

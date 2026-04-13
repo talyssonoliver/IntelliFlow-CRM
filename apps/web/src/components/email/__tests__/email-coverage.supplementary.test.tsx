@@ -106,7 +106,7 @@ describe('EmailListItem formatRelativeTime branches', () => {
       />
     );
     // formatDate from TimezoneProvider (UTC fallback) uses en-US month short format
-    const expected = date.toLocaleDateString('en-US', {
+    const expected = date.toLocaleDateString('en-GB', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',

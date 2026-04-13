@@ -154,7 +154,7 @@ export function BackupCodesDisplay({
           <h4 className="text-sm font-medium text-slate-300">Your backup codes</h4>
           <span className="text-xs text-slate-500">
             Generated{' '}
-            {generatedAt.toLocaleDateString('en-US', {
+            {generatedAt.toLocaleDateString('en-GB', {
               month: 'short',
               day: 'numeric',
               year: 'numeric',

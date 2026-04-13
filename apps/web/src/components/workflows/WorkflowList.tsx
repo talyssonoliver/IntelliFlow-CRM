@@ -183,7 +183,7 @@ export function WorkflowList({ onEdit, onCreateNew }: WorkflowListProps) {
                     {wf.category}
                     <span className="mx-1">&middot;</span>
                     <time dateTime={new Date(wf.createdAt).toISOString()}>
-                      {new Date(wf.createdAt).toLocaleDateString('en-US', {
+                      {new Date(wf.createdAt).toLocaleDateString('en-GB', {
                         year: 'numeric',
                         month: 'short',
                         day: 'numeric',

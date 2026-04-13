@@ -259,7 +259,7 @@ export function WorkflowProgressPanel({
         </header>
 
         {/* Progress bar */}
-        {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- shadcn Progress renders a div; role="progressbar" is the correct ARIA pattern for this compound component */}
+        { }
         <Progress
           value={completedPercent}
           className="h-1.5 mb-4"

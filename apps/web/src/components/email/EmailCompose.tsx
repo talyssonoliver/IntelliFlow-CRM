@@ -494,7 +494,7 @@ export function EmailCompose({
         <label className="sr-only" htmlFor="compose-body">
           Message body
         </label>
-        {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- contentEditable rich-text editor; <textarea> does not support contentEditable with rich formatting */}
+        { }
         <div // NOSONAR — contentEditable rich-text editor; role="textbox" is the correct ARIA pattern
           ref={bodyRef}
           id="compose-body"

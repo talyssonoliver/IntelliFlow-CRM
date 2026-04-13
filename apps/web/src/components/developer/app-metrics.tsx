@@ -230,7 +230,7 @@ export function AppMetrics({ app }: Readonly<AppMetricsProps>) {
                     </td>
                     <td className="py-2 px-3 text-muted-foreground">
                       {key.lastUsed
-                        ? new Date(key.lastUsed).toLocaleDateString('en-US', {
+                        ? new Date(key.lastUsed).toLocaleDateString('en-GB', {
                             month: 'short',
                             day: 'numeric',
                             year: 'numeric',

@@ -92,7 +92,7 @@ export function OpportunityCreateSheet({
 
     createMutation.mutate({
       name: form.name.trim(),
-      value: { amount: parseFloat(form.value), currency: 'USD' },
+      value: { amount: parseFloat(form.value), currency: 'GBP' },
       stage: form.stage as (typeof OPPORTUNITY_STAGES)[number],
       probability: 10,
       accountId,

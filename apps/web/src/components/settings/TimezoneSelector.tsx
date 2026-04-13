@@ -96,7 +96,7 @@ function formatTimezoneLabel(tz: string): string {
   const city = tz.includes('/') ? tz.split('/').slice(1).join('/').replaceAll('_', ' ') : tz;
   try {
     const now = new Date();
-    const offset = new Intl.DateTimeFormat('en-US', {
+    const offset = new Intl.DateTimeFormat('en-GB', {
       timeZone: tz,
       timeZoneName: 'shortOffset',
     })

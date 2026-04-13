@@ -111,7 +111,7 @@ function WebVitalsSection({ vitals }: { vitals: LighthouseVitals }) {
   if (rows.length === 0) return null;
 
   return (
-    // eslint-disable-next-line jsx-a11y/prefer-tag-over-role
+     
     <Card className="p-4 mb-6" role="region" aria-label="Core Web Vitals">
       <h3 className="font-semibold text-foreground mb-4">Core Web Vitals</h3>
       <div className="overflow-x-auto">
@@ -169,7 +169,7 @@ function ResourceBudgetsSection({ vitals }: { vitals: LighthouseVitals }) {
   if (rows.length === 0) return null;
 
   return (
-    // eslint-disable-next-line jsx-a11y/prefer-tag-over-role
+     
     <Card className="p-4 mb-6" role="region" aria-label="Resource budgets">
       <h3 className="font-semibold text-foreground mb-4">Resource Budgets</h3>
       <div className="space-y-3">
@@ -323,7 +323,7 @@ export default function LighthouseReportView() {
       {!loading && !error && report && !isPlaceholder && details && (
         <>
           {/* ── Section 1: Overall Summary Banner ── */}
-          {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role */}
+          { }
           <Card className="p-4 mb-6" role="region" aria-label="Overall Lighthouse summary">
             <div className="flex items-center gap-4">
               <div
@@ -355,7 +355,7 @@ export default function LighthouseReportView() {
           </Card>
 
           {/* ── Section 2: Category Score Cards ── */}
-          {/* eslint-disable jsx-a11y/prefer-tag-over-role -- shadcn Card renders a div; role="region" provides correct landmark semantics */}
+          { }
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
             {categories.map(({ key, label }) => {
               const score = details[key];
@@ -398,7 +398,7 @@ export default function LighthouseReportView() {
               <span className="material-symbols-outlined text-base">schedule</span>
               <span>
                 Generated:{' '}
-                {new Date(report.generatedAt).toLocaleDateString('en-US', {
+                {new Date(report.generatedAt).toLocaleDateString('en-GB', {
                   month: 'short',
                   day: 'numeric',
                   year: 'numeric',
@@ -414,7 +414,7 @@ export default function LighthouseReportView() {
               )}
             </div>
           </Card>
-          {/* eslint-enable jsx-a11y/prefer-tag-over-role */}
+          { }
         </>
       )}
     </>

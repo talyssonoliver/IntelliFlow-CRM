@@ -34,7 +34,6 @@ export const defaultAppointmentFilters: AppointmentFilters = {
   sortOrder: 'asc',
   page: 1,
   limit: 20,
-  viewMode: 'calendar',
   calendarView: 'month',
 };
 
@@ -57,7 +56,6 @@ export function useAppointmentFilters() {
       ...defaultAppointmentFilters,
       startTimeFrom: range.from,
       startTimeTo: range.to,
-      viewMode: loadFromStorage('appointment-viewMode', 'calendar' as const),
       calendarView: loadFromStorage('appointment-calendarView', 'month' as const),
     };
   });
@@ -65,9 +63,8 @@ export function useAppointmentFilters() {
   // Persist view preferences to localStorage
   useEffect(() => {
     if (typeof globalThis.window === 'undefined') return;
-    localStorage.setItem('appointment-viewMode', JSON.stringify(filters.viewMode));
     localStorage.setItem('appointment-calendarView', JSON.stringify(filters.calendarView));
-  }, [filters.viewMode, filters.calendarView]);
+  }, [filters.calendarView]);
 
   const setSearch = useCallback((search: string) => {
     setFilters((prev) => ({ ...prev, search, page: 1 }));
@@ -100,10 +97,6 @@ export function useAppointmentFilters() {
     setFilters((prev) => ({ ...prev, page }));
   }, []);
 
-  const setViewMode = useCallback((viewMode: 'calendar' | 'list') => {
-    setFilters((prev) => ({ ...prev, viewMode }));
-  }, []);
-
   const setCalendarView = useCallback((calendarView: 'month' | 'week' | 'day') => {
     setFilters((prev) => ({ ...prev, calendarView }));
   }, []);
@@ -134,7 +127,6 @@ export function useAppointmentFilters() {
     setCaseFilter,
     setSort,
     setPage,
-    setViewMode,
     setCalendarView,
   };
 }

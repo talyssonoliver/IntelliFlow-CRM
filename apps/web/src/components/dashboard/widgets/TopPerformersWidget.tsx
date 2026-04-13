@@ -53,9 +53,9 @@ export function TopPerformersWidget(_props: Readonly<WidgetProps>) {
                     <p className="text-xs text-slate-500">{performer.dealCount} deals</p>
                   </div>
                   <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
-                    {revenue.toLocaleString('en-US', {
+                    {revenue.toLocaleString('en-GB', {
                       style: 'currency',
-                      currency: 'USD',
+                      currency: 'GBP',
                       maximumFractionDigits: 0,
                     })}
                   </span>

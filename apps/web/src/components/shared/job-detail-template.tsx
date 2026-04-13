@@ -39,7 +39,7 @@ export function JobDetailTemplate({ job, relatedJobs = [] }: Readonly<JobDetailT
   }, []);
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString('en-GB', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -49,7 +49,7 @@ export function JobDetailTemplate({ job, relatedJobs = [] }: Readonly<JobDetailT
 
   const formatSalary = (salary: JobListing['salary']) => {
     if (!salary) return null;
-    const formatter = new Intl.NumberFormat('en-US', {
+    const formatter = new Intl.NumberFormat('en-GB', {
       style: 'currency',
       currency: salary.currency,
       maximumFractionDigits: 0,

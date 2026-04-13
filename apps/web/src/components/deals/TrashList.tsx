@@ -22,6 +22,8 @@ import {
 } from '@intelliflow/ui';
 import { SearchFilterBar } from '@/components/shared';
 import { trpc } from '@/lib/trpc';
+import { useAuth } from '@/lib/auth/AuthContext';
+import { revalidateDealCaches } from '@/app/deals/actions';
 import { type TrashedDeal, PIPELINE_STAGE_CONFIG, formatCurrencyFull } from './types';
 import { type OpportunityStage } from '@intelliflow/domain';
 
@@ -57,7 +59,7 @@ function formatDate(dateStr: string | null, timezone: string = 'Europe/London'):
   if (!dateStr) return '-';
   const d = new Date(dateStr);
   if (Number.isNaN(d.getTime())) return '-';
-  return d.toLocaleDateString('en-US', {
+  return d.toLocaleDateString('en-GB', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -205,6 +207,7 @@ function createColumns(
 
 export const TrashList = React.memo(function TrashList() {
   const { timezone } = useTimezoneContext();
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState<string>('deleted-newest');
   const [currentPage, setCurrentPage] = useState(1);
@@ -245,6 +248,7 @@ export const TrashList = React.memo(function TrashList() {
   // Mutations
   const restoreMutation = trpc.opportunity.restore.useMutation({
     onSuccess: () => {
+      revalidateDealCaches(user?.id ?? null).catch(() => {});
       utils.opportunity.listTrashed.invalidate();
       utils.opportunity.list.invalidate();
       utils.opportunity.stats.invalidate();

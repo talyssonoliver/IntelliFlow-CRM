@@ -15,6 +15,7 @@ import { trpc } from '@/lib/trpc';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useNotificationSubscription } from './hooks/useNotificationSubscription';
 import { formatRelativeTime, getTypeConfig } from './notification-utils';
+import { revalidateNotifications } from '@/app/notifications/actions';
 
 function NotificationBellSkeleton() {
   return (
@@ -40,7 +41,7 @@ function NotificationBellSkeleton() {
  * Fallback: refetchInterval 60s when WebSocket is unavailable.
  */
 export function NotificationBell() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const router = useRouter();
   const utils = trpc.useUtils();
   const [isOpen, setIsOpen] = useState(false);
@@ -83,6 +84,9 @@ export function NotificationBell() {
     onSuccess: () => {
       utils.notifications.getUnreadCount.invalidate();
       utils.notifications.list.invalidate();
+      if (user?.id) {
+        revalidateNotifications(user.id);
+      }
     },
   });
 

@@ -95,7 +95,7 @@ export function MfaQrGenerator({
     <div className={cn('space-y-6', className)}>
       {/* QR Code Section */}
       <div className="flex flex-col items-center">
-        {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- QR code wrapper div; <img> cannot contain the QRCodeSVG React component */}
+        { }
         <div
           className="bg-white p-4 rounded-lg"
           role="img" // NOSONAR typescript:S6819

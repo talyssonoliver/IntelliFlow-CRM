@@ -84,7 +84,7 @@ export function PendingTasksWidget(_props: Readonly<WidgetProps>) {
                   className={`text-xs ${task.dueDate && new Date(task.dueDate) < new Date() ? 'text-destructive' : 'text-muted-foreground'}`}
                 >
                   {task.dueDate
-                    ? new Date(task.dueDate).toLocaleDateString('en-US', {
+                    ? new Date(task.dueDate).toLocaleDateString('en-GB', {
                         month: 'short',
                         day: 'numeric',
                         timeZone: timezone,
