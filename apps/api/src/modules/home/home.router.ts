@@ -516,7 +516,8 @@ async function runHeuristicQueries(
       }),
       prisma.task.count({
         where: {
-          ...(ownerFilter ? { ownerId: ownerFilter } : { tenantId }),
+          tenantId,
+          ...(ownerFilter ? { ownerId: ownerFilter } : {}),
           dueDate: { lt: overdueCutoff },
           status: { notIn: ['COMPLETED', 'CANCELLED'] },
         },

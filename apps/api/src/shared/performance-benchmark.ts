@@ -389,11 +389,23 @@ async function runBenchmarks() {
     );
 
     // Analytics — frequent aggregates
+    // analytics.getSalesMetrics requires an ISO datetime range — last 30 days.
+    const today = new Date();
+    const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const analyticsRange = {
+      startDate: thirtyDaysAgo.toISOString(),
+      endDate: today.toISOString(),
+    };
     results.push(
       await safeBenchmark('analytics.getOverview', () => caller.analytics.getOverview({}), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
     );
     results.push(
-      await safeBenchmark('analytics.getSalesMetrics', () => caller.analytics.getSalesMetrics({}), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
+      await safeBenchmark(
+        'analytics.getSalesMetrics',
+        () => caller.analytics.getSalesMetrics(analyticsRange),
+        AUTHN_ITERATIONS,
+        AUTHN_PAUSE_MS
+      )
     );
 
     // Notifications — polled by the nav bell

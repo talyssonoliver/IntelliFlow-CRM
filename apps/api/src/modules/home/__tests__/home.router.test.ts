@@ -319,6 +319,24 @@ describe('Home Router', () => {
       );
     });
 
+    // HOME-PERF: regression guard — ensure the overdue-task count query always
+    // scopes by tenantId so Postgres can use [tenantId, ownerId, status, dueDate].
+    // Previously the owner branch dropped tenantId, preventing the leftmost-prefix
+    // match and forcing a fallback scan on the large tasks table.
+    it('task.count predicate is always scoped by tenantId (owner path)', async () => {
+      prismaMock.opportunity.findMany.mockResolvedValue([]);
+      prismaMock.lead.findMany.mockResolvedValue([]);
+      prismaMock.task.count.mockResolvedValue(0);
+      prismaMock.contact.findMany.mockResolvedValue([]);
+
+      await caller.getAIInsights();
+
+      const taskCountCall = (prismaMock.task.count as any).mock.calls[0]?.[0];
+      expect(taskCountCall).toBeDefined();
+      expect(taskCountCall.where).toHaveProperty('tenantId');
+      expect(taskCountCall.where).toHaveProperty('ownerId');
+    });
+
     it('should return achievement when no urgent items', async () => {
       prismaMock.opportunity.findMany.mockResolvedValue([]);
       prismaMock.lead.findMany.mockResolvedValue([]);
