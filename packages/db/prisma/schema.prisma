@@ -519,6 +519,8 @@ model Contact {
   @@index([accountId, createdAt(sort: Desc)])
   // IFC-192: Composite index for stale contact queries
   @@index([tenantId, lastContactedAt])
+  // HOME-PERF: home.getAIInsights stale-contact query (ownerId + lastContactedAt)
+  @@index([tenantId, ownerId, lastContactedAt])
   @@map("contacts")
 }
 
@@ -602,6 +604,8 @@ model Opportunity {
   @@index([contactId, stage])
   // HOME-PERF: Composite index for getWelcomeSummary deal trend queries
   @@index([tenantId, ownerId, stage, closedAt])
+  // HOME-PERF: home.getAIInsights deals-at-risk query (stage NOT IN, updatedAt <)
+  @@index([tenantId, ownerId, stage, updatedAt])
   @@index([deletedAt])
   @@map("opportunities")
 }

@@ -234,7 +234,7 @@ export class PrismaAnalyticsRepository implements AnalyticsRepository {
 
     const result = await this.prisma.$queryRaw<Array<{ avg_days: number | null }>>(
       Prisma.sql`SELECT AVG(EXTRACT(EPOCH FROM ("closedAt" - "createdAt")) / 86400) as avg_days
-        FROM "Opportunity"
+        FROM "opportunities"
         WHERE "tenantId" = ${tenantId}
           AND stage = 'CLOSED_WON'
           AND "closedAt" IS NOT NULL

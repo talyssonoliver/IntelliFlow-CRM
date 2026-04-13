@@ -260,10 +260,11 @@ describe('AccountService (additional coverage)', () => {
       const account = Account.create({
         name: 'No Industry',
         ownerId: 'owner-1',
+        tenantId: '11111111-1111-4111-8111-111111111111',
       } as any).value;
       await accountRepository.save(account);
 
-      const stats = await service.getAccountStatistics('owner-1');
+      const stats = await service.getAccountStatistics('owner-1', '11111111-1111-4111-8111-111111111111');
 
       expect(stats.byIndustry['Uncategorized']).toBe(1);
     });
@@ -273,16 +274,18 @@ describe('AccountService (additional coverage)', () => {
         name: 'A1',
         revenue: 1000000,
         ownerId: 'owner-1',
+        tenantId: '11111111-1111-4111-8111-111111111111',
       } as any).value;
       const a2 = Account.create({
         name: 'A2',
         revenue: 3000000,
         ownerId: 'owner-1',
+        tenantId: '11111111-1111-4111-8111-111111111111',
       } as any).value;
       await accountRepository.save(a1);
       await accountRepository.save(a2);
 
-      const stats = await service.getAccountStatistics('owner-1');
+      const stats = await service.getAccountStatistics('owner-1', '11111111-1111-4111-8111-111111111111');
 
       expect(stats.total).toBe(2);
       expect(stats.totalRevenue).toBe(4000000);
@@ -299,11 +302,12 @@ describe('AccountService (additional coverage)', () => {
         name: 'Mid Market',
         revenue: 2000000,
         ownerId: 'owner-1',
+        tenantId: '11111111-1111-4111-8111-111111111111',
       } as any).value;
       await accountRepository.save(account);
 
       // Default is MID_MARKET threshold = 1,000,000
-      const results = await service.getHighValueAccounts(undefined, 'owner-1');
+      const results = await service.getHighValueAccounts(undefined, 'owner-1', '11111111-1111-4111-8111-111111111111');
 
       expect(results).toHaveLength(1);
     });
@@ -318,10 +322,11 @@ describe('AccountService (additional coverage)', () => {
       const account = Account.create({
         name: 'No Revenue',
         ownerId: 'owner-1',
+        tenantId: '11111111-1111-4111-8111-111111111111',
       } as any).value;
       await accountRepository.save(account);
 
-      const results = await service.getHighValueAccounts(0, 'owner-1');
+      const results = await service.getHighValueAccounts(0, 'owner-1', '11111111-1111-4111-8111-111111111111');
 
       // revenue is undefined, so (undefined ?? 0) = 0, which is >= 0
       expect(results).toHaveLength(1);
@@ -503,7 +508,7 @@ describe('AccountService (additional coverage)', () => {
       const account = Account.create({
         name: 'Contacts Test',
         ownerId: 'owner-1',
-        tenantId: 'tenant-1',
+        tenantId: '11111111-1111-4111-8111-111111111111',
       } as any).value;
       await accountRepository.save(account);
 
@@ -513,11 +518,11 @@ describe('AccountService (additional coverage)', () => {
         lastName: 'Doe',
         accountId: account.id.value,
         ownerId: 'owner-1',
-        tenantId: 'tenant-1',
+        tenantId: '11111111-1111-4111-8111-111111111111',
       } as any).value;
       await contactRepository.save(contact);
 
-      const result = await service.getAccountContacts(account.id.value, 'tenant-1', {
+      const result = await service.getAccountContacts(account.id.value, '11111111-1111-4111-8111-111111111111', {
         limit: 10,
       });
 
@@ -528,14 +533,14 @@ describe('AccountService (additional coverage)', () => {
 
     it('should fail if account not found', async () => {
       const fakeId = '00000000-0000-0000-0000-000000000000';
-      const result = await service.getAccountContacts(fakeId, 'tenant-1', { limit: 10 });
+      const result = await service.getAccountContacts(fakeId, '11111111-1111-4111-8111-111111111111', { limit: 10 });
 
       expect(result.isFailure).toBe(true);
       expect(result.error.message).toContain('not found');
     });
 
     it('should fail with invalid account ID', async () => {
-      const result = await service.getAccountContacts('bad-id', 'tenant-1', { limit: 10 });
+      const result = await service.getAccountContacts('bad-id', '11111111-1111-4111-8111-111111111111', { limit: 10 });
 
       expect(result.isFailure).toBe(true);
     });
@@ -544,7 +549,7 @@ describe('AccountService (additional coverage)', () => {
       const account = Account.create({
         name: 'Tenant Test',
         ownerId: 'owner-1',
-        tenantId: 'tenant-1',
+        tenantId: '11111111-1111-4111-8111-111111111111',
       } as any).value;
       await accountRepository.save(account);
 
@@ -560,7 +565,7 @@ describe('AccountService (additional coverage)', () => {
       const account = Account.create({
         name: 'Status Filter',
         ownerId: 'owner-1',
-        tenantId: 'tenant-1',
+        tenantId: '11111111-1111-4111-8111-111111111111',
       } as any).value;
       await accountRepository.save(account);
 
@@ -570,7 +575,7 @@ describe('AccountService (additional coverage)', () => {
         lastName: 'Contact',
         accountId: account.id.value,
         ownerId: 'owner-1',
-        tenantId: 'tenant-1',
+        tenantId: '11111111-1111-4111-8111-111111111111',
         status: 'ACTIVE',
       } as any).value;
       const c2 = Contact.create({
@@ -579,13 +584,13 @@ describe('AccountService (additional coverage)', () => {
         lastName: 'Contact',
         accountId: account.id.value,
         ownerId: 'owner-1',
-        tenantId: 'tenant-1',
+        tenantId: '11111111-1111-4111-8111-111111111111',
         status: 'INACTIVE',
       } as any).value;
       await contactRepository.save(c1);
       await contactRepository.save(c2);
 
-      const result = await service.getAccountContacts(account.id.value, 'tenant-1', {
+      const result = await service.getAccountContacts(account.id.value, '11111111-1111-4111-8111-111111111111', {
         limit: 10,
         status: ['ACTIVE'],
       });
@@ -599,7 +604,7 @@ describe('AccountService (additional coverage)', () => {
       const account = Account.create({
         name: 'Cursor Test',
         ownerId: 'owner-1',
-        tenantId: 'tenant-1',
+        tenantId: '11111111-1111-4111-8111-111111111111',
       } as any).value;
       await accountRepository.save(account);
 
@@ -611,13 +616,13 @@ describe('AccountService (additional coverage)', () => {
           lastName: `Last${i}`,
           accountId: account.id.value,
           ownerId: 'owner-1',
-          tenantId: 'tenant-1',
+          tenantId: '11111111-1111-4111-8111-111111111111',
         } as any).value;
         await contactRepository.save(c);
         contacts.push(c);
       }
 
-      const result = await service.getAccountContacts(account.id.value, 'tenant-1', {
+      const result = await service.getAccountContacts(account.id.value, '11111111-1111-4111-8111-111111111111', {
         limit: 2,
       });
 
@@ -626,7 +631,7 @@ describe('AccountService (additional coverage)', () => {
       expect(result.value.total).toBe(5);
       if (result.value.nextCursor) {
         // Second page using cursor
-        const page2 = await service.getAccountContacts(account.id.value, 'tenant-1', {
+        const page2 = await service.getAccountContacts(account.id.value, '11111111-1111-4111-8111-111111111111', {
           limit: 2,
           cursor: result.value.nextCursor,
         });
@@ -644,7 +649,7 @@ describe('AccountService (additional coverage)', () => {
       const account = Account.create({
         name: 'Opps Test',
         ownerId: 'owner-1',
-        tenantId: 'tenant-1',
+        tenantId: '11111111-1111-4111-8111-111111111111',
       } as any).value;
       await accountRepository.save(account);
 
@@ -656,7 +661,7 @@ describe('AccountService (additional coverage)', () => {
       }).value;
       await opportunityRepository.save(opp);
 
-      const result = await service.getAccountOpportunities(account.id.value, 'tenant-1', {
+      const result = await service.getAccountOpportunities(account.id.value, '11111111-1111-4111-8111-111111111111', {
         limit: 10,
       });
 
@@ -668,13 +673,13 @@ describe('AccountService (additional coverage)', () => {
 
     it('should fail if account not found', async () => {
       const fakeId = '00000000-0000-0000-0000-000000000000';
-      const result = await service.getAccountOpportunities(fakeId, 'tenant-1', { limit: 10 });
+      const result = await service.getAccountOpportunities(fakeId, '11111111-1111-4111-8111-111111111111', { limit: 10 });
 
       expect(result.isFailure).toBe(true);
     });
 
     it('should fail with invalid ID', async () => {
-      const result = await service.getAccountOpportunities('bad-id', 'tenant-1', { limit: 10 });
+      const result = await service.getAccountOpportunities('bad-id', '11111111-1111-4111-8111-111111111111', { limit: 10 });
 
       expect(result.isFailure).toBe(true);
     });
@@ -683,7 +688,7 @@ describe('AccountService (additional coverage)', () => {
       const account = Account.create({
         name: 'Tenant Opp',
         ownerId: 'owner-1',
-        tenantId: 'tenant-1',
+        tenantId: '11111111-1111-4111-8111-111111111111',
       } as any).value;
       await accountRepository.save(account);
 
@@ -698,7 +703,7 @@ describe('AccountService (additional coverage)', () => {
       const account = Account.create({
         name: 'Stage Filter',
         ownerId: 'owner-1',
-        tenantId: 'tenant-1',
+        tenantId: '11111111-1111-4111-8111-111111111111',
       } as any).value;
       await accountRepository.save(account);
 
@@ -718,7 +723,7 @@ describe('AccountService (additional coverage)', () => {
       await opportunityRepository.save(opp1);
       await opportunityRepository.save(opp2);
 
-      const result = await service.getAccountOpportunities(account.id.value, 'tenant-1', {
+      const result = await service.getAccountOpportunities(account.id.value, '11111111-1111-4111-8111-111111111111', {
         limit: 10,
         stage: ['QUALIFICATION'],
       });
@@ -732,7 +737,7 @@ describe('AccountService (additional coverage)', () => {
       const account = Account.create({
         name: 'Opp Cursor',
         ownerId: 'owner-1',
-        tenantId: 'tenant-1',
+        tenantId: '11111111-1111-4111-8111-111111111111',
       } as any).value;
       await accountRepository.save(account);
 
@@ -746,7 +751,7 @@ describe('AccountService (additional coverage)', () => {
         await opportunityRepository.save(opp);
       }
 
-      const result = await service.getAccountOpportunities(account.id.value, 'tenant-1', {
+      const result = await service.getAccountOpportunities(account.id.value, '11111111-1111-4111-8111-111111111111', {
         limit: 2,
       });
 
@@ -764,7 +769,7 @@ describe('AccountService (additional coverage)', () => {
       const account = Account.create({
         name: 'Activity Test',
         ownerId: 'owner-1',
-        tenantId: 'tenant-1',
+        tenantId: '11111111-1111-4111-8111-111111111111',
       } as any).value;
       await accountRepository.save(account);
 
@@ -774,7 +779,7 @@ describe('AccountService (additional coverage)', () => {
         lastName: 'Doe',
         accountId: account.id.value,
         ownerId: 'owner-1',
-        tenantId: 'tenant-1',
+        tenantId: '11111111-1111-4111-8111-111111111111',
       } as any).value;
       await contactRepository.save(contact);
 
@@ -786,7 +791,7 @@ describe('AccountService (additional coverage)', () => {
       }).value;
       await opportunityRepository.save(opp);
 
-      const result = await service.getAccountActivity(account.id.value, 'tenant-1', {
+      const result = await service.getAccountActivity(account.id.value, '11111111-1111-4111-8111-111111111111', {
         limit: 10,
       });
 
@@ -800,13 +805,13 @@ describe('AccountService (additional coverage)', () => {
 
     it('should fail if account not found', async () => {
       const fakeId = '00000000-0000-0000-0000-000000000000';
-      const result = await service.getAccountActivity(fakeId, 'tenant-1', { limit: 10 });
+      const result = await service.getAccountActivity(fakeId, '11111111-1111-4111-8111-111111111111', { limit: 10 });
 
       expect(result.isFailure).toBe(true);
     });
 
     it('should fail with invalid ID', async () => {
-      const result = await service.getAccountActivity('bad-id', 'tenant-1', { limit: 10 });
+      const result = await service.getAccountActivity('bad-id', '11111111-1111-4111-8111-111111111111', { limit: 10 });
 
       expect(result.isFailure).toBe(true);
     });
@@ -815,7 +820,7 @@ describe('AccountService (additional coverage)', () => {
       const account = Account.create({
         name: 'Tenant Activity',
         ownerId: 'owner-1',
-        tenantId: 'tenant-1',
+        tenantId: '11111111-1111-4111-8111-111111111111',
       } as any).value;
       await accountRepository.save(account);
 
@@ -830,7 +835,7 @@ describe('AccountService (additional coverage)', () => {
       const account = Account.create({
         name: 'Filter Activity',
         ownerId: 'owner-1',
-        tenantId: 'tenant-1',
+        tenantId: '11111111-1111-4111-8111-111111111111',
       } as any).value;
       await accountRepository.save(account);
 
@@ -840,7 +845,7 @@ describe('AccountService (additional coverage)', () => {
         lastName: 'Test',
         accountId: account.id.value,
         ownerId: 'owner-1',
-        tenantId: 'tenant-1',
+        tenantId: '11111111-1111-4111-8111-111111111111',
       } as any).value;
       await contactRepository.save(contact);
 
@@ -852,7 +857,7 @@ describe('AccountService (additional coverage)', () => {
       }).value;
       await opportunityRepository.save(opp);
 
-      const result = await service.getAccountActivity(account.id.value, 'tenant-1', {
+      const result = await service.getAccountActivity(account.id.value, '11111111-1111-4111-8111-111111111111', {
         limit: 10,
         types: ['CONTACT_CREATED'],
       });
@@ -866,7 +871,7 @@ describe('AccountService (additional coverage)', () => {
       const account = Account.create({
         name: 'Paginate Activity',
         ownerId: 'owner-1',
-        tenantId: 'tenant-1',
+        tenantId: '11111111-1111-4111-8111-111111111111',
       } as any).value;
       await accountRepository.save(account);
 
@@ -877,12 +882,12 @@ describe('AccountService (additional coverage)', () => {
           lastName: 'Test',
           accountId: account.id.value,
           ownerId: 'owner-1',
-          tenantId: 'tenant-1',
+          tenantId: '11111111-1111-4111-8111-111111111111',
         } as any).value;
         await contactRepository.save(contact);
       }
 
-      const result = await service.getAccountActivity(account.id.value, 'tenant-1', {
+      const result = await service.getAccountActivity(account.id.value, '11111111-1111-4111-8111-111111111111', {
         limit: 2,
       });
 
@@ -895,11 +900,11 @@ describe('AccountService (additional coverage)', () => {
       const account = Account.create({
         name: 'Empty Activity',
         ownerId: 'owner-1',
-        tenantId: 'tenant-1',
+        tenantId: '11111111-1111-4111-8111-111111111111',
       } as any).value;
       await accountRepository.save(account);
 
-      const result = await service.getAccountActivity(account.id.value, 'tenant-1', {
+      const result = await service.getAccountActivity(account.id.value, '11111111-1111-4111-8111-111111111111', {
         limit: 10,
       });
 

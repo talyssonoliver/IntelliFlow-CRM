@@ -525,9 +525,9 @@ describe('NotificationService - additional coverage', () => {
       expect(mockNotif.markAsRead).toHaveBeenCalled();
     });
 
-    it('should not mark pending notification as read', async () => {
+    it('should not mark failed notification as read', async () => {
       const mockNotif = {
-        status: 'pending',
+        status: 'failed',
         markAsRead: vi.fn(),
       };
       notifRepo.findById.mockResolvedValue(mockNotif);

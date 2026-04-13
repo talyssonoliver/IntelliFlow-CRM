@@ -1,16 +1,16 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { LeadService } from '../../../src/services/LeadService';
-import { ContactService } from '../../../src/services/ContactService';
-import { AccountService } from '../../../src/services/AccountService';
-import { OpportunityService } from '../../../src/services/OpportunityService';
-import { TaskService } from '../../../src/services/TaskService';
-import { InMemoryLeadRepository } from '../../../../adapters/src/repositories/InMemoryLeadRepository';
-import { InMemoryContactRepository } from '../../../../adapters/src/repositories/InMemoryContactRepository';
-import { InMemoryAccountRepository } from '../../../../adapters/src/repositories/InMemoryAccountRepository';
-import { InMemoryOpportunityRepository } from '../../../../adapters/src/repositories/InMemoryOpportunityRepository';
-import { InMemoryTaskRepository } from '../../../../adapters/src/repositories/InMemoryTaskRepository';
-import { InMemoryEventBus } from '../../../../adapters/src/external/InMemoryEventBus';
-import { MockAIService } from '../../../../adapters/src/external/MockAIService';
+import { LeadService } from '../../LeadService';
+import { ContactService } from '../../ContactService';
+import { AccountService } from '../../AccountService';
+import { OpportunityService } from '../../OpportunityService';
+import { TaskService } from '../../TaskService';
+import { InMemoryLeadRepository } from '../../../../../adapters/src/repositories/InMemoryLeadRepository';
+import { InMemoryContactRepository } from '../../../../../adapters/src/repositories/InMemoryContactRepository';
+import { InMemoryAccountRepository } from '../../../../../adapters/src/repositories/InMemoryAccountRepository';
+import { InMemoryOpportunityRepository } from '../../../../../adapters/src/repositories/InMemoryOpportunityRepository';
+import { InMemoryTaskRepository } from '../../../../../adapters/src/repositories/InMemoryTaskRepository';
+import { InMemoryEventBus } from '../../../../../adapters/src/external/InMemoryEventBus';
+import { MockAIService } from '../../../../../adapters/src/external/MockAIService';
 
 /**
  * Integration tests for domain services

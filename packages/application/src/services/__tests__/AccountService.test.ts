@@ -433,16 +433,18 @@ describe('AccountService', () => {
         name: 'Enterprise Corp',
         revenue: 15000000,
         ownerId: 'owner-1',
+        tenantId: '11111111-1111-4111-8111-111111111111',
       }).value;
       const account2 = Account.create({
         name: 'Startup Inc',
         revenue: 50000,
         ownerId: 'owner-1',
+        tenantId: '11111111-1111-4111-8111-111111111111',
       }).value;
       await accountRepository.save(account1);
       await accountRepository.save(account2);
 
-      const highValue = await service.getHighValueAccounts(1000000, 'owner-1');
+      const highValue = await service.getHighValueAccounts(1000000, 'owner-1', '11111111-1111-4111-8111-111111111111');
 
       expect(highValue).toHaveLength(1);
       expect(highValue[0].name).toBe('Enterprise Corp');
@@ -551,23 +553,26 @@ describe('AccountService', () => {
         revenue: 15000000,
         industry: 'Technology',
         ownerId: 'owner-1',
+        tenantId: '11111111-1111-4111-8111-111111111111',
       }).value;
       const account2 = Account.create({
         name: 'Stat 2',
         revenue: 500000,
         industry: 'Technology',
         ownerId: 'owner-1',
+        tenantId: '11111111-1111-4111-8111-111111111111',
       }).value;
       const account3 = Account.create({
         name: 'Stat 3',
         industry: 'Healthcare',
         ownerId: 'owner-1',
+        tenantId: '11111111-1111-4111-8111-111111111111',
       }).value;
       await accountRepository.save(account1);
       await accountRepository.save(account2);
       await accountRepository.save(account3);
 
-      const stats = await service.getAccountStatistics('owner-1');
+      const stats = await service.getAccountStatistics('owner-1', '11111111-1111-4111-8111-111111111111');
 
       expect(stats.total).toBe(3);
       expect(stats.byTier['ENTERPRISE']).toBe(1);

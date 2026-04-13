@@ -269,7 +269,8 @@ describe('AccountService — Hierarchy (PG-134)', () => {
       const result = await service.setParent(child.id.value, parent.id.value, TENANT, OWNER);
 
       expect(result.isFailure).toBe(true);
-      expect(result.error.message).toContain('different tenant');
+      // Tenant isolation: parent from a different tenant is invisible to this tenant's queries.
+      expect(result.error.message).toContain('Parent account not found');
     });
 
     it('should publish domain events after setting parent', async () => {

@@ -29,6 +29,7 @@ const createMockPrismaClient = () => ({
   auditLogEntry: {
     findMany: vi.fn(),
   },
+  $queryRaw: vi.fn(),
 });
 
 describe('PrismaAnalyticsRepository', () => {
@@ -672,6 +673,46 @@ describe('PrismaAnalyticsRepository', () => {
       const result = await repository.countLeadsThisMonth(tenantId);
 
       expect(result).toBe(0);
+    });
+  });
+
+  // Regression: analytics.getSalesMetrics failed in production benchmark with
+  // "relation 'Opportunity' does not exist" because the raw SQL used the model
+  // name instead of the @@map'd table name. Guard the lowercase "opportunities"
+  // table name in the emitted SQL so any future rename is caught by unit tests.
+  describe('getAvgSalesCycleLength() raw SQL', () => {
+    const dateRange = {
+      startDate: new Date('2026-01-01T00:00:00Z'),
+      endDate: new Date('2026-04-01T00:00:00Z'),
+    };
+
+    it('emits SQL against the lowercase "opportunities" table (Prisma @@map target)', async () => {
+      mockPrisma.$queryRaw.mockResolvedValue([{ avg_days: 42 }]);
+
+      await repository.getAvgSalesCycleLength(tenantId, dateRange);
+
+      expect(mockPrisma.$queryRaw).toHaveBeenCalledTimes(1);
+      const sqlArg = mockPrisma.$queryRaw.mock.calls[0][0];
+      // Prisma.sql produces a tagged-template object with `.strings` and `.values`
+      const joinedSql = (sqlArg.strings || []).join(' ');
+      expect(joinedSql).toMatch(/FROM\s+"opportunities"/);
+      expect(joinedSql).not.toMatch(/FROM\s+"Opportunity"/);
+    });
+
+    it('returns null when average is null (no closed-won deals in range)', async () => {
+      mockPrisma.$queryRaw.mockResolvedValue([{ avg_days: null }]);
+
+      const result = await repository.getAvgSalesCycleLength(tenantId, dateRange);
+
+      expect(result).toBeNull();
+    });
+
+    it('rounds average days to one decimal', async () => {
+      mockPrisma.$queryRaw.mockResolvedValue([{ avg_days: 42.456 }]);
+
+      const result = await repository.getAvgSalesCycleLength(tenantId, dateRange);
+
+      expect(result).toBe(42.5);
     });
   });
 });
