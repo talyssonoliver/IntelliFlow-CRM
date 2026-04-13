@@ -26,6 +26,8 @@ export const MODULE_ICONS = {
   profile: 'account_circle',
   accounts: 'domain',
   helpCenter: 'help_center',
+  cases: 'gavel',
+  workflows: 'account_tree',
 } as const;
 
 // =============================================================================

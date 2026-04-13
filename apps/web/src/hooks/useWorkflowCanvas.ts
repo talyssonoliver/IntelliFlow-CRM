@@ -119,7 +119,17 @@ export function useWorkflowCanvas(
     [nodes, edges, pushHistory, setEdges],
   );
 
-  // Add a new node at a given canvas position
+  // Add a new node at a given canvas position.
+  //
+  // UX behaviour: the new node is auto-linked to the previously-added node
+  // so users don't have to manually draw edges for sequential flows — the
+  // common case. The "previous node" is whichever node is visually closest
+  // above the new one's position (smallest Y delta among nodes above),
+  // falling back to the most-recently-added node if no node is above. The
+  // first node added is not linked (nothing to link to).
+  //
+  // Edges are still editable/removable from the UI, so auto-link is a
+  // convenience, not a constraint.
   const addNode = useCallback(
     (nodeType: string, position: { x: number; y: number }) => {
       pushHistory(nodes, edges);
@@ -134,8 +144,31 @@ export function useWorkflowCanvas(
         },
       };
       setNodes((nds) => [...nds, newNode]);
+
+      // Auto-link: pick the "source" candidate — nearest node above the
+      // new position by Y, or the last node in the array if nothing sits
+      // above. End-type nodes never act as sources (they are terminal).
+      if (nodes.length > 0) {
+        const candidates = nodes.filter(
+          (n) => n.type !== 'end' && n.position.y < position.y,
+        );
+        const source =
+          candidates.length > 0
+            ? candidates.reduce((best, n) =>
+                position.y - n.position.y < position.y - best.position.y ? n : best,
+              )
+            : nodes[nodes.length - 1];
+        if (source && source.type !== 'end') {
+          setEdges((eds) =>
+            addEdge(
+              { source: source.id, target: id, id: `edge-${Date.now()}` },
+              eds,
+            ),
+          );
+        }
+      }
     },
-    [nodes, edges, pushHistory, setNodes],
+    [nodes, edges, pushHistory, setNodes, setEdges],
   );
 
   // Remove a node (and its connected edges)

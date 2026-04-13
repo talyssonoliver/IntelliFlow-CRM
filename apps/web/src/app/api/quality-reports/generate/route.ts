@@ -638,6 +638,81 @@ async function finalizeJobTracking(
   }
 }
 
+/**
+ * Run the tRPC in-process benchmark + HTML generator.
+ *
+ * Mirrors the manual invocation:
+ *   npx dotenv -e .env.test -- npx tsx apps/api/src/shared/performance-benchmark.ts
+ *   node scripts/ci/generate-trpc-benchmark-report.js
+ *
+ * Writes artifacts/benchmarks/trpc-benchmark{.json,-summary.json,-report.html}.
+ * Requires a reachable, seeded test DB — if missing, reports the real error
+ * surfaced by the benchmark (no fabricated success).
+ */
+async function generateTRPCBenchmarkReport(
+  projectRoot: string,
+  _scope: string = 'standard'
+): Promise<GenerateResult> {
+  const start = Date.now();
+  const fs = await import('node:fs');
+
+  const benchmarkDir = path.join(projectRoot, 'artifacts', 'benchmarks');
+  if (!fs.existsSync(benchmarkDir)) {
+    fs.mkdirSync(benchmarkDir, { recursive: true });
+  }
+
+  try {
+    // Step 1: run the benchmark (writes trpc-benchmark{.json,-summary.json}).
+    // `.env.test` keeps us on the local ephemeral Postgres; no connection_limit=1.
+    // 10-min timeout covers the authenticated-path iterations comfortably.
+    await execAsync(
+      'npx dotenv -e .env.test -- npx tsx apps/api/src/shared/performance-benchmark.ts',
+      { cwd: projectRoot, timeout: 600_000, maxBuffer: 10 * 1024 * 1024 }
+    );
+
+    // Step 2: render the HTML artifact from the summary JSON.
+    await execAsync('node scripts/ci/generate-trpc-benchmark-report.js', {
+      cwd: projectRoot,
+      timeout: 30_000,
+    });
+
+    // Sanity-read the summary to surface pass rate in the result message.
+    const summaryPath = path.join(benchmarkDir, 'trpc-benchmark-summary.json');
+    let detail = '';
+    try {
+      const summary = JSON.parse(fs.readFileSync(summaryPath, 'utf8')) as {
+        totals?: { passed: number; completed: number; failedKpi: number; errored: number };
+      };
+      const t = summary.totals;
+      if (t) detail = ` (${t.passed}/${t.completed} passed, ${t.failedKpi} failed KPI, ${t.errored} errored)`;
+    } catch {
+      // summary missing — don't mask the generator's own success signal
+    }
+
+    return {
+      report: 'trpc-benchmark',
+      success: true,
+      message: `tRPC benchmark report generated${detail}`,
+      duration: Date.now() - start,
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    // Extract a short root-cause phrase when the benchmark itself errors.
+    const short =
+      /connect ECONNREFUSED/.exec(message)?.[0] ||
+      /too many clients already/.exec(message)?.[0] ||
+      /does not exist in the current database/.exec(message)?.[0] ||
+      message.split('\n').find((l) => l.includes('Error')) ||
+      message.split('\n')[0];
+    return {
+      report: 'trpc-benchmark',
+      success: false,
+      message: `tRPC benchmark failed: ${short.slice(0, 300)}`,
+      duration: Date.now() - start,
+    };
+  }
+}
+
 function buildReportPromise(
   report: string,
   projectRoot: string,
@@ -651,6 +726,8 @@ function buildReportPromise(
       return generateLighthouseReport(projectRoot, lighthouseUrl, scope);
     case 'performance':
       return generatePerformanceReport(projectRoot, scope);
+    case 'trpc-benchmark':
+      return generateTRPCBenchmarkReport(projectRoot, scope);
     default:
       return Promise.resolve({
         report,
@@ -707,11 +784,11 @@ export async function GET() {
   return NextResponse.json({
     success: true,
     data: {
-      availableReports: ['coverage', 'lighthouse', 'performance'],
+      availableReports: ['coverage', 'lighthouse', 'performance', 'trpc-benchmark'],
       usage: {
         method: 'POST',
         body: {
-          reports: ['coverage', 'lighthouse', 'performance'],
+          reports: ['coverage', 'lighthouse', 'performance', 'trpc-benchmark'],
           url: 'http://localhost:3000 (for lighthouse)', // NOSONAR — localhost dev URL in documentation string, not a network request
         },
       },

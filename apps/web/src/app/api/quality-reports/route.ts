@@ -11,7 +11,7 @@ type HealthStatus = 'good' | 'warning' | 'critical';
 interface QualityReport {
   id: string;
   name: string;
-  type: 'lighthouse' | 'coverage' | 'performance' | 'debt' | 'sonarqube';
+  type: 'lighthouse' | 'coverage' | 'performance' | 'trpc-benchmark' | 'debt' | 'sonarqube';
   status: ReportStatus;
   score?: number;
   generatedAt: string;
@@ -602,6 +602,94 @@ function getPerformanceReport(): QualityReport {
   };
 }
 
+/**
+ * Read the tRPC benchmark summary produced by
+ * apps/api/src/shared/performance-benchmark.ts.
+ *
+ * File shape (trpc-benchmark-summary.json):
+ *   { generatedAt, kpi, thresholds: { p50, p95, p99 },
+ *     totals: { total, completed, passed, failedKpi, errored },
+ *     operations: [{ operation, p50, p95, p99, mean, passed, error }],
+ *     passed: boolean }
+ */
+function getTRPCBenchmarkReport(): QualityReport {
+  const filePath = findFile(['artifacts/benchmarks/trpc-benchmark-summary.json']);
+  const placeholder: QualityReport = {
+    id: 'trpc-benchmark',
+    name: 'tRPC API Benchmark',
+    type: 'trpc-benchmark',
+    status: 'unknown',
+    generatedAt: new Date().toISOString(),
+    source: 'placeholder',
+    isPlaceholder: true,
+    placeholderReason:
+      'No tRPC benchmark generated yet. Run: npx dotenv -e .env.test -- npx tsx apps/api/src/shared/performance-benchmark.ts',
+  };
+
+  if (!filePath) return placeholder;
+
+  try {
+    const data = JSON.parse(fs.readFileSync(filePath, 'utf8')) as {
+      generatedAt?: string;
+      kpi?: string;
+      thresholds?: { p50?: number; p95?: number; p99?: number };
+      totals?: {
+        total: number;
+        completed: number;
+        passed: number;
+        failedKpi: number;
+        errored: number;
+      };
+      operations?: Array<{
+        operation: string;
+        iterations: number;
+        p50: number | null;
+        p95: number | null;
+        p99: number | null;
+        mean: number | null;
+        min: number | null;
+        max: number | null;
+        passed: boolean;
+        error: string | null;
+      }>;
+      passed?: boolean;
+    };
+
+    const totals = data.totals ?? { total: 0, completed: 0, passed: 0, failedKpi: 0, errored: 0 };
+    const status: ReportStatus =
+      totals.completed === 0
+        ? 'unknown'
+        : totals.failedKpi === 0 && totals.errored === 0
+          ? 'passing'
+          : 'failing';
+
+    // Score = share of completed benchmarks that passed KPI, scaled 0–100.
+    const score =
+      totals.completed > 0 ? Math.round((totals.passed / totals.completed) * 100) : 0;
+
+    return {
+      id: 'trpc-benchmark',
+      name: 'tRPC API Benchmark',
+      type: 'trpc-benchmark',
+      status,
+      score,
+      generatedAt: data.generatedAt ?? new Date().toISOString(),
+      source: 'manual',
+      htmlPath: '/api/quality-reports/view?report=trpc-benchmark',
+      details: {
+        kpi: data.kpi ?? 'IFC-003',
+        thresholds: data.thresholds ?? { p50: 30, p95: 50, p99: 100 },
+        totals,
+        operations: data.operations ?? [],
+      },
+      isPlaceholder: false,
+    };
+  } catch (error) {
+    console.error('Failed to read tRPC benchmark report:', error);
+    return placeholder;
+  }
+}
+
 function resolveDebtStatus(summary: Record<string, number> | undefined): ReportStatus {
   if (!summary) return 'unknown';
   if (summary.critical === 0 && summary.overdue === 0) return 'passing';
@@ -769,6 +857,7 @@ function getAllReports(): QualityReport[] {
     getLighthouseReport(),
     getCoverageReport(),
     getPerformanceReport(),
+    getTRPCBenchmarkReport(),
     getDebtReport(),
     getSonarQubeReport(),
   ];

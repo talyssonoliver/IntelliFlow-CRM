@@ -10,7 +10,7 @@ import { TestRunnerModal } from '@/components/governance/test-runner-modal';
 interface QualityReport {
   id: string;
   name: string;
-  type: 'lighthouse' | 'coverage' | 'performance';
+  type: 'lighthouse' | 'coverage' | 'performance' | 'trpc-benchmark';
   status: 'passing' | 'failing' | 'unknown';
   score?: number;
   generatedAt: string;
@@ -117,6 +117,21 @@ const reportConfigs: Record<string, ReportConfig> = {
       quick: '~5s',
       standard: '~30s',
       comprehensive: '~2min',
+    },
+  },
+  'trpc-benchmark': {
+    icon: 'bolt',
+    color: 'bg-violet-500',
+    description: 'Per-procedure in-process latency (IFC-003: p50<30ms, p95<50ms, p99<100ms)',
+    scopes: {
+      quick: 'Core hot paths (~28 procedures)',
+      standard: 'All authenticated list/stats endpoints',
+      comprehensive: 'All tRPC procedures',
+    },
+    estimatedTime: {
+      quick: '~2min',
+      standard: '~3min',
+      comprehensive: '~5min',
     },
   },
 };
@@ -614,7 +629,7 @@ export default function QualityReportsPage() {
           { label: 'Quality Reports' },
         ]}
         title="Quality Reports"
-        description="CI-generated quality reports for Lighthouse, test coverage, and performance"
+        description="CI-generated quality reports for Lighthouse, test coverage, performance, and tRPC benchmarks"
         actions={[
           {
             label: 'Run Tests',

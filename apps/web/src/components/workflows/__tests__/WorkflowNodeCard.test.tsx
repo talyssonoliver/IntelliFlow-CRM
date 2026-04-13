@@ -27,6 +27,11 @@ vi.mock('@xyflow/react', () => ({
     Left: 'left',
     Right: 'right',
   },
+  // NodeResizer is rendered when the node is selected; in tests it just
+  // mounts a marker div so the size assertions can verify it exists.
+  NodeResizer: ({ isVisible }: { isVisible?: boolean }) => (
+    <div data-testid="node-resizer" data-visible={isVisible ? 'true' : 'false'} />
+  ),
 }));
 
 vi.mock('@/lib/workflow-types', async (importOriginal) => {

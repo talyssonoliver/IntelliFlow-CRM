@@ -78,6 +78,12 @@ export const governanceSidebarConfig: SidebarConfig = {
           icon: 'timeline',
           href: '/governance/quality-reports/performance',
         },
+        {
+          id: 'trpc-benchmark',
+          label: 'tRPC Benchmark',
+          icon: 'bolt',
+          href: '/governance/quality-reports/trpc-benchmark',
+        },
       ],
     },
   ],

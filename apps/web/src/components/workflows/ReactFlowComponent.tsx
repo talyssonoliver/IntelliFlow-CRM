@@ -46,6 +46,7 @@ import { useWorkflowCanvas, type CanvasNode, type CanvasEdge } from '@/hooks/use
 import { useWorkflowMutations } from '@/hooks/useWorkflowMutations';
 import { api } from '@/lib/api';
 import { workflowNodeTypes } from './WorkflowNodeCard';
+import { workflowEdgeTypes, WORKFLOW_EDGE_TYPE } from './WorkflowEdge';
 import { NodeConfigPanel } from './NodeConfigPanel';
 import { NodePalette } from './NodePalette';
 import { WorkflowToolbar } from './WorkflowToolbar';
@@ -58,6 +59,8 @@ import type { WorkflowNodeType, WorkflowNodeConfig } from '@/lib/workflow-types'
 
 export interface ReactFlowComponentProps {
   workflowId?: string | null;
+  /** Controlled workflow name — sent with create/update on Save. */
+  workflowName?: string;
   initialNodes?: CanvasNode[];
   initialEdges?: CanvasEdge[];
   onSave?: (nodes: Node[], edges: Edge[]) => void | Promise<void>;
@@ -222,6 +225,7 @@ export function ReactFlowComponent(props: ReactFlowComponentProps) {
 
 function CanvasInner({
   workflowId,
+  workflowName,
   initialNodes = EMPTY_NODES,
   initialEdges = EMPTY_EDGES,
   nodes: externalNodes,
@@ -384,15 +388,22 @@ function CanvasInner({
       };
     });
 
+    const trimmedName = workflowName?.trim();
+    const effectiveName =
+      trimmedName && trimmedName.length > 0
+        ? trimmedName
+        : `Workflow ${new Date().toISOString().slice(0, 19).replace('T', ' ')}`;
+
     if (workflowId) {
       updateMutation.mutate({
         id: workflowId,
+        name: trimmedName && trimmedName.length > 0 ? trimmedName : undefined,
         steps: stepsPayload,
         edges: edgesPayload,
       });
     } else {
       createMutation.mutate({
-        name: `Workflow ${new Date().toISOString().slice(0, 19).replace('T', ' ')}`,
+        name: effectiveName,
         category: 'custom',
         triggerType: 'manual',
         triggerConfig: {},
@@ -400,7 +411,7 @@ function CanvasInner({
         edges: edgesPayload,
       });
     }
-  }, [canvas.nodes, canvas.edges, workflowId, createMutation, updateMutation, externalOnSave]);
+  }, [canvas.nodes, canvas.edges, workflowId, workflowName, createMutation, updateMutation, externalOnSave]);
 
   const handleNodeConfigSave = useCallback(
     (newConfig: WorkflowNodeConfig) => {
@@ -440,6 +451,12 @@ function CanvasInner({
           )}
 
           <ReactFlow
+            // Default every edge to the custom WorkflowEdge so the hover-×
+            // and selected-state styling apply uniformly. Existing edges
+            // that don't carry an explicit `type` will fall back to it via
+            // ReactFlow's `defaultEdgeOptions`.
+            defaultEdgeOptions={{ type: WORKFLOW_EDGE_TYPE }}
+            edgeTypes={workflowEdgeTypes}
             nodes={canvas.nodes}
             edges={canvas.edges}
             nodeTypes={workflowNodeTypes as NodeTypes}
@@ -448,6 +465,9 @@ function CanvasInner({
             onConnect={externalOnConnect ?? canvas.onConnect}
             onNodeClick={handleNodeClick}
             onPaneClick={handlePaneClick}
+            // Allow keyboard delete on selected edge (Backspace + Delete)
+            deleteKeyCode={['Backspace', 'Delete']}
+            edgesFocusable
             fitView
             className="bg-muted/20 h-full w-full"
             style={{ minHeight: 600 }}

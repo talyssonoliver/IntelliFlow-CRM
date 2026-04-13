@@ -12,6 +12,7 @@ const REPORT_PATHS: Record<string, string[]> = {
     'artifacts/coverage/lcov-report/index.html',
   ],
   performance: ['artifacts/benchmarks/performance-report.html'],
+  'trpc-benchmark': ['artifacts/benchmarks/trpc-benchmark-report.html'],
 };
 
 function findReportPath(reportType: string): string | null {
