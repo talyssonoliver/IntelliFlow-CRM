@@ -30,7 +30,9 @@ test.describe('Workflow Builder (IFC-031)', () => {
    * TC-1: Navigate to workflow list → create new workflow → canvas loads
    * AC-001, AC-002, NF-001
    */
-  test('TC-1: Navigate to workflow list, create new, canvas loads (AC-001/002/NF-001)', async ({ page }) => {
+  test('TC-1: Navigate to workflow list, create new, canvas loads (AC-001/002/NF-001)', async ({
+    page,
+  }) => {
     await page.goto('/cases/case-workflows');
 
     // NF-001: breadcrumb present
@@ -44,14 +46,18 @@ test.describe('Workflow Builder (IFC-031)', () => {
     await page.getByRole('button', { name: /create workflow/i }).click();
 
     // Canvas container should render (ReactFlow loads client-side)
-    await expect(page.locator('.react-flow, [data-testid="canvas-loading"]')).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('.react-flow, [data-testid="canvas-loading"]')).toBeVisible({
+      timeout: 10_000,
+    });
   });
 
   /**
    * TC-2: Full workflow creation flow
    * AC-002, AC-003, AC-004, AC-005
    */
-  test('TC-2: Create 3-node workflow, configure action node, save (AC-003/004/005)', async ({ page }) => {
+  test('TC-2: Create 3-node workflow, configure action node, save (AC-003/004/005)', async ({
+    page,
+  }) => {
     await page.goto('/cases/case-workflows');
     await page.getByRole('button', { name: /create workflow/i }).click();
 
@@ -91,13 +97,21 @@ test.describe('Workflow Builder (IFC-031)', () => {
 
     // AC-003: Connect Start→Action by dragging edge handles
     // Locate source (start) and target (action) connection handles
-    const startHandle = page.locator('.react-flow__node[data-type="start"] .react-flow__handle--source').first();
-    const actionHandle = page.locator('.react-flow__node[data-type="action"] .react-flow__handle--target').first();
+    const startHandle = page
+      .locator('.react-flow__node[data-type="start"] .react-flow__handle--source')
+      .first();
+    const actionHandle = page
+      .locator('.react-flow__node[data-type="action"] .react-flow__handle--target')
+      .first();
     await startHandle.dragTo(actionHandle);
 
     // Connect Action→End
-    const actionSourceHandle = page.locator('.react-flow__node[data-type="action"] .react-flow__handle--source').first();
-    const endHandle = page.locator('.react-flow__node[data-type="end"] .react-flow__handle--target').first();
+    const actionSourceHandle = page
+      .locator('.react-flow__node[data-type="action"] .react-flow__handle--source')
+      .first();
+    const endHandle = page
+      .locator('.react-flow__node[data-type="end"] .react-flow__handle--target')
+      .first();
     await actionSourceHandle.dragTo(endHandle);
 
     // AC-005: Save workflow — button should be enabled after valid topology
@@ -119,7 +133,9 @@ test.describe('Workflow Builder (IFC-031)', () => {
    * level (workflow.procedures.test.ts) because the UI auto-generates names
    * via timestamp and has no name input field.
    */
-  test('TC-3: Delete workflow, confirm, then create new workflow succeeds (AC-007)', async ({ page }) => {
+  test('TC-3: Delete workflow, confirm, then create new workflow succeeds (AC-007)', async ({
+    page,
+  }) => {
     test.slow(); // delete + full create cycle
 
     await page.goto('/cases/case-workflows');
@@ -160,8 +176,12 @@ test.describe('Workflow Builder (IFC-031)', () => {
     });
 
     // Connect Start → End
-    const startHandle = page.locator('.react-flow__node[data-type="start"] .react-flow__handle--source').first();
-    const endHandle = page.locator('.react-flow__node[data-type="end"] .react-flow__handle--target').first();
+    const startHandle = page
+      .locator('.react-flow__node[data-type="start"] .react-flow__handle--source')
+      .first();
+    const endHandle = page
+      .locator('.react-flow__node[data-type="end"] .react-flow__handle--target')
+      .first();
     await startHandle.dragTo(endHandle);
 
     // Save — redirect back to list proves create succeeded
@@ -188,7 +208,10 @@ test.describe('Workflow Builder (IFC-031)', () => {
     await firstToggle.click();
 
     // State should have flipped
-    await expect(firstToggle).toHaveAttribute('aria-checked', wasChecked === 'true' ? 'false' : 'true');
+    await expect(firstToggle).toHaveAttribute(
+      'aria-checked',
+      wasChecked === 'true' ? 'false' : 'true'
+    );
   });
 
   /**
