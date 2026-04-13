@@ -11,7 +11,7 @@
  * ReactFlow canvas (`canvas-drop-zone`), wired in ReactFlowComponent.
  */
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { Plus } from 'lucide-react';
 import {
@@ -27,8 +27,15 @@ import {
   SheetDescription,
   Button,
 } from '@intelliflow/ui';
-import { PALETTE_ITEMS, type PaletteItem } from '@/lib/workflow-types';
+import type { PaletteItem } from '@/lib/workflow-types';
 import { useIsMobile } from '@/hooks/useIsMobile';
+import { api } from '@/lib/api';
+import {
+  clearCustomNodeTypeRegistry,
+  getAllPaletteEntries,
+  registerCustomNodeType,
+} from './node-registry';
+import type { CustomNodeTypeDescriptor } from '@intelliflow/domain';
 
 // ---------------------------------------------------------------------------
 // Single draggable palette item
@@ -73,14 +80,55 @@ function PaletteItem({ item, onActivate }: { item: PaletteItem; onActivate?: () 
 // Palette entries (shared between desktop + mobile sheet)
 // ---------------------------------------------------------------------------
 
-function PaletteEntries({ onActivate }: { onActivate?: () => void }) {
+function PaletteEntries({
+  items,
+  onActivate,
+}: {
+  items: PaletteItem[];
+  onActivate?: () => void;
+}) {
   return (
     <ul className="flex flex-col gap-2">
-      {PALETTE_ITEMS.map((item) => (
+      {items.map((item) => (
         <PaletteItem key={item.nodeType} item={item} onActivate={onActivate} />
       ))}
     </ul>
   );
+}
+
+/**
+ * Hydrate the custom-node-type registry from tRPC and return the combined
+ * palette entries (canonical + custom).
+ *
+ * The tRPC query is non-blocking — on first paint we show just canonical
+ * entries, and re-render once custom types arrive. Failure is non-fatal.
+ */
+function useHydratedPaletteItems(): PaletteItem[] {
+  const query = api.customNodeType.list.useQuery(undefined, {
+    staleTime: 60_000,
+    retry: false,
+  });
+
+  useEffect(() => {
+    if (!query.data) return;
+    clearCustomNodeTypeRegistry();
+    for (const row of query.data.items) {
+      if (!row.isActive) continue;
+      const descriptor: CustomNodeTypeDescriptor = {
+        id: row.id,
+        typeId: row.typeId,
+        label: row.label,
+        description: row.description ?? undefined,
+        iconKey: row.iconKey,
+        accentClass: row.accentClass,
+        configSchema: (row.configSchema as CustomNodeTypeDescriptor['configSchema']) ?? [],
+        isActive: row.isActive,
+      };
+      registerCustomNodeType(descriptor);
+    }
+  }, [query.data]);
+
+  return useMemo(() => getAllPaletteEntries(), [query.data]);
 }
 
 // ---------------------------------------------------------------------------
@@ -90,6 +138,7 @@ function PaletteEntries({ onActivate }: { onActivate?: () => void }) {
 export function NodePalette() {
   const isMobile = useIsMobile();
   const [sheetOpen, setSheetOpen] = useState(false);
+  const items = useHydratedPaletteItems();
 
   if (!isMobile) {
     // Desktop: left rail
@@ -106,7 +155,7 @@ export function NodePalette() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <PaletteEntries />
+            <PaletteEntries items={items} />
           </CardContent>
         </Card>
       </aside>
@@ -135,7 +184,7 @@ export function NodePalette() {
             </SheetDescription>
           </SheetHeader>
           <div className="mt-4 overflow-y-auto">
-            <PaletteEntries onActivate={() => setSheetOpen(false)} />
+            <PaletteEntries items={items} onActivate={() => setSheetOpen(false)} />
           </div>
         </SheetContent>
       </Sheet>

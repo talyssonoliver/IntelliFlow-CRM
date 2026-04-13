@@ -28,6 +28,17 @@ vi.mock('@dnd-kit/core', () => ({
     React.createElement(React.Fragment, null, children),
 }));
 
+// Mock tRPC — custom-node-type hydration is non-fatal; return an empty list.
+vi.mock('@/lib/api', () => ({
+  api: {
+    customNodeType: {
+      list: {
+        useQuery: () => ({ data: { items: [] }, isLoading: false }),
+      },
+    },
+  },
+}));
+
 import { NodePalette } from '../NodePalette';
 
 describe('NodePalette', () => {

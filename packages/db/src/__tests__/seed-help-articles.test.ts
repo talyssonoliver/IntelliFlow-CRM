@@ -19,6 +19,7 @@ import {
   EXPECTED_SECTIONS,
   __setPrismaForTest,
   __TEST_FIXTURES__ as FIXTURES,
+  getPrisma,
   main,
   runAndExit,
 } from '../../prisma/seed-help-articles';
@@ -251,6 +252,23 @@ describe('seed-help-articles', () => {
     expect(errorSpy).toHaveBeenCalled();
     expect(exitSpy).toHaveBeenCalledWith(1);
     expect(mocks.mockDisconnect).toHaveBeenCalled();
+  });
+
+  it('T9b — getPrisma returns the injected mock without constructing a real client', () => {
+    const { fakePrisma } = buildFakePrisma();
+    __setPrismaForTest(fakePrisma);
+    expect(getPrisma()).toBe(fakePrisma);
+  });
+
+  it('T9c — getPrisma constructs a real client when nothing is injected', () => {
+    __setPrismaForTest(null);
+    process.env.DATABASE_URL = 'postgres://test@localhost/test';
+    // Exercises the lazy-init branch: without an injected mock, getPrisma
+    // constructs PrismaPg + PrismaClient on first call and caches them.
+    const client = getPrisma();
+    expect(client).toBeDefined();
+    expect(getPrisma()).toBe(client); // cached
+    __setPrismaForTest(null); // reset cache for later tests
   });
 
   it('T9 — $disconnect runs on both success and failure paths', async () => {

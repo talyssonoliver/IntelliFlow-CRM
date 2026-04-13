@@ -22,9 +22,10 @@ import {
   type NodeTypeId,
   defaultConfigForType,
   type WorkflowNodeConfig as DomainWorkflowNodeConfig,
+  type CustomNodeTypeDescriptor,
 } from '@intelliflow/domain';
 import { WorkflowNodeCard } from './WorkflowNodeCard';
-import type { PaletteItem } from '@/lib/workflow-types';
+import type { PaletteItem, WorkflowNodeType } from '@/lib/workflow-types';
 
 // ---------------------------------------------------------------------------
 // Canvas renderer map — one React component per node type
@@ -99,6 +100,76 @@ export function registerConfigForm(type: NodeTypeId, component: ConfigFormCompon
 
 export function getConfigForm(type: NodeTypeId): ConfigFormComponent | null {
   return configFormRegistry.get(type) ?? null;
+}
+
+// ---------------------------------------------------------------------------
+// Custom node type registry (IFC-031 FU-011)
+// ---------------------------------------------------------------------------
+
+/**
+ * Tenant-registered descriptors hydrated at mount via
+ * `api.customNodeType.list`. Keyed by `typeId`. Separate from the canonical
+ * registry so canonical behaviour is never mutated at runtime.
+ */
+const customDescriptorRegistry = new Map<string, CustomNodeTypeDescriptor>();
+
+/**
+ * Register a custom node type descriptor and attach a generic
+ * `WorkflowNodeCard` renderer + the dynamic form under the
+ * same config-form registry used by canonical forms.
+ */
+export function registerCustomNodeType(descriptor: CustomNodeTypeDescriptor): void {
+  customDescriptorRegistry.set(descriptor.typeId, descriptor);
+}
+
+export function unregisterCustomNodeType(typeId: string): void {
+  customDescriptorRegistry.delete(typeId);
+}
+
+export function getCustomNodeTypeDescriptor(
+  typeId: string
+): CustomNodeTypeDescriptor | undefined {
+  return customDescriptorRegistry.get(typeId);
+}
+
+export function clearCustomNodeTypeRegistry(): void {
+  customDescriptorRegistry.clear();
+}
+
+/**
+ * Palette entries including canonical + custom (active only). Custom
+ * entries are sorted by label for stable ordering.
+ */
+export function getAllPaletteEntries(): PaletteItem[] {
+  const canonical: PaletteItem[] = NODE_TYPE_IDS.map((id) => {
+    const meta = NODE_DISPLAY_META[id];
+    return {
+      nodeType: id as WorkflowNodeType,
+      label: meta.label,
+      description: meta.description,
+      iconName: meta.lucideIcon,
+    };
+  });
+  const custom: PaletteItem[] = Array.from(customDescriptorRegistry.values())
+    .filter((d) => d.isActive)
+    .sort((a, b) => a.label.localeCompare(b.label))
+    .map((d) => ({
+      // Custom types don't satisfy the WorkflowNodeType literal union, but the
+      // palette only uses this as an opaque drag identifier — runtime is a string.
+      nodeType: d.typeId as unknown as WorkflowNodeType,
+      label: d.label,
+      description: d.description ?? 'Custom node type',
+      iconName: 'Puzzle',
+    }));
+  return [...canonical, ...custom];
+}
+
+/**
+ * Is this a canonical catalog type? Consumers that need to differentiate
+ * rendering (e.g. generic card for custom types) can use this guard.
+ */
+export function isCanonicalNodeType(typeId: string): typeId is NodeTypeId {
+  return (NODE_TYPE_IDS as readonly string[]).includes(typeId);
 }
 
 // ---------------------------------------------------------------------------

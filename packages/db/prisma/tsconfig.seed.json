@@ -14,6 +14,7 @@
   },
   "include": [
     "seed-help-articles.ts",
+    "seed-help-articles.cli.ts",
     "data/help-articles.snapshot.json",
     "../src/seed-ids.ts",
     "../generated/prisma/**/*.ts"

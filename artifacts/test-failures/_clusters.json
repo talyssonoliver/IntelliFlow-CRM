@@ -1,23 +1,17 @@
 {
-  "projects_green": ["packages/domain", "packages/db", "packages/application", "packages/adapters"],
+  "projects_green": ["packages/domain", "packages/db", "packages/application", "packages/adapters", "apps/api"],
   "apps/api": {
-    "baseline_total": 5315,
-    "baseline_failed": 7,
+    "final_total": 5371,
+    "final_failed": 0,
     "clusters": [
-      { "id": "api-timezone-utils-en-gb-24h", "label": "test-bug", "status": "resolved", "failures_before": 3 },
-      {
-        "id": "api-supabase-mock-keys",
-        "label": "regression",
-        "status": "resolved",
-        "failures_before": 1,
-        "fix": "verifyToken() was missing the IFC-169 mock-key guard. When config.usingMockKeys is true, fell through to supabaseAdmin.auth.getUser() which hit real/missing Supabase endpoint and returned 'fetch failed'. Added early return at top of verifyToken: returns Error('Mock keys cannot verify real tokens') when config.usingMockKeys. This is a production fix — test codified intended IFC-169 behavior that production hadn't implemented."
-      },
+      { "id": "api-timezone-utils-en-gb-24h", "label": "test-bug", "status": "resolved" },
+      { "id": "api-supabase-mock-keys", "label": "regression", "status": "resolved" },
       {
         "id": "api-appointments-business-hours",
-        "label": "test-bug-or-regression",
-        "status": "pending",
+        "label": "test-bug",
+        "status": "resolved",
         "failures_before": 3,
-        "signature": "3 appointments.router.caller tests throwing 'Appointments must start and end between 07:00 and 19:00'"
+        "fix": "Tests used `new Date()` for startTime, making them wall-clock-dependent — passed during 07:00-19:00 UTC business hours, failed outside. Production correctly enforces business hours via assertWithinBusinessHours(). Pinned test `now` to '2026-04-14T10:00:00Z' (mid-business-hours); oneHourLater and the +86400000 reschedule time still land in business hours."
       }
     ]
   }

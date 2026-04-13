@@ -179,6 +179,3 @@ export async function runAndExit() {
   }
 }
 
-if (process.argv[1]?.endsWith('seed-help-articles.ts')) {
-  void runAndExit();
-}
