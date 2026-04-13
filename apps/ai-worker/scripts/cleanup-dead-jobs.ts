@@ -38,9 +38,7 @@ async function processFailedJob(
     return 'removed';
   }
 
-  console.log(
-    `  [KEPT] Job #${job.id} (tenant: ${tenantId}, reason: ${reason.slice(0, 80)})`
-  );
+  console.log(`  [KEPT] Job #${job.id} (tenant: ${tenantId}, reason: ${reason.slice(0, 80)})`);
   return 'kept';
 }
 

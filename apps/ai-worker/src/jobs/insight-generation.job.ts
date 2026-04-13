@@ -394,10 +394,7 @@ function capContacts(contacts: InsightJobData['staleContacts'], max: number) {
 // Job Handler Helpers
 // ============================================================================
 
-async function gatherTenantHeuristicData(
-  prisma: any,
-  tenantId: string
-) {
+async function gatherTenantHeuristicData(prisma: any, tenantId: string) {
   const SEVEN_DAYS_AGO = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   const FOURTEEN_DAYS_AGO = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
   return Promise.all([
@@ -408,7 +405,14 @@ async function gatherTenantHeuristicData(
     }),
     prisma.lead.findMany({
       where: { tenantId, score: { gte: 60 } },
-      select: { id: true, firstName: true, lastName: true, score: true, company: true, status: true },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        score: true,
+        company: true,
+        status: true,
+      },
       take: 20,
     }),
     prisma.task.count({
@@ -425,10 +429,28 @@ async function gatherTenantHeuristicData(
 function buildTenantJobPayload(
   tenantId: string,
   userId: string,
-  dealsAtRisk: Array<{ id: string; name: string; stage: string | null; value: unknown; updatedAt: Date }>,
-  hotLeads: Array<{ id: string; firstName: string; lastName: string; score: number | null; company: string | null; status: string | null }>,
+  dealsAtRisk: Array<{
+    id: string;
+    name: string;
+    stage: string | null;
+    value: unknown;
+    updatedAt: Date;
+  }>,
+  hotLeads: Array<{
+    id: string;
+    firstName: string;
+    lastName: string;
+    score: number | null;
+    company: string | null;
+    status: string | null;
+  }>,
   overdueCount: number,
-  staleContacts: Array<{ id: string; firstName: string; lastName: string; lastContactedAt: Date | null }>
+  staleContacts: Array<{
+    id: string;
+    firstName: string;
+    lastName: string;
+    lastContactedAt: Date | null;
+  }>
 ) {
   return {
     tenantId,
@@ -476,8 +498,15 @@ async function dispatchScheduledInsights(
     });
 
     if (activeTenants.length === 0) {
-      logger.info({ jobId: job.id }, 'No active tenants found — skipping scheduled insight refresh');
-      return { insightsCreated: 0, processingTimeMs: Date.now() - startTime, processedAt: new Date().toISOString() };
+      logger.info(
+        { jobId: job.id },
+        'No active tenants found — skipping scheduled insight refresh'
+      );
+      return {
+        insightsCreated: 0,
+        processingTimeMs: Date.now() - startTime,
+        processedAt: new Date().toISOString(),
+      };
     }
 
     const queue = new Queue(INSIGHT_QUEUE, {
@@ -489,24 +518,47 @@ async function dispatchScheduledInsights(
 
     for (const tenant of activeTenants) {
       const adminUser =
-        (await prisma.user.findFirst({ where: { tenantId: tenant.tenantId, role: 'ADMIN' }, select: { id: true } })) ??
-        (await prisma.user.findFirst({ where: { tenantId: tenant.tenantId }, select: { id: true } }));
+        (await prisma.user.findFirst({
+          where: { tenantId: tenant.tenantId, role: 'ADMIN' },
+          select: { id: true },
+        })) ??
+        (await prisma.user.findFirst({
+          where: { tenantId: tenant.tenantId },
+          select: { id: true },
+        }));
 
-      const [dealsAtRisk, hotLeads, overdueCount, staleContacts] = await gatherTenantHeuristicData(prisma, tenant.tenantId);
-      const payload = buildTenantJobPayload(tenant.tenantId, adminUser?.id ?? 'system', dealsAtRisk, hotLeads, overdueCount, staleContacts);
+      const [dealsAtRisk, hotLeads, overdueCount, staleContacts] = await gatherTenantHeuristicData(
+        prisma,
+        tenant.tenantId
+      );
+      const payload = buildTenantJobPayload(
+        tenant.tenantId,
+        adminUser?.id ?? 'system',
+        dealsAtRisk,
+        hotLeads,
+        overdueCount,
+        staleContacts
+      );
       await queue.add('generate-insights', payload);
       enqueued++;
     }
 
     await queue.close();
-    logger.info({ jobId: job.id, tenantsEnqueued: enqueued }, 'Scheduled insight dispatcher completed');
+    logger.info(
+      { jobId: job.id, tenantsEnqueued: enqueued },
+      'Scheduled insight dispatcher completed'
+    );
   } catch (error) {
     logger.error(
       { jobId: job.id, error: error instanceof Error ? error.message : String(error) },
       'Scheduled insight dispatcher failed'
     );
   }
-  return { insightsCreated: enqueued, processingTimeMs: Date.now() - startTime, processedAt: new Date().toISOString() };
+  return {
+    insightsCreated: enqueued,
+    processingTimeMs: Date.now() - startTime,
+    processedAt: new Date().toISOString(),
+  };
 }
 
 async function generateInsightsWithFallback(
@@ -514,7 +566,10 @@ async function generateInsightsWithFallback(
   chain: ReturnType<typeof getInsightGenerationChain>,
   cappedData: InsightJobData,
   LLM_TIMEOUT_MS: number
-): Promise<{ insights: Awaited<ReturnType<typeof chain.generateInsights>>; usedFallback: boolean }> {
+): Promise<{
+  insights: Awaited<ReturnType<typeof chain.generateInsights>>;
+  usedFallback: boolean;
+}> {
   try {
     const generation = await Promise.race([
       chain.generateInsightsWithMeta({
@@ -526,7 +581,10 @@ async function generateInsightsWithFallback(
         staleContacts: cappedData.staleContacts,
       }),
       new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error(`LLM inference timed out after ${LLM_TIMEOUT_MS}ms`)), LLM_TIMEOUT_MS)
+        setTimeout(
+          () => reject(new Error(`LLM inference timed out after ${LLM_TIMEOUT_MS}ms`)),
+          LLM_TIMEOUT_MS
+        )
       ),
     ]);
     return { insights: generation.insights, usedFallback: generation.source === 'fallback' };
@@ -541,7 +599,14 @@ async function generateInsightsWithFallback(
 
 async function persistInsightNotification(
   prisma: any,
-  insight: { entityType?: string | null; entityId?: string | null; type: string; priority: string; title: string; description: string },
+  insight: {
+    entityType?: string | null;
+    entityId?: string | null;
+    type: string;
+    priority: string;
+    title: string;
+    description: string;
+  },
   tenantId: string,
   userId: string
 ): Promise<void> {
@@ -562,7 +627,11 @@ async function persistInsightNotification(
 
   if (existingNotification) return;
 
-  const entityLink = buildEntityLink(insight.entityType ?? undefined, insight.entityId ?? undefined, insight.type);
+  const entityLink = buildEntityLink(
+    insight.entityType ?? undefined,
+    insight.entityId ?? undefined,
+    insight.type
+  );
   await prisma.notification.create({
     data: {
       tenantId,
@@ -587,23 +656,63 @@ async function persistInsightNotification(
 
 async function persistEntityActivity(
   prisma: any,
-  insight: { entityType?: string | null; entityId?: string | null; type: string; priority: string; title: string; description: string; confidence: number; suggestedActions: string[] },
+  insight: {
+    entityType?: string | null;
+    entityId?: string | null;
+    type: string;
+    priority: string;
+    title: string;
+    description: string;
+    confidence: number;
+    suggestedActions: string[];
+  },
   tenantId: string
 ): Promise<void> {
   if (!insight.entityId) return;
 
   const sentiment = insight.priority === 'critical' ? 'NEGATIVE' : 'POSITIVE';
-  const metadata = { insightType: insight.type, insightPriority: insight.priority, confidence: insight.confidence, suggestedActions: insight.suggestedActions };
+  const metadata = {
+    insightType: insight.type,
+    insightPriority: insight.priority,
+    confidence: insight.confidence,
+    suggestedActions: insight.suggestedActions,
+  };
 
   if (insight.entityType === 'lead') {
-    const existing = await prisma.leadActivity.findFirst({ where: { leadId: insight.entityId, title: insight.title, tenantId } });
+    const existing = await prisma.leadActivity.findFirst({
+      where: { leadId: insight.entityId, title: insight.title, tenantId },
+    });
     if (!existing) {
-      await prisma.leadActivity.create({ data: { leadId: insight.entityId, type: 'SCORE_UPDATE', title: insight.title, description: insight.description, userName: 'AI Insights', sentiment, metadata, tenantId } });
+      await prisma.leadActivity.create({
+        data: {
+          leadId: insight.entityId,
+          type: 'SCORE_UPDATE',
+          title: insight.title,
+          description: insight.description,
+          userName: 'AI Insights',
+          sentiment,
+          metadata,
+          tenantId,
+        },
+      });
     }
   } else if (insight.entityType === 'contact') {
-    const existing = await prisma.contactActivity.findFirst({ where: { contactId: insight.entityId, title: insight.title, tenantId } });
+    const existing = await prisma.contactActivity.findFirst({
+      where: { contactId: insight.entityId, title: insight.title, tenantId },
+    });
     if (!existing) {
-      await prisma.contactActivity.create({ data: { contactId: insight.entityId, type: 'NOTE', title: insight.title, description: insight.description, userName: 'AI Insights', sentiment, metadata, tenantId } });
+      await prisma.contactActivity.create({
+        data: {
+          contactId: insight.entityId,
+          type: 'NOTE',
+          title: insight.title,
+          description: insight.description,
+          userName: 'AI Insights',
+          sentiment,
+          metadata,
+          tenantId,
+        },
+      });
     }
   }
 }
@@ -632,7 +741,10 @@ async function persistInsightRecord(
   if (insight.entityId && insight.entityType) {
     const exists = await entityExists(prisma, insight.entityType, insight.entityId, tenantId);
     if (!exists) {
-      logger.info({ jobId: job.id, entityType: insight.entityType, entityId: insight.entityId }, 'Skipping insight — referenced entity no longer exists');
+      logger.info(
+        { jobId: job.id, entityType: insight.entityType, entityId: insight.entityId },
+        'Skipping insight — referenced entity no longer exists'
+      );
       return false;
     }
   }
@@ -787,7 +899,12 @@ export async function processInsightJob(job: Job<InsightJobData>): Promise<Insig
   const chain = getInsightGenerationChain();
   const llmStartTime = Date.now();
 
-  const { insights, usedFallback } = await generateInsightsWithFallback(job, chain, cappedData, LLM_TIMEOUT_MS);
+  const { insights, usedFallback } = await generateInsightsWithFallback(
+    job,
+    chain,
+    cappedData,
+    LLM_TIMEOUT_MS
+  );
 
   const llmDuration = Date.now() - llmStartTime;
 
@@ -842,7 +959,15 @@ export async function processInsightJob(job: Job<InsightJobData>): Promise<Insig
   let insightsCreated = 0;
 
   for (const insight of insights) {
-    const created = await persistInsightRecord(prisma, insight, tenantId, userId, validatedData, now, job);
+    const created = await persistInsightRecord(
+      prisma,
+      insight,
+      tenantId,
+      userId,
+      validatedData,
+      now,
+      job
+    );
     if (!created) continue;
     insightsCreated++;
     await persistHighPriorityInsightSideEffects(prisma, insight, tenantId, userId, now, job);
