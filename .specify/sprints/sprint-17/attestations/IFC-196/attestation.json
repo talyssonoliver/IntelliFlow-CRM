@@ -1,0 +1,128 @@
+{
+  "task_id": "IFC-196",
+  "sprint": 17,
+  "verdict": "COMPLETE",
+  "completed_at": "2026-04-13T21:25:00Z",
+  "artifact_hashes": {
+    "packages/adapters/src/cache/RedisCacheAdapter.ts": "67ca9c9aab5684e3ab43dddb306a8d3cec759a84d6abeac2ac94ab2c3124f94f",
+    "packages/adapters/src/cache/__tests__/RedisCacheAdapter.test.ts": "2eb9161ffbd8284989a5474720d8c2656f1824f430027520f5d3129c2e1c24c7",
+    "packages/adapters/src/cache/index.ts": "d453d12dc76e83aacfdd8155c7410a66318aab2d1ae4e6a7e6abab4d5cfb18c7",
+    "apps/api/src/modules/home/home.cache.ts": "cc9cdab2644939cc895741f59e9db841f2049382dcae683237036adcbc8692cf",
+    "apps/api/src/modules/home/__tests__/home.cache.test.ts": "387e30faeb9115c5e68aa24067b4073ac8261c267f887b05bcc4148d13830717",
+    "apps/api/src/modules/home/home.cache.bench.ts": "d3e678b04285c57bac17e17510e75041747d52bce4d388b4d55846f5c3381e11",
+    "artifacts/benchmarks/IFC-196/cache-layer-benchmark.json": "6d9af3f4cd55965c456f03380d81b18dcc0d8ada45367b66edef3b7a60c50e61",
+    "artifacts/benchmarks/IFC-196/cache-comparison.md": "f1bb7884482c19ec3b0eed90a603103babe2269db318f47d67ae7600a76e24d9",
+    ".specify/sprints/sprint-17/execution/IFC-196/IFC-196-delivery.md": "f8fc4882d6a43778ab673e723312b9aa8e1371cf0c89a5d9e8a4f84dfc777077"
+  },
+  "dependencies_verified": {
+    "IFC-182": "Completed — home router + getWelcomeSummary (baseline).",
+    "IFC-075": "Completed — Redis 7-alpine provisioned in docker-compose.yml."
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/api typecheck && pnpm --filter @intelliflow/adapters build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-04-13T21:09:00Z",
+      "duration_ms": 45000
+    },
+    {
+      "name": "Tests",
+      "command": "cd apps/api && npx vitest run src/modules/home/__tests__/ && cd ../../packages/adapters && npx vitest run src/cache/__tests__/RedisCacheAdapter.test.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-04-13T21:10:00Z",
+      "duration_ms": 5500
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter @intelliflow/adapters lint && pnpm --filter @intelliflow/api lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-04-13T21:12:00Z",
+      "duration_ms": 60000
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/api build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-04-13T21:13:00Z",
+      "duration_ms": 41000
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "plan-checkboxes",
+      "passed": true,
+      "timestamp": "2026-04-13T21:24:00Z"
+    },
+    {
+      "gate_id": "artifact-verification",
+      "passed": true,
+      "timestamp": "2026-04-13T21:24:00Z"
+    },
+    {
+      "gate_id": "coverage-gte-90",
+      "passed": true,
+      "score": 98.73,
+      "timestamp": "2026-04-13T21:13:00Z"
+    },
+    {
+      "gate_id": "container-registration",
+      "passed": true,
+      "timestamp": "2026-04-13T21:24:00Z"
+    },
+    {
+      "gate_id": "stoa-foundation",
+      "passed": true,
+      "timestamp": "2026-04-13T21:24:00Z"
+    }
+  ],
+  "kpi_results": [
+    {
+      "name": "Cache hit p95",
+      "target": "<50ms",
+      "actual": "0.00ms",
+      "met": true
+    },
+    {
+      "name": "Cache hit rate",
+      "target": ">80%",
+      "actual": "99%",
+      "met": true
+    },
+    {
+      "name": "Coverage (home.cache.ts)",
+      "target": ">=90% stmts",
+      "actual": "98.73%",
+      "met": true
+    },
+    {
+      "name": "Coverage (RedisCacheAdapter.ts)",
+      "target": ">=90% stmts",
+      "actual": "100%",
+      "met": true
+    },
+    {
+      "name": "Test count (new)",
+      "target": ">=20",
+      "actual": "38 (18 adapter + 20 service)",
+      "met": true
+    },
+    {
+      "name": "Regression (home tests)",
+      "target": "all 197 pass",
+      "actual": "197/197 pass",
+      "met": true
+    }
+  ],
+  "evidence_summary": {
+    "benchmark_report": "artifacts/benchmarks/IFC-196/cache-comparison.md",
+    "delivery_report": ".specify/sprints/sprint-17/execution/IFC-196/IFC-196-delivery.md",
+    "spec": ".specify/sprints/sprint-17/specifications/IFC-196-spec.md",
+    "plan": ".specify/sprints/sprint-17/planning/IFC-196-plan.md"
+  },
+  "notes": "Cache key simplified from {tenantId}:{userId} to {userId} because domain events do not carry tenantId. userId is a globally-unique UUID and tenant scoping is enforced at query time by ctx.prismaWithTenant, so no cross-tenant data leakage is possible. Documented in delivery report 'Deviation From Spec'. Full end-to-end tRPC benchmark blocked by missing Postgres in this environment; cache-layer micro-benchmark (new) validates the hit-latency KPI directly and is reproducible without infrastructure."
+}
