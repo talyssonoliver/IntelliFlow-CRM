@@ -58,9 +58,7 @@ process.env.ALLOW_DEV_AUTH_FALLBACK = 'true';
 // Scripts/runners: pass credentials explicitly for a clean baseline, e.g.
 //   dotenv -e .env.test -- tsx apps/api/src/shared/performance-benchmark.ts
 const benchmarkDbUrl =
-  process.env.TEST_DATABASE_URL ||
-  process.env.DIRECT_URL ||
-  process.env.DATABASE_URL;
+  process.env.TEST_DATABASE_URL || process.env.DIRECT_URL || process.env.DATABASE_URL;
 if (benchmarkDbUrl && benchmarkDbUrl !== process.env.DATABASE_URL) {
   process.env.DATABASE_URL = benchmarkDbUrl;
 }
@@ -208,7 +206,9 @@ async function safeBenchmark<T>(
       /too many clients already/.exec(message) ||
       /connect ECONNREFUSED/.exec(message) ||
       /Timed out/.exec(message);
-    const rootCause = rootCauseMatch ? rootCauseMatch[1] || rootCauseMatch[0] : message.split('\n')[0];
+    const rootCause = rootCauseMatch
+      ? rootCauseMatch[1] || rootCauseMatch[0]
+      : message.split('\n')[0];
     const truncated = rootCause.length > 200 ? rootCause.slice(0, 200) + '…' : rootCause;
     console.log(`\n  ❌ ${operation} could not complete: ${truncated}`);
     return {
@@ -341,51 +341,116 @@ async function runBenchmarks() {
 
     // CRM core entity hot paths — list + stats for every top-level resource
     results.push(
-      await safeBenchmark('lead.list', () => caller.lead.list(LIST_ARGS), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
+      await safeBenchmark(
+        'lead.list',
+        () => caller.lead.list(LIST_ARGS),
+        AUTHN_ITERATIONS,
+        AUTHN_PAUSE_MS
+      )
     );
     results.push(
       await safeBenchmark('lead.stats', () => caller.lead.stats(), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
     );
     results.push(
-      await safeBenchmark('contact.list', () => caller.contact.list(LIST_ARGS), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
+      await safeBenchmark(
+        'contact.list',
+        () => caller.contact.list(LIST_ARGS),
+        AUTHN_ITERATIONS,
+        AUTHN_PAUSE_MS
+      )
     );
     results.push(
-      await safeBenchmark('contact.stats', () => caller.contact.stats(), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
+      await safeBenchmark(
+        'contact.stats',
+        () => caller.contact.stats(),
+        AUTHN_ITERATIONS,
+        AUTHN_PAUSE_MS
+      )
     );
     results.push(
-      await safeBenchmark('account.list', () => caller.account.list(LIST_ARGS), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
+      await safeBenchmark(
+        'account.list',
+        () => caller.account.list(LIST_ARGS),
+        AUTHN_ITERATIONS,
+        AUTHN_PAUSE_MS
+      )
     );
     results.push(
-      await safeBenchmark('account.stats', () => caller.account.stats(), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
+      await safeBenchmark(
+        'account.stats',
+        () => caller.account.stats(),
+        AUTHN_ITERATIONS,
+        AUTHN_PAUSE_MS
+      )
     );
     results.push(
-      await safeBenchmark('opportunity.list', () => caller.opportunity.list(LIST_ARGS), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
+      await safeBenchmark(
+        'opportunity.list',
+        () => caller.opportunity.list(LIST_ARGS),
+        AUTHN_ITERATIONS,
+        AUTHN_PAUSE_MS
+      )
     );
     results.push(
-      await safeBenchmark('opportunity.stats', () => caller.opportunity.stats(), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
+      await safeBenchmark(
+        'opportunity.stats',
+        () => caller.opportunity.stats(),
+        AUTHN_ITERATIONS,
+        AUTHN_PAUSE_MS
+      )
     );
     results.push(
-      await safeBenchmark('task.list', () => caller.task.list(LIST_ARGS), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
+      await safeBenchmark(
+        'task.list',
+        () => caller.task.list(LIST_ARGS),
+        AUTHN_ITERATIONS,
+        AUTHN_PAUSE_MS
+      )
     );
     results.push(
       await safeBenchmark('task.stats', () => caller.task.stats(), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
     );
     results.push(
-      await safeBenchmark('ticket.list', () => caller.ticket.list(LIST_ARGS), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
+      await safeBenchmark(
+        'ticket.list',
+        () => caller.ticket.list(LIST_ARGS),
+        AUTHN_ITERATIONS,
+        AUTHN_PAUSE_MS
+      )
     );
     results.push(
-      await safeBenchmark('ticket.stats', () => caller.ticket.stats({ timeWindow: 'all' }), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
+      await safeBenchmark(
+        'ticket.stats',
+        () => caller.ticket.stats({ timeWindow: 'all' }),
+        AUTHN_ITERATIONS,
+        AUTHN_PAUSE_MS
+      )
     );
 
     // Home dashboard — hit on every authenticated landing
     results.push(
-      await safeBenchmark('home.getWelcomeSummary', () => caller.home.getWelcomeSummary(), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
+      await safeBenchmark(
+        'home.getWelcomeSummary',
+        () => caller.home.getWelcomeSummary(),
+        AUTHN_ITERATIONS,
+        AUTHN_PAUSE_MS
+      )
     );
     results.push(
-      await safeBenchmark('home.getAIInsights', () => caller.home.getAIInsights(), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
+      await safeBenchmark(
+        'home.getAIInsights',
+        () => caller.home.getAIInsights(),
+        AUTHN_ITERATIONS,
+        AUTHN_PAUSE_MS
+      )
     );
     results.push(
-      await safeBenchmark('home.getDailyGoal', () => caller.home.getDailyGoal(), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
+      await safeBenchmark(
+        'home.getDailyGoal',
+        () => caller.home.getDailyGoal(),
+        AUTHN_ITERATIONS,
+        AUTHN_PAUSE_MS
+      )
     );
 
     // Analytics — frequent aggregates
@@ -397,7 +462,12 @@ async function runBenchmarks() {
       endDate: today.toISOString(),
     };
     results.push(
-      await safeBenchmark('analytics.getOverview', () => caller.analytics.getOverview({}), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
+      await safeBenchmark(
+        'analytics.getOverview',
+        () => caller.analytics.getOverview({}),
+        AUTHN_ITERATIONS,
+        AUTHN_PAUSE_MS
+      )
     );
     results.push(
       await safeBenchmark(
@@ -410,28 +480,58 @@ async function runBenchmarks() {
 
     // Notifications — polled by the nav bell
     results.push(
-      await safeBenchmark('notifications.list', () => caller.notifications.list({}), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
+      await safeBenchmark(
+        'notifications.list',
+        () => caller.notifications.list({}),
+        AUTHN_ITERATIONS,
+        AUTHN_PAUSE_MS
+      )
     );
     results.push(
-      await safeBenchmark('notifications.getUnreadCount', () => caller.notifications.getUnreadCount(), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
+      await safeBenchmark(
+        'notifications.getUnreadCount',
+        () => caller.notifications.getUnreadCount(),
+        AUTHN_ITERATIONS,
+        AUTHN_PAUSE_MS
+      )
     );
 
     // Activity feed — unified entity timeline
     results.push(
-      await safeBenchmark('activityFeed.getUnifiedFeed', () => caller.activityFeed.getUnifiedFeed({}), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
+      await safeBenchmark(
+        'activityFeed.getUnifiedFeed',
+        () => caller.activityFeed.getUnifiedFeed({}),
+        AUTHN_ITERATIONS,
+        AUTHN_PAUSE_MS
+      )
     );
 
     // Gates / identity — called on every protected route render
     results.push(
-      await safeBenchmark('moduleAccess.getEnabledModules', () => caller.moduleAccess.getEnabledModules(), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
+      await safeBenchmark(
+        'moduleAccess.getEnabledModules',
+        () => caller.moduleAccess.getEnabledModules(),
+        AUTHN_ITERATIONS,
+        AUTHN_PAUSE_MS
+      )
     );
     results.push(
-      await safeBenchmark('user.getProfile', () => caller.user.getProfile(), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
+      await safeBenchmark(
+        'user.getProfile',
+        () => caller.user.getProfile(),
+        AUTHN_ITERATIONS,
+        AUTHN_PAUSE_MS
+      )
     );
 
     // Global search — uses a seeded term guaranteed to match at least one row
     results.push(
-      await safeBenchmark('globalSearch.query', () => caller.globalSearch.query({ query: 'sarah', limit: 5 }), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
+      await safeBenchmark(
+        'globalSearch.query',
+        () => caller.globalSearch.query({ query: 'sarah', limit: 5 }),
+        AUTHN_ITERATIONS,
+        AUTHN_PAUSE_MS
+      )
     );
 
     // Print summary
@@ -533,19 +633,25 @@ async function runBenchmarks() {
     //  - 1: at least one completed benchmark failed the KPI
     //  - 2: every benchmark errored (no useful signal)
     if (errored > 0) {
-      const anyColumnMissing = results.some((r) => r.error?.includes('does not exist in the current database'));
+      const anyColumnMissing = results.some((r) =>
+        r.error?.includes('does not exist in the current database')
+      );
       const anyTooManyClients = results.some((r) => r.error?.includes('too many clients'));
       if (anyColumnMissing) {
         console.log(
           '\n  💡 Hint: at least one benchmark failed with a missing column. The test DB likely needs'
         );
-        console.log('     migrations:  dotenv -e .env.test -- pnpm --filter @intelliflow/db db:migrate');
+        console.log(
+          '     migrations:  dotenv -e .env.test -- pnpm --filter @intelliflow/db db:migrate'
+        );
       }
       if (anyTooManyClients) {
         console.log(
           '\n  💡 Hint: "too many clients already" usually means the Postgres URL has `connection_limit=1`'
         );
-        console.log('     (Supabase dev safety flag). Run with:  dotenv -e .env.test -- tsx <this file>');
+        console.log(
+          '     (Supabase dev safety flag). Run with:  dotenv -e .env.test -- tsx <this file>'
+        );
       }
     }
 
@@ -554,7 +660,9 @@ async function runBenchmarks() {
       console.log('═══════════════════════════════════════════\n');
       process.exit(2);
     } else if (failedMeasured === 0) {
-      console.log(`  ✅ ${passedTests}/${measured.length} BENCHMARKS PASSED IFC-003 KPI (p95 < 50ms)`);
+      console.log(
+        `  ✅ ${passedTests}/${measured.length} BENCHMARKS PASSED IFC-003 KPI (p95 < 50ms)`
+      );
       if (errored > 0) {
         console.log(`  ⚠️  ${errored} benchmark(s) could not run — see errors above`);
       }

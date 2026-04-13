@@ -203,11 +203,7 @@ function getLocalHour(date: Date, timezone?: string): number {
  * Validates that the appointment's start and end fall within business hours
  * (07:00 – 19:00) in the provided timezone. Throws a BAD_REQUEST if outside.
  */
-function assertWithinBusinessHours(
-  startTime: Date,
-  endTime: Date,
-  timezone?: string
-): void {
+function assertWithinBusinessHours(startTime: Date, endTime: Date, timezone?: string): void {
   const startHour = getLocalHour(startTime, timezone);
   const endHour = getLocalHour(endTime, timezone);
   const startWithinDay = startHour >= BUSINESS_HOURS_START && startHour < BUSINESS_HOURS_END;

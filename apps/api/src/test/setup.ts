@@ -148,6 +148,8 @@ export const mockServices = {
   // should override via createTestContext({ services: { notificationOrchestrator: ... } }).
   notificationOrchestrator: undefined as any,
   aiMonitoringService: mockDeep<any>(),
+  // IFC-196: homeCache undefined so router tests fall back to direct compute.
+  homeCache: undefined as any,
 };
 
 /**

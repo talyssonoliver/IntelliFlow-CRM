@@ -54,6 +54,8 @@ export type Services = {
   notificationOrchestrator: Container['notificationOrchestrator'];
   // IFC-297: AI Monitoring persistence service
   aiMonitoringService: Container['aiMonitoringService'];
+  // IFC-196: Home Page Response Caching (Redis read-through + event-driven invalidation)
+  homeCache: Container['homeCacheService'];
   // Optional future services
   feedback?: unknown;
 };
@@ -179,6 +181,7 @@ function buildServicesFromContainer(): Services {
     experiment: container.experimentService,
     notificationOrchestrator: container.notificationOrchestrator,
     aiMonitoringService: container.aiMonitoringService,
+    homeCache: container.homeCacheService,
   };
 }
 
@@ -331,7 +334,10 @@ function extractLocale(meta: Record<string, unknown>): string | null {
   return locale || null;
 }
 
-function extractProvider(supabaseUser: { app_metadata?: Record<string, unknown>; user_metadata?: Record<string, unknown> }): string | null {
+function extractProvider(supabaseUser: {
+  app_metadata?: Record<string, unknown>;
+  user_metadata?: Record<string, unknown>;
+}): string | null {
   const appMeta = supabaseUser.app_metadata ?? {};
   const userMeta = supabaseUser.user_metadata ?? {};
   return (
@@ -342,7 +348,10 @@ function extractProvider(supabaseUser: { app_metadata?: Record<string, unknown>;
   );
 }
 
-function extractEmailVerified(supabaseUser: { email_confirmed_at?: string | null; user_metadata?: Record<string, unknown> }): boolean {
+function extractEmailVerified(supabaseUser: {
+  email_confirmed_at?: string | null;
+  user_metadata?: Record<string, unknown>;
+}): boolean {
   if (supabaseUser.email_confirmed_at) return true;
   const meta = supabaseUser.user_metadata ?? {};
   return Boolean(meta.email_verified);

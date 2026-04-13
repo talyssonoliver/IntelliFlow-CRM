@@ -429,7 +429,11 @@ export async function verifyToken(
     try {
       const { data, error } = await supabaseAdmin.auth.getUser(token);
       if (error) {
-        console.error('[verifyToken] Both local and remote verification failed:', jwtError, error.message);
+        console.error(
+          '[verifyToken] Both local and remote verification failed:',
+          jwtError,
+          error.message
+        );
       }
       return { user: data.user, error };
     } catch (unexpectedError) {

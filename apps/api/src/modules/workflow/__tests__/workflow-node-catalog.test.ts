@@ -22,14 +22,11 @@ import {
 } from '@intelliflow/domain';
 
 describe('WorkflowNodeConfigSchema (IFC-031 Phase D)', () => {
-  it.each(NODE_TYPE_IDS)(
-    'accepts the default config for %s',
-    (type) => {
-      const cfg = defaultConfigForType(type);
-      const result = WorkflowNodeConfigSchema.safeParse(cfg);
-      expect(result.success).toBe(true);
-    },
-  );
+  it.each(NODE_TYPE_IDS)('accepts the default config for %s', (type) => {
+    const cfg = defaultConfigForType(type);
+    const result = WorkflowNodeConfigSchema.safeParse(cfg);
+    expect(result.success).toBe(true);
+  });
 
   it('rejects an action node with an unknown actionType', () => {
     const result = WorkflowNodeConfigSchema.safeParse({

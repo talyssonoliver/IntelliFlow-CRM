@@ -17,11 +17,7 @@
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { Prisma } from '@intelliflow/db';
-import {
-  WorkflowNodeConfigSchema,
-  NODE_TYPE_IDS,
-  isNodeTypeId,
-} from '@intelliflow/domain';
+import { WorkflowNodeConfigSchema, NODE_TYPE_IDS, isNodeTypeId } from '@intelliflow/domain';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
 
 // ---------------------------------------------------------------------------
@@ -237,7 +233,7 @@ export type WorkflowExecutionStatus = 'RUNNING' | 'PAUSED' | 'COMPLETED' | 'FAIL
 export function mergeSteps(
   defs: WorkflowStepDef[],
   results: WorkflowStepResult[],
-  status: WorkflowExecutionStatus,
+  status: WorkflowExecutionStatus
 ): WorkflowMergedStep[] {
   const resultByStep = new Map<number, WorkflowStepResult>();
   for (const r of results) resultByStep.set(r.step, r);
@@ -425,7 +421,9 @@ function validateWorkflowGraph(graph: GraphInput): string[] {
     if (s.type === 'decision') {
       const out = outgoing.get(`node-${s.id}`)?.length ?? 0;
       if (out < 2) {
-        errors.push(`Decision nodes must have at least 2 outgoing connections (node ${s.id} has ${out})`);
+        errors.push(
+          `Decision nodes must have at least 2 outgoing connections (node ${s.id} has ${out})`
+        );
       }
     }
   }
@@ -459,119 +457,125 @@ export const workflowRouter = createTRPCRouter({
   // -------------------------------------------------------------------------
 
   /** Create a new workflow definition. */
-  create: tenantProcedure
-    .input(workflowCreateInput)
-    .mutation(async ({ ctx, input }) => {
-      try {
-        // Server-side topology validation (AC-008)
-        const topologyErrors = validateWorkflowGraph({
-          steps: input.steps,
-          edges: input.edges ?? [],
-        });
-        if (topologyErrors.length > 0) {
-          throw new TRPCError({
-            code: 'BAD_REQUEST',
-            message: `Topology validation failed: ${topologyErrors.join('; ')}`,
-          });
-        }
-
-        const tenantId = ctx.tenant.tenantId;
-        const createdBy = ctx.user!.userId;
-        // Store both nodes and edges in the `steps` JSON column as an envelope
-        const graphPayload = {
-          nodes: input.steps,
-          edges: input.edges ?? [],
-        };
-        return await ctx.prismaWithTenant.workflowDefinition.create({
-          data: {
-            name: input.name,
-            description: input.description,
-            category: input.category,
-            triggerType: input.triggerType,
-            triggerConfig: input.triggerConfig as Prisma.InputJsonValue,
-            steps: graphPayload as unknown as Prisma.InputJsonValue,
-            tenantId,
-            createdBy,
-          },
-        });
-      } catch (error: unknown) {
-        // Re-throw TRPCErrors (e.g. BAD_REQUEST from topology validation) as-is
-        if (error instanceof TRPCError) throw error;
-        if ((error as { code?: string }).code === 'P2002') {
-          throw new TRPCError({
-            code: 'CONFLICT',
-            message: 'A workflow with this name already exists in this tenant',
-          });
-        }
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to create workflow',
-          cause: error,
-        });
-      }
-    }),
-
-  /** Update an existing workflow definition (increments version). */
-  update: tenantProcedure
-    .input(workflowUpdateInput)
-    .mutation(async ({ ctx, input }) => {
-      const tenantId = ctx.tenant.tenantId;
-      const { id, ...data } = input;
-
-      const existing = await ctx.prismaWithTenant.workflowDefinition.findFirst({
-        where: { id, tenantId, deletedAt: null },
+  create: tenantProcedure.input(workflowCreateInput).mutation(async ({ ctx, input }) => {
+    try {
+      // Server-side topology validation (AC-008)
+      const topologyErrors = validateWorkflowGraph({
+        steps: input.steps,
+        edges: input.edges ?? [],
       });
-      if (!existing) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Workflow not found' });
-      }
-
-      // Server-side topology validation when steps or edges change (AC-008)
-      if (data.steps || data.edges) {
-        const prevGraph = existing.steps as Record<string, unknown> | unknown[];
-        const prevNodes = Array.isArray(prevGraph)
-          ? prevGraph as Array<{ id: number; type: string }>
-          : ((prevGraph as Record<string, unknown>)?.nodes ?? []) as Array<{ id: number; type: string }>;
-        const prevEdges = Array.isArray(prevGraph)
-          ? []
-          : ((prevGraph as Record<string, unknown>)?.edges ?? []) as Array<{ source: string; target: string }>;
-        const topologyErrors = validateWorkflowGraph({
-          steps: data.steps ?? prevNodes,
-          edges: (data.edges ?? prevEdges) as Array<{ source: string; target: string }>,
+      if (topologyErrors.length > 0) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: `Topology validation failed: ${topologyErrors.join('; ')}`,
         });
-        if (topologyErrors.length > 0) {
-          throw new TRPCError({
-            code: 'BAD_REQUEST',
-            message: `Topology validation failed: ${topologyErrors.join('; ')}`,
-          });
-        }
       }
 
-      return ctx.prismaWithTenant.workflowDefinition.update({
-        where: { id },
+      const tenantId = ctx.tenant.tenantId;
+      const createdBy = ctx.user!.userId;
+      // Store both nodes and edges in the `steps` JSON column as an envelope
+      const graphPayload = {
+        nodes: input.steps,
+        edges: input.edges ?? [],
+      };
+      return await ctx.prismaWithTenant.workflowDefinition.create({
         data: {
-          ...(data.name !== undefined && { name: data.name }),
-          ...(data.description !== undefined && { description: data.description }),
-          ...(data.category !== undefined && { category: data.category }),
-          ...(data.triggerType !== undefined && { triggerType: data.triggerType }),
-          ...(data.triggerConfig !== undefined && {
-            triggerConfig: data.triggerConfig as Prisma.InputJsonValue,
-          }),
-          ...((data.steps !== undefined || data.edges !== undefined) && {
-            steps: (() => {
-              // Merge nodes + edges into the graph envelope
-              const prevGraph = existing.steps as Record<string, unknown> | unknown[] | null;
-              const prevNodes = Array.isArray(prevGraph) ? prevGraph : (prevGraph as Record<string, unknown>)?.nodes ?? [];
-              const prevEdges = Array.isArray(prevGraph) ? [] : ((prevGraph as Record<string, unknown>)?.edges ?? []);
-              return {
-                nodes: data.steps ?? prevNodes,
-                edges: data.edges ?? prevEdges,
-              } as unknown as Prisma.InputJsonValue;
-            })(),
-          }),
-          version: existing.version + 1,
+          name: input.name,
+          description: input.description,
+          category: input.category,
+          triggerType: input.triggerType,
+          triggerConfig: input.triggerConfig as Prisma.InputJsonValue,
+          steps: graphPayload as unknown as Prisma.InputJsonValue,
+          tenantId,
+          createdBy,
         },
       });
-    }),
+    } catch (error: unknown) {
+      // Re-throw TRPCErrors (e.g. BAD_REQUEST from topology validation) as-is
+      if (error instanceof TRPCError) throw error;
+      if ((error as { code?: string }).code === 'P2002') {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: 'A workflow with this name already exists in this tenant',
+        });
+      }
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Failed to create workflow',
+        cause: error,
+      });
+    }
+  }),
+
+  /** Update an existing workflow definition (increments version). */
+  update: tenantProcedure.input(workflowUpdateInput).mutation(async ({ ctx, input }) => {
+    const tenantId = ctx.tenant.tenantId;
+    const { id, ...data } = input;
+
+    const existing = await ctx.prismaWithTenant.workflowDefinition.findFirst({
+      where: { id, tenantId, deletedAt: null },
+    });
+    if (!existing) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Workflow not found' });
+    }
+
+    // Server-side topology validation when steps or edges change (AC-008)
+    if (data.steps || data.edges) {
+      const prevGraph = existing.steps as Record<string, unknown> | unknown[];
+      const prevNodes = Array.isArray(prevGraph)
+        ? (prevGraph as Array<{ id: number; type: string }>)
+        : (((prevGraph as Record<string, unknown>)?.nodes ?? []) as Array<{
+            id: number;
+            type: string;
+          }>);
+      const prevEdges = Array.isArray(prevGraph)
+        ? []
+        : (((prevGraph as Record<string, unknown>)?.edges ?? []) as Array<{
+            source: string;
+            target: string;
+          }>);
+      const topologyErrors = validateWorkflowGraph({
+        steps: data.steps ?? prevNodes,
+        edges: (data.edges ?? prevEdges) as Array<{ source: string; target: string }>,
+      });
+      if (topologyErrors.length > 0) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: `Topology validation failed: ${topologyErrors.join('; ')}`,
+        });
+      }
+    }
+
+    return ctx.prismaWithTenant.workflowDefinition.update({
+      where: { id },
+      data: {
+        ...(data.name !== undefined && { name: data.name }),
+        ...(data.description !== undefined && { description: data.description }),
+        ...(data.category !== undefined && { category: data.category }),
+        ...(data.triggerType !== undefined && { triggerType: data.triggerType }),
+        ...(data.triggerConfig !== undefined && {
+          triggerConfig: data.triggerConfig as Prisma.InputJsonValue,
+        }),
+        ...((data.steps !== undefined || data.edges !== undefined) && {
+          steps: (() => {
+            // Merge nodes + edges into the graph envelope
+            const prevGraph = existing.steps as Record<string, unknown> | unknown[] | null;
+            const prevNodes = Array.isArray(prevGraph)
+              ? prevGraph
+              : ((prevGraph as Record<string, unknown>)?.nodes ?? []);
+            const prevEdges = Array.isArray(prevGraph)
+              ? []
+              : ((prevGraph as Record<string, unknown>)?.edges ?? []);
+            return {
+              nodes: data.steps ?? prevNodes,
+              edges: data.edges ?? prevEdges,
+            } as unknown as Prisma.InputJsonValue;
+          })(),
+        }),
+        version: existing.version + 1,
+      },
+    });
+  }),
 
   /** Soft-delete a workflow definition (sets deletedAt, does not remove). */
   delete: tenantProcedure
@@ -617,7 +621,7 @@ export const workflowRouter = createTRPCRouter({
       z.object({
         cursor: z.string().optional(),
         limit: z.number().min(1).max(100).default(20),
-      }),
+      })
     )
     .query(async ({ ctx, input }) => {
       const tenantId = ctx.tenant.tenantId;
@@ -640,15 +644,13 @@ export const workflowRouter = createTRPCRouter({
     }),
 
   /** Get a single workflow definition by ID (excludes soft-deleted). */
-  getById: tenantProcedure
-    .input(z.object({ id: z.string() }))
-    .query(async ({ ctx, input }) => {
-      const tenantId = ctx.tenant.tenantId;
-      const workflow = await ctx.prismaWithTenant.workflowDefinition.findFirst({
-        where: { id: input.id, tenantId, deletedAt: null },
-      });
-      return workflow ?? null;
-    }),
+  getById: tenantProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
+    const tenantId = ctx.tenant.tenantId;
+    const workflow = await ctx.prismaWithTenant.workflowDefinition.findFirst({
+      where: { id: input.id, tenantId, deletedAt: null },
+    });
+    return workflow ?? null;
+  }),
 
   /**
    * PG-193 — Fetch a single WorkflowExecution by ID, joined with its
@@ -690,7 +692,7 @@ export const workflowRouter = createTRPCRouter({
       z.object({
         entityType: z.string().min(1),
         entityId: z.string().min(1),
-      }),
+      })
     )
     .query(async ({ ctx, input }) => {
       try {

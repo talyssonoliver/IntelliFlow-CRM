@@ -127,4 +127,53 @@ describe('User Router', () => {
       await expect(noUserIdCaller.updateTimezone({ timezone: 'UTC' })).rejects.toThrow();
     });
   });
+
+  describe('list (IFC-031 FU-005)', () => {
+    it('returns users filtered by search term', async () => {
+      prismaMock.user.findMany.mockResolvedValue([
+        {
+          id: TEST_UUIDS.user1,
+          name: 'Alice Example',
+          email: 'alice@example.com',
+          givenName: 'Alice',
+          familyName: 'Example',
+          avatarUrl: null,
+        },
+      ] as any);
+
+      const result = await caller.list({ search: 'alice', limit: 5 });
+
+      expect(result.users).toHaveLength(1);
+      expect(result.users[0]).toMatchObject({
+        id: TEST_UUIDS.user1,
+        name: 'Alice Example',
+        email: 'alice@example.com',
+        avatarUrl: null,
+      });
+    });
+
+    it('falls back to composed name or email when name is null', async () => {
+      prismaMock.user.findMany.mockResolvedValue([
+        {
+          id: TEST_UUIDS.user2,
+          name: null,
+          email: 'bob@example.com',
+          givenName: 'Bob',
+          familyName: 'Tester',
+          avatarUrl: null,
+        },
+      ] as any);
+
+      const result = await caller.list({ limit: 5 });
+
+      expect(result.users[0].name).toBe('Bob Tester');
+    });
+
+    it('throws UNAUTHORIZED without auth context', async () => {
+      const publicCtx = createPublicContext();
+      const publicCaller = userRouter.createCaller(publicCtx);
+
+      await expect(publicCaller.list({ limit: 5 })).rejects.toThrow();
+    });
+  });
 });

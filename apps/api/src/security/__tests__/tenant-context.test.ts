@@ -179,8 +179,13 @@ describe('Tenant Context', () => {
         expect(capturedQueryConfig).not.toBeNull();
 
         // Extract and invoke the $allOperations callback directly
-        const allModels = (capturedQueryConfig as unknown as Record<string, unknown>)['$allModels'] as Record<string, unknown>;
-        const allOperations = allModels['$allOperations'] as (opts: { args: unknown; query: (a: unknown) => Promise<unknown> }) => Promise<unknown>;
+        const allModels = (capturedQueryConfig as unknown as Record<string, unknown>)[
+          '$allModels'
+        ] as Record<string, unknown>;
+        const allOperations = allModels['$allOperations'] as (opts: {
+          args: unknown;
+          query: (a: unknown) => Promise<unknown>;
+        }) => Promise<unknown>;
 
         const mockQuery = vi.fn().mockResolvedValue('result');
         mockPrisma.$executeRawUnsafe.mockResolvedValue(undefined);
@@ -219,9 +224,9 @@ describe('Tenant Context', () => {
           canAccessAllTenantData: true,
         };
 
-        expect(() =>
-          createTenantScopedPrisma(mockPrisma as any, tenant)
-        ).toThrow(/invalid tenantId format/);
+        expect(() => createTenantScopedPrisma(mockPrisma as any, tenant)).toThrow(
+          /invalid tenantId format/
+        );
       } finally {
         if (prevVitest === undefined) delete process.env.VITEST;
         else process.env.VITEST = prevVitest;

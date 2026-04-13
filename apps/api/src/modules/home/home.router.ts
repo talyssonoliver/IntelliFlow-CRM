@@ -1223,194 +1223,211 @@ export const homeRouter = createTRPCRouter({
    * Uses progressive time fallbacks for meaningful data display
    */
   getWelcomeSummary: tenantProcedure.query(async ({ ctx }): Promise<WelcomeSummary> => {
-    const startTime = performance.now();
-    const tenantId = ctx.tenant.tenantId;
-    const userId = ctx.tenant.userId;
-    const now = new Date();
-    const userTz = safeTimezone(ctx.user?.timezone);
-    const todayStart = startOfDayInTimezone(userTz, now);
-    const yesterdayStart = new Date(todayStart.getTime() - 24 * 60 * 60 * 1000);
-    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
-    const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-    const twoMonthsAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+    // IFC-196: Delegate to HomeCacheService when container wired it up.
+    // Falls through to direct compute for legacy tests that don't install it.
+    const compute = async (): Promise<WelcomeSummary> => {
+      const startTime = performance.now();
+      const tenantId = ctx.tenant.tenantId;
+      const userId = ctx.tenant.userId;
+      const now = new Date();
+      const userTz = safeTimezone(ctx.user?.timezone);
+      const todayStart = startOfDayInTimezone(userTz, now);
+      const yesterdayStart = new Date(todayStart.getTime() - 24 * 60 * 60 * 1000);
+      const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+      const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      const twoMonthsAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
 
-    // Parallel fetch user + all stats (user query was previously sequential)
-    const [
-      user,
-      highPriorityTasks,
-      overdueTasks,
-      newLeadsSinceYesterday,
-      newLeadsThisWeek,
-      newLeadsThisMonth,
-      totalLeads,
-      appointmentsToday,
-      dealsClosedThisWeek,
-      dealsClosedLastWeek,
-      dealsClosedThisMonth,
-      dealsClosedLastMonth,
-    ] = await Promise.all([
-      // User name (timezone comes from ctx.user session)
-      ctx.prismaWithTenant.user.findUnique({
-        where: { id: userId },
-        select: { name: true, email: true },
-      }),
-      // High priority tasks not completed (includes URGENT)
-      ctx.prismaWithTenant.task.count({
-        where: {
-          tenantId,
-          ownerId: userId,
-          priority: { in: ['HIGH', 'URGENT'] },
-          status: { notIn: ['COMPLETED', 'CANCELLED'] },
-        },
-      }),
-      // Overdue tasks
-      ctx.prismaWithTenant.task.count({
-        where: {
-          tenantId,
-          ownerId: userId,
-          dueDate: { lt: now },
-          status: { notIn: ['COMPLETED', 'CANCELLED'] },
-        },
-      }),
-      // New leads since yesterday
-      ctx.prismaWithTenant.lead.count({
-        where: {
-          tenantId,
-          ownerId: userId,
-          createdAt: { gte: yesterdayStart },
-        },
-      }),
-      // New leads this week
-      ctx.prismaWithTenant.lead.count({
-        where: {
-          tenantId,
-          ownerId: userId,
-          createdAt: { gte: weekAgo },
-        },
-      }),
-      // New leads this month
-      ctx.prismaWithTenant.lead.count({
-        where: {
-          tenantId,
-          ownerId: userId,
-          createdAt: { gte: monthAgo },
-        },
-      }),
-      // Total leads (all time)
-      ctx.prismaWithTenant.lead.count({
-        where: {
-          tenantId,
-          ownerId: userId,
-        },
-      }),
-      // Appointments today
-      ctx.prismaWithTenant.appointment.count({
-        where: {
-          OR: [{ organizerId: userId }, { attendees: { some: { userId } } }],
-          startTime: { gte: todayStart },
-          endTime: { lt: new Date(todayStart.getTime() + 24 * 60 * 60 * 1000) },
-          status: { notIn: ['CANCELLED', 'NO_SHOW'] },
-        },
-      }),
-      // Deals closed this week
-      ctx.prismaWithTenant.opportunity.count({
-        where: {
-          tenantId,
-          ownerId: userId,
-          stage: 'CLOSED_WON',
-          closedAt: { gte: weekAgo },
-        },
-      }),
-      // Deals closed last week (for comparison)
-      ctx.prismaWithTenant.opportunity.count({
-        where: {
-          tenantId,
-          ownerId: userId,
-          stage: 'CLOSED_WON',
-          closedAt: { gte: twoWeeksAgo, lt: weekAgo },
-        },
-      }),
-      // Deals closed this month
-      ctx.prismaWithTenant.opportunity.count({
-        where: {
-          tenantId,
-          ownerId: userId,
-          stage: 'CLOSED_WON',
-          closedAt: { gte: monthAgo },
-        },
-      }),
-      // Deals closed last month (for comparison)
-      ctx.prismaWithTenant.opportunity.count({
-        where: {
-          tenantId,
-          ownerId: userId,
-          stage: 'CLOSED_WON',
-          closedAt: { gte: twoMonthsAgo, lt: monthAgo },
-        },
-      }),
-    ]);
-
-    // Progressive fallback for leads: yesterday -> this week -> this month -> all time
-    let newLeadsCount = 0;
-    let newLeadsPeriod: 'today' | 'yesterday' | 'this_week' | 'this_month' | 'all_time' =
-      'yesterday';
-
-    if (newLeadsSinceYesterday > 0) {
-      newLeadsCount = newLeadsSinceYesterday;
-    } else if (newLeadsThisWeek > 0) {
-      newLeadsCount = newLeadsThisWeek;
-      newLeadsPeriod = 'this_week';
-    } else if (newLeadsThisMonth > 0) {
-      newLeadsCount = newLeadsThisMonth;
-      newLeadsPeriod = 'this_month';
-    } else if (totalLeads > 0) {
-      newLeadsCount = totalLeads;
-      newLeadsPeriod = 'all_time';
-    }
-
-    // Progressive fallback for deal trends: weekly -> monthly
-    let dealClosingRateTrend = 0;
-    let dealsTrendPeriod: 'today' | 'yesterday' | 'this_week' | 'this_month' | 'all_time' =
-      'this_week';
-
-    // Try weekly comparison first
-    if (dealsClosedLastWeek > 0) {
-      dealClosingRateTrend = Math.round(
-        ((dealsClosedThisWeek - dealsClosedLastWeek) / dealsClosedLastWeek) * 100
-      );
-    } else if (dealsClosedThisWeek > 0) {
-      dealClosingRateTrend = 100; // Infinite improvement from 0
-    } else if (dealsClosedLastMonth > 0) {
-      // Fall back to monthly comparison
-      dealClosingRateTrend = Math.round(
-        ((dealsClosedThisMonth - dealsClosedLastMonth) / dealsClosedLastMonth) * 100
-      );
-      dealsTrendPeriod = 'this_month';
-    } else if (dealsClosedThisMonth > 0) {
-      dealClosingRateTrend = 100;
-      dealsTrendPeriod = 'this_month';
-    }
-
-    const duration = performance.now() - startTime;
-    if (duration > 200) {
-      console.warn(`[home.getWelcomeSummary] SLOW: ${duration.toFixed(2)}ms (target: <200ms)`);
-    }
-
-    return {
-      userName: user?.name || user?.email?.split('@')[0] || 'User',
-      greeting: getGreeting(safeTimezone(ctx.user?.timezone)),
-      todayDate: now,
-      stats: {
-        highPriorityTasksCount: highPriorityTasks,
-        newLeadsCount,
-        newLeadsPeriod,
-        dealClosingRateTrend,
-        dealsTrendPeriod,
+      // Parallel fetch user + all stats (user query was previously sequential)
+      const [
+        user,
+        highPriorityTasks,
+        overdueTasks,
+        newLeadsSinceYesterday,
+        newLeadsThisWeek,
+        newLeadsThisMonth,
+        totalLeads,
         appointmentsToday,
-        overdueTasksCount: overdueTasks,
-      },
+        dealsClosedThisWeek,
+        dealsClosedLastWeek,
+        dealsClosedThisMonth,
+        dealsClosedLastMonth,
+      ] = await Promise.all([
+        // User name (timezone comes from ctx.user session)
+        ctx.prismaWithTenant.user.findUnique({
+          where: { id: userId },
+          select: { name: true, email: true },
+        }),
+        // High priority tasks not completed (includes URGENT)
+        ctx.prismaWithTenant.task.count({
+          where: {
+            tenantId,
+            ownerId: userId,
+            priority: { in: ['HIGH', 'URGENT'] },
+            status: { notIn: ['COMPLETED', 'CANCELLED'] },
+          },
+        }),
+        // Overdue tasks
+        ctx.prismaWithTenant.task.count({
+          where: {
+            tenantId,
+            ownerId: userId,
+            dueDate: { lt: now },
+            status: { notIn: ['COMPLETED', 'CANCELLED'] },
+          },
+        }),
+        // New leads since yesterday
+        ctx.prismaWithTenant.lead.count({
+          where: {
+            tenantId,
+            ownerId: userId,
+            createdAt: { gte: yesterdayStart },
+          },
+        }),
+        // New leads this week
+        ctx.prismaWithTenant.lead.count({
+          where: {
+            tenantId,
+            ownerId: userId,
+            createdAt: { gte: weekAgo },
+          },
+        }),
+        // New leads this month
+        ctx.prismaWithTenant.lead.count({
+          where: {
+            tenantId,
+            ownerId: userId,
+            createdAt: { gte: monthAgo },
+          },
+        }),
+        // Total leads (all time)
+        ctx.prismaWithTenant.lead.count({
+          where: {
+            tenantId,
+            ownerId: userId,
+          },
+        }),
+        // Appointments today
+        ctx.prismaWithTenant.appointment.count({
+          where: {
+            OR: [{ organizerId: userId }, { attendees: { some: { userId } } }],
+            startTime: { gte: todayStart },
+            endTime: { lt: new Date(todayStart.getTime() + 24 * 60 * 60 * 1000) },
+            status: { notIn: ['CANCELLED', 'NO_SHOW'] },
+          },
+        }),
+        // Deals closed this week
+        ctx.prismaWithTenant.opportunity.count({
+          where: {
+            tenantId,
+            ownerId: userId,
+            stage: 'CLOSED_WON',
+            closedAt: { gte: weekAgo },
+          },
+        }),
+        // Deals closed last week (for comparison)
+        ctx.prismaWithTenant.opportunity.count({
+          where: {
+            tenantId,
+            ownerId: userId,
+            stage: 'CLOSED_WON',
+            closedAt: { gte: twoWeeksAgo, lt: weekAgo },
+          },
+        }),
+        // Deals closed this month
+        ctx.prismaWithTenant.opportunity.count({
+          where: {
+            tenantId,
+            ownerId: userId,
+            stage: 'CLOSED_WON',
+            closedAt: { gte: monthAgo },
+          },
+        }),
+        // Deals closed last month (for comparison)
+        ctx.prismaWithTenant.opportunity.count({
+          where: {
+            tenantId,
+            ownerId: userId,
+            stage: 'CLOSED_WON',
+            closedAt: { gte: twoMonthsAgo, lt: monthAgo },
+          },
+        }),
+      ]);
+
+      // Progressive fallback for leads: yesterday -> this week -> this month -> all time
+      let newLeadsCount = 0;
+      let newLeadsPeriod: 'today' | 'yesterday' | 'this_week' | 'this_month' | 'all_time' =
+        'yesterday';
+
+      if (newLeadsSinceYesterday > 0) {
+        newLeadsCount = newLeadsSinceYesterday;
+      } else if (newLeadsThisWeek > 0) {
+        newLeadsCount = newLeadsThisWeek;
+        newLeadsPeriod = 'this_week';
+      } else if (newLeadsThisMonth > 0) {
+        newLeadsCount = newLeadsThisMonth;
+        newLeadsPeriod = 'this_month';
+      } else if (totalLeads > 0) {
+        newLeadsCount = totalLeads;
+        newLeadsPeriod = 'all_time';
+      }
+
+      // Progressive fallback for deal trends: weekly -> monthly
+      let dealClosingRateTrend = 0;
+      let dealsTrendPeriod: 'today' | 'yesterday' | 'this_week' | 'this_month' | 'all_time' =
+        'this_week';
+
+      // Try weekly comparison first
+      if (dealsClosedLastWeek > 0) {
+        dealClosingRateTrend = Math.round(
+          ((dealsClosedThisWeek - dealsClosedLastWeek) / dealsClosedLastWeek) * 100
+        );
+      } else if (dealsClosedThisWeek > 0) {
+        dealClosingRateTrend = 100; // Infinite improvement from 0
+      } else if (dealsClosedLastMonth > 0) {
+        // Fall back to monthly comparison
+        dealClosingRateTrend = Math.round(
+          ((dealsClosedThisMonth - dealsClosedLastMonth) / dealsClosedLastMonth) * 100
+        );
+        dealsTrendPeriod = 'this_month';
+      } else if (dealsClosedThisMonth > 0) {
+        dealClosingRateTrend = 100;
+        dealsTrendPeriod = 'this_month';
+      }
+
+      const duration = performance.now() - startTime;
+      if (duration > 200) {
+        console.warn(`[home.getWelcomeSummary] SLOW: ${duration.toFixed(2)}ms (target: <200ms)`);
+      }
+
+      return {
+        userName: user?.name || user?.email?.split('@')[0] || 'User',
+        greeting: getGreeting(safeTimezone(ctx.user?.timezone)),
+        todayDate: now,
+        stats: {
+          highPriorityTasksCount: highPriorityTasks,
+          newLeadsCount,
+          newLeadsPeriod,
+          dealClosingRateTrend,
+          dealsTrendPeriod,
+          appointmentsToday,
+          overdueTasksCount: overdueTasks,
+        },
+      };
     };
+    const homeCache = (
+      ctx.services as
+        | {
+            homeCache?: {
+              getWelcomeSummary: <T>(t: string, u: string, c: () => Promise<T>) => Promise<T>;
+            };
+          }
+        | undefined
+    )?.homeCache;
+    if (homeCache) {
+      return homeCache.getWelcomeSummary(ctx.tenant.tenantId, ctx.tenant.userId, compute);
+    }
+    return compute();
   }),
 
   /**

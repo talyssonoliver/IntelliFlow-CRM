@@ -23,8 +23,8 @@ src/modules/<entity>/
 Static checks (typecheck, mocked tests, lint, build) can all pass while a
 service is never actually instantiated.
 
-Root cause: IFC-086 attestation falsely claimed "service wired in container" ÔÇö 4
-broken services discovered (ChainVersion, Experiment, Feedback,
+Root cause: IFC-086 attestation falsely claimed "service wired in container" ÔÇö
+4 broken services discovered (ChainVersion, Experiment, Feedback,
 ConversationSearch).
 
 When adding a new service:

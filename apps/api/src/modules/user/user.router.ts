@@ -7,6 +7,7 @@
  * Phase 2: Profile field expansion (avatar, bio, contact info, OAuth metadata)
  */
 
+import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import { updateTimezoneInputSchema, updateProfileInputSchema } from '@intelliflow/validators';
@@ -140,5 +141,54 @@ export const userRouter = createTRPCRouter({
       });
 
       return { success: true };
+    }),
+
+  /**
+   * List users in the current tenant.
+   * Used by EntitySearchField (approver / assignee pickers) and workflow builder.
+   */
+  list: tenantProcedure
+    .input(
+      z.object({
+        search: z.string().optional(),
+        limit: z.number().int().min(1).max(50).default(5),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const search = input.search?.trim();
+      const where: Record<string, unknown> = {
+        tenantId: ctx.tenant.tenantId,
+      };
+      if (search && search.length > 0) {
+        where.OR = [
+          { name: { contains: search, mode: 'insensitive' } },
+          { email: { contains: search, mode: 'insensitive' } },
+          { givenName: { contains: search, mode: 'insensitive' } },
+          { familyName: { contains: search, mode: 'insensitive' } },
+        ];
+      }
+
+      const users = await ctx.prismaWithTenant.user.findMany({
+        where: where as never,
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          givenName: true,
+          familyName: true,
+          avatarUrl: true,
+        },
+        take: input.limit,
+        orderBy: { name: 'asc' },
+      });
+
+      return {
+        users: users.map((u) => ({
+          id: u.id,
+          name: u.name ?? ([u.givenName, u.familyName].filter(Boolean).join(' ').trim() || u.email),
+          email: u.email,
+          avatarUrl: u.avatarUrl ?? null,
+        })),
+      };
     }),
 });

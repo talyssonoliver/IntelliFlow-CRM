@@ -28,6 +28,8 @@ import {
   MockAIService,
   OllamaAIService,
   InMemoryCache,
+  RedisCacheAdapter,
+  type RedisLike,
   GuardrailsAIService,
   DurableAuditLogAdapter,
   FeatureFlagAdapter,
@@ -76,6 +78,8 @@ import {
 import { loadFeatureFlagsConfig } from './config/feature-flags.config';
 import { CalendarWebhookService } from './modules/calendar/calendar-webhook.service';
 import { AIMonitoringService } from './services/AIMonitoringService';
+import { HomeCacheService } from './modules/home/home.cache';
+import type { CachePort } from '@intelliflow/application';
 
 /**
  * Get the API Prisma client.
@@ -90,6 +94,50 @@ export const getApiPrisma = (): PrismaClient => sharedPrisma;
  * Note: This triggers lazy initialization on first import
  */
 export const apiPrisma = getApiPrisma();
+
+/**
+ * IFC-196: Create the cache adapter used across the API.
+ *
+ * Prefers RedisCacheAdapter when Redis is available; falls back to InMemoryCache
+ * in test/dev environments where Redis isn't running. RedisCacheAdapter methods
+ * swallow connection errors internally, so a misconfigured URL just degrades
+ * cache hit rate without breaking the API.
+ */
+function createCacheAdapter(): CachePort {
+  if (process.env.DISABLE_HOME_CACHE === '1') {
+    return new InMemoryCache();
+  }
+  if (process.env.NODE_ENV === 'test' && !process.env.REDIS_HOST) {
+    return new InMemoryCache();
+  }
+  try {
+    // Lazy require so environments without ioredis don't fail at import.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const IORedis = require('ioredis');
+    const RedisCtor = IORedis.default ?? IORedis;
+    const client = new RedisCtor({
+      host: process.env.REDIS_HOST || 'localhost',
+      port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
+      password: process.env.REDIS_PASSWORD || undefined,
+      db: Number.parseInt(process.env.REDIS_DB || '0', 10),
+      lazyConnect: true,
+      enableOfflineQueue: false,
+      maxRetriesPerRequest: 1,
+    }) as RedisLike;
+    return new RedisCacheAdapter(client, {
+      keyPrefix: 'ifc:',
+      onError: (op, key, err) => {
+        console.warn('[cache] redis', op, key, err instanceof Error ? err.message : err);
+      },
+    });
+  } catch (err) {
+    console.warn(
+      '[cache] ioredis unavailable — falling back to InMemoryCache',
+      err instanceof Error ? err.message : err
+    );
+    return new InMemoryCache();
+  }
+}
 
 /**
  * Create singleton instances of adapters
@@ -147,7 +195,8 @@ const createAdapters = (prismaClient: PrismaClient) => {
             : 60_000,
         })
       : new MockAIService();
-  const cache = new InMemoryCache();
+  // IFC-196: Prefer Redis-backed cache, fall back to InMemoryCache.
+  const cache: CachePort = createCacheAdapter();
 
   // IFC-158/IFC-223: Notification service + ICS generation
   const emailProvider = process.env.EMAIL_PROVIDER || 'mock';
@@ -394,6 +443,12 @@ const createServices = (prismaClient: PrismaClient) => {
   };
   const conversationSearchService = new ConversationSearchService(stubConversationRepository);
 
+  // IFC-196: Home Page Response Caching
+  const homeCacheService = new HomeCacheService(adapters.cache, adapters.eventBus);
+  homeCacheService.registerInvalidationHandlers().catch((err) => {
+    console.warn('[home.cache] failed to register invalidation handlers', err);
+  });
+
   return {
     leadService,
     contactService,
@@ -436,6 +491,8 @@ const createServices = (prismaClient: PrismaClient) => {
     aiMonitoringService,
     // IFC-148: Conversation Search Service
     conversationSearchService,
+    // IFC-196: Home Page Response Caching
+    homeCacheService,
   };
 };
 
