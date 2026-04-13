@@ -668,7 +668,6 @@ async function main(): Promise<void> {
 // Run if executed directly
 if (require.main === module) {
   main().catch((error) => {
-    // NOSONAR typescript:S7785 — CJS entry point, top-level await requires ESM migration
     console.error('Fatal error:', error);
     process.exit(1);
   });

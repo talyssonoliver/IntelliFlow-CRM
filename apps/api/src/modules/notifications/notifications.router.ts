@@ -723,7 +723,6 @@ export const notificationsRouter = createTRPCRouter({
    */
   onNew: tenantProcedure
     .input(notificationSubscriptionInputSchema)
-    // NOSONAR typescript:S1874 — legacy observable subscription, tRPC v11 async iterator migration tracked separately
     .subscription(({ ctx, input }) => {
       const userId = ctx.tenant.userId;
       return observable<NotificationEvent>(

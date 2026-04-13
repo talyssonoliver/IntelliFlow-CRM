@@ -19,6 +19,9 @@ import type { TenantContext } from '../security/tenant-context';
 import { TicketService } from '../services/TicketService';
 import { AnalyticsAggregationService } from '@intelliflow/application';
 import { PrismaAnalyticsRepository } from '@intelliflow/adapters';
+import { SEED_IDS } from '@intelliflow/db/seed-ids';
+
+export { SEED_IDS } from '@intelliflow/db/seed-ids';
 
 /**
  * Infrastructure availability flag
@@ -161,14 +164,6 @@ try {
   }
   displayInfrastructureAlert(_infrastructureUnavailableReason);
 }
-
-/**
- * SEED_IDS - Imported from single source of truth
- * @see packages/db/src/seed-ids.ts
- * These are always available regardless of infrastructure state
- */
-import { SEED_IDS } from '@intelliflow/db/seed-ids'; // NOSONAR typescript:S7763 — re-export via import/export required here due to module ordering constraints
-export { SEED_IDS };
 
 /**
  * Real services for integration tests (lazy-loaded)

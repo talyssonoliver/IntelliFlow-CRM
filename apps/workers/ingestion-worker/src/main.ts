@@ -479,7 +479,6 @@ if (require.main === module) {
       logger.info('Ingestion worker is running. Press Ctrl+C to stop.');
     })
     .catch((error: Error) => {
-      // NOSONAR: S7785
       logger.error({ error: error.message }, 'Failed to start ingestion worker');
       process.exit(1);
     });

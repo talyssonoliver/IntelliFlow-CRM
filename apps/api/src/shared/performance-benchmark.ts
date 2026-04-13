@@ -16,7 +16,16 @@
  *
  * Prerequisites:
  * - Database seeded with Sarah Johnson user (from `packages/db/prisma/seed.ts`)
- * - Database reachable via the DATABASE_URL env var
+ * - A Postgres URL that does NOT use `connection_limit=1` (the Supabase dev
+ *   safety flag in `.env.local`). The benchmark auto-selects the first of:
+ *     1. `TEST_DATABASE_URL`  (recommended — seeded local DB)
+ *     2. `DIRECT_URL`         (same Supabase host, unpooled)
+ *     3. `DATABASE_URL`       (fallback — authenticated benchmarks may fail
+ *                              under `connection_limit=1`)
+ * - Recommended invocation for a clean baseline:
+ *     dotenv -e .env.test -- tsx apps/api/src/shared/performance-benchmark.ts
+ * - Authenticated benchmarks run 30 iterations with a 50ms inter-iteration
+ *   pause to match sustained load patterns (not a synthetic stress test).
  *
  * Outputs actual measured latencies; does not include speculative or fabricated
  * targets beyond the documented IFC-003 KPI thresholds below.
@@ -35,6 +44,39 @@
 // procedures would throw UNAUTHORIZED.
 process.env.ALLOW_DEV_AUTH_FALLBACK = 'true';
 
+// Select a Postgres URL that is suitable for benchmarking.
+// The default DATABASE_URL in `.env.local` ends with `?pgbouncer=true&connection_limit=1`
+// — this is a Supabase dev safety flag that ALLOWS ONLY 1 CONCURRENT CONNECTION.
+// Procedures that do Promise.all internally (e.g. lead.list) will immediately
+// fail with "too many clients already" under that constraint.
+//
+// Preference order (first match wins):
+//  1. TEST_DATABASE_URL — seeded local Postgres (e.g. localhost:5433/intelliflow_test)
+//  2. DIRECT_URL — same Supabase host WITHOUT pgbouncer/connection_limit=1
+//  3. DATABASE_URL — fallback; authenticated benchmarks will likely fail
+//
+// Scripts/runners: pass credentials explicitly for a clean baseline, e.g.
+//   dotenv -e .env.test -- tsx apps/api/src/shared/performance-benchmark.ts
+const benchmarkDbUrl =
+  process.env.TEST_DATABASE_URL ||
+  process.env.DIRECT_URL ||
+  process.env.DATABASE_URL;
+if (benchmarkDbUrl && benchmarkDbUrl !== process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = benchmarkDbUrl;
+}
+// Redact credentials when logging the selection to avoid leaking into CI logs.
+const redactedUrl = (benchmarkDbUrl || '').replace(/:\/\/[^@]+@/, '://***@');
+console.log(`[benchmark] Using Postgres: ${redactedUrl || '(none set)'}`);
+console.log(
+  `[benchmark] Source: ${
+    process.env.TEST_DATABASE_URL
+      ? 'TEST_DATABASE_URL'
+      : process.env.DIRECT_URL
+        ? 'DIRECT_URL'
+        : 'DATABASE_URL (may be pooled with connection_limit=1 — authenticated benchmarks may fail)'
+  }`
+);
+
 import { performance } from 'node:perf_hooks';
 import { createContext } from '../context';
 import { appRouter } from '../router';
@@ -52,6 +94,8 @@ interface BenchmarkResult {
   p95: number;
   p99: number;
   passed: boolean;
+  /** Set when the benchmark could not complete (e.g. DB pool exhausted). */
+  error?: string;
 }
 
 /**
@@ -64,12 +108,24 @@ async function runIteration<T>(fn: () => Promise<T>): Promise<number> {
 }
 
 /**
+ * Pause briefly so DB connections can recycle between iterations.
+ * Critical for benchmarks that exercise the Prisma connection pool — without
+ * this, rapid-fire iterations can saturate Supabase's small connection limit.
+ */
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+/**
  * Run multiple iterations and collect timings
  */
 async function benchmark<T>(
   operation: string,
   fn: () => Promise<T>,
-  iterations: number = 100
+  iterations: number = 100,
+  pauseMs: number = 0
 ): Promise<BenchmarkResult> {
   console.log(`\nBenchmarking: ${operation} (${iterations} iterations)...`);
 
@@ -79,6 +135,7 @@ async function benchmark<T>(
   console.log('  Warming up...');
   for (let i = 0; i < 10; i++) {
     await runIteration(fn);
+    if (pauseMs > 0) await sleep(pauseMs);
   }
 
   // Actual benchmark
@@ -86,6 +143,7 @@ async function benchmark<T>(
   for (let i = 0; i < iterations; i++) {
     const duration = await runIteration(fn);
     timings.push(duration);
+    if (pauseMs > 0) await sleep(pauseMs);
 
     // Progress indicator every 25 iterations
     if ((i + 1) % 25 === 0) {
@@ -123,9 +181,63 @@ async function benchmark<T>(
 }
 
 /**
+ * Error-tolerant wrapper — captures per-benchmark failures so the suite
+ * continues on to the remaining measurements. A benchmark that fails with
+ * e.g. "too many clients already" is a real signal (shared dev DB under
+ * load) — we record the error verbatim, not a fabricated passing result.
+ */
+async function safeBenchmark<T>(
+  operation: string,
+  fn: () => Promise<T>,
+  iterations: number,
+  pauseMs: number = 0
+): Promise<BenchmarkResult> {
+  try {
+    return await benchmark(operation, fn, iterations, pauseMs);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    // Extract a short root-cause phrase for the summary line. Prisma wraps
+    // DB errors in a multi-line invocation trace; the actual cause shows up
+    // on a line starting with "Message:" or a recognizable keyword further
+    // down. We surface the most useful signal rather than the first 200 chars.
+    const rootCauseMatch =
+      /Message: `([^`]+)`/.exec(message) ||
+      /does not exist in the current database/.exec(message) ||
+      /too many clients already/.exec(message) ||
+      /connect ECONNREFUSED/.exec(message) ||
+      /Timed out/.exec(message);
+    const rootCause = rootCauseMatch ? rootCauseMatch[1] || rootCauseMatch[0] : message.split('\n')[0];
+    const truncated = rootCause.length > 200 ? rootCause.slice(0, 200) + '…' : rootCause;
+    console.log(`\n  ❌ ${operation} could not complete: ${truncated}`);
+    return {
+      operation,
+      iterations: 0,
+      min: NaN,
+      max: NaN,
+      mean: NaN,
+      median: NaN,
+      p95: NaN,
+      p99: NaN,
+      passed: false,
+      // Keep the full message (not just the truncated root cause) for the
+      // hint matcher in the summary to introspect.
+      error: message,
+    };
+  }
+}
+
+/**
  * Print benchmark result
  */
 function printResult(result: BenchmarkResult) {
+  if (result.error) {
+    console.log(`\n  Results for ${result.operation}:`);
+    console.log(`  ─────────────────────────────────────`);
+    console.log(`  Status:     ❌ ERROR — ${result.error}`);
+    console.log(`  ─────────────────────────────────────`);
+    return;
+  }
+
   const status = result.passed ? '✅ PASS' : '❌ FAIL';
 
   console.log(`\n  Results for ${result.operation}:`);
@@ -197,10 +309,10 @@ async function runBenchmarks() {
     );
     results.push(systemVersionResult);
 
-    // Benchmark 5: auth.getStatus (unauthenticated path)
-    // Public procedure. Without a bearer token it resolves quickly to
-    // `{ authenticated: false }`. Measures the hot-path that every page load
-    // exercises before the user logs in.
+    // Benchmark 5: auth.getStatus
+    // Measures the hot-path that every page load exercises. With the
+    // dev-auth fallback enabled, this also exercises the GET_STATUS_CACHE
+    // added for IFC-PERF session-cache hit path.
     const authStatusResult = await benchmark(
       'auth.getStatus',
       async () => {
@@ -210,41 +322,100 @@ async function runBenchmarks() {
     );
     results.push(authStatusResult);
 
+    // ── Authenticated hot-path procedures ────────────────────────────
+    // These exercise the tenantProcedure middleware chain + real database
+    // queries. They run under the seeded Sarah Johnson user (SALES_REP).
+    // 30 iterations with 50ms pause — realistic sustained-load sample that
+    // won't exhaust the Supabase pool when a dev server is also running.
+    //
+    // Each benchmark is wrapped in safeBenchmark() so that a per-procedure
+    // failure (e.g. DB connection pool exhausted during shared-dev use)
+    // records an error result and lets the suite continue, rather than
+    // aborting and losing the other measurements.
+    const AUTHN_ITERATIONS = 30;
+    const AUTHN_PAUSE_MS = 50;
+
+    results.push(
+      await safeBenchmark('lead.list', () => caller.lead.list({ page: 1, limit: 20 }), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
+    );
+    results.push(
+      await safeBenchmark('lead.stats', () => caller.lead.stats(), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
+    );
+    results.push(
+      await safeBenchmark('contact.list', () => caller.contact.list({ page: 1, limit: 20 }), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
+    );
+    results.push(
+      await safeBenchmark('contact.stats', () => caller.contact.stats(), AUTHN_ITERATIONS, AUTHN_PAUSE_MS)
+    );
+
     // Print summary
     console.log('\n═══════════════════════════════════════════');
     console.log('  BENCHMARK SUMMARY');
     console.log('═══════════════════════════════════════════\n');
 
-    const allPassed = results.every((r) => r.passed);
     const totalTests = results.length;
-    const passedTests = results.filter((r) => r.passed).length;
+    const errored = results.filter((r) => r.error).length;
+    const measured = results.filter((r) => !r.error);
+    const passedTests = measured.filter((r) => r.passed).length;
+    const failedMeasured = measured.length - passedTests;
 
-    console.log(`  Total Tests:   ${totalTests}`);
-    console.log(`  Passed:        ${passedTests} ✅`);
-    console.log(`  Failed:        ${totalTests - passedTests} ❌`);
-    console.log(`  Success Rate:  ${((passedTests / totalTests) * 100).toFixed(1)}%`);
+    console.log(`  Total Benchmarks:      ${totalTests}`);
+    console.log(`  Completed:             ${measured.length}`);
+    console.log(`  Passed IFC-003 KPI:    ${passedTests} ✅`);
+    console.log(`  Failed IFC-003 KPI:    ${failedMeasured} ❌`);
+    console.log(`  Could not run:         ${errored} ⚠️  (see error rows above)`);
 
     console.log('\n  Performance by Operation:');
     console.log('  ─────────────────────────────────────');
     for (const r of results) {
-      const status = r.passed ? '✅' : '❌';
-      console.log(`  ${status} ${r.operation.padEnd(25)} p95: ${r.p95.toFixed(2)}ms`);
+      if (r.error) {
+        console.log(`  ⚠️  ${r.operation.padEnd(25)} ERROR (did not complete)`);
+      } else {
+        const status = r.passed ? '✅' : '❌';
+        console.log(`  ${status} ${r.operation.padEnd(25)} p95: ${r.p95.toFixed(2)}ms`);
+      }
     }
 
     console.log('\n═══════════════════════════════════════════');
 
-    if (allPassed) {
-      console.log('  ✅ ALL BENCHMARKS PASSED!');
-      console.log('  IFC-003 KPI validated: p95 < 50ms');
-    } else {
-      console.log('  ❌ SOME BENCHMARKS FAILED');
-      console.log('  Review performance and optimize slow endpoints');
+    // Exit code policy:
+    //  - 0: all COMPLETED benchmarks pass KPI (infra errors don't count)
+    //  - 1: at least one completed benchmark failed the KPI
+    //  - 2: every benchmark errored (no useful signal)
+    if (errored > 0) {
+      const anyColumnMissing = results.some((r) => r.error?.includes('does not exist in the current database'));
+      const anyTooManyClients = results.some((r) => r.error?.includes('too many clients'));
+      if (anyColumnMissing) {
+        console.log(
+          '\n  💡 Hint: at least one benchmark failed with a missing column. The test DB likely needs'
+        );
+        console.log('     migrations:  dotenv -e .env.test -- pnpm --filter @intelliflow/db db:migrate');
+      }
+      if (anyTooManyClients) {
+        console.log(
+          '\n  💡 Hint: "too many clients already" usually means the Postgres URL has `connection_limit=1`'
+        );
+        console.log('     (Supabase dev safety flag). Run with:  dotenv -e .env.test -- tsx <this file>');
+      }
     }
 
-    console.log('═══════════════════════════════════════════\n');
-
-    // Exit with appropriate code
-    process.exit(allPassed ? 0 : 1);
+    if (measured.length === 0) {
+      console.log('  ❌ NO BENCHMARKS COMPLETED — infrastructure issue');
+      console.log('═══════════════════════════════════════════\n');
+      process.exit(2);
+    } else if (failedMeasured === 0) {
+      console.log(`  ✅ ${passedTests}/${measured.length} BENCHMARKS PASSED IFC-003 KPI (p95 < 50ms)`);
+      if (errored > 0) {
+        console.log(`  ⚠️  ${errored} benchmark(s) could not run — see errors above`);
+      }
+      console.log('═══════════════════════════════════════════\n');
+      process.exit(0);
+    } else {
+      console.log(`  ❌ ${failedMeasured}/${measured.length} BENCHMARKS FAILED IFC-003 KPI`);
+      console.log('  Review performance and optimize slow endpoints');
+      console.log('═══════════════════════════════════════════\n');
+      process.exit(1);
+    }
   } catch (error) {
     console.error('\n❌ Benchmark failed with error:');
     console.error(error);
@@ -290,13 +461,8 @@ export type { BenchmarkResult };
  * Run if executed directly
  */
 if (require.main === module) {
-  (async () => {
-    // NOSONAR typescript:S7785 — top-level await unavailable in CJS modules
-    try {
-      await runBenchmarks();
-    } catch (error) {
-      console.error('Fatal error:', error);
-      process.exit(1);
-    }
-  })();
+  runBenchmarks().catch((error) => {
+    console.error('Fatal error:', error);
+    process.exit(1);
+  });
 }

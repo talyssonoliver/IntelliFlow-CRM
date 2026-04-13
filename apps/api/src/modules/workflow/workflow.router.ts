@@ -17,18 +17,58 @@
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { Prisma } from '@intelliflow/db';
+import {
+  WorkflowNodeConfigSchema,
+  NODE_TYPE_IDS,
+  isNodeTypeId,
+} from '@intelliflow/domain';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
 
 // ---------------------------------------------------------------------------
 // Zod schemas for JSON columns
 // ---------------------------------------------------------------------------
 
-const workflowStepDefSchema = z.object({
-  id: z.number().int().positive(),
-  type: z.string(),
-  config: z.record(z.string(), z.unknown()).default({}),
-  position: z.object({ x: z.number(), y: z.number() }).optional(),
-});
+/**
+ * Workflow step definition.
+ *
+ * The `config` payload is kept permissive at the router level so legacy
+ * workflows (seeded before the domain node catalog existed — types like
+ * "approval", "condition", "notify") can still round-trip through
+ * list/getById/update without a data migration.
+ *
+ * When the step's `type` IS one of the catalog-registered node types
+ * (`NODE_TYPE_IDS` — start/action/decision/human/end), the config is
+ * additionally validated against `WorkflowNodeConfigSchema` from
+ * `@intelliflow/domain`. Unknown types (legacy) still pass through.
+ */
+const workflowStepDefSchema = z
+  .object({
+    id: z.number().int().positive(),
+    type: z.string(),
+    config: z.record(z.string(), z.unknown()).default({}),
+    position: z.object({ x: z.number(), y: z.number() }).optional(),
+  })
+  .superRefine((val, ctx) => {
+    if (!isNodeTypeId(val.type)) {
+      // Legacy / unknown type — accept without strict config validation.
+      return;
+    }
+    const parsed = WorkflowNodeConfigSchema.safeParse({
+      type: val.type,
+      ...val.config,
+    });
+    if (!parsed.success) {
+      for (const issue of parsed.error.issues) {
+        ctx.addIssue({
+          code: 'custom',
+          message: `Invalid ${val.type} node config: ${issue.message}`,
+          path: ['config', ...issue.path.filter((p) => p !== 'type')],
+        });
+      }
+    }
+  });
+
+export { NODE_TYPE_IDS };
 
 const workflowEdgeSchema = z.object({
   id: z.string(),
