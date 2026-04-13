@@ -230,7 +230,7 @@ describe('SAPAdapter', () => {
           SoldToParty: 'CUST001',
           SalesOrderDate: '2025-01-15',
           OverallSDProcessStatus: 'A',
-          TransactionCurrency: 'USD',
+          TransactionCurrency: 'GBP',
           TotalNetAmount: 1000,
           TotalTaxAmount: 100,
           to_Item: {

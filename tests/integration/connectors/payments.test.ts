@@ -43,7 +43,7 @@ describe('Stripe Payment Adapter', () => {
         id: 'pi_test_123',
         object: 'payment_intent',
         amount: 1000,
-        currency: 'usd',
+        currency: 'GBP',
         status: 'requires_payment_method',
         client_secret: 'pi_test_123_secret_abc',
       };
@@ -67,7 +67,7 @@ describe('Stripe Payment Adapter', () => {
 
       expect(result.id).toBe('pi_test_123');
       expect(result.amount).toBe(1000);
-      expect(result.currency).toBe('usd');
+      expect(result.currency).toBe('GBP');
       expect(result.client_secret).toBeDefined();
     });
 
@@ -343,7 +343,7 @@ describe('Stripe Payment Adapter', () => {
         json: () =>
           Promise.resolve({
             object: 'balance',
-            available: [{ amount: 10000, currency: 'usd' }],
+            available: [{ amount: 10000, currency: 'GBP' }],
           }),
       });
 
@@ -451,7 +451,7 @@ describe('PayPal Payment Adapter', () => {
           intent: 'CAPTURE',
           purchase_units: [
             {
-              amount: { currency_code: 'USD', value: '100.00' },
+              amount: { currency_code: 'GBP', value: '100.00' },
             },
           ],
         }),
@@ -477,7 +477,7 @@ describe('PayPal Payment Adapter', () => {
                     {
                       id: 'CAPTURE-123',
                       status: 'COMPLETED',
-                      amount: { currency_code: 'USD', value: '100.00' },
+                      amount: { currency_code: 'GBP', value: '100.00' },
                     },
                   ],
                 },
@@ -517,7 +517,7 @@ describe('PayPal Payment Adapter', () => {
                     {
                       id: 'AUTH-123',
                       status: 'CREATED',
-                      amount: { currency_code: 'USD', value: '100.00' },
+                      amount: { currency_code: 'GBP', value: '100.00' },
                     },
                   ],
                 },
@@ -554,7 +554,7 @@ describe('PayPal Payment Adapter', () => {
           Promise.resolve({
             id: 'REFUND-123',
             status: 'COMPLETED',
-            amount: { currency_code: 'USD', value: '50.00' },
+            amount: { currency_code: 'GBP', value: '50.00' },
           }),
       });
 
@@ -567,7 +567,7 @@ describe('PayPal Payment Adapter', () => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            amount: { currency_code: 'USD', value: '50.00' },
+            amount: { currency_code: 'GBP', value: '50.00' },
           }),
         }
       );

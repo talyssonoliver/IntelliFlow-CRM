@@ -38,7 +38,7 @@ describe('StripeAdapter', () => {
         email: 'test@example.com',
         name: 'Test Customer',
         balance: 0,
-        currency: 'usd',
+        currency: 'GBP',
         created: Math.floor(Date.now() / 1000),
       };
 
@@ -82,7 +82,7 @@ describe('StripeAdapter', () => {
       const mockPaymentIntent = {
         id: 'pi_123',
         amount: 1000,
-        currency: 'usd',
+        currency: 'GBP',
         status: 'requires_payment_method',
         client_secret: 'pi_123_secret_456',
         created: Math.floor(Date.now() / 1000),
@@ -95,7 +95,7 @@ describe('StripeAdapter', () => {
 
       const result = await adapter.createPaymentIntent({
         amount: 1000,
-        currency: 'usd',
+        currency: 'GBP',
         description: 'Test payment',
       });
 
@@ -119,7 +119,7 @@ describe('StripeAdapter', () => {
 
       const result = await adapter.createPaymentIntent({
         amount: 1000,
-        currency: 'usd',
+        currency: 'GBP',
       });
 
       expect(result.isFailure).toBe(true);
@@ -132,7 +132,7 @@ describe('StripeAdapter', () => {
       const mockPaymentIntent = {
         id: 'pi_123',
         amount: 1000,
-        currency: 'usd',
+        currency: 'GBP',
         status: 'succeeded',
         client_secret: 'pi_123_secret_456',
         created: Math.floor(Date.now() / 1000),
@@ -156,7 +156,7 @@ describe('StripeAdapter', () => {
         id: 're_123',
         payment_intent: 'pi_123',
         amount: 500,
-        currency: 'usd',
+        currency: 'GBP',
         status: 'succeeded',
         created: Math.floor(Date.now() / 1000),
       };
@@ -188,7 +188,7 @@ describe('StripeAdapter', () => {
             },
           ],
         },
-        currency: 'usd',
+        currency: 'GBP',
         current_period_start: Math.floor(Date.now() / 1000),
         current_period_end: Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60,
         cancel_at_period_end: false,
@@ -250,7 +250,7 @@ describe('StripeAdapter', () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({
-          available: [{ amount: 10000, currency: 'usd' }],
+          available: [{ amount: 10000, currency: 'GBP' }],
         }),
       });
 

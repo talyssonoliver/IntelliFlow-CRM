@@ -70,7 +70,7 @@ export default defineConfig({
       permissions: [],
 
       // Locale
-      locale: 'en-US',
+      locale: 'en-GB',
 
       // Timezone
       timezoneId: 'America/New_York',

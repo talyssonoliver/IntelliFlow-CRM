@@ -232,7 +232,7 @@ describe.skip('SAP ERP Adapter', () => {
               SalesOrderType: 'TA',
               SoldToParty: 'CUST001',
               TotalNetAmount: '1000.00',
-              TransactionCurrency: 'USD',
+              TransactionCurrency: 'GBP',
             },
           }),
       });
@@ -284,7 +284,7 @@ describe.skip('SAP ERP Adapter', () => {
             d: {
               BillingDocument: 'INV001',
               TotalNetAmount: '500.00',
-              TransactionCurrency: 'USD',
+              TransactionCurrency: 'GBP',
               BillingDocumentDate: '2025-01-15',
             },
           }),
