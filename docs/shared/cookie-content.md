@@ -36,10 +36,9 @@ preferences.
 Necessary cookies support authentication, cross-site request forgery protection,
 and the storage of your consent choice itself. They are always on because the
 service cannot function without them. Analytics cookies help us understand how
-visitors reach and move through the site so we can improve it. Marketing
-cookies measure the effectiveness of advertising campaigns. Preference cookies
-remember choices such as language or theme so the site feels familiar on your
-next visit.
+visitors reach and move through the site so we can improve it. Marketing cookies
+measure the effectiveness of advertising campaigns. Preference cookies remember
+choices such as language or theme so the site feels familiar on your next visit.
 
 ## How We Obtain Consent
 
@@ -64,11 +63,11 @@ necessary cookies will sign you out and prevent core site features from working.
 
 ## Third-Party Cookies
 
-Some cookies are set by providers we rely on. Google Analytics and Mixpanel
-help us measure product usage. Meta and Google Ads help us understand the
-reach of marketing campaigns. These providers process only the data described
-in their own privacy notices, and their cookies only load when the matching
-category is enabled.
+Some cookies are set by providers we rely on. Google Analytics and Mixpanel help
+us measure product usage. Meta and Google Ads help us understand the reach of
+marketing campaigns. These providers process only the data described in their
+own privacy notices, and their cookies only load when the matching category is
+enabled.
 
 We do not sell personal data, and we do not share cookie data with providers
 other than those disclosed here.
@@ -85,12 +84,12 @@ Your consent record is kept for up to one year, after which we ask again.
 
 You can always withdraw consent, ask for details of how your cookie data is
 processed, or request deletion by contacting our privacy team. Withdrawing
-consent does not affect the lawfulness of processing carried out beforehand.
-See the Privacy Policy for broader rights under UK GDPR and other applicable
+consent does not affect the lawfulness of processing carried out beforehand. See
+the Privacy Policy for broader rights under UK GDPR and other applicable
 regimes.
 
 ## Contact
 
-If you have a question about cookies, the consent banner, or a specific
-provider in the inventory, email our privacy team. We will respond within the
-timeframe required by the applicable law.
+If you have a question about cookies, the consent banner, or a specific provider
+in the inventory, email our privacy team. We will respond within the timeframe
+required by the applicable law.

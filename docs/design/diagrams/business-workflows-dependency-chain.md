@@ -313,11 +313,11 @@ Orchestration Flow:
 
 ### Overview
 
-| Layer      | Task ID | Status | Description                     |
-| ---------- | ------- | ------ | ------------------------------- |
-| Database   | IFC-028 | ✅     | WorkflowDefinition Prisma model |
-| API        | IFC-031 | ✅     | workflow.router CRUD procedures |
-| UI         | IFC-031 | ✅     | Workflow Builder React Flow UI  |
+| Layer    | Task ID | Status | Description                     |
+| -------- | ------- | ------ | ------------------------------- |
+| Database | IFC-028 | ✅     | WorkflowDefinition Prisma model |
+| API      | IFC-031 | ✅     | workflow.router CRUD procedures |
+| UI       | IFC-031 | ✅     | Workflow Builder React Flow UI  |
 
 ### Dependency Chain
 
@@ -331,10 +331,14 @@ IFC-028 (Workflow Engine) ✅ ──► workflow.router (CRUD) ✅ ──► IFC
 
 ### Key Design Decisions
 
-- **SSR Safety (NF-007)**: `@xyflow/react` loaded via `next/dynamic({ ssr: false })` in `WorkflowCanvas.tsx`
-- **Soft Delete**: `WorkflowDefinition.deletedAt DateTime?` with partial unique index on `(tenantId, name)` WHERE `deletedAt IS NULL`
-- **Topology Validation**: Client-side `validateWorkflow()` in `validation.ts` + server-side guard in `workflow.create/update`
-- **Drag & Drop**: `@dnd-kit/core` for palette items; React Flow's built-in handles for edge connections
+- **SSR Safety (NF-007)**: `@xyflow/react` loaded via
+  `next/dynamic({ ssr: false })` in `WorkflowCanvas.tsx`
+- **Soft Delete**: `WorkflowDefinition.deletedAt DateTime?` with partial unique
+  index on `(tenantId, name)` WHERE `deletedAt IS NULL`
+- **Topology Validation**: Client-side `validateWorkflow()` in `validation.ts` +
+  server-side guard in `workflow.create/update`
+- **Drag & Drop**: `@dnd-kit/core` for palette items; React Flow's built-in
+  handles for edge connections
 
 ---
 

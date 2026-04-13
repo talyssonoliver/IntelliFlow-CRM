@@ -217,11 +217,11 @@ Users who encounter accessibility barriers can report issues via:
 
 ## Document Control
 
-| Version | Date       | Author                | Changes                                                                               |
-| ------- | ---------- | --------------------- | ------------------------------------------------------------------------------------- |
-| 1.0.0   | 2026-02-24 | Engineering (DOC-008) | Initial conformance statement with screen reader testing plan                         |
-| 1.1.0   | 2026-03-01 | Engineering (DOC-011) | Expanded scope from 26 to 82 routes; added dynamic segment parent-inherits policy     |
-| 1.2.0   | 2026-03-10 | Engineering (PG-173)  | Added 3 ticket config routes (sla-policies, types, automations) — scope now 85 routes |
-| 1.3.0   | 2026-03-11 | Engineering (PG-174)  | Added 2 notification config routes (channels, quiet-hours) — scope now 87 routes      |
-| 1.4.0   | 2026-04-10 | Engineering (PG-051, IFC-031) | Added `/terms` (PG-051) and `/cases/case-workflows` (IFC-031) — scope now 89 routes |
+| Version | Date       | Author                        | Changes                                                                                                                        |
+| ------- | ---------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| 1.0.0   | 2026-02-24 | Engineering (DOC-008)         | Initial conformance statement with screen reader testing plan                                                                  |
+| 1.1.0   | 2026-03-01 | Engineering (DOC-011)         | Expanded scope from 26 to 82 routes; added dynamic segment parent-inherits policy                                              |
+| 1.2.0   | 2026-03-10 | Engineering (PG-173)          | Added 3 ticket config routes (sla-policies, types, automations) — scope now 85 routes                                          |
+| 1.3.0   | 2026-03-11 | Engineering (PG-174)          | Added 2 notification config routes (channels, quiet-hours) — scope now 87 routes                                               |
+| 1.4.0   | 2026-04-10 | Engineering (PG-051, IFC-031) | Added `/terms` (PG-051) and `/cases/case-workflows` (IFC-031) — scope now 89 routes                                            |
 | 1.5.0   | 2026-04-12 | Engineering (PG-056)          | Added `/500` system error page — scope now 90 routes; `h1` heading, keyboard-accessible recovery actions, semantic error badge |

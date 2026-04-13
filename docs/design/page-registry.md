@@ -143,45 +143,45 @@ Each route entry uses this standard table format:
 
 ### Terms of Service (`/terms`)
 
-| Field          | Value                                                       |
-| -------------- | ----------------------------------------------------------- |
-| **Task ID**    | PG-051                                                      |
-| **File Path**  | `apps/web/src/app/(public)/terms/page.tsx`                  |
-| **Layout**     | `apps/web/src/app/(public)/layout.tsx`                      |
-| **API Router** | N/A                                                         |
-| **E2E Test**   | None                                                        |
-| **Unit Tests** | `apps/web/src/app/(public)/terms/__tests__/page.test.tsx`   |
-| **KPI**        | Lighthouse >=90; Response <200ms; SEO >=90                  |
-| **Status**     | Implemented                                                 |
-| **RACI**       | R: Frontend / A: Legal Counsel / C: Compliance / I: QA      |
+| Field          | Value                                                     |
+| -------------- | --------------------------------------------------------- |
+| **Task ID**    | PG-051                                                    |
+| **File Path**  | `apps/web/src/app/(public)/terms/page.tsx`                |
+| **Layout**     | `apps/web/src/app/(public)/layout.tsx`                    |
+| **API Router** | N/A                                                       |
+| **E2E Test**   | None                                                      |
+| **Unit Tests** | `apps/web/src/app/(public)/terms/__tests__/page.test.tsx` |
+| **KPI**        | Lighthouse >=90; Response <200ms; SEO >=90                |
+| **Status**     | Implemented                                               |
+| **RACI**       | R: Frontend / A: Legal Counsel / C: Compliance / I: QA    |
 
 ### Cookie Policy (`/cookies`)
 
-| Field          | Value                                                       |
-| -------------- | ----------------------------------------------------------- |
-| **Task ID**    | PG-052                                                      |
-| **File Path**  | `apps/web/src/app/(public)/cookies/page.tsx`                |
-| **Layout**     | `apps/web/src/app/(public)/layout.tsx`                      |
-| **API Router** | N/A                                                         |
-| **E2E Test**   | None                                                        |
+| Field          | Value                                                                                                                         |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| **Task ID**    | PG-052                                                                                                                        |
+| **File Path**  | `apps/web/src/app/(public)/cookies/page.tsx`                                                                                  |
+| **Layout**     | `apps/web/src/app/(public)/layout.tsx`                                                                                        |
+| **API Router** | N/A                                                                                                                           |
+| **E2E Test**   | None                                                                                                                          |
 | **Unit Tests** | `apps/web/src/app/(public)/cookies/__tests__/page.test.tsx`, `apps/web/src/lib/legal/__tests__/cookie-policy-tracker.test.ts` |
-| **KPI**        | Lighthouse >=90; Response <200ms; SEO >=90                  |
-| **Status**     | Implemented                                                 |
-| **RACI**       | R: Frontend / A: Legal Counsel / C: Compliance / I: QA      |
+| **KPI**        | Lighthouse >=90; Response <200ms; SEO >=90                                                                                    |
+| **Status**     | Implemented                                                                                                                   |
+| **RACI**       | R: Frontend / A: Legal Counsel / C: Compliance / I: QA                                                                        |
 
 ### Data Processing Addendum (`/dpa`)
 
-| Field          | Value                                                       |
-| -------------- | ----------------------------------------------------------- |
-| **Task ID**    | PG-053                                                      |
-| **File Path**  | `apps/web/src/app/(public)/dpa/page.tsx`                    |
-| **Layout**     | `apps/web/src/app/(public)/layout.tsx`                      |
-| **API Router** | N/A                                                         |
-| **E2E Test**   | None                                                        |
+| Field          | Value                                                                                                                                                                                                                                                              |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Task ID**    | PG-053                                                                                                                                                                                                                                                             |
+| **File Path**  | `apps/web/src/app/(public)/dpa/page.tsx`                                                                                                                                                                                                                           |
+| **Layout**     | `apps/web/src/app/(public)/layout.tsx`                                                                                                                                                                                                                             |
+| **API Router** | N/A                                                                                                                                                                                                                                                                |
+| **E2E Test**   | None                                                                                                                                                                                                                                                               |
 | **Unit Tests** | `apps/web/src/app/(public)/dpa/__tests__/page.test.tsx`, `apps/web/src/lib/legal/__tests__/signature-handler.test.ts`, `apps/web/src/lib/legal/__tests__/signature-handler.client.test.ts`, `apps/web/src/components/legal/__tests__/dpa-signature-panel.test.tsx` |
-| **KPI**        | Lighthouse >=90; Response <200ms; SEO >=90                  |
-| **Status**     | Implemented                                                 |
-| **RACI**       | R: Frontend / A: Legal Counsel / C: Compliance / I: QA      |
+| **KPI**        | Lighthouse >=90; Response <200ms; SEO >=90                                                                                                                                                                                                                         |
+| **Status**     | Implemented                                                                                                                                                                                                                                                        |
+| **RACI**       | R: Frontend / A: Legal Counsel / C: Compliance / I: QA                                                                                                                                                                                                             |
 
 ### Partners (`/partners`)
 

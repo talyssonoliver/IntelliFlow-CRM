@@ -54,41 +54,41 @@ structure, and user flows in the IntelliFlow CRM web application.
 
 Located in `(public)` route group. Accessible without login.
 
-| Route                      | Page                    | Description                                                                                                                                          |
-| -------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/`                        | Home                    | Landing page (shows PublicHomePage or AuthenticatedHomePage based on auth). Lighthouse audit: PG-166 (Performance >=90, Accessibility >=90, TTI <1s) |
-| `/login`                   | Login                   | Email/password + OAuth login                                                                                                                         |
-| `/signup`                  | Sign Up                 | New account registration                                                                                                                             |
-| `/signup/success`          | Sign Up Success         | Registration confirmation                                                                                                                            |
-| `/forgot-password`         | Forgot Password         | Password reset request                                                                                                                               |
-| `/reset-password/[token]`  | Reset Password          | Password reset with token                                                                                                                            |
-| `/reset-password/callback` | Reset Password Callback | Supabase password reset redirect handler                                                                                                             |
-| `/logout`                  | Logout                  | Session termination                                                                                                                                  |
-| `/auth/callback`           | OAuth Callback          | Handles OAuth provider redirects (Google, etc.)                                                                                                      |
-| `/sso`                     | Enterprise SSO          | SSO email lookup form for enterprise SAML/OAuth providers (PG-124)                                                                                   |
-| `/mfa/verify`              | MFA Verification        | Two-factor authentication input                                                                                                                      |
-| `/verify-email/[token]`    | Email Verification      | Email confirmation with token                                                                                                                        |
-| `/verify-email/callback`   | Email Verify Callback   | Supabase email verification redirect handler                                                                                                         |
-| `/about`                   | About                   | Company information                                                                                                                                  |
-| `/features`                | Features                | Product features showcase                                                                                                                            |
-| `/pricing`                 | Pricing                 | Subscription plans                                                                                                                                   |
-| `/security`                | Security                | Security practices                                                                                                                                   |
-| `/contact`                 | Contact                 | Contact form                                                                                                                                         |
-| `/partners`                | Partners                | Partner program                                                                                                                                      |
-| `/press`                   | Press                   | Press releases                                                                                                                                       |
-| `/press/[id]`              | Press Release Detail    | Individual press release with full body, quotes, boilerplate                                                                                         |
-| `/status`                  | Status                  | System status page                                                                                                                                   |
-| `/404`                     | 404 Not Found           | Direct system-page route for missing URLs; excluded from sitemap indexing                                                                            |
-| `/500`                     | 500 Server Error        | Direct system-page route for internal errors; excluded from sitemap indexing                                                                         |
-| `/privacy`                 | Privacy Policy          | Public privacy policy and data handling commitments                                                                                                  |
-| `/terms`                   | Terms of Service        | Public terms of service page (PG-051)                                                                                                                |
-| `/cookies`                 | Cookie Policy           | Public cookie policy (PG-052) — consumed by `<CookieConsentBanner>` and public footer                                                                 |
+| Route                      | Page                     | Description                                                                                                                                                                                             |
+| -------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/`                        | Home                     | Landing page (shows PublicHomePage or AuthenticatedHomePage based on auth). Lighthouse audit: PG-166 (Performance >=90, Accessibility >=90, TTI <1s)                                                    |
+| `/login`                   | Login                    | Email/password + OAuth login                                                                                                                                                                            |
+| `/signup`                  | Sign Up                  | New account registration                                                                                                                                                                                |
+| `/signup/success`          | Sign Up Success          | Registration confirmation                                                                                                                                                                               |
+| `/forgot-password`         | Forgot Password          | Password reset request                                                                                                                                                                                  |
+| `/reset-password/[token]`  | Reset Password           | Password reset with token                                                                                                                                                                               |
+| `/reset-password/callback` | Reset Password Callback  | Supabase password reset redirect handler                                                                                                                                                                |
+| `/logout`                  | Logout                   | Session termination                                                                                                                                                                                     |
+| `/auth/callback`           | OAuth Callback           | Handles OAuth provider redirects (Google, etc.)                                                                                                                                                         |
+| `/sso`                     | Enterprise SSO           | SSO email lookup form for enterprise SAML/OAuth providers (PG-124)                                                                                                                                      |
+| `/mfa/verify`              | MFA Verification         | Two-factor authentication input                                                                                                                                                                         |
+| `/verify-email/[token]`    | Email Verification       | Email confirmation with token                                                                                                                                                                           |
+| `/verify-email/callback`   | Email Verify Callback    | Supabase email verification redirect handler                                                                                                                                                            |
+| `/about`                   | About                    | Company information                                                                                                                                                                                     |
+| `/features`                | Features                 | Product features showcase                                                                                                                                                                               |
+| `/pricing`                 | Pricing                  | Subscription plans                                                                                                                                                                                      |
+| `/security`                | Security                 | Security practices                                                                                                                                                                                      |
+| `/contact`                 | Contact                  | Contact form                                                                                                                                                                                            |
+| `/partners`                | Partners                 | Partner program                                                                                                                                                                                         |
+| `/press`                   | Press                    | Press releases                                                                                                                                                                                          |
+| `/press/[id]`              | Press Release Detail     | Individual press release with full body, quotes, boilerplate                                                                                                                                            |
+| `/status`                  | Status                   | System status page                                                                                                                                                                                      |
+| `/404`                     | 404 Not Found            | Direct system-page route for missing URLs; excluded from sitemap indexing                                                                                                                               |
+| `/500`                     | 500 Server Error         | Direct system-page route for internal errors; excluded from sitemap indexing                                                                                                                            |
+| `/privacy`                 | Privacy Policy           | Public privacy policy and data handling commitments                                                                                                                                                     |
+| `/terms`                   | Terms of Service         | Public terms of service page (PG-051)                                                                                                                                                                   |
+| `/cookies`                 | Cookie Policy            | Public cookie policy (PG-052) — consumed by `<CookieConsentBanner>` and public footer                                                                                                                   |
 | `/dpa`                     | Data Processing Addendum | Public DPA (PG-053) — GDPR Article 28 controller/processor addendum; linked from PublicFooter; renders a client-side `DpaSignaturePanel` for controller acknowledgement and a downloadable template PDF |
-| `/blog`                    | Blog                    | Blog listing                                                                                                                                         |
-| `/blog/[slug]`             | Blog Post               | Individual blog article                                                                                                                              |
-| `/careers`                 | Careers                 | Job listings                                                                                                                                         |
-| `/careers/[id]`            | Job Detail              | Individual job posting                                                                                                                               |
-| `/lp/[slug]`               | Landing Page            | Dynamic marketing landing pages                                                                                                                      |
+| `/blog`                    | Blog                     | Blog listing                                                                                                                                                                                            |
+| `/blog/[slug]`             | Blog Post                | Individual blog article                                                                                                                                                                                 |
+| `/careers`                 | Careers                  | Job listings                                                                                                                                                                                            |
+| `/careers/[id]`            | Job Detail               | Individual job posting                                                                                                                                                                                  |
+| `/lp/[slug]`               | Landing Page             | Dynamic marketing landing pages                                                                                                                                                                         |
 
 ---
 
@@ -235,13 +235,13 @@ developer sidebar. These pages are accessible through the Settings sidebar
 
 ### 13. Cases (5 pages)
 
-| Route                      | Page                 | Description                                     |
-| -------------------------- | -------------------- | ----------------------------------------------- |
-| `/cases`                   | Cases List           | Legal/service case queue with stats and filters |
-| `/cases/new`               | New Case             | Case creation form                              |
-| `/cases/[id]`              | Case Detail          | Case detail with documents                      |
-| `/cases/timeline`          | Case Timeline        | Case history and deadline engine                |
-| `/cases/case-workflows`    | Case Workflow Builder| Visual workflow builder for case automation (IFC-031) |
+| Route                   | Page                  | Description                                           |
+| ----------------------- | --------------------- | ----------------------------------------------------- |
+| `/cases`                | Cases List            | Legal/service case queue with stats and filters       |
+| `/cases/new`            | New Case              | Case creation form                                    |
+| `/cases/[id]`           | Case Detail           | Case detail with documents                            |
+| `/cases/timeline`       | Case Timeline         | Case history and deadline engine                      |
+| `/cases/case-workflows` | Case Workflow Builder | Visual workflow builder for case automation (IFC-031) |
 
 ---
 

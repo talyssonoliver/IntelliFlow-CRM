@@ -1,6 +1,8 @@
 # IntelliFlow CRM - Sitemap
 
-> **Location**: `docs/design/sitemap.md` **Last Updated**: 2026-04-13 **Total Pages**: 201 **Total Flows**: 42 (linked) **Layouts**: 37 **API Routers**: 48 (232 procedures)
+> **Location**: `docs/design/sitemap.md` **Last Updated**: 2026-04-13 **Total
+> Pages**: 201 **Total Flows**: 42 (linked) **Layouts**: 37 **API Routers**: 48
+> (232 procedures)
 
 ---
 
@@ -252,32 +254,32 @@ intelliflow.com
 
 ## Page Count by Section
 
-| Section               | Pages   | Status                                         |
-| --------------------- | ------- | ---------------------------------------------- |
-| Public Pages          | 29      | Marketing, auth, blog, careers, callbacks, SSO, legal, system |
-| Developer Portal      | 14      | Docs (10), apps (3), apps/new (1)              |
-| Dashboard             | 3       | Main, new, customize                           |
-| CRM Core: Leads       | 4       | List, new, detail, edit                        |
-| CRM Core: Contacts    | 4       | List, new, detail, edit                        |
-| CRM Core: Accounts    | 2       | List, detail                                   |
-| CRM Core: Deals       | 5       | List, trash, detail, forecast (2)              |
-| CRM Core: Tickets     | 3       | List, new, detail                              |
-| CRM Core: Documents   | 3       | List, new, detail                              |
-| CRM Core: Cases       | 4       | List, new, detail, timeline                    |
-| Tasks                 | 2       | List, detail                                   |
-| Calendar              | 3       | List, new, detail                              |
-| Email                 | 2       | Inbox, detail                                  |
-| AI & Automation       | 14      | Queue + 13 sub-pages                           |
-| AI Insights           | 1       | All insights (paginated, filtered)             |
-| Analytics             | 5       | Dashboard, feedback, weekly, monthly, quarterly |
-| Settings              | 9       | Account, team, AI, integrations, routing, etc. |
-| Billing               | 7       | Overview, checkout, subscriptions, etc.        |
+| Section               | Pages   | Status                                                                |
+| --------------------- | ------- | --------------------------------------------------------------------- |
+| Public Pages          | 29      | Marketing, auth, blog, careers, callbacks, SSO, legal, system         |
+| Developer Portal      | 14      | Docs (10), apps (3), apps/new (1)                                     |
+| Dashboard             | 3       | Main, new, customize                                                  |
+| CRM Core: Leads       | 4       | List, new, detail, edit                                               |
+| CRM Core: Contacts    | 4       | List, new, detail, edit                                               |
+| CRM Core: Accounts    | 2       | List, detail                                                          |
+| CRM Core: Deals       | 5       | List, trash, detail, forecast (2)                                     |
+| CRM Core: Tickets     | 3       | List, new, detail                                                     |
+| CRM Core: Documents   | 3       | List, new, detail                                                     |
+| CRM Core: Cases       | 4       | List, new, detail, timeline                                           |
+| Tasks                 | 2       | List, detail                                                          |
+| Calendar              | 3       | List, new, detail                                                     |
+| Email                 | 2       | Inbox, detail                                                         |
+| AI & Automation       | 14      | Queue + 13 sub-pages                                                  |
+| AI Insights           | 1       | All insights (paginated, filtered)                                    |
+| Analytics             | 5       | Dashboard, feedback, weekly, monthly, quarterly                       |
+| Settings              | 9       | Account, team, AI, integrations, routing, etc.                        |
+| Billing               | 7       | Overview, checkout, subscriptions, etc.                               |
 | Governance            | 9       | ADR, compliance, policies, reports, lighthouse, coverage, performance |
-| Notifications         | 2       | List, settings                                 |
-| Profile               | 1       | User profile                                   |
-| Support Portal        | 1       | Support-agent ticket queue                     |
-| Support / Help Center | 1       | Self-service help center                       |
-| **Total**             | **128** |                                                |
+| Notifications         | 2       | List, settings                                                        |
+| Profile               | 1       | User profile                                                          |
+| Support Portal        | 1       | Support-agent ticket queue                                            |
+| Support / Help Center | 1       | Self-service help center                                              |
+| **Total**             | **128** |                                                                       |
 
 ---
 
@@ -311,8 +313,8 @@ only** — no authenticated routes.
 | `/blog/ai-lead-scoring-best-practices` | 0.6      | monthly          |
 | `/blog/governance-ready-automation`    | 0.6      | monthly          |
 
-**Excluded:** All 78 authenticated routes, `/404`, `/500`, auth flow pages, dynamic
-`[id]`/`[token]` routes, API routes, redirect-only paths.
+**Excluded:** All 78 authenticated routes, `/404`, `/500`, auth flow pages,
+dynamic `[id]`/`[token]` routes, API routes, redirect-only paths.
 
 ### `apps/web/src/app/robots.ts`
 
@@ -374,7 +376,7 @@ resolve to sidebar/navigation links but have no `page.tsx` yet:
 | Leads         | `/leads`, `/leads/new`, `/leads/[id]`, `/leads/[id]/edit`                                                                                                                                                                                                        | Implemented | FLOW-005, FLOW-006 |
 | Contacts      | `/contacts`, `/contacts/new`, `/contacts/[id]`, `/contacts/[id]/edit`                                                                                                                                                                                            | Implemented | FLOW-016           |
 | Accounts      | `/accounts`, `/accounts/[id]`                                                                                                                                                                                                                                    | Implemented | -                  |
-| Deals         | `/deals`, `/deals/trash`, `/deals/[id]`, `/deals/[id]/forecast`                                                                                                                                                                                                   | Implemented | FLOW-007, FLOW-008 |
+| Deals         | `/deals`, `/deals/trash`, `/deals/[id]`, `/deals/[id]/forecast`                                                                                                                                                                                                  | Implemented | FLOW-007, FLOW-008 |
 | Tickets       | `/tickets`, `/tickets/new`, `/tickets/[id]`                                                                                                                                                                                                                      | Implemented | FLOW-011, FLOW-012 |
 | Documents     | `/documents`, `/documents/new`, `/documents/[id]`                                                                                                                                                                                                                | Implemented | -                  |
 | Cases         | `/cases`, `/cases/new`, `/cases/[id]`, `/cases/timeline`                                                                                                                                                                                                         | Implemented | FLOW-020           |
