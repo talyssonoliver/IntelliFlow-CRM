@@ -46,7 +46,9 @@ if (existsSync(specifySprintsDir)) {
   const stateReport = generateCurrentStateReport(metricsDir, specifySprintsDir, monorepoRoot);
   writeFileSync(stateReportMdPath, stateReport.markdown, 'utf-8');
   writeFileSync(stateReportJsonPath, `${JSON.stringify(stateReport.data, null, 2)}\n`, 'utf-8');
-  console.log(`  State report: ${stateReport.data.overview.completedTasks}/${stateReport.data.overview.totalTasks} tasks`);
+  console.log(
+    `  State report: ${stateReport.data.overview.completedTasks}/${stateReport.data.overview.totalTasks} tasks`
+  );
 }
 
 // Step 2: Generate SESSION_CONTEXT (reads the fresh state-report JSON for Project Health)

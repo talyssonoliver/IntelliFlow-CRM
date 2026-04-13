@@ -700,7 +700,8 @@ function StalenessWarning({ provenance }: Readonly<StalenessWarningProps>) {
       <div className="flex-1">
         <p className="font-semibold text-amber-800">Metrics are stale</p>
         <p className="text-sm text-amber-700">
-          Last collected {provenance.daysSinceCollection} days ago (threshold: {provenance.threshold} days).
+          Last collected {provenance.daysSinceCollection} days ago (threshold:{' '}
+          {provenance.threshold} days).
           {provenance.nextDue && (
             <> Next collection was due: {new Date(provenance.nextDue).toLocaleDateString()}</>
           )}
@@ -731,7 +732,8 @@ function MaturityLevelCard({ maturity }: Readonly<MaturityLevelCardProps>) {
           <div>
             <h3 className="text-lg font-bold text-gray-800">{maturity.name}</h3>
             <p className="text-sm text-gray-500">
-              {maturity.criteria.filter((c) => c.passed).length}/{maturity.criteria.length} criteria met across all levels
+              {maturity.criteria.filter((c) => c.passed).length}/{maturity.criteria.length} criteria
+              met across all levels
             </p>
           </div>
         </div>
@@ -784,7 +786,9 @@ function PlatformSummaryCards({ summary }: Readonly<PlatformSummaryCardsProps>) 
           )}
           <p className="text-sm font-medium text-gray-600">KPIs</p>
         </div>
-        <p className={`text-2xl font-bold ${summary.kpis.allMet ? 'text-green-700' : 'text-red-700'}`}>
+        <p
+          className={`text-2xl font-bold ${summary.kpis.allMet ? 'text-green-700' : 'text-red-700'}`}
+        >
           {summary.kpis.met}/{summary.kpis.total}
         </p>
         <p className="text-xs text-gray-500">met</p>
@@ -798,7 +802,9 @@ function PlatformSummaryCards({ summary }: Readonly<PlatformSummaryCardsProps>) 
           )}
           <p className="text-sm font-medium text-gray-600">Evidence</p>
         </div>
-        <p className={`text-2xl font-bold ${evidenceAllPassed ? 'text-green-700' : 'text-yellow-700'}`}>
+        <p
+          className={`text-2xl font-bold ${evidenceAllPassed ? 'text-green-700' : 'text-yellow-700'}`}
+        >
           {summary.evidence.passed}/{summary.evidence.total}
         </p>
         <p className="text-xs text-gray-500">verified</p>
@@ -812,7 +818,9 @@ function PlatformSummaryCards({ summary }: Readonly<PlatformSummaryCardsProps>) 
           )}
           <p className="text-sm font-medium text-gray-600">Provenance</p>
         </div>
-        <p className={`text-2xl font-bold ${provenanceFresh ? 'text-green-700' : 'text-yellow-700'}`}>
+        <p
+          className={`text-2xl font-bold ${provenanceFresh ? 'text-green-700' : 'text-yellow-700'}`}
+        >
           {provenanceFresh ? 'Fresh' : 'Stale'}
         </p>
         <p className="text-xs text-gray-500">{summary.provenance.daysSinceCollection}d ago</p>
@@ -856,9 +864,7 @@ function PassFailSummaryCard({ label, passed, value }: Readonly<PassFailSummaryC
         )}
         <p className="text-sm font-medium text-gray-600">{label}</p>
       </div>
-      <p className={`text-2xl font-bold ${passed ? 'text-green-700' : 'text-red-700'}`}>
-        {value}
-      </p>
+      <p className={`text-2xl font-bold ${passed ? 'text-green-700' : 'text-red-700'}`}>{value}</p>
     </div>
   );
 }
@@ -985,9 +991,7 @@ function PlatformHealthTab({
           <StalenessWarning provenance={platformHealth.summary.provenance} />
 
           {/* Maturity Level Card */}
-          {platformHealth.maturity && (
-            <MaturityLevelCard maturity={platformHealth.maturity} />
-          )}
+          {platformHealth.maturity && <MaturityLevelCard maturity={platformHealth.maturity} />}
 
           {/* Top Summary Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -1239,14 +1243,20 @@ function PlatformHealthTab({
                       : 'bg-yellow-100 text-yellow-700'
                   }`}
                 >
-                  {platformHealth.summary.evidence.passed}/{platformHealth.summary.evidence.total} passed
+                  {platformHealth.summary.evidence.passed}/{platformHealth.summary.evidence.total}{' '}
+                  passed
                 </span>
               }
               expanded={expandedSections.has('evidence')}
               onToggle={() => toggleSection('evidence')}
             >
               {platformHealth.evidenceChecks.map((check) => (
-                <CheckItem key={check.name} name={check.name} detail={check.detail} passed={check.passed} />
+                <CheckItem
+                  key={check.name}
+                  name={check.name}
+                  detail={check.detail}
+                  passed={check.passed}
+                />
               ))}
             </CheckListSection>
 
@@ -1270,7 +1280,12 @@ function PlatformHealthTab({
               onToggle={() => toggleSection('provenance')}
             >
               {platformHealth.provenanceChecks.map((check) => (
-                <CheckItem key={check.name} name={check.name} detail={check.detail} passed={check.passed} />
+                <CheckItem
+                  key={check.name}
+                  name={check.name}
+                  detail={check.detail}
+                  passed={check.passed}
+                />
               ))}
             </CheckListSection>
 
@@ -1281,7 +1296,8 @@ function PlatformHealthTab({
               badge={
                 <span
                   className={`px-2 py-0.5 text-xs rounded-full ${
-                    platformHealth.summary.consistency.passed === platformHealth.summary.consistency.total
+                    platformHealth.summary.consistency.passed ===
+                    platformHealth.summary.consistency.total
                       ? 'bg-green-100 text-green-700'
                       : 'bg-red-100 text-red-700'
                   }`}
@@ -1294,7 +1310,12 @@ function PlatformHealthTab({
               onToggle={() => toggleSection('consistency')}
             >
               {platformHealth.consistencyChecks.map((check) => (
-                <ConsistencyCheckItem key={check.name} name={check.name} detail={check.detail} passed={check.passed} />
+                <ConsistencyCheckItem
+                  key={check.name}
+                  name={check.name}
+                  detail={check.detail}
+                  passed={check.passed}
+                />
               ))}
             </CheckListSection>
           </div>

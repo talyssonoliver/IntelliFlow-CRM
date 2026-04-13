@@ -214,8 +214,12 @@ function isEndpointK6Tested(
     (name) =>
       name === fullName ||
       (routerName.toLowerCase() === 'health' && index === 0 && name.includes('health')) ||
-      (routerName.toLowerCase() === 'lead' && endpointName === 'list' && name.includes('lead.list')) ||
-      (routerName.toLowerCase() === 'contact' && endpointName === 'list' && name.includes('contact.list'))
+      (routerName.toLowerCase() === 'lead' &&
+        endpointName === 'list' &&
+        name.includes('lead.list')) ||
+      (routerName.toLowerCase() === 'contact' &&
+        endpointName === 'list' &&
+        name.includes('contact.list'))
   );
 }
 
@@ -373,7 +377,8 @@ function K6TestOutputPanel({
     <div className="p-4 bg-gray-900 text-green-400 font-mono text-xs max-h-64 overflow-y-auto">
       {isRunningTest && !testOutput && (
         <div className="flex items-center gap-2">
-          <span className="animate-pulse">▶</span> Running {isRunningTest} test... This may take 30-60 seconds.
+          <span className="animate-pulse">▶</span> Running {isRunningTest} test... This may take
+          30-60 seconds.
         </div>
       )}
       {testOutput && <pre className="whitespace-pre-wrap">{testOutput}</pre>}
@@ -386,8 +391,12 @@ interface ResponseTimeMetricsSectionProps {
   endpointMetrics: EndpointMetric[] | undefined;
 }
 
-function ResponseTimeMetricsSection({ performanceStatus, endpointMetrics }: Readonly<ResponseTimeMetricsSectionProps>) {
-  const hasData = performanceStatus === 'completed' && endpointMetrics && endpointMetrics.length > 0;
+function ResponseTimeMetricsSection({
+  performanceStatus,
+  endpointMetrics,
+}: Readonly<ResponseTimeMetricsSectionProps>) {
+  const hasData =
+    performanceStatus === 'completed' && endpointMetrics && endpointMetrics.length > 0;
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
       <div className="bg-gray-100 px-6 py-4 border-b">
@@ -395,7 +404,9 @@ function ResponseTimeMetricsSection({ performanceStatus, endpointMetrics }: Read
       </div>
       <div className="p-6">
         {performanceStatus === 'pending' && (
-          <p className="text-gray-600 italic mb-4">Run benchmarks to see actual response time data</p>
+          <p className="text-gray-600 italic mb-4">
+            Run benchmarks to see actual response time data
+          </p>
         )}
         {hasData ? (
           <>
@@ -410,28 +421,50 @@ function ResponseTimeMetricsSection({ performanceStatus, endpointMetrics }: Read
                     <div className="flex items-end gap-1 h-40">
                       <div className="flex flex-col items-center">
                         <span className="text-xs text-gray-500 mb-1">{section.p50.toFixed(0)}</span>
-                        <div className="w-5 bg-green-500 rounded-t" style={{ height: `${p50Height}px` }} />
+                        <div
+                          className="w-5 bg-green-500 rounded-t"
+                          style={{ height: `${p50Height}px` }}
+                        />
                       </div>
                       <div className="flex flex-col items-center">
                         <span className="text-xs text-gray-500 mb-1">{section.p95.toFixed(0)}</span>
-                        <div className="w-5 bg-yellow-500 rounded-t" style={{ height: `${p95Height}px` }} />
+                        <div
+                          className="w-5 bg-yellow-500 rounded-t"
+                          style={{ height: `${p95Height}px` }}
+                        />
                       </div>
                       <div className="flex flex-col items-center">
                         <span className="text-xs text-gray-500 mb-1">{section.p99.toFixed(0)}</span>
-                        <div className="w-5 bg-orange-500 rounded-t" style={{ height: `${p99Height}px` }} />
+                        <div
+                          className="w-5 bg-orange-500 rounded-t"
+                          style={{ height: `${p99Height}px` }}
+                        />
                       </div>
                     </div>
-                    <span className="text-xs text-gray-700 font-medium text-center capitalize">{section.name}</span>
+                    <span className="text-xs text-gray-700 font-medium text-center capitalize">
+                      {section.name}
+                    </span>
                     <span className="text-xs text-gray-400">({section.count})</span>
                   </div>
                 );
               })}
             </div>
             <div className="flex justify-center gap-6 mt-4 pt-4 border-t">
-              <div className="flex items-center gap-2"><div className="w-4 h-4 bg-green-500 rounded" /><span className="text-sm text-gray-600">p50 (Median)</span></div>
-              <div className="flex items-center gap-2"><div className="w-4 h-4 bg-yellow-500 rounded" /><span className="text-sm text-gray-600">p95</span></div>
-              <div className="flex items-center gap-2"><div className="w-4 h-4 bg-orange-500 rounded" /><span className="text-sm text-gray-600">p99</span></div>
-              <div className="flex items-center gap-2 ml-4 pl-4 border-l"><span className="text-sm text-gray-500">(n) = endpoints tested</span></div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-green-500 rounded" />
+                <span className="text-sm text-gray-600">p50 (Median)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-yellow-500 rounded" />
+                <span className="text-sm text-gray-600">p95</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-orange-500 rounded" />
+                <span className="text-sm text-gray-600">p99</span>
+              </div>
+              <div className="flex items-center gap-2 ml-4 pl-4 border-l">
+                <span className="text-sm text-gray-500">(n) = endpoints tested</span>
+              </div>
             </div>
           </>
         ) : (
@@ -439,9 +472,18 @@ function ResponseTimeMetricsSection({ performanceStatus, endpointMetrics }: Read
             {['Health', 'Auth', 'CRM', 'AI', 'Billing'].map((section) => (
               <div key={section} className="flex flex-col items-center gap-2 flex-1">
                 <div className="flex items-end gap-1 h-40">
-                  <div className="flex flex-col items-center"><span className="text-xs text-gray-500 mb-1">--</span><div className="w-5 bg-gray-200 rounded-t" style={{ height: '32px' }} /></div>
-                  <div className="flex flex-col items-center"><span className="text-xs text-gray-500 mb-1">--</span><div className="w-5 bg-gray-300 rounded-t" style={{ height: '64px' }} /></div>
-                  <div className="flex flex-col items-center"><span className="text-xs text-gray-500 mb-1">--</span><div className="w-5 bg-gray-400 rounded-t" style={{ height: '96px' }} /></div>
+                  <div className="flex flex-col items-center">
+                    <span className="text-xs text-gray-500 mb-1">--</span>
+                    <div className="w-5 bg-gray-200 rounded-t" style={{ height: '32px' }} />
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <span className="text-xs text-gray-500 mb-1">--</span>
+                    <div className="w-5 bg-gray-300 rounded-t" style={{ height: '64px' }} />
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <span className="text-xs text-gray-500 mb-1">--</span>
+                    <div className="w-5 bg-gray-400 rounded-t" style={{ height: '96px' }} />
+                  </div>
                 </div>
                 <span className="text-xs text-gray-700 font-medium text-center">{section}</span>
                 <span className="text-xs text-gray-400">(0)</span>
@@ -459,7 +501,10 @@ interface ErrorRateAnalysisSectionProps {
   k6TestedEndpoints: K6TestedEndpoint[] | undefined;
 }
 
-function ErrorRateAnalysisSection({ k6ErrorAnalysis, k6TestedEndpoints }: Readonly<ErrorRateAnalysisSectionProps>) {
+function ErrorRateAnalysisSection({
+  k6ErrorAnalysis,
+  k6TestedEndpoints,
+}: Readonly<ErrorRateAnalysisSectionProps>) {
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
       <div className="bg-gray-100 px-6 py-4 border-b">
@@ -470,17 +515,23 @@ function ErrorRateAnalysisSection({ k6ErrorAnalysis, k6TestedEndpoints }: Readon
           <>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               <div className="bg-gray-50 p-4 rounded-lg text-center">
-                <div className={`text-3xl font-bold ${k6ErrorAnalysis.error_rate_percent === 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <div
+                  className={`text-3xl font-bold ${k6ErrorAnalysis.error_rate_percent === 0 ? 'text-green-600' : 'text-red-600'}`}
+                >
                   {k6ErrorAnalysis.error_rate_percent.toFixed(2)}%
                 </div>
                 <div className="text-sm text-gray-600 mt-1">Total Error Rate</div>
               </div>
               <div className="bg-gray-50 p-4 rounded-lg text-center">
-                <div className="text-3xl font-bold text-green-600">{k6ErrorAnalysis.total_checks_passed.toLocaleString()}</div>
+                <div className="text-3xl font-bold text-green-600">
+                  {k6ErrorAnalysis.total_checks_passed.toLocaleString()}
+                </div>
                 <div className="text-sm text-gray-600 mt-1">Checks Passed</div>
               </div>
               <div className="bg-gray-50 p-4 rounded-lg text-center">
-                <div className={`text-3xl font-bold ${k6ErrorAnalysis.total_checks_failed === 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <div
+                  className={`text-3xl font-bold ${k6ErrorAnalysis.total_checks_failed === 0 ? 'text-green-600' : 'text-red-600'}`}
+                >
                   {k6ErrorAnalysis.total_checks_failed.toLocaleString()}
                 </div>
                 <div className="text-sm text-gray-600 mt-1">Checks Failed</div>
@@ -491,10 +542,14 @@ function ErrorRateAnalysisSection({ k6ErrorAnalysis, k6TestedEndpoints }: Readon
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="bg-gray-50">
-                      <th className="px-4 py-3 text-left font-semibold text-gray-600">Endpoint Check</th>
+                      <th className="px-4 py-3 text-left font-semibold text-gray-600">
+                        Endpoint Check
+                      </th>
                       <th className="px-4 py-3 text-center font-semibold text-gray-600">Passes</th>
                       <th className="px-4 py-3 text-center font-semibold text-gray-600">Fails</th>
-                      <th className="px-4 py-3 text-center font-semibold text-gray-600">Success Rate</th>
+                      <th className="px-4 py-3 text-center font-semibold text-gray-600">
+                        Success Rate
+                      </th>
                       <th className="px-4 py-3 text-center font-semibold text-gray-600">Status</th>
                     </tr>
                   </thead>
@@ -502,11 +557,17 @@ function ErrorRateAnalysisSection({ k6ErrorAnalysis, k6TestedEndpoints }: Readon
                     {k6TestedEndpoints.map((endpoint) => (
                       <tr key={endpoint.name} className="border-t hover:bg-gray-50">
                         <td className="px-4 py-3 font-medium">{endpoint.name}</td>
-                        <td className="px-4 py-3 text-center text-green-600">{endpoint.passes.toLocaleString()}</td>
+                        <td className="px-4 py-3 text-center text-green-600">
+                          {endpoint.passes.toLocaleString()}
+                        </td>
                         <td className="px-4 py-3 text-center text-red-600">{endpoint.fails}</td>
-                        <td className="px-4 py-3 text-center">{endpoint.success_rate.toFixed(1)}%</td>
                         <td className="px-4 py-3 text-center">
-                          <span className={`px-2 py-0.5 rounded text-xs ${endpoint.fails === 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                          {endpoint.success_rate.toFixed(1)}%
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <span
+                            className={`px-2 py-0.5 rounded text-xs ${endpoint.fails === 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}
+                          >
                             {endpoint.fails === 0 ? 'PASS' : 'FAIL'}
                           </span>
                         </td>
@@ -517,17 +578,23 @@ function ErrorRateAnalysisSection({ k6ErrorAnalysis, k6TestedEndpoints }: Readon
               </div>
             )}
             <p className="mt-4 text-sm text-gray-700">
-              <strong>Check Success Rate: {(k6ErrorAnalysis.check_success_rate * 100).toFixed(1)}%</strong>{' '}
+              <strong>
+                Check Success Rate: {(k6ErrorAnalysis.check_success_rate * 100).toFixed(1)}%
+              </strong>{' '}
               | HTTP Failed Requests: {k6ErrorAnalysis.http_failed_count}
             </p>
           </>
         ) : (
           <>
-            <p className="text-gray-600 italic mb-4">No load test data available - run k6 benchmark to see actual error analysis</p>
+            <p className="text-gray-600 italic mb-4">
+              No load test data available - run k6 benchmark to see actual error analysis
+            </p>
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
               <p className="text-sm text-amber-800">
                 <strong>To run load tests:</strong> Execute{' '}
-                <code className="bg-amber-100 px-1 rounded">.\artifacts\misc\k6\run-quick-test.ps1</code>{' '}
+                <code className="bg-amber-100 px-1 rounded">
+                  .\artifacts\misc\k6\run-quick-test.ps1
+                </code>{' '}
                 from project root
               </p>
             </div>
@@ -575,7 +642,10 @@ export default function PerformanceReportView() {
     setIsRunningTest(testType);
     setTestOutput(null);
     runK6TestRequest(testType)
-      .then((output) => { setTestOutput(output); return loadData(); })
+      .then((output) => {
+        setTestOutput(output);
+        return loadData();
+      })
       .catch((err: unknown) => setTestOutput(err instanceof Error ? err.message : 'Test failed'))
       .finally(() => setIsRunningTest(null));
   };
@@ -668,7 +738,11 @@ export default function PerformanceReportView() {
           </div>
           <div className="flex gap-3">
             <K6TestButton testType="quick" isRunningTest={isRunningTest} onRun={runK6Test} />
-            <K6TestButton testType="comprehensive" isRunningTest={isRunningTest} onRun={runK6Test} />
+            <K6TestButton
+              testType="comprehensive"
+              isRunningTest={isRunningTest}
+              onRun={runK6Test}
+            />
           </div>
         </div>
         {/* Test output log */}
@@ -1201,7 +1275,12 @@ export default function PerformanceReportView() {
                           const fullEndpointName = `${router.name}.${endpointName}`;
 
                           // Check if this endpoint was tested by k6
-                          const isK6Tested = isEndpointK6Tested(testedEndpointNames, router.name, endpointName, i);
+                          const isK6Tested = isEndpointK6Tested(
+                            testedEndpointNames,
+                            router.name,
+                            endpointName,
+                            i
+                          );
 
                           // Get benchmark data if available
                           const benchmarkData = data.endpoint_metrics?.find(
@@ -1276,8 +1355,6 @@ export default function PerformanceReportView() {
         k6ErrorAnalysis={data.k6_error_analysis}
         k6TestedEndpoints={data.k6_tested_endpoints}
       />
-
-
 
       {/* Resource Utilization Targets */}
       <div className="bg-white rounded-lg shadow overflow-hidden">

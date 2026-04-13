@@ -44,7 +44,10 @@ export const DEFAULT_COVERAGE_THRESHOLDS: CoverageThresholds = {
 const COVERAGE_SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs']);
 
 function normalizePath(value: string): string {
-  return value.replaceAll('\\', '/').replace(/\/{2,}/g, '/').toLowerCase();
+  return value
+    .replaceAll('\\', '/')
+    .replace(/\/{2,}/g, '/')
+    .toLowerCase();
 }
 
 function resolveAbsolutePath(repoRoot: string, filePath: string): string {
@@ -305,12 +308,7 @@ export function buildCoverageMetricsFromAttestedKpis(
         parsePercentage(branches?.actual) ??
         parsePercentage(functions?.actual) ??
         0,
-      met:
-        lines?.met ??
-        statements?.met ??
-        branches?.met ??
-        functions?.met ??
-        false,
+      met: lines?.met ?? statements?.met ?? branches?.met ?? functions?.met ?? false,
     },
     scope: {
       source: 'attestation-kpis',

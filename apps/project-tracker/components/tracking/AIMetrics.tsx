@@ -203,14 +203,12 @@ function DriftCard({ data }: Readonly<DriftCardProps>) {
       : 0;
 
   return (
-    <div className={`rounded-lg p-4 border ${detected ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'}`}>
+    <div
+      className={`rounded-lg p-4 border ${detected ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'}`}
+    >
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <Icon
-            name={detected ? 'warning' : 'check_circle'}
-            className={colorClass}
-            size="lg"
-          />
+          <Icon name={detected ? 'warning' : 'check_circle'} className={colorClass} size="lg" />
           <span className="font-medium text-gray-900">Model Drift</span>
         </div>
         <span className={`text-sm ${colorClass}`}>
@@ -253,8 +251,13 @@ function DriftCard({ data }: Readonly<DriftCardProps>) {
       {data?.drift.alerts && data.drift.alerts.length > 0 && (
         <div className="mt-3 space-y-1">
           {data.drift.alerts.map((alert) => (
-            <div key={`${alert.severity}-${alert.timestamp}`} className="text-xs flex items-center gap-2">
-              <span className={`font-medium ${alert.severity === 'critical' ? 'text-red-600' : 'text-yellow-600'}`}>
+            <div
+              key={`${alert.severity}-${alert.timestamp}`}
+              className="text-xs flex items-center gap-2"
+            >
+              <span
+                className={`font-medium ${alert.severity === 'critical' ? 'text-red-600' : 'text-yellow-600'}`}
+              >
                 [{alert.severity}]
               </span>
               <span className="text-gray-600">{alert.message}</span>
@@ -278,7 +281,9 @@ function HallucinationCard({ data }: Readonly<HallucinationCardProps>) {
     data.hallucination.rate > data.hallucination.threshold;
 
   return (
-    <div className={`rounded-lg p-4 border ${isExceeded ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'}`}>
+    <div
+      className={`rounded-lg p-4 border ${isExceeded ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'}`}
+    >
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <Icon
@@ -297,7 +302,9 @@ function HallucinationCard({ data }: Readonly<HallucinationCardProps>) {
       <div className="flex items-center gap-4 text-sm">
         <div>
           <span className="text-gray-500">Samples: </span>
-          <span className="text-gray-900 font-mono">{data?.hallucination.samples_checked ?? 0}</span>
+          <span className="text-gray-900 font-mono">
+            {data?.hallucination.samples_checked ?? 0}
+          </span>
         </div>
         <div>
           <span className="text-gray-500">Threshold: </span>

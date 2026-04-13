@@ -404,13 +404,14 @@ function normalizeAttestation(
     taskId,
     sprintFolder,
     path,
-    verdict:
-      ((() => {
-        const value = flattenText(raw['verdict']).toUpperCase();
-        if (value === 'PASS') return 'COMPLETE';
-        return value || null;
-      })() as string | null),
-    title: flattenText(raw['task_title'] ?? raw['title'] ?? raw['description'] ?? raw['summary']) || null,
+    verdict: (() => {
+      const value = flattenText(raw['verdict']).toUpperCase();
+      if (value === 'PASS') return 'COMPLETE';
+      return value || null;
+    })() as string | null,
+    title:
+      flattenText(raw['task_title'] ?? raw['title'] ?? raw['description'] ?? raw['summary']) ||
+      null,
     notes: flattenText(raw['notes']),
     blockerDescription:
       raw['blocker'] && typeof raw['blocker'] === 'object'
@@ -423,9 +424,7 @@ function normalizeAttestation(
           )
         : [],
     definitionOfDoneItems: normalizeDoDItems(raw['definition_of_done_items']),
-    validationSummary: normalizeValidationSummary(
-      raw['validation_results'] ?? raw['validations']
-    ),
+    validationSummary: normalizeValidationSummary(raw['validation_results'] ?? raw['validations']),
     kpiSummary: normalizeKpiSummary(raw['kpi_results'] ?? raw['kpis']),
     timestamp:
       parseTimestamp(raw['attestation_timestamp']) ??
@@ -576,11 +575,9 @@ function loadCanonicalAttestations(
   return { byTaskId, duplicateCanonicalAttestations, ignoredSpecifySprintDirs, sourceFiles };
 }
 
-function summarizeDefinitionOfDone(
-  items: NormalizedDoDItem[],
-  fallbackDefinition: string
-): string {
-  if (items.length === 0) return summarizeText(normalizeDefinitionOfDoneText(fallbackDefinition), 240);
+function summarizeDefinitionOfDone(items: NormalizedDoDItem[], fallbackDefinition: string): string {
+  if (items.length === 0)
+    return summarizeText(normalizeDefinitionOfDoneText(fallbackDefinition), 240);
 
   const criteria = items
     .map((item) => item.criterion)
@@ -622,12 +619,17 @@ function summarizeTask(
       : '';
   const blockerSummary =
     attestation?.blockerDescription && attestation.blockerDescription.length > 0
-      ? summarizeText(`Blocked because ${stripNarrativeBoilerplate(attestation.blockerDescription)}`, 240)
+      ? summarizeText(
+          `Blocked because ${stripNarrativeBoilerplate(attestation.blockerDescription)}`,
+          240
+        )
       : '';
 
   const noteIsProcedural =
     /repair|re-attestation|attestation|stub|checkbox|lint error|sha256/i.test(noteSummary);
-  const primaryNarrative = blockerSummary || (!noteSummary || noteIsProcedural ? invariantSummary || noteSummary : noteSummary);
+  const primaryNarrative =
+    blockerSummary ||
+    (!noteSummary || noteIsProcedural ? invariantSummary || noteSummary : noteSummary);
 
   const fragments = [primaryNarrative, definitionOfDoneSnapshot]
     .filter(Boolean)
@@ -635,9 +637,7 @@ function summarizeTask(
       if (
         acc.some(
           (existing) =>
-            existing === fragment ||
-            existing.includes(fragment) ||
-            fragment.includes(existing)
+            existing === fragment || existing.includes(fragment) || fragment.includes(existing)
         )
       ) {
         return acc;
@@ -671,8 +671,9 @@ function buildTaskRecord(
     summary: normalized.summary,
     definitionOfDone: normalizeWhitespace(row['Definition of Done']),
     definitionOfDoneSnapshot: normalized.definitionOfDoneSnapshot,
-    dependencies: parseDependencies((row.Dependencies || '').replaceAll(';', ','))
-      .map((dep) => dep.replace(/:(?:FS|BS|TS)$/i, '')),
+    dependencies: parseDependencies((row.Dependencies || '').replaceAll(';', ',')).map((dep) =>
+      dep.replace(/:(?:FS|BS|TS)$/i, '')
+    ),
     attestation: {
       exists: Boolean(attestation),
       path: attestation ? toRepoRelative(repoRoot, attestation.path) : null,
@@ -806,7 +807,8 @@ function renderTaskBullet(task: ReportTask): string {
 }
 
 function renderSprintSection(sprint: SprintReport): string {
-  const inProgressSuffix = sprint.inProgressTasks > 0 ? `, ${sprint.inProgressTasks} in progress` : '';
+  const inProgressSuffix =
+    sprint.inProgressTasks > 0 ? `, ${sprint.inProgressTasks} in progress` : '';
   const lines: string[] = [
     `## Sprint ${sprint.sprint} - ${sprint.name}`,
     '',
@@ -843,7 +845,8 @@ function renderMarkdown(data: CurrentStateReportData): string {
   const numberedBacklog = data.sprints.reduce((sum, s) => sum + s.backlogTasks, 0);
   const numberedBlocked = data.sprints.reduce((sum, s) => sum + s.blockedTasks, 0);
   const numberedInProgress = data.sprints.reduce((sum, s) => sum + s.inProgressTasks, 0);
-  const numberedCompleted = data.overview.totalNumberedSprintTasks - numberedBacklog - numberedBlocked - numberedInProgress;
+  const numberedCompleted =
+    data.overview.totalNumberedSprintTasks - numberedBacklog - numberedBlocked - numberedInProgress;
   const lines: string[] = [
     '# Current State Report',
     `_Generated: ${data.generatedAt}_`,
@@ -858,10 +861,10 @@ function renderMarkdown(data: CurrentStateReportData): string {
   ];
 
   if (data.currentState.blockedTasks.length > 0) {
-    const blockedList = data.currentState.blockedTasks.map((task) => `${task.taskId} (${task.title})`).join(', ');
-    lines.push(
-      `- Blocking issue: ${blockedList}.`
-    );
+    const blockedList = data.currentState.blockedTasks
+      .map((task) => `${task.taskId} (${task.title})`)
+      .join(', ');
+    lines.push(`- Blocking issue: ${blockedList}.`);
   } else {
     lines.push('- Blocking issue: none currently marked `Blocked` in the sprint plan.');
   }
@@ -897,13 +900,21 @@ function renderMarkdown(data: CurrentStateReportData): string {
   }
 
   if (data.inconsistencies.attestedButNotCompletedInCsv.length > 0) {
-    const attestedList = data.inconsistencies.attestedButNotCompletedInCsv.map((entry) => `${entry.taskId} (${entry.status})`).join(', ');
+    const attestedList = data.inconsistencies.attestedButNotCompletedInCsv
+      .map((entry) => `${entry.taskId} (${entry.status})`)
+      .join(', ');
     lines.push(`- Attested but not completed in CSV: ${attestedList}.`);
   }
 
   if (data.inconsistencies.sprintMismatches.length > 0) {
-    const mismatchList = data.inconsistencies.sprintMismatches.map((m) => `${m.taskId} (CSV sprint ${m.csvSprint}, attested in sprint ${m.attestationSprint})`).join(', ');
-    lines.push(`- Sprint mismatches (attestation in different sprint than CSV Target Sprint): ${mismatchList}.`);
+    const mismatchList = data.inconsistencies.sprintMismatches
+      .map(
+        (m) => `${m.taskId} (CSV sprint ${m.csvSprint}, attested in sprint ${m.attestationSprint})`
+      )
+      .join(', ');
+    lines.push(
+      `- Sprint mismatches (attestation in different sprint than CSV Target Sprint): ${mismatchList}.`
+    );
   }
 
   if (data.inconsistencies.ignoredSpecifySprintDirs.length > 0) {
@@ -936,8 +947,9 @@ export function generateCurrentStateReport(
 
   const expectedSprintByTaskId = new Map<string, number | 'Continuous'>();
   for (const row of csvLoad.rows) {
-    const sprint =
-      /^\d+$/.test(row['Target Sprint']) ? Number(row['Target Sprint']) : ('Continuous' as const);
+    const sprint = /^\d+$/.test(row['Target Sprint'])
+      ? Number(row['Target Sprint'])
+      : ('Continuous' as const);
     expectedSprintByTaskId.set(row['Task ID'], sprint);
   }
 
@@ -955,8 +967,8 @@ export function generateCurrentStateReport(
   const tasks = csvLoad.rows.map((row) =>
     buildTaskRecord(row, attestationLoad.byTaskId.get(row['Task ID']), repoRoot)
   );
-  const numericTasks = tasks.filter((task): task is ReportTask & { sprint: number } =>
-    typeof task.sprint === 'number'
+  const numericTasks = tasks.filter(
+    (task): task is ReportTask & { sprint: number } => typeof task.sprint === 'number'
   );
   const continuousTasks = tasks.filter((task) => task.sprint === 'Continuous');
   const numericSprintIds = [...new Set(numericTasks.map((task) => task.sprint))].sort(
@@ -1021,7 +1033,9 @@ export function generateCurrentStateReport(
       otherTasks: otherTasks.length,
     },
     inconsistencies: {
-      missingSpecifySprintSummaries: numericSprintIds.filter((sprint) => !summaryCoverage.has(sprint)),
+      missingSpecifySprintSummaries: numericSprintIds.filter(
+        (sprint) => !summaryCoverage.has(sprint)
+      ),
       ignoredSpecifySprintDirs: attestationLoad.ignoredSpecifySprintDirs,
       completedWithoutCanonicalAttestation: completedTasks
         .filter((task) => !task.attestation.exists)
@@ -1054,7 +1068,10 @@ export function generateCurrentStateReport(
       blockedTasks,
       readyToStart,
       activeFocusSprints: sprintReports
-        .filter((sprint) => sprint.backlogTasks > 0 || sprint.blockedTasks > 0 || sprint.inProgressTasks > 0)
+        .filter(
+          (sprint) =>
+            sprint.backlogTasks > 0 || sprint.blockedTasks > 0 || sprint.inProgressTasks > 0
+        )
         .slice(0, 4)
         .map((sprint) => sprint.sprint),
     },

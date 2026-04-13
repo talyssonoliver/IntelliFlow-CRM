@@ -405,14 +405,16 @@ function OutdatedDepsSection({ outdatedDeps }: Readonly<OutdatedDepsSectionProps
 }
 
 interface RemediationSectionProps {
-  remediationDisplay: ReturnType<typeof getRemediationSummary> | {
-    isEmpty: true;
-    emptyMessage: string;
-    fixedCount: 0;
-    openCount: 0;
-    waiverCount: 0;
-    mttrDisplay: string;
-  };
+  remediationDisplay:
+    | ReturnType<typeof getRemediationSummary>
+    | {
+        isEmpty: true;
+        emptyMessage: string;
+        fixedCount: 0;
+        openCount: 0;
+        waiverCount: 0;
+        mttrDisplay: string;
+      };
   items: RemediationItem[] | undefined;
 }
 
@@ -575,8 +577,7 @@ interface SecretScanSectionProps {
 
 function SecretScanSection({ secretScan }: Readonly<SecretScanSectionProps>) {
   const hasData =
-    secretScan &&
-    (secretScan.lastScan || secretScan.leaksFound > 0 || secretScan.filesScanned > 0);
+    secretScan && (secretScan.lastScan || secretScan.leaksFound > 0 || secretScan.filesScanned > 0);
   return (
     <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
       <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">

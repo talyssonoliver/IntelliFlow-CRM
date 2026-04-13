@@ -221,9 +221,7 @@ export default function ContextPackStatus({
               </h4>
               <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
                 {data.invariantsAcknowledged.map((inv) => (
-                  <li key={inv}>
-                    {inv}
-                  </li>
+                  <li key={inv}>{inv}</li>
                 ))}
               </ul>
             </div>

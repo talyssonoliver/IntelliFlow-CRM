@@ -797,7 +797,10 @@ function buildArtifactsFetchParams(
   return params;
 }
 
-function getFileHistoryStatusBadge(file: { isStale: boolean; createdAt: string | null }): React.ReactElement {
+function getFileHistoryStatusBadge(file: {
+  isStale: boolean;
+  createdAt: string | null;
+}): React.ReactElement {
   if (file.isStale)
     return (
       <span className="px-2 py-0.5 text-xs bg-orange-100 text-orange-700 rounded border border-orange-200">
@@ -805,12 +808,8 @@ function getFileHistoryStatusBadge(file: { isStale: boolean; createdAt: string |
       </span>
     );
   if (file.createdAt)
-    return (
-      <span className="px-2 py-0.5 text-xs bg-green-100 text-green-700 rounded">Active</span>
-    );
-  return (
-    <span className="px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded">Untracked</span>
-  );
+    return <span className="px-2 py-0.5 text-xs bg-green-100 text-green-700 rounded">Active</span>;
+  return <span className="px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded">Untracked</span>;
 }
 
 function applyHistoryFilter(
@@ -843,7 +842,10 @@ async function fetchCodeAnalysisRequest(runFresh: boolean): Promise<CodeAnalysis
   return response.json();
 }
 
-async function fetchHistoryRequest(staleDays: number, staleOnly: boolean): Promise<HistoryResponse> {
+async function fetchHistoryRequest(
+  staleDays: number,
+  staleOnly: boolean
+): Promise<HistoryResponse> {
   const params = new URLSearchParams({ staleDays: staleDays.toString() });
   if (staleOnly) params.set('stale', 'true');
   const response = await fetch(`/api/artifacts/history?${params}`);
@@ -860,7 +862,10 @@ function toggleSetItem(prev: Set<string>, item: string): Set<string> {
   return next;
 }
 
-function formatActionMessage(action: string, result: ActionResponse): { type: 'success' | 'error'; text: string } {
+function formatActionMessage(
+  action: string,
+  result: ActionResponse
+): { type: 'success' | 'error'; text: string } {
   return {
     type: result.failed > 0 ? 'error' : 'success',
     text:
@@ -941,23 +946,30 @@ function CleanupTabContent({
         </button>
         <div className="h-6 w-px bg-gray-300" />
         {(['archive', 'ignore', 'delete'] as const).map((action) => {
-          const actionBgClass = { archive: 'bg-blue-600', ignore: 'bg-gray-600', delete: 'bg-red-600' }[action];
-          const actionIcon = { archive: 'archive', ignore: 'visibility_off', delete: 'delete' }[action];
+          const actionBgClass = {
+            archive: 'bg-blue-600',
+            ignore: 'bg-gray-600',
+            delete: 'bg-red-600',
+          }[action];
+          const actionIcon = { archive: 'archive', ignore: 'visibility_off', delete: 'delete' }[
+            action
+          ];
           return (
-          <button
-            key={action}
-            onClick={() => onExecuteAction(action)}
-            disabled={selectedPaths.size === 0 || actionLoading !== null}
-            className={`flex items-center gap-2 px-4 py-2 rounded text-white hover:opacity-90 disabled:bg-gray-300 disabled:cursor-not-allowed text-sm font-medium ${actionBgClass}`}
-          >
-            {actionLoading === action ? (
-              <Icon name="progress_activity" size="sm" className="animate-spin" />
-            ) : (
-              <Icon name={actionIcon} size="sm" />
-            )}
-            {action.charAt(0).toUpperCase() + action.slice(1)}
-          </button>
-        ); })}
+            <button
+              key={action}
+              onClick={() => onExecuteAction(action)}
+              disabled={selectedPaths.size === 0 || actionLoading !== null}
+              className={`flex items-center gap-2 px-4 py-2 rounded text-white hover:opacity-90 disabled:bg-gray-300 disabled:cursor-not-allowed text-sm font-medium ${actionBgClass}`}
+            >
+              {actionLoading === action ? (
+                <Icon name="progress_activity" size="sm" className="animate-spin" />
+              ) : (
+                <Icon name={actionIcon} size="sm" />
+              )}
+              {action.charAt(0).toUpperCase() + action.slice(1)}
+            </button>
+          );
+        })}
         <div className="flex-1" />
         <span className="text-sm text-gray-500">
           Archive moves to artifacts/archive/, Ignore adds to .artifactignore
@@ -976,10 +988,18 @@ function CleanupTabContent({
                   )}
                 </button>
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Priority</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">File Path</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reason</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Size</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                Priority
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                File Path
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                Reason
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                Size
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
@@ -997,11 +1017,15 @@ function CleanupTabContent({
                   )}
                 </td>
                 <td className="px-4 py-4">
-                  <span className={`px-2 py-1 text-xs rounded border ${getPriorityColor(item.priority)}`}>
+                  <span
+                    className={`px-2 py-1 text-xs rounded border ${getPriorityColor(item.priority)}`}
+                  >
                     {item.priority}
                   </span>
                 </td>
-                <td className="px-4 py-4 font-mono text-sm text-gray-900 max-w-md truncate">{item.path}</td>
+                <td className="px-4 py-4 font-mono text-sm text-gray-900 max-w-md truncate">
+                  {item.path}
+                </td>
                 <td className="px-4 py-4 text-sm text-gray-600 max-w-sm">{item.reason}</td>
                 <td className="px-4 py-4 text-sm text-gray-500">{formatBytes(item.size)}</td>
               </tr>
@@ -1018,17 +1042,20 @@ function useFileHistory(staleDays: number, activeTab: ViewTab) {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyFilter, setHistoryFilter] = useState<'all' | 'stale' | 'with-task'>('all');
 
-  const fetchHistory = useCallback(async (staleOnly = false) => {
-    setHistoryLoading(true);
-    try {
-      const result = await fetchHistoryRequest(staleDays, staleOnly);
-      setHistoryData(result);
-    } catch (err) {
-      console.error('Failed to fetch history:', err);
-    } finally {
-      setHistoryLoading(false);
-    }
-  }, [staleDays]);
+  const fetchHistory = useCallback(
+    async (staleOnly = false) => {
+      setHistoryLoading(true);
+      try {
+        const result = await fetchHistoryRequest(staleDays, staleOnly);
+        setHistoryData(result);
+      } catch (err) {
+        console.error('Failed to fetch history:', err);
+      } finally {
+        setHistoryLoading(false);
+      }
+    },
+    [staleDays]
+  );
 
   useEffect(() => {
     if (activeTab === 'history' && !historyData && !historyLoading) {
@@ -1151,7 +1178,10 @@ export default function ArtifactsView({ onTaskClick }: Readonly<ArtifactsViewPro
       setSelectedPaths(new Set());
       fetchData(true);
     } catch (err) {
-      setActionMessage({ type: 'error', text: err instanceof Error ? err.message : 'Action failed' });
+      setActionMessage({
+        type: 'error',
+        text: err instanceof Error ? err.message : 'Action failed',
+      });
     } finally {
       setActionLoading(null);
     }
@@ -1780,9 +1810,7 @@ export default function ArtifactsView({ onTaskClick }: Readonly<ArtifactsViewPro
                               </span>
                             )}
                           </td>
-                          <td className="px-4 py-3">
-                            {getFileHistoryStatusBadge(file)}
-                          </td>
+                          <td className="px-4 py-3">{getFileHistoryStatusBadge(file)}</td>
                         </tr>
                       ))}
                   </tbody>

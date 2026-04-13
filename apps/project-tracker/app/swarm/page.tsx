@@ -221,14 +221,28 @@ async function restartTaskRequest(taskId: string): Promise<void> {
   await fetch(`/api/swarm/restart-task/${taskId}`, { method: 'POST' });
 }
 
-function applyStartSwarmResult(result: { ok: boolean; pid?: number; error?: string }, onRefresh: () => void): void {
-  if (result.ok) { alert(`Swarm started! PID: ${result.pid}`); onRefresh(); }
-  else { alert(`Failed to start swarm: ${result.error}`); }
+function applyStartSwarmResult(
+  result: { ok: boolean; pid?: number; error?: string },
+  onRefresh: () => void
+): void {
+  if (result.ok) {
+    alert(`Swarm started! PID: ${result.pid}`);
+    onRefresh();
+  } else {
+    alert(`Failed to start swarm: ${result.error}`);
+  }
 }
 
-function applyStopSwarmResult(result: { ok: boolean; error?: string }, onRefresh: () => void): void {
-  if (result.ok) { alert('Swarm stop signal sent'); onRefresh(); }
-  else { alert(`Failed to stop swarm: ${result.error}`); }
+function applyStopSwarmResult(
+  result: { ok: boolean; error?: string },
+  onRefresh: () => void
+): void {
+  if (result.ok) {
+    alert('Swarm stop signal sent');
+    onRefresh();
+  } else {
+    alert(`Failed to stop swarm: ${result.error}`);
+  }
 }
 
 function applySubmitAnswersResult(
@@ -237,12 +251,17 @@ function applySubmitAnswersResult(
   onClearAnswers: (taskId: string) => void,
   onRefreshQuestions: () => void
 ): void {
-  if (result.error === 'no_answers') { alert('Please provide at least one answer'); return; }
+  if (result.error === 'no_answers') {
+    alert('Please provide at least one answer');
+    return;
+  }
   if (result.ok) {
     alert(result.message);
     onClearAnswers(taskId);
     onRefreshQuestions();
-  } else { alert(`Error: ${result.error}`); }
+  } else {
+    alert(`Error: ${result.error}`);
+  }
 }
 
 interface SwarmStatusResult {
@@ -324,7 +343,7 @@ async function explainTaskRequest(taskId: string): Promise<string> {
   const response = await fetch(`/api/swarm/explain/${taskId}`);
   const result = await response.json();
   return result.success
-    ? (result.explanation || '(no explanation available)')
+    ? result.explanation || '(no explanation available)'
     : `❌ Error: ${result.error || 'Failed to get explanation'}`;
 }
 
@@ -366,14 +385,26 @@ function ActiveTaskCard({
             />
             <span className="font-medium">{task.taskId}</span>
             {task.status === 'stuck' && (
-              <span className="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded">STUCK</span>
+              <span className="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded">
+                STUCK
+              </span>
             )}
             {task.status === 'needs_human' && (
-              <span className="text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded">NEEDS REVIEW</span>
+              <span className="text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded">
+                NEEDS REVIEW
+              </span>
             )}
           </button>
-          <button type="button" className="p-1 hover:bg-gray-700 rounded" onClick={() => onToggleExpand(task.taskId)}>
-            {isExpanded ? <Icon name="expand_less" size="sm" /> : <Icon name="expand_more" size="sm" />}
+          <button
+            type="button"
+            className="p-1 hover:bg-gray-700 rounded"
+            onClick={() => onToggleExpand(task.taskId)}
+          >
+            {isExpanded ? (
+              <Icon name="expand_less" size="sm" />
+            ) : (
+              <Icon name="expand_more" size="sm" />
+            )}
           </button>
         </div>
         <div className="mt-2 text-sm text-gray-400">{task.phase}</div>
@@ -388,16 +419,32 @@ function ActiveTaskCard({
       {isExpanded && (
         <div className="border-t border-gray-700 p-3">
           <div className="flex flex-wrap gap-2 mb-3">
-            <button type="button" onClick={() => onOpenTerminal(task.taskId)} className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-green-600 hover:bg-green-700 rounded transition-colors">
+            <button
+              type="button"
+              onClick={() => onOpenTerminal(task.taskId)}
+              className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-green-600 hover:bg-green-700 rounded transition-colors"
+            >
               <Icon name="terminal" size="xs" /> Terminal
             </button>
-            <button type="button" onClick={() => onViewLog(task.taskId)} className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-blue-600 hover:bg-blue-700 rounded transition-colors">
+            <button
+              type="button"
+              onClick={() => onViewLog(task.taskId)}
+              className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-blue-600 hover:bg-blue-700 rounded transition-colors"
+            >
               <Icon name="visibility" size="xs" /> Full Log
             </button>
-            <button type="button" onClick={() => onRestart(task.taskId)} className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-yellow-600 hover:bg-yellow-700 rounded transition-colors">
+            <button
+              type="button"
+              onClick={() => onRestart(task.taskId)}
+              className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-yellow-600 hover:bg-yellow-700 rounded transition-colors"
+            >
               <Icon name="refresh" size="xs" /> Restart
             </button>
-            <button type="button" onClick={() => onKill(task.taskId)} className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-red-600 hover:bg-red-700 rounded transition-colors">
+            <button
+              type="button"
+              onClick={() => onKill(task.taskId)}
+              className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-red-600 hover:bg-red-700 rounded transition-colors"
+            >
               <Icon name="close" size="xs" /> Kill
             </button>
           </div>
@@ -406,7 +453,9 @@ function ActiveTaskCard({
               <div className="text-xs text-gray-500 mb-2">Recent Activity</div>
               <div className="space-y-1 max-h-32 overflow-y-auto text-xs font-mono bg-gray-900 rounded p-2">
                 {task.recentActivity.slice(-5).map((activity, idx) => (
-                  <div key={`${task.taskId}-activity-${idx}`} className="text-gray-400">{activity}</div>
+                  <div key={`${task.taskId}-activity-${idx}`} className="text-gray-400">
+                    {activity}
+                  </div>
                 ))}
               </div>
             </div>
@@ -437,17 +486,32 @@ interface SwarmHeaderProps {
 }
 
 function SwarmHeader({
-  isConnected, isLoading, health, activeCount, maxAgents,
-  isStarting, isStopping, showSettings, maxConcurrent, pollInterval,
-  onRefresh, onToggleSettings, onStartSwarm, onStopSwarm,
-  onSetMaxConcurrent, onSetPollInterval,
+  isConnected,
+  isLoading,
+  health,
+  activeCount,
+  maxAgents,
+  isStarting,
+  isStopping,
+  showSettings,
+  maxConcurrent,
+  pollInterval,
+  onRefresh,
+  onToggleSettings,
+  onStartSwarm,
+  onStopSwarm,
+  onSetMaxConcurrent,
+  onSetPollInterval,
 }: Readonly<SwarmHeaderProps>) {
   return (
     <header className="bg-gray-800 border-b border-gray-700 sticky top-0 z-50">
       <div className="max-w-full mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link href="/" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
+            <Link
+              href="/"
+              className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+            >
               <Icon name="home" size="lg" />
             </Link>
             <div className="flex items-center gap-2">
@@ -456,18 +520,29 @@ function SwarmHeader({
             </div>
             <div className="flex items-center gap-2 ml-4">
               {isConnected ? (
-                <div className="flex items-center gap-1 text-green-400"><Icon name="wifi" size="sm" /><span className="text-sm">Connected</span></div>
+                <div className="flex items-center gap-1 text-green-400">
+                  <Icon name="wifi" size="sm" />
+                  <span className="text-sm">Connected</span>
+                </div>
               ) : (
-                <div className="flex items-center gap-1 text-red-400"><Icon name="wifi_off" size="sm" /><span className="text-sm">Disconnected</span></div>
+                <div className="flex items-center gap-1 text-red-400">
+                  <Icon name="wifi_off" size="sm" />
+                  <span className="text-sm">Disconnected</span>
+                </div>
               )}
             </div>
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 bg-gray-700 px-3 py-1.5 rounded-lg">
               <Icon name="memory" size="sm" className="text-blue-400" />
-              <span className="text-sm font-medium">{activeCount} / {maxAgents} Agents</span>
+              <span className="text-sm font-medium">
+                {activeCount} / {maxAgents} Agents
+              </span>
               <div className="w-20 h-2 bg-gray-600 rounded-full overflow-hidden">
-                <div className={`h-full transition-all ${getCapacityBarColor(activeCount, maxAgents)}`} style={{ width: `${(activeCount / maxAgents) * 100}%` }} />
+                <div
+                  className={`h-full transition-all ${getCapacityBarColor(activeCount, maxAgents)}`}
+                  style={{ width: `${(activeCount / maxAgents) * 100}%` }}
+                />
               </div>
             </div>
             {health?.recent_claude_errors !== undefined && health.recent_claude_errors > 0 && (
@@ -476,10 +551,19 @@ function SwarmHeader({
                 <span className="text-sm">{health.recent_claude_errors} Claude errors</span>
               </div>
             )}
-            <button onClick={onRefresh} disabled={isLoading} className="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors" title="Refresh">
+            <button
+              onClick={onRefresh}
+              disabled={isLoading}
+              className="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+              title="Refresh"
+            >
               <Icon name="refresh" size="sm" className={isLoading ? 'animate-spin' : ''} />
             </button>
-            <button onClick={onToggleSettings} className="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors" title="Settings">
+            <button
+              onClick={onToggleSettings}
+              className="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+              title="Settings"
+            >
               <Icon name="settings" size="sm" />
             </button>
           </div>
@@ -487,24 +571,46 @@ function SwarmHeader({
         <div className="mt-3 flex items-center justify-between">
           <div className="flex items-center gap-6 text-sm">
             <div className="flex items-center gap-2">
-              <label htmlFor="poll-interval" className="text-gray-400">Poll Interval:</label>
-              <select id="poll-interval" value={pollInterval} onChange={(e) => onSetPollInterval(Number(e.target.value))} className="bg-gray-700 text-white px-2 py-1 rounded text-sm border border-gray-600">
-                <option value={1000}>1s</option><option value={3000}>3s</option><option value={5000}>5s</option><option value={10000}>10s</option>
+              <label htmlFor="poll-interval" className="text-gray-400">
+                Poll Interval:
+              </label>
+              <select
+                id="poll-interval"
+                value={pollInterval}
+                onChange={(e) => onSetPollInterval(Number(e.target.value))}
+                className="bg-gray-700 text-white px-2 py-1 rounded text-sm border border-gray-600"
+              >
+                <option value={1000}>1s</option>
+                <option value={3000}>3s</option>
+                <option value={5000}>5s</option>
+                <option value={10000}>10s</option>
               </select>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-gray-400">Watchdog Threshold:</span>
-              <span className="text-white font-medium">{health?.watchdog_threshold ? `${Math.floor(health.watchdog_threshold / 60)}m` : '15m'}</span>
+              <span className="text-white font-medium">
+                {health?.watchdog_threshold
+                  ? `${Math.floor(health.watchdog_threshold / 60)}m`
+                  : '15m'}
+              </span>
             </div>
           </div>
           <div className="flex items-center gap-2">
             {activeCount === 0 ? (
-              <button onClick={onStartSwarm} disabled={isStarting} className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white font-medium rounded-lg transition-colors">
+              <button
+                onClick={onStartSwarm}
+                disabled={isStarting}
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white font-medium rounded-lg transition-colors"
+              >
                 <Icon name="play_arrow" size="sm" className={isStarting ? 'animate-pulse' : ''} />
                 {isStarting ? 'Starting...' : 'Start Swarm'}
               </button>
             ) : (
-              <button onClick={onStopSwarm} disabled={isStopping} className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-600 text-white font-medium rounded-lg transition-colors">
+              <button
+                onClick={onStopSwarm}
+                disabled={isStopping}
+                className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-600 text-white font-medium rounded-lg transition-colors"
+              >
                 <Icon name="stop" size="sm" className={isStopping ? 'animate-pulse' : ''} />
                 {isStopping ? 'Stopping...' : 'Stop Swarm'}
               </button>
@@ -515,10 +621,21 @@ function SwarmHeader({
           <div className="mt-3 p-4 bg-gray-700 rounded-lg">
             <div className="flex items-center gap-6 text-sm">
               <div className="flex items-center gap-2">
-                <label htmlFor="max-concurrent" className="text-gray-400">Max Concurrent Agents:</label>
-                <select id="max-concurrent" value={maxConcurrent} onChange={(e) => onSetMaxConcurrent(Number(e.target.value))} className="bg-gray-600 text-white px-2 py-1 rounded text-sm border border-gray-500">
-                  <option value={1}>1</option><option value={2}>2</option><option value={3}>3</option>
-                  <option value={4}>4</option><option value={6}>6</option><option value={8}>8</option>
+                <label htmlFor="max-concurrent" className="text-gray-400">
+                  Max Concurrent Agents:
+                </label>
+                <select
+                  id="max-concurrent"
+                  value={maxConcurrent}
+                  onChange={(e) => onSetMaxConcurrent(Number(e.target.value))}
+                  className="bg-gray-600 text-white px-2 py-1 rounded text-sm border border-gray-500"
+                >
+                  <option value={1}>1</option>
+                  <option value={2}>2</option>
+                  <option value={3}>3</option>
+                  <option value={4}>4</option>
+                  <option value={6}>6</option>
+                  <option value={8}>8</option>
                 </select>
               </div>
               <span className="text-xs text-gray-500">(Applied on next Start)</span>
@@ -557,32 +674,52 @@ function PendingQuestionsSection({
           <Icon name="contact_support" size="lg" className="text-purple-400" />
           Agent Questions ({pendingQuestions.reduce((acc, t) => acc + t.questions.length, 0)})
         </h2>
-        <button type="button" onClick={onTogglePanel} className="text-xs text-gray-400 hover:text-white">
+        <button
+          type="button"
+          onClick={onTogglePanel}
+          className="text-xs text-gray-400 hover:text-white"
+        >
           {showQuestionsPanel ? 'Hide' : 'Show'}
         </button>
       </div>
       {showQuestionsPanel && (
         <div className="space-y-4 max-h-[400px] overflow-y-auto">
           {pendingQuestions.map((task) => (
-            <div key={task.taskId} className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-3">
+            <div
+              key={task.taskId}
+              className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-3"
+            >
               <div className="flex items-center justify-between mb-2">
                 <span className="font-medium text-purple-300">{task.taskId}</span>
-                <span className="text-xs text-gray-400">{task.source === 'spec' ? 'Specification' : 'Planning'} phase</span>
+                <span className="text-xs text-gray-400">
+                  {task.source === 'spec' ? 'Specification' : 'Planning'} phase
+                </span>
               </div>
               <div className="space-y-3">
                 {task.questions.map((q) => (
                   <div key={q.id} className="bg-gray-800/50 rounded p-2">
                     <div className="flex items-start gap-2 mb-2">
-                      <span className={`text-xs px-2 py-0.5 rounded ${getQuestionTypeBadgeClass(q.type)}`}>{q.type}</span>
-                      <span className={`text-xs px-2 py-0.5 rounded ${getQuestionPriorityBadgeClass(q.priority)}`}>{q.priority}</span>
+                      <span
+                        className={`text-xs px-2 py-0.5 rounded ${getQuestionTypeBadgeClass(q.type)}`}
+                      >
+                        {q.type}
+                      </span>
+                      <span
+                        className={`text-xs px-2 py-0.5 rounded ${getQuestionPriorityBadgeClass(q.priority)}`}
+                      >
+                        {q.priority}
+                      </span>
                     </div>
                     <p className="text-sm text-gray-200 mb-2">{q.question}</p>
                     {q.context && (
-                      <p className="text-xs text-gray-500 mb-2"><span className="text-gray-400">Context:</span> {q.context}</p>
+                      <p className="text-xs text-gray-500 mb-2">
+                        <span className="text-gray-400">Context:</span> {q.context}
+                      </p>
                     )}
                     {q.answer ? (
                       <div className="flex items-center gap-2 text-xs text-green-400">
-                        <Icon name="check_circle" size="xs" /><span>Answered</span>
+                        <Icon name="check_circle" size="xs" />
+                        <span>Answered</span>
                       </div>
                     ) : (
                       <textarea
@@ -674,7 +811,11 @@ function SwarmPageContent() {
   }, []);
 
   const clearTaskAnswers = (taskId: string) => {
-    setQuestionAnswers((prev) => { const next = { ...prev }; delete next[taskId]; return next; });
+    setQuestionAnswers((prev) => {
+      const next = { ...prev };
+      delete next[taskId];
+      return next;
+    });
   };
 
   // Submit answers to questions
@@ -684,7 +825,9 @@ function SwarmPageContent() {
     setIsSubmittingAnswers(taskId);
     submitAnswersRequest(taskId, answers)
       .then((result) => applySubmitAnswersResult(result, taskId, clearTaskAnswers, fetchQuestions))
-      .catch((error: unknown) => alert(`Failed to submit answers: ${error instanceof Error ? error.message : String(error)}`))
+      .catch((error: unknown) =>
+        alert(`Failed to submit answers: ${error instanceof Error ? error.message : String(error)}`)
+      )
       .finally(() => setIsSubmittingAnswers(null));
   };
 
@@ -753,7 +896,10 @@ function SwarmPageContent() {
     setIsStarting(true);
     startSwarmRequest(maxConcurrent, health?.watchdog_threshold || 900)
       .then((result) => applyStartSwarmResult(result, fetchStatus))
-      .catch((error) => { console.error('Failed to start swarm:', error); alert('Error starting swarm'); })
+      .catch((error) => {
+        console.error('Failed to start swarm:', error);
+        alert('Error starting swarm');
+      })
       .finally(() => setIsStarting(false));
   };
 
@@ -763,7 +909,10 @@ function SwarmPageContent() {
     setIsStopping(true);
     stopSwarmRequest()
       .then((result) => applyStopSwarmResult(result, fetchStatus))
-      .catch((error) => { console.error('Failed to stop swarm:', error); alert('Error stopping swarm'); })
+      .catch((error) => {
+        console.error('Failed to stop swarm:', error);
+        alert('Error stopping swarm');
+      })
       .finally(() => setIsStopping(false));
   };
 

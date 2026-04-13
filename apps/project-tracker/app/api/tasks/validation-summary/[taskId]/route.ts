@@ -382,7 +382,18 @@ async function makeDeliverable(
   return { path: filePath, type: 'file', status, size, lastModified, fromSection };
 }
 
-const INLINE_FILE_KNOWN_PREFIXES = ['apps/', 'packages/', 'infra/', 'docs/', 'tests/', 'scripts/', 'artifacts/', '.specify/', '.claude/', '.github/'];
+const INLINE_FILE_KNOWN_PREFIXES = [
+  'apps/',
+  'packages/',
+  'infra/',
+  'docs/',
+  'tests/',
+  'scripts/',
+  'artifacts/',
+  '.specify/',
+  '.claude/',
+  '.github/',
+];
 const INLINE_FILE_PATTERN = /`((?:[\w@.-]+\/)+[\w.-]+\.(?:ts|tsx|json|md|js|jsx|css|yaml|yml))`/g;
 
 async function addInlineFileReferences(
@@ -405,7 +416,11 @@ async function extractDeliverablesFromPlan(
 ): Promise<PlanDeliverable[]> {
   const deliverables: PlanDeliverable[] = [];
 
-  async function addIfNew(filePath: string, fromSection: PlanDeliverable['fromSection'], invertStatus = false): Promise<void> {
+  async function addIfNew(
+    filePath: string,
+    fromSection: PlanDeliverable['fromSection'],
+    invertStatus = false
+  ): Promise<void> {
     if (deliverables.some((d) => d.path === filePath)) return;
     deliverables.push(await makeDeliverable(repoRoot, filePath, fromSection, invertStatus));
   }
@@ -417,7 +432,8 @@ async function extractDeliverablesFromPlan(
   ]) {
     let match;
     while ((match = pattern.exec(planContent)) !== null) {
-      for (const fp of extractFilePathsFromBlock(match[1])) await addIfNew(fp, 'Files to Create/Modify');
+      for (const fp of extractFilePathsFromBlock(match[1]))
+        await addIfNew(fp, 'Files to Create/Modify');
     }
   }
 
@@ -425,7 +441,8 @@ async function extractDeliverablesFromPlan(
   const deletePattern = /\*\*Files to Delete[^:]*:\*\*\s*\n((?:- `[^`]+`\n?)+)/g;
   let deleteMatch;
   while ((deleteMatch = deletePattern.exec(planContent)) !== null) {
-    for (const fp of extractFilePathsFromBlock(deleteMatch[1])) await addIfNew(fp, 'Files to Delete', true);
+    for (const fp of extractFilePathsFromBlock(deleteMatch[1]))
+      await addIfNew(fp, 'Files to Delete', true);
   }
 
   // Artifact paths
@@ -439,7 +456,8 @@ async function extractDeliverablesFromPlan(
   const testFilesPattern = /\*\*Test Files:\*\*\s*\n((?:- `[^`]+`\n?)+)/g;
   let testMatch;
   while ((testMatch = testFilesPattern.exec(planContent)) !== null) {
-    for (const fp of extractFilePathsFromBlock(testMatch[1])) await addIfNew(fp, 'Implementation Steps');
+    for (const fp of extractFilePathsFromBlock(testMatch[1]))
+      await addIfNew(fp, 'Implementation Steps');
   }
 
   // Inline backtick file references
@@ -477,7 +495,10 @@ function calculateOverallStatus(
   checkboxItems: PlanCheckboxItem[],
   verifiedCount: number,
   checkedCount: number
-): { overallStatus: 'complete' | 'partial' | 'incomplete' | 'no-plan'; completionPercentage: number } {
+): {
+  overallStatus: 'complete' | 'partial' | 'incomplete' | 'no-plan';
+  completionPercentage: number;
+} {
   if (deliverables.length === 0 && checkboxItems.length === 0) {
     return { overallStatus: 'incomplete', completionPercentage: 0 };
   }
@@ -501,7 +522,14 @@ async function parsePlanDeliverables(
   const repoRoot = getRepoRoot();
 
   const possiblePaths = [
-    join(repoRoot, '.specify', 'sprints', `sprint-${sprintNumber}`, 'planning', `${taskId}-plan.md`),
+    join(
+      repoRoot,
+      '.specify',
+      'sprints',
+      `sprint-${sprintNumber}`,
+      'planning',
+      `${taskId}-plan.md`
+    ),
     join(repoRoot, '.specify', 'sprints', `sprint-${sprintNumber}`, 'planning', `${taskId}.md`),
   ];
 
@@ -522,10 +550,13 @@ async function parsePlanDeliverables(
 
   if (!planContent || !planPath) {
     return {
-      taskId, planExists: false, planPath: null,
+      taskId,
+      planExists: false,
+      planPath: null,
       deliverables: { total: 0, verified: 0, missing: 0, items: [] },
       checkboxes: { total: 0, checked: 0, unchecked: 0, items: [] },
-      overallStatus: 'no-plan', completionPercentage: 0,
+      overallStatus: 'no-plan',
+      completionPercentage: 0,
       verifiedAt: new Date().toISOString(),
     };
   }
@@ -533,17 +564,37 @@ async function parsePlanDeliverables(
   const deliverables = await extractDeliverablesFromPlan(planContent, repoRoot);
   const checkboxItems = extractCheckboxesFromPlan(planContent);
 
-  const verifiedCount = deliverables.filter((d) => d.status === 'exists' || d.status === 'deleted').length;
+  const verifiedCount = deliverables.filter(
+    (d) => d.status === 'exists' || d.status === 'deleted'
+  ).length;
   const missingCount = deliverables.filter((d) => d.status === 'missing').length;
   const checkedCount = checkboxItems.filter((c) => c.checked).length;
 
-  const { overallStatus, completionPercentage } = calculateOverallStatus(deliverables, checkboxItems, verifiedCount, checkedCount);
+  const { overallStatus, completionPercentage } = calculateOverallStatus(
+    deliverables,
+    checkboxItems,
+    verifiedCount,
+    checkedCount
+  );
 
   return {
-    taskId, planExists: true, planPath,
-    deliverables: { total: deliverables.length, verified: verifiedCount, missing: missingCount, items: deliverables },
-    checkboxes: { total: checkboxItems.length, checked: checkedCount, unchecked: checkboxItems.length - checkedCount, items: checkboxItems },
-    overallStatus, completionPercentage,
+    taskId,
+    planExists: true,
+    planPath,
+    deliverables: {
+      total: deliverables.length,
+      verified: verifiedCount,
+      missing: missingCount,
+      items: deliverables,
+    },
+    checkboxes: {
+      total: checkboxItems.length,
+      checked: checkedCount,
+      unchecked: checkboxItems.length - checkedCount,
+      items: checkboxItems,
+    },
+    overallStatus,
+    completionPercentage,
     verifiedAt: new Date().toISOString(),
   };
 }

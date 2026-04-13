@@ -243,7 +243,8 @@ function loadReportHealth(repoDir: string): ReportHealth | null {
       activeFocusSprints: raw.currentState?.activeFocusSprints ?? [],
       attestedButNotCompleted: raw.inconsistencies?.attestedButNotCompletedInCsv?.length ?? 0,
       sprintMismatches: raw.inconsistencies?.sprintMismatches?.length ?? 0,
-      completedWithoutAttestation: raw.inconsistencies?.completedWithoutCanonicalAttestation?.length ?? 0,
+      completedWithoutAttestation:
+        raw.inconsistencies?.completedWithoutCanonicalAttestation?.length ?? 0,
       generatedAt: raw.generatedAt ?? '',
     };
   } catch {

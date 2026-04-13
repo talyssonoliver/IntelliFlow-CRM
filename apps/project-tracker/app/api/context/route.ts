@@ -28,8 +28,20 @@ function resolveSnapshotPaths() {
   const specifySprintsDir = join(monorepoRoot, '.specify', 'sprints');
   const outputPath = join(monorepoRoot, 'docs', 'SESSION_CONTEXT.md');
   const stateReportMdPath = join(monorepoRoot, 'docs', 'CURRENT_STATE_REPORT.md');
-  const stateReportJsonPath = join(monorepoRoot, 'artifacts', 'reports', 'current-state-report.json');
-  return { monorepoRoot, metricsDir, specifySprintsDir, outputPath, stateReportMdPath, stateReportJsonPath };
+  const stateReportJsonPath = join(
+    monorepoRoot,
+    'artifacts',
+    'reports',
+    'current-state-report.json'
+  );
+  return {
+    monorepoRoot,
+    metricsDir,
+    specifySprintsDir,
+    outputPath,
+    stateReportMdPath,
+    stateReportJsonPath,
+  };
 }
 
 export async function GET() {
@@ -59,7 +71,14 @@ export async function GET() {
 
 export async function POST() {
   try {
-    const { monorepoRoot, metricsDir, specifySprintsDir, outputPath, stateReportMdPath, stateReportJsonPath } = resolveSnapshotPaths();
+    const {
+      monorepoRoot,
+      metricsDir,
+      specifySprintsDir,
+      outputPath,
+      stateReportMdPath,
+      stateReportJsonPath,
+    } = resolveSnapshotPaths();
 
     // Step 1: Regenerate current-state-report so PROJECT_HEALTH section is fresh
     if (existsSync(specifySprintsDir)) {
@@ -81,9 +100,7 @@ export async function POST() {
     }
     writeFileSync(outputPath, result.markdown, 'utf-8');
 
-    console.log(
-      `Wrote session context snapshot: ${outputPath} (${result.markdown.length} bytes)`
-    );
+    console.log(`Wrote session context snapshot: ${outputPath} (${result.markdown.length} bytes)`);
 
     return NextResponse.json({
       success: true,

@@ -168,29 +168,27 @@ function CheckboxesSection({ data, expanded, onToggle }: Readonly<CheckboxesSect
       {expanded ? (
         <div className="px-4 pb-3">
           <div className="space-y-2 max-h-64 overflow-y-auto">
-            {Object.entries(groupCheckboxesByPhase(data.checkboxes.items)).map(
-              ([phase, items]) => (
-                <div key={phase} className="bg-gray-50 rounded-lg p-2">
-                  <h5 className="text-xs font-medium text-gray-600 mb-1">{phase}</h5>
-                  <div className="space-y-1">
-                    {items.map((item) => (
-                      <div key={item.text} className="flex items-start gap-2 text-xs">
-                        <span
-                          className={`mt-0.5 ${item.checked ? 'text-green-600' : 'text-gray-400'}`}
-                        >
-                          {item.checked ? '☑' : '☐'}
-                        </span>
-                        <span
-                          className={`${item.checked ? 'text-gray-700 line-through' : 'text-gray-900'}`}
-                        >
-                          {item.text}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+            {Object.entries(groupCheckboxesByPhase(data.checkboxes.items)).map(([phase, items]) => (
+              <div key={phase} className="bg-gray-50 rounded-lg p-2">
+                <h5 className="text-xs font-medium text-gray-600 mb-1">{phase}</h5>
+                <div className="space-y-1">
+                  {items.map((item) => (
+                    <div key={item.text} className="flex items-start gap-2 text-xs">
+                      <span
+                        className={`mt-0.5 ${item.checked ? 'text-green-600' : 'text-gray-400'}`}
+                      >
+                        {item.checked ? '☑' : '☐'}
+                      </span>
+                      <span
+                        className={`${item.checked ? 'text-gray-700 line-through' : 'text-gray-900'}`}
+                      >
+                        {item.text}
+                      </span>
+                    </div>
+                  ))}
                 </div>
-              )
-            )}
+              </div>
+            ))}
           </div>
         </div>
       ) : null}
