@@ -2,7 +2,7 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Bash",
+        "matcher": "Bash|.*[Ee]xecute.*|codex.*|mcp__codex.*|mcp__openai.*|ralph.*|.*-bash|.*[Ss]hell.*",
         "hooks": [
           {
             "type": "command",
