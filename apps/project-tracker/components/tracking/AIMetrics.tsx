@@ -232,9 +232,9 @@ function DriftCard({ data }: Readonly<DriftCardProps>) {
         </div>
       </div>
       <div className="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden">
-        <div
-          className={`h-full ${detected ? 'bg-red-500' : 'bg-green-500'}`}
-          role="progressbar" // NOSONAR typescript:S6819 — inner fill bar inside container; <progress> cannot be positioned inside a parent container this way
+        <span
+          className={`h-full ${detected ? 'bg-red-500' : 'bg-green-500'} block`}
+          role="progressbar"
           aria-valuenow={driftBarWidth}
           aria-valuemin={0}
           aria-valuemax={100}
@@ -252,8 +252,8 @@ function DriftCard({ data }: Readonly<DriftCardProps>) {
       )}
       {data?.drift.alerts && data.drift.alerts.length > 0 && (
         <div className="mt-3 space-y-1">
-          {data.drift.alerts.map((alert, i) => (
-            <div key={i} className="text-xs flex items-center gap-2"> {/* NOSONAR typescript:S6479 */}
+          {data.drift.alerts.map((alert) => (
+            <div key={`${alert.severity}-${alert.timestamp}`} className="text-xs flex items-center gap-2">
               <span className={`font-medium ${alert.severity === 'critical' ? 'text-red-600' : 'text-yellow-600'}`}>
                 [{alert.severity}]
               </span>
@@ -564,9 +564,9 @@ export default function AIMetrics() {
           />
         </div>
         <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
-          <div
-            className={`h-full transition-all ${getCostBarColor(costUtilization)}`}
-            role="progressbar" // NOSONAR typescript:S6819 — inner fill bar inside container; <progress> cannot be positioned inside a parent container this way
+          <span
+            className={`h-full transition-all ${getCostBarColor(costUtilization)} block`}
+            role="progressbar"
             aria-valuenow={Math.min(costUtilization, 100)}
             aria-valuemin={0}
             aria-valuemax={100}

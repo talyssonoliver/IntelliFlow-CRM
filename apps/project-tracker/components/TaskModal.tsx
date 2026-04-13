@@ -997,9 +997,8 @@ function ValidationTab({
                   </tr>
                 </thead>
                 <tbody>
-                  {validationSummary.kpis.results.map((kpi, idx) => (
-                    <tr key={idx} className="border-t">
-                      {/* NOSONAR typescript:S6479 */}
+                  {validationSummary.kpis.results.map((kpi) => (
+                    <tr key={kpi.kpi} className="border-t">
                       <td className="py-2 text-gray-700">{kpi.kpi}</td>
                       <td className="py-2 text-gray-500 font-mono text-xs">{kpi.target}</td>
                       <td className="py-2 text-gray-700 font-mono text-xs">{kpi.actual}</td>
@@ -1050,7 +1049,7 @@ function ValidationTab({
             <div className="p-4 space-y-2">
               {validationSummary.dod.items.map((item, idx) => (
                 <div
-                  key={idx} // NOSONAR typescript:S6479
+                  key={item.criterion}
                   className={clsx(
                     'flex items-start gap-3 p-2 rounded',
                     item.met ? 'bg-green-50' : 'bg-red-50'
@@ -1103,9 +1102,9 @@ function ValidationTab({
                   {validationSummary.spec.sections &&
                     validationSummary.spec.sections.length > 0 && (
                       <div className="flex flex-wrap gap-1">
-                        {validationSummary.spec.sections.slice(0, 5).map((section, idx) => (
+                        {validationSummary.spec.sections.slice(0, 5).map((section) => (
                           <span
-                            key={idx} // NOSONAR typescript:S6479
+                            key={section}
                             className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-xs"
                           >
                             {section}
@@ -1154,9 +1153,9 @@ function ValidationTab({
                   {validationSummary.plan.sections &&
                     validationSummary.plan.sections.length > 0 && (
                       <div className="flex flex-wrap gap-1">
-                        {validationSummary.plan.sections.slice(0, 5).map((section, idx) => (
+                        {validationSummary.plan.sections.slice(0, 5).map((section) => (
                           <span
-                            key={idx} // NOSONAR typescript:S6479
+                            key={section}
                             className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs"
                           >
                             {section}

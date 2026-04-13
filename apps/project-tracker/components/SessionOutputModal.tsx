@@ -113,7 +113,6 @@ export function SessionOutputModal({
             onClose();
           }
         }}
-        role="button" // NOSONAR typescript:S6819 — full-screen backdrop div; <button> cannot fill viewport as position:absolute overlay
         tabIndex={-1}
         aria-label="Close modal"
       />

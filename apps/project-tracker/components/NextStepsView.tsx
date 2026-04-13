@@ -650,7 +650,6 @@ export default function NextStepsView({
                                   handleTaskClick(task.taskId);
                                 }
                               }}
-                              role="button" // NOSONAR typescript:S6819 — task card with nested display content; <button> cannot be block container
                               tabIndex={0}
                               className="p-3 hover:bg-gray-50 cursor-pointer transition-colors"
                             >
@@ -834,7 +833,6 @@ export default function NextStepsView({
                       handleTaskClick(task.taskId);
                     }
                   }}
-                  role="button" // NOSONAR typescript:S6819 — blocked task card with nested display content; <button> cannot be block container
                   tabIndex={0}
                   className="border border-orange-200 rounded-lg p-3 hover:bg-orange-50 cursor-pointer transition-colors"
                 >

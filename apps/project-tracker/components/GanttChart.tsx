@@ -487,9 +487,9 @@ export default function GanttChart({
             style={{ transform: `translateX(-${headerScrollLeft}px)` }}
           >
             <rect x={0} y={0} width={chartWidth} height={HEADER_HEIGHT} fill="#f9fafb" />
-            {timeHeaders.map((header, index) => (
+            {timeHeaders.map((header) => (
               <g
-                key={index} // NOSONAR typescript:S6479
+                key={header.label}
                 className="cursor-pointer"
                 onClick={() => handleHeaderClick(header.x, header)}
                 onKeyDown={(e) => {
@@ -557,7 +557,6 @@ export default function GanttChart({
                     onTaskClick?.(task.taskId);
                   }
                 }}
-                role="button" // NOSONAR typescript:S6819 — Gantt row contains icon and text children; <button> cannot be flex row container
                 tabIndex={0}
               >
                 {task.isCritical ? (
@@ -581,9 +580,9 @@ export default function GanttChart({
             <svg ref={svgRef} width={chartWidth} height={chartHeight} className="block">
               {/* Grid lines */}
               <g>
-                {timeHeaders.map((header, index) => (
+                {timeHeaders.map((header) => (
                   <line
-                    key={index} // NOSONAR typescript:S6479
+                    key={header.label}
                     x1={header.x}
                     y1={0}
                     x2={header.x}
@@ -753,15 +752,14 @@ export default function GanttChart({
           onKeyDown={(e) => {
             if (e.key === 'Escape') closeModal();
           }}
-          role="button"
-          tabIndex={0}
+          tabIndex={-1}
           aria-label="Close modal"
         >
-          <div // NOSONAR typescript:S6847 — dialog div prevents event bubbling to backdrop; role="dialog" makes it an interactive landmark
-            role="dialog" // NOSONAR typescript:S6819 — custom modal with overflow/sizing constraints; <dialog> lacks consistent CSS layout support
+          <dialog
+            open
             aria-modal="true"
             aria-label={selectedPeriod.label}
-            className="bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden"
+            className="bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden relative"
             onClick={(e) => e.stopPropagation()}
             onKeyDown={(e) => {
               if (e.key === 'Escape') closeModal();
@@ -840,7 +838,6 @@ export default function GanttChart({
                           onTaskClick?.(task.taskId);
                         }
                       }}
-                      role="button" // NOSONAR typescript:S6819 — task card row with nested icons and text; <button> cannot be block-level container
                       tabIndex={0}
                     >
                       {/* Status Indicator */}
@@ -946,7 +943,7 @@ export default function GanttChart({
                 Close
               </button>
             </div>
-          </div>
+          </dialog>
         </div>
       ) : null}
     </div>

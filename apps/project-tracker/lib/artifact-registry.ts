@@ -2249,7 +2249,7 @@ export interface FullRegistryResult {
 export type ArtifactEntry = FileEntry;
 export type ArtifactSummary = CodebaseHealth;
 export type MissingArtifact = MissingFile;
-export type ArtifactCategory = FileCategory; // NOSONAR typescript:S6564 — backward-compatible re-export alias used by other modules
+export type { FileCategory as ArtifactCategory };
 
 export interface ArtifactRegistryResult {
   artifacts: FileEntry[];

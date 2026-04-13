@@ -300,9 +300,7 @@ export default function BuildHealth() {
             <div className="text-sm text-red-600 font-medium mb-2">Build Errors:</div>
             <ul className="text-sm text-gray-700 space-y-1">
               {data.turbo.errors.slice(0, 5).map((err, idx) => (
-                <li key={idx} className="font-mono text-xs">
-                  {' '}
-                  {/* NOSONAR typescript:S6479 */}
+                <li key={`err-${idx}-${err.slice(0, 20)}`} className="font-mono text-xs">
                   {err}
                 </li>
               ))}

@@ -1080,7 +1080,6 @@ function PriorityBucket({
             if (fullTask) onTaskClick?.(fullTask);
           }
         }}
-        role="button" // NOSONAR typescript:S6819 — task card contains nested display elements; <button> cannot be block container
         tabIndex={0}
       >
         <div className="flex items-center justify-between gap-2">
@@ -1184,8 +1183,7 @@ function PriorityBucket({
                         if (fullTask) onTaskClick?.(fullTask);
                       }
                     }}
-                    role="button" // NOSONAR typescript:S6819 — task card contains nested display elements; <button> cannot be block container
-                    tabIndex={0}
+                                tabIndex={0}
                   >
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -1357,7 +1355,6 @@ function TaskRow({
           if (fullTask) onTaskClick?.(fullTask);
         }
       }}
-      role="button" // NOSONAR typescript:S6819 — task card contains nested display elements; <button> cannot be block container
       tabIndex={0}
     >
       <div className="flex items-center justify-between">

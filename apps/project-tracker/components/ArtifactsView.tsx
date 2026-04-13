@@ -1365,7 +1365,6 @@ export default function ArtifactsView({ onTaskClick }: Readonly<ArtifactsViewPro
                       setActiveTab('files');
                     }
                   }}
-                  role="button" // NOSONAR typescript:S6819 — card contains nested display elements; <button> cannot contain block-level children
                   tabIndex={0}
                 >
                   <div className="flex items-center gap-2 mb-2">

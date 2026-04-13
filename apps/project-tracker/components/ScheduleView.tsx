@@ -481,7 +481,6 @@ export default function ScheduleView() {
                     handleTaskClick(scored.taskId);
                   }
                 }}
-                role="button" // NOSONAR typescript:S6819 — schedule task row with nested icon and text; <button> cannot be flex row container
                 tabIndex={0}
               >
                 <span className="text-xs font-bold text-red-500 w-4">{idx + 1}.</span>

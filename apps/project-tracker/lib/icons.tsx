@@ -7,9 +7,10 @@
 import { cn } from './utils';
 
 /**
- * Icon name type for type-safe icon usage
+ * Icon name — a branded string subtype (Material Symbols icon identifier).
+ * Plain string literals remain assignable; the brand is documentation.
  */
-export type IconName = string; // NOSONAR typescript:S6564 — exported as part of the public API for type-safe icon name usage
+export type IconName = string & { readonly __iconName?: never };
 
 export interface IconProps {
   /** Material Symbol icon name (e.g., 'check', 'close', 'search') */

@@ -90,21 +90,25 @@ function parseCSVLine(line: string): string[] {
   let current = '';
   let inQuotes = false;
 
-  for (let i = 0; i < line.length; i++) {
+  let i = 0;
+  while (i < line.length) {
     const char = line[i];
 
     if (char === '"') {
       if (inQuotes && line[i + 1] === '"') {
         current += '"';
-        i++; // NOSONAR typescript:S2310 — intentionally skipping the escaped quote character
+        i += 2;
       } else {
         inQuotes = !inQuotes;
+        i++;
       }
     } else if (char === ',' && !inQuotes) {
       result.push(current);
       current = '';
+      i++;
     } else {
       current += char;
+      i++;
     }
   }
 

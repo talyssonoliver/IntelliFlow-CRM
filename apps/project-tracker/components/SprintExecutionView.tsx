@@ -650,10 +650,9 @@ export default function SprintExecutionView({ sprintNumber }: Readonly<SprintExe
                   </span>
 
                   <span className="text-sm text-gray-500">
-                    {/* NOSONAR typescript:S4624 — ternary between two sibling template literals, not nested */}
                     {progress
-                      ? `${progress.completedTasks}/${progress.totalTasks}`
-                      : `${phase.taskCount} tasks`}
+                      ? progress.completedTasks + '/' + progress.totalTasks
+                      : phase.taskCount + ' tasks'}
                   </span>
 
                   <button
@@ -696,7 +695,6 @@ export default function SprintExecutionView({ sprintNumber }: Readonly<SprintExe
                               openTaskModal(task);
                             }
                           }}
-                          role="button" // NOSONAR typescript:S6819 — task card row with nested icons and status; <button> cannot be flex row container
                           tabIndex={0}
                           className={clsx(
                             'flex items-center gap-3 p-2 rounded bg-white border cursor-pointer hover:shadow-md transition-shadow',

@@ -125,7 +125,6 @@ export default function ContextPackStatus({
             setExpanded(!expanded);
           }
         }}
-        role="button" // NOSONAR typescript:S6819 — collapsible header with nested content; <button> cannot be a flex container parent of block elements
         tabIndex={0}
       >
         <div className="flex items-center gap-2">
@@ -177,7 +176,7 @@ export default function ContextPackStatus({
               ) : (
                 data.filesRead.map((file, idx) => (
                   <div
-                    key={idx} // NOSONAR typescript:S6479
+                    key={file.path}
                     className="flex items-center justify-between py-1 px-2 rounded hover:bg-gray-100"
                   >
                     <span className="text-gray-700 truncate flex-1" title={file.path}>
@@ -221,10 +220,8 @@ export default function ContextPackStatus({
                 Invariants Acknowledged ({data.invariantsAcknowledged.length})
               </h4>
               <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
-                {data.invariantsAcknowledged.map((inv, idx) => (
-                  <li key={idx}>
-                    {' '}
-                    {/* NOSONAR typescript:S6479 */}
+                {data.invariantsAcknowledged.map((inv) => (
+                  <li key={inv}>
                     {inv}
                   </li>
                 ))}

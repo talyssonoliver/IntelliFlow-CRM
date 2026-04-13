@@ -110,7 +110,7 @@ function DeliverablesSection({ data, expanded, onToggle }: Readonly<Deliverables
               const present = isFilePresent(file.status);
               return (
                 <div
-                  key={idx} // NOSONAR typescript:S6479
+                  key={file.path}
                   className={`flex items-center justify-between py-1 px-2 rounded ${present ? 'bg-green-50' : 'bg-red-50'}`}
                 >
                   <span
@@ -173,10 +173,8 @@ function CheckboxesSection({ data, expanded, onToggle }: Readonly<CheckboxesSect
                 <div key={phase} className="bg-gray-50 rounded-lg p-2">
                   <h5 className="text-xs font-medium text-gray-600 mb-1">{phase}</h5>
                   <div className="space-y-1">
-                    {items.map((item, idx) => (
-                      <div key={idx} className="flex items-start gap-2 text-xs">
-                        {' '}
-                        {/* NOSONAR typescript:S6479 */}
+                    {items.map((item) => (
+                      <div key={item.text} className="flex items-start gap-2 text-xs">
                         <span
                           className={`mt-0.5 ${item.checked ? 'text-green-600' : 'text-gray-400'}`}
                         >

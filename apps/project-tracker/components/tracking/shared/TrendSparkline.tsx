@@ -62,7 +62,7 @@ export default function TrendSparkline({
       width={width}
       height={height}
       viewBox={`0 0 ${width} ${height}`}
-      role="img" // NOSONAR typescript:S6819 — inline SVG sparkline chart; <img> cannot render dynamic SVG polylines
+      role="img"
       aria-label={label ?? 'Trend sparkline'}
       className="inline-block"
     >
@@ -77,7 +77,7 @@ export default function TrendSparkline({
       {/* Dots along the sparkline — key is positional (stable render order) */}
       {showDots &&
         points.map((p, i) => (
-          <circle key={i} cx={p.x} cy={p.y} r={2} fill={color} /> // NOSONAR typescript:S6479
+          <circle key={`${p.x}-${p.y}`} cx={p.x} cy={p.y} r={2} fill={color} />
         ))}
     </svg>
   );
