@@ -58,10 +58,10 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@bull-board/api": "^6.20.3",
-    "@bull-board/ui": "^6.20.3",
+    "@bull-board/api": "^6.21.1",
+    "@bull-board/ui": "^6.21.1",
     "@intelliflow/domain": "workspace:*",
-    "bullmq": "^5.70.1",
+    "bullmq": "^5.73.5",
     "zod": "^4.3.6"
   },
   "devDependencies": {
