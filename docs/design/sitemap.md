@@ -1,8 +1,6 @@
 # IntelliFlow CRM - Sitemap
 
-> **Location**: `docs/design/sitemap.md` **Last Updated**: 2026-04-11 **Total
-> Pages**: 145 **Total Flows**: 42 (linked) **Layouts**: 37 **API Routers**: 25
-> (232 procedures)
+> **Location**: `docs/design/sitemap.md` **Last Updated**: 2026-04-13 **Total Pages**: 201 **Total Flows**: 42 (linked) **Layouts**: 37 **API Routers**: 48 (232 procedures)
 
 ---
 
@@ -55,6 +53,7 @@ intelliflow.com
 │   ├── /privacy                          [PG-050] Privacy policy
 │   ├── /terms                            [PG-051] Terms of service
 │   ├── /cookies                          [PG-052] Cookie policy
+│   ├── /dpa                              [PG-053] Data Processing Addendum
 │   │
 │   ├── /blog                             [PG-009]
 │   │   └── /blog/[slug]                  [PG-010] Dynamic blog post
@@ -308,6 +307,7 @@ only** — no authenticated routes.
 | `/status`                              | 0.4      | hourly           |
 | `/privacy`                             | 0.5      | monthly          |
 | `/cookies`                             | 0.5      | monthly          |
+| `/dpa`                                 | 0.5      | monthly          |
 | `/blog/ai-lead-scoring-best-practices` | 0.6      | monthly          |
 | `/blog/governance-ready-automation`    | 0.6      | monthly          |
 
@@ -547,6 +547,7 @@ apps/web/src/app/
 │   ├── privacy/page.tsx          # /privacy
 │   ├── terms/page.tsx            # /terms
 │   ├── cookies/page.tsx          # /cookies
+│   ├── dpa/page.tsx              # /dpa
 │   ├── blog/
 │   │   ├── page.tsx              # /blog
 │   │   └── [slug]/page.tsx       # /blog/[slug]

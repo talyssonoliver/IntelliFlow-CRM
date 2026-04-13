@@ -35,7 +35,7 @@ structure, and user flows in the IntelliFlow CRM web application.
 
 | Category        | Count |
 | --------------- | ----- |
-| Total Pages     | 198   |
+| Total Pages     | 201   |
 | Public Pages    | 31    |
 | Developer Pages | 14    |
 | Protected Pages | 96    |
@@ -83,6 +83,7 @@ Located in `(public)` route group. Accessible without login.
 | `/privacy`                 | Privacy Policy          | Public privacy policy and data handling commitments                                                                                                  |
 | `/terms`                   | Terms of Service        | Public terms of service page (PG-051)                                                                                                                |
 | `/cookies`                 | Cookie Policy           | Public cookie policy (PG-052) — consumed by `<CookieConsentBanner>` and public footer                                                                 |
+| `/dpa`                     | Data Processing Addendum | Public DPA (PG-053) — GDPR Article 28 controller/processor addendum; linked from PublicFooter; renders a client-side `DpaSignaturePanel` for controller acknowledgement and a downloadable template PDF |
 | `/blog`                    | Blog                    | Blog listing                                                                                                                                         |
 | `/blog/[slug]`             | Blog Post               | Individual blog article                                                                                                                              |
 | `/careers`                 | Careers                 | Job listings                                                                                                                                         |

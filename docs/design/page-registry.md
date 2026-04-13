@@ -3,7 +3,7 @@
 > **Location**: `docs/design/page-registry.md` **Purpose**: Central registry of
 > all UI pages with task IDs, KPIs, file paths, components, API routers, test
 > paths, and RACI assignments **Last Updated**: 2026-04-12 (as of Sprint 17)
-> **Total Pages**: 198
+> **Total Pages**: 201
 
 ---
 
@@ -165,6 +165,20 @@ Each route entry uses this standard table format:
 | **API Router** | N/A                                                         |
 | **E2E Test**   | None                                                        |
 | **Unit Tests** | `apps/web/src/app/(public)/cookies/__tests__/page.test.tsx`, `apps/web/src/lib/legal/__tests__/cookie-policy-tracker.test.ts` |
+| **KPI**        | Lighthouse >=90; Response <200ms; SEO >=90                  |
+| **Status**     | Implemented                                                 |
+| **RACI**       | R: Frontend / A: Legal Counsel / C: Compliance / I: QA      |
+
+### Data Processing Addendum (`/dpa`)
+
+| Field          | Value                                                       |
+| -------------- | ----------------------------------------------------------- |
+| **Task ID**    | PG-053                                                      |
+| **File Path**  | `apps/web/src/app/(public)/dpa/page.tsx`                    |
+| **Layout**     | `apps/web/src/app/(public)/layout.tsx`                      |
+| **API Router** | N/A                                                         |
+| **E2E Test**   | None                                                        |
+| **Unit Tests** | `apps/web/src/app/(public)/dpa/__tests__/page.test.tsx`, `apps/web/src/lib/legal/__tests__/signature-handler.test.ts`, `apps/web/src/lib/legal/__tests__/signature-handler.client.test.ts`, `apps/web/src/components/legal/__tests__/dpa-signature-panel.test.tsx` |
 | **KPI**        | Lighthouse >=90; Response <200ms; SEO >=90                  |
 | **Status**     | Implemented                                                 |
 | **RACI**       | R: Frontend / A: Legal Counsel / C: Compliance / I: QA      |

@@ -124,6 +124,7 @@ Legend:
 | `/privacy`                                                | OK     | Footer, signup, home, cookie banner |
 | `/terms`                                                  | OK     | Footer, signup, registration, welcome email |
 | `/cookies`                                                | OK     | Footer (2x), cookie banner          |
+| `/dpa`                                                    | OK     | Footer (legal list)                 |
 | `/login`, `/signup`, `/signup/success`                    | OK     | Header CTA                          |
 | `/forgot-password`, `/reset-password/*`                   | OK     | Login page link                     |
 | `/mfa/verify`                                             | OK     | Login flow                          |

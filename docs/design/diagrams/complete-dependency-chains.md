@@ -80,6 +80,7 @@ When implementing new features or modifying existing ones:
 | `/privacy` | `PG-050` | ✅ Implemented | Public route backed by tracked policy content and legal metadata helper |
 | `/terms`   | `PG-051` | ✅ Implemented | Terms of service page; route count updated from 87 to 88                |
 | `/cookies` | `PG-052` | ✅ Implemented | Cookie policy; reuses `@intelliflow/ui::CookieConsentBanner` and shared legal parser |
+| `/dpa`     | `PG-053` | ✅ Implemented | GDPR Article 28 Data Processing Addendum; reuses `legal-content-parser.ts`; ships `DpaSignaturePanel` with client-only localStorage acknowledgement and downloadable template PDF |
 
 ---
 

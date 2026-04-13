@@ -243,9 +243,7 @@ async function main() {
   console.log('✅ Quality checks PASSED');
 }
 
-// NOSONAR: S7785 - Top-level await not available in CommonJS modules
 (async () => {
-  // NOSONAR
   try {
     await main();
   } catch (error) {

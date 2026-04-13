@@ -70,6 +70,29 @@ IntelliFlow CRM exposes privacy, terms, and cookie-policy links from public rout
 - Keep policy metadata logic in `apps/web/src/lib/legal/consent-tracker.ts` (Privacy) and `apps/web/src/lib/legal/acceptance-tracker.ts` (Terms) so later legal tasks can build on the same helpers.
 - Acceptance tracking uses `localStorage` only (no backend dependency for MVP).
 
+### PG-053 — Data Processing Addendum
+
+- A public `/dpa` route exists under the `(public)` route group and is reachable from the `PublicFooter` Legal section.
+- The page renders DPA sections derived from `docs/shared/dpa-content.md` (YAML frontmatter + markdown, same pattern as privacy/terms/cookies/aup).
+- The page displays DPA version metadata, effective date, and legal contact details.
+- A server-only `signature-handler.ts` in `apps/web/src/lib/legal/` delegates parsing to `loadLegalContent()` from `legal-content-parser.ts` and exports `getDpa()`, `formatDpaDate()`, and the `DpaSignatureRecord` type.
+- A client-only `signature-handler.client.ts` in `apps/web/src/lib/legal/` persists controller acknowledgements to `localStorage` under key `intelliflow_dpa_signature` and exports `hasSigned`, `recordDpaSignature`, `getStoredDpaSignature`.
+- A `DpaSignaturePanel` (`apps/web/src/components/legal/dpa-signature-panel.tsx`) renders a sticky acknowledgement bar on `/dpa` with `pending`/`signed`/`updated` states, SSR-safe (returns `null` during `loading` and `signed`).
+- A downloadable template at `apps/web/public/legal/dpa-template.pdf` is served from `/legal/dpa-template.pdf`; `artifacts/reports/dpa-template.pdf` holds the governance mirror.
+- `apps/web/src/app/sitemap.ts` includes a `/dpa` entry (priority 0.5, changeFrequency `monthly`) between `/cookies` and `/status`.
+- `PublicFooter.tsx` Legal list contains a "Data Processing Addendum" link to `/dpa`.
+- The route is covered by unit tests (`__tests__/page.test.tsx`, `signature-handler.test.ts`, `signature-handler.client.test.ts`, `dpa-signature-panel.test.tsx`) and the `sitemap-reconciliation.test.ts` TC-25 count is bumped to 199.
+- DPA signature is controller-facing only (browser-local); enterprise customers are directed to `legal@intelliflow-crm.com` for a countersigned DPA. Server-side signature persistence is explicitly out of scope (would require a future ADR).
+
+### Delivered Routes
+
+| Route | Task | Version | Effective Date |
+| --- | --- | --- | --- |
+| `/privacy` | PG-050 | see `docs/shared/privacy-content.md` | see `docs/shared/privacy-content.md` |
+| `/terms` | PG-051 | see `docs/shared/terms-content.md` | see `docs/shared/terms-content.md` |
+| `/cookies` | PG-052 | see `docs/shared/cookie-content.md` | see `docs/shared/cookie-content.md` |
+| `/dpa` | PG-053 | v2026.08 | 2026-08-13 |
+
 ### PG-054 — Acceptable Use Policy
 
 - A public `/aup` route exists and is reachable from the public footer Legal section and bottom bar.
