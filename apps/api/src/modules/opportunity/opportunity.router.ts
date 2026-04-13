@@ -361,7 +361,7 @@ function buildMonthlyRevenue(
 ): Record<string, { actual: number; deals: number }> {
   const monthlyRevenue: Record<string, { actual: number; deals: number }> = {};
   for (const deal of wonDeals) {
-    const month = new Date(deal.closedAt!).toLocaleString('en-US', {
+    const month = new Date(deal.closedAt!).toLocaleString('en-GB', {
       month: 'short',
       timeZone: 'UTC',
     });
@@ -434,7 +434,7 @@ function buildWinRateTrend(
   return months.map((month) => {
     const monthDeals = closedDeals.filter(
       (d) =>
-        new Date(d.closedAt!).toLocaleString('en-US', { month: 'short', timeZone: 'UTC' }) === month
+        new Date(d.closedAt!).toLocaleString('en-GB', { month: 'short', timeZone: 'UTC' }) === month
     );
     const monthWon = monthDeals.filter((d) => d.stage === 'CLOSED_WON').length;
     const rate = monthDeals.length > 0 ? Math.round((monthWon / monthDeals.length) * 100) : 0;
@@ -567,7 +567,7 @@ export const opportunityRouter = createTRPCRouter({
       id: record.id,
       name: record.name,
       value: numericValue,
-      currency: 'USD',
+      currency: 'GBP',
       probability: record.probability,
       stage: record.stage,
       expectedCloseDate: record.expectedCloseDate,

@@ -456,7 +456,7 @@ export const createAppointmentTool: AgentToolDefinition<
     }
 
     return {
-      summary: `Create appointment: "${input.title}" (${input.appointmentType}) on ${input.startTime.toLocaleDateString('en-US', { timeZone: 'UTC' })} at ${input.startTime.toLocaleTimeString('en-US', { timeZone: 'UTC' })}`,
+      summary: `Create appointment: "${input.title}" (${input.appointmentType}) on ${input.startTime.toLocaleDateString('en-GB', { timeZone: 'UTC' })} at ${input.startTime.toLocaleTimeString('en-GB', { timeZone: 'UTC' })}`,
       changes: [
         {
           field: 'title',

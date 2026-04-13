@@ -489,7 +489,7 @@ export const mockUser = {
   familyName: null,
   avatarUrl: 'https://example.com/avatar.jpg',
   timezone: 'UTC',
-  locale: 'en-US',
+  locale: 'en-GB',
   phone: null,
   company: null,
   department: null,

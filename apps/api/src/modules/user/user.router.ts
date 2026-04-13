@@ -64,7 +64,7 @@ export const userRouter = createTRPCRouter({
       avatarUrl: user.avatarUrl ?? null,
       role: user.role,
       timezone: user.timezone ?? 'UTC',
-      locale: user.locale ?? 'en-US',
+      locale: user.locale ?? 'en-GB',
       phone: user.phone ?? null,
       company: user.company ?? null,
       department: user.department ?? null,

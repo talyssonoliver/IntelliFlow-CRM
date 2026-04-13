@@ -298,7 +298,7 @@ async function queryOpportunities(
     name: row.name,
     stage: row.stage,
     value: Number(row.value),
-    currency: 'USD', // Opportunity model does not store currency; defaulting to USD
+    currency: 'GBP', // Opportunity model does not store currency; defaulting to USD
     probability: row.probability,
     closeDate: row.expectedCloseDate ?? undefined,
     accountId: row.accountId ?? undefined,

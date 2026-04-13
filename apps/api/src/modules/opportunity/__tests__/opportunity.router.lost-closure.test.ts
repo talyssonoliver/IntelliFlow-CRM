@@ -27,7 +27,7 @@ import { ValidationError, NotFoundError } from '@intelliflow/application';
 const createMockDomainOpportunity = (overrides: Record<string, unknown> = {}) => ({
   id: { value: TEST_UUIDS.opportunity1 },
   name: 'Lost Deal',
-  value: { amount: 50000, currency: 'USD' },
+  value: { amount: 50000, currency: 'GBP' },
   probability: { value: 0 },
   stage: 'CLOSED_LOST',
   expectedCloseDate: new Date('2026-06-30'),
@@ -35,7 +35,7 @@ const createMockDomainOpportunity = (overrides: Record<string, unknown> = {}) =>
   contactId: TEST_UUIDS.contact1,
   ownerId: TEST_UUIDS.user1,
   tenantId: TEST_UUIDS.tenant,
-  weightedValue: { amount: 0, currency: 'USD' },
+  weightedValue: { amount: 0, currency: 'GBP' },
   isClosed: true,
   isWon: false,
   isLost: true,

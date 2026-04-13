@@ -23,7 +23,7 @@ export function safeTimezone(timezone: string | undefined | null): string {
   if (!timezone) return 'UTC';
   try {
     // Intl.DateTimeFormat throws RangeError for invalid timezones
-    Intl.DateTimeFormat('en-US', { timeZone: timezone });
+    Intl.DateTimeFormat('en-GB', { timeZone: timezone });
     return timezone;
   } catch {
     return 'UTC';
@@ -118,7 +118,7 @@ export function getHourInTimezone(
   referenceDate?: DateInput
 ): number {
   const ref = referenceDate ? toDate(referenceDate) : new Date();
-  const parts = new Intl.DateTimeFormat('en-US', {
+  const parts = new Intl.DateTimeFormat('en-GB', {
     timeZone: timezone,
     hour: 'numeric',
     hour12: false,
@@ -139,7 +139,7 @@ export function formatDateTimeInTimezone(
   options?: Partial<Intl.DateTimeFormatOptions>
 ): string {
   const date = toDate(input);
-  return date.toLocaleString('en-US', {
+  return date.toLocaleString('en-GB', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -158,7 +158,7 @@ export function formatDateTimeInTimezone(
  * dependency on the server's local timezone setting.
  */
 function getTimezoneOffsetMinutes(date: Date, timezone: string): number {
-  const utcParts = new Intl.DateTimeFormat('en-US', {
+  const utcParts = new Intl.DateTimeFormat('en-GB', {
     timeZone: 'UTC',
     year: 'numeric',
     month: '2-digit',
@@ -169,7 +169,7 @@ function getTimezoneOffsetMinutes(date: Date, timezone: string): number {
     hour12: false,
   }).formatToParts(date);
 
-  const tzParts = new Intl.DateTimeFormat('en-US', {
+  const tzParts = new Intl.DateTimeFormat('en-GB', {
     timeZone: timezone,
     year: 'numeric',
     month: '2-digit',

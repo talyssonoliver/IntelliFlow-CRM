@@ -1400,7 +1400,7 @@ export const billingRouter = createTRPCRouter({
 
       // Build email content
       const receiptNumber = invoice.number || input.receiptId;
-      const amountFormatted = new Intl.NumberFormat('en-US', {
+      const amountFormatted = new Intl.NumberFormat('en-GB', {
         style: 'currency',
         currency: invoice.currency.toUpperCase(),
       }).format(invoice.amountPaid / 100);
@@ -1411,7 +1411,7 @@ export const billingRouter = createTRPCRouter({
         `Amount: ${amountFormatted}`,
         `Status: ${invoice.status}`,
         invoice.paidAt
-          ? `Paid: ${invoice.paidAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}`
+          ? `Paid: ${invoice.paidAt.toLocaleDateString('en-GB', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}`
           : '',
         invoice.hostedInvoiceUrl ? `\nView receipt: ${invoice.hostedInvoiceUrl}` : '',
       ]
@@ -1421,7 +1421,7 @@ export const billingRouter = createTRPCRouter({
         <p><strong>Receipt:</strong> ${receiptNumber}</p>
         <p><strong>Amount:</strong> ${amountFormatted}</p>
         <p><strong>Status:</strong> ${invoice.status}</p>
-        ${invoice.paidAt ? `<p><strong>Paid:</strong> ${invoice.paidAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}</p>` : ''}
+        ${invoice.paidAt ? `<p><strong>Paid:</strong> ${invoice.paidAt.toLocaleDateString('en-GB', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}</p>` : ''}
         ${invoice.hostedInvoiceUrl ? `<p><a href="${invoice.hostedInvoiceUrl}">View receipt online</a></p>` : ''}
       `;
 

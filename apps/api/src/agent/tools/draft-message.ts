@@ -302,7 +302,7 @@ export const draftMessageTool: AgentToolDefinition<DraftMessageInput, DraftedMes
     }
     summary += ` to ${input.recipientType.toLowerCase()} ${input.recipientId}`;
     if (input.scheduledFor) {
-      summary += ` (scheduled for ${input.scheduledFor.toLocaleString('en-US', { timeZone: 'UTC' })})`;
+      summary += ` (scheduled for ${input.scheduledFor.toLocaleString('en-GB', { timeZone: 'UTC' })})`;
     }
 
     return {

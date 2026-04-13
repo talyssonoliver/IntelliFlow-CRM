@@ -77,7 +77,7 @@ const forecastResponseSchema = z.object({
 const createMockDomainOpportunity = (overrides: Record<string, unknown> = {}) => ({
   id: { value: TEST_UUIDS.opportunity1 },
   name: 'Enterprise Deal',
-  value: { amount: 50000, currency: 'USD' },
+  value: { amount: 50000, currency: 'GBP' },
   probability: { value: 60 },
   stage: 'PROPOSAL' as const,
   expectedCloseDate: new Date('2025-12-31'),
@@ -262,7 +262,7 @@ describe('Opportunity Router Contract Tests', () => {
 
     it('should return value as number', async () => {
       const mockDomainOpportunity = createMockDomainOpportunity({
-        value: { amount: 50000, currency: 'USD' },
+        value: { amount: 50000, currency: 'GBP' },
       });
       ctx.services!.opportunity!.createOpportunity = vi.fn().mockResolvedValue({
         isSuccess: true,

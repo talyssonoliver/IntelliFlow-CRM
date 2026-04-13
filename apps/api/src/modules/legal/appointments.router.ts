@@ -531,7 +531,7 @@ export const appointmentsRouter = createTRPCRouter({
         tenantId,
         type: 'appointment_scheduled',
         title: 'Appointment scheduled',
-        body: `Appointment "${input.title}" scheduled for ${input.startTime.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: safeTimezone(ctx.user?.timezone) })}`,
+        body: `Appointment "${input.title}" scheduled for ${input.startTime.toLocaleDateString('en-GB', { month: 'short', day: 'numeric', year: 'numeric', timeZone: safeTimezone(ctx.user?.timezone) })}`,
         priority: 'normal',
         entityType: 'appointment',
         entityId: appointment.id,

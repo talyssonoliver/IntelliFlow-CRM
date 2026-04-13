@@ -269,7 +269,7 @@ describe('authRouter', () => {
     mockResetPasswordForEmail.mockResolvedValue({ data: {}, error: null });
     mockUpdateUserPassword.mockResolvedValue({ data: {}, error: null });
 
-    prismaMock.user.findUnique.mockResolvedValue({
+    const defaultUserRow = {
       id: TEST_UUIDS.user,
       email: 'test@example.com',
       name: 'Test User',
@@ -278,7 +278,12 @@ describe('authRouter', () => {
       avatarUrl: null,
       stripeCustomerId: null,
       timezone: 'UTC',
-    } as any);
+    };
+    prismaMock.user.findUnique.mockResolvedValue(defaultUserRow as any);
+    // ensureAppUserSession fires `prisma.user.update(...).catch(...)` on every
+    // authenticated flow (login / oauthCallback / verifyMfa). Without a default
+    // thenable, `.catch` is called on undefined and throws.
+    prismaMock.user.update.mockResolvedValue(defaultUserRow as any);
   }
 
   beforeEach(() => {
