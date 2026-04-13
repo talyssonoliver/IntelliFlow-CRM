@@ -15,9 +15,7 @@ const tags: TagRow[] = [
 
 describe('TagsTab', () => {
   it('renders existing tags', () => {
-    render(
-      <TagsTab tags={tags} onCreate={vi.fn()} onUpdate={vi.fn()} onDelete={vi.fn()} />
-    );
+    render(<TagsTab tags={tags} onCreate={vi.fn()} onUpdate={vi.fn()} onDelete={vi.fn()} />);
     expect(screen.getByText('VIP')).toBeInTheDocument();
     expect(screen.getByText('High value')).toBeInTheDocument();
   });
@@ -30,7 +28,10 @@ describe('TagsTab', () => {
   it('opens new-tag dialog from New tag button', () => {
     render(<TagsTab tags={[]} onCreate={vi.fn()} onUpdate={vi.fn()} onDelete={vi.fn()} />);
     fireEvent.click(screen.getByRole('button', { name: /New tag/i }));
-    expect(screen.getByText(/^New tag$/, { selector: 'h2, [role="heading"]' }) ?? screen.getByText(/New tag/)).toBeTruthy();
+    expect(
+      screen.getByText(/^New tag$/, { selector: 'h2, [role="heading"]' }) ??
+        screen.getByText(/New tag/)
+    ).toBeTruthy();
   });
 
   it('rejects empty name on submit', async () => {

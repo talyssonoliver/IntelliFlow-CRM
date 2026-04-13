@@ -414,13 +414,7 @@ export function isNodeTypeId(v: string): v is NodeTypeId {
  * Kept intentionally narrow: only the primitives that can be safely rendered
  * by the generic form builder and round-tripped through JSON.
  */
-export const FIELD_DESCRIPTOR_TYPES = [
-  'string',
-  'number',
-  'boolean',
-  'entity',
-  'enum',
-] as const;
+export const FIELD_DESCRIPTOR_TYPES = ['string', 'number', 'boolean', 'entity', 'enum'] as const;
 export type FieldDescriptorType = (typeof FIELD_DESCRIPTOR_TYPES)[number];
 
 export const FieldDescriptorSchema = z
@@ -550,7 +544,9 @@ export function isPublicHttpUrl(raw: string): boolean {
     return false;
   }
   if (url.protocol !== 'http:' && url.protocol !== 'https:') return false;
-  const host = url.hostname.toLowerCase();
+  // URL.hostname strips IPv6 brackets for some forms but not all; normalize.
+  const rawHost = url.hostname.toLowerCase();
+  const host = rawHost.startsWith('[') && rawHost.endsWith(']') ? rawHost.slice(1, -1) : rawHost;
   if (
     host === 'localhost' ||
     host === '0.0.0.0' ||
@@ -558,6 +554,10 @@ export function isPublicHttpUrl(raw: string): boolean {
     host === '::1' ||
     host.endsWith('.localhost')
   ) {
+    return false;
+  }
+  // Block ::1 when loopback is embedded as an IPv4-mapped IPv6 or full form
+  if (host.startsWith('::ffff:127.') || host === '::') {
     return false;
   }
   // Block RFC1918 + link-local IPv4 ranges

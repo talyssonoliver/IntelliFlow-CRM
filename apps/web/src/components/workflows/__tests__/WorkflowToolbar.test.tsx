@@ -161,7 +161,7 @@ describe('WorkflowToolbar', () => {
     expect(container.querySelector('[data-testid="rf-panel"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="workflow-toolbar-mobile-wrap"]')).toBeNull();
     expect(
-      container.querySelector('[data-testid="workflow-toolbar"]')?.getAttribute('data-variant'),
+      container.querySelector('[data-testid="workflow-toolbar"]')?.getAttribute('data-variant')
     ).toBe('desktop');
   });
 
@@ -175,7 +175,7 @@ describe('WorkflowToolbar', () => {
     expect(wrap?.className).toMatch(/left-1\/2/);
     expect(container.querySelector('[data-testid="rf-panel"]')).toBeNull();
     expect(
-      container.querySelector('[data-testid="workflow-toolbar"]')?.getAttribute('data-variant'),
+      container.querySelector('[data-testid="workflow-toolbar"]')?.getAttribute('data-variant')
     ).toBe('mobile');
   });
 

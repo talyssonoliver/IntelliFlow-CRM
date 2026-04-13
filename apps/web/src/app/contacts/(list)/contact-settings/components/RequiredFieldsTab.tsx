@@ -37,10 +37,7 @@ const FIELD_LABELS: Record<ContactRequiredFieldKey, { label: string; description
   },
 };
 
-export function RequiredFieldsTab({
-  fields,
-  onFieldsChange,
-}: Readonly<RequiredFieldsTabProps>) {
+export function RequiredFieldsTab({ fields, onFieldsChange }: Readonly<RequiredFieldsTabProps>) {
   const handleToggle = useCallback(
     (fieldKey: ContactRequiredFieldKey, value: boolean) => {
       if (fieldKey === 'email') return; // email is always required

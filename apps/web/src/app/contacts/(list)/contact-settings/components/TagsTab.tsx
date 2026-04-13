@@ -210,7 +210,6 @@ export function TagsTab({ tags, onCreate, onUpdate, onDelete }: Readonly<TagsTab
                   setNameError(null);
                 }}
                 maxLength={60}
-                autoFocus
               />
               {nameError && (
                 <p className="text-sm text-destructive mt-1" role="alert">

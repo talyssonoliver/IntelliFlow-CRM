@@ -57,6 +57,8 @@ import { calendarRouter } from './modules/calendar/calendar.router';
 import { calendarWebhooksRouter } from './modules/calendar/calendar-webhook.router';
 import { dsarRouter } from './modules/privacy/dsar.router';
 import { helpArticleRouter } from './modules/help-article/help-article.router';
+import { customNodeTypeRouter } from './modules/custom-node-type/custom-node-type.router';
+import { customActionHandlerRouter } from './modules/custom-action-handler/custom-action-handler.router';
 
 /**
  * Main application router
@@ -209,6 +211,10 @@ export const appRouter = createTRPCRouter({
 
   // Support Help Center (IFC-299)
   helpArticle: helpArticleRouter,
+
+  // Workflow Custom Extensions (IFC-031 FU-011 / FU-012)
+  customNodeType: customNodeTypeRouter,
+  customActionHandler: customActionHandlerRouter,
 });
 
 /**

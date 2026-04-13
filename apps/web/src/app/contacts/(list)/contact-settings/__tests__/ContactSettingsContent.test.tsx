@@ -119,9 +119,7 @@ describe('ContactSettingsContent', () => {
   it('renders the module shell with four tabs', () => {
     render(<ContactSettingsContent />);
     expect(screen.getByRole('heading', { name: /Contact Settings/i })).toBeInTheDocument();
-    expect(
-      screen.getByRole('tab', { name: /Duplicate Detection/i })
-    ).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /Duplicate Detection/i })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: /Required Fields/i })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: /^Tags$/i })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: /Automation/i })).toBeInTheDocument();

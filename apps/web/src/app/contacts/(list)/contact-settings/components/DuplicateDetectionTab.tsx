@@ -84,7 +84,11 @@ export function DuplicateDetectionTab({
             Configure how the system flags potential duplicate contacts.
           </p>
         </div>
-        <Button variant="outline" onClick={addRule} disabled={rules.length >= FIELDS.length * STRATEGIES.length}>
+        <Button
+          variant="outline"
+          onClick={addRule}
+          disabled={rules.length >= FIELDS.length * STRATEGIES.length}
+        >
           <span className="material-symbols-outlined text-base mr-1" aria-hidden="true">
             add
           </span>
@@ -96,7 +100,10 @@ export function DuplicateDetectionTab({
         {rules.map((rule, index) => {
           const rowId = `dup-${rule.field}-${rule.matchStrategy}`;
           return (
-            <div key={rowId} className="rounded-lg border border-border p-4 flex flex-wrap items-center gap-4">
+            <div
+              key={rowId}
+              className="rounded-lg border border-border p-4 flex flex-wrap items-center gap-4"
+            >
               <div className="flex flex-col gap-0.5">
                 <span className="text-sm font-medium">{FIELD_LABELS[rule.field]}</span>
                 <span className="text-xs text-muted-foreground">

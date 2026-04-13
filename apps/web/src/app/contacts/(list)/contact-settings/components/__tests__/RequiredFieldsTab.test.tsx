@@ -23,9 +23,7 @@ describe('RequiredFieldsTab', () => {
     render(<RequiredFieldsTab fields={baseFields} onFieldsChange={onFieldsChange} />);
     fireEvent.click(screen.getByLabelText(/Require Phone number/i));
     expect(onFieldsChange).toHaveBeenCalledWith(
-      expect.arrayContaining([
-        expect.objectContaining({ fieldKey: 'phone', isRequired: true }),
-      ])
+      expect.arrayContaining([expect.objectContaining({ fieldKey: 'phone', isRequired: true })])
     );
   });
 

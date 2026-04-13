@@ -39,7 +39,10 @@ vi.mock('../../../services', () => ({
 }));
 
 describe('Appointments Router - Caller Tests', () => {
-  const now = new Date();
+  // Use a fixed UTC time well inside business hours (07:00-19:00) so tests
+  // don't depend on wall-clock time. 10:00 UTC gives a 1h meeting ending at
+  // 11:00 UTC, and `+86400000` still lands in business hours the next day.
+  const now = new Date('2026-04-14T10:00:00Z');
   const oneHourLater = new Date(now.getTime() + 3600000);
 
   const mockAppointment = {

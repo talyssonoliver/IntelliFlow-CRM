@@ -17,8 +17,6 @@ describe('Contact Settings Page (Server Component)', () => {
     render(rendered);
     // Suspense boundary shows fallback or content; in test env, synchronous
     // dummy component resolves immediately.
-    expect(
-      screen.getByTestId('contact-settings-content')
-    ).toBeInTheDocument();
+    expect(screen.getByTestId('contact-settings-content')).toBeInTheDocument();
   });
 });

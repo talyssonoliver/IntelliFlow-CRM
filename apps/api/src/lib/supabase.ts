@@ -391,6 +391,15 @@ async function getJoseVerifier(): Promise<{ jwtVerify: any; jwks: any } | null> 
 export async function verifyToken(
   token: string
 ): Promise<{ user: User | null; error: Error | null }> {
+  // IFC-169: Reject token verification outright when mock keys are in use.
+  // Calling supabaseAdmin.auth.getUser() would hit a real (or non-existent)
+  // remote endpoint and return a confusing "fetch failed" error. Short-circuit
+  // with a clear diagnostic so tests and dev environments fail loudly instead
+  // of silently accepting mock-key tokens.
+  if (config.usingMockKeys) {
+    return { user: null, error: new Error('Mock keys cannot verify real tokens') };
+  }
+
   const verifier = await getJoseVerifier();
 
   if (!verifier) {

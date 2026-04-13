@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 
-const liveUpdatesMock = vi.fn(() => null);
+const liveUpdatesMock = vi.fn((_props: unknown) => null);
 
 vi.mock('@/components/status/maintenance-live-updates', () => ({
   MaintenanceLiveUpdates: (props: unknown) => liveUpdatesMock(props),
@@ -52,9 +52,7 @@ describe('MaintenancePage', () => {
 
     render(<MaintenancePage />);
 
-    expect(
-      screen.getByRole('heading', { name: /scheduled maintenance/i })
-    ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /scheduled maintenance/i })).toBeInTheDocument();
     expect(screen.getByText('Upgrading database engines.')).toBeInTheDocument();
     expect(screen.getByText('api')).toBeInTheDocument();
     expect(screen.getByText('worker')).toBeInTheDocument();

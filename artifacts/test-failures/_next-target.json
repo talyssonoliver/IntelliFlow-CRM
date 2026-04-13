@@ -1,4 +1,5 @@
 {
   "next_project": "apps/api",
-  "reason": "packages/adapters fully green. Next per batch-strategy order: apps/api -> apps/web -> apps/ai-worker."
+  "cluster_id": "api-appointments-business-hours",
+  "reason": "Last remaining cluster in apps/api. 3 failures. Tests schedule appointments outside 07:00-19:00 window — investigate whether test fixtures use times outside business hours or whether production added the constraint after tests were written."
 }

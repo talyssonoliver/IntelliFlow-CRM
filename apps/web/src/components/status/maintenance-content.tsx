@@ -87,8 +87,8 @@ export function MaintenanceContent({ window }: MaintenanceContentProps) {
                 </>
               ) : (
                 <p className="text-base text-slate-600 dark:text-slate-300 sm:text-lg">
-                  IntelliFlow CRM is running normally. Visit the status page for live
-                  signals and the latest incident history.
+                  IntelliFlow CRM is running normally. Visit the status page for live signals and
+                  the latest incident history.
                 </p>
               )}
             </section>

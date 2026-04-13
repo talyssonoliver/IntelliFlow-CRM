@@ -281,6 +281,21 @@ const tenantMiddleware = t.middleware(async ({ ctx, next }) => {
 export const tenantProcedure = protectedProcedure.use(tenantMiddleware);
 
 /**
+ * Admin-gated tenant procedure — authenticated + admin role + tenant isolation.
+ *
+ * Required for mutations that change tenant-wide configuration (e.g. registering
+ * custom workflow node types, custom action handlers, RBAC policies).
+ *
+ * Chain order matters: isAuthed → isAdmin → tenantMiddleware so the admin check
+ * runs BEFORE we spin up the tenant-scoped Prisma client.
+ */
+export const adminTenantProcedure = t.procedure
+  .use(isAuthed)
+  .use(isAdmin)
+  .use(tenantMiddleware)
+  .use(tracingMiddleware);
+
+/**
  * Auth procedure - applies strict rate limiting for auth endpoints (5 req/min)
  *
  * Use this for all unauthenticated auth endpoints to prevent brute-force attacks:

@@ -17,7 +17,13 @@
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { Prisma } from '@intelliflow/db';
-import { WorkflowNodeConfigSchema, NODE_TYPE_IDS, isNodeTypeId } from '@intelliflow/domain';
+import {
+  WorkflowNodeConfigSchema,
+  NODE_TYPE_IDS,
+  isNodeTypeId,
+  buildZodFromDescriptors,
+} from '@intelliflow/domain';
+import { getCustomNodeTypeRegistry } from '../../workflow/registries/custom-node-type-registry';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
 
 // ---------------------------------------------------------------------------
@@ -357,6 +363,55 @@ interface GraphInput {
   edges: Array<{ source: string; target: string }>;
 }
 
+/**
+ * Validate step configs for non-canonical types against the tenant's
+ * CustomNodeTypeRegistry (IFC-031 FU-011). Hydrates the registry from
+ * Postgres if needed, then runs each descriptor-reconstructed Zod schema
+ * against the step's `config` payload.
+ *
+ * Returns a list of error messages (empty = success).
+ */
+async function validateCustomNodeConfigs(
+  steps: Array<{ id: number; type: string; config?: Record<string, unknown> }>,
+  tenantId: string,
+  prisma: { customNodeType: { findMany: (args: unknown) => Promise<unknown[]> } }
+): Promise<string[]> {
+  const unknownTypes = steps
+    .filter((s) => !isNodeTypeId(s.type))
+    .map((s) => ({ stepId: s.id, type: s.type, config: s.config ?? {} }));
+  if (unknownTypes.length === 0) return [];
+
+  const registry = getCustomNodeTypeRegistry();
+  await registry.loadTenant(prisma as never, tenantId);
+
+  const errors: string[] = [];
+  for (const u of unknownTypes) {
+    const descriptor = registry.get(tenantId, u.type);
+    if (!descriptor) {
+      errors.push(
+        `Step ${u.stepId} uses unknown node type "${u.type}" (not in catalog nor custom registry)`
+      );
+      continue;
+    }
+    if (!descriptor.isActive) {
+      errors.push(
+        `Step ${u.stepId} uses deactivated custom node type "${u.type}"`
+      );
+      continue;
+    }
+    const schema = buildZodFromDescriptors(descriptor.configSchema);
+    const parsed = schema.safeParse(u.config);
+    if (!parsed.success) {
+      for (const issue of parsed.error.issues) {
+        errors.push(
+          `Step ${u.stepId} (${u.type}) config.${issue.path.join('.') || '<root>'}: ${issue.message}`
+        );
+      }
+    }
+  }
+  return errors;
+}
+
 function validateWorkflowGraph(graph: GraphInput): string[] {
   const errors: string[] = [];
   const { steps, edges } = graph;
@@ -471,6 +526,19 @@ export const workflowRouter = createTRPCRouter({
         });
       }
 
+      // Custom node type validation (IFC-031 FU-011)
+      const customErrors = await validateCustomNodeConfigs(
+        input.steps,
+        ctx.tenant.tenantId,
+        ctx.prismaWithTenant as never
+      );
+      if (customErrors.length > 0) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: `Custom node validation failed: ${customErrors.join('; ')}`,
+        });
+      }
+
       const tenantId = ctx.tenant.tenantId;
       const createdBy = ctx.user!.userId;
       // Store both nodes and edges in the `steps` JSON column as an envelope
@@ -542,6 +610,24 @@ export const workflowRouter = createTRPCRouter({
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: `Topology validation failed: ${topologyErrors.join('; ')}`,
+        });
+      }
+
+      // Custom node type validation (IFC-031 FU-011)
+      const stepsForCheck = (data.steps ?? prevNodes) as Array<{
+        id: number;
+        type: string;
+        config?: Record<string, unknown>;
+      }>;
+      const customErrors = await validateCustomNodeConfigs(
+        stepsForCheck,
+        tenantId,
+        ctx.prismaWithTenant as never
+      );
+      if (customErrors.length > 0) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: `Custom node validation failed: ${customErrors.join('; ')}`,
         });
       }
     }

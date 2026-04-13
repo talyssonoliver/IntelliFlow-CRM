@@ -1,10 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { MaintenanceWindow } from '../maintenance-mode';
-import {
-  buildMaintenanceStatusPayload,
-  publishStatusUpdate,
-} from '../status-updater';
+import { buildMaintenanceStatusPayload, publishStatusUpdate } from '../status-updater';
 
 const FIXED_TS = '2026-04-13T12:00:00.000Z';
 
@@ -78,9 +75,7 @@ describe('publishStatusUpdate', () => {
 
   it('does not push when dataLayer is not an array', () => {
     window.dataLayer = undefined as unknown as Array<Record<string, unknown>>;
-    expect(() =>
-      publishStatusUpdate({ window: activeWindow, timestamp: FIXED_TS })
-    ).not.toThrow();
+    expect(() => publishStatusUpdate({ window: activeWindow, timestamp: FIXED_TS })).not.toThrow();
   });
 
   it('dispatches intelliflow:status-update on window', () => {

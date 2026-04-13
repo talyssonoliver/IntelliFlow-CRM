@@ -14,19 +14,10 @@ import type {
   UpdateContactTagInput,
 } from '@intelliflow/validators';
 import { ContactSettingsLoading } from './ContactSettingsLoading';
-import {
-  DuplicateDetectionTab,
-  type DuplicateRuleRow,
-} from './components/DuplicateDetectionTab';
-import {
-  RequiredFieldsTab,
-  type RequiredFieldRow,
-} from './components/RequiredFieldsTab';
+import { DuplicateDetectionTab, type DuplicateRuleRow } from './components/DuplicateDetectionTab';
+import { RequiredFieldsTab, type RequiredFieldRow } from './components/RequiredFieldsTab';
 import { TagsTab, type TagRow } from './components/TagsTab';
-import {
-  AutomationTab,
-  type ContactAutomationSettings,
-} from './components/AutomationTab';
+import { AutomationTab, type ContactAutomationSettings } from './components/AutomationTab';
 
 const DEFAULT_AUTOMATION: ContactAutomationSettings = {
   autoMergeOnExactEmail: false,
@@ -53,22 +44,18 @@ export default function ContactSettingsContent() {
 
   // ─── Mutations ──────────────────────────────────────────────────────────
   const utils = trpc.useUtils();
-  const duplicateRulesUpdate =
-    trpc.contactSettings.duplicateRules.updateAll.useMutation({
-      onSuccess: () => utils.contactSettings.duplicateRules.getAll.invalidate(),
-    });
-  const duplicateRulesReset =
-    trpc.contactSettings.duplicateRules.resetToDefaults.useMutation({
-      onSuccess: () => utils.contactSettings.duplicateRules.getAll.invalidate(),
-    });
-  const requiredFieldsUpdate =
-    trpc.contactSettings.requiredFields.updateAll.useMutation({
-      onSuccess: () => utils.contactSettings.requiredFields.getAll.invalidate(),
-    });
-  const requiredFieldsReset =
-    trpc.contactSettings.requiredFields.resetToDefaults.useMutation({
-      onSuccess: () => utils.contactSettings.requiredFields.getAll.invalidate(),
-    });
+  const duplicateRulesUpdate = trpc.contactSettings.duplicateRules.updateAll.useMutation({
+    onSuccess: () => utils.contactSettings.duplicateRules.getAll.invalidate(),
+  });
+  const duplicateRulesReset = trpc.contactSettings.duplicateRules.resetToDefaults.useMutation({
+    onSuccess: () => utils.contactSettings.duplicateRules.getAll.invalidate(),
+  });
+  const requiredFieldsUpdate = trpc.contactSettings.requiredFields.updateAll.useMutation({
+    onSuccess: () => utils.contactSettings.requiredFields.getAll.invalidate(),
+  });
+  const requiredFieldsReset = trpc.contactSettings.requiredFields.resetToDefaults.useMutation({
+    onSuccess: () => utils.contactSettings.requiredFields.getAll.invalidate(),
+  });
   const automationUpdate = trpc.contactSettings.automation.update.useMutation({
     onSuccess: () => utils.contactSettings.automation.get.invalidate(),
   });
@@ -135,13 +122,10 @@ export default function ContactSettingsContent() {
     setIsDirty(true);
   }, []);
 
-  const handleAutomationChange = useCallback(
-    (settings: ContactAutomationSettings) => {
-      setLocalAutomation(settings);
-      setIsDirty(true);
-    },
-    []
-  );
+  const handleAutomationChange = useCallback((settings: ContactAutomationSettings) => {
+    setLocalAutomation(settings);
+    setIsDirty(true);
+  }, []);
 
   // ─── Tag actions (immediate, not dirty-tracked) ─────────────────────────
   const handleTagCreate = useCallback(
@@ -193,9 +177,7 @@ export default function ContactSettingsContent() {
   );
 
   const isSaving =
-    duplicateRulesUpdate.isPending ||
-    requiredFieldsUpdate.isPending ||
-    automationUpdate.isPending;
+    duplicateRulesUpdate.isPending || requiredFieldsUpdate.isPending || automationUpdate.isPending;
 
   const handleSave = useCallback(async () => {
     try {
@@ -263,23 +245,19 @@ export default function ContactSettingsContent() {
       {
         value: 'duplicate-detection',
         label: 'Duplicate Detection',
-        content: (
-          <DuplicateDetectionTab rules={localRules} onRulesChange={handleRulesChange} />
-        ),
+        content: <DuplicateDetectionTab rules={localRules} onRulesChange={handleRulesChange} />,
       },
       {
         value: 'required-fields',
         label: 'Required Fields',
-        content: (
-          <RequiredFieldsTab fields={localFields} onFieldsChange={handleFieldsChange} />
-        ),
+        content: <RequiredFieldsTab fields={localFields} onFieldsChange={handleFieldsChange} />,
       },
       {
         value: 'tags',
         label: 'Tags',
         content: (
           <TagsTab
-            tags={((tagsQuery.data as unknown as TagRow[]) ?? [])}
+            tags={(tagsQuery.data as unknown as TagRow[]) ?? []}
             onCreate={handleTagCreate}
             onUpdate={handleTagUpdate}
             onDelete={handleTagDelete}
@@ -290,10 +268,7 @@ export default function ContactSettingsContent() {
         value: 'automation',
         label: 'Automation',
         content: (
-          <AutomationTab
-            settings={localAutomation}
-            onSettingsChange={handleAutomationChange}
-          />
+          <AutomationTab settings={localAutomation} onSettingsChange={handleAutomationChange} />
         ),
       },
     ],

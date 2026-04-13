@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-04-13T22:36:30.521Z",
+  "generated_at": "2026-04-13T23:02:19.491Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
-    "total_specs_analyzed": 380,
+    "total_specs_analyzed": 381,
     "completed": 373,
     "partially_done": 5,
-    "spec_only": 1,
+    "spec_only": 2,
     "uncertain": 1
   },
   "status_legend": {
@@ -6060,8 +6060,8 @@
       "spec_path": ".specify/sprints/sprint-17/specifications/PG-182-spec.md",
       "has_spec": true,
       "has_plan": true,
-      "has_attestation": false,
-      "csv_status": "In Progress",
+      "has_attestation": true,
+      "csv_status": "In Review",
       "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
@@ -6076,8 +6076,8 @@
       "spec_path": ".specify/sprints/sprint-17/specifications/PG-183-spec.md",
       "has_spec": true,
       "has_plan": true,
-      "has_attestation": false,
-      "csv_status": "Plan Complete",
+      "has_attestation": true,
+      "csv_status": "In Progress",
       "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
@@ -6117,6 +6117,22 @@
         "PG-192"
       ],
       "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-195",
+      "title": "Subset Material Symbols font to unblock Lighthouse Performance >=90 gate — reduces 3.5 MB MaterialSymbolsOutlined.woff2 shipped by root layout to every route (PG-056 Lighthouse=63 baseline). Audit the 1,421 .material-symbols-outlined call sites, build a subsetter script that extracts the exact glyph set, regenerate a smaller woff2 (<500 KB target), add CI guard so new glyphs are added to the audit list.",
+      "sprint": 17,
+      "spec_path": ".specify/sprints/sprint-17/specifications/PG-195-spec.md",
+      "has_spec": true,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Spec Complete",
+      "metric_status": "PLANNED",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-056"
+      ],
+      "real_status": "SPEC_ONLY"
     },
     {
       "task_id": "PM-OPS-001",

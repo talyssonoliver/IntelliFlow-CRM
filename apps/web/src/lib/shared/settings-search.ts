@@ -98,6 +98,15 @@ export const SETTINGS_ITEMS: SettingItem[] = [
     color: 'bg-primary/75',
     keywords: ['lead', 'stage', 'scoring', 'pipeline', 'custom field', 'automation'],
   },
+  {
+    id: 'accounts',
+    title: 'Accounts',
+    description: 'Hierarchy, industry taxonomy, and custom fields for accounts',
+    href: '/accounts/account-settings',
+    icon: 'business_center',
+    color: 'bg-primary/70',
+    keywords: ['account', 'hierarchy', 'industry', 'custom field', 'parent', 'child', 'tier'],
+  },
 ];
 
 /**
@@ -112,7 +121,7 @@ export const SETTINGS_CATEGORIES: SettingCategory[] = [
   {
     id: 'ai-automation',
     title: 'AI & Automation',
-    itemIds: ['ai', 'pipeline', 'leads'],
+    itemIds: ['ai', 'pipeline', 'leads', 'accounts'],
   },
   {
     id: 'integrations-comms',

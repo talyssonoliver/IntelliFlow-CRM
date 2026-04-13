@@ -60,6 +60,12 @@ export const settingsSidebarConfig: SidebarConfig = {
           href: '/settings/leads',
         },
         {
+          id: 'accounts',
+          label: 'Accounts',
+          icon: 'business_center',
+          href: '/accounts/account-settings',
+        },
+        {
           id: 'security',
           label: 'Security',
           icon: 'security',

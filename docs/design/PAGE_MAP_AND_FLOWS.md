@@ -35,7 +35,7 @@ structure, and user flows in the IntelliFlow CRM web application.
 
 | Category        | Count |
 | --------------- | ----- |
-| Total Pages     | 201   |
+| Total Pages     | 202   |
 | Public Pages    | 31    |
 | Developer Pages | 14    |
 | Protected Pages | 96    |
@@ -80,6 +80,7 @@ Located in `(public)` route group. Accessible without login.
 | `/status`                  | Status                   | System status page                                                                                                                                                                                      |
 | `/404`                     | 404 Not Found            | Direct system-page route for missing URLs; excluded from sitemap indexing                                                                                                                               |
 | `/500`                     | 500 Server Error         | Direct system-page route for internal errors; excluded from sitemap indexing                                                                                                                            |
+| `/maintenance`             | Maintenance              | Env-driven maintenance window page with ETA, affected services, and status updates; excluded from sitemap indexing                                                                                      |
 | `/privacy`                 | Privacy Policy           | Public privacy policy and data handling commitments                                                                                                                                                     |
 | `/terms`                   | Terms of Service         | Public terms of service page (PG-051)                                                                                                                                                                   |
 | `/cookies`                 | Cookie Policy            | Public cookie policy (PG-052) — consumed by `<CookieConsentBanner>` and public footer                                                                                                                   |

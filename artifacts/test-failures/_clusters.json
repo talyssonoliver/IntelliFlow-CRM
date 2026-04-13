@@ -1,15 +1,23 @@
 {
   "projects_green": ["packages/domain", "packages/db", "packages/application", "packages/adapters"],
-  "packages/adapters": {
-    "baseline_failed": 45,
-    "final_failed": 0,
+  "apps/api": {
+    "baseline_total": 5315,
+    "baseline_failed": 7,
     "clusters": [
+      { "id": "api-timezone-utils-en-gb-24h", "label": "test-bug", "status": "resolved", "failures_before": 3 },
       {
-        "id": "adapters-repo-tenantid-missing-REAPPLIED",
-        "label": "schema-drift",
+        "id": "api-supabase-mock-keys",
+        "label": "regression",
         "status": "resolved",
-        "failures_before": 45,
-        "fix": "Re-applied iteration-8 fix after state revert: script-driven tenantId arg addition to repo method call sites across InMemoryAccountRepository.{test,hierarchy.test}.ts (findById/findByName/findByOwnerId/findByIndustry/delete/existsByName/countByIndustry/findWithChildren/findAncestors/getHierarchyDepth) and InMemoryOpportunityRepository.test.ts (delete). Migrated 'tenant-123'/'tenant-001' literals to TEST_TENANT_ID from @intelliflow/test-fixtures. Also retargeted 'should not throw when deleting non-existent opportunity' to match production's intentional throw behavior (both in-memory and Prisma)."
+        "failures_before": 1,
+        "fix": "verifyToken() was missing the IFC-169 mock-key guard. When config.usingMockKeys is true, fell through to supabaseAdmin.auth.getUser() which hit real/missing Supabase endpoint and returned 'fetch failed'. Added early return at top of verifyToken: returns Error('Mock keys cannot verify real tokens') when config.usingMockKeys. This is a production fix — test codified intended IFC-169 behavior that production hadn't implemented."
+      },
+      {
+        "id": "api-appointments-business-hours",
+        "label": "test-bug-or-regression",
+        "status": "pending",
+        "failures_before": 3,
+        "signature": "3 appointments.router.caller tests throwing 'Appointments must start and end between 07:00 and 19:00'"
       }
     ]
   }

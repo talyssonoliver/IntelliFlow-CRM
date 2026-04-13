@@ -119,22 +119,21 @@ describe('API timezone-utils', () => {
       expect(result).toContain('Mar');
       expect(result).toContain('15');
       expect(result).toContain('2026');
-      expect(result).toContain('2:30');
-      expect(result).toContain('PM');
+      // en-GB locale uses 24h format (14:30, not 2:30 PM)
+      expect(result).toContain('14:30');
     });
 
     it('adjusts display for user timezone', () => {
       const result = formatDateTimeInTimezone(FIXED_UTC, 'America/New_York');
+      // 14:30 UTC = 10:30 EDT in 24h format
       expect(result).toContain('10:30');
-      expect(result).toContain('AM');
     });
 
     it('shows correct day when crossing boundary', () => {
-      // 03:00 UTC March 16 = 11:00 PM March 15 in New York
+      // 03:00 UTC March 16 = 23:00 March 15 in New York (24h format)
       const result = formatDateTimeInTimezone(CROSS_DAY_UTC, 'America/New_York');
       expect(result).toContain('15');
-      expect(result).toContain('11:00');
-      expect(result).toContain('PM');
+      expect(result).toContain('23:00');
     });
   });
 });
