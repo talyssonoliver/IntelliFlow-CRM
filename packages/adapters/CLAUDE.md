@@ -37,8 +37,8 @@ actually instantiated at runtime.
 
 ## Testing
 
-- Prisma mock types don't support `include`/`select` relations ÔÇö cast mock data
-  with `as any`
+- Prisma mock types don't support `include`/`select` relations ÔÇö cast mock
+  data with `as any`
 - Use `Record<string, any>` for mock repositories to avoid TS2348 "not callable"
   on vi.fn()
 - For test files using `await import(...)`, use `as any` cast on the result

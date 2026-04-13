@@ -44,7 +44,7 @@ describe('InMemoryAccountRepository — Hierarchy (PG-134)', () => {
 
   describe('findWithChildren()', () => {
     it('should return null for non-existent account', async () => {
-      const result = await repository.findWithChildren(AccountId.generate(), 5);
+      const result = await repository.findWithChildren(AccountId.generate(), 5, TENANT);
       expect(result).toBeNull();
     });
 
@@ -52,7 +52,7 @@ describe('InMemoryAccountRepository — Hierarchy (PG-134)', () => {
       const account = createAccount({ name: 'Leaf' });
       await repository.save(account);
 
-      const result = await repository.findWithChildren(account.id, 5);
+      const result = await repository.findWithChildren(account.id, 5, TENANT);
 
       expect(result).not.toBeNull();
       expect(result!.id).toBe(account.id.value);
@@ -70,7 +70,7 @@ describe('InMemoryAccountRepository — Hierarchy (PG-134)', () => {
       await repository.save(child1);
       await repository.save(child2);
 
-      const result = await repository.findWithChildren(parent.id, 5);
+      const result = await repository.findWithChildren(parent.id, 5, TENANT);
 
       expect(result!.childAccounts).toHaveLength(2);
       const names = result!.childAccounts!.map((c) => c.name).sort();
@@ -87,7 +87,7 @@ describe('InMemoryAccountRepository — Hierarchy (PG-134)', () => {
       const grandchild = createAccount({ name: 'Grandchild', parentAccountId: child.id.value });
       await repository.save(grandchild);
 
-      const result = await repository.findWithChildren(root.id, 5);
+      const result = await repository.findWithChildren(root.id, 5, TENANT);
 
       expect(result!.childAccounts).toHaveLength(1);
       expect(result!.childAccounts![0].name).toBe('Child');
@@ -106,7 +106,7 @@ describe('InMemoryAccountRepository — Hierarchy (PG-134)', () => {
       await repository.save(grandchild);
 
       // maxDepth=1: only root + immediate children
-      const result = await repository.findWithChildren(root.id, 1);
+      const result = await repository.findWithChildren(root.id, 1, TENANT);
 
       expect(result!.childAccounts).toHaveLength(1);
       expect(result!.childAccounts![0].name).toBe('Child');
@@ -118,7 +118,7 @@ describe('InMemoryAccountRepository — Hierarchy (PG-134)', () => {
       const account = createAccount({ name: 'Rich', industry: 'Finance', revenue: 10000000 });
       await repository.save(account);
 
-      const result = await repository.findWithChildren(account.id, 5);
+      const result = await repository.findWithChildren(account.id, 5, TENANT);
 
       expect(result!.industry).toBe('Finance');
       expect(result!.revenue).toBe(10000000);
@@ -128,7 +128,7 @@ describe('InMemoryAccountRepository — Hierarchy (PG-134)', () => {
       const account = createAccount({ name: 'Minimal' });
       await repository.save(account);
 
-      const result = await repository.findWithChildren(account.id, 5);
+      const result = await repository.findWithChildren(account.id, 5, TENANT);
 
       expect(result!.industry).toBeNull();
       expect(result!.revenue).toBeNull();
@@ -138,7 +138,7 @@ describe('InMemoryAccountRepository — Hierarchy (PG-134)', () => {
       const account = createAccount({ name: 'Tenant Check' });
       await repository.save(account);
 
-      const result = await repository.findWithChildren(account.id, 5);
+      const result = await repository.findWithChildren(account.id, 5, TENANT);
 
       expect(result!.tenantId).toBe(TENANT);
     });
@@ -151,7 +151,7 @@ describe('InMemoryAccountRepository — Hierarchy (PG-134)', () => {
       const root = createAccount({ name: 'Root' });
       await repository.save(root);
 
-      const ancestors = await repository.findAncestors(root.id);
+      const ancestors = await repository.findAncestors(root.id, TENANT);
 
       expect(ancestors).toHaveLength(0);
     });
@@ -163,7 +163,7 @@ describe('InMemoryAccountRepository — Hierarchy (PG-134)', () => {
       const child = createAccount({ name: 'Child', parentAccountId: parent.id.value });
       await repository.save(child);
 
-      const ancestors = await repository.findAncestors(child.id);
+      const ancestors = await repository.findAncestors(child.id, TENANT);
 
       expect(ancestors).toHaveLength(1);
       expect(ancestors[0].name).toBe('Parent');
@@ -179,7 +179,7 @@ describe('InMemoryAccountRepository — Hierarchy (PG-134)', () => {
       const child = createAccount({ name: 'Child', parentAccountId: parent.id.value });
       await repository.save(child);
 
-      const ancestors = await repository.findAncestors(child.id);
+      const ancestors = await repository.findAncestors(child.id, TENANT);
 
       expect(ancestors).toHaveLength(2);
       // Should be ordered root-to-leaf: [Grandparent, Parent]
@@ -188,7 +188,7 @@ describe('InMemoryAccountRepository — Hierarchy (PG-134)', () => {
     });
 
     it('should return empty for non-existent account', async () => {
-      const ancestors = await repository.findAncestors(AccountId.generate());
+      const ancestors = await repository.findAncestors(AccountId.generate(), TENANT);
 
       expect(ancestors).toHaveLength(0);
     });
@@ -200,7 +200,7 @@ describe('InMemoryAccountRepository — Hierarchy (PG-134)', () => {
       });
       await repository.save(child);
 
-      const ancestors = await repository.findAncestors(child.id);
+      const ancestors = await repository.findAncestors(child.id, TENANT);
 
       expect(ancestors).toHaveLength(0);
     });
@@ -213,7 +213,7 @@ describe('InMemoryAccountRepository — Hierarchy (PG-134)', () => {
       const root = createAccount({ name: 'Root' });
       await repository.save(root);
 
-      const depth = await repository.getHierarchyDepth(root.id);
+      const depth = await repository.getHierarchyDepth(root.id, TENANT);
 
       expect(depth).toBe(0);
     });
@@ -225,7 +225,7 @@ describe('InMemoryAccountRepository — Hierarchy (PG-134)', () => {
       const child = createAccount({ name: 'Child', parentAccountId: root.id.value });
       await repository.save(child);
 
-      const depth = await repository.getHierarchyDepth(child.id);
+      const depth = await repository.getHierarchyDepth(child.id, TENANT);
 
       expect(depth).toBe(1);
     });
@@ -241,13 +241,13 @@ describe('InMemoryAccountRepository — Hierarchy (PG-134)', () => {
         previousId = account.id.value;
       }
 
-      const depth = await repository.getHierarchyDepth(accounts[3].id);
+      const depth = await repository.getHierarchyDepth(accounts[3].id, TENANT);
 
       expect(depth).toBe(3);
     });
 
     it('should return 0 for non-existent account', async () => {
-      const depth = await repository.getHierarchyDepth(AccountId.generate());
+      const depth = await repository.getHierarchyDepth(AccountId.generate(), TENANT);
 
       expect(depth).toBe(0);
     });

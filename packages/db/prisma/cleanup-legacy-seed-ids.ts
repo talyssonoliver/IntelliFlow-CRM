@@ -112,23 +112,35 @@ async function deleteSeedRecords(
 
 async function cleanupApiAndWebhooks(): Promise<number> {
   let total = 0;
-  total += await deleteSeedRecords(prisma.aPIUsageRecord, 'API usage records', { id: { startsWith: 'seed-' } });
+  total += await deleteSeedRecords(prisma.aPIUsageRecord, 'API usage records', {
+    id: { startsWith: 'seed-' },
+  });
   total += await deleteSeedRecords(prisma.aPIKey, 'API keys', { id: { startsWith: 'seed-' } });
-  total += await deleteSeedRecords(prisma.webhookEndpoint, 'webhook endpoints', { id: { startsWith: 'seed-' } });
+  total += await deleteSeedRecords(prisma.webhookEndpoint, 'webhook endpoints', {
+    id: { startsWith: 'seed-' },
+  });
   return total;
 }
 
 async function cleanupAgentAndContactActivities(): Promise<number> {
   let total = 0;
-  total += await deleteSeedRecords(prisma.agentAction, 'agent actions', { id: { startsWith: 'seed-' } });
-  total += await deleteSeedRecords(prisma.contactActivity, 'contact activities', { id: { startsWith: 'seed-' } });
+  total += await deleteSeedRecords(prisma.agentAction, 'agent actions', {
+    id: { startsWith: 'seed-' },
+  });
+  total += await deleteSeedRecords(prisma.contactActivity, 'contact activities', {
+    id: { startsWith: 'seed-' },
+  });
   return total;
 }
 
 async function cleanupTicketRelated(): Promise<number> {
   let total = 0;
-  total += await deleteSeedRecords(prisma.ticketActivity, 'ticket activities', { id: { startsWith: 'seed-' } });
-  total += await deleteSeedRecords(prisma.ticketAttachment, 'ticket attachments', { id: { startsWith: 'seed-' } });
+  total += await deleteSeedRecords(prisma.ticketActivity, 'ticket activities', {
+    id: { startsWith: 'seed-' },
+  });
+  total += await deleteSeedRecords(prisma.ticketAttachment, 'ticket attachments', {
+    id: { startsWith: 'seed-' },
+  });
   total += await deleteSeedRecords(prisma.ticket, 'tickets', { id: { startsWith: 'seed-' } });
   return total;
 }
@@ -138,9 +150,13 @@ async function cleanupTasksAndDeals(): Promise<number> {
   total += await deleteSeedRecords(prisma.task, 'tasks', {
     OR: [{ id: { startsWith: 'seed-' } }, { id: { in: [...LEGACY_HOME_PAGE_TASK_IDS] } }],
   });
-  total += await deleteSeedRecords(prisma.activity, 'deal activities', { id: { startsWith: 'seed-' } });
+  total += await deleteSeedRecords(prisma.activity, 'deal activities', {
+    id: { startsWith: 'seed-' },
+  });
   total += await deleteSeedRecords(prisma.file, 'deal files', { id: { startsWith: 'seed-' } });
-  total += await deleteSeedRecords(prisma.opportunity, 'opportunities', { id: { startsWith: 'seed-' } });
+  total += await deleteSeedRecords(prisma.opportunity, 'opportunities', {
+    id: { startsWith: 'seed-' },
+  });
   return total;
 }
 
@@ -157,11 +173,11 @@ async function cleanupLegacySeedData() {
 
   // Delete in order to respect foreign key constraints (children first)
   let totalDeleted = 0;
-  totalDeleted += await cleanupApiAndWebhooks();             // 1. API & Webhooks
-  totalDeleted += await cleanupAgentAndContactActivities();  // 2. Agent actions and activities
-  totalDeleted += await cleanupTicketRelated();              // 3. Ticket-related
-  totalDeleted += await cleanupTasksAndDeals();              // 4. Tasks and deal-related
-  totalDeleted += await cleanupCoreEntities();               // 5-8. Leads, Contacts, Accounts
+  totalDeleted += await cleanupApiAndWebhooks(); // 1. API & Webhooks
+  totalDeleted += await cleanupAgentAndContactActivities(); // 2. Agent actions and activities
+  totalDeleted += await cleanupTicketRelated(); // 3. Ticket-related
+  totalDeleted += await cleanupTasksAndDeals(); // 4. Tasks and deal-related
+  totalDeleted += await cleanupCoreEntities(); // 5-8. Leads, Contacts, Accounts
 
   console.log(
     `\n✅ Cleanup complete! Deleted ${totalDeleted} total records with legacy string IDs.`

@@ -54,6 +54,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@intelliflow/test-fixtures": "workspace:*",
     "@intelliflow/typescript-config": "workspace:*",
     "@types/node": "^25.3.2",
     "@vitest/coverage-v8": "^4.0.16",

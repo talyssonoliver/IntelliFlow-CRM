@@ -11,6 +11,7 @@ import { InMemoryOpportunityRepository } from '../../../../../adapters/src/repos
 import { InMemoryTaskRepository } from '../../../../../adapters/src/repositories/InMemoryTaskRepository';
 import { InMemoryEventBus } from '../../../../../adapters/src/external/InMemoryEventBus';
 import { MockAIService } from '../../../../../adapters/src/external/MockAIService';
+import { TEST_TENANT_ID } from '@intelliflow/test-fixtures';
 
 /**
  * Integration tests for domain services
@@ -176,6 +177,7 @@ describe('Domain Services Integration', () => {
         industry: 'Technology',
         revenue: 5000000, // 5M = MID_MARKET tier (< 10M ENTERPRISE threshold)
         ownerId: 'sales-rep-1',
+        tenantId: TEST_TENANT_ID,
       });
       expect(accountResult.isSuccess).toBe(true);
       const account = accountResult.value;
@@ -187,7 +189,8 @@ describe('Domain Services Integration', () => {
         lastName: 'CEO',
         accountId: account.id.value,
         ownerId: 'sales-rep-1',
-      });
+        tenantId: TEST_TENANT_ID,
+      } as any);
       expect(contact1.isSuccess).toBe(true);
 
       const contact2 = await contactService.createContact({
@@ -196,7 +199,8 @@ describe('Domain Services Integration', () => {
         lastName: 'CTO',
         accountId: account.id.value,
         ownerId: 'sales-rep-1',
-      });
+        tenantId: TEST_TENANT_ID,
+      } as any);
       expect(contact2.isSuccess).toBe(true);
 
       // Create multiple opportunities
@@ -206,7 +210,8 @@ describe('Domain Services Integration', () => {
         accountId: account.id.value,
         contactId: contact1.value.id.value,
         ownerId: 'sales-rep-1',
-      });
+        tenantId: TEST_TENANT_ID,
+      } as any);
       expect(opp1.isSuccess).toBe(true);
 
       const opp2 = await opportunityService.createOpportunity({
@@ -215,11 +220,15 @@ describe('Domain Services Integration', () => {
         accountId: account.id.value,
         contactId: contact2.value.id.value,
         ownerId: 'sales-rep-1',
-      });
+        tenantId: TEST_TENANT_ID,
+      } as any);
       expect(opp2.isSuccess).toBe(true);
 
       // Verify account context
-      const contextResult = await accountService.getAccountWithContext(account.id.value);
+      const contextResult = await accountService.getAccountWithContext(
+        account.id.value,
+        TEST_TENANT_ID
+      );
       expect(contextResult.isSuccess).toBe(true);
       expect(contextResult.value.contacts).toBe(2);
       expect(contextResult.value.opportunities.total).toBe(2);
@@ -227,7 +236,7 @@ describe('Domain Services Integration', () => {
       expect(contextResult.value.tier).toBe('MID_MARKET');
 
       // Verify pipeline forecast
-      const forecast = await opportunityService.getPipelineForecast('sales-rep-1');
+      const forecast = await opportunityService.getPipelineForecast('sales-rep-1', TEST_TENANT_ID);
       expect(forecast.totalPipelineValue).toBe(300000);
     });
 

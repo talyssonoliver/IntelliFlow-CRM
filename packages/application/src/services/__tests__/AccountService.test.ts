@@ -444,7 +444,11 @@ describe('AccountService', () => {
       await accountRepository.save(account1);
       await accountRepository.save(account2);
 
-      const highValue = await service.getHighValueAccounts(1000000, 'owner-1', '11111111-1111-4111-8111-111111111111');
+      const highValue = await service.getHighValueAccounts(
+        1000000,
+        'owner-1',
+        '11111111-1111-4111-8111-111111111111'
+      );
 
       expect(highValue).toHaveLength(1);
       expect(highValue[0].name).toBe('Enterprise Corp');
@@ -572,7 +576,10 @@ describe('AccountService', () => {
       await accountRepository.save(account2);
       await accountRepository.save(account3);
 
-      const stats = await service.getAccountStatistics('owner-1', '11111111-1111-4111-8111-111111111111');
+      const stats = await service.getAccountStatistics(
+        'owner-1',
+        '11111111-1111-4111-8111-111111111111'
+      );
 
       expect(stats.total).toBe(3);
       expect(stats.byTier['ENTERPRISE']).toBe(1);

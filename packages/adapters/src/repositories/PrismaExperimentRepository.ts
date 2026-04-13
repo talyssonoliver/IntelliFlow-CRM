@@ -296,15 +296,25 @@ export class PrismaExperimentRepository implements ExperimentRepositoryPort {
     return row ? this.toResultRecord(row) : null;
   }
 
-  private buildResultUpdateData(
-    data: Partial<ExperimentResultRecord>
-  ): Record<string, unknown> {
+  private buildResultUpdateData(data: Partial<ExperimentResultRecord>): Record<string, unknown> {
     const updateData: Record<string, unknown> = {};
     const scalarFields = [
-      'controlSampleSize', 'treatmentSampleSize', 'controlMean', 'treatmentMean',
-      'controlStdDev', 'treatmentStdDev', 'tStatistic', 'pValue', 'effectSize',
-      'controlConversionRate', 'treatmentConversionRate', 'chiSquareStatistic',
-      'chiSquarePValue', 'isSignificant', 'winner', 'recommendation',
+      'controlSampleSize',
+      'treatmentSampleSize',
+      'controlMean',
+      'treatmentMean',
+      'controlStdDev',
+      'treatmentStdDev',
+      'tStatistic',
+      'pValue',
+      'effectSize',
+      'controlConversionRate',
+      'treatmentConversionRate',
+      'chiSquareStatistic',
+      'chiSquarePValue',
+      'isSignificant',
+      'winner',
+      'recommendation',
     ] as const;
     for (const field of scalarFields) {
       if (data[field] !== undefined) updateData[field] = data[field];

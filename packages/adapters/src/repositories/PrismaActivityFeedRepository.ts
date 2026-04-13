@@ -1135,17 +1135,14 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
       i === 0 ? arm : Prisma.sql`${acc} UNION ALL ${arm}`
     );
 
-    const rows = await this.prisma.$queryRaw<
-      Array<{ source: string; type: string; count: bigint }>
-    >(unionSql);
+    const rows =
+      await this.prisma.$queryRaw<Array<{ source: string; type: string; count: bigint }>>(unionSql);
 
     for (const row of rows) {
       const source = row.source as ActivityFeedSource;
       const count = Number(row.count); // BigInt from COUNT(*) → number
       const typeMap = typeMaps[source];
-      const normalizedType: ActivityFeedType = typeMap
-        ? (typeMap[row.type] ?? 'SYSTEM')
-        : 'SYSTEM';
+      const normalizedType: ActivityFeedType = typeMap ? (typeMap[row.type] ?? 'SYSTEM') : 'SYSTEM';
 
       sourceCountMap[source] = (sourceCountMap[source] || 0) + count;
       typeCountMap[normalizedType] = (typeCountMap[normalizedType] || 0) + count;

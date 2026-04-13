@@ -264,7 +264,10 @@ describe('AccountService (additional coverage)', () => {
       } as any).value;
       await accountRepository.save(account);
 
-      const stats = await service.getAccountStatistics('owner-1', '11111111-1111-4111-8111-111111111111');
+      const stats = await service.getAccountStatistics(
+        'owner-1',
+        '11111111-1111-4111-8111-111111111111'
+      );
 
       expect(stats.byIndustry['Uncategorized']).toBe(1);
     });
@@ -285,7 +288,10 @@ describe('AccountService (additional coverage)', () => {
       await accountRepository.save(a1);
       await accountRepository.save(a2);
 
-      const stats = await service.getAccountStatistics('owner-1', '11111111-1111-4111-8111-111111111111');
+      const stats = await service.getAccountStatistics(
+        'owner-1',
+        '11111111-1111-4111-8111-111111111111'
+      );
 
       expect(stats.total).toBe(2);
       expect(stats.totalRevenue).toBe(4000000);
@@ -307,7 +313,11 @@ describe('AccountService (additional coverage)', () => {
       await accountRepository.save(account);
 
       // Default is MID_MARKET threshold = 1,000,000
-      const results = await service.getHighValueAccounts(undefined, 'owner-1', '11111111-1111-4111-8111-111111111111');
+      const results = await service.getHighValueAccounts(
+        undefined,
+        'owner-1',
+        '11111111-1111-4111-8111-111111111111'
+      );
 
       expect(results).toHaveLength(1);
     });
@@ -326,7 +336,11 @@ describe('AccountService (additional coverage)', () => {
       } as any).value;
       await accountRepository.save(account);
 
-      const results = await service.getHighValueAccounts(0, 'owner-1', '11111111-1111-4111-8111-111111111111');
+      const results = await service.getHighValueAccounts(
+        0,
+        'owner-1',
+        '11111111-1111-4111-8111-111111111111'
+      );
 
       // revenue is undefined, so (undefined ?? 0) = 0, which is >= 0
       expect(results).toHaveLength(1);
@@ -522,9 +536,13 @@ describe('AccountService (additional coverage)', () => {
       } as any).value;
       await contactRepository.save(contact);
 
-      const result = await service.getAccountContacts(account.id.value, '11111111-1111-4111-8111-111111111111', {
-        limit: 10,
-      });
+      const result = await service.getAccountContacts(
+        account.id.value,
+        '11111111-1111-4111-8111-111111111111',
+        {
+          limit: 10,
+        }
+      );
 
       expect(result.isSuccess).toBe(true);
       expect(result.value.contacts).toHaveLength(1);
@@ -533,14 +551,22 @@ describe('AccountService (additional coverage)', () => {
 
     it('should fail if account not found', async () => {
       const fakeId = '00000000-0000-0000-0000-000000000000';
-      const result = await service.getAccountContacts(fakeId, '11111111-1111-4111-8111-111111111111', { limit: 10 });
+      const result = await service.getAccountContacts(
+        fakeId,
+        '11111111-1111-4111-8111-111111111111',
+        { limit: 10 }
+      );
 
       expect(result.isFailure).toBe(true);
       expect(result.error.message).toContain('not found');
     });
 
     it('should fail with invalid account ID', async () => {
-      const result = await service.getAccountContacts('bad-id', '11111111-1111-4111-8111-111111111111', { limit: 10 });
+      const result = await service.getAccountContacts(
+        'bad-id',
+        '11111111-1111-4111-8111-111111111111',
+        { limit: 10 }
+      );
 
       expect(result.isFailure).toBe(true);
     });
@@ -590,10 +616,14 @@ describe('AccountService (additional coverage)', () => {
       await contactRepository.save(c1);
       await contactRepository.save(c2);
 
-      const result = await service.getAccountContacts(account.id.value, '11111111-1111-4111-8111-111111111111', {
-        limit: 10,
-        status: ['ACTIVE'],
-      });
+      const result = await service.getAccountContacts(
+        account.id.value,
+        '11111111-1111-4111-8111-111111111111',
+        {
+          limit: 10,
+          status: ['ACTIVE'],
+        }
+      );
 
       expect(result.isSuccess).toBe(true);
       expect(result.value.contacts).toHaveLength(1);
@@ -622,19 +652,27 @@ describe('AccountService (additional coverage)', () => {
         contacts.push(c);
       }
 
-      const result = await service.getAccountContacts(account.id.value, '11111111-1111-4111-8111-111111111111', {
-        limit: 2,
-      });
+      const result = await service.getAccountContacts(
+        account.id.value,
+        '11111111-1111-4111-8111-111111111111',
+        {
+          limit: 2,
+        }
+      );
 
       expect(result.isSuccess).toBe(true);
       expect(result.value.contacts).toHaveLength(2);
       expect(result.value.total).toBe(5);
       if (result.value.nextCursor) {
         // Second page using cursor
-        const page2 = await service.getAccountContacts(account.id.value, '11111111-1111-4111-8111-111111111111', {
-          limit: 2,
-          cursor: result.value.nextCursor,
-        });
+        const page2 = await service.getAccountContacts(
+          account.id.value,
+          '11111111-1111-4111-8111-111111111111',
+          {
+            limit: 2,
+            cursor: result.value.nextCursor,
+          }
+        );
         expect(page2.isSuccess).toBe(true);
         expect(page2.value.contacts.length).toBeGreaterThan(0);
       }
@@ -661,9 +699,13 @@ describe('AccountService (additional coverage)', () => {
       }).value;
       await opportunityRepository.save(opp);
 
-      const result = await service.getAccountOpportunities(account.id.value, '11111111-1111-4111-8111-111111111111', {
-        limit: 10,
-      });
+      const result = await service.getAccountOpportunities(
+        account.id.value,
+        '11111111-1111-4111-8111-111111111111',
+        {
+          limit: 10,
+        }
+      );
 
       expect(result.isSuccess).toBe(true);
       expect(result.value.opportunities).toHaveLength(1);
@@ -673,13 +715,21 @@ describe('AccountService (additional coverage)', () => {
 
     it('should fail if account not found', async () => {
       const fakeId = '00000000-0000-0000-0000-000000000000';
-      const result = await service.getAccountOpportunities(fakeId, '11111111-1111-4111-8111-111111111111', { limit: 10 });
+      const result = await service.getAccountOpportunities(
+        fakeId,
+        '11111111-1111-4111-8111-111111111111',
+        { limit: 10 }
+      );
 
       expect(result.isFailure).toBe(true);
     });
 
     it('should fail with invalid ID', async () => {
-      const result = await service.getAccountOpportunities('bad-id', '11111111-1111-4111-8111-111111111111', { limit: 10 });
+      const result = await service.getAccountOpportunities(
+        'bad-id',
+        '11111111-1111-4111-8111-111111111111',
+        { limit: 10 }
+      );
 
       expect(result.isFailure).toBe(true);
     });
@@ -723,10 +773,14 @@ describe('AccountService (additional coverage)', () => {
       await opportunityRepository.save(opp1);
       await opportunityRepository.save(opp2);
 
-      const result = await service.getAccountOpportunities(account.id.value, '11111111-1111-4111-8111-111111111111', {
-        limit: 10,
-        stage: ['QUALIFICATION'],
-      });
+      const result = await service.getAccountOpportunities(
+        account.id.value,
+        '11111111-1111-4111-8111-111111111111',
+        {
+          limit: 10,
+          stage: ['QUALIFICATION'],
+        }
+      );
 
       expect(result.isSuccess).toBe(true);
       expect(result.value.opportunities).toHaveLength(1);
@@ -751,9 +805,13 @@ describe('AccountService (additional coverage)', () => {
         await opportunityRepository.save(opp);
       }
 
-      const result = await service.getAccountOpportunities(account.id.value, '11111111-1111-4111-8111-111111111111', {
-        limit: 2,
-      });
+      const result = await service.getAccountOpportunities(
+        account.id.value,
+        '11111111-1111-4111-8111-111111111111',
+        {
+          limit: 2,
+        }
+      );
 
       expect(result.isSuccess).toBe(true);
       expect(result.value.opportunities).toHaveLength(2);
@@ -791,9 +849,13 @@ describe('AccountService (additional coverage)', () => {
       }).value;
       await opportunityRepository.save(opp);
 
-      const result = await service.getAccountActivity(account.id.value, '11111111-1111-4111-8111-111111111111', {
-        limit: 10,
-      });
+      const result = await service.getAccountActivity(
+        account.id.value,
+        '11111111-1111-4111-8111-111111111111',
+        {
+          limit: 10,
+        }
+      );
 
       expect(result.isSuccess).toBe(true);
       expect(result.value.activities).toHaveLength(2);
@@ -805,13 +867,21 @@ describe('AccountService (additional coverage)', () => {
 
     it('should fail if account not found', async () => {
       const fakeId = '00000000-0000-0000-0000-000000000000';
-      const result = await service.getAccountActivity(fakeId, '11111111-1111-4111-8111-111111111111', { limit: 10 });
+      const result = await service.getAccountActivity(
+        fakeId,
+        '11111111-1111-4111-8111-111111111111',
+        { limit: 10 }
+      );
 
       expect(result.isFailure).toBe(true);
     });
 
     it('should fail with invalid ID', async () => {
-      const result = await service.getAccountActivity('bad-id', '11111111-1111-4111-8111-111111111111', { limit: 10 });
+      const result = await service.getAccountActivity(
+        'bad-id',
+        '11111111-1111-4111-8111-111111111111',
+        { limit: 10 }
+      );
 
       expect(result.isFailure).toBe(true);
     });
@@ -857,10 +927,14 @@ describe('AccountService (additional coverage)', () => {
       }).value;
       await opportunityRepository.save(opp);
 
-      const result = await service.getAccountActivity(account.id.value, '11111111-1111-4111-8111-111111111111', {
-        limit: 10,
-        types: ['CONTACT_CREATED'],
-      });
+      const result = await service.getAccountActivity(
+        account.id.value,
+        '11111111-1111-4111-8111-111111111111',
+        {
+          limit: 10,
+          types: ['CONTACT_CREATED'],
+        }
+      );
 
       expect(result.isSuccess).toBe(true);
       expect(result.value.activities).toHaveLength(1);
@@ -887,9 +961,13 @@ describe('AccountService (additional coverage)', () => {
         await contactRepository.save(contact);
       }
 
-      const result = await service.getAccountActivity(account.id.value, '11111111-1111-4111-8111-111111111111', {
-        limit: 2,
-      });
+      const result = await service.getAccountActivity(
+        account.id.value,
+        '11111111-1111-4111-8111-111111111111',
+        {
+          limit: 2,
+        }
+      );
 
       expect(result.isSuccess).toBe(true);
       expect(result.value.activities).toHaveLength(2);
@@ -904,9 +982,13 @@ describe('AccountService (additional coverage)', () => {
       } as any).value;
       await accountRepository.save(account);
 
-      const result = await service.getAccountActivity(account.id.value, '11111111-1111-4111-8111-111111111111', {
-        limit: 10,
-      });
+      const result = await service.getAccountActivity(
+        account.id.value,
+        '11111111-1111-4111-8111-111111111111',
+        {
+          limit: 10,
+        }
+      );
 
       expect(result.isSuccess).toBe(true);
       expect(result.value.activities).toHaveLength(0);

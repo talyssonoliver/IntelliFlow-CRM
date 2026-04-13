@@ -312,15 +312,16 @@ export class PrismaCaseDocumentRepository implements CaseDocumentRepository {
       isLatestVersion: record.isLatestVersion,
       retentionUntil: record.retentionUntil || undefined,
       deletedAt: record.deletedAt || undefined,
-      eSignature: record.signedBy && record.signatureHash && /^[a-f0-9]{64}$/.test(record.signatureHash)
-        ? {
-            signedBy: record.signedBy,
-            signedAt: record.signedAt,
-            signatureHash: record.signatureHash,
-            ipAddress: record.signatureIpAddress,
-            userAgent: record.signatureUserAgent,
-          }
-        : undefined,
+      eSignature:
+        record.signedBy && record.signatureHash && /^[a-f0-9]{64}$/.test(record.signatureHash)
+          ? {
+              signedBy: record.signedBy,
+              signedAt: record.signedAt,
+              signatureHash: record.signatureHash,
+              ipAddress: record.signatureIpAddress,
+              userAgent: record.signatureUserAgent,
+            }
+          : undefined,
     };
 
     return CaseDocument.fromPersistence(data);

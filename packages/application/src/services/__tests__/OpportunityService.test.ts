@@ -19,6 +19,7 @@ import { InMemoryAccountRepository } from '../../../../adapters/src/repositories
 import { InMemoryContactRepository } from '../../../../adapters/src/repositories/InMemoryContactRepository';
 import { InMemoryEventBus } from '../../../../adapters/src/external/InMemoryEventBus';
 import { Opportunity, Account, Contact } from '@intelliflow/domain';
+import { TEST_TENANT_ID } from '@intelliflow/test-fixtures';
 
 describe('OpportunityService', () => {
   let opportunityRepository: InMemoryOpportunityRepository;
@@ -661,10 +662,11 @@ describe('OpportunityService', () => {
         value: 50000,
         accountId: testAccount.id.value,
         ownerId: 'owner-1',
-      }).value;
+        tenantId: TEST_TENANT_ID,
+      } as any).value;
       await opportunityRepository.save(opp);
 
-      const result = await service.deleteOpportunity(opp.id.value, '');
+      const result = await service.deleteOpportunity(opp.id.value, TEST_TENANT_ID);
 
       expect(result.isSuccess).toBe(true);
 
@@ -698,11 +700,12 @@ describe('OpportunityService', () => {
         value: 50000,
         accountId: testAccount.id.value,
         ownerId: 'owner-1',
-      }).value;
+        tenantId: TEST_TENANT_ID,
+      } as any).value;
       opp.markAsLost('Lost for test purposes', 'user');
       await opportunityRepository.save(opp);
 
-      const result = await service.deleteOpportunity(opp.id.value, '');
+      const result = await service.deleteOpportunity(opp.id.value, TEST_TENANT_ID);
 
       expect(result.isSuccess).toBe(true);
     });

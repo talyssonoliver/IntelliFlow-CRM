@@ -677,7 +677,11 @@ export class AnalyticsAggregationService {
               999
             )
           );
-          label = current.toLocaleDateString('en-GB', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+          label = current.toLocaleDateString('en-GB', {
+            month: 'short',
+            day: 'numeric',
+            timeZone: 'UTC',
+          });
           break;
         }
         case 'week': {
@@ -692,7 +696,11 @@ export class AnalyticsAggregationService {
           bucketEnd = new Date(
             Date.UTC(current.getUTCFullYear(), current.getUTCMonth() + 1, 0, 23, 59, 59, 999)
           );
-          label = current.toLocaleDateString('en-GB', { month: 'short', year: 'numeric', timeZone: 'UTC' });
+          label = current.toLocaleDateString('en-GB', {
+            month: 'short',
+            year: 'numeric',
+            timeZone: 'UTC',
+          });
           break;
         }
       }

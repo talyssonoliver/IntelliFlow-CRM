@@ -22,7 +22,7 @@ function SkeletonList({
 }: SkeletonListProps) {
   const items = React.useMemo(
     () => Array.from({ length: count }, (_, i) => `${keyPrefix}-${i}`),
-    [count, keyPrefix],
+    [count, keyPrefix]
   );
   return (
     <div className={className} {...props}>

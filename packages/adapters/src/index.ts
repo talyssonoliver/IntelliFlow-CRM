@@ -135,3 +135,6 @@ export * from './webhooks/outbound';
 // Shared utilities (IFC-125)
 export { detectScoreBias } from './shared/bias-detector';
 export type { BiasMetric, BiasViolation, LeadScoringBiasCheck } from './shared/bias-detector';
+
+// Cache Adapters (IFC-196)
+export * from './cache';
