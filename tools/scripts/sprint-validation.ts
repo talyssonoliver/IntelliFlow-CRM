@@ -479,17 +479,18 @@ function runEvidenceIntegrityGate(targetSprint: string): GateResult[] {
             required: Array.isArray(att.dependencies_verified) ? att.dependencies_verified : [],
             all_satisfied: att.verdict === 'COMPLETE',
           },
-          validations: Array.isArray(att.validation_results) && att.validation_results.length > 0
-            ? att.validation_results.map((v: any) => ({
-                name: v.command ?? 'validation',
-                command: v.command,
-                passed: v.passed,
-                exit_code: v.exit_code,
-                executed_at: v.timestamp,
-              }))
-            : att.verdict === 'COMPLETE'
-              ? [{ name: 'attestation', command: 'attestation', passed: true, exit_code: 0 }]
-              : [],
+          validations:
+            Array.isArray(att.validation_results) && att.validation_results.length > 0
+              ? att.validation_results.map((v: any) => ({
+                  name: v.command ?? 'validation',
+                  command: v.command,
+                  passed: v.passed,
+                  exit_code: v.exit_code,
+                  executed_at: v.timestamp,
+                }))
+              : att.verdict === 'COMPLETE'
+                ? [{ name: 'attestation', command: 'attestation', passed: true, exit_code: 0 }]
+                : [],
           artifacts: {
             expected: att.artifact_hashes ? Object.keys(att.artifact_hashes) : [],
             created: att.artifact_hashes ? Object.keys(att.artifact_hashes) : [],

@@ -50,7 +50,14 @@ import {
 // Configuration
 // ============================================================================
 
-const ALLOWED_STATUSES = new Set(['Done', 'Completed', 'In Progress', 'Blocked', 'Planned', 'Backlog']);
+const ALLOWED_STATUSES = new Set([
+  'Done',
+  'Completed',
+  'In Progress',
+  'Blocked',
+  'Planned',
+  'Backlog',
+]);
 
 const repoRoot = findRepoRoot();
 
@@ -197,8 +204,7 @@ function indexTaskJsonFiles(taskJsonFiles: string[]): {
         taskId,
         // Metrics JSONs use "status"; attestation JSONs use "verdict" (COMPLETE → DONE)
         status: normalizeText(
-          data?.status ||
-          (data?.verdict === 'COMPLETE' ? 'DONE' : data?.verdict)
+          data?.status || (data?.verdict === 'COMPLETE' ? 'DONE' : data?.verdict)
         ).toUpperCase(),
         description: normalizeText(data?.description),
         filePath: jsonFile,
@@ -387,7 +393,11 @@ function checkJsonParseErrors(index: ReturnType<typeof indexTaskJsonFiles>): Gat
       details: index.parseErrors.slice(0, 5),
     };
   }
-  return { name: 'JSON: Parse Errors', severity: 'PASS', message: `All task JSON files are valid JSON` };
+  return {
+    name: 'JSON: Parse Errors',
+    severity: 'PASS',
+    message: `All task JSON files are valid JSON`,
+  };
 }
 
 function checkJsonTaskIdPresence(index: ReturnType<typeof indexTaskJsonFiles>): GateResult {
@@ -399,7 +409,11 @@ function checkJsonTaskIdPresence(index: ReturnType<typeof indexTaskJsonFiles>): 
       details: index.missingTaskIdFiles.slice(0, 5),
     };
   }
-  return { name: 'JSON: task_id Presence', severity: 'PASS', message: `All task JSON files contain task_id` };
+  return {
+    name: 'JSON: task_id Presence',
+    severity: 'PASS',
+    message: `All task JSON files contain task_id`,
+  };
 }
 
 function checkJsonTaskIdUniqueness(index: ReturnType<typeof indexTaskJsonFiles>): GateResult {
@@ -411,7 +425,11 @@ function checkJsonTaskIdUniqueness(index: ReturnType<typeof indexTaskJsonFiles>)
       details: index.duplicateTaskIds.slice(0, 5),
     };
   }
-  return { name: 'JSON: Task ID Uniqueness', severity: 'PASS', message: `All task_id values are unique` };
+  return {
+    name: 'JSON: Task ID Uniqueness',
+    severity: 'PASS',
+    message: `All task_id values are unique`,
+  };
 }
 
 function checkJsonOrphanedFiles(
@@ -478,7 +496,11 @@ function checkJsonStatusConsistency(
       details: statusMismatches.slice(0, 5),
     };
   }
-  return { name: 'JSON: Status Consistency', severity: 'PASS', message: `All JSON statuses match CSV` };
+  return {
+    name: 'JSON: Status Consistency',
+    severity: 'PASS',
+    message: `All JSON statuses match CSV`,
+  };
 }
 
 function checkJsonDescriptionConsistency(
@@ -531,7 +553,9 @@ function validateJsonFiles(
       const data = JSON.parse(readFileSync(f, 'utf-8'));
       const tid = data?.task_id ?? data?.taskId;
       if (typeof tid === 'string' && tid.trim()) metricsTaskIds.add(tid.trim());
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }
 
   const sprintTasks = tasks.filter((t) => String(t['Target Sprint']) === targetSprint);
@@ -541,8 +565,15 @@ function validateJsonFiles(
     try {
       const data = JSON.parse(readFileSync(f, 'utf-8'));
       const tid = data?.task_id ?? data?.taskId;
-      return typeof tid === 'string' && tid.trim() && !metricsTaskIds.has(tid.trim()) && csvTaskIds.has(tid.trim());
-    } catch { return false; }
+      return (
+        typeof tid === 'string' &&
+        tid.trim() &&
+        !metricsTaskIds.has(tid.trim()) &&
+        csvTaskIds.has(tid.trim())
+      );
+    } catch {
+      return false;
+    }
   });
 
   const taskJsonFiles = [...metricsJsonFiles, ...filteredAttestations];
@@ -623,7 +654,7 @@ function main(): void {
   allResults.push(
     ...validateCsvStructure(tasks),
     ...validateSprintCounts(tasks, metricsDir, sprintArg.sprint),
-    ...validateJsonFiles(tasks, metricsDir, sprintArg.sprint),
+    ...validateJsonFiles(tasks, metricsDir, sprintArg.sprint)
   );
 
   // Summary

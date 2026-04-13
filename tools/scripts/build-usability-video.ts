@@ -106,11 +106,7 @@ const FONT_BOLD = 'C\\:/Windows/Fonts/segoeuib.ttf';
 
 /** Escape a string for ffmpeg drawtext (single-quoted) — escapes backslashes, colons, single quotes, and percent. */
 function escDrawText(s: string): string {
-  return s
-    .replace(/\\/g, '\\\\')
-    .replace(/:/g, '\\:')
-    .replace(/'/g, "\\'")
-    .replace(/%/g, '\\%');
+  return s.replace(/\\/g, '\\\\').replace(/:/g, '\\:').replace(/'/g, "\\'").replace(/%/g, '\\%');
 }
 
 /** Build the ffmpeg -filter_complex for a single slide. */
@@ -119,7 +115,9 @@ function slideFilter(step: Step): string {
   const caption = escDrawText(step.caption);
   const where = escDrawText(step.where);
   const stepN = escDrawText(`Step ${step.n} / ${STEPS.length}`);
-  const brand = escDrawText('IntelliFlow CRM  -  IFC-031  -  Workflow Builder Usability Walkthrough');
+  const brand = escDrawText(
+    'IntelliFlow CRM  -  IFC-031  -  Workflow Builder Usability Walkthrough'
+  );
 
   // Layout:
   //   Top bar (80px) navy header with brand text on the left, step counter on the right
@@ -140,7 +138,7 @@ function slideFilter(step: Step): string {
     // canvas placeholder border
     `drawbox=x=120:y=560:w=${WIDTH - 240}:h=420:color=0x94a3b8:t=3`,
     // highlight call-out near the action of this step
-    `drawbox=x=${140 + ((step.n - 1) * 180) % 900}:y=620:w=220:h=120:color=0x3b82f6:t=4`,
+    `drawbox=x=${140 + (((step.n - 1) * 180) % 900)}:y=620:w=220:h=120:color=0x3b82f6:t=4`,
     // brand text (header)
     `drawtext=fontfile='${FONT_BOLD}':text='${brand}':fontcolor=0xffffff:fontsize=22:x=40:y=26`,
     // step counter (header right)
@@ -185,7 +183,7 @@ function buildSlide(step: Step, outPath: string): void {
       '+faststart',
       outPath,
     ],
-    { stdio: 'inherit' },
+    { stdio: 'inherit' }
   );
 }
 
@@ -234,7 +232,7 @@ function concatWithXFade(slides: string[], totalDurations: number[], outPath: st
       '+faststart',
       outPath,
     ],
-    { stdio: 'inherit' },
+    { stdio: 'inherit' }
   );
 }
 
@@ -268,8 +266,7 @@ function main(): void {
     concatWithXFade(slides, durations, outFile);
 
     // Report.
-    const totalSec =
-      durations.reduce((s, d) => s + d, 0) - XFADE * (durations.length - 1);
+    const totalSec = durations.reduce((s, d) => s + d, 0) - XFADE * (durations.length - 1);
     console.log(`\nWrote ${outFile}`);
     console.log(`Approx duration: ${totalSec.toFixed(1)}s at ${FPS} fps, ${WIDTH}x${HEIGHT}.`);
   } finally {

@@ -267,7 +267,12 @@ function checkAttestationSprintPath(
 // MAIN
 // ============================================================================
 
-type SprintMismatchEntry = { task_id: string; description: string; expected_sprint: number; found_dir: string };
+type SprintMismatchEntry = {
+  task_id: string;
+  description: string;
+  expected_sprint: number;
+  found_dir: string;
+};
 type VerifiedEntry = { task_id: string; description: string; artifacts_verified: string[] };
 
 function classifyTask(
@@ -283,21 +288,42 @@ function classifyTask(
   const dodIssues = verifyDod(task['Definition of Done'] || '');
 
   let expectedSprint = 0;
-  try { expectedSprint = getSprintForTask(taskId, process.cwd()); } catch { /* skip */ }
+  try {
+    expectedSprint = getSprintForTask(taskId, process.cwd());
+  } catch {
+    /* skip */
+  }
   if (expectedSprint > 0) {
     const sprintCheck = checkAttestationSprintPath(taskId, expectedSprint);
     if (sprintCheck.mismatch) {
-      sprintMismatches.push({ task_id: taskId, description: shortDesc, expected_sprint: expectedSprint, found_dir: sprintCheck.foundDir });
+      sprintMismatches.push({
+        task_id: taskId,
+        description: shortDesc,
+        expected_sprint: expectedSprint,
+        found_dir: sprintCheck.foundDir,
+      });
     }
   }
 
   if (artifactCheck.missing.length > 0 || dodIssues.length > 0) {
     const issues: string[] = [];
-    if (artifactCheck.missing.length > 0) issues.push(`Missing ${artifactCheck.missing.length} artifact(s)`);
+    if (artifactCheck.missing.length > 0)
+      issues.push(`Missing ${artifactCheck.missing.length} artifact(s)`);
     issues.push(...dodIssues);
-    phantoms.push({ taskId, description: shortDesc, status: 'Completed', issues, missingArtifacts: artifactCheck.missing, dodIssues });
+    phantoms.push({
+      taskId,
+      description: shortDesc,
+      status: 'Completed',
+      issues,
+      missingArtifacts: artifactCheck.missing,
+      dodIssues,
+    });
   } else {
-    verified.push({ task_id: taskId, description: shortDesc, artifacts_verified: artifactCheck.exists });
+    verified.push({
+      task_id: taskId,
+      description: shortDesc,
+      artifacts_verified: artifactCheck.exists,
+    });
   }
 }
 
@@ -318,7 +344,10 @@ function printPhantomEntry(p: PhantomIssue): void {
   console.log('');
 }
 
-function printPhantomReport(phantoms: PhantomIssue[], sprintMismatches: SprintMismatchEntry[]): void {
+function printPhantomReport(
+  phantoms: PhantomIssue[],
+  sprintMismatches: SprintMismatchEntry[]
+): void {
   if (phantoms.length > 0) {
     console.log('=== Phantom Completions ===\n');
     for (const p of phantoms) {
@@ -329,9 +358,13 @@ function printPhantomReport(phantoms: PhantomIssue[], sprintMismatches: SprintMi
     console.log('=== Sprint Path Mismatches ===\n');
     for (const m of sprintMismatches) {
       console.log(`[${m.task_id}] ${m.description}`);
-      console.log(`  Expected: sprint-${m.expected_sprint}/attestations/${m.task_id}/attestation.json`);
+      console.log(
+        `  Expected: sprint-${m.expected_sprint}/attestations/${m.task_id}/attestation.json`
+      );
       console.log(`  Found at: ${m.found_dir}/attestations/${m.task_id}/attestation.json`);
-      console.log(`  Fix: Move attestation to sprint-${m.expected_sprint} or update CSV Target Sprint.`);
+      console.log(
+        `  Fix: Move attestation to sprint-${m.expected_sprint} or update CSV Target Sprint.`
+      );
       console.log('');
     }
   }
@@ -342,23 +375,39 @@ function buildAuditConclusion(phantomCount: number, mismatchCount: number): stri
     return 'All completed tasks have been verified - no phantom completions or sprint path mismatches detected';
   }
   return [
-    phantomCount > 0 ? `${phantomCount} tasks marked as Completed but missing artifacts or unverifiable DOD` : '',
+    phantomCount > 0
+      ? `${phantomCount} tasks marked as Completed but missing artifacts or unverifiable DOD`
+      : '',
     mismatchCount > 0 ? `${mismatchCount} tasks have attestations in the wrong sprint folder` : '',
-  ].filter(Boolean).join('; ');
+  ]
+    .filter(Boolean)
+    .join('; ');
 }
 
-function buildRecommendations(phantomCount: number, mismatchCount: number): Array<{ priority: string; action: string }> {
+function buildRecommendations(
+  phantomCount: number,
+  mismatchCount: number
+): Array<{ priority: string; action: string }> {
   if (phantomCount === 0 && mismatchCount === 0) {
-    return [{ priority: 'INFO', action: 'All tasks verified - maintain current validation practices' }];
+    return [
+      { priority: 'INFO', action: 'All tasks verified - maintain current validation practices' },
+    ];
   }
   const recs: Array<{ priority: string; action: string }> = [];
   if (phantomCount > 0) {
     recs.push({ priority: 'HIGH', action: 'Create missing artifacts for phantom completions' });
     recs.push({ priority: 'MEDIUM', action: 'Update DOD to include verifiable criteria' });
-    recs.push({ priority: 'LOW', action: 'Consider reverting status to "In Progress" until artifacts exist' });
+    recs.push({
+      priority: 'LOW',
+      action: 'Consider reverting status to "In Progress" until artifacts exist',
+    });
   }
   if (mismatchCount > 0) {
-    recs.push({ priority: 'HIGH', action: 'Move misplaced attestations to their correct sprint folder, or update CSV Target Sprint' });
+    recs.push({
+      priority: 'HIGH',
+      action:
+        'Move misplaced attestations to their correct sprint folder, or update CSV Target Sprint',
+    });
   }
   return recs;
 }
@@ -367,7 +416,10 @@ async function main() {
   console.log('=== Real-time Phantom Completion Detection ===\n');
 
   const csvContent = readFileSync(CSV_PATH, 'utf-8');
-  const tasks = parse(csvContent, { columns: true, bom: true, relax_quotes: true }) as Record<string, string>[];
+  const tasks = parse(csvContent, { columns: true, bom: true, relax_quotes: true }) as Record<
+    string,
+    string
+  >[];
   const completedTasks = tasks.filter((t) => t['Status']?.toLowerCase() === 'completed');
 
   console.log(`Total tasks: ${tasks.length}`);
@@ -384,7 +436,8 @@ async function main() {
   const totalCompleted = completedTasks.length;
   const verifiedCount = verified.length;
   const phantomCount = phantoms.length;
-  const integrityScore = totalCompleted > 0 ? Math.round((verifiedCount / totalCompleted) * 100) : 100;
+  const integrityScore =
+    totalCompleted > 0 ? Math.round((verifiedCount / totalCompleted) * 100) : 100;
   const severity = determineSeverity(phantomCount);
 
   console.log('=== Results ===');

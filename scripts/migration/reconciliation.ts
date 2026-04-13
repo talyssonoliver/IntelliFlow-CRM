@@ -246,20 +246,30 @@ async function checkNotificationDeliveryGap(prisma: PrismaClient): Promise<Valid
   try {
     const [notifRows, deliveryRows] = await Promise.all([
       prisma.$queryRaw<{ count: bigint }[]>`SELECT COUNT(*) as count FROM notifications`,
-      prisma.$queryRaw<{ count: bigint }[]>`SELECT COUNT(*) as count FROM notification_delivery_logs`,
+      prisma.$queryRaw<
+        { count: bigint }[]
+      >`SELECT COUNT(*) as count FROM notification_delivery_logs`,
     ]);
     const nCount = Number(notifRows[0]?.count ?? 0);
     const dCount = Number(deliveryRows[0]?.count ?? 0);
     const hasGap = nCount > 0 && dCount === 0;
     return {
-      check: checkId, entity, description,
+      check: checkId,
+      entity,
+      description,
       passed: true, // Informational — seed data bypasses orchestrator; delivery logs populate at runtime
       details: hasGap
         ? `${nCount} notifications, 0 delivery logs (seed data — logs populate at runtime via orchestrator)`
         : `${nCount} notifications, ${dCount} delivery logs`,
     };
   } catch (e) {
-    return { check: checkId, entity, description, passed: false, details: `Query error: ${e instanceof Error ? e.message : String(e)}` };
+    return {
+      check: checkId,
+      entity,
+      description,
+      passed: false,
+      details: `Query error: ${e instanceof Error ? e.message : String(e)}`,
+    };
   }
 }
 
@@ -276,14 +286,22 @@ async function checkRbacAssignmentGap(prisma: PrismaClient): Promise<ValidationC
     const aCount = Number(assignRows[0]?.count ?? 0);
     const hasGap = rCount > 0 && aCount === 0;
     return {
-      check: checkId, entity, description,
+      check: checkId,
+      entity,
+      description,
       passed: !hasGap,
       details: hasGap
         ? `${rCount} roles defined but 0 user assignments — RBAC may not be active`
         : `${rCount} roles, ${aCount} assignments`,
     };
   } catch (e) {
-    return { check: checkId, entity, description, passed: false, details: `Query error: ${e instanceof Error ? e.message : String(e)}` };
+    return {
+      check: checkId,
+      entity,
+      description,
+      passed: false,
+      details: `Query error: ${e instanceof Error ? e.message : String(e)}`,
+    };
   }
 }
 
@@ -315,53 +333,109 @@ export async function runValidationChecks(prisma: PrismaClient): Promise<Validat
   const checks: ValidationCheck[] = [];
 
   // ── Check 1: Email uniqueness in Users ──
-  checks.push(await runRawCountCheck(
-    prisma, 'EMAIL_UNIQUENESS', 'User', 'All user emails should be unique',
-    prisma.$queryRaw`SELECT COUNT(*) as count FROM (SELECT email FROM users GROUP BY email HAVING COUNT(*) > 1) as dups`,
-    (n) => ({ passed: n === 0, details: n > 0 ? `Found ${n} duplicate emails` : 'All emails unique' })
-  ));
+  checks.push(
+    await runRawCountCheck(
+      prisma,
+      'EMAIL_UNIQUENESS',
+      'User',
+      'All user emails should be unique',
+      prisma.$queryRaw`SELECT COUNT(*) as count FROM (SELECT email FROM users GROUP BY email HAVING COUNT(*) > 1) as dups`,
+      (n) => ({
+        passed: n === 0,
+        details: n > 0 ? `Found ${n} duplicate emails` : 'All emails unique',
+      })
+    )
+  );
 
   // ── Check 2: Lead scores in valid range (0-100) ──
-  checks.push(await runRawCountCheck(
-    prisma, 'SCORE_RANGE', 'Lead', 'All lead scores should be between 0-100',
-    prisma.$queryRaw`SELECT COUNT(*) as count FROM leads WHERE score < 0 OR score > 100`,
-    (n) => ({ passed: n === 0, details: n > 0 ? `Found ${n} leads with invalid scores` : 'All scores valid' })
-  ));
+  checks.push(
+    await runRawCountCheck(
+      prisma,
+      'SCORE_RANGE',
+      'Lead',
+      'All lead scores should be between 0-100',
+      prisma.$queryRaw`SELECT COUNT(*) as count FROM leads WHERE score < 0 OR score > 100`,
+      (n) => ({
+        passed: n === 0,
+        details: n > 0 ? `Found ${n} leads with invalid scores` : 'All scores valid',
+      })
+    )
+  );
 
   // ── Check 3: Opportunity values are non-negative (column is "value", not "amount") ──
-  checks.push(await runRawCountCheck(
-    prisma, 'POSITIVE_VALUES', 'Opportunity', 'All opportunity values should be non-negative',
-    prisma.$queryRaw`SELECT COUNT(*) as count FROM opportunities WHERE value < 0`,
-    (n) => ({ passed: n === 0, details: n > 0 ? `Found ${n} opportunities with negative values` : 'All values valid' })
-  ));
+  checks.push(
+    await runRawCountCheck(
+      prisma,
+      'POSITIVE_VALUES',
+      'Opportunity',
+      'All opportunity values should be non-negative',
+      prisma.$queryRaw`SELECT COUNT(*) as count FROM opportunities WHERE value < 0`,
+      (n) => ({
+        passed: n === 0,
+        details: n > 0 ? `Found ${n} opportunities with negative values` : 'All values valid',
+      })
+    )
+  );
 
   // ── Check 4: FK integrity — Leads reference valid owners (column is "ownerId", camelCase) ──
-  checks.push(await runRawCountCheck(
-    prisma, 'FK_INTEGRITY_LEAD_OWNER', 'Lead', 'All leads should reference valid owners',
-    prisma.$queryRaw`SELECT COUNT(*) as count FROM leads l LEFT JOIN users u ON l."ownerId" = u.id WHERE u.id IS NULL AND l."ownerId" IS NOT NULL`,
-    (n) => ({ passed: n === 0, details: n > 0 ? `Found ${n} orphaned leads` : 'All references valid' })
-  ));
+  checks.push(
+    await runRawCountCheck(
+      prisma,
+      'FK_INTEGRITY_LEAD_OWNER',
+      'Lead',
+      'All leads should reference valid owners',
+      prisma.$queryRaw`SELECT COUNT(*) as count FROM leads l LEFT JOIN users u ON l."ownerId" = u.id WHERE u.id IS NULL AND l."ownerId" IS NOT NULL`,
+      (n) => ({
+        passed: n === 0,
+        details: n > 0 ? `Found ${n} orphaned leads` : 'All references valid',
+      })
+    )
+  );
 
   // ── Check 5: Contact email format validation ──
-  checks.push(await runRawCountCheck(
-    prisma, 'EMAIL_FORMAT', 'Contact', 'All contact emails should have valid format',
-    prisma.$queryRaw`SELECT COUNT(*) as count FROM contacts WHERE email IS NOT NULL AND email NOT LIKE '%@%.%'`,
-    (n) => ({ passed: n === 0, details: n > 0 ? `Found ${n} invalid email formats` : 'All emails valid' })
-  ));
+  checks.push(
+    await runRawCountCheck(
+      prisma,
+      'EMAIL_FORMAT',
+      'Contact',
+      'All contact emails should have valid format',
+      prisma.$queryRaw`SELECT COUNT(*) as count FROM contacts WHERE email IS NOT NULL AND email NOT LIKE '%@%.%'`,
+      (n) => ({
+        passed: n === 0,
+        details: n > 0 ? `Found ${n} invalid email formats` : 'All emails valid',
+      })
+    )
+  );
 
   // ── Check 6: FK integrity — Contacts reference valid accounts ──
-  checks.push(await runRawCountCheck(
-    prisma, 'FK_INTEGRITY_CONTACT_ACCOUNT', 'Contact', 'All contacts should reference valid accounts',
-    prisma.$queryRaw`SELECT COUNT(*) as count FROM contacts c LEFT JOIN accounts a ON c."accountId" = a.id WHERE c."accountId" IS NOT NULL AND a.id IS NULL`,
-    (n) => ({ passed: n === 0, details: n > 0 ? `Found ${n} orphaned contacts` : 'All references valid' })
-  ));
+  checks.push(
+    await runRawCountCheck(
+      prisma,
+      'FK_INTEGRITY_CONTACT_ACCOUNT',
+      'Contact',
+      'All contacts should reference valid accounts',
+      prisma.$queryRaw`SELECT COUNT(*) as count FROM contacts c LEFT JOIN accounts a ON c."accountId" = a.id WHERE c."accountId" IS NOT NULL AND a.id IS NULL`,
+      (n) => ({
+        passed: n === 0,
+        details: n > 0 ? `Found ${n} orphaned contacts` : 'All references valid',
+      })
+    )
+  );
 
   // ── Check 7: FK integrity — Opportunities reference valid accounts ──
-  checks.push(await runRawCountCheck(
-    prisma, 'FK_INTEGRITY_OPP_ACCOUNT', 'Opportunity', 'All opportunities should reference valid accounts',
-    prisma.$queryRaw`SELECT COUNT(*) as count FROM opportunities o LEFT JOIN accounts a ON o."accountId" = a.id WHERE o."accountId" IS NOT NULL AND a.id IS NULL`,
-    (n) => ({ passed: n === 0, details: n > 0 ? `Found ${n} orphaned opportunities` : 'All references valid' })
-  ));
+  checks.push(
+    await runRawCountCheck(
+      prisma,
+      'FK_INTEGRITY_OPP_ACCOUNT',
+      'Opportunity',
+      'All opportunities should reference valid accounts',
+      prisma.$queryRaw`SELECT COUNT(*) as count FROM opportunities o LEFT JOIN accounts a ON o."accountId" = a.id WHERE o."accountId" IS NOT NULL AND a.id IS NULL`,
+      (n) => ({
+        passed: n === 0,
+        details: n > 0 ? `Found ${n} orphaned opportunities` : 'All references valid',
+      })
+    )
+  );
 
   // ── Check 8: Notification delivery gap — notifications exist but no delivery logs ──
   checks.push(await checkNotificationDeliveryGap(prisma));
@@ -370,33 +444,65 @@ export async function runValidationChecks(prisma: PrismaClient): Promise<Validat
   checks.push(await checkRbacAssignmentGap(prisma));
 
   // ── Check 10: Tenant isolation — all tenantId-bearing records reference valid tenants ──
-  checks.push(await runRawCountCheck(
-    prisma, 'TENANT_ISOLATION_LEADS', 'Lead', 'All leads should reference valid tenants',
-    prisma.$queryRaw`SELECT COUNT(*) as count FROM leads l LEFT JOIN tenants t ON l."tenantId" = t.id WHERE t.id IS NULL`,
-    (n) => ({ passed: n === 0, details: n > 0 ? `Found ${n} leads with invalid tenantId` : 'All tenantIds valid' })
-  ));
+  checks.push(
+    await runRawCountCheck(
+      prisma,
+      'TENANT_ISOLATION_LEADS',
+      'Lead',
+      'All leads should reference valid tenants',
+      prisma.$queryRaw`SELECT COUNT(*) as count FROM leads l LEFT JOIN tenants t ON l."tenantId" = t.id WHERE t.id IS NULL`,
+      (n) => ({
+        passed: n === 0,
+        details: n > 0 ? `Found ${n} leads with invalid tenantId` : 'All tenantIds valid',
+      })
+    )
+  );
 
   // ── Check 11: Orphaned AI insights — AIInsight records reference valid entities ──
-  checks.push(await runRawCountCheck(
-    prisma, 'FK_INTEGRITY_AI_INSIGHT', 'AIInsight', 'AI insights should reference valid entities',
-    prisma.$queryRaw`SELECT COUNT(*) as count FROM ai_insights ai WHERE ai."entityType" = 'LEAD' AND ai."entityId" NOT IN (SELECT id FROM leads)`,
-    (n) => ({ passed: n === 0, details: n > 0 ? `Found ${n} orphaned lead AI insights` : 'All entity references valid' })
-  ));
+  checks.push(
+    await runRawCountCheck(
+      prisma,
+      'FK_INTEGRITY_AI_INSIGHT',
+      'AIInsight',
+      'AI insights should reference valid entities',
+      prisma.$queryRaw`SELECT COUNT(*) as count FROM ai_insights ai WHERE ai."entityType" = 'LEAD' AND ai."entityId" NOT IN (SELECT id FROM leads)`,
+      (n) => ({
+        passed: n === 0,
+        details: n > 0 ? `Found ${n} orphaned lead AI insights` : 'All entity references valid',
+      })
+    )
+  );
 
   // ── Check 12: Duplicate notifications — same recipient+sourceType+sourceId within 1 minute ──
-  checks.push(await runRawCountCheck(
-    prisma, 'DUPLICATE_NOTIFICATIONS', 'Notification',
-    'No duplicate notifications within same minute for same recipient/source',
-    prisma.$queryRaw`SELECT COUNT(*) as count FROM (SELECT "recipientId", "sourceType", "sourceId", DATE_TRUNC('minute', "createdAt") as minute_bucket FROM notifications WHERE "sourceId" IS NOT NULL GROUP BY "recipientId", "sourceType", "sourceId", minute_bucket HAVING COUNT(*) > 1) as dups`,
-    (n) => ({ passed: n === 0, details: n > 0 ? `Found ${n} duplicate notification groups` : 'No duplicates detected' })
-  ));
+  checks.push(
+    await runRawCountCheck(
+      prisma,
+      'DUPLICATE_NOTIFICATIONS',
+      'Notification',
+      'No duplicate notifications within same minute for same recipient/source',
+      prisma.$queryRaw`SELECT COUNT(*) as count FROM (SELECT "recipientId", "sourceType", "sourceId", DATE_TRUNC('minute', "createdAt") as minute_bucket FROM notifications WHERE "sourceId" IS NOT NULL GROUP BY "recipientId", "sourceType", "sourceId", minute_bucket HAVING COUNT(*) > 1) as dups`,
+      (n) => ({
+        passed: n === 0,
+        details: n > 0 ? `Found ${n} duplicate notification groups` : 'No duplicates detected',
+      })
+    )
+  );
 
   // ── Check 13: Task date consistency — dueDate should not be before createdAt ──
-  checks.push(await runRawCountCheck(
-    prisma, 'TASK_DATE_CONSISTENCY', 'Task', 'Task due dates should not precede creation date',
-    prisma.$queryRaw`SELECT COUNT(*) as count FROM tasks WHERE "dueDate" IS NOT NULL AND "dueDate" < "createdAt"`,
-    (n) => ({ passed: n === 0, details: n > 0 ? `Found ${n} tasks with dueDate before createdAt` : 'All task dates consistent' })
-  ));
+  checks.push(
+    await runRawCountCheck(
+      prisma,
+      'TASK_DATE_CONSISTENCY',
+      'Task',
+      'Task due dates should not precede creation date',
+      prisma.$queryRaw`SELECT COUNT(*) as count FROM tasks WHERE "dueDate" IS NOT NULL AND "dueDate" < "createdAt"`,
+      (n) => ({
+        passed: n === 0,
+        details:
+          n > 0 ? `Found ${n} tasks with dueDate before createdAt` : 'All task dates consistent',
+      })
+    )
+  );
 
   return checks;
 }
@@ -586,7 +692,12 @@ function getSimulatedCounts(): Record<string, number> {
 
 function buildLiveEntityCounts(actualCounts: Record<string, number>): EntityCount[] {
   return Object.entries(actualCounts).map(([entity, actual]) => ({
-    entity, expected: actual, actual, variance: 0, variancePercent: 0, status: 'PASS' as const,
+    entity,
+    expected: actual,
+    actual,
+    variance: 0,
+    variancePercent: 0,
+    status: 'PASS' as const,
   }));
 }
 
@@ -604,11 +715,41 @@ function buildSimulatedEntityCounts(actualCounts: Record<string, number>): Entit
 
 function getSimulatedValidationChecks(): ValidationCheck[] {
   return [
-    { check: 'EMAIL_UNIQUENESS', entity: 'User', description: 'All user emails should be unique', passed: true, details: 'All emails unique' },
-    { check: 'SCORE_RANGE', entity: 'Lead', description: 'All lead scores should be between 0-100', passed: true, details: 'All scores valid' },
-    { check: 'POSITIVE_AMOUNTS', entity: 'Opportunity', description: 'All opportunity amounts should be positive', passed: true, details: 'All amounts valid' },
-    { check: 'FK_INTEGRITY_LEAD_OWNER', entity: 'Lead', description: 'All leads should reference valid owners', passed: true, details: 'All references valid' },
-    { check: 'EMAIL_FORMAT', entity: 'Contact', description: 'All contact emails should have valid format', passed: true, details: 'All emails valid' },
+    {
+      check: 'EMAIL_UNIQUENESS',
+      entity: 'User',
+      description: 'All user emails should be unique',
+      passed: true,
+      details: 'All emails unique',
+    },
+    {
+      check: 'SCORE_RANGE',
+      entity: 'Lead',
+      description: 'All lead scores should be between 0-100',
+      passed: true,
+      details: 'All scores valid',
+    },
+    {
+      check: 'POSITIVE_AMOUNTS',
+      entity: 'Opportunity',
+      description: 'All opportunity amounts should be positive',
+      passed: true,
+      details: 'All amounts valid',
+    },
+    {
+      check: 'FK_INTEGRITY_LEAD_OWNER',
+      entity: 'Lead',
+      description: 'All leads should reference valid owners',
+      passed: true,
+      details: 'All references valid',
+    },
+    {
+      check: 'EMAIL_FORMAT',
+      entity: 'Contact',
+      description: 'All contact emails should have valid format',
+      passed: true,
+      details: 'All emails valid',
+    },
   ];
 }
 
@@ -621,8 +762,13 @@ function determineOverallStatus(
     entityCounts.some((e) => e.status === 'FAIL') ||
     validationChecks.some((c) => !c.passed) ||
     qualityMetrics.some((m) => m.status === 'FAIL')
-  ) return 'FAIL';
-  if (entityCounts.some((e) => e.status === 'WARN') || qualityMetrics.some((m) => m.status === 'WARN')) return 'WARN';
+  )
+    return 'FAIL';
+  if (
+    entityCounts.some((e) => e.status === 'WARN') ||
+    qualityMetrics.some((m) => m.status === 'WARN')
+  )
+    return 'WARN';
   return 'PASS';
 }
 
@@ -739,7 +885,13 @@ Options:
   }
 
   // Print summary
-  printReconciliationSummary(entityCounts, validationChecks, overallStatus, completenessPercent, isLiveMode);
+  printReconciliationSummary(
+    entityCounts,
+    validationChecks,
+    overallStatus,
+    completenessPercent,
+    isLiveMode
+  );
 
   // Exit with appropriate code
   process.exit(overallStatus === 'FAIL' ? 1 : 0);

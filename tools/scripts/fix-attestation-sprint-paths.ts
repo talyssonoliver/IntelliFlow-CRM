@@ -54,12 +54,7 @@ const CSV_PATH = join(
   '_global',
   'Sprint_plan.csv'
 );
-const REPORT_JSON = join(
-  REPO_ROOT,
-  'artifacts',
-  'reports',
-  'current-state-report.json'
-);
+const REPORT_JSON = join(REPO_ROOT, 'artifacts', 'reports', 'current-state-report.json');
 
 const DRY_RUN = process.argv.includes('--dry-run');
 
@@ -121,7 +116,10 @@ function loadMismatchesFromReport(): SprintMismatch[] | null {
   return null;
 }
 
-function scanSprintForMismatches(sprintDir: { name: string; isDirectory(): boolean }, mismatches: SprintMismatch[]): void {
+function scanSprintForMismatches(
+  sprintDir: { name: string; isDirectory(): boolean },
+  mismatches: SprintMismatch[]
+): void {
   if (!sprintDir.isDirectory()) return;
   const match = /^sprint-(\d+)$/.exec(sprintDir.name);
   if (!match) return;
@@ -159,7 +157,12 @@ function detectMismatches(): SprintMismatch[] {
 
 // ── Migration ──────────────────────────────────────────────────────────
 
-function copyNonDuplicateFiles(sourceDir: string, destDir: string, taskId: string, action: MigrationAction): void {
+function copyNonDuplicateFiles(
+  sourceDir: string,
+  destDir: string,
+  taskId: string,
+  action: MigrationAction
+): void {
   const sourceFiles = readdirSync(sourceDir).filter((f) => statSync(join(sourceDir, f)).isFile());
   for (const file of sourceFiles) {
     if (isPrefixedDuplicate(file, taskId)) {
@@ -171,7 +174,11 @@ function copyNonDuplicateFiles(sourceDir: string, destDir: string, taskId: strin
   }
 }
 
-function removePrefixedDuplicatesFromDest(destDir: string, taskId: string, action: MigrationAction): void {
+function removePrefixedDuplicatesFromDest(
+  destDir: string,
+  taskId: string,
+  action: MigrationAction
+): void {
   if (!existsSync(destDir) || DRY_RUN) return;
   for (const file of readdirSync(destDir)) {
     if (isPrefixedDuplicate(file, taskId)) {
@@ -194,7 +201,14 @@ function migrateAttestation(mismatch: SprintMismatch): MigrationAction | null {
     return null;
   }
 
-  const action: MigrationAction = { taskId, sourceDir, destDir, filesCopied: [], prefixedRemoved: [], sourceDirRemoved: false };
+  const action: MigrationAction = {
+    taskId,
+    sourceDir,
+    destDir,
+    filesCopied: [],
+    prefixedRemoved: [],
+    sourceDirRemoved: false,
+  };
 
   if (!DRY_RUN) mkdirSync(destDir, { recursive: true });
 
@@ -285,7 +299,9 @@ function main(): void {
     const action = migrateAttestation(mismatch);
     if (action) {
       actions.push(action);
-      log(`  Copied ${action.filesCopied.length} files, removed ${action.prefixedRemoved.length} prefixed duplicates`);
+      log(
+        `  Copied ${action.filesCopied.length} files, removed ${action.prefixedRemoved.length} prefixed duplicates`
+      );
     }
   }
 
@@ -297,14 +313,18 @@ function main(): void {
   console.log('\n--- Summary ---');
   console.log(`Attestation dirs migrated: ${actions.length}`);
   console.log(`Total files copied: ${actions.reduce((sum, a) => sum + a.filesCopied.length, 0)}`);
-  console.log(`Prefixed duplicates removed: ${actions.reduce((sum, a) => sum + a.prefixedRemoved.length, 0)}`);
+  console.log(
+    `Prefixed duplicates removed: ${actions.reduce((sum, a) => sum + a.prefixedRemoved.length, 0)}`
+  );
   console.log(`Source dirs removed: ${actions.filter((a) => a.sourceDirRemoved).length}`);
   console.log(`CSV rows patched: ${csvPatched}`);
 
   if (DRY_RUN) {
     console.log('\nRe-run without --dry-run to apply changes.');
   } else {
-    console.log('\nDone. Run `npx tsx apps/project-tracker/scripts/generate-current-state-report.ts` to verify.');
+    console.log(
+      '\nDone. Run `npx tsx apps/project-tracker/scripts/generate-current-state-report.ts` to verify.'
+    );
   }
 }
 
