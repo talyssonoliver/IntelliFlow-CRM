@@ -537,7 +537,7 @@ export function DailyWorkflowSummary({
   const now = new Date();
   const afternoonOrEvening = now.getHours() < 17 ? 'afternoon' : 'evening';
   const timeOfDay = now.getHours() < 12 ? 'morning' : afternoonOrEvening;
-  const dateStr = now.toLocaleDateString('en-US', {
+  const dateStr = now.toLocaleDateString('en-GB', {
     weekday: 'long',
     month: 'short',
     day: 'numeric',

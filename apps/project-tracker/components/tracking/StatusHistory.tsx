@@ -109,14 +109,14 @@ export default function StatusHistory({ onBack }: Readonly<StatusHistoryProps>) 
     const diffDays = Math.floor(diffHours / 24);
 
     if (diffDays > 0) {
-      return date.toLocaleDateString('en-US', {
+      return date.toLocaleDateString('en-GB', {
         month: 'short',
         day: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
       });
     }
-    return date.toLocaleTimeString('en-US', {
+    return date.toLocaleTimeString('en-GB', {
       hour: '2-digit',
       minute: '2-digit',
     });
