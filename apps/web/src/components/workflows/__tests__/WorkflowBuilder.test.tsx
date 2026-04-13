@@ -69,6 +69,34 @@ vi.mock('@intelliflow/ui', () => ({
   ),
 }));
 
+// Mock shared PageHeader so tests depend on title + actions, not on the
+// primitive's DOM structure. PageHeader is already covered by its own tests.
+vi.mock('@/components/shared/page-header', () => ({
+  PageHeader: ({
+    title,
+    actions,
+  }: {
+    title: string;
+    breadcrumbs?: unknown;
+    description?: string;
+    actions?: Array<{ label: string; onClick?: () => void; href?: string }>;
+  }) => (
+    <div data-testid="page-header">
+      <h1>{title}</h1>
+      {actions?.map((a) => (
+        <button
+          key={a.label}
+          onClick={a.onClick}
+          aria-label={a.label}
+          data-testid={`page-header-action-${a.label.toLowerCase().replace(/\s+/g, '-')}`}
+        >
+          {a.label}
+        </button>
+      ))}
+    </div>
+  ),
+}));
+
 const { WorkflowBuilder } = await import('../WorkflowBuilder');
 
 // ---------------------------------------------------------------------------
@@ -93,7 +121,7 @@ describe('WorkflowBuilder', () => {
     fireEvent.click(screen.getByTestId('create-btn'));
     expect(screen.getByTestId('workflow-canvas')).toBeInTheDocument();
     expect(screen.getByTestId('workflow-canvas').dataset.workflowId).toBe('');
-    expect(screen.getByText('New Workflow')).toBeInTheDocument();
+    expect(screen.getByText('New workflow')).toBeInTheDocument();
   });
 
   it('switches to canvas view with editingWorkflowId set when Edit is called', () => {
@@ -101,7 +129,7 @@ describe('WorkflowBuilder', () => {
     fireEvent.click(screen.getByTestId('edit-btn'));
     expect(screen.getByTestId('workflow-canvas')).toBeInTheDocument();
     expect(screen.getByTestId('workflow-canvas').dataset.workflowId).toBe('wf-42');
-    expect(screen.getByText('Edit Workflow')).toBeInTheDocument();
+    expect(screen.getByText('Edit workflow')).toBeInTheDocument();
   });
 
   it('back button in canvas view returns to list view and clears editingWorkflowId', () => {
@@ -111,7 +139,7 @@ describe('WorkflowBuilder', () => {
     expect(screen.getByTestId('workflow-canvas')).toBeInTheDocument();
 
     // Click the component's own back button (not canvas internal)
-    const backButton = screen.getByRole('button', { name: /back to workflow list/i });
+    const backButton = screen.getByRole('button', { name: /back to workflows/i });
     fireEvent.click(backButton);
 
     expect(screen.getByTestId('workflow-list')).toBeInTheDocument();
@@ -123,16 +151,16 @@ describe('WorkflowBuilder', () => {
 
     // Create mode
     fireEvent.click(screen.getByTestId('create-btn'));
-    expect(screen.getByText('New Workflow')).toBeInTheDocument();
-    expect(screen.queryByText('Edit Workflow')).not.toBeInTheDocument();
+    expect(screen.getByText('New workflow')).toBeInTheDocument();
+    expect(screen.queryByText('Edit workflow')).not.toBeInTheDocument();
 
     // Go back
-    const backButton = screen.getByRole('button', { name: /back to workflow list/i });
+    const backButton = screen.getByRole('button', { name: /back to workflows/i });
     fireEvent.click(backButton);
 
     // Edit mode
     fireEvent.click(screen.getByTestId('edit-btn'));
-    expect(screen.getByText('Edit Workflow')).toBeInTheDocument();
-    expect(screen.queryByText('New Workflow')).not.toBeInTheDocument();
+    expect(screen.getByText('Edit workflow')).toBeInTheDocument();
+    expect(screen.queryByText('New workflow')).not.toBeInTheDocument();
   });
 });

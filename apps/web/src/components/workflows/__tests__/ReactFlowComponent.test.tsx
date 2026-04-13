@@ -73,7 +73,16 @@ vi.mock('@xyflow/react', () => ({
     zoomIn: vi.fn(),
     zoomOut: vi.fn(),
     fitView: vi.fn(),
+    screenToFlowPosition: mockScreenToFlowPosition,
   }),
+}));
+
+// Hoisted so vi.mock() factory above can reference it without TDZ errors.
+// Default implementation = identity transform; tests override per-case.
+const { mockScreenToFlowPosition } = vi.hoisted(() => ({
+  mockScreenToFlowPosition: vi.fn(
+    ({ x, y }: { x: number; y: number }) => ({ x, y })
+  ),
 }));
 
 // ---------------------------------------------------------------------------
@@ -93,6 +102,15 @@ vi.mock('@dnd-kit/core', () => ({
     capturedOnDragEnd = onDragEnd;
     return <>{children}</>;
   },
+  useDroppable: ({ id }: { id: string }) => ({
+    setNodeRef: vi.fn(),
+    isOver: false,
+    node: { current: null },
+    over: null,
+    active: null,
+    rect: { current: null },
+    id,
+  }),
 }));
 
 // ---------------------------------------------------------------------------
