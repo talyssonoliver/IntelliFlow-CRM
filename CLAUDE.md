@@ -186,6 +186,7 @@ of the current working state generated from the metrics tree + git.
    source health diagnostics. Generated from `.specify/` attestations + CSV.
 
 **Generator sources**:
+
 - Session digest: `apps/project-tracker/lib/context-snapshot.ts`
 - Full state report: `apps/project-tracker/lib/current-state-report.ts`
 

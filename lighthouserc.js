@@ -19,6 +19,7 @@ module.exports = {
         'http://localhost:3000/login', // Login page
         'http://localhost:3000/signup', // Signup page
         'http://localhost:3000/pricing', // Pricing page
+        'http://localhost:3000/aup', // Acceptable Use Policy (PG-054)
         // Core CRM
         'http://localhost:3000/dashboard', // Dashboard
         'http://localhost:3000/leads', // Leads list
