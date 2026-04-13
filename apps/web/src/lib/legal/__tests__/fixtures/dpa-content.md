@@ -12,8 +12,10 @@ summary:
 
 ## Introduction and Parties
 
-[PLACEHOLDER — Legal review required] This Data Processing Addendum governs the relationship between the Controller and IntelliFlow CRM as the Processor.
+[PLACEHOLDER — Legal review required] This Data Processing Addendum governs the
+relationship between the Controller and IntelliFlow CRM as the Processor.
 
 ## Subject Matter and Duration
 
-[PLACEHOLDER — Legal review required] Processing is limited to the subject matter and duration defined in the main Service Agreement.
+[PLACEHOLDER — Legal review required] Processing is limited to the subject
+matter and duration defined in the main Service Agreement.

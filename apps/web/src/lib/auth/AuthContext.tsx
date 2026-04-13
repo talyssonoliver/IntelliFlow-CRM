@@ -182,20 +182,16 @@ function debugLogLocalStorageToken(): void {
   }
 }
 
-type QueryStateResult =
-  | { handled: false }
-  | { handled: true; update: Partial<AuthState> };
+type QueryStateResult = { handled: false } | { handled: true; update: Partial<AuthState> };
 
-function resolveQueryStateUpdate(
-  statusQuery: {
-    isPending: boolean;
-    isFetching: boolean;
-    isSuccess: boolean;
-    isError: boolean;
-    data?: unknown;
-    error?: unknown;
-  }
-): QueryStateResult {
+function resolveQueryStateUpdate(statusQuery: {
+  isPending: boolean;
+  isFetching: boolean;
+  isSuccess: boolean;
+  isError: boolean;
+  data?: unknown;
+  error?: unknown;
+}): QueryStateResult {
   if (statusQuery.isPending || statusQuery.isFetching) {
     return { handled: false };
   }
@@ -208,7 +204,12 @@ function resolveQueryStateUpdate(
           : null;
       return {
         handled: true,
-        update: { user: data['user'] as AuthUser, isAuthenticated: true, isLoading: false, session: expiresAt },
+        update: {
+          user: data['user'] as AuthUser,
+          isAuthenticated: true,
+          isLoading: false,
+          session: expiresAt,
+        },
       };
     }
     return {

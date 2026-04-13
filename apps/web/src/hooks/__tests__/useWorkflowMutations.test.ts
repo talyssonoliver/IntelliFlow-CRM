@@ -18,7 +18,10 @@ const mockGetByIdInvalidate = vi.fn().mockResolvedValue(undefined);
 const mockToast = vi.fn();
 
 // Store onSuccess/onError callbacks for each mutation so we can trigger them
-const mutationCallbacks: Record<string, { onSuccess?: () => void; onError?: (err: { message?: string }) => void }> = {};
+const mutationCallbacks: Record<
+  string,
+  { onSuccess?: () => void; onError?: (err: { message?: string }) => void }
+> = {};
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: mockPush }),
@@ -38,7 +41,10 @@ vi.mock('@/lib/api', () => ({
     }),
     workflow: {
       create: {
-        useMutation: (opts: { onSuccess?: () => void; onError?: (err: { message?: string }) => void }) => {
+        useMutation: (opts: {
+          onSuccess?: () => void;
+          onError?: (err: { message?: string }) => void;
+        }) => {
           mutationCallbacks.create = opts;
           return {
             mutate: vi.fn((input: unknown) => {
@@ -50,7 +56,10 @@ vi.mock('@/lib/api', () => ({
         },
       },
       update: {
-        useMutation: (opts: { onSuccess?: () => void; onError?: (err: { message?: string }) => void }) => {
+        useMutation: (opts: {
+          onSuccess?: () => void;
+          onError?: (err: { message?: string }) => void;
+        }) => {
           mutationCallbacks.update = opts;
           return {
             mutate: vi.fn((input: unknown) => {
@@ -61,7 +70,10 @@ vi.mock('@/lib/api', () => ({
         },
       },
       delete: {
-        useMutation: (opts: { onSuccess?: () => void; onError?: (err: { message?: string }) => void }) => {
+        useMutation: (opts: {
+          onSuccess?: () => void;
+          onError?: (err: { message?: string }) => void;
+        }) => {
           mutationCallbacks.delete = opts;
           return {
             mutate: vi.fn((input: unknown) => {
@@ -72,7 +84,10 @@ vi.mock('@/lib/api', () => ({
         },
       },
       setActive: {
-        useMutation: (opts: { onSuccess?: () => void; onError?: (err: { message?: string }) => void }) => {
+        useMutation: (opts: {
+          onSuccess?: () => void;
+          onError?: (err: { message?: string }) => void;
+        }) => {
           mutationCallbacks.setActive = opts;
           return {
             mutate: vi.fn((input: unknown) => {
@@ -128,7 +143,7 @@ describe('useWorkflowMutations', () => {
         title: 'Error',
         description: 'Name already exists',
         variant: 'destructive',
-      }),
+      })
     );
   });
 
@@ -148,9 +163,7 @@ describe('useWorkflowMutations', () => {
     // ...AND the single-workflow cache invalidates so the edit screen,
     // if opened again, doesn't show the pre-save graph.
     expect(mockGetByIdInvalidate).toHaveBeenCalledWith({ id: 'wf-42' });
-    expect(mockToast).toHaveBeenCalledWith(
-      expect.objectContaining({ title: 'Workflow saved' }),
-    );
+    expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Workflow saved' }));
   });
 
   it('update onError shows destructive toast', () => {
@@ -164,7 +177,7 @@ describe('useWorkflowMutations', () => {
       expect.objectContaining({
         variant: 'destructive',
         description: 'Validation failed',
-      }),
+      })
     );
   });
 
@@ -176,9 +189,7 @@ describe('useWorkflowMutations', () => {
     });
 
     expect(mockInvalidate).toHaveBeenCalled();
-    expect(mockToast).toHaveBeenCalledWith(
-      expect.objectContaining({ title: 'Workflow deleted' }),
-    );
+    expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Workflow deleted' }));
   });
 
   it('delete onError shows destructive toast', () => {
@@ -192,7 +203,7 @@ describe('useWorkflowMutations', () => {
       expect.objectContaining({
         variant: 'destructive',
         description: 'Not found',
-      }),
+      })
     );
   });
 
@@ -217,7 +228,7 @@ describe('useWorkflowMutations', () => {
       expect.objectContaining({
         variant: 'destructive',
         description: 'Forbidden',
-      }),
+      })
     );
   });
 
@@ -231,31 +242,37 @@ describe('useWorkflowMutations', () => {
     expect(mockToast).toHaveBeenCalledWith(
       expect.objectContaining({
         description: 'Failed to create workflow',
-      }),
+      })
     );
   });
 
   it('update onError uses fallback message when error.message is undefined', () => {
     renderHook(() => useWorkflowMutations());
-    act(() => { mutationCallbacks.update?.onError?.({}); });
+    act(() => {
+      mutationCallbacks.update?.onError?.({});
+    });
     expect(mockToast).toHaveBeenCalledWith(
-      expect.objectContaining({ description: 'Failed to update workflow' }),
+      expect.objectContaining({ description: 'Failed to update workflow' })
     );
   });
 
   it('delete onError uses fallback message when error.message is undefined', () => {
     renderHook(() => useWorkflowMutations());
-    act(() => { mutationCallbacks.delete?.onError?.({}); });
+    act(() => {
+      mutationCallbacks.delete?.onError?.({});
+    });
     expect(mockToast).toHaveBeenCalledWith(
-      expect.objectContaining({ description: 'Failed to delete workflow' }),
+      expect.objectContaining({ description: 'Failed to delete workflow' })
     );
   });
 
   it('setActive onError uses fallback message when error.message is undefined', () => {
     renderHook(() => useWorkflowMutations());
-    act(() => { mutationCallbacks.setActive?.onError?.({}); });
+    act(() => {
+      mutationCallbacks.setActive?.onError?.({});
+    });
     expect(mockToast).toHaveBeenCalledWith(
-      expect.objectContaining({ description: 'Failed to update workflow status' }),
+      expect.objectContaining({ description: 'Failed to update workflow status' })
     );
   });
 

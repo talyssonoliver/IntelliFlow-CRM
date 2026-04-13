@@ -35,7 +35,7 @@ interface HistoryEntry {
 
 export function useWorkflowCanvas(
   initialNodes: CanvasNode[] = [],
-  initialEdges: CanvasEdge[] = [],
+  initialEdges: CanvasEdge[] = []
 ) {
   const [nodes, setNodes, onNodesChange] = useNodesState<CanvasNode>(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState<CanvasEdge>(initialEdges);
@@ -70,7 +70,7 @@ export function useWorkflowCanvas(
         (e, i) =>
           e.id === initialEdges[i].id &&
           e.source === initialEdges[i].source &&
-          e.target === initialEdges[i].target,
+          e.target === initialEdges[i].target
       );
     if (!sameContent) {
       prevInitialEdgesRef.current = initialEdges;
@@ -83,23 +83,20 @@ export function useWorkflowCanvas(
   const [redoStack, setRedoStack] = useState<HistoryEntry[]>([]);
 
   // Push current state to undo stack before mutation
-  const pushHistory = useCallback(
-    (currentNodes: CanvasNode[], currentEdges: CanvasEdge[]) => {
-      setUndoStack((prev) => {
-        const next = [...prev, { nodes: currentNodes, edges: currentEdges }];
-        return next.length > MAX_HISTORY ? next.slice(-MAX_HISTORY) : next;
-      });
-      setRedoStack([]);
-    },
-    [],
-  );
+  const pushHistory = useCallback((currentNodes: CanvasNode[], currentEdges: CanvasEdge[]) => {
+    setUndoStack((prev) => {
+      const next = [...prev, { nodes: currentNodes, edges: currentEdges }];
+      return next.length > MAX_HISTORY ? next.slice(-MAX_HISTORY) : next;
+    });
+    setRedoStack([]);
+  }, []);
 
   // History-aware wrappers for node changes
   const handleNodesChange = useCallback(
     (changes: NodeChange[]) => {
       onNodesChange(changes as NodeChange<CanvasNode>[]);
     },
-    [onNodesChange],
+    [onNodesChange]
   );
 
   // History-aware wrappers for edge changes
@@ -107,7 +104,7 @@ export function useWorkflowCanvas(
     (changes: EdgeChange[]) => {
       onEdgesChange(changes);
     },
-    [onEdgesChange],
+    [onEdgesChange]
   );
 
   // Connect two nodes (called by ReactFlow onConnect)
@@ -116,7 +113,7 @@ export function useWorkflowCanvas(
       pushHistory(nodes, edges);
       setEdges((eds) => addEdge(connection, eds));
     },
-    [nodes, edges, pushHistory, setEdges],
+    [nodes, edges, pushHistory, setEdges]
   );
 
   // Add a new node at a given canvas position.
@@ -149,26 +146,21 @@ export function useWorkflowCanvas(
       // new position by Y, or the last node in the array if nothing sits
       // above. End-type nodes never act as sources (they are terminal).
       if (nodes.length > 0) {
-        const candidates = nodes.filter(
-          (n) => n.type !== 'end' && n.position.y < position.y,
-        );
+        const candidates = nodes.filter((n) => n.type !== 'end' && n.position.y < position.y);
         const source =
           candidates.length > 0
             ? candidates.reduce((best, n) =>
-                position.y - n.position.y < position.y - best.position.y ? n : best,
+                position.y - n.position.y < position.y - best.position.y ? n : best
               )
             : nodes[nodes.length - 1];
         if (source && source.type !== 'end') {
           setEdges((eds) =>
-            addEdge(
-              { source: source.id, target: id, id: `edge-${Date.now()}` },
-              eds,
-            ),
+            addEdge({ source: source.id, target: id, id: `edge-${Date.now()}` }, eds)
           );
         }
       }
     },
-    [nodes, edges, pushHistory, setNodes, setEdges],
+    [nodes, edges, pushHistory, setNodes, setEdges]
   );
 
   // Remove a node (and its connected edges)
@@ -178,7 +170,7 @@ export function useWorkflowCanvas(
       setNodes((nds) => nds.filter((n) => n.id !== nodeId));
       setEdges((eds) => eds.filter((e) => e.source !== nodeId && e.target !== nodeId));
     },
-    [nodes, edges, pushHistory, setNodes, setEdges],
+    [nodes, edges, pushHistory, setNodes, setEdges]
   );
 
   // Update the config data on an existing node
@@ -186,12 +178,10 @@ export function useWorkflowCanvas(
     (nodeId: string, config: WorkflowNodeConfig) => {
       pushHistory(nodes, edges);
       setNodes((nds) =>
-        nds.map((n) =>
-          n.id === nodeId ? { ...n, data: { ...n.data, config } } : n,
-        ),
+        nds.map((n) => (n.id === nodeId ? { ...n, data: { ...n.data, config } } : n))
       );
     },
-    [nodes, edges, pushHistory, setNodes],
+    [nodes, edges, pushHistory, setNodes]
   );
 
   // Undo last action
@@ -221,7 +211,7 @@ export function useWorkflowCanvas(
   // Run topology validation
   const validationResult = validateWorkflowTopology(
     nodes.map((n) => ({ id: n.id, type: n.type ?? 'action', data: n.data })),
-    edges.map((e) => ({ id: e.id, source: e.source, target: e.target })),
+    edges.map((e) => ({ id: e.id, source: e.source, target: e.target }))
   );
 
   return {

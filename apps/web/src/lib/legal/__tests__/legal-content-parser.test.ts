@@ -186,11 +186,7 @@ describe('parseLegalSections', () => {
   });
 
   it('joins multi-line paragraphs into single strings', () => {
-    const body = [
-      '## Wrapped',
-      'Line one',
-      'continues here.',
-    ].join('\n');
+    const body = ['## Wrapped', 'Line one', 'continues here.'].join('\n');
 
     const sections = parseLegalSections(body);
     expect(sections[0].body).toEqual(['Line one continues here.']);
@@ -220,9 +216,9 @@ describe('formatLegalDate', () => {
 
 describe('resolveLegalContentPath', () => {
   it('throws when no candidate path exists', () => {
-    expect(() =>
-      resolveLegalContentPath(['/nonexistent/a.md', '/nonexistent/b.md'])
-    ).toThrow('Unable to locate legal content file');
+    expect(() => resolveLegalContentPath(['/nonexistent/a.md', '/nonexistent/b.md'])).toThrow(
+      'Unable to locate legal content file'
+    );
   });
 
   it('returns first existing candidate', () => {

@@ -175,43 +175,28 @@ describe('useWorkflowCanvas — module contract', () => {
   });
 
   it('MAX_HISTORY is 50', () => {
-    const source = readFileSync(
-      resolve(__dirname, '../../hooks/useWorkflowCanvas.ts'),
-      'utf-8',
-    );
+    const source = readFileSync(resolve(__dirname, '../../hooks/useWorkflowCanvas.ts'), 'utf-8');
     expect(source).toContain('MAX_HISTORY = 50');
   });
 
   it('calls validateWorkflowTopology on every render', () => {
-    const source = readFileSync(
-      resolve(__dirname, '../../hooks/useWorkflowCanvas.ts'),
-      'utf-8',
-    );
+    const source = readFileSync(resolve(__dirname, '../../hooks/useWorkflowCanvas.ts'), 'utf-8');
     expect(source).toContain('validateWorkflowTopology(');
   });
 
   it('pushHistory clears redo stack on new mutation', () => {
-    const source = readFileSync(
-      resolve(__dirname, '../../hooks/useWorkflowCanvas.ts'),
-      'utf-8',
-    );
+    const source = readFileSync(resolve(__dirname, '../../hooks/useWorkflowCanvas.ts'), 'utf-8');
     expect(source).toContain('setRedoStack([])');
   });
 
   it('syncs initial values when refs change (useEffect)', () => {
-    const source = readFileSync(
-      resolve(__dirname, '../../hooks/useWorkflowCanvas.ts'),
-      'utf-8',
-    );
+    const source = readFileSync(resolve(__dirname, '../../hooks/useWorkflowCanvas.ts'), 'utf-8');
     expect(source).toContain('prevInitialNodesRef');
     expect(source).toContain('prevInitialEdgesRef');
   });
 
   it('removeNode also removes connected edges', () => {
-    const source = readFileSync(
-      resolve(__dirname, '../../hooks/useWorkflowCanvas.ts'),
-      'utf-8',
-    );
+    const source = readFileSync(resolve(__dirname, '../../hooks/useWorkflowCanvas.ts'), 'utf-8');
     expect(source).toMatch(/filter.*source.*nodeId.*target.*nodeId/s);
   });
 });

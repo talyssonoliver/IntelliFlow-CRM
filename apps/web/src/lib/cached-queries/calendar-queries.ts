@@ -61,10 +61,7 @@ export async function fetchAppointmentsList(
  * @param token   - JWT access token read outside this `'use cache'` boundary
  * @param userId  - Decoded JWT `sub` claim, used for the per-user cacheTag
  */
-export async function fetchAppointmentStats(
-  token: string | null,
-  userId: string | null
-) {
+export async function fetchAppointmentStats(token: string | null, userId: string | null) {
   cacheLife(DASHBOARD_STATS);
   cacheTag(CALENDAR_EVENTS);
   if (userId) {

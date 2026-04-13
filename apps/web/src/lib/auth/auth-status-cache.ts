@@ -76,7 +76,10 @@ export function getCachedAuthStatus(accessToken: string): CachedAuthStatus | nul
  * Store an auth status result keyed by the token's sub claim.
  * No-ops if the token cannot be decoded.
  */
-export function setCachedAuthStatus(accessToken: string, status: Omit<CachedAuthStatus, 'cachedAt'>): void {
+export function setCachedAuthStatus(
+  accessToken: string,
+  status: Omit<CachedAuthStatus, 'cachedAt'>
+): void {
   const sub = getTokenSub(accessToken);
   if (!sub) return;
   cache.set(sub, { ...status, cachedAt: Date.now() });

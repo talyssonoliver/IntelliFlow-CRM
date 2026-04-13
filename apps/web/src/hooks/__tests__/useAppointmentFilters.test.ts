@@ -79,7 +79,6 @@ describe('useAppointmentFilters', () => {
     expect(result.current.filters.appointmentType).toBe('HEARING');
   });
 
-
   it('updates calendar view and persists to localStorage', () => {
     const { result } = renderHook(() => useAppointmentFilters());
     act(() => {

@@ -45,7 +45,10 @@ describe('notifications-queries', () => {
 
   describe('fetchUnreadCount', () => {
     it('calls cacheLife with REALTIME ("seconds") profile', async () => {
-      mockGetUnreadCount.mockResolvedValue({ total: 0, byPriority: { high: 0, normal: 0, low: 0 } });
+      mockGetUnreadCount.mockResolvedValue({
+        total: 0,
+        byPriority: { high: 0, normal: 0, low: 0 },
+      });
 
       await fetchUnreadCount('tok', null);
 
@@ -53,7 +56,10 @@ describe('notifications-queries', () => {
     });
 
     it('always tags with NOTIFICATIONS_UNREAD', async () => {
-      mockGetUnreadCount.mockResolvedValue({ total: 3, byPriority: { high: 1, normal: 2, low: 0 } });
+      mockGetUnreadCount.mockResolvedValue({
+        total: 3,
+        byPriority: { high: 1, normal: 2, low: 0 },
+      });
 
       await fetchUnreadCount('tok', null);
 
@@ -61,7 +67,10 @@ describe('notifications-queries', () => {
     });
 
     it('adds per-user tag when userId is provided', async () => {
-      mockGetUnreadCount.mockResolvedValue({ total: 5, byPriority: { high: 2, normal: 2, low: 1 } });
+      mockGetUnreadCount.mockResolvedValue({
+        total: 5,
+        byPriority: { high: 2, normal: 2, low: 1 },
+      });
 
       await fetchUnreadCount('tok', 'user-abc');
 
@@ -69,7 +78,10 @@ describe('notifications-queries', () => {
     });
 
     it('does NOT add per-user tag when userId is null', async () => {
-      mockGetUnreadCount.mockResolvedValue({ total: 0, byPriority: { high: 0, normal: 0, low: 0 } });
+      mockGetUnreadCount.mockResolvedValue({
+        total: 0,
+        byPriority: { high: 0, normal: 0, low: 0 },
+      });
 
       await fetchUnreadCount('tok', null);
 
@@ -79,7 +91,10 @@ describe('notifications-queries', () => {
     });
 
     it('creates caller from the provided token', async () => {
-      mockGetUnreadCount.mockResolvedValue({ total: 2, byPriority: { high: 0, normal: 2, low: 0 } });
+      mockGetUnreadCount.mockResolvedValue({
+        total: 2,
+        byPriority: { high: 0, normal: 2, low: 0 },
+      });
 
       await fetchUnreadCount('my-jwt-token', 'uid-1');
 
@@ -96,7 +111,10 @@ describe('notifications-queries', () => {
     });
 
     it('works with a null token (unauthenticated path)', async () => {
-      mockGetUnreadCount.mockResolvedValue({ total: 0, byPriority: { high: 0, normal: 0, low: 0 } });
+      mockGetUnreadCount.mockResolvedValue({
+        total: 0,
+        byPriority: { high: 0, normal: 0, low: 0 },
+      });
 
       await fetchUnreadCount(null, null);
 

@@ -87,7 +87,11 @@ describe('module-access-queries', () => {
     });
 
     it('returns the result from caller.moduleAccess.getEnabledModules', async () => {
-      const expected = { modules: ['CORE_CRM', 'LEGAL', 'AI_TOOLS'], plan: 'ENTERPRISE', status: 'active' };
+      const expected = {
+        modules: ['CORE_CRM', 'LEGAL', 'AI_TOOLS'],
+        plan: 'ENTERPRISE',
+        status: 'active',
+      };
       mockGetEnabledModules.mockResolvedValue(expected);
 
       const result = await fetchEnabledModules('tok', 'uid-1');

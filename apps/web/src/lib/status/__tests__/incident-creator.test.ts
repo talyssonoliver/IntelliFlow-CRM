@@ -1,10 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import {
-  buildIncidentPayload,
-  createIncident,
-  type IncidentInput,
-} from '../incident-creator';
+import { buildIncidentPayload, createIncident, type IncidentInput } from '../incident-creator';
 
 describe('buildIncidentPayload', () => {
   const baseInput: IncidentInput = {

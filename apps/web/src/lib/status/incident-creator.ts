@@ -48,12 +48,8 @@ export function buildIncidentPayload(input: IncidentInput): IncidentPayload {
     digest: input.error.digest ?? null,
     message: truncateMessage(input.error.message ?? ''),
     severity: input.severity ?? 'error',
-    path:
-      input.path ??
-      (typeof window !== 'undefined' ? window.location.pathname : null),
-    userAgent:
-      input.userAgent ??
-      (typeof navigator !== 'undefined' ? navigator.userAgent : null),
+    path: input.path ?? (typeof window !== 'undefined' ? window.location.pathname : null),
+    userAgent: input.userAgent ?? (typeof navigator !== 'undefined' ? navigator.userAgent : null),
     timestamp: input.timestamp ?? new Date().toISOString(),
   };
 }

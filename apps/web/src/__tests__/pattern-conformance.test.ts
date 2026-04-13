@@ -46,7 +46,11 @@ function listSourceFiles(dir: string, filter: (path: string) => boolean = () => 
       if (stat.isDirectory()) {
         if (entry === '__tests__' || entry === 'node_modules' || entry === '.next') continue;
         walk(full);
-      } else if (/\.(ts|tsx)$/.test(entry) && !entry.endsWith('.test.ts') && !entry.endsWith('.test.tsx')) {
+      } else if (
+        /\.(ts|tsx)$/.test(entry) &&
+        !entry.endsWith('.test.ts') &&
+        !entry.endsWith('.test.tsx')
+      ) {
         if (filter(full)) out.push(full);
       }
     }
@@ -169,14 +173,20 @@ describe('Pattern Conformance — Mutation Swarm: cache tags must have revalidat
     const violations: string[] = [];
     for (const tag of tagValues) {
       // A revalidator may reference either the literal value or the constant name
-      const literalHit = revalidateCorpus.includes(`revalidateTag('${tag.value}')`) ||
-                         revalidateCorpus.includes(`revalidateTag("${tag.value}")`);
-      const constantHit = new RegExp(`revalidateTag\\s*\\(\\s*${tag.name}\\b`).test(revalidateCorpus);
+      const literalHit =
+        revalidateCorpus.includes(`revalidateTag('${tag.value}')`) ||
+        revalidateCorpus.includes(`revalidateTag("${tag.value}")`);
+      const constantHit = new RegExp(`revalidateTag\\s*\\(\\s*${tag.name}\\b`).test(
+        revalidateCorpus
+      );
 
       // Allow opt-out for tags that are intentionally never invalidated (e.g. truly global public data)
       // Opt-out lives inline in cache-tags.ts: a comment `// @no-revalidator: <reason>` on the line above the export
       const tagLineIndex = cacheTagsContent.indexOf(`export const ${tag.name}`);
-      const precedingText = cacheTagsContent.substring(Math.max(0, tagLineIndex - 200), tagLineIndex);
+      const precedingText = cacheTagsContent.substring(
+        Math.max(0, tagLineIndex - 200),
+        tagLineIndex
+      );
       const hasOptOut = /@no-revalidator:/.test(precedingText);
 
       if (!literalHit && !constantHit && !hasOptOut) {
@@ -209,7 +219,8 @@ describe('Pattern Conformance — Team 5: dynamic(ssr:false) needs sibling loadi
     for (const pageFile of pageFiles) {
       const content = readTextFile(pageFile);
       // Fast reject: file doesn't import `dynamic` from 'next/dynamic'
-      if (!content.includes("from 'next/dynamic'") && !content.includes('from "next/dynamic"')) continue;
+      if (!content.includes("from 'next/dynamic'") && !content.includes('from "next/dynamic"'))
+        continue;
 
       // Detect `ssr: false` in a dynamic() call. Tolerates whitespace and comments.
       const hasSsrFalse = /dynamic\s*\([^)]*\{[^}]*ssr\s*:\s*false/s.test(content);

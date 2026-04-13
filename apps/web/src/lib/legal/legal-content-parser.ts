@@ -30,9 +30,7 @@ export function slugify(value: string): string {
 export function resolveLegalContentPath(candidates: string[]): string {
   const match = candidates.find((candidate) => existsSync(candidate));
   if (!match) {
-    throw new Error(
-      `Unable to locate legal content file. Candidates: ${candidates.join(', ')}`
-    );
+    throw new Error(`Unable to locate legal content file. Candidates: ${candidates.join(', ')}`);
   }
   return match;
 }
@@ -146,10 +144,7 @@ export function formatLegalDate(isoDate: string): string {
   }).format(new Date(isoDate));
 }
 
-export function loadLegalContent(
-  candidates: string[],
-  label: string
-): ParsedLegalContent {
+export function loadLegalContent(candidates: string[], label: string): ParsedLegalContent {
   const source = readFileSync(resolveLegalContentPath(candidates), 'utf-8');
   const { metadata, body } = parseLegalFrontmatter(source, label);
   return { metadata, sections: parseLegalSections(body) };

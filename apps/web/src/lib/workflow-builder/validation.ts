@@ -45,7 +45,7 @@ interface GraphEdge {
  */
 export function validateWorkflowTopology(
   nodes: GraphNode[],
-  edges: GraphEdge[],
+  edges: GraphEdge[]
 ): TopologyValidationResult {
   const errors: string[] = [];
 
@@ -97,9 +97,7 @@ export function validateWorkflowTopology(
   } else if (nodes.length > 1) {
     // Fallback: if start node is missing, still check for isolated nodes
     const isolated = nodes.filter(
-      (n) =>
-        (outgoing.get(n.id)?.length ?? 0) === 0 &&
-        (incoming.get(n.id)?.length ?? 0) === 0,
+      (n) => (outgoing.get(n.id)?.length ?? 0) === 0 && (incoming.get(n.id)?.length ?? 0) === 0
     );
     if (isolated.length > 0) {
       errors.push('All nodes must be connected');
@@ -112,7 +110,7 @@ export function validateWorkflowTopology(
     const outCount = outgoing.get(dn.id)?.length ?? 0;
     if (outCount < 2) {
       errors.push(
-        `Decision nodes must have at least 2 outgoing connections (node "${dn.id}" has ${outCount})`,
+        `Decision nodes must have at least 2 outgoing connections (node "${dn.id}" has ${outCount})`
       );
     }
   }
@@ -132,7 +130,7 @@ export function validateWorkflowTopology(
 function _hasCycle(
   nodeIds: Set<string>,
   outgoing: Map<string, string[]>,
-  incoming: Map<string, string[]>,
+  incoming: Map<string, string[]>
 ): boolean {
   // Build in-degree map (copy so we don't mutate)
   const inDegree = new Map<string, number>();
@@ -172,7 +170,7 @@ function _hasCycle(
  */
 export function validateNodeConfig(
   nodeType: WorkflowNodeType,
-  config: WorkflowNodeConfig,
+  config: WorkflowNodeConfig
 ): NodeConfigValidationResult {
   const errors: string[] = [];
 

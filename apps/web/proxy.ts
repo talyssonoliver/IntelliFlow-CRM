@@ -43,7 +43,11 @@ async function handleAuthPageRoute(
 ): Promise<NextResponse | null> {
   if (hasValidSession && !request.nextUrl.searchParams.has('logged_out')) {
     console.log('[Proxy] Authenticated user on auth page, redirecting to home');
-    return clearStaleAuthCookies(NextResponse.redirect(new URL('/', request.url)), hasStaleAccessToken, hasStaleSession);
+    return clearStaleAuthCookies(
+      NextResponse.redirect(new URL('/', request.url)),
+      hasStaleAccessToken,
+      hasStaleSession
+    );
   }
   if (hasStaleAccessToken || hasStaleSession) {
     console.log('[Proxy] Stale access token without session on auth page, clearing cookies');
@@ -105,7 +109,11 @@ export async function proxy(request: NextRequest) {
     console.log(`[Proxy] Protected route without auth, redirecting to login: ${path}`);
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirect', path);
-    return clearStaleAuthCookies(NextResponse.redirect(loginUrl), hasStaleAccessToken, hasStaleSession);
+    return clearStaleAuthCookies(
+      NextResponse.redirect(loginUrl),
+      hasStaleAccessToken,
+      hasStaleSession
+    );
   }
 
   // Check role-based access (only if we have a full session)
@@ -121,7 +129,12 @@ export async function proxy(request: NextRequest) {
   // Only if we have a valid session; stale tokens should not redirect
   // If token exists but session is missing/invalid, clear cookies to break loops
   if (path === '/login' || path === '/signup') {
-    const authPageResult = await handleAuthPageRoute(hasValidSession, hasStaleAccessToken, hasStaleSession, request);
+    const authPageResult = await handleAuthPageRoute(
+      hasValidSession,
+      hasStaleAccessToken,
+      hasStaleSession,
+      request
+    );
     if (authPageResult) return authPageResult;
   }
 

@@ -146,7 +146,12 @@ export const TableHead = wrap('div');
 export const TableHeader = wrap('div');
 export const TableRow = wrap('div');
 
-export const EmptyState = ({ title, description, children, ...props }: AnyProps & { title?: React.ReactNode; description?: React.ReactNode }) => (
+export const EmptyState = ({
+  title,
+  description,
+  children,
+  ...props
+}: AnyProps & { title?: React.ReactNode; description?: React.ReactNode }) => (
   <div data-testid="empty-state" {...props}>
     {title ? <div>{title}</div> : null}
     {description ? <div>{description}</div> : null}

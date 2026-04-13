@@ -95,9 +95,7 @@ export function syncTokenToCookie(token: string | null): void {
     document.cookie = cookieValue;
     // DEBUG: verify the write actually landed in the cookie jar
     // TODO: remove once post-login flash is diagnosed
-    const verify = document.cookie
-      .split('; ')
-      .find((c) => c.startsWith('accessToken='));
+    const verify = document.cookie.split('; ').find((c) => c.startsWith('accessToken='));
     console.log('[syncTokenToCookie]', {
       wrote: token.substring(0, 20) + '...',
       maxAgeSeconds,

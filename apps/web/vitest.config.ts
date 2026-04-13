@@ -11,9 +11,18 @@ const hasLocalNodeModules = existsSync(path.resolve(__dirname, './node_modules')
 const worktreeStubAliases = hasLocalNodeModules
   ? []
   : [
-      { find: /^next\/link$/, replacement: path.resolve(__dirname, './src/test/__mocks__/next-link-stub.tsx') },
-      { find: /^@intelliflow\/ui$/, replacement: path.resolve(__dirname, './src/test/__mocks__/intelliflow-ui-stub.tsx') },
-      { find: /^server-only$/, replacement: path.resolve(__dirname, './src/test/__mocks__/empty.ts') },
+      {
+        find: /^next\/link$/,
+        replacement: path.resolve(__dirname, './src/test/__mocks__/next-link-stub.tsx'),
+      },
+      {
+        find: /^@intelliflow\/ui$/,
+        replacement: path.resolve(__dirname, './src/test/__mocks__/intelliflow-ui-stub.tsx'),
+      },
+      {
+        find: /^server-only$/,
+        replacement: path.resolve(__dirname, './src/test/__mocks__/empty.ts'),
+      },
     ];
 
 export default defineConfig({

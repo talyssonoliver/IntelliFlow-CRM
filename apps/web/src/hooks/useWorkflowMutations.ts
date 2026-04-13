@@ -26,7 +26,12 @@ export function useWorkflowMutations() {
     category: string;
     triggerType: string;
     triggerConfig: Record<string, unknown>;
-    steps: Array<{ id: number; type: string; config?: Record<string, unknown>; position?: { x: number; y: number } }>;
+    steps: Array<{
+      id: number;
+      type: string;
+      config?: Record<string, unknown>;
+      position?: { x: number; y: number };
+    }>;
     edges?: Array<{ id: string; source: string; target: string; label?: string }>;
   }> = api.workflow.create.useMutation({
     onSuccess: () => {
@@ -34,14 +39,23 @@ export function useWorkflowMutations() {
       router.push('/cases/case-workflows');
     },
     onError: (error: { message?: string }) => {
-      toast({ title: 'Error', description: error.message ?? 'Failed to create workflow', variant: 'destructive' });
+      toast({
+        title: 'Error',
+        description: error.message ?? 'Failed to create workflow',
+        variant: 'destructive',
+      });
     },
   });
 
   const updateMutation: SimpleMutation<{
     id: string;
     name?: string;
-    steps?: Array<{ id: number; type: string; config?: Record<string, unknown>; position?: { x: number; y: number } }>;
+    steps?: Array<{
+      id: number;
+      type: string;
+      config?: Record<string, unknown>;
+      position?: { x: number; y: number };
+    }>;
     edges?: Array<{ id: string; source: string; target: string; label?: string }>;
   }> = api.workflow.update.useMutation({
     // Invalidate BOTH the list (so the row re-renders with the new step
@@ -53,7 +67,11 @@ export function useWorkflowMutations() {
       toast({ title: 'Workflow saved' });
     },
     onError: (error: { message?: string }) => {
-      toast({ title: 'Error', description: error.message ?? 'Failed to update workflow', variant: 'destructive' });
+      toast({
+        title: 'Error',
+        description: error.message ?? 'Failed to update workflow',
+        variant: 'destructive',
+      });
     },
   });
 
@@ -63,18 +81,27 @@ export function useWorkflowMutations() {
       toast({ title: 'Workflow deleted' });
     },
     onError: (error: { message?: string }) => {
-      toast({ title: 'Error', description: error.message ?? 'Failed to delete workflow', variant: 'destructive' });
+      toast({
+        title: 'Error',
+        description: error.message ?? 'Failed to delete workflow',
+        variant: 'destructive',
+      });
     },
   });
 
-  const setActiveMutation: SimpleMutation<{ id: string; isActive: boolean }> = api.workflow.setActive.useMutation({
-    onSuccess: () => {
-      void utils.workflow.list.invalidate();
-    },
-    onError: (error: { message?: string }) => {
-      toast({ title: 'Error', description: error.message ?? 'Failed to update workflow status', variant: 'destructive' });
-    },
-  });
+  const setActiveMutation: SimpleMutation<{ id: string; isActive: boolean }> =
+    api.workflow.setActive.useMutation({
+      onSuccess: () => {
+        void utils.workflow.list.invalidate();
+      },
+      onError: (error: { message?: string }) => {
+        toast({
+          title: 'Error',
+          description: error.message ?? 'Failed to update workflow status',
+          variant: 'destructive',
+        });
+      },
+    });
 
   return {
     createMutation,

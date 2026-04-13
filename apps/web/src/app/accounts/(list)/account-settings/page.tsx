@@ -1,16 +1,21 @@
 'use client';
 
+/**
+ * Account Settings Page - PG-183
+ *
+ * Entry for the in-module account-settings page. Uses Pattern B
+ * (dynamic import, SSR disabled) to keep the initial bundle small
+ * and to match the PG-178 settings pattern.
+ */
+
+import dynamic from 'next/dynamic';
+import { AccountSettingsLoading } from './AccountSettingsLoading';
+
+const AccountSettingsContent = dynamic(() => import('./AccountSettingsContent'), {
+  ssr: false,
+  loading: () => <AccountSettingsLoading />,
+});
+
 export default function AccountSettingsPage() {
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Account Settings</h1>
-        <p className="text-muted-foreground mt-1">Manage account fields, statuses, and defaults.</p>
-      </div>
-      <div className="rounded-lg border border-border bg-card p-8 text-center text-muted-foreground">
-        <span className="material-symbols-outlined text-4xl mb-2 block">tune</span>
-        <p>Account settings configuration coming soon.</p>
-      </div>
-    </div>
-  );
+  return <AccountSettingsContent />;
 }

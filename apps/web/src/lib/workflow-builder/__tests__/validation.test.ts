@@ -12,9 +12,21 @@ import { validateWorkflowTopology, validateNodeConfig } from '../validation';
 // Helpers — minimal node/edge shapes used across tests
 // ---------------------------------------------------------------------------
 
-const startNode = { id: 'n1', type: 'start', data: { label: 'Start', config: { triggerType: 'event' } } };
-const actionNode = { id: 'n2', type: 'action', data: { label: 'Notify', config: { actionType: 'send_notification' } } };
-const decisionNode = { id: 'n3', type: 'decision', data: { label: 'Check', config: { conditions: ['a > b'] } } };
+const startNode = {
+  id: 'n1',
+  type: 'start',
+  data: { label: 'Start', config: { triggerType: 'event' } },
+};
+const actionNode = {
+  id: 'n2',
+  type: 'action',
+  data: { label: 'Notify', config: { actionType: 'send_notification' } },
+};
+const decisionNode = {
+  id: 'n3',
+  type: 'decision',
+  data: { label: 'Check', config: { conditions: ['a > b'] } },
+};
 const humanNode = { id: 'n4', type: 'human', data: { label: 'Review', config: { timeout: 3600 } } };
 const endNode = { id: 'n5', type: 'end', data: { label: 'End', config: {} } };
 
@@ -114,7 +126,11 @@ describe('validateWorkflowTopology', () => {
     const edges = [edgeStoA, edgeAtoD, edgeDtoH, edgeHtoE];
     const result = validateWorkflowTopology(validNodes, edges);
     expect(result.isValid).toBe(false);
-    expect(result.errors.some((e: string) => e.toLowerCase().includes('decision') && e.toLowerCase().includes('2'))).toBe(true);
+    expect(
+      result.errors.some(
+        (e: string) => e.toLowerCase().includes('decision') && e.toLowerCase().includes('2')
+      )
+    ).toBe(true);
   });
 
   // --- Cycle detection ---
@@ -159,9 +175,7 @@ describe('validateNodeConfig', () => {
     // Validator accepts either, so missing BOTH should fail.
     const result = validateNodeConfig('human', { instructions: 'Review this' });
     expect(result.valid).toBe(false);
-    expect(
-      result.errors.some((e: string) => e.toLowerCase().includes('deadline')),
-    ).toBe(true);
+    expect(result.errors.some((e: string) => e.toLowerCase().includes('deadline'))).toBe(true);
   });
 
   it('human node with deadlineInHours → passes', () => {
