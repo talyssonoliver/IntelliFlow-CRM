@@ -1,0 +1,22 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "rootDir": "..",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "outDir": "../dist-seed-typecheck",
+    "types": ["node"]
+  },
+  "include": [
+    "seed-help-articles.ts",
+    "data/help-articles.snapshot.json",
+    "../src/seed-ids.ts",
+    "../generated/prisma/**/*.ts"
+  ],
+  "exclude": ["**/__tests__/**", "**/*.test.ts"]
+}
