@@ -777,7 +777,7 @@ describe('RemindersService', () => {
       ['deal', 'deal-2', '/deals/deal-2'],
       ['contact', 'contact-3', '/contacts/contact-3'],
       ['task', 'task-4', '/tasks/task-4'],
-      ['appointment', 'appt-5', '/calendar/appt-5'],
+      ['appointment', 'appt-5', '/appointments/appt-5'],
     ] as const)('generates correct link for %s entity', (entityType, entityId, expectedLink) => {
       const callback = vi.fn();
       service.onNotification(callback);

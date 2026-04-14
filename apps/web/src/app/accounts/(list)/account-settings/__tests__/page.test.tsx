@@ -1,28 +1,19 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 
-// next/dynamic is mocked to render the loading fallback so we can assert on it
-// without booting the full tRPC-backed content component.
-vi.mock('next/dynamic', () => ({
-  __esModule: true,
-  default: (_loader: unknown, opts: { loading?: () => React.ReactNode }) => {
-    return () => <>{opts?.loading?.()}</>;
-  },
+vi.mock('../AccountSettingsContent', () => ({
+  default: () => <div data-testid="account-settings-content">content</div>,
+}));
+
+vi.mock('../AccountSettingsLoading', () => ({
+  AccountSettingsLoading: () => <div data-testid="account-settings-loading">loading</div>,
 }));
 
 import AccountSettingsPage from '../page';
 
-describe('AccountSettingsPage', () => {
-  it('renders the dynamic loading skeleton on first paint', () => {
-    const { container } = render(<AccountSettingsPage />);
-    // Loading skeleton contains multiple Skeleton placeholders — not text.
-    // Use the card container structure.
-    expect(container.firstChild).toBeTruthy();
-    // The skeleton includes at least 4 breadcrumb/header/skeleton bars
-    expect(container.querySelectorAll('div').length).toBeGreaterThan(3);
-  });
-
-  it('does not throw when imported', () => {
-    expect(AccountSettingsPage).toBeTypeOf('function');
+describe('Account Settings Page (Server Component)', () => {
+  it('renders AccountSettingsContent wrapped in Suspense', () => {
+    render(AccountSettingsPage());
+    expect(screen.getByTestId('account-settings-content')).toBeTruthy();
   });
 });

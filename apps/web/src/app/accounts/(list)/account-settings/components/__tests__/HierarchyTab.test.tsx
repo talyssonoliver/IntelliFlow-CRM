@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { HierarchyTab } from '../components/HierarchyTab';
+import { HierarchyTab } from '../HierarchyTab';
 
 describe('HierarchyTab', () => {
   const baseConfig = {

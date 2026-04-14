@@ -52,6 +52,15 @@ const {
       autoMergeOnExactEmail: false,
       notifyOnDuplicate: true,
       restrictTagCreationToAdmins: false,
+      normalizePhoneNumbers: true,
+      autoCapitalizeNames: true,
+      preventDeleteWithOpenDeals: true,
+      notifyOnOwnerChange: false,
+      aiDuplicateDetection: true,
+      aiEnrichment: false,
+      aiTagSuggestions: true,
+      aiInsightGeneration: true,
+      aiAutoReplyDrafting: false,
       updatedAt: new Date('2026-04-13').toISOString(),
     }),
     mockDuplicateRulesUpdate: makeMutation(),
@@ -91,6 +100,13 @@ vi.mock('@/lib/trpc', () => ({
       automation: {
         get: { useQuery: mockAutomationGetQuery },
         update: { useMutation: mockAutomationUpdate },
+        resetToDefaults: {
+          useMutation: () => ({
+            mutate: () => {},
+            mutateAsync: async () => undefined,
+            isPending: false,
+          }),
+        },
       },
     },
     useUtils: () => ({
@@ -116,13 +132,24 @@ vi.mock('@intelliflow/ui', async () => {
 import ContactSettingsContent from '../ContactSettingsContent';
 
 describe('ContactSettingsContent', () => {
-  it('renders the module shell with four tabs', () => {
+  it('renders the PageHeader and four bento sections', () => {
     render(<ContactSettingsContent />);
-    expect(screen.getByRole('heading', { name: /Contact Settings/i })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: /Duplicate Detection/i })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: /Required Fields/i })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: /^Tags$/i })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: /Automation/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: 'Contact Settings', level: 1 })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: /Duplicate Detection/i, level: 3 })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: /Required Fields/i, level: 3 })
+    ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /^Tags$/i, level: 3 })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: /Automation/i, level: 3 })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: /AI & Intelligence/i, level: 3 })
+    ).toBeInTheDocument();
   });
 
   it('renders the Save Changes button as disabled when not dirty', () => {

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { CustomFieldsTab, type CustomFieldRow } from '../components/CustomFieldsTab';
+import { CustomFieldsTab, type CustomFieldRow } from '../CustomFieldsTab';
 
 describe('CustomFieldsTab', () => {
   const rows: CustomFieldRow[] = [

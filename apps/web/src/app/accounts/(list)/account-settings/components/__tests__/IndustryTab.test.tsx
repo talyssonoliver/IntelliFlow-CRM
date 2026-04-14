@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { IndustryTab, type IndustryRow } from '../components/IndustryTab';
+import { IndustryTab, type IndustryRow } from '../IndustryTab';
 
 describe('IndustryTab', () => {
   const rows: IndustryRow[] = [

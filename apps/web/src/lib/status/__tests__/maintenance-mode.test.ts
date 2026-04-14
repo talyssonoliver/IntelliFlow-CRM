@@ -23,82 +23,68 @@ describe('readMaintenanceWindow', () => {
   });
 
   it('returns active for "true" (case-insensitive with whitespace)', () => {
-    const window = readMaintenanceWindow({ MAINTENANCE_MODE: '  TRUE ' });
-    expect(window.active).toBe(true);
-    if (window.active) {
-      expect(window.message).toBe(DEFAULT_MAINTENANCE_MESSAGE);
-      expect(window.affectedServices).toEqual([]);
-      expect(window.etaIso).toBeNull();
-      expect(typeof window.startedAtIso).toBe('string');
+    const w = readMaintenanceWindow({ MAINTENANCE_MODE: '  TRUE ' });
+    expect(w.active).toBe(true);
+    if (w.active) {
+      expect(w.message).toBe(DEFAULT_MAINTENANCE_MESSAGE);
+      expect(w.affectedServices).toEqual([]);
+      expect(w.etaIso).toBeNull();
     }
   });
 
   it('parses valid ISO ETA verbatim', () => {
     const eta = '2026-08-18T04:00:00.000Z';
-    const window = readMaintenanceWindow({
+    const w = readMaintenanceWindow({
       MAINTENANCE_MODE: 'true',
       MAINTENANCE_ETA: eta,
     });
-    if (window.active) {
-      expect(window.etaIso).toBe(eta);
+    if (w.active) {
+      expect(w.etaIso).toBe(eta);
     } else {
       throw new Error('window should be active');
     }
   });
 
   it('returns etaIso null for malformed ETA', () => {
-    const window = readMaintenanceWindow({
+    const w = readMaintenanceWindow({
       MAINTENANCE_MODE: 'true',
       MAINTENANCE_ETA: 'not-a-date',
     });
-    if (window.active) {
-      expect(window.etaIso).toBeNull();
+    if (w.active) {
+      expect(w.etaIso).toBeNull();
     } else {
       throw new Error('window should be active');
     }
   });
 
   it('splits affected services on commas and trims', () => {
-    const window = readMaintenanceWindow({
+    const w = readMaintenanceWindow({
       MAINTENANCE_MODE: 'true',
       MAINTENANCE_AFFECTED_SERVICES: 'api, worker ,db',
     });
-    if (window.active) {
-      expect(window.affectedServices).toEqual(['api', 'worker', 'db']);
+    if (w.active) {
+      expect(w.affectedServices).toEqual(['api', 'worker', 'db']);
     } else {
       throw new Error('window should be active');
     }
   });
 
   it('returns empty services when unset', () => {
-    const window = readMaintenanceWindow({ MAINTENANCE_MODE: 'true' });
-    if (window.active) {
-      expect(window.affectedServices).toEqual([]);
+    const w = readMaintenanceWindow({ MAINTENANCE_MODE: 'true' });
+    if (w.active) {
+      expect(w.affectedServices).toEqual([]);
     } else {
       throw new Error('window should be active');
     }
   });
 
   it('uses custom message when provided', () => {
-    const window = readMaintenanceWindow({
+    const w = readMaintenanceWindow({
       MAINTENANCE_MODE: 'true',
       MAINTENANCE_MESSAGE: 'Upgrading database engines.',
     });
-    if (window.active) {
-      expect(window.message).toBe('Upgrading database engines.');
-    } else {
-      throw new Error('window should be active');
-    }
-  });
-
-  it('uses startedAt from env when valid', () => {
-    const started = '2026-08-18T03:30:00.000Z';
-    const window = readMaintenanceWindow({
-      MAINTENANCE_MODE: 'true',
-      MAINTENANCE_STARTED_AT: started,
-    });
-    if (window.active) {
-      expect(window.startedAtIso).toBe(started);
+    if (w.active) {
+      expect(w.message).toBe('Upgrading database engines.');
     } else {
       throw new Error('window should be active');
     }

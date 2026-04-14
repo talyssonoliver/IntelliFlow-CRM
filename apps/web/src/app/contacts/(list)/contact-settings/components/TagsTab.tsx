@@ -2,8 +2,9 @@
 
 import { useCallback, useState } from 'react';
 import {
-  Card,
   Button,
+  EmptyState,
+  NotesIllustration,
   Input,
   Label,
   Textarea,
@@ -30,7 +31,9 @@ import {
 export interface TagRow {
   id: string;
   name: string;
-  colorToken: TagColorToken;
+  /** Stored as String in Prisma; Zod enum is enforced at write time.
+   *  Kept wide here so legacy rows with unknown tokens don't crash the UI. */
+  colorToken: string;
   description?: string | null;
   sortOrder: number;
   isActive: boolean;
@@ -51,6 +54,10 @@ type DraftTag = {
 };
 
 const EMPTY_DRAFT: DraftTag = { name: '', colorToken: 'slate', description: '' };
+
+function swatchClass(token: string): string {
+  return COLOR_SWATCH_CLASSES[token as TagColorToken] ?? COLOR_SWATCH_CLASSES.slate;
+}
 
 const COLOR_SWATCH_CLASSES: Record<TagColorToken, string> = {
   slate: 'bg-slate-200 text-slate-900',
@@ -86,10 +93,17 @@ export function TagsTab({ tags, onCreate, onUpdate, onDelete }: Readonly<TagsTab
   }, []);
 
   const openEdit = useCallback((tag: TagRow) => {
+    // Narrow legacy unknown tokens back to the enum before the Select trigger
+    // mounts (an unknown value would render the trigger empty).
+    const normalizedColor: TagColorToken = (TAG_COLOR_TOKENS as readonly string[]).includes(
+      tag.colorToken
+    )
+      ? (tag.colorToken as TagColorToken)
+      : 'slate';
     setDraft({
       id: tag.id,
       name: tag.name,
-      colorToken: tag.colorToken,
+      colorToken: normalizedColor,
       description: tag.description ?? '',
     });
     setNameError(null);
@@ -130,14 +144,8 @@ export function TagsTab({ tags, onCreate, onUpdate, onDelete }: Readonly<TagsTab
   }, [confirmDeleteId, onDelete]);
 
   return (
-    <Card className="p-6">
-      <div className="mb-4 flex items-start justify-between gap-4">
-        <div>
-          <h3 className="text-lg font-semibold">Tags</h3>
-          <p className="text-sm text-muted-foreground">
-            Manage the tag vocabulary available to the contacts module.
-          </p>
-        </div>
+    <div>
+      <div className="mb-4 flex items-start justify-end">
         <Button onClick={openCreate}>
           <span className="material-symbols-outlined text-base mr-1" aria-hidden="true">
             add
@@ -153,7 +161,7 @@ export function TagsTab({ tags, onCreate, onUpdate, onDelete }: Readonly<TagsTab
             className="flex items-center gap-3 rounded-lg border border-border px-3 py-2"
           >
             <span
-              className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${COLOR_SWATCH_CLASSES[tag.colorToken]}`}
+              className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${swatchClass(tag.colorToken)}`}
             >
               {tag.name}
             </span>
@@ -184,9 +192,13 @@ export function TagsTab({ tags, onCreate, onUpdate, onDelete }: Readonly<TagsTab
         ))}
 
         {tags.length === 0 && (
-          <p className="text-sm text-muted-foreground text-center py-6">
-            No tags yet. Click &ldquo;New tag&rdquo; to add one.
-          </p>
+          <EmptyState
+            size="sm"
+            illustration={<NotesIllustration className="h-20 w-20" />}
+            title="No tags yet"
+            description="Create a tag to start labelling contacts with your team's vocabulary."
+            action={{ label: 'Create first tag', icon: 'add', onClick: openCreate }}
+          />
         )}
       </div>
 
@@ -267,6 +279,6 @@ export function TagsTab({ tags, onCreate, onUpdate, onDelete }: Readonly<TagsTab
         variant="destructive"
         onConfirm={runDelete}
       />
-    </Card>
+    </div>
   );
 }

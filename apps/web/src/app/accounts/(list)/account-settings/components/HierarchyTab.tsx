@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, Input, Button, Switch, Badge } from '@intelliflow/ui';
+import { Input, Button, Switch, Badge } from '@intelliflow/ui';
 import type { AccountHierarchyConfigInput } from '@intelliflow/validators';
 
 const DEFAULT_TIER_OPTIONS = ['enterprise', 'mid-market', 'smb', 'startup'];
@@ -46,34 +46,32 @@ export function HierarchyTab({
   };
 
   return (
-    <div className="space-y-4">
-      <Card className="p-4 space-y-3">
-        <div>
-          <label
-            htmlFor="account-hierarchy-max-depth"
-            className="text-sm font-medium text-foreground"
-          >
-            Maximum hierarchy depth
-          </label>
-          <p className="text-xs text-muted-foreground mb-2">
-            How many levels a child account can be nested below its top-level parent (1–10).
-          </p>
-          <Input
-            id="account-hierarchy-max-depth"
-            type="number"
-            min={1}
-            max={10}
-            value={config.maxDepth}
-            onChange={(e) => handleMaxDepth(e.target.value)}
-            aria-label="Maximum hierarchy depth"
-            className="max-w-[120px]"
-          />
-        </div>
-      </Card>
+    <div className="space-y-5">
+      <div>
+        <label
+          htmlFor="account-hierarchy-max-depth"
+          className="text-sm font-medium text-foreground"
+        >
+          Maximum hierarchy depth
+        </label>
+        <p className="text-xs text-muted-foreground mb-2">
+          How many levels a child account can be nested below its top-level parent (1–10).
+        </p>
+        <Input
+          id="account-hierarchy-max-depth"
+          type="number"
+          min={1}
+          max={10}
+          value={config.maxDepth}
+          onChange={(e) => handleMaxDepth(e.target.value)}
+          aria-label="Maximum hierarchy depth"
+          className="max-w-[120px]"
+        />
+      </div>
 
-      <Card className="p-4 space-y-3">
+      <div className="space-y-3">
         <div>
-          <h3 className="text-sm font-medium text-foreground">Tiers that require a parent</h3>
+          <h4 className="text-sm font-medium text-foreground">Tiers that require a parent</h4>
           <p className="text-xs text-muted-foreground mb-2">
             Accounts on these tiers must be created with a parent account.
           </p>
@@ -129,19 +127,17 @@ export function HierarchyTab({
             Add
           </Button>
         </div>
-      </Card>
+      </div>
 
-      <Card className="p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-sm font-medium text-foreground">Prevent hierarchy cycles</h3>
-            <p className="text-xs text-muted-foreground">
-              Disabling cycle prevention is not supported — accounts cannot be their own ancestor.
-            </p>
-          </div>
-          <Switch checked={config.preventCycles} disabled aria-label="Prevent hierarchy cycles" />
+      <div className="flex items-center justify-between pt-2 border-t border-border">
+        <div>
+          <h4 className="text-sm font-medium text-foreground">Prevent hierarchy cycles</h4>
+          <p className="text-xs text-muted-foreground">
+            Disabling cycle prevention is not supported — accounts cannot be their own ancestor.
+          </p>
         </div>
-      </Card>
+        <Switch checked={config.preventCycles} disabled aria-label="Prevent hierarchy cycles" />
+      </div>
     </div>
   );
 }

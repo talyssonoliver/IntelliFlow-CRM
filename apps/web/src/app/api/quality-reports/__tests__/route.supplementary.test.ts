@@ -29,6 +29,16 @@ vi.mock('fs', () => ({
   existsSync: (...a: unknown[]) => mockExistsSync(...a),
   readFileSync: (...a: unknown[]) => mockReadFileSync(...a),
 }));
+// route.ts imports from 'node:fs' — Vitest treats the prefixed name as a
+// separate module ID, so mock both to keep the mock effective.
+vi.mock('node:fs', () => ({
+  default: {
+    existsSync: (...a: unknown[]) => mockExistsSync(...a),
+    readFileSync: (...a: unknown[]) => mockReadFileSync(...a),
+  },
+  existsSync: (...a: unknown[]) => mockExistsSync(...a),
+  readFileSync: (...a: unknown[]) => mockReadFileSync(...a),
+}));
 
 import { GET } from '../route';
 
@@ -874,6 +884,16 @@ describe('/api/quality-reports - supplementary', () => {
               functions: { pct: 94 },
               statements: { pct: 93 },
             },
+          });
+        }
+        if (p.includes('trpc-benchmark')) {
+          return JSON.stringify({
+            generatedAt: '2026-01-01T00:00:00Z',
+            kpi: 'p95 < 50ms',
+            thresholds: { p95: 50 },
+            totals: { total: 3, completed: 3, passed: 3, failedKpi: 0, errored: 0 },
+            operations: [],
+            passed: true,
           });
         }
         if (p.includes('performance')) {

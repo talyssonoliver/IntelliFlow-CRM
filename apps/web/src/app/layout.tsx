@@ -15,7 +15,7 @@ const materialSymbols = localFont({
   src: '../../public/fonts/MaterialSymbolsOutlined.woff2',
   variable: '--font-material-symbols',
   display: 'swap',
-  weight: '100 700',
+  weight: '400',
 });
 
 export const metadata: Metadata = {

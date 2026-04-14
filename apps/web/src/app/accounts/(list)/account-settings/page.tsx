@@ -1,21 +1,19 @@
-'use client';
-
 /**
  * Account Settings Page - PG-183
  *
- * Entry for the in-module account-settings page. Uses Pattern B
- * (dynamic import, SSR disabled) to keep the initial bundle small
- * and to match the PG-178 settings pattern.
+ * Server Component shell — streams the skeleton immediately, then hydrates
+ * AccountSettingsContent (client component) via Suspense. Matches the
+ * PG-182 contact-settings pattern.
  */
 
-import dynamic from 'next/dynamic';
+import { Suspense } from 'react';
+import AccountSettingsContent from './AccountSettingsContent';
 import { AccountSettingsLoading } from './AccountSettingsLoading';
 
-const AccountSettingsContent = dynamic(() => import('./AccountSettingsContent'), {
-  ssr: false,
-  loading: () => <AccountSettingsLoading />,
-});
-
 export default function AccountSettingsPage() {
-  return <AccountSettingsContent />;
+  return (
+    <Suspense fallback={<AccountSettingsLoading />}>
+      <AccountSettingsContent />
+    </Suspense>
+  );
 }

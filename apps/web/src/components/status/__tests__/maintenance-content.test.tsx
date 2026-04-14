@@ -7,14 +7,13 @@ import { MaintenanceContent } from '../maintenance-content';
 const activeWindow: MaintenanceWindow = {
   active: true,
   etaIso: '2026-08-18T04:00:00.000Z',
-  startedAtIso: '2026-08-18T03:00:00.000Z',
   message: 'Upgrading database engines.',
   affectedServices: ['api', 'worker'],
 };
 
 describe('MaintenanceContent', () => {
   it('renders the inactive state when window.active is false', () => {
-    render(<MaintenanceContent window={{ active: false }} />);
+    render(<MaintenanceContent maintenanceWindow={{ active: false }} />);
 
     expect(
       screen.getByRole('heading', { name: /no maintenance currently scheduled/i })
@@ -23,9 +22,11 @@ describe('MaintenanceContent', () => {
   });
 
   it('renders ETA, message, and affected services when active', () => {
-    render(<MaintenanceContent window={activeWindow} />);
+    render(<MaintenanceContent maintenanceWindow={activeWindow} />);
 
-    expect(screen.getByRole('heading', { name: /scheduled maintenance/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: /scheduled maintenance/i })
+    ).toBeInTheDocument();
     expect(screen.getByText('Upgrading database engines.')).toBeInTheDocument();
     expect(screen.getByText(/estimated completion/i)).toBeInTheDocument();
 
@@ -38,27 +39,29 @@ describe('MaintenanceContent', () => {
   });
 
   it('marks the status region with aria-live="polite"', () => {
-    const { container } = render(<MaintenanceContent window={activeWindow} />);
+    const { container } = render(<MaintenanceContent maintenanceWindow={activeWindow} />);
     const live = container.querySelector('[aria-live="polite"]');
     expect(live).not.toBeNull();
   });
 
   it('renders recovery links to /status and /', () => {
-    render(<MaintenanceContent window={activeWindow} />);
+    render(<MaintenanceContent maintenanceWindow={activeWindow} />);
     expect(screen.getByRole('link', { name: /check status page/i })).toHaveAttribute(
       'href',
       '/status'
     );
-    expect(screen.getByRole('link', { name: /back to home/i })).toHaveAttribute('href', '/');
+    expect(screen.getByRole('link', { name: /back to home/i })).toHaveAttribute(
+      'href',
+      '/'
+    );
   });
 
   it('falls back to "ETA unavailable" when etaIso is null', () => {
     render(
       <MaintenanceContent
-        window={{
+        maintenanceWindow={{
           active: true,
           etaIso: null,
-          startedAtIso: '2026-08-18T03:00:00.000Z',
           message: 'Investigating.',
           affectedServices: [],
         }}

@@ -61,13 +61,7 @@ export function IndustryTab({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-sm font-medium text-foreground">Industry taxonomy</h3>
-          <p className="text-xs text-muted-foreground">
-            Admin-configurable list of allowed industry values for account records.
-          </p>
-        </div>
+      <div className="flex items-center justify-end">
         <Button type="button" onClick={openCreate} disabled={isBusy}>
           <span className="material-symbols-outlined text-sm mr-1" aria-hidden>
             add

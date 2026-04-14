@@ -125,13 +125,7 @@ export function CustomFieldsTab({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-sm font-medium text-foreground">Account custom fields</h3>
-          <p className="text-xs text-muted-foreground">
-            Define additional data captured on account records.
-          </p>
-        </div>
+      <div className="flex items-center justify-end">
         <Button type="button" onClick={openCreate} disabled={isBusy}>
           <span className="material-symbols-outlined text-sm mr-1" aria-hidden>
             add

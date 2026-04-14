@@ -10,7 +10,8 @@
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "test": "vitest",
     "typecheck": "pnpm run typegen && tsc --noEmit",
-    "lighthouse:auth": "lhci autorun --config=../../lighthouserc.authenticated.js && npx tsx ../../tools/lighthouse/extract-lhci-report.ts"
+    "lighthouse:auth": "lhci autorun --config=../../lighthouserc.authenticated.js && npx tsx ../../tools/lighthouse/extract-lhci-report.ts",
+    "audit:material-symbols": "node ../../tools/scripts/subset-material-symbols.mjs --verify"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -70,6 +71,7 @@
     "eslint": "^10.0.2",
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
     "happy-dom": "^20.7.0",
     "jsdom": "^28.1.0",
     "msw": "^2.7.6",

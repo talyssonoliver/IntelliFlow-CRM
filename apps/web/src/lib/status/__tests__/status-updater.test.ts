@@ -1,14 +1,16 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { MaintenanceWindow } from '../maintenance-mode';
-import { buildMaintenanceStatusPayload, publishStatusUpdate } from '../status-updater';
+import {
+  buildMaintenanceStatusPayload,
+  publishStatusUpdate,
+} from '../status-updater';
 
 const FIXED_TS = '2026-04-13T12:00:00.000Z';
 
 const activeWindow: MaintenanceWindow = {
   active: true,
   etaIso: '2026-08-18T04:00:00.000Z',
-  startedAtIso: '2026-08-18T03:00:00.000Z',
   message: 'Upgrading database engines.',
   affectedServices: ['api', 'worker'],
 };
@@ -18,7 +20,7 @@ const inactiveWindow: MaintenanceWindow = { active: false };
 describe('buildMaintenanceStatusPayload', () => {
   it('returns stable payload with supplied timestamp for active window', () => {
     const payload = buildMaintenanceStatusPayload({
-      window: activeWindow,
+      maintenanceWindow: activeWindow,
       timestamp: FIXED_TS,
     });
 
@@ -35,7 +37,7 @@ describe('buildMaintenanceStatusPayload', () => {
 
   it('returns inactive payload with neutral defaults when window is inactive', () => {
     const payload = buildMaintenanceStatusPayload({
-      window: inactiveWindow,
+      maintenanceWindow: inactiveWindow,
       timestamp: FIXED_TS,
     });
 
@@ -47,7 +49,7 @@ describe('buildMaintenanceStatusPayload', () => {
   });
 
   it('fills timestamp when omitted', () => {
-    const payload = buildMaintenanceStatusPayload({ window: activeWindow });
+    const payload = buildMaintenanceStatusPayload({ maintenanceWindow: activeWindow });
     expect(typeof payload.timestamp).toBe('string');
     expect(payload.timestamp.length).toBeGreaterThan(0);
   });
@@ -63,7 +65,7 @@ describe('publishStatusUpdate', () => {
     const dataLayer: Array<Record<string, unknown>> = [];
     window.dataLayer = dataLayer as typeof window.dataLayer;
 
-    publishStatusUpdate({ window: activeWindow, timestamp: FIXED_TS });
+    publishStatusUpdate({ maintenanceWindow: activeWindow, timestamp: FIXED_TS });
 
     expect(dataLayer).toHaveLength(1);
     expect(dataLayer[0]).toMatchObject({
@@ -75,14 +77,16 @@ describe('publishStatusUpdate', () => {
 
   it('does not push when dataLayer is not an array', () => {
     window.dataLayer = undefined as unknown as Array<Record<string, unknown>>;
-    expect(() => publishStatusUpdate({ window: activeWindow, timestamp: FIXED_TS })).not.toThrow();
+    expect(() =>
+      publishStatusUpdate({ maintenanceWindow: activeWindow, timestamp: FIXED_TS })
+    ).not.toThrow();
   });
 
   it('dispatches intelliflow:status-update on window', () => {
     const listener = vi.fn();
     window.addEventListener('intelliflow:status-update', listener);
 
-    publishStatusUpdate({ window: activeWindow, timestamp: FIXED_TS });
+    publishStatusUpdate({ maintenanceWindow: activeWindow, timestamp: FIXED_TS });
 
     expect(listener).toHaveBeenCalledTimes(1);
     const event = listener.mock.calls[0][0] as CustomEvent;
@@ -99,7 +103,7 @@ describe('publishStatusUpdate', () => {
     delete globalThis.window;
     try {
       const payload = publishStatusUpdate({
-        window: activeWindow,
+        maintenanceWindow: activeWindow,
         timestamp: FIXED_TS,
       });
       expect(payload.timestamp).toBe(FIXED_TS);

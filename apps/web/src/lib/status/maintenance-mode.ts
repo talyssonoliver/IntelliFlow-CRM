@@ -5,14 +5,14 @@ export type MaintenanceWindowInactive = {
 export type MaintenanceWindowActive = {
   readonly active: true;
   readonly etaIso: string | null;
-  readonly startedAtIso: string;
   readonly message: string;
   readonly affectedServices: readonly string[];
 };
 
 export type MaintenanceWindow = MaintenanceWindowInactive | MaintenanceWindowActive;
 
-export const DEFAULT_MAINTENANCE_MESSAGE = 'IntelliFlow CRM is performing scheduled maintenance.';
+export const DEFAULT_MAINTENANCE_MESSAGE =
+  'IntelliFlow CRM is performing scheduled maintenance.';
 
 type EnvLike = Readonly<Record<string, string | undefined>>;
 
@@ -59,12 +59,9 @@ export function readMaintenanceWindow(env?: EnvLike): MaintenanceWindow {
       ? messageRaw
       : DEFAULT_MAINTENANCE_MESSAGE;
 
-  const startedAtIso = parseIsoDate(source.MAINTENANCE_STARTED_AT) ?? new Date().toISOString();
-
   return {
     active: true,
     etaIso: parseIsoDate(source.MAINTENANCE_ETA),
-    startedAtIso,
     message,
     affectedServices: parseServiceList(source.MAINTENANCE_AFFECTED_SERVICES),
   };

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback } from 'react';
-import { Card, Switch } from '@intelliflow/ui';
+import { Switch } from '@intelliflow/ui';
 import type { ContactAutomationSettingsInput } from '@intelliflow/validators';
 
 export type ContactAutomationSettings = ContactAutomationSettingsInput;
@@ -11,24 +11,60 @@ interface AutomationTabProps {
   onSettingsChange: (settings: ContactAutomationSettings) => void;
 }
 
-const AUTOMATION_ITEMS = [
+const AUTOMATION_ITEMS: Array<{
+  key: keyof ContactAutomationSettings;
+  title: string;
+  description: string;
+  enforced: boolean;
+}> = [
   {
-    key: 'autoMergeOnExactEmail' as const,
-    title: 'Auto-merge on exact email match',
+    key: 'normalizePhoneNumbers',
+    title: 'Normalize phone numbers',
     description:
-      'When a duplicate is detected by the "email + exact" rule, automatically merge the new record into the existing contact.',
+      'Reformat phone numbers to E.164 on save so duplicate detection, dialing, and messaging all see the same shape.',
+    enforced: true,
   },
   {
-    key: 'notifyOnDuplicate' as const,
-    title: 'Notify on duplicate',
+    key: 'autoCapitalizeNames',
+    title: 'Auto-capitalize names',
     description:
-      'Send a notification to the contact owner when a potential duplicate is detected so they can review.',
+      'Apply Title Case to first and last names on save. Reduces "john smith" / "JOHN SMITH" noise in lists.',
+    enforced: true,
   },
   {
-    key: 'restrictTagCreationToAdmins' as const,
+    key: 'preventDeleteWithOpenDeals',
+    title: 'Prevent delete with open deals',
+    description:
+      'Block deletion of contacts linked to an active opportunity so pipeline data is never orphaned.',
+    enforced: true,
+  },
+  {
+    key: 'restrictTagCreationToAdmins',
     title: 'Restrict tag creation to admins',
     description:
       'Only workspace admins can create new tags. Regular users can only apply existing tags.',
+    enforced: true,
+  },
+  {
+    key: 'autoMergeOnExactEmail',
+    title: 'Auto-merge on exact email match',
+    description:
+      'When a duplicate is detected by the "email + exact" rule, automatically merge the new record into the existing contact.',
+    enforced: false,
+  },
+  {
+    key: 'notifyOnDuplicate',
+    title: 'Notify on duplicate',
+    description:
+      'Send a notification to the contact owner when a potential duplicate is detected so they can review.',
+    enforced: false,
+  },
+  {
+    key: 'notifyOnOwnerChange',
+    title: 'Notify on owner change',
+    description:
+      'Email the new and previous owner whenever a contact is reassigned so handovers are not missed.',
+    enforced: false,
   },
 ];
 
@@ -41,34 +77,33 @@ export function AutomationTab({ settings, onSettingsChange }: Readonly<Automatio
   );
 
   return (
-    <Card className="p-6">
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold">Automation</h3>
-        <p className="text-sm text-muted-foreground">
-          Configure automated behaviors for contact management.
-        </p>
-      </div>
-
-      <div className="space-y-6">
-        {AUTOMATION_ITEMS.map((item) => (
-          <div key={item.key} className="flex items-center justify-between gap-4">
-            <div className="flex-1">
-              <label
-                htmlFor={`contact-automation-${item.key}`}
-                className="text-sm font-medium cursor-pointer"
-              >
-                {item.title}
-              </label>
-              <p className="text-sm text-muted-foreground mt-0.5">{item.description}</p>
-            </div>
-            <Switch
-              id={`contact-automation-${item.key}`}
-              checked={settings[item.key]}
-              onCheckedChange={(checked) => handleToggle(item.key, checked)}
-            />
+    <div className="space-y-5">
+      {AUTOMATION_ITEMS.map((item) => (
+        <div key={item.key} className="flex items-start justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <label
+              htmlFor={`contact-automation-${item.key}`}
+              className="text-sm font-medium cursor-pointer inline-flex items-center gap-2"
+            >
+              {item.title}
+              {!item.enforced && (
+                <span
+                  className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+                  title="Setting persists but runtime enforcement is pending"
+                >
+                  pending
+                </span>
+              )}
+            </label>
+            <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>
           </div>
-        ))}
-      </div>
-    </Card>
+          <Switch
+            id={`contact-automation-${item.key}`}
+            checked={settings[item.key]}
+            onCheckedChange={(checked) => handleToggle(item.key, checked)}
+          />
+        </div>
+      ))}
+    </div>
   );
 }

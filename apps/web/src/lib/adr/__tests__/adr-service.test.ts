@@ -3,6 +3,8 @@
  *
  * Unit tests for Architecture Decision Record lifecycle management.
  * Uses vi.spyOn to mock `fs` module functions.
+ *
+ * @vitest-environment node
  */
 
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
@@ -11,40 +13,53 @@ import * as path from 'node:path';
 
 // We need to spy on individual fs/path functions BEFORE importing the module under test.
 // Use vi.mock with factory to control what gets exported.
-vi.mock('fs', async () => {
-  return {
-    readFileSync: vi.fn(),
-    existsSync: vi.fn(),
-    readdirSync: vi.fn(),
-    writeFileSync: vi.fn(),
-    mkdirSync: vi.fn(),
-  };
-});
+vi.mock('fs', async () => ({
+  readFileSync: vi.fn(),
+  existsSync: vi.fn(),
+  readdirSync: vi.fn(),
+  writeFileSync: vi.fn(),
+  mkdirSync: vi.fn(),
+}));
+vi.mock('node:fs', async () => ({
+  readFileSync: vi.fn(),
+  existsSync: vi.fn(),
+  readdirSync: vi.fn(),
+  writeFileSync: vi.fn(),
+  mkdirSync: vi.fn(),
+}));
 
 vi.mock('path', async () => {
-  const actual = await vi.importActual<typeof import('node:path')>('node:path');
+  const actual = await vi.importActual<typeof import('node:path')>('path');
+  const resolve = vi.fn((...segments: string[]) => segments.join('/'));
+  const relative = vi.fn((from: string, to: string) => {
+    if (to.startsWith(from + '/')) return to.slice(from.length + 1);
+    return to;
+  });
+  const join = vi.fn((...segments: string[]) => segments.join('/'));
   return {
     __esModule: true,
-    default: {
-      ...actual,
-      resolve: vi.fn((...segments: string[]) => segments.join('/')),
-      relative: vi.fn((from: string, to: string) => {
-        if (to.startsWith(from + '/')) {
-          return to.slice(from.length + 1);
-        }
-        return to;
-      }),
-      join: vi.fn((...segments: string[]) => segments.join('/')),
-    },
+    default: { ...actual, resolve, relative, join },
     ...actual,
-    resolve: vi.fn((...segments: string[]) => segments.join('/')),
-    relative: vi.fn((from: string, to: string) => {
-      if (to.startsWith(from + '/')) {
-        return to.slice(from.length + 1);
-      }
-      return to;
-    }),
-    join: vi.fn((...segments: string[]) => segments.join('/')),
+    resolve,
+    relative,
+    join,
+  };
+});
+vi.mock('node:path', async () => {
+  const actual = await vi.importActual<typeof import('node:path')>('path');
+  const resolve = vi.fn((...segments: string[]) => segments.join('/'));
+  const relative = vi.fn((from: string, to: string) => {
+    if (to.startsWith(from + '/')) return to.slice(from.length + 1);
+    return to;
+  });
+  const join = vi.fn((...segments: string[]) => segments.join('/'));
+  return {
+    __esModule: true,
+    default: { ...actual, resolve, relative, join },
+    ...actual,
+    resolve,
+    relative,
+    join,
   };
 });
 

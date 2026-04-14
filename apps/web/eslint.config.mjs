@@ -1,6 +1,7 @@
 import typescriptEslint from '@typescript-eslint/eslint-plugin';
 import typescriptParser from '@typescript-eslint/parser';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
+import reactHooks from 'eslint-plugin-react-hooks';
 
 export default [
   {
@@ -19,8 +20,12 @@ export default [
     plugins: {
       '@typescript-eslint': typescriptEslint,
       'jsx-a11y': jsxA11y,
+      'react-hooks': reactHooks,
     },
     rules: {
+      // React Hooks rules
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
       // TypeScript rules
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_' }],
       '@typescript-eslint/no-explicit-any': 'warn',

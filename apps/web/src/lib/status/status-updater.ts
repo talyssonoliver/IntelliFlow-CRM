@@ -11,7 +11,7 @@ export type MaintenanceStatusUpdatePayload = {
 };
 
 export type MaintenanceStatusInput = {
-  readonly window: MaintenanceWindow;
+  readonly maintenanceWindow: MaintenanceWindow;
   readonly timestamp?: string;
 };
 
@@ -27,8 +27,9 @@ export function buildMaintenanceStatusPayload(
   input: MaintenanceStatusInput
 ): MaintenanceStatusUpdatePayload {
   const timestamp = input.timestamp ?? new Date().toISOString();
+  const w = input.maintenanceWindow;
 
-  if (!input.window.active) {
+  if (!w.active) {
     return {
       event: 'status_update',
       mode: 'maintenance',
@@ -44,14 +45,16 @@ export function buildMaintenanceStatusPayload(
     event: 'status_update',
     mode: 'maintenance',
     active: true,
-    etaIso: input.window.etaIso,
-    message: input.window.message,
-    affectedServices: input.window.affectedServices,
+    etaIso: w.etaIso,
+    message: w.message,
+    affectedServices: w.affectedServices,
     timestamp,
   };
 }
 
-export function publishStatusUpdate(input: MaintenanceStatusInput): MaintenanceStatusUpdatePayload {
+export function publishStatusUpdate(
+  input: MaintenanceStatusInput
+): MaintenanceStatusUpdatePayload {
   const payload = buildMaintenanceStatusPayload(input);
 
   if (typeof window !== 'undefined') {

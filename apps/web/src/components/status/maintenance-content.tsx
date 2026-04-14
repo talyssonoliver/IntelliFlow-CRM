@@ -3,7 +3,7 @@ import { Card } from '@intelliflow/ui';
 import type { MaintenanceWindow } from '@/lib/status/maintenance-mode';
 
 export type MaintenanceContentProps = {
-  readonly window: MaintenanceWindow;
+  readonly maintenanceWindow: MaintenanceWindow;
 };
 
 function formatEta(etaIso: string | null): string {
@@ -17,8 +17,8 @@ function formatEta(etaIso: string | null): string {
   }
 }
 
-export function MaintenanceContent({ window }: MaintenanceContentProps) {
-  const isActive = window.active;
+export function MaintenanceContent({ maintenanceWindow }: MaintenanceContentProps) {
+  const isActive = maintenanceWindow.active;
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-8">
@@ -44,7 +44,7 @@ export function MaintenanceContent({ window }: MaintenanceContentProps) {
               {isActive ? (
                 <>
                   <p className="text-base text-slate-600 dark:text-slate-300 sm:text-lg">
-                    {window.message}
+                    {maintenanceWindow.message}
                   </p>
 
                   <div className="grid gap-4 sm:grid-cols-2">
@@ -56,7 +56,7 @@ export function MaintenanceContent({ window }: MaintenanceContentProps) {
                         Estimated completion
                       </p>
                       <p className="mt-2 text-lg font-semibold text-slate-900 dark:text-white">
-                        {formatEta(window.etaIso)}
+                        {formatEta(maintenanceWindow.etaIso)}
                       </p>
                     </div>
                     <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900">
@@ -66,9 +66,9 @@ export function MaintenanceContent({ window }: MaintenanceContentProps) {
                         </span>
                         Affected services
                       </p>
-                      {window.affectedServices.length > 0 ? (
+                      {maintenanceWindow.affectedServices.length > 0 ? (
                         <ul className="mt-2 flex flex-wrap gap-2">
-                          {window.affectedServices.map((service) => (
+                          {maintenanceWindow.affectedServices.map((service) => (
                             <li
                               key={service}
                               className="rounded-full bg-slate-200 px-3 py-1 text-sm font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-200"
@@ -87,8 +87,8 @@ export function MaintenanceContent({ window }: MaintenanceContentProps) {
                 </>
               ) : (
                 <p className="text-base text-slate-600 dark:text-slate-300 sm:text-lg">
-                  IntelliFlow CRM is running normally. Visit the status page for live signals and
-                  the latest incident history.
+                  IntelliFlow CRM is running normally. Visit the status page for live
+                  signals and the latest incident history.
                 </p>
               )}
             </section>

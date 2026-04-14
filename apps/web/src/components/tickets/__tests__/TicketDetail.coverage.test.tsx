@@ -53,7 +53,8 @@ vi.mock('../EscalationAlert', () => ({
   },
 }));
 
-vi.mock('@intelliflow/ui', () => ({
+vi.mock('@intelliflow/ui', async (importOriginal) => ({
+  ...((await importOriginal()) as Record<string, unknown>),
   Card: ({ children, className }: any) => <div className={className}>{children}</div>,
   Button: ({ children, onClick, ...props }: any) => (
     <button onClick={onClick} {...props}>
@@ -100,6 +101,11 @@ vi.mock('@intelliflow/ui', () => ({
       {children}
     </button>
   ),
+  // Tooltip primitives (used transitively via EntityHoverCard)
+  TooltipProvider: ({ children }: any) => <div>{children}</div>,
+  Tooltip: ({ children }: any) => <div>{children}</div>,
+  TooltipTrigger: ({ children }: any) => <span>{children}</span>,
+  TooltipContent: ({ children }: any) => <div>{children}</div>,
 }));
 
 vi.mock('@/components/home/PinButton', () => ({

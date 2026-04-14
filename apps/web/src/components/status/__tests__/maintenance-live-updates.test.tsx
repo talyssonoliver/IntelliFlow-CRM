@@ -14,7 +14,6 @@ import { MaintenanceLiveUpdates } from '../maintenance-live-updates';
 const activeWindow: MaintenanceWindow = {
   active: true,
   etaIso: '2026-08-18T04:00:00.000Z',
-  startedAtIso: '2026-08-18T03:00:00.000Z',
   message: 'Upgrading database engines.',
   affectedServices: ['api'],
 };
@@ -31,18 +30,25 @@ describe('MaintenanceLiveUpdates', () => {
   });
 
   it('calls publishStatusUpdate on mount when window is active', () => {
-    render(<MaintenanceLiveUpdates window={activeWindow} />);
+    render(<MaintenanceLiveUpdates maintenanceWindow={activeWindow} />);
     expect(publishStatusUpdate).toHaveBeenCalledTimes(1);
-    expect(publishStatusUpdate).toHaveBeenCalledWith({ window: activeWindow });
+    expect(publishStatusUpdate).toHaveBeenCalledWith({ maintenanceWindow: activeWindow });
   });
 
   it('does not call publishStatusUpdate when window is inactive', () => {
-    render(<MaintenanceLiveUpdates window={inactiveWindow} />);
+    render(<MaintenanceLiveUpdates maintenanceWindow={inactiveWindow} />);
     expect(publishStatusUpdate).not.toHaveBeenCalled();
   });
 
   it('renders null (zero visible output)', () => {
-    const { container } = render(<MaintenanceLiveUpdates window={activeWindow} />);
+    const { container } = render(<MaintenanceLiveUpdates maintenanceWindow={activeWindow} />);
     expect(container.firstChild).toBeNull();
+  });
+
+  it('does not re-publish when parent passes a new window object with identical content', () => {
+    const { rerender } = render(<MaintenanceLiveUpdates maintenanceWindow={activeWindow} />);
+    expect(publishStatusUpdate).toHaveBeenCalledTimes(1);
+    rerender(<MaintenanceLiveUpdates maintenanceWindow={{ ...activeWindow }} />);
+    expect(publishStatusUpdate).toHaveBeenCalledTimes(1);
   });
 });

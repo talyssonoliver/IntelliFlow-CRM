@@ -47,12 +47,12 @@ describe('DuplicateDetectionTab', () => {
   it('removes a rule when trash is clicked', () => {
     const onRulesChange = vi.fn();
     render(<DuplicateDetectionTab rules={baseRules} onRulesChange={onRulesChange} />);
-    fireEvent.click(screen.getByLabelText(/Remove Email rule/i));
+    fireEvent.click(screen.getByLabelText(/Remove rule 1/i));
     expect(onRulesChange).toHaveBeenCalledWith([baseRules[1]]);
   });
 
   it('shows empty state when no rules exist', () => {
     render(<DuplicateDetectionTab rules={[]} onRulesChange={() => {}} />);
-    expect(screen.getByText(/No rules yet/i)).toBeInTheDocument();
+    expect(screen.getByText(/No duplicate rules/i)).toBeInTheDocument();
   });
 });
