@@ -4,11 +4,11 @@
  * tRPC router for contact duplicate-detection rules, required-field policy,
  * tag vocabulary, and automation settings.
  *
- * Uses direct Prisma access (ticketConfigRouter / leadSettingsRouter pattern).
+ * Writes that touch more than one row are wrapped in `$transaction` so a
+ * failure mid-operation cannot leave a tenant with partial/zero configuration.
  */
 
 import { TRPCError } from '@trpc/server';
-import { z } from 'zod';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import {
   updateContactDuplicateRulesSchema,
@@ -18,8 +18,9 @@ import {
   deleteContactTagSchema,
   contactAutomationSettingsSchema,
 } from '@intelliflow/validators';
+import { assertCanCreateTag, loadContactAutomation } from './contact-automation';
 
-// ─── Defaults ───────────────────────────────────────────────────────────────
+// ─── Defaults (tenant-scoped seed rows) ─────────────────────────────────────
 
 const DEFAULT_DUPLICATE_RULES = [
   { field: 'email', matchStrategy: 'exact', threshold: 100, isActive: true, sortOrder: 0 },
@@ -45,6 +46,15 @@ const DEFAULT_AUTOMATION = {
   autoMergeOnExactEmail: false,
   notifyOnDuplicate: true,
   restrictTagCreationToAdmins: false,
+  normalizePhoneNumbers: true,
+  autoCapitalizeNames: true,
+  preventDeleteWithOpenDeals: true,
+  notifyOnOwnerChange: false,
+  aiDuplicateDetection: false,
+  aiEnrichment: false,
+  aiTagSuggestions: false,
+  aiInsightGeneration: false,
+  aiAutoReplyDrafting: false,
 };
 
 // ─── Duplicate Rules Sub-Router ─────────────────────────────────────────────
@@ -61,7 +71,6 @@ const duplicateRulesRouter = createTRPCRouter({
 
     await ctx.prismaWithTenant.contactDuplicateRule.createMany({
       data: DEFAULT_DUPLICATE_RULES.map((r) => ({ ...r, tenantId })),
-      skipDuplicates: true,
     });
 
     return ctx.prismaWithTenant.contactDuplicateRule.findMany({
@@ -75,14 +84,27 @@ const duplicateRulesRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const tenantId = ctx.tenant.tenantId;
 
-      await ctx.prismaWithTenant.contactDuplicateRule.deleteMany({
-        where: { tenantId },
-      });
-
-      await ctx.prismaWithTenant.contactDuplicateRule.createMany({
-        data: input.rules.map((r) => ({ ...r, tenantId })),
-        skipDuplicates: true,
-      });
+      // Transactional replace: delete + insert must both succeed, or neither
+      // persists. Dropping `skipDuplicates` means any (field, matchStrategy)
+      // collision the superRefine let through (e.g. race with another writer)
+      // surfaces as a Prisma P2002 and we map it to CONFLICT.
+      try {
+        await ctx.prismaWithTenant.$transaction([
+          ctx.prismaWithTenant.contactDuplicateRule.deleteMany({ where: { tenantId } }),
+          ctx.prismaWithTenant.contactDuplicateRule.createMany({
+            data: input.rules.map((r) => ({ ...r, tenantId })),
+          }),
+        ]);
+      } catch (err: unknown) {
+        if (isUniqueConstraintError(err)) {
+          throw new TRPCError({
+            code: 'CONFLICT',
+            message:
+              'Two rules share the same (field, match strategy) pair. Remove or change one before saving.',
+          });
+        }
+        throw err;
+      }
 
       return ctx.prismaWithTenant.contactDuplicateRule.findMany({
         where: { tenantId },
@@ -92,10 +114,12 @@ const duplicateRulesRouter = createTRPCRouter({
 
   resetToDefaults: tenantProcedure.mutation(async ({ ctx }) => {
     const tenantId = ctx.tenant.tenantId;
-    await ctx.prismaWithTenant.contactDuplicateRule.deleteMany({ where: { tenantId } });
-    await ctx.prismaWithTenant.contactDuplicateRule.createMany({
-      data: DEFAULT_DUPLICATE_RULES.map((r) => ({ ...r, tenantId })),
-    });
+    await ctx.prismaWithTenant.$transaction([
+      ctx.prismaWithTenant.contactDuplicateRule.deleteMany({ where: { tenantId } }),
+      ctx.prismaWithTenant.contactDuplicateRule.createMany({
+        data: DEFAULT_DUPLICATE_RULES.map((r) => ({ ...r, tenantId })),
+      }),
+    ]);
     return ctx.prismaWithTenant.contactDuplicateRule.findMany({
       where: { tenantId },
       orderBy: { sortOrder: 'asc' },
@@ -116,7 +140,6 @@ const requiredFieldsRouter = createTRPCRouter({
 
     await ctx.prismaWithTenant.contactRequiredField.createMany({
       data: DEFAULT_REQUIRED_FIELDS.map((f) => ({ ...f, tenantId })),
-      skipDuplicates: true,
     });
 
     return ctx.prismaWithTenant.contactRequiredField.findMany({
@@ -129,7 +152,9 @@ const requiredFieldsRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const tenantId = ctx.tenant.tenantId;
 
-      await Promise.all(
+      // All upserts must apply atomically — otherwise a mid-flight failure
+      // leaves the UI reporting "saved" with partial server state.
+      await ctx.prismaWithTenant.$transaction(
         input.fields.map((f) =>
           ctx.prismaWithTenant.contactRequiredField.upsert({
             where: { tenantId_fieldKey: { tenantId, fieldKey: f.fieldKey } },
@@ -146,10 +171,12 @@ const requiredFieldsRouter = createTRPCRouter({
 
   resetToDefaults: tenantProcedure.mutation(async ({ ctx }) => {
     const tenantId = ctx.tenant.tenantId;
-    await ctx.prismaWithTenant.contactRequiredField.deleteMany({ where: { tenantId } });
-    await ctx.prismaWithTenant.contactRequiredField.createMany({
-      data: DEFAULT_REQUIRED_FIELDS.map((f) => ({ ...f, tenantId })),
-    });
+    await ctx.prismaWithTenant.$transaction([
+      ctx.prismaWithTenant.contactRequiredField.deleteMany({ where: { tenantId } }),
+      ctx.prismaWithTenant.contactRequiredField.createMany({
+        data: DEFAULT_REQUIRED_FIELDS.map((f) => ({ ...f, tenantId })),
+      }),
+    ]);
     return ctx.prismaWithTenant.contactRequiredField.findMany({ where: { tenantId } });
   }),
 });
@@ -167,6 +194,10 @@ const tagsRouter = createTRPCRouter({
 
   create: tenantProcedure.input(createContactTagSchema).mutation(async ({ ctx, input }) => {
     const tenantId = ctx.tenant.tenantId;
+
+    const flags = await loadContactAutomation(ctx);
+    assertCanCreateTag(ctx, flags);
+
     try {
       return await ctx.prismaWithTenant.contactTag.create({
         data: {
@@ -241,6 +272,15 @@ const automationRouter = createTRPCRouter({
         create: { tenantId, ...input },
       });
     }),
+
+  resetToDefaults: tenantProcedure.mutation(async ({ ctx }) => {
+    const tenantId = ctx.tenant.tenantId;
+    return ctx.prismaWithTenant.contactAutomationSetting.upsert({
+      where: { tenantId },
+      update: DEFAULT_AUTOMATION,
+      create: { tenantId, ...DEFAULT_AUTOMATION },
+    });
+  }),
 });
 
 // ─── Top-level Router ───────────────────────────────────────────────────────
@@ -259,11 +299,3 @@ function isUniqueConstraintError(err: unknown): boolean {
   const e = err as { code?: string };
   return e.code === 'P2002';
 }
-
-// Export default inputs for tests.
-export const __DEFAULT_DUPLICATE_RULES = DEFAULT_DUPLICATE_RULES;
-export const __DEFAULT_REQUIRED_FIELDS = DEFAULT_REQUIRED_FIELDS;
-export const __DEFAULT_AUTOMATION = DEFAULT_AUTOMATION;
-
-// Silence unused import (z reserved for future Zod transforms).
-void z;

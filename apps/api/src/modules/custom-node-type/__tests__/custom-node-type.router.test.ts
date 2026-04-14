@@ -30,7 +30,7 @@ describe('customNodeTypeRouter', () => {
           isActive: true,
           createdAt: new Date(),
           updatedAt: new Date(),
-          tenantId: ctx.tenant!.tenantId,
+          tenantId: (ctx.tenant as { tenantId: string }).tenantId,
           createdBy: null,
         } as never,
       ]);

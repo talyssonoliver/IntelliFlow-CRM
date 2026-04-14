@@ -5,7 +5,7 @@
  * tRPC procedures. Follows the PG-178 leadSettingsRouter test pattern.
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { accountSettingsRouter } from '../account-settings.router';
 import { prismaMock, createTestContext, TEST_UUIDS } from '../../../test/setup';
 
@@ -291,6 +291,32 @@ describe('Account Settings Router', () => {
     });
   });
 
+  // ── industry.resetToDefaults ────────────────────────────────
+
+  describe('industry.resetToDefaults', () => {
+    it('runs the seed transaction and returns canonical list', async () => {
+      const txMock = {
+        accountIndustryOption: {
+          upsert: vi.fn().mockResolvedValue(mockIndustry),
+          updateMany: vi.fn().mockResolvedValue({ count: 0 }),
+          findMany: vi.fn().mockResolvedValue([mockIndustry]),
+        },
+      };
+      (prismaMock.$transaction as any).mockImplementationOnce(async (fn: any) => fn(txMock));
+
+      const result = await caller.industry.resetToDefaults();
+
+      // 12 upserts (one per canonical industry)
+      expect(txMock.accountIndustryOption.upsert).toHaveBeenCalledTimes(12);
+      // Deactivates non-canonical entries once
+      expect(txMock.accountIndustryOption.updateMany).toHaveBeenCalledTimes(1);
+      expect(txMock.accountIndustryOption.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ orderBy: { sortOrder: 'asc' } })
+      );
+      expect(result).toEqual([mockIndustry]);
+    });
+  });
+
   // ── customFields.list ──────────────────────────────────────
 
   describe('customFields.list', () => {
@@ -345,6 +371,12 @@ describe('Account Settings Router', () => {
         caller.customFields.create({ fieldName: 'Region', dataType: 'text' })
       ).rejects.toThrow(/already exists/i);
     });
+
+    it('rejects field name that normalises to empty key', async () => {
+      await expect(
+        caller.customFields.create({ fieldName: '???', dataType: 'text' })
+      ).rejects.toThrow(/alphanumeric/i);
+    });
   });
 
   // ── customFields.update ────────────────────────────────────
@@ -371,6 +403,239 @@ describe('Account Settings Router', () => {
       await expect(
         caller.customFields.update({ id: 'nope', fieldName: 'X', dataType: 'text' })
       ).rejects.toThrow(/not found/i);
+    });
+  });
+
+  // ── duplicateRules ─────────────────────────────────────────
+
+  describe('duplicateRules.getAll', () => {
+    it('seeds defaults when none exist', async () => {
+      (prismaMock.accountDuplicateRule.findMany as any)
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([{ id: 'd-1', field: 'website', matchStrategy: 'normalized' }]);
+      (prismaMock.accountDuplicateRule.createMany as any).mockResolvedValue({ count: 3 });
+
+      const result = await caller.duplicateRules.getAll();
+      expect(prismaMock.accountDuplicateRule.createMany).toHaveBeenCalled();
+      expect(result).toHaveLength(1);
+    });
+
+    it('returns existing rules without seeding', async () => {
+      (prismaMock.accountDuplicateRule.findMany as any).mockResolvedValueOnce([
+        { id: 'd-1' },
+      ]);
+      await caller.duplicateRules.getAll();
+      expect(prismaMock.accountDuplicateRule.createMany).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('duplicateRules.updateAll', () => {
+    it('deletes + recreates rules inside a transaction', async () => {
+      const txMock = {
+        accountDuplicateRule: {
+          deleteMany: vi.fn().mockResolvedValue({ count: 3 }),
+          createMany: vi.fn().mockResolvedValue({ count: 2 }),
+          findMany: vi.fn().mockResolvedValue([{ id: 'd-new' }]),
+        },
+      };
+      (prismaMock.$transaction as any).mockImplementationOnce(async (fn: any) => fn(txMock));
+
+      const result = await caller.duplicateRules.updateAll({
+        rules: [
+          { field: 'name', matchStrategy: 'fuzzy', threshold: 85, isActive: true, sortOrder: 0 },
+        ],
+      });
+
+      expect(txMock.accountDuplicateRule.deleteMany).toHaveBeenCalled();
+      expect(txMock.accountDuplicateRule.createMany).toHaveBeenCalled();
+      expect(result).toHaveLength(1);
+    });
+  });
+
+  describe('duplicateRules.resetToDefaults', () => {
+    it('seeds canonical defaults', async () => {
+      const txMock = {
+        accountDuplicateRule: {
+          deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
+          createMany: vi.fn().mockResolvedValue({ count: 3 }),
+          findMany: vi.fn().mockResolvedValue([]),
+        },
+      };
+      (prismaMock.$transaction as any).mockImplementationOnce(async (fn: any) => fn(txMock));
+      await caller.duplicateRules.resetToDefaults();
+      expect(txMock.accountDuplicateRule.createMany).toHaveBeenCalled();
+    });
+  });
+
+  // ── requiredFields ─────────────────────────────────────────
+
+  describe('requiredFields.getAll', () => {
+    it('seeds defaults when none exist', async () => {
+      (prismaMock.accountRequiredField.findMany as any)
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([{ fieldKey: 'name', isRequired: true }]);
+      (prismaMock.accountRequiredField.createMany as any).mockResolvedValue({ count: 6 });
+
+      const result = await caller.requiredFields.getAll();
+      expect(prismaMock.accountRequiredField.createMany).toHaveBeenCalled();
+      expect(result).toHaveLength(1);
+    });
+
+    it('returns existing without seeding', async () => {
+      (prismaMock.accountRequiredField.findMany as any).mockResolvedValueOnce([{ fieldKey: 'name' }]);
+      await caller.requiredFields.getAll();
+      expect(prismaMock.accountRequiredField.createMany).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('requiredFields.updateAll', () => {
+    it('upserts each field (name stays required)', async () => {
+      const txMock = {
+        accountRequiredField: {
+          upsert: vi.fn().mockResolvedValue({}),
+          findMany: vi.fn().mockResolvedValue([]),
+        },
+      };
+      (prismaMock.$transaction as any).mockImplementationOnce(async (fn: any) => fn(txMock));
+
+      await caller.requiredFields.updateAll({
+        fields: [
+          { fieldKey: 'name', isRequired: true },
+          { fieldKey: 'industry', isRequired: true },
+          { fieldKey: 'website', isRequired: false },
+          { fieldKey: 'ownerId', isRequired: true },
+          { fieldKey: 'employees', isRequired: false },
+          { fieldKey: 'revenue', isRequired: false },
+        ],
+      });
+      expect(txMock.accountRequiredField.upsert).toHaveBeenCalledTimes(6);
+    });
+
+    it('rejects when name is not required', async () => {
+      await expect(
+        caller.requiredFields.updateAll({
+          fields: [{ fieldKey: 'name', isRequired: false }],
+        })
+      ).rejects.toThrow();
+    });
+  });
+
+  describe('requiredFields.resetToDefaults', () => {
+    it('deletes + reseeds defaults', async () => {
+      const txMock = {
+        accountRequiredField: {
+          deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
+          createMany: vi.fn().mockResolvedValue({ count: 6 }),
+          findMany: vi.fn().mockResolvedValue([]),
+        },
+      };
+      (prismaMock.$transaction as any).mockImplementationOnce(async (fn: any) => fn(txMock));
+      await caller.requiredFields.resetToDefaults();
+      expect(txMock.accountRequiredField.createMany).toHaveBeenCalled();
+    });
+  });
+
+  // ── tags ───────────────────────────────────────────────────
+
+  describe('tags.list', () => {
+    it('returns active tags', async () => {
+      (prismaMock.accountTag.findMany as any).mockResolvedValueOnce([{ id: 't-1' }]);
+      const result = await caller.tags.list();
+      expect(result).toHaveLength(1);
+    });
+  });
+
+  describe('tags.create', () => {
+    it('throws CONFLICT when name exists', async () => {
+      (prismaMock.accountTag.findUnique as any).mockResolvedValueOnce({ id: 't-1' });
+      await expect(caller.tags.create({ name: 'Strategic', colorToken: 'slate' })).rejects.toThrow(
+        /already exists/i
+      );
+    });
+
+    it('auto-assigns sortOrder when omitted', async () => {
+      (prismaMock.accountTag.findUnique as any).mockResolvedValueOnce(null);
+      (prismaMock.accountTag.aggregate as any).mockResolvedValueOnce({ _max: { sortOrder: 2 } });
+      (prismaMock.accountTag.create as any).mockResolvedValueOnce({ id: 't-new', sortOrder: 3 });
+      const result = await caller.tags.create({ name: 'Strategic', colorToken: 'slate' });
+      expect(result.sortOrder).toBe(3);
+    });
+  });
+
+  describe('tags.update', () => {
+    it('updates existing tag', async () => {
+      (prismaMock.accountTag.findFirst as any).mockResolvedValueOnce({ id: 't-1' });
+      (prismaMock.accountTag.update as any).mockResolvedValueOnce({ id: 't-1', name: 'New' });
+      const result = await caller.tags.update({ id: 't-1', name: 'New' });
+      expect(result.name).toBe('New');
+    });
+    it('NOT_FOUND when missing', async () => {
+      (prismaMock.accountTag.findFirst as any).mockResolvedValueOnce(null);
+      await expect(caller.tags.update({ id: 'nope', name: 'X' })).rejects.toThrow(/not found/i);
+    });
+  });
+
+  describe('tags.delete', () => {
+    it('soft-deletes via isActive:false', async () => {
+      (prismaMock.accountTag.findFirst as any).mockResolvedValueOnce({ id: 't-1' });
+      (prismaMock.accountTag.update as any).mockResolvedValueOnce({ id: 't-1', isActive: false });
+      const result = await caller.tags.delete({ id: 't-1' });
+      expect(result.isActive).toBe(false);
+    });
+    it('NOT_FOUND when missing', async () => {
+      (prismaMock.accountTag.findFirst as any).mockResolvedValueOnce(null);
+      await expect(caller.tags.delete({ id: 'nope' })).rejects.toThrow(/not found/i);
+    });
+  });
+
+  // ── automation ─────────────────────────────────────────────
+
+  describe('automation.get', () => {
+    it('creates defaults when none exist', async () => {
+      (prismaMock.accountAutomationSetting.findUnique as any).mockResolvedValueOnce(null);
+      (prismaMock.accountAutomationSetting.create as any).mockResolvedValueOnce({
+        autoAssignOwner: false,
+        aiIndustryInference: true,
+      });
+      const result = await caller.automation.get();
+      expect(prismaMock.accountAutomationSetting.create).toHaveBeenCalled();
+      expect(result.aiIndustryInference).toBe(true);
+    });
+
+    it('returns existing when present', async () => {
+      (prismaMock.accountAutomationSetting.findUnique as any).mockResolvedValueOnce({
+        id: 'a-1',
+        autoAssignOwner: true,
+      });
+      const result = await caller.automation.get();
+      expect(prismaMock.accountAutomationSetting.create).not.toHaveBeenCalled();
+      expect(result).toEqual({ id: 'a-1', autoAssignOwner: true });
+    });
+  });
+
+  describe('automation.update', () => {
+    it('upserts automation config', async () => {
+      (prismaMock.accountAutomationSetting.upsert as any).mockResolvedValueOnce({
+        autoAssignOwner: true,
+        aiAccountScoring: true,
+      });
+      const input = {
+        autoAssignOwner: true,
+        autoLinkContactsByDomain: true,
+        preventDeleteWithOpenOpportunities: true,
+        notifyOnOwnerChange: false,
+        normalizeWebsiteDomain: true,
+        autoCapitalizeAccountNames: true,
+        notifyOnDuplicate: true,
+        restrictTagCreationToAdmins: false,
+        aiIndustryInference: true,
+        aiEnrichment: false,
+        aiTagSuggestions: true,
+        aiInsightGeneration: true,
+        aiAccountScoring: true,
+      };
+      const result = await caller.automation.update(input);
+      expect(result.autoAssignOwner).toBe(true);
     });
   });
 

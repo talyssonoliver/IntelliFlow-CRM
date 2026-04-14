@@ -31,7 +31,7 @@ describe('customActionHandlerRouter', () => {
           inputSchema: [],
           outputSchema: [],
           isActive: true,
-          tenantId: ctx.tenant!.tenantId,
+          tenantId: (ctx.tenant as { tenantId: string }).tenantId,
           createdBy: null,
           createdAt: new Date(),
           updatedAt: new Date(),

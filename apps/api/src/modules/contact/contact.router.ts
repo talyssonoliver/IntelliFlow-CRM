@@ -16,6 +16,14 @@ import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import {
+  assertCanDeleteContact,
+  assertRequiredContactFields,
+  capitalizeName,
+  loadContactAutomation,
+  loadRequiredContactFields,
+  normalizePhone,
+} from './contact-automation';
+import {
   createContactSchema,
   updateContactSchema,
   contactQuerySchema,
@@ -318,8 +326,44 @@ export const contactRouter = createTRPCRouter({
     const typedCtx = getTenantContext(ctx);
     const contactService = getContactService(ctx);
 
-    const result = await contactService.createContact({
+    // PG-182: apply tenant hygiene policy + required-field enforcement
+    // before handing off to the domain service.
+    const [flags, requiredFields] = await Promise.all([
+      loadContactAutomation(typedCtx),
+      loadRequiredContactFields(typedCtx),
+    ]);
+
+    // Phone arrives as a PhoneNumber value-object from phoneSchema — unwrap
+    // to a plain string so the PG-182 hygiene helpers (that pre-date the VO)
+    // and the required-fields check both see the raw value.
+    const rawPhone: string | null = input.phone ? input.phone.value : null;
+
+    assertRequiredContactFields(
+      {
+        email: input.email,
+        phone: rawPhone,
+        company: (input as { company?: string | null }).company,
+        jobTitle: (input as { jobTitle?: string | null }).jobTitle,
+        ownerId: typedCtx.tenant.userId, // always satisfied for create — owner is caller
+      },
+      requiredFields,
+      'create'
+    );
+
+    const normalizedPhone = normalizePhone(rawPhone, flags);
+
+    const hygieneInput = {
       ...input,
+      firstName: capitalizeName(input.firstName, flags) ?? input.firstName,
+      lastName: capitalizeName(input.lastName, flags) ?? input.lastName,
+      // CreateContactProps.phone accepts `string | PhoneNumber | undefined`.
+      // Pass the normalized string (service will re-wrap via PhoneNumber.create)
+      // or omit the key entirely when we normalized to "no phone".
+      phone: normalizedPhone ?? undefined,
+    };
+
+    const result = await contactService.createContact({
+      ...hygieneInput,
       ownerId: typedCtx.tenant.userId,
       tenantId: typedCtx.tenant.tenantId,
     });
@@ -571,8 +615,54 @@ export const contactRouter = createTRPCRouter({
     const { id, accountId, ...data } = input;
     const contactService = getContactService(ctx);
 
+    // PG-182: apply hygiene + required-field policy before building the update.
+    const [flags, requiredFields] = await Promise.all([
+      loadContactAutomation(typedCtx),
+      loadRequiredContactFields(typedCtx),
+    ]);
+
+    // Email is not in updateContactSchema (see validators/contact.ts — uses a
+    // dedicated updateContactEmail service method), so nothing to check here.
+    // Phone arrives as PhoneNumber VO; unwrap to plain string for the hygiene
+    // + required-fields helpers.
+    const rawPhone: string | null | undefined =
+      data.phone === undefined ? undefined : data.phone === null ? null : data.phone.value;
+
+    assertRequiredContactFields(
+      {
+        ...(rawPhone !== undefined ? { phone: rawPhone } : {}),
+        ...((data as { company?: string | null }).company !== undefined
+          ? { company: (data as { company?: string | null }).company }
+          : {}),
+        ...((data as { jobTitle?: string | null }).jobTitle !== undefined
+          ? { jobTitle: (data as { jobTitle?: string | null }).jobTitle }
+          : {}),
+        ...((data as { ownerId?: string | null }).ownerId !== undefined
+          ? { ownerId: (data as { ownerId?: string | null }).ownerId }
+          : {}),
+      },
+      requiredFields,
+      'update'
+    );
+
+    const hygienedData = {
+      ...data,
+      ...(data.firstName !== undefined
+        ? { firstName: capitalizeName(data.firstName, flags) ?? data.firstName }
+        : {}),
+      ...(data.lastName !== undefined
+        ? { lastName: capitalizeName(data.lastName, flags) ?? data.lastName }
+        : {}),
+      // Feed the service a plain string (or undefined for "unset") — it will
+      // re-wrap via PhoneNumber.create. This avoids the VO/string mismatch
+      // that the pre-refactor signature caused.
+      ...(rawPhone !== undefined
+        ? { phone: normalizePhone(rawPhone, flags) ?? undefined }
+        : {}),
+    };
+
     // Build info update payload (all non-account, non-email fields)
-    const infoUpdates = buildContactInfoUpdates(data as UpdateContactData);
+    const infoUpdates = buildContactInfoUpdates(hygienedData as UpdateContactData);
 
     if (Object.keys(infoUpdates).length > 0) {
       const result = await contactService.updateContactInfo(
@@ -623,13 +713,19 @@ export const contactRouter = createTRPCRouter({
     const typedCtx = getTenantContext(ctx);
     const contactService = getContactService(ctx);
 
-    // Check for opportunities (business rule not in service yet)
     const existingContact = await typedCtx.prismaWithTenant.contact.findUnique({
       where: { id: input.id },
       include: {
         _count: {
           select: {
-            opportunities: true,
+            // PG-182: only count ACTIVE deals (not CLOSED_WON/CLOSED_LOST)
+            // so finished pipelines do not block tidy-up deletes.
+            opportunities: {
+              where: {
+                stage: { notIn: ['CLOSED_WON', 'CLOSED_LOST'] },
+                deletedAt: null,
+              },
+            },
           },
         },
       },
@@ -642,13 +738,12 @@ export const contactRouter = createTRPCRouter({
       });
     }
 
-    // Warn if contact has opportunities
-    if (existingContact._count.opportunities > 0) {
-      throw new TRPCError({
-        code: 'PRECONDITION_FAILED',
-        message: `Contact has ${existingContact._count.opportunities} associated opportunities. Please reassign or delete them first.`,
-      });
-    }
+    // PG-182: gate deletion on the preventDeleteWithOpenDeals toggle
+    const flags = await loadContactAutomation(typedCtx);
+    assertCanDeleteContact(
+      { activeOpportunities: existingContact._count.opportunities },
+      flags
+    );
 
     // Delete via service
     const result = await contactService.deleteContact(input.id);

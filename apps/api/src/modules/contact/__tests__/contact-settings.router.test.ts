@@ -7,7 +7,12 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { contactSettingsRouter } from '../contact-settings.router';
-import { prismaMock, createTestContext, TEST_UUIDS } from '../../../test/setup';
+import {
+  prismaMock,
+  createTestContext,
+  createAdminContext,
+  TEST_UUIDS,
+} from '../../../test/setup';
 
 const tenantId = TEST_UUIDS.tenant;
 
@@ -50,6 +55,15 @@ const mockAutomation = {
   autoMergeOnExactEmail: false,
   notifyOnDuplicate: true,
   restrictTagCreationToAdmins: false,
+  normalizePhoneNumbers: true,
+  autoCapitalizeNames: true,
+  preventDeleteWithOpenDeals: true,
+  notifyOnOwnerChange: false,
+  aiDuplicateDetection: true,
+  aiEnrichment: false,
+  aiTagSuggestions: true,
+  aiInsightGeneration: true,
+  aiAutoReplyDrafting: false,
   createdAt: new Date('2024-01-01'),
   updatedAt: new Date('2024-01-01'),
 };
@@ -76,7 +90,6 @@ describe('Contact Settings Router', () => {
           data: expect.arrayContaining([
             expect.objectContaining({ tenantId, field: 'email', matchStrategy: 'exact' }),
           ]),
-          skipDuplicates: true,
         })
       );
       expect(result).toHaveLength(1);
@@ -91,9 +104,8 @@ describe('Contact Settings Router', () => {
   });
 
   describe('duplicateRules.updateAll', () => {
-    it('replaces rules for tenant', async () => {
-      (prismaMock.contactDuplicateRule.deleteMany as any).mockResolvedValue({ count: 3 });
-      (prismaMock.contactDuplicateRule.createMany as any).mockResolvedValue({ count: 1 });
+    it('replaces rules transactionally for tenant', async () => {
+      (prismaMock.$transaction as any).mockResolvedValue([]);
       (prismaMock.contactDuplicateRule.findMany as any).mockResolvedValue([mockDuplicateRule]);
 
       const result = await caller.duplicateRules.updateAll({
@@ -108,9 +120,7 @@ describe('Contact Settings Router', () => {
         ],
       });
 
-      expect(prismaMock.contactDuplicateRule.deleteMany).toHaveBeenCalledWith({
-        where: { tenantId },
-      });
+      expect(prismaMock.$transaction).toHaveBeenCalled();
       expect(result).toHaveLength(1);
     });
 
@@ -120,15 +130,13 @@ describe('Contact Settings Router', () => {
   });
 
   describe('duplicateRules.resetToDefaults', () => {
-    it('wipes and reseeds the three factory rules', async () => {
-      (prismaMock.contactDuplicateRule.deleteMany as any).mockResolvedValue({ count: 3 });
-      (prismaMock.contactDuplicateRule.createMany as any).mockResolvedValue({ count: 3 });
+    it('wipes and reseeds the three factory rules transactionally', async () => {
+      (prismaMock.$transaction as any).mockResolvedValue([]);
       (prismaMock.contactDuplicateRule.findMany as any).mockResolvedValue([mockDuplicateRule]);
 
       const result = await caller.duplicateRules.resetToDefaults();
 
-      expect(prismaMock.contactDuplicateRule.deleteMany).toHaveBeenCalled();
-      expect(prismaMock.contactDuplicateRule.createMany).toHaveBeenCalled();
+      expect(prismaMock.$transaction).toHaveBeenCalled();
       expect(result).toHaveLength(1);
     });
   });
@@ -145,8 +153,8 @@ describe('Contact Settings Router', () => {
       ).rejects.toThrow();
     });
 
-    it('upserts when email remains required', async () => {
-      (prismaMock.contactRequiredField.upsert as any).mockResolvedValue(mockRequiredField);
+    it('upserts when email remains required (transactional)', async () => {
+      (prismaMock.$transaction as any).mockResolvedValue([mockRequiredField, mockRequiredField]);
       (prismaMock.contactRequiredField.findMany as any).mockResolvedValue([mockRequiredField]);
 
       const result = await caller.requiredFields.updateAll({
@@ -156,7 +164,7 @@ describe('Contact Settings Router', () => {
         ],
       });
 
-      expect(prismaMock.contactRequiredField.upsert).toHaveBeenCalledTimes(2);
+      expect(prismaMock.$transaction).toHaveBeenCalled();
       expect(result).toEqual([mockRequiredField]);
     });
   });
@@ -211,6 +219,82 @@ describe('Contact Settings Router', () => {
         where: { id: 'tag-1', tenantId },
       });
     });
+
+    it('rejects when the tag belongs to another tenant (P2025 from Prisma)', async () => {
+      (prismaMock.contactTag.delete as any).mockRejectedValue({ code: 'P2025' });
+      await expect(caller.tags.delete({ id: 'tag-of-tenant-2' })).rejects.toBeTruthy();
+    });
+  });
+
+  describe('tags.create — admin restriction', () => {
+    it('throws FORBIDDEN for non-admin when restrictTagCreationToAdmins is on', async () => {
+      (prismaMock.contactAutomationSetting.findUnique as any).mockResolvedValue({
+        ...mockAutomation,
+        restrictTagCreationToAdmins: true,
+      });
+      // default createTestContext() gives role 'USER'
+      await expect(
+        caller.tags.create({ name: 'Internal', colorToken: 'slate' })
+      ).rejects.toMatchObject({ code: 'FORBIDDEN' });
+    });
+
+    it('allows ADMIN when restrictTagCreationToAdmins is on', async () => {
+      (prismaMock.contactAutomationSetting.findUnique as any).mockResolvedValue({
+        ...mockAutomation,
+        restrictTagCreationToAdmins: true,
+      });
+      (prismaMock.contactTag.create as any).mockResolvedValue(mockTag);
+      const adminCaller = contactSettingsRouter.createCaller(createAdminContext());
+      const result = await adminCaller.tags.create({
+        name: 'Internal',
+        colorToken: 'slate',
+      });
+      expect(result).toEqual(mockTag);
+    });
+  });
+
+  describe('duplicateRules.updateAll — Zod superRefine', () => {
+    it('rejects payload with duplicate (field, matchStrategy) pairs', async () => {
+      await expect(
+        caller.duplicateRules.updateAll({
+          rules: [
+            { field: 'email', matchStrategy: 'exact', threshold: 100, isActive: true, sortOrder: 0 },
+            { field: 'email', matchStrategy: 'exact', threshold: 50, isActive: true, sortOrder: 1 },
+          ],
+        })
+      ).rejects.toThrow();
+    });
+
+    it('maps Prisma P2002 to CONFLICT when a race writes a colliding rule', async () => {
+      (prismaMock.$transaction as any).mockRejectedValue({ code: 'P2002' });
+      await expect(
+        caller.duplicateRules.updateAll({
+          rules: [
+            { field: 'email', matchStrategy: 'exact', threshold: 100, isActive: true, sortOrder: 0 },
+          ],
+        })
+      ).rejects.toMatchObject({ code: 'CONFLICT' });
+    });
+  });
+
+  describe('automation.resetToDefaults', () => {
+    it('upserts the AI toggles back to false', async () => {
+      (prismaMock.contactAutomationSetting.upsert as any).mockResolvedValue(mockAutomation);
+      const result = await caller.automation.resetToDefaults();
+      expect(prismaMock.contactAutomationSetting.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { tenantId },
+          update: expect.objectContaining({
+            aiDuplicateDetection: false,
+            aiEnrichment: false,
+            aiTagSuggestions: false,
+            aiInsightGeneration: false,
+            aiAutoReplyDrafting: false,
+          }),
+        })
+      );
+      expect(result).toEqual(mockAutomation);
+    });
   });
 
   describe('tags.list', () => {
@@ -253,13 +337,24 @@ describe('Contact Settings Router', () => {
       (prismaMock.contactAutomationSetting.upsert as any).mockResolvedValue({
         ...mockAutomation,
         autoMergeOnExactEmail: true,
+        aiEnrichment: true,
       });
       const result = await caller.automation.update({
         autoMergeOnExactEmail: true,
         notifyOnDuplicate: true,
         restrictTagCreationToAdmins: false,
+        normalizePhoneNumbers: true,
+        autoCapitalizeNames: true,
+        preventDeleteWithOpenDeals: true,
+        notifyOnOwnerChange: false,
+        aiDuplicateDetection: true,
+        aiEnrichment: true,
+        aiTagSuggestions: true,
+        aiInsightGeneration: true,
+        aiAutoReplyDrafting: false,
       });
       expect(result.autoMergeOnExactEmail).toBe(true);
+      expect(result.aiEnrichment).toBe(true);
     });
   });
 });
