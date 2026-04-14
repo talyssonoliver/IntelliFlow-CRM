@@ -79,8 +79,8 @@ function parseArtifacts(artifactStr: string): string[] {
   return artifactStr
     .split(';')
     .flatMap((part) => {
-      // Extract path from ARTIFACT: or EVIDENCE: prefix
-      const match = part.match(/(?:ARTIFACT:|EVIDENCE:)(.+)/);
+      // Extract path from ARTIFACT:, EVIDENCE:, SPEC:, or PLAN: prefix
+      const match = part.match(/(?:ARTIFACT:|EVIDENCE:|SPEC:|PLAN:)(.+)/);
       if (match) {
         return [match[1].trim()];
       }

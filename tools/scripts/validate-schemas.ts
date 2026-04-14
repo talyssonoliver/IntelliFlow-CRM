@@ -53,11 +53,18 @@ const VALIDATION_RULES: ValidationRule[] = [
     schema: vulnerabilityBaselineSchema,
     patterns: ['artifacts/misc/vulnerability-baseline.json'],
   },
-  // 🔧 FIX: Attestation - changed path to .specify/ with context_ack.json
+  // Attestation — validates both attestation.json (evidence file) and context_ack.json
+  // (the pre-execution context acknowledgment file). Both share attestationSchema because
+  // exec-attestation/context-ack skills write files that conform to the same schema.
+  // Previous pattern only matched context_ack.json, which let 18 bad attestation.json
+  // files slip past validation (object-shaped kpi_results/gate_results, missing required fields).
   {
     name: 'Attestation',
     schema: attestationSchema,
-    patterns: ['.specify/sprints/sprint-*/attestations/*/context_ack.json'],
+    patterns: [
+      '.specify/sprints/sprint-*/attestations/*/attestation.json',
+      '.specify/sprints/sprint-*/attestations/*/context_ack.json',
+    ],
   },
   // 🔧 FIX: Task Status - use ignore option for summaries
   {
