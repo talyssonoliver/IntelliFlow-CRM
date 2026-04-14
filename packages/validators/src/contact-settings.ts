@@ -24,9 +24,26 @@ export const contactDuplicateRuleSchema = z.object({
 });
 export type ContactDuplicateRuleInput = z.infer<typeof contactDuplicateRuleSchema>;
 
-export const updateContactDuplicateRulesSchema = z.object({
-  rules: z.array(contactDuplicateRuleSchema).min(1, 'At least one rule is required'),
-});
+export const updateContactDuplicateRulesSchema = z
+  .object({
+    rules: z.array(contactDuplicateRuleSchema).min(1, 'At least one rule is required'),
+  })
+  .superRefine((data, ctx) => {
+    const seen = new Map<string, number>();
+    data.rules.forEach((rule, index) => {
+      const key = `${rule.field}__${rule.matchStrategy}`;
+      const first = seen.get(key);
+      if (first !== undefined) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Duplicate (field, strategy) pair: "${rule.field}" + "${rule.matchStrategy}" appears in rows ${first + 1} and ${index + 1}`,
+          path: ['rules', index, 'matchStrategy'],
+        });
+      } else {
+        seen.set(key, index);
+      }
+    });
+  });
 export type UpdateContactDuplicateRulesInput = z.infer<typeof updateContactDuplicateRulesSchema>;
 
 // ─── Required Fields ────────────────────────────────────────────────────────
@@ -111,5 +128,16 @@ export const contactAutomationSettingsSchema = z.object({
   autoMergeOnExactEmail: z.boolean(),
   notifyOnDuplicate: z.boolean(),
   restrictTagCreationToAdmins: z.boolean(),
+  // Data hygiene (PG-182)
+  normalizePhoneNumbers: z.boolean(),
+  autoCapitalizeNames: z.boolean(),
+  preventDeleteWithOpenDeals: z.boolean(),
+  notifyOnOwnerChange: z.boolean(),
+  // AI & Intelligence (PG-182)
+  aiDuplicateDetection: z.boolean(),
+  aiEnrichment: z.boolean(),
+  aiTagSuggestions: z.boolean(),
+  aiInsightGeneration: z.boolean(),
+  aiAutoReplyDrafting: z.boolean(),
 });
 export type ContactAutomationSettingsInput = z.infer<typeof contactAutomationSettingsSchema>;

@@ -52,6 +52,50 @@ describe('contact-settings validators', () => {
       const result = updateContactDuplicateRulesSchema.safeParse({ rules: [] });
       expect(result.success).toBe(false);
     });
+
+    it('updateContactDuplicateRulesSchema rejects duplicate (field, strategy) pairs', () => {
+      const result = updateContactDuplicateRulesSchema.safeParse({
+        rules: [
+          {
+            field: 'email',
+            matchStrategy: 'exact',
+            threshold: 100,
+            isActive: true,
+            sortOrder: 0,
+          },
+          {
+            field: 'email',
+            matchStrategy: 'exact',
+            threshold: 80,
+            isActive: false,
+            sortOrder: 1,
+          },
+        ],
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it('accepts distinct (field, strategy) pairs', () => {
+      const result = updateContactDuplicateRulesSchema.safeParse({
+        rules: [
+          {
+            field: 'email',
+            matchStrategy: 'exact',
+            threshold: 100,
+            isActive: true,
+            sortOrder: 0,
+          },
+          {
+            field: 'email',
+            matchStrategy: 'normalized',
+            threshold: 100,
+            isActive: true,
+            sortOrder: 1,
+          },
+        ],
+      });
+      expect(result.success).toBe(true);
+    });
   });
 
   describe('required fields', () => {
@@ -135,11 +179,20 @@ describe('contact-settings validators', () => {
   });
 
   describe('automation settings', () => {
-    it('accepts all three booleans', () => {
+    it('accepts all booleans including AI flags', () => {
       const result = contactAutomationSettingsSchema.safeParse({
         autoMergeOnExactEmail: false,
         notifyOnDuplicate: true,
         restrictTagCreationToAdmins: false,
+        normalizePhoneNumbers: true,
+        autoCapitalizeNames: true,
+        preventDeleteWithOpenDeals: true,
+        notifyOnOwnerChange: false,
+        aiDuplicateDetection: true,
+        aiEnrichment: false,
+        aiTagSuggestions: true,
+        aiInsightGeneration: true,
+        aiAutoReplyDrafting: false,
       });
       expect(result.success).toBe(true);
     });
@@ -147,6 +200,24 @@ describe('contact-settings validators', () => {
     it('rejects missing fields', () => {
       const result = contactAutomationSettingsSchema.safeParse({
         notifyOnDuplicate: true,
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it('rejects when an AI flag is missing', () => {
+      const result = contactAutomationSettingsSchema.safeParse({
+        autoMergeOnExactEmail: false,
+        notifyOnDuplicate: true,
+        restrictTagCreationToAdmins: false,
+        normalizePhoneNumbers: true,
+        autoCapitalizeNames: true,
+        preventDeleteWithOpenDeals: true,
+        notifyOnOwnerChange: false,
+        aiDuplicateDetection: true,
+        aiEnrichment: false,
+        aiTagSuggestions: true,
+        aiInsightGeneration: true,
+        // aiAutoReplyDrafting missing
       });
       expect(result.success).toBe(false);
     });
