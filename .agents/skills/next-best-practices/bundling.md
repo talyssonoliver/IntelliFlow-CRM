@@ -167,7 +167,7 @@ Reference: https://nextjs.org/docs/app/guides/package-bundling
 
 ## Migrating from Webpack to Turbopack
 
-Turbopack is the default bundler in Next.js 15+. If you have custom webpack
+Turbopack is the default bundler in Next.js 16+. If you have custom webpack
 config, migrate to Turbopack-compatible alternatives:
 
 ```js

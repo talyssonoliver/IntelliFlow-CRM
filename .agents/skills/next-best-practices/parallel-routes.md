@@ -251,7 +251,7 @@ Check your matcher:
 
 ### 5. TypeScript Errors with `params`
 
-In Next.js 15+, `params` is a Promise:
+In Next.js 16+, `params` is a Promise:
 
 ```tsx
 // Correct

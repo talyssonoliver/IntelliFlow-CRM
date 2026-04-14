@@ -32,7 +32,7 @@ See [rsc-boundaries.md](./rsc-boundaries.md) for:
 
 ## Async Patterns
 
-Next.js 15+ async API changes.
+Next.js 16+ async API changes.
 
 See [async-patterns.md](./async-patterns.md) for:
 

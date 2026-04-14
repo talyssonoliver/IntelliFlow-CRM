@@ -400,6 +400,22 @@ Before reviewing, you MUST read:
      from source files → **WARN** ("barrel will be dead code — remove it or
      update consumer imports")
 
+### HH. Icon Library Compliance (PG-195 / ADR-046)
+
+124. If the plan touches `apps/web/**` or `packages/ui/**` AND names any icon
+     library other than Material Symbols Outlined (i.e. mentions `lucide-react`,
+     `@heroicons/react`, `react-icons`, `@radix-ui/react-icons`,
+     `react-feather`, or proposes new inline `<svg>` "icon" components that
+     replace font-rendered icons) → **ERROR** ("Icon policy violation — use
+     Material Symbols Outlined per docs/design/ICON_USAGE.md and ADR-046. The
+     alternative libraries are blocked by ESLint `no-restricted-imports`.")
+125. If the plan introduces new icon literals and does NOT include a step that
+     runs `node tools/scripts/subset-material-symbols.mjs` (or at minimum
+     regenerates `apps/web/public/fonts/MaterialSymbolsOutlined.woff2` and
+     `artifacts/perf/material-symbols-glyph-audit.json`) → **WARN** ("new icons
+     will fail the `--verify` CI guard until the font is regenerated; see
+     docs/design/ICON_USAGE.md")
+
 ## Output Format
 
 ```markdown
