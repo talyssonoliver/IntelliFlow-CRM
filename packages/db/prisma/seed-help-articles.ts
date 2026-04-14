@@ -41,7 +41,29 @@ interface SeedArticle {
 // `packages/db/tsconfig.json`'s rootDir constraint. Regenerate the
 // snapshot with `pnpm --filter @intelliflow/db run db:snapshot:help-articles`
 // whenever the apps/web source changes.
-const DEFAULT_HELP_ARTICLES = (snapshot as { articles: readonly SeedArticle[] }).articles;
+export function assertSnapshotShape(value: unknown): asserts value is { articles: readonly SeedArticle[] } {
+  if (!value || typeof value !== 'object' || !('articles' in value)) {
+    throw new Error('help-articles.snapshot.json: missing "articles" property');
+  }
+  const articles = (value as { articles: unknown }).articles;
+  if (!Array.isArray(articles) || articles.length === 0) {
+    throw new Error('help-articles.snapshot.json: "articles" must be a non-empty array');
+  }
+  for (const article of articles as readonly unknown[]) {
+    if (!article || typeof article !== 'object') {
+      throw new Error('help-articles.snapshot.json: each article must be an object');
+    }
+    const a = article as Record<string, unknown>;
+    if (typeof a.slug !== 'string' || typeof a.title !== 'string' || !Array.isArray(a.sections)) {
+      throw new Error(
+        `help-articles.snapshot.json: article missing required fields (slug/title/sections) — got ${JSON.stringify(a).slice(0, 120)}`,
+      );
+    }
+  }
+}
+
+assertSnapshotShape(snapshot);
+const DEFAULT_HELP_ARTICLES = snapshot.articles;
 
 type SeedPrismaClient = Pick<
   PrismaClient,
@@ -60,6 +82,9 @@ export function getPrisma(): SeedPrismaClient {
 
 /** Test-only injection hook. Must NOT be called from production code. */
 export function __setPrismaForTest(mock: SeedPrismaClient | null): void {
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('__setPrismaForTest is not callable in production');
+  }
   cachedClient = mock;
 }
 
@@ -104,8 +129,8 @@ async function seedArticle(tenantId: string, article: (typeof DEFAULT_HELP_ARTIC
     categoryId: article.categoryId,
     excerpt: article.excerpt,
     readTimeMinutes: article.readTimeMinutes,
-    keywords: article.keywords as unknown as object,
-    relatedArticleIds: article.relatedArticleIds as unknown as object,
+    keywords: [...article.keywords],
+    relatedArticleIds: [...article.relatedArticleIds],
     order: article.order,
     status: 'PUBLISHED' as const,
     publishedAt,
@@ -126,12 +151,12 @@ async function syncSections(
   await prisma.articleSection.deleteMany({ where: { articleId } });
   for (let index = 0; index < sections.length; index++) {
     const section = sections[index];
-    const blocks = section.blocks as unknown as object | undefined;
+    const blocks = section.blocks;
     await prisma.articleSection.create({
       data: {
         heading: section.heading,
         content: section.content,
-        ...(blocks !== undefined ? { blocks } : {}),
+        ...(blocks !== undefined ? { blocks: [...blocks] } : {}),
         order: index,
         articleId,
         tenantId,

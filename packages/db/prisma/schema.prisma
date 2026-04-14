@@ -616,6 +616,81 @@ model AccountCustomField {
   @@map("account_custom_fields")
 }
 
+/// Duplicate-detection rule for accounts (name/website/phone/address).
+model AccountDuplicateRule {
+  id            String   @id @default(cuid())
+  tenantId      String
+  field         String
+  matchStrategy String
+  threshold     Int      @default(100)
+  isActive      Boolean  @default(true)
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([tenantId, field, matchStrategy])
+  @@index([tenantId])
+  @@map("account_duplicate_rules")
+}
+
+/// Required-field policy for Account create/update.
+model AccountRequiredField {
+  id         String   @id @default(cuid())
+  tenantId   String
+  fieldKey   String
+  isRequired Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([tenantId, fieldKey])
+  @@index([tenantId])
+  @@map("account_required_fields")
+}
+
+/// Tenant-scoped tag vocabulary for the Accounts module.
+model AccountTag {
+  id          String   @id @default(cuid())
+  tenantId    String
+  name        String
+  colorToken  String   @default("slate")
+  description String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+  @@map("account_tags")
+}
+
+/// Account module automation + AI toggles. One row per tenant.
+model AccountAutomationSetting {
+  id                                 String   @id @default(cuid())
+  tenantId                           String   @unique
+  // Ownership / lifecycle
+  autoAssignOwner                    Boolean  @default(false)
+  autoLinkContactsByDomain           Boolean  @default(true)
+  preventDeleteWithOpenOpportunities Boolean  @default(true)
+  notifyOnOwnerChange                Boolean  @default(false)
+  // Data hygiene
+  normalizeWebsiteDomain             Boolean  @default(true)
+  autoCapitalizeAccountNames         Boolean  @default(true)
+  // Duplicate / tag policy
+  notifyOnDuplicate                  Boolean  @default(true)
+  restrictTagCreationToAdmins        Boolean  @default(false)
+  // AI & Intelligence
+  aiIndustryInference                Boolean  @default(true)
+  aiEnrichment                       Boolean  @default(false)
+  aiTagSuggestions                   Boolean  @default(true)
+  aiInsightGeneration                Boolean  @default(true)
+  aiAccountScoring                   Boolean  @default(false)
+  createdAt                          DateTime @default(now())
+  updatedAt                          DateTime @updatedAt
+
+  @@map("account_automation_settings")
+}
+
 model Opportunity {
   id            String              @id @default(cuid())
   name          String
@@ -4731,6 +4806,17 @@ model ContactAutomationSetting {
   autoMergeOnExactEmail       Boolean  @default(false)
   notifyOnDuplicate           Boolean  @default(true)
   restrictTagCreationToAdmins Boolean  @default(false)
+  // Data hygiene (PG-182)
+  normalizePhoneNumbers       Boolean  @default(true)
+  autoCapitalizeNames         Boolean  @default(true)
+  preventDeleteWithOpenDeals  Boolean  @default(true)
+  notifyOnOwnerChange         Boolean  @default(false)
+  // AI & Intelligence (PG-182) — defaulted OFF (opt-in) per audit F4
+  aiDuplicateDetection        Boolean  @default(false)
+  aiEnrichment                Boolean  @default(false)
+  aiTagSuggestions            Boolean  @default(false)
+  aiInsightGeneration         Boolean  @default(false)
+  aiAutoReplyDrafting         Boolean  @default(false)
   createdAt                   DateTime @default(now())
   updatedAt                   DateTime @updatedAt
 

@@ -38,6 +38,10 @@ export type {
   HelpArticle,
   ArticleSection,
   ArticleFeedback,
+  ContactDuplicateRule,
+  ContactRequiredField,
+  ContactTag,
+  ContactAutomationSetting,
 } from '../generated/prisma/client';
 
 // Re-export performance tracking utilities

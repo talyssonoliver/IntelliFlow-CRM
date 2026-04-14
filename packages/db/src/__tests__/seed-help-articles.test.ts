@@ -19,6 +19,7 @@ import {
   EXPECTED_SECTIONS,
   __setPrismaForTest,
   __TEST_FIXTURES__ as FIXTURES,
+  assertSnapshotShape,
   getPrisma,
   main,
   runAndExit,
@@ -269,6 +270,25 @@ describe('seed-help-articles', () => {
     expect(client).toBeDefined();
     expect(getPrisma()).toBe(client); // cached
     __setPrismaForTest(null); // reset cache for later tests
+  });
+
+  it('T10 — assertSnapshotShape rejects malformed inputs', () => {
+    expect(() => assertSnapshotShape(null)).toThrow(/missing "articles"/);
+    expect(() => assertSnapshotShape({})).toThrow(/missing "articles"/);
+    expect(() => assertSnapshotShape({ articles: [] })).toThrow(/non-empty array/);
+    expect(() => assertSnapshotShape({ articles: 'not-an-array' })).toThrow(/non-empty array/);
+    expect(() => assertSnapshotShape({ articles: [null] })).toThrow(/each article must be an object/);
+    expect(() => assertSnapshotShape({ articles: [{ slug: 'x' }] })).toThrow(/required fields/);
+  });
+
+  it('T11 — __setPrismaForTest throws in production', () => {
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'production';
+    try {
+      expect(() => __setPrismaForTest(null)).toThrow(/not callable in production/);
+    } finally {
+      process.env.NODE_ENV = originalEnv;
+    }
   });
 
   it('T9 — $disconnect runs on both success and failure paths', async () => {
