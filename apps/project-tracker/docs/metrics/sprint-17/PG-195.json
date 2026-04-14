@@ -4,13 +4,13 @@
   "section": "Performance",
   "description": "Subset Material Symbols font to unblock Lighthouse Performance >=90 gate — reduces 3.5 MB MaterialSymbolsOutlined.woff2 shipped by root layout to every route (PG-056 Lighthouse=63 baseline). Audit the 1,421 .material-symbols-outlined call sites, build a subsetter script that extracts the exact glyph set, regenerate a smaller woff2 (<500 KB target), add CI guard so new glyphs are added to the audit list.",
   "owner": "Growth FE (STOA-Foundation)",
-  "status": "BACKLOG",
+  "status": "NEEDS_HUMAN",
   "sprint": "sprint-17",
   "phase": "phase-0-initialisation",
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-04-13T22:40:46.902Z",
+    "verified_at": "2026-04-14T19:39:53.385Z",
     "required": [
       "PG-056"
     ]
@@ -36,13 +36,13 @@
     ],
     "created": [
       "apps/web/public/fonts/MaterialSymbolsOutlined.woff2",
-      "apps/web/src/app/layout.tsx"
-    ],
-    "missing": [
       "tools/scripts/subset-material-symbols.mjs",
       "artifacts/perf/material-symbols-glyph-audit.json",
+      "apps/web/src/app/layout.tsx",
       ".specify/sprints/sprint-17/attestations/PG-195/context_ack.json",
-      ".specify/sprints/sprint-17/attestations/PG-195/attestation.json",
+      ".specify/sprints/sprint-17/attestations/PG-195/attestation.json"
+    ],
+    "missing": [
       "artifacts/lighthouse/pg-195-post-subset-500.json",
       "artifacts/lighthouse/pg-195-post-subset-404.json"
     ]

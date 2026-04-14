@@ -460,7 +460,7 @@ const SKIP_DIRS_TOP_LEVEL = new Set(['build', 'coverage']);
 const SKIP_DIRS_ROOT_ONLY = new Set(['logs', 'tmp', 'playwright-report', 'sonar-reports']);
 
 /** Specific path prefixes to skip entirely (gitignored temp data, archived files) */
-const SKIP_PATH_PREFIXES = ['supabase/.temp/', 'artifacts/old/'];
+const SKIP_PATH_PREFIXES = ['supabase/.temp/'];
 
 const SKIP_FILES = new Set([
   '.DS_Store',

@@ -11,7 +11,7 @@
   "dependencies": {
     "required": [],
     "all_satisfied": true,
-    "verified_at": "2026-04-13T22:40:46.652Z"
+    "verified_at": "2026-04-14T19:39:53.264Z"
   },
   "dependencies_resolved": [],
   "started_at": "2026-02-23T12:00:00Z",
@@ -50,11 +50,10 @@
       "artifacts/reports/accessibility-audit-results.json"
     ],
     "created": [
-      "docs/compliance/accessibility-gap-assessment.md"
-    ],
-    "missing": [
+      "docs/compliance/accessibility-gap-assessment.md",
       "artifacts/reports/accessibility-audit-results.json"
-    ]
+    ],
+    "missing": []
   },
   "validations": [
     {

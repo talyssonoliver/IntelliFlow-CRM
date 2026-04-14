@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-04-13T22:50:33.489Z",
+  "last_updated": "2026-04-14T19:39:53.027Z",
   "tasks_by_status": {
     "DONE": [
       "EXC-INIT-001",
@@ -157,6 +157,7 @@
       "PG-053",
       "PG-055",
       "PG-056",
+      "PG-057",
       "DOC-001",
       "BRAND-001",
       "BRAND-002",
@@ -372,22 +373,17 @@
       "IFC-297",
       "IFC-298",
       "IFC-299",
+      "IFC-300",
       "IFC-303",
       "PG-192",
       "PG-193"
     ],
     "IN_PROGRESS": [
-      "PG-054",
-      "PG-057",
-      "IFC-300",
-      "PG-182",
-      "PG-183"
+      "PG-054"
     ],
     "VALIDATING": [],
     "BLOCKED": [],
-    "PLANNED": [
-      "PG-195"
-    ],
+    "PLANNED": [],
     "BACKLOG": [
       "IFC-032",
       "IFC-033",
@@ -583,9 +579,13 @@
     ],
     "FAILED": [],
     "NEEDS_HUMAN": [
-      "IFC-031"
+      "IFC-031",
+      "PG-183",
+      "PG-195"
     ],
-    "IN_REVIEW": []
+    "IN_REVIEW": [
+      "PG-182"
+    ]
   },
   "task_details": {
     "EXC-INIT-001": {
@@ -722,7 +722,7 @@
         "ENV-003-AI"
       ],
       "artifacts": [
-        "ARTIFACT:infra/supabase/config.toml;ARTIFACT:packages/db/prisma/_archived_migrations/**;ARTIFACT:packages/db/prisma/migrations/**;ARTIFACT:packages/db/scripts/**;EVIDENCE:.specify/sprints/sprint-0/attestations/ENV-004-AI/context_ack.json;ARTIFACT:packages/db/.env.example;ARTIFACT:scripts/reset-test-db.ps1;ARTIFACT:scripts/reset-test-db.sh"
+        "ARTIFACT:infra/supabase/config.toml;ARTIFACT:packages/db/prisma/migrations/**;ARTIFACT:packages/db/scripts/**;EVIDENCE:.specify/sprints/sprint-0/attestations/ENV-004-AI/context_ack.json;ARTIFACT:packages/db/.env.example;ARTIFACT:scripts/reset-test-db.ps1;ARTIFACT:scripts/reset-test-db.sh"
       ],
       "kpis": "Connection <30ms, AI-optimized indexes, 100% type safety verified",
       "definition_of_done": "Connection established, pgvector optimized by AI, schema AI-validated for performance; targets: >=100%, <30ms",
@@ -3993,7 +3993,7 @@
       "section": "System Pages",
       "description": "Maintenance",
       "owner": "SRE (STOA-Foundation)",
-      "status": "IN_PROGRESS",
+      "status": "DONE",
       "sprint": 17,
       "dependencies": [
         "PG-055"
@@ -5989,7 +5989,7 @@
         "IFC-072"
       ],
       "artifacts": [
-        "SPEC:.specify/sprints/sprint-5/specifications/IFC-127-spec.md;PLAN:.specify/sprints/sprint-5/planning/IFC-127-plan.md;EVIDENCE:.specify/sprints/sprint-5/attestations/IFC-127/context_pack.md;EVIDENCE:.specify/sprints/sprint-5/attestations/IFC-127/context_ack.json;ARTIFACT:infra/supabase/migrations/20250124000000_rls_policies.sql;ARTIFACT:infra/supabase/migrations/20260103000000_add_tenant_isolation.sql;ARTIFACT:apps/api/src/security/tenant-context.ts;ARTIFACT:packages/db/prisma/_archived_migrations/add-multi-tenancy-diff.sql;ARTIFACT:packages/db/prisma/_archived_migrations/add_multi_tenancy_manual.sql;ARTIFACT:packages/db/prisma/_archived_migrations/tenant-rls.sql"
+        "SPEC:.specify/sprints/sprint-5/specifications/IFC-127-spec.md;PLAN:.specify/sprints/sprint-5/planning/IFC-127-plan.md;EVIDENCE:.specify/sprints/sprint-5/attestations/IFC-127/context_pack.md;EVIDENCE:.specify/sprints/sprint-5/attestations/IFC-127/context_ack.json;ARTIFACT:infra/supabase/migrations/20250124000000_rls_policies.sql;ARTIFACT:infra/supabase/migrations/20260103000000_add_tenant_isolation.sql;ARTIFACT:apps/api/src/security/tenant-context.ts;ARTIFACT:docs/history/db/add_multi_tenancy_manual.sql;ARTIFACT:docs/history/db/tenant-rls.sql"
       ],
       "kpis": "No cross‑tenant data access; isolation tests pass",
       "definition_of_done": "Row‑level security policies applied; tenant context enforced in services; per‑tenant resource limits; artifacts: rls-policies.sql, tenant-context.ts, context_ack.json; verified by: pnpm test",
@@ -6632,7 +6632,7 @@
       "kpis": "Timeline load <1s; user task completion improved; 0 unauthorized events visible",
       "definition_of_done": "Timeline shows unified chronological events (tasks/deadlines/docs/comms/agent actions); filters; permissions enforced; E2E tests; targets: <1s",
       "validation": "VALIDATE:pnpm test;VALIDATE:pnpm --filter @intelliflow/api test --run",
-      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Timeline UI exists; ingestion pipeline available; comms and agent actions recorded;FILE:docs/planning/adr/ADR-006-agent-tools.md;FILE:docs/shared/review-checklist.md;FILE:docs/operations/pr-checklist.md;FILE:apps/web/src/app/cases/timeline/page.tsx;FILE:docs/operations/runbooks/ingestion.md;FILE:packages/adapters/src/messaging/email/outbound.ts;FILE:apps/web/src/app/agent-approvals/page.tsx;FILE:packages/db/prisma/_archived_migrations/20260131000000_init/migration.sql;FILE:docs/design/sitemap.md;FILE:docs/design/ui-flow-mapping.md;FILE:docs/design/page-registry.md;FILE:apps/project-tracker/docs/metrics/_global/flows/flow-index.md",
+      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Timeline UI exists; ingestion pipeline available; comms and agent actions recorded;FILE:docs/planning/adr/ADR-006-agent-tools.md;FILE:docs/shared/review-checklist.md;FILE:docs/operations/pr-checklist.md;FILE:apps/web/src/app/cases/timeline/page.tsx;FILE:docs/operations/runbooks/ingestion.md;FILE:packages/adapters/src/messaging/email/outbound.ts;FILE:apps/web/src/app/agent-approvals/page.tsx;FILE:docs/design/sitemap.md;FILE:docs/design/ui-flow-mapping.md;FILE:docs/design/page-registry.md;FILE:apps/project-tracker/docs/metrics/_global/flows/flow-index.md",
       "cadence": ""
     },
     "IFC-160": {
@@ -8702,7 +8702,7 @@
         "IFC-076"
       ],
       "artifacts": [
-        "ARTIFACT:apps/web/src/app/settings/leads/page.tsx;ARTIFACT:apps/web/src/app/settings/leads/LeadSettingsContent.tsx;ARTIFACT:apps/web/src/app/settings/leads/components/LeadStagesTab.tsx;ARTIFACT:apps/web/src/app/settings/leads/components/ScoringRulesTab.tsx;ARTIFACT:apps/web/src/app/settings/leads/components/CustomFieldsTab.tsx;ARTIFACT:apps/web/src/app/settings/leads/components/AutomationTab.tsx;ARTIFACT:apps/web/src/components/settings/ModuleSettingsLayout.tsx;ARTIFACT:apps/web/src/components/settings/__tests__/ModuleSettingsLayout.test.tsx;ARTIFACT:apps/api/src/modules/lead/lead-settings.router.ts;ARTIFACT:packages/validators/src/lead-settings.ts;ARTIFACT:packages/db/prisma/_archived_migrations/20260311_lead_settings/migration.sql;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-178/context_ack.json"
+        "ARTIFACT:apps/web/src/app/settings/leads/page.tsx;ARTIFACT:apps/web/src/app/settings/leads/LeadSettingsContent.tsx;ARTIFACT:apps/web/src/app/settings/leads/components/LeadStagesTab.tsx;ARTIFACT:apps/web/src/app/settings/leads/components/ScoringRulesTab.tsx;ARTIFACT:apps/web/src/app/settings/leads/components/CustomFieldsTab.tsx;ARTIFACT:apps/web/src/app/settings/leads/components/AutomationTab.tsx;ARTIFACT:apps/web/src/components/settings/ModuleSettingsLayout.tsx;ARTIFACT:apps/web/src/components/settings/__tests__/ModuleSettingsLayout.test.tsx;ARTIFACT:apps/api/src/modules/lead/lead-settings.router.ts;ARTIFACT:packages/validators/src/lead-settings.ts;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-178/context_ack.json"
       ],
       "kpis": "All 11 module settings routes resolve; form fields render and save; breadcrumb navigation works; Lighthouse >=90",
       "definition_of_done": "Pages at /settings/leads (scoring thresholds assignment auto-qual) /settings/contacts (duplicate detection required fields tags) /settings/accounts (hierarchy industry custom fields) /settings/deals (pipeline stages win-loss reasons scoring) /settings/tickets (default SLA auto-close notification triggers) /settings/documents (file types size limits antivirus retention) /settings/reports (default range currency scheduled delivery) /settings/billing (billing address tax ID invoice contact) /settings/appointments (duration buffer calendar integration) /settings/cases (case prefix default priority auto-assign) /settings/tasks (due-date offset reminder templates); all settingsHref and ModulePaywall links resolve; follows settings/account pattern; Lighthouse >=90; verified by: pnpm test",
@@ -10548,7 +10548,7 @@
         "PG-045"
       ],
       "artifacts": [
-        "ARTIFACT:packages/db/prisma/schema.prisma;ARTIFACT:packages/db/prisma/_archived_migrations/20260311000000_add_help_article_models/migration.sql;EVIDENCE:.specify/sprints/sprint-17/attestations/IFC-298/context_ack.json;EVIDENCE:.specify/sprints/sprint-17/attestations/IFC-298/attestation.json;SPEC:.specify/sprints/sprint-17/specifications/IFC-298-spec.md;PLAN:.specify/sprints/sprint-17/planning/IFC-298-plan.md"
+        "ARTIFACT:packages/db/prisma/schema.prisma;EVIDENCE:.specify/sprints/sprint-17/attestations/IFC-298/context_ack.json;EVIDENCE:.specify/sprints/sprint-17/attestations/IFC-298/attestation.json;SPEC:.specify/sprints/sprint-17/specifications/IFC-298-spec.md;PLAN:.specify/sprints/sprint-17/planning/IFC-298-plan.md"
       ],
       "kpis": "3 models + 1 enum + migration + 14 tests; all 4 validations pass",
       "definition_of_done": "HelpArticle, ArticleSection, ArticleFeedback Prisma models; migration applied; fields match HelpArticle TS interface; status enum (draft/published); verified by: pnpm test",
@@ -10578,19 +10578,19 @@
       "section": "Support",
       "description": "Help Article Seed Script — Static to DB Migration",
       "owner": "Backend Dev (STOA-Foundation)",
-      "status": "IN_PROGRESS",
+      "status": "DONE",
       "sprint": 17,
       "dependencies": [
         "IFC-298"
       ],
       "artifacts": [
-        "ARTIFACT:packages/db/prisma/seed-help-articles.ts;EVIDENCE:.specify/sprints/sprint-17/attestations/IFC-300/context_ack.json;SPEC:.specify/sprints/sprint-17/specifications/IFC-300-spec.md;PLAN:.specify/sprints/sprint-17/planning/IFC-300-plan.md"
+        "ARTIFACT:packages/db/prisma/seed-help-articles.ts;ARTIFACT:packages/db/prisma/seed-help-articles.cli.ts;ARTIFACT:packages/db/prisma/data/help-articles.snapshot.json;EVIDENCE:.specify/sprints/sprint-17/attestations/IFC-300/context_ack.json;EVIDENCE:.specify/sprints/sprint-17/attestations/IFC-300/attestation.json;SPEC:.specify/sprints/sprint-17/specifications/IFC-300-spec.md;PLAN:.specify/sprints/sprint-17/planning/IFC-300-plan.md"
       ],
-      "kpis": "17 articles seeded, idempotent re-run passes",
+      "kpis": "17 articles seeded, idempotent re-run passes; coverage 100%/90%/100%/100%; 11 tests pass",
       "definition_of_done": "Seed script migrates DEFAULT_HELP_ARTICLES into DB; idempotent (skip existing slugs); validates data integrity post-seed; verified by: pnpm test",
       "validation": "VALIDATE:pnpm --filter @intelliflow/db typecheck;VALIDATE:pnpm test",
       "prerequisites": "FILE:packages/db/prisma/schema.prisma;FILE:apps/web/src/lib/support/help-articles.ts",
-      "cadence": ""
+      "cadence": "2026-04-14"
     },
     "IFC-303": {
       "section": "Support",
@@ -10706,13 +10706,13 @@
       "section": "Settings",
       "description": "Module Settings - Contacts (/contacts/contact-settings)",
       "owner": "Frontend Dev (STOA-Foundation)",
-      "status": "IN_PROGRESS",
+      "status": "IN_REVIEW",
       "sprint": 17,
       "dependencies": [
         "PG-178"
       ],
       "artifacts": [
-        "ARTIFACT:apps/web/src/app/contacts/(list)/contact-settings/page.tsx;SPEC:.specify/sprints/sprint-17/specifications/PG-182-spec.md;PLAN:.specify/sprints/sprint-17/planning/PG-182-plan.md"
+        "ARTIFACT:apps/web/src/app/contacts/(list)/contact-settings/page.tsx;SPEC:.specify/sprints/sprint-17/specifications/PG-182-spec.md;PLAN:.specify/sprints/sprint-17/planning/PG-182-plan.md;EVIDENCE:.specify/sprints/sprint-17/attestations/PG-182/context_ack.json;EVIDENCE:.specify/sprints/sprint-17/attestations/PG-182/attestation.json"
       ],
       "kpis": "All form fields render and save; sidebar settings nav works; Lighthouse >=90",
       "definition_of_done": "Contact settings page at /contacts/contact-settings with duplicate detection, required fields, tags config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
@@ -10724,7 +10724,7 @@
       "section": "Settings",
       "description": "Module Settings - Accounts (/accounts/account-settings)",
       "owner": "Frontend Dev (STOA-Foundation)",
-      "status": "IN_PROGRESS",
+      "status": "NEEDS_HUMAN",
       "sprint": 17,
       "dependencies": [
         "PG-178"
@@ -10733,10 +10733,10 @@
         "ARTIFACT:apps/web/src/app/accounts/(list)/account-settings/page.tsx"
       ],
       "kpis": "All form fields render and save; sidebar settings nav works; Lighthouse >=90",
-      "definition_of_done": "Account settings page at /accounts/account-settings with hierarchy, industry, custom fields config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
+      "definition_of_done": "Account settings page at /accounts/account-settings with 8 sections: hierarchy, industry taxonomy, custom fields, duplicate detection, required fields, automation, AI & intelligence, tags; bento grid layout matching /contacts/contact-settings; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
       "validation": "VALIDATE:pnpm test",
       "prerequisites": "FILE:apps/web/src/components/sidebar/configs/accounts.ts;FILE:apps/web/src/components/accounts/AccountSettingsSidebarNav.tsx",
-      "cadence": "SPEC:.specify/sprints/sprint-17/specifications/PG-183-spec.md;PLAN:.specify/sprints/sprint-17/planning/PG-183-plan.md"
+      "cadence": "SPEC:.specify/sprints/sprint-17/specifications/PG-183-spec.md;PLAN:.specify/sprints/sprint-17/planning/PG-183-plan.md;EVIDENCE:.specify/sprints/sprint-17/attestations/PG-183/attestation.json"
     },
     "PG-184": {
       "section": "Settings",
@@ -11017,7 +11017,7 @@
       "section": "Performance",
       "description": "Subset Material Symbols font to unblock Lighthouse Performance >=90 gate — reduces 3.5 MB MaterialSymbolsOutlined.woff2 shipped by root layout to every route (PG-056 Lighthouse=63 baseline). Audit the 1,421 .material-symbols-outlined call sites, build a subsetter script that extracts the exact glyph set, regenerate a smaller woff2 (<500 KB target), add CI guard so new glyphs are added to the audit list.",
       "owner": "Growth FE (STOA-Foundation)",
-      "status": "PLANNED",
+      "status": "NEEDS_HUMAN",
       "sprint": 17,
       "dependencies": [
         "PG-056"

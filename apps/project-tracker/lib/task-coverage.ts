@@ -80,7 +80,9 @@ export function extractCoverageThresholdsFromKpis(
 ): CoverageThresholds {
   const thresholds = { ...DEFAULT_COVERAGE_THRESHOLDS };
 
-  for (const kpi of kpis ?? []) {
+  // Guard against malformed attestations (object-shaped kpi_results instead of array).
+  const iterable = Array.isArray(kpis) ? kpis : [];
+  for (const kpi of iterable) {
     const metric = inferCoverageMetric(kpi.kpi);
     const target = parsePercentage(kpi.target);
     if (metric && target !== null) {
@@ -267,7 +269,9 @@ export function buildCoverageMetricsFromAttestedKpis(
 ): CoverageMetrics | null {
   const metrics = new Map<keyof CoverageThresholds, CoverageKpiSnapshot>();
 
-  for (const kpi of kpis ?? []) {
+  // Guard against malformed attestations (object-shaped kpi_results instead of array).
+  const iterable = Array.isArray(kpis) ? kpis : [];
+  for (const kpi of iterable) {
     const metric = inferCoverageMetric(kpi.kpi);
     if (metric) {
       metrics.set(metric, kpi);

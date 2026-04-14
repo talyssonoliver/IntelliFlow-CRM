@@ -989,20 +989,28 @@ export async function GET(request: Request, { params }: Params) {
     const passOrPartial = allPassed ? 'pass' : 'partial';
     const overall = anyFailed ? 'fail' : passOrPartial;
 
-    // Build KPI results
-    const kpiResults: AttestationKPIResult[] = (attestation?.kpi_results || []).map((r) => ({
-      kpi: r.kpi,
-      target: r.target,
-      actual: r.actual,
-      met: r.met,
-    }));
+    // Build KPI results — guard against malformed attestations where kpi_results
+    // is written as an object dictionary instead of the schema-required array.
+    // Schema fix enforced at tools/scripts/validate-schemas.ts; 18 historical files
+    // slipped through with object shape (see memory: attestation shape drift 2026-04-14).
+    const rawKpis = attestation?.kpi_results;
+    const kpiResults: AttestationKPIResult[] = Array.isArray(rawKpis)
+      ? rawKpis.map((r) => ({
+          kpi: r.kpi,
+          target: r.target,
+          actual: r.actual,
+          met: r.met,
+        }))
+      : [];
 
-    // Build DoD results
-    const dodResults: DODItemResult[] = (attestation?.definition_of_done_items || []).map((r) => ({
-      criterion: r.criterion,
-      met: r.met,
-      evidence: r.evidence,
-    }));
+    const rawDod = attestation?.definition_of_done_items;
+    const dodResults: DODItemResult[] = Array.isArray(rawDod)
+      ? rawDod.map((r) => ({
+          criterion: r.criterion,
+          met: r.met,
+          evidence: r.evidence,
+        }))
+      : [];
 
     // Build context data
     const context = buildEnhancedContext(attestation, taskId);

@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/dependency-graph.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-04-13T22:50:34.369Z",
+  "last_updated": "2026-04-14T19:39:53.839Z",
   "description": "Cross-sprint dependency tracking for all tasks",
   "nodes": {
     "EXC-INIT-001": {
@@ -2320,7 +2320,7 @@
     "PG-057": {
       "task_id": "PG-057",
       "sprint": 17,
-      "status": "IN_PROGRESS",
+      "status": "DONE",
       "dependencies": [
         "PG-055"
       ],
@@ -6155,7 +6155,7 @@
     "IFC-300": {
       "task_id": "IFC-300",
       "sprint": 17,
-      "status": "IN_PROGRESS",
+      "status": "DONE",
       "dependencies": [
         "IFC-298"
       ],
@@ -6228,7 +6228,7 @@
     "PG-182": {
       "task_id": "PG-182",
       "sprint": 17,
-      "status": "IN_PROGRESS",
+      "status": "PLANNED",
       "dependencies": [
         "PG-178"
       ],
@@ -6237,7 +6237,7 @@
     "PG-183": {
       "task_id": "PG-183",
       "sprint": 17,
-      "status": "IN_PROGRESS",
+      "status": "BLOCKED",
       "dependencies": [
         "PG-178"
       ],
@@ -6390,7 +6390,7 @@
     "PG-195": {
       "task_id": "PG-195",
       "sprint": 17,
-      "status": "PLANNED",
+      "status": "BLOCKED",
       "dependencies": [
         "PG-056"
       ],
@@ -10718,6 +10718,8 @@
   ],
   "blocked_tasks": [
     "IFC-031",
+    "PG-183",
+    "PG-195",
     "PG-060",
     "PG-061",
     "PG-062",
@@ -10799,10 +10801,10 @@
   ],
   "ready_to_start": [
     "PG-126",
+    "PG-182",
     "PG-184",
     "PG-185",
     "PG-186",
-    "PG-195",
     "IFC-032",
     "PG-058",
     "PG-059",
