@@ -375,3 +375,41 @@ Ensure you're running from the project root directory.
 
 Check the detailed report at `artifacts/reports/turbo-validation.json` for
 specific issues.
+
+---
+
+## subset-material-symbols.mjs
+
+Scans source for Material Symbols icon references, regenerates the subsetted
+woff2 that `apps/web/src/app/layout.tsx` ships, and guards against icon drift at
+CI time. Introduced by PG-195.
+
+**Modes**:
+
+| Command                                                       | Purpose                                                                        | Exit code         |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------ | ----------------- |
+| `node tools/scripts/subset-material-symbols.mjs`              | Regenerate subsetted font + `artifacts/perf/material-symbols-glyph-audit.json` | 0 on success      |
+| `node tools/scripts/subset-material-symbols.mjs --verify`     | Scan source + diff against audit; fail on drift or unresolved dynamics         | 0 clean / 1 drift |
+| `node tools/scripts/subset-material-symbols.mjs --check-size` | Assert `apps/web/public/fonts/MaterialSymbolsOutlined.woff2` < 500 KB          | 0 / 1             |
+| `node tools/scripts/subset-material-symbols.mjs --help`       | Print usage                                                                    | 0                 |
+
+**Adding an icon** — two paths:
+
+1. **Icon is already in upstream Material Symbols (usual)**: add a literal usage
+   at a call site, run the regenerate command, commit the updated font + audit
+   JSON together.
+2. **Icon is NOT in upstream** (rare — upstream has ~3,500 glyphs): bump the
+   committed upstream fixture at
+   `tools/scripts/fixtures/MaterialSymbolsOutlined-upstream.woff2` per the
+   [ADR-046 Rollback Plan](../../docs/planning/adr/ADR-046-material-symbols-font-subsetting.md#rollback-plan).
+
+**CI integration**: the `--verify` guard runs in
+`.github/workflows/pr-checks.yml` (Quality Checks job) and
+`.github/workflows/ci.yml` (pre-Build step). See
+[`docs/design/ICON_USAGE.md`](../../docs/design/ICON_USAGE.md) for the full icon
+policy + forbidden libraries.
+
+**Tests**: `tools/scripts/__tests__/subset-material-symbols.test.ts` (56 cases,
+picked up by the root vitest project) + dedicated Istanbul config at
+`tools/scripts/__tests__/pg195.vitest.config.ts` (statements ≥ 90, branches ≥
+80, functions ≥ 90, lines ≥ 90).

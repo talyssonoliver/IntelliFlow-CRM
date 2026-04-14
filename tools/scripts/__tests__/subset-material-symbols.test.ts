@@ -65,8 +65,7 @@ describe('extractIconNamesFromSource', () => {
   });
 
   it('captures span with className={`... material-symbols-outlined ...`} template literal', () => {
-    const src =
-      '<span className={`${base} material-symbols-outlined ${size}`}>push_pin</span>';
+    const src = '<span className={`${base} material-symbols-outlined ${size}`}>push_pin</span>';
     const { icons } = extractIconNamesFromSource(src, 'tpl.tsx');
     expect(icons.has('push_pin')).toBe(true);
   });
@@ -233,7 +232,7 @@ describe('resolveDynamicSites', () => {
     expect(unresolved).toEqual([]);
   });
 
-  it('marks a site as covered for bare string-literal children like {\'push_pin\'}', () => {
+  it("marks a site as covered for bare string-literal children like {'push_pin'}", () => {
     const scan = { dynamicSites: [{ file: 'x', line: 1, snippet: "'push_pin'" }] };
     const { unresolved } = resolveDynamicSites(scan, { iconMapping, allowList: [] });
     expect(unresolved).toEqual([]);
@@ -394,12 +393,18 @@ describe('main CLI', () => {
       mkdirSync(join(tmp, 'artifacts/perf'), { recursive: true });
       mkdirSync(join(tmp, 'tools/scripts/fixtures'), { recursive: true });
       writeFileSync(join(tmp, 'package.json'), JSON.stringify({ devDependencies: {} }));
-      writeFileSync(join(tmp, 'apps/web/src/page.tsx'), `<span className="material-symbols-outlined">search</span>`);
+      writeFileSync(
+        join(tmp, 'apps/web/src/page.tsx'),
+        `<span className="material-symbols-outlined">search</span>`
+      );
       writeFileSync(
         join(tmp, 'packages/ui/src/lib/icon-mapping.ts'),
-        `export const ICON_MAPPING = {} as const;`,
+        `export const ICON_MAPPING = {} as const;`
       );
-      writeFileSync(join(tmp, 'tools/scripts/fixtures/MaterialSymbolsOutlined-upstream.woff2'), Buffer.alloc(1_000));
+      writeFileSync(
+        join(tmp, 'tools/scripts/fixtures/MaterialSymbolsOutlined-upstream.woff2'),
+        Buffer.alloc(1_000)
+      );
       const subsetSpy = vi.fn(async () => Buffer.alloc(42));
       const code = await main([], { log, repoRoot: tmp, subsetFont: subsetSpy });
       expect(code).toBe(0);
@@ -415,7 +420,7 @@ describe('main CLI', () => {
       mkdirSync(join(tmp, 'packages/ui/src/lib'), { recursive: true });
       writeFileSync(
         join(tmp, 'packages/ui/src/lib/icon-mapping.ts'),
-        `export const ICON_MAPPING = { Check: 'check' } as const;`,
+        `export const ICON_MAPPING = { Check: 'check' } as const;`
       );
       const code = await main(['--verify'], { log, repoRoot: tmp });
       expect(code).toBe(1);
@@ -474,11 +479,11 @@ describe('main CLI', () => {
       mkdirSync(join(tmp, 'artifacts/perf'), { recursive: true });
       writeFileSync(
         join(tmp, 'apps/web/src/page.tsx'),
-        `export const Page = () => <span className="material-symbols-outlined">search</span>;`,
+        `export const Page = () => <span className="material-symbols-outlined">search</span>;`
       );
       writeFileSync(
         join(tmp, 'packages/ui/src/lib/icon-mapping.ts'),
-        `export const ICON_MAPPING = { Search: 'search' } as const;`,
+        `export const ICON_MAPPING = { Search: 'search' } as const;`
       );
       const audit = {
         generated_at: '2026-01-01T00:00:00Z',
@@ -507,11 +512,11 @@ describe('main CLI', () => {
       // union and no allowList entry exists.
       writeFileSync(
         join(tmp, 'apps/web/src/page.tsx'),
-        `<span className="material-symbols-outlined">{mysteryExpression}</span>`,
+        `<span className="material-symbols-outlined">{mysteryExpression}</span>`
       );
       writeFileSync(
         join(tmp, 'packages/ui/src/lib/icon-mapping.ts'),
-        `export const ICON_MAPPING = {} as const;`,
+        `export const ICON_MAPPING = {} as const;`
       );
       const audit = {
         generated_at: '2026-01-01T00:00:00Z',
@@ -542,11 +547,11 @@ describe('main CLI', () => {
              <span className="material-symbols-outlined">search</span>
              <span className="material-symbols-outlined">fabricated_glyph_pg195</span>
            </>
-         );`,
+         );`
       );
       writeFileSync(
         join(tmp, 'packages/ui/src/lib/icon-mapping.ts'),
-        `export const ICON_MAPPING = { Search: 'search' } as const;`,
+        `export const ICON_MAPPING = { Search: 'search' } as const;`
       );
       const audit = {
         generated_at: '2026-01-01T00:00:00Z',
@@ -606,20 +611,23 @@ describe('regenerate', () => {
       mkdirSync(join(tmp, 'packages/ui/src/lib'), { recursive: true });
       mkdirSync(join(tmp, 'artifacts/perf'), { recursive: true });
       mkdirSync(join(tmp, 'tools/scripts/fixtures'), { recursive: true });
-      writeFileSync(join(tmp, 'package.json'), JSON.stringify({ devDependencies: { 'subset-font': '^2.5.0' } }));
+      writeFileSync(
+        join(tmp, 'package.json'),
+        JSON.stringify({ devDependencies: { 'subset-font': '^2.5.0' } })
+      );
       writeFileSync(
         join(tmp, 'apps/web/src/page.tsx'),
-        `<span className="material-symbols-outlined">search</span>`,
+        `<span className="material-symbols-outlined">search</span>`
       );
       writeFileSync(
         join(tmp, 'packages/ui/src/lib/icon-mapping.ts'),
-        `export const ICON_MAPPING = { Check: 'check' } as const;`,
+        `export const ICON_MAPPING = { Check: 'check' } as const;`
       );
       // Synthesise a minimal "upstream font" fixture of any bytes — the mock
       // subsetFont below ignores its content and returns a smaller buffer.
       writeFileSync(
         join(tmp, 'tools/scripts/fixtures/MaterialSymbolsOutlined-upstream.woff2'),
-        Buffer.alloc(3_000_000),
+        Buffer.alloc(3_000_000)
       );
 
       const fakeSubset = vi.fn(async () => Buffer.alloc(123_456));
@@ -633,9 +641,13 @@ describe('regenerate', () => {
       expect(audit.subsetted_bytes).toBe(123_456);
       expect(audit.unresolved_dynamic_icons).toEqual([]);
       expect(fakeSubset).toHaveBeenCalledOnce();
-      expect(readFileSync(join(tmp, 'apps/web/public/fonts/MaterialSymbolsOutlined.woff2')).length).toBe(123_456);
+      expect(
+        readFileSync(join(tmp, 'apps/web/public/fonts/MaterialSymbolsOutlined.woff2')).length
+      ).toBe(123_456);
       // Audit JSON round-trips through serializeAudit key order
-      const auditOnDisk = JSON.parse(readFileSync(join(tmp, 'artifacts/perf/material-symbols-glyph-audit.json'), 'utf8'));
+      const auditOnDisk = JSON.parse(
+        readFileSync(join(tmp, 'artifacts/perf/material-symbols-glyph-audit.json'), 'utf8')
+      );
       expect(auditOnDisk.icons_count).toBe(audit.icons.length);
     } finally {
       rmSync(tmp, { recursive: true, force: true });
@@ -656,15 +668,15 @@ describe('regenerate', () => {
       // A dynamic site whose snippet is an unknown identifier.
       writeFileSync(
         join(tmp, 'apps/web/src/page.tsx'),
-        `<span className="material-symbols-outlined">{mysteryWidget}</span>`,
+        `<span className="material-symbols-outlined">{mysteryWidget}</span>`
       );
       writeFileSync(
         join(tmp, 'packages/ui/src/lib/icon-mapping.ts'),
-        `export const ICON_MAPPING = { Check: 'check' } as const;`,
+        `export const ICON_MAPPING = { Check: 'check' } as const;`
       );
       writeFileSync(
         join(tmp, 'tools/scripts/fixtures/MaterialSymbolsOutlined-upstream.woff2'),
-        Buffer.alloc(1_000),
+        Buffer.alloc(1_000)
       );
 
       await mod.regenerate({
