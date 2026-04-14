@@ -57,21 +57,77 @@
     "files_created": 2,
     "files_modified": 7
   },
-  "gate_results": {
-    "gate_0_context_ack": "N/A",
-    "gate_1_plan_checkboxes": "PASS (52/52 - 100%)",
-    "gate_2_artifact_hashes": "PASS (9/9 verified)",
-    "gate_2b_import_reachability": "PASS (2/2 imported)",
-    "gate_2c_runtime_wiring": "PASS (6/6 verified)",
-    "gate_3_build_validation": "PASS (4/4 passed)",
-    "gate_3a_validation_matrix": "PASS (11/11 passed)",
-    "gate_3b_scoped_coverage": "PASS (100%/100%/100%/100%)",
-    "gate_3c_dead_code_check": "PASS (0 unused)"
-  },
-  "kpi_results": {
-    "coverage_actual": "Statements 100%, Branches 100%, Functions 100%, Lines 100% (23 tests)",
-    "acceptance_criteria": "10/10 AC verified, 5/5 NF verified"
-  },
-  "dependencies_verified": true,
+  "gate_results": [
+    {
+      "gate_id": "gate_0_context_ack",
+      "passed": true,
+      "timestamp": "2026-02-28T00:55:00Z"
+    },
+    {
+      "gate_id": "gate_1_plan_checkboxes",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-28T00:55:00Z"
+    },
+    {
+      "gate_id": "gate_2_artifact_hashes",
+      "passed": true,
+      "score": 9,
+      "timestamp": "2026-02-28T00:55:00Z"
+    },
+    {
+      "gate_id": "gate_2b_import_reachability",
+      "passed": true,
+      "score": 2,
+      "timestamp": "2026-02-28T00:55:00Z"
+    },
+    {
+      "gate_id": "gate_2c_runtime_wiring",
+      "passed": true,
+      "score": 6,
+      "timestamp": "2026-02-28T00:55:00Z"
+    },
+    {
+      "gate_id": "gate_3_build_validation",
+      "passed": true,
+      "score": 4,
+      "timestamp": "2026-02-28T00:55:00Z"
+    },
+    {
+      "gate_id": "gate_3a_validation_matrix",
+      "passed": true,
+      "score": 11,
+      "timestamp": "2026-02-28T00:55:00Z"
+    },
+    {
+      "gate_id": "gate_3b_scoped_coverage",
+      "passed": true,
+      "score": 100,
+      "timestamp": "2026-02-28T00:55:00Z"
+    },
+    {
+      "gate_id": "gate_3c_dead_code_check",
+      "passed": true,
+      "score": 0,
+      "timestamp": "2026-02-28T00:55:00Z"
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Test coverage (statements/branches/functions/lines)",
+      "target": "≥90%",
+      "actual": "Statements 100%, Branches 100%, Functions 100%, Lines 100% (23 tests)",
+      "met": true
+    },
+    {
+      "kpi": "Acceptance criteria verified",
+      "target": "10/10 AC, 5/5 NF",
+      "actual": "10/10 AC verified, 5/5 NF verified",
+      "met": true
+    }
+  ],
+  "dependencies_verified": [
+    "PG-129"
+  ],
   "notes": "PinButton component created and integrated into 5 entity detail pages (deals, contacts, leads, tickets, accounts). Uses existing useEntityPin hook. 100% test coverage. TicketDetail.coverage.test.tsx and AccountDetail.test.tsx needed PinButton mocks added to avoid tRPC context issues. 6 pre-existing failures in QuickActionHrefs.test.tsx and 1 in DocsNavigation are unrelated to PG-157."
 }

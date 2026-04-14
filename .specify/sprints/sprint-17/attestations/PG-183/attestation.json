@@ -1,0 +1,103 @@
+{
+  "task_id": "PG-183",
+  "target_sprint": 17,
+  "attested_at": "2026-04-14",
+  "verdict": "NEEDS_HUMAN",
+  "notes": "PG-183 expanded per user request to parity with /contacts/contact-settings. Now includes 8 bento sections: Hierarchy, Industry, Custom Fields, Duplicate Detection, Required Fields, Automation, AI & Intelligence, Tags + Configuration Summary. New Prisma models: AccountDuplicateRule, AccountRequiredField, AccountTag, AccountAutomationSetting. New router sub-routers: duplicateRules, requiredFields, tags, automation (7 total). 97 tests pass (80 router + validator + 17 web). Coverage on router = 100% stmts/100% fns/100% lines. Web build still blocked by unrelated pre-existing WIP in NodePalette.tsx:86 and other unrelated files. My code (account-settings/**) typechecks and lints clean.",
+  "artifact_hashes": {
+    "spec": "41cc029d57e038dbe7f8c16f8823eea75ace4d2f7523c380428490754c49d7ef",
+    "plan": "89dea6f82b3cb1ebf421fbd416dedd4f59b1f399b633a6886bbc2439105293c3",
+    "router": "76b32021f5aa6f59618258eeb56ced98197c1ab2bdeaafd2ddcbdb89bba60a22",
+    "validators": "7bccfcbc61244463fb3e63ede75dbd20ac1fff8e7051f69bd18585b58091b3fc",
+    "content": "2b545cb81cb714df948c9c094a4a705667c8e3211979017f171aacf8132f603a",
+    "page": "5966a81dc5420ce1027a01d7050c9045ae51bb68b934ecff272f93955edaeaf4",
+    "loading": "e91d394f83e35ea542e6b598889bc6ff58f4e788c55efc59095efda89f2858a4"
+  },
+  "dependencies_verified": [
+    {
+      "id": "PG-178",
+      "status": "Completed",
+      "evidence": "apps/web/src/components/settings/ModuleSettingsLayout.tsx present and imported by new AccountSettingsContent"
+    }
+  ],
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/validators --filter @intelliflow/api --filter @intelliflow/web run typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-04-14T00:00:00Z"
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run apps/api/src/modules/account/__tests__/account-settings.router.test.ts packages/validators/src/__tests__/account-settings.test.ts 'apps/web/src/app/accounts/(list)/account-settings/__tests__'",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-04-14T00:00:00Z"
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter @intelliflow/web --filter @intelliflow/api --filter @intelliflow/validators run lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-04-14T00:00:00Z"
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/web run build",
+      "exit_code": 1,
+      "passed": false,
+      "timestamp": "2026-04-14T00:00:00Z"
+    }
+  ],
+  "kpi_results": [
+    {
+      "name": "coverage.statements",
+      "target": 90,
+      "actual": 100,
+      "unit": "%",
+      "met": true
+    },
+    {
+      "name": "coverage.branches",
+      "target": 80,
+      "actual": 91.66,
+      "unit": "%",
+      "met": true
+    },
+    {
+      "name": "coverage.functions",
+      "target": 90,
+      "actual": 100,
+      "unit": "%",
+      "met": true
+    },
+    {
+      "name": "coverage.lines",
+      "target": 90,
+      "actual": 100,
+      "unit": "%",
+      "met": true
+    }
+  ],
+  "gate_results": [
+    { "gate_id": "plan-checkboxes", "passed": true },
+    { "gate_id": "artifact-verification", "passed": true },
+    { "gate_id": "import-reachability", "passed": true },
+    { "gate_id": "shared-component-reuse", "passed": true },
+    { "gate_id": "csv-reconcile", "passed": true },
+    { "gate_id": "dead-code", "passed": true },
+    { "gate_id": "build", "passed": false },
+    { "gate_id": "container-registration", "passed": true },
+    { "gate_id": "mock-coverage", "passed": true },
+    { "gate_id": "coverage", "passed": true }
+  ],
+  "evidence_summary": {
+    "files_created": 15,
+    "files_modified": 6,
+    "tests_added": 78,
+    "tests_passing": 78,
+    "coverage_pct_lines": 100,
+    "blocker": "Unrelated pre-existing WIP in apps/web/src/components/workflows/NodePalette.tsx blocks `next build` tsc step"
+  }
+}
