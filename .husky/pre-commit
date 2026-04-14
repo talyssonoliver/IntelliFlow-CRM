@@ -2,36 +2,33 @@
 . "$(dirname -- "$0")/_/husky.sh"
 
 # IntelliFlow CRM Pre-commit Hook
-# Runs linting, type checking, and formatting before commit
+# Fast checks only (~30s): format, lint, typecheck, auto-sync inventories.
+# Full test suite runs in CI — do not add slow steps here.
 
 echo "🔍 Running pre-commit checks..."
 
 # Auto-regenerate Sprint Plan split files if source CSV changed
-# (Split files are gitignored - they exist locally for Claude Code to read)
 if git diff --cached --name-only | grep -q "Sprint_plan\.csv$"; then
   echo "📊 Sprint_plan.csv changed - regenerating local split files..."
   npx tsx tools/scripts/split-sprint-plan.ts || {
     echo "❌ Failed to split Sprint_plan.csv"
     exit 1
   }
-  echo "✅ Local split files regenerated (not committed - gitignored)"
+  echo "✅ Local split files regenerated"
 fi
 
 # Auto-sync API inventory if router files changed
-# Keeps baseline.json in sync with actual tRPC endpoints
 if git diff --cached --name-only | grep -q "\.router\.ts$"; then
   echo "🔄 Router files changed - syncing API inventory..."
   npx tsx tools/scripts/sync-api-inventory.ts || {
     echo "❌ Failed to sync API inventory"
     exit 1
   }
-  # Stage the updated baseline.json
   git add artifacts/benchmarks/baseline.json
   echo "✅ API inventory synced and staged"
 fi
 
 # Auto-sync codebase inventory if relevant source files changed
-# Tracks: Prisma schema, middleware, workers, adapters, domain events, validators
 CODEBASE_PATTERNS="schema\.prisma|middleware/|workers/|adapters/src/|domain/src/events|validators/src/"
 if git diff --cached --name-only | grep -qE "$CODEBASE_PATTERNS"; then
   echo "🔄 Codebase files changed - syncing full inventory..."
@@ -39,7 +36,6 @@ if git diff --cached --name-only | grep -qE "$CODEBASE_PATTERNS"; then
     echo "❌ Failed to sync codebase inventory"
     exit 1
   }
-  # Stage the updated baseline.json
   git add artifacts/benchmarks/baseline.json
   echo "✅ Codebase inventory synced and staged"
 fi
@@ -52,43 +48,32 @@ if command -v gitleaks >/dev/null 2>&1; then
     echo "   If this is a false positive, add to .gitleaks.toml allowlist."
     exit 1
   }
-  echo "✅ No secrets detected in staged files"
+  echo "✅ No secrets detected"
 else
-  echo "⚠️  gitleaks not installed locally — skipping pre-commit secret scan."
-  echo "   CI will still scan this commit. Install locally with:"
-  echo "     brew install gitleaks   # macOS"
-  echo "     scoop install gitleaks  # Windows"
-  echo "     See https://github.com/gitleaks/gitleaks#installing"
+  echo "⚠️  gitleaks not installed — skipping local secret scan (CI will still run it)."
 fi
 
-# Run linting
+# Auto-format staged files then re-stage them
+echo "💅 Auto-formatting staged files..."
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(ts|tsx|js|jsx|json|md)$' || true)
+if [ -n "$STAGED_FILES" ]; then
+  echo "$STAGED_FILES" | xargs npx prettier --write --log-level=warn
+  echo "$STAGED_FILES" | xargs git add
+  echo "✅ Formatting applied and re-staged"
+fi
+
+# Run linting (excluding project-tracker which has known isolated TS issues)
 echo "📋 Linting code..."
 pnpm run lint "--filter=!@intelliflow/project-tracker" || {
-  echo "❌ Linting failed. Please fix errors before committing."
+  echo "❌ Linting failed. Fix errors before committing."
   exit 1
 }
 
 # Run type checking
 echo "🔧 Type checking..."
 pnpm run typecheck || {
-  echo "❌ Type checking failed. Please fix type errors before committing."
+  echo "❌ Type checking failed. Fix type errors before committing."
   exit 1
 }
 
-# Run formatting check
-echo "💅 Checking code formatting..."
-pnpm exec prettier --check "**/*.{ts,tsx,js,jsx,json,md}" || {
-  echo "❌ Code formatting check failed. Running auto-fix..."
-  pnpm run format
-  echo "✅ Code formatted. Please review changes and commit again."
-  exit 1
-}
-
-# Run unit tests for changed files
-echo "🧪 Running affected tests..."
-pnpm run test -- --changed || {
-  echo "❌ Tests failed. Please fix failing tests before committing."
-  exit 1
-}
-
-echo "✅ All pre-commit checks passed!"
+echo "✅ All pre-commit checks passed! (Full tests run in CI)"
