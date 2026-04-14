@@ -1,7 +1,62 @@
 # IntelliFlow CRM
 
-Modern CRM platform built with AI-first principles, leveraging Next.js, tRPC,
-and intelligent automation.
+Modern, AI-Native CRM platform built with **Hexagonal Architecture (Ports &
+Adapters)** and **Domain-Driven Design (DDD)** principles. Designed for high
+maintainability, type safety, and intelligent automation.
+
+## Core Intent
+
+IntelliFlow CRM is not just a lead management tool, but a modular ecosystem
+where core business logic is isolated from infrastructure. This architecture
+ensures that AI models, databases, and external integrations can be evolved or
+swapped without impacting the central domain.
+
+## Project Structure
+
+The codebase is organized as a **Turborepo monorepo** following strict
+architectural boundaries:
+
+```
+intelliFlow-CRM/
+├── apps/                      # Composition Root (wires layers together)
+│   ├── web/                   # Next.js 16+ Frontend (App Router)
+│   ├── api/                   # tRPC API Server
+│   ├── ai-worker/             # AI processing workers (LangChain/CrewAI)
+│   ├── workers/               # Background job workers (Notifications, Events)
+│   └── project-tracker/       # Internal sprint tracking dashboard
+├── packages/                  # Shared Modular Packages
+│   ├── domain/                # Pure Business Logic (Entities, Value Objects, Events)
+│   ├── application/           # Use Cases & Ports (Input/Output Interfaces)
+│   ├── adapters/              # Infrastructure (Prisma, Redis, AI Services, APIs)
+│   ├── db/                    # Database Schema (Prisma + Supabase)
+│   ├── validators/            # Type-safe Zod schemas
+│   ├── ui/                    # Shared shadcn/ui components
+│   └── platform/              # Feature flags & resilience patterns
+├── docs/                      # Architecture ADRs & System Design
+├── tests/                     # Unit, Integration, E2E, and Architecture tests
+└── artifacts/                 # Governance evidence & validation reports
+```
+
+## Tech Stack
+
+- **Frontend**: Next.js 16+ (App Router), React 19, shadcn/ui, Tailwind CSS
+- **Backend**: tRPC, Node.js (Hexagonal Application Layer)
+- **Database**: Prisma ORM, Supabase (PostgreSQL + pgvector for embeddings)
+- **AI/ML**: LangChain, CrewAI, Ollama (Local), OpenAI (Production)
+- **Observability**: OpenTelemetry, Prometheus, Grafana
+- **Infrastructure**: Turborepo, pnpm, Docker, GitHub Actions
+
+## Development Status
+
+The project is currently in **Active Development (Sprint 17+)**. Overall
+Progress: **~65% Completion** across 570+ tasks.
+
+For real-time metrics and detailed sprint status, see
+`docs/CURRENT_STATE_REPORT.md` or run the internal tracker:
+
+```bash
+pnpm tracker
+```
 
 ## Quick Start
 
@@ -9,73 +64,22 @@ and intelligent automation.
 pnpm install
 pnpm dev
 pnpm test
-pnpm run validate:sprint0
 ```
 
-## Project Structure
+For a full validation of the current architectural state:
 
+```bash
+pnpm run test:architecture
+pnpm run validate:sprint
 ```
-intelliFlow-CRM/
-├── apps/
-│   ├── web/              # Next.js frontend
-│   ├── api/              # tRPC API server
-│   ├── ai-worker/        # AI processing workers
-│   └── project-tracker/  # Sprint tracking dashboard
-├── packages/
-│   ├── db/               # Prisma + Supabase
-│   ├── domain/           # Domain models (DDD)
-│   ├── validators/       # Zod schemas
-│   ├── api-client/       # tRPC client
-│   ├── ui/               # Shared UI components
-│   └── platform/         # Feature flags & platform utilities
-├── docs/                 # Architecture & planning
-├── tests/                # Unit / integration / E2E tests
-├── tools/                # Scripts & utilities
-└── artifacts/            # Sprint artifacts & evidence
-```
-
-## Tech Stack
-
-- **Frontend**: Next.js (App Router), React, shadcn/ui, Tailwind CSS
-- **Backend**: tRPC, Prisma, Supabase (PostgreSQL + pgvector)
-- **AI/ML**: LangChain, model provider integrations (no keys committed)
-- **Monorepo**: Turborepo, pnpm workspaces
-- **Testing**: Vitest, Playwright
-- **Observability**: OpenTelemetry
-- **CI/CD**: GitHub Actions, Docker
-
-## Sprint 0 Status
-
-**Completion**: 100% (35/35 tasks)
-
-- Completed: 35
-- In Progress: 0
-- Planned: 0
-- Backlog: 0
-- Blocked: 0
-
-See `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv` for details.
 
 ## Documentation
 
-- `QUICK-START.md`
-- `SETUP.md`
-- `VALIDATION.md`
-- `PLANNING_ANALYSIS.md`
-- `CLAUDE.md`
-- `docs/company/product/feature-matrix.md`
-- `docs/architecture/`
-- Sprint 0 run report: `artifacts/sprint0/codex-run/report.md`
-
-## Testing
-
-```bash
-pnpm test:unit
-pnpm test:integration
-pnpm test:e2e
-pnpm test:coverage
-```
+- `docs/architecture/overview.md` - Core System Design
+- `docs/architecture/hex-boundaries.md` - Architectural Enforcement Rules
+- `QUICK-START.md` - Comprehensive Developer Onboarding
+- `SETUP.md` - Environment and Infrastructure Setup
 
 ## License
 
-Proprietary - IntelliFlow CRM © 2025
+Proprietary - IntelliFlow CRM © 2025-2026
