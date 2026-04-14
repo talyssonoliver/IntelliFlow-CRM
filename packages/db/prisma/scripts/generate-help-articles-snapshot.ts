@@ -34,7 +34,7 @@ function serialize(articles: unknown) {
         articles,
       },
       null,
-      2,
+      2
     ) + '\n'
   );
 }
@@ -58,16 +58,18 @@ if (checkMode) {
   const currentHash = sha256(currentBody);
   if (currentHash !== nextHash) {
     console.error(
-      `❌ Snapshot drift detected. apps/web source and committed snapshot disagree.\n   Expected hash: ${nextHash}\n   Actual hash:   ${currentHash}\n   Run: pnpm --filter @intelliflow/db run db:snapshot:help-articles`,
+      `❌ Snapshot drift detected. apps/web source and committed snapshot disagree.\n   Expected hash: ${nextHash}\n   Actual hash:   ${currentHash}\n   Run: pnpm --filter @intelliflow/db run db:snapshot:help-articles`
     );
     process.exit(1);
   }
-  console.log(`✅ Snapshot in sync with source (${DEFAULT_HELP_ARTICLES.length} articles, sha256 ${nextHash.slice(0, 12)}...)`);
+  console.log(
+    `✅ Snapshot in sync with source (${DEFAULT_HELP_ARTICLES.length} articles, sha256 ${nextHash.slice(0, 12)}...)`
+  );
   process.exit(0);
 }
 
 mkdirSync(dirname(outPath), { recursive: true });
 writeFileSync(outPath, nextBody, 'utf8');
 console.log(
-  `✅ Wrote ${DEFAULT_HELP_ARTICLES.length} articles to ${outPath} (sha256 ${nextHash.slice(0, 12)}...)`,
+  `✅ Wrote ${DEFAULT_HELP_ARTICLES.length} articles to ${outPath} (sha256 ${nextHash.slice(0, 12)}...)`
 );

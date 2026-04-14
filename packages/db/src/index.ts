@@ -42,6 +42,13 @@ export type {
   ContactRequiredField,
   ContactTag,
   ContactAutomationSetting,
+  AccountHierarchyConfig,
+  AccountIndustryOption,
+  AccountCustomField,
+  AccountDuplicateRule,
+  AccountRequiredField,
+  AccountTag,
+  AccountAutomationSetting,
 } from '../generated/prisma/client';
 
 // Re-export performance tracking utilities

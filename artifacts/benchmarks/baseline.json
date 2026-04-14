@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-04-12T23:48:46.796Z",
+  "timestamp": "2026-04-14T23:28:22.618Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1317,13 +1317,27 @@
     ]
   },
   "database_inventory": {
-    "total_tables": 96,
-    "total_fields": 1301,
-    "total_indexes": 418,
-    "total_relations": 72,
-    "tables_with_embeddings": 3,
-    "enums": 51,
+    "total_tables": 139,
+    "total_fields": 2111,
+    "total_indexes": 705,
+    "total_relations": 201,
+    "tables_with_embeddings": 4,
+    "enums": 71,
     "tables": [
+      {
+        "name": "Tenant",
+        "fields": 120,
+        "indexes": 4,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "User",
+        "fields": 39,
+        "indexes": 7,
+        "relations": 3,
+        "hasEmbedding": false
+      },
       {
         "name": "ConversationRecord",
         "fields": 36,
@@ -1333,142 +1347,212 @@
       },
       {
         "name": "Contact",
-        "fields": 33,
-        "indexes": 7,
+        "fields": 35,
+        "indexes": 14,
         "relations": 4,
         "hasEmbedding": true
       },
       {
-        "name": "CaseDocument",
-        "fields": 32,
-        "indexes": 11,
-        "relations": 0,
-        "hasEmbedding": false
-      },
-      {
         "name": "ToolCallRecord",
-        "fields": 31,
-        "indexes": 7,
-        "relations": 2,
-        "hasEmbedding": false
-      },
-      {
-        "name": "AuditLogEntry",
-        "fields": 31,
+        "fields": 33,
         "indexes": 8,
-        "relations": 1,
-        "hasEmbedding": false
-      },
-      {
-        "name": "Ticket",
-        "fields": 29,
-        "indexes": 10,
         "relations": 3,
         "hasEmbedding": false
       },
       {
-        "name": "Notification",
-        "fields": 27,
-        "indexes": 9,
-        "relations": 0,
-        "hasEmbedding": false
-      },
-      {
-        "name": "Appointment",
-        "fields": 25,
-        "indexes": 8,
-        "relations": 2,
-        "hasEmbedding": false
-      },
-      {
-        "name": "Document",
-        "fields": 23,
-        "indexes": 6,
-        "relations": 0,
-        "hasEmbedding": false
-      },
-      {
-        "name": "Opportunity",
-        "fields": 22,
-        "indexes": 6,
-        "relations": 4,
-        "hasEmbedding": false
-      },
-      {
-        "name": "EmailRecord",
-        "fields": 22,
-        "indexes": 5,
-        "relations": 0,
-        "hasEmbedding": false
-      },
-      {
-        "name": "CallRecord",
-        "fields": 22,
-        "indexes": 5,
-        "relations": 0,
-        "hasEmbedding": false
-      },
-      {
-        "name": "AgentAction",
-        "fields": 21,
-        "indexes": 5,
-        "relations": 0,
-        "hasEmbedding": false
-      },
-      {
-        "name": "Tenant",
-        "fields": 20,
-        "indexes": 4,
+        "name": "CaseDocument",
+        "fields": 33,
+        "indexes": 11,
         "relations": 1,
         "hasEmbedding": false
       },
       {
         "name": "Lead",
-        "fields": 20,
-        "indexes": 8,
+        "fields": 32,
+        "indexes": 11,
         "relations": 2,
         "hasEmbedding": true
       },
       {
-        "name": "FeedbackSurvey",
-        "fields": 20,
-        "indexes": 5,
-        "relations": 0,
+        "name": "AuditLogEntry",
+        "fields": 32,
+        "indexes": 8,
+        "relations": 2,
         "hasEmbedding": false
       },
       {
-        "name": "Task",
-        "fields": 19,
-        "indexes": 5,
-        "relations": 5,
+        "name": "Appointment",
+        "fields": 30,
+        "indexes": 10,
+        "relations": 4,
         "hasEmbedding": false
       },
       {
-        "name": "AIInsight",
-        "fields": 19,
-        "indexes": 6,
-        "relations": 0,
+        "name": "ChainVersion",
+        "fields": 30,
+        "indexes": 4,
+        "relations": 3,
         "hasEmbedding": false
       },
       {
-        "name": "User",
-        "fields": 18,
+        "name": "Ticket",
+        "fields": 29,
+        "indexes": 11,
+        "relations": 3,
+        "hasEmbedding": false
+      },
+      {
+        "name": "Notification",
+        "fields": 28,
+        "indexes": 10,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "EmailRecord",
+        "fields": 26,
         "indexes": 7,
         "relations": 1,
         "hasEmbedding": false
       },
       {
+        "name": "Document",
+        "fields": 25,
+        "indexes": 7,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "Opportunity",
+        "fields": 24,
+        "indexes": 14,
+        "relations": 4,
+        "hasEmbedding": false
+      },
+      {
+        "name": "CallRecord",
+        "fields": 24,
+        "indexes": 6,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "AgentAction",
+        "fields": 23,
+        "indexes": 8,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "AutoResponseDraft",
+        "fields": 23,
+        "indexes": 6,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "FeedbackSurvey",
+        "fields": 22,
+        "indexes": 6,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "Task",
+        "fields": 21,
+        "indexes": 11,
+        "relations": 6,
+        "hasEmbedding": false
+      },
+      {
+        "name": "Case",
+        "fields": 21,
+        "indexes": 8,
+        "relations": 4,
+        "hasEmbedding": false
+      },
+      {
+        "name": "AIInsight",
+        "fields": 21,
+        "indexes": 7,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "Account",
+        "fields": 19,
+        "indexes": 6,
+        "relations": 4,
+        "hasEmbedding": false
+      },
+      {
         "name": "ActivityEvent",
-        "fields": 17,
+        "fields": 19,
+        "indexes": 6,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "SLAPolicy",
+        "fields": 19,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "AIOutputReview",
+        "fields": 19,
+        "indexes": 8,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "ReportDefinition",
+        "fields": 19,
+        "indexes": 5,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "Experiment",
+        "fields": 19,
         "indexes": 4,
         "relations": 1,
         "hasEmbedding": false
       },
       {
-        "name": "SLAPolicy",
+        "name": "MessageRecord",
+        "fields": 18,
+        "indexes": 5,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "AccountAutomationSetting",
         "fields": 17,
-        "indexes": 1,
+        "indexes": 2,
         "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "TicketActivity",
+        "fields": 17,
+        "indexes": 6,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "LeadAIInsight",
+        "fields": 17,
+        "indexes": 5,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "ChatConversation",
+        "fields": 17,
+        "indexes": 6,
+        "relations": 1,
         "hasEmbedding": false
       },
       {
@@ -1479,38 +1563,73 @@
         "hasEmbedding": false
       },
       {
-        "name": "ReportDefinition",
+        "name": "ReportSchedule",
         "fields": 17,
-        "indexes": 3,
-        "relations": 0,
-        "hasEmbedding": false
-      },
-      {
-        "name": "MessageRecord",
-        "fields": 16,
-        "indexes": 4,
-        "relations": 1,
-        "hasEmbedding": false
-      },
-      {
-        "name": "TicketActivity",
-        "fields": 16,
         "indexes": 5,
-        "relations": 1,
+        "relations": 2,
         "hasEmbedding": false
       },
       {
         "name": "NotificationDLQ",
-        "fields": 16,
+        "fields": 17,
         "indexes": 4,
-        "relations": 0,
+        "relations": 1,
         "hasEmbedding": false
       },
       {
-        "name": "Account",
+        "name": "HelpArticle",
+        "fields": 17,
+        "indexes": 6,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "ContactAutomationSetting",
+        "fields": 17,
+        "indexes": 2,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "SecurityEvent",
+        "fields": 16,
+        "indexes": 8,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "ContactAIInsight",
+        "fields": 16,
+        "indexes": 5,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "WorkflowDefinition",
+        "fields": 16,
+        "indexes": 6,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "WebhookEndpoint",
+        "fields": 16,
+        "indexes": 4,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "UserMfaSettings",
         "fields": 15,
         "indexes": 4,
-        "relations": 2,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "DomainEvent",
+        "fields": 15,
+        "indexes": 8,
+        "relations": 1,
         "hasEmbedding": false
       },
       {
@@ -1521,24 +1640,73 @@
         "hasEmbedding": false
       },
       {
-        "name": "ChatConversation",
+        "name": "AccountHealthScore",
+        "fields": 15,
+        "indexes": 6,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "SLABreach",
+        "fields": 15,
+        "indexes": 6,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "WorkflowExecution",
+        "fields": 15,
+        "indexes": 7,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "BusinessRule",
+        "fields": 15,
+        "indexes": 6,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "ReportExecution",
         "fields": 15,
         "indexes": 5,
-        "relations": 0,
+        "relations": 2,
         "hasEmbedding": false
       },
       {
-        "name": "ReportSchedule",
+        "name": "WebhookDelivery",
         "fields": 15,
-        "indexes": 4,
+        "indexes": 6,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "APIKey",
+        "fields": 15,
+        "indexes": 6,
         "relations": 1,
         "hasEmbedding": false
       },
       {
-        "name": "ContactAIInsight",
-        "fields": 14,
-        "indexes": 4,
+        "name": "NotificationTemplate",
+        "fields": 15,
+        "indexes": 6,
         "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "CustomActionHandler",
+        "fields": 15,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "CaseTask",
+        "fields": 14,
+        "indexes": 7,
+        "relations": 3,
         "hasEmbedding": false
       },
       {
@@ -1549,17 +1717,45 @@
         "hasEmbedding": false
       },
       {
-        "name": "WebhookEndpoint",
+        "name": "ChatMessage",
         "fields": 14,
-        "indexes": 2,
-        "relations": 0,
+        "indexes": 4,
+        "relations": 2,
         "hasEmbedding": false
       },
       {
-        "name": "NotificationTemplate",
+        "name": "EscalationHistory",
         "fields": 14,
         "indexes": 6,
-        "relations": 0,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "DashboardConfig",
+        "fields": 14,
+        "indexes": 5,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "APIUsageRecord",
+        "fields": 14,
+        "indexes": 6,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "LeadActivity",
+        "fields": 13,
+        "indexes": 4,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "ContactActivity",
+        "fields": 13,
+        "indexes": 6,
+        "relations": 2,
         "hasEmbedding": false
       },
       {
@@ -1570,52 +1766,31 @@
         "hasEmbedding": false
       },
       {
-        "name": "SecurityEvent",
-        "fields": 13,
-        "indexes": 5,
-        "relations": 0,
-        "hasEmbedding": false
-      },
-      {
-        "name": "AccountHealthScore",
-        "fields": 13,
-        "indexes": 4,
-        "relations": 0,
-        "hasEmbedding": false
-      },
-      {
-        "name": "SLABreach",
-        "fields": 13,
-        "indexes": 4,
-        "relations": 0,
-        "hasEmbedding": false
-      },
-      {
-        "name": "WorkflowDefinition",
-        "fields": 13,
-        "indexes": 3,
-        "relations": 0,
-        "hasEmbedding": false
-      },
-      {
-        "name": "WorkflowExecution",
+        "name": "AgentAvailability",
         "fields": 13,
         "indexes": 5,
         "relations": 1,
         "hasEmbedding": false
       },
       {
-        "name": "BusinessRule",
+        "name": "RoutingAudit",
         "fields": 13,
-        "indexes": 4,
-        "relations": 0,
+        "indexes": 5,
+        "relations": 1,
         "hasEmbedding": false
       },
       {
-        "name": "ReportExecution",
+        "name": "TicketCategory",
         "fields": 13,
-        "indexes": 4,
+        "indexes": 7,
         "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "BusinessRuleExecution",
+        "fields": 13,
+        "indexes": 5,
+        "relations": 2,
         "hasEmbedding": false
       },
       {
@@ -1626,45 +1801,80 @@
         "hasEmbedding": false
       },
       {
-        "name": "WebhookDelivery",
-        "fields": 13,
-        "indexes": 5,
-        "relations": 1,
-        "hasEmbedding": false
-      },
-      {
-        "name": "APIKey",
-        "fields": 13,
-        "indexes": 5,
-        "relations": 0,
-        "hasEmbedding": false
-      },
-      {
         "name": "NotificationDeliveryLog",
         "fields": 13,
-        "indexes": 4,
+        "indexes": 5,
         "relations": 0,
         "hasEmbedding": false
       },
       {
-        "name": "ChatMessage",
-        "fields": 12,
+        "name": "CustomNodeType",
+        "fields": 13,
         "indexes": 3,
         "relations": 1,
         "hasEmbedding": false
       },
       {
-        "name": "EscalationHistory",
+        "name": "LeadFile",
         "fields": 12,
         "indexes": 4,
-        "relations": 0,
+        "relations": 2,
         "hasEmbedding": false
       },
       {
-        "name": "DashboardConfig",
+        "name": "DealProduct",
         "fields": 12,
         "indexes": 3,
-        "relations": 0,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "DealFile",
+        "fields": 12,
+        "indexes": 3,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "AIScore",
+        "fields": 12,
+        "indexes": 4,
+        "relations": 3,
+        "hasEmbedding": false
+      },
+      {
+        "name": "TicketAttachment",
+        "fields": 12,
+        "indexes": 3,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "TicketAIInsight",
+        "fields": 12,
+        "indexes": 3,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "Team",
+        "fields": 12,
+        "indexes": 4,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "EmailTemplate",
+        "fields": 12,
+        "indexes": 5,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "RoutingRule",
+        "fields": 12,
+        "indexes": 6,
+        "relations": 1,
         "hasEmbedding": false
       },
       {
@@ -1675,10 +1885,31 @@
         "hasEmbedding": false
       },
       {
-        "name": "APIUsageRecord",
+        "name": "CaseDocumentAudit",
         "fields": 12,
-        "indexes": 4,
+        "indexes": 6,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "LeadCustomField",
+        "fields": 12,
+        "indexes": 3,
         "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "LeadNote",
+        "fields": 11,
+        "indexes": 4,
+        "relations": 2,
+        "hasEmbedding": true
+      },
+      {
+        "name": "AccountCustomField",
+        "fields": 11,
+        "indexes": 3,
+        "relations": 0,
         "hasEmbedding": false
       },
       {
@@ -1689,10 +1920,24 @@
         "hasEmbedding": false
       },
       {
-        "name": "ContactActivity",
+        "name": "SLANotification",
         "fields": 11,
-        "indexes": 4,
+        "indexes": 5,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "AIMonitoringEvent",
+        "fields": 11,
+        "indexes": 9,
         "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "UserPermission",
+        "fields": 11,
+        "indexes": 5,
+        "relations": 2,
         "hasEmbedding": false
       },
       {
@@ -1703,115 +1948,150 @@
         "hasEmbedding": true
       },
       {
-        "name": "AgentAvailability",
+        "name": "SalesPerformance",
         "fields": 11,
-        "indexes": 4,
-        "relations": 0,
-        "hasEmbedding": false
-      },
-      {
-        "name": "RoutingAudit",
-        "fields": 11,
-        "indexes": 4,
-        "relations": 0,
-        "hasEmbedding": false
-      },
-      {
-        "name": "TicketCategory",
-        "fields": 11,
-        "indexes": 4,
-        "relations": 0,
-        "hasEmbedding": false
-      },
-      {
-        "name": "BusinessRuleExecution",
-        "fields": 11,
-        "indexes": 4,
+        "indexes": 6,
         "relations": 1,
         "hasEmbedding": false
       },
       {
-        "name": "CaseDocumentAudit",
+        "name": "DocumentAccessLog",
         "fields": 11,
         "indexes": 5,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "DocumentShare",
+        "fields": 11,
+        "indexes": 5,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "AgentSkill",
+        "fields": 11,
+        "indexes": 7,
         "relations": 1,
         "hasEmbedding": false
       },
       {
-        "name": "DealProduct",
-        "fields": 10,
+        "name": "CaseDocumentACL",
+        "fields": 11,
+        "indexes": 6,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "ExperimentAssignment",
+        "fields": 11,
+        "indexes": 5,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "ExperimentResult",
+        "fields": 11,
         "indexes": 2,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "Calendar",
+        "fields": 11,
+        "indexes": 3,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "ArticleSection",
+        "fields": 11,
+        "indexes": 3,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "LeadStageConfig",
+        "fields": 11,
+        "indexes": 4,
         "relations": 1,
         "hasEmbedding": false
       },
       {
-        "name": "DealFile",
+        "name": "TicketNextStep",
         "fields": 10,
-        "indexes": 2,
-        "relations": 1,
+        "indexes": 5,
+        "relations": 2,
         "hasEmbedding": false
       },
       {
-        "name": "AIScore",
+        "name": "RelatedTicket",
+        "fields": 10,
+        "indexes": 4,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "EmailAttachment",
         "fields": 10,
         "indexes": 3,
         "relations": 2,
         "hasEmbedding": false
       },
       {
-        "name": "TicketAttachment",
+        "name": "PerformanceMetric",
         "fields": 10,
-        "indexes": 2,
+        "indexes": 6,
         "relations": 1,
         "hasEmbedding": false
       },
       {
-        "name": "TicketAIInsight",
+        "name": "LeadConversionAudit",
         "fields": 10,
-        "indexes": 2,
+        "indexes": 9,
         "relations": 1,
         "hasEmbedding": false
       },
       {
-        "name": "Team",
-        "fields": 10,
-        "indexes": 3,
-        "relations": 1,
-        "hasEmbedding": false
-      },
-      {
-        "name": "EmailTemplate",
+        "name": "ZepEpisodeUsage",
         "fields": 10,
         "indexes": 3,
         "relations": 0,
         "hasEmbedding": false
       },
       {
-        "name": "RoutingRule",
+        "name": "ChainVersionAudit",
         "fields": 10,
-        "indexes": 3,
-        "relations": 0,
-        "hasEmbedding": false
-      },
-      {
-        "name": "CaseDocumentACL",
-        "fields": 10,
-        "indexes": 5,
-        "relations": 1,
-        "hasEmbedding": false
-      },
-      {
-        "name": "DomainEvent",
-        "fields": 9,
-        "indexes": 5,
-        "relations": 0,
-        "hasEmbedding": false
-      },
-      {
-        "name": "SLANotification",
-        "fields": 9,
         "indexes": 4,
         "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "ContactDuplicateRule",
+        "fields": 10,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "ContactTag",
+        "fields": 10,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "AccountDuplicateRule",
+        "fields": 9,
+        "indexes": 3,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "AccountTag",
+        "fields": 9,
+        "indexes": 3,
+        "relations": 0,
         "hasEmbedding": false
       },
       {
@@ -1822,38 +2102,24 @@
         "hasEmbedding": false
       },
       {
-        "name": "UserPermission",
-        "fields": 9,
-        "indexes": 4,
-        "relations": 1,
-        "hasEmbedding": false
-      },
-      {
-        "name": "SalesPerformance",
+        "name": "UserRoleAssignment",
         "fields": 9,
         "indexes": 5,
-        "relations": 0,
+        "relations": 2,
         "hasEmbedding": false
       },
       {
-        "name": "DocumentAccessLog",
+        "name": "TeamMessage",
         "fields": 9,
         "indexes": 4,
         "relations": 1,
         "hasEmbedding": false
       },
       {
-        "name": "DocumentShare",
+        "name": "PipelineSnapshot",
         "fields": 9,
         "indexes": 4,
         "relations": 1,
-        "hasEmbedding": false
-      },
-      {
-        "name": "AgentSkill",
-        "fields": 9,
-        "indexes": 5,
-        "relations": 0,
         "hasEmbedding": false
       },
       {
@@ -1864,16 +2130,51 @@
         "hasEmbedding": false
       },
       {
-        "name": "LeadConversionAudit",
+        "name": "ActivityComment",
         "fields": 9,
-        "indexes": 7,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "ActivityReaction",
+        "fields": 9,
+        "indexes": 4,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "ArticleFeedback",
+        "fields": 9,
+        "indexes": 3,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "AccountIndustryOption",
+        "fields": 8,
+        "indexes": 3,
         "relations": 0,
         "hasEmbedding": false
       },
       {
-        "name": "RelatedTicket",
+        "name": "AppointmentCase",
         "fields": 8,
-        "indexes": 3,
+        "indexes": 4,
+        "relations": 3,
+        "hasEmbedding": false
+      },
+      {
+        "name": "AIOutputReviewAudit",
+        "fields": 8,
+        "indexes": 4,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "GrowthMetric",
+        "fields": 8,
+        "indexes": 5,
         "relations": 1,
         "hasEmbedding": false
       },
@@ -1885,17 +2186,52 @@
         "hasEmbedding": false
       },
       {
-        "name": "EmailAttachment",
+        "name": "TeamMember",
+        "fields": 8,
+        "indexes": 5,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "ZepEpisodeAudit",
+        "fields": 8,
+        "indexes": 2,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "LeadScoringRule",
+        "fields": 8,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "LeadAutomationSetting",
         "fields": 8,
         "indexes": 2,
         "relations": 1,
         "hasEmbedding": false
       },
       {
-        "name": "PerformanceMetric",
-        "fields": 8,
-        "indexes": 4,
+        "name": "TenantModule",
+        "fields": 7,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "AccountHierarchyConfig",
+        "fields": 7,
+        "indexes": 2,
         "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "AppointmentAttendee",
+        "fields": 7,
+        "indexes": 4,
+        "relations": 2,
         "hasEmbedding": false
       },
       {
@@ -1906,30 +2242,16 @@
         "hasEmbedding": false
       },
       {
-        "name": "UserRoleAssignment",
+        "name": "TrafficSource",
         "fields": 7,
         "indexes": 4,
         "relations": 1,
         "hasEmbedding": false
       },
       {
-        "name": "TeamMessage",
+        "name": "DealsWonMetric",
         "fields": 7,
-        "indexes": 3,
-        "relations": 0,
-        "hasEmbedding": false
-      },
-      {
-        "name": "PipelineSnapshot",
-        "fields": 7,
-        "indexes": 3,
-        "relations": 0,
-        "hasEmbedding": false
-      },
-      {
-        "name": "TicketNextStep",
-        "fields": 7,
-        "indexes": 3,
+        "indexes": 4,
         "relations": 1,
         "hasEmbedding": false
       },
@@ -1941,31 +2263,24 @@
         "hasEmbedding": false
       },
       {
-        "name": "GrowthMetric",
+        "name": "ContactRequiredField",
+        "fields": 7,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "Session",
         "fields": 6,
-        "indexes": 4,
+        "indexes": 1,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "AccountRequiredField",
+        "fields": 6,
+        "indexes": 3,
         "relations": 0,
-        "hasEmbedding": false
-      },
-      {
-        "name": "TeamMember",
-        "fields": 6,
-        "indexes": 4,
-        "relations": 1,
-        "hasEmbedding": false
-      },
-      {
-        "name": "AppointmentAttendee",
-        "fields": 5,
-        "indexes": 3,
-        "relations": 1,
-        "hasEmbedding": false
-      },
-      {
-        "name": "AppointmentCase",
-        "fields": 5,
-        "indexes": 3,
-        "relations": 1,
         "hasEmbedding": false
       },
       {
@@ -1976,35 +2291,22 @@
         "hasEmbedding": false
       },
       {
-        "name": "TrafficSource",
-        "fields": 5,
-        "indexes": 3,
-        "relations": 0,
-        "hasEmbedding": false
-      },
-      {
-        "name": "DealsWonMetric",
-        "fields": 5,
-        "indexes": 3,
-        "relations": 0,
-        "hasEmbedding": false
-      },
-      {
         "name": "NotificationPreference",
-        "fields": 4,
+        "fields": 5,
         "indexes": 1,
-        "relations": 0,
+        "relations": 1,
         "hasEmbedding": false
       }
     ]
   },
   "middleware_inventory": {
-    "total_middleware": 6,
+    "total_middleware": 14,
     "by_type": {
-      "auth": 1,
+      "auth": 3,
       "other": 2,
       "logging": 2,
-      "error": 1
+      "error": 1,
+      "rate-limit": 6
     },
     "middleware": [
       {
@@ -2041,6 +2343,54 @@
         "name": "createErrorTrackingMiddleware",
         "type": "error",
         "description": "Error tracking and reporting",
+        "enabled": true
+      },
+      {
+        "name": "createRateLimitMiddleware",
+        "type": "rate-limit",
+        "description": "Rate limiting",
+        "enabled": true
+      },
+      {
+        "name": "createStrictRateLimitMiddleware",
+        "type": "rate-limit",
+        "description": "Rate limiting",
+        "enabled": true
+      },
+      {
+        "name": "createLenientRateLimitMiddleware",
+        "type": "rate-limit",
+        "description": "Rate limiting",
+        "enabled": true
+      },
+      {
+        "name": "createTieredRateLimitMiddleware",
+        "type": "rate-limit",
+        "description": "Rate limiting",
+        "enabled": true
+      },
+      {
+        "name": "createPublicRateLimitMiddleware",
+        "type": "rate-limit",
+        "description": "Rate limiting",
+        "enabled": true
+      },
+      {
+        "name": "createAuthenticatedRateLimitMiddleware",
+        "type": "auth",
+        "description": "Authentication and authorization",
+        "enabled": true
+      },
+      {
+        "name": "createAIRateLimitMiddleware",
+        "type": "rate-limit",
+        "description": "Rate limiting",
+        "enabled": true
+      },
+      {
+        "name": "createAuthEndpointRateLimitMiddleware",
+        "type": "auth",
+        "description": "Authentication and authorization",
         "enabled": true
       }
     ]
@@ -2316,14 +2666,26 @@
     ]
   },
   "validators_inventory": {
-    "total_validators": 22,
-    "total_schemas": 248,
+    "total_validators": 40,
+    "total_schemas": 472,
     "by_complexity": {
-      "complex": 13,
-      "moderate": 8,
-      "simple": 1
+      "complex": 27,
+      "moderate": 9,
+      "simple": 4
     },
     "validators": [
+      {
+        "name": "ai",
+        "file": "ai.ts",
+        "schemas": 31,
+        "complexity": "complex"
+      },
+      {
+        "name": "billing",
+        "file": "billing.ts",
+        "schemas": 27,
+        "complexity": "complex"
+      },
       {
         "name": "platform-metrics",
         "file": "platform-metrics.ts",
@@ -2333,19 +2695,25 @@
       {
         "name": "auth",
         "file": "auth.ts",
-        "schemas": 24,
+        "schemas": 26,
         "complexity": "complex"
       },
       {
-        "name": "billing",
-        "file": "billing.ts",
-        "schemas": 21,
+        "name": "home",
+        "file": "home.ts",
+        "schemas": 25,
         "complexity": "complex"
       },
       {
-        "name": "ai",
-        "file": "ai.ts",
-        "schemas": 20,
+        "name": "auto-response",
+        "file": "auto-response.ts",
+        "schemas": 19,
+        "complexity": "complex"
+      },
+      {
+        "name": "notifications",
+        "file": "notifications.ts",
+        "schemas": 19,
         "complexity": "complex"
       },
       {
@@ -2355,8 +2723,20 @@
         "complexity": "complex"
       },
       {
+        "name": "account-settings",
+        "file": "account-settings.ts",
+        "schemas": 18,
+        "complexity": "complex"
+      },
+      {
         "name": "chain-version",
         "file": "chain-version.ts",
+        "schemas": 18,
+        "complexity": "complex"
+      },
+      {
+        "name": "account",
+        "file": "account.ts",
         "schemas": 17,
         "complexity": "complex"
       },
@@ -2367,8 +2747,8 @@
         "complexity": "complex"
       },
       {
-        "name": "feedback",
-        "file": "feedback.ts",
+        "name": "activity-feed",
+        "file": "activity-feed.ts",
         "schemas": 16,
         "complexity": "complex"
       },
@@ -2379,56 +2759,122 @@
         "complexity": "complex"
       },
       {
-        "name": "config",
-        "file": "config.ts",
-        "schemas": 11,
+        "name": "contact",
+        "file": "contact.ts",
+        "schemas": 15,
         "complexity": "complex"
       },
       {
-        "name": "env",
-        "file": "env.ts",
-        "schemas": 11,
-        "complexity": "complex"
-      },
-      {
-        "name": "lead",
-        "file": "lead.ts",
-        "schemas": 9,
-        "complexity": "complex"
-      },
-      {
-        "name": "common",
-        "file": "common.ts",
-        "schemas": 7,
+        "name": "feedback",
+        "file": "feedback.ts",
+        "schemas": 15,
         "complexity": "complex"
       },
       {
         "name": "task",
         "file": "task.ts",
-        "schemas": 7,
-        "complexity": "moderate"
+        "schemas": 14,
+        "complexity": "complex"
       },
       {
-        "name": "opportunity",
-        "file": "opportunity.ts",
-        "schemas": 6,
-        "complexity": "moderate"
+        "name": "lead",
+        "file": "lead.ts",
+        "schemas": 12,
+        "complexity": "complex"
       },
       {
         "name": "ticket",
         "file": "ticket.ts",
-        "schemas": 6,
+        "schemas": 11,
+        "complexity": "complex"
+      },
+      {
+        "name": "ai-review",
+        "file": "ai-review.ts",
+        "schemas": 10,
+        "complexity": "complex"
+      },
+      {
+        "name": "config",
+        "file": "config.ts",
+        "schemas": 10,
+        "complexity": "complex"
+      },
+      {
+        "name": "contact-settings",
+        "file": "contact-settings.ts",
+        "schemas": 10,
+        "complexity": "complex"
+      },
+      {
+        "name": "opportunity",
+        "file": "opportunity.ts",
+        "schemas": 10,
+        "complexity": "complex"
+      },
+      {
+        "name": "common",
+        "file": "common.ts",
+        "schemas": 8,
+        "complexity": "complex"
+      },
+      {
+        "name": "help-article",
+        "file": "help-article.ts",
+        "schemas": 8,
+        "complexity": "complex"
+      },
+      {
+        "name": "lead-settings",
+        "file": "lead-settings.ts",
+        "schemas": 8,
+        "complexity": "complex"
+      },
+      {
+        "name": "events",
+        "file": "events.ts",
+        "schemas": 7,
+        "complexity": "complex"
+      },
+      {
+        "name": "module",
+        "file": "module.ts",
+        "schemas": 7,
         "complexity": "moderate"
       },
       {
-        "name": "contact",
-        "file": "contact.ts",
+        "name": "routing",
+        "file": "routing.ts",
         "schemas": 5,
         "complexity": "moderate"
       },
       {
-        "name": "account",
-        "file": "account.ts",
+        "name": "ticket-routing",
+        "file": "ticket-routing.ts",
+        "schemas": 5,
+        "complexity": "moderate"
+      },
+      {
+        "name": "calendar",
+        "file": "calendar.ts",
+        "schemas": 3,
+        "complexity": "moderate"
+      },
+      {
+        "name": "email",
+        "file": "email.ts",
+        "schemas": 3,
+        "complexity": "simple"
+      },
+      {
+        "name": "feedback-survey",
+        "file": "feedback-survey.ts",
+        "schemas": 3,
+        "complexity": "simple"
+      },
+      {
+        "name": "user",
+        "file": "user.ts",
         "schemas": 3,
         "complexity": "moderate"
       },
@@ -2447,6 +2893,18 @@
       {
         "name": "contact-form",
         "file": "contact-form.ts",
+        "schemas": 2,
+        "complexity": "moderate"
+      },
+      {
+        "name": "sla-policy",
+        "file": "sla-policy.ts",
+        "schemas": 2,
+        "complexity": "simple"
+      },
+      {
+        "name": "ticket-category",
+        "file": "ticket-category.ts",
         "schemas": 2,
         "complexity": "moderate"
       },

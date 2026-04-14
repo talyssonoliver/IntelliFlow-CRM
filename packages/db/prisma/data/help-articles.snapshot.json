@@ -33,10 +33,7 @@
           "blocks": [
             {
               "type": "nav-path",
-              "path": [
-                "Settings",
-                "Workspace"
-              ]
+              "path": ["Settings", "Workspace"]
             },
             {
               "type": "steps",
@@ -59,10 +56,7 @@
           "blocks": [
             {
               "type": "nav-path",
-              "path": [
-                "Settings",
-                "Import"
-              ]
+              "path": ["Settings", "Import"]
             },
             {
               "type": "steps",
@@ -83,17 +77,8 @@
       ],
       "readTimeMinutes": 4,
       "lastUpdatedAt": "2026-03-01",
-      "keywords": [
-        "setup",
-        "onboarding",
-        "quickstart",
-        "account",
-        "import"
-      ],
-      "relatedArticleIds": [
-        "gs-002",
-        "gs-003"
-      ],
+      "keywords": ["setup", "onboarding", "quickstart", "account", "import"],
+      "relatedArticleIds": ["gs-002", "gs-003"],
       "order": 0
     },
     {
@@ -140,16 +125,8 @@
       ],
       "readTimeMinutes": 3,
       "lastUpdatedAt": "2026-02-28",
-      "keywords": [
-        "dashboard",
-        "navigation",
-        "widgets",
-        "home"
-      ],
-      "relatedArticleIds": [
-        "gs-001",
-        "gs-003"
-      ],
+      "keywords": ["dashboard", "navigation", "widgets", "home"],
+      "relatedArticleIds": ["gs-001", "gs-003"],
       "order": 1
     },
     {
@@ -188,10 +165,7 @@
           "blocks": [
             {
               "type": "nav-path",
-              "path": [
-                "Settings",
-                "Users & Roles"
-              ]
+              "path": ["Settings", "Users & Roles"]
             },
             {
               "type": "steps",
@@ -211,16 +185,8 @@
       ],
       "readTimeMinutes": 3,
       "lastUpdatedAt": "2026-02-28",
-      "keywords": [
-        "roles",
-        "permissions",
-        "admin",
-        "access",
-        "security"
-      ],
-      "relatedArticleIds": [
-        "gs-001"
-      ],
+      "keywords": ["roles", "permissions", "admin", "access", "security"],
+      "relatedArticleIds": ["gs-001"],
       "order": 2
     },
     {
@@ -286,16 +252,8 @@
       ],
       "readTimeMinutes": 5,
       "lastUpdatedAt": "2026-03-01",
-      "keywords": [
-        "lead",
-        "create",
-        "qualify",
-        "convert",
-        "scoring"
-      ],
-      "relatedArticleIds": [
-        "lc-002"
-      ],
+      "keywords": ["lead", "create", "qualify", "convert", "scoring"],
+      "relatedArticleIds": ["lc-002"],
       "order": 0
     },
     {
@@ -311,10 +269,7 @@
           "blocks": [
             {
               "type": "nav-path",
-              "path": [
-                "Contacts",
-                "Import"
-              ]
+              "path": ["Contacts", "Import"]
             },
             {
               "type": "steps",
@@ -353,16 +308,8 @@
       ],
       "readTimeMinutes": 4,
       "lastUpdatedAt": "2026-02-28",
-      "keywords": [
-        "import",
-        "csv",
-        "contacts",
-        "duplicate",
-        "merge"
-      ],
-      "relatedArticleIds": [
-        "lc-001"
-      ],
+      "keywords": ["import", "csv", "contacts", "duplicate", "merge"],
+      "relatedArticleIds": ["lc-001"],
       "order": 1
     },
     {
@@ -392,10 +339,7 @@
             },
             {
               "type": "nav-path",
-              "path": [
-                "Settings",
-                "Pipeline"
-              ]
+              "path": ["Settings", "Pipeline"]
             },
             {
               "type": "tip",
@@ -425,16 +369,8 @@
       ],
       "readTimeMinutes": 4,
       "lastUpdatedAt": "2026-03-01",
-      "keywords": [
-        "pipeline",
-        "stages",
-        "kanban",
-        "deals",
-        "forecast"
-      ],
-      "relatedArticleIds": [
-        "dp-002"
-      ],
+      "keywords": ["pipeline", "stages", "kanban", "deals", "forecast"],
+      "relatedArticleIds": ["dp-002"],
       "order": 0
     },
     {
@@ -481,16 +417,8 @@
       ],
       "readTimeMinutes": 3,
       "lastUpdatedAt": "2026-02-28",
-      "keywords": [
-        "forecast",
-        "revenue",
-        "prediction",
-        "ai",
-        "scenario"
-      ],
-      "relatedArticleIds": [
-        "dp-001"
-      ],
+      "keywords": ["forecast", "revenue", "prediction", "ai", "scenario"],
+      "relatedArticleIds": ["dp-001"],
       "order": 1
     },
     {
@@ -506,11 +434,7 @@
           "blocks": [
             {
               "type": "nav-path",
-              "path": [
-                "Settings",
-                "Integrations",
-                "Email"
-              ]
+              "path": ["Settings", "Integrations", "Email"]
             },
             {
               "type": "steps",
@@ -558,16 +482,8 @@
       ],
       "readTimeMinutes": 4,
       "lastUpdatedAt": "2026-02-28",
-      "keywords": [
-        "email",
-        "gmail",
-        "outlook",
-        "integration",
-        "tracking"
-      ],
-      "relatedArticleIds": [
-        "ec-002"
-      ],
+      "keywords": ["email", "gmail", "outlook", "integration", "tracking"],
+      "relatedArticleIds": ["ec-002"],
       "order": 0
     },
     {
@@ -583,11 +499,7 @@
           "blocks": [
             {
               "type": "nav-path",
-              "path": [
-                "Settings",
-                "Integrations",
-                "Calendar"
-              ]
+              "path": ["Settings", "Integrations", "Calendar"]
             },
             {
               "type": "steps",
@@ -635,9 +547,7 @@
         "google",
         "outlook"
       ],
-      "relatedArticleIds": [
-        "ec-001"
-      ],
+      "relatedArticleIds": ["ec-001"],
       "order": 1
     },
     {
@@ -653,10 +563,7 @@
           "blocks": [
             {
               "type": "nav-path",
-              "path": [
-                "Support",
-                "Tickets"
-              ]
+              "path": ["Support", "Tickets"]
             },
             {
               "type": "steps",
@@ -702,16 +609,8 @@
       ],
       "readTimeMinutes": 4,
       "lastUpdatedAt": "2026-03-01",
-      "keywords": [
-        "ticket",
-        "support",
-        "create",
-        "sla",
-        "priority"
-      ],
-      "relatedArticleIds": [
-        "tc-002"
-      ],
+      "keywords": ["ticket", "support", "create", "sla", "priority"],
+      "relatedArticleIds": ["tc-002"],
       "order": 0
     },
     {
@@ -727,11 +626,7 @@
           "blocks": [
             {
               "type": "nav-path",
-              "path": [
-                "Settings",
-                "Support",
-                "SLA Policies"
-              ]
+              "path": ["Settings", "Support", "SLA Policies"]
             },
             {
               "type": "steps",
@@ -782,9 +677,7 @@
         "resolution",
         "compliance"
       ],
-      "relatedArticleIds": [
-        "tc-001"
-      ],
+      "relatedArticleIds": ["tc-001"],
       "order": 1
     },
     {
@@ -835,16 +728,8 @@
       ],
       "readTimeMinutes": 3,
       "lastUpdatedAt": "2026-03-01",
-      "keywords": [
-        "ai",
-        "scoring",
-        "lead",
-        "prediction",
-        "machine learning"
-      ],
-      "relatedArticleIds": [
-        "ai-002"
-      ],
+      "keywords": ["ai", "scoring", "lead", "prediction", "machine learning"],
+      "relatedArticleIds": ["ai-002"],
       "order": 0
     },
     {
@@ -887,9 +772,7 @@
             },
             {
               "type": "nav-path",
-              "path": [
-                "Agent Approvals"
-              ]
+              "path": ["Agent Approvals"]
             },
             {
               "type": "steps",
@@ -909,16 +792,8 @@
       ],
       "readTimeMinutes": 3,
       "lastUpdatedAt": "2026-02-28",
-      "keywords": [
-        "ai",
-        "suggestions",
-        "automation",
-        "next action",
-        "agent"
-      ],
-      "relatedArticleIds": [
-        "ai-001"
-      ],
+      "keywords": ["ai", "suggestions", "automation", "next action", "agent"],
+      "relatedArticleIds": ["ai-001"],
       "order": 1
     },
     {
@@ -934,10 +809,7 @@
           "blocks": [
             {
               "type": "nav-path",
-              "path": [
-                "Settings",
-                "Workspace"
-              ]
+              "path": ["Settings", "Workspace"]
             },
             {
               "type": "steps",
@@ -961,10 +833,7 @@
           "blocks": [
             {
               "type": "nav-path",
-              "path": [
-                "Settings",
-                "Notifications"
-              ]
+              "path": ["Settings", "Notifications"]
             },
             {
               "type": "paragraph",
@@ -995,9 +864,7 @@
         "notifications",
         "preferences"
       ],
-      "relatedArticleIds": [
-        "sa-002"
-      ],
+      "relatedArticleIds": ["sa-002"],
       "order": 0
     },
     {
@@ -1013,10 +880,7 @@
           "blocks": [
             {
               "type": "nav-path",
-              "path": [
-                "Settings",
-                "Integrations"
-              ]
+              "path": ["Settings", "Integrations"]
             },
             {
               "type": "paragraph",
@@ -1044,11 +908,7 @@
           "blocks": [
             {
               "type": "nav-path",
-              "path": [
-                "Settings",
-                "Developer",
-                "API Keys"
-              ]
+              "path": ["Settings", "Developer", "API Keys"]
             },
             {
               "type": "steps",
@@ -1077,9 +937,7 @@
         "zapier",
         "slack"
       ],
-      "relatedArticleIds": [
-        "sa-001"
-      ],
+      "relatedArticleIds": ["sa-001"],
       "order": 1
     },
     {
@@ -1095,11 +953,7 @@
           "blocks": [
             {
               "type": "nav-path",
-              "path": [
-                "Settings",
-                "Billing",
-                "Plans"
-              ]
+              "path": ["Settings", "Billing", "Plans"]
             },
             {
               "type": "paragraph",
@@ -1145,16 +999,8 @@
       ],
       "readTimeMinutes": 3,
       "lastUpdatedAt": "2026-02-28",
-      "keywords": [
-        "billing",
-        "subscription",
-        "plan",
-        "upgrade",
-        "pricing"
-      ],
-      "relatedArticleIds": [
-        "bl-002"
-      ],
+      "keywords": ["billing", "subscription", "plan", "upgrade", "pricing"],
+      "relatedArticleIds": ["bl-002"],
       "order": 0
     },
     {
@@ -1170,11 +1016,7 @@
           "blocks": [
             {
               "type": "nav-path",
-              "path": [
-                "Settings",
-                "Billing",
-                "Payment"
-              ]
+              "path": ["Settings", "Billing", "Payment"]
             },
             {
               "type": "steps",
@@ -1198,11 +1040,7 @@
           "blocks": [
             {
               "type": "nav-path",
-              "path": [
-                "Settings",
-                "Billing",
-                "Invoices"
-              ]
+              "path": ["Settings", "Billing", "Invoices"]
             },
             {
               "type": "steps",
@@ -1229,9 +1067,7 @@
         "billing history",
         "receipt"
       ],
-      "relatedArticleIds": [
-        "bl-001"
-      ],
+      "relatedArticleIds": ["bl-001"],
       "order": 1
     }
   ]

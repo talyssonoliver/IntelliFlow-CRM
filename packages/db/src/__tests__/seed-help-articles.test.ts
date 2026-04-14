@@ -277,7 +277,9 @@ describe('seed-help-articles', () => {
     expect(() => assertSnapshotShape({})).toThrow(/missing "articles"/);
     expect(() => assertSnapshotShape({ articles: [] })).toThrow(/non-empty array/);
     expect(() => assertSnapshotShape({ articles: 'not-an-array' })).toThrow(/non-empty array/);
-    expect(() => assertSnapshotShape({ articles: [null] })).toThrow(/each article must be an object/);
+    expect(() => assertSnapshotShape({ articles: [null] })).toThrow(
+      /each article must be an object/
+    );
     expect(() => assertSnapshotShape({ articles: [{ slug: 'x' }] })).toThrow(/required fields/);
   });
 

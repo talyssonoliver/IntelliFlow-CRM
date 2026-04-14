@@ -41,7 +41,9 @@ interface SeedArticle {
 // `packages/db/tsconfig.json`'s rootDir constraint. Regenerate the
 // snapshot with `pnpm --filter @intelliflow/db run db:snapshot:help-articles`
 // whenever the apps/web source changes.
-export function assertSnapshotShape(value: unknown): asserts value is { articles: readonly SeedArticle[] } {
+export function assertSnapshotShape(
+  value: unknown
+): asserts value is { articles: readonly SeedArticle[] } {
   if (!value || typeof value !== 'object' || !('articles' in value)) {
     throw new Error('help-articles.snapshot.json: missing "articles" property');
   }
@@ -56,7 +58,7 @@ export function assertSnapshotShape(value: unknown): asserts value is { articles
     const a = article as Record<string, unknown>;
     if (typeof a.slug !== 'string' || typeof a.title !== 'string' || !Array.isArray(a.sections)) {
       throw new Error(
-        `help-articles.snapshot.json: article missing required fields (slug/title/sections) — got ${JSON.stringify(a).slice(0, 120)}`,
+        `help-articles.snapshot.json: article missing required fields (slug/title/sections) — got ${JSON.stringify(a).slice(0, 120)}`
       );
     }
   }
@@ -203,4 +205,3 @@ export async function runAndExit() {
     await prisma.$disconnect();
   }
 }
-

@@ -679,11 +679,12 @@ model AccountAutomationSetting {
   // Duplicate / tag policy
   notifyOnDuplicate                  Boolean  @default(true)
   restrictTagCreationToAdmins        Boolean  @default(false)
-  // AI & Intelligence
-  aiIndustryInference                Boolean  @default(true)
+  // AI & Intelligence (opt-in defaults — flipped in
+  // 20260414140000_account_settings_hardening)
+  aiIndustryInference                Boolean  @default(false)
   aiEnrichment                       Boolean  @default(false)
-  aiTagSuggestions                   Boolean  @default(true)
-  aiInsightGeneration                Boolean  @default(true)
+  aiTagSuggestions                   Boolean  @default(false)
+  aiInsightGeneration                Boolean  @default(false)
   aiAccountScoring                   Boolean  @default(false)
   createdAt                          DateTime @default(now())
   updatedAt                          DateTime @updatedAt
