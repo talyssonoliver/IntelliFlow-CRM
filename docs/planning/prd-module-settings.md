@@ -127,6 +127,51 @@ module settings pages follow the same tab-based pattern with Save/Reset actions.
 - AC-C11: Multi-tenant isolation — every Prisma model in this PRD has
   `tenantId` + compound unique constraints where applicable.
 
+### PG-182 Addendum 2026-04-14 — Data Hygiene + AI Toggles
+
+Following the audit of the initial PG-182 delivery, the
+`ContactAutomationSetting` model now carries 11 booleans (was 3). They fall
+into three groups:
+
+1. **Duplicate-detection policy (3)** — `autoMergeOnExactEmail`,
+   `notifyOnDuplicate`, `restrictTagCreationToAdmins`.
+2. **Data hygiene (4, wired in contact.router)** —
+   `normalizePhoneNumbers` (E.164 normalization on save),
+   `autoCapitalizeNames` (Title-Case transform on save),
+   `preventDeleteWithOpenDeals` (delete gate counts only ACTIVE
+   opportunities), `notifyOnOwnerChange` (notification on reassignment —
+   pending notification infrastructure).
+3. **AI & Intelligence (5)** — `aiDuplicateDetection`, `aiEnrichment`,
+   `aiTagSuggestions`, `aiInsightGeneration`, `aiAutoReplyDrafting`. All
+   default **off** (opt-in privacy stance). The AI toggles surface a
+   "pending" badge in the UI because the supporting AI chains are tracked
+   by `FOLLOWUP-PG-182-C` (separate task).
+
+### Acceptance Criteria (additions)
+
+- AC-C12: Data-hygiene toggles are enforced at runtime by
+  `apps/api/src/modules/contact/contact-automation.ts`; unit tests in
+  `__tests__/contact-automation.test.ts` cover each transform.
+- AC-C13: `ContactRequiredField` policy is now enforced on
+  `contact.create` and `contact.update` — creating a contact without a
+  required field returns `BAD_REQUEST` listing the missing fields.
+- AC-C14: `restrictTagCreationToAdmins` is enforced in
+  `contactSettings.tags.create` via `FORBIDDEN` when a non-admin submits.
+- AC-C15: All AI toggles default `false` in the DB (seeded via migration
+  `20260414120000_contact_settings_hardening`) so the platform ships
+  opt-in, not opt-out.
+- AC-C16: Destructive multi-row writes (`duplicateRules.updateAll`,
+  `requiredFields.updateAll`, both `resetToDefaults`) run inside
+  `prisma.$transaction` so a mid-operation failure cannot leave a tenant
+  with zero rules.
+- AC-C17: `contactTag.colorToken` has a DB `CHECK` constraint enforcing
+  the Zod allowlist — the schema can no longer silently store garbage.
+- AC-C18: Zod `updateContactDuplicateRulesSchema` rejects payloads that
+  contain two rows with the same `(field, matchStrategy)` pair; the UI
+  disables Save while a conflict exists and displays an inline warning.
+- AC-C19: `automation.resetToDefaults` exists and is called from the UI
+  "Reset to Defaults" action alongside the other two reset procedures.
+
 ## PG-183 Addendum: Account Settings (2026-04-13)
 
 ### Additional User Stories

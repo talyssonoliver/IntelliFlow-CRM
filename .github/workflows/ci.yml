@@ -220,6 +220,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # PG-195: enforce glyph-audit coverage before the production build so
+      # a new unlisted icon cannot ship as tofu (also enforced on PRs via
+      # pr-checks.yml > Quality Checks).
+      - name: Audit Material Symbols glyph coverage
+        run: pnpm --filter @intelliflow/web audit:material-symbols
+
       - name: Build
         run: pnpm run build
 

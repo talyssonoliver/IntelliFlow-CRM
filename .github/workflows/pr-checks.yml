@@ -95,6 +95,11 @@ jobs:
         run: pnpm run lint:artifacts
         continue-on-error: true
 
+      # PG-195: block PRs that introduce a new material-symbols icon literal
+      # without regenerating the committed glyph audit.
+      - name: Audit Material Symbols glyph coverage
+        run: pnpm --filter @intelliflow/web audit:material-symbols
+
   test-coverage:
     name: Test Coverage
     runs-on: ubuntu-latest
