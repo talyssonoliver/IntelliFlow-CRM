@@ -52,19 +52,19 @@
   ],
   "kpi_results": [
     {
-      "name": "Total tests passing (validators + api + web, contact-settings scope)",
+      "kpi": "Total tests passing (validators + api + web, contact-settings scope)",
       "target": "≥30",
       "actual": "84 (validators 20 + api 44 + web 20) — of which 33 are net-new vs. the pre-audit delivery",
       "met": true
     },
     {
-      "name": "Automation toggles wired to runtime",
+      "kpi": "Automation toggles wired to runtime",
       "target": "≥4",
       "actual": "5 (normalizePhoneNumbers, autoCapitalizeNames, preventDeleteWithOpenDeals, restrictTagCreationToAdmins, + required-fields enforcement)",
       "met": true
     },
     {
-      "name": "Destructive writes wrapped in transaction",
+      "kpi": "Destructive writes wrapped in transaction",
       "target": "all",
       "actual": "all (duplicateRules.updateAll/resetToDefaults, requiredFields.updateAll/resetToDefaults)",
       "met": true

@@ -44,43 +44,43 @@
       "timestamp": "2026-04-13T00:22:00Z"
     }
   ],
-  "kpi_results": {
-    "scoped_coverage_statements": {
-      "target": 90,
-      "actual": 100,
-      "met": true,
-      "unit": "percent"
+  "kpi_results": [
+    {
+      "kpi": "scoped_coverage_statements",
+      "target": "90%",
+      "actual": "100%",
+      "met": true
     },
-    "scoped_coverage_branches": {
-      "target": 80,
-      "actual": 100,
-      "met": true,
-      "unit": "percent"
+    {
+      "kpi": "scoped_coverage_branches",
+      "target": "80%",
+      "actual": "100%",
+      "met": true
     },
-    "scoped_coverage_functions": {
-      "target": 90,
-      "actual": 100,
-      "met": true,
-      "unit": "percent"
+    {
+      "kpi": "scoped_coverage_functions",
+      "target": "90%",
+      "actual": "100%",
+      "met": true
     },
-    "scoped_coverage_lines": {
-      "target": 90,
-      "actual": 100,
-      "met": true,
-      "unit": "percent"
+    {
+      "kpi": "scoped_coverage_lines",
+      "target": "90%",
+      "actual": "100%",
+      "met": true
     },
-    "route_reachability_surfaces": {
-      "target": 4,
-      "actual": 4,
-      "met": true,
-      "unit": "count"
+    {
+      "kpi": "route_reachability_surfaces",
+      "target": "4",
+      "actual": "4",
+      "met": true
     },
-    "public_route_count": {
-      "target": 31,
-      "actual": 31,
-      "met": true,
-      "unit": "count"
+    {
+      "kpi": "public_route_count",
+      "target": "31",
+      "actual": "31",
+      "met": true
     }
-  },
+  ],
   "notes": "PG-051 Terms of Service public page at /terms, server-rendered from docs/shared/terms-content.md via getTermsOfService() + formatTermsDate() in apps/web/src/lib/legal/acceptance-tracker.ts. Scope corrections applied post-audit (2026-04-13): (1) removed out-of-scope TermsAcceptanceBanner and acceptance-tracker.client.ts — client-only localStorage was a misleading legal-compliance signal and was never in spec/plan; (2) removed dead buildTermsAcceptanceRecord helper; (3) amended spec to reflect git reality — legal-content-parser.ts and acceptance-tracker.ts were in fact introduced by PG-051, not PG-050 (separate audit of PG-050 for parallel false-reuse claims recommended); (4) ticked plan checkboxes for executed steps. Server-side acceptance persistence deferred to a follow-up task (DB audit record + tRPC procedure + tenant scoping). All 4 validations pass: TypeScript 0 errors, 89 tests across 6 suites passing (6 terms + 83 regression), lint 0 errors, build emits /terms. Scoped coverage: 100% across statements/branches/functions/lines. Runtime wiring preserved: page is the sole real production caller of getTermsOfService and formatTermsDate."
 }

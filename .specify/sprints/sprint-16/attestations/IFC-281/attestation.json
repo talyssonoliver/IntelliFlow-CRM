@@ -3,7 +3,7 @@
   "verdict": "COMPLETE",
   "notes": "Deal Backend Tenant Isolation & Audit Logging. B-01 fixed: repository findById/delete enforce tenantId, threaded through OpportunityService, CloseDealWon/LostUseCase, TaskService.validateOpportunityAssignment. B-02 fixed: audit logging (7 mutations: create/update/delete/moveStage + pipeline updateStage/updateAll/resetToDefaults). B-03 confirmed already fixed. moveStage captures previousStage before mutation. 3 dedicated test files added (tenant-isolation, audit-logging, repo-tenant). 248 tests pass across 9 test files. Code audit findings 1-4 all addressed.",
   "artifact_hashes": {},
-  "dependencies_verified": true,
+  "dependencies_verified": [],
   "validation_results": [
     {
       "name": "TypeScript",

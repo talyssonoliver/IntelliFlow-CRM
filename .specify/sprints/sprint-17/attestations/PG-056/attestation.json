@@ -4,14 +4,13 @@
   "verdict": "COMPLETE",
   "attested_at": "2026-04-12T16:00:00Z",
   "executor": "claude-sonnet-4-6",
-  "dependencies_verified": [
-    {
-      "task_id": "PG-055",
-      "claim": "404 system-page foundation (Card/brand/material-symbols pattern, analytics payload) complete",
+  "dependencies_verified": {
+    "PG-055": {
       "verified": true,
-      "method": "CSV Status=Completed, apps/web/src/app/404/page.tsx and error-analytics.ts confirmed on disk"
+      "description": "404 system-page foundation (Card/brand/material-symbols pattern, analytics payload) complete",
+      "verification_method": "CSV Status=Completed, apps/web/src/app/404/page.tsx and error-analytics.ts confirmed on disk"
     }
-  ],
+  },
   "evidence_summary": {
     "spec_path": ".specify/sprints/sprint-17/specifications/PG-056-spec.md",
     "plan_path": ".specify/sprints/sprint-17/planning/PG-056-plan.md",
@@ -60,27 +59,61 @@
       "duration_ms": 95000
     }
   ],
-  "gate_results": {
-    "plan_checkboxes": "PASS",
-    "artifact_verification": "PASS",
-    "import_reachability": "PASS",
-    "shared_component_reuse": "PASS",
-    "build": "PASS",
-    "coverage_measurement": "PASS",
-    "mock_coverage_audit": "PASS",
-    "dead_code_check": "PASS",
-    "compliance_check": "PASS",
-    "accessibility_doc_gate": "PASS"
-  },
-  "kpi_results": {
-    "statements_coverage": "93.85%",
-    "branch_coverage": "85.55%",
-    "function_coverage": "100%",
-    "line_coverage": "93.45%",
-    "test_files": 8,
-    "total_tests": 60,
-    "lighthouse_gate": "NOT_RUN (machine under OOM pressure; page mirrors PG-055 static pattern)",
-    "build_route_compiled": "apps/web/.next/server/app/500/page.js confirmed"
-  },
+  "gate_results": [
+    { "gate_id": "gate_1_plan_checkboxes", "passed": true, "timestamp": "2026-04-12T16:00:00Z" },
+    { "gate_id": "gate_2_artifact_verification", "passed": true, "timestamp": "2026-04-12T16:00:00Z" },
+    { "gate_id": "gate_2b_import_reachability", "passed": true, "timestamp": "2026-04-12T16:00:00Z" },
+    { "gate_id": "gate_2d_shared_component_reuse", "passed": true, "timestamp": "2026-04-12T16:00:00Z" },
+    { "gate_id": "gate_3_build", "passed": true, "timestamp": "2026-04-12T15:58:00Z" },
+    { "gate_id": "gate_3b_coverage_measurement", "passed": true, "timestamp": "2026-04-12T16:00:00Z" },
+    { "gate_id": "gate_mock_coverage_audit", "passed": true, "timestamp": "2026-04-12T16:00:00Z" },
+    { "gate_id": "gate_3c_dead_code_check", "passed": true, "timestamp": "2026-04-12T16:00:00Z" },
+    { "gate_id": "gate_compliance_check", "passed": true, "timestamp": "2026-04-12T16:00:00Z" },
+    { "gate_id": "gate_accessibility_doc_gate", "passed": true, "timestamp": "2026-04-12T16:00:00Z" }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Statement coverage",
+      "target": ">=90%",
+      "actual": "93.85%",
+      "met": true
+    },
+    {
+      "kpi": "Branch coverage",
+      "target": ">=80%",
+      "actual": "85.55%",
+      "met": true
+    },
+    {
+      "kpi": "Function coverage",
+      "target": ">=90%",
+      "actual": "100%",
+      "met": true
+    },
+    {
+      "kpi": "Line coverage",
+      "target": ">=90%",
+      "actual": "93.45%",
+      "met": true
+    },
+    {
+      "kpi": "Test suite (8 files, 60 tests)",
+      "target": "All pass",
+      "actual": "60/60 tests passing across 8 files",
+      "met": true
+    },
+    {
+      "kpi": "Lighthouse performance gate",
+      "target": ">=0.9 on production build",
+      "actual": "NOT_RUN (machine under OOM pressure; page mirrors PG-055 static pattern)",
+      "met": false
+    },
+    {
+      "kpi": "500 route compiled in production build",
+      "target": "apps/web/.next/server/app/500/page.js present",
+      "actual": "apps/web/.next/server/app/500/page.js confirmed",
+      "met": true
+    }
+  ],
   "notes": "Implementation was completed in a prior session. This session: verified all artifacts, updated sitemap-fixes.test.ts count (28→29, pre-existing drift from /status static route addition), ran all validations, checked plan checkboxes (14/14), updated WCAG conformance statement (89→90 routes) and VPAT (89→90 routes) per Section 11 accessibility doc gate, ran compliance check (all sections PASS)."
 }

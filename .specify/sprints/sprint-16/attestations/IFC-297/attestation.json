@@ -9,7 +9,7 @@
     "apps/api/src/services/__tests__/AIMonitoringService.test.ts": "e286f6ce3657a79ef13147b7e37a42de89ef8b7d82d7d08d545225ce17c1bab7",
     "packages/db/prisma/migrations/20260316000000_ai_monitoring_events/migration.sql": "73dcd72b1704b809c20cce57b7a7bf0824b2f937d82e64950afdf65e214475d1"
   },
-  "dependencies_verified": true,
+  "dependencies_verified": ["IFC-015", "IFC-025"],
   "notes": "Cross-package backend task: Prisma model AIMonitoringEvent added to schema with 8 indexes, MonitoringFlushService drains singletons to DB every 60s, AIMonitoringService queries DB, router rewritten from singleton imports to service calls, container wired. loadAIMonitoringModule and AI_WORKER_COLOCATED retired. Response shapes match frontend MonitoringHealthStatus type. Retention cleanup (30d) built in. Migration SQL created. 48 tests passing (11 flush + 14 service + 23 router).",
   "validation_results": [
     {

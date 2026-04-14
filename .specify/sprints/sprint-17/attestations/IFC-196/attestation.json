@@ -14,10 +14,10 @@
     "artifacts/benchmarks/IFC-196/cache-comparison.md": "f1bb7884482c19ec3b0eed90a603103babe2269db318f47d67ae7600a76e24d9",
     ".specify/sprints/sprint-17/execution/IFC-196/IFC-196-delivery.md": "f8fc4882d6a43778ab673e723312b9aa8e1371cf0c89a5d9e8a4f84dfc777077"
   },
-  "dependencies_verified": {
-    "IFC-182": "Completed — home router + getWelcomeSummary (baseline).",
-    "IFC-075": "Completed — Redis 7-alpine provisioned in docker-compose.yml."
-  },
+  "dependencies_verified": [
+    "IFC-182",
+    "IFC-075"
+  ],
   "validation_results": [
     {
       "name": "TypeScript",
@@ -82,37 +82,37 @@
   ],
   "kpi_results": [
     {
-      "name": "Cache hit p95",
+      "kpi": "Cache hit p95",
       "target": "<50ms",
       "actual": "0.00ms",
       "met": true
     },
     {
-      "name": "Cache hit rate",
+      "kpi": "Cache hit rate",
       "target": ">80%",
       "actual": "99%",
       "met": true
     },
     {
-      "name": "Coverage (home.cache.ts)",
+      "kpi": "Coverage (home.cache.ts)",
       "target": ">=90% stmts",
       "actual": "98.73%",
       "met": true
     },
     {
-      "name": "Coverage (RedisCacheAdapter.ts)",
+      "kpi": "Coverage (RedisCacheAdapter.ts)",
       "target": ">=90% stmts",
       "actual": "100%",
       "met": true
     },
     {
-      "name": "Test count (new)",
+      "kpi": "Test count (new)",
       "target": ">=20",
       "actual": "38 (18 adapter + 20 service)",
       "met": true
     },
     {
-      "name": "Regression (home tests)",
+      "kpi": "Regression (home tests)",
       "target": "all 197 pass",
       "actual": "197/197 pass",
       "met": true

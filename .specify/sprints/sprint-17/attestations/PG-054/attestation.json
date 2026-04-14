@@ -86,53 +86,46 @@
   ],
   "kpi_results": [
     {
-      "name": "AUP scoped tests",
+      "kpi": "AUP scoped tests",
       "target": "all pass",
       "actual": "44/44 pass",
-      "met": true,
-      "unit": "tests"
+      "met": true
     },
     {
-      "name": "AC coverage",
+      "kpi": "AC coverage",
       "target": "16/16",
       "actual": "16/16",
-      "met": true,
-      "unit": "AC"
+      "met": true
     },
     {
-      "name": "Scoped Istanbul coverage (statements)",
-      "target": ">=90",
-      "actual": "96",
-      "met": true,
-      "unit": "percent"
+      "kpi": "Scoped Istanbul coverage (statements)",
+      "target": ">=90%",
+      "actual": "96%",
+      "met": true
     },
     {
-      "name": "Scoped Istanbul coverage (branches)",
-      "target": ">=80",
-      "actual": "88.88",
-      "met": true,
-      "unit": "percent"
+      "kpi": "Scoped Istanbul coverage (branches)",
+      "target": ">=80%",
+      "actual": "88.88%",
+      "met": true
     },
     {
-      "name": "Scoped Istanbul coverage (functions)",
-      "target": ">=90",
-      "actual": "90",
-      "met": true,
-      "unit": "percent"
+      "kpi": "Scoped Istanbul coverage (functions)",
+      "target": ">=90%",
+      "actual": "90%",
+      "met": true
     },
     {
-      "name": "Scoped Istanbul coverage (lines)",
-      "target": ">=90",
-      "actual": "100",
-      "met": true,
-      "unit": "percent"
+      "kpi": "Scoped Istanbul coverage (lines)",
+      "target": ">=90%",
+      "actual": "100%",
+      "met": true
     },
     {
-      "name": "Lighthouse /aup",
+      "kpi": "Lighthouse /aup",
       "target": ">=0.90",
       "actual": "not measured (deferred to next full lighthouserc run; URL added)",
-      "met": false,
-      "unit": "score"
+      "met": false
     }
   ],
   "evidence_summary": {

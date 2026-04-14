@@ -5,12 +5,7 @@
   "attested_at": "2026-04-14T19:55:00Z",
   "executor": "claude-opus-4-6",
   "dependencies_verified": [
-    {
-      "task_id": "PG-056",
-      "claim": "500 system page complete; Lighthouse gate deferred",
-      "verified": true,
-      "method": "CSV Status=Completed, attestation.json verdict=COMPLETE, artifact hash for 500/page.tsx recorded; baseline Lighthouse JSON pg-056-500-r1.json exists"
-    }
+    "PG-056"
   ],
   "evidence_summary": {
     "spec_path": ".specify/sprints/sprint-17/specifications/PG-195-spec.md",
@@ -80,43 +75,144 @@
       "notes": "Webpack compile completes successfully (76 s). `next build`'s subsequent tsc gate fails on apps/api/src/modules/contact/contact-automation.ts:11 (pre-existing)."
     }
   ],
-  "gate_results": {
-    "plan_checkboxes": "12/16 — 12 done, 1 merged into Step 3, 1 not needed (Step 10), 2 blocked externally (Step 11, 13)",
-    "artifact_verification": "PASS (all listed artifacts present, hashes captured)",
-    "import_reachability": "PASS (subsetter module imports cleanly; layout.tsx still consumes same font path)",
-    "shared_component_reuse": "PASS (n/a — tooling task; no UI components introduced)",
-    "build": "BLOCKED (pre-existing apps/api typecheck errors block `next build` tsc step)",
-    "coverage_measurement": "PASS — real Istanbul measurement: Statements 97.5%, Branches 80.18%, Functions 91.3%, Lines 98.16% (all ≥ project thresholds)",
-    "mock_coverage_audit": "PASS (no production mocks; test-only mocks use vi.fn for subset-font)",
-    "dead_code_check": "PASS",
-    "container_registration": "PASS (n/a — no backend services)",
-    "compliance_check": "PENDING (cannot complete while typecheck/build gates blocked)",
-    "route_conflict_audit": "PASS (no routes touched)",
-    "font_size_gate": "PASS (234,496 bytes ≤ 500,000)",
-    "audit_verify_gate": "PASS (0 unresolved dynamic icons; 0 audit drift)",
-    "ci_wiring_gate": "PASS — `.github/workflows/pr-checks.yml:96-98` and `.github/workflows/ci.yml:223-228` both invoke `pnpm --filter @intelliflow/web audit:material-symbols` on every PR and every main-branch build"
-  },
-  "kpi_results": {
-    "font_bytes_before": 3555400,
-    "font_bytes_after": 234496,
-    "font_reduction_percent": "93.40%",
-    "font_size_target_met": true,
-    "font_size_target_threshold": "<500 KB",
-    "glyph_coverage": "100% (343 icons, 0 unresolved dynamic sites, 1065 files scanned)",
-    "scanner_test_count": 56,
-    "scanner_tests_passed": 56,
-    "coverage_statements_pct": 97.5,
-    "coverage_branches_pct": 80.18,
-    "coverage_functions_pct": 91.3,
-    "coverage_lines_pct": 98.16,
-    "coverage_threshold_statements": 90,
-    "coverage_threshold_branches": 80,
-    "coverage_threshold_functions": 90,
-    "coverage_threshold_lines": 90,
-    "lighthouse_404_perf": "NOT_RUN — blocked by pre-existing apps/api typecheck failures",
-    "lighthouse_500_perf": "NOT_RUN — blocked by pre-existing apps/api typecheck failures",
-    "total_transfer_500": "NOT_MEASURED — blocked by AC #4"
-  },
+  "gate_results": [
+    {
+      "gate_id": "gate_1_plan_checkboxes",
+      "passed": false,
+      "score": 75,
+      "timestamp": "2026-04-14T19:55:00Z"
+    },
+    {
+      "gate_id": "gate_2_artifact_verification",
+      "passed": true,
+      "timestamp": "2026-04-14T19:55:00Z"
+    },
+    {
+      "gate_id": "gate_2b_import_reachability",
+      "passed": true,
+      "timestamp": "2026-04-14T19:55:00Z"
+    },
+    {
+      "gate_id": "gate_2d_shared_component_reuse",
+      "passed": true,
+      "timestamp": "2026-04-14T19:55:00Z"
+    },
+    {
+      "gate_id": "gate_3_build",
+      "passed": false,
+      "exit_code": 1,
+      "timestamp": "2026-04-14T19:15:00Z"
+    },
+    {
+      "gate_id": "gate_3b_coverage_measurement",
+      "passed": true,
+      "score": 97,
+      "timestamp": "2026-04-14T19:53:09Z"
+    },
+    {
+      "gate_id": "gate_6_mock_coverage_audit",
+      "passed": true,
+      "timestamp": "2026-04-14T19:55:00Z"
+    },
+    {
+      "gate_id": "gate_3c_dead_code_check",
+      "passed": true,
+      "timestamp": "2026-04-14T19:55:00Z"
+    },
+    {
+      "gate_id": "gate_5_container_registration",
+      "passed": true,
+      "timestamp": "2026-04-14T19:55:00Z"
+    },
+    {
+      "gate_id": "gate_compliance_check",
+      "passed": false,
+      "timestamp": "2026-04-14T19:55:00Z"
+    },
+    {
+      "gate_id": "gate_route_conflict_audit",
+      "passed": true,
+      "timestamp": "2026-04-14T19:55:00Z"
+    },
+    {
+      "gate_id": "gate_font_size",
+      "passed": true,
+      "score": 234496,
+      "timestamp": "2026-04-14T19:55:00Z"
+    },
+    {
+      "gate_id": "gate_audit_verify",
+      "passed": true,
+      "timestamp": "2026-04-14T19:55:00Z"
+    },
+    {
+      "gate_id": "gate_ci_wiring",
+      "passed": true,
+      "timestamp": "2026-04-14T19:55:00Z"
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Font file size after subsetting",
+      "target": "<500 KB (500,000 bytes)",
+      "actual": "234,496 bytes (93.40% reduction from 3,555,400 bytes)",
+      "met": true
+    },
+    {
+      "kpi": "Glyph coverage",
+      "target": "100% of used icons covered",
+      "actual": "100% (343 icons, 0 unresolved dynamic sites, 1065 files scanned)",
+      "met": true
+    },
+    {
+      "kpi": "Scanner test suite",
+      "target": "All tests pass",
+      "actual": "56/56 tests pass",
+      "met": true
+    },
+    {
+      "kpi": "Coverage — statements",
+      "target": ">=90%",
+      "actual": "97.5%",
+      "met": true
+    },
+    {
+      "kpi": "Coverage — branches",
+      "target": ">=80%",
+      "actual": "80.18%",
+      "met": true
+    },
+    {
+      "kpi": "Coverage — functions",
+      "target": ">=90%",
+      "actual": "91.3%",
+      "met": true
+    },
+    {
+      "kpi": "Coverage — lines",
+      "target": ">=90%",
+      "actual": "98.16%",
+      "met": true
+    },
+    {
+      "kpi": "Lighthouse performance /500",
+      "target": ">=90",
+      "actual": "NOT_RUN — blocked by pre-existing apps/api typecheck failures",
+      "met": false
+    },
+    {
+      "kpi": "Lighthouse performance /404",
+      "target": ">=90",
+      "actual": "NOT_RUN — blocked by pre-existing apps/api typecheck failures",
+      "met": false
+    },
+    {
+      "kpi": "Total page transfer weight /500",
+      "target": "<=1024 KiB",
+      "actual": "NOT_MEASURED — blocked by pre-existing build failures",
+      "met": false
+    }
+  ],
   "audit_response_summary": {
     "finding_1_ci_guard_not_wired": "FIXED — pr-checks.yml step added (Audit Material Symbols glyph coverage) + ci.yml Build job pre-step added. Guard now runs on every PR and every main build.",
     "finding_2_comment_harvest": "FIXED — stripComments() exported from subset-material-symbols.mjs now removes both line and block comments before the regex pass; the comment-sourced icon_name token is no longer harvested (verified by the two new 'does NOT harvest icon names from block/line-comment text' tests).",

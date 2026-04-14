@@ -80,25 +80,22 @@
   ],
   "kpi_results": [
     {
-      "name": "DPA scoped tests",
+      "kpi": "DPA scoped tests",
       "target": "all pass",
       "actual": "34/34 pass",
-      "met": true,
-      "unit": "tests"
+      "met": true
     },
     {
-      "name": "AC coverage",
+      "kpi": "AC coverage",
       "target": "17/17",
       "actual": "17/17",
-      "met": true,
-      "unit": "AC"
+      "met": true
     },
     {
-      "name": "Lighthouse /dpa",
+      "kpi": "Lighthouse /dpa",
       "target": ">=0.90",
       "actual": "not measured (build blocked)",
-      "met": false,
-      "unit": "score"
+      "met": false
     }
   ],
   "evidence_summary": {

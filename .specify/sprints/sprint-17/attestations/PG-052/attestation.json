@@ -17,14 +17,13 @@
     "apps/web/src/__tests__/content-audit-schema.test.ts": "376f827229d1986b057e088b640ff907eec6af219ed4bfab0287504fa1b3b173",
     "apps/web/src/app/__tests__/sitemap-reconciliation.test.ts": "3ca01efe66e6a54b0c37e13025710878b2eb38dbe3c7565a63b37b57f0f92012"
   },
-  "dependencies_verified": [
-    {
-      "id": "PG-050",
+  "dependencies_verified": {
+    "PG-050": {
       "status": "Completed",
-      "evidence": ".specify/sprints/sprint-17/attestations/PG-050/attestation.json verdict=COMPLETE; apps/web/src/app/(public)/privacy/page.tsx; docs/shared/privacy-content.md",
-      "correction_2026-04-13": "Original evidence also listed apps/web/src/lib/legal/legal-content-parser.ts as a PG-050 artifact. That file was actually delivered by PG-051 (commit 31eaed98). Corrected here; PG-050's real deliverables are the /privacy route, consent-tracker.ts, and docs/shared/privacy-content.md."
+      "verified": true,
+      "description": ".specify/sprints/sprint-17/attestations/PG-050/attestation.json verdict=COMPLETE; apps/web/src/app/(public)/privacy/page.tsx; docs/shared/privacy-content.md. Note: legal-content-parser.ts was delivered by PG-051 (commit 31eaed98), not PG-050. PG-050 real deliverables: /privacy route, consent-tracker.ts, docs/shared/privacy-content.md."
     }
-  ],
+  },
   "validation_results": [
     {
       "name": "TypeScript",
@@ -103,32 +102,28 @@
   ],
   "kpi_results": [
     {
-      "name": "scoped-coverage-statements",
-      "target": ">=90",
-      "actual": "100",
-      "met": true,
-      "unit": "%"
+      "kpi": "scoped-coverage-statements",
+      "target": "≥90%",
+      "actual": "100%",
+      "met": true
     },
     {
-      "name": "scoped-coverage-branches",
-      "target": ">=80",
-      "actual": "100",
-      "met": true,
-      "unit": "%"
+      "kpi": "scoped-coverage-branches",
+      "target": "≥80%",
+      "actual": "100%",
+      "met": true
     },
     {
-      "name": "scoped-coverage-functions",
-      "target": ">=90",
-      "actual": "100",
-      "met": true,
-      "unit": "%"
+      "kpi": "scoped-coverage-functions",
+      "target": "≥90%",
+      "actual": "100%",
+      "met": true
     },
     {
-      "name": "scoped-coverage-lines",
-      "target": ">=90",
-      "actual": "100",
-      "met": true,
-      "unit": "%"
+      "kpi": "scoped-coverage-lines",
+      "target": "≥90%",
+      "actual": "100%",
+      "met": true
     }
   ],
   "evidence_summary": {

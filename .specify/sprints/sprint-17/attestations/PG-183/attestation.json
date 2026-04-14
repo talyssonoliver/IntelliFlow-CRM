@@ -13,13 +13,13 @@
     "page": "5966a81dc5420ce1027a01d7050c9045ae51bb68b934ecff272f93955edaeaf4",
     "loading": "e91d394f83e35ea542e6b598889bc6ff58f4e788c55efc59095efda89f2858a4"
   },
-  "dependencies_verified": [
-    {
-      "id": "PG-178",
+  "dependencies_verified": {
+    "PG-178": {
       "status": "Completed",
-      "evidence": "apps/web/src/components/settings/ModuleSettingsLayout.tsx present and imported by new AccountSettingsContent"
+      "verified": true,
+      "description": "apps/web/src/components/settings/ModuleSettingsLayout.tsx present and imported by new AccountSettingsContent"
     }
-  ],
+  },
   "validation_results": [
     {
       "name": "TypeScript",
@@ -52,31 +52,27 @@
   ],
   "kpi_results": [
     {
-      "name": "coverage.statements",
-      "target": 90,
-      "actual": 100,
-      "unit": "%",
+      "kpi": "coverage.statements",
+      "target": "≥90%",
+      "actual": "100%",
       "met": true
     },
     {
-      "name": "coverage.branches",
-      "target": 80,
-      "actual": 91.66,
-      "unit": "%",
+      "kpi": "coverage.branches",
+      "target": "≥80%",
+      "actual": "91.66%",
       "met": true
     },
     {
-      "name": "coverage.functions",
-      "target": 90,
-      "actual": 100,
-      "unit": "%",
+      "kpi": "coverage.functions",
+      "target": "≥90%",
+      "actual": "100%",
       "met": true
     },
     {
-      "name": "coverage.lines",
-      "target": 90,
-      "actual": 100,
-      "unit": "%",
+      "kpi": "coverage.lines",
+      "target": "≥90%",
+      "actual": "100%",
       "met": true
     }
   ],
