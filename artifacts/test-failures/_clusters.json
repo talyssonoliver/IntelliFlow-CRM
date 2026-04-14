@@ -1,17 +1,17 @@
 {
   "projects_green": ["packages/domain", "packages/db", "packages/application", "packages/adapters", "apps/api"],
-  "apps/api": {
-    "final_total": 5371,
-    "final_failed": 0,
+  "apps/web": {
+    "in_progress": true,
     "clusters": [
-      { "id": "api-timezone-utils-en-gb-24h", "label": "test-bug", "status": "resolved" },
-      { "id": "api-supabase-mock-keys", "label": "regression", "status": "resolved" },
+      { "id": "web-adr-service-node-module-mocking", "label": "test-bug", "status": "resolved" },
+      { "id": "web-reminders-appointment-link", "label": "test-bug", "status": "resolved" },
+      { "id": "web-quality-reports-route-supplementary", "label": "test-bug", "status": "resolved" },
       {
-        "id": "api-appointments-business-hours",
+        "id": "web-ticket-detail-ui-mock-incomplete",
         "label": "test-bug",
         "status": "resolved",
-        "failures_before": 3,
-        "fix": "Tests used `new Date()` for startTime, making them wall-clock-dependent — passed during 07:00-19:00 UTC business hours, failed outside. Production correctly enforces business hours via assertWithinBusinessHours(). Pinned test `now` to '2026-04-14T10:00:00Z' (mid-business-hours); oneHourLater and the +86400000 reschedule time still land in business hours."
+        "failures_before": 38,
+        "fix": "TicketDetail.coverage.test.tsx mocked @intelliflow/ui with a hand-maintained allow-list (Card, Button, Badge, Tabs, …) which broke when transitive imports (EntityHoverCard -> TooltipProvider, Sheet, etc.) tried to pull in non-mocked exports. Switched to partial mock with importOriginal: `vi.mock('@intelliflow/ui', async (importOriginal) => ({ ...(await importOriginal()), <overrides> }))`. Unmocked exports now pass through; behaviour-specific overrides retained."
       }
     ]
   }

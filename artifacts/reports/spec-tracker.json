@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-04-13T23:02:19.491Z",
+  "generated_at": "2026-04-14T19:39:55.209Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
     "total_specs_analyzed": 381,
-    "completed": 373,
-    "partially_done": 5,
-    "spec_only": 2,
+    "completed": 375,
+    "partially_done": 4,
+    "spec_only": 1,
     "uncertain": 1
   },
   "status_legend": {
@@ -4226,13 +4226,13 @@
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
-      "csv_status": "In Progress",
-      "metric_status": "IN_PROGRESS",
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-298"
       ],
-      "real_status": "PARTIALLY_DONE"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-303",
@@ -5183,14 +5183,14 @@
       "spec_path": ".specify/sprints/sprint-17/specifications/PG-057-spec.md",
       "has_spec": true,
       "has_plan": true,
-      "has_attestation": false,
-      "csv_status": "In Progress",
-      "metric_status": "NOT_FOUND",
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-055"
       ],
-      "real_status": "PARTIALLY_DONE"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-104",
@@ -6077,7 +6077,7 @@
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
-      "csv_status": "In Progress",
+      "csv_status": "Needs Human",
       "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
@@ -6124,15 +6124,15 @@
       "sprint": 17,
       "spec_path": ".specify/sprints/sprint-17/specifications/PG-195-spec.md",
       "has_spec": true,
-      "has_plan": false,
-      "has_attestation": false,
-      "csv_status": "Spec Complete",
-      "metric_status": "PLANNED",
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Needs Human",
+      "metric_status": "NEEDS_HUMAN",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-056"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "PARTIALLY_DONE"
     },
     {
       "task_id": "PM-OPS-001",

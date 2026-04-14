@@ -1,4 +1,4 @@
 {
   "next_project": "apps/web",
-  "reason": "apps/api fully green. Next per batch-strategy order: apps/web, then apps/ai-worker."
+  "reason": "Continuing web sweep (bail=5 running in background to find next batch of failures)."
 }
