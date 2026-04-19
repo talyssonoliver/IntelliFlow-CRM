@@ -40,6 +40,24 @@ if git diff --cached --name-only | grep -qE "$CODEBASE_PATTERNS"; then
   echo "✅ Codebase inventory synced and staged"
 fi
 
+# PG-195 / ADR-046: auto-regenerate Material Symbols subset + audit when any
+# scanned source file changes. Mirrors the auto-regenerate precedent above —
+# dev edits an icon, commit just works; font + audit JSON get staged
+# automatically. If nothing drifted, --verify exits 0 and we do nothing.
+ICON_SCAN_PATTERNS="^apps/web/src/|^packages/ui/src/"
+if git diff --cached --name-only | grep -qE "$ICON_SCAN_PATTERNS"; then
+  if ! node tools/scripts/subset-material-symbols.mjs --verify >/dev/null 2>&1; then
+    echo "🔤 Material Symbols drift detected - regenerating font + audit..."
+    node tools/scripts/subset-material-symbols.mjs || {
+      echo "❌ Failed to regenerate Material Symbols subset. Fix the scanner error and retry."
+      echo "   (See docs/design/ICON_USAGE.md for troubleshooting.)"
+      exit 1
+    }
+    git add apps/web/public/fonts/MaterialSymbolsOutlined.woff2 artifacts/perf/material-symbols-glyph-audit.json
+    echo "✅ Material Symbols font + audit regenerated and staged"
+  fi
+fi
+
 # Secret scan (gitleaks) - fail fast locally before CI
 echo "🔐 Scanning for secrets..."
 if command -v gitleaks >/dev/null 2>&1; then

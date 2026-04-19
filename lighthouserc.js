@@ -27,8 +27,10 @@ module.exports = {
         'http://localhost:3000/accounts', // Accounts list
         'http://localhost:3000/deals', // Deals/pipeline list
         'http://localhost:3000/deals/forecast', // Deals forecast
+        'http://localhost:3000/deals/deal-settings', // PG-184 Deal Settings bento
         'http://localhost:3000/tasks', // Tasks list
         'http://localhost:3000/tickets', // Tickets list
+        'http://localhost:3000/tickets/sla-policies', // PG-185 Ticket Settings bento
         // Communications & scheduling
         'http://localhost:3000/email', // Email client
         'http://localhost:3000/calendar', // Calendar / Appointments
