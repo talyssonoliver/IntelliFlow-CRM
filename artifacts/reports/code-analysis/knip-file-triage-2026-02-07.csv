@@ -1,6 +1,0 @@
-"file","category","action","risk","reason","status"
-"apps/api/src/shared/audit-encryption-module.ts","runtime","wire","high","Already wired: writer.ts imports getAuditEncryption(). Encrypts audit beforeState/afterState/metadata.","resolved"
-"apps/api/src/shared/bias-detector.ts","runtime","wire","high","File no longer exists on disk (deleted).","resolved"
-"apps/api/src/shared/retry-policy.ts","runtime","wire","medium","File no longer exists on disk (deleted). webhooks/retry.ts is a separate module.","resolved"
-"apps/web/src/components/shared/entity-action-sheet.tsx","ui","keep-intentional","low","Component has no references in active routes. Wire when entity lists need it.","open"
-"apps/web/src/components/shared/more-actions-button.tsx","ui","keep-intentional","low","Presentational button that pairs with entity-action-sheet. Wire together.","open"

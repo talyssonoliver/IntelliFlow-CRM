@@ -83,7 +83,7 @@ function validateBenchmarks(): ValidationResult {
     console.log('┌─────────────────────────────────────────────────────────────┐');
     console.log('│  ✗ FAIL: Benchmark results not found                        │');
     console.log('│  Run k6 benchmarks first:                                   │');
-    console.log('│  k6 run artifacts/misc/k6/gate2-benchmark.js \\              │');
+    console.log('│  k6 run tools/scripts/k6/gate2-benchmark.js \\              │');
     console.log('│    --out json=artifacts/benchmarks/k6-latest.json           │');
     console.log('└─────────────────────────────────────────────────────────────┘');
 

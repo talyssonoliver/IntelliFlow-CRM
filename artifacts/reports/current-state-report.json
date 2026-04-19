@@ -6281,7 +6281,7 @@
           "section": "Governance",
           "title": "ADR Registry & Compliance Reporting",
           "description": "ADR Registry & Compliance Reporting",
-          "summary": "ADR template already existed at docs/architecture/adr/000-template.md Existing ADRs were inventoried and registered in the index Compliance checklists aligned with existing GDPR checklist format ISO 42001 checklist builds on existing gap an......",
+          "summary": "ADR template already existed at docs/architecture/adr/template.md Existing ADRs were inventoried and registered in the index Compliance checklists aligned with existing GDPR checklist format ISO 42001 checklist builds on existing gap an......",
           "definitionOfDone": "ADR repo active, compliance docs ready; artifacts: adr-index.md, compliance-dashboard-mockup.md, context_ack.json",
           "definitionOfDoneSnapshot": "ADR repo active, compliance docs ready",
           "dependencies": [
@@ -20613,9 +20613,9 @@
           "section": "Documentation",
           "title": "Execute first quarterly accessibility documentation review using template",
           "description": "Execute first quarterly accessibility documentation review using template",
-          "summary": "All 5 review sections completed with evidence; sign-off block filled; conformance statement updated if needed; review archived at docs/compliance/quarterly-a11y-reviews/sprint-20-review.md",
-          "definitionOfDone": "All 5 review sections completed with evidence; sign-off block filled; conformance statement updated if needed; review archived at docs/compliance/quarterly-a11y-reviews/sprint-20-review.md; verified by: template completeness review",
-          "definitionOfDoneSnapshot": "All 5 review sections completed with evidence; sign-off block filled; conformance statement updated if needed; review archived at docs/compliance/quarterly-a11y-reviews/sprint-20-review.md",
+          "summary": "All 5 review sections completed with evidence; sign-off block filled; conformance statement updated if needed; review archived at docs/compliance-and-governance/compliance/quarterly-a11y-reviews/sprint-20-review.md",
+          "definitionOfDone": "All 5 review sections completed with evidence; sign-off block filled; conformance statement updated if needed; review archived at docs/compliance-and-governance/compliance/quarterly-a11y-reviews/sprint-20-review.md; verified by: template completeness review",
+          "definitionOfDoneSnapshot": "All 5 review sections completed with evidence; sign-off block filled; conformance statement updated if needed; review archived at docs/compliance-and-governance/compliance/quarterly-a11y-reviews/sprint-20-review.md",
           "dependencies": [
             "DOC-012"
           ],

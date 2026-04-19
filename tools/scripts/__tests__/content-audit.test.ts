@@ -23,6 +23,7 @@ import {
   resolveMetadataChain,
   calculateSeoScore,
   buildSitemapSet,
+  resolveSitemapMatch,
   crossReferenceGhostLinks,
   detectStaleContent,
   checkLegalPages,
@@ -307,23 +308,28 @@ describe('calculateSeoScore', () => {
 
 describe('crossReferenceGhostLinks', () => {
   it('TC-22: returns all 28 when none resolved', () => {
-    (fs.existsSync as Mock).mockReturnValue(false);
+    (fs.readdirSync as Mock).mockReturnValue([]);
     const result = crossReferenceGhostLinks('/app');
     expect(result).toHaveLength(28);
   });
 
-  it('TC-23: excludes resolved ghost links (page.tsx exists)', () => {
-    (fs.existsSync as Mock).mockImplementation((p: string) => {
-      // Resolve billing/usage ghost link
-      return p.includes('billing') && p.includes('usage');
+  it('TC-23: excludes resolved ghost links when page exists under a route group', () => {
+    (fs.readdirSync as Mock).mockImplementation((dir: string) => {
+      const d = String(dir).replace(/\\/g, '/');
+      if (d === '/app') return [dirent('analytics', true)];
+      if (d === '/app/analytics') return [dirent('(list)', true)];
+      if (d === '/app/analytics/(list)') return [dirent('saved', true)];
+      if (d === '/app/analytics/(list)/saved') return [dirent('weekly', true)];
+      if (d === '/app/analytics/(list)/saved/weekly') return [dirent('page.tsx', false)];
+      return [];
     });
     const result = crossReferenceGhostLinks('/app');
     expect(result).toHaveLength(27);
-    expect(result.find((g) => g.ghost_link_id === 'G-01')).toBeUndefined();
+    expect(result.find((g) => g.ghost_link_id === 'G-15')).toBeUndefined();
   });
 
   it('TC-24: ghost link entries have correct G-NN format', () => {
-    (fs.existsSync as Mock).mockReturnValue(false);
+    (fs.readdirSync as Mock).mockReturnValue([]);
     const result = crossReferenceGhostLinks('/app');
     for (const gl of result) {
       expect(gl.ghost_link_id).toMatch(/^G-\d{2}$/);
@@ -396,6 +402,7 @@ describe('buildSitemapSet', () => {
           { url: \`\${BASE_URL}\`, lastModified: STATIC_LAST_MODIFIED },
           { url: \`\${BASE_URL}/features\`, lastModified: STATIC_LAST_MODIFIED },
           { url: \`\${BASE_URL}/pricing\`, lastModified: STATIC_LAST_MODIFIED },
+          { url: \`\${BASE_URL}/blog/\${post.slug}\`, lastModified: post.updatedAt },
         ];`;
       }
       throw new Error('not found');
@@ -405,14 +412,17 @@ describe('buildSitemapSet', () => {
     expect(result.has('/')).toBe(true);
     expect(result.has('/features')).toBe(true);
     expect(result.has('/pricing')).toBe(true);
+    expect(result.has('/blog/${post.slug}')).toBe(false);
   });
 
-  it('TC-33: includes dynamic blog/careers/lp routes', () => {
+  it('TC-33: includes dynamic blog/careers/lp/press routes', () => {
     (fs.readFileSync as Mock).mockImplementation((p: string) => {
       if (p.includes('sitemap.ts')) return 'const routes = [];';
       if (p.includes('blog-posts.ts')) return "{ slug: 'ai-scoring', slug: 'governance' }";
       if (p.includes('job-listings.ts')) return "{ id: 'sr-eng' }";
       if (p.includes('landing-pages.json')) return JSON.stringify({ pages: { 'ai-crm': {} } });
+      if (p.includes('press-releases.json'))
+        return JSON.stringify({ releases: [{ id: 'pr-004' }] });
       throw new Error('not found');
     });
 
@@ -421,15 +431,17 @@ describe('buildSitemapSet', () => {
     expect(result.has('/blog/governance')).toBe(true);
     expect(result.has('/careers/sr-eng')).toBe(true);
     expect(result.has('/lp/ai-crm')).toBe(true);
+    expect(result.has('/press/pr-004')).toBe(true);
   });
 
-  it('TC-34: route has in_sitemap true when URL in sitemap set', () => {
+  it('TC-34: dynamic route patterns match concrete sitemap URLs', () => {
     const sitemapMap = new Map<string, string>();
     sitemapMap.set('/about', 'STATIC_LAST_MODIFIED');
+    sitemapMap.set('/blog/ai-scoring', 'data-field');
 
-    // Test that the map lookup works correctly (this is how runAudit uses it)
-    expect(sitemapMap.has('/about')).toBe(true);
-    expect(sitemapMap.has('/missing')).toBe(false);
+    expect(resolveSitemapMatch('/about', sitemapMap)).toBe('STATIC_LAST_MODIFIED');
+    expect(resolveSitemapMatch('/blog/[slug]', sitemapMap)).toBe('data-field');
+    expect(resolveSitemapMatch('/missing', sitemapMap)).toBeNull();
   });
 });
 

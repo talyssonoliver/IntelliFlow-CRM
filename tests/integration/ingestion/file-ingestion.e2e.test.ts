@@ -374,10 +374,10 @@ describeOrSkip('File Ingestion Pipeline E2E', () => {
   describe('Failure Handling', () => {
     it('should retry on transient storage failures', async (context) => {
       // This test requires mocking storage service to fail then succeed.
-      // Skipped until a mock storage adapter is available for unit-level retry testing.
+      // Skipped until a mock storage adapter is available for unit-level
+      // retry testing. Removed trailing `expect(true).toBe(true)` — after
+      // context.skip() throws, that assertion is unreachable dead code.
       context.skip();
-      // Assertion placeholder — test body runs only when skip is removed
-      expect(true).toBe(true);
     });
 
     it('should emit failure event after max retries', async (context) => {

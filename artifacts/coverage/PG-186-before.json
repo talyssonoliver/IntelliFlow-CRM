@@ -1,0 +1,23 @@
+{
+  "task_id": "PG-186",
+  "captured_at": "2026-04-16T18:32:33Z",
+  "description": "Pre-implementation coverage baseline for the PG-186 surface area. All target files (document-settings router, document-automation helper, validators, UI) do not yet exist on disk — baseline is empty by construction.",
+  "measurement_scope": [
+    "apps/api/src/modules/legal/document-settings.router.ts",
+    "apps/api/src/modules/legal/document-automation.ts",
+    "packages/validators/src/document-settings.ts",
+    "apps/web/src/app/documents/(list)/document-settings/**"
+  ],
+  "command": "npx vitest run apps/api/src/modules/legal packages/validators 'apps/web/src/app/documents/(list)/document-settings' --coverage --coverage.provider=istanbul --coverage.include='apps/api/src/modules/legal/document-settings.router.ts' --coverage.include='apps/api/src/modules/legal/document-automation.ts' --coverage.include='packages/validators/src/document-settings.ts' --coverage.include='apps/web/src/app/documents/(list)/document-settings/**'",
+  "baseline_totals": {
+    "lines": { "total": 0, "covered": 0, "skipped": 0, "pct": 0 },
+    "statements": { "total": 0, "covered": 0, "skipped": 0, "pct": 0 },
+    "functions": { "total": 0, "covered": 0, "skipped": 0, "pct": 0 },
+    "branches": { "total": 0, "covered": 0, "skipped": 0, "pct": 0 }
+  },
+  "baseline_files": {},
+  "notes": [
+    "All PG-186 target files are newly created during exec; baseline is empty by construction.",
+    "After-implementation coverage will be recorded in artifacts/coverage/coverage-summary.json (see executive dashboard and PG-186-delivery.md)."
+  ]
+}

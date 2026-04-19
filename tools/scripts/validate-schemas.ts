@@ -51,7 +51,7 @@ const VALIDATION_RULES: ValidationRule[] = [
   {
     name: 'Vulnerability Baseline',
     schema: vulnerabilityBaselineSchema,
-    patterns: ['artifacts/misc/vulnerability-baseline.json'],
+    patterns: ['infra/monitoring/vulnerability-baseline.json'],
   },
   // Attestation — validates both attestation.json (evidence file) and context_ack.json
   // (the pre-execution context acknowledgment file). Both share attestationSchema because

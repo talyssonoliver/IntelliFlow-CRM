@@ -32,7 +32,7 @@
       ],
       "artifacts_verified": [
         {
-          "path": "artifacts/misc/vulnerability-baseline.json",
+          "path": "infra/monitoring/vulnerability-baseline.json",
           "exists": true,
           "is_placeholder": false,
           "sha256": "5c69d785f9f864bb9ce2d7cef1c242a779724531d6d9158523dafddb4eb7a2db",

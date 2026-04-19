@@ -318,7 +318,7 @@ Rollback procedure validated
 2. **ID mapping table**: `artifacts/misc/id-mapping-users.csv` ✅
 3. **Transformation logs**: `/var/log/migration/transformation-2025-12-29.log`
    ✅
-4. **Reconciliation results**: `artifacts/misc/reconciliation-results.csv` ✅
+4. **Reconciliation results**: `artifacts/reports/reconciliation-results.csv` ✅
 5. **Rollback snapshot**: `/db-snapshots/legacy-2025-12-29-pre-migration.sql` ✅
 
 ---

@@ -29,11 +29,11 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 // Configuration
-const ADR_PATHS = ['docs/planning/adr', 'docs/architecture/adr', 'docs/shared'];
+const ADR_PATHS = ['docs/architecture/adr', 'docs/shared'];
 
 const VALID_STATUSES = ['Proposed', 'Accepted', 'Rejected', 'Deprecated', 'Superseded'];
 
-const TEMPLATE_PATH = 'docs/architecture/adr/000-template.md';
+const TEMPLATE_PATH = 'docs/architecture/adr/template.md';
 
 interface ADRMetadata {
   id: string;
@@ -179,7 +179,7 @@ function createADR(title: string, technicalStory?: string): void {
 
   const nextId = (maxId + 1).toString().padStart(3, '0');
   const fileName = `ADR-${nextId}-${title.toLowerCase().replaceAll(/\s+/g, '-')}.md`;
-  const outputPath = path.resolve(process.cwd(), 'docs/planning/adr', fileName);
+  const outputPath = path.resolve(process.cwd(), 'docs/architecture/adr', fileName);
 
   // Read and customize template
   let template = fs.readFileSync(templatePath, 'utf-8');

@@ -250,7 +250,7 @@ Fix:
 
 - **Policy**: `tools/audit/policies/runtime-path-policy.yml`
 - **Full Docs**: `tools/audit/policies/README.md`
-- **Design**: `artifacts/reports/runtime-path-linter-design.md`
+- **Design**: `docs/architecture/runtime-path-linter-design.md`
 - **GitHub Workflow**: `.github/workflows/runtime-path-lint.yml`
 
 ---

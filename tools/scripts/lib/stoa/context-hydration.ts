@@ -59,7 +59,7 @@ const CODEBASE_SCAN_DIRS = [
 // Project knowledge files
 const PROJECT_KNOWLEDGE_FILES = {
   claudeMd: 'CLAUDE.md',
-  adrDir: 'docs/planning/adr',
+  adrDir: 'docs/architecture/adr',
   domainDir: 'packages/domain/src',
   schemasDir: 'packages/validators/src',
 };

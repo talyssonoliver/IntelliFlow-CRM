@@ -59,14 +59,14 @@
       "status": "fresh",
       "artifacts": [
         {
-          "path": "artifacts/reports/risk-register.csv",
+          "path": "docs/compliance-and-governance/governance/risk-register.csv",
           "last_modified": "2026-02-23T20:36:15.382Z",
           "age_days": 4,
           "threshold_days": 90,
           "status": "fresh"
         },
         {
-          "path": "artifacts/reports/gdpr-compliance.md",
+          "path": "docs/compliance-and-governance/compliance/gdpr-compliance.md",
           "last_modified": "2026-02-23T20:37:27.986Z",
           "age_days": 4,
           "threshold_days": 90,

@@ -1,4 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+// Mock @prisma/adapter-pg — reconciliation.ts imports it at top level but
+// the package is only installed in packages/db, not hoisted to root.
+vi.mock('@prisma/adapter-pg', () => ({
+  PrismaPg: vi.fn(),
+}));
+
 import {
   transformValue,
   TRANSFORMATION_RULES,

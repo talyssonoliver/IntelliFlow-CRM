@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-04-16T00:23:49.409Z",
-  "tool_version": "1.0.0",
+  "generated_at": "2026-04-16T19:43:43.245Z",
+  "tool_version": "1.2.0",
   "routes": [
     {
       "route": "/",
@@ -3598,9 +3598,9 @@
         },
         "robots_noindex": false
       },
-      "seo_score": 60,
-      "in_sitemap": false,
-      "sitemap_last_modified_method": null,
+      "seo_score": 70,
+      "in_sitemap": true,
+      "sitemap_last_modified_method": "data-field",
       "http_status": null,
       "response_time_ms": null,
       "http_measurement_method": "pending-runtime",
@@ -3980,9 +3980,9 @@
         },
         "robots_noindex": false
       },
-      "seo_score": 60,
-      "in_sitemap": false,
-      "sitemap_last_modified_method": null,
+      "seo_score": 70,
+      "in_sitemap": true,
+      "sitemap_last_modified_method": "data-field",
       "http_status": null,
       "response_time_ms": null,
       "http_measurement_method": "pending-runtime",
@@ -5585,7 +5585,7 @@
     },
     {
       "route": "/deals/deal-automation",
-      "file_path": "apps/web/src/app/deals/deal-automation/page.tsx",
+      "file_path": "apps/web/src/app/deals/(list)/deal-automation/page.tsx",
       "access_tier": "auth-gated",
       "metadata": {
         "title": {
@@ -5648,7 +5648,7 @@
     },
     {
       "route": "/deals/deal-settings",
-      "file_path": "apps/web/src/app/deals/deal-settings/page.tsx",
+      "file_path": "apps/web/src/app/deals/(list)/deal-settings/page.tsx",
       "access_tier": "auth-gated",
       "metadata": {
         "title": {
@@ -5711,7 +5711,7 @@
     },
     {
       "route": "/deals/deal-stages",
-      "file_path": "apps/web/src/app/deals/deal-stages/page.tsx",
+      "file_path": "apps/web/src/app/deals/(list)/deal-stages/page.tsx",
       "access_tier": "auth-gated",
       "metadata": {
         "title": {
@@ -6975,7 +6975,7 @@
     },
     {
       "route": "/documents/document-settings",
-      "file_path": "apps/web/src/app/documents/document-settings/page.tsx",
+      "file_path": "apps/web/src/app/documents/(list)/document-settings/page.tsx",
       "access_tier": "auth-gated",
       "metadata": {
         "title": {
@@ -7038,7 +7038,7 @@
     },
     {
       "route": "/documents/document-types",
-      "file_path": "apps/web/src/app/documents/document-types/page.tsx",
+      "file_path": "apps/web/src/app/documents/(list)/document-types/page.tsx",
       "access_tier": "auth-gated",
       "metadata": {
         "title": {
@@ -7166,7 +7166,7 @@
     },
     {
       "route": "/documents/storage-policies",
-      "file_path": "apps/web/src/app/documents/storage-policies/page.tsx",
+      "file_path": "apps/web/src/app/documents/(list)/storage-policies/page.tsx",
       "access_tier": "auth-gated",
       "metadata": {
         "title": {
@@ -9321,9 +9321,9 @@
         },
         "robots_noindex": false
       },
-      "seo_score": 60,
-      "in_sitemap": false,
-      "sitemap_last_modified_method": null,
+      "seo_score": 70,
+      "in_sitemap": true,
+      "sitemap_last_modified_method": "data-field",
       "http_status": null,
       "response_time_ms": null,
       "http_measurement_method": "pending-runtime",
@@ -9902,9 +9902,9 @@
         },
         "robots_noindex": false
       },
-      "seo_score": 60,
-      "in_sitemap": false,
-      "sitemap_last_modified_method": null,
+      "seo_score": 70,
+      "in_sitemap": true,
+      "sitemap_last_modified_method": "data-field",
       "http_status": null,
       "response_time_ms": null,
       "http_measurement_method": "pending-runtime",
@@ -10617,10 +10617,134 @@
       "response_time_ms": null,
       "http_measurement_method": "pending-runtime",
       "stale_content": {
-        "classification": "stale",
-        "patterns_found": [
-          "placeholder"
-        ],
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/settings/automation/custom-actions",
+      "file_path": "apps/web/src/app/settings/automation/custom-actions/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Settings",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/settings/automation/custom-node-types",
+      "file_path": "apps/web/src/app/settings/automation/custom-node-types/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Settings",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
         "data_sources": []
       },
       "ghost_links": [],
@@ -12724,7 +12848,7 @@
     },
     {
       "route": "/tickets/sla-policies",
-      "file_path": "apps/web/src/app/tickets/sla-policies/page.tsx",
+      "file_path": "apps/web/src/app/tickets/(list)/sla-policies/page.tsx",
       "access_tier": "auth-gated",
       "metadata": {
         "title": {
@@ -13044,15 +13168,15 @@
     }
   ],
   "summary": {
-    "total_routes": 205,
+    "total_routes": 207,
     "public_routes": 32,
-    "auth_gated_routes": 159,
+    "auth_gated_routes": 161,
     "developer_routes": 14,
     "routes_with_seo_score": 32,
-    "routes_pending_runtime_measurement": 205,
-    "average_seo_score_public": 79,
+    "routes_pending_runtime_measurement": 207,
+    "average_seo_score_public": 80,
     "legal_pages_missing": [],
-    "ghost_link_count": 4
+    "ghost_link_count": 0
   },
   "findings": {
     "critical": [],
@@ -13061,10 +13185,10 @@
         "id": "CONTENT-PRESS-404",
         "type": "data-dependent-404",
         "severity": "high",
-        "description": "/press/[id] uses notFound() — data-dependent 404 risk with no individual sitemap entries",
+        "description": "/press/[id] uses notFound() — data-dependent 404 risk if press data, route params, and crawled URLs drift out of sync",
         "route": "/press/[id]",
         "file": "apps/web/src/app/(public)/press/[id]/page.tsx",
-        "remediation": "Add dynamic press release routes to sitemap.ts or implement ISR fallback"
+        "remediation": "Keep press-releases.json, generateStaticParams/generateMetadata behavior, and sitemap.ts entries in sync or add fallback handling"
       },
       {
         "id": "SEO-LIGHTHOUSE-WARN",
@@ -13086,35 +13210,6 @@
       }
     ],
     "low": [],
-    "ghost_links": [
-      {
-        "ghost_link_id": "G-11",
-        "severity": "low",
-        "planned_task": "PG-175",
-        "description": "Sidebar link to /deals/trash, no page exists",
-        "route": "/deals/trash"
-      },
-      {
-        "ghost_link_id": "G-15",
-        "severity": "low",
-        "planned_task": "PG-177",
-        "description": "Sidebar link to /analytics/saved/weekly, no page exists",
-        "route": "/analytics/saved/weekly"
-      },
-      {
-        "ghost_link_id": "G-16",
-        "severity": "low",
-        "planned_task": "PG-177",
-        "description": "Sidebar link to /analytics/saved/monthly, no page exists",
-        "route": "/analytics/saved/monthly"
-      },
-      {
-        "ghost_link_id": "G-17",
-        "severity": "low",
-        "planned_task": "PG-177",
-        "description": "Sidebar link to /analytics/saved/quarterly, no page exists",
-        "route": "/analytics/saved/quarterly"
-      }
-    ]
+    "ghost_links": []
   }
 }

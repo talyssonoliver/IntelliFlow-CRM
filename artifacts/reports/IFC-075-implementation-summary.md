@@ -250,7 +250,7 @@ As per Sprint_plan.csv requirements:
 - modules/vercel/* (enhanced with README)
 - modules/railway/* (enhanced with README)
 
-**artifacts/misc/drift-detection-config.yaml** (documented in README)
+**infra/monitoring/drift-detection-config.yaml** (documented in README)
 - Drift detection workflow configuration provided
 - To be created as `.github/workflows/terraform-drift.yml`
 

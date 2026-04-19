@@ -1,4 +1,10 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+
+// Mock @prisma/adapter-pg — not installed at root, only in packages/db
+vi.mock('@prisma/adapter-pg', () => ({
+  PrismaPg: vi.fn(),
+}));
+
 import {
   calculateQualityMetrics,
   generateCSV,

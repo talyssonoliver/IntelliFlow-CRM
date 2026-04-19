@@ -1,17 +1,17 @@
 {
   "audit_metadata": {
-    "generated_at": "2026-04-14T19:34:01.085Z",
+    "generated_at": "2026-04-19T10:08:11.451Z",
     "audit_type": "PHANTOM_COMPLETION_DETECTION",
     "sprint_scope": "all",
     "severity": "CRITICAL"
   },
   "summary": {
-    "total_completed_tasks": 375,
-    "verified_completions": 250,
-    "phantom_completions": 125,
+    "total_completed_tasks": 383,
+    "verified_completions": 254,
+    "phantom_completions": 129,
     "sprint_path_mismatches": 0,
-    "integrity_score": "67%",
-    "conclusion": "125 tasks marked as Completed but missing artifacts or unverifiable DOD"
+    "integrity_score": "66%",
+    "conclusion": "129 tasks marked as Completed but missing artifacts or unverifiable DOD"
   },
   "verified_tasks": [
     {
@@ -20,7 +20,7 @@
       "artifacts_verified": [
         "docs/agent/setup-complete-checklist.md",
         "artifacts/metrics/automation-metrics.json",
-        "artifacts/misc/pipeline-status.yaml",
+        "infra/monitoring/pipeline-status.yaml",
         ".specify/sprints/sprint-0/attestations/EXC-INIT-001/context_ack.json"
       ]
     },
@@ -28,7 +28,7 @@
       "task_id": "AI-SETUP-001",
       "description": "Configure Claude Code with Custom Commands and Hooks",
       "artifacts_verified": [
-        "artifacts/misc/command-test-results.csv",
+        "artifacts/reports/command-test-results.csv",
         ".specify/sprints/sprint-0/attestations/AI-SETUP-001/context_ack.json"
       ]
     },
@@ -37,8 +37,8 @@
       "description": "GitHub Copilot Enterprise Automation Setup",
       "artifacts_verified": [
         "docs/shared/copilot-instructions.md",
-        "artifacts/misc/team-licenses.csv",
-        "artifacts/misc/workflow-automation.yaml",
+        "docs/planning/team-licenses.csv",
+        "infra/monitoring/workflow-automation.yaml",
         ".specify/sprints/sprint-0/attestations/AI-SETUP-002/context_ack.json"
       ]
     },
@@ -46,7 +46,7 @@
       "task_id": "AI-SETUP-003",
       "description": "External AI Tools Integration (Codex, Jules)",
       "artifacts_verified": [
-        "artifacts/misc/sandbox-security.json",
+        "infra/monitoring/sandbox-security.json",
         "artifacts/metrics/response-metrics.csv",
         ".specify/sprints/sprint-0/attestations/AI-SETUP-003/context_ack.json"
       ]
@@ -94,14 +94,14 @@
       "artifacts_verified": [
         "eslint.config.mjs",
         ".prettierrc",
-        "artifacts/misc/commitlint.config.js",
-        "artifacts/misc/lint-results.json",
-        "artifacts/misc/env-validation-results.json",
+        "tools/scripts/commitlint.config.js",
+        "artifacts/reports/lint-results.json",
+        "artifacts/reports/env-validation-results.json",
         ".specify/sprints/sprint-0/attestations/ENV-002-AI/context_ack.json",
         "packages/ai/tsconfig.json",
         "packages/search/tsconfig.json",
         "tests/utils/test-helpers.ts",
-        "artifacts/reports/code-analysis/knip-report.json"
+        "artifacts/reports/code-analysis/knip-report-latest.json"
       ]
     },
     {
@@ -109,7 +109,7 @@
       "description": "Docker Environment with Optimized Configuration",
       "artifacts_verified": [
         "docker-compose.yml",
-        "artifacts/misc/health-check.yaml",
+        "infra/monitoring/health-check.yaml",
         ".specify/sprints/sprint-0/attestations/ENV-003-AI/context_ack.json",
         "apps/workers/events-worker/Dockerfile",
         "apps/workers/ingestion-worker/Dockerfile",
@@ -134,7 +134,7 @@
       "artifacts_verified": [
         ".github/workflows/ci.yml",
         ".github/workflows/cd.yml",
-        "artifacts/misc/env-validation-results.json",
+        "artifacts/reports/env-validation-results.json",
         ".specify/sprints/sprint-0/attestations/ENV-005-AI/context_ack.json"
       ]
     },
@@ -158,12 +158,12 @@
       "task_id": "ENV-008-AI",
       "description": "Automated Observability with Predictive Monitoring",
       "artifacts_verified": [
-        "artifacts/misc/otel-config.yaml",
-        "artifacts/misc/anomaly-detection.json",
-        "artifacts/misc/self-healing-rules.yaml",
-        "artifacts/misc/otel-implementation/correlation-patterns.md",
-        "artifacts/misc/otel-implementation/implementation-guide.md",
-        "artifacts/misc/otel-implementation/instrumentation-checklist.md",
+        "infra/monitoring/otel-config.yaml",
+        "infra/monitoring/anomaly-detection.json",
+        "infra/monitoring/self-healing-rules.yaml",
+        "docs/architecture/observability/correlation-patterns.md",
+        "docs/architecture/observability/implementation-guide.md",
+        "docs/architecture/observability/instrumentation-checklist.md",
         ".specify/sprints/sprint-0/attestations/ENV-008-AI/context_ack.json"
       ]
     },
@@ -195,7 +195,7 @@
       "description": "Documentation with Auto-Generation",
       "artifacts_verified": [
         "docs/docusaurus.config.js",
-        "artifacts/misc/docusaurus.config.js",
+        "tools/scripts/docusaurus.config.js",
         ".specify/sprints/sprint-0/attestations/ENV-012-AI/context_ack.json"
       ]
     },
@@ -203,21 +203,21 @@
       "task_id": "ENV-013-AI",
       "description": "Automated Security Implementation",
       "artifacts_verified": [
-        "artifacts/misc/security-scan-results.json",
-        "artifacts/reports/compliance-report.md",
-        "artifacts/misc/security-baseline.json",
-        "artifacts/reports/security/pnpm-audit-latest.json",
+        "artifacts/reports/security-scan-results.json",
+        "docs/compliance-and-governance/compliance/compliance-report.md",
+        "infra/monitoring/security-baseline.json",
+        "artifacts/reports/security/audit-latest.json",
         ".specify/sprints/sprint-0/attestations/ENV-013-AI/context_ack.json",
-        "docs/planning/adr/ADR-015-security-validation.md"
+        "docs/architecture/adr/ADR-015-security-validation.md"
       ]
     },
     {
       "task_id": "ENV-014-AI",
       "description": "Performance Optimization with AI Profiling",
       "artifacts_verified": [
-        "artifacts/misc/profiling-results.json",
-        "artifacts/misc/cache-config.yaml",
-        "artifacts/misc/security-baseline.json",
+        "artifacts/reports/profiling-results.json",
+        "infra/monitoring/cache-config.yaml",
+        "infra/monitoring/security-baseline.json",
         ".specify/sprints/sprint-0/attestations/ENV-014-AI/context_ack.json"
       ]
     },
@@ -225,8 +225,8 @@
       "task_id": "ENV-015-AI",
       "description": "AI-Managed Feature Flags with Predictive Rollout",
       "artifacts_verified": [
-        "artifacts/misc/rollout-config.json",
-        "artifacts/misc/ab-test-results.csv",
+        "infra/monitoring/rollout-config.json",
+        "artifacts/reports/ab-test-results.csv",
         "artifacts/metrics/prediction-accuracy.json",
         ".specify/sprints/sprint-0/attestations/ENV-015-AI/context_ack.json"
       ]
@@ -235,11 +235,11 @@
       "task_id": "ENV-016-AI",
       "description": "Privacy-First Analytics with AI Insights",
       "artifacts_verified": [
-        "artifacts/misc/privacy-config.json",
+        "infra/monitoring/privacy-config.json",
         "artifacts/metrics/insights-accuracy.csv",
-        "artifacts/reports/gdpr-compliance.md",
-        "artifacts/misc/analytics/event-schema.json",
-        "artifacts/misc/analytics/README.md",
+        "docs/compliance-and-governance/compliance/gdpr-compliance.md",
+        "docs/api/schemas/analytics-event-schema.json",
+        "docs/analytics/analytics-README.md",
         ".specify/sprints/sprint-0/attestations/ENV-016-AI/context_ack.json"
       ]
     },
@@ -247,7 +247,7 @@
       "task_id": "ENV-017-AI",
       "description": "Automated Integration Testing",
       "artifacts_verified": [
-        "artifacts/misc/test-orchestration.json",
+        "infra/monitoring/test-orchestration.json",
         "artifacts/metrics/confidence-metrics.csv",
         ".specify/sprints/sprint-1/attestations/ENV-017-AI/context_ack.json"
       ]
@@ -256,10 +256,10 @@
       "task_id": "ENV-018-AI",
       "description": "Sprint Planning and Velocity Prediction",
       "artifacts_verified": [
-        "artifacts/misc/velocity-prediction.json",
-        "artifacts/misc/capacity-model.csv",
-        "artifacts/reports/risk-matrix.md",
-        "artifacts/misc/sprint-planning/README.md",
+        "packages/test-fixtures/velocity-prediction.json",
+        "docs/planning/capacity-model.csv",
+        "docs/compliance-and-governance/governance/risk-matrix.md",
+        "docs/planning/sprint-planning-README.md",
         ".specify/sprints/sprint-1/attestations/ENV-018-AI/context_ack.json"
       ]
     },
@@ -273,23 +273,23 @@
         "infra/monitoring/prometheus.yml",
         "infra/monitoring/loki-config.yml",
         "artifacts/monitoring-config-hashes.txt",
-        "docs/operations/monitoring-runbook.md",
+        "docs/operations/runbooks/monitoring-runbook.md",
         ".specify/sprints/sprint-0/attestations/EP-001-AI/context_ack.json",
-        "docs/operations/easypanel-runbook.md"
+        "docs/operations/runbooks/easypanel-runbook.md"
       ]
     },
     {
       "task_id": "AUTOMATION-001",
       "description": "Continuous AI Agent Coordination System",
       "artifacts_verified": [
-        "artifacts/misc/orchestration-config.yaml",
+        "infra/monitoring/orchestration-config.yaml",
         "artifacts/metrics/handoff-metrics.json",
-        "artifacts/misc/quality-gate-config.json",
+        "infra/monitoring/quality-gate-config.json",
         "scripts/swarm/orchestrator.sh",
         "scripts/swarm/swarm-manager.sh",
-        "artifacts/misc/agent-coordination/README.md",
-        "artifacts/misc/agent-coordination/routing-rules.json",
-        "artifacts/misc/agents-actions-logs/agent-actions.log",
+        "docs/architecture/agent-coordination-README.md",
+        "infra/agent-routing-rules.json",
+        "artifacts/logs/agent-actions.log",
         "tools/scripts/verify-dod.ts",
         "tools/scripts/lib/sprint/types.ts",
         "tools/scripts/lib/contract-parser.ts",
@@ -306,22 +306,22 @@
         "tools/scripts/lib/context-ack-gatekeeper.test.ts",
         "tools/scripts/lib/context-pack-builder.test.ts",
         "tools/scripts/lib/validation-utils.test.ts",
-        "docs/plan-change-log.md",
-        "docs/plan-governance.md"
+        "docs/planning/plan-change-log.md",
+        "docs/planning/plan-governance.md"
       ]
     },
     {
       "task_id": "AUTOMATION-002",
       "description": "AI Performance Dashboard and Optimization Loop",
       "artifacts_verified": [
-        "artifacts/misc/optimization-loop.yaml",
-        "artifacts/misc/roi-tracking.csv",
+        "infra/monitoring/optimization-loop.yaml",
+        "artifacts/reports/roi-tracking.csv",
         "artifacts/metrics/metrics-realtime.json",
-        "artifacts/misc/ai-dashboard/dashboard-spec.json",
-        "artifacts/misc/ai-dashboard/README.md",
-        "artifacts/misc/agent-coordination/README.md",
-        "artifacts/misc/agent-coordination/routing-rules.json",
-        "artifacts/misc/agents-actions-logs/agent-actions.log",
+        "infra/monitoring/dashboard-spec.json",
+        "docs/architecture/ai-dashboard-README.md",
+        "docs/architecture/agent-coordination-README.md",
+        "infra/agent-routing-rules.json",
+        "artifacts/logs/agent-actions.log",
         ".specify/sprints/sprint-0/attestations/AUTOMATION-002/context_ack.json"
       ]
     },
@@ -329,32 +329,11 @@
       "task_id": "IFC-000",
       "description": "IntelliFlow CRM Feasibility Assessment",
       "artifacts_verified": [
-        "artifacts/reports/business-case.md",
-        "artifacts/reports/swot-analysis.md",
-        "artifacts/reports/financial-model.md",
-        "docs/planning/adr/ADR-000-feasibility.md",
-        "artifacts/reports/ifc-000-completion-manifest.json",
+        "docs/planning/financial/business-case.md",
+        "docs/planning/swot-analysis.md",
+        "docs/planning/financial/financial-model.md",
+        "docs/architecture/adr/ADR-000-feasibility.md",
         ".specify/sprints/sprint-0/attestations/IFC-000/context_ack.json"
-      ]
-    },
-    {
-      "task_id": "IFC-001",
-      "description": "PHASE-001: Technical Architecture Spike - Modern Stack",
-      "artifacts_verified": [
-        ".specify/sprints/sprint-1/context/IFC-001/hydrated-context.md",
-        ".specify/sprints/sprint-1/specifications/IFC-001-spec.md",
-        ".specify/sprints/sprint-1/planning/IFC-001-plan.md",
-        "artifacts/misc/architecture-spike/README.md",
-        "artifacts/misc/architecture-spike/performance-test.ts",
-        "artifacts/misc/architecture-spike/type-safety-validation.ts",
-        "artifacts/reports/ifc-000-completion-manifest.json",
-        ".specify/sprints/sprint-1/attestations/IFC-001/context_pack.md",
-        ".specify/sprints/sprint-1/attestations/IFC-001/context_ack.json",
-        "docs/planning/adr/ADR-001-modern-stack.md",
-        "docs/planning/adr/ADR-001-modern-stack.md",
-        "artifacts/benchmarks/performance-benchmark.json",
-        "apps/project-tracker/docs/metrics/_global/flows/FLOW-001.md",
-        "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-001-validation.md"
       ]
     },
     {
@@ -365,7 +344,6 @@
         "docs/planning/DDD-context-map.puml",
         "apps/project-tracker/docs/metrics/_global/flows/FLOW-001.md",
         "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-001-validation.md",
-        "artifacts/reports/ifc-000-completion-manifest.json",
         ".specify/sprints/sprint-1/attestations/IFC-002/context_ack.json"
       ]
     },
@@ -436,9 +414,9 @@
       "task_id": "IFC-007",
       "description": "PHASE-003: Performance Benchmarks - Modern Stack",
       "artifacts_verified": [
-        "artifacts/misc/k6/scripts/load-test.js",
+        "tools/scripts/k6/load-test.js",
         "artifacts/benchmarks/performance-report.html",
-        "artifacts/misc/grafana-dashboard.json",
+        "infra/monitoring/grafana-dashboard.json",
         "artifacts/metrics/baseline-metrics.csv",
         "apps/ai-worker/src/scripts/benchmark.ts",
         "apps/project-tracker/docs/metrics/_global/flows/FLOW-003.md",
@@ -450,15 +428,15 @@
       "task_id": "IFC-008",
       "description": "PHASE-003: Security Assessment - OWASP + ISO 42001 Prep",
       "artifacts_verified": [
-        "artifacts/reports/compliance-report.md",
+        "docs/compliance-and-governance/compliance/compliance-report.md",
         "docs/security/owasp-checklist.md",
         "docs/planning/iso42001-gap-analysis.md",
         "artifacts/reports/zap-scan-report.json",
         "apps/project-tracker/docs/metrics/_global/flows/FLOW-003.md",
         "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-003-validation.md",
-        "artifacts/misc/architecture-spike/README.md",
-        "artifacts/misc/architecture-spike/performance-test.ts",
-        "artifacts/misc/architecture-spike/type-safety-validation.ts",
+        "docs/architecture/architecture-spike-README.md",
+        "tools/scripts/benchmarks/performance-test.ts",
+        "tools/scripts/benchmarks/type-safety-validation.ts",
         ".specify/sprints/sprint-2/attestations/IFC-008/context_ack.json"
       ]
     },
@@ -466,9 +444,9 @@
       "task_id": "IFC-009",
       "description": "PHASE-002: Team Capability Assessment - Modern Stack (Next.j",
       "artifacts_verified": [
-        "artifacts/reports/team-skills-matrix.csv",
+        "docs/training/team-skills-matrix.csv",
         "docs/planning/training-plan.md",
-        "artifacts/misc/competency-test-results.csv",
+        "artifacts/reports/competency-test-results.csv",
         "artifacts/reports/confidence-survey.md",
         "apps/project-tracker/docs/metrics/_global/flows/FLOW-002.md",
         "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-002-validation.md",
@@ -481,7 +459,7 @@
       "artifacts_verified": [
         "turbo.json",
         ".github/workflows/ci.yml",
-        "artifacts/misc/pnpm-workspace.yaml",
+        "infra/monitoring/pnpm-workspace.yaml",
         ".specify/sprints/sprint-6/attestations/IFC-012/context_ack.json"
       ]
     },
@@ -499,8 +477,8 @@
       "task_id": "IFC-014",
       "description": "PHASE-002: Next.js 16.0.10 App Router UI",
       "artifacts_verified": [
-        "artifacts/reports/web-vitals-report.json",
-        "artifacts/misc/axe-audit-results.json",
+        "artifacts/benchmarks/web-vitals-report.json",
+        "artifacts/reports/axe-audit-results.json",
         "apps/project-tracker/docs/metrics/_global/flows/FLOW-002.md",
         "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-002-validation.md",
         ".specify/sprints/sprint-6/attestations/IFC-014/context_ack.json"
@@ -510,7 +488,6 @@
       "task_id": "IFC-015",
       "description": "PHASE-002: BullMQ Job Queue Setup",
       "artifacts_verified": [
-        "artifacts/misc/bull-board-screenshot.png",
         "artifacts/metrics/job-metrics.json",
         "packages/platform/src/queues/retry-strategy.ts",
         ".specify/sprints/sprint-6/attestations/IFC-015/context_ack.json"
@@ -522,7 +499,7 @@
       "artifacts_verified": [
         "apps/web/src/hooks/use-trpc-subscriptions.ts",
         "apps/web/src/hooks/__tests__/use-trpc-subscriptions.test.ts",
-        "artifacts/misc/websocket-test-results.json",
+        "artifacts/reports/websocket-test-results.json",
         ".specify/sprints/sprint-6/attestations/IFC-016/context_ack.json"
       ]
     },
@@ -531,7 +508,7 @@
       "description": "PHASE-002: Prisma + Supabase Data Layer",
       "artifacts_verified": [
         "packages/db/src/client.ts",
-        "artifacts/misc/pgvector-test.sql",
+        "tools/scripts/pgvector-test.sql",
         "apps/project-tracker/docs/metrics/_global/flows/FLOW-002.md",
         "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-002-validation.md",
         ".specify/sprints/sprint-6/attestations/IFC-017/context_ack.json"
@@ -542,8 +519,8 @@
       "description": "PHASE-002: Vitest Testing Suite",
       "artifacts_verified": [
         "vitest.config.ts",
-        "artifacts/reports/test-report.html",
-        "artifacts/misc/ci-test-results.xml",
+        "artifacts/test-results/test-report.html",
+        "artifacts/reports/ci-test-results.xml",
         ".specify/sprints/sprint-6/attestations/IFC-018/context_ack.json"
       ]
     },
@@ -551,7 +528,7 @@
       "task_id": "IFC-021",
       "description": "PHASE-011: CrewAI Agent Framework",
       "artifacts_verified": [
-        "artifacts/misc/crew-config.yaml",
+        "infra/monitoring/crew-config.yaml",
         "apps/api/src/agent/orchestration.test.ts",
         ".specify/sprints/sprint-6/attestations/IFC-021/context_ack.json"
       ]
@@ -561,7 +538,7 @@
       "description": "PHASE-011: Structured AI Output Implementation",
       "artifacts_verified": [
         "apps/api/src/shared/output-validation.test.ts",
-        "artifacts/misc/confidence-calibration.json",
+        "artifacts/reports/confidence-calibration.json",
         ".specify/sprints/sprint-13/attestations/IFC-022/context_ack.json"
       ]
     },
@@ -569,26 +546,35 @@
       "task_id": "IFC-029",
       "description": "PHASE-005: Auto-Response with Approval Gate",
       "artifacts_verified": [
-        "artifacts/misc/approval-workflow.bpmn",
+        "docs/architecture/approval-workflow.bpmn",
         "artifacts/metrics/response-quality-metrics.json",
         "apps/project-tracker/docs/metrics/sprint-16/IFC-029-attestation.json",
         ".specify/sprints/sprint-16/attestations/IFC-029/context_ack.json",
         ".specify/sprints/sprint-16/specifications/IFC-029-spec.md",
         ".specify/sprints/sprint-16/planning/IFC-029-plan.md",
-        "docs/planning/adr/ADR-017-workflow-reliability.md"
+        "docs/architecture/adr/ADR-017-workflow-reliability.md"
       ]
     },
     {
       "task_id": "IFC-030",
       "description": "PHASE-005: Smart Lead Routing",
       "artifacts_verified": [
-        "artifacts/misc/routing-rules-config.yaml",
-        "artifacts/misc/routing-simulation-results.csv",
-        "artifacts/reports/sla-compliance.md",
+        "infra/monitoring/routing-rules-config.yaml",
+        "artifacts/reports/routing-simulation-results.csv",
+        "docs/compliance-and-governance/governance/sla-compliance.md",
         ".specify/sprints/sprint-17/attestations/IFC-030/context_ack.json",
-        "docs/planning/adr/ADR-017-workflow-reliability.md",
+        "docs/architecture/adr/ADR-017-workflow-reliability.md",
         ".specify/sprints/sprint-17/specifications/IFC-030-spec.md",
         ".specify/sprints/sprint-17/planning/IFC-030-plan.md"
+      ]
+    },
+    {
+      "task_id": "IFC-031",
+      "description": "PHASE-005: Workflow Builder UI (React Flow)",
+      "artifacts_verified": [
+        ".specify/sprints/sprint-17/attestations/IFC-031/context_ack.json",
+        ".specify/sprints/sprint-17/specifications/IFC-031-spec.md",
+        ".specify/sprints/sprint-17/planning/IFC-031-plan.md"
       ]
     },
     {
@@ -619,7 +605,7 @@
       "artifacts_verified": [
         "artifacts/metrics/complexity-metrics.json",
         "docs/shared/refactoring-backlog.md",
-        "artifacts/misc/team-velocity.csv",
+        "artifacts/reports/team-velocity.csv",
         ".specify/sprints/sprint-7/attestations/IFC-054/context_ack.json"
       ]
     },
@@ -631,18 +617,17 @@
         ".specify/sprints/sprint-8/planning/IFC-055-plan.md",
         ".specify/sprints/sprint-8/attestations/IFC-055/context_pack.md",
         ".specify/sprints/sprint-8/attestations/IFC-055/context_ack.json",
-        "artifacts/reports/weekly-cost-report.csv",
-        "artifacts/misc/usage-alerts-config.yaml",
-        "docs/shared/cost-optimization-actions.md",
-        "artifacts/misc/invoice-tracker.csv"
+        "docs/planning/financial/weekly-cost-report.csv",
+        "infra/monitoring/usage-alerts-config.yaml",
+        "docs/shared/cost-optimization-actions.md"
       ]
     },
     {
       "task_id": "IFC-058",
       "description": "GDPR baseline controls: Supabase RLS policies, data minimisa",
       "artifacts_verified": [
-        "artifacts/reports/gdpr-compliance-checklist.csv",
-        "artifacts/misc/audit-trail-test.json",
+        "docs/compliance-and-governance/compliance/gdpr-compliance-checklist.csv",
+        "artifacts/reports/audit-trail-test.json",
         ".specify/sprints/sprint-11/attestations/IFC-058/context_ack.json"
       ]
     },
@@ -653,7 +638,7 @@
         "packages/application/src/usecases/leads/ConvertLeadToContactUseCase.ts",
         "packages/application/src/usecases/leads/__tests__/ConvertLeadToContactUseCase.test.ts",
         ".specify/sprints/sprint-14/attestations/IFC-061/context_ack.json",
-        "docs/planning/adr/ADR-019-core-crm-foundation.md",
+        "docs/architecture/adr/ADR-019-core-crm-foundation.md",
         "docs/planning/prd-core-crm.md"
       ]
     },
@@ -674,7 +659,7 @@
         "apps/api/src/modules/opportunity/pipeline-config.router.ts",
         "apps/web/src/app/settings/pipeline/page.tsx",
         ".specify/sprints/sprint-14/attestations/IFC-063/context_ack.json",
-        "docs/planning/adr/ADR-019-core-crm-foundation.md",
+        "docs/architecture/adr/ADR-019-core-crm-foundation.md",
         "docs/planning/prd-core-crm.md"
       ]
     },
@@ -685,7 +670,7 @@
         ".specify/sprints/sprint-18/specifications/IFC-070-spec.md",
         ".specify/sprints/sprint-18/planning/IFC-070-plan.md",
         "artifacts/reports/data-validation-report.csv",
-        "artifacts/misc/migration-log.txt",
+        "artifacts/reports/migration-log.txt",
         "docs/shared/rollback-procedure.md",
         ".specify/sprints/sprint-18/attestations/IFC-070/attestation.json",
         ".specify/sprints/sprint-18/attestations/IFC-070/context_ack.json",
@@ -705,19 +690,19 @@
       "task_id": "IFC-073",
       "description": "PHASE-040: Privacy Impact Assessment",
       "artifacts_verified": [
-        "artifacts/reports/gdpr-compliance.md",
-        "artifacts/reports/risk-matrix.md",
+        "docs/compliance-and-governance/compliance/gdpr-compliance.md",
+        "docs/compliance-and-governance/governance/risk-matrix.md",
         ".specify/sprints/sprint-2/attestations/IFC-073/context_ack.json",
-        "artifacts/misc/compliance-calendar.json"
+        "docs/planning/compliance-calendar.json"
       ]
     },
     {
       "task_id": "IFC-074",
       "description": "PHASE-040: Full Stack Observability",
       "artifacts_verified": [
-        "artifacts/misc/sentry-project-config.json",
-        "artifacts/misc/correlation-test.csv",
-        "artifacts/misc/mttr-baseline.json",
+        "infra/monitoring/sentry-project-config.json",
+        "artifacts/reports/correlation-test.csv",
+        "artifacts/reports/mttr-baseline.json",
         "packages/observability/package.json",
         "packages/observability/tsconfig.json",
         "packages/observability/src/index.ts",
@@ -734,10 +719,10 @@
       "description": "IaC with Terraform",
       "artifacts_verified": [
         "infra/terraform/modules/supabase/main.tf",
-        "artifacts/misc/drift-detection-config.yaml",
-        "artifacts/misc/architecture-spike/README.md",
-        "artifacts/misc/architecture-spike/performance-test.ts",
-        "artifacts/misc/architecture-spike/type-safety-validation.ts",
+        "infra/monitoring/drift-detection-config.yaml",
+        "docs/architecture/architecture-spike-README.md",
+        "tools/scripts/benchmarks/performance-test.ts",
+        "tools/scripts/benchmarks/type-safety-validation.ts",
         "artifacts/reports/IFC-075-implementation-summary.md",
         ".specify/sprints/sprint-1/attestations/IFC-075/context_ack.json"
       ]
@@ -750,8 +735,8 @@
         ".specify/sprints/sprint-10/planning/IFC-076-plan.md",
         ".specify/sprints/sprint-10/attestations/IFC-076/context_pack.md",
         ".specify/sprints/sprint-10/attestations/IFC-076/context_ack.json",
-        "artifacts/misc/accessibility-audit.json",
-        "artifacts/misc/component-usage.csv",
+        "artifacts/reports/accessibility-audit.json",
+        "artifacts/reports/component-usage.csv",
         "apps/web/src/components/billing/checkout-form.stories.tsx",
         "apps/web/src/components/shared/email-verification.stories.tsx",
         "apps/web/src/components/shared/mfa-qr-generator.stories.tsx",
@@ -774,7 +759,7 @@
       "task_id": "IFC-080",
       "description": "PHASE-041: LLM-Friendly Documentation Templates",
       "artifacts_verified": [
-        "docs/glossary.md",
+        "docs/shared/glossary.md",
         "docs/templates/chunking-strategy.md",
         "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-041-validation.md",
         ".specify/sprints/sprint-7/attestations/IFC-080/context_ack.json"
@@ -785,7 +770,7 @@
       "description": "API Documentation (tRPC + OpenAPI)",
       "artifacts_verified": [
         "apps/api/openapi.json",
-        "artifacts/misc/postman-collection.json",
+        "packages/test-fixtures/postman-collection.json",
         "apps/project-tracker/docs/metrics/_global/flows/FLOW-002.md",
         "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-002-validation.md",
         ".specify/sprints/sprint-12/attestations/IFC-081/context_ack.json"
@@ -795,13 +780,13 @@
       "task_id": "IFC-085",
       "description": "PHASE-040: Ollama Local Development",
       "artifacts_verified": [
-        "artifacts/misc/ollama-setup.sh",
-        "artifacts/misc/model-comparison.csv",
+        "tools/scripts/ollama-setup.sh",
+        "artifacts/reports/model-comparison.csv",
         "artifacts/reports/cost-savings-report.json",
         "artifacts/benchmarks/accuracy-benchmarks.json",
         "scripts/setup-ollama.sh",
         ".specify/sprints/sprint-2/attestations/IFC-085/context_ack.json",
-        "docs/planning/adr/ADR-022-ai-features-quality.md",
+        "docs/architecture/adr/ADR-022-ai-features-quality.md",
         "docs/planning/prd-ai-output-quality.md"
       ]
     },
@@ -814,10 +799,10 @@
         "packages/application/src/services/ChainVersionService.ts",
         "apps/ai-worker/src/versioning/version-loader.ts",
         "apps/api/src/modules/chain-version/chain-version.router.ts",
-        "artifacts/misc/prompt-versions/prompt-versions-latest.json",
-        "artifacts/misc/ab-test-config.yaml",
+        "artifacts/prompts/prompt-versions-latest.json",
+        "infra/monitoring/ab-test-config.yaml",
         ".specify/sprints/sprint-14/attestations/IFC-086/context_ack.json",
-        "docs/planning/adr/ADR-022-ai-features-quality.md",
+        "docs/architecture/adr/ADR-022-ai-features-quality.md",
         "docs/planning/prd-ai-output-quality.md"
       ]
     },
@@ -825,9 +810,9 @@
       "task_id": "IFC-088",
       "description": "Continuous Quality Metrics",
       "artifacts_verified": [
-        "artifacts/misc/sonar-project.properties",
-        "artifacts/misc/quality-gate-config.json",
-        "artifacts/reports/sonarqube-debt-report.html",
+        "infra/monitoring/sonar-project.properties",
+        "infra/monitoring/quality-gate-config.json",
+        "artifacts/reports/code-analysis/debt-analysis.json",
         "docs/shared/refactoring-backlog.md",
         "scripts/sonar-iterative.js",
         "scripts/sonar-new-issues.js",
@@ -848,7 +833,7 @@
       "artifacts_verified": [
         "artifacts/lighthouse/lighthouse-report.html",
         ".specify/sprints/sprint-6/attestations/IFC-090/context_ack.json",
-        "docs/planning/adr/ADR-019-core-crm-foundation.md",
+        "docs/architecture/adr/ADR-019-core-crm-foundation.md",
         "docs/planning/prd-core-crm.md"
       ]
     },
@@ -858,7 +843,7 @@
       "artifacts_verified": [
         "apps/api/src/modules/opportunity/opportunity.router.ts",
         ".specify/sprints/sprint-6/attestations/IFC-091/context_ack.json",
-        "docs/planning/adr/ADR-019-core-crm-foundation.md",
+        "docs/architecture/adr/ADR-019-core-crm-foundation.md",
         "docs/planning/prd-core-crm.md"
       ]
     },
@@ -869,7 +854,7 @@
         "apps/api/src/shared/forecast-algorithm.test.ts",
         "artifacts/metrics/accuracy-backtest.csv",
         ".specify/sprints/sprint-7/attestations/IFC-092/context_ack.json",
-        "docs/planning/adr/ADR-019-core-crm-foundation.md",
+        "docs/architecture/adr/ADR-019-core-crm-foundation.md",
         "docs/planning/prd-core-crm.md"
       ]
     },
@@ -881,7 +866,7 @@
         "apps/web/lib/tickets/sla-notifications.ts",
         "apps/web/lib/tickets/sla-notifications.test.ts",
         ".specify/sprints/sprint-7/attestations/IFC-093/context_ack.json",
-        "docs/planning/adr/ADR-019-core-crm-foundation.md",
+        "docs/architecture/adr/ADR-019-core-crm-foundation.md",
         "docs/planning/prd-core-crm.md"
       ]
     },
@@ -891,12 +876,12 @@
       "artifacts_verified": [
         ".specify/sprints/sprint-6/specifications/IFC-095-spec.md",
         ".specify/sprints/sprint-6/planning/IFC-095-plan.md",
-        "artifacts/misc/model-evaluation.ipynb",
+        "tools/scripts/model-evaluation.ipynb",
         "apps/api/src/modules/intelligence/intelligence.router.ts",
         "packages/ui/src/components/intelligence/ChurnRiskCard.tsx",
         "packages/ui/src/components/intelligence/NextBestActionCard.tsx",
         ".specify/sprints/sprint-6/attestations/IFC-095/context_ack.json",
-        "docs/planning/adr/ADR-022-ai-features-quality.md",
+        "docs/architecture/adr/ADR-022-ai-features-quality.md",
         "docs/planning/prd-ai-output-quality.md"
       ]
     },
@@ -930,7 +915,7 @@
       "task_id": "IFC-099",
       "description": "ERP/Payment/Email Connectors",
       "artifacts_verified": [
-        "artifacts/misc/connector-status-dashboard.json",
+        "artifacts/reports/connector-status-dashboard.json",
         "packages/adapters/src/erp/sap/client.ts",
         "packages/adapters/src/payments/stripe/client.ts",
         "packages/adapters/src/payments/paypal/client.ts",
@@ -953,7 +938,7 @@
       "description": "ADR Registry & Compliance Reporting",
       "artifacts_verified": [
         "docs/shared/adr-index.md",
-        "artifacts/misc/compliance-dashboard-mockup.md",
+        "docs/planning/compliance-dashboard-mockup.md",
         ".specify/sprints/sprint-6/attestations/IFC-100/context_ack.json"
       ]
     },
@@ -969,8 +954,8 @@
         "apps/web/src/components/home/PublicHomePage.tsx",
         "apps/web/src/app/(public)/loading.tsx",
         "apps/web/src/app/(public)/error.tsx",
-        "artifacts/misc/seo-meta.json",
-        "docs/planning/adr/ADR-020-public-site-auth.md",
+        "docs/planning/seo-meta.json",
+        "docs/architecture/adr/ADR-020-public-site-auth.md",
         "docs/planning/prd-public-site-auth.md",
         "docs/planning/prd-home-page.md",
         "docs/specs/HOME-PAGE-SPEC.md"
@@ -981,10 +966,10 @@
       "description": "Features Page",
       "artifacts_verified": [
         "apps/web/src/app/(public)/features/page.tsx",
-        "artifacts/misc/features-content.json",
-        "artifacts/misc/conversion-tracking.js",
+        "docs/planning/features-content.json",
+        "tools/scripts/conversion-tracking.js",
         ".specify/sprints/sprint-11/attestations/PG-002/context_ack.json",
-        "docs/planning/adr/ADR-020-public-site-auth.md",
+        "docs/architecture/adr/ADR-020-public-site-auth.md",
         "docs/planning/prd-public-site-auth.md"
       ]
     },
@@ -996,7 +981,7 @@
         "apps/web/src/components/pricing/pricing-calculator.tsx",
         "apps/web/src/lib/pricing/stripe-integration.ts",
         ".specify/sprints/sprint-11/attestations/PG-003/context_ack.json",
-        "docs/planning/adr/ADR-020-public-site-auth.md",
+        "docs/architecture/adr/ADR-020-public-site-auth.md",
         "docs/planning/prd-public-site-auth.md"
       ]
     },
@@ -1008,7 +993,7 @@
         "apps/web/src/data/team-data.json",
         "docs/about/about-content.md",
         ".specify/sprints/sprint-11/attestations/PG-004/context_ack.json",
-        "docs/planning/adr/ADR-020-public-site-auth.md",
+        "docs/architecture/adr/ADR-020-public-site-auth.md",
         "docs/planning/prd-public-site-auth.md"
       ]
     },
@@ -1020,7 +1005,7 @@
         "apps/web/src/components/shared/contact-form.tsx",
         "apps/web/src/lib/shared/email-handler.ts",
         ".specify/sprints/sprint-11/attestations/PG-005/context_ack.json",
-        "docs/planning/adr/ADR-020-public-site-auth.md",
+        "docs/architecture/adr/ADR-020-public-site-auth.md",
         "docs/planning/prd-public-site-auth.md"
       ]
     },
@@ -1029,9 +1014,9 @@
       "description": "Partners Page",
       "artifacts_verified": [
         "apps/web/src/app/(public)/partners/page.tsx",
-        "artifacts/misc/partner-benefits.json",
+        "docs/planning/partner-benefits.json",
         ".specify/sprints/sprint-11/attestations/PG-006/context_ack.json",
-        "docs/planning/adr/ADR-020-public-site-auth.md",
+        "docs/architecture/adr/ADR-020-public-site-auth.md",
         "docs/planning/prd-public-site-auth.md",
         "apps/web/src/data/partner-benefits.json"
       ]
@@ -1043,7 +1028,7 @@
         "apps/web/src/app/(public)/press/page.tsx",
         "apps/web/src/data/press-releases.json",
         ".specify/sprints/sprint-11/attestations/PG-007/attestation.json",
-        "docs/planning/adr/ADR-020-public-site-auth.md",
+        "docs/architecture/adr/ADR-020-public-site-auth.md",
         "docs/planning/prd-public-site-auth.md"
       ]
     },
@@ -1054,7 +1039,7 @@
         "apps/web/src/app/(public)/security/page.tsx",
         "apps/web/src/data/security-features.json",
         ".specify/sprints/sprint-11/attestations/PG-008/attestation.json",
-        "docs/planning/adr/ADR-020-public-site-auth.md",
+        "docs/architecture/adr/ADR-020-public-site-auth.md",
         "docs/planning/prd-public-site-auth.md"
       ]
     },
@@ -1065,7 +1050,7 @@
         "apps/web/src/app/(public)/blog/page.tsx",
         "apps/web/src/components/blog/blog-pagination.tsx",
         ".specify/sprints/sprint-12/attestations/PG-009/context_ack.json",
-        "docs/planning/adr/ADR-020-public-site-auth.md",
+        "docs/architecture/adr/ADR-020-public-site-auth.md",
         "docs/planning/prd-public-site-auth.md"
       ]
     },
@@ -1077,7 +1062,7 @@
         "apps/web/src/components/blog/markdown-renderer.tsx",
         "apps/web/src/components/blog/comments-widget.tsx",
         ".specify/sprints/sprint-12/attestations/PG-010/context_ack.json",
-        "docs/planning/adr/ADR-020-public-site-auth.md",
+        "docs/architecture/adr/ADR-020-public-site-auth.md",
         "docs/planning/prd-public-site-auth.md"
       ]
     },
@@ -1087,10 +1072,10 @@
       "artifacts_verified": [
         "apps/web/src/app/(public)/careers/page.tsx",
         "apps/web/src/app/(public)/careers/[id]/page.tsx",
-        "artifacts/misc/job-listings.json",
+        "docs/planning/job-listings.json",
         "apps/web/src/components/shared/application-form.tsx",
         ".specify/sprints/sprint-12/attestations/PG-011/context_ack.json",
-        "docs/planning/adr/ADR-020-public-site-auth.md",
+        "docs/architecture/adr/ADR-020-public-site-auth.md",
         "docs/planning/prd-public-site-auth.md"
       ]
     },
@@ -1133,7 +1118,7 @@
         "apps/web/src/components/shared/auth-providers.tsx",
         "apps/web/src/lib/shared/login-security.ts",
         ".specify/sprints/sprint-13/execution/PG-015/20260125-173318/PG-015-delivery.md",
-        "docs/planning/adr/ADR-020-public-site-auth.md",
+        "docs/architecture/adr/ADR-020-public-site-auth.md",
         "docs/planning/prd-public-site-auth.md"
       ]
     },
@@ -1147,7 +1132,7 @@
         "apps/web/src/lib/shared/password-breach-check.ts",
         "apps/web/src/lib/shared/signup-rate-limiter.ts",
         ".specify/sprints/sprint-13/attestations/PG-016/context_ack.json",
-        "docs/planning/adr/ADR-020-public-site-auth.md",
+        "docs/architecture/adr/ADR-020-public-site-auth.md",
         "docs/planning/prd-public-site-auth.md"
       ]
     },
@@ -1175,7 +1160,7 @@
         "apps/web/src/components/auth/logout-button.tsx",
         "apps/web/src/components/auth/unsaved-work-modal.tsx",
         ".specify/sprints/sprint-13/execution/PG-018/20260126-000000/PG-018-delivery.md",
-        "docs/planning/adr/ADR-020-public-site-auth.md",
+        "docs/architecture/adr/ADR-020-public-site-auth.md",
         "docs/planning/prd-public-site-auth.md"
       ]
     },
@@ -1522,9 +1507,19 @@
       "description": "Data Processing Addendum",
       "artifacts_verified": [
         "apps/web/src/app/(public)/dpa/page.tsx",
-        "artifacts/reports/dpa-template.pdf",
+        "docs/compliance-and-governance/compliance/dpa-template.pdf",
         "apps/web/src/lib/legal/signature-handler.ts",
         ".specify/sprints/sprint-17/attestations/PG-053/context_ack.json"
+      ]
+    },
+    {
+      "task_id": "PG-054",
+      "description": "Acceptable Use Policy",
+      "artifacts_verified": [
+        "apps/web/src/app/(public)/aup/page.tsx",
+        "docs/shared/aup-content.md",
+        "apps/web/src/lib/legal/violation-tracker.ts",
+        ".specify/sprints/sprint-17/attestations/PG-054/context_ack.json"
       ]
     },
     {
@@ -1613,18 +1608,6 @@
       ]
     },
     {
-      "task_id": "SALES-001",
-      "description": "Commercial Narrative + Pitch Deck Outline + One-Pager",
-      "artifacts_verified": [
-        "docs/sales/pitch-deck-outline.md",
-        "docs/sales/one-pager.md",
-        "artifacts/misc/sales/pitch-deck-source-link.txt",
-        "artifacts/reports/SALES-001-quick-reference.md",
-        "artifacts/reports/SALES-001-validation-report.md",
-        ".specify/sprints/sprint-1/attestations/SALES-001/context_ack.json"
-      ]
-    },
-    {
       "task_id": "SALES-002",
       "description": "Sales Motion Playbook (outreach sequences, discovery + demo ",
       "artifacts_verified": [
@@ -1662,7 +1645,7 @@
       "task_id": "GOV-001",
       "description": "Architecture Governance Pack (ADR + ARP templates, decision ",
       "artifacts_verified": [
-        "docs/architecture/adr/000-template.md",
+        "docs/architecture/adr/template.md",
         "docs/architecture/arp/000-template.md",
         "docs/architecture/decision-workflow.md",
         "docs/architecture/diagrams/README.md",
@@ -1697,7 +1680,7 @@
         "packages/adapters/src/repositories/PrismaLeadRepository.ts",
         "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-039-validation.md",
         ".specify/sprints/sprint-2/attestations/IFC-101/context_ack.json",
-        "docs/planning/adr/ADR-019-core-crm-foundation.md",
+        "docs/architecture/adr/ADR-019-core-crm-foundation.md",
         "docs/planning/prd-core-crm.md",
         "packages/domain/src/shared/__tests__/AggregateRoot.test.ts",
         "packages/domain/src/shared/__tests__/DomainEvent.test.ts",
@@ -1713,7 +1696,7 @@
         "packages/adapters/src/repositories/PrismaContactRepository.ts",
         "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-039-validation.md",
         ".specify/sprints/sprint-2/attestations/IFC-102/context_ack.json",
-        "docs/planning/adr/ADR-019-core-crm-foundation.md",
+        "docs/architecture/adr/ADR-019-core-crm-foundation.md",
         "docs/planning/prd-core-crm.md"
       ]
     },
@@ -1724,7 +1707,7 @@
         "packages/adapters/src/repositories/PrismaAccountRepository.ts",
         "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-039-validation.md",
         ".specify/sprints/sprint-2/attestations/IFC-103/context_ack.json",
-        "docs/planning/adr/ADR-019-core-crm-foundation.md",
+        "docs/architecture/adr/ADR-019-core-crm-foundation.md",
         "docs/planning/prd-core-crm.md"
       ]
     },
@@ -1735,7 +1718,7 @@
         "packages/adapters/src/repositories/PrismaOpportunityRepository.ts",
         "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-039-validation.md",
         ".specify/sprints/sprint-3/attestations/IFC-104/context_ack.json",
-        "docs/planning/adr/ADR-019-core-crm-foundation.md",
+        "docs/architecture/adr/ADR-019-core-crm-foundation.md",
         "docs/planning/prd-core-crm.md"
       ]
     },
@@ -1746,7 +1729,7 @@
         "packages/adapters/src/repositories/PrismaTaskRepository.ts",
         "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-039-validation.md",
         ".specify/sprints/sprint-3/attestations/IFC-105/context_ack.json",
-        "docs/planning/adr/ADR-019-core-crm-foundation.md",
+        "docs/architecture/adr/ADR-019-core-crm-foundation.md",
         "docs/planning/prd-core-crm.md"
       ]
     },
@@ -1759,7 +1742,7 @@
         "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-039-validation.md",
         ".specify/sprints/sprint-1/attestations/IFC-106/context_ack.json",
         "packages/application/src/errors/ApplicationErrors.ts",
-        "docs/architecture/adr/001-hexagonal-architecture.md",
+        "docs/architecture/adr/ADR-047-hexagonal-architecture.md",
         "docs/architecture/overview.md",
         "tests/architecture/dependency-rules.ts"
       ]
@@ -1783,11 +1766,11 @@
       "task_id": "IFC-109",
       "description": "Define TDD Process, Coverage & Review Checklist",
       "artifacts_verified": [
-        "docs/tdd-guidelines.md",
-        "artifacts/misc/ci-coverage-config.yml",
+        "docs/development/tdd-guidelines.md",
+        "infra/monitoring/ci-coverage-config.yml",
         "docs/shared/review-checklist.md",
         ".specify/sprints/sprint-2/attestations/IFC-109/context_ack.json",
-        "docs/planning/adr/ADR-019-core-crm-foundation.md",
+        "docs/architecture/adr/ADR-019-core-crm-foundation.md",
         "docs/planning/prd-core-crm.md"
       ]
     },
@@ -1796,7 +1779,7 @@
       "description": "Write Unit & Integration Tests for Domain Entities",
       "artifacts_verified": [
         ".specify/sprints/sprint-4/attestations/IFC-110/context_ack.json",
-        "docs/planning/adr/ADR-019-core-crm-foundation.md",
+        "docs/architecture/adr/ADR-019-core-crm-foundation.md",
         "docs/planning/prd-core-crm.md"
       ]
     },
@@ -1804,8 +1787,8 @@
       "task_id": "IFC-111",
       "description": "Set up SonarQube and integrate static analysis into CI/CD",
       "artifacts_verified": [
-        "artifacts/misc/sonar-project.properties",
-        "artifacts/misc/ci-sonar.yml",
+        "infra/monitoring/sonar-project.properties",
+        "infra/monitoring/ci-sonar.yml",
         "docs/shared/sonar-dashboard.md",
         ".specify/sprints/sprint-5/attestations/IFC-111/context_ack.json"
       ]
@@ -1822,7 +1805,7 @@
       "task_id": "IFC-113",
       "description": "Implement secrets management and encryption at rest and in t",
       "artifacts_verified": [
-        "artifacts/misc/vault-config.yaml",
+        "infra/monitoring/vault-config.yaml",
         "apps/api/src/security/encryption.ts",
         "apps/api/src/security/key-rotation.ts",
         "docs/security/encryption-tests.md",
@@ -1834,8 +1817,8 @@
       "description": "Implement API rate limiting and DDoS protection",
       "artifacts_verified": [
         "apps/api/src/middleware/rate-limit.ts",
-        "artifacts/misc/waf-config.json",
-        "artifacts/misc/ddos-test-report.txt",
+        "infra/monitoring/waf-config.json",
+        "artifacts/reports/ddos-test-report.txt",
         ".specify/sprints/sprint-7/attestations/IFC-114/context_ack.json"
       ]
     },
@@ -1844,8 +1827,8 @@
       "description": "Monitor AI models for drift, latency, hallucination and ROI",
       "artifacts_verified": [
         "artifacts/metrics/ai-metrics.json",
-        "artifacts/misc/drift-dashboard.md",
-        "artifacts/misc/alerts-config.yaml",
+        "docs/planning/drift-dashboard.md",
+        "infra/monitoring/alerts-config.yaml",
         "infra/monitoring/ai-grafana-dashboard.json",
         "infra/monitoring/ai-prometheus-rules.yaml",
         "apps/ai-worker/src/metrics/prometheus-exporter.ts",
@@ -1856,7 +1839,7 @@
       "task_id": "IFC-118",
       "description": "Establish and maintain a risk register with mitigation actio",
       "artifacts_verified": [
-        "artifacts/reports/risk-register.csv",
+        "docs/compliance-and-governance/governance/risk-register.csv",
         "docs/shared/risk-mitigation-plan.md",
         "docs/shared/risk-review-agenda.md",
         ".specify/sprints/sprint-8/attestations/IFC-118/context_ack.json"
@@ -1866,13 +1849,13 @@
       "task_id": "IFC-119",
       "description": "Define recurring backlog refinement, sprint planning, review",
       "artifacts_verified": [
-        "artifacts/misc/ceremony-calendar.ics",
-        "artifacts/reports/retro-action-items.md",
-        "artifacts/misc/templates/backlog-refinement.md",
-        "artifacts/misc/templates/daily-standup.md",
-        "artifacts/misc/templates/sprint-planning.md",
-        "artifacts/misc/templates/sprint-retrospective.md",
-        "artifacts/misc/templates/sprint-review.md",
+        "docs/planning/ceremony-calendar.ics",
+        "artifacts/reports/sprint-11-completion-report.md",
+        "docs/planning/templates/backlog-refinement.md",
+        "docs/planning/templates/daily-standup.md",
+        "docs/planning/templates/sprint-planning.md",
+        "docs/planning/templates/sprint-retrospective.md",
+        "docs/planning/templates/sprint-review.md",
         ".specify/sprints/sprint-1/attestations/IFC-119/context_ack.json"
       ]
     },
@@ -1882,7 +1865,7 @@
       "artifacts_verified": [
         "apps/web/src/app/(public)/sso/page.tsx",
         "apps/web/src/lib/auth/sso-handler.ts",
-        "artifacts/misc/provider-config.json",
+        "infra/monitoring/provider-config.json",
         ".specify/sprints/sprint-15/attestations/PG-124/context_ack.json"
       ]
     },
@@ -1914,8 +1897,8 @@
       "task_id": "IFC-126",
       "description": "Continuously maintain ADR registry and developer guide updat",
       "artifacts_verified": [
-        "docs/dev-guide.md",
-        "artifacts/misc/adr-index.csv",
+        "docs/development/dev-guide.md",
+        "artifacts/reports/adr-index.csv",
         ".specify/sprints/sprint-7/attestations/IFC-126/context_ack.json"
       ]
     },
@@ -1930,8 +1913,8 @@
         "infra/supabase/migrations/20250124000000_rls_policies.sql",
         "infra/supabase/migrations/20260103000000_add_tenant_isolation.sql",
         "apps/api/src/security/tenant-context.ts",
-        "docs/history/db/add_multi_tenancy_manual.sql",
-        "docs/history/db/tenant-rls.sql"
+        "infra/supabase/migrations/20260103000000_add_tenant_isolation.sql",
+        "infra/supabase/rls-policies.sql"
       ]
     },
     {
@@ -1947,7 +1930,7 @@
       "task_id": "IFC-129",
       "description": "Write UI and contract tests for core pages and tRPC endpoint",
       "artifacts_verified": [
-        "artifacts/misc/coverage-reports/ui-coverage.html",
+        "artifacts/reports/ui-coverage.html",
         ".specify/sprints/sprint-6/attestations/IFC-129/context_ack.json"
       ]
     },
@@ -1959,7 +1942,7 @@
         ".github/workflows/release.yml",
         "docs/operations/runbooks/release-checklist.md",
         ".specify/sprints/sprint-5/attestations/IFC-130/context_ack.json",
-        "docs/planning/adr/ADR-021-governance-ops-release.md",
+        "docs/architecture/adr/ADR-021-governance-ops-release.md",
         "docs/planning/prd-release-governance.md"
       ]
     },
@@ -1970,7 +1953,7 @@
         ".github/workflows/security-sbom.yml",
         "docs/security/supply-chain.md",
         ".specify/sprints/sprint-6/attestations/IFC-132/context_ack.json",
-        "docs/planning/adr/ADR-021-governance-ops-release.md",
+        "docs/architecture/adr/ADR-021-governance-ops-release.md",
         "docs/planning/prd-release-governance.md"
       ]
     },
@@ -1981,7 +1964,7 @@
         "docs/security/signing.md",
         ".github/workflows/signing.yml",
         ".specify/sprints/sprint-7/attestations/IFC-133/context_ack.json",
-        "docs/planning/adr/ADR-021-governance-ops-release.md",
+        "docs/architecture/adr/ADR-021-governance-ops-release.md",
         "docs/planning/prd-release-governance.md"
       ]
     },
@@ -1992,7 +1975,7 @@
         "docs/security/image-scanning.md",
         ".github/workflows/image-scan.yml",
         ".specify/sprints/sprint-7/attestations/IFC-134/context_ack.json",
-        "docs/planning/adr/ADR-021-governance-ops-release.md",
+        "docs/architecture/adr/ADR-021-governance-ops-release.md",
         "docs/planning/prd-release-governance.md"
       ]
     },
@@ -2000,12 +1983,12 @@
       "task_id": "IFC-135",
       "description": "Create ADR pack for multi-tenancy; workflow engine choice; a",
       "artifacts_verified": [
-        "docs/planning/adr/ADR-004-multi-tenancy.md",
-        "docs/planning/adr/ADR-005-workflow-engine.md",
-        "docs/planning/adr/ADR-006-agent-tools.md",
-        "docs/planning/adr/ADR-007-data-governance.md",
-        "docs/planning/adr/ADR-008-audit-logging.md",
-        "artifacts/misc/adr-index.csv",
+        "docs/architecture/adr/ADR-004-multi-tenancy.md",
+        "docs/architecture/adr/ADR-005-workflow-engine.md",
+        "docs/architecture/adr/ADR-006-agent-tools.md",
+        "docs/architecture/adr/ADR-007-data-governance.md",
+        "docs/architecture/adr/ADR-008-audit-logging.md",
+        "artifacts/reports/adr-index.csv",
         ".specify/sprints/sprint-1/attestations/IFC-135/context_ack.json"
       ]
     },
@@ -2019,9 +2002,9 @@
         "packages/adapters/src/calendar/shared/ConflictResolver.ts",
         "packages/adapters/src/calendar/shared/IdempotencyManager.ts",
         "packages/adapters/src/calendar/shared/RetryHandler.ts",
-        "artifacts/misc/webhooks-config.yaml",
+        "infra/monitoring/webhooks-config.yaml",
         ".specify/sprints/sprint-5/attestations/IFC-138/context_ack.json",
-        "docs/planning/adr/ADR-024-scheduling-calendar.md",
+        "docs/architecture/adr/ADR-024-scheduling-calendar.md",
         "docs/planning/prd-scheduling-calendar.md"
       ]
     },
@@ -2029,7 +2012,7 @@
       "task_id": "IFC-139",
       "description": "Expose application services as agent tools and implement hum",
       "artifacts_verified": [
-        "artifacts/misc/logs/agent-actions.log",
+        "artifacts/logs/agent-actions.log",
         "apps/api/src/agent/approval-workflow.ts",
         "apps/api/src/agent/authorization.ts",
         "apps/api/src/agent/index.ts",
@@ -2051,11 +2034,11 @@
       "task_id": "IFC-140",
       "description": "Implement data governance workflows: DSAR requests; retentio",
       "artifacts_verified": [
-        "docs/data-governance/dsar-process.md",
-        "docs/data-governance/retention-policy.md",
-        "artifacts/misc/kms-key-config.json",
+        "docs/compliance-and-governance/data-governance/dsar-process.md",
+        "docs/compliance-and-governance/data-governance/retention-policy.md",
+        "infra/monitoring/kms-key-config.json",
         "apps/api/src/workflow/dsar-workflow.ts",
-        "artifacts/misc/compliance-tests/data-governance.spec.ts",
+        "tests/compliance/data-governance.spec.ts",
         ".specify/sprints/sprint-11/attestations/IFC-140/context_ack.json"
       ]
     },
@@ -2065,11 +2048,11 @@
       "artifacts_verified": [
         ".specify/sprints/sprint-10/specifications/IFC-141-spec.md",
         ".specify/sprints/sprint-10/planning/IFC-141-plan.md",
-        "artifacts/misc/workflow-comparison-matrix.md",
+        "docs/planning/workflow-comparison-matrix.md",
         ".specify/sprints/sprint-10/attestations/IFC-141/context_pack.md",
         ".specify/sprints/sprint-10/attestations/IFC-141/context_ack.json",
-        "docs/planning/adr/ADR-014-workflow-engine-decision.md",
-        "artifacts/misc/events-spec.yaml"
+        "docs/architecture/adr/ADR-005-workflow-engine.md",
+        "infra/monitoring/events-spec.yaml"
       ]
     },
     {
@@ -2077,16 +2060,16 @@
       "description": "Define SLOs/SLIs and alerting; establish on-call and inciden",
       "artifacts_verified": [
         "docs/operations/slo-definitions.md",
-        "artifacts/misc/alerts-config.yaml",
-        "artifacts/misc/oncall-schedule.json",
+        "infra/monitoring/alerts-config.yaml",
+        "infra/monitoring/oncall-schedule.json",
         "docs/operations/incident-runbook.md",
         "docs/operations/restore-drill-report.md",
-        "artifacts/reports/cost-budget.csv",
-        "artifacts/misc/otel-implementation/correlation-patterns.md",
-        "artifacts/misc/otel-implementation/implementation-guide.md",
-        "artifacts/misc/otel-implementation/instrumentation-checklist.md",
+        "docs/planning/financial/cost-budget.csv",
+        "docs/architecture/observability/correlation-patterns.md",
+        "docs/architecture/observability/implementation-guide.md",
+        "docs/architecture/observability/instrumentation-checklist.md",
         ".specify/sprints/sprint-8/attestations/IFC-142/context_ack.json",
-        "docs/planning/adr/ADR-021-governance-ops-release.md",
+        "docs/architecture/adr/ADR-021-governance-ops-release.md",
         "docs/planning/prd-release-governance.md"
       ]
     },
@@ -2100,7 +2083,7 @@
         ".specify/sprints/sprint-11/attestations/IFC-143/context_ack.json",
         "docs/security/threat-model.puml",
         "docs/security/abuse-cases.md",
-        "artifacts/reports/pen-test-scope.md",
+        "docs/security/pen-test-scope.md",
         "packages/ui/src/components/cookie-consent/cookie-consent.tsx"
       ]
     },
@@ -2114,10 +2097,10 @@
         "packages/adapters/src/messaging/email/attachments.ts",
         "packages/adapters/src/messaging/email/dkim-signer.ts",
         "packages/adapters/src/ics/IcsGenerationService.ts",
-        "artifacts/misc/webhooks/framework.ts",
-        "artifacts/misc/api-spec/openapi-v1.yaml",
+        "packages/webhooks/src/framework.ts",
+        "docs/api/openapi-v1.yaml",
         ".specify/sprints/sprint-6/attestations/IFC-144/attestation.json",
-        "docs/planning/adr/ADR-023-communications-inbox.md",
+        "docs/architecture/adr/ADR-023-communications-inbox.md",
         "docs/planning/prd-communications-inbox.md"
       ]
     },
@@ -2129,7 +2112,7 @@
         "scripts/migration/rehearsal-report.md",
         "scripts/migration/cutover-plan.md",
         "scripts/migration/README.md",
-        "artifacts/misc/reconciliation-results.csv",
+        "artifacts/reports/reconciliation-results.csv",
         ".specify/sprints/sprint-9/attestations/IFC-145/context_ack.json"
       ]
     },
@@ -2140,7 +2123,7 @@
         "docs/planning/prd-template.md",
         "docs/planning/user-journey-template.md",
         "docs/planning/definition-of-ready.md",
-        "artifacts/reports/traceability-matrix.md",
+        "docs/planning/traceability-matrix.md",
         ".specify/sprints/sprint-2/attestations/IFC-146/context_ack.json",
         "artifacts/reports/traceability-matrix.json"
       ]
@@ -2153,7 +2136,7 @@
         "apps/api/src/modules/agent/__tests__/conversation.router.test.ts",
         "packages/application/src/services/ConversationSearchService.ts",
         "infra/supabase/migrations/20260104000000_conversation_rls.sql",
-        "artifacts/misc/data-retention-config.yaml",
+        "infra/monitoring/data-retention-config.yaml",
         ".specify/sprints/sprint-7/attestations/IFC-148/context_ack.json"
       ]
     },
@@ -2164,7 +2147,7 @@
         "apps/web/src/app/agent-approvals/page.tsx",
         "apps/web/src/lib/agent/index.ts",
         "apps/web/src/lib/agent/rollback-service.ts",
-        "artifacts/misc/analytics/approvals-metrics.csv",
+        "artifacts/metrics/approvals-metrics.csv",
         ".specify/sprints/sprint-6/attestations/IFC-149/context_ack.json"
       ]
     },
@@ -2172,9 +2155,9 @@
       "task_id": "EXC-SEC-001",
       "description": "Implement Secrets Management (e.g., HashiCorp Vault) for API",
       "artifacts_verified": [
-        "artifacts/misc/vault-config.yaml",
-        "artifacts/misc/access-policy.json",
-        "artifacts/reports/security/pnpm-audit-latest.json",
+        "infra/monitoring/vault-config.yaml",
+        "packages/test-fixtures/access-policy.json",
+        "artifacts/reports/security/audit-latest.json",
         ".specify/sprints/sprint-0/attestations/EXC-SEC-001/context_ack.json"
       ]
     },
@@ -2183,7 +2166,7 @@
       "description": "Domain events infrastructure: event contracts + versioning +",
       "artifacts_verified": [
         "docs/events/contracts-v1.yaml",
-        "docs/planning/adr/ADR-011-domain-events.md",
+        "docs/architecture/adr/ADR-011-domain-events.md",
         ".specify/sprints/sprint-5/attestations/IFC-150/context_ack.json",
         ".specify/sprints/sprint-5/specifications/IFC-150-spec.md",
         ".specify/sprints/sprint-5/planning/IFC-150-plan.md",
@@ -2214,7 +2197,7 @@
       "task_id": "IFC-154",
       "description": "OCR + text extraction worker for scanned PDFs/images; normal",
       "artifacts_verified": [
-        "artifacts/misc/extracted-text-schema.json",
+        "packages/test-fixtures/extracted-text-schema.json",
         ".specify/sprints/sprint-6/attestations/IFC-154/context_ack.json"
       ]
     },
@@ -2235,7 +2218,7 @@
         ".specify/sprints/sprint-11/planning/IFC-157-plan.md",
         ".specify/sprints/sprint-11/attestations/IFC-157/context_pack.md",
         ".specify/sprints/sprint-11/attestations/IFC-157/context_ack.json",
-        "docs/operations/runbooks/notifications.md"
+        "docs/operations/runbooks/notification-service.md"
       ]
     },
     {
@@ -2257,14 +2240,14 @@
         "scripts/validate-artifact-paths.sh",
         "scripts/compare-tree-to-sprint-plan.js",
         "artifacts/reports/artifact-containment-analysis.md",
-        "artifacts/reports/ARTIFACT-CONTAINMENT-SUMMARY.md",
-        "artifacts/reports/runtime-path-linter-design.md",
+        "artifacts/reports/artifact-containment-analysis.md",
+        "docs/architecture/runtime-path-linter-design.md",
         "artifacts/reports/plan-lint-report.json",
         ".specify/sprints/sprint-0/attestations/IFC-160/context_ack.json",
-        "docs/planning/adr/ADR-021-governance-ops-release.md",
+        "docs/architecture/adr/ADR-021-governance-ops-release.md",
         "docs/planning/prd-release-governance.md",
-        "docs/attestation-schema.yaml",
-        "docs/evidence-pack-schema.yaml"
+        "apps/project-tracker/docs/metrics/schemas/attestation-schema.yaml",
+        "apps/project-tracker/docs/metrics/schemas/evidence-pack-schema.yaml"
       ]
     },
     {
@@ -2272,7 +2255,7 @@
       "description": "Standardize worker runtime under apps/workers (events, inges",
       "artifacts_verified": [
         "infra/monitoring/dashboards/workers.json",
-        "docs/operations/workers-runbook.md",
+        "docs/operations/runbooks/workers-runbook.md",
         ".specify/sprints/sprint-13/attestations/IFC-163/context_ack.json"
       ]
     },
@@ -2302,7 +2285,7 @@
       "task_id": "EXP-ARTIFACTS-003",
       "description": "Vulnerability Baseline Documentation",
       "artifacts_verified": [
-        "artifacts/misc/vulnerability-baseline.json",
+        "infra/monitoring/vulnerability-baseline.json",
         ".specify/sprints/sprint-14/attestations/EXP-ARTIFACTS-003/context_ack.json"
       ]
     },
@@ -2652,7 +2635,7 @@
       "task_id": "PG-173",
       "description": "Ticket Configuration Pages - SLA Policies Types and Automati",
       "artifacts_verified": [
-        "apps/web/src/app/tickets/sla-policies/page.tsx",
+        "apps/web/src/app/tickets/(list)/sla-policies/page.tsx",
         "apps/web/src/app/tickets/types/page.tsx",
         "apps/web/src/app/tickets/automations/page.tsx",
         "apps/web/src/components/tickets/SLAPolicyManager.tsx",
@@ -2774,19 +2757,19 @@
       "task_id": "DOC-007",
       "description": "Conduct full accessibility compliance gap assessment: Lighth",
       "artifacts_verified": [
-        "docs/compliance/accessibility-gap-assessment.md"
+        "docs/compliance-and-governance/compliance/accessibility-gap-assessment.md"
       ]
     },
     {
       "task_id": "DOC-008",
       "description": "Create VPAT 2.5 document, WCAG 2.1 AA conformance statement,",
       "artifacts_verified": [
-        "docs/compliance/vpat-2.5.md",
-        "docs/compliance/wcag-conformance-statement.md",
+        "docs/compliance-and-governance/compliance/vpat-2.5.md",
+        "docs/compliance-and-governance/compliance/wcag-conformance-statement.md",
         "tests/a11y/axe-core.spec.ts",
         "tests/a11y/vitest.config.ts",
         "tests/a11y/setup.ts",
-        "docs/planning/adr/ADR-038-accessibility-architecture.md"
+        "docs/architecture/adr/ADR-038-accessibility-architecture.md"
       ]
     },
     {
@@ -2809,14 +2792,14 @@
       "task_id": "DOC-012",
       "description": "Establish quarterly accessibility documentation review caden",
       "artifacts_verified": [
-        "docs/compliance/quarterly-a11y-review-template.md"
+        "docs/compliance-and-governance/compliance/quarterly-a11y-review-template.md"
       ]
     },
     {
       "task_id": "DOC-013",
       "description": "Amend ADR-038 with Documentation Maintenance section mandati",
       "artifacts_verified": [
-        "docs/planning/adr/ADR-038-accessibility-architecture.md",
+        "docs/architecture/adr/ADR-038-accessibility-architecture.md",
         ".specify/sprints/sprint-15/specifications/DOC-013-spec.md",
         ".specify/sprints/sprint-15/planning/DOC-013-plan.md"
       ]
@@ -2886,6 +2869,38 @@
       ]
     },
     {
+      "task_id": "PG-182",
+      "description": "Module Settings - Contacts (/contacts/contact-settings)",
+      "artifacts_verified": [
+        "apps/web/src/app/contacts/(list)/contact-settings/page.tsx",
+        ".specify/sprints/sprint-17/specifications/PG-182-spec.md",
+        ".specify/sprints/sprint-17/planning/PG-182-plan.md",
+        ".specify/sprints/sprint-17/attestations/PG-182/context_ack.json",
+        ".specify/sprints/sprint-17/attestations/PG-182/attestation.json"
+      ]
+    },
+    {
+      "task_id": "PG-185",
+      "description": "Module Settings - Tickets (/tickets/sla-policies)",
+      "artifacts_verified": [
+        "apps/web/src/app/tickets/(list)/sla-policies/page.tsx",
+        "apps/api/src/modules/ticket/ticket-settings.router.ts",
+        "apps/api/src/modules/ticket/ticket-automation.ts",
+        "packages/validators/src/ticket-settings.ts"
+      ]
+    },
+    {
+      "task_id": "PG-186",
+      "description": "Module Settings - Documents (/documents/document-settings)",
+      "artifacts_verified": [
+        "apps/web/src/app/documents/(list)/document-settings/page.tsx",
+        "apps/web/src/app/documents/(list)/document-settings/DocumentSettingsContent.tsx",
+        "apps/api/src/modules/legal/document-settings.router.ts",
+        "apps/api/src/modules/legal/document-automation.ts",
+        "packages/validators/src/document-settings.ts"
+      ]
+    },
+    {
       "task_id": "PG-192",
       "description": "Fix missing /agent-approvals/logs page — PG-152 regression; ",
       "artifacts_verified": [
@@ -2902,9 +2917,34 @@
         "apps/web/src/components/ai-monitoring/WorkflowProgressPanel.tsx",
         "apps/web/src/components/ai-monitoring/__tests__/WorkflowProgressPanel.test.tsx"
       ]
+    },
+    {
+      "task_id": "PG-195",
+      "description": "Subset Material Symbols font to unblock Lighthouse Performan",
+      "artifacts_verified": [
+        "apps/web/public/fonts/MaterialSymbolsOutlined.woff2",
+        "tools/scripts/subset-material-symbols.mjs",
+        "artifacts/reports/material-symbols-glyph-audit.json",
+        "apps/web/src/app/layout.tsx",
+        ".specify/sprints/sprint-17/attestations/PG-195/context_ack.json",
+        "artifacts/lighthouse/pg-195-post-subset-500.json",
+        "artifacts/lighthouse/pg-195-post-subset-404.json"
+      ]
     }
   ],
   "phantom_completions": [
+    {
+      "task_id": "IFC-001",
+      "description": "PHASE-001: Technical Architecture Spike - Modern Stack",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 1 artifact(s)"
+      ],
+      "missing_artifacts": [
+        ".specify/sprints/sprint-1/context/IFC-001/hydrated-context.md"
+      ],
+      "dod_issues": []
+    },
     {
       "task_id": "IFC-010",
       "description": "PHASE-001: Phase 1 Go/No-Go Decision",
@@ -3217,6 +3257,18 @@
       ],
       "missing_artifacts": [
         "ATTESTATION:.specify/sprints/sprint-16/attestations/PG-048/attestation.json"
+      ],
+      "dod_issues": []
+    },
+    {
+      "task_id": "SALES-001",
+      "description": "Commercial Narrative + Pitch Deck Outline + One-Pager",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 1 artifact(s)"
+      ],
+      "missing_artifacts": [
+        "artifacts/misc/sales/pitch-deck-source-link.txt"
       ],
       "dod_issues": []
     },
@@ -4435,6 +4487,30 @@
       "dod_issues": [
         "DOD has no artifact reference"
       ]
+    },
+    {
+      "task_id": "PG-183",
+      "description": "Module Settings - Accounts (/accounts/account-settings)",
+      "status_claimed": "Completed",
+      "issues": [
+        "DOD has no artifact reference"
+      ],
+      "missing_artifacts": [],
+      "dod_issues": [
+        "DOD has no artifact reference"
+      ]
+    },
+    {
+      "task_id": "PG-184",
+      "description": "Module Settings - Deals (/deals/deal-settings)",
+      "status_claimed": "Completed",
+      "issues": [
+        "Missing 1 artifact(s)"
+      ],
+      "missing_artifacts": [
+        "apps/web/src/app/deals/deal-settings/page.tsx"
+      ],
+      "dod_issues": []
     }
   ],
   "sprint_path_mismatches": [],

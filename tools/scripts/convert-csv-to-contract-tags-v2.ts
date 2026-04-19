@@ -84,7 +84,7 @@ const KEYWORD_TO_FILES: Record<string, string[]> = {
 
   // Docs
   documentation: ['docs/*'],
-  adr: ['docs/planning/adr/*'],
+  adr: ['docs/architecture/adr/*'],
   docusaurus: ['docs/*'],
 
   // Security

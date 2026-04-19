@@ -219,7 +219,7 @@ async function rotateSecrets(args: Record<string, string | boolean>): Promise<vo
   console.log(`\n=== Secret Rotation ${dryRun ? '(DRY RUN)' : ''} ===`);
   console.log(`Type: ${secretType || 'all'}`);
 
-  const schedule = loadSchedule(schedulePath || 'artifacts/misc/rotation-schedule.yaml');
+  const schedule = loadSchedule(schedulePath || 'infra/monitoring/rotation-schedule.yaml');
   const result: RotationResult = {
     success: true,
     rotated_secrets: [],
@@ -439,7 +439,7 @@ Options:
 
 Examples:
   # Check rotation schedule
-  npx tsx tools/scripts/rotate-secrets.ts check --schedule artifacts/misc/rotation-schedule.yaml
+  npx tsx tools/scripts/rotate-secrets.ts check --schedule infra/monitoring/rotation-schedule.yaml
 
   # Dry run rotation
   npx tsx tools/scripts/rotate-secrets.ts rotate --type api_keys --dry-run

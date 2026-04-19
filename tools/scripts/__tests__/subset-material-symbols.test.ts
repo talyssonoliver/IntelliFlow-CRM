@@ -390,7 +390,7 @@ describe('main CLI', () => {
       mkdirSync(join(tmp, 'apps/web/src'), { recursive: true });
       mkdirSync(join(tmp, 'apps/web/public/fonts'), { recursive: true });
       mkdirSync(join(tmp, 'packages/ui/src/lib'), { recursive: true });
-      mkdirSync(join(tmp, 'artifacts/perf'), { recursive: true });
+      mkdirSync(join(tmp, 'artifacts/reports'), { recursive: true });
       mkdirSync(join(tmp, 'tools/scripts/fixtures'), { recursive: true });
       writeFileSync(join(tmp, 'package.json'), JSON.stringify({ devDependencies: {} }));
       writeFileSync(
@@ -473,10 +473,10 @@ describe('main CLI', () => {
       // Synthesise a minimum repo shape:
       //   - apps/web/src/page.tsx with one icon literal
       //   - packages/ui/src/lib/icon-mapping.ts with a mapping
-      //   - artifacts/perf/material-symbols-glyph-audit.json with matching audit
+      //   - artifacts/reports/material-symbols-glyph-audit.json with matching audit
       mkdirSync(join(tmp, 'apps/web/src'), { recursive: true });
       mkdirSync(join(tmp, 'packages/ui/src/lib'), { recursive: true });
-      mkdirSync(join(tmp, 'artifacts/perf'), { recursive: true });
+      mkdirSync(join(tmp, 'artifacts/reports'), { recursive: true });
       writeFileSync(
         join(tmp, 'apps/web/src/page.tsx'),
         `export const Page = () => <span className="material-symbols-outlined">search</span>;`
@@ -506,7 +506,7 @@ describe('main CLI', () => {
     try {
       mkdirSync(join(tmp, 'apps/web/src'), { recursive: true });
       mkdirSync(join(tmp, 'packages/ui/src/lib'), { recursive: true });
-      mkdirSync(join(tmp, 'artifacts/perf'), { recursive: true });
+      mkdirSync(join(tmp, 'artifacts/reports'), { recursive: true });
       // A dynamic site referencing an unknown identifier, with an empty
       // ICON_MAPPING so resolveDynamicSites cannot cover it via the mapping
       // union and no allowList entry exists.
@@ -539,7 +539,7 @@ describe('main CLI', () => {
     try {
       mkdirSync(join(tmp, 'apps/web/src'), { recursive: true });
       mkdirSync(join(tmp, 'packages/ui/src/lib'), { recursive: true });
-      mkdirSync(join(tmp, 'artifacts/perf'), { recursive: true });
+      mkdirSync(join(tmp, 'artifacts/reports'), { recursive: true });
       writeFileSync(
         join(tmp, 'apps/web/src/page.tsx'),
         `export const Page = () => (
@@ -609,7 +609,7 @@ describe('regenerate', () => {
       mkdirSync(join(tmp, 'apps/web/src'), { recursive: true });
       mkdirSync(join(tmp, 'apps/web/public/fonts'), { recursive: true });
       mkdirSync(join(tmp, 'packages/ui/src/lib'), { recursive: true });
-      mkdirSync(join(tmp, 'artifacts/perf'), { recursive: true });
+      mkdirSync(join(tmp, 'artifacts/reports'), { recursive: true });
       mkdirSync(join(tmp, 'tools/scripts/fixtures'), { recursive: true });
       writeFileSync(
         join(tmp, 'package.json'),
@@ -646,7 +646,7 @@ describe('regenerate', () => {
       ).toBe(123_456);
       // Audit JSON round-trips through serializeAudit key order
       const auditOnDisk = JSON.parse(
-        readFileSync(join(tmp, 'artifacts/perf/material-symbols-glyph-audit.json'), 'utf8')
+        readFileSync(join(tmp, 'artifacts/reports/material-symbols-glyph-audit.json'), 'utf8')
       );
       expect(auditOnDisk.icons_count).toBe(audit.icons.length);
     } finally {
@@ -662,7 +662,7 @@ describe('regenerate', () => {
       mkdirSync(join(tmp, 'apps/web/src'), { recursive: true });
       mkdirSync(join(tmp, 'apps/web/public/fonts'), { recursive: true });
       mkdirSync(join(tmp, 'packages/ui/src/lib'), { recursive: true });
-      mkdirSync(join(tmp, 'artifacts/perf'), { recursive: true });
+      mkdirSync(join(tmp, 'artifacts/reports'), { recursive: true });
       mkdirSync(join(tmp, 'tools/scripts/fixtures'), { recursive: true });
       writeFileSync(join(tmp, 'package.json'), JSON.stringify({ devDependencies: {} }));
       // A dynamic site whose snippet is an unknown identifier.

@@ -133,7 +133,7 @@ export interface ParsedMetadata {
 // Constants
 // ============================================================================
 
-const TOOL_VERSION = '1.0.0';
+const TOOL_VERSION = '1.2.0';
 
 const ROOT_TITLE_DEFAULT = 'IntelliFlow CRM - AI-Powered Customer Relationship Management';
 
@@ -725,6 +725,37 @@ export function calculateSeoScore(
   return Math.max(0, score);
 }
 
+function routePatternToRegex(route: string): RegExp | null {
+  if (!route.includes('[')) return null;
+
+  const pattern = route
+    .split('/')
+    .map((segment, index) => {
+      if (index === 0) return '';
+      if (/^\[[^/]+\]$/.test(segment)) return '[^/]+';
+      return segment.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    })
+    .join('/');
+
+  return new RegExp(`^${pattern}$`);
+}
+
+export function resolveSitemapMatch(route: string, sitemapMap: Map<string, string>): string | null {
+  const exactMatch = sitemapMap.get(route);
+  if (exactMatch) return exactMatch;
+
+  const dynamicPattern = routePatternToRegex(route);
+  if (!dynamicPattern) return null;
+
+  for (const [candidateRoute, method] of sitemapMap.entries()) {
+    if (dynamicPattern.test(candidateRoute)) {
+      return method;
+    }
+  }
+
+  return null;
+}
+
 // ============================================================================
 // Sitemap Cross-Reference
 // ============================================================================
@@ -745,6 +776,7 @@ export function buildSitemapSet(sitemapPath: string, dataDir: string): Map<strin
   let match;
   while ((match = urlRegex.exec(sitemapSource)) !== null) {
     const path = match[1] || '/';
+    if (path.includes('${')) continue;
     result.set(path, 'STATIC_LAST_MODIFIED');
   }
 
@@ -782,6 +814,20 @@ export function buildSitemapSet(sitemapPath: string, dataDir: string): Map<strin
     /* skip if file missing */
   }
 
+  // Dynamic press routes from press-releases.json
+  try {
+    const pressJson = JSON.parse(readFileSync(resolve(dataDir, 'press-releases.json'), 'utf-8'));
+    if (Array.isArray(pressJson.releases)) {
+      for (const release of pressJson.releases) {
+        if (typeof release?.id === 'string' && release.id.length > 0) {
+          result.set(`/press/${release.id}`, 'data-field');
+        }
+      }
+    }
+  } catch {
+    /* skip if file missing */
+  }
+
   return result;
 }
 
@@ -790,16 +836,16 @@ export function buildSitemapSet(sitemapPath: string, dataDir: string): Map<strin
 // ============================================================================
 
 export function crossReferenceGhostLinks(appDir: string): GhostLinkFinding[] {
+  const existingRoutes = new Set(scanRoutes(appDir).map((raw) => pathToRoute(raw.relPath)));
   const results: GhostLinkFinding[] = [];
 
   for (let i = 0; i < GHOST_LINK_ROUTES.length; i++) {
     const route = GHOST_LINK_ROUTES[i];
     const registryEntry = GHOST_LINK_REGISTRY[i];
 
-    // Convert route to filesystem path and check if page.tsx exists
-    // Ghost link routes map to auth-gated routes (not under (public)/ or (developer)/)
-    const fsPath = join(appDir, ...route.slice(1).split('/'), 'page.tsx');
-    if (!existsSync(fsPath)) {
+    // Resolve against the full scanned route inventory so route groups like
+    // `(list)` still count as implemented pages for the collapsed URL space.
+    if (!existingRoutes.has(route)) {
       results.push({ ...registryEntry, route });
     }
   }
@@ -905,10 +951,11 @@ export function buildFindings(
           type: 'data-dependent-404',
           severity: 'high',
           description:
-            '/press/[id] uses notFound() — data-dependent 404 risk with no individual sitemap entries',
+            '/press/[id] uses notFound() — data-dependent 404 risk if press data, route params, and crawled URLs drift out of sync',
           route: '/press/[id]',
           file: pressRoute.file_path,
-          remediation: 'Add dynamic press release routes to sitemap.ts or implement ISR fallback',
+          remediation:
+            'Keep press-releases.json, generateStaticParams/generateMetadata behavior, and sitemap.ts entries in sync or add fallback handling',
         });
       }
     } catch {
@@ -995,7 +1042,8 @@ export function runAudit(repoRoot: string): AuditData {
     const accessTier = classifyAccessTier(raw.relPath);
 
     const metadata = resolveMetadataChain(raw.filePath, appDir, layoutMap);
-    const inSitemap = sitemapMap.has(route);
+    const sitemapMatch = resolveSitemapMatch(route, sitemapMap);
+    const inSitemap = sitemapMatch !== null;
     const seoScore = calculateSeoScore(metadata, inSitemap, accessTier);
 
     let pageSource = '';
@@ -1013,7 +1061,7 @@ export function runAudit(repoRoot: string): AuditData {
       metadata,
       seo_score: seoScore,
       in_sitemap: inSitemap,
-      sitemap_last_modified_method: sitemapMap.get(route) ?? null,
+      sitemap_last_modified_method: sitemapMatch,
       http_status: null,
       response_time_ms: null,
       http_measurement_method: 'pending-runtime',

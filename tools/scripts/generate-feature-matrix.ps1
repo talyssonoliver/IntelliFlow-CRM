@@ -529,7 +529,7 @@ function Get-TaskLayerFlags($row) {
   $adr = New-Object System.Collections.Generic.HashSet[string]
   foreach ($txt in $allRefs) {
     foreach ($m in [regex]::Matches($txt, 'docs/planning/prd-[A-Za-z0-9\-_]+\.md')) { [void]$prd.Add($m.Value) }
-    foreach ($m in [regex]::Matches($txt, 'docs/planning/adr/ADR-[0-9]{3}[A-Za-z0-9\-_]*\.md')) { [void]$adr.Add($m.Value) }
+    foreach ($m in [regex]::Matches($txt, 'docs/architecture/adr/ADR-[0-9]{3}[A-Za-z0-9\-_]*\.md')) { [void]$adr.Add($m.Value) }
   }
 
   return [pscustomobject]@{
@@ -865,7 +865,7 @@ foreach ($f in $baseFeatures) {
     foreach ($s in $primaryInfo.Specs) { $reqRefs.Add((Clean-Cell $s)) }
     foreach ($a in $primaryInfo.Artifacts) {
       $aClean = Clean-Cell $a
-      if ($aClean -match 'docs/specs/|docs/planning/prd|docs/planning/adr') { $reqRefs.Add($aClean) }
+      if ($aClean -match 'docs/specs/|docs/planning/prd|docs/architecture/adr') { $reqRefs.Add($aClean) }
     }
   }
 

@@ -51,7 +51,6 @@ import {
   getExitCode,
   findRepoRoot,
   type GateResult,
-  type SprintTask,
 } from './lib/validation-utils.js';
 import {
   validateTaskContract,

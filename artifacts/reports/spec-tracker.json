@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-04-14T19:39:55.209Z",
+  "generated_at": "2026-04-19T10:06:58.177Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
-    "total_specs_analyzed": 381,
-    "completed": 375,
-    "partially_done": 4,
-    "spec_only": 1,
-    "uncertain": 1
+    "total_specs_analyzed": 383,
+    "completed": 383,
+    "partially_done": 0,
+    "spec_only": 0,
+    "uncertain": 0
   },
   "status_legend": {
     "COMPLETED": "All evidence confirms task is done: attestation present, CSV=Completed, plan checkboxes done",
@@ -1431,13 +1431,13 @@
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
-      "csv_status": "Needs Human",
-      "metric_status": "NEEDS_HUMAN",
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-028"
       ],
-      "real_status": "PARTIALLY_DONE"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-039",
@@ -5136,13 +5136,13 @@
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
-      "csv_status": "In Progress",
+      "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-050"
       ],
-      "real_status": "UNCERTAIN"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-055",
@@ -6061,13 +6061,13 @@
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
-      "csv_status": "In Review",
-      "metric_status": "NOT_FOUND",
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-178"
       ],
-      "real_status": "PARTIALLY_DONE"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-183",
@@ -6077,13 +6077,67 @@
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
-      "csv_status": "Needs Human",
-      "metric_status": "NOT_FOUND",
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-178"
       ],
-      "real_status": "PARTIALLY_DONE"
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-184",
+      "title": "Module Settings - Deals (/deals/deal-settings)",
+      "sprint": 17,
+      "spec_path": ".specify/sprints/sprint-17/specifications/PG-184-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-178",
+        "PG-182",
+        "PG-183"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-185",
+      "title": "Module Settings - Tickets (/tickets/sla-policies)",
+      "sprint": 17,
+      "spec_path": ".specify/sprints/sprint-17/specifications/PG-185-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-178",
+        "PG-182",
+        "PG-183"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-186",
+      "title": "Module Settings - Documents (/documents/document-settings)",
+      "sprint": 17,
+      "spec_path": ".specify/sprints/sprint-17/specifications/PG-186-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-178",
+        "PG-182",
+        "PG-183"
+      ],
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-192",
@@ -6126,13 +6180,13 @@
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
-      "csv_status": "Needs Human",
-      "metric_status": "NEEDS_HUMAN",
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-056"
       ],
-      "real_status": "PARTIALLY_DONE"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PM-OPS-001",
@@ -6184,20 +6238,6 @@
         "GTM-002"
       ],
       "real_status": "COMPLETED"
-    },
-    {
-      "task_id": "swarm",
-      "title": "swarm",
-      "sprint": 0,
-      "spec_path": null,
-      "has_spec": false,
-      "has_plan": false,
-      "has_attestation": false,
-      "csv_status": "NOT_IN_CSV",
-      "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 0,
-      "dependencies": [],
-      "real_status": "SPEC_ONLY"
     },
     {
       "task_id": "TRACK-001",

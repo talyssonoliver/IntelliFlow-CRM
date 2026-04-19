@@ -9,7 +9,7 @@
  *   --check-size → assert on-disk woff2 < 500 KB
  *   --help     → usage
  *
- * See `docs/planning/adr/ADR-046-material-symbols-font-subsetting.md` for the
+ * See `docs/architecture/adr/ADR-046-material-symbols-font-subsetting.md` for the
  * underlying tool choice. See `.specify/sprints/sprint-17/specifications/
  * PG-195-spec.md` and `.specify/sprints/sprint-17/planning/PG-195-plan.md`
  * for acceptance criteria + step list.
@@ -30,7 +30,7 @@ const REPO_ROOT = resolve(dirname(THIS_FILE), '..', '..');
 
 export const FONT_OUTPUT = 'apps/web/public/fonts/MaterialSymbolsOutlined.woff2';
 export const FONT_INPUT = 'tools/scripts/fixtures/MaterialSymbolsOutlined-upstream.woff2';
-export const AUDIT_PATH = 'artifacts/perf/material-symbols-glyph-audit.json';
+export const AUDIT_PATH = 'artifacts/reports/material-symbols-glyph-audit.json';
 export const ICON_MAPPING_PATH = 'packages/ui/src/lib/icon-mapping.ts';
 export const MAX_FONT_BYTES = 500_000;
 
@@ -139,7 +139,7 @@ function findMarkerOpenings(src) {
 //   materialSymbol: 'priority_high'
 //   iconName: 'archive'
 const ICON_PROP_RE =
-  /\b(?:icon|Icon|iconName|materialSymbol|materialIcon)\s*:\s*'([a-z][a-z0-9_]*)'/gm;
+  /\b(?:icon|Icon|iconName|iconKey|symbol|glyph|materialSymbol|materialIcon)\s*:\s*'([a-z][a-z0-9_]*)'/gm;
 
 // Catches JSX prop assignments like  icon="check_circle"
 const ICON_JSX_PROP_RE =
@@ -248,7 +248,7 @@ export function resolveDynamicSites(scan, opts) {
   //   - ternary/OR between two literal icon strings ('a' : 'b'), ('a' || 'b')
   //   - bare string literal inside a JSX child (single quote pair)
   const coveredPatterns = [
-    /\.(icon|Icon|iconName|name|Name|materialSymbol|materialIcon|type)\b/,
+    /\.(icon|Icon|iconName|iconKey|symbol|glyph|name|Name|materialSymbol|materialIcon|type)\b/,
     /\[[^\]]+\]/, // array/map subscript lookup like ICONS[x] or activityIcons[activity.type]
     /\bget[A-Z][A-Za-z0-9_]*Icon\s*\(/,
     /(?:^|[^A-Za-z0-9_])[a-zA-Z_][A-Za-z0-9_]*(?:Icon|Name)(?![A-Za-z0-9_])/,

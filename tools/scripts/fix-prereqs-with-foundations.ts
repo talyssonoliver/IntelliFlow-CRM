@@ -47,37 +47,37 @@ interface FoundationalArtifact {
 const FOUNDATIONAL_ARTIFACTS: FoundationalArtifact[] = [
   // ADRs
   {
-    file: 'docs/planning/adr/ADR-001-modern-stack.md',
+    file: 'docs/architecture/adr/ADR-001-modern-stack.md',
     createdBy: 'IFC-001',
     category: 'adr',
     appliesTo: ['architecture', 'stack', 'trpc', 'supabase', 'next.js', 'turborepo'],
   },
   {
-    file: 'docs/planning/adr/ADR-004-multi-tenancy.md',
+    file: 'docs/architecture/adr/ADR-004-multi-tenancy.md',
     createdBy: 'IFC-135',
     category: 'adr',
     appliesTo: ['tenant', 'multi-tenant', 'isolation'],
   },
   {
-    file: 'docs/planning/adr/ADR-005-workflow-engine.md',
+    file: 'docs/architecture/adr/ADR-005-workflow-engine.md',
     createdBy: 'IFC-135',
     category: 'adr',
     appliesTo: ['workflow', 'engine', 'automation'],
   },
   {
-    file: 'docs/planning/adr/ADR-006-agent-tools.md',
+    file: 'docs/architecture/adr/ADR-006-agent-tools.md',
     createdBy: 'IFC-135',
     category: 'adr',
     appliesTo: ['agent', 'tool', 'ai assistant'],
   },
   {
-    file: 'docs/planning/adr/ADR-007-data-governance.md',
+    file: 'docs/architecture/adr/ADR-007-data-governance.md',
     createdBy: 'IFC-135',
     category: 'adr',
     appliesTo: ['data', 'retention', 'classification', 'gdpr'],
   },
   {
-    file: 'docs/planning/adr/ADR-008-audit-logging.md',
+    file: 'docs/architecture/adr/ADR-008-audit-logging.md',
     createdBy: 'IFC-135',
     category: 'adr',
     appliesTo: ['audit', 'logging', 'compliance'],
@@ -127,7 +127,7 @@ const FOUNDATIONAL_ARTIFACTS: FoundationalArtifact[] = [
 
   // Testing docs
   {
-    file: 'docs/tdd-guidelines.md',
+    file: 'docs/development/tdd-guidelines.md',
     createdBy: 'IFC-109',
     category: 'testing',
     appliesTo: ['test', 'tdd', 'coverage', 'unit test', 'integration test'],
@@ -173,7 +173,7 @@ const FOUNDATIONAL_ARTIFACTS: FoundationalArtifact[] = [
 
   // Governance
   {
-    file: 'docs/architecture/adr/000-template.md',
+    file: 'docs/architecture/adr/template.md',
     createdBy: 'GOV-001',
     category: 'adr',
     appliesTo: ['adr', 'architecture decision'],

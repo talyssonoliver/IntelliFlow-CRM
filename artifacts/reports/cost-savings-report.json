@@ -108,7 +108,7 @@
     "Consider llama3.1:70b for staging when production-like accuracy is needed"
   ],
   "implementation_checklist": [
-    {"step": "Run artifacts/misc/ollama-setup.sh", "status": "script_ready"},
+    {"step": "Run tools/scripts/ollama-setup.sh", "status": "script_ready"},
     {"step": "Set AI_PROVIDER=ollama in .env.local", "status": "documented"},
     {"step": "Pull mistral and llama3.1 models", "status": "in_setup_script"},
     {"step": "Verify with pnpm --filter ai-worker test", "status": "tests_pass"}

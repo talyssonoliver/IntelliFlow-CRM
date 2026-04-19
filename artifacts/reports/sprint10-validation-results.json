@@ -97,9 +97,9 @@
       "artifacts_exist": true,
       "files_verified": [
         "docs/shared/adr-index.md",
-        "docs/compliance/iso-27001-checklist.md",
-        "docs/compliance/iso-42001-checklist.md",
-        "docs/compliance/iso-14001-checklist.md"
+        "docs/compliance-and-governance/compliance/iso-27001-checklist.md",
+        "docs/compliance-and-governance/compliance/iso-42001-checklist.md",
+        "docs/compliance-and-governance/compliance/iso-14001-checklist.md"
       ],
       "status": "COMPLETE"
     },
@@ -111,7 +111,7 @@
       "files_verified": [
         "apps/api/src/security/encryption.ts",
         "apps/api/src/security/key-rotation.ts",
-        "artifacts/misc/vault-config.yaml"
+        "infra/monitoring/vault-config.yaml"
       ],
       "status": "COMPLETE"
     },
@@ -136,7 +136,7 @@
       "schema_alignment": "PASS - Table names match @@map() directives",
       "artifacts_exist": true,
       "files_verified": [
-        "packages/db/prisma/migrations/tenant-rls.sql",
+        "infra/supabase/rls-policies.sql",
         "apps/api/src/security/tenant-context.ts",
         "apps/api/src/security/tenant-limiter.ts",
         "docs/security/rls-policies.md"
@@ -151,8 +151,8 @@
       "files_verified": [
         "packages/platform/src/workflow/engine.ts",
         "packages/platform/src/workflow/rules-engine.ts",
-        "docs/planning/adr/ADR-014-workflow-engine-decision.md",
-        "artifacts/misc/workflow-comparison-matrix.md"
+        "docs/architecture/adr/ADR-005-workflow-engine.md",
+        "docs/planning/workflow-comparison-matrix.md"
       ],
       "status": "COMPLETE"
     },
@@ -166,7 +166,7 @@
         "packages/adapters/src/messaging/email/outbound.ts",
         "packages/adapters/src/messaging/email/dkim-signer.ts",
         "artifacts/misc/webhooks/framework.ts (875 lines)",
-        "artifacts/misc/api-spec/openapi-v1.yaml"
+        "docs/api/openapi-v1.yaml"
       ],
       "status": "COMPLETE (with known timing-sensitive test failures)"
     }

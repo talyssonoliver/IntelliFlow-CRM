@@ -135,6 +135,6 @@ To add new dependency rules:
 
 ## Related Resources
 
-- [ADR-010: Architecture Boundary Enforcement](../../docs/planning/adr/ADR-010-architecture-boundary-enforcement.md)
+- [ADR-010: Architecture Boundary Enforcement](../../docs/architecture/adr/ADR-010-architecture-boundary-enforcement.md)
 - [Hexagonal Architecture Documentation](../../docs/architecture/hex-boundaries.md)
 - [IFC-131 Task](../../apps/project-tracker/docs/metrics/_global/Sprint_plan.csv)

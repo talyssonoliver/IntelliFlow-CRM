@@ -143,6 +143,7 @@ describe('Tenant Context', () => {
 
       expect(where).toEqual({
         status: 'NEW',
+        tenantId: 'user-123',
         ownerId: 'user-123',
       });
     });
@@ -160,6 +161,7 @@ describe('Tenant Context', () => {
 
       expect(where).toEqual({
         status: 'NEW',
+        tenantId: 'admin-789',
       });
     });
 
@@ -177,6 +179,7 @@ describe('Tenant Context', () => {
 
       expect(where).toEqual({
         status: 'NEW',
+        tenantId: 'manager-456',
         ownerId: { in: ['manager-456', 'user-1', 'user-2'] },
       });
     });

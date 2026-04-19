@@ -208,7 +208,7 @@ export function createActionsFromAttestation(
  * Loads the debt ledger
  */
 export function loadDebtLedger(repoRoot: string): DebtLedger | null {
-  const ledgerPath = path.join(repoRoot, 'docs/debt-ledger.yaml');
+  const ledgerPath = path.join(repoRoot, 'artifacts/metrics/debt-ledger.yaml');
 
   if (!fs.existsSync(ledgerPath)) {
     return null;
@@ -222,7 +222,7 @@ export function loadDebtLedger(repoRoot: string): DebtLedger | null {
  * Saves the debt ledger
  */
 export async function saveDebtLedger(repoRoot: string, ledger: DebtLedger): Promise<void> {
-  const ledgerPath = path.join(repoRoot, 'docs/debt-ledger.yaml');
+  const ledgerPath = path.join(repoRoot, 'artifacts/metrics/debt-ledger.yaml');
   const content = yaml.stringify(ledger, { lineWidth: 0 });
   await fs.promises.writeFile(ledgerPath, content, 'utf-8');
   console.log(`Debt ledger updated: ${ledgerPath}`);

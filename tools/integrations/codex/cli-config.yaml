@@ -358,7 +358,7 @@ safety:
 
   sandboxing:
     enabled: true
-    config_file: artifacts/misc/sandbox-security.json
+    config_file: infra/monitoring/sandbox-security.json
     restrict_file_access: true
     allowed_paths:
       - packages/**

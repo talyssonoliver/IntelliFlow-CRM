@@ -73,7 +73,7 @@ function main() {
   if (!existsSync(K6_RESULTS_PATH)) {
     console.error('ERROR: k6-latest.json not found.');
     console.log('Run the k6 load test first:');
-    console.log('  k6 run artifacts/misc/k6/scripts/authenticated-load-test.js');
+    console.log('  k6 run tools/scripts/k6/authenticated-load-test.js');
     process.exit(1);
   }
 

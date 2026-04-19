@@ -1,0 +1,24 @@
+{
+  "task_id": "PG-184",
+  "captured_at": "2026-04-15T12:45:00Z",
+  "description": "Pre-implementation coverage baseline for the PG-184 surface area. Captured retroactively via the check-exec-readiness preflight on 2026-04-16. All target files listed below were created DURING this task (iterations 3 and 4 added them); none existed prior to 2026-04-15T12:45:00Z. A true empirical baseline was therefore zero by construction — no file to measure coverage against.",
+  "measurement_scope": [
+    "apps/api/src/modules/opportunity/deal-settings.router.ts",
+    "apps/api/src/modules/opportunity/deal-automation.ts",
+    "packages/validators/src/deal-settings.ts",
+    "apps/web/src/app/deals/(list)/deal-settings/**"
+  ],
+  "command": "npx vitest run apps/web/src/app/deals apps/api/src/modules/opportunity packages/validators --coverage --coverage.provider=istanbul --coverage.include='apps/web/src/app/deals/(list)/deal-settings/**' --coverage.include='apps/api/src/modules/opportunity/deal-settings.router.ts' --coverage.include='apps/api/src/modules/opportunity/deal-automation.ts' --coverage.include='packages/validators/src/deal-settings.ts'",
+  "baseline_totals": {
+    "lines": { "total": 0, "covered": 0, "skipped": 0, "pct": 0 },
+    "statements": { "total": 0, "covered": 0, "skipped": 0, "pct": 0 },
+    "functions": { "total": 0, "covered": 0, "skipped": 0, "pct": 0 },
+    "branches": { "total": 0, "covered": 0, "skipped": 0, "pct": 0 }
+  },
+  "baseline_files": {},
+  "notes": [
+    "All PG-184 target files were newly created during exec; baseline is therefore empty by construction.",
+    "This file was written retroactively — the /exec-coverage before-capture step was skipped in exec iteration 3 because the check-exec-readiness preflight did not yet exist. The preflight is now wired so future tasks capture their before-snapshot at exec Phase 0.",
+    "After-coverage snapshot will be captured at plan step V-5b once all 7 deal-settings cards and the router are complete."
+  ]
+}

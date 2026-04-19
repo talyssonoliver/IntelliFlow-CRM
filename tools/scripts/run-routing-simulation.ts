@@ -3,7 +3,7 @@
  *
  * Queries real seeded leads from the test database and runs each through
  * the LeadRoutingService routing logic in dry-run mode.
- * Writes results to artifacts/misc/routing-simulation-results.csv
+ * Writes results to artifacts/reports/routing-simulation-results.csv
  *
  * GATE: real-routing-data — CSV must contain real lead routing data,
  * not generated fake data.

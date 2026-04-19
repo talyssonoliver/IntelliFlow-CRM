@@ -80,23 +80,20 @@ test.describe('Case Timeline (IFC-159)', () => {
       }
     });
 
-    test('should display communication events when available', async ({ page }) => {
+    test('case-timeline page loads without network errors', async ({ page }) => {
+      // The previous iteration of this test tried to assert on communication
+      // icons (email/phone/chat) via CSS class matching, but the demo dataset
+      // is not stable enough to guarantee any one category is present — which
+      // made the assertion collapse to expect(true).toBe(true). Narrow the
+      // contract to the one thing we can assert reliably: the page loads and
+      // the timeline landmark is present. Richer category-specific assertions
+      // should live in seeded integration tests.
+      const responses: number[] = [];
+      page.on('response', (r) => responses.push(r.status()));
       await page.goto('/cases/timeline');
       await page.waitForLoadState('networkidle');
-
-      // Look for email, call, or chat icons in the timeline
-      const emailIcon = page.locator('[class*="mail"]');
-      const phoneIcon = page.locator('[class*="phone"]');
-      const chatIcon = page.locator('[class*="message"]');
-
-      // At least one communication type might be present
-      const hasEmail = (await emailIcon.count()) > 0;
-      const hasPhone = (await phoneIcon.count()) > 0;
-      const hasChat = (await chatIcon.count()) > 0;
-
-      // This is demo data so communication events may or may not be present
-      // We're just verifying the page loads without errors
-      expect(true).toBe(true);
+      expect(responses.every((s) => s < 500)).toBe(true);
+      await expect(page.locator('main')).toBeVisible();
     });
 
     test('should display agent action events with approval links', async ({ page }) => {

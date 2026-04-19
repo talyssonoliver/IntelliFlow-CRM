@@ -1,0 +1,23 @@
+{
+  "task_id": "PG-183",
+  "captured_at": "2026-04-13T00:00:00Z",
+  "description": "Pre-implementation coverage baseline for the PG-183 surface area. Captured before any of the account-settings router, validators, or UI files existed — all targets returned zero coverage because they had not yet been written.",
+  "measurement_scope": [
+    "apps/api/src/modules/account/account-settings.router.ts",
+    "apps/api/src/modules/account/account-automation.ts",
+    "packages/validators/src/account-settings.ts",
+    "apps/web/src/app/accounts/(list)/account-settings/**"
+  ],
+  "command": "npx vitest run apps/api/src/modules/account packages/validators 'apps/web/src/app/accounts/(list)/account-settings' --coverage --coverage.provider=istanbul --coverage.include='apps/api/src/modules/account/account-settings.router.ts' --coverage.include='apps/api/src/modules/account/account-automation.ts' --coverage.include='packages/validators/src/account-settings.ts' --coverage.include='apps/web/src/app/accounts/(list)/account-settings/**'",
+  "baseline_totals": {
+    "lines": { "total": 0, "covered": 0, "skipped": 0, "pct": 0 },
+    "statements": { "total": 0, "covered": 0, "skipped": 0, "pct": 0 },
+    "functions": { "total": 0, "covered": 0, "skipped": 0, "pct": 0 },
+    "branches": { "total": 0, "covered": 0, "skipped": 0, "pct": 0 }
+  },
+  "baseline_files": {},
+  "notes": [
+    "All PG-183 target files were newly created during exec; baseline is therefore empty by construction.",
+    "After-implementation coverage is recorded in artifacts/coverage/coverage-summary.json (see executive dashboard and PG-183-delivery.md)."
+  ]
+}

@@ -701,8 +701,8 @@ if (fs.existsSync(readmePath)) {
       readmeChanged = true;
       console.log(
         DRY_RUN
-          ? '[DRY RUN] Would update: docs/planning/adr/README.md (add retroactive ADR index)'
-          : '[UPDATED] docs/planning/adr/README.md (added retroactive ADR index)'
+          ? '[DRY RUN] Would update: docs/architecture/adr/README.md (add retroactive ADR index)'
+          : '[UPDATED] docs/architecture/adr/README.md (added retroactive ADR index)'
       );
     } else {
       console.log('[SKIP] Could not find insertion point in ADR README');
@@ -721,8 +721,8 @@ if (fs.existsSync(readmePath)) {
     readmeChanged = true;
     console.log(
       DRY_RUN
-        ? '[DRY RUN] Would update: docs/planning/adr/README.md (Next Steps section)'
-        : '[UPDATED] docs/planning/adr/README.md (Next Steps section)'
+        ? '[DRY RUN] Would update: docs/architecture/adr/README.md (Next Steps section)'
+        : '[UPDATED] docs/architecture/adr/README.md (Next Steps section)'
     );
   }
 
@@ -732,8 +732,8 @@ if (fs.existsSync(readmePath)) {
     readmeChanged = true;
     console.log(
       DRY_RUN
-        ? '[DRY RUN] Would update: docs/planning/adr/README.md total count'
-        : '[UPDATED] docs/planning/adr/README.md (total count → 38)'
+        ? '[DRY RUN] Would update: docs/architecture/adr/README.md total count'
+        : '[UPDATED] docs/architecture/adr/README.md (total count → 38)'
     );
   }
 

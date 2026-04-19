@@ -167,36 +167,34 @@ test.describe('Lead Form', () => {
       await page.goto('/leads/new');
     });
 
-    test('should show loading state on submit', async ({ page }) => {
-      // Fill valid data
+    test('should show loading state or navigate after submit', async ({ page }) => {
       await page.fill('input#email', 'newlead@example.com');
       await page.fill('input#firstName', 'New');
       await page.fill('input#lastName', 'Lead');
-
-      // Click submit
       await page.click('button:has-text("Create Lead")');
 
-      // Check for loading state (button should show "Creating...")
+      // Race the loading state vs. a post-submit navigation. Either is a
+      // valid signal that the click produced work. Previously this asserted
+      // expect(true).toBe(true) which proved nothing.
       const loadingButton = page.locator('button:has-text("Creating")');
-      // This might flash quickly, so we just check it exists or moved on
-      const wasLoading = await loadingButton.isVisible().catch(() => false);
-      // Loading state exists in the component
-      expect(true).toBe(true);
+      const wasLoading = await loadingButton.isVisible({ timeout: 2000 }).catch(() => false);
+      const navigated = !page.url().endsWith('/leads/new');
+
+      expect(wasLoading || navigated).toBe(true);
     });
 
     test('should disable submit button while submitting', async ({ page }) => {
-      // Fill valid data
       await page.fill('input#email', 'newlead@example.com');
-
-      // Click submit
       await page.click('button:has-text("Create Lead")');
 
-      // Button should be disabled during submission
+      // Assert that the submit button is either disabled (mid-flight) OR the
+      // page has navigated (flight completed). Either outcome is valid;
+      // asserting neither — the old expect(true) — is not.
       const submitButton = page.locator('button[type="submit"]');
-      // Check if it has disabled class or attribute
-      const isDisabled = await submitButton.getAttribute('disabled');
-      // The test passes if we reach here (button was clickable initially)
-      expect(true).toBe(true);
+      const isDisabled = (await submitButton.getAttribute('disabled')) !== null;
+      const navigated = !page.url().endsWith('/leads/new');
+
+      expect(isDisabled || navigated).toBe(true);
     });
   });
 });

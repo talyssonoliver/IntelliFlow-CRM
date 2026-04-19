@@ -587,4 +587,4 @@ pnpm tsx tools/audit/runtime-path-linter.ts --strict
 - **Linter Implementation**: `tools/audit/runtime-path-linter.ts`
 - **CI Workflow**: `.github/workflows/runtime-path-lint.yml`
 - **Data Sync Documentation**: `apps/project-tracker/docs/DATA_SYNC.md`
-- **Sprint Plan Governance**: `docs/plan-governance.md`
+- **Sprint Plan Governance**: `docs/planning/plan-governance.md`

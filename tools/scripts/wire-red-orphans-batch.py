@@ -35,8 +35,8 @@ WIRINGS: dict[str, list[str]] = {
         'ARTIFACT:tools/scripts/quality-report.ts',
         'ARTIFACT:tools/plan-linter/package.json',
         'ARTIFACT:tools/scripts/lib/stoa/waiver.ts',
-        'ARTIFACT:docs/plan-change-log.md',
-        'ARTIFACT:docs/plan-governance.md',
+        'ARTIFACT:docs/planning/plan-change-log.md',
+        'ARTIFACT:docs/planning/plan-governance.md',
     ],
 
     # tools/integrations -> AI-SETUP-001
@@ -137,7 +137,7 @@ WIRINGS: dict[str, list[str]] = {
 
     # compliance calendar -> IFC-073
     'IFC-073': [
-        'ARTIFACT:artifacts/misc/compliance-calendar.json',
+        'ARTIFACT:docs/planning/compliance-calendar.json',
     ],
 
     # review queues -> EXP-REPORTS-002
@@ -153,13 +153,13 @@ WIRINGS: dict[str, list[str]] = {
 
     # attestation/evidence schemas -> IFC-160
     'IFC-160': [
-        'ARTIFACT:docs/attestation-schema.yaml',
-        'ARTIFACT:docs/evidence-pack-schema.yaml',
+        'ARTIFACT:apps/project-tracker/docs/metrics/schemas/attestation-schema.yaml',
+        'ARTIFACT:apps/project-tracker/docs/metrics/schemas/evidence-pack-schema.yaml',
     ],
 
     # easypanel runbook -> EP-001-AI
     'EP-001-AI': [
-        'ARTIFACT:docs/operations/easypanel-runbook.md',
+        'ARTIFACT:docs/operations/runbooks/easypanel-runbook.md',
     ],
 
     # sonarqube setup -> ENV-009-AI
@@ -170,8 +170,8 @@ WIRINGS: dict[str, list[str]] = {
     # multi-tenancy migration files -> IFC-127
     'IFC-127': [
         'ARTIFACT:packages/db/prisma/migrations/add-multi-tenancy-diff.sql',
-        'ARTIFACT:packages/db/prisma/migrations/add_multi_tenancy_manual.sql',
-        'ARTIFACT:packages/db/prisma/migrations/tenant-rls.sql',
+        'ARTIFACT:infra/supabase/migrations/20260103000000_add_tenant_isolation.sql',
+        'ARTIFACT:infra/supabase/rls-policies.sql',
     ],
 }
 

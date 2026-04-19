@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated_at": "2026-04-13T17:13:32.899Z",
+    "generated_at": "2026-04-15T18:45:11.738Z",
     "schema_version": "1.0.0",
     "sprint_scope": 0
   },
@@ -11,7 +11,7 @@
       "B": 8,
       "C": 7
     },
-    "error_count": 0,
+    "error_count": 6,
     "warning_count": 20,
     "review_queue_size": 23,
     "validation_coverage": {
@@ -20,7 +20,62 @@
       "coverage_percentage": 100
     }
   },
-  "errors": [],
+  "errors": [
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task PG-182 missing gate_profile",
+      "tasks": [
+        "PG-182"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task PG-182 missing acceptance_owner",
+      "tasks": [
+        "PG-182"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task PG-182 missing evidence_required",
+      "tasks": [
+        "PG-182"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_GATES_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task PG-183 missing gate_profile",
+      "tasks": [
+        "PG-183"
+      ],
+      "fix": "Add gate_profile array to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_OWNER_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task PG-183 missing acceptance_owner",
+      "tasks": [
+        "PG-183"
+      ],
+      "fix": "Add acceptance_owner to task in plan-overrides.yaml"
+    },
+    {
+      "rule": "TIER_A_EVIDENCE_REQUIRED",
+      "severity": "error",
+      "message": "Tier A task PG-183 missing evidence_required",
+      "tasks": [
+        "PG-183"
+      ],
+      "fix": "Add evidence_required array to task in plan-overrides.yaml"
+    }
+  ],
   "warnings": [
     {
       "rule": "AI_TASKS_MVP",

@@ -13,7 +13,7 @@
  * Usage:
  *   pnpm tsx tools/scripts/validate-env.ts
  *   pnpm tsx tools/scripts/validate-env.ts --env production
- *   pnpm tsx tools/scripts/validate-env.ts --output artifacts/misc/env-validation-results.json
+ *   pnpm tsx tools/scripts/validate-env.ts --output artifacts/reports/env-validation-results.json
  */
 
 import * as fs from 'node:fs';
