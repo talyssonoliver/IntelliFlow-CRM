@@ -1,0 +1,133 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "PG-190",
+  "section": "Settings",
+  "description": "Module Settings - Cases (/cases/case-settings)",
+  "owner": "Frontend Dev (STOA-Foundation)",
+  "status": "Completed",
+  "sprint": "sprint-18",
+  "phase": "",
+  "stream": null,
+  "dependencies": {
+    "required": ["PG-178"],
+    "all_satisfied": true,
+    "verified_at": "2026-04-19T00:00:00.000Z"
+  },
+  "started_at": "2026-04-19T00:00:00.000Z",
+  "completed_at": "2026-04-19T02:05:00.000Z",
+  "execution": {
+    "retry_count": 0,
+    "last_error": null
+  },
+  "artifacts": {
+    "expected": ["apps/web/src/app/cases/case-settings/page.tsx"],
+    "created": [
+      {
+        "path": "apps/web/src/app/cases/case-settings/page.tsx",
+        "sha256": "c296a5dbffd4b137a0adc46e7c079c28aed3d83f52fc8b8829d60b8fa8b208a1",
+        "created_at": "2026-04-19T01:00:00.000Z"
+      },
+      {
+        "path": "apps/web/src/app/cases/case-settings/CaseSettingsContent.tsx",
+        "sha256": "666184e3e8d6cebc3ab2d59364ba7f39b2ebc41d912352fef45ea62893257ae5",
+        "created_at": "2026-04-19T01:00:00.000Z"
+      },
+      {
+        "path": "apps/web/src/app/cases/case-settings/CaseSettingsLoading.tsx",
+        "sha256": "9dd436f406ee27cec06b65e6c9dc8271007dc02da8ff7e6b0111978c9aced98b",
+        "created_at": "2026-04-19T01:00:00.000Z"
+      },
+      {
+        "path": "apps/api/src/modules/legal/case-settings.router.ts",
+        "sha256": "95e5c3a624b1887fc01c27da7d1390699ae7228184acd72c316bd0c5cccabb48",
+        "created_at": "2026-04-19T01:00:00.000Z"
+      },
+      {
+        "path": "packages/validators/src/case-settings.ts",
+        "sha256": "3fdb0243223b2b4ebc59f1c77ae447239f8b47c6613b16d3a023912fa63609d9",
+        "created_at": "2026-04-19T01:00:00.000Z"
+      }
+    ],
+    "missing": []
+  },
+  "validations": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/validators typecheck && pnpm --filter @intelliflow/web typecheck (case-settings scoped)",
+      "exit_code": 0,
+      "passed": true,
+      "executed_at": "2026-04-19T02:01:00.000Z",
+      "duration_ms": 12000
+    },
+    {
+      "name": "Tests",
+      "command": "pnpm --filter @intelliflow/web exec vitest run src/app/cases/case-settings/__tests__/ (29 pass) + router (7 pass) + validators (14 pass)",
+      "exit_code": 0,
+      "passed": true,
+      "executed_at": "2026-04-19T02:01:30.000Z",
+      "duration_ms": 8000
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter @intelliflow/web exec eslint 'src/app/cases/case-settings/**/*.{ts,tsx}'",
+      "exit_code": 0,
+      "passed": true,
+      "executed_at": "2026-04-19T02:02:00.000Z",
+      "duration_ms": 5000
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 1,
+      "passed": false,
+      "executed_at": "2026-04-19T01:55:00.000Z",
+      "duration_ms": 45000
+    }
+  ],
+  "kpis": {
+    "validator_coverage": {
+      "target": ">=90%",
+      "actual": "100%/100%/100%/100%",
+      "met": true,
+      "unit": "stmts/branch/funcs/lines"
+    },
+    "router_coverage": {
+      "target": ">=90%",
+      "actual": "100%/100%/100%/100%",
+      "met": true,
+      "unit": "stmts/branch/funcs/lines"
+    },
+    "component_coverage": {
+      "target": ">=90%/80%/90%/90%",
+      "actual": "100%/84.44%/100%/100%",
+      "met": true,
+      "unit": "stmts/branch/funcs/lines"
+    },
+    "test_count": {
+      "target": ">=20",
+      "actual": "50",
+      "met": true,
+      "unit": "tests"
+    }
+  },
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-03-08T18:00:00Z",
+      "note": "Task created — Case settings page"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-04-19T00:00:00.000Z",
+      "note": "Exec session started — implementing case settings page with bento grid, tRPC router, Prisma model"
+    },
+    {
+      "status": "Completed",
+      "at": "2026-04-19T02:05:00.000Z",
+      "note": "All deliverables implemented: CaseSetting model, validators, router, UI components. 50 tests passing, all coverage thresholds met."
+    }
+  ],
+  "notes": "Module Settings - Cases page at /cases/case-settings. Bento grid layout, tRPC router (get/update/resetToDefaults), Prisma CaseSetting model with upsert-on-read, cross-field Zod validation. Web build fails on pre-existing unrelated errors (queues.router, ai-review.router).",
+  "dependencies_resolved": ["PG-178"]
+}

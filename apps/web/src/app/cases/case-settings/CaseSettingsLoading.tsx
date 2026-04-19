@@ -1,0 +1,46 @@
+import { Skeleton, Card } from '@intelliflow/ui';
+
+export function CaseSettingsLoading() {
+  return (
+    <div className="w-full">
+      <div className="mb-4">
+        <Skeleton className="h-4 w-48" />
+      </div>
+
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <Skeleton className="h-8 w-56 mb-2" />
+          <Skeleton className="h-4 w-80" />
+        </div>
+        <div className="flex gap-2">
+          <Skeleton className="h-10 w-36" />
+          <Skeleton className="h-10 w-32" />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5">
+        {[
+          { span: 'lg:col-span-7', rows: 2 },
+          { span: 'lg:col-span-5', rows: 2 },
+          { span: 'lg:col-span-12', rows: 3 },
+          { span: 'lg:col-span-12', rows: 3 },
+        ].map((section, idx) => (
+          <Card key={idx} className={`${section.span} p-4 sm:p-6`}>
+            <div className="flex items-start gap-3 mb-5">
+              <Skeleton className="h-9 w-9 rounded-lg" />
+              <div className="flex-1">
+                <Skeleton className="h-4 w-32 mb-2" />
+                <Skeleton className="h-3 w-full max-w-[260px]" />
+              </div>
+            </div>
+            <div className="space-y-3">
+              {Array.from({ length: section.rows }).map((_, i) => (
+                <Skeleton key={i} className="h-10 w-full" />
+              ))}
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
