@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-04-19T10:34:40.485Z",
+  "timestamp": "2026-04-19T18:52:24.075Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1015,10 +1015,10 @@
     ]
   },
   "api_inventory": {
-    "total_routers": 49,
-    "total_endpoints": 468,
-    "total_queries": 227,
-    "total_mutations": 241,
+    "total_routers": 60,
+    "total_endpoints": 519,
+    "total_queries": 246,
+    "total_mutations": 273,
     "routers": [
       {
         "name": "contact",
@@ -1135,12 +1135,6 @@
         "mutations": 7
       },
       {
-        "name": "aiMonitoring",
-        "endpoints": 11,
-        "queries": 9,
-        "mutations": 2
-      },
-      {
         "name": "helpArticle",
         "endpoints": 11,
         "queries": 5,
@@ -1153,10 +1147,22 @@
         "mutations": 3
       },
       {
+        "name": "aiMonitoring",
+        "endpoints": 9,
+        "queries": 8,
+        "mutations": 1
+      },
+      {
         "name": "webhooks",
         "endpoints": 9,
         "queries": 3,
         "mutations": 6
+      },
+      {
+        "name": "accountSettings",
+        "endpoints": 8,
+        "queries": 3,
+        "mutations": 5
       },
       {
         "name": "agent",
@@ -1166,6 +1172,18 @@
       },
       {
         "name": "aiReview",
+        "endpoints": 8,
+        "queries": 3,
+        "mutations": 5
+      },
+      {
+        "name": "contactSettings",
+        "endpoints": 8,
+        "queries": 3,
+        "mutations": 5
+      },
+      {
+        "name": "documentSettings",
         "endpoints": 8,
         "queries": 3,
         "mutations": 5
@@ -1190,6 +1208,18 @@
       },
       {
         "name": "notifications",
+        "endpoints": 8,
+        "queries": 3,
+        "mutations": 5
+      },
+      {
+        "name": "dealSettings",
+        "endpoints": 8,
+        "queries": 3,
+        "mutations": 5
+      },
+      {
+        "name": "ticketSettings",
         "endpoints": 8,
         "queries": 3,
         "mutations": 5
@@ -1261,22 +1291,40 @@
         "mutations": 0
       },
       {
+        "name": "user",
+        "endpoints": 4,
+        "queries": 2,
+        "mutations": 2
+      },
+      {
+        "name": "reportSettings",
+        "endpoints": 3,
+        "queries": 1,
+        "mutations": 2
+      },
+      {
         "name": "calendarWebhook",
         "endpoints": 3,
         "queries": 2,
         "mutations": 1
       },
       {
+        "name": "appointmentSettings",
+        "endpoints": 3,
+        "queries": 1,
+        "mutations": 2
+      },
+      {
+        "name": "caseSettings",
+        "endpoints": 3,
+        "queries": 1,
+        "mutations": 2
+      },
+      {
         "name": "subscription",
         "endpoints": 3,
         "queries": 2,
         "mutations": 1
-      },
-      {
-        "name": "user",
-        "endpoints": 3,
-        "queries": 1,
-        "mutations": 2
       },
       {
         "name": "zepBudget",
@@ -1303,6 +1351,18 @@
         "mutations": 1
       },
       {
+        "name": "customActionHandler",
+        "endpoints": 1,
+        "queries": 0,
+        "mutations": 1
+      },
+      {
+        "name": "customNodeType",
+        "endpoints": 1,
+        "queries": 0,
+        "mutations": 1
+      },
+      {
         "name": "emailInbound",
         "endpoints": 1,
         "queries": 0,
@@ -1310,6 +1370,12 @@
       },
       {
         "name": "globalSearch",
+        "endpoints": 1,
+        "queries": 1,
+        "mutations": 0
+      },
+      {
+        "name": "team",
         "endpoints": 1,
         "queries": 1,
         "mutations": 0
@@ -2806,12 +2872,12 @@
     ]
   },
   "validators_inventory": {
-    "total_validators": 43,
-    "total_schemas": 517,
+    "total_validators": 46,
+    "total_schemas": 512,
     "by_complexity": {
-      "complex": 30,
-      "moderate": 9,
-      "simple": 4
+      "complex": 29,
+      "moderate": 11,
+      "simple": 6
     },
     "validators": [
       {
@@ -2883,12 +2949,6 @@
       {
         "name": "account",
         "file": "account.ts",
-        "schemas": 17,
-        "complexity": "complex"
-      },
-      {
-        "name": "document-settings",
-        "file": "document-settings.ts",
         "schemas": 17,
         "complexity": "complex"
       },
@@ -3001,6 +3061,18 @@
         "complexity": "moderate"
       },
       {
+        "name": "report-settings",
+        "file": "report-settings.ts",
+        "schemas": 6,
+        "complexity": "moderate"
+      },
+      {
+        "name": "document-settings",
+        "file": "document-settings.ts",
+        "schemas": 5,
+        "complexity": "moderate"
+      },
+      {
         "name": "routing",
         "file": "routing.ts",
         "schemas": 5,
@@ -3067,10 +3139,22 @@
         "complexity": "moderate"
       },
       {
+        "name": "appointment-settings",
+        "file": "appointment-settings.ts",
+        "schemas": 1,
+        "complexity": "simple"
+      },
+      {
         "name": "base-schemas",
         "file": "base-schemas.ts",
         "schemas": 1,
         "complexity": "moderate"
+      },
+      {
+        "name": "case-settings",
+        "file": "case-settings.ts",
+        "schemas": 0,
+        "complexity": "simple"
       }
     ]
   },
@@ -3119,6 +3203,48 @@
     "thresholds_passed": true
   },
   "endpoint_catalog": {
+    "accountSettings": [
+      {
+        "name": "accountSettings.get",
+        "method": "GET",
+        "description": "Get"
+      },
+      {
+        "name": "accountSettings.update",
+        "method": "POST",
+        "description": "Update accountSettings"
+      },
+      {
+        "name": "accountSettings.resetToDefaults",
+        "method": "POST",
+        "description": "Reset to defaults"
+      },
+      {
+        "name": "accountSettings.list",
+        "method": "GET",
+        "description": "List accountSettingss with pagination"
+      },
+      {
+        "name": "accountSettings.create",
+        "method": "POST",
+        "description": "Create new accountSettings"
+      },
+      {
+        "name": "accountSettings.delete",
+        "method": "POST",
+        "description": "Delete accountSettings"
+      },
+      {
+        "name": "accountSettings.getAll",
+        "method": "GET",
+        "description": "Get all"
+      },
+      {
+        "name": "accountSettings.updateAll",
+        "method": "POST",
+        "description": "Update all"
+      }
+    ],
     "account": [
       {
         "name": "account.create",
@@ -3381,18 +3507,8 @@
       },
       {
         "name": "aiMonitoring.getAgentLogs",
-        "method": "GET",
+        "method": "POST",
         "description": "Get agent logs"
-      },
-      {
-        "name": "aiMonitoring.resetAgentStatus",
-        "method": "POST",
-        "description": "Reset agent status"
-      },
-      {
-        "name": "aiMonitoring.deleteAgent",
-        "method": "POST",
-        "description": "Delete agent"
       },
       {
         "name": "aiMonitoring.getFailedJobs",
@@ -3515,6 +3631,23 @@
         "name": "analytics.topPerformers",
         "method": "GET",
         "description": "Top performers"
+      }
+    ],
+    "reportSettings": [
+      {
+        "name": "reportSettings.get",
+        "method": "GET",
+        "description": "Get"
+      },
+      {
+        "name": "reportSettings.update",
+        "method": "POST",
+        "description": "Update reportSettings"
+      },
+      {
+        "name": "reportSettings.resetToDefaults",
+        "method": "POST",
+        "description": "Reset to defaults"
       }
     ],
     "auth": [
@@ -3893,6 +4026,48 @@
         "description": "Get zep budget"
       }
     ],
+    "contactSettings": [
+      {
+        "name": "contactSettings.getAll",
+        "method": "GET",
+        "description": "Get all"
+      },
+      {
+        "name": "contactSettings.updateAll",
+        "method": "POST",
+        "description": "Update all"
+      },
+      {
+        "name": "contactSettings.resetToDefaults",
+        "method": "POST",
+        "description": "Reset to defaults"
+      },
+      {
+        "name": "contactSettings.list",
+        "method": "GET",
+        "description": "List contactSettingss with pagination"
+      },
+      {
+        "name": "contactSettings.create",
+        "method": "POST",
+        "description": "Create new contactSettings"
+      },
+      {
+        "name": "contactSettings.update",
+        "method": "POST",
+        "description": "Update contactSettings"
+      },
+      {
+        "name": "contactSettings.delete",
+        "method": "POST",
+        "description": "Delete contactSettings"
+      },
+      {
+        "name": "contactSettings.get",
+        "method": "GET",
+        "description": "Get"
+      }
+    ],
     "contact": [
       {
         "name": "contact.create",
@@ -3997,6 +4172,62 @@
         "name": "contact.scoreWithAI",
         "method": "POST",
         "description": "Score with a i"
+      }
+    ],
+    "customActionHandler": [
+      {
+        "name": "customActionHandler.list",
+        "method": "POST",
+        "description": "List customActionHandlers with pagination"
+      }
+    ],
+    "customNodeType": [
+      {
+        "name": "customNodeType.list",
+        "method": "POST",
+        "description": "List customNodeTypes with pagination"
+      }
+    ],
+    "documentSettings": [
+      {
+        "name": "documentSettings.get",
+        "method": "GET",
+        "description": "Get"
+      },
+      {
+        "name": "documentSettings.update",
+        "method": "POST",
+        "description": "Update documentSettings"
+      },
+      {
+        "name": "documentSettings.resetToDefaults",
+        "method": "POST",
+        "description": "Reset to defaults"
+      },
+      {
+        "name": "documentSettings.getAll",
+        "method": "GET",
+        "description": "Get all"
+      },
+      {
+        "name": "documentSettings.updateAll",
+        "method": "POST",
+        "description": "Update all"
+      },
+      {
+        "name": "documentSettings.list",
+        "method": "GET",
+        "description": "List documentSettingss with pagination"
+      },
+      {
+        "name": "documentSettings.create",
+        "method": "POST",
+        "description": "Create new documentSettings"
+      },
+      {
+        "name": "documentSettings.delete",
+        "method": "POST",
+        "description": "Delete documentSettings"
       }
     ],
     "emailInbound": [
@@ -4590,6 +4821,23 @@
         "description": "Bulk delete"
       }
     ],
+    "appointmentSettings": [
+      {
+        "name": "appointmentSettings.get",
+        "method": "GET",
+        "description": "Get"
+      },
+      {
+        "name": "appointmentSettings.update",
+        "method": "POST",
+        "description": "Update appointmentSettings"
+      },
+      {
+        "name": "appointmentSettings.resetToDefaults",
+        "method": "POST",
+        "description": "Reset to defaults"
+      }
+    ],
     "appointments": [
       {
         "name": "appointments.create",
@@ -4690,6 +4938,23 @@
         "name": "appointments.stats",
         "method": "GET",
         "description": "Appointments statistics"
+      }
+    ],
+    "caseSettings": [
+      {
+        "name": "caseSettings.get",
+        "method": "GET",
+        "description": "Get"
+      },
+      {
+        "name": "caseSettings.update",
+        "method": "POST",
+        "description": "Update caseSettings"
+      },
+      {
+        "name": "caseSettings.resetToDefaults",
+        "method": "POST",
+        "description": "Reset to defaults"
       }
     ],
     "cases": [
@@ -5049,6 +5314,48 @@
         "description": "Batch action"
       }
     ],
+    "dealSettings": [
+      {
+        "name": "dealSettings.getAll",
+        "method": "GET",
+        "description": "Get all"
+      },
+      {
+        "name": "dealSettings.updateAll",
+        "method": "POST",
+        "description": "Update all"
+      },
+      {
+        "name": "dealSettings.resetToDefaults",
+        "method": "POST",
+        "description": "Reset to defaults"
+      },
+      {
+        "name": "dealSettings.list",
+        "method": "GET",
+        "description": "List dealSettingss with pagination"
+      },
+      {
+        "name": "dealSettings.create",
+        "method": "POST",
+        "description": "Create new dealSettings"
+      },
+      {
+        "name": "dealSettings.update",
+        "method": "POST",
+        "description": "Update dealSettings"
+      },
+      {
+        "name": "dealSettings.delete",
+        "method": "POST",
+        "description": "Delete dealSettings"
+      },
+      {
+        "name": "dealSettings.get",
+        "method": "GET",
+        "description": "Get"
+      }
+    ],
     "opportunity": [
       {
         "name": "opportunity.create",
@@ -5360,6 +5667,13 @@
         "description": "Get by entity"
       }
     ],
+    "team": [
+      {
+        "name": "team.list",
+        "method": "GET",
+        "description": "List teams with pagination"
+      }
+    ],
     "ticketConfig": [
       {
         "name": "ticketConfig.list",
@@ -5407,6 +5721,48 @@
         "name": "ticketRouting.suggestAssignee",
         "method": "GET",
         "description": "Suggest assignee"
+      }
+    ],
+    "ticketSettings": [
+      {
+        "name": "ticketSettings.getAll",
+        "method": "GET",
+        "description": "Get all"
+      },
+      {
+        "name": "ticketSettings.updateAll",
+        "method": "POST",
+        "description": "Update all"
+      },
+      {
+        "name": "ticketSettings.resetToDefaults",
+        "method": "POST",
+        "description": "Reset to defaults"
+      },
+      {
+        "name": "ticketSettings.list",
+        "method": "GET",
+        "description": "List ticketSettingss with pagination"
+      },
+      {
+        "name": "ticketSettings.create",
+        "method": "POST",
+        "description": "Create new ticketSettings"
+      },
+      {
+        "name": "ticketSettings.update",
+        "method": "POST",
+        "description": "Update ticketSettings"
+      },
+      {
+        "name": "ticketSettings.delete",
+        "method": "POST",
+        "description": "Delete ticketSettings"
+      },
+      {
+        "name": "ticketSettings.get",
+        "method": "GET",
+        "description": "Get"
       }
     ],
     "ticket": [
@@ -5510,6 +5866,11 @@
         "name": "user.updateProfile",
         "method": "POST",
         "description": "Update profile"
+      },
+      {
+        "name": "user.list",
+        "method": "GET",
+        "description": "List users with pagination"
       }
     ],
     "webhooks": [
