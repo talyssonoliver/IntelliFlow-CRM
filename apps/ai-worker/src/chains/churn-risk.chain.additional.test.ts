@@ -29,6 +29,36 @@ vi.mock('../config/ai.config', () => ({
 }));
 vi.mock('../utils/cost-tracker', () => ({ costTracker: { recordUsage: vi.fn() } }));
 
+// Mock LLM factory — ChurnRiskChain's constructor calls createLLM() which
+// otherwise opens a real LiteLLM/OpenAI connection and hangs without
+// credentials.
+vi.mock('../lib/llm-factory.js', () => ({
+  createLLM: vi.fn(() => ({
+    invoke: vi.fn().mockResolvedValue({ content: '{}' }),
+    withStructuredOutput: vi.fn(() => ({
+      invoke: vi.fn().mockResolvedValue({
+        riskScore: 0.35,
+        confidence: 0.7,
+        topRiskFactors: [
+          {
+            factor: 'engagement-trend',
+            value: 'low',
+            impact: 'medium',
+            reasoning: 'Stubbed by test mock',
+          },
+        ],
+        explanation: 'Mock provider fallback',
+        recommendations: ['Monitor engagement metrics weekly'],
+        primaryAction: 'MONITOR',
+      }),
+    })),
+  })),
+  createEmbeddings: vi.fn(() => ({
+    embedQuery: vi.fn().mockResolvedValue([]),
+    embedDocuments: vi.fn().mockResolvedValue([]),
+  })),
+}));
+
 describe('ChurnRiskChain additional', () => {
   let chain: ChurnRiskChain;
   const baseInput: ChurnRiskInput = {
@@ -89,8 +119,8 @@ describe('ChurnRiskChain additional', () => {
   describe('fallback heuristics', () => {
     it('no risk factors yields insufficient_data', async () => {
       // Force error to trigger fallback by making model throw
-      const orig = (chain as any).model;
-      (chain as any).model = {
+      const orig = (chain as any).structuredModel;
+      (chain as any).structuredModel = {
         invoke: async () => {
           throw new Error('forced');
         },
@@ -99,11 +129,11 @@ describe('ChurnRiskChain additional', () => {
       expect(r.modelVersion).toContain('fallback');
       expect(r.topRiskFactors[0].factor).toBe('insufficient_data');
       expect(r.riskScore).toBeCloseTo(0.3, 1);
-      (chain as any).model = orig;
+      (chain as any).structuredModel = orig;
     });
 
     it('declining usage adds usage_trend factor', async () => {
-      (chain as any).model = {
+      (chain as any).structuredModel = {
         invoke: async () => {
           throw new Error('err');
         },
@@ -115,7 +145,7 @@ describe('ChurnRiskChain additional', () => {
     });
 
     it('high support tickets adds support_tickets factor', async () => {
-      (chain as any).model = {
+      (chain as any).structuredModel = {
         invoke: async () => {
           throw new Error('err');
         },
@@ -127,7 +157,7 @@ describe('ChurnRiskChain additional', () => {
     });
 
     it('high days since login adds login factor', async () => {
-      (chain as any).model = {
+      (chain as any).structuredModel = {
         invoke: async () => {
           throw new Error('err');
         },
@@ -139,7 +169,7 @@ describe('ChurnRiskChain additional', () => {
     });
 
     it('low NPS adds nps factor', async () => {
-      (chain as any).model = {
+      (chain as any).structuredModel = {
         invoke: async () => {
           throw new Error('err');
         },
@@ -150,7 +180,7 @@ describe('ChurnRiskChain additional', () => {
     });
 
     it('combined factors clamp to 1.0', async () => {
-      (chain as any).model = {
+      (chain as any).structuredModel = {
         invoke: async () => {
           throw new Error('err');
         },

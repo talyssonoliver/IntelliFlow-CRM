@@ -2,10 +2,14 @@
  * MonitoringFlushService — Periodically drains in-memory monitoring singletons to DB (IFC-297)
  */
 import type { PrismaClient } from '@intelliflow/db';
+import pino from 'pino';
 import { driftDetector } from './drift-detector';
 import { latencyMonitor } from './latency-monitor';
 import { hallucinationChecker } from './hallucination-checker';
 import { roiTracker } from './roi-tracker';
+import { AIMonitoringPayloadSchema } from './ai-monitoring-payload.schema';
+
+const logger = pino({ name: 'monitoring-flush', level: process.env.LOG_LEVEL || 'info' });
 
 export class MonitoringFlushService {
   private flushInterval: ReturnType<typeof setInterval> | null = null;
@@ -183,9 +187,26 @@ export class MonitoringFlushService {
 
     if (events.length === 0) return;
 
+    // Validate payload shape for each event; skip malformed ones rather than
+    // crashing the entire flush (M10 — ADR-048 payload validation at write time).
+    const validEvents = events.filter((event) => {
+      if (event.payload === null || event.payload === undefined) return true;
+      const result = AIMonitoringPayloadSchema.safeParse(event.payload);
+      if (!result.success) {
+        logger.warn(
+          { eventType: event.eventType, issues: result.error.issues },
+          '[MonitoringFlush] Skipping event with invalid payload'
+        );
+        return false;
+      }
+      return true;
+    });
+
+    if (validEvents.length === 0) return;
+
     try {
       await (this.prisma as any).aIMonitoringEvent.createMany({
-        data: events,
+        data: validEvents,
         skipDuplicates: true,
       });
 

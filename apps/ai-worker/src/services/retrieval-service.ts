@@ -255,7 +255,7 @@ export interface SearchResponse {
   results: SearchResult[];
   total: number;
   query: string;
-  searchType: string;
+  searchType: 'fulltext' | 'semantic' | 'hybrid';
   executionTimeMs: number;
   facets?: {
     sources: Record<string, number>;

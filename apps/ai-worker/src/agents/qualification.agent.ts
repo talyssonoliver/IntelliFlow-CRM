@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { BaseAgent, AgentTask, BaseAgentConfig } from './base.agent';
-import { StructuredOutputParser } from '@langchain/core/output_parsers';
+import { ensurePromptBudget } from '../utils/prompt-budget.js';
+import { replayConversation } from '../utils/conversation-replay.js';
 import pino from 'pino';
 
 const logger = pino({
@@ -63,7 +64,7 @@ export type QualificationOutput = z.infer<typeof qualificationOutputSchema>;
  * Provides detailed reasoning and recommended next steps
  */
 export class LeadQualificationAgent extends BaseAgent<QualificationInput, QualificationOutput> {
-  private readonly parser: StructuredOutputParser<any>;
+  private readonly structuredModel: { invoke(input: unknown): Promise<unknown> };
 
   constructor(config?: Partial<BaseAgentConfig>) {
     super({
@@ -77,10 +78,14 @@ Your recommendations are data-driven, actionable, and focused on conversion opti
       maxIterations: 3,
       allowDelegation: false,
       verbose: true,
+      purpose: 'qualification',
+      // ADR-049: enable blocking reflection gate for output quality assurance.
+      // usesPlanning remains false — LLM-driven plan override needs product design first.
+      usesReflection: true,
       ...config,
     });
 
-    this.parser = StructuredOutputParser.fromZodSchema(qualificationOutputSchema);
+    this.structuredModel = (this.model as any).withStructuredOutput(qualificationOutputSchema);
   }
 
   /**
@@ -106,14 +111,51 @@ Your recommendations are data-driven, actionable, and focused on conversion opti
     // Get the system prompt
     const systemPrompt = this.generateSystemPrompt();
 
-    // Invoke the LLM
-    const messages = [this.createSystemMessage(systemPrompt), this.createHumanMessage(prompt)];
+    // M6: conversation-history replay — prepend prior turns when sessionId is available.
+    // tenantId is sourced from AgentContext.userId (the authenticated caller's tenant),
+    // mirroring the FollowupAgent pattern.
+    const sessionId = task.context?.sessionId;
+    const tenantId = task.context?.userId;
+    let historyMessages: import('@langchain/core/messages').BaseMessage[] = [];
+    if (sessionId && tenantId) {
+      try {
+        const replay = await replayConversation({ tenantId, sessionId });
+        historyMessages = replay.messages;
+      } catch (replayError) {
+        logger.warn(
+          {
+            leadId: lead.leadId,
+            sessionId,
+            error: replayError instanceof Error ? replayError.message : String(replayError),
+          },
+          'Failed to load conversation history — proceeding without it'
+        );
+      }
+    }
 
-    const response = await this.invokeLLM(messages);
+    // Invoke the LLM with structured output
+    const messages = [
+      this.createSystemMessage(systemPrompt),
+      ...historyMessages,
+      this.createHumanMessage(prompt),
+    ];
+
+    const budgeted = ensurePromptBudget(messages, { maxTokens: 6000 });
+    if (budgeted.truncated) {
+      logger.warn(
+        {
+          agentName: this.config.name,
+          droppedCount: budgeted.droppedCount,
+          remaining: budgeted.messages.length,
+        },
+        'Prompt history truncated to fit token budget'
+      );
+    }
+    const response = await this.invokeLLM(budgeted.messages);
 
     // Parse structured output
     try {
-      const result = (await this.parser.parse(response)) as QualificationOutput;
+      const result = (await this.structuredModel.invoke(response)) as QualificationOutput;
 
       logger.info(
         {
@@ -237,7 +279,7 @@ Your recommendations are data-driven, actionable, and focused on conversion opti
       '   - Overall likelihood to convert',
       '   - Risk factors or red flags',
       '\n=== REQUIRED OUTPUT ===\n',
-      this.parser.getFormatInstructions(),
+      'Respond with a structured JSON object matching the qualification output schema.',
       '\nIMPORTANT GUIDELINES:',
       '- Be specific and data-driven in your reasoning',
       '- Identify both strengths AND concerns',

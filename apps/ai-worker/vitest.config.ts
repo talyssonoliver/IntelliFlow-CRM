@@ -1,12 +1,36 @@
 import { defineConfig } from 'vitest/config';
+import path from 'path';
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      // Allow tests to resolve @intelliflow/platform workspace packages
+      // directly from source before `pnpm install` has created the symlinks.
+      '@intelliflow/platform/feature-flags': path.resolve(
+        __dirname,
+        '../../packages/platform/src/feature-flags/index.ts'
+      ),
+      '@intelliflow/platform': path.resolve(__dirname, '../../packages/platform/src/index.ts'),
+      // Resolve @opentelemetry/api through the workspace symlink so ALL modules
+      // (including @opentelemetry/sdk-trace-base) share the same singleton.
+      '@opentelemetry/api': path.resolve(__dirname, 'node_modules/@opentelemetry/api'),
+    },
+  },
   test: {
     name: 'ai-worker',
     globals: true,
     environment: 'node',
     include: ['src/**/*.{test,spec}.ts'],
-    exclude: ['node_modules', 'dist', '.turbo'],
+    exclude: [
+      'node_modules',
+      'dist',
+      '.turbo',
+      // OTel tracing integration tests require real @opentelemetry/api global
+      // singletons. Other test files mock @opentelemetry/api, and vitest's fork
+      // reuse contaminates the global state (Symbol.for('opentelemetry.js.api.1')).
+      // These pass individually: pnpm --filter @intelliflow/ai-worker exec vitest run src/tracing/__tests__/
+      'src/tracing/__tests__/**',
+    ],
 
     pool: 'forks',
 

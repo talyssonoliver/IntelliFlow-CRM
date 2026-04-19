@@ -1,4 +1,12 @@
 /**
+ * @deprecated Unused skeleton — kept for reference.
+ * ADR-049 (Plan/Reflect phases) supersedes this orchestration pattern.
+ * Replacement: BaseAgent.plan() → execute() → reflect() inside individual agents.
+ *
+ * Remove when all 4 agents have adopted ADR-049 phases.
+ */
+
+/**
  * CrewAI Multi-Agent Workflow Skeleton
  *
  * This file provides a foundation for implementing CrewAI-style

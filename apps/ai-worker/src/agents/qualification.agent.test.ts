@@ -8,52 +8,43 @@ import {
   qualificationOutputSchema,
 } from './qualification.agent';
 
-// Mock the BaseAgent's LLM invocation with proper class
-vi.mock('@langchain/openai', () => {
-  const mockResponse = JSON.stringify({
-    qualified: true,
-    qualificationLevel: 'HIGH',
-    confidence: 0.9,
-    reasoning: 'Strong buying signals with decision-maker title and corporate email',
-    strengths: ['VP title indicates decision-making authority', 'Corporate email domain'],
-    concerns: [],
-    recommendedActions: [
-      {
-        action: 'Schedule discovery call',
-        priority: 'HIGH',
-        reasoning: 'High qualification score warrants immediate outreach',
-      },
-    ],
-    nextSteps: ['Send personalized email', 'Schedule call within 48 hours'],
-    estimatedConversionProbability: 0.75,
-  });
-
-  return {
-    ChatOpenAI: class MockChatOpenAI {
-      constructor(config: unknown) {
-        // Store config for potential inspection
-      }
-      async invoke(messages: unknown[]): Promise<{ content: string }> {
-        return { content: mockResponse };
-      }
+// Pattern A: mock the factory — qualification agent calls createLLM and uses
+// withStructuredOutput for structured output (B2b pattern).
+const QUALIFICATION_PARSED_RESPONSE = {
+  qualified: true,
+  qualificationLevel: 'HIGH',
+  confidence: 0.9,
+  reasoning: 'Strong buying signals with decision-maker title and corporate email',
+  strengths: ['VP title indicates decision-making authority', 'Corporate email domain'],
+  concerns: [],
+  recommendedActions: [
+    {
+      action: 'Schedule discovery call',
+      priority: 'HIGH',
+      reasoning: 'High qualification score warrants immediate outreach',
     },
-  };
-});
+  ],
+  nextSteps: ['Send personalized email', 'Schedule call within 48 hours'],
+  estimatedConversionProbability: 0.75,
+};
 
-// Mock StructuredOutputParser
-vi.mock('@langchain/core/output_parsers', () => ({
-  StructuredOutputParser: {
-    fromZodSchema: vi.fn(() => ({
-      parse: vi.fn((response: string) => JSON.parse(response)),
-      getFormatInstructions: vi.fn(() => 'Format instructions here'),
+vi.mock('../lib/llm-factory.js', () => ({
+  createLLM: vi.fn(() => ({
+    invoke: vi.fn().mockResolvedValue({ content: JSON.stringify(QUALIFICATION_PARSED_RESPONSE) }),
+    withStructuredOutput: vi.fn(() => ({
+      invoke: vi.fn().mockResolvedValue(QUALIFICATION_PARSED_RESPONSE),
     })),
-  },
+  })),
+  createEmbeddings: vi.fn(() => ({
+    embedQuery: vi.fn().mockResolvedValue([]),
+    embedDocuments: vi.fn().mockResolvedValue([]),
+  })),
 }));
 
 // Mock the ai.config
 vi.mock('../config/ai.config', () => ({
   aiConfig: {
-    provider: 'openai',
+    provider: 'litellm',
     openai: {
       model: 'gpt-4-turbo-preview',
       temperature: 0.7,
@@ -72,6 +63,11 @@ vi.mock('../utils/cost-tracker', () => ({
   costTracker: {
     recordUsage: vi.fn(),
   },
+}));
+
+vi.mock('../utils/token-counter', () => ({
+  countMessagesTokens: vi.fn().mockReturnValue(100),
+  countTokens: vi.fn().mockReturnValue(50),
 }));
 
 describe('LeadQualificationAgent', () => {
@@ -196,9 +192,11 @@ describe('LeadQualificationAgent', () => {
     it('should handle parsing errors gracefully', async () => {
       const failingAgent = new LeadQualificationAgent();
 
-      // Spy on the parser's parse method and mock it to reject
-      const parserParseError = new Error('Parse error');
-      vi.spyOn((failingAgent as any).parser, 'parse').mockRejectedValue(parserParseError);
+      // After B2b, the agent uses structuredModel.invoke instead of a StructuredOutputParser.
+      // Simulate a parse/validation failure by making structuredModel.invoke throw.
+      (failingAgent as any).structuredModel = {
+        invoke: vi.fn().mockRejectedValue(new Error('Parse error')),
+      };
 
       const input: QualificationInput = {
         leadId: 'lead-005',

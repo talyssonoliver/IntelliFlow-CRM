@@ -19,10 +19,16 @@ import {
 import { hallucinationChecker } from '../monitoring/hallucination-checker';
 // Fix #20: conversation record audit logging
 import { logConversationRecord } from '../utils/conversation-record-logger';
+// H4: AI_AGENT audit entries
+import { logAIAgentAction } from '../utils/audit-log';
+import { runWithLogContext } from '../utils/logger';
+import { getCurrentLogContext } from '@intelliflow/observability';
+import { isAiFeatureEnabled } from '../lib/feature-flags';
 
 const logger = pino({
   name: 'insight-generation-job',
   level: process.env.LOG_LEVEL || 'info',
+  mixin: () => getCurrentLogContext() ?? {},
 });
 
 // ============================================================================
@@ -70,6 +76,8 @@ export const InsightJobDataSchema = z.object({
       })
     )
     .default([]),
+  /** W3C traceparent carrier injected by enqueue-side for distributed trace propagation */
+  _otelCarrier: z.record(z.string(), z.string()).optional(),
 });
 
 export type InsightJobData = z.infer<typeof InsightJobDataSchema>;
@@ -169,7 +177,7 @@ async function upsertLeadInsight(
   try {
     const score = lead.score;
     await prisma.leadAIInsight.upsert({
-      where: { leadId: lead.id },
+      where: { leadId_tenantId: { leadId: lead.id, tenantId } },
       create: {
         leadId: lead.id,
         tenantId,
@@ -491,7 +499,11 @@ async function dispatchScheduledInsights(
     const { prisma } = await import('@intelliflow/db');
     const { Queue } = await import('bullmq');
 
-    const activeTenants = await prisma.lead.groupBy({
+    // M4 encryption wraps prisma in $extends — the extended client's .groupBy
+    // signature doesn't narrow cleanly for this call pattern. Cast matches the
+    // pattern used in packages/db/src/client.ts withTransaction helpers.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const activeTenants = await (prisma.lead as any).groupBy({
       by: ['tenantId'],
       where: { updatedAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } },
       _count: true,
@@ -749,7 +761,7 @@ async function persistInsightRecord(
     }
   }
 
-  await prisma.aIInsight.create({
+  const created = await prisma.aIInsight.create({
     data: {
       type: mapInsightTypeToDbType(insight.type),
       category: mapEntityTypeToCategory(insight.entityType),
@@ -773,6 +785,18 @@ async function persistInsightRecord(
       tenantId,
     },
   });
+
+  // H4: emit AI_AGENT audit entry — non-fatal (warn and continue on failure)
+  await logAIAgentAction({
+    tenantId,
+    agentName: 'insight-generation-job',
+    resourceType: 'AIInsight',
+    resourceId: created.id as string,
+    action: 'CREATE',
+  }).catch((err: unknown) => {
+    logger.warn({ insightId: created.id, err }, 'audit-log: logAIAgentAction failed (non-fatal)');
+  });
+
   return true;
 }
 
@@ -830,173 +854,191 @@ async function persistHighPriorityInsightSideEffects(
  */
 export async function processInsightJob(job: Job<InsightJobData>): Promise<InsightJobResult> {
   const startTime = Date.now();
-  const { tenantId, userId } = job.data;
+  const { tenantId, userId, correlationId } = job.data;
 
-  // Scheduled cron sentinel — enumerate active tenants and enqueue real per-tenant jobs
-  if (tenantId === '__scheduled__') {
-    return dispatchScheduledInsights(job, startTime);
-  }
-
-  logger.info(
+  return runWithLogContext(
     {
-      jobId: job.id,
+      correlationId: correlationId ?? job.id ?? undefined,
       tenantId,
-      dealsCount: job.data.dealsAtRisk.length,
-      leadsCount: job.data.hotLeads.length,
+      userId,
     },
-    'Processing insight generation job'
-  );
+    async () => {
+      // Scheduled cron sentinel — enumerate active tenants and enqueue real per-tenant jobs
+      if (tenantId === '__scheduled__') {
+        return dispatchScheduledInsights(job, startTime);
+      }
 
-  // Validate input
-  const validatedData = InsightJobDataSchema.parse(job.data);
+      // Validate input (tenantId now confirmed non-sentinel)
+      const validatedData = InsightJobDataSchema.parse(job.data);
 
-  // Cap arrays to prevent LLM token overflow and stalls on large tenants.
-  // Items are priority-sorted so the most important ones are always analysed.
-  const cappedDeals = capDeals(validatedData.dealsAtRisk, MAX_DEALS_PER_JOB);
-  const cappedLeads = capLeads(validatedData.hotLeads, MAX_LEADS_PER_JOB);
-  const cappedContacts = capContacts(validatedData.staleContacts, MAX_CONTACTS_PER_JOB);
+      // Feature-flag gate — checked after Zod validation, before LLM work
+      if (!isAiFeatureEnabled('ai.insights.enabled', validatedData.tenantId)) {
+        logger.info(
+          { jobId: job.id, tenantId: validatedData.tenantId },
+          'AI insights job skipped — feature flag disabled'
+        );
+        return { skipped: true, reason: 'feature-flag-disabled' } as unknown as InsightJobResult;
+      }
 
-  const truncated =
-    cappedDeals.length < validatedData.dealsAtRisk.length ||
-    cappedLeads.length < validatedData.hotLeads.length ||
-    cappedContacts.length < validatedData.staleContacts.length;
-
-  if (truncated) {
-    logger.info(
-      {
-        jobId: job.id,
-        original: {
-          deals: validatedData.dealsAtRisk.length,
-          leads: validatedData.hotLeads.length,
-          contacts: validatedData.staleContacts.length,
-        },
-        capped: {
-          deals: cappedDeals.length,
-          leads: cappedLeads.length,
-          contacts: cappedContacts.length,
-        },
-      },
-      'Payload truncated to fit LLM prompt budget — highest-priority items retained'
-    );
-  }
-
-  const cappedData = {
-    ...validatedData,
-    dealsAtRisk: cappedDeals,
-    hotLeads: cappedLeads,
-    staleContacts: cappedContacts,
-  };
-
-  await job.updateProgress(10);
-
-  // Extend lock before the potentially long-running LLM call to prevent
-  // BullMQ stall detection from killing the job mid-inference.
-  await job.extendLock(job.token!, 300_000); // 5 minutes
-
-  // Generate insights via chain, with a timeout guard so a hanging LLM
-  // (e.g. Ollama not running) doesn't stall the worker indefinitely.
-  const LLM_TIMEOUT_MS = 120_000; // 2 minutes
-  const chain = getInsightGenerationChain();
-  const llmStartTime = Date.now();
-
-  const { insights, usedFallback } = await generateInsightsWithFallback(
-    job,
-    chain,
-    cappedData,
-    LLM_TIMEOUT_MS
-  );
-
-  const llmDuration = Date.now() - llmStartTime;
-
-  // Fix #20: log conversation record for audit trail (only when LLM was actually called)
-  if (!usedFallback) {
-    logConversationRecord(logger, {
-      conversationId: `insight-${tenantId}-${job.id ?? Date.now()}`,
-      model: `${process.env.AI_PROVIDER || 'mock'}:insight-generation:v1`,
-      tokenCountInput: 0, // token usage tracked via cost-tracker callbacks
-      tokenCountOutput: 0,
-      duration: llmDuration,
-      chainType: 'INSIGHT_GENERATION',
-      tenantId,
-    });
-  }
-
-  // Fix #14: hallucination check on first insight's description — log warning, do NOT block
-  if (!usedFallback && insights.length > 0) {
-    const firstInsight = insights[0];
-    const inputSummary = `Deals: ${cappedData.dealsAtRisk.length}, Leads: ${cappedData.hotLeads.length}, Overdue: ${cappedData.overdueTasksCount}`;
-    const hallucinationResult = await hallucinationChecker.checkOutput({
-      id: `insight-${tenantId}-${job.id ?? Date.now()}`,
-      model: `${process.env.AI_PROVIDER || 'mock'}:insight-generation:v1`,
-      inputContext: inputSummary,
-      output: firstInsight.description,
-    });
-
-    if (hallucinationResult.hallucinated) {
-      logger.warn(
+      logger.info(
         {
           jobId: job.id,
           tenantId,
-          hallucinationScore: hallucinationResult.score,
-          hallucinationTypes: hallucinationResult.hallucinationTypes,
+          dealsCount: job.data.dealsAtRisk.length,
+          leadsCount: job.data.hotLeads.length,
         },
-        'Hallucination detected in insight generation output — output not blocked, flagged for monitoring'
+        'Processing insight generation job'
       );
+
+      // Cap arrays to prevent LLM token overflow and stalls on large tenants.
+      // Items are priority-sorted so the most important ones are always analysed.
+      const cappedDeals = capDeals(validatedData.dealsAtRisk, MAX_DEALS_PER_JOB);
+      const cappedLeads = capLeads(validatedData.hotLeads, MAX_LEADS_PER_JOB);
+      const cappedContacts = capContacts(validatedData.staleContacts, MAX_CONTACTS_PER_JOB);
+
+      const truncated =
+        cappedDeals.length < validatedData.dealsAtRisk.length ||
+        cappedLeads.length < validatedData.hotLeads.length ||
+        cappedContacts.length < validatedData.staleContacts.length;
+
+      if (truncated) {
+        logger.info(
+          {
+            jobId: job.id,
+            original: {
+              deals: validatedData.dealsAtRisk.length,
+              leads: validatedData.hotLeads.length,
+              contacts: validatedData.staleContacts.length,
+            },
+            capped: {
+              deals: cappedDeals.length,
+              leads: cappedLeads.length,
+              contacts: cappedContacts.length,
+            },
+          },
+          'Payload truncated to fit LLM prompt budget — highest-priority items retained'
+        );
+      }
+
+      const cappedData = {
+        ...validatedData,
+        dealsAtRisk: cappedDeals,
+        hotLeads: cappedLeads,
+        staleContacts: cappedContacts,
+      };
+
+      await job.updateProgress(10);
+
+      // Extend lock before the potentially long-running LLM call to prevent
+      // BullMQ stall detection from killing the job mid-inference.
+      await job.extendLock(job.token!, 300_000); // 5 minutes
+
+      // Generate insights via chain, with a timeout guard so a hanging LLM
+      // (e.g. Ollama not running) doesn't stall the worker indefinitely.
+      const LLM_TIMEOUT_MS = 120_000; // 2 minutes
+      const chain = getInsightGenerationChain();
+      const llmStartTime = Date.now();
+
+      const { insights, usedFallback } = await generateInsightsWithFallback(
+        job,
+        chain,
+        cappedData,
+        LLM_TIMEOUT_MS
+      );
+
+      const llmDuration = Date.now() - llmStartTime;
+
+      // Fix #20: log conversation record for audit trail (only when LLM was actually called)
+      if (!usedFallback) {
+        logConversationRecord(logger, {
+          conversationId: `insight-${tenantId}-${job.id ?? Date.now()}`,
+          model: `${process.env.AI_PROVIDER || 'mock'}:insight-generation:v1`,
+          tokenCountInput: 0, // token usage tracked via cost-tracker callbacks
+          tokenCountOutput: 0,
+          duration: llmDuration,
+          chainType: 'INSIGHT_GENERATION',
+          tenantId,
+        });
+      }
+
+      // Fix #14: hallucination check on first insight's description — log warning, do NOT block
+      if (!usedFallback && insights.length > 0) {
+        const firstInsight = insights[0];
+        const inputSummary = `Deals: ${cappedData.dealsAtRisk.length}, Leads: ${cappedData.hotLeads.length}, Overdue: ${cappedData.overdueTasksCount}`;
+        const hallucinationResult = await hallucinationChecker.checkOutput({
+          id: `insight-${tenantId}-${job.id ?? Date.now()}`,
+          model: `${process.env.AI_PROVIDER || 'mock'}:insight-generation:v1`,
+          inputContext: inputSummary,
+          output: firstInsight.description,
+        });
+
+        if (hallucinationResult.hallucinated) {
+          logger.warn(
+            {
+              jobId: job.id,
+              tenantId,
+              hallucinationScore: hallucinationResult.score,
+              hallucinationTypes: hallucinationResult.hallucinationTypes,
+            },
+            'Hallucination detected in insight generation output — output not blocked, flagged for monitoring'
+          );
+        }
+      }
+
+      await job.updateProgress(60);
+
+      // Persist insights to AIInsight table
+      // Dynamic import to avoid circular deps — Prisma client lives in @intelliflow/db
+      const { prisma } = await import('@intelliflow/db');
+
+      // Extend lock again before the DB write loop (many insights = many round-trips)
+      await job.extendLock(job.token!, 300_000);
+
+      const now = new Date();
+
+      let insightsCreated = 0;
+
+      for (const insight of insights) {
+        const created = await persistInsightRecord(
+          prisma,
+          insight,
+          tenantId,
+          userId,
+          validatedData,
+          now,
+          job
+        );
+        if (!created) continue;
+        insightsCreated++;
+        await persistHighPriorityInsightSideEffects(prisma, insight, tenantId, userId, now, job);
+      }
+
+      await job.updateProgress(80);
+
+      // Populate entity-level insight tables for lead/contact 360 pages
+      const entityStats = await populateEntityInsights(prisma, validatedData, insights, tenantId);
+
+      await job.updateProgress(100);
+
+      const processingTimeMs = Date.now() - startTime;
+
+      logger.info(
+        {
+          jobId: job.id,
+          insightsCreated,
+          entityInsights: entityStats,
+          processingTimeMs,
+        },
+        'Insight generation job completed'
+      );
+
+      return {
+        insightsCreated,
+        processingTimeMs,
+        processedAt: new Date().toISOString(),
+      };
     }
-  }
-
-  await job.updateProgress(60);
-
-  // Persist insights to AIInsight table
-  // Dynamic import to avoid circular deps — Prisma client lives in @intelliflow/db
-  const { prisma } = await import('@intelliflow/db');
-
-  // Extend lock again before the DB write loop (many insights = many round-trips)
-  await job.extendLock(job.token!, 300_000);
-
-  const now = new Date();
-
-  let insightsCreated = 0;
-
-  for (const insight of insights) {
-    const created = await persistInsightRecord(
-      prisma,
-      insight,
-      tenantId,
-      userId,
-      validatedData,
-      now,
-      job
-    );
-    if (!created) continue;
-    insightsCreated++;
-    await persistHighPriorityInsightSideEffects(prisma, insight, tenantId, userId, now, job);
-  }
-
-  await job.updateProgress(80);
-
-  // Populate entity-level insight tables for lead/contact 360 pages
-  const entityStats = await populateEntityInsights(prisma, validatedData, insights, tenantId);
-
-  await job.updateProgress(100);
-
-  const processingTimeMs = Date.now() - startTime;
-
-  logger.info(
-    {
-      jobId: job.id,
-      insightsCreated,
-      entityInsights: entityStats,
-      processingTimeMs,
-    },
-    'Insight generation job completed'
   );
-
-  return {
-    insightsCreated,
-    processingTimeMs,
-    processedAt: new Date().toISOString(),
-  };
 }
 
 // ============================================================================

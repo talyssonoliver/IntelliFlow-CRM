@@ -60,7 +60,9 @@ export const DEFAULT_EMBEDDING_RESPONSE = {
 };
 
 /**
- * Create a mock ChatOpenAI instance with customizable response
+ * Create a mock ChatOpenAI instance with string-content response.
+ * Used for chains that do NOT use structuredOutput (e.g. auto-response.chain.ts).
+ * The `withStructuredOutput` method is also added so tests don't explode if called.
  */
 export function createMockChatOpenAI(response: unknown = DEFAULT_SCORING_RESPONSE) {
   const MockChatOpenAI = function (this: Record<string, unknown>) {
@@ -72,6 +74,33 @@ export function createMockChatOpenAI(response: unknown = DEFAULT_SCORING_RESPONS
     });
     this.bind = vi.fn().mockReturnThis();
     this.pipe = vi.fn().mockReturnThis();
+    // withStructuredOutput returns a mock that resolves with the parsed object directly
+    this.withStructuredOutput = vi.fn().mockReturnValue({
+      invoke: vi.fn().mockResolvedValue(response),
+    });
+  };
+  return MockChatOpenAI;
+}
+
+/**
+ * Create a mock ChatOpenAI instance whose `.withStructuredOutput().invoke()` returns
+ * `parsedObject` directly (no JSON wrapping). Use for chains that call
+ * `this.structuredModel.invoke(...)` and expect the typed object back.
+ */
+export function createMockChatOpenAIStructured(parsedObject: unknown = DEFAULT_SCORING_RESPONSE) {
+  const MockChatOpenAI = function (this: Record<string, unknown>) {
+    this.invoke = vi.fn().mockResolvedValue({
+      content: JSON.stringify(parsedObject),
+    });
+    this.stream = vi.fn().mockImplementation(async function* () {
+      yield { content: JSON.stringify(parsedObject) };
+    });
+    this.bind = vi.fn().mockReturnThis();
+    this.pipe = vi.fn().mockReturnThis();
+    // Canonical structured-output path: returns parsed object directly
+    this.withStructuredOutput = vi.fn().mockReturnValue({
+      invoke: vi.fn().mockResolvedValue(parsedObject),
+    });
   };
   return MockChatOpenAI;
 }

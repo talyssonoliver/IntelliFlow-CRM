@@ -1,4 +1,7 @@
 import pino from 'pino';
+import { getCurrentLogContext, runWithLogContext } from '@intelliflow/observability';
+
+export { runWithLogContext };
 
 /**
  * Centralized logger configuration for AI Worker
@@ -27,6 +30,8 @@ export function createLogger(name: string, context?: LoggerContext) {
       },
     },
     timestamp: pino.stdTimeFunctions.isoTime,
+    // Merge request-scoped context (correlationId, tenantId, userId) into every line
+    mixin: () => getCurrentLogContext() ?? {},
     ...(process.env.NODE_ENV === 'production'
       ? {}
       : {

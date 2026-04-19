@@ -15,6 +15,10 @@ import { BaseCallbackHandler } from '@langchain/core/callbacks/base';
 import type { Serialized } from '@langchain/core/load/serializable';
 import { randomUUID } from 'node:crypto';
 import pino from 'pino';
+import {
+  enqueueSummarizationIfNeeded,
+  SUMMARIZE_QUEUE,
+} from '../jobs/summarize-conversation.job.js';
 
 const logger = pino({
   name: 'conversation-record-handler',
@@ -105,6 +109,23 @@ export class ConversationRecordCallbackHandler extends BaseCallbackHandler {
         where: { id: conversationId },
         data: { messageCount: { increment: 1 }, lastMessageAt: new Date() },
       });
+
+      // After every message write, asynchronously check summarization thresholds.
+      // Fire-and-forget: errors are swallowed inside enqueueSummarizationIfNeeded
+      // so this never blocks or breaks the LLM callback path.
+      const { Queue } = await import('bullmq');
+      const summarizeQueue = new Queue(SUMMARIZE_QUEUE, {
+        connection: {
+          host: process.env.REDIS_HOST || 'localhost',
+          port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
+        },
+      });
+      enqueueSummarizationIfNeeded(
+        conversationId,
+        this.sessionId,
+        this.tenantId,
+        summarizeQueue
+      ).finally(() => summarizeQueue.close().catch(() => undefined));
     } catch (error) {
       logger.debug({ error: String(error) }, 'Failed to write message record');
     }

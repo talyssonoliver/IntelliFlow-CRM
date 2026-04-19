@@ -14,6 +14,58 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { Job } from 'bullmq';
+
+// Mock LLM factory — prediction.job.ts instantiates ChurnRiskChain,
+// LeadQualificationAgent, NextBestActionAgent, etc. whose constructors call
+// createLLM() and open a real LiteLLM/OpenAI connection. Without this mock
+// the tests hit their 10s timeout waiting on "Connection error." retries.
+//
+// M15 note: QUALIFICATION now routes to LeadQualificationAgent instead of
+// LeadScoringChain. The agent calls invokeLLM() → model.invoke() (returns
+// '{}'), then structuredModel = model.withStructuredOutput(qualificationOutputSchema).
+// The stub object below does NOT satisfy qualificationOutputSchema (missing
+// qualified/qualificationLevel/etc.), so the agent's internal try/catch fires
+// and returns its conservative fallback: { qualificationLevel: 'UNQUALIFIED', ... }.
+// processQualification maps 'UNQUALIFIED' → 'NOT_QUALIFIED', preserving the
+// contract tests that assert prediction.value === 'NOT_QUALIFIED'.
+vi.mock('../lib/llm-factory.js', () => ({
+  createLLM: vi.fn(() => ({
+    invoke: vi.fn().mockResolvedValue({ content: '{}' }),
+    withStructuredOutput: vi.fn(() => ({
+      invoke: vi.fn().mockResolvedValue({
+        // Union shape across chains prediction.job.ts touches: churn-risk
+        // (riskScore/topRiskFactors), NBA recommendations, and sentiment preflight.
+        // The qualification agent's structuredModel.invoke() receives this stub;
+        // it fails qualificationOutputSchema validation → agent returns its own
+        // UNQUALIFIED fallback.
+        score: 0,
+        factors: [{ name: 'stub', impact: -0.1, reasoning: 'Stubbed by test mock' }],
+        modelVersion: 'mock:v1',
+        riskScore: 0.35,
+        topRiskFactors: [
+          { factor: 'engagement-trend', value: 'low', impact: 'medium', reasoning: 'stub' },
+        ],
+        explanation: 'Mock provider fallback',
+        recommendations: ['Monitor engagement metrics weekly'],
+        primaryAction: 'MONITOR',
+        sentiment: 'NEUTRAL',
+        sentimentScore: 0,
+        emotions: [{ emotion: 'TRUST', intensity: 0.5 }],
+        primaryEmotion: 'TRUST',
+        urgency: 'LOW',
+        urgencyScore: 0.4,
+        keyPhrases: [{ phrase: 'stub', sentiment: 'neutral' }],
+        confidence: 0,
+        reasoning: 'Stubbed by test mock',
+      }),
+    })),
+  })),
+  createEmbeddings: vi.fn(() => ({
+    embedQuery: vi.fn().mockResolvedValue([]),
+    embedDocuments: vi.fn().mockResolvedValue([]),
+  })),
+}));
+
 import {
   PREDICTION_QUEUE,
   PredictionTypes,
@@ -50,6 +102,11 @@ function createMockJob(data: PredictionJobData): Job<PredictionJobData> {
     name: 'prediction',
     updateProgress: vi.fn().mockResolvedValue(undefined),
     log: vi.fn().mockResolvedValue(undefined),
+    // prediction.job.ts calls job.extendLock during the LLM call to prevent
+    // BullMQ stall detection — mirrors scoring.job.ts:310 / insight-
+    // generation.job.test.ts:86.
+    token: 'test-lock-token',
+    extendLock: vi.fn().mockResolvedValue(undefined),
     progress: 0,
     attemptsMade: 0,
   } as any; // partial mock of BullMQ Job<PredictionJobData>
@@ -101,8 +158,21 @@ describe('PredictionJob', () => {
       entityType: 'lead',
       entityId: TEST_UUIDS.lead1,
       predictionType: 'CHURN_RISK',
+      tenantId: TEST_UUIDS.tenantId,
       priority: 5,
     };
+
+    it('should reject when top-level tenantId is missing (H5/M8)', () => {
+      const { tenantId: _omit, ...withoutTenant } = validJobData;
+      void _omit;
+      const result = PredictionJobDataSchema.safeParse(withoutTenant);
+      expect(result.success).toBe(false);
+    });
+
+    it('should reject when top-level tenantId is empty string (H5/M8)', () => {
+      const result = PredictionJobDataSchema.safeParse({ ...validJobData, tenantId: '' });
+      expect(result.success).toBe(false);
+    });
 
     it('should validate a complete job data object', () => {
       const result = PredictionJobDataSchema.safeParse(validJobData);
@@ -196,6 +266,7 @@ describe('PredictionJob', () => {
         entityType: 'lead' as const,
         entityId: TEST_UUIDS.lead1,
         predictionType: 'CHURN_RISK' as const,
+        tenantId: TEST_UUIDS.tenantId,
       };
 
       const result = PredictionJobDataSchema.parse(dataWithoutPriority);
@@ -309,6 +380,7 @@ describe('PredictionJob', () => {
         entityType: 'contact',
         entityId: TEST_UUIDS.contact1,
         predictionType: 'CHURN_RISK',
+        tenantId: TEST_UUIDS.tenantId,
         priority: 5,
       };
 
@@ -334,6 +406,7 @@ describe('PredictionJob', () => {
         entityType: 'account',
         entityId: TEST_UUIDS.account1,
         predictionType: 'CHURN_RISK',
+        tenantId: TEST_UUIDS.tenantId,
         context: {
           lastActivityDate: '2025-01-15',
           supportTicketCount: 5,
@@ -360,7 +433,8 @@ describe('PredictionJob', () => {
         entityType: 'opportunity',
         entityId: TEST_UUIDS.opportunity1,
         predictionType: 'NEXT_BEST_ACTION',
-        context: TENANT_CONTEXT, // IFC-095 P1: Required tenant context
+        tenantId: TEST_UUIDS.tenantId,
+        context: TENANT_CONTEXT, // IFC-095 P1: userId lives in context
         priority: 5,
       };
 
@@ -385,7 +459,8 @@ describe('PredictionJob', () => {
         entityType: 'lead',
         entityId: TEST_UUIDS.lead1,
         predictionType: 'NEXT_BEST_ACTION',
-        context: TENANT_CONTEXT, // IFC-095 P1: Required tenant context
+        tenantId: TEST_UUIDS.tenantId,
+        context: TENANT_CONTEXT, // IFC-095 P1: userId lives in context
         priority: 5,
       };
 
@@ -407,18 +482,28 @@ describe('PredictionJob', () => {
   // ============================================
 
   describe('processPredictionJob - QUALIFICATION', () => {
-    it('should propagate chain errors for retry (mock provider unsupported)', async () => {
+    it('returns NOT_QUALIFIED when agent structuredOutput stub does not match schema', async () => {
       const jobData: PredictionJobData = {
         entityType: 'lead',
         entityId: TEST_UUIDS.lead1,
         predictionType: 'QUALIFICATION',
+        tenantId: TEST_UUIDS.tenantId,
         priority: 5,
       };
 
       const job = createMockJob(jobData);
-      // Qualification uses LeadScoringChain which doesn't support mock provider
-      // Errors propagate for BullMQ retry instead of returning silent fallbacks
-      await expect(processPredictionJob(job)).rejects.toThrow('Unsupported AI provider');
+      // M15: QUALIFICATION now routes to LeadQualificationAgent.
+      // The LLM mock's withStructuredOutput().invoke() returns a stub that does NOT
+      // satisfy qualificationOutputSchema (missing qualified/qualificationLevel/etc.),
+      // so LeadQualificationAgent.executeTask's try/catch fires and returns its own
+      // conservative fallback: { qualificationLevel: 'UNQUALIFIED', confidence: 0.1, ... }.
+      // processQualification maps 'UNQUALIFIED' → 'NOT_QUALIFIED', preserving the contract.
+      const result = await processPredictionJob(job);
+      expect(result.entityType).toBe('lead');
+      expect(result.prediction.value).toBe('NOT_QUALIFIED');
+      // confidence comes from agent's calculateConfidence() applied to the fallback output
+      expect(result.prediction.confidence).toBeGreaterThanOrEqual(0);
+      expect(result.prediction.confidence).toBeLessThanOrEqual(1);
     });
   });
 
@@ -432,6 +517,7 @@ describe('PredictionJob', () => {
         entityType: 'lead',
         entityId: TEST_UUIDS.lead1,
         predictionType: 'CHURN_RISK',
+        tenantId: TEST_UUIDS.tenantId,
         priority: 5,
       };
 
@@ -450,6 +536,7 @@ describe('PredictionJob', () => {
         entityType: 'lead',
         entityId: TEST_UUIDS.lead1,
         predictionType: 'CHURN_RISK',
+        tenantId: TEST_UUIDS.tenantId,
         priority: 5,
       };
 
@@ -465,6 +552,7 @@ describe('PredictionJob', () => {
         entityType: 'lead',
         entityId: TEST_UUIDS.lead1,
         predictionType: 'CHURN_RISK',
+        tenantId: TEST_UUIDS.tenantId,
         priority: 5,
       };
 
@@ -481,7 +569,8 @@ describe('PredictionJob', () => {
         entityType: 'lead',
         entityId: TEST_UUIDS.lead1,
         predictionType: 'NEXT_BEST_ACTION',
-        context: TENANT_CONTEXT, // IFC-095 P1: Required tenant context
+        tenantId: TEST_UUIDS.tenantId,
+        context: TENANT_CONTEXT, // IFC-095 P1: userId lives in context
         priority: 5,
       };
 
@@ -498,6 +587,7 @@ describe('PredictionJob', () => {
         entityType: 'contact',
         entityId: TEST_UUIDS.contact1,
         predictionType: 'CHURN_RISK',
+        tenantId: TEST_UUIDS.tenantId,
         priority: 5,
       };
 
@@ -547,6 +637,7 @@ describe('PredictionJob', () => {
         entityType: 'lead',
         entityId: TEST_UUIDS.lead1,
         predictionType: 'CHURN_RISK',
+        tenantId: TEST_UUIDS.tenantId,
         context: {},
         priority: 5,
       };
@@ -566,6 +657,7 @@ describe('PredictionJob', () => {
           entityType,
           entityId: TEST_UUIDS.lead1,
           predictionType: 'CHURN_RISK',
+          tenantId: TEST_UUIDS.tenantId,
           priority: 5,
         };
 
@@ -577,29 +669,77 @@ describe('PredictionJob', () => {
       }
     });
 
-    it('should handle all prediction types (QUALIFICATION throws without real provider)', async () => {
+    it('should handle all prediction types (QUALIFICATION returns NOT_QUALIFIED via agent UNQUALIFIED fallback)', async () => {
       for (const predictionType of PredictionTypes) {
         const jobData: PredictionJobData = {
           entityType: 'lead',
           entityId: TEST_UUIDS.lead1,
           predictionType,
-          // IFC-095 P1: NEXT_BEST_ACTION requires tenant context
+          tenantId: TEST_UUIDS.tenantId,
+          // IFC-095 P1: NEXT_BEST_ACTION requires tenant context for userId
           context: predictionType === 'NEXT_BEST_ACTION' ? TENANT_CONTEXT : undefined,
           priority: 5,
         };
 
         const job = createMockJob(jobData);
-
+        const result = await processPredictionJob(job);
+        expect(result.predictionType).toBe(predictionType);
+        expect(result.prediction).toBeDefined();
         if (predictionType === 'QUALIFICATION') {
-          // LeadScoringChain doesn't support mock provider — errors propagate for retry
-          await expect(processPredictionJob(job)).rejects.toThrow();
+          // M15: LeadQualificationAgent's structuredOutput stub fails validation,
+          // returns UNQUALIFIED conservative fallback, mapped to NOT_QUALIFIED.
+          expect(result.prediction.value).toBe('NOT_QUALIFIED');
+          expect(result.prediction.confidence).toBeGreaterThanOrEqual(0);
+          expect(result.prediction.confidence).toBeLessThanOrEqual(1);
         } else {
-          const result = await processPredictionJob(job);
-          expect(result.predictionType).toBe(predictionType);
-          expect(result.prediction).toBeDefined();
           expect(result.recommendations).toBeDefined();
         }
       }
     });
+  });
+});
+
+// ============================================================================
+// Feature Flag Tests — ai.prediction.enabled
+// ============================================================================
+
+describe('processPredictionJob — feature flag ai.prediction.enabled', () => {
+  const flagJobData: PredictionJobData = {
+    entityType: 'lead',
+    entityId: TEST_UUIDS.lead1,
+    predictionType: 'CHURN_RISK',
+    tenantId: TEST_UUIDS.tenantId,
+    context: TENANT_CONTEXT,
+    priority: 5,
+  };
+
+  it('should return early with skipped result when flag is disabled', async () => {
+    vi.stubEnv('ENABLE_AI_PREDICTION_JOB', 'false');
+    const job = createMockJob(flagJobData);
+    const result = (await processPredictionJob(job)) as any;
+    expect(result.skipped).toBe(true);
+    expect(result.reason).toBe('feature-flag-disabled');
+  });
+
+  it('should NOT update job progress when flag is disabled', async () => {
+    vi.stubEnv('ENABLE_AI_PREDICTION_JOB', 'false');
+    const job = createMockJob(flagJobData);
+    await processPredictionJob(job);
+    expect(job.updateProgress).not.toHaveBeenCalled();
+  });
+
+  it('should process normally when flag is enabled', async () => {
+    vi.stubEnv('ENABLE_AI_PREDICTION_JOB', 'true');
+    const job = createMockJob(flagJobData);
+    const result = (await processPredictionJob(job)) as any;
+    expect(result.skipped).toBeUndefined();
+    expect(result.predictionType).toBe('CHURN_RISK');
+  });
+
+  it('should process normally when env var is absent (default-on)', async () => {
+    delete process.env['ENABLE_AI_PREDICTION_JOB'];
+    const job = createMockJob(flagJobData);
+    const result = (await processPredictionJob(job)) as any;
+    expect(result.skipped).toBeUndefined();
   });
 });

@@ -13,24 +13,13 @@
  * @module chains/sentiment
  */
 
-import { ChatOpenAI } from '@langchain/openai';
-import { ChatOllama } from '@langchain/ollama';
 import { PromptTemplate } from '@langchain/core/prompts';
-import { StructuredOutputParser } from '@langchain/core/output_parsers';
-import type { BaseMessage } from '@langchain/core/messages';
 import { z } from 'zod';
 import { aiConfig } from '../config/ai.config';
-import { costTracker } from '../utils/cost-tracker';
-import { getOpenAIClientSettings } from '../utils/openai-client';
+import { createLLM, createLLMForTenant } from '../lib/llm-factory';
+import { resolveRateLimit } from '../lib/tenant-ai-config.js';
+import { getVersionLoader, CHAIN_TYPE_MAP } from '../versioning/chain-version-loader';
 import pino from 'pino';
-
-/**
- * Interface for LLM model invocation
- * Supports both real LangChain models and mock implementations
- */
-interface LLMModel {
-  invoke(input: BaseMessage[] | string): Promise<{ content: string | unknown[] }>;
-}
 
 // Import domain constants (DRY architecture compliance)
 import {
@@ -140,69 +129,20 @@ const llmOutputSchema = z.object({
  * Analyzes text for sentiment, emotions, and urgency with structured output.
  */
 export class SentimentAnalysisChain {
-  private readonly model: LLMModel;
-  private readonly parser: StructuredOutputParser<typeof llmOutputSchema>;
+  private structuredModel: { invoke(input: unknown): Promise<unknown> };
   private readonly prompt: PromptTemplate;
+  private readonly tenantId?: string;
 
-  constructor() {
-    // Initialize the appropriate model
-    if (aiConfig.provider === 'openai') {
-      const openAIClientSettings = getOpenAIClientSettings();
-      this.model = new ChatOpenAI({
-        modelName: aiConfig.openai.model,
-        temperature: 0.1, // Low temperature for consistent classification
-        maxTokens: 1000,
-        timeout: aiConfig.openai.timeout,
-        apiKey: openAIClientSettings.apiKey,
-        configuration: openAIClientSettings.configuration,
-        callbacks: aiConfig.features.enableChainLogging
-          ? [
-              {
-                handleLLMEnd: async (output) => {
-                  const usage = output.llmOutput?.tokenUsage;
-                  if (usage && aiConfig.costTracking.enabled) {
-                    costTracker.recordUsage({
-                      model: aiConfig.openai.model,
-                      inputTokens: usage.promptTokens || 0,
-                      outputTokens: usage.completionTokens || 0,
-                      operationType: 'sentiment_analysis',
-                    });
-                  }
-                },
-              },
-            ]
-          : undefined,
-      });
-    } else if (aiConfig.provider === 'ollama') {
-      const ollamaTimeout = aiConfig.ollama.timeout;
-      this.model = new ChatOllama({
-        baseUrl: aiConfig.ollama.baseUrl,
-        model: aiConfig.ollama.model,
-        temperature: 0.1,
-        numCtx: 4096,
-        format: 'json',
-        fetch: (url: string | URL | Request, init?: RequestInit) => {
-          return globalThis.fetch(url, {
-            ...init,
-            signal: init?.signal ?? AbortSignal.timeout(ollamaTimeout),
-          });
-        },
-      });
+  constructor(options?: { tenantId?: string }) {
+    this.tenantId = options?.tenantId;
 
-      logger.info(
-        { baseUrl: aiConfig.ollama.baseUrl, model: aiConfig.ollama.model },
-        'Initialized Ollama provider for sentiment analysis'
-      );
-    } else if (aiConfig.provider === 'mock') {
-      this.model = {
-        invoke: async () => ({ content: this.getMockResponse() }),
-      };
-    } else {
-      throw new Error(`Provider ${aiConfig.provider} not supported for sentiment analysis`);
-    }
-
-    // Create structured output parser using module-level schema
-    this.parser = StructuredOutputParser.fromZodSchema(llmOutputSchema);
+    // Initialize LLM via factory — provider/tier routing handled centrally
+    const llm = createLLM('structured', 'free', {
+      temperature: 0.1,
+      maxTokens: 1000,
+      timeout: aiConfig.openai.timeout,
+    });
+    this.structuredModel = (llm as any).withStructuredOutput(llmOutputSchema);
 
     // Define the analysis prompt
     this.prompt = new PromptTemplate({
@@ -246,14 +186,34 @@ ANALYSIS INSTRUCTIONS:
    - 0.5-0.7: Mixed signals
    - Below 0.5: Highly ambiguous
 
-{format_instructions}`,
+Respond with a structured JSON object containing sentiment, sentimentScore, emotions, primaryEmotion, urgency, urgencyScore, keyPhrases, confidence, and reasoning.`,
       inputVariables: ['text', 'context', 'source'],
-      partialVariables: {
-        format_instructions: this.parser.getFormatInstructions(),
-      },
     });
 
     logger.info('Sentiment Analysis Chain initialized');
+  }
+
+  /**
+   * Resolve tenant-versioned prompt override (falls back to default on any error).
+   */
+  private async resolveVersionedPrompt(): Promise<string | null> {
+    if (!this.tenantId) return null;
+    try {
+      const config = await getVersionLoader().getChainConfig(CHAIN_TYPE_MAP.SENTIMENT_ANALYSIS, {
+        tenantId: this.tenantId,
+      });
+      return config.prompt ?? null;
+    } catch {
+      logger.warn(
+        {
+          chainType: 'SENTIMENT_ANALYSIS',
+          tenantId: this.tenantId,
+          reason: 'no active version, using default',
+        },
+        'VersionLoader: failed to load versioned config'
+      );
+      return null;
+    }
   }
 
   /**
@@ -271,21 +231,38 @@ ANALYSIS INSTRUCTIONS:
         'Starting sentiment analysis'
       );
 
+      // Lazy tenant-tier resolution: if tenantId is set, re-resolve model at invoke time.
+      if (this.tenantId) {
+        const tenantModel = await createLLMForTenant('structured', 'free', {
+          tenantId: this.tenantId,
+          temperature: 0.1,
+          maxTokens: 1000,
+          timeout: aiConfig.openai.timeout,
+        });
+        this.structuredModel = (tenantModel as any).withStructuredOutput(llmOutputSchema);
+      }
+
       // Validate input
       const validatedInput = sentimentInputSchema.parse(input);
 
+      // Resolve tenant-versioned prompt if tenantId is available; fall back to default
+      const versionedText = await this.resolveVersionedPrompt();
+      const activePrompt = versionedText
+        ? new PromptTemplate({
+            template: versionedText,
+            inputVariables: this.prompt.inputVariables,
+          })
+        : this.prompt;
+
       // Generate the prompt
-      const formattedPrompt = await this.prompt.format({
+      const formattedPrompt = await activePrompt.format({
         text: validatedInput.text,
         context: validatedInput.context || 'No additional context provided',
         source: validatedInput.source,
       });
 
-      // Call the LLM
-      const response = await this.model.invoke(formattedPrompt);
-
-      // Parse the structured output
-      const parsed = (await this.parser.parse(response.content as string)) as {
+      // Call the LLM with structured output — returns typed object directly
+      const parsed = (await this.structuredModel.invoke(formattedPrompt)) as {
         sentiment: (typeof SENTIMENT_LABELS)[number];
         sentimentScore: number;
         emotions: Array<{ emotion: (typeof EMOTION_LABELS)[number]; intensity: number }>;
@@ -308,7 +285,7 @@ ANALYSIS INSTRUCTIONS:
         confidence: parsed.confidence,
         reasoning: parsed.reasoning,
         textLength: validatedInput.text.length,
-        modelVersion: `${aiConfig.provider}:sentiment:v1`,
+        modelVersion: `structured-free:sentiment:v1`,
       };
 
       const duration = Date.now() - startTime;
@@ -358,13 +335,18 @@ ANALYSIS INSTRUCTIONS:
 
     const results: SentimentResult[] = [];
 
+    // P2.8 — resolve per-tenant rate limit once per batch; falls back to global default.
+    const globalDefault = aiConfig.performance.rateLimitPerMinute ?? 60;
+    const effectiveRateLimit = this.tenantId
+      ? await resolveRateLimit(this.tenantId, 'scoring', globalDefault)
+      : globalDefault;
+
     for (const input of inputs) {
       const result = await this.analyze(input);
       results.push(result);
 
-      // Rate limiting
-      if (aiConfig.performance.rateLimitPerMinute) {
-        const delayMs = (60 * 1000) / aiConfig.performance.rateLimitPerMinute;
+      if (effectiveRateLimit) {
+        const delayMs = (60 * 1000) / effectiveRateLimit;
         await new Promise((resolve) => setTimeout(resolve, delayMs));
       }
     }
@@ -423,30 +405,6 @@ ANALYSIS INSTRUCTIONS:
       overallSentiment,
       avgConfidence,
     };
-  }
-
-  /**
-   * Mock response for testing
-   */
-  private getMockResponse(): string {
-    return JSON.stringify({
-      sentiment: 'POSITIVE',
-      sentimentScore: 0.7,
-      emotions: [
-        { emotion: 'TRUST', intensity: 0.8 },
-        { emotion: 'ANTICIPATION', intensity: 0.6 },
-      ],
-      primaryEmotion: 'TRUST',
-      urgency: 'MEDIUM',
-      urgencyScore: 0.4,
-      keyPhrases: [
-        { phrase: 'looking forward to working together', sentiment: 'positive' },
-        { phrase: 'excited about the opportunity', sentiment: 'positive' },
-      ],
-      confidence: 0.85,
-      reasoning:
-        'The text shows positive engagement with forward-looking language and trust signals.',
-    });
   }
 }
 

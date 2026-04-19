@@ -4,7 +4,7 @@
  * Generates comprehensive analytics from user feedback data
  * to monitor AI model performance and identify retraining needs.
  *
- * Outputs: artifacts/misc/feedback-analytics.json
+ * Outputs: artifacts/reports/feedback-analytics.json
  *
  * @module feedback-analytics-generator
  * @task IFC-024
@@ -135,7 +135,7 @@ export interface FeedbackAnalytics {
 export class FeedbackAnalyticsGenerator {
   private readonly outputPath: string;
 
-  constructor(outputPath: string = 'artifacts/misc/feedback-analytics.json') {
+  constructor(outputPath: string = 'artifacts/reports/feedback-analytics.json') {
     this.outputPath = outputPath;
   }
 
@@ -587,10 +587,10 @@ export class FeedbackAnalyticsGenerator {
    * Get ISO week key for a date
    */
   private getWeekKey(date: Date): string {
-    const jan1 = new Date(date.getFullYear(), 0, 1);
+    const jan1 = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
     const days = Math.floor((date.getTime() - jan1.getTime()) / (24 * 60 * 60 * 1000));
-    const weekNumber = Math.ceil((days + jan1.getDay() + 1) / 7);
-    return `${date.getFullYear()}-W${weekNumber.toString().padStart(2, '0')}`;
+    const weekNumber = Math.ceil((days + jan1.getUTCDay() + 1) / 7);
+    return `${date.getUTCFullYear()}-W${weekNumber.toString().padStart(2, '0')}`;
   }
 }
 
@@ -598,8 +598,37 @@ export class FeedbackAnalyticsGenerator {
  * Default analytics generator instance
  */
 export const feedbackAnalyticsGenerator = new FeedbackAnalyticsGenerator(
-  join(process.cwd(), 'artifacts/misc/feedback-analytics.json')
+  join(process.cwd(), 'artifacts/reports/feedback-analytics.json')
 );
+
+/**
+ * Pure function — runs the full analytics pipeline against the provided records
+ * and optionally persists the result to disk.
+ *
+ * Both the CLI entry point and the BullMQ cron handler delegate to this function
+ * so that the core logic remains testable without process-level side effects.
+ *
+ * @param records       Feedback records to analyse (pass [] for CLI dry-runs)
+ * @param periodDays    Rolling window in days (default: 30)
+ * @param save          When true the result is also written to outputPath
+ * @param outputPath    File path for saved output (defaults to artifacts/misc/...)
+ * @returns             The computed FeedbackAnalytics object
+ */
+export async function runFeedbackAnalytics(
+  records: FeedbackRecord[],
+  periodDays: number = 30,
+  save: boolean = false,
+  outputPath?: string
+): Promise<FeedbackAnalytics> {
+  const generator = new FeedbackAnalyticsGenerator(
+    outputPath ?? join(process.cwd(), 'artifacts/reports/feedback-analytics.json')
+  );
+
+  if (save) {
+    return generator.generateAndSave(records, periodDays);
+  }
+  return generator.generate(records, periodDays);
+}
 
 /**
  * CLI entry point for generating analytics
@@ -611,7 +640,7 @@ export async function generateFeedbackAnalyticsCLI(): Promise<void> {
   // For now, generate with empty records (or mock data for testing)
   const mockRecords: FeedbackRecord[] = [];
 
-  await feedbackAnalyticsGenerator.generateAndSave(mockRecords);
+  await runFeedbackAnalytics(mockRecords, 30, true);
 
   logger.info('Feedback analytics generation complete');
 }

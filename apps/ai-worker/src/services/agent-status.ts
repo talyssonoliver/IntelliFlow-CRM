@@ -17,9 +17,13 @@ import {
   SCORING_QUEUE,
   PREDICTION_QUEUE,
   INSIGHT_QUEUE,
+  SUMMARIZE_QUEUE,
+  FEEDBACK_ANALYTICS_QUEUE,
   type ScoringJobData,
   type PredictionJobData,
   type InsightJobData,
+  type SummarizeConversationJobData,
+  type FeedbackAnalyticsJobData,
 } from '../jobs';
 
 const logger = pino({ name: 'agent-status', level: process.env.LOG_LEVEL || 'info' });
@@ -35,16 +39,23 @@ export interface AgentStatusContext {
   taskDescription: string;
 }
 
-type AIJobData = ScoringJobData | PredictionJobData | InsightJobData;
+type AIJobData =
+  | ScoringJobData
+  | PredictionJobData
+  | InsightJobData
+  | SummarizeConversationJobData
+  | FeedbackAnalyticsJobData;
 
 // ============================================================================
 // Helpers
 // ============================================================================
 
 function getModelName(): string {
+  // Factory owns provider selection; return a stable placeholder derived from provider
   if (aiConfig.provider === 'ollama') return `ollama/${aiConfig.ollama.model}`;
-  if (aiConfig.provider === 'openai') return aiConfig.openai.model;
-  return 'mock';
+  if (aiConfig.provider === 'mock') return 'mock';
+  // litellm / openai / any future provider — factory routes to litellm proxy
+  return `litellm/${aiConfig.provider}`;
 }
 
 let prismaPromise: Promise<any> | null = null;
@@ -101,6 +112,26 @@ export function extractJobContext(
       userId = d.userId;
       agentType = 'insights';
       taskDescription = `Generating insights (${d.dealsAtRisk.length} deals, ${d.hotLeads.length} leads)`;
+      break;
+    }
+    case SUMMARIZE_QUEUE: {
+      const d = jobData as SummarizeConversationJobData;
+      tenantId = d.tenantId;
+      // Summarization jobs have no userId — use system sentinel so agent tracking
+      // skips the active-agent record for this job type (null is returned below).
+      userId = undefined;
+      agentType = 'summarization';
+      taskDescription = `Summarizing conversation ${d.conversationId}`;
+      break;
+    }
+    case FEEDBACK_ANALYTICS_QUEUE: {
+      const d = jobData as FeedbackAnalyticsJobData;
+      // Feedback analytics cron runs without a specific tenant context.
+      // Return null so the agent-status layer is a no-op for this job type.
+      tenantId = d.tenantId;
+      userId = undefined;
+      agentType = 'feedback-analytics';
+      taskDescription = `Analysing feedback (period: ${d.periodDays}d)`;
       break;
     }
     default:

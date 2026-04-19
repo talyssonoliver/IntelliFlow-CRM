@@ -601,28 +601,46 @@ describe('HallucinationChecker', () => {
   // ============================================
 
   describe('addKnownEntity', () => {
-    it('should add entity to known set', () => {
+    it('should add entity to known set so subsequent calls do not flag it', async () => {
       checker.addKnownEntity('Acme Corporation');
 
-      // Entity should be recognized (not trigger false positive)
-      // This is tested indirectly through checkOutput
-      expect(true).toBe(true);
+      // After registering, the entity in an output should not be reported as
+      // a fabricated/unknown entity.
+      const result = await checker.checkOutput({
+        id: 'known-entity-1',
+        model: 'gpt-4',
+        inputContext: 'Company research',
+        output: 'Acme Corporation is a leading provider.',
+      });
+
+      expect(result.hallucinationTypes).not.toContain('fabricated_entity');
     });
 
-    it('should handle case-insensitive matching', () => {
+    it('should normalize case when adding entities', async () => {
       checker.addKnownEntity('GOOGLE');
       checker.addKnownEntity('microsoft');
 
-      // Both should be normalized
-      expect(true).toBe(true);
+      // Case variations should also be treated as known.
+      const result = await checker.checkOutput({
+        id: 'known-entity-case',
+        model: 'gpt-4',
+        inputContext: 'Tech giants',
+        output: 'google and Microsoft dominate cloud.',
+      });
+
+      expect(result.hallucinationTypes).not.toContain('fabricated_entity');
     });
   });
 
   describe('addFact', () => {
-    it('should add fact to database', () => {
-      checker.addFact('company_founded', '2020');
-
-      expect(true).toBe(true);
+    it('should add fact without throwing and keep factDatabase consistent on repeated adds', () => {
+      // Idempotent: adding the same key twice should not throw and should
+      // overwrite, not duplicate. Side-effects are private; this is the
+      // narrowest real assertion available without exposing internals.
+      expect(() => {
+        checker.addFact('company_founded', '2020');
+        checker.addFact('company_founded', '2021');
+      }).not.toThrow();
     });
   });
 

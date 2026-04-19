@@ -1,32 +1,59 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { AutoResponseChain, AutoResponseInput, AutoResponseOutput } from './auto-response.chain';
 
-// Mock the LangChain OpenAI module with realistic response
-vi.mock('@langchain/openai', () => {
-  const mockInvoke = vi.fn().mockResolvedValue({
-    content: JSON.stringify({
-      subject: 'Re: Your inquiry about our CRM solution',
-      body: 'Dear John,\n\nThank you for reaching out to IntelliFlow regarding your CRM needs.\n\nI would be happy to schedule a demo to show you how our AI-powered features can help streamline your sales process.\n\nBest regards,\nIntelliFlow Team',
-      confidence: 0.87,
-      tone: 'professional',
-      suggestedFollowUp: '3 days',
-    }),
-  });
+// Mock the VersionLoader singleton so tests never hit the DB.
+// Default: getChainConfig throws (simulates no active version → fallback to default instructions).
+vi.mock('../versioning/chain-version-loader', () => ({
+  getVersionLoader: vi.fn(() => ({
+    getChainConfig: vi.fn().mockRejectedValue(new Error('No active version')),
+  })),
+  CHAIN_TYPE_MAP: {
+    LEAD_SCORING: 'SCORING',
+    CHURN_RISK: 'SCORING',
+    INSIGHT_GENERATION: 'QUALIFICATION',
+    SENTIMENT_ANALYSIS: 'EMAIL_WRITER',
+    TICKET_ROUTING: 'FOLLOWUP',
+    AUTO_RESPONSE: 'EMAIL_WRITER',
+  },
+  configureVersionLoader: vi.fn(),
+}));
 
-  const MockChatOpenAI = function (this: any) {
-    this.invoke = mockInvoke;
-  };
-
-  return {
-    ChatOpenAI: MockChatOpenAI,
-    __mockInvoke: mockInvoke,
-  };
+// Pattern A: mock the factory — auto-response.chain has no structuredOutput, only .invoke()
+const AUTO_RESPONSE_CONTENT = JSON.stringify({
+  subject: 'Re: Your inquiry about our CRM solution',
+  body: 'Dear John,\n\nThank you for reaching out to IntelliFlow regarding your CRM needs.\n\nI would be happy to schedule a demo to show you how our AI-powered features can help streamline your sales process.\n\nBest regards,\nIntelliFlow Team',
+  confidence: 0.87,
+  tone: 'professional',
+  suggestedFollowUp: '3 days',
 });
+
+const mockInvoke = vi.fn().mockResolvedValue({ content: AUTO_RESPONSE_CONTENT });
+
+vi.mock('../lib/llm-factory.js', () => ({
+  createLLM: vi.fn(() => ({
+    invoke: mockInvoke,
+    withStructuredOutput: vi.fn(() => ({
+      invoke: vi.fn().mockResolvedValue(JSON.parse(AUTO_RESPONSE_CONTENT)),
+    })),
+  })),
+  createLLMForTenant: vi.fn(async () => ({
+    invoke: vi.fn().mockResolvedValue({ content: AUTO_RESPONSE_CONTENT }),
+    withStructuredOutput: vi.fn(() => ({
+      invoke: vi.fn().mockResolvedValue(JSON.parse(AUTO_RESPONSE_CONTENT)),
+    })),
+  })),
+  createEmbeddings: vi.fn(() => ({
+    embedQuery: vi.fn().mockResolvedValue([]),
+    embedDocuments: vi.fn().mockResolvedValue([]),
+  })),
+  getLLMBreaker: vi.fn(() => ({ execute: vi.fn(async (fn) => fn()) })),
+  __resetBreakers: vi.fn(),
+}));
 
 // Mock the AI config
 vi.mock('../config/ai.config', () => ({
   aiConfig: {
-    provider: 'openai',
+    provider: 'litellm',
     openai: {
       apiKey: 'test-api-key',
       model: 'gpt-4-turbo-preview',
@@ -331,10 +358,13 @@ describe('AutoResponseChain', () => {
   });
 
   describe('error handling', () => {
-    it('should throw error when LLM call fails', async () => {
-      // Import the mock to modify behavior
-      const { __mockInvoke } = await import('@langchain/openai');
-      __mockInvoke.mockRejectedValueOnce(new Error('LLM service unavailable'));
+    it('should throw error when both structured and invoke paths fail', async () => {
+      // auto-response.chain.ts now prefers withStructuredOutput; force both
+      // paths to fail so the rejection surfaces out of generateResponse.
+      (chain as any).llm.withStructuredOutput.mockImplementationOnce(() => ({
+        invoke: vi.fn().mockRejectedValue(new Error('structured unsupported')),
+      }));
+      (chain as any).llm.invoke.mockRejectedValueOnce(new Error('LLM service unavailable'));
 
       const input: AutoResponseInput = {
         triggerType: 'EMAIL_RECEIVED',
@@ -356,9 +386,12 @@ describe('AutoResponseChain', () => {
       await expect(chain.generateResponse(input)).rejects.toThrow();
     });
 
-    it('should throw error for invalid LLM response format', async () => {
-      const { __mockInvoke } = await import('@langchain/openai');
-      __mockInvoke.mockResolvedValueOnce({
+    it('should throw error for invalid LLM response format on fallback path', async () => {
+      // Force structured-output path to fail so we exercise the raw-invoke + JSON.parse fallback.
+      (chain as any).llm.withStructuredOutput.mockImplementationOnce(() => ({
+        invoke: vi.fn().mockRejectedValue(new Error('structured unsupported')),
+      }));
+      (chain as any).llm.invoke.mockResolvedValueOnce({
         content: 'not valid json',
       });
 
@@ -518,6 +551,54 @@ describe('AutoResponseChain', () => {
 
       const result = await chain.generateResponse(input);
       expect(result).toBeDefined();
+    });
+  });
+
+  // ============================================================
+  // H3: VersionLoader integration tests
+  // ============================================================
+
+  describe('VersionLoader integration (H3)', () => {
+    const baseInput: AutoResponseInput = {
+      triggerType: 'EMAIL_RECEIVED',
+      leadInfo: { id: 'lead-h3', name: 'H3 Test', email: 'h3@acme.com', status: 'NEW' },
+      context: { originalMessage: 'H3 version test inquiry' },
+      tenantSettings: { companyName: 'IntelliFlow', tone: 'professional' },
+    };
+
+    it('should accept optional tenantId constructor option without throwing', () => {
+      expect(() => new AutoResponseChain({ tenantId: 'tenant-abc' })).not.toThrow();
+    });
+
+    it('uses default instructions when VersionLoader returns null (no active version)', async () => {
+      const tenantChain = new AutoResponseChain({ tenantId: 'tenant-xyz' });
+      const result = await tenantChain.generateResponse(baseInput);
+
+      expect(result).toBeDefined();
+      expect(typeof result.body).toBe('string');
+    });
+
+    it('uses versioned instructions when VersionLoader returns a config', async () => {
+      const { getVersionLoader } = await import('../versioning/chain-version-loader');
+      vi.mocked(getVersionLoader).mockReturnValueOnce({
+        getChainConfig: vi.fn().mockResolvedValue({
+          prompt: 'You are a versioned auto-response assistant.',
+          model: 'gpt-4-turbo-preview',
+          temperature: 0.5,
+          maxTokens: 2000,
+        }),
+      } as any);
+
+      const tenantChain = new AutoResponseChain({ tenantId: 'tenant-versioned' });
+      const result = await tenantChain.generateResponse(baseInput);
+
+      expect(result).toBeDefined();
+      expect(typeof result.body).toBe('string');
+    });
+
+    it('falls back to default instructions when VersionLoader throws', async () => {
+      const tenantChain = new AutoResponseChain({ tenantId: 'tenant-throw' });
+      await expect(tenantChain.generateResponse(baseInput)).resolves.toBeDefined();
     });
   });
 });

@@ -14,37 +14,53 @@ import {
   createEmailWriterTask,
 } from './email-writer.agent';
 
-// Mock the LangChain ChatOpenAI
-vi.mock('@langchain/openai', () => ({
-  ChatOpenAI: class MockChatOpenAI {
-    invoke = vi.fn().mockResolvedValue({
-      content: JSON.stringify({
-        subject: 'Following up on your interest in IntelliFlow',
-        body: 'Dear John,\n\nThank you for your interest in our CRM solution...',
-        callToAction: 'Schedule a 15-minute demo call',
-        confidence: 0.85,
-        reasoning:
-          'Based on lead engagement and company profile, personalized outreach is appropriate.',
-        suggestedSendTime: 'Tuesday 10:00 AM',
-        alternativeSubjects: [
-          "John, let's discuss your CRM needs",
-          'Quick question about your sales process',
-        ],
-        personalizationElements: [
-          'Referenced company name',
-          'Addressed by first name',
-          'Mentioned specific interest area',
-        ],
-        requiresHumanReview: false,
-      }),
-    });
+// Pattern A: mock the factory — agent calls createLLM and uses invoke() with JSON parsing.
+// Use vi.hoisted so the constant is available inside the hoisted vi.mock() factory.
+const { EMAIL_PARSED_RESPONSE } = vi.hoisted(() => ({
+  EMAIL_PARSED_RESPONSE: {
+    subject: 'Following up on your interest in IntelliFlow',
+    body: 'Dear John,\n\nThank you for your interest in our CRM solution...',
+    callToAction: 'Schedule a 15-minute demo call',
+    confidence: 0.85,
+    reasoning:
+      'Based on lead engagement and company profile, personalized outreach is appropriate.',
+    suggestedSendTime: 'Tuesday 10:00 AM',
+    alternativeSubjects: [
+      "John, let's discuss your CRM needs",
+      'Quick question about your sales process',
+    ],
+    personalizationElements: [
+      'Referenced company name',
+      'Addressed by first name',
+      'Mentioned specific interest area',
+    ],
+    requiresHumanReview: false,
   },
+}));
+
+vi.mock('../lib/llm-factory.js', () => ({
+  createLLM: vi.fn(() => ({
+    invoke: vi.fn().mockResolvedValue({ content: JSON.stringify(EMAIL_PARSED_RESPONSE) }),
+    withStructuredOutput: vi.fn(() => ({
+      invoke: vi.fn().mockResolvedValue(EMAIL_PARSED_RESPONSE),
+    })),
+  })),
+  createEmbeddings: vi.fn(() => ({
+    embedQuery: vi.fn().mockResolvedValue([]),
+    embedDocuments: vi.fn().mockResolvedValue([]),
+  })),
+}));
+
+// Mock token counter (needed by ensurePromptBudget)
+vi.mock('../utils/token-counter', () => ({
+  countMessagesTokens: vi.fn().mockReturnValue(100),
+  countTokens: vi.fn().mockReturnValue(50),
 }));
 
 // Mock the AI config
 vi.mock('../config/ai.config', () => ({
   aiConfig: {
-    provider: 'openai',
+    provider: 'litellm',
     openai: {
       model: 'gpt-4-turbo-preview',
       temperature: 0.7,

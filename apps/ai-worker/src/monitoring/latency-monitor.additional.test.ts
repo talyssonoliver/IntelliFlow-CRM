@@ -58,10 +58,7 @@ describe('LatencyMonitor - Additional Coverage', () => {
 
   describe('markPhase edge cases', () => {
     it('should silently ignore markPhase for non-existent operation', () => {
-      // This should not throw - just a no-op when no timer exists
-      monitor.markPhase('non-existent-op', 'preprocessing');
-      // If we get here without error, the test passes
-      expect(true).toBe(true);
+      expect(() => monitor.markPhase('non-existent-op', 'preprocessing')).not.toThrow();
     });
   });
 
@@ -835,18 +832,19 @@ describe('withLatencyTracking', () => {
   });
 
   it('should record error type when operation fails', async () => {
-    try {
-      await withLatencyTracking('tracking-test-3', 'gpt-4', 'scoring', async () => {
+    // withLatencyTracking must rethrow the original error AND leave no hanging
+    // timer. If completeOperation weren't called the second tracking-test-3
+    // call below would return `null` (no stats) rather than valid stats, but
+    // here we just verify the rethrow semantics + subsequent-op independence.
+    await expect(
+      withLatencyTracking('tracking-test-3', 'gpt-4', 'scoring', async () => {
         throw new RangeError('Out of range');
-      });
-    } catch {
-      // Expected to throw
-    }
+      })
+    ).rejects.toBeInstanceOf(RangeError);
 
-    // The function should have called completeOperation with errorType
-    // We verify this indirectly: the operation completed (no hanging timer)
-    // and an alert may have been generated depending on timing
-    expect(true).toBe(true);
+    // Subsequent tracked op on the same id should still succeed (no hanging timer).
+    const ok = await withLatencyTracking('tracking-test-3', 'gpt-4', 'scoring', async () => 42);
+    expect(ok).toBe(42);
   });
 
   it('should handle non-Error thrown values', async () => {

@@ -7,7 +7,7 @@
  * Integrates with real AI chains instead of returning mock values:
  * - processChurnRisk: Uses ChurnRiskChain
  * - processNextBestAction: Uses NextBestActionAgent
- * - processQualification: Uses LeadScoringChain
+ * - processQualification: Uses LeadQualificationAgent (M15: was LeadScoringChain)
  *
  * @module ai-worker/jobs/prediction
  */
@@ -17,19 +17,34 @@ import { z } from 'zod';
 import pino from 'pino';
 
 // AI Chain imports (IFC-095)
-import { getChurnRiskChain, type ChurnRiskInput } from '../chains/churn-risk.chain';
+import { getChurnRiskChain, ChurnRiskChain, type ChurnRiskInput } from '../chains/churn-risk.chain';
 import { createNBAAgent, type NBAContext } from '../agents/next-best-action.agent';
-import { getLeadScoringChain, type LeadInput } from '../chains/scoring.chain';
+// M15: qualification now routes to LeadQualificationAgent instead of LeadScoringChain
+import {
+  createQualificationTask,
+  qualificationAgent,
+  type QualificationInput,
+} from '../agents/qualification.agent';
+// M3: Import pre-wired ragContextChain singleton so NBA agent uses the RetrievalService
+// wired at startup instead of spawning a new disconnected chain instance.
+import { ragContextChain } from '../chains/rag-context.chain';
 // Fix #14: hallucination checker
 import { hallucinationChecker } from '../monitoring/hallucination-checker';
 // Fix #20: conversation record audit logging
 import { logConversationRecord } from '../utils/conversation-record-logger';
 // Fix #15: human review threshold check
 import { requiresHumanReview } from '@intelliflow/domain';
+// H4: AI_AGENT audit entries
+import { logAIAgentAction } from '../utils/audit-log';
+// H9/H10: circuit breaker + fallbacks
+import { getLLMBreaker } from '../lib/llm-factory';
+import { runWithLogContext, getCurrentLogContext } from '@intelliflow/observability';
+import { isAiFeatureEnabled } from '../lib/feature-flags';
 
 const logger = pino({
   name: 'prediction-job',
   level: process.env.LOG_LEVEL || 'info',
+  mixin: () => getCurrentLogContext() ?? {},
 });
 
 // ============================================================================
@@ -48,9 +63,19 @@ export const PredictionJobDataSchema = z.object({
   entityType: z.enum(['lead', 'contact', 'opportunity', 'account']),
   entityId: z.uuid(),
   predictionType: z.enum(PredictionTypes),
+  // H5/M8 — tenantId is a top-level required field (was previously buried in
+  // untyped context). Enqueue sites MUST pass it; Zod rejects missing/empty
+  // with the same message regardless of which failure mode triggered.
+  tenantId: z
+    .string({
+      error: () => 'tenantId is required for prediction jobs - tenant isolation enforced',
+    })
+    .min(1, 'tenantId is required for prediction jobs - tenant isolation enforced'),
   context: z.record(z.string(), z.unknown()).optional(),
   correlationId: z.string().optional(),
   priority: z.number().min(1).max(10).default(5),
+  /** W3C traceparent carrier injected by enqueue-side for distributed trace propagation */
+  _otelCarrier: z.record(z.string(), z.string()).optional(),
 });
 
 export type PredictionJobData = z.infer<typeof PredictionJobDataSchema>;
@@ -85,90 +110,120 @@ export type PredictionJobResult = z.infer<typeof PredictionJobResultSchema>;
 export async function processPredictionJob(
   job: Job<PredictionJobData>
 ): Promise<PredictionJobResult> {
-  const startTime = Date.now();
-  const { entityType, entityId, predictionType, context } = job.data;
+  const validatedData = PredictionJobDataSchema.parse(job.data);
+  const { tenantId } = validatedData;
 
-  logger.info(
+  return runWithLogContext(
     {
-      jobId: job.id,
-      entityType,
-      entityId,
-      predictionType,
+      correlationId: validatedData.correlationId ?? job.id ?? undefined,
+      tenantId,
+      userId: undefined,
     },
-    'Processing prediction job'
-  );
+    async () => {
+      const startTime = Date.now();
+      const { entityType, entityId, predictionType, context } = validatedData;
 
-  // Update job progress
-  await job.updateProgress(10);
+      // Feature-flag gate — checked after Zod validation, before LLM work
+      if (!isAiFeatureEnabled('ai.prediction.enabled', tenantId)) {
+        logger.info(
+          { jobId: job.id, tenantId, entityId, predictionType },
+          'AI prediction job skipped — feature flag disabled'
+        );
+        return { skipped: true, reason: 'feature-flag-disabled' } as unknown as PredictionJobResult;
+      }
 
-  // Route to appropriate prediction handler
-  let prediction: PredictionJobResult['prediction'];
-  let recommendations: string[];
+      logger.info(
+        {
+          jobId: job.id,
+          entityType,
+          entityId,
+          predictionType,
+        },
+        'Processing prediction job'
+      );
 
-  switch (predictionType) {
-    case 'CHURN_RISK':
-      ({ prediction, recommendations } = await processChurnRisk(entityType, entityId, context));
-      break;
-    case 'NEXT_BEST_ACTION':
-      ({ prediction, recommendations } = await processNextBestAction(
+      // Update job progress
+      await job.updateProgress(10);
+
+      // Route to appropriate prediction handler
+      let prediction: PredictionJobResult['prediction'];
+      let recommendations: string[];
+
+      switch (predictionType) {
+        case 'CHURN_RISK':
+          ({ prediction, recommendations } = await processChurnRisk(
+            job,
+            entityType,
+            entityId,
+            tenantId,
+            context
+          ));
+          break;
+        case 'NEXT_BEST_ACTION':
+          ({ prediction, recommendations } = await processNextBestAction(
+            job,
+            entityType,
+            entityId,
+            tenantId,
+            context
+          ));
+          break;
+        case 'QUALIFICATION':
+          ({ prediction, recommendations } = await processQualification(
+            job,
+            entityType,
+            entityId,
+            tenantId,
+            context
+          ));
+          break;
+        default:
+          throw new Error(`Unknown prediction type: ${predictionType}`);
+      }
+
+      await job.updateProgress(90);
+
+      // Persist prediction results to entity insight tables
+      await persistPredictionResult(
         entityType,
         entityId,
-        context
-      ));
-      break;
-    case 'QUALIFICATION':
-      ({ prediction, recommendations } = await processQualification(entityType, entityId, context));
-      break;
-    default:
-      throw new Error(`Unknown prediction type: ${predictionType}`);
-  }
+        tenantId,
+        predictionType,
+        prediction,
+        recommendations
+      );
 
-  await job.updateProgress(90);
+      // Notify on high churn risk (non-blocking)
+      if (predictionType === 'CHURN_RISK') {
+        await notifyHighChurnRisk(tenantId, entityType, entityId, prediction, context);
+      }
 
-  // Persist prediction results to entity insight tables
-  const tenantId = context?.tenantId as string | undefined;
-  if (tenantId) {
-    await persistPredictionResult(
-      entityType,
-      entityId,
-      tenantId,
-      predictionType,
-      prediction,
-      recommendations
-    );
+      // Transform to job result
+      const processingTimeMs = Date.now() - startTime;
+      const jobResult: PredictionJobResult = {
+        entityType,
+        entityId,
+        predictionType,
+        prediction,
+        recommendations,
+        processedAt: new Date().toISOString(),
+        processingTimeMs,
+      };
 
-    // Notify on high churn risk (non-blocking)
-    if (predictionType === 'CHURN_RISK') {
-      await notifyHighChurnRisk(tenantId, entityType, entityId, prediction, context);
+      await job.updateProgress(100);
+
+      logger.info(
+        {
+          jobId: job.id,
+          processingTimeMs,
+          confidence: prediction.confidence,
+        },
+        'Prediction job completed'
+      );
+
+      return jobResult;
     }
-  } else {
-    logger.warn({ jobId: job.id, entityId }, 'No tenantId in context — skipping DB persistence');
-  }
-
-  // Transform to job result
-  const processingTimeMs = Date.now() - startTime;
-  const jobResult: PredictionJobResult = {
-    entityType,
-    entityId,
-    predictionType,
-    prediction,
-    recommendations,
-    processedAt: new Date().toISOString(),
-    processingTimeMs,
-  };
-
-  await job.updateProgress(100);
-
-  logger.info(
-    {
-      jobId: job.id,
-      processingTimeMs,
-      confidence: prediction.confidence,
-    },
-    'Prediction job completed'
   );
-
-  return jobResult;
 }
 
 // ============================================================================
@@ -217,7 +272,7 @@ async function persistLeadPrediction(
   const updateData = buildPredictionUpdateData(predictionType, prediction, recommendations);
 
   await prisma.leadAIInsight.upsert({
-    where: { leadId: entityId },
+    where: { leadId_tenantId: { leadId: entityId, tenantId } },
     create: {
       leadId: entityId,
       tenantId,
@@ -309,7 +364,20 @@ async function persistPredictionResult(
         { entityType, entityId, predictionType },
         'Prediction persistence skipped — no AI insight table for this entity type'
       );
+      return; // no DB write — skip audit entry
     }
+
+    // H4: emit AI_AGENT audit entry after successful DB write — non-fatal
+    const resourceType = entityType === 'lead' ? 'LeadAIInsight' : 'ContactAIInsight';
+    await logAIAgentAction({
+      tenantId,
+      agentName: 'prediction-job',
+      resourceType,
+      resourceId: entityId,
+      action: 'UPSERT',
+    }).catch((err: unknown) => {
+      logger.warn({ entityId, entityType, err }, 'audit-log: logAIAgentAction failed (non-fatal)');
+    });
   } catch (error) {
     logger.error(
       {
@@ -376,6 +444,76 @@ async function notifyHighChurnRisk(
 }
 
 // ============================================================================
+// LLM Timeout Constant + Heuristic Fallbacks (H10)
+// ============================================================================
+
+/** LLM inference timeout for prediction handlers (120 s — mirrors insight job). */
+const PREDICTION_LLM_TIMEOUT_MS = 120_000;
+
+/**
+ * Neutral fallback for CHURN_RISK when LLM is unavailable.
+ * risk_score = 0.5 (unknown), confidence = 0.3, pure static — no LLM dependency.
+ */
+function churnRiskFallback(): {
+  prediction: PredictionJobResult['prediction'];
+  recommendations: string[];
+} {
+  return {
+    prediction: {
+      value: 0.5,
+      confidence: 0.3,
+      explanation: 'Heuristic fallback — LLM unavailable. Risk unknown; manual review recommended.',
+    },
+    recommendations: [
+      'Review account activity manually',
+      'Contact customer success team',
+      'Check recent support tickets',
+    ],
+  };
+}
+
+/**
+ * Neutral fallback for NEXT_BEST_ACTION when LLM is unavailable.
+ * Low-priority generic recommendations — no LLM dependency.
+ */
+function nextBestActionFallback(): {
+  prediction: PredictionJobResult['prediction'];
+  recommendations: string[];
+} {
+  return {
+    prediction: {
+      value: 'FOLLOW_UP',
+      confidence: 0.3,
+      explanation: 'Heuristic fallback — LLM unavailable. Generic follow-up recommended.',
+    },
+    recommendations: ['Contact lead', 'Update contact information'],
+  };
+}
+
+/**
+ * Neutral fallback for QUALIFICATION when LLM is unavailable.
+ * Returns NOT_QUALIFIED with low confidence — no LLM dependency.
+ */
+function qualificationFallback(): {
+  prediction: PredictionJobResult['prediction'];
+  recommendations: string[];
+} {
+  return {
+    prediction: {
+      value: 'NOT_QUALIFIED',
+      confidence: 0.3,
+      explanation:
+        'Heuristic fallback — LLM unavailable. Qualification status unknown; manual review required.',
+    },
+    recommendations: [
+      'Review lead manually',
+      'Gather additional information',
+      'Re-evaluate when LLM is available',
+    ],
+  };
+}
+
+// ============================================================================
 // Prediction Handlers - Real AI Chain Integration (IFC-095)
 // ============================================================================
 
@@ -388,11 +526,13 @@ async function notifyHighChurnRisk(
  * @returns Prediction result with risk score and recommendations
  */
 async function processChurnRisk(
+  job: Job<PredictionJobData>,
   entityType: string,
   entityId: string,
+  tenantId: string,
   context?: Record<string, unknown>
 ): Promise<{ prediction: PredictionJobResult['prediction']; recommendations: string[] }> {
-  logger.info({ entityType, entityId }, 'Processing churn risk with real AI chain');
+  logger.info({ entityType, entityId, tenantId }, 'Processing churn risk with real AI chain');
 
   try {
     // Build input for churn risk chain
@@ -422,10 +562,21 @@ async function processChurnRisk(
       metadata: context,
     };
 
-    // Call the real churn risk chain
+    // Call the real churn risk chain (with timeout + circuit breaker)
+    // Construct per-job instance with tenantId so versioned configs are resolved
     const llmStartTime = Date.now();
-    const chain = getChurnRiskChain();
-    const result = await chain.predictChurnRisk(churnInput);
+    const chain = new ChurnRiskChain({ tenantId });
+    const churnBreaker = getLLMBreaker('scoring', 'free');
+    await job.extendLock(job.token!, 300_000); // 5 minutes — prevent stall detection during LLM call
+    const result = await Promise.race([
+      churnBreaker.execute(() => chain.predictChurnRisk(churnInput)),
+      new Promise<never>((_, reject) =>
+        setTimeout(
+          () => reject(new Error(`LLM churn risk timed out after ${PREDICTION_LLM_TIMEOUT_MS}ms`)),
+          PREDICTION_LLM_TIMEOUT_MS
+        )
+      ),
+    ]);
     const llmDuration = Date.now() - llmStartTime;
 
     // Fix #20: log conversation record for audit trail
@@ -436,7 +587,7 @@ async function processChurnRisk(
       tokenCountOutput: 0,
       duration: llmDuration,
       chainType: 'CHURN_PREDICTION',
-      tenantId: context?.tenantId as string | undefined,
+      tenantId,
     });
 
     // Fix #14: hallucination check — log warning if detected, do NOT block output
@@ -476,14 +627,14 @@ async function processChurnRisk(
       recommendations: result.recommendations,
     };
   } catch (error) {
-    logger.error(
+    logger.warn(
       {
         entityId,
         error: error instanceof Error ? error.message : String(error),
       },
-      'Churn risk prediction failed — propagating for retry'
+      'Churn risk prediction failed or timed out — using heuristic fallback'
     );
-    throw error;
+    return churnRiskFallback();
   }
 }
 
@@ -496,19 +647,15 @@ async function processChurnRisk(
  * @returns Prediction result with recommended action and additional recommendations
  */
 async function processNextBestAction(
+  job: Job<PredictionJobData>,
   entityType: string,
   entityId: string,
+  tenantId: string,
   context?: Record<string, unknown>
 ): Promise<{ prediction: PredictionJobResult['prediction']; recommendations: string[] }> {
-  logger.info({ entityType, entityId }, 'Processing next best action with real AI agent');
+  logger.info({ entityType, entityId, tenantId }, 'Processing next best action with real AI agent');
 
-  // IFC-095 P1: Enforce mandatory tenant context - security fix
-  const tenantId = context?.tenantId as string;
-  if (!tenantId) {
-    logger.error({ entityId }, 'Missing tenantId - tenant isolation violated');
-    throw new Error('tenantId is required for prediction jobs - tenant isolation enforced');
-  }
-
+  // userId is still passed via context; NBA requires it per IFC-095 P1
   const userId = context?.userId as string;
   if (!userId) {
     logger.error({ entityId }, 'Missing userId - user context required');
@@ -542,7 +689,7 @@ async function processNextBestAction(
       try {
         const { prisma } = await import('@intelliflow/db');
         const existingInsight = await prisma.leadAIInsight.findUnique({
-          where: { leadId: entityId },
+          where: { leadId_tenantId: { leadId: entityId, tenantId } },
           select: {
             engagementScore: true,
             conversionProbability: true,
@@ -565,14 +712,28 @@ async function processNextBestAction(
       }
     }
 
-    // Call the real NBA agent
-    const agent = createNBAAgent();
-    const result = await agent.execute({
-      id: `nba-job-${entityId}`,
-      description: `Generate NBA for ${entityType} ${entityId}`,
-      input: nbaContext,
-      expectedOutput: z.any(), // Use the agent's internal schema
-    });
+    // Call the real NBA agent (with timeout + circuit breaker)
+    // M3: Pass the globally wired ragContextChain so the agent uses the
+    // RetrievalService connected at startup rather than a new null-service instance.
+    const agent = createNBAAgent(ragContextChain);
+    const nbaBreaker = getLLMBreaker('reasoning', 'standard');
+    await job.extendLock(job.token!, 300_000); // 5 minutes — prevent stall detection during agent execution
+    const result = await Promise.race([
+      nbaBreaker.execute(() =>
+        agent.execute({
+          id: `nba-job-${entityId}`,
+          description: `Generate NBA for ${entityType} ${entityId}`,
+          input: nbaContext,
+          expectedOutput: z.any(), // Use the agent's internal schema
+        })
+      ),
+      new Promise<never>((_, reject) =>
+        setTimeout(
+          () => reject(new Error(`NBA agent timed out after ${PREDICTION_LLM_TIMEOUT_MS}ms`)),
+          PREDICTION_LLM_TIMEOUT_MS
+        )
+      ),
+    ]);
 
     if (!result.success || !result.output) {
       throw new Error(result.error || 'NBA agent returned no output');
@@ -592,35 +753,53 @@ async function processNextBestAction(
       ),
     };
   } catch (error) {
-    logger.error(
+    logger.warn(
       {
         entityId,
         error: error instanceof Error ? error.message : String(error),
       },
-      'Next best action prediction failed — propagating for retry'
+      'Next best action prediction failed or timed out — using heuristic fallback'
     );
-    throw error;
+    return nextBestActionFallback();
   }
 }
 
 /**
- * Process qualification using LeadScoringChain
+ * Process qualification using LeadQualificationAgent (M15 reroute).
+ *
+ * Previously used LeadScoringChain which returns a 0–100 numeric score and
+ * required manual threshold logic to derive a status string. The agent uses
+ * withStructuredOutput(qualificationOutputSchema) and returns explicit
+ * qualificationLevel + recommendedActions, making the mapping direct and
+ * domain-semantics-aware.
+ *
+ * Output mapping: agent → PredictionResult
+ *   value        ← qualificationLevel   ('HIGH' | 'MEDIUM' | 'LOW' | 'UNQUALIFIED')
+ *   confidence   ← calculateConfidence() applied inside agent.execute()
+ *   explanation  ← output.reasoning
+ *   recommendations ← output.nextSteps (+ action strings from recommendedActions)
  *
  * @param entityType - Type of entity (primarily lead)
  * @param entityId - UUID of the entity
  * @param context - Optional context data with lead information
- * @returns Prediction result with qualification status and recommendations
+ * @returns Prediction result with qualification level and recommendations
  */
 async function processQualification(
+  job: Job<PredictionJobData>,
   entityType: string,
   entityId: string,
+  tenantId: string,
   context?: Record<string, unknown>
 ): Promise<{ prediction: PredictionJobResult['prediction']; recommendations: string[] }> {
-  logger.info({ entityType, entityId }, 'Processing qualification with real AI chain');
+  logger.info(
+    { entityType, entityId, tenantId },
+    'Processing qualification with LeadQualificationAgent'
+  );
 
   try {
-    // Build input for lead scoring chain
-    const leadInput: LeadInput = {
+    // Build typed input for the qualification agent
+    const qualInput: QualificationInput = {
+      leadId: entityId,
       email: (context?.email as string) || `${entityId}@unknown.example`,
       firstName: context?.firstName as string | undefined,
       lastName: context?.lastName as string | undefined,
@@ -628,81 +807,115 @@ async function processQualification(
       title: context?.title as string | undefined,
       phone: context?.phone as string | undefined,
       source: (context?.source as string) || 'unknown',
-      metadata: context,
+      score: context?.score as number | undefined,
+      recentActivities: context?.recentActivities as string[] | undefined,
+      companyData: context?.companyData as QualificationInput['companyData'],
     };
 
-    // Call the real lead scoring chain
-    const chain = getLeadScoringChain();
-    const result = await chain.scoreLead(leadInput);
+    const task = createQualificationTask(qualInput, {
+      userId: context?.userId as string | undefined,
+    });
 
-    // Determine qualification status based on score
-    let qualificationStatus: string;
-    let recommendations: string[];
+    const qualBreaker = getLLMBreaker('qualification', 'free');
+    await job.extendLock(job.token!, 300_000); // 5 minutes — prevent stall detection during agent execution
+    const result = await Promise.race([
+      qualBreaker.execute(() => qualificationAgent.execute(task)),
+      new Promise<never>((_, reject) =>
+        setTimeout(
+          () =>
+            reject(
+              new Error(`LeadQualificationAgent timed out after ${PREDICTION_LLM_TIMEOUT_MS}ms`)
+            ),
+          PREDICTION_LLM_TIMEOUT_MS
+        )
+      ),
+    ]);
 
-    if (result.score >= 80) {
-      qualificationStatus = 'HIGHLY_QUALIFIED';
-      recommendations = [
-        'Prioritize for immediate sales outreach',
-        'Schedule discovery call within 24 hours',
-        'Prepare personalized proposal',
-        'Assign to senior sales representative',
-      ];
-    } else if (result.score >= 60) {
-      qualificationStatus = 'QUALIFIED';
-      recommendations = [
-        'Add to active pipeline',
-        'Schedule discovery call within 48 hours',
-        'Send product information package',
-        'Assign to sales representative',
-      ];
-    } else if (result.score >= 40) {
-      qualificationStatus = 'NURTURE';
-      recommendations = [
-        'Add to nurture campaign',
-        'Send educational content series',
-        'Schedule follow-up in 2 weeks',
-        'Monitor engagement signals',
-      ];
-    } else if (result.score >= 20) {
-      qualificationStatus = 'DEVELOPING';
-      recommendations = [
-        'Add to awareness campaign',
-        'Provide self-service resources',
-        'Re-evaluate in 30 days',
-        'Track website engagement',
-      ];
-    } else {
-      qualificationStatus = 'NOT_QUALIFIED';
-      recommendations = [
-        'Archive for future reference',
-        'Add to long-term nurture list',
-        'Consider for different product/segment',
-        'Re-evaluate if engagement increases',
-      ];
+    if (!result.success || !result.output) {
+      throw new Error(result.error || 'LeadQualificationAgent returned no output');
     }
 
-    // Add factor-based recommendations
-    const factorRecommendations = result.factors
-      .filter((f) => f.impact < 0)
-      .map((f) => `Improve: ${f.name} - ${f.reasoning}`);
+    const output = result.output;
+
+    // Hallucination check on the reasoning text — non-blocking, mirrors churn path
+    const hallucinationResult = await hallucinationChecker.checkOutput({
+      id: `qual-${entityId}`,
+      model: 'qualification-agent',
+      inputContext: JSON.stringify(qualInput).slice(0, 500),
+      output: output.reasoning,
+    });
+
+    if (hallucinationResult.hallucinated) {
+      logger.warn(
+        {
+          entityId,
+          hallucinationScore: hallucinationResult.score,
+          hallucinationTypes: hallucinationResult.hallucinationTypes,
+        },
+        'Hallucination detected in qualification output — output not blocked, flagged for monitoring'
+      );
+    }
+
+    // Human-review threshold check — mirrors churn path
+    // 'LEAD_SCORING' is the closest AIChainType for qualification (domain enum lacks 'QUALIFICATION').
+    const needsReview = requiresHumanReview(result.confidence, 'LEAD_SCORING');
+    if (needsReview) {
+      logger.info(
+        { entityId, confidence: result.confidence },
+        'Qualification output is pending human review due to low confidence'
+      );
+    }
+
+    // Map qualificationLevel → a value string the job consumer understands.
+    // The agent returns 'HIGH' | 'MEDIUM' | 'LOW' | 'UNQUALIFIED'.
+    // We translate to match the status vocabulary used by the scoring-chain path
+    // so downstream (persistPredictionResult → buildPredictionUpdateData) is unchanged.
+    const levelToStatus: Record<string, string> = {
+      HIGH: 'HIGHLY_QUALIFIED',
+      MEDIUM: 'QUALIFIED',
+      LOW: 'NURTURE',
+      UNQUALIFIED: 'NOT_QUALIFIED',
+    };
+    const qualificationStatus = levelToStatus[output.qualificationLevel] ?? 'NOT_QUALIFIED';
+
+    // Build flat recommendation strings from agent's structured action list + nextSteps
+    const actionStrings = output.recommendedActions.map(
+      (a: { priority: string; action: string }) => `[${a.priority}] ${a.action}`
+    );
+    const allRecommendations = [...output.nextSteps, ...actionStrings].slice(0, 5);
+
+    // Audit log — mirrors NBA path, non-fatal
+    const { logAIAgentAction } = await import('../utils/audit-log.js');
+    await logAIAgentAction({
+      tenantId,
+      agentName: 'LeadQualificationAgent',
+      resourceType: 'Lead',
+      resourceId: entityId,
+      action: 'UPDATE',
+    }).catch((err: unknown) => {
+      logger.warn(
+        { entityId, err },
+        'audit-log: logAIAgentAction (qualification) failed (non-fatal)'
+      );
+    });
 
     return {
       prediction: {
         value: qualificationStatus,
         confidence: result.confidence,
-        explanation: `Lead score: ${result.score}/100. ${result.factors.map((f) => f.reasoning).join(' ')}`,
+        explanation: output.reasoning,
       },
-      recommendations: [...recommendations, ...factorRecommendations].slice(0, 5),
+      recommendations: allRecommendations,
     };
   } catch (error) {
-    logger.error(
+    logger.warn(
       {
         entityId,
         error: error instanceof Error ? error.message : String(error),
       },
-      'Qualification prediction failed — propagating for retry'
+      'Qualification prediction failed or timed out — using heuristic fallback'
     );
-    throw error;
+    return qualificationFallback();
   }
 }
 

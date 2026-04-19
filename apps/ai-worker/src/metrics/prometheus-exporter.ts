@@ -11,6 +11,52 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { getAllMetrics, getMonitoringStatus } from '../monitoring';
 
+// ============================================================================
+// Retraining Triggers Counter
+// ============================================================================
+
+/** In-process counter incremented each time a retraining threshold is breached. */
+let retrainingTriggersTotal = 0;
+const retrainingTriggersByUrgency: Record<string, number> = {};
+
+/**
+ * Increment the retraining triggers counter.
+ * Called by the feedback-analytics job handler on every threshold breach.
+ *
+ * @param labels  Optional label set (urgency level)
+ */
+export function incrementRetrainingTriggers(labels?: { urgency?: string }): void {
+  retrainingTriggersTotal += 1;
+  if (labels?.urgency) {
+    retrainingTriggersByUrgency[labels.urgency] =
+      (retrainingTriggersByUrgency[labels.urgency] ?? 0) + 1;
+  }
+}
+
+/**
+ * Returns Prometheus text for the retraining triggers counter.
+ * Exposed separately so it can be included in `getAllMetrics()`.
+ */
+export function getRetrainingTriggerMetrics(): string {
+  let out = '';
+  out +=
+    '# HELP intelliflow_ai_retraining_triggers_total Total AI retraining threshold breaches detected\n';
+  out += '# TYPE intelliflow_ai_retraining_triggers_total counter\n';
+  out += `intelliflow_ai_retraining_triggers_total ${retrainingTriggersTotal}\n`;
+  for (const [urgency, count] of Object.entries(retrainingTriggersByUrgency)) {
+    out += `intelliflow_ai_retraining_triggers_total{urgency="${urgency}"} ${count}\n`;
+  }
+  return out;
+}
+
+/** Reset counters — test helper only. */
+export function _resetRetrainingTriggerCounters(): void {
+  retrainingTriggersTotal = 0;
+  for (const key of Object.keys(retrainingTriggersByUrgency)) {
+    delete retrainingTriggersByUrgency[key];
+  }
+}
+
 export interface MetricsResponse {
   contentType: string;
   body: string;
@@ -37,7 +83,7 @@ export function authenticateMetricsRequest(authHeader: string | undefined): bool
  * Build Prometheus-formatted metrics response
  */
 export function buildMetricsResponse(): MetricsResponse {
-  const metrics = getAllMetrics();
+  const metrics = getAllMetrics() + '\n' + getRetrainingTriggerMetrics();
 
   return {
     contentType: 'text/plain; charset=utf-8',

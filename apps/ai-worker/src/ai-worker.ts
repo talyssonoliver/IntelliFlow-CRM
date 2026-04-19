@@ -12,7 +12,8 @@
  * @task IFC-168
  */
 
-import { Job } from 'bullmq';
+import { context as otelContext, propagation } from '@opentelemetry/api';
+import { Job, Queue, QueueEvents } from 'bullmq';
 import express from 'express';
 import type { Server } from 'node:http';
 import { createBullBoard } from '@bull-board/api';
@@ -25,17 +26,33 @@ import {
   SCORING_QUEUE,
   PREDICTION_QUEUE,
   INSIGHT_QUEUE,
+  SUMMARIZE_QUEUE,
+  FEEDBACK_ANALYTICS_QUEUE,
+  MEMORY_RETENTION_QUEUE,
   processScoringJob,
   processPredictionJob,
   processInsightJob,
+  processSummarizeJob,
+  processFeedbackAnalyticsJob,
+  processMemoryRetentionJob,
   DEFAULT_INSIGHT_JOB_OPTIONS,
   DEFAULT_SCORING_JOB_OPTIONS,
+  DEFAULT_FEEDBACK_ANALYTICS_JOB_OPTIONS,
+  DEFAULT_MEMORY_RETENTION_JOB_OPTIONS,
+  FEEDBACK_ANALYTICS_CRON,
+  MEMORY_RETENTION_CRON,
   type ScoringJobData,
   type ScoringJobResult,
   type PredictionJobData,
   type PredictionJobResult,
   type InsightJobData,
   type InsightJobResult,
+  type SummarizeConversationJobData,
+  type SummarizeConversationJobResult,
+  type FeedbackAnalyticsJobData,
+  type FeedbackAnalyticsJobResult,
+  type MemoryRetentionJobData,
+  type MemoryRetentionJobResult,
 } from './jobs';
 import { costTracker } from './utils/cost-tracker';
 import { aiConfig, loadAIConfig } from './config/ai.config';
@@ -49,16 +66,45 @@ import {
 } from './services/agent-status';
 import { hallucinationChecker } from './monitoring';
 import { MonitoringFlushService } from './monitoring/monitoring-flush.service';
+import { setAuditLogAdapter } from './utils/audit-log';
+import { tenantContextStore } from './tracing/tenant-context.js';
+import { runWithLogContext } from '@intelliflow/observability';
+
+// ============================================================================
+// Constants
+// ============================================================================
+
+/** Dead-letter queue name for exhausted AI jobs (H8). */
+const AI_DLQ_QUEUE = 'ai-dlq';
+
+/**
+ * Fallback max-attempts used when a job does not declare its own
+ * `opts.attempts`. Per-queue DEFAULT_*_JOB_OPTIONS set 3; this only applies
+ * if a job was enqueued without attempts set explicitly.
+ */
+const AI_JOB_DEFAULT_MAX_ATTEMPTS = 3;
 
 // ============================================================================
 // Types
 // ============================================================================
 
 /** Union type for all job data */
-type AIJobData = ScoringJobData | PredictionJobData | InsightJobData;
+type AIJobData =
+  | ScoringJobData
+  | PredictionJobData
+  | InsightJobData
+  | SummarizeConversationJobData
+  | FeedbackAnalyticsJobData
+  | MemoryRetentionJobData;
 
 /** Union type for all job results */
-type AIJobResult = ScoringJobResult | PredictionJobResult | InsightJobResult;
+type AIJobResult =
+  | ScoringJobResult
+  | PredictionJobResult
+  | InsightJobResult
+  | SummarizeConversationJobResult
+  | FeedbackAnalyticsJobResult
+  | MemoryRetentionJobResult;
 
 // ============================================================================
 // AI Worker
@@ -69,6 +115,10 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
   private dashboardServer: Server | null = null;
   private monitoringFlushService?: MonitoringFlushService;
   private prisma?: import('@intelliflow/db').PrismaClient;
+  /** Passive dead-letter queue — no worker, just for inspection and replay. */
+  private dlqQueue: Queue | null = null;
+  /** QueueEvents instances for each AI queue (used for lifecycle listeners). */
+  private queueEventListeners: QueueEvents[] = [];
 
   constructor() {
     super({
@@ -126,20 +176,67 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     // Register scheduled/repeatable jobs
     await this.registerScheduledJobs();
 
+    // H8: Create DLQ and register lifecycle listeners on AI queues
+    await this.setupDLQAndLifecycleListeners();
+
     // Start Bull Board dashboard
     await this.startDashboard();
 
     // IFC-297: Initialize Prisma and start monitoring data flush to DB
     try {
       const { prisma } = await import('@intelliflow/db');
-      this.prisma = prisma;
-      this.monitoringFlushService = new MonitoringFlushService(this.prisma);
+      // M4 encryption is ACTIVE — prisma from @intelliflow/db is the
+      // $extends(fieldEncryptionExtension()) client (AES-256-GCM, bespoke).
+      // The `as unknown as` cast aligns the extended type with the field here.
+      this.prisma = prisma as unknown as typeof this.prisma;
+      this.monitoringFlushService = new MonitoringFlushService(this.prisma as never);
       this.monitoringFlushService.start();
       this.logger.info('MonitoringFlushService started — flushing metrics to DB every 60s');
     } catch (error) {
       this.logger.warn(
         { error: error instanceof Error ? error.message : String(error) },
         'Failed to initialize MonitoringFlushService — monitoring data will remain in-memory only'
+      );
+    }
+
+    // H4: Wire AuditLogPort so logAIAgentAction() writes to DB in addition to pino.
+    if (this.prisma) {
+      try {
+        const { DurableAuditLogAdapter } = await import('@intelliflow/adapters');
+        const signingKey = Buffer.from(
+          process.env.AUDIT_SIGNING_KEY || 'insecure-dev-key-replace-in-production',
+          'utf8'
+        );
+        const auditAdapter = new DurableAuditLogAdapter(this.prisma as any, signingKey);
+        setAuditLogAdapter(auditAdapter);
+        this.logger.info('AuditLogPort wired — audit trail will write to DB');
+      } catch (err) {
+        this.logger.warn(
+          { err: err instanceof Error ? err.message : String(err) },
+          'Failed to wire AuditLogPort — falling back to pino-only audit trail'
+        );
+      }
+    }
+
+    // M3: Wire RetrievalService into the global ragContextChain singleton so that
+    // NextBestActionAgent (and any other consumer of the singleton) can perform
+    // real pgvector-backed RAG retrieval instead of throwing at invocation time.
+    if (this.prisma) {
+      try {
+        const { ragContextChain } = await import('./chains/rag-context.chain.js');
+        const { RetrievalService } = await import('./services/retrieval-service.js');
+        const retrievalService = new RetrievalService(this.prisma);
+        ragContextChain.setRetrievalService(retrievalService);
+        this.logger.info('RetrievalService wired into ragContextChain — RAG retrieval enabled');
+      } catch (error) {
+        this.logger.warn(
+          { error: error instanceof Error ? error.message : String(error) },
+          'Failed to wire RetrievalService into ragContextChain — RAG calls will throw until resolved'
+        );
+      }
+    } else {
+      this.logger.warn(
+        'Prisma unavailable — skipping RetrievalService wiring; ragContextChain will throw on invocation'
       );
     }
   }
@@ -155,6 +252,130 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
    *
    * Jobs are added with a repeatJobKey so BullMQ deduplicates across restarts.
    */
+  /**
+   * H8: Create the passive AI DLQ and register QueueEvents lifecycle listeners
+   * for each AI processing queue.
+   *
+   * - completed → info log (tracing)
+   * - stalled   → warn log
+   * - failed    → error log; enqueue to ai-dlq when job is exhausted
+   */
+  private async setupDLQAndLifecycleListeners(): Promise<void> {
+    const connection = {
+      host: process.env.REDIS_HOST || 'localhost',
+      port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
+    };
+
+    // Create the passive DLQ — no worker, only used for storage and inspection.
+    this.dlqQueue = new Queue(AI_DLQ_QUEUE, {
+      connection,
+      defaultJobOptions: {
+        // DLQ jobs never auto-expire — on-call decides when to replay or discard.
+        removeOnFail: false,
+        removeOnComplete: false,
+      },
+    });
+
+    this.logger.info({ queue: AI_DLQ_QUEUE }, 'Dead-letter queue created');
+
+    // Register lifecycle event listeners for every AI processing queue.
+    const aiQueues = [
+      SCORING_QUEUE,
+      PREDICTION_QUEUE,
+      INSIGHT_QUEUE,
+      SUMMARIZE_QUEUE,
+      FEEDBACK_ANALYTICS_QUEUE,
+      MEMORY_RETENTION_QUEUE,
+    ] as const;
+
+    for (const queueName of aiQueues) {
+      const queueEvents = new QueueEvents(queueName, { connection });
+      this.queueEventListeners.push(queueEvents);
+
+      // completed — optional info log for distributed tracing
+      queueEvents.on('completed', ({ jobId }) => {
+        this.logger.info({ jobId, queue: queueName }, 'Job completed');
+      });
+
+      // stalled — warn level; indicates the worker lock expired mid-job
+      queueEvents.on('stalled', ({ jobId }) => {
+        this.logger.warn(
+          { jobId, queue: queueName },
+          'Job stalled — lock expired before completion'
+        );
+      });
+
+      // failed — enqueue to DLQ when attempts are exhausted
+      queueEvents.on('failed', ({ jobId, failedReason }) => {
+        this.logger.error({ jobId, queue: queueName, failedReason }, 'Job failed');
+
+        // We need the full job to read attemptsMade + data; use the queue API.
+        this.getQueue(queueName)
+          .getJob(jobId)
+          .then((job) => {
+            if (!job) return;
+
+            const attemptsMade = job.attemptsMade ?? 0;
+            // H8 — respect per-job opts.attempts; fall back to global default if unset.
+            const maxAttempts = job.opts?.attempts ?? AI_JOB_DEFAULT_MAX_ATTEMPTS;
+            if (attemptsMade < maxAttempts) {
+              // Still has retries remaining — BullMQ will re-enqueue automatically.
+              return;
+            }
+
+            // Exhausted — forward to DLQ.
+            const tenantId = (job.data as Record<string, unknown>)?.tenantId as string | undefined;
+            const dlqPayload = {
+              jobName: job.name,
+              originalJobId: jobId,
+              originalQueue: queueName,
+              failureReason: failedReason,
+              tenantId,
+              lastAttemptAt: new Date().toISOString(),
+              originalData: job.data,
+            };
+
+            this.dlqQueue!.add(`dlq-${job.name}`, dlqPayload, {
+              removeOnFail: false,
+              removeOnComplete: false,
+            })
+              .then(() => {
+                this.logger.error(
+                  { jobId, queue: queueName, dlqQueue: AI_DLQ_QUEUE },
+                  'Exhausted job forwarded to DLQ'
+                );
+              })
+              .catch((dlqErr: unknown) => {
+                // Extreme edge case — never crash the worker.
+                this.logger.error(
+                  {
+                    jobId,
+                    queue: queueName,
+                    error: dlqErr instanceof Error ? dlqErr.message : String(dlqErr),
+                  },
+                  'Failed to enqueue exhausted job to DLQ — job data may be lost'
+                );
+              });
+          })
+          .catch((err: unknown) => {
+            this.logger.error(
+              {
+                jobId,
+                queue: queueName,
+                error: err instanceof Error ? err.message : String(err),
+              },
+              'Could not retrieve job data for DLQ forwarding'
+            );
+          });
+      });
+    }
+
+    this.logger.info(
+      { queues: aiQueues, dlqQueue: AI_DLQ_QUEUE },
+      'Lifecycle event listeners registered for AI queues'
+    );
+  }
+
   private async registerScheduledJobs(): Promise<void> {
     const insightsCron = process.env.AI_INSIGHTS_CRON || '0 */6 * * *'; // every 6 hours
     const scoringCron = process.env.AI_SCORING_CRON || '0 */4 * * *'; // every 4 hours
@@ -204,6 +425,45 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
         }
       );
       this.logger.info({ cron: scoringCron }, 'Scheduled lead scoring job registered');
+
+      // Feedback analytics — daily at 02:00 UTC
+      const feedbackAnalyticsCron =
+        process.env.AI_FEEDBACK_ANALYTICS_CRON || FEEDBACK_ANALYTICS_CRON;
+      const feedbackAnalyticsQueue = this.getQueue(FEEDBACK_ANALYTICS_QUEUE);
+      await feedbackAnalyticsQueue.upsertJobScheduler(
+        'scheduled-feedback-analytics',
+        { pattern: feedbackAnalyticsCron },
+        {
+          name: 'scheduled-feedback-analytics',
+          data: {
+            periodDays: 30,
+            save: false,
+            correlationId: `scheduled-feedback-analytics-${Date.now()}`,
+          },
+          opts: DEFAULT_FEEDBACK_ANALYTICS_JOB_OPTIONS,
+        }
+      );
+      this.logger.info(
+        { cron: feedbackAnalyticsCron },
+        'Scheduled feedback analytics job registered'
+      );
+
+      // Memory retention — daily at 03:00 UTC (offset from feedback analytics)
+      const memoryRetentionCron = process.env.AI_MEMORY_RETENTION_CRON || MEMORY_RETENTION_CRON;
+      const memoryRetentionQueue = this.getQueue(MEMORY_RETENTION_QUEUE);
+      await memoryRetentionQueue.upsertJobScheduler(
+        'scheduled-memory-retention',
+        { pattern: memoryRetentionCron },
+        {
+          name: 'scheduled-memory-retention',
+          data: {
+            dryRun: false,
+            correlationId: `scheduled-memory-retention-${Date.now()}`,
+          },
+          opts: DEFAULT_MEMORY_RETENTION_JOB_OPTIONS,
+        }
+      );
+      this.logger.info({ cron: memoryRetentionCron }, 'Scheduled memory retention job registered');
     } catch (error) {
       this.logger.warn(
         { error: error instanceof Error ? error.message : String(error) },
@@ -219,6 +479,11 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
 
     // Register AI worker queues (read-write)
     const queues = AI_WORKER_QUEUES.map((name) => new BullMQAdapter(this.getQueue(name)));
+
+    // Register DLQ in dashboard (read-only inspection)
+    if (this.dlqQueue) {
+      queues.push(new BullMQAdapter(this.dlqQueue));
+    }
 
     // Also register external worker queues (read-only visibility)
     const { Queue } = await import('bullmq');
@@ -261,6 +526,27 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
       await this.monitoringFlushService.stop();
     }
 
+    // H8: Close DLQ queue and lifecycle event listeners
+    for (const queueEvents of this.queueEventListeners) {
+      await queueEvents.close().catch((err: unknown) => {
+        this.logger.warn(
+          { error: err instanceof Error ? err.message : String(err) },
+          'Error closing QueueEvents listener'
+        );
+      });
+    }
+    this.queueEventListeners = [];
+
+    if (this.dlqQueue) {
+      await this.dlqQueue.close().catch((err: unknown) => {
+        this.logger.warn(
+          { error: err instanceof Error ? err.message : String(err) },
+          'Error closing DLQ queue'
+        );
+      });
+      this.dlqQueue = null;
+    }
+
     // Close dashboard server
     if (this.dashboardServer) {
       this.dashboardServer.close();
@@ -283,6 +569,32 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
    * Agent Logs page (/agent-approvals/logs) shows real tool invocations.
    */
   protected async processJob(job: Job<AIJobData>): Promise<AIJobResult> {
+    // --- OTel trace context restore ---
+    // Extract the W3C traceparent carrier injected at enqueue time so all
+    // child spans (including llm.invoke) are parented to the originating trace.
+    const carrier = (job.data as { _otelCarrier?: Record<string, string> })._otelCarrier ?? {};
+    const parentContext = propagation.extract(otelContext.active(), carrier);
+
+    // Extract tenantId for AsyncLocalStorage so wrapModelWithTracing can stamp spans.
+    const tenantIdForStore = (job.data as { tenantId?: string }).tenantId ?? 'unknown';
+
+    // L1 — Pino MDC: populate correlationId + tenantId for every log line
+    // emitted during job processing. Per-job runWithLogContext calls inside
+    // specific handlers may re-enter this ALS with a more specific context
+    // (e.g. validated correlationId); those nested calls override cleanly.
+    const correlationId =
+      (job.data as { correlationId?: string }).correlationId ?? job.id ?? undefined;
+
+    return otelContext.with(parentContext, async () =>
+      tenantContextStore.run({ tenantId: tenantIdForStore }, async () =>
+        runWithLogContext({ correlationId, tenantId: tenantIdForStore, userId: undefined }, () =>
+          this._processJobImpl(job)
+        )
+      )
+    );
+  }
+
+  private async _processJobImpl(job: Job<AIJobData>): Promise<AIJobResult> {
     const ctx = extractJobContext(job.queueName, job.data);
     const startMs = Date.now();
 
@@ -299,6 +611,9 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
           [SCORING_QUEUE]: 'lead_scoring_chain',
           [PREDICTION_QUEUE]: 'prediction_chain',
           [INSIGHT_QUEUE]: 'insight_generation_chain',
+          [SUMMARIZE_QUEUE]: 'conversation_summarization_chain',
+          [FEEDBACK_ANALYTICS_QUEUE]: 'feedback_analytics_chain',
+          [MEMORY_RETENTION_QUEUE]: 'memory_retention_chain',
         }[job.queueName] ?? job.queueName;
 
       switch (job.queueName) {
@@ -310,6 +625,15 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
           break;
         case INSIGHT_QUEUE:
           result = await processInsightJob(job as Job<InsightJobData>); // NOSONAR
+          break;
+        case SUMMARIZE_QUEUE:
+          result = await processSummarizeJob(job as Job<SummarizeConversationJobData>); // NOSONAR
+          break;
+        case FEEDBACK_ANALYTICS_QUEUE:
+          result = await processFeedbackAnalyticsJob(job as Job<FeedbackAnalyticsJobData>); // NOSONAR
+          break;
+        case MEMORY_RETENTION_QUEUE:
+          result = await processMemoryRetentionJob(job as Job<MemoryRetentionJobData>); // NOSONAR
           break;
         default:
           throw new Error(`Unknown queue: ${job.queueName}`);
@@ -348,6 +672,9 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
             [SCORING_QUEUE]: 'lead_scoring_chain',
             [PREDICTION_QUEUE]: 'prediction_chain',
             [INSIGHT_QUEUE]: 'insight_generation_chain',
+            [SUMMARIZE_QUEUE]: 'conversation_summarization_chain',
+            [FEEDBACK_ANALYTICS_QUEUE]: 'feedback_analytics_chain',
+            [MEMORY_RETENTION_QUEUE]: 'memory_retention_chain',
           }[job.queueName] ?? job.queueName;
 
         await recordToolCall(
@@ -382,6 +709,10 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
 
     // Prediction result
     if ('prediction' in r) summary.prediction = r.prediction;
+
+    // Memory retention result
+    if ('tenantsProcessed' in r) summary.tenantsProcessed = r.tenantsProcessed;
+    if ('tenantsSkipped' in r) summary.tenantsSkipped = r.tenantsSkipped;
 
     if ('processingTimeMs' in r) summary.processingTimeMs = r.processingTimeMs;
 
@@ -439,12 +770,15 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
   }
 
   private getProviderModel(): string {
+    if (aiConfig.provider === 'litellm') return 'litellm-proxy';
     if (aiConfig.provider === 'openai') return aiConfig.openai.model;
     if (aiConfig.provider === 'ollama') return aiConfig.ollama.model;
     return 'mock';
   }
 
   private getProviderEndpoint(): string {
+    if (aiConfig.provider === 'litellm')
+      return process.env['LITELLM_BASE_URL'] || 'http://localhost:4000/v1';
     if (aiConfig.provider === 'openai') return aiConfig.openai.baseUrl || 'https://api.openai.com';
     if (aiConfig.provider === 'ollama') return aiConfig.ollama.baseUrl;
     return 'mock';
@@ -490,6 +824,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     lastCheck: string
   ): Promise<ComponentHealth> | ComponentHealth {
     if (aiConfig.provider === 'mock') return this.getMockProviderHealth(lastCheck);
+    if (aiConfig.provider === 'litellm') return this.getOpenAIProviderHealth(lastCheck); // LiteLLM uses same OpenAI-compat check
     if (aiConfig.provider === 'openai') return this.getOpenAIProviderHealth(lastCheck);
     if (aiConfig.provider === 'ollama') return this.checkOllamaHealth(lastCheck);
     return {

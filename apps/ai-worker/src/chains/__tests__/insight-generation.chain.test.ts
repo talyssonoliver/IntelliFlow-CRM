@@ -28,15 +28,17 @@ vi.mock('../../config/ai.config', () => ({
   },
 }));
 
-vi.mock('@langchain/openai', () => ({
-  ChatOpenAI: vi.fn().mockImplementation(() => ({
+// Pattern A: mock the factory — the mock provider routes through createLLM
+vi.mock('../../lib/llm-factory.js', () => ({
+  createLLM: vi.fn(() => ({
     invoke: vi.fn().mockResolvedValue({ content: '{}' }),
+    withStructuredOutput: vi.fn(() => ({
+      invoke: vi.fn().mockResolvedValue({}),
+    })),
   })),
-}));
-
-vi.mock('@langchain/ollama', () => ({
-  ChatOllama: vi.fn().mockImplementation(() => ({
-    invoke: vi.fn().mockResolvedValue({ content: '{}' }),
+  createEmbeddings: vi.fn(() => ({
+    embedQuery: vi.fn().mockResolvedValue([]),
+    embedDocuments: vi.fn().mockResolvedValue([]),
   })),
 }));
 
@@ -44,11 +46,21 @@ vi.mock('../../utils/cost-tracker', () => ({
   costTracker: { recordUsage: vi.fn() },
 }));
 
-vi.mock('../../utils/openai-client', () => ({
-  getOpenAIClientSettings: vi.fn().mockReturnValue({
-    apiKey: 'test-key',
-    configuration: {},
-  }),
+// Mock the VersionLoader singleton so tests never hit the DB.
+// Default: getChainConfig throws (simulates no active version → fallback to default prompt).
+vi.mock('../../versioning/chain-version-loader', () => ({
+  getVersionLoader: vi.fn(() => ({
+    getChainConfig: vi.fn().mockRejectedValue(new Error('No active version')),
+  })),
+  CHAIN_TYPE_MAP: {
+    LEAD_SCORING: 'SCORING',
+    CHURN_RISK: 'SCORING',
+    INSIGHT_GENERATION: 'QUALIFICATION',
+    SENTIMENT_ANALYSIS: 'EMAIL_WRITER',
+    TICKET_ROUTING: 'FOLLOWUP',
+    AUTO_RESPONSE: 'EMAIL_WRITER',
+  },
+  configureVersionLoader: vi.fn(),
 }));
 
 import {
@@ -107,7 +119,7 @@ describe('InsightGenerationChain', () => {
     it('should fall back to heuristics when LLM throws timeout', async () => {
       const chain = new InsightGenerationChain();
       // Override the model to throw
-      (chain as any).model = {
+      (chain as any).structuredModel = {
         invoke: vi.fn().mockRejectedValue(new Error('Request timeout')),
       };
 
@@ -125,8 +137,9 @@ describe('InsightGenerationChain', () => {
 
     it('should fall back to heuristics when LLM returns malformed JSON', async () => {
       const chain = new InsightGenerationChain();
-      (chain as any).model = {
-        invoke: vi.fn().mockResolvedValue({ content: 'not valid json at all' }),
+      // structuredModel throws if the LLM returns invalid data (Zod validation error path)
+      (chain as any).structuredModel = {
+        invoke: vi.fn().mockRejectedValue(new Error('ZodError: invalid JSON structure')),
       };
 
       const input = createInput({
@@ -143,20 +156,23 @@ describe('InsightGenerationChain', () => {
 
     it('should normalize missing optional LLM fields instead of falling back', async () => {
       const chain = new InsightGenerationChain();
-      (chain as any).model = {
+      // structuredModel.invoke returns the parsed object directly (no content wrapper).
+      // Optional fields with Zod defaults (suggestedActions, entityId, reasoning) must be
+      // explicitly included or undefined in the mock — Zod doesn't run on the mock return.
+      (chain as any).structuredModel = {
         invoke: vi.fn().mockResolvedValue({
-          content: JSON.stringify({
-            insights: [
-              {
-                entityType: 'task',
-                type: 'reminder',
-                title: 'Overdue tasks need attention',
-                description: 'There are 3 overdue tasks in your pipeline.',
-                confidence: 0.8,
-                priority: 'high',
-              },
-            ],
-          }),
+          insights: [
+            {
+              entityType: 'task',
+              type: 'reminder',
+              title: 'Overdue tasks need attention',
+              description: 'There are 3 overdue tasks in your pipeline.',
+              confidence: 0.8,
+              priority: 'high',
+              // entityId and reasoning intentionally omitted to test normalization
+              suggestedActions: [], // required by chain logic even though Zod marks optional
+            },
+          ],
         }),
       };
 
@@ -176,7 +192,7 @@ describe('InsightGenerationChain', () => {
     it('should produce achievement insight when no items flagged', async () => {
       const chain = new InsightGenerationChain();
       // Override to throw so we exercise fallback for empty input
-      (chain as any).model = {
+      (chain as any).structuredModel = {
         invoke: vi.fn().mockRejectedValue(new Error('timeout')),
       };
 
@@ -315,6 +331,47 @@ describe('InsightGenerationChain', () => {
       expect(types).toContain('warning');
       expect(types).toContain('opportunity');
       expect(types).toContain('reminder');
+    });
+  });
+
+  // ============================================================
+  // H3: VersionLoader integration tests
+  // ============================================================
+
+  describe('VersionLoader integration (H3)', () => {
+    it('should accept optional tenantId constructor option without throwing', () => {
+      expect(() => new InsightGenerationChain({ tenantId: 'tenant-abc' })).not.toThrow();
+    });
+
+    it('uses default prompt when VersionLoader returns null (no active version)', async () => {
+      const tenantChain = new InsightGenerationChain({ tenantId: 'tenant-xyz' });
+      const result = await tenantChain.generateInsightsWithMeta(createInput());
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result.insights)).toBe(true);
+    });
+
+    it('uses versioned prompt when VersionLoader returns a config', async () => {
+      const { getVersionLoader } = await import('../../versioning/chain-version-loader');
+      vi.mocked(getVersionLoader).mockReturnValueOnce({
+        getChainConfig: vi.fn().mockResolvedValue({
+          prompt: 'Custom versioned insight prompt: {context}',
+          model: 'gpt-4',
+          temperature: 0.4,
+          maxTokens: 2000,
+        }),
+      } as any);
+
+      const tenantChain = new InsightGenerationChain({ tenantId: 'tenant-versioned' });
+      const result = await tenantChain.generateInsightsWithMeta(createInput());
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result.insights)).toBe(true);
+    });
+
+    it('falls back to default prompt when VersionLoader throws', async () => {
+      const tenantChain = new InsightGenerationChain({ tenantId: 'tenant-throw' });
+      await expect(tenantChain.generateInsightsWithMeta(createInput())).resolves.toBeDefined();
     });
   });
 });

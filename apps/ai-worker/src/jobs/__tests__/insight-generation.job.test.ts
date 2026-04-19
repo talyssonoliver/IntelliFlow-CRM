@@ -18,17 +18,22 @@ const mockTaskCreate = vi.hoisted(() => vi.fn());
 const mockLeadAIInsightUpsert = vi.hoisted(() => vi.fn());
 const mockContactAIInsightUpsert = vi.hoisted(() => vi.fn());
 
-vi.mock('../..//chains/insight-generation.chain', () => ({
-  getInsightGenerationChain: () => ({
-    generateInsightsWithMeta: mockGenerateInsightsWithMeta,
-    generateFallbackInsights: mockGenerateFallbackInsights,
-  }),
-}));
+vi.mock('../..//chains/insight-generation.chain', () => {
+  class InsightGenerationChain {
+    generateInsightsWithMeta = mockGenerateInsightsWithMeta;
+    generateFallbackInsights = mockGenerateFallbackInsights;
+  }
+  return {
+    getInsightGenerationChain: () => new InsightGenerationChain(),
+    InsightGenerationChain,
+  };
+});
 
 vi.mock('@intelliflow/db', () => ({
   prisma: {
     aIInsight: {
       create: (...args: any[]) => mockCreate(...args),
+      findFirst: () => Promise.resolve(null),
     },
     notification: {
       create: (...args: any[]) => mockNotificationCreate(...args),
@@ -278,5 +283,52 @@ describe('InsightJobDataSchema', () => {
       staleContacts: [],
     });
     expect(result.success).toBe(false);
+  });
+});
+
+describe('processInsightJob — feature flag ai.insights.enabled', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should return early with skipped result when flag is disabled', async () => {
+    vi.stubEnv('ENABLE_AI_INSIGHTS_JOB', 'false');
+    const job = createMockJob({});
+    const result = (await processInsightJob(job)) as any;
+    expect(result.skipped).toBe(true);
+    expect(result.reason).toBe('feature-flag-disabled');
+  });
+
+  it('should NOT call the insight chain when flag is disabled', async () => {
+    vi.stubEnv('ENABLE_AI_INSIGHTS_JOB', 'false');
+    const job = createMockJob({
+      dealsAtRisk: [{ id: 'deal-1', name: 'Enterprise Deal', daysSinceUpdate: 10 }],
+    });
+    await processInsightJob(job);
+    expect(mockGenerateInsightsWithMeta).not.toHaveBeenCalled();
+  });
+
+  it('should process normally when flag is enabled', async () => {
+    vi.stubEnv('ENABLE_AI_INSIGHTS_JOB', 'true');
+    mockGenerateInsightsWithMeta.mockResolvedValue({
+      insights: [],
+      source: 'llm',
+      executionTimeMs: 10,
+    });
+    const job = createMockJob({});
+    const result = (await processInsightJob(job)) as any;
+    expect(result.skipped).toBeUndefined();
+  });
+
+  it('should process normally when env var is absent (default-on)', async () => {
+    delete process.env['ENABLE_AI_INSIGHTS_JOB'];
+    mockGenerateInsightsWithMeta.mockResolvedValue({
+      insights: [],
+      source: 'llm',
+      executionTimeMs: 10,
+    });
+    const job = createMockJob({});
+    const result = (await processInsightJob(job)) as any;
+    expect(result.skipped).toBeUndefined();
   });
 });

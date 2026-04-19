@@ -14,25 +14,13 @@
  * @module chains/churn-risk
  */
 
-import { ChatOpenAI } from '@langchain/openai';
-import { ChatOllama } from '@langchain/ollama';
 import { PromptTemplate } from '@langchain/core/prompts';
-import { StructuredOutputParser } from '@langchain/core/output_parsers';
-import type { BaseMessage } from '@langchain/core/messages';
 import { z } from 'zod';
 import { aiConfig } from '../config/ai.config';
-import { costTracker } from '../utils/cost-tracker';
-import { getOpenAIClientSettings } from '../utils/openai-client';
 import { sanitizeStringField } from '../utils/input-sanitizer';
+import { createLLM, createLLMForTenant } from '../lib/llm-factory';
+import { getVersionLoader, CHAIN_TYPE_MAP } from '../versioning/chain-version-loader';
 import pino from 'pino';
-
-/**
- * Interface for LLM model invocation
- * Supports both real LangChain models and mock implementations
- */
-interface LLMModel {
-  invoke(input: BaseMessage[] | string): Promise<{ content: string | unknown[] }>;
-}
 
 // Import domain constants (IFC-095: DRY pattern)
 import { CHURN_RISK_LEVELS, type ChurnRiskLevel } from '@intelliflow/domain';
@@ -201,67 +189,23 @@ const llmOutputSchema = z.object({
  * actionable recommendations.
  */
 export class ChurnRiskChain {
-  private readonly model: LLMModel;
-  private readonly parser: StructuredOutputParser<typeof llmOutputSchema>;
+  private structuredModel: { invoke(input: unknown): Promise<unknown> };
   private readonly prompt: PromptTemplate;
+  private readonly tenantId?: string;
 
-  constructor() {
+  constructor(options?: { tenantId?: string }) {
+    this.tenantId = options?.tenantId;
+
     // Production guard: prevent mock provider in production (IFC-095 P1)
     validateProviderForProduction();
 
-    // Initialize the appropriate model based on configuration
-    // Model type uses `any` due to LangChain's complex union types
-    if (aiConfig.provider === 'openai') {
-      const openAIClientSettings = getOpenAIClientSettings();
-      this.model = new ChatOpenAI({
-        modelName: aiConfig.openai.model,
-        temperature: 0.3, // Lower temperature for consistent predictions
-        maxTokens: 1500,
-        timeout: aiConfig.openai.timeout,
-        apiKey: openAIClientSettings.apiKey,
-        configuration: openAIClientSettings.configuration,
-        callbacks: aiConfig.features.enableChainLogging
-          ? [
-              {
-                handleLLMEnd: async (output) => {
-                  const usage = output.llmOutput?.tokenUsage;
-                  if (usage && aiConfig.costTracking.enabled) {
-                    costTracker.recordUsage({
-                      model: aiConfig.openai.model,
-                      inputTokens: usage.promptTokens || 0,
-                      outputTokens: usage.completionTokens || 0,
-                      operationType: 'churn_risk_prediction',
-                    });
-                  }
-                },
-              },
-            ]
-          : undefined,
-      });
-    } else if (aiConfig.provider === 'ollama') {
-      this.model = new ChatOllama({
-        baseUrl: aiConfig.ollama.baseUrl,
-        model: aiConfig.ollama.model,
-        temperature: 0.3,
-      });
-
-      logger.info(
-        {
-          baseUrl: aiConfig.ollama.baseUrl,
-          model: aiConfig.ollama.model,
-        },
-        'Initialized Ollama provider for churn risk prediction'
-      );
-    } else if (aiConfig.provider === 'mock') {
-      this.model = {
-        invoke: async () => ({ content: this.getMockResponse() }),
-      };
-    } else {
-      throw new Error(`Unsupported AI provider: ${aiConfig.provider}`);
-    }
-
-    // Create structured output parser using module-level schema
-    this.parser = StructuredOutputParser.fromZodSchema(llmOutputSchema);
+    // Initialize LLM via factory — provider/tier routing handled centrally
+    const llm = createLLM('scoring', 'free', {
+      temperature: 0.3,
+      maxTokens: 1500,
+      timeout: aiConfig.openai.timeout,
+    });
+    this.structuredModel = (llm as any).withStructuredOutput(llmOutputSchema);
 
     // Define the prediction prompt
     this.prompt = new PromptTemplate({
@@ -316,7 +260,7 @@ ANALYSIS INSTRUCTIONS:
    - 0.5-0.69: Moderate confidence (some data gaps)
    - Below 0.5: Low confidence (significant data missing)
 
-{format_instructions}`,
+Respond with a structured JSON object containing riskScore, confidence, topRiskFactors, explanation, recommendations, and primaryAction.`,
       inputVariables: [
         'entityType',
         'entityId',
@@ -326,12 +270,32 @@ ANALYSIS INSTRUCTIONS:
         'supportData',
         'accountData',
       ],
-      partialVariables: {
-        format_instructions: this.parser.getFormatInstructions(),
-      },
     });
 
     logger.info('Churn Risk Chain initialized');
+  }
+
+  /**
+   * Resolve tenant-versioned prompt override (falls back to default on any error).
+   */
+  private async resolveVersionedPrompt(): Promise<string | null> {
+    if (!this.tenantId) return null;
+    try {
+      const config = await getVersionLoader().getChainConfig(CHAIN_TYPE_MAP.CHURN_RISK, {
+        tenantId: this.tenantId,
+      });
+      return config.prompt ?? null;
+    } catch {
+      logger.warn(
+        {
+          chainType: 'CHURN_RISK',
+          tenantId: this.tenantId,
+          reason: 'no active version, using default',
+        },
+        'VersionLoader: failed to load versioned config'
+      );
+      return null;
+    }
   }
 
   /**
@@ -349,6 +313,17 @@ ANALYSIS INSTRUCTIONS:
         'Starting churn risk prediction'
       );
 
+      // Lazy tenant-tier resolution: if tenantId is set, re-resolve model at invoke time.
+      if (this.tenantId) {
+        const tenantModel = await createLLMForTenant('scoring', 'free', {
+          tenantId: this.tenantId,
+          temperature: 0.3,
+          maxTokens: 1500,
+          timeout: aiConfig.openai.timeout,
+        });
+        this.structuredModel = (tenantModel as any).withStructuredOutput(llmOutputSchema);
+      }
+
       // Validate input
       const validatedInput = churnRiskInputSchema.parse(input);
 
@@ -359,8 +334,17 @@ ANALYSIS INSTRUCTIONS:
       const supportData = this.formatSupportData(validatedInput);
       const accountData = this.formatAccountData(validatedInput);
 
+      // Resolve tenant-versioned prompt override; fall back to default
+      const versionedText = await this.resolveVersionedPrompt();
+      const activePrompt = versionedText
+        ? new PromptTemplate({
+            template: versionedText,
+            inputVariables: this.prompt.inputVariables,
+          })
+        : this.prompt;
+
       // Generate the prompt
-      const formattedPrompt = await this.prompt.format({
+      const formattedPrompt = await activePrompt.format({
         entityType: validatedInput.entityType,
         entityId: validatedInput.entityId,
         engagementData,
@@ -370,11 +354,8 @@ ANALYSIS INSTRUCTIONS:
         accountData,
       });
 
-      // Call the LLM
-      const response = await this.model.invoke(formattedPrompt);
-
-      // Parse the structured output
-      const parsed = (await this.parser.parse(response.content as string)) as {
+      // Call the LLM with structured output — returns typed object directly
+      const parsed = (await this.structuredModel.invoke(formattedPrompt)) as {
         riskScore: number;
         confidence: number;
         topRiskFactors: RiskFactor[];
@@ -695,45 +676,6 @@ ANALYSIS INSTRUCTIONS:
       modelVersion: 'fallback:heuristic:v2',
       dataQuality: this.assessDataQuality(input),
     };
-  }
-
-  /**
-   * Mock response for testing
-   */
-  private getMockResponse(): string {
-    return JSON.stringify({
-      riskScore: 0.35,
-      confidence: 0.85,
-      topRiskFactors: [
-        {
-          factor: 'days_since_last_login',
-          value: 12,
-          impact: 'medium',
-          reasoning: 'Customer has not logged in for 12 days, above average',
-        },
-        {
-          factor: 'usage_trend',
-          value: -0.15,
-          impact: 'medium',
-          reasoning: 'Slight decline in feature usage over past month',
-        },
-        {
-          factor: 'support_satisfaction',
-          value: '75%',
-          impact: 'low',
-          reasoning: 'Support satisfaction is acceptable but below target',
-        },
-      ],
-      explanation:
-        'Customer shows moderate churn risk due to declining engagement. Recent login gap and usage decline are primary concerns, though transaction history remains stable.',
-      recommendations: [
-        'Schedule a check-in call within 48 hours',
-        'Send personalized feature highlight email',
-        'Review recent support tickets for unresolved issues',
-        'Consider offering product training session',
-      ],
-      primaryAction: 'Schedule a proactive check-in call to understand current needs',
-    });
   }
 }
 

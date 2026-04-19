@@ -109,6 +109,14 @@ export class HallucinationChecker {
   private readonly knownEntities: Set<string> = new Set();
   private readonly factDatabase: Map<string, string> = new Map();
 
+  /**
+   * The most recent hallucination check result, or null if no check has been
+   * run yet.  Used by BaseAgent.calculateConfidence() (L4 rule-based scoring).
+   */
+  get lastCheck(): HallucinationResult | null {
+    return this.results.length > 0 ? this.results[this.results.length - 1] : null;
+  }
+
   constructor(private readonly config: HallucinationCheckerConfig) {
     logger.info({ config }, 'HallucinationChecker initialized');
     this.initializeKnownEntities();

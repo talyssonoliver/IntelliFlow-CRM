@@ -14,58 +14,68 @@ import {
   createFollowupTask,
 } from './followup.agent';
 
-// Mock the LangChain ChatOpenAI
-vi.mock('@langchain/openai', () => ({
-  ChatOpenAI: class MockChatOpenAI {
-    invoke = vi.fn().mockResolvedValue({
-      content: JSON.stringify({
-        shouldFollowUp: true,
-        urgency: 'HIGH',
-        recommendedAction: 'PHONE_CALL',
-        reasoning: 'Lead has shown strong engagement and is at qualified stage.',
-        confidence: 0.82,
-        suggestedTiming: {
-          optimalDay: 'TUESDAY',
-          optimalTimeSlot: 'MORNING',
-          reasonForTiming: 'B2B leads are most responsive Tuesday-Thursday mornings.',
-        },
-        emailSuggestions: {
-          subject: 'Quick follow-up on our conversation',
-          keyPoints: ['Recap value proposition', 'Address timeline concerns'],
-          tone: 'PROFESSIONAL',
-        },
-        callScript: {
-          opening: 'Hi [Name], this is [Your Name] from IntelliFlow.',
-          keyQuestions: [
-            'What is your timeline for implementation?',
-            'Who else is involved in the decision?',
-          ],
-          objectionsToAnticipate: ['Budget concerns', 'Current vendor relationship'],
-          closingStatement: 'Would you be available for a 30-minute demo next week?',
-        },
-        nextSteps: [
-          {
-            action: 'Call lead at optimal time',
-            deadline: 'Tuesday 10:00 AM',
-            owner: 'Sales Rep',
-          },
-          {
-            action: 'Send follow-up email if no answer',
-            deadline: 'Tuesday 2:00 PM',
-            owner: 'Sales Rep',
-          },
-        ],
-        riskFactors: ['Long sales cycle', 'Multiple stakeholders'],
-        opportunitySignals: ['Strong engagement', 'High lead score', 'Urgent timeline'],
-      }),
-    });
+// Pattern A: mock the factory — agent calls createLLM and uses withStructuredOutput
+// Use vi.hoisted so the constant is available inside the hoisted vi.mock() factory.
+const { FOLLOWUP_PARSED_RESPONSE } = vi.hoisted(() => ({
+  FOLLOWUP_PARSED_RESPONSE: {
+    shouldFollowUp: true,
+    urgency: 'HIGH',
+    recommendedAction: 'PHONE_CALL',
+    reasoning: 'Lead has shown strong engagement and is at qualified stage.',
+    confidence: 0.82,
+    suggestedTiming: {
+      optimalDay: 'TUESDAY',
+      optimalTimeSlot: 'MORNING',
+      reasonForTiming: 'B2B leads are most responsive Tuesday-Thursday mornings.',
+    },
+    emailSuggestions: {
+      subject: 'Quick follow-up on our conversation',
+      keyPoints: ['Recap value proposition', 'Address timeline concerns'],
+      tone: 'PROFESSIONAL',
+    },
+    callScript: {
+      opening: 'Hi [Name], this is [Your Name] from IntelliFlow.',
+      keyQuestions: [
+        'What is your timeline for implementation?',
+        'Who else is involved in the decision?',
+      ],
+      objectionsToAnticipate: ['Budget concerns', 'Current vendor relationship'],
+      closingStatement: 'Would you be available for a 30-minute demo next week?',
+    },
+    nextSteps: [
+      {
+        action: 'Call lead at optimal time',
+        deadline: 'Tuesday 10:00 AM',
+        owner: 'Sales Rep',
+      },
+      {
+        action: 'Send follow-up email if no answer',
+        deadline: 'Tuesday 2:00 PM',
+        owner: 'Sales Rep',
+      },
+    ],
+    riskFactors: ['Long sales cycle', 'Multiple stakeholders'],
+    opportunitySignals: ['Strong engagement', 'High lead score', 'Urgent timeline'],
   },
+}));
+
+vi.mock('../lib/llm-factory.js', () => ({
+  createLLM: vi.fn(() => ({
+    invoke: vi.fn().mockResolvedValue({ content: JSON.stringify(FOLLOWUP_PARSED_RESPONSE) }),
+    withStructuredOutput: vi.fn(() => ({
+      invoke: vi.fn().mockResolvedValue(FOLLOWUP_PARSED_RESPONSE),
+    })),
+  })),
+  createEmbeddings: vi.fn(() => ({
+    embedQuery: vi.fn().mockResolvedValue([]),
+    embedDocuments: vi.fn().mockResolvedValue([]),
+  })),
 }));
 
 // Mock the AI config
 vi.mock('../config/ai.config', () => ({
   aiConfig: {
-    provider: 'openai',
+    provider: 'litellm',
     openai: {
       model: 'gpt-4-turbo-preview',
       temperature: 0.7,

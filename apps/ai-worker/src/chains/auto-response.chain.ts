@@ -16,23 +16,23 @@
  * - ChainMonitor integration for latency/cost tracking
  */
 
-import { ChatOpenAI } from '@langchain/openai';
-import { ChatOllama } from '@langchain/ollama';
 import type { BaseChatModel } from '@langchain/core/language_models/chat_models';
+import { z } from 'zod';
 import { aiConfig } from '../config/ai.config';
-import { getOpenAIClientSettings } from '../utils/openai-client';
+import { createLLM, createLLMForTenant } from '../lib/llm-factory';
+import { sanitizeStringField } from '../utils/input-sanitizer';
+import { getVersionLoader, CHAIN_TYPE_MAP } from '../versioning/chain-version-loader';
+import {
+  withMonitoring,
+  createChainMonitor,
+  type MonitoredResult,
+} from '../monitoring/chain-monitor';
 import pino from 'pino';
 
 const logger = pino({
   name: 'auto-response-chain',
   level: process.env.LOG_LEVEL || 'info',
 });
-import { sanitizeStringField } from '../utils/input-sanitizer';
-import {
-  withMonitoring,
-  createChainMonitor,
-  type MonitoredResult,
-} from '../monitoring/chain-monitor';
 
 /**
  * Input for auto-response generation
@@ -67,6 +67,18 @@ export interface AutoResponseInput {
 }
 
 /**
+ * Zod schema for LLM-generated portion of the auto-response.
+ * `modelVersion` is stamped by the chain itself and is NOT requested from the model.
+ */
+const autoResponseLLMSchema = z.object({
+  subject: z.string().describe('Short subject line, <= 100 chars'),
+  body: z.string().describe('Email body in plain text, <= 2000 chars'),
+  confidence: z.number().min(0).max(1).describe('Model self-reported confidence 0-1'),
+  tone: z.string().optional(),
+  suggestedFollowUp: z.string().optional(),
+});
+
+/**
  * Output from auto-response generation
  */
 export interface AutoResponseOutput {
@@ -95,9 +107,10 @@ export interface ValidationResult {
  * IFC-029: All user inputs are sanitized before prompt construction.
  */
 export class AutoResponseChain {
-  private readonly llm: BaseChatModel;
+  private llm: BaseChatModel;
   private readonly modelVersion: string;
   private readonly chainMonitor = createChainMonitor({ latencyThresholdMs: 1000 });
+  private readonly tenantId?: string;
 
   // Content limits (from ResponseContent value object)
   private static readonly MAX_SUBJECT_LENGTH = 100;
@@ -110,41 +123,40 @@ export class AutoResponseChain {
   private static readonly MAX_MESSAGE_LENGTH = 2000;
   private static readonly MAX_CUSTOM_INSTRUCTIONS_LENGTH = 500;
 
-  constructor() {
-    if (aiConfig.provider === 'openai') {
-      const openAIClientSettings = getOpenAIClientSettings();
-      this.llm = new ChatOpenAI({
-        modelName: aiConfig.openai.model,
-        temperature: aiConfig.openai.temperature,
-        maxTokens: aiConfig.openai.maxTokens,
-        timeout: aiConfig.openai.timeout,
-        apiKey: openAIClientSettings.apiKey,
-        configuration: openAIClientSettings.configuration,
-      });
-      this.modelVersion = `${openAIClientSettings.endpoint}:${aiConfig.openai.model}:v1`;
-    } else if (aiConfig.provider === 'ollama') {
-      const ollamaTimeout = aiConfig.ollama.timeout;
-      this.llm = new ChatOllama({
-        baseUrl: aiConfig.ollama.baseUrl,
-        model: aiConfig.ollama.model,
-        temperature: aiConfig.ollama.temperature,
-        numCtx: 4096,
-        format: 'json',
-        fetch: (url: string | URL | Request, init?: RequestInit) => {
-          return globalThis.fetch(url, {
-            ...init,
-            signal: init?.signal ?? AbortSignal.timeout(ollamaTimeout),
-          });
-        },
-      });
-      this.modelVersion = `ollama:${aiConfig.ollama.model}:v1`;
+  constructor(options?: { tenantId?: string }) {
+    this.tenantId = options?.tenantId;
 
-      logger.info(
-        { baseUrl: aiConfig.ollama.baseUrl, model: aiConfig.ollama.model },
-        'Initialized Ollama provider for auto-response'
+    // Initialize LLM via factory — provider/tier routing handled centrally
+    this.llm = createLLM('email', 'free', {
+      temperature: aiConfig.openai.temperature,
+      maxTokens: aiConfig.openai.maxTokens,
+      timeout: aiConfig.openai.timeout,
+    });
+    this.modelVersion = `email-free:auto-response:v1`;
+  }
+
+  /**
+   * Resolve tenant-versioned custom instructions override (falls back to null on any error).
+   * AutoResponseChain uses a dynamic prompt (buildPrompt), so we apply the versioned
+   * config's prompt as custom instructions prefix when a tenant override exists.
+   */
+  private async resolveVersionedInstructions(): Promise<string | null> {
+    if (!this.tenantId) return null;
+    try {
+      const config = await getVersionLoader().getChainConfig(CHAIN_TYPE_MAP.AUTO_RESPONSE, {
+        tenantId: this.tenantId,
+      });
+      return config.prompt ?? null;
+    } catch {
+      logger.warn(
+        {
+          chainType: 'AUTO_RESPONSE',
+          tenantId: this.tenantId,
+          reason: 'no active version, using default',
+        },
+        'VersionLoader: failed to load versioned config'
       );
-    } else {
-      throw new Error(`Unsupported AI provider: ${aiConfig.provider}`);
+      return null;
     }
   }
 
@@ -157,21 +169,63 @@ export class AutoResponseChain {
    * @throws Error if LLM call fails or response cannot be parsed
    */
   async generateResponse(input: AutoResponseInput): Promise<AutoResponseOutput> {
-    const prompt = this.buildPrompt(input);
+    // Lazy tenant-tier resolution: if tenantId is set, re-resolve model at invoke time.
+    if (this.tenantId) {
+      this.llm = await createLLMForTenant('email', 'free', {
+        tenantId: this.tenantId,
+        temperature: aiConfig.openai.temperature,
+        maxTokens: aiConfig.openai.maxTokens,
+        timeout: aiConfig.openai.timeout,
+      });
+    }
 
-    // Call LLM - NO TEMPLATE FALLBACK per specification
-    const response = await this.llm.invoke(prompt);
+    // Resolve tenant-versioned instructions; apply as custom instructions prefix when available
+    const versionedInstructions = await this.resolveVersionedInstructions();
+    const effectiveInput: AutoResponseInput = versionedInstructions
+      ? {
+          ...input,
+          tenantSettings: {
+            ...input.tenantSettings,
+            customInstructions: versionedInstructions,
+          },
+        }
+      : input;
+    const prompt = this.buildPrompt(effectiveInput);
 
-    // Parse and validate JSON response with fallback for markdown-wrapped JSON
-    const content =
-      typeof response.content === 'string' ? response.content : JSON.stringify(response.content);
-    const parsed = this.parseResponse(content);
+    // Prefer structured-output binding when the model supports it — eliminates
+    // fragile JSON parsing. Falls back to raw invoke + parseResponse if the
+    // underlying model/provider doesn't implement withStructuredOutput.
+    let parsed: z.infer<typeof autoResponseLLMSchema>;
+    try {
+      const structured = this.llm.withStructuredOutput(autoResponseLLMSchema, {
+        name: 'auto_response',
+      });
+      parsed = (await structured.invoke(prompt)) as z.infer<typeof autoResponseLLMSchema>;
+    } catch (structuredErr) {
+      logger.warn(
+        {
+          err: structuredErr instanceof Error ? structuredErr.message : String(structuredErr),
+        },
+        'withStructuredOutput unavailable or failed — falling back to raw invoke + JSON parse'
+      );
+      const response = await this.llm.invoke(prompt);
+      const content =
+        typeof response.content === 'string' ? response.content : JSON.stringify(response.content);
+      const raw = this.parseResponse(content);
+      parsed = autoResponseLLMSchema.parse({
+        subject: raw.subject ?? 'Re: Your inquiry',
+        body: raw.body ?? '',
+        confidence: typeof raw.confidence === 'number' ? raw.confidence : 0.7,
+        tone: raw.tone,
+        suggestedFollowUp: raw.suggestedFollowUp,
+      });
+    }
 
-    // Build output with length constraints
+    // Build output with length constraints; modelVersion is stamped here, not by the model
     const output: AutoResponseOutput = {
       subject: this.truncateSubject(parsed.subject || 'Re: Your inquiry'),
       body: this.truncateBody(parsed.body || ''),
-      confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0.7,
+      confidence: parsed.confidence,
       modelVersion: this.modelVersion,
       tone: parsed.tone,
       suggestedFollowUp: parsed.suggestedFollowUp,

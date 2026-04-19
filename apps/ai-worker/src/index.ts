@@ -9,6 +9,11 @@
 // so that aiConfig and chain constructors see the correct values.
 import './env';
 
+// CRITICAL: OTel MUST be the second import — before LangChain, BullMQ, express.
+// Auto-instrumentation patches Node.js module hooks; if libraries load first
+// they will not be instrumented.
+import './tracing/otel.js';
+
 import pino from 'pino';
 
 const logger = pino({
@@ -40,6 +45,10 @@ export {
   createQualificationTask,
 } from './agents/qualification.agent';
 export { createLogger, withContext, withTiming } from './utils/logger';
+
+// M6: conversation-history replay helper
+export { replayConversation } from './utils/conversation-replay';
+export type { ReplayOptions, ReplayResult } from './utils/conversation-replay';
 
 // IFC-154: Export OCR worker for cross-worker reuse
 export {
@@ -218,13 +227,19 @@ async function initializeWorker() {
     // Validate configuration
     const { aiConfig } = await import('./config/ai.config.js');
 
-    const ollamaModelName = aiConfig.provider === 'ollama' ? aiConfig.ollama.model : 'mock';
-    const modelName = aiConfig.provider === 'openai' ? aiConfig.openai.model : ollamaModelName;
-    const ollamaEndpointUrl = aiConfig.provider === 'ollama' ? aiConfig.ollama.baseUrl : 'mock';
+    // Derive display model/endpoint from provider config — factory owns actual routing
+    const modelName =
+      aiConfig.provider === 'ollama'
+        ? aiConfig.ollama.model
+        : aiConfig.provider === 'mock'
+          ? 'mock'
+          : `litellm/${aiConfig.provider}`;
     const endpointUrl =
-      aiConfig.provider === 'openai'
-        ? aiConfig.openai.baseUrl || 'https://api.openai.com'
-        : ollamaEndpointUrl;
+      aiConfig.provider === 'ollama'
+        ? aiConfig.ollama.baseUrl
+        : aiConfig.provider === 'mock'
+          ? 'mock'
+          : process.env['LITELLM_BASE_URL'] || 'http://localhost:4000/v1';
     logger.info(
       {
         provider: aiConfig.provider,

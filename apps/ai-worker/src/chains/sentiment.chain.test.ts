@@ -16,6 +16,23 @@ import {
   type SentimentResult,
 } from './sentiment.chain';
 
+// Mock the VersionLoader singleton so tests never hit the DB.
+// Default: getChainConfig throws (simulates no active version → fallback to default prompt).
+vi.mock('../versioning/chain-version-loader', () => ({
+  getVersionLoader: vi.fn(() => ({
+    getChainConfig: vi.fn().mockRejectedValue(new Error('No active version')),
+  })),
+  CHAIN_TYPE_MAP: {
+    LEAD_SCORING: 'SCORING',
+    CHURN_RISK: 'SCORING',
+    INSIGHT_GENERATION: 'QUALIFICATION',
+    SENTIMENT_ANALYSIS: 'EMAIL_WRITER',
+    TICKET_ROUTING: 'FOLLOWUP',
+    AUTO_RESPONSE: 'EMAIL_WRITER',
+  },
+  configureVersionLoader: vi.fn(),
+}));
+
 // Mock the AI config to use mock provider
 vi.mock('../config/ai.config', () => ({
   aiConfig: {
@@ -31,6 +48,33 @@ vi.mock('../config/ai.config', () => ({
     features: { enableChainLogging: false },
     performance: { rateLimitPerMinute: 60 },
   },
+}));
+
+// Mock LLM factory — SentimentAnalysisChain's constructor calls createLLM()
+// which otherwise opens a real LiteLLM/OpenAI connection and hangs without
+// credentials. Matches llmOutputSchema shape in sentiment.chain.ts:131.
+vi.mock('../lib/llm-factory.js', () => ({
+  createLLM: vi.fn(() => ({
+    invoke: vi.fn().mockResolvedValue({ content: '{}' }),
+    withStructuredOutput: vi.fn(() => ({
+      invoke: vi.fn().mockResolvedValue({
+        // Match upper-case enums exported from @intelliflow/domain.
+        sentiment: 'NEUTRAL',
+        sentimentScore: 0,
+        emotions: [{ emotion: 'TRUST', intensity: 0.5 }],
+        primaryEmotion: 'TRUST',
+        urgency: 'LOW',
+        urgencyScore: 0.4,
+        keyPhrases: [{ phrase: 'stub phrase', sentiment: 'neutral' }],
+        confidence: 0.7,
+        reasoning: 'Stubbed by test mock',
+      }),
+    })),
+  })),
+  createEmbeddings: vi.fn(() => ({
+    embedQuery: vi.fn().mockResolvedValue([]),
+    embedDocuments: vi.fn().mockResolvedValue([]),
+  })),
 }));
 
 describe('SentimentAnalysisChain', () => {
@@ -322,6 +366,52 @@ describe('SentimentAnalysisChain', () => {
 
       expect(typeof result.modelVersion).toBe('string');
       expect(result.modelVersion.length).toBeGreaterThan(0);
+    });
+  });
+
+  // ============================================================
+  // H3: VersionLoader integration tests
+  // ============================================================
+
+  describe('VersionLoader integration (H3)', () => {
+    it('should accept optional tenantId constructor option without throwing', () => {
+      expect(() => new SentimentAnalysisChain({ tenantId: 'tenant-abc' })).not.toThrow();
+    });
+
+    it('uses default prompt when VersionLoader returns null (no active version)', async () => {
+      const tenantChain = new SentimentAnalysisChain({ tenantId: 'tenant-xyz' });
+      const result = await tenantChain.analyze({
+        text: 'Test message for tenant',
+        source: 'email',
+      });
+
+      expect(result).toBeDefined();
+      expect(SENTIMENT_LABELS).toContain(result.sentiment);
+    });
+
+    it('uses versioned prompt when VersionLoader returns a config', async () => {
+      const { getVersionLoader } = await import('../versioning/chain-version-loader');
+      vi.mocked(getVersionLoader).mockReturnValueOnce({
+        getChainConfig: vi.fn().mockResolvedValue({
+          prompt: 'Custom versioned sentiment prompt: {text}',
+          model: 'gpt-4-turbo-preview',
+          temperature: 0.1,
+          maxTokens: 1000,
+        }),
+      } as any);
+
+      const tenantChain = new SentimentAnalysisChain({ tenantId: 'tenant-versioned' });
+      const result = await tenantChain.analyze({ text: 'Versioned analysis test', source: 'chat' });
+
+      expect(result).toBeDefined();
+      expect(SENTIMENT_LABELS).toContain(result.sentiment);
+    });
+
+    it('falls back to default prompt when VersionLoader throws', async () => {
+      const tenantChain = new SentimentAnalysisChain({ tenantId: 'tenant-throw' });
+      await expect(
+        tenantChain.analyze({ text: 'Fallback test message', source: 'ticket' })
+      ).resolves.toBeDefined();
     });
   });
 });

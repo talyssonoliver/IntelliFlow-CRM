@@ -21,6 +21,23 @@ import {
   type ChurnRiskResult,
 } from './churn-risk.chain';
 
+// Mock the VersionLoader singleton so tests never hit the DB.
+// Default: getChainConfig throws (simulates no active version → fallback to default prompt).
+vi.mock('../versioning/chain-version-loader', () => ({
+  getVersionLoader: vi.fn(() => ({
+    getChainConfig: vi.fn().mockRejectedValue(new Error('No active version')),
+  })),
+  CHAIN_TYPE_MAP: {
+    LEAD_SCORING: 'SCORING',
+    CHURN_RISK: 'SCORING',
+    INSIGHT_GENERATION: 'QUALIFICATION',
+    SENTIMENT_ANALYSIS: 'EMAIL_WRITER',
+    TICKET_ROUTING: 'FOLLOWUP',
+    AUTO_RESPONSE: 'EMAIL_WRITER',
+  },
+  configureVersionLoader: vi.fn(),
+}));
+
 // Mock the AI config
 vi.mock('../config/ai.config', () => ({
   aiConfig: {
@@ -63,6 +80,37 @@ vi.mock('../utils/cost-tracker', () => ({
   costTracker: {
     recordUsage: vi.fn(),
   },
+}));
+
+// Mock LLM factory — ChurnRiskChain's constructor calls createLLM() which
+// otherwise opens a real LiteLLM/OpenAI connection and hangs for 15+ min
+// without credentials. Return a deterministic structured-output shape that
+// matches what churn-risk.chain.ts:312 reads off parsed.
+vi.mock('../lib/llm-factory.js', () => ({
+  createLLM: vi.fn(() => ({
+    invoke: vi.fn().mockResolvedValue({ content: '{}' }),
+    withStructuredOutput: vi.fn(() => ({
+      invoke: vi.fn().mockResolvedValue({
+        riskScore: 0.35,
+        confidence: 0.7,
+        topRiskFactors: [
+          {
+            factor: 'engagement-trend',
+            value: 'low',
+            impact: 'medium',
+            reasoning: 'Stubbed by test mock',
+          },
+        ],
+        explanation: 'Mock provider fallback',
+        recommendations: ['Monitor engagement metrics weekly'],
+        primaryAction: 'MONITOR',
+      }),
+    })),
+  })),
+  createEmbeddings: vi.fn(() => ({
+    embedQuery: vi.fn().mockResolvedValue([]),
+    embedDocuments: vi.fn().mockResolvedValue([]),
+  })),
 }));
 
 describe('ChurnRiskChain', () => {
@@ -239,9 +287,10 @@ describe('ChurnRiskChain', () => {
       // Create a chain that will fail
       const failingChain = new ChurnRiskChain();
 
-      // Override the model to throw
+      // Override structuredModel (the real field churn-risk.chain.ts:312 calls)
+      // to throw. Older tests referenced a non-existent `model` field.
       // @ts-expect-error - accessing private property for test
-      failingChain.model = {
+      failingChain.structuredModel = {
         invoke: vi.fn().mockRejectedValue(new Error('API Error')),
       };
 
@@ -264,7 +313,7 @@ describe('ChurnRiskChain', () => {
       const failingChain = new ChurnRiskChain();
 
       // @ts-expect-error - accessing private property for test
-      failingChain.model = {
+      failingChain.structuredModel = {
         invoke: vi.fn().mockRejectedValue(new Error('API Error')),
       };
 
@@ -371,6 +420,59 @@ describe('ChurnRiskChain', () => {
       expect(result.recommendations.length).toBeGreaterThan(0);
       expect(result.primaryAction).toBeDefined();
       expect(result.primaryAction.length).toBeGreaterThan(0);
+    });
+  });
+
+  // ============================================================
+  // H3: VersionLoader integration tests
+  // ============================================================
+
+  describe('VersionLoader integration (H3)', () => {
+    it('should accept optional tenantId constructor option without throwing', () => {
+      expect(() => new ChurnRiskChain({ tenantId: 'tenant-abc' })).not.toThrow();
+    });
+
+    it('uses default prompt when VersionLoader returns null (no active version)', async () => {
+      const tenantChain = new ChurnRiskChain({ tenantId: 'tenant-xyz' });
+      const result = await tenantChain.predictChurnRisk({
+        entityType: 'contact',
+        entityId: '550e8400-e29b-41d4-a716-446655440010',
+      });
+
+      expect(result).toBeDefined();
+      expect(result.riskScore).toBeGreaterThanOrEqual(0);
+      expect(result.riskScore).toBeLessThanOrEqual(1);
+    });
+
+    it('uses versioned prompt when VersionLoader returns a config', async () => {
+      const { getVersionLoader } = await import('../versioning/chain-version-loader');
+      vi.mocked(getVersionLoader).mockReturnValueOnce({
+        getChainConfig: vi.fn().mockResolvedValue({
+          prompt: 'Custom versioned churn prompt: {churn_input}',
+          model: 'gpt-4-turbo-preview',
+          temperature: 0.3,
+          maxTokens: 1500,
+        }),
+      } as any);
+
+      const tenantChain = new ChurnRiskChain({ tenantId: 'tenant-versioned' });
+      const result = await tenantChain.predictChurnRisk({
+        entityType: 'contact',
+        entityId: '550e8400-e29b-41d4-a716-446655440011',
+      });
+
+      expect(result).toBeDefined();
+      expect(result.riskScore).toBeGreaterThanOrEqual(0);
+    });
+
+    it('falls back to default prompt when VersionLoader throws', async () => {
+      const tenantChain = new ChurnRiskChain({ tenantId: 'tenant-throw' });
+      await expect(
+        tenantChain.predictChurnRisk({
+          entityType: 'lead',
+          entityId: '550e8400-e29b-41d4-a716-446655440012',
+        })
+      ).resolves.toBeDefined();
     });
   });
 });

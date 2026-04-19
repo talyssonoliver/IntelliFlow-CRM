@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { BaseAgent, AgentTask, BaseAgentConfig } from './base.agent';
-import { StructuredOutputParser } from '@langchain/core/output_parsers';
+import { ensurePromptBudget } from '../utils/prompt-budget.js';
+import { replayConversation } from '../utils/conversation-replay.js';
 import pino from 'pino';
 import {
   emailWriterOutputSchema,
@@ -52,7 +53,7 @@ export { emailWriterOutputSchema, type EmailWriterOutput } from '@intelliflow/va
  * Uses context from lead qualification and previous interactions
  */
 export class EmailWriterAgent extends BaseAgent<EmailWriterInput, EmailWriterOutput> {
-  private readonly parser: StructuredOutputParser<any>;
+  private readonly structuredModel: { invoke(input: unknown): Promise<unknown> };
 
   constructor(config?: Partial<BaseAgentConfig>) {
     super({
@@ -67,10 +68,15 @@ and response rates.`,
       maxIterations: 3,
       allowDelegation: false,
       verbose: true,
+      purpose: 'email',
+      // ADR-049: enable blocking reflection gate. Emails go directly to customers,
+      // so a higher confidenceThreshold of 0.5 is warranted (vs default 0.3).
+      usesReflection: true,
+      confidenceThreshold: 0.5,
       ...config,
     });
 
-    this.parser = StructuredOutputParser.fromZodSchema(emailWriterOutputSchema);
+    this.structuredModel = (this.model as any).withStructuredOutput(emailWriterOutputSchema);
   }
 
   /**
@@ -96,14 +102,49 @@ and response rates.`,
     // Get the system prompt
     const systemPrompt = this.generateSystemPrompt();
 
-    // Invoke the LLM
-    const messages = [this.createSystemMessage(systemPrompt), this.createHumanMessage(prompt)];
+    // M6: conversation-history replay — prepend prior turns when sessionId is available.
+    const sessionId = task.context?.sessionId;
+    const tenantId = task.context?.userId;
+    let historyMessages: import('@langchain/core/messages').BaseMessage[] = [];
+    if (sessionId && tenantId) {
+      try {
+        const replay = await replayConversation({ tenantId, sessionId });
+        historyMessages = replay.messages;
+      } catch (replayError) {
+        logger.warn(
+          {
+            recipientEmail: input.recipientEmail,
+            sessionId,
+            error: replayError instanceof Error ? replayError.message : String(replayError),
+          },
+          'Failed to load conversation history — proceeding without it'
+        );
+      }
+    }
 
-    const response = await this.invokeLLM(messages);
+    // Invoke the LLM
+    const messages = [
+      this.createSystemMessage(systemPrompt),
+      ...historyMessages,
+      this.createHumanMessage(prompt),
+    ];
+
+    const budgeted = ensurePromptBudget(messages, { maxTokens: 6000 });
+    if (budgeted.truncated) {
+      logger.warn(
+        {
+          agentName: this.config.name,
+          droppedCount: budgeted.droppedCount,
+          remaining: budgeted.messages.length,
+        },
+        'Prompt history truncated to fit token budget'
+      );
+    }
+    const response = await this.invokeLLM(budgeted.messages);
 
     // Parse structured output
     try {
-      const result = (await this.parser.parse(response)) as EmailWriterOutput;
+      const result = (await this.structuredModel.invoke(response)) as EmailWriterOutput;
 
       // Determine if human review is needed
       const reviewReasons = this.checkForHumanReview(input, result);
@@ -247,7 +288,7 @@ and response rates.`,
       '6. Suggest optimal send timing based on purpose and urgency',
       '7. Provide 2-3 alternative subject lines',
       '\n=== REQUIRED OUTPUT ===\n',
-      this.parser.getFormatInstructions()
+      'Respond with a structured JSON object matching the email writer output schema.'
     );
 
     return sections.join('\n');

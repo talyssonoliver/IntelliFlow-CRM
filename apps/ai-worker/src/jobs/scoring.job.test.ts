@@ -26,9 +26,39 @@ import {
 // Mock the scoring chain
 const mockScoreLead = vi.fn();
 
-vi.mock('../chains/scoring.chain', () => ({
-  leadScoringChain: {
-    scoreLead: (input: any) => mockScoreLead(input),
+vi.mock('../chains/scoring.chain', () => {
+  class LeadScoringChain {
+    scoreLead = (input: any) => mockScoreLead(input);
+  }
+  return {
+    leadScoringChain: { scoreLead: (input: any) => mockScoreLead(input) },
+    LeadScoringChain,
+  };
+});
+
+// Mock the version loader (no DB in unit tests)
+vi.mock('../versioning/chain-version-loader', () => ({
+  getVersionLoader: vi.fn(() => ({
+    getChainConfig: vi.fn().mockRejectedValue(new Error('no DB in tests')),
+  })),
+  configureVersionLoader: vi.fn(),
+  CHAIN_TYPE_MAP: {
+    LEAD_SCORING: 'SCORING',
+    CHURN_RISK: 'SCORING',
+    INSIGHT_GENERATION: 'QUALIFICATION',
+    SENTIMENT_ANALYSIS: 'EMAIL_WRITER',
+    TICKET_ROUTING: 'FOLLOWUP',
+    AUTO_RESPONSE: 'EMAIL_WRITER',
+  },
+}));
+
+// Mock @intelliflow/db — required because tenantId is now mandatory and
+// persistScoringResult is always called on the normal scoring path.
+vi.mock('@intelliflow/db', () => ({
+  prisma: {
+    leadAIInsight: {
+      upsert: vi.fn().mockResolvedValue({ id: 'insight-1' }),
+    },
   },
 }));
 
@@ -36,6 +66,7 @@ vi.mock('../chains/scoring.chain', () => ({
 const TEST_UUIDS = {
   lead1: '12345678-0000-4000-8000-000012345678',
   lead2: '23456789-0000-4000-8000-000023456789',
+  tenant1: '99999999-0000-4000-8000-000099999999',
 };
 
 // Mock scoring result
@@ -70,6 +101,10 @@ function createMockJob(data: ScoringJobData): Job<ScoringJobData> {
     name: 'scoring',
     updateProgress: vi.fn().mockResolvedValue(undefined),
     log: vi.fn().mockResolvedValue(undefined),
+    // scoring.job.ts:310 calls `job.extendLock(job.token!, 300_000)` during
+    // the LLM call to prevent BullMQ stall detection.
+    token: 'test-lock-token',
+    extendLock: vi.fn().mockResolvedValue(undefined),
     progress: 0,
     attemptsMade: 0,
   } as any; // partial mock of BullMQ Job<ScoringJobData>
@@ -98,6 +133,7 @@ describe('ScoringJob', () => {
   describe('ScoringJobDataSchema', () => {
     const validJobData = {
       leadId: TEST_UUIDS.lead1,
+      tenantId: TEST_UUIDS.tenant1,
       lead: {
         email: 'john.doe@acme.com',
         firstName: 'John',
@@ -115,9 +151,10 @@ describe('ScoringJob', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should validate minimal job data', () => {
+    it('should validate minimal job data with tenantId', () => {
       const minimalData = {
         leadId: TEST_UUIDS.lead1,
+        tenantId: TEST_UUIDS.tenant1,
         lead: {
           email: 'test@example.com',
           source: 'COLD_CALL',
@@ -126,6 +163,31 @@ describe('ScoringJob', () => {
 
       const result = ScoringJobDataSchema.safeParse(minimalData);
       expect(result.success).toBe(true);
+    });
+
+    it('should reject missing tenantId (H5 tenant isolation)', () => {
+      const missingTenant = {
+        leadId: TEST_UUIDS.lead1,
+        lead: {
+          email: 'test@example.com',
+          source: 'WEBSITE',
+        },
+      };
+      const result = ScoringJobDataSchema.safeParse(missingTenant);
+      expect(result.success).toBe(false);
+    });
+
+    it('should reject empty string tenantId (H5 tenant isolation)', () => {
+      const emptyTenant = {
+        leadId: TEST_UUIDS.lead1,
+        tenantId: '',
+        lead: {
+          email: 'test@example.com',
+          source: 'WEBSITE',
+        },
+      };
+      const result = ScoringJobDataSchema.safeParse(emptyTenant);
+      expect(result.success).toBe(false);
     });
 
     it('should reject invalid UUID', () => {
@@ -164,6 +226,7 @@ describe('ScoringJob', () => {
     it('should default priority to 5', () => {
       const dataWithoutPriority = {
         leadId: TEST_UUIDS.lead1,
+        tenantId: TEST_UUIDS.tenant1,
         lead: {
           email: 'test@example.com',
           source: 'WEBSITE',
@@ -177,6 +240,7 @@ describe('ScoringJob', () => {
     it('should accept metadata', () => {
       const dataWithMetadata = {
         leadId: TEST_UUIDS.lead1,
+        tenantId: TEST_UUIDS.tenant1,
         lead: {
           email: 'test@example.com',
           source: 'WEBSITE',
@@ -268,6 +332,7 @@ describe('ScoringJob', () => {
 
       const jobData: ScoringJobData = {
         leadId: TEST_UUIDS.lead1,
+        tenantId: TEST_UUIDS.tenant1,
         lead: {
           email: 'test@example.com',
           source: 'WEBSITE',
@@ -286,6 +351,7 @@ describe('ScoringJob', () => {
 
       const jobData: ScoringJobData = {
         leadId: TEST_UUIDS.lead1,
+        tenantId: TEST_UUIDS.tenant1,
         lead: { email: 'test@example.com', source: 'WEBSITE' },
         priority: 5,
       };
@@ -301,6 +367,7 @@ describe('ScoringJob', () => {
 
       const jobData: ScoringJobData = {
         leadId: TEST_UUIDS.lead1,
+        tenantId: TEST_UUIDS.tenant1,
         lead: { email: 'test@example.com', source: 'WEBSITE' },
         priority: 5,
       };
@@ -316,6 +383,7 @@ describe('ScoringJob', () => {
 
       const jobData: ScoringJobData = {
         leadId: TEST_UUIDS.lead1,
+        tenantId: TEST_UUIDS.tenant1,
         lead: { email: 'test@example.com', source: 'WEBSITE' },
         priority: 5,
       };
@@ -331,6 +399,7 @@ describe('ScoringJob', () => {
       mockScoreLead.mockResolvedValueOnce({ ...mockScoringResult, score: 80 });
       let job = createMockJob({
         leadId: TEST_UUIDS.lead1,
+        tenantId: TEST_UUIDS.tenant1,
         lead: { email: 'test@example.com', source: 'WEBSITE' },
         priority: 5,
       });
@@ -341,6 +410,7 @@ describe('ScoringJob', () => {
       mockScoreLead.mockResolvedValueOnce({ ...mockScoringResult, score: 60 });
       job = createMockJob({
         leadId: TEST_UUIDS.lead1,
+        tenantId: TEST_UUIDS.tenant1,
         lead: { email: 'test@example.com', source: 'WEBSITE' },
         priority: 5,
       });
@@ -351,6 +421,7 @@ describe('ScoringJob', () => {
       mockScoreLead.mockResolvedValueOnce({ ...mockScoringResult, score: 30 });
       job = createMockJob({
         leadId: TEST_UUIDS.lead1,
+        tenantId: TEST_UUIDS.tenant1,
         lead: { email: 'test@example.com', source: 'WEBSITE' },
         priority: 5,
       });
@@ -369,6 +440,7 @@ describe('ScoringJob', () => {
 
       const job = createMockJob({
         leadId: TEST_UUIDS.lead1,
+        tenantId: TEST_UUIDS.tenant1,
         lead: { email: 'test@example.com', source: 'WEBSITE' },
         priority: 5,
       });
@@ -384,6 +456,7 @@ describe('ScoringJob', () => {
 
       const job = createMockJob({
         leadId: TEST_UUIDS.lead1,
+        tenantId: TEST_UUIDS.tenant1,
         lead: { email: 'test@example.com', source: 'WEBSITE' },
         priority: 5,
       });
@@ -399,6 +472,7 @@ describe('ScoringJob', () => {
 
       const job = createMockJob({
         leadId: TEST_UUIDS.lead1,
+        tenantId: TEST_UUIDS.tenant1,
         lead: { email: 'test@example.com', source: 'WEBSITE' },
         priority: 5,
       });
@@ -414,6 +488,7 @@ describe('ScoringJob', () => {
 
       const job = createMockJob({
         leadId: TEST_UUIDS.lead1,
+        tenantId: TEST_UUIDS.tenant1,
         lead: { email: 'test@example.com', source: 'WEBSITE' },
         priority: 5,
       });
@@ -429,6 +504,7 @@ describe('ScoringJob', () => {
 
       const job = createMockJob({
         leadId: TEST_UUIDS.lead1,
+        tenantId: TEST_UUIDS.tenant1,
         lead: { email: 'test@example.com', source: 'WEBSITE' },
         priority: 5,
       });
@@ -446,6 +522,7 @@ describe('ScoringJob', () => {
     it('should process a complete lead scoring job', async () => {
       const jobData: ScoringJobData = {
         leadId: TEST_UUIDS.lead1,
+        tenantId: TEST_UUIDS.tenant1,
         lead: {
           email: 'john.doe@acme.com',
           firstName: 'John',
@@ -477,6 +554,7 @@ describe('ScoringJob', () => {
     it('should call leadScoringChain.scoreLead with correct input', async () => {
       const jobData: ScoringJobData = {
         leadId: TEST_UUIDS.lead1,
+        tenantId: TEST_UUIDS.tenant1,
         lead: {
           email: 'test@example.com',
           firstName: 'Test',
@@ -504,6 +582,7 @@ describe('ScoringJob', () => {
     it('should update job progress throughout processing', async () => {
       const jobData: ScoringJobData = {
         leadId: TEST_UUIDS.lead1,
+        tenantId: TEST_UUIDS.tenant1,
         lead: { email: 'test@example.com', source: 'WEBSITE' },
         priority: 5,
       };
@@ -521,6 +600,7 @@ describe('ScoringJob', () => {
     it('should include processing time in result', async () => {
       const jobData: ScoringJobData = {
         leadId: TEST_UUIDS.lead1,
+        tenantId: TEST_UUIDS.tenant1,
         lead: { email: 'test@example.com', source: 'WEBSITE' },
         priority: 5,
       };
@@ -535,6 +615,7 @@ describe('ScoringJob', () => {
     it('should include ISO timestamp in processedAt', async () => {
       const jobData: ScoringJobData = {
         leadId: TEST_UUIDS.lead1,
+        tenantId: TEST_UUIDS.tenant1,
         lead: { email: 'test@example.com', source: 'WEBSITE' },
         priority: 5,
       };
@@ -550,6 +631,7 @@ describe('ScoringJob', () => {
     it('should return result matching ScoringJobResultSchema', async () => {
       const jobData: ScoringJobData = {
         leadId: TEST_UUIDS.lead1,
+        tenantId: TEST_UUIDS.tenant1,
         lead: { email: 'test@example.com', source: 'WEBSITE' },
         priority: 5,
       };
@@ -562,18 +644,25 @@ describe('ScoringJob', () => {
       expect(validation.success).toBe(true);
     });
 
-    it('should propagate errors from scoring chain', async () => {
+    it('should return heuristic fallback (not throw) when scoring chain rejects', async () => {
+      // H10: scoring errors are caught and a heuristic fallback is returned instead of propagated.
       mockScoreLead.mockRejectedValueOnce(new Error('LLM API error'));
 
       const jobData: ScoringJobData = {
         leadId: TEST_UUIDS.lead1,
+        tenantId: TEST_UUIDS.tenant1,
         lead: { email: 'test@example.com', source: 'WEBSITE' },
         priority: 5,
       };
 
       const job = createMockJob(jobData);
+      const result = await processScoringJob(job);
 
-      await expect(processScoringJob(job)).rejects.toThrow('LLM API error');
+      expect(result).toBeDefined();
+      expect(result.confidence).toBe(0.3);
+      expect(result.modelVersion).toBe('fallback');
+      expect(result.score).toBeGreaterThanOrEqual(0);
+      expect(result.score).toBeLessThanOrEqual(100);
     });
   });
 
@@ -601,6 +690,49 @@ describe('ScoringJob', () => {
 
     it('should keep max 1000 completed jobs', () => {
       expect(DEFAULT_SCORING_JOB_OPTIONS.removeOnComplete.count).toBe(1000);
+    });
+  });
+
+  // ============================================
+  // Feature Flag Disabled Tests
+  // ============================================
+
+  describe('feature flag — ai.scoring.enabled', () => {
+    const flagJob = createMockJob({
+      leadId: TEST_UUIDS.lead1,
+      tenantId: TEST_UUIDS.tenant1,
+      lead: {
+        email: 'flag@test.com',
+        source: 'WEBSITE',
+      },
+    });
+
+    it('should return early with skipped result when flag is disabled', async () => {
+      vi.stubEnv('ENABLE_AI_SCORING_JOB', 'false');
+      const result = (await processScoringJob(flagJob)) as any;
+      expect(result.skipped).toBe(true);
+      expect(result.reason).toBe('feature-flag-disabled');
+    });
+
+    it('should NOT call the scoring chain when flag is disabled', async () => {
+      vi.stubEnv('ENABLE_AI_SCORING_JOB', 'false');
+      await processScoringJob(flagJob);
+      expect(mockScoreLead).not.toHaveBeenCalled();
+    });
+
+    it('should process normally when flag is enabled (default)', async () => {
+      vi.stubEnv('ENABLE_AI_SCORING_JOB', 'true');
+      const result = (await processScoringJob(flagJob)) as any;
+      expect(result.skipped).toBeUndefined();
+      expect(mockScoreLead).toHaveBeenCalled();
+    });
+
+    it('should process normally when env var is absent (default-on)', async () => {
+      // unstubEnvs is set in vitest config, so env is clean per-test;
+      // deleting explicitly ensures no residue
+      delete process.env['ENABLE_AI_SCORING_JOB'];
+      const result = (await processScoringJob(flagJob)) as any;
+      expect(result.skipped).toBeUndefined();
     });
   });
 });

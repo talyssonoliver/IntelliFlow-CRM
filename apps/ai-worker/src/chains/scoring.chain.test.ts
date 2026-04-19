@@ -1,47 +1,77 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { LeadScoringChain, LeadInput } from './scoring.chain';
 
-// Mock the LangChain OpenAI module
-vi.mock('@langchain/openai', () => {
-  const MockChatOpenAI = function (this: any) {
-    this.invoke = vi.fn().mockResolvedValue({
-      content: JSON.stringify({
-        score: 75,
-        confidence: 0.85,
-        factors: [
-          {
-            name: 'Contact Completeness',
-            impact: 20,
-            reasoning:
-              'Complete contact information with corporate email domain indicates a professional lead.',
-          },
-          {
-            name: 'Engagement Quality',
-            impact: 15,
-            reasoning: 'Website source suggests active interest in the product.',
-          },
-          {
-            name: 'Qualification Signals',
-            impact: 25,
-            reasoning:
-              'VP-level title indicates decision-making authority within the organization.',
-          },
-          {
-            name: 'Data Quality',
-            impact: 15,
-            reasoning: 'All required fields present with consistent formatting.',
-          },
-        ],
-      }),
-    });
-  };
-  return { ChatOpenAI: MockChatOpenAI };
-});
+// Mock the VersionLoader singleton so tests never hit the DB.
+// Default: getChainConfig throws (simulates no active version → fallback to default prompt).
+vi.mock('../versioning/chain-version-loader', () => ({
+  getVersionLoader: vi.fn(() => ({
+    getChainConfig: vi.fn().mockRejectedValue(new Error('No active version')),
+  })),
+  CHAIN_TYPE_MAP: {
+    LEAD_SCORING: 'SCORING',
+    CHURN_RISK: 'SCORING',
+    INSIGHT_GENERATION: 'QUALIFICATION',
+    SENTIMENT_ANALYSIS: 'EMAIL_WRITER',
+    TICKET_ROUTING: 'FOLLOWUP',
+    AUTO_RESPONSE: 'EMAIL_WRITER',
+  },
+  configureVersionLoader: vi.fn(),
+}));
 
-// Mock the AI config to use OpenAI provider
+// Pattern A: mock the factory — survives provider swaps
+const PARSED_SCORING_RESPONSE = {
+  score: 75,
+  confidence: 0.85,
+  factors: [
+    {
+      name: 'Contact Completeness',
+      impact: 20,
+      reasoning:
+        'Complete contact information with corporate email domain indicates a professional lead.',
+    },
+    {
+      name: 'Engagement Quality',
+      impact: 15,
+      reasoning: 'Website source suggests active interest in the product.',
+    },
+    {
+      name: 'Qualification Signals',
+      impact: 25,
+      reasoning: 'VP-level title indicates decision-making authority within the organization.',
+    },
+    {
+      name: 'Data Quality',
+      impact: 15,
+      reasoning: 'All required fields present with consistent formatting.',
+    },
+  ],
+};
+
+vi.mock('../lib/llm-factory.js', () => ({
+  createLLM: vi.fn(() => ({
+    invoke: vi.fn().mockResolvedValue({ content: JSON.stringify(PARSED_SCORING_RESPONSE) }),
+    withStructuredOutput: vi.fn(() => ({
+      invoke: vi.fn().mockResolvedValue(PARSED_SCORING_RESPONSE),
+    })),
+  })),
+  createLLMForTenant: vi.fn(async () => ({
+    invoke: vi.fn().mockResolvedValue({ content: JSON.stringify(PARSED_SCORING_RESPONSE) }),
+    withStructuredOutput: vi.fn(() => ({
+      invoke: vi.fn().mockResolvedValue(PARSED_SCORING_RESPONSE),
+    })),
+  })),
+  createEmbeddings: vi.fn(() => ({
+    embedQuery: vi.fn().mockResolvedValue([]),
+    embedDocuments: vi.fn().mockResolvedValue([]),
+  })),
+  getLLMBreaker: vi.fn(() => ({ execute: vi.fn(async (fn: () => unknown) => fn()) })),
+  __resetBreakers: vi.fn(),
+}));
+
+// Mock the AI config
 vi.mock('../config/ai.config', () => ({
   aiConfig: {
-    provider: 'openai',
+    provider: 'litellm',
     openai: {
       apiKey: 'test-api-key',
       model: 'gpt-4-turbo-preview',
@@ -224,6 +254,62 @@ describe('LeadScoringChain', () => {
       expect(formatted).toContain('Acme Corp');
       expect(formatted).toContain('CEO');
       expect(formatted).toContain('WEBSITE');
+    });
+  });
+
+  // ============================================================
+  // H3: VersionLoader integration tests
+  // ============================================================
+
+  describe('VersionLoader integration (H3)', () => {
+    it('should accept optional tenantId constructor option without throwing', () => {
+      // Constructor must not throw when tenantId is provided
+      expect(() => new LeadScoringChain({ tenantId: 'tenant-abc' })).not.toThrow();
+    });
+
+    it('uses default prompt when VersionLoader returns null (no active version)', async () => {
+      // VersionLoader mock always throws → resolveVersionedPrompt returns null → default prompt used
+      const chain = new LeadScoringChain({ tenantId: 'tenant-xyz' });
+      const lead: LeadInput = { email: 'test@acme.com', source: 'WEBSITE' };
+
+      // scoreLead should complete without error and use the default hardcoded prompt
+      const result = await chain.scoreLead(lead);
+
+      expect(result).toBeDefined();
+      expect(result.score).toBeGreaterThanOrEqual(0);
+      // modelVersion confirms the chain ran (not error path)
+      expect(result.modelVersion).not.toBe('error:v1');
+    });
+
+    it('uses versioned prompt when VersionLoader returns a config', async () => {
+      // Override the module mock to return a successful versioned config for this test
+      const { getVersionLoader } = await import('../versioning/chain-version-loader');
+      vi.mocked(getVersionLoader).mockReturnValueOnce({
+        getChainConfig: vi.fn().mockResolvedValue({
+          prompt: 'Custom versioned prompt: {lead_info}',
+          model: 'gpt-4-turbo-preview',
+          temperature: 0.5,
+          maxTokens: 1500,
+        }),
+      } as any);
+
+      const chain = new LeadScoringChain({ tenantId: 'tenant-versioned' });
+      const lead: LeadInput = { email: 'versioned@acme.com', source: 'REFERRAL' };
+
+      const result = await chain.scoreLead(lead);
+
+      // Chain should complete successfully with versioned prompt applied
+      expect(result).toBeDefined();
+      expect(result.score).toBeGreaterThanOrEqual(0);
+    });
+
+    it('falls back to default prompt when VersionLoader throws', async () => {
+      // Already mocked to throw — just verify graceful fallback
+      const chain = new LeadScoringChain({ tenantId: 'tenant-throw' });
+      const lead: LeadInput = { email: 'fallback@test.com', source: 'COLD_CALL' };
+
+      // Should NOT throw even when VersionLoader fails
+      await expect(chain.scoreLead(lead)).resolves.toBeDefined();
     });
   });
 });

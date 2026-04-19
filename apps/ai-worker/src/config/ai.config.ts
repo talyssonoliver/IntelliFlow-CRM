@@ -5,12 +5,12 @@ import { z } from 'zod';
  * Supports both OpenAI (production) and Ollama (local development)
  */
 
-export const AIProviderSchema = z.enum(['openai', 'ollama', 'mock']);
+export const AIProviderSchema = z.enum(['litellm', 'openai', 'ollama', 'mock']);
 export type AIProvider = z.infer<typeof AIProviderSchema>;
 
 export const AIConfigSchema = z.object({
   // Provider selection
-  provider: AIProviderSchema.default('openai'),
+  provider: AIProviderSchema.default('litellm'),
 
   // OpenAI Configuration
   openai: z.object({
@@ -21,6 +21,16 @@ export const AIConfigSchema = z.object({
     temperature: z.number().min(0).max(2).default(0.7),
     maxTokens: z.number().positive().default(2000),
     timeout: z.number().positive().default(30000), // 30 seconds
+  }),
+
+  // LiteLLM Proxy Configuration (primary production path)
+  // LiteLLM normalises all providers (Groq, Mistral, Anthropic, OpenAI, Gemini) behind
+  // a single OpenAI-compatible endpoint.  Model selection is handled by LiteLLM's
+  // model_list in infra/litellm/config.yaml — no per-provider SDK needed here.
+  litellm: z.object({
+    baseUrl: z.string().default('http://localhost:4000/v1'),
+    masterKey: z.string().default(''),
+    timeout: z.number().positive().default(120_000), // 120 seconds
   }),
 
   // Ollama Configuration (local development)
@@ -62,11 +72,17 @@ export type AIConfig = z.infer<typeof AIConfigSchema>;
  * Load AI configuration from environment variables
  */
 export function loadAIConfig(): AIConfig {
-  const provider = (process.env.AI_PROVIDER || 'openai') as AIProvider;
+  const provider = (process.env.AI_PROVIDER || 'litellm') as AIProvider;
   const openAIBaseUrl = (process.env.OPENAI_BASE_URL || process.env.OPENAI_API_BASE || '').trim();
 
   const config: AIConfig = {
     provider,
+
+    litellm: {
+      baseUrl: process.env['LITELLM_BASE_URL'] || 'http://localhost:4000/v1',
+      masterKey: process.env['LITELLM_MASTER_KEY'] || '',
+      timeout: Number.parseInt(process.env['LITELLM_TIMEOUT'] || '120000', 10),
+    },
 
     openai: {
       apiKey: process.env.OPENAI_API_KEY,
@@ -117,6 +133,30 @@ export function loadAIConfig(): AIConfig {
  * Used for cost tracking
  *
  * IFC-029: Added GPT-4o-mini pricing for <1s latency auto-response
+ *
+ * ADR-048: Added logical LiteLLM model names (${purpose}-${tier}) so
+ * costTracker.recordUsage() correctly prices calls regardless of provider.
+ * Pricing derived from infra/litellm/config.yaml routing table (2026-04-16):
+ *
+ *   FREE tier
+ *     scoring-free / email-free  → groq/llama-3.1-8b-instant   $0.05/$0.08 per M
+ *     qualification-free         → groq/llama-3.3-70b-versatile $0.59/$0.79 per M
+ *     reasoning-free             → openrouter free tier          $0 / $0
+ *     structured-free            → gemini-2.5-flash              $0.075/$0.30 per M
+ *     rag-free                   → ollama/nomic-embed-text        $0 / $0
+ *
+ *   STANDARD tier
+ *     scoring-standard / structured-standard → mistral-small    $0.2/$0.6 per M
+ *     qualification-standard                 → mistral-medium   $1.0/$3.0 per M
+ *     email-standard                         → groq/llama-3.3-70b-versatile $0.59/$0.79 per M
+ *     reasoning-standard                     → claude-haiku-4-5 $0.8/$4.0 per M
+ *
+ *   PREMIUM tier
+ *     scoring-premium            → gpt-4o-mini                   $0.15/$0.60 per M
+ *     qualification-premium / structured-premium → gpt-4o       $2.5/$10.0 per M
+ *     email-premium              → claude-haiku-4-5              $0.8/$4.0 per M
+ *     reasoning-premium          → claude-sonnet-4-5             $3.0/$15.0 per M
+ *     rag-premium                → text-embedding-3-small        $0.02/n/a  per M
  */
 export const MODEL_PRICING = {
   'gpt-4-turbo-preview': {
@@ -148,6 +188,47 @@ export const MODEL_PRICING = {
     input: 0,
     output: 0,
   },
+
+  // ----------------------------------------------------------------
+  // ADR-048: LiteLLM logical model names — ${purpose}-${tier}
+  // ----------------------------------------------------------------
+
+  // --- free tier ---
+  // groq/llama-3.1-8b-instant: $0.05 input / $0.08 output per M tokens
+  'scoring-free': { input: 0.00005, output: 0.00008 },
+  'email-free': { input: 0.00005, output: 0.00008 },
+  // groq/llama-3.3-70b-versatile: $0.59/$0.79 per M
+  'qualification-free': { input: 0.00059, output: 0.00079 },
+  // openrouter free tier: $0
+  'reasoning-free': { input: 0, output: 0 },
+  // gemini-2.5-flash: $0.075/$0.30 per M
+  'structured-free': { input: 0.000075, output: 0.0003 },
+  // ollama/nomic-embed-text: $0 (local)
+  'rag-free': { input: 0, output: 0 },
+
+  // --- standard tier ---
+  // mistral-small: $0.2/$0.6 per M
+  'scoring-standard': { input: 0.0002, output: 0.0006 },
+  'structured-standard': { input: 0.0002, output: 0.0006 },
+  // mistral-medium: $1.0/$3.0 per M
+  'qualification-standard': { input: 0.001, output: 0.003 },
+  // groq/llama-3.3-70b-versatile: $0.59/$0.79 per M
+  'email-standard': { input: 0.00059, output: 0.00079 },
+  // claude-haiku-4-5: $0.8/$4.0 per M
+  'reasoning-standard': { input: 0.0008, output: 0.004 },
+
+  // --- premium tier ---
+  // gpt-4o-mini: $0.15/$0.60 per M
+  'scoring-premium': { input: 0.00015, output: 0.0006 },
+  // gpt-4o: $2.5/$10.0 per M
+  'qualification-premium': { input: 0.0025, output: 0.01 },
+  'structured-premium': { input: 0.0025, output: 0.01 },
+  // claude-haiku-4-5: $0.8/$4.0 per M
+  'email-premium': { input: 0.0008, output: 0.004 },
+  // claude-sonnet-4-5: $3.0/$15.0 per M
+  'reasoning-premium': { input: 0.003, output: 0.015 },
+  // openai/text-embedding-3-small: $0.02/M (input only; no output tokens for embeddings)
+  'rag-premium': { input: 0.00002, output: 0 },
 } as const;
 
 export type ModelName = keyof typeof MODEL_PRICING;

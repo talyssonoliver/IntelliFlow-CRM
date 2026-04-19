@@ -15,25 +15,14 @@
  * @module chains/insight-generation
  */
 
-import { ChatOpenAI } from '@langchain/openai';
-import { ChatOllama } from '@langchain/ollama';
 import { PromptTemplate } from '@langchain/core/prompts';
-import { StructuredOutputParser } from '@langchain/core/output_parsers';
-import type { BaseMessage } from '@langchain/core/messages';
 import { z } from 'zod';
 import { aiConfig } from '../config/ai.config';
 import { costTracker } from '../utils/cost-tracker';
-import { getOpenAIClientSettings } from '../utils/openai-client';
 import { sanitizeStringField } from '../utils/input-sanitizer';
+import { createLLM, createLLMForTenant } from '../lib/llm-factory';
+import { getVersionLoader, CHAIN_TYPE_MAP } from '../versioning/chain-version-loader';
 import pino from 'pino';
-
-/**
- * Interface for LLM model invocation
- * Supports both real LangChain models and mock implementations
- */
-interface LLMModel {
-  invoke(input: BaseMessage[] | string): Promise<{ content: string | unknown[] }>;
-}
 
 const logger = pino({
   name: 'insight-generation-chain',
@@ -174,64 +163,21 @@ const LLMInsightOutputSchema = z.object({
  * natural language explanations and confidence scores.
  */
 export class InsightGenerationChain {
-  private readonly model: LLMModel;
-  private readonly parser: StructuredOutputParser<typeof LLMInsightOutputSchema>;
+  private structuredModel: { invoke(input: unknown): Promise<unknown> };
   private readonly prompt: PromptTemplate;
+  private readonly tenantId?: string;
 
-  constructor() {
+  constructor(options?: { tenantId?: string }) {
+    this.tenantId = options?.tenantId;
     validateProviderForProduction();
 
-    if (aiConfig.provider === 'openai') {
-      const openAIClientSettings = getOpenAIClientSettings();
-      this.model = new ChatOpenAI({
-        modelName: aiConfig.openai.model,
-        temperature: 0.4,
-        maxTokens: 2000,
-        timeout: aiConfig.openai.timeout,
-        apiKey: openAIClientSettings.apiKey,
-        configuration: openAIClientSettings.configuration,
-        callbacks: aiConfig.features.enableChainLogging
-          ? [
-              {
-                handleLLMEnd: async (output) => {
-                  const usage = output.llmOutput?.tokenUsage;
-                  if (usage && aiConfig.costTracking.enabled) {
-                    costTracker.recordUsage({
-                      model: aiConfig.openai.model,
-                      inputTokens: usage.promptTokens || 0,
-                      outputTokens: usage.completionTokens || 0,
-                      operationType: 'insight_generation',
-                    });
-                  }
-                },
-              },
-            ]
-          : undefined,
-      });
-    } else if (aiConfig.provider === 'ollama') {
-      this.model = new ChatOllama({
-        baseUrl: aiConfig.ollama.baseUrl,
-        model: aiConfig.ollama.model,
-        temperature: 0.4,
-        numCtx: 4096,
-      });
-
-      logger.info(
-        {
-          baseUrl: aiConfig.ollama.baseUrl,
-          model: aiConfig.ollama.model,
-        },
-        'Initialized Ollama provider for insight generation'
-      );
-    } else if (aiConfig.provider === 'mock') {
-      this.model = {
-        invoke: async () => ({ content: this.getMockResponse() }),
-      };
-    } else {
-      throw new Error(`Unsupported AI provider: ${aiConfig.provider}`);
-    }
-
-    this.parser = StructuredOutputParser.fromZodSchema(LLMInsightOutputSchema);
+    // Initialize LLM via factory — provider/tier routing handled centrally
+    const llm = createLLM('reasoning', 'free', {
+      temperature: 0.4,
+      maxTokens: 2000,
+      timeout: aiConfig.openai.timeout,
+    });
+    this.structuredModel = (llm as any).withStructuredOutput(LLMInsightOutputSchema);
 
     this.prompt = new PromptTemplate({
       template: `You are an expert CRM sales coach analyzing a user's pipeline health. Based on the data below, generate actionable insights that explain WHY items need attention and WHAT specific actions to take.
@@ -278,14 +224,34 @@ ANALYSIS INSTRUCTIONS:
    - suggestedActions: an array (use [] when no action is needed)
    - reasoning: one short sentence explaining why the insight was generated
 
-{format_instructions}`,
+Respond with a structured JSON object containing an insights array.`,
       inputVariables: ['dealsData', 'leadsData', 'overdueTasksCount', 'contactsData'],
-      partialVariables: {
-        format_instructions: this.parser.getFormatInstructions(),
-      },
     });
 
     logger.info('Insight Generation Chain initialized');
+  }
+
+  /**
+   * Resolve tenant-versioned prompt override (falls back to default on any error).
+   */
+  private async resolveVersionedPrompt(): Promise<string | null> {
+    if (!this.tenantId) return null;
+    try {
+      const config = await getVersionLoader().getChainConfig(CHAIN_TYPE_MAP.INSIGHT_GENERATION, {
+        tenantId: this.tenantId,
+      });
+      return config.prompt ?? null;
+    } catch {
+      logger.warn(
+        {
+          chainType: 'INSIGHT_GENERATION',
+          tenantId: this.tenantId,
+          reason: 'no active version, using default',
+        },
+        'VersionLoader: failed to load versioned config'
+      );
+      return null;
+    }
   }
 
   /**
@@ -310,6 +276,17 @@ ANALYSIS INSTRUCTIONS:
         },
         'Starting insight generation'
       );
+
+      // Lazy tenant-tier resolution: if tenantId is set, re-resolve model at invoke time.
+      if (this.tenantId) {
+        const tenantModel = await createLLMForTenant('reasoning', 'free', {
+          tenantId: this.tenantId,
+          temperature: 0.4,
+          maxTokens: 2000,
+          timeout: aiConfig.openai.timeout,
+        });
+        this.structuredModel = (tenantModel as any).withStructuredOutput(LLMInsightOutputSchema);
+      }
 
       const validatedInput = InsightGenerationInputSchema.parse(input);
 
@@ -351,23 +328,34 @@ ANALYSIS INSTRUCTIONS:
               .join('\n')
           : 'No stale contacts';
 
-      const formattedPrompt = await this.prompt.format({
+      // Resolve tenant-versioned prompt if tenantId is available; fall back to default
+      const versionedText = await this.resolveVersionedPrompt();
+      const activePrompt = versionedText
+        ? new PromptTemplate({
+            template: versionedText,
+            inputVariables: this.prompt.inputVariables,
+          })
+        : this.prompt;
+
+      const formattedPrompt = await activePrompt.format({
         dealsData,
         leadsData,
         overdueTasksCount: String(validatedInput.overdueTasksCount),
         contactsData,
       });
 
-      const response = await this.model.invoke(formattedPrompt);
-
-      const parsed = await this.parser.parse(response.content as string);
+      // Use structured output model — returns typed object directly
+      const parsed = (await this.structuredModel.invoke(formattedPrompt)) as z.infer<
+        typeof LLMInsightOutputSchema
+      >;
 
       const executionTimeMs = Date.now() - startTime;
 
-      // Record cost tracking
+      // Record cost tracking — use logical LiteLLM model name (ADR-048).
+      // LiteLLM returns OpenAI-compatible token counts for all providers.
       if (aiConfig.costTracking.enabled) {
         costTracker.recordUsage({
-          model: aiConfig.provider === 'openai' ? aiConfig.openai.model : aiConfig.ollama.model,
+          model: 'structured-free',
           inputTokens: 0,
           outputTokens: 0,
           operationType: 'insight_generation',
@@ -511,49 +499,6 @@ ANALYSIS INSTRUCTIONS:
     }
 
     return insights;
-  }
-
-  /**
-   * Mock response for testing
-   */
-  private getMockResponse(): string {
-    return JSON.stringify({
-      insights: [
-        {
-          entityId: 'mock-deal-1',
-          entityType: 'opportunity',
-          type: 'warning',
-          title: 'Deal at Risk: Enterprise License Renewal',
-          description:
-            'This high-value renewal has been dormant for 18 days. The client may be evaluating competitors.',
-          suggestedActions: [
-            'Schedule an executive check-in call within 24 hours',
-            'Prepare a competitive value comparison document',
-            'Offer a renewal incentive or early-bird discount',
-          ],
-          confidence: 0.85,
-          priority: 'critical',
-          reasoning:
-            'High-value deal with extended inactivity suggests potential competitive evaluation',
-        },
-        {
-          entityId: 'mock-lead-1',
-          entityType: 'lead',
-          type: 'opportunity',
-          title: 'Hot Lead: Acme Corp',
-          description:
-            'This lead scored 92 and has visited pricing pages 3 times this week. Strong purchase intent.',
-          suggestedActions: [
-            'Send a personalized demo invitation',
-            'Share relevant case studies',
-            'Connect on LinkedIn for relationship building',
-          ],
-          confidence: 0.88,
-          priority: 'high',
-          reasoning: 'High score combined with pricing page visits indicates active evaluation',
-        },
-      ],
-    });
   }
 }
 

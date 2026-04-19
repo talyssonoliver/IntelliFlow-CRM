@@ -1,9 +1,7 @@
-import { OpenAIEmbeddings } from '@langchain/openai';
-import { OllamaEmbeddings } from '@langchain/ollama';
 import type { Embeddings } from '@langchain/core/embeddings';
 import { z } from 'zod';
 import { aiConfig } from '../config/ai.config';
-import { getOpenAIClientSettings } from '../utils/openai-client';
+import { createEmbeddings } from '../lib/llm-factory';
 import pino from 'pino';
 
 const logger = pino({
@@ -54,39 +52,18 @@ export class EmbeddingChain {
   private readonly dimensions: number;
 
   constructor() {
-    if (aiConfig.provider === 'ollama') {
-      // Ollama local embeddings (free, no API key needed)
-      this.modelName = process.env.OLLAMA_EMBEDDING_MODEL || 'nomic-embed-text';
-      this.dimensions = Number.parseInt(process.env.EMBEDDING_DIMENSIONS || '768', 10);
+    // All embedding providers routed through createEmbeddings factory
+    this.modelName = process.env.EMBEDDING_MODEL || 'rag-free';
+    this.dimensions = Number.parseInt(
+      process.env.EMBEDDING_DIMENSIONS || (aiConfig.provider === 'ollama' ? '768' : '1536'),
+      10
+    );
+    this.embeddings = createEmbeddings('free');
 
-      this.embeddings = new OllamaEmbeddings({
-        baseUrl: aiConfig.ollama.baseUrl,
-        model: this.modelName,
-      });
-
-      logger.info(
-        { model: this.modelName, dimensions: this.dimensions, provider: 'ollama' },
-        'Embedding chain initialized with Ollama'
-      );
-    } else {
-      // OpenAI embeddings (production)
-      this.modelName = process.env.EMBEDDING_MODEL || 'text-embedding-3-small';
-      this.dimensions = Number.parseInt(process.env.EMBEDDING_DIMENSIONS || '1536', 10);
-      const openAIClientSettings = getOpenAIClientSettings();
-
-      this.embeddings = new OpenAIEmbeddings({
-        modelName: this.modelName,
-        apiKey: openAIClientSettings.apiKey,
-        configuration: openAIClientSettings.configuration,
-        stripNewLines: true,
-        timeout: 30000,
-      });
-
-      logger.info(
-        { model: this.modelName, dimensions: this.dimensions, provider: 'openai' },
-        'Embedding chain initialized with OpenAI'
-      );
-    }
+    logger.info(
+      { model: this.modelName, dimensions: this.dimensions, provider: aiConfig.provider },
+      'Embedding chain initialized'
+    );
   }
 
   /**

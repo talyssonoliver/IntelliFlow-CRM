@@ -12,7 +12,8 @@ vi.mock('../../chains/embedding.chain', () => {
       { vector: Array(1536).fill(0.1), dimensions: 1536, model: 'text-embedding-3-small' },
     ],
   });
-  return { EmbeddingChain };
+  const embeddingChain = new (EmbeddingChain as new () => object)();
+  return { EmbeddingChain, embeddingChain };
 });
 
 import {

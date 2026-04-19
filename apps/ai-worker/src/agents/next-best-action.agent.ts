@@ -17,6 +17,8 @@
 
 import { z } from 'zod';
 import { BaseAgent, AgentTask, AgentResult } from './base.agent';
+import { ensurePromptBudget } from '../utils/prompt-budget.js';
+import { replayConversation } from '../utils/conversation-replay.js';
 import { RAGContextChain } from '../chains/rag-context.chain';
 import { SentimentAnalysisChain, getSentimentChain } from '../chains/sentiment.chain';
 import {
@@ -165,6 +167,9 @@ are data-driven, time-sensitive, and include clear reasoning.`,
   maxIterations: 3,
   allowDelegation: false,
   verbose: true,
+  // ADR-049: enable blocking reflection gate. NBA recommendations are advisory
+  // (the user decides), so the default confidenceThreshold of 0.3 is sufficient.
+  usesReflection: true,
 };
 
 /**
@@ -311,11 +316,32 @@ export class NextBestActionAgent extends BaseAgent<NBAContext, NBAResult> {
     // Step 2: Analyze sentiment from recent messages
     const sentimentAnalysis = await this.analyzeSentiment(context);
 
+    // M6: conversation-history replay — prepend prior turns when sessionId is available.
+    const sessionId = task.context?.sessionId;
+    const tenantId = task.context?.userId;
+    let historyMessages: import('@langchain/core/messages').BaseMessage[] = [];
+    if (sessionId && tenantId) {
+      try {
+        const replay = await replayConversation({ tenantId, sessionId });
+        historyMessages = replay.messages;
+      } catch (replayError) {
+        logger.warn(
+          {
+            entityId: context.entityId,
+            sessionId,
+            error: replayError instanceof Error ? replayError.message : String(replayError),
+          },
+          'Failed to load conversation history — proceeding without it'
+        );
+      }
+    }
+
     // Step 3: Generate recommendations using LLM
     const recommendations = await this.generateRecommendations(
       context,
       ragContent,
-      sentimentAnalysis
+      sentimentAnalysis,
+      historyMessages
     );
 
     // Step 4: Build entity summary
@@ -371,16 +397,32 @@ export class NextBestActionAgent extends BaseAgent<NBAContext, NBAResult> {
   private async generateRecommendations(
     context: NBAContext,
     ragContent: string,
-    sentimentAnalysis?: NBAResult['sentimentAnalysis']
+    sentimentAnalysis?: NBAResult['sentimentAnalysis'],
+    historyMessages: import('@langchain/core/messages').BaseMessage[] = []
   ): Promise<RecommendedAction[]> {
     // Build prompt for recommendation generation
     const systemPrompt = this.generateSystemPrompt();
     const humanPrompt = this.buildRecommendationPrompt(context, ragContent, sentimentAnalysis);
 
-    const messages = [this.createSystemMessage(systemPrompt), this.createHumanMessage(humanPrompt)];
+    const messages = [
+      this.createSystemMessage(systemPrompt),
+      ...historyMessages,
+      this.createHumanMessage(humanPrompt),
+    ];
 
+    const budgeted = ensurePromptBudget(messages, { maxTokens: 6000 });
+    if (budgeted.truncated) {
+      logger.warn(
+        {
+          agentName: this.config.name,
+          droppedCount: budgeted.droppedCount,
+          remaining: budgeted.messages.length,
+        },
+        'Prompt history truncated to fit token budget'
+      );
+    }
     try {
-      const response = await this.invokeLLM(messages);
+      const response = await this.invokeLLM(budgeted.messages);
       return this.parseRecommendations(response, context);
     } catch (error) {
       logger.error(

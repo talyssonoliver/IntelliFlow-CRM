@@ -50,9 +50,14 @@ describe('LatencyMonitor', () => {
 
   describe('operation timing', () => {
     it('should track operation start', () => {
-      monitor.startOperation('op-1');
-      // No error means it tracked
-      expect(true).toBe(true);
+      expect(() => monitor.startOperation('op-1')).not.toThrow();
+      // And a subsequent completeOperation must find the started timer.
+      const measurements = monitor.completeOperation('op-1', {
+        model: 'gpt-4',
+        operationType: 'scoring',
+        success: true,
+      });
+      expect(measurements).not.toBeNull();
     });
 
     it('should complete operation and return measurements', () => {

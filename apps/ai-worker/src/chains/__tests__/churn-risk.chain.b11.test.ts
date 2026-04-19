@@ -31,15 +31,27 @@ vi.mock('../../config/ai.config', () => ({
   },
 }));
 
-vi.mock('@langchain/openai', () => ({
-  ChatOpenAI: vi.fn().mockImplementation(() => ({
+// Pattern A: mock the factory — the mock provider routes through createLLM
+vi.mock('../../lib/llm-factory.js', () => ({
+  createLLM: vi.fn(() => ({
     invoke: vi.fn().mockResolvedValue({ content: '{}' }),
+    withStructuredOutput: vi.fn(() => ({
+      // churn-risk.chain.ts reads riskScore, confidence, topRiskFactors,
+      // explanation, recommendations, primaryAction off the structured
+      // return. An empty object causes NaN in the Math.max/min clamps.
+      invoke: vi.fn().mockResolvedValue({
+        riskScore: 0.35,
+        confidence: 0.7,
+        topRiskFactors: [],
+        explanation: 'Mock provider fallback',
+        recommendations: ['Monitor engagement metrics weekly'],
+        primaryAction: 'MONITOR',
+      }),
+    })),
   })),
-}));
-
-vi.mock('@langchain/ollama', () => ({
-  ChatOllama: vi.fn().mockImplementation(() => ({
-    invoke: vi.fn().mockResolvedValue({ content: '{}' }),
+  createEmbeddings: vi.fn(() => ({
+    embedQuery: vi.fn().mockResolvedValue([]),
+    embedDocuments: vi.fn().mockResolvedValue([]),
   })),
 }));
 

@@ -71,6 +71,7 @@ function createMockJob(data: Partial<PredictionJobData>): Job<PredictionJobData>
       entityType: 'lead',
       entityId: '550e8400-e29b-41d4-a716-446655440000',
       predictionType: 'NEXT_BEST_ACTION',
+      tenantId: '550e8400-e29b-41d4-a716-446655440001',
       priority: 5,
       ...data,
     } as PredictionJobData,
@@ -79,20 +80,23 @@ function createMockJob(data: Partial<PredictionJobData>): Job<PredictionJobData>
     progress: vi.fn(),
     updateProgress: vi.fn(),
     log: vi.fn(),
+    // prediction.job.ts extends the BullMQ lock during long LLM calls.
+    token: 'test-lock-token',
+    extendLock: vi.fn().mockResolvedValue(undefined),
   } as any; // partial mock of BullMQ Job<PredictionJobData>
 }
 
-describe('Prediction Job Tenant Isolation (IFC-095 P1)', () => {
+describe('Prediction Job Tenant Isolation (IFC-095 P1 — H5/M8 top-level tenantId)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   describe('NEXT_BEST_ACTION predictions', () => {
-    it('should throw error when tenantId is missing from context', async () => {
+    it('rejects at schema level when top-level tenantId is missing', async () => {
       const job = createMockJob({
         predictionType: 'NEXT_BEST_ACTION',
+        tenantId: undefined as unknown as string, // force-omit the default
         context: {
-          // No tenantId!
           userId: '550e8400-e29b-41d4-a716-446655440001',
         },
       });
@@ -100,11 +104,22 @@ describe('Prediction Job Tenant Isolation (IFC-095 P1)', () => {
       await expect(processPredictionJob(job)).rejects.toThrow('tenantId is required');
     });
 
-    it('should throw error when userId is missing from context', async () => {
+    it('rejects at schema level when top-level tenantId is empty string', async () => {
+      const job = createMockJob({
+        predictionType: 'NEXT_BEST_ACTION',
+        tenantId: '',
+        context: {
+          userId: '550e8400-e29b-41d4-a716-446655440001',
+        },
+      });
+
+      await expect(processPredictionJob(job)).rejects.toThrow('tenantId is required');
+    });
+
+    it('throws at runtime when userId is missing from context', async () => {
       const job = createMockJob({
         predictionType: 'NEXT_BEST_ACTION',
         context: {
-          tenantId: '550e8400-e29b-41d4-a716-446655440001',
           // No userId!
         },
       });
@@ -112,32 +127,19 @@ describe('Prediction Job Tenant Isolation (IFC-095 P1)', () => {
       await expect(processPredictionJob(job)).rejects.toThrow('userId is required');
     });
 
-    it('should throw error when context is completely missing', async () => {
+    it('throws at runtime when context is completely missing (userId still required)', async () => {
       const job = createMockJob({
         predictionType: 'NEXT_BEST_ACTION',
-        // No context at all!
+        // top-level tenantId is supplied by helper; context is not
       });
 
-      await expect(processPredictionJob(job)).rejects.toThrow('tenantId is required');
+      await expect(processPredictionJob(job)).rejects.toThrow('userId is required');
     });
 
-    it('should throw error when tenantId is empty string', async () => {
+    it('processes successfully when tenantId is top-level and userId is in context', async () => {
       const job = createMockJob({
         predictionType: 'NEXT_BEST_ACTION',
         context: {
-          tenantId: '',
-          userId: '550e8400-e29b-41d4-a716-446655440001',
-        },
-      });
-
-      await expect(processPredictionJob(job)).rejects.toThrow('tenantId is required');
-    });
-
-    it('should process successfully when both tenantId and userId are provided', async () => {
-      const job = createMockJob({
-        predictionType: 'NEXT_BEST_ACTION',
-        context: {
-          tenantId: '550e8400-e29b-41d4-a716-446655440001',
           userId: '550e8400-e29b-41d4-a716-446655440002',
         },
       });
@@ -150,12 +152,19 @@ describe('Prediction Job Tenant Isolation (IFC-095 P1)', () => {
     });
   });
 
-  describe('CHURN_RISK predictions (no tenant validation required)', () => {
-    // Note: CHURN_RISK doesn't require tenantId - it passes context as metadata
-    it('should process CHURN_RISK without tenant context', async () => {
+  describe('CHURN_RISK predictions (now also tenant-scoped)', () => {
+    it('rejects CHURN_RISK when top-level tenantId is missing', async () => {
       const job = createMockJob({
         predictionType: 'CHURN_RISK',
-        // No context
+        tenantId: undefined as unknown as string,
+      });
+
+      await expect(processPredictionJob(job)).rejects.toThrow('tenantId is required');
+    });
+
+    it('processes CHURN_RISK when top-level tenantId is provided', async () => {
+      const job = createMockJob({
+        predictionType: 'CHURN_RISK',
       });
 
       const result = await processPredictionJob(job);

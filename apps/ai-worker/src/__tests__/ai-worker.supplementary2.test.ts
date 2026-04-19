@@ -61,13 +61,32 @@ vi.mock('@intelliflow/worker-shared', () => ({
 // Mock jobs
 // ============================================================
 vi.mock('../jobs', () => ({
-  AI_WORKER_QUEUES: ['ai-scoring', 'ai-prediction', 'ai-insights'],
+  AI_WORKER_QUEUES: [
+    'ai-scoring',
+    'ai-prediction',
+    'ai-insights',
+    'ai-summarize-conversation',
+    'ai-feedback-analytics',
+    'ai-memory-retention',
+  ],
   SCORING_QUEUE: 'ai-scoring',
   PREDICTION_QUEUE: 'ai-prediction',
   INSIGHT_QUEUE: 'ai-insights',
+  SUMMARIZE_QUEUE: 'ai-summarize-conversation',
+  FEEDBACK_ANALYTICS_QUEUE: 'ai-feedback-analytics',
+  MEMORY_RETENTION_QUEUE: 'ai-memory-retention',
+  FEEDBACK_ANALYTICS_CRON: '0 2 * * *',
+  MEMORY_RETENTION_CRON: '0 3 * * *',
+  DEFAULT_SCORING_JOB_OPTIONS: { attempts: 3 },
+  DEFAULT_INSIGHT_JOB_OPTIONS: { attempts: 3 },
+  DEFAULT_FEEDBACK_ANALYTICS_JOB_OPTIONS: { attempts: 3 },
+  DEFAULT_MEMORY_RETENTION_JOB_OPTIONS: { attempts: 3 },
   processScoringJob: mocks.mockProcessScoringJob,
   processPredictionJob: mocks.mockProcessPredictionJob,
   processInsightJob: vi.fn().mockResolvedValue({}),
+  processSummarizeJob: vi.fn().mockResolvedValue({}),
+  processFeedbackAnalyticsJob: vi.fn().mockResolvedValue({}),
+  processMemoryRetentionJob: vi.fn().mockResolvedValue({}),
 }));
 
 // ============================================================
@@ -124,6 +143,13 @@ vi.mock('bullmq', () => ({
   Job: class {},
   Queue: class {
     constructor(_name: any, _opts: any) {}
+    close = vi.fn().mockResolvedValue(undefined);
+    add = vi.fn().mockResolvedValue({});
+  },
+  QueueEvents: class {
+    constructor(_name: any, _opts: any) {}
+    on = vi.fn();
+    close = vi.fn().mockResolvedValue(undefined);
   },
 }));
 
@@ -253,7 +279,14 @@ describe('AIWorker', () => {
       await worker.start();
       expect(mocks.mockLoggerInfo).toHaveBeenCalledWith(
         expect.objectContaining({
-          queues: ['ai-scoring', 'ai-prediction', 'ai-insights'],
+          queues: [
+            'ai-scoring',
+            'ai-prediction',
+            'ai-insights',
+            'ai-summarize-conversation',
+            'ai-feedback-analytics',
+            'ai-memory-retention',
+          ],
         }),
         'AI Worker ready to process jobs'
       );

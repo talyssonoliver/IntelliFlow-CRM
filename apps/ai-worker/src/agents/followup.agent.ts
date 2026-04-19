@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { BaseAgent, AgentTask, BaseAgentConfig } from './base.agent';
-import { StructuredOutputParser } from '@langchain/core/output_parsers';
 import pino from 'pino';
 import {
   followupOutputSchema,
@@ -9,6 +8,8 @@ import {
   qualificationLevelSchema,
   interactionTypeSchema,
 } from '@intelliflow/validators';
+import { replayConversation } from '../utils/conversation-replay.js';
+import { ensurePromptBudget } from '../utils/prompt-budget.js';
 
 const logger = pino({
   name: 'followup-agent',
@@ -53,7 +54,7 @@ export { followupOutputSchema, type FollowupOutput } from '@intelliflow/validato
  * Provides actionable recommendations with timing and communication approach
  */
 export class FollowupAgent extends BaseAgent<FollowupInput, FollowupOutput> {
-  private readonly parser: StructuredOutputParser<any>;
+  private readonly structuredModel: { invoke(input: unknown): Promise<unknown> };
 
   constructor(config?: Partial<BaseAgentConfig>) {
     super({
@@ -67,14 +68,22 @@ the specific context of each lead. You excel at balancing persistence with profe
       maxIterations: 3,
       allowDelegation: false,
       verbose: true,
+      purpose: 'reasoning',
+      // ADR-049: enable blocking reflection gate. Follow-up logic is advisory
+      // (user decides), so the default confidenceThreshold of 0.3 is sufficient.
+      usesReflection: true,
       ...config,
     });
 
-    this.parser = StructuredOutputParser.fromZodSchema(followupOutputSchema);
+    this.structuredModel = (this.model as any).withStructuredOutput(followupOutputSchema);
   }
 
   /**
-   * Execute follow-up strategy task
+   * Execute follow-up strategy task.
+   *
+   * If `task.context.sessionId` and `task.context.userId` (used as tenantId here) are
+   * both present, prior conversation turns are replayed from the database and prepended
+   * to the prompt so the LLM has full conversational context.
    */
   protected async executeTask(
     task: AgentTask<FollowupInput, FollowupOutput>
@@ -97,14 +106,68 @@ the specific context of each lead. You excel at balancing persistence with profe
     // Get the system prompt
     const systemPrompt = this.generateSystemPrompt();
 
-    // Invoke the LLM
-    const messages = [this.createSystemMessage(systemPrompt), this.createHumanMessage(prompt)];
+    // --- M6: conversation-history replay ---
+    // Load prior turns when a sessionId is available so the model has context.
+    // tenantId is sourced from AgentContext.userId (the authenticated caller's tenant).
+    const sessionId = task.context?.sessionId;
+    const tenantId = task.context?.userId; // userId carries tenantId in agent context
+    let historyMessages: import('@langchain/core/messages').BaseMessage[] = [];
+
+    if (sessionId && tenantId) {
+      try {
+        const replay = await replayConversation({ tenantId, sessionId });
+        historyMessages = replay.messages;
+        if (historyMessages.length > 0) {
+          logger.debug(
+            {
+              leadId: input.leadId,
+              sessionId,
+              historyLength: historyMessages.length,
+              tokenCount: replay.tokenCount,
+              truncated: replay.truncated,
+            },
+            'Prepending conversation history to follow-up prompt'
+          );
+        }
+      } catch (replayError) {
+        // Non-fatal: log and continue without history rather than failing the task
+        logger.warn(
+          {
+            leadId: input.leadId,
+            sessionId,
+            error: replayError instanceof Error ? replayError.message : String(replayError),
+          },
+          'Failed to load conversation history — proceeding without it'
+        );
+      }
+    }
+
+    // Assemble messages: system + prior history + current human turn
+    const rawMessages = [
+      this.createSystemMessage(systemPrompt),
+      ...historyMessages,
+      this.createHumanMessage(prompt),
+    ];
+
+    // M11: enforce token budget before sending to LLM (cap at 6000 tokens)
+    const budgetResult = ensurePromptBudget(rawMessages, { maxTokens: 6000 });
+    if (budgetResult.truncated) {
+      logger.warn(
+        {
+          leadId: input.leadId,
+          droppedCount: budgetResult.droppedCount,
+          remaining: budgetResult.messages.length,
+        },
+        'Prompt exceeded token budget — dropped oldest history messages'
+      );
+    }
+    const messages = budgetResult.messages;
 
     const response = await this.invokeLLM(messages);
 
     // Parse structured output
     try {
-      const result = (await this.parser.parse(response)) as FollowupOutput;
+      const result = (await this.structuredModel.invoke(response)) as FollowupOutput;
 
       logger.info(
         {
@@ -230,7 +293,7 @@ the specific context of each lead. You excel at balancing persistence with profe
     // Output format
     const outputFormat: string[] = [
       '\n=== REQUIRED OUTPUT ===\n',
-      this.parser.getFormatInstructions(),
+      'Respond with a structured JSON object matching the follow-up output schema.',
     ];
     sections.push(...outputFormat);
 

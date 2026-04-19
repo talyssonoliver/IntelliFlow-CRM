@@ -10,12 +10,18 @@
 import type { Job } from 'bullmq';
 import { z } from 'zod';
 import pino from 'pino';
-import { leadScoringChain } from '../chains/scoring.chain';
+import { LeadScoringChain } from '../chains/scoring.chain';
 import type { LeadInput, ScoringResult } from '../chains/scoring.chain';
+import { logAIAgentAction } from '../utils/audit-log';
+import { getLLMBreaker } from '../lib/llm-factory';
+import type { CircuitBreaker } from '../utils/circuit-breaker';
+import { runWithLogContext, getCurrentLogContext } from '@intelliflow/observability';
+import { isAiFeatureEnabled } from '../lib/feature-flags';
 
 const logger = pino({
   name: 'scoring-job',
   level: process.env.LOG_LEVEL || 'info',
+  mixin: () => getCurrentLogContext() ?? {},
 });
 
 // ============================================================================
@@ -31,7 +37,7 @@ export type LeadTier = 'HOT' | 'WARM' | 'COLD' | 'UNQUALIFIED';
 /** Schema for scoring job data */
 export const ScoringJobDataSchema = z.object({
   leadId: z.uuid(),
-  tenantId: z.string().optional(),
+  tenantId: z.string().min(1),
   lead: z.object({
     email: z.email(),
     firstName: z.string().optional(),
@@ -44,6 +50,8 @@ export const ScoringJobDataSchema = z.object({
   }),
   correlationId: z.string().optional(),
   priority: z.number().min(1).max(10).default(5),
+  /** W3C traceparent carrier injected by enqueue-side for distributed trace propagation */
+  _otelCarrier: z.record(z.string(), z.string()).optional(),
 });
 
 export type ScoringJobData = z.infer<typeof ScoringJobDataSchema>;
@@ -138,6 +146,101 @@ function generateRecommendations(tier: LeadTier, score: number): string[] {
 }
 
 // ============================================================================
+// Constants
+// ============================================================================
+
+/** LLM inference timeout for scoring (120 s — matches insight job pattern). */
+const LLM_TIMEOUT_MS = 120_000;
+
+// ============================================================================
+// Fallback Scoring
+// ============================================================================
+
+/**
+ * Heuristic fallback score when LLM is unavailable or timed out.
+ * Pure logic — no LLM dependency. Survives a total LLM outage.
+ */
+function computeHeuristicScore(lead: ScoringJobData['lead']): number {
+  let score = 50; // baseline
+
+  // Corporate email domain bump
+  const emailDomain = lead.email.split('@')[1] ?? '';
+  const freeDomains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'aol.com'];
+  if (!freeDomains.includes(emailDomain.toLowerCase())) score += 10;
+
+  // Title signals (decision-making authority)
+  const title = (lead.title ?? '').toLowerCase();
+  if (/\b(ceo|cto|cfo|vp|vice president|director|head|chief)\b/.test(title)) score += 15;
+  else if (/\b(manager|lead|senior|principal)\b/.test(title)) score += 8;
+
+  // Company present
+  if (lead.company && lead.company.length > 1) score += 5;
+
+  // Phone present
+  if (lead.phone) score += 5;
+
+  // Source quality
+  const source = (lead.source ?? '').toLowerCase();
+  if (source === 'referral') score += 10;
+  else if (source === 'website' || source === 'demo_request') score += 5;
+
+  // metadata: companySize
+  const companySize = Number(
+    (lead.metadata as Record<string, unknown> | undefined)?.companySize ?? 0
+  );
+  if (companySize > 500) score += 10;
+  else if (companySize > 100) score += 5;
+
+  return Math.min(100, Math.max(0, score));
+}
+
+/**
+ * Wrap LLM scoring in a Promise.race timeout + circuit-breaker catch.
+ * Returns `{ result, usedFallback }`.
+ */
+async function generateScoringWithFallback(
+  job: Job<ScoringJobData>,
+  chain: LeadScoringChain,
+  input: LeadInput,
+  timeoutMs: number,
+  breaker: CircuitBreaker
+): Promise<{ result: ScoringResult; usedFallback: boolean }> {
+  try {
+    const scored = await Promise.race([
+      breaker.execute(() => chain.scoreLead(input)),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error(`LLM scoring timed out after ${timeoutMs}ms`)), timeoutMs)
+      ),
+    ]);
+    return { result: scored, usedFallback: false };
+  } catch (error) {
+    logger.warn(
+      { jobId: job.id, error: error instanceof Error ? error.message : String(error) },
+      'LLM scoring failed or timed out — using heuristic fallback'
+    );
+    const heuristicScore = computeHeuristicScore(job.data.lead);
+    const fallbackResult: ScoringResult = {
+      score: heuristicScore,
+      confidence: 0.3,
+      factors: [
+        {
+          name: 'heuristic',
+          impact: heuristicScore,
+          reasoning: 'Heuristic fallback — LLM unavailable',
+        },
+      ],
+      modelVersion: 'fallback',
+    };
+    return { result: fallbackResult, usedFallback: true };
+  }
+}
+
+/** Convenience accessor for the scoring circuit breaker (purpose='scoring', tier='free'). */
+function getScoringBreaker(): CircuitBreaker {
+  return getLLMBreaker('scoring', 'free');
+}
+
+// ============================================================================
 // Job Handler
 // ============================================================================
 
@@ -149,7 +252,10 @@ async function handleScheduledDispatch(
   startTime: number
 ): Promise<ScoringJobResult> {
   const { leadId } = job.data;
-  logger.info({ jobId: job.id }, 'Scheduled scoring dispatcher — enumerating unscored leads');
+  logger.info(
+    { jobId: job.id },
+    'Scheduled scoring dispatcher — enumerating unscored leads per tenant'
+  );
   let enqueued = 0;
 
   try {
@@ -157,38 +263,75 @@ async function handleScheduledDispatch(
     const { Queue } = await import('bullmq');
 
     const staleThreshold = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const unscoredLeads = await prisma.lead.findMany({
+
+    // Step 1: find distinct tenants that have any unscored / stale leads
+    const tenantsWithUnscoredLeads = await (prisma as any).lead.groupBy({
+      by: ['tenantId'],
       where: {
-        OR: [{ aiInsight: null }, { aiInsight: { updatedAt: { lt: staleThreshold } } }],
+        OR: [
+          { aiInsights: { none: {} } },
+          { aiInsights: { some: { updatedAt: { lt: staleThreshold } } } },
+        ],
       },
-      select: {
-        id: true,
-        tenantId: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        company: true,
-        title: true,
-        phone: true,
-        source: true,
-      },
-      take: 100,
+      _count: { id: true },
     });
 
-    if (unscoredLeads.length > 0) {
-      const queue = new Queue(SCORING_QUEUE, {
-        connection: {
-          host: process.env.REDIS_HOST || 'localhost',
-          port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
+    if (tenantsWithUnscoredLeads.length === 0) {
+      logger.info(
+        { jobId: job.id },
+        'No tenants with unscored leads — skipping scheduled dispatch'
+      );
+      return {
+        leadId,
+        score: 0,
+        confidence: 0,
+        tier: 'UNQUALIFIED',
+        factors: [],
+        recommendations: [],
+        modelVersion: 'scheduler-dispatcher',
+        processedAt: new Date().toISOString(),
+        processingTimeMs: Date.now() - startTime,
+      };
+    }
+
+    const queue = new Queue(SCORING_QUEUE, {
+      connection: {
+        host: process.env.REDIS_HOST || 'localhost',
+        port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
+      },
+    });
+
+    // Step 2: for each tenant, run a scoped query and enqueue per-lead jobs
+    for (const tenantRow of tenantsWithUnscoredLeads) {
+      const tenantId: string = tenantRow.tenantId;
+      const tenantLeads = await (prisma as any).lead.findMany({
+        where: {
+          tenantId,
+          OR: [
+            { aiInsights: { none: {} } },
+            { aiInsights: { some: { updatedAt: { lt: staleThreshold } } } },
+          ],
         },
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          company: true,
+          title: true,
+          phone: true,
+          source: true,
+        },
+        take: 100,
       });
 
-      for (const l of unscoredLeads) {
+      let tenantEnqueued = 0;
+      for (const l of tenantLeads) {
         await queue.add(
           'score-lead',
           {
             leadId: l.id,
-            tenantId: l.tenantId,
+            tenantId,
             lead: {
               email: l.email,
               firstName: l.firstName ?? undefined,
@@ -201,14 +344,21 @@ async function handleScheduledDispatch(
           },
           DEFAULT_SCORING_JOB_OPTIONS
         );
+        tenantEnqueued++;
         enqueued++;
       }
 
-      await queue.close();
+      // Step 4: log per-tenant batch counts
+      logger.info(
+        { jobId: job.id, tenantId, batchSize: tenantEnqueued },
+        'Enqueued scoring batch for tenant'
+      );
     }
 
+    await queue.close();
+
     logger.info(
-      { jobId: job.id, leadsEnqueued: enqueued },
+      { jobId: job.id, tenantsProcessed: tenantsWithUnscoredLeads.length, leadsEnqueued: enqueued },
       'Scheduled scoring dispatcher completed'
     );
   } catch (error) {
@@ -246,7 +396,7 @@ async function persistScoringResult(
     const churnRisk = churnRiskFromTier(tier);
 
     await prisma.leadAIInsight.upsert({
-      where: { leadId },
+      where: { leadId_tenantId: { leadId, tenantId } },
       create: {
         leadId,
         tenantId,
@@ -271,6 +421,17 @@ async function persistScoringResult(
     });
 
     logger.info({ leadId, score: result.score, tier }, 'Persisted scoring result to LeadAIInsight');
+
+    // H4: emit AI_AGENT audit entry — non-fatal (warn and continue on failure)
+    await logAIAgentAction({
+      tenantId,
+      agentName: 'scoring-job',
+      resourceType: 'LeadAIInsight',
+      resourceId: leadId,
+      action: 'UPSERT',
+    }).catch((err: unknown) => {
+      logger.warn({ leadId, err }, 'audit-log: logAIAgentAction failed (non-fatal)');
+    });
   } catch (error) {
     logger.error(
       { leadId, error: error instanceof Error ? error.message : String(error) },
@@ -286,54 +447,81 @@ async function persistScoringResult(
  * @returns Scoring result with score, confidence, and recommendations
  */
 export async function processScoringJob(job: Job<ScoringJobData>): Promise<ScoringJobResult> {
-  const startTime = Date.now();
-  const { leadId, lead } = job.data;
+  const validatedData = ScoringJobDataSchema.parse(job.data);
 
-  if (job.data.tenantId === '__scheduled__') {
-    return handleScheduledDispatch(job, startTime);
-  }
+  return runWithLogContext(
+    {
+      correlationId: validatedData.correlationId ?? job.id ?? undefined,
+      tenantId: validatedData.tenantId,
+    },
+    async () => {
+      const startTime = Date.now();
+      const { leadId, lead } = validatedData;
 
-  const chainInput: LeadInput = {
-    email: lead.email,
-    firstName: lead.firstName,
-    lastName: lead.lastName,
-    company: lead.company,
-    title: lead.title,
-    phone: lead.phone,
-    source: lead.source,
-    metadata: lead.metadata,
-  };
+      if (validatedData.tenantId === '__scheduled__') {
+        return handleScheduledDispatch(job, startTime);
+      }
 
-  await job.updateProgress(10);
+      // Feature-flag gate — checked after tenantId validation, before LLM work
+      if (!isAiFeatureEnabled('ai.scoring.enabled', validatedData.tenantId)) {
+        logger.info(
+          { jobId: job.id, tenantId: validatedData.tenantId },
+          'AI scoring job skipped — feature flag disabled'
+        );
+        return { skipped: true, reason: 'feature-flag-disabled' } as unknown as ScoringJobResult;
+      }
 
-  const result: ScoringResult = await leadScoringChain.scoreLead(chainInput);
+      const chainInput: LeadInput = {
+        email: lead.email,
+        firstName: lead.firstName,
+        lastName: lead.lastName,
+        company: lead.company,
+        title: lead.title,
+        phone: lead.phone,
+        source: lead.source,
+        metadata: lead.metadata,
+      };
 
-  await job.updateProgress(90);
+      await job.updateProgress(10);
 
-  const tier = computeTier(result.score);
-  const recommendations = generateRecommendations(tier, result.score);
+      await job.extendLock(job.token!, 300_000); // 5 minutes — prevent stall detection during LLM call
+      const breaker = getScoringBreaker();
+      // Construct per-job chain with tenantId so versioned configs are resolved per-tenant
+      const chainInstance = new LeadScoringChain({ tenantId: validatedData.tenantId });
+      const { result, usedFallback } = await generateScoringWithFallback(
+        job,
+        chainInstance,
+        chainInput,
+        LLM_TIMEOUT_MS,
+        breaker
+      );
 
-  const tenantId = job.data.tenantId;
-  if (tenantId) {
-    await persistScoringResult(leadId, tenantId, result, tier, recommendations);
-  }
+      await job.updateProgress(90);
 
-  const processingTimeMs = Date.now() - startTime;
-  const jobResult: ScoringJobResult = {
-    leadId,
-    score: result.score,
-    confidence: result.confidence,
-    tier,
-    factors: result.factors,
-    recommendations,
-    modelVersion: result.modelVersion,
-    processedAt: new Date().toISOString(),
-    processingTimeMs,
-  };
+      const tier = computeTier(result.score);
+      const recommendations = generateRecommendations(tier, result.score);
 
-  await job.updateProgress(100);
+      const tenantId = validatedData.tenantId;
+      await persistScoringResult(leadId, tenantId, result, tier, recommendations);
 
-  return jobResult;
+      const processingTimeMs = Date.now() - startTime;
+      const jobResult: ScoringJobResult = {
+        leadId,
+        score: result.score,
+        confidence: result.confidence,
+        tier,
+        factors: result.factors,
+        recommendations,
+        modelVersion: usedFallback ? 'fallback' : result.modelVersion,
+        processedAt: new Date().toISOString(),
+        processingTimeMs,
+      };
+
+      await job.updateProgress(100);
+
+      return jobResult;
+    }
+  );
 }
 
 // ============================================================================

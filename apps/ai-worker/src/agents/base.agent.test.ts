@@ -2,37 +2,33 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { BaseAgent, AgentTask, BaseAgentConfig, AgentResult } from './base.agent';
 import { z } from 'zod';
 
-// Mock the ChatOpenAI with a proper class
-vi.mock('@langchain/openai', () => {
-  return {
-    ChatOpenAI: class MockChatOpenAI {
-      constructor(config: unknown) {
-        // Store config for potential inspection
-      }
-      async invoke(messages: unknown[]): Promise<{ content: string }> {
-        return { content: 'Mocked LLM response' };
-      }
+// Mock hallucinationChecker so L4 confidence tests are deterministic
+vi.mock('../monitoring/hallucination-checker.js', () => ({
+  hallucinationChecker: {
+    get lastCheck() {
+      return null; // default: no hallucination detected
     },
-  };
-});
+  },
+}));
 
-vi.mock('@langchain/ollama', () => {
-  return {
-    ChatOllama: class MockChatOllama {
-      constructor(config: unknown) {
-        // Store config for potential inspection
-      }
-      async invoke(messages: unknown[] | string): Promise<{ content: string }> {
-        return { content: 'Mocked Ollama response' };
-      }
-    },
-  };
-});
+// Pattern A: mock the factory — BaseAgent calls createLLM internally
+vi.mock('../lib/llm-factory.js', () => ({
+  createLLM: vi.fn(() => ({
+    invoke: vi.fn().mockResolvedValue({ content: 'Mocked LLM response' }),
+    withStructuredOutput: vi.fn(() => ({
+      invoke: vi.fn().mockResolvedValue({ content: 'Mocked LLM response' }),
+    })),
+  })),
+  createEmbeddings: vi.fn(() => ({
+    embedQuery: vi.fn().mockResolvedValue([]),
+    embedDocuments: vi.fn().mockResolvedValue([]),
+  })),
+}));
 
 // Mock the ai.config
 vi.mock('../config/ai.config', () => ({
   aiConfig: {
-    provider: 'openai',
+    provider: 'litellm',
     openai: {
       model: 'gpt-4-turbo-preview',
       temperature: 0.7,
@@ -131,11 +127,26 @@ describe('BaseAgent', () => {
       expect(stats.config.verbose).toBe(false);
     });
 
-    it('should initialize Ollama provider', async () => {
-      // Reset modules to apply new mock
+    it('should initialize with Ollama provider config', async () => {
+      // After B2b the agent delegates provider selection to the factory.
+      // We only need to verify the agent initializes without error when
+      // aiConfig.provider = 'ollama'. The factory is already mocked at the
+      // top of this file — no module reset needed.
       vi.resetModules();
 
-      // Mock Ollama provider before importing the module
+      vi.doMock('../lib/llm-factory.js', () => ({
+        createLLM: vi.fn(() => ({
+          invoke: vi.fn().mockResolvedValue({ content: 'Mocked Ollama response' }),
+          withStructuredOutput: vi.fn(() => ({
+            invoke: vi.fn().mockResolvedValue({ content: 'Mocked Ollama response' }),
+          })),
+        })),
+        createEmbeddings: vi.fn(() => ({
+          embedQuery: vi.fn().mockResolvedValue([]),
+          embedDocuments: vi.fn().mockResolvedValue([]),
+        })),
+      }));
+
       vi.doMock('../config/ai.config', () => ({
         aiConfig: {
           provider: 'ollama',
@@ -170,29 +181,6 @@ describe('BaseAgent', () => {
 
       const ollamaAgent = new OllamaTestAgent(config);
       expect(ollamaAgent).toBeDefined();
-
-      // Restore original mock
-      vi.doMock('../config/ai.config', () => ({
-        aiConfig: {
-          provider: 'openai',
-          openai: {
-            model: 'gpt-4-turbo-preview',
-            temperature: 0.7,
-            maxTokens: 2000,
-            timeout: 30000,
-            apiKey: 'test-api-key',
-          },
-          ollama: {
-            baseUrl: 'http://localhost:11434',
-            model: 'mistral',
-            temperature: 0.7,
-            timeout: 60000,
-          },
-          costTracking: {
-            enabled: true,
-          },
-        },
-      }));
     });
   });
 
@@ -324,18 +312,142 @@ describe('BaseAgent', () => {
   });
 
   describe('calculateConfidence', () => {
-    it('should return default confidence score', async () => {
+    it('valid payload, no schema, no hallucination → 0.5 + 0.2 + 0.1 = 0.8', async () => {
       const task: AgentTask<{ message: string }, { response: string }> = {
         id: 'test-task-6',
         description: 'Confidence test',
         input: { message: 'Hello' },
+        // no expectedOutput schema
       };
 
-      const output = { response: 'Test response' };
+      // Output text with a token count in [10, 1500]
+      const output = {
+        response:
+          'This is a normal response with enough tokens to fall inside the expected range for confidence scoring.',
+      };
 
       const confidence = await agent.testCalculateConfidence(task, output);
 
-      expect(confidence).toBe(0.8);
+      // baseline 0.5 + schema bonus 0.2 (no schema = treated as valid) + token bonus 0.1
+      expect(confidence).toBeCloseTo(0.8, 5);
+    });
+
+    it('output passes Zod schema → includes +0.2 schema bonus', async () => {
+      const task: AgentTask<{ message: string }, { response: string }> = {
+        id: 'test-task-conf-schema',
+        description: 'Schema validation test',
+        input: { message: 'Hello' },
+        expectedOutput: z.object({ response: z.string() }),
+      };
+      const output = {
+        response:
+          'Valid response text that has enough content to stay within the expected token range.',
+      };
+
+      const confidence = await agent.testCalculateConfidence(task, output);
+
+      // 0.5 + 0.2 (schema pass) + 0.1 (token range) = 0.8
+      expect(confidence).toBeCloseTo(0.8, 5);
+    });
+
+    it('output fails Zod schema → no schema bonus', async () => {
+      const task: AgentTask<{ message: string }, { response: string }> = {
+        id: 'test-task-conf-schema-fail',
+        description: 'Schema failure test',
+        input: { message: 'Hello' },
+        expectedOutput: z.object({ response: z.number() }), // expects number, gets string
+      };
+      const output = {
+        response: 'This is a string, not a number — schema validation should fail for this output.',
+      } as unknown as { response: string };
+
+      const confidence = await agent.testCalculateConfidence(task, output);
+
+      // 0.5 + 0 (schema fail) + 0.1 (token range) = 0.6
+      expect(confidence).toBeCloseTo(0.6, 5);
+    });
+
+    it('hallucination detected → -0.3 applied', async () => {
+      // Override the mock for this test only
+      const { hallucinationChecker: hc } = await import('../monitoring/hallucination-checker.js');
+      vi.spyOn(hc, 'lastCheck', 'get').mockReturnValue({
+        id: 'fake',
+        timestamp: new Date(),
+        model: 'gpt-4',
+        inputContext: '',
+        output: '',
+        hallucinated: true,
+        confidence: 0.9,
+        hallucinationTypes: ['factual_error' as any],
+        evidence: [],
+        groundTruthSources: [],
+        score: 0.9,
+      });
+
+      const task: AgentTask<{ message: string }, { response: string }> = {
+        id: 'test-task-conf-hallucination',
+        description: 'Hallucination penalty test',
+        input: { message: 'Hello' },
+      };
+      const output = {
+        response: 'Response that triggered a hallucination flag from the checker service.',
+      };
+
+      const confidence = await agent.testCalculateConfidence(task, output);
+
+      // 0.5 + 0.2 (no schema) - 0.3 (hallucination) + 0.1 (token range) = 0.5
+      expect(confidence).toBeCloseTo(0.5, 5);
+
+      vi.restoreAllMocks();
+    });
+
+    it('suspiciously short output → no token bonus', async () => {
+      const task: AgentTask<{ message: string }, { response: string }> = {
+        id: 'test-task-conf-short',
+        description: 'Short output test',
+        input: { message: 'Hi' },
+      };
+      // Very short — fewer than 10 tokens
+      const output = { response: 'OK' };
+
+      const confidence = await agent.testCalculateConfidence(task, output);
+
+      // 0.5 + 0.2 (no schema) + 0 (too short) = 0.7
+      expect(confidence).toBeCloseTo(0.7, 5);
+    });
+
+    it('confidence is clamped to [0, 1]', async () => {
+      const { hallucinationChecker: hc } = await import('../monitoring/hallucination-checker.js');
+      // Force hallucinated=true to push score low
+      vi.spyOn(hc, 'lastCheck', 'get').mockReturnValue({
+        id: 'fake2',
+        timestamp: new Date(),
+        model: 'gpt-4',
+        inputContext: '',
+        output: '',
+        hallucinated: true,
+        confidence: 0.95,
+        hallucinationTypes: [] as any,
+        evidence: [],
+        groundTruthSources: [],
+        score: 0.95,
+      });
+
+      // schema fail + hallucination + short output = 0.5 - 0.3 = 0.2 (no bonuses)
+      const task: AgentTask<{ message: string }, { response: string }> = {
+        id: 'test-task-conf-clamp',
+        description: 'Clamp test',
+        input: { message: 'Hi' },
+        expectedOutput: z.object({ response: z.number() }), // will fail
+      };
+      const output = { response: 'ok' } as unknown as { response: string };
+
+      const confidence = await agent.testCalculateConfidence(task, output);
+
+      expect(confidence).toBeGreaterThanOrEqual(0);
+      expect(confidence).toBeLessThanOrEqual(1);
+
+      vi.restoreAllMocks();
     });
   });
 

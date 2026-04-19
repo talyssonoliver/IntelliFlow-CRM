@@ -41,11 +41,15 @@ vi.mock('../../monitoring/hallucination-checker', () => ({
   },
 }));
 
-vi.mock('../../chains/churn-risk.chain', () => ({
-  getChurnRiskChain: () => ({
-    predictChurnRisk: mockPredictChurnRisk,
-  }),
-}));
+vi.mock('../../chains/churn-risk.chain', () => {
+  class ChurnRiskChain {
+    predictChurnRisk = mockPredictChurnRisk;
+  }
+  return {
+    getChurnRiskChain: () => new ChurnRiskChain(),
+    ChurnRiskChain,
+  };
+});
 
 vi.mock('../../agents/next-best-action.agent', () => ({
   createNBAAgent: () => ({
@@ -62,24 +66,36 @@ vi.mock('../../agents/next-best-action.agent', () => ({
   }),
 }));
 
-vi.mock('../../chains/scoring.chain', () => ({
-  getLeadScoringChain: () => ({
-    scoreLead: vi.fn().mockResolvedValue({
-      score: 45,
-      confidence: 0.9,
-      factors: [{ name: 'email', impact: 10, reasoning: 'has email' }],
-      modelVersion: 'mock:v1',
-      requiresReview: false,
-    }),
-  }),
-}));
+const mockScoreLead = vi.hoisted(() =>
+  vi.fn().mockResolvedValue({
+    score: 45,
+    confidence: 0.9,
+    factors: [{ name: 'email', impact: 10, reasoning: 'has email' }],
+    modelVersion: 'mock:v1',
+    requiresReview: false,
+  })
+);
 
-vi.mock('../../chains/insight-generation.chain', () => ({
-  getInsightGenerationChain: () => ({
-    generateInsightsWithMeta: mockGenerateInsightsWithMeta,
-    generateFallbackInsights: mockGenerateFallbackInsights,
-  }),
-}));
+vi.mock('../../chains/scoring.chain', () => {
+  class LeadScoringChain {
+    scoreLead = mockScoreLead;
+  }
+  return {
+    getLeadScoringChain: () => new LeadScoringChain(),
+    LeadScoringChain,
+  };
+});
+
+vi.mock('../../chains/insight-generation.chain', () => {
+  class InsightGenerationChain {
+    generateInsightsWithMeta = mockGenerateInsightsWithMeta;
+    generateFallbackInsights = mockGenerateFallbackInsights;
+  }
+  return {
+    getInsightGenerationChain: () => new InsightGenerationChain(),
+    InsightGenerationChain,
+  };
+});
 
 vi.mock('../../utils/conversation-record-logger', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../../utils/conversation-record-logger')>();
@@ -94,7 +110,10 @@ vi.mock('../../utils/conversation-record-logger', async (importOriginal) => {
 
 vi.mock('@intelliflow/db', () => ({
   prisma: {
-    aIInsight: { create: (...args: any[]) => mockCreate(...args) },
+    aIInsight: {
+      create: (...args: any[]) => mockCreate(...args),
+      findFirst: () => Promise.resolve(null),
+    },
     notification: { create: (...args: any[]) => mockNotificationCreate(...args) },
     task: { create: (...args: any[]) => mockTaskCreate(...args) },
     leadAIInsight: { upsert: (...args: any[]) => mockLeadAIInsightUpsert(...args) },
@@ -132,14 +151,16 @@ function createPredictionJob(
       entityType: 'lead',
       entityId: '550e8400-e29b-41d4-a716-446655440000',
       predictionType,
+      tenantId: '550e8400-e29b-41d4-a716-446655440001',
       context: {
-        tenantId: '550e8400-e29b-41d4-a716-446655440001',
         userId: '550e8400-e29b-41d4-a716-446655440002',
         ...overrides,
       },
       priority: 5,
     },
     updateProgress: vi.fn().mockResolvedValue(undefined),
+    // prediction.job.ts extends the BullMQ lock during long LLM calls.
+    extendLock: vi.fn().mockResolvedValue(undefined),
     token: 'mock-token',
     queueName: 'ai-prediction',
   } as any;

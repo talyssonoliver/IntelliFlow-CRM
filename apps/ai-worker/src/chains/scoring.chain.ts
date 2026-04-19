@@ -1,17 +1,15 @@
-import { ChatOpenAI } from '@langchain/openai';
-import { ChatOllama } from '@langchain/ollama';
 import { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { PromptTemplate } from '@langchain/core/prompts';
-import { StructuredOutputParser } from '@langchain/core/output_parsers';
 import { z } from 'zod';
 import { aiConfig } from '../config/ai.config';
-import { costTracker } from '../utils/cost-tracker';
-import { getOpenAIClientSettings } from '../utils/openai-client';
 import { chainMonitor, withMonitoring } from '../monitoring/chain-monitor';
 import type { MonitoredResult } from '../monitoring/chain-monitor';
 import { leadScoreSchema } from '@intelliflow/validators';
 import { requiresHumanReview } from '@intelliflow/domain';
 import { sanitizeStringField } from '../utils/input-sanitizer';
+import { createLLM, createLLMForTenant } from '../lib/llm-factory';
+import { resolveRateLimit } from '../lib/tenant-ai-config.js';
+import { getVersionLoader, CHAIN_TYPE_MAP } from '../versioning/chain-version-loader';
 import pino from 'pino';
 
 const logger = pino({
@@ -46,78 +44,12 @@ export type ScoringResult = z.infer<typeof leadScoreSchema>;
  */
 export class LeadScoringChain {
   private readonly model: BaseChatModel;
-  private readonly parser: StructuredOutputParser<typeof leadScoreSchema>;
+  private structuredModel: { invoke(input: unknown): Promise<unknown> };
   private readonly prompt: PromptTemplate;
+  private readonly tenantId?: string;
 
-  constructor() {
-    // Initialize the appropriate model based on configuration
-    if (aiConfig.provider === 'openai') {
-      const openAIClientSettings = getOpenAIClientSettings();
-      this.model = new ChatOpenAI({
-        modelName: aiConfig.openai.model,
-        temperature: aiConfig.openai.temperature,
-        maxTokens: aiConfig.openai.maxTokens,
-        timeout: aiConfig.openai.timeout,
-        apiKey: openAIClientSettings.apiKey,
-        configuration: openAIClientSettings.configuration,
-        callbacks: aiConfig.features.enableChainLogging
-          ? [
-              {
-                handleLLMEnd: async (output) => {
-                  // Track token usage and cost
-                  const usage = output.llmOutput?.tokenUsage;
-                  if (usage && aiConfig.costTracking.enabled) {
-                    costTracker.recordUsage({
-                      model: aiConfig.openai.model,
-                      inputTokens: usage.promptTokens || 0,
-                      outputTokens: usage.completionTokens || 0,
-                      operationType: 'lead_scoring',
-                    });
-                  }
-                },
-              },
-            ]
-          : undefined,
-      });
-    } else if (aiConfig.provider === 'ollama') {
-      // Ollama local development support (IFC-085)
-      // Uses @langchain/ollama for local LLM inference
-      // Benefits: 90% cost reduction, no rate limits, offline dev, data privacy
-      // IFC-174: Forward timeout via custom fetch with AbortSignal
-      // ChatOllama doesn't accept a timeout param directly — use fetch wrapper
-      const ollamaTimeout = aiConfig.ollama.timeout;
-      this.model = new ChatOllama({
-        baseUrl: aiConfig.ollama.baseUrl,
-        model: aiConfig.ollama.model,
-        temperature: aiConfig.ollama.temperature,
-        numCtx: 4096,
-        format: 'json',
-        fetch: (url: string | URL | Request, init?: RequestInit) => {
-          return globalThis.fetch(url, {
-            ...init,
-            signal: init?.signal ?? AbortSignal.timeout(ollamaTimeout),
-          });
-        },
-      });
-
-      logger.info(
-        {
-          baseUrl: aiConfig.ollama.baseUrl,
-          model: aiConfig.ollama.model,
-        },
-        'Initialized Ollama provider for lead scoring'
-      );
-    } else {
-      // Mock provider for testing or unsupported provider
-      throw new Error(`Unsupported AI provider: ${aiConfig.provider}`);
-    }
-
-    // Create structured output parser
-    this.parser = StructuredOutputParser.fromZodSchema(leadScoreSchema);
-
-    // Define the scoring prompt
-    this.prompt = new PromptTemplate({
-      template: `You are an expert lead scoring AI for a CRM system. Analyze the provided lead information and assign a score from 0-100 based on the lead's quality and conversion potential.
+  /** Default prompt template used when no versioned config is available */
+  private static readonly DEFAULT_PROMPT = `You are an expert lead scoring AI for a CRM system. Analyze the provided lead information and assign a score from 0-100 based on the lead's quality and conversion potential.
 
 Consider the following factors:
 1. Contact Information Completeness (0-25 points)
@@ -143,15 +75,50 @@ Consider the following factors:
 Lead Information:
 {lead_info}
 
-IMPORTANT: Provide your analysis in the following format:
-{format_instructions}
+Respond with a structured JSON object containing the score, confidence, factors, and modelVersion fields.`;
 
-Be thorough but concise. Each factor should have a clear impact score and reasoning.`,
-      inputVariables: ['lead_info'],
-      partialVariables: {
-        format_instructions: this.parser.getFormatInstructions(),
-      },
+  constructor(options?: { tenantId?: string }) {
+    this.tenantId = options?.tenantId;
+
+    // Initialize LLM via factory — provider/tier routing handled centrally
+    this.model = createLLM('scoring', 'free', {
+      temperature: aiConfig.openai.temperature,
+      maxTokens: aiConfig.openai.maxTokens,
+      timeout: aiConfig.openai.timeout,
     });
+
+    this.structuredModel = (this.model as any).withStructuredOutput(leadScoreSchema);
+
+    // Define the scoring prompt (may be overridden per-tenant in scoreLead)
+    this.prompt = new PromptTemplate({
+      template: LeadScoringChain.DEFAULT_PROMPT,
+      inputVariables: ['lead_info'],
+    });
+  }
+
+  /**
+   * Resolve the tenant-versioned prompt override (if any).
+   * Falls back silently to the default prompt when no active version exists.
+   */
+  private async resolveVersionedPrompt(): Promise<string | null> {
+    if (!this.tenantId) return null;
+    try {
+      const loader = getVersionLoader();
+      const config = await loader.getChainConfig(CHAIN_TYPE_MAP.LEAD_SCORING, {
+        tenantId: this.tenantId,
+      });
+      return config.prompt ?? null;
+    } catch {
+      logger.warn(
+        {
+          chainType: 'LEAD_SCORING',
+          tenantId: this.tenantId,
+          reason: 'no active version, using default',
+        },
+        'VersionLoader: failed to load versioned config'
+      );
+      return null;
+    }
   }
 
   /**
@@ -163,22 +130,36 @@ Be thorough but concise. Each factor should have a clear impact score and reason
     try {
       logger.info({ leadEmail: lead.email }, 'Starting lead scoring');
 
+      // Lazy tenant-tier resolution: if tenantId is set, re-resolve model at invoke time.
+      if (this.tenantId) {
+        const tenantModel = await createLLMForTenant('scoring', 'free', {
+          tenantId: this.tenantId,
+          temperature: aiConfig.openai.temperature,
+          maxTokens: aiConfig.openai.maxTokens,
+          timeout: aiConfig.openai.timeout,
+        });
+        this.structuredModel = (tenantModel as any).withStructuredOutput(leadScoreSchema);
+      }
+
       // Format lead information for the prompt
       const leadInfo = this.formatLeadInfo(lead);
 
+      // Resolve tenant-versioned prompt if tenantId is available; fall back to default
+      const versionedPromptText = await this.resolveVersionedPrompt();
+      const activePrompt = versionedPromptText
+        ? new PromptTemplate({ template: versionedPromptText, inputVariables: ['lead_info'] })
+        : this.prompt;
+
       // Generate the prompt
-      const formattedPrompt = await this.prompt.format({
+      const formattedPrompt = await activePrompt.format({
         lead_info: leadInfo,
       });
 
       // Wrap LLM call + parsing with monitoring (IFC-117)
       const monitoredConfig = chainMonitor.getConfig();
       const monitored: MonitoredResult<ScoringResult> = await withMonitoring(async () => {
-        // Call the LLM
-        const response = await this.model.invoke(formattedPrompt);
-
-        // Parse the structured output
-        const result = (await this.parser.parse(response.content as string)) as Omit<
+        // Call the LLM with structured output — returns typed object directly
+        const result = (await this.structuredModel.invoke(formattedPrompt)) as unknown as Omit<
           ScoringResult,
           'modelVersion'
         >;
@@ -186,7 +167,7 @@ Be thorough but concise. Each factor should have a clear impact score and reason
         // Add model version
         return {
           ...result,
-          modelVersion: `${aiConfig.provider}:${aiConfig.provider === 'openai' ? aiConfig.openai.model : aiConfig.ollama.model}:v1`,
+          modelVersion: `${aiConfig.provider}:scoring-free:v1`,
         };
       }, monitoredConfig);
 
@@ -249,13 +230,18 @@ Be thorough but concise. Each factor should have a clear impact score and reason
     // In production, consider using a queue system like BullMQ
     const results: ScoringResult[] = [];
 
+    // P2.8 — resolve per-tenant rate limit once per batch; falls back to global default.
+    const globalDefault = aiConfig.performance.rateLimitPerMinute ?? 60;
+    const effectiveRateLimit = this.tenantId
+      ? await resolveRateLimit(this.tenantId, 'scoring', globalDefault)
+      : globalDefault;
+
     for (const lead of leads) {
       const result = await this.scoreLead(lead);
       results.push(result);
 
-      // Add delay to respect rate limits
-      if (aiConfig.performance.rateLimitPerMinute) {
-        const delayMs = (60 * 1000) / aiConfig.performance.rateLimitPerMinute;
+      if (effectiveRateLimit) {
+        const delayMs = (60 * 1000) / effectiveRateLimit;
         await new Promise((resolve) => setTimeout(resolve, delayMs));
       }
     }
