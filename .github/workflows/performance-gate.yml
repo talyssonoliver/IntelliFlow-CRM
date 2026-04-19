@@ -112,7 +112,7 @@ jobs:
             --env SUPABASE_URL=${{ env.SUPABASE_URL }} \
             --env SUPABASE_ANON_KEY=${{ env.SUPABASE_ANON_KEY }} \
             --env BASE_URL=http://localhost:3000 \
-            artifacts/misc/k6/scripts/__tests__/auth-smoke.js || true
+            tools/scripts/k6/__tests__/auth-smoke.js || true
 
       - name: Run performance test (smoke)
         id: perf-test
@@ -122,7 +122,7 @@ jobs:
             --env SUPABASE_URL=${{ env.SUPABASE_URL }} \
             --env SUPABASE_ANON_KEY=${{ env.SUPABASE_ANON_KEY }} \
             --env BASE_URL=http://localhost:3000 \
-            artifacts/misc/k6/scripts/authenticated-load-test.js || true
+            tools/scripts/k6/authenticated-load-test.js || true
 
       - name: Run performance test (full)
         id: perf-test-full
@@ -132,7 +132,7 @@ jobs:
             --env SUPABASE_URL=${{ env.SUPABASE_URL }} \
             --env SUPABASE_ANON_KEY=${{ env.SUPABASE_ANON_KEY }} \
             --env BASE_URL=http://localhost:3000 \
-            artifacts/misc/k6/scripts/load-test.js || true
+            tools/scripts/k6/load-test.js || true
 
       - name: Validate performance thresholds
         id: validate

@@ -9,7 +9,7 @@
 # References:
 # - docs/security/supply-chain.md
 # - docs/security/owasp-checklist.md (A06: Vulnerable and Outdated Components)
-# - artifacts/misc/security-baseline.json
+# - infra/monitoring/security-baseline.json
 
 name: Supply Chain Security - SBOM
 
@@ -405,7 +405,7 @@ jobs:
           echo "## References" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- [Supply Chain Policy](../docs/security/supply-chain.md)" >> $GITHUB_STEP_SUMMARY
-          echo "- [Security Baseline](../artifacts/misc/security-baseline.json)" >> $GITHUB_STEP_SUMMARY
+          echo "- [Security Baseline](../infra/monitoring/security-baseline.json)" >> $GITHUB_STEP_SUMMARY
 
       - name: Fail if critical jobs failed
         if: needs.generate-sbom.result == 'failure'

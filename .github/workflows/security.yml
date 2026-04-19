@@ -219,7 +219,7 @@ jobs:
             ".github/CODEOWNERS"
             "infra/security/trivy.yaml"
             "infra/security/dependency-check.yaml"
-            "artifacts/misc/security-baseline.json"
+            "infra/monitoring/security-baseline.json"
           )
 
           missing_files=()
@@ -238,7 +238,7 @@ jobs:
           echo "All required security files present"
 
           # Validate security baseline JSON
-          if ! jq empty artifacts/misc/security-baseline.json 2>/dev/null; then
+          if ! jq empty infra/monitoring/security-baseline.json 2>/dev/null; then
             echo "ERROR: security-baseline.json is not valid JSON"
             exit 1
           fi

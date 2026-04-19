@@ -7,6 +7,12 @@ on:
       - 'apps/web/src/app/**/page.tsx'
       - 'apps/web/src/app/**/layout.tsx'
       - 'apps/web/src/app/layout.tsx'
+      - 'apps/web/src/app/sitemap.ts'
+      - 'apps/web/src/data/blog-posts.ts'
+      - 'apps/web/src/data/job-listings.ts'
+      - 'apps/web/src/data/landing-pages.json'
+      - 'apps/web/src/data/press-releases.json'
+      - 'lighthouserc.js'
       - 'tools/scripts/content-audit.ts'
       - '.github/workflows/content-audit.yml'
   workflow_dispatch:

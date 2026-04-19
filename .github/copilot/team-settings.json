@@ -165,7 +165,7 @@
       "description": "Architecture documentation"
     },
     {
-      "path": "docs/planning/adr/**",
+      "path": "docs/architecture/adr/**",
       "priority": "medium",
       "description": "Architecture Decision Records"
     }

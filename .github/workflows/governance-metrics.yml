@@ -28,7 +28,7 @@ on:
     paths:
       - 'packages/**/*.ts'
       - 'apps/**/*.ts'
-      - 'docs/debt-ledger.yaml'
+      - 'artifacts/metrics/debt-ledger.yaml'
 
 concurrency:
   group: governance-metrics-${{ github.ref }}
@@ -57,7 +57,7 @@ jobs:
 
       - name: Run performance benchmarks
         run: |
-          npx tsx artifacts/misc/architecture-spike/performance-test.ts
+          npx tsx tools/scripts/benchmarks/performance-test.ts
           echo "Benchmark completed at $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 
       - name: Upload benchmark artifacts
@@ -93,7 +93,7 @@ jobs:
           const fs = require('fs');
           const yaml = require('js-yaml');
 
-          const ledgerPath = 'docs/debt-ledger.yaml';
+          const ledgerPath = 'artifacts/metrics/debt-ledger.yaml';
           const outputPath = 'artifacts/reports/code-analysis/latest.json';
 
           fs.mkdirSync('artifacts/reports/code-analysis', { recursive: true });
