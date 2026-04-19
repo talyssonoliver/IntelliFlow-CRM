@@ -1,7 +1,7 @@
 # IntelliFlow CRM - Information Architecture
 
 > **Location**: `docs/design/information-architecture.md` **Last Updated**:
-> 2026-04-16 **Total Pages**: 205 | **Total Flows**: 48 | **API Routers**: 55
+> 2026-04-16 **Total Pages**: 207 | **Total Flows**: 48 | **API Routers**: 56
 > (366 procedures) | **Ghost Links**: 0
 
 ---
@@ -426,8 +426,9 @@ FLOW-020.
 Sidebar or in-page links pointing to routes that have no `page.tsx`. All 28
 previously-tracked ghosts (G-01 through G-28) were resolved in sprints 16–17.
 The register is currently empty. If a new ghost link is introduced, add a row
-below with the columns `# | Source Config | Link Label | Target URL | Issue
-Type | Resolution` (see git history for prior examples).
+below with the columns
+`# | Source Config | Link Label | Target URL | Issue Type | Resolution` (see git
+history for prior examples).
 
 | #   | Source Config | Link Label | Target URL | Issue Type | Resolution |
 | --- | ------------- | ---------- | ---------- | ---------- | ---------- |

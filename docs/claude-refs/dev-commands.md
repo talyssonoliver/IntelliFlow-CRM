@@ -64,12 +64,20 @@ Config: `lighthouserc.js` — 27 URLs, desktop preset, >=90% thresholds. Reports
 
 ## AI Development
 
+### AI inference (primary path)
+
 ```bash
-ollama serve                    # Start Ollama for local AI
-ollama pull llama2              # Pull models
-ollama pull mistral
+docker compose -f infra/docker/docker-compose.litellm.yml up -d   # Start LiteLLM proxy
+curl http://localhost:4000/v1/models                               # Smoke-test proxy
 pnpm --filter ai-worker test:chains  # Test AI chains
 pnpm run ai:benchmark           # Benchmark AI performance
+```
+
+### Offline fallback (Ollama)
+
+```bash
+ollama serve                              # Start Ollama
+ollama pull mistral:7b-instruct-q4_K_M   # Pull required model
 ```
 
 ## Data Sync

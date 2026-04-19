@@ -1,15 +1,16 @@
 # tRPC API Routes
 
-> **Last Updated**: 2026-02-05 **API Version**: 2.0.0
+> **Last Updated**: 2026-04-14 **API Version**: 2.1.0
 
 ## API Inventory Summary
 
 | Metric               | Count |
 | -------------------- | ----- |
-| **Total Routers**    | 25    |
-| **Total Procedures** | 235   |
-| **Queries**          | 113   |
-| **Mutations**        | 122   |
+| **Total Routers**    | 62    |
+| **Total Procedures** | 386   |
+| **Queries**          | 192   |
+| **Mutations**        | 189   |
+| **Subscriptions**    | 5     |
 
 ---
 
@@ -220,6 +221,80 @@ apps/api/src/
 | `addComment` | mutation | Add internal comment to ticket                         |
 | `getMetrics` | query    | Get ticket SLA and resolution metrics                  |
 
+#### `ticketRouting` Router (2 procedures)
+
+| Procedure         | Type | Description                             |
+| ----------------- | ---- | --------------------------------------- |
+| `autoRoute`       | M    | Auto-route ticket via AI classification |
+| `suggestAssignee` | Q    | Suggest ranked agent candidates         |
+
+#### `ticketConfig` Router (12 procedures)
+
+| Procedure            | Type | Description               |
+| -------------------- | ---- | ------------------------- |
+| `slaPolicies.list`   | Q    | List SLA policies         |
+| `slaPolicies.create` | M    | Create SLA policy         |
+| `slaPolicies.update` | M    | Update SLA policy         |
+| `slaPolicies.delete` | M    | Delete SLA policy         |
+| `categories.list`    | Q    | List ticket categories    |
+| `categories.create`  | M    | Create ticket category    |
+| `categories.update`  | M    | Update ticket category    |
+| `categories.delete`  | M    | Delete ticket category    |
+| `categories.reorder` | M    | Reorder ticket categories |
+
+#### `leadSettings` Router (12 procedures)
+
+| Procedure                | Type | Description                     |
+| ------------------------ | ---- | ------------------------------- |
+| `stages.getAll`          | Q    | Get all lead pipeline stages    |
+| `stages.updateAll`       | M    | Replace all stages              |
+| `stages.resetToDefaults` | M    | Reset stages to system defaults |
+| `scoringRules.getAll`    | Q    | Get all lead scoring rules      |
+| `scoringRules.updateAll` | M    | Replace all scoring rules       |
+| `customFields.list`      | Q    | List custom lead fields         |
+| `customFields.create`    | M    | Create a custom field           |
+| `automation.get`         | Q    | Get lead automation config      |
+| `automation.update`      | M    | Update lead automation settings |
+
+#### `contactSettings` Router (5 procedures)
+
+| Procedure | Type | Description     |
+| --------- | ---- | --------------- |
+| `getAll`  | Q    | Get settings    |
+| `update`  | M    | Update settings |
+
+#### `accountSettings` Router (5 procedures)
+
+| Procedure | Type | Description     |
+| --------- | ---- | --------------- |
+| `getAll`  | Q    | Get settings    |
+| `update`  | M    | Update settings |
+
+#### `activityFeed` Router (9 procedures)
+
+| Procedure        | Type | Description                         |
+| ---------------- | ---- | ----------------------------------- |
+| `getUnifiedFeed` | Q    | Cross-entity activity feed          |
+| `getEntityFeed`  | Q    | Activity feed for a specific entity |
+| `addComment`     | M    | Add comment to activity             |
+| `toggleReaction` | M    | Toggle emoji reaction               |
+
+#### `globalSearch` Router (1 procedure)
+
+| Procedure | Type | Description                   |
+| --------- | ---- | ----------------------------- |
+| `query`   | Q    | Cross-entity full-text search |
+
+#### `routing` Router (13 procedures)
+
+| Procedure          | Type | Description                     |
+| ------------------ | ---- | ------------------------------- |
+| `list`             | Q    | List routing rules              |
+| `create`           | M    | Create a lead routing rule      |
+| `update`           | M    | Update a routing rule           |
+| `autoRouteLead`    | M    | Auto-route lead via engine      |
+| `getAgentWorkload` | Q    | Agent availability and capacity |
+
 ---
 
 ### 3. AI & Automation
@@ -322,6 +397,26 @@ apps/api/src/
 | `getStatus`        | query    | Get real-time experiment status             |
 | `getResults`       | query    | Get detailed results and metrics            |
 
+#### `aiMonitoring` Router (11 procedures)
+
+| Procedure              | Type | Description                     |
+| ---------------------- | ---- | ------------------------------- |
+| `getStatus`            | Q    | Overall AI system health status |
+| `getDriftMetrics`      | Q    | Model drift indicators          |
+| `getLatencyMetrics`    | Q    | P50/P95/P99 latency by model    |
+| `getHallucinationRate` | Q    | Hallucination rate report       |
+| `getROIMetrics`        | Q    | Cost vs. value metrics          |
+
+#### `aiReview` Router (8 procedures)
+
+| Procedure  | Type | Description                                |
+| ---------- | ---- | ------------------------------------------ |
+| `list`     | Q    | List AI-generated responses pending review |
+| `get`      | Q    | Get single review item                     |
+| `approve`  | M    | Approve AI response                        |
+| `reject`   | M    | Reject AI response                         |
+| `escalate` | M    | Escalate to senior reviewer                |
+
 #### `feedback` Router (6 procedures)
 
 | Procedure            | Type     | Description                             |
@@ -419,6 +514,16 @@ apps/api/src/
 | ----------------- | -------- | -------------------------------- |
 | `upload`          | mutation | Upload file with base64 encoding |
 | `getUploadStatus` | query    | Get status of upload operation   |
+
+#### `webhooks` Router (9 procedures)
+
+| Procedure              | Type | Description                        |
+| ---------------------- | ---- | ---------------------------------- |
+| `handleWebhook`        | M    | Receive inbound webhook            |
+| `registerSource`       | M    | Register a webhook source          |
+| `getSources`           | Q    | List registered webhook sources    |
+| `processRetries`       | M    | Process pending webhook retries    |
+| `getDeadLetterEntries` | Q    | List undeliverable webhook entries |
 
 ---
 
@@ -538,21 +643,161 @@ compatibility.
 
 ---
 
+### 11. Real-Time & User Experience
+
+#### `home` Router (12 procedures)
+
+| Procedure           | Type | Description                            |
+| ------------------- | ---- | -------------------------------------- |
+| `getWelcomeSummary` | Q    | Personalized welcome dashboard summary |
+| `getAIInsights`     | Q    | AI-generated actionable insights       |
+| `getTimeline`       | Q    | Merged activity timeline for home      |
+| `pinItem`           | M    | Pin an entity to dashboard             |
+| `dismissInsight`    | M    | Dismiss a home insight                 |
+
+#### `notifications` Router (10 procedures)
+
+| Procedure        | Type | Description                                  |
+| ---------------- | ---- | -------------------------------------------- |
+| `list`           | Q    | Paginated notification list                  |
+| `getUnreadCount` | Q    | Count of unread notifications                |
+| `markAsRead`     | M    | Mark notification as read                    |
+| `markAllAsRead`  | M    | Mark all notifications as read               |
+| `onNew`          | S    | WebSocket subscription for new notifications |
+
+---
+
+### 12. Support & Feedback
+
+#### `feedbackSurvey` Router (4 procedures)
+
+| Procedure           | Type | Description               |
+| ------------------- | ---- | ------------------------- |
+| `getDashboardStats` | Q    | NPS/CSAT survey dashboard |
+| `getNPSTrend`       | Q    | NPS score trend over time |
+| `listResponses`     | Q    | List raw survey responses |
+| `exportResponses`   | M    | Export responses to CSV   |
+
+#### `helpArticle` Router (11 procedures)
+
+| Procedure   | Type | Description               |
+| ----------- | ---- | ------------------------- |
+| `list`      | Q    | List help articles        |
+| `getBySlug` | Q    | Fetch article by URL slug |
+| `create`    | M    | Create a help article     |
+| `update`    | M    | Update help article       |
+| `publish`   | M    | Publish draft article     |
+| `archive`   | M    | Archive article           |
+
+---
+
+### 13. Privacy & Compliance
+
+#### `privacy` Router (2 procedures)
+
+| Procedure       | Type | Description                  |
+| --------------- | ---- | ---------------------------- |
+| `submitDSAR`    | M    | Submit a GDPR rights request |
+| `getDSARStatus` | Q    | Check DSAR status            |
+
+---
+
+### 14. User & Team Management
+
+#### `user` Router (3 procedures)
+
+| Procedure       | Type | Description               |
+| --------------- | ---- | ------------------------- |
+| `getProfile`    | Q    | Get current user profile  |
+| `updateProfile` | M    | Update name, avatar, etc. |
+
+#### `team` Router (5 procedures)
+
+| Procedure | Type | Description          |
+| --------- | ---- | -------------------- |
+| `list`    | Q    | List teams           |
+| `getById` | Q    | Get team by ID       |
+| `update`  | M    | Update team settings |
+
+#### `moduleAccess` Router (3 procedures)
+
+| Procedure           | Type | Description                     |
+| ------------------- | ---- | ------------------------------- |
+| `getEnabledModules` | Q    | Get enabled modules for tenant  |
+| `toggleModule`      | M    | Enable/disable a module (admin) |
+
+---
+
+### 15. Automation & Workflows
+
+#### `workflow` Router (8 procedures)
+
+| Procedure      | Type | Description                  |
+| -------------- | ---- | ---------------------------- |
+| `create`       | M    | Create a workflow automation |
+| `list`         | Q    | List workflows               |
+| `getExecution` | Q    | Get a workflow execution     |
+
+#### `customNodeType` Router (2 procedures)
+
+| Procedure | Type | Description                     |
+| --------- | ---- | ------------------------------- |
+| `list`    | Q    | List custom workflow node types |
+
+#### `customActionHandler` Router (2 procedures)
+
+| Procedure | Type | Description                 |
+| --------- | ---- | --------------------------- |
+| `list`    | Q    | List custom action handlers |
+
+#### `queuesAdmin` Router (6 procedures)
+
+| Procedure | Type | Description        |
+| --------- | ---- | ------------------ |
+| `list`    | Q    | List BullMQ queues |
+| `pause`   | M    | Pause a queue      |
+| `resume`  | M    | Resume a queue     |
+
+---
+
+### 16. Calendar & Productivity
+
+#### `calendar` Router (4 procedures)
+
+| Procedure | Type | Description             |
+| --------- | ---- | ----------------------- |
+| `list`    | Q    | List calendar events    |
+| `create`  | M    | Create a calendar event |
+
+#### `calendarWebhooks` Router (3 procedures)
+
+| Procedure       | Type | Description          |
+| --------------- | ---- | -------------------- |
+| `getSyncStatus` | Q    | Calendar sync status |
+| `triggerSync`   | M    | Trigger manual sync  |
+
+---
+
 ## Router Summary by Category
 
-| Category          | Routers | Procedures | Description                                            |
-| ----------------- | ------- | ---------- | ------------------------------------------------------ |
-| **Auth**          | 1       | 14         | Authentication, MFA, sessions                          |
-| **CRM Core**      | 6       | 65         | Lead, Contact, Account, Opportunity, Task, Ticket      |
-| **AI/Automation** | 7       | 74         | Agent, Conversation, Intelligence, Chains, Experiments |
-| **Legal**         | 3       | 36         | Appointments, Documents, Cases                         |
-| **Communication** | 2       | 8          | Email webhooks, file upload                            |
-| **Billing**       | 1       | 11         | Stripe integration                                     |
-| **Analytics**     | 1       | 5          | Dashboard metrics                                      |
-| **Security**      | 1       | 6          | Audit logs                                             |
-| **Integrations**  | 1       | 6          | External connectors                                    |
-| **System**        | 4       | 22         | Health, system, timeline, subscriptions                |
-| **Total**         | **25**  | **235**    |                                                        |
+| Category          | Routers | Procedures | Description                                             |
+| ----------------- | ------- | ---------- | ------------------------------------------------------- |
+| **Auth**          | 1       | 14         | Authentication, MFA, sessions                           |
+| **CRM Core**      | 15      | 135        | Lead, Contact, Account, Opportunity, Task, Ticket, etc. |
+| **AI/Automation** | 10      | 93         | Agent, Monitoring, Review, Chains, Experiments          |
+| **Legal**         | 3       | 36         | Appointments, Documents, Cases                          |
+| **Communication** | 3       | 17         | Email, Upload, Webhooks                                 |
+| **Billing**       | 1       | 11         | Stripe integration                                      |
+| **Analytics**     | 1       | 5          | Dashboard metrics                                       |
+| **Security**      | 1       | 6          | Audit logs                                              |
+| **Integrations**  | 1       | 6          | External connectors                                     |
+| **System**        | 4       | 22         | Health, system, timeline, subscriptions                 |
+| **Experience**    | 2       | 22         | Home, Notifications                                     |
+| **Support**       | 2       | 15         | Feedback, Help Articles                                 |
+| **Org/Mgmt**      | 3       | 11         | User, Team, Module Access                               |
+| **Workflows**     | 4       | 18         | Workflow Engine, Custom Nodes, Queues                   |
+| **Calendar**      | 2       | 7          | Calendar Sync and Webhooks                              |
+| **Total**         | **62**  | **~386**   |                                                         |
 
 ---
 

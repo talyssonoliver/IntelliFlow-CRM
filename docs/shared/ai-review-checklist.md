@@ -403,5 +403,5 @@ Copy this template for quick reviews:
 
 - `docs/shared/review-checklist.md` - General PR review checklist
 - `docs/shared/fallback-procedure.md` - Manual fallback when AI outputs fail
-- `docs/tdd-guidelines.md` - Testing standards
+- `docs/development/tdd-guidelines.md` - Testing standards
 - `CLAUDE.md` - Project architecture and conventions

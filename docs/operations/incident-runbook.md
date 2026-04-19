@@ -510,9 +510,9 @@ kubectl logs -l app=api --since=1h | jq '.level == "error"'
 ### 7.3 Related Documents
 
 - [SLO Definitions](./slo-definitions.md)
-- [On-Call Schedule](../artifacts/misc/oncall-schedule.json)
-- [Alerts Configuration](../artifacts/misc/alerts-config.yaml)
-- [Monitoring Runbook](./monitoring-runbook.md)
+- [On-Call Schedule](../infra/monitoring/oncall-schedule.json)
+- [Alerts Configuration](../infra/monitoring/alerts-config.yaml)
+- [Monitoring Runbook](./runbooks/monitoring-runbook.md)
 - [Release & Rollback](./release-rollback.md)
 
 ---

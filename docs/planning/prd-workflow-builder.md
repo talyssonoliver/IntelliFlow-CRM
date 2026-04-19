@@ -248,9 +248,9 @@ models already exist (IFC-028).
 ## References
 
 - Sprint Plan: `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv`
-- ADR-005: `docs/planning/adr/ADR-005-workflow-engine.md`
-- ADR-014: `docs/planning/adr/ADR-014-workflow-engine-decision.md`
-- ADR-017: `docs/planning/adr/ADR-017-workflow-reliability.md`
+- ADR-005: `docs/architecture/adr/ADR-005-workflow-engine.md`
+- ADR-014: `docs/architecture/adr/ADR-005-workflow-engine.md`
+- ADR-017: `docs/architecture/adr/ADR-017-workflow-reliability.md`
 - Dependency IFC-028: Workflow Engine backend
 - Related: IFC-029 (Auto-Response), IFC-030 (Lead Routing)
 

@@ -191,9 +191,9 @@ $sprint0 | Group-Object Status | Select-Object Name, Count
 - **README**: `README.md` — Project overview and quick start
 - **Planning Analysis**: `PLANNING_ANALYSIS.md` — Initial sprint decomposition
   (Portuguese)
-- **ADRs**: `docs/planning/adr/` — Architecture decisions
+- **ADRs**: `docs/architecture/adr/` — Architecture decisions
 - **API Docs**: Auto-generated from tRPC routers (`pnpm run docs:api`)
 - **Domain Docs**: Docusaurus site at `docs/`
-- **Dependency Chains**: `docs/design/diagrams/complete-dependency-chains.md` —
-  All 36 entities
+- **Dependency Chains**:
+  `docs/architecture/diagrams/complete-dependency-chains.md` — All 36 entities
 - **Dependency Graph**: Task dependencies tracked in CSV `Dependencies` column

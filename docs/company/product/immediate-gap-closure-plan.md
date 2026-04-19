@@ -31,13 +31,13 @@ All 4 remaining work items have been resolved. This plan is now fully complete.
 | `FLOW-047` file                             | EXISTS                                                                       | DONE            |
 | `FLOW-048` file                             | EXISTS                                                                       | DONE            |
 | Home flow mapping for `PG-129` (`FLOW-047`) | Linked in CSV + flow-index.md                                                | DONE            |
-| ADR-027 (authenticated-home-composition)    | Created at `docs/planning/adr/ADR-027-authenticated-home-composition.md`     | DONE            |
-| ADR-028 (ai-chain-versioning)               | Created at `docs/planning/adr/ADR-028-ai-chain-versioning.md`                | DONE            |
-| ADR-029 (billing-architecture)              | Created at `docs/planning/adr/ADR-029-billing-architecture.md`               | DONE            |
+| ADR-027 (authenticated-home-composition)    | Created at `docs/architecture/adr/ADR-027-authenticated-home-composition.md` | DONE            |
+| ADR-028 (ai-chain-versioning)               | Created at `docs/architecture/adr/ADR-028-ai-chain-versioning.md`            | DONE            |
+| ADR-029 (billing-architecture)              | Created at `docs/architecture/adr/ADR-029-billing-architecture.md`           | DONE            |
 | PRD for AI chain versioning                 | Created at `docs/planning/prd-ai-chain-versioning.md`                        | DONE            |
 | PRD for billing portal                      | Created at `docs/planning/prd-billing-portal.md`                             | DONE            |
 | PRD for account management                  | Already exists at `docs/planning/prd-account-management.md`                  | DONE            |
-| ADR-026 (account-hierarchy)                 | Already exists at `docs/planning/adr/ADR-026-account-hierarchy.md`           | DONE            |
+| ADR-026 (account-hierarchy)                 | Already exists at `docs/architecture/adr/ADR-026-account-hierarchy.md`       | DONE            |
 | CSV doc refs for PG-128                     | PRD + ADR-028 added to Pre-requisites                                        | DONE            |
 | CSV doc refs for PG-129                     | FLOW-047 + ADR-027 added to Pre-requisites                                   | DONE            |
 | CSV doc refs for PG-134                     | FLOW-046 + PRD + ADR-026 added to Pre-requisites                             | DONE            |
@@ -61,11 +61,12 @@ All 4 remaining work items have been resolved. This plan is now fully complete.
 - **Doc closure**: Created `docs/planning/prd-ai-chain-versioning.md` (PRD
   covering FR-1 through FR-6: overview dashboard, version management,
   comparison, A/B testing, Zep budget, audit log).
-- **Doc closure**: Created `docs/planning/adr/ADR-028-ai-chain-versioning.md`
-  (decision: database-backed versioning with state machine
+- **Doc closure**: Created
+  `docs/architecture/adr/ADR-028-ai-chain-versioning.md` (decision:
+  database-backed versioning with state machine
   DRAFT->ACTIVE->DEPRECATED->ARCHIVED).
 - **CSV closure**: Added
-  `FILE:docs/planning/prd-ai-chain-versioning.md;FILE:docs/planning/adr/ADR-028-ai-chain-versioning.md`
+  `FILE:docs/planning/prd-ai-chain-versioning.md;FILE:docs/architecture/adr/ADR-028-ai-chain-versioning.md`
   to PG-128 Pre-requisites.
 - **FLOW**: FLOW-045 was already linked via `IMPLEMENTS:FLOW-045`.
 - **Dependency cleanup**: Removed `PG-104` from PG-128 dependency list. PG-104
@@ -78,14 +79,14 @@ All 4 remaining work items have been resolved. This plan is now fully complete.
 ### 3-7) Dashboard | Authenticated home (`PG-129`) — FULLY CLOSED
 
 - **Doc closure**: Created
-  `docs/planning/adr/ADR-027-authenticated-home-composition.md` (decision:
+  `docs/architecture/adr/ADR-027-authenticated-home-composition.md` (decision:
   parallel independent tRPC queries per section with client-side composition).
 - **Flow closure**: Created
   `apps/project-tracker/docs/metrics/_global/flows/FLOW-047.md` (6 sections:
   welcome, quick actions, AI insights, activity feed, daily goals, pinned
   items).
 - **CSV closure**: Added
-  `IMPLEMENTS:FLOW-047;FILE:docs/planning/adr/ADR-027-authenticated-home-composition.md`
+  `IMPLEMENTS:FLOW-047;FILE:docs/architecture/adr/ADR-027-authenticated-home-composition.md`
   to PG-129 Pre-requisites. Existing `prd-home-page.md` was already linked.
 - **Flow index**: Updated flow-index.md with FLOW-047 in Dashboard category.
 - **Evidence**: Both `context_ack.json` and `attestation.json` already exist in
@@ -100,10 +101,10 @@ All 4 remaining work items have been resolved. This plan is now fully complete.
 ### 8-11) Account | Account management (`PG-134`) — FULLY CLOSED
 
 - **Discovery**: `docs/planning/prd-account-management.md` and
-  `docs/planning/adr/ADR-026-account-hierarchy.md` already existed but were not
-  referenced in Sprint_plan.csv.
+  `docs/architecture/adr/ADR-026-account-hierarchy.md` already existed but were
+  not referenced in Sprint_plan.csv.
 - **CSV closure**: Added
-  `IMPLEMENTS:FLOW-046;FILE:docs/planning/prd-account-management.md;FILE:docs/planning/adr/ADR-026-account-hierarchy.md`
+  `IMPLEMENTS:FLOW-046;FILE:docs/planning/prd-account-management.md;FILE:docs/architecture/adr/ADR-026-account-hierarchy.md`
   to PG-134 Pre-requisites.
 - **FLOW**: FLOW-046 already existed at `flows/FLOW-046.md` and is now linked
   via CSV.
@@ -121,15 +122,15 @@ All 4 remaining work items have been resolved. This plan is now fully complete.
 - **Doc closure**: Created `docs/planning/prd-billing-portal.md` (PRD covering
   PG-025 to PG-031: portal, checkout, invoices, invoice detail, payment methods,
   subscriptions, receipts).
-- **Doc closure**: Created `docs/planning/adr/ADR-029-billing-architecture.md`
-  (decision: custom billing domain with Stripe as payment adapter behind port
-  interface).
+- **Doc closure**: Created
+  `docs/architecture/adr/ADR-029-billing-architecture.md` (decision: custom
+  billing domain with Stripe as payment adapter behind port interface).
 - **Flow closure**: Created
   `apps/project-tracker/docs/metrics/_global/flows/FLOW-048.md` (8 flow steps:
   portal, checkout, invoice list, invoice detail, payment methods, subscription
   manager, receipts, webhook processing).
 - **CSV closure**: Added
-  `IMPLEMENTS:FLOW-048;FILE:docs/planning/prd-billing-portal.md;FILE:docs/planning/adr/ADR-029-billing-architecture.md`
+  `IMPLEMENTS:FLOW-048;FILE:docs/planning/prd-billing-portal.md;FILE:docs/architecture/adr/ADR-029-billing-architecture.md`
   to all 8 billing rows (PG-025 through PG-031 + IFC-198).
 - **Flow index**: Updated flow-index.md with FLOW-048 in new Billing & Payments
   category; total flows 46 -> 47.

@@ -264,7 +264,8 @@ section **So that** I can respond to and manage individual tickets in context.
 ## References
 
 - Sprint Plan: `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv`
-- Dependency Chain: `docs/design/diagrams/auth-public-pages-dependency-chain.md`
+- Dependency Chain:
+  `docs/architecture/diagrams/auth-public-pages-dependency-chain.md`
 - Information Architecture: `docs/design/information-architecture.md`
 - Sidebar Patterns: `apps/web/src/components/sidebar/configs/tickets.ts`
 - Analogous Task: PG-032 (Developer Docs Index)

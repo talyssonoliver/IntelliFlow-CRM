@@ -264,10 +264,10 @@ sum(rate(http_requests_total[5m])) * 100
 
 ### 8.2 Related Documents
 
-- [Alerts Configuration](../artifacts/misc/alerts-config.yaml)
+- [Alerts Configuration](../infra/monitoring/alerts-config.yaml)
 - [Incident Runbook](./incident-runbook.md)
-- [On-Call Schedule](../artifacts/misc/oncall-schedule.json)
-- [Monitoring Runbook](./monitoring-runbook.md)
+- [On-Call Schedule](../infra/monitoring/oncall-schedule.json)
+- [Monitoring Runbook](./runbooks/monitoring-runbook.md)
 
 ---
 

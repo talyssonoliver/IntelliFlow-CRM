@@ -51,7 +51,8 @@ needed.
 
 Before each sprint risk review, all risk owners must:
 
-- [ ] Update risk status in `artifacts/reports/risk-register.csv`
+- [ ] Update risk status in
+      `docs/compliance-and-governance/governance/risk-register.csv`
 - [ ] Document any new risks identified during sprint
 - [ ] Prepare evidence of mitigation actions taken
 - [ ] Calculate updated likelihood/impact scores
@@ -68,14 +69,14 @@ Before each sprint risk review, all risk owners must:
 
 ### 2.3 Materials to Prepare
 
-| Document                | Location                                   | Owner         |
-| ----------------------- | ------------------------------------------ | ------------- |
-| Risk Register (current) | `artifacts/reports/risk-register.csv`      | PM            |
-| Risk Mitigation Plan    | `docs/shared/risk-mitigation-plan.md`      | PM            |
-| KRI Dashboard           | `artifacts/reports/weekly-cost-report.csv` | DevOps        |
-| Security Scan Results   | CI pipeline outputs                        | Security Lead |
-| Test Coverage Report    | `artifacts/coverage/`                      | QA Lead       |
-| AI Cost Report          | Cost tracking dashboard                    | AI Lead       |
+| Document                | Location                                                      | Owner         |
+| ----------------------- | ------------------------------------------------------------- | ------------- |
+| Risk Register (current) | `docs/compliance-and-governance/governance/risk-register.csv` | PM            |
+| Risk Mitigation Plan    | `docs/shared/risk-mitigation-plan.md`                         | PM            |
+| KRI Dashboard           | `docs/planning/financial/weekly-cost-report.csv`              | DevOps        |
+| Security Scan Results   | CI pipeline outputs                                           | Security Lead |
+| Test Coverage Report    | `artifacts/coverage/`                                         | QA Lead       |
+| AI Cost Report          | Cost tracking dashboard                                       | AI Lead       |
 
 ---
 
@@ -333,7 +334,8 @@ Use this checklist to ensure review completeness:
 
 ## References
 
-- Risk Register: `artifacts/reports/risk-register.csv`
+- Risk Register: `docs/compliance-and-governance/governance/risk-register.csv`
 - Risk Mitigation Plan: `docs/shared/risk-mitigation-plan.md`
-- Risk Assessment: `artifacts/reports/risk-assessment.csv`
-- Cost Reports: `artifacts/reports/weekly-cost-report.csv`
+- Risk Assessment:
+  `docs/compliance-and-governance/governance/risk-assessment.csv`
+- Cost Reports: `docs/planning/financial/weekly-cost-report.csv`

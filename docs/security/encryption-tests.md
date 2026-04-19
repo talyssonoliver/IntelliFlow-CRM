@@ -108,7 +108,7 @@ pnpm --filter @intelliflow/api test:coverage -- --grep "encryption"
 
 - `apps/api/src/security/encryption.ts` - Main encryption service
 - `apps/api/src/security/key-rotation.ts` - Key rotation logic
-- `artifacts/misc/vault-config.yaml` - Vault configuration
+- `infra/monitoring/vault-config.yaml` - Vault configuration
 
 ---
 

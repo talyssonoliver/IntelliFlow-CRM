@@ -378,7 +378,7 @@ From `Sprint_plan.csv` Dependencies column:
 ## References
 
 - Sprint Plan: `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv`
-- Architecture Decision Records: `docs/planning/adr/`
+- Architecture Decision Records: `docs/architecture/adr/`
 - User Journey: `docs/planning/user-journey-[feature].md`
 - API Documentation: [Link]
 - Design Files: [Link]

@@ -310,7 +310,7 @@ storage:
 
 - [SLO Definitions](./slo-definitions.md)
 - [Incident Runbook](./incident-runbook.md)
-- [Monitoring Runbook](./monitoring-runbook.md)
+- [Monitoring Runbook](./runbooks/monitoring-runbook.md)
 - [Backup Policy](./backup-policy.md)
 
 ---

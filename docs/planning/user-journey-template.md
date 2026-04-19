@@ -535,7 +535,7 @@ Entry → [Screen 1] → [Screen 2] → [Screen 3] → Success
 ### Appendix C: Related Documentation
 
 - PRD: `docs/planning/prd-[feature].md`
-- ADR: `docs/planning/adr/[number]-[title].md`
+- ADR: `docs/architecture/adr/[number]-[title].md`
 - Sprint Plan: `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv`
 
 ## Revision History

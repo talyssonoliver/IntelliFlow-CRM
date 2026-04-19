@@ -11,9 +11,11 @@ This document defines the mitigation strategies, escalation procedures, and
 ownership model for all identified project risks in the IntelliFlow CRM project.
 It works in conjunction with:
 
-- **Risk Register:** `artifacts/reports/risk-register.csv`
+- **Risk Register:**
+  `docs/compliance-and-governance/governance/risk-register.csv`
 - **Risk Review Agenda:** `docs/shared/risk-review-agenda.md`
-- **Existing Risk Matrix:** `artifacts/reports/risk-matrix.md`
+- **Existing Risk Matrix:**
+  `docs/compliance-and-governance/governance/risk-matrix.md`
 
 ---
 
@@ -319,9 +321,13 @@ Return to normal operations:
 
 ## References
 
-- Risk Register: `artifacts/reports/risk-register.csv`
+- Risk Register: `docs/compliance-and-governance/governance/risk-register.csv`
 - Risk Review Agenda: `docs/shared/risk-review-agenda.md`
-- Previous Risk Matrix: `artifacts/reports/risk-matrix.md`
-- Risk Assessment: `artifacts/reports/risk-assessment.csv`
-- Compliance Report: `artifacts/reports/compliance-report.md`
-- GDPR Compliance: `artifacts/reports/gdpr-compliance.md`
+- Previous Risk Matrix:
+  `docs/compliance-and-governance/governance/risk-matrix.md`
+- Risk Assessment:
+  `docs/compliance-and-governance/governance/risk-assessment.csv`
+- Compliance Report:
+  `docs/compliance-and-governance/compliance/compliance-report.md`
+- GDPR Compliance:
+  `docs/compliance-and-governance/compliance/gdpr-compliance.md`

@@ -180,7 +180,7 @@ flowchart TD
 #### For Decisions (ADRs)
 
 1. **Create ADR** (When decision is made)
-   - Copy template from `docs/architecture/adr/000-template.md`
+   - Copy template from `docs/architecture/adr/template.md`
    - Number sequentially (e.g., `ADR-007-use-redis-caching.md`)
    - Document decision, rationale, and consequences
    - Status: **Proposed** (or **Accepted** if already consensus)
@@ -321,7 +321,7 @@ When reviewing an ARP or ADR, consider:
 ### Available Templates
 
 1. **ADR Template**:
-   [`docs/architecture/adr/000-template.md`](./adr/000-template.md)
+   [`docs/architecture/adr/template.md`](./adr/000-template.md)
    - Use for documenting decisions
 
 2. **ARP Template**:
@@ -335,7 +335,7 @@ When reviewing an ARP or ADR, consider:
    - Shows comprehensive trade-off analysis
 
 2. **ADR-002**:
-   [CSV as Source of Truth](../planning/adr/ADR-012-csv-source-of-truth.md)
+   [CSV as Source of Truth](../architecture/adr/ADR-012-csv-source-of-truth.md)
    - Example of a tactical decision
    - Demonstrates migration planning
 

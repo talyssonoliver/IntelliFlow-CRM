@@ -57,7 +57,7 @@ freshness SLAs, and meet performance and data-quality targets.
 
 ## Dependencies
 
-- ADR-001, ADR-003, ADR-004, ADR-007, ADR-016.
+- ADR-001, ADR-003, ADR-004, ADR-007, ADR-016, ADR-048 (hybrid AI inference).
 
 ## Risks / Mitigations
 

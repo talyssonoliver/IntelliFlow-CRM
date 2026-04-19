@@ -1,0 +1,37 @@
+Category,Service,Monthly Budget (USD),Q1 2025 Budget (USD),Annual Budget (USD),Cost Driver,Optimization Strategy,Alert Threshold (%)
+Infrastructure,AWS EC2,800,2400,9600,Compute instances,Reserved instances + auto-scaling,80
+Infrastructure,AWS RDS,400,1200,4800,Database hosting,Reserved instances,85
+Infrastructure,AWS S3,150,450,1800,Object storage + backups,Lifecycle policies,90
+Infrastructure,AWS CloudFront,200,600,2400,CDN bandwidth,Cache optimization,85
+Infrastructure,AWS Lambda,100,300,1200,Serverless functions,Code optimization,80
+Infrastructure,Total Infrastructure,1650,4950,19800,,,
+Platform,Supabase Pro,25,75,300,Database platform,Efficient queries,95
+Platform,Vercel Pro,20,60,240,Frontend hosting,Build optimization,95
+Platform,Railway,50,150,600,Backend hosting,Container optimization,85
+Platform,Upstash Redis,30,90,360,Rate limiting + caching,Cache efficiency,90
+Platform,Total Platform,125,375,1500,,,
+AI/ML,OpenAI API,500,1500,6000,GPT-4 API calls,Caching + batching,75
+AI/ML,Ollama (self-hosted),0,0,0,Local inference,N/A,N/A
+AI/ML,Langchain,0,0,0,Framework (OSS),N/A,N/A
+AI/ML,Vector DB (pgvector),0,0,0,Included in RDS,N/A,N/A
+AI/ML,Total AI/ML,500,1500,6000,,,
+Observability,Grafana Cloud,100,300,1200,Metrics + dashboards,Retention policies,85
+Observability,Sentry,50,150,600,Error tracking,Sampling,90
+Observability,PagerDuty,35,105,420,Alerting,Tier optimization,95
+Observability,OpenTelemetry (self-hosted),0,0,0,Tracing,N/A,N/A
+Observability,Total Observability,185,555,2220,,,
+Security,HashiCorp Vault Cloud,100,300,1200,Secrets management,Policy optimization,90
+Security,Snyk,50,150,600,Vulnerability scanning,Scan frequency,95
+Security,AWS WAF,75,225,900,Web application firewall,Rule optimization,85
+Security,Total Security,225,675,2700,,,
+Development,GitHub Team,40,120,480,Source control,N/A,N/A
+Development,Cursor Pro,20,60,240,AI coding assistant,N/A,N/A
+Development,Linear,10,30,120,Project management,N/A,N/A
+Development,Slack Pro,15,45,180,Team communication,N/A,N/A
+Development,Total Development,85,255,1020,,,
+Contingency,Reserved,300,900,3600,Unexpected costs,Monthly review,100
+TOTAL,All Categories,3070,9210,36840,,,
+Budget Control,Monthly Variance Allowed,307,921,3684,10% of total,,10
+Budget Control,Approval Required Above,500,1500,6000,Per-category limit,,
+Actual Spend (Current Month),Tracking,2890,8670,34680,94.1% of budget,,
+Budget Status,On Track,TRUE,,,,Under budget by 5.9%,

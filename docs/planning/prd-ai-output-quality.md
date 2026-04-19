@@ -50,7 +50,7 @@ outputs with reproducible evals and approvals.
 
 ## Dependencies
 
-- ADR-006, ADR-007, ADR-015, ADR-022.
+- ADR-006, ADR-007, ADR-015, ADR-022, ADR-048 (hybrid AI inference).
 
 ## Risks / Mitigations
 

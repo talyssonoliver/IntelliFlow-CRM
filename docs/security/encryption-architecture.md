@@ -118,7 +118,7 @@ if (await rotationService.isRotationNeeded()) {
 
 HashiCorp Vault provides enterprise-grade secrets management:
 
-**Configuration** (`artifacts/misc/vault-config.yaml`):
+**Configuration** (`infra/monitoring/vault-config.yaml`):
 
 - KV v2 secrets engine for credential storage
 - Transit engine for encryption-as-a-service

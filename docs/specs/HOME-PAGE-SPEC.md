@@ -906,7 +906,7 @@ apps/api/src/modules/home/home.router.ts            (MODIFY - add getAllInsights
 | Sitemap              | `docs/design/sitemap.md`                                        |
 | Flow Index           | `apps/project-tracker/docs/metrics/_global/flows/flow-index.md` |
 | PRD Public Site Auth | `docs/planning/prd-public-site-auth.md`                         |
-| ADR-020              | `docs/planning/adr/ADR-020-public-site-auth.md`                 |
+| ADR-020              | `docs/architecture/adr/ADR-020-public-site-auth.md`             |
 
 ---
 

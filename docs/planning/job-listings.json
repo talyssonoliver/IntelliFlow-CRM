@@ -1,0 +1,120 @@
+{
+  "jobs": [
+    {
+      "id": "sr-fullstack-eng",
+      "title": "Senior Full-Stack Engineer",
+      "department": "Engineering",
+      "location": "Remote (UK/EU)",
+      "type": "Full-time",
+      "salary_range": "90000-130000 GBP",
+      "posted_at": "2025-12-15",
+      "description": "Build and scale our Next.js/tRPC platform with a focus on type safety, performance, and AI integration.",
+      "requirements": [
+        "5+ years full-stack experience",
+        "Strong TypeScript/React expertise",
+        "Experience with tRPC, Prisma, or similar",
+        "Understanding of DDD and clean architecture"
+      ],
+      "nice_to_have": [
+        "Experience with AI/ML integrations",
+        "Knowledge of observability (OpenTelemetry)",
+        "Contributions to open source"
+      ],
+      "status": "open"
+    },
+    {
+      "id": "ai-engineer",
+      "title": "AI/ML Engineer",
+      "department": "AI & Intelligence",
+      "location": "Remote (Global)",
+      "type": "Full-time",
+      "salary_range": "100000-150000 GBP",
+      "posted_at": "2025-12-10",
+      "description": "Design and implement AI features including lead scoring, predictive analytics, and RAG-based assistants.",
+      "requirements": [
+        "3+ years ML/AI experience",
+        "Experience with LangChain, OpenAI, or similar",
+        "Strong Python and TypeScript skills",
+        "Understanding of AI safety and governance"
+      ],
+      "nice_to_have": [
+        "Experience with vector databases",
+        "Knowledge of CrewAI or agent frameworks",
+        "Background in NLP"
+      ],
+      "status": "open"
+    },
+    {
+      "id": "product-designer",
+      "title": "Product Designer",
+      "department": "Design",
+      "location": "London, UK",
+      "type": "Full-time",
+      "salary_range": "70000-100000 GBP",
+      "posted_at": "2025-12-20",
+      "description": "Shape the user experience of our AI-first CRM, balancing automation with human oversight.",
+      "requirements": [
+        "4+ years product design experience",
+        "Strong Figma and prototyping skills",
+        "Experience with B2B SaaS products",
+        "WCAG accessibility knowledge"
+      ],
+      "nice_to_have": [
+        "Experience designing AI interfaces",
+        "Design system experience",
+        "User research skills"
+      ],
+      "status": "open"
+    },
+    {
+      "id": "devrel-engineer",
+      "title": "Developer Relations Engineer",
+      "department": "Developer Experience",
+      "location": "Remote (US/EU)",
+      "type": "Full-time",
+      "salary_range": "80000-120000 GBP",
+      "posted_at": "2025-12-18",
+      "description": "Build developer community, create technical content, and improve our API documentation.",
+      "requirements": [
+        "3+ years in DevRel or software engineering",
+        "Strong technical writing skills",
+        "Experience with API documentation",
+        "Public speaking experience a plus"
+      ],
+      "nice_to_have": [
+        "YouTube/content creation experience",
+        "Open source community building",
+        "Conference speaking"
+      ],
+      "status": "open"
+    },
+    {
+      "id": "security-engineer",
+      "title": "Security Engineer",
+      "department": "Platform",
+      "location": "Remote (UK/EU)",
+      "type": "Full-time",
+      "salary_range": "90000-130000 GBP",
+      "posted_at": "2025-12-22",
+      "description": "Ensure our platform meets enterprise security standards with focus on zero-trust architecture.",
+      "requirements": [
+        "4+ years security engineering",
+        "Experience with cloud security (AWS/GCP)",
+        "Knowledge of SOC2, GDPR compliance",
+        "Penetration testing experience"
+      ],
+      "nice_to_have": [
+        "CISSP or similar certification",
+        "Experience with HashiCorp Vault",
+        "Bug bounty experience"
+      ],
+      "status": "open"
+    }
+  ],
+  "metadata": {
+    "version": "1.0.0",
+    "generatedAt": "2025-12-31T06:42:00.000Z",
+    "task": "PG-011",
+    "total_open": 5
+  }
+}

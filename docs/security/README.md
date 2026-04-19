@@ -21,7 +21,7 @@ the authentication system including:
   `.github/workflows/security.yml`).
 - Repository-level security policy (`SECURITY.md`).
 - Configuration stubs and artifact tracking for:
-  - scan results (`artifacts/misc/security-scan-results.json`)
+  - scan results (`artifacts/reports/security-scan-results.json`)
   - compliance report placeholder (`artifacts/reports/compliance-report.pdf`)
   - applied patch log (`artifacts/logs/patch-log.csv`)
 

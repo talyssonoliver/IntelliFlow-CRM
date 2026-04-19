@@ -78,7 +78,16 @@ intelliFlow-CRM/
   `@intelliflow/ui`)
 - **Styling**: Tailwind CSS ^4.2.0 (CSS-first) + CSS variables for theming
 - **Forms**: React Hook Form + Zod validation
-- **Icons**: Material Symbols Outlined (414 occurrences)
+- **Icons**: Material Symbols Outlined ONLY — see
+  [`docs/design/ICON_USAGE.md`](./ICON_USAGE.md) for the policy. `lucide-react`,
+  `@heroicons/react`, `react-icons`, `@radix-ui/react-icons`, and
+  `react-feather` are BANNED by ESLint `no-restricted-imports`. CI `--verify`
+  gate blocks new icons not in the glyph audit.
+- **Empty states**: CRM entity zero states MUST use
+  `<EmptyState entity='...' />` from `@intelliflow/ui` (30 entities auto-wired
+  to curated illustrations). No inline `<svg>` zero states, no parallel
+  `FooIllustration` components. Full policy:
+  [`docs/design/EMPTY_STATES.md`](./EMPTY_STATES.md).
 - **Testing**: Vitest + @testing-library/react + vitest-axe
 - **Documentation**: Storybook 8.4.7 with a11y addon
 - **API**: tRPC (type-safe API layer)

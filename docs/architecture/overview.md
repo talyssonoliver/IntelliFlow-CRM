@@ -150,8 +150,10 @@ graph TB
     subgraph "AI/ML Services"
         LANGCHAIN[LangChain Chains]
         CREWAI[CrewAI Agents]
-        OLLAMA[Ollama<br/>Local LLM]
-        OPENAI[OpenAI API<br/>Production]
+        LITELLM[LiteLLM Proxy<br/>:4000]
+        GROQ[Groq / Gemini<br/>Free Tier]
+        ANTHROPIC[Anthropic / OpenAI<br/>Premium Tier]
+        OLLAMA[Ollama<br/>Offline Fallback]
     end
 
     subgraph "Observability"
@@ -173,8 +175,10 @@ graph TB
 
     AI_WORKER --> LANGCHAIN
     LANGCHAIN --> CREWAI
-    LANGCHAIN --> OLLAMA
-    LANGCHAIN --> OPENAI
+    LANGCHAIN --> LITELLM
+    LITELLM --> GROQ
+    LITELLM --> ANTHROPIC
+    LITELLM -.-> OLLAMA
 
     PRISMA --> SUPABASE
     API_APP --> REDIS
@@ -183,6 +187,12 @@ graph TB
     OTEL --> PROM
     PROM --> GRAFANA
 ```
+
+> **AI inference routing**: All LLM calls go through the LiteLLM proxy on
+> port 4000. Chains use `createLLM(purpose, tier)` from
+> `apps/ai-worker/src/lib/llm-factory.ts`. Routing configuration lives in
+> `infra/litellm/config.yaml`. Ollama is retained as an offline fallback only.
+> See [ADR-048](./adr/ADR-048-hybrid-ai-inference.md) for the full decision.
 
 ### Monorepo Structure
 
@@ -754,7 +764,7 @@ graph TB
 
 ## References
 
-- [Architecture Decision Records](../planning/adr/template.md)
+- [Architecture Decision Records](../architecture/adr/template.md)
 - [Hexagonal Architecture](https://alistair.cockburn.us/hexagonal-architecture/)
 - [Domain-Driven Design](https://martinfowler.com/tags/domain%20driven%20design.html)
 - [tRPC Documentation](https://trpc.io)

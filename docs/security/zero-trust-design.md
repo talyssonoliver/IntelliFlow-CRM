@@ -1,7 +1,7 @@
 # Zero Trust Security Design
 
 **Status:** Implemented (Sprint 1) **Related ADR:**
-[ADR-009: Zero Trust Security](../planning/adr/ADR-009-zero-trust-security.md)
+[ADR-009: Zero Trust Security](../architecture/adr/ADR-009-zero-trust-security.md)
 **Task:** IFC-072
 
 ## Overview
@@ -143,7 +143,7 @@ In case of suspected breach:
 
 ## Related Documents
 
-- [ADR-009: Zero Trust Security](../planning/adr/ADR-009-zero-trust-security.md)
+- [ADR-009: Zero Trust Security](../architecture/adr/ADR-009-zero-trust-security.md)
 - [RLS Design](./rls-design.md)
 - [Multi-Tenant Isolation](./multi-tenant-isolation.md)
 - [OWASP Checklist](./owasp-checklist.md)

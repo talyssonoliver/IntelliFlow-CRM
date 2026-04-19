@@ -280,7 +280,7 @@ production deployment and reviewed quarterly.
   - Contents: Data flow diagrams, trust boundaries, threat analysis (STRIDE)
 
 - [ ] **Architecture Decision Records (ADRs) for security decisions**
-  - Location: `docs/planning/adr/`
+  - Location: `docs/architecture/adr/`
   - Examples: ADR for authentication strategy, data encryption, API design
 
 #### Secure Development Lifecycle
@@ -500,7 +500,7 @@ errors.
   - Supabase: Review security certifications (SOC 2, ISO 27001)
   - OpenAI: Review data processing agreement (DPA)
   - Upstash: Review security practices
-  - Location: `docs/governance/ai-vendor-assessments/`
+  - Location: `docs/compliance-and-governance/governance/ai-vendor-assessments/`
 
 ---
 

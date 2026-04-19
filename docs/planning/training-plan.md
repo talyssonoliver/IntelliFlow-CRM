@@ -116,7 +116,7 @@ stack components.
 - **Resources:**
   - [Next.js 16 Documentation](https://nextjs.org/docs)
   - [App Router Migration Guide](https://nextjs.org/docs/app/building-your-application/upgrading/app-router-migration)
-  - ADR-001: `docs/planning/adr/ADR-001-modern-stack.md`
+  - ADR-001: `docs/architecture/adr/ADR-001-modern-stack.md`
 
 #### Day 3-4: Cache Components and Performance
 
@@ -227,7 +227,7 @@ stack components.
 #### Resources Library
 
 - Internal documentation: `docs/`
-- Architecture decisions: `docs/planning/adr/`
+- Architecture decisions: `docs/architecture/adr/`
 - Code examples: `apps/` and `packages/`
 
 ---
@@ -256,11 +256,11 @@ stack components.
 
 ### Internal Resources
 
-| Resource  | Location                                    | Purpose                 |
-| --------- | ------------------------------------------- | ----------------------- |
-| ADR-001   | `docs/planning/adr/ADR-001-modern-stack.md` | Architecture decisions  |
-| Framework | `.specify/memory/Framework.md`              | STOA governance         |
-| POC Code  | `apps/`                                     | Working implementations |
+| Resource  | Location                                        | Purpose                 |
+| --------- | ----------------------------------------------- | ----------------------- |
+| ADR-001   | `docs/architecture/adr/ADR-001-modern-stack.md` | Architecture decisions  |
+| Framework | `.specify/memory/Framework.md`                  | STOA governance         |
+| POC Code  | `apps/`                                         | Working implementations |
 
 ---
 

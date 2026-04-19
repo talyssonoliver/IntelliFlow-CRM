@@ -99,7 +99,7 @@ RelatedTasksCard already has explicit account type check with
 graceful empty state: "No tasks linked to this account".
 Requires 6-layer change (Prisma schema + Domain + Application +
 Validators + API + Frontend). Logged as WIRE-TASK-F05-001 in
-docs/debt-ledger.yaml. Not audit cleanup — proper sprint task.
+artifacts/metrics/debt-ledger.yaml. Not audit cleanup — proper sprint task.
 ```
 
 ### Finding F-06 (MEDIUM) — Entity Re-assignment Not Possible — FIXED 2026-03-07
@@ -334,7 +334,7 @@ FIXED: All 3 dead endpoints now have frontend callers:
 DEFERRED-WITH-DEBT: Requires schema migration to add version field,
 plus domain/application/API layer changes. No entity in the system
 uses true optimistic locking — system-wide architectural decision.
-Logged as WIRE-TASK-B10-001 in docs/debt-ledger.yaml.
+Logged as WIRE-TASK-B10-001 in artifacts/metrics/debt-ledger.yaml.
 Recommendation: ADR needed for system-wide optimistic locking strategy.
 ```
 
@@ -497,11 +497,11 @@ on all procedures)
 
 ## Changes Log
 
-| Date       | Change                                                                                                                                                                                                                                                                                                                                    |
-| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-03-07 | Created — 37 findings (3 CRITICAL, 11 HIGH, 13 MEDIUM, 7 LOW, 3 test gaps)                                                                                                                                                                                                                                                                |
-| 2026-03-07 | Fixed 18 findings: F-01, F-02, F-06, F-08, F-09, F-10, F-14, F-15, F-16, F-17, B-01, B-02, B-03, B-04, B-05, B-06, E-02, E-03, E-04                                                                                                                                                                                                       |
-| 2026-03-08 | Fixed 11 more: F-03, F-04, F-11, F-12, F-13, F-18, F-19, B-07, B-08, E-01. Total: 29/37 fixed, 5 deferred, 3 test gaps remaining                                                                                                                                                                                                          |
-| 2026-03-08 | Session 3 re-audit: verified all 29 FIXED items present. Fixed F-07 (ActivityFeed existed but was falsely deferred), T-01 (10 tests), T-02 (9 tests). Total: 32/37 fixed, 4 deferred, 1 test gap                                                                                                                                          |
-| 2026-03-08 | Session 4 remaining items: T-03 FIXED (10 E2E Playwright tests in tests/e2e/tasks.spec.ts). B-09 DOCUMENTED (3 dead endpoints with line numbers). F-05, B-10 logged as debt (WIRE-TASK-F05-001, WIRE-TASK-B09-001, WIRE-TASK-B10-001 in docs/debt-ledger.yaml). Final: 33 FIXED, 1 DOCUMENTED, 2 DEFERRED-WITH-DEBT, 1 ACCEPTED-WITH-DEBT |
-| 2026-03-08 | Session 5: B-09 FIXED — wired all 3 dead endpoints (task.stats → TaskStatsBar on list page, task.assign → assign panel on detail page, task.reschedule → inline date picker on detail page). Final: 34 FIXED, 0 DOCUMENTED, 1 DEFERRED-WITH-DEBT, 1 ACCEPTED-WITH-DEBT                                                                    |
+| Date       | Change                                                                                                                                                                                                                                                                                                                                                 |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 2026-03-07 | Created — 37 findings (3 CRITICAL, 11 HIGH, 13 MEDIUM, 7 LOW, 3 test gaps)                                                                                                                                                                                                                                                                             |
+| 2026-03-07 | Fixed 18 findings: F-01, F-02, F-06, F-08, F-09, F-10, F-14, F-15, F-16, F-17, B-01, B-02, B-03, B-04, B-05, B-06, E-02, E-03, E-04                                                                                                                                                                                                                    |
+| 2026-03-08 | Fixed 11 more: F-03, F-04, F-11, F-12, F-13, F-18, F-19, B-07, B-08, E-01. Total: 29/37 fixed, 5 deferred, 3 test gaps remaining                                                                                                                                                                                                                       |
+| 2026-03-08 | Session 3 re-audit: verified all 29 FIXED items present. Fixed F-07 (ActivityFeed existed but was falsely deferred), T-01 (10 tests), T-02 (9 tests). Total: 32/37 fixed, 4 deferred, 1 test gap                                                                                                                                                       |
+| 2026-03-08 | Session 4 remaining items: T-03 FIXED (10 E2E Playwright tests in tests/e2e/tasks.spec.ts). B-09 DOCUMENTED (3 dead endpoints with line numbers). F-05, B-10 logged as debt (WIRE-TASK-F05-001, WIRE-TASK-B09-001, WIRE-TASK-B10-001 in artifacts/metrics/debt-ledger.yaml). Final: 33 FIXED, 1 DOCUMENTED, 2 DEFERRED-WITH-DEBT, 1 ACCEPTED-WITH-DEBT |
+| 2026-03-08 | Session 5: B-09 FIXED — wired all 3 dead endpoints (task.stats → TaskStatsBar on list page, task.assign → assign panel on detail page, task.reschedule → inline date picker on detail page). Final: 34 FIXED, 0 DOCUMENTED, 1 DEFERRED-WITH-DEBT, 1 ACCEPTED-WITH-DEBT                                                                                 |

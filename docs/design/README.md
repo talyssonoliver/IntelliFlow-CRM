@@ -5,11 +5,25 @@
 This directory contains design mockups and UI specifications that **MUST** be
 referenced when implementing UI tasks.
 
+## Cross-cutting policies
+
+- **Icon policy**: [`docs/design/ICON_USAGE.md`](./ICON_USAGE.md) — Material
+  Symbols Outlined only; no Lucide / Heroicons / react-icons / inline SVG icons.
+  Enforced by ESLint `no-restricted-imports` + the subsetter `--verify` CI
+  guard. Read this before touching any icon call site.
+- **Empty-state policy**: [`docs/design/EMPTY_STATES.md`](./EMPTY_STATES.md) —
+  Every CRM-entity zero state MUST use `<EmptyState entity='...' />` from
+  `@intelliflow/ui`. 30 entities are auto-wired to curated illustrations in
+  `packages/ui/src/components/empty-state-illustrations.tsx`. No inline `<svg>`
+  zero states, no parallel `FooIllustration` components. Read this before
+  building any list/detail/search page.
+
 ## Directory Structure
 
 ```
 docs/design/
 ├── README.md              # This file
+├── ICON_USAGE.md          # PG-195 / ADR-046 icon policy (single source of truth)
 ├── sitemap.md             # Full application sitemap (~90 pages)
 ├── page-registry.md       # Central registry of all UI pages with KPIs, paths, ownership
 └── mockups/               # 32 unique mockups (PNG + HTML prototypes)

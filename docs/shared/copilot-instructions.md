@@ -463,5 +463,5 @@ Before suggesting code, ensure:
 If you're unsure about a pattern or approach, refer to:
 
 - Existing code in the same module for consistency
-- Architecture Decision Records (ADRs) in `/docs/planning/adr/`
+- Architecture Decision Records (ADRs) in `/docs/architecture/adr/`
 - The project CLAUDE.md for detailed guidelines

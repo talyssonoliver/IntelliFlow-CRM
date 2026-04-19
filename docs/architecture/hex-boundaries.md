@@ -250,9 +250,9 @@ cd tests/architecture && pnpm test:watch
 
 ## Related ADRs
 
-- [ADR-001: Modern Stack](../planning/adr/ADR-001-modern-stack.md)
-- [ADR-002: Domain-Driven Design](../planning/adr/ADR-002-domain-driven-design.md)
-- [ADR-003: Architecture Boundary Enforcement](../planning/adr/ADR-003-architecture-boundary-enforcement.md)
+- [ADR-001: Modern Stack](../architecture/adr/ADR-001-modern-stack.md)
+- [ADR-002: Domain-Driven Design](../architecture/adr/ADR-002-domain-driven-design.md)
+- [ADR-003: Architecture Boundary Enforcement](../architecture/adr/ADR-003-architecture-boundary-enforcement.md)
 
 ## References
 

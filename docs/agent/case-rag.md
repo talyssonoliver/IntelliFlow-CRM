@@ -211,5 +211,5 @@ Test coverage includes:
 
 ## Related ADRs
 
-- [ADR-004: Multi-tenancy Architecture](../planning/adr/ADR-004-multi-tenancy.md)
-- [ADR-006: Agent Tool-Calling Model](../planning/adr/ADR-006-agent-tools.md)
+- [ADR-004: Multi-tenancy Architecture](../architecture/adr/ADR-004-multi-tenancy.md)
+- [ADR-006: Agent Tool-Calling Model](../architecture/adr/ADR-006-agent-tools.md)

@@ -60,7 +60,9 @@ Ticket. Consistency enforced by
    agents
 3. **Human-in-the-Loop**: All AI outputs include confidence scores + human
    override
-4. **Cost Optimization**: Ollama (dev), OpenAI (prod), caching + rate limiting
+4. **Cost Optimization**: LiteLLM free-tier routing (Groq/Gemini dev,
+   Mistral/OpenAI prod). See
+   [ADR-048](../architecture/adr/ADR-048-hybrid-ai-inference.md).
 
 ## Event-Driven Architecture
 
@@ -146,10 +148,11 @@ supabase/            # Supabase local dev (ENV-004-AI)
 
 ## Dependency Chain Documentation
 
-- **Master**: `docs/design/diagrams/complete-dependency-chains.md` (36 entities)
-- Domain-specific files in `docs/design/diagrams/`: core-crm, legal-scheduling,
-  ai-intelligence, ai-output-review, security-platform, auth-public-pages,
-  platform-infrastructure, integrations, business-workflows
+- **Master**: `docs/architecture/diagrams/complete-dependency-chains.md` (36
+  entities)
+- Domain-specific files in `docs/architecture/diagrams/`: core-crm,
+  legal-scheduling, ai-intelligence, ai-output-review, security-platform,
+  auth-public-pages, platform-infrastructure, integrations, business-workflows
 - Update chains when completing/starting tasks (mark with checkmarks/progress %)
 
 **Workflow Integration**:

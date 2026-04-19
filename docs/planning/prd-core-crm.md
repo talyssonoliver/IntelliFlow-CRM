@@ -62,7 +62,8 @@ and performance budgets.
 
 ## Dependencies
 
-- ADR-001, ADR-002, ADR-003, ADR-004, ADR-008, ADR-019.
+- ADR-001, ADR-002, ADR-003, ADR-004, ADR-008, ADR-019, ADR-048 (hybrid AI
+  inference).
 
 ## Risks / Mitigations
 

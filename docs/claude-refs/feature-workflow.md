@@ -4,7 +4,7 @@
 
 1. **Check Sprint Plan**: Locate task in `Sprint_plan.csv`. Review dependencies,
    pre-requisites, DoD, KPIs, artifacts, validation method.
-2. **Define ADR** in `docs/planning/adr/` if architectural change.
+2. **Define ADR** in `docs/architecture/adr/` if architectural change.
 3. **Update Domain Model**: Add entities/value objects to `packages/domain/`.
    Follow hexagonal architecture. Domain has NO infrastructure dependencies.
 4. **Create Prisma Migration**: Update schema in `packages/db/`, generate
@@ -148,8 +148,8 @@ If the same missing step occurs twice → make it a first-class artifact
 
 ### Debt Ledger
 
-Record in `docs/debt-ledger.yaml`: Debt ID, origin task, category, severity,
-owner, **expiry date** (mandatory), remediation plan.
+Record in `artifacts/metrics/debt-ledger.yaml`: Debt ID, origin task, category,
+severity, owner, **expiry date** (mandatory), remediation plan.
 
 **Rule: No expiry date = not acceptable debt.**
 

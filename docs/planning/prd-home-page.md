@@ -481,7 +481,7 @@ From `Sprint_plan.csv` Dependencies column:
 - **Integration Backlog**: `docs/design/integration-backlog.md`
 - **Flow Index**:
   `apps/project-tracker/docs/metrics/_global/flows/flow-index.md`
-- **ADR-020**: `docs/planning/adr/ADR-020-public-site-auth.md`
+- **ADR-020**: `docs/architecture/adr/ADR-020-public-site-auth.md`
 - **Page Map**: `docs/design/PAGE_MAP_AND_FLOWS.md`
 
 ## Revision History

@@ -124,7 +124,8 @@ task chain.
   acknowledgement bar on `/dpa` with `pending`/`signed`/`updated` states,
   SSR-safe (returns `null` during `loading` and `signed`).
 - A downloadable template at `apps/web/public/legal/dpa-template.pdf` is served
-  from `/legal/dpa-template.pdf`; `artifacts/reports/dpa-template.pdf` holds the
+  from `/legal/dpa-template.pdf`;
+  `docs/compliance-and-governance/compliance/dpa-template.pdf` holds the
   governance mirror.
 - `apps/web/src/app/sitemap.ts` includes a `/dpa` entry (priority 0.5,
   changeFrequency `monthly`) between `/cookies` and `/status`.

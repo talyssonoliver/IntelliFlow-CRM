@@ -200,7 +200,7 @@ async qualify(leadId: LeadId, score: LeadScore): Promise<Lead> {
 - [ ] **README updated**: If new setup steps or dependencies added
 - [ ] **CHANGELOG updated**: Notable changes documented
 - [ ] **ADR created** (if architectural change): Architecture Decision Record in
-      `docs/planning/adr/`
+      `docs/architecture/adr/`
 - [ ] **API docs updated**: tRPC router changes reflected in generated docs
 - [ ] **Migration guide** (if breaking change): Document upgrade path for
       consumers
@@ -319,7 +319,7 @@ PRs may be rejected for:
 
 If unsure about any checklist item:
 
-1. Reference `docs/tdd-guidelines.md` for testing standards
+1. Reference `docs/development/tdd-guidelines.md` for testing standards
 2. Review `CLAUDE.md` for project architecture and conventions
 3. Check existing code for examples
 4. Ask the team in pull request comments

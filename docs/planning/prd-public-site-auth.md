@@ -54,7 +54,7 @@ secure signup/signin.
 
 ## Dependencies
 
-- ADR-001, ADR-003, ADR-004, ADR-009, ADR-020.
+- ADR-001, ADR-003, ADR-004, ADR-009, ADR-020, ADR-048 (hybrid AI inference).
 
 ## Risks / Mitigations
 

@@ -771,8 +771,8 @@ const auditLogger = t.middleware(async ({ ctx, path, type, next }) => {
 ## References
 
 - [RLS Design Document](./rls-design.md)
-- [ADR-009: Zero Trust Security](../planning/adr/ADR-009-zero-trust-security.md)
-- [ADR-004: Multi-Tenancy](../planning/adr/ADR-004-multi-tenancy.md)
+- [ADR-009: Zero Trust Security](../architecture/adr/ADR-009-zero-trust-security.md)
+- [ADR-004: Multi-Tenancy](../architecture/adr/ADR-004-multi-tenancy.md)
 - [PostgreSQL RLS Documentation](https://www.postgresql.org/docs/current/ddl-rowsecurity.html)
 - [Supabase Auth & RLS](https://supabase.com/docs/guides/auth/row-level-security)
 

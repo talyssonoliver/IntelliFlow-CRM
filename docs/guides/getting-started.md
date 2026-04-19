@@ -178,38 +178,41 @@ This will create:
 - Test accounts and opportunities
 - Demo AI scoring data
 
-## Step 6: Set Up Ollama (Optional)
+## Step 6: Set Up AI Inference (LiteLLM or Ollama)
 
-If you want to use local AI models instead of OpenAI:
+### Primary path: LiteLLM proxy (recommended)
 
-### Install Ollama
+LiteLLM provides a unified endpoint at `http://localhost:4000/v1` and routes
+requests to Groq, Gemini, Mistral, or Anthropic depending on the tier. No API
+keys are required for the `free` tier in development.
+
+```bash
+# Start the LiteLLM proxy
+docker compose -f infra/docker/docker-compose.litellm.yml up -d
+
+# Smoke-test
+curl http://localhost:4000/v1/models
+```
+
+See `infra/litellm/README.md` for provider API key configuration and tier
+mapping.
+
+### Alternative: Ollama (offline / no-internet environments)
+
+If you need fully offline inference, Ollama is still supported as a fallback.
+Set `AI_PROVIDER=ollama` in your `.env` file and use the quantized model tag:
 
 ```bash
 # macOS/Linux
 curl https://ollama.ai/install.sh | sh
 
-# Windows
-# Download installer from https://ollama.ai/download
-```
+# Windows: download from https://ollama.ai/download
 
-### Pull Required Models
+# Pull the required quantized model
+ollama pull mistral:7b-instruct-q4_K_M
 
-```bash
-# Pull Llama 2 (7B parameters)
-ollama pull llama2
-
-# Pull Mistral (7B parameters)
-ollama pull mistral
-
-# Verify models
+# Verify
 ollama list
-```
-
-### Test Ollama
-
-```bash
-# Run a test prompt
-ollama run llama2 "Hello, world!"
 ```
 
 ## Step 7: Start Development Servers

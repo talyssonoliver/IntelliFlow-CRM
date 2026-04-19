@@ -1,7 +1,12 @@
 # Notification Service Runbook - IntelliFlow CRM
 
-**Document ID**: IFC-157-NOTIFICATION-RUNBOOK **Version**: 1.0.0 **Last
-Updated**: 2025-12-31 **Owner**: STOA-Domain (Backend Dev + SRE)
+**Document ID**: IFC-157-NOTIFICATION-RUNBOOK **Version**: 1.1.0 **Last
+Updated**: 2026-04-15 **Owner**: STOA-Domain (Backend Dev + SRE)
+
+> **Consolidated** 2026-04-15: absorbed `notifications.md` (IFC-163 BullMQ-level
+> ops) — circuit-breaker states, extended email retry table, `bullmq-cli` DLQ
+> commands, and per-provider rate-limit table now live here as the single
+> canonical notification runbook.
 
 ---
 
@@ -304,13 +309,24 @@ curl -X POST http://localhost:3000/admin/notification-dlq/drain \
 ### 5.1 Retry Settings
 
 ```typescript
-// Default configuration
+// Default configuration — non-email channels (3 attempts)
 const RETRY_CONFIG = {
   maxRetries: 3,
   backoffMs: [1000, 5000, 30000], // 1s, 5s, 30s
   jitterFactor: 0.1, // 10% random jitter
 };
 ```
+
+**Per-channel retry schedule** (email extends to 5 attempts because of transient
+provider throttling — SendGrid/Mailgun 429s typically recover within minutes):
+
+| Attempt        | Delay | Cumulative | Applies to   |
+| -------------- | ----- | ---------- | ------------ |
+| 1              | 1s    | 1s         | all channels |
+| 2              | 5s    | 6s         | all channels |
+| 3              | 30s   | 36s        | all channels |
+| 4 (email only) | 2m    | 2m 36s     | email        |
+| 5 (email only) | 5m    | 7m 36s     | email        |
 
 ### 5.2 DLQ Processing
 
@@ -342,6 +358,60 @@ curl -X POST http://localhost:3000/admin/notification-dlq/retry \
 curl -X POST http://localhost:3000/admin/notification-dlq/discard \
   -H "Authorization: Bearer $ADMIN_TOKEN" \
   -d '{"notificationId": "notif-abc123", "reason": "Invalid recipient - user deleted"}'
+```
+
+### 5.4 Circuit Breaker
+
+Each channel has an independent circuit breaker in the BullMQ layer (separate
+from the DB-level DLQ above — it stops the queue from hammering a failing
+provider).
+
+| Setting           | Value | Description             |
+| ----------------- | ----- | ----------------------- |
+| Failure Threshold | 5     | Failures before opening |
+| Reset Timeout     | 60s   | Time before half-open   |
+| Half-Open Max     | 3     | Test calls in half-open |
+
+**States:**
+
+```
+CLOSED → (5 failures) → OPEN → (60s) → HALF_OPEN → (success) → CLOSED
+                                            ↓
+                                       (failure)
+                                            ↓
+                                          OPEN
+```
+
+**Manual reset:** restart the worker to reset all circuit breakers:
+
+```bash
+docker restart notifications-worker
+```
+
+### 5.5 BullMQ CLI Operations
+
+Redis-level DLQ operations for when the DB-level admin API (§5.3) is unavailable
+or the issue is inside BullMQ itself (e.g. job never reached `notifications`
+table).
+
+```bash
+# List failed email jobs
+redis-cli LRANGE intelliflow:notifications:email:failed 0 10
+
+# Get job details
+redis-cli HGETALL bull:intelliflow:notifications:email:JOB_ID
+
+# Retry specific job
+npx bullmq-cli retry intelliflow:notifications:email JOB_ID
+
+# Retry all failed
+npx bullmq-cli retry-all intelliflow:notifications:email
+
+# Remove specific failed job
+npx bullmq-cli remove intelliflow:notifications:email JOB_ID
+
+# Clean old failed jobs (> 7 days, in ms)
+npx bullmq-cli clean intelliflow:notifications:email failed 604800000
 ```
 
 ---
@@ -407,6 +477,15 @@ Default rate limits per channel:
 - SMS: 10/second (Twilio limit)
 - Push: 500/second (FCM limit)
 - In-app: No limit (internal)
+
+**Per-provider hard limits** (cap worker concurrency below these):
+
+| Provider   | Rate Limit       | Recommendation                               |
+| ---------- | ---------------- | -------------------------------------------- |
+| Gmail SMTP | 500/day          | Use transactional service (SendGrid/Mailgun) |
+| SendGrid   | 100/sec          | Scale workers accordingly                    |
+| Mailgun    | 300/min          | Configure worker rate                        |
+| Twilio     | 1 msg/sec/number | Use multiple numbers for higher throughput   |
 
 ### 7.3 Database Indexes
 

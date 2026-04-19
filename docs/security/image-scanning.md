@@ -59,7 +59,7 @@ All images built by the CI/CD pipeline are scanned:
 
 ### Response SLAs
 
-Per the security baseline (`artifacts/misc/security-baseline.json`):
+Per the security baseline (`infra/monitoring/security-baseline.json`):
 
 | Severity | Remediation SLA | Escalation Path                |
 | -------- | --------------- | ------------------------------ |

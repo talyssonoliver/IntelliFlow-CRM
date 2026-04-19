@@ -702,7 +702,8 @@ vector API) → **IFC-218**
 
 ### 2026-03-05 — Debt Logging & Follow-up Task Creation
 
-**Debt entries logged** (7 `WIRE-*` entries in `docs/debt-ledger.yaml`):
+**Debt entries logged** (7 `WIRE-*` entries in
+`artifacts/metrics/debt-ledger.yaml`):
 
 - WIRE-IFC-094-001 → IFC-216 (file upload/download)
 - WIRE-IFC-144-001 → IFC-217 (email compose)

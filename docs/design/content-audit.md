@@ -1,223 +1,235 @@
 # Content Audit Framework
 
+> **Last verified**: 2026-04-16 **Generator**:
+> `npx tsx tools/scripts/content-audit.ts` **Machine output**:
+> `artifacts/reports/content-audit-results.json` **Tool version**: `1.2.0`
+
 ## 1. Purpose and Scope
 
-This document defines the content audit framework for IntelliFlow CRM's web
-application (`apps/web`). The audit inventories all **103 routes** derived from
-`page.tsx` files, evaluates SEO metadata quality, sitemap coverage, stale
-content, ghost links, and legal compliance gaps.
+This document defines the content-audit framework for IntelliFlow CRM's web
+application (`apps/web`). It describes how the automated audit is generated,
+what it measures, how to interpret the JSON output, and what the current
+baseline looks like after the latest regeneration.
 
-### Scope
+The audit is observational. It inventories page entries, evaluates metadata and
+sitemap coverage, detects stale-content signals, checks legal-page presence, and
+tracks navigation ghost-link status. It does not implement fixes by itself.
 
-- **103 routes** across three access tiers:
-  - **Tier 1 — Public** (25 routes): Under `(public)/`, no authentication
-    required
-  - **Tier 2 — Auth-gated** (73 routes): Require authentication, outside
-    `(public)/` and `(developer)/`
-  - **Tier 3 — Developer portal** (5 routes): Under `(developer)/`, require
-    SUPER_ADMIN role
-- **Audit type**: Observational only — documents current state and classifies
-  gaps. Does not implement fixes.
-- **Data approach**: Static-analysis-first. HTTP measurements for auth-gated
-  routes are deferred to runtime.
+### Current baseline
+
+- **205 `page.tsx` entries** scanned from `apps/web/src/app`
+- **32 public entries** under `(public)/`
+- **159 auth-gated entries** outside `(public)/` and `(developer)/`
+- **14 developer entries** under `(developer)/`
+- **0 unresolved ghost links** after route-group-aware reconciliation
+- **80 average SEO score** across public routes
+- **0 missing legal pages** across `/privacy`, `/terms`, `/cookies`
+
+### Canonical counting rule
+
+`summary.total_routes` counts **filesystem `page.tsx` entries**. Route groups
+collapse out of the public URL space, so this count can diverge from distinct
+URL patterns if duplicate collapsed routes are introduced in future.
+
+Current verified state:
+
+- **205 page entries**
+- **205 distinct collapsed route patterns**
 
 ## 2. Methodology
 
 ### 2.1 Route Inventory (Static — Filesystem Enumeration)
 
-Routes are enumerated by scanning `apps/web/src/app/**/page.tsx` files. Each
-file path is mapped to its Next.js URL pattern:
+Routes are enumerated by scanning `apps/web/src/app/**/page.tsx`. Each file path
+is mapped to its Next.js URL pattern by:
 
-1. Strip the `apps/web/src/app` prefix and `/page.tsx` suffix
-2. Remove parenthesized route group segments: `(public)`, `(developer)`,
+1. Stripping the `apps/web/src/app` prefix and `/page.tsx` suffix
+2. Removing parenthesized route groups such as `(public)`, `(developer)`, and
    `(list)`
-3. Retain dynamic segments as-is: `[param]`, `[slug]`, `[id]`, `[token]`
-4. Root `page.tsx` maps to `/`
+3. Retaining dynamic segments as-is: `[id]`, `[slug]`, `[token]`, `[param]`
+4. Mapping root `page.tsx` to `/`
 
-Access tier is determined by the containing route group:
+Access tier is derived from the containing route group:
 
-- `(public)/` → `public`
-- `(developer)/` → `developer`
-- All others → `auth-gated`
+- `(public)/` -> `public`
+- `(developer)/` -> `developer`
+- all other paths -> `auth-gated`
 
 ### 2.2 SEO Metadata (Static — Metadata Export Chain Analysis)
 
-For each route, the metadata resolution chain is traced:
+For each page entry, the audit resolves metadata in this order:
 
-1. **Page-level**: Check `page.tsx` for `export const metadata` or
-   `export async function generateMetadata`
-2. **Layout-level**: Check the nearest `layout.tsx` ancestor for metadata
-   exports
-3. **Root-level**: Fall back to `apps/web/src/app/layout.tsx` metadata
+1. Page-level `export const metadata`
+2. Page-level `export async function generateMetadata`
+3. Nearest ancestor `layout.tsx`
+4. Root fallback from `apps/web/src/app/layout.tsx`
 
-For each metadata field, the `source` is recorded as `"page"`, `"layout"`,
-`"root-layout"`, or `null`.
+Each field records both its `value` and `source`, where `source` is one of
+`page`, `layout`, `root-layout`, or `null`.
 
-**Fields measured per route:**
+Measured fields:
 
 | Field               | JSON Key              | Pass Condition                           |
 | ------------------- | --------------------- | ---------------------------------------- |
 | Page title          | `title`               | Non-empty, not identical to root default |
-| Meta description    | `description`         | Present, 50–160 characters               |
+| Meta description    | `description`         | Present, 50-160 characters               |
 | OG title            | `og_title`            | Present                                  |
 | OG description      | `og_description`      | Present                                  |
-| OG URL              | `og_url`              | Present (public routes only)             |
+| OG URL              | `og_url`              | Present on public routes                 |
 | OG site name        | `og_site_name`        | Present                                  |
-| OG image            | `og_image`            | Present (none in codebase currently)     |
+| OG image            | `og_image`            | Present                                  |
 | Twitter card type   | `twitter_card`        | Present                                  |
 | Twitter title       | `twitter_title`       | Present                                  |
 | Twitter description | `twitter_description` | Present                                  |
-| Robots noindex      | `robots_noindex`      | Auth routes expected to have noindex     |
+| Robots noindex      | `robots_noindex`      | Expected on non-public flows             |
 
-### 2.3 Sitemap Coverage (Static — sitemap.ts Cross-Reference)
+### 2.3 Sitemap Coverage (Static — `sitemap.ts` Cross-Reference)
 
-Each route is cross-referenced against `apps/web/src/app/sitemap.ts` to
-determine `in_sitemap` status. The sitemap currently emits 13 static public
-routes + 2 hardcoded blog slugs = 15 URLs.
+Each route is cross-referenced against `apps/web/src/app/sitemap.ts`.
 
-Known gaps: partial blog coverage (2 of 6 slugs), missing dynamic route entries
-(`/careers/[id]`, `/lp/[slug]`).
+The current sitemap has:
 
-The `sitemap_last_modified_method` field records how `lastModified` is set:
-`"dynamic-new-Date"` for the current defective pattern, `null` for routes not in
-sitemap.
+- **18 static URLs** defined directly in `staticRoutes`
+- data-driven blog detail URLs from `apps/web/src/data/blog-posts.ts`
+- data-driven careers detail URLs from `apps/web/src/data/job-listings.ts`
+- data-driven landing-page URLs from `apps/web/src/data/landing-pages.json`
+- data-driven press-release URLs from `apps/web/src/data/press-releases.json`
 
-### 2.4 HTTP Status & Response Time (Runtime — Tier 1 Public Only)
+The `sitemap_last_modified_method` field records how the route was matched:
 
-For public routes accessible without authentication, HTTP status codes and
-response times can be measured via HTTP GET requests. For auth-gated and
-developer routes, these fields are set to `null` with
-`http_measurement_method: "pending-runtime"`.
+- `STATIC_LAST_MODIFIED` for static sitemap entries
+- `data-field` for data-driven entries
+- `null` when the route is not included in the sitemap
 
-This separation ensures no fabricated data appears in the audit (NF-005).
+### 2.4 HTTP Status and Response Time
+
+The generator is currently **static-analysis only**. It does not execute HTTP
+requests yet.
+
+As a result, every route currently emits:
+
+- `http_status: null`
+- `response_time_ms: null`
+- `http_measurement_method: "pending-runtime"`
+
+This is intentional. The audit must not fabricate measurements.
 
 ### 2.5 Stale Content Detection (Static — Pattern Matching)
 
-Three detection patterns are applied to page component source code:
+The audit scans the page source for:
 
-1. **Hardcoded data**: Content embedded as JSX that should be CMS-driven (blog
-   posts, job listings, incident data, uptime statistics)
-2. **Hardcoded dates/statistics**: Regex scan for years (`202[0-9]`),
-   percentages, currency amounts in JSX strings
-3. **Placeholder indicators**: Scan for `TODO`, `FIXME`, `placeholder`,
-   `lorem ipsum`
+1. data imports from `@/data/*`
+2. dated content signals such as years, percentages, and currency
+3. placeholder signals such as `TODO`, `FIXME`, `HACK`, `lorem ipsum`, or
+   `placeholder`
 
-Classification follows the decision tree in Section 6.
+The classification priority is:
 
-### 2.6 Ghost Link Classification (Reference — Reachability Audit)
+`stale` > `static-by-design-dated` > `static-by-design` > `none`
 
-28 ghost links identified in `docs/design/navigation-reachability-audit.md` are
-pre-classified as `ghost-planned` with references to planned remediation tasks
-(PG-172 through PG-178, Sprint 16). These are navigation targets that exist in
-the UI but have no corresponding `page.tsx`.
+### 2.6 Ghost Link Classification
 
-Ghost links are NOT treated as content failures — they are tracked separately in
-the findings with their planned remediation status.
+The ghost-link registry still contains the historical 28 links from the earlier
+navigation audit work, but the generator now reconciles them against the **full
+collapsed route inventory**, not naive direct filesystem paths. This means route
+groups like `(list)` are treated correctly as implemented routes.
 
-### 2.7 Legal Compliance Check (Static — GDPR Touchpoints)
+Current result:
 
-The audit checks for the existence of legally required pages referenced by the
-application:
+- historical registry size: **28**
+- currently unresolved ghost links: **0**
 
-- `/privacy` — Privacy Policy (referenced by `CookieConsentBanner` in root
-  `layout.tsx`)
-- `/terms` — Terms of Service
-- `/cookies` — Cookie Policy
+The human-readable source of navigation context remains
+`docs/design/navigation-reachability-audit.md`.
 
-Missing pages are classified as `severity: critical` with GDPR Art. 12
-implications.
+### 2.7 Legal Compliance Check
+
+The audit checks for required legal routes:
+
+- `/privacy`
+- `/terms`
+- `/cookies`
+
+The current baseline has all three pages present, so
+`summary.legal_pages_missing` is empty.
 
 ## 3. Dimensions Measured
 
 ### 3.1 Quantitative Dimensions
 
-Per-route measurements captured in the audit JSON:
+Per route entry, the audit captures:
 
-- **SEO metadata fields** (10 fields): title, description, og_title,
-  og_description, og_url, og_site_name, og_image, twitter_card, twitter_title,
-  twitter_description
-- **Sitemap inclusion**: boolean `in_sitemap`
-- **HTTP status**: integer status code or null
-- **Response time**: milliseconds or null
-- **SEO score**: integer 0–100 for public routes, null for others
-- **Stale content classification**: enum value per route
+- metadata completeness and source provenance
+- sitemap inclusion
+- sitemap matching method
+- public SEO score
+- stale-content classification
+- runtime-measurement placeholders
 
 ### 3.2 Qualitative Dimensions
 
-Cross-cutting assessments captured in the findings section:
+Cross-cutting findings capture:
 
-- **Content freshness**: Hardcoded temporal data that may become stale
-- **Placeholder detection**: TODO markers, lorem ipsum, incomplete content
-- **Brand consistency**: Title format adherence to `%s | IntelliFlow CRM`
-  template
-- **Navigation completeness**: Ghost link coverage relative to sidebar/header
-  navigation
-- **Legal compliance**: Presence of required legal pages
+- legal-compliance gaps
+- data-dependent 404 risk
+- SEO CI enforcement gaps
+- sitemap timestamp quality
+- ghost-link reconciliation status
 
 ## 4. Scoring Criteria
 
-### 4.1 SEO Score (0–100, Public Pages Only)
+### 4.1 SEO Score (0-100, Public Routes Only)
 
-Applied only to routes with `access_tier: "public"`. Auth-gated and developer
-routes receive `seo_score: null`.
+Applied only to `access_tier: "public"`. Auth-gated and developer entries emit
+`seo_score: null`.
 
 | Criterion                | Points | Condition                                                              |
 | ------------------------ | ------ | ---------------------------------------------------------------------- |
-| Title present and unique | +20    | Non-empty, differs from root layout default                            |
-| Description 50–160 chars | +20    | Present with length in range                                           |
+| Title present and unique | +20    | Non-empty and not identical to the root default                        |
+| Description 50-160 chars | +20    | Present and length in range                                            |
 | OG title + description   | +20    | Both `og_title` and `og_description` present                           |
-| OG url + siteName        | +10    | Both `og_url` and `og_site_name` present                               |
+| OG URL + site name       | +10    | Both `og_url` and `og_site_name` present                               |
 | Twitter card complete    | +15    | `twitter_card`, `twitter_title`, and `twitter_description` all present |
 | In sitemap               | +10    | Route appears in `sitemap.ts` output                                   |
-| No OG image              | −5     | Global deduction (no `og:image` anywhere in codebase)                  |
+| No OG image              | -5     | Global deduction while `og:image` is missing                           |
 
-**Maximum possible**: 95 (100 − 5 for missing og:image)
+**Current maximum practical score**: `95`, because `og:image` is still absent.
 
-### 4.2 Content Freshness Score
+### 4.2 Content Freshness Classification
 
-Not scored numerically. Classification enum per Section 6: `static-by-design`,
-`static-by-design-dated`, `stale`.
+The audit does not assign a numeric freshness score. It emits one of:
 
-### 4.3 Navigation Completeness Score
+- `none`
+- `static-by-design`
+- `static-by-design-dated`
+- `stale`
 
-Derived from ghost link count: 28 navigation targets without corresponding
-pages, tracked for remediation in Sprint 16.
+### 4.3 Navigation Completeness
 
-## 5. Audit Report Schema (JSON)
+Navigation completeness is now reflected through ghost-link reconciliation. The
+current verified baseline is **0 unresolved ghost links**.
 
-### Top-Level Structure
+## 5. Audit Report Schema
+
+### Top-level structure
 
 ```json
 {
   "generated_at": "ISO-8601 timestamp",
-  "tool_version": "1.0.0",
-  "routes": [
-    /* RouteEntry[] */
-  ],
-  "summary": {
-    /* AuditSummary */
-  },
+  "tool_version": "1.2.0",
+  "routes": [],
+  "summary": {},
   "findings": {
-    "critical": [
-      /* Finding[] */
-    ],
-    "high": [
-      /* Finding[] */
-    ],
-    "medium": [
-      /* Finding[] */
-    ],
-    "low": [
-      /* Finding[] */
-    ],
-    "ghost_links": [
-      /* GhostLinkFinding[] */
-    ]
+    "critical": [],
+    "high": [],
+    "medium": [],
+    "low": [],
+    "ghost_links": []
   }
 }
 ```
 
-### RouteEntry Schema
+### RouteEntry schema
 
 ```json
 {
@@ -242,12 +254,12 @@ pages, tracked for remediation in Sprint 16.
   },
   "seo_score": "integer 0-100 | null",
   "in_sitemap": true,
-  "sitemap_last_modified_method": "dynamic-new-Date | null",
+  "sitemap_last_modified_method": "STATIC_LAST_MODIFIED | data-field | null",
   "http_status": "integer | null",
   "response_time_ms": "number | null",
-  "http_measurement_method": "measured | pending-runtime",
+  "http_measurement_method": "pending-runtime",
   "stale_content": {
-    "classification": "static-by-design | static-by-design-dated | stale | not-applicable",
+    "classification": "none | static-by-design | static-by-design-dated | stale",
     "patterns_found": [],
     "data_sources": []
   },
@@ -257,37 +269,37 @@ pages, tracked for remediation in Sprint 16.
 }
 ```
 
-### AuditSummary Schema
+### AuditSummary schema
 
 ```json
 {
-  "total_routes": 103,
-  "public_routes": 25,
-  "auth_gated_routes": 73,
-  "developer_routes": 5,
-  "routes_with_seo_score": 25,
-  "routes_pending_runtime_measurement": 78,
-  "average_seo_score_public": 0,
-  "legal_pages_missing": ["privacy", "terms", "cookies"],
-  "ghost_link_count": 28
+  "total_routes": 205,
+  "public_routes": 32,
+  "auth_gated_routes": 159,
+  "developer_routes": 14,
+  "routes_with_seo_score": 32,
+  "routes_pending_runtime_measurement": 205,
+  "average_seo_score_public": 80,
+  "legal_pages_missing": [],
+  "ghost_link_count": 0
 }
 ```
 
-### Finding Schema
+### Finding schema
 
 ```json
 {
-  "id": "F-001",
-  "type": "missing_page | broken_link | config_defect | metadata_gap | stale_content",
+  "id": "SEO-LIGHTHOUSE-WARN",
+  "type": "string",
   "severity": "critical | high | medium | low",
-  "description": "Descriptive text with file:line references",
+  "description": "Descriptive text",
   "file": "optional file path",
   "route": "optional route path",
-  "remediation": "Planned task reference or action"
+  "remediation": "Suggested action or task reference"
 }
 ```
 
-### GhostLinkFinding Schema
+### GhostLinkFinding schema
 
 ```json
 {
@@ -301,78 +313,98 @@ pages, tracked for remediation in Sprint 16.
 
 ## 6. Stale Content Detection Rules
 
-### 6.1 Static-by-Design vs Stale
+### 6.1 Classification decision tree
 
-Decision tree for classifying content freshness:
+1. No matched signals -> `none`
+2. Import from `@/data/*` -> `static-by-design`
+3. Year, percentage, or currency in rendered source -> `static-by-design-dated`
+4. Placeholder or TODO markers -> `stale`
 
-1. **Data sourced from `@/data/*.json` or similar data files** →
-   `static-by-design`
-   - Intentionally static content that does not require CMS
-   - Examples: feature descriptions, pricing tiers, team bios
+### 6.2 Detection patterns
 
-2. **Content containing temporal facts** (years, version numbers, dated
-   statistics) → `static-by-design-dated`
-   - Static content that includes time-sensitive data
-   - Flagged for periodic review but not treated as stale
-   - Examples: "Founded in 2024", "99.9% uptime in 2025"
-
-3. **Content matching placeholder patterns** → `stale`
-   - `TODO`, `FIXME`, `HACK` markers in rendered content
-   - `lorem ipsum` text
-   - `placeholder` attribute values rendered as content
-   - Empty sections with no meaningful content
-
-### 6.2 Detection Patterns
-
-| Pattern          | Regex                                         | Classification         |
+| Pattern          | Regex or signal                               | Classification         |
 | ---------------- | --------------------------------------------- | ---------------------- |
+| Data file import | `from '@/data/`                               | static-by-design       |
 | Year references  | `202[0-9]`                                    | static-by-design-dated |
-| Percentage stats | `\d+(\.\d+)?%` in JSX strings                 | static-by-design-dated |
-| Currency amounts | `\$[\d,]+` in JSX strings                     | static-by-design-dated |
+| Percentage stats | `\d+(\.\d+)?%`                                | static-by-design-dated |
+| Currency amounts | `\$[\d,]+`                                    | static-by-design-dated |
 | TODO markers     | `TODO\|FIXME\|HACK`                           | stale                  |
 | Placeholder text | `lorem ipsum\|placeholder` (case-insensitive) | stale                  |
-| Data file import | `from '@/data/`                               | static-by-design       |
 
 ## 7. Re-Audit Cadence
 
-### Automated (Structural)
+### Automated
 
-Triggered on every PR that modifies files matching:
+The GitHub workflow `.github/workflows/content-audit.yml` now reruns the audit
+when these inputs change:
 
 - `apps/web/src/app/**/page.tsx`
 - `apps/web/src/app/**/layout.tsx`
+- `apps/web/src/app/layout.tsx`
 - `apps/web/src/app/sitemap.ts`
+- `apps/web/src/data/blog-posts.ts`
+- `apps/web/src/data/job-listings.ts`
+- `apps/web/src/data/landing-pages.json`
+- `apps/web/src/data/press-releases.json`
+- `lighthouserc.js`
+- `tools/scripts/content-audit.ts`
+- `.github/workflows/content-audit.yml`
 
 Automated checks verify:
 
-- Route count matches `summary.total_routes` (TR-002 snapshot test)
-- New routes have required metadata fields
-- Sitemap coverage for new public routes
+- route-entry drift against the previous audit JSON
+- schema validity of `content-audit-results.json`
+- public-route SEO scoring presence
+- legal-page presence
+- ghost-link reconciliation status
 
-### Manual (Qualitative)
+### Manual
 
-Quarterly review covering:
+Run a manual re-audit whenever one of these changes would alter interpretation
+but not necessarily trigger a route-count drift:
 
-- Content freshness assessment for `static-by-design-dated` entries
-- Brand consistency review for title/description copy
-- Legal page status update
-- Ghost link remediation progress
+- duplicated collapsed routes are introduced or removed
+- copy updates materially change stale-content classification
+- navigation documentation changes require registry reconciliation
+- audit findings need to be re-triaged against sprint tasks
 
-## 8. Remediation Priority Matrix
+## 8. Current Findings and Priority Matrix
 
-> **Last verified**: 2026-03-19. Fixed findings removed; see git history for
-> original full table.
+> **Verified against live generator output on 2026-04-16**
 
-| Severity     | Finding     | Description                                                                             | Sprint | Task           | Status  |
-| ------------ | ----------- | --------------------------------------------------------------------------------------- | ------ | -------------- | ------- |
-| **Critical** | F-002/F-003 | Missing legal pages (`/terms`, `/cookies`) — GDPR Art. 12 risk                          | 17     | PG-051, PG-052 | Backlog |
-| **High**     | F-005       | Lighthouse SEO at `warn` not `error` — no CI enforcement                                | 21     | IFC-208        | Backlog |
-| **High**     | F-006       | No `og:image` on any page — degrades social sharing                                     | 21     | IFC-208        | Backlog |
-| **Medium**   | F-009       | `/press/[id]` dynamic routes missing from sitemap (4 public press release detail pages) | 15     | IFC-209        | Fixed   |
-| **Low**      | F-012       | `/signup`, `/forgot-password`, `/verify-email` still missing metadata                   | 15     | IFC-210        | Fixed   |
+| Severity      | Finding ID            | Description                                                                                           | Tracking status                                            |
+| ------------- | --------------------- | ----------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| High          | `SEO-LIGHTHOUSE-WARN` | `lighthouserc.js` still treats SEO as `warn` instead of `error`                                       | `IFC-208` backlog                                          |
+| High          | `CONTENT-PRESS-404`   | `/press/[id]` still uses `notFound()` and can produce crawlable data-dependent 404s if content drifts | residual risk after `PG-179`; no dedicated follow-up found |
+| Medium        | `SITEMAP-STATIC-DATE` | `sitemap.ts` still uses a hardcoded `STATIC_LAST_MODIFIED` constant                                   | regression against `IFC-209` intent                        |
+| Informational | `GHOST-LINKS`         | Historical 28 ghost links now reconcile to 0 unresolved routes                                        | verified resolved                                          |
+| Informational | `LEGAL-PAGES`         | `/privacy`, `/terms`, and `/cookies` all exist                                                        | verified resolved                                          |
 
-### Audit Automation
+### Automation and integrity tasks
 
-| Task    | Description                                                                                                                              | Sprint |
-| ------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| DOC-014 | Automated content audit script — regenerates `content-audit-results.json` from filesystem, integrates as CI check on route-modifying PRs | 15     |
+| Task      | Description                                                  | Status    |
+| --------- | ------------------------------------------------------------ | --------- |
+| `DOC-014` | Automated content audit script and CI regeneration           | completed |
+| `DOC-015` | Cross-document route-total reconciliation across design docs | backlog   |
+| `DOC-016` | CI gate for cross-document route-total drift                 | backlog   |
+
+## 9. How to Regenerate
+
+Run:
+
+```bash
+pnpm tsx tools/scripts/content-audit.ts
+```
+
+Then validate with:
+
+```bash
+pnpm exec vitest run tools/scripts/__tests__/content-audit.test.ts apps/web/src/__tests__/content-audit-schema.test.ts
+```
+
+If the route-entry baseline changes, review:
+
+1. whether a new `page.tsx` was added or removed
+2. whether two files now collapse to the same public URL
+3. whether sitemap or data-driven route expansion also changed
+4. whether companion design docs need the same baseline refresh

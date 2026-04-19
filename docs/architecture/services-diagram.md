@@ -397,8 +397,9 @@ graph TB
             SonarDB[(SonarQube PostgreSQL)]
         end
 
-        subgraph LLM["Local LLM (docker-compose.ollama.yml)"]
-            Ollama["Ollama<br/>Port: 11434<br/><code>docker compose -f docker-compose.ollama.yml up</code>"]
+        subgraph LLM["AI Inference (infra/docker/docker-compose.litellm.yml)"]
+            LiteLLM["LiteLLM Proxy<br/>Port: 4000<br/><code>docker compose -f infra/docker/docker-compose.litellm.yml up -d</code>"]
+            Ollama["Ollama<br/>Port: 11434<br/><code>docker compose -f docker-compose.ollama.yml up</code><br/>(offline fallback only)"]
         end
 
         subgraph Monitor["Monitoring Stack (infra/monitoring/)"]
@@ -434,8 +435,9 @@ graph TB
     Tempo --> Grafana
 
     Sonar -.->|Analysis| SonarDB
-    API -.->|LLM Inference| Ollama
-    AI -.->|LLM Inference| Ollama
+    API -.->|LLM Inference| LiteLLM
+    AI -.->|LLM Inference| LiteLLM
+    LiteLLM -.->|offline fallback| Ollama
 
     style Web fill:#61dafb,stroke:#333,stroke-width:2px
     style API fill:#68a063,stroke:#333,stroke-width:2px
@@ -448,6 +450,7 @@ graph TB
     style Ingestion fill:#16a085,stroke:#333,stroke-width:2px
     style Grafana fill:#f46800,stroke:#333,stroke-width:2px
     style Sonar fill:#549dd0,stroke:#333,stroke-width:2px
+    style LiteLLM fill:#6366f1,stroke:#333,stroke-width:2px,color:#fff
     style Ollama fill:#000000,stroke:#fff,stroke-width:2px,color:#fff
 ```
 

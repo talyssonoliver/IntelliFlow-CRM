@@ -1,6 +1,6 @@
 # Navigation & Reachability Audit
 
-> **Generated**: 2026-02-22 | **Updated**: 2026-02-23 | **Sprint**: 6 (MVP
+> **Generated**: 2026-02-22 | **Updated**: 2026-04-15 | **Sprint**: 6 (MVP
 > Phase) **Trigger**: PG-030 shipped a complete subscription manager at
 > `/billing/subscriptions` with zero navigation entries — only discoverable by
 > typing the URL directly.
@@ -111,12 +111,13 @@ Legend:
 - **IP** = In-page link (breadcrumb, button, data table row)
 - **--** = No entry (unreachable from that layer)
 
-### Public Pages (26 routes) — All reachable via PublicHeader/PublicFooter
+### Public Pages (32 routes) — All reachable via PublicHeader/PublicFooter
 
 | Route                                                     | Status | Notes                                       |
 | --------------------------------------------------------- | ------ | ------------------------------------------- |
 | `/` (public)                                              | OK     | Public home                                 |
 | `/about`                                                  | OK     | Footer link                                 |
+| `/aup`                                                    | OK     | Footer link (Acceptable Use Policy)         |
 | `/blog`, `/blog/[slug]`                                   | OK     | Header/footer links                         |
 | `/careers`, `/careers/[id]`                               | OK     | Footer link                                 |
 | `/contact`                                                | OK     | Header/footer link                          |
@@ -141,132 +142,186 @@ Legend:
 | `/dashboard/customize` | --  | --  | --  | IP? |   VERIFY   | Likely linked from dashboard |
 | `/dashboard/new`       | --  | --  | --  | IP? |   VERIFY   | Likely linked from dashboard |
 
-### Accounts (2 routes)
+### Accounts (5 routes)
 
-| Route            |  H  | UM  | SB  | IP  | Reachable? | Notes                 |
-| ---------------- | :-: | :-: | :-: | :-: | :--------: | --------------------- |
-| `/accounts`      | YES | --  | SB  | --  |    YES     | Header nav (CORE_CRM) |
-| `/accounts/[id]` | --  | --  | --  | IP  |     OK     | From list rows        |
+| Route                         |  H  | UM  | SB  | IP  | Reachable? | Notes                 |
+| ----------------------------- | :-: | :-: | :-: | :-: | :--------: | --------------------- |
+| `/accounts`                   | YES | --  | SB  | --  |    YES     | Header nav (CORE_CRM) |
+| `/accounts/[id]`              | --  | --  | --  | IP  |     OK     | From list rows        |
+| `/accounts/account-settings`  | --  | --  | SB  | --  |    YES     | Accounts sidebar      |
+| `/accounts/account-tiers`     | --  | --  | SB  | --  |    YES     | Accounts sidebar      |
+| `/accounts/territory-mapping` | --  | --  | SB  | --  |    YES     | Accounts sidebar      |
 
-### Agent Approvals (14 routes)
+### Agent Approvals (17 routes)
 
-| Route                             |  H  | UM  |   SB   | IP  | Reachable?  | Notes                                       |
-| --------------------------------- | :-: | :-: | :----: | :-: | :---------: | ------------------------------------------- |
-| `/agent-approvals`                | YES | --  |   SB   | --  |     YES     |                                             |
-| `/agent-approvals/agents`         | --  | --  |   SB   | --  |     YES     | Sidebar: Monitoring                         |
-| `/agent-approvals/ai-review`      | --  | --  |   SB   | --  |     YES     | Sidebar: AI Review                          |
-| `/agent-approvals/ai-review/[id]` | --  | --  |   --   | IP  |     OK      | From review list                            |
-| `/agent-approvals/ai-search`      | --  | --  |   SB   | --  |     YES     | Sidebar: AI Tools                           |
-| `/agent-approvals/churn-risk`     | --  | --  |   SB   | --  |     YES     | Sidebar: Intelligence                       |
-| `/agent-approvals/drift`          | --  | --  |   SB   | --  |     YES     | Sidebar: Monitoring                         |
-| `/agent-approvals/experiments`    | --  | --  |   SB   | --  |     YES     | Sidebar: AI Tools                           |
-| `/agent-approvals/history`        | --  | --  |   SB   | --  |     YES     | Sidebar: History                            |
-| `/agent-approvals/latency`        | --  | --  |   SB   | --  |     YES     | Sidebar: Monitoring                         |
-| `/agent-approvals/lead-scoring`   | --  | --  |   SB   | --  |     YES     | Sidebar: Intelligence                       |
-| `/agent-approvals/logs`           | --  | --  |   SB   | --  |     YES     | Sidebar: Monitoring                         |
-| `/agent-approvals/preview`        | --  | --  | **NO** | IP  | **PARTIAL** | Only via "Preview Mode" button on main page |
-| `/agent-approvals/sentiment`      | --  | --  |   SB   | --  |     YES     | Sidebar: Intelligence                       |
+| Route                                |  H  | UM  |   SB   | IP  | Reachable?  | Notes                                       |
+| ------------------------------------ | :-: | :-: | :----: | :-: | :---------: | ------------------------------------------- |
+| `/agent-approvals`                   | YES | --  |   SB   | --  |     YES     |                                             |
+| `/agent-approvals/agents`            | --  | --  |   SB   | --  |     YES     | Sidebar: Monitoring                         |
+| `/agent-approvals/ai-review`         | --  | --  |   SB   | --  |     YES     | Sidebar: AI Review                          |
+| `/agent-approvals/ai-review/[id]`    | --  | --  |   --   | IP  |     OK      | From review list                            |
+| `/agent-approvals/ai-search`         | --  | --  |   SB   | --  |     YES     | Sidebar: AI Tools                           |
+| `/agent-approvals/ai-settings`       | --  | --  |   SB   | --  |     YES     | Sidebar: Configuration                      |
+| `/agent-approvals/approval-policies` | --  | --  |   SB   | --  |     YES     | Sidebar: Configuration                      |
+| `/agent-approvals/churn-risk`        | --  | --  |   SB   | --  |     YES     | Sidebar: Intelligence                       |
+| `/agent-approvals/drift`             | --  | --  |   SB   | --  |     YES     | Sidebar: Monitoring                         |
+| `/agent-approvals/experiments`       | --  | --  |   SB   | --  |     YES     | Sidebar: AI Tools                           |
+| `/agent-approvals/history`           | --  | --  |   SB   | --  |     YES     | Sidebar: History                            |
+| `/agent-approvals/insights`          | --  | --  |   SB   | --  |     YES     | Sidebar: Intelligence                       |
+| `/agent-approvals/latency`           | --  | --  |   SB   | --  |     YES     | Sidebar: Monitoring                         |
+| `/agent-approvals/lead-scoring`      | --  | --  |   SB   | --  |     YES     | Sidebar: Intelligence                       |
+| `/agent-approvals/logs`              | --  | --  |   SB   | --  |     YES     | Sidebar: Monitoring                         |
+| `/agent-approvals/logs/[id]`         | --  | --  |   --   | IP  |     OK      | From logs list rows                         |
+| `/agent-approvals/model-config`      | --  | --  |   SB   | --  |     YES     | Sidebar: Configuration                      |
+| `/agent-approvals/preview`           | --  | --  | **NO** | IP  | **PARTIAL** | Only via "Preview Mode" button on main page |
+| `/agent-approvals/sentiment`         | --  | --  |   SB   | --  |     YES     | Sidebar: Intelligence                       |
+| `/agent-approvals/tools`             | --  | --  |   SB   | --  |     YES     | Sidebar: AI Tools (IFC-191)                 |
 
-### Analytics (2 routes)
+### Analytics (8 routes)
 
-| Route                 |  H  | UM  | SB  | IP  | Reachable? | Notes                 |
-| --------------------- | :-: | :-: | :-: | :-: | :--------: | --------------------- |
-| `/analytics`          | YES | --  | SB  | --  |    YES     | Header: Reports       |
-| `/analytics/feedback` | --  | --  | SB  | --  |    YES     | Sidebar: Report Views |
+| Route                          |  H  | UM  | SB  | IP  | Reachable? | Notes                      |
+| ------------------------------ | :-: | :-: | :-: | :-: | :--------: | -------------------------- |
+| `/analytics`                   | YES | --  | SB  | --  |    YES     | Header: Reports            |
+| `/analytics/feedback`          | --  | --  | SB  | --  |    YES     | Sidebar: Report Views      |
+| `/analytics/saved/weekly`      | --  | --  | SB  | --  |    YES     | Sidebar: Saved Reports     |
+| `/analytics/saved/monthly`     | --  | --  | SB  | --  |    YES     | Sidebar: Saved Reports     |
+| `/analytics/saved/quarterly`   | --  | --  | SB  | --  |    YES     | Sidebar: Saved Reports     |
+| `/analytics/report-templates`  | --  | --  | SB  | --  |    YES     | Sidebar: Report Management |
+| `/analytics/scheduled-reports` | --  | --  | SB  | --  |    YES     | Sidebar: Report Management |
+| `/analytics/report-settings`   | --  | --  | SB  | --  |    YES     | Sidebar: settingsHref      |
 
-### Appointments (redirects to /calendar)
+### Appointments (3 routes)
 
-| Route                | Status   | Notes                                 |
-| -------------------- | -------- | ------------------------------------- |
-| `/appointments`      | REDIRECT | Permanent redirect → `/calendar`      |
-| `/appointments/[id]` | REDIRECT | Permanent redirect → `/calendar/[id]` |
+| Route                |  H  | UM  | SB  | IP  | Reachable? | Notes                                            |
+| -------------------- | :-: | :-: | :-: | :-: | :--------: | ------------------------------------------------ |
+| `/appointments`      | --  | --  | SB  | IP  |    YES     | Appointments sidebar (Calendar View link → here) |
+| `/appointments/new`  | --  | --  | --  | IP  |     OK     | PageHeader action from appointments list         |
+| `/appointments/[id]` | --  | --  | --  | IP  |     OK     | From appointments list rows                      |
 
-### Billing (7 routes)
+### Billing (12 routes)
 
 | Route                      |  H  | UM  | SB  | IP  | Reachable? | Notes                            |
 | -------------------------- | :-: | :-: | :-: | :-: | :--------: | -------------------------------- |
 | `/billing`                 | --  | --  | SB  | --  |    YES     | Settings sidebar "More" section  |
-| `/billing/checkout`        | --  | --  | --  | IP? |   VERIFY   | Likely CTA from billing overview |
+| `/billing/cancel`          | --  | --  | SB  | IP  |    YES     | Billing sidebar + portal CTA     |
+| `/billing/checkout`        | --  | --  | --  | IP  |   VERIFY   | Likely CTA from billing overview |
 | `/billing/invoices`        | --  | --  | SB  | IP  |    YES     | Billing sidebar                  |
 | `/billing/invoices/[id]`   | --  | --  | --  | IP  |     OK     | From invoice list rows           |
 | `/billing/payment-methods` | --  | --  | SB  | IP  |    YES     | Billing sidebar                  |
+| `/billing/plans`           | --  | --  | SB  | IP  |    YES     | Billing sidebar + portal CTA     |
 | `/billing/receipts`        | --  | --  | SB  | --  |    YES     | Billing sidebar                  |
+| `/billing/settings`        | --  | --  | SB  | IP  |    YES     | Billing sidebar + portal CTA     |
 | `/billing/subscriptions`   | --  | --  | SB  | --  |    YES     | Billing sidebar                  |
+| `/billing/upgrade`         | --  | --  | SB  | --  |    YES     | Billing sidebar                  |
+| `/billing/usage`           | --  | --  | SB  | --  |    YES     | Billing sidebar                  |
 
-### Calendar (3 routes)
+### Calendar (4 routes)
 
-| Route            |  H  | UM  | SB  | IP  | Reachable? | Notes                                             |
-| ---------------- | :-: | :-: | :-: | :-: | :--------: | ------------------------------------------------- |
-| `/calendar`      | YES | --  | SB  | --  |    YES     | Header nav (CORE_CRM) + appointmentsSidebarConfig |
-| `/calendar/[id]` | --  | --  | --  | IP  |     OK     | From calendar items                               |
-| `/calendar/new`  | --  | --  | --  | IP? |   VERIFY   | Action page                                       |
+| Route                         |  H  | UM  | SB  | IP  | Reachable? | Notes                                             |
+| ----------------------------- | :-: | :-: | :-: | :-: | :--------: | ------------------------------------------------- |
+| `/calendar`                   | YES | --  | SB  | --  |    YES     | Header nav (CORE_CRM) + appointments sidebar link |
+| `/calendar/availability`      | --  | --  | SB  | --  |    YES     | Calendar sidebar                                  |
+| `/calendar/event-types`       | --  | --  | SB  | --  |    YES     | Calendar sidebar                                  |
+| `/calendar/calendar-settings` | --  | --  | SB  | --  |    YES     | Calendar sidebar                                  |
 
-### Cases (4 routes)
+### Cases (9 routes)
 
-| Route             |  H  | UM  | SB  | IP  | Reachable? | Notes                           |
-| ----------------- | :-: | :-: | :-: | :-: | :--------: | ------------------------------- |
-| `/cases`          | YES | --  | SB  | IP  |    YES     | Header nav (LEGAL)              |
-| `/cases/new`      | --  | --  | --  | IP  |     OK     | PageHeader action from `/cases` |
-| `/cases/[id]`     | --  | --  | --  | IP  |     OK     | From list rows                  |
-| `/cases/timeline` | --  | --  | SB  | --  |    YES     | Cases sidebar                   |
+| Route                        |  H  | UM  | SB  | IP  | Reachable? | Notes                            |
+| ---------------------------- | :-: | :-: | :-: | :-: | :--------: | -------------------------------- |
+| `/cases`                     | YES | --  | SB  | IP  |    YES     | Header nav (LEGAL)               |
+| `/cases/new`                 | --  | --  | --  | IP  |     OK     | PageHeader action from `/cases`  |
+| `/cases/[id]`                | --  | --  | --  | IP  |     OK     | From list rows                   |
+| `/cases/timeline`            | --  | --  | SB  | --  |    YES     | Cases sidebar                    |
+| `/cases/case-workflows`      | --  | --  | SB  | --  |    YES     | Cases sidebar                    |
+| `/cases/case-workflows/[id]` | --  | --  | --  | IP  |     OK     | From workflow list rows          |
+| `/cases/case-workflows/new`  | --  | --  | --  | IP  |     OK     | PageHeader action from workflows |
+| `/cases/case-types`          | --  | --  | SB  | --  |    YES     | Cases sidebar                    |
+| `/cases/case-settings`       | --  | --  | SB  | --  |    YES     | Cases sidebar                    |
 
-### Contacts (3 routes)
+### Contacts (7 routes)
 
-| Route            |  H  | UM  | SB  | IP  | Reachable? | Notes                            |
-| ---------------- | :-: | :-: | :-: | :-: | :--------: | -------------------------------- |
-| `/contacts`      | YES | --  | SB  | --  |    YES     |                                  |
-| `/contacts/new`  | --  | --  | --  | IP  |     OK     | CaseForm cross-link, list action |
-| `/contacts/[id]` | --  | --  | --  | IP  |     OK     | From list rows                   |
+| Route                        |  H  | UM  | SB  | IP  | Reachable? | Notes                            |
+| ---------------------------- | :-: | :-: | :-: | :-: | :--------: | -------------------------------- |
+| `/contacts`                  | YES | --  | SB  | --  |    YES     |                                  |
+| `/contacts/new`              | --  | --  | --  | IP  |     OK     | CaseForm cross-link, list action |
+| `/contacts/[id]`             | --  | --  | --  | IP  |     OK     | From list rows                   |
+| `/contacts/[id]/edit`        | --  | --  | --  | IP  |     OK     | From contact detail              |
+| `/contacts/contact-types`    | --  | --  | SB  | --  |    YES     | Contacts sidebar                 |
+| `/contacts/contact-settings` | --  | --  | SB  | --  |    YES     | Contacts sidebar                 |
+| `/contacts/import-export`    | --  | --  | SB  | --  |    YES     | Contacts sidebar                 |
 
-### Deals (4 routes)
+### Deals (10 routes)
 
-| Route                  |  H  | UM  |   SB   | IP  | Reachable? | Notes                    |
-| ---------------------- | :-: | :-: | :----: | :-: | :--------: | ------------------------ |
-| `/deals`               | YES | --  |   SB   | --  |    YES     |                          |
-| `/deals/[id]`          | --  | --  |   --   | IP  |     OK     | From list/pipeline       |
-| `/deals/[id]/forecast` | --  | --  | **NO** | IP? |   VERIFY   | Nested under deal detail |
-| `/deals/forecast`      | --  | --  |   SB   | --  |    YES     | Sidebar: Deal Views      |
+| Route                    |  H  | UM  |   SB   | IP  | Reachable? | Notes                               |
+| ------------------------ | :-: | :-: | :----: | :-: | :--------: | ----------------------------------- |
+| `/deals`                 | YES | --  |   SB   | --  |    YES     |                                     |
+| `/deals/new`             | --  | --  |   --   | IP  |     OK     | List action button                  |
+| `/deals/trash`           | --  | --  |   SB   | --  |    YES     | Deals sidebar: Trash folder         |
+| `/deals/forecast`        | --  | --  |   SB   | --  |    YES     | Sidebar: Deal Views                 |
+| `/deals/all/forecast`    | --  | --  |   --   | IP  |     OK     | Legacy redirect → `/deals/forecast` |
+| `/deals/[id]`            | --  | --  |   --   | IP  |     OK     | From list/pipeline                  |
+| `/deals/[id]/forecast`   | --  | --  | **NO** | IP  |   VERIFY   | Nested under deal detail            |
+| `/deals/deal-stages`     | --  | --  |   SB   | --  |    YES     | Deals sidebar: Configuration        |
+| `/deals/deal-settings`   | --  | --  |   SB   | --  |    YES     | Deals sidebar: Configuration        |
+| `/deals/deal-automation` | --  | --  |   SB   | --  |    YES     | Deals sidebar: Configuration        |
 
-### Documents (3 routes)
+### Documents (6 routes)
 
-| Route             |  H  | UM  | SB  | IP  | Reachable? | Notes                            |
-| ----------------- | :-: | :-: | :-: | :-: | :--------: | -------------------------------- |
-| `/documents`      | YES | --  | SB  | IP  |    YES     | Header nav + home quick actions  |
-| `/documents/new`  | --  | --  | --  | IP  |     OK     | Home quick actions + list action |
-| `/documents/[id]` | --  | --  | --  | IP  |     OK     | From list rows                   |
+| Route                          |  H  | UM  | SB  | IP  | Reachable? | Notes                            |
+| ------------------------------ | :-: | :-: | :-: | :-: | :--------: | -------------------------------- |
+| `/documents`                   | YES | --  | SB  | IP  |    YES     | Header nav + home quick actions  |
+| `/documents/new`               | --  | --  | --  | IP  |     OK     | Home quick actions + list action |
+| `/documents/[id]`              | --  | --  | --  | IP  |     OK     | From list rows                   |
+| `/documents/document-types`    | --  | --  | SB  | --  |    YES     | Documents sidebar                |
+| `/documents/storage-policies`  | --  | --  | SB  | --  |    YES     | Documents sidebar                |
+| `/documents/document-settings` | --  | --  | SB  | --  |    YES     | Documents sidebar                |
 
-### Email (2 routes)
+### Email (6 routes)
 
-| Route         |  H  | UM  | SB  | IP  | Reachable? | Notes                      |
-| ------------- | :-: | :-: | :-: | :-: | :--------: | -------------------------- |
-| `/email`      | YES | --  | SB  | --  |    YES     | Header nav + sidebar wired |
-| `/email/[id]` | --  | --  | --  | IP  |     OK     | From inbox rows            |
+| Route                   |  H  | UM  | SB  | IP  | Reachable? | Notes                       |
+| ----------------------- | :-: | :-: | :-: | :-: | :--------: | --------------------------- |
+| `/email`                | YES | --  | SB  | --  |    YES     | Header nav + sidebar wired  |
+| `/email/[id]`           | --  | --  | --  | IP  |     OK     | From inbox rows             |
+| `/email/compose`        | --  | --  | --  | IP  |     OK     | Compose button in email app |
+| `/email/templates`      | --  | --  | SB  | --  |    YES     | Email sidebar               |
+| `/email/signatures`     | --  | --  | SB  | --  |    YES     | Email sidebar               |
+| `/email/email-settings` | --  | --  | SB  | --  |    YES     | Email sidebar               |
 
-### Governance (6 routes)
+### Governance (10 routes)
 
-| Route                                    |  H  | UM  | SB  | IP  | Reachable? | Notes                                   |
-| ---------------------------------------- | :-: | :-: | :-: | :-: | :--------: | --------------------------------------- |
-| `/governance`                            | --  | YES | SB  | --  |    YES     | User menu + settings sidebar cross-link |
-| `/governance/adr`                        | --  | --  | SB  | --  |    YES     |                                         |
-| `/governance/compliance`                 | --  | --  | SB  | --  |    YES     |                                         |
-| `/governance/policies`                   | --  | --  | SB  | --  |    YES     |                                         |
-| `/governance/quality-reports`            | --  | --  | SB  | --  |    YES     |                                         |
-| `/governance/quality-reports/[reportId]` | --  | --  | --  | IP  |     OK     | From quality reports list               |
+| Route                                        |  H  | UM  | SB  | IP  | Reachable? | Notes                                   |
+| -------------------------------------------- | :-: | :-: | :-: | :-: | :--------: | --------------------------------------- |
+| `/governance`                                | --  | YES | SB  | --  |    YES     | User menu + settings sidebar cross-link |
+| `/governance/adr`                            | --  | --  | SB  | --  |    YES     |                                         |
+| `/governance/compliance`                     | --  | --  | SB  | --  |    YES     |                                         |
+| `/governance/policies`                       | --  | --  | SB  | --  |    YES     |                                         |
+| `/governance/quality-reports`                | --  | --  | SB  | --  |    YES     |                                         |
+| `/governance/quality-reports/[reportId]`     | --  | --  | --  | IP  |     OK     | From quality reports list               |
+| `/governance/quality-reports/lighthouse`     | --  | --  | SB  | --  |    YES     | Governance sidebar                      |
+| `/governance/quality-reports/coverage`       | --  | --  | SB  | --  |    YES     | Governance sidebar                      |
+| `/governance/quality-reports/performance`    | --  | --  | SB  | --  |    YES     | Governance sidebar                      |
+| `/governance/quality-reports/trpc-benchmark` | --  | --  | SB  | --  |    YES     | Governance sidebar                      |
 
-### Leads (3 routes)
+### Leads (7 routes)
 
-| Route         |  H  | UM  | SB  | IP  | Reachable? | Notes          |
-| ------------- | :-: | :-: | :-: | :-: | :--------: | -------------- |
-| `/leads`      | YES | --  | SB  | --  |    YES     |                |
-| `/leads/new`  | --  | --  | --  | IP  |     OK     | List action    |
-| `/leads/[id]` | --  | --  | --  | IP  |     OK     | From list rows |
+| Route                  |  H  | UM  | SB  | IP  | Reachable? | Notes                        |
+| ---------------------- | :-: | :-: | :-: | :-: | :--------: | ---------------------------- |
+| `/leads`               | YES | --  | SB  | --  |    YES     |                              |
+| `/leads/new`           | --  | --  | --  | IP  |     OK     | List action                  |
+| `/leads/[id]`          | --  | --  | --  | IP  |     OK     | From list rows               |
+| `/leads/[id]/edit`     | --  | --  | --  | IP  |     OK     | From lead detail             |
+| `/leads/pipeline`      | --  | --  | SB  | --  |    YES     | Leads sidebar: Views         |
+| `/leads/routing`       | --  | --  | SB  | --  |    YES     | Leads sidebar: Configuration |
+| `/leads/lead-settings` | --  | --  | SB  | --  |    YES     | Leads sidebar: settingsHref  |
 
-### Notifications (2 routes)
+### Notifications (4 routes)
 
-| Route                     |  H  | UM  | SB  | IP  | Reachable? | Notes                |
-| ------------------------- | :-: | :-: | :-: | :-: | :--------: | -------------------- |
-| `/notifications`          | --  | --  | SB  | IP  |    YES     | Bell icon in header  |
-| `/notifications/settings` | --  | --  | SB  | --  |    YES     | Sidebar settingsHref |
+| Route                        |  H  | UM  | SB  | IP  | Reachable? | Notes                          |
+| ---------------------------- | :-: | :-: | :-: | :-: | :--------: | ------------------------------ |
+| `/notifications`             | --  | --  | SB  | IP  |    YES     | Bell icon in header            |
+| `/notifications/settings`    | --  | --  | SB  | --  |    YES     | Sidebar settingsHref           |
+| `/notifications/channels`    | --  | --  | SB  | --  |    YES     | Notifications sidebar (PG-174) |
+| `/notifications/quiet-hours` | --  | --  | SB  | --  |    YES     | Notifications sidebar (PG-174) |
 
 ### Profile (1 route)
 
@@ -274,37 +329,44 @@ Legend:
 | ---------- | :-: | :-: | :-: | :-: | :--------: | --------- |
 | `/profile` | --  | YES | --  | --  |    YES     | User menu |
 
-### Settings (9 routes + 3 cross-links)
+### Settings (10 routes + 3 cross-links)
 
-| Route                     |  H  | UM  | SB  | IP  | Reachable? | Notes                                              |
-| ------------------------- | :-: | :-: | :-: | :-: | :--------: | -------------------------------------------------- |
-| `/settings`               | --  | YES | --  | --  |    YES     | User menu                                          |
-| `/settings/account`       | --  | --  | SB  | --  |    YES     |                                                    |
-| `/settings/ai`            | --  | --  | SB  | --  |    YES     | Also cross-linked from AI sidebar                  |
-| `/settings/integrations`  | --  | --  | SB  | --  |    YES     |                                                    |
-| `/settings/notifications` | --  | --  | SB  | --  |    YES     |                                                    |
-| `/settings/pipeline`      | --  | --  | SB  | --  |    YES     |                                                    |
-| `/settings/routing`       | --  | --  | SB  | --  |    YES     |                                                    |
-| `/settings/security/mfa`  | --  | --  | SB  | --  |    YES     |                                                    |
-| `/settings/team`          | --  | --  | SB  | --  |    YES     |                                                    |
-| → `/billing`              | --  | --  | SB  | --  |    YES     | Settings sidebar "More" section — cross-link       |
-| → `/governance`           | --  | --  | SB  | --  |    YES     | Settings sidebar "More" section — cross-link       |
-| → `/docs`                 | --  | --  | SB  | --  |    YES     | Settings sidebar "More" section — SUPER_ADMIN only |
+| Route                     |  H  | UM  | SB  | IP  | Reachable? | Notes                                                                               |
+| ------------------------- | :-: | :-: | :-: | :-: | :--------: | ----------------------------------------------------------------------------------- |
+| `/settings`               | --  | YES | --  | --  |    YES     | User menu                                                                           |
+| `/settings/account`       | --  | --  | SB  | --  |    YES     |                                                                                     |
+| `/settings/ai`            | --  | --  | SB  | --  |    YES     | Also cross-linked from AI sidebar                                                   |
+| `/settings/integrations`  | --  | --  | SB  | --  |    YES     |                                                                                     |
+| `/settings/notifications` | --  | --  | SB  | --  |    YES     |                                                                                     |
+| `/settings/pipeline`      | --  | --  | SB  | --  |    YES     |                                                                                     |
+| `/settings/routing`       | --  | --  | SB  | --  |    YES     |                                                                                     |
+| `/settings/security/mfa`  | --  | --  | SB  | --  |    YES     |                                                                                     |
+| `/settings/team`          | --  | --  | SB  | --  |    YES     |                                                                                     |
+| `/settings/automation`    | --  | --  | SB  | --  |    YES     | Settings sidebar "Automation" item — unified bento page for IFC-031 FU-011 + FU-012 |
+| → `/billing`              | --  | --  | SB  | --  |    YES     | Settings sidebar "More" section — cross-link                                        |
+| → `/governance`           | --  | --  | SB  | --  |    YES     | Settings sidebar "More" section — cross-link                                        |
+| → `/docs`                 | --  | --  | SB  | --  |    YES     | Settings sidebar "More" section — SUPER_ADMIN only                                  |
 
-### Tasks (2 routes)
+### Tasks (5 routes)
 
-| Route         |  H  | UM  | SB  | IP  | Reachable? | Notes                 |
-| ------------- | :-: | :-: | :-: | :-: | :--------: | --------------------- |
-| `/tasks`      | YES | --  | SB  | --  |    YES     | Header nav (CORE_CRM) |
-| `/tasks/[id]` | --  | --  | --  | IP  |     OK     | From list rows        |
+| Route                  |  H  | UM  | SB  | IP  | Reachable? | Notes                      |
+| ---------------------- | :-: | :-: | :-: | :-: | :--------: | -------------------------- |
+| `/tasks`               | YES | --  | SB  | --  |    YES     | Header nav (CORE_CRM)      |
+| `/tasks/[id]`          | --  | --  | --  | IP  |     OK     | From list rows             |
+| `/tasks/task-types`    | --  | --  | SB  | --  |    YES     | Tasks sidebar              |
+| `/tasks/task-settings` | --  | --  | SB  | --  |    YES     | Tasks sidebar settingsHref |
+| `/tasks/automation`    | --  | --  | SB  | --  |    YES     | Tasks sidebar              |
 
-### Tickets (3 routes)
+### Tickets (6 routes)
 
-| Route           |  H  | UM  | SB  | IP  | Reachable? | Notes          |
-| --------------- | :-: | :-: | :-: | :-: | :--------: | -------------- |
-| `/tickets`      | YES | --  | SB  | --  |    YES     |                |
-| `/tickets/[id]` | --  | --  | --  | IP  |     OK     | From list rows |
-| `/tickets/new`  | --  | --  | --  | IP  |     OK     | List action    |
+| Route                   |  H  | UM  | SB  | IP  | Reachable? | Notes           |
+| ----------------------- | :-: | :-: | :-: | :-: | :--------: | --------------- |
+| `/tickets`              | YES | --  | SB  | --  |    YES     |                 |
+| `/tickets/[id]`         | --  | --  | --  | IP  |     OK     | From list rows  |
+| `/tickets/new`          | --  | --  | --  | IP  |     OK     | List action     |
+| `/tickets/sla-policies` | --  | --  | SB  | --  |    YES     | Tickets sidebar |
+| `/tickets/types`        | --  | --  | SB  | --  |    YES     | Tickets sidebar |
+| `/tickets/automations`  | --  | --  | SB  | --  |    YES     | Tickets sidebar |
 
 ### Developer Docs (4 routes)
 
@@ -329,49 +391,53 @@ Legend:
 
 ## 4. Issues: Ghost Links
 
-Sidebar or in-page links pointing to routes that **have no `page.tsx`**.
+> **All 28 previously identified ghost links have been resolved** — page.tsx
+> files now exist for all routes. The table below is preserved for historical
+> reference with updated status.
 
-| #    | Route                                     | Source                                  | Severity   | Notes                                                     | Planned Task |
-| ---- | ----------------------------------------- | --------------------------------------- | ---------- | --------------------------------------------------------- | ------------ |
-| G-01 | `/billing/usage`                          | billing.ts sidebar                      | **HIGH**   | Sidebar link, no page                                     | **PG-172**   |
-| G-02 | `/billing/plans`                          | billing.ts sidebar + billing-portal.tsx | **HIGH**   | Sidebar + 2 in-page links, no page                        | **PG-172**   |
-| G-03 | `/billing/upgrade`                        | billing.ts sidebar                      | **HIGH**   | Sidebar link, no page                                     | **PG-172**   |
-| G-04 | `/billing/cancel`                         | billing-portal.tsx                      | **MEDIUM** | In-page link, no page                                     | **PG-172**   |
-| G-05 | `/billing/settings`                       | billing-portal.tsx                      | **MEDIUM** | In-page link ("Update Info"), no page                     | **PG-172**   |
-| G-06 | `/tickets/sla-policies`                   | tickets.ts sidebar                      | **MEDIUM** | Sidebar link, no page                                     | **PG-173**   |
-| G-07 | `/tickets/types`                          | tickets.ts sidebar                      | **MEDIUM** | Sidebar link, no page                                     | **PG-173**   |
-| G-08 | `/tickets/automations`                    | tickets.ts sidebar                      | **MEDIUM** | Sidebar link, no page                                     | **PG-173**   |
-| G-09 | `/notifications/channels`                 | notifications.ts sidebar                | **MEDIUM** | Sidebar link, no page                                     | **PG-174**   |
-| G-10 | `/notifications/quiet-hours`              | notifications.ts sidebar                | **MEDIUM** | Sidebar link, no page                                     | **PG-174**   |
-| G-11 | `/deals/trash`                            | deals.ts sidebar                        | **LOW**    | Sidebar link, no page                                     | **PG-175**   |
-| G-12 | `/governance/quality-reports/lighthouse`  | governance.ts sidebar                   | **LOW**    | Sidebar link, no page (parent + `[reportId]` route exist) | **PG-176**   |
-| G-13 | `/governance/quality-reports/coverage`    | governance.ts sidebar                   | **LOW**    | Sidebar link, no page                                     | **PG-176**   |
-| G-14 | `/governance/quality-reports/performance` | governance.ts sidebar                   | **LOW**    | Sidebar link, no page                                     | **PG-176**   |
-| G-15 | `/analytics/saved/weekly`                 | analytics.ts sidebar                    | **LOW**    | Sidebar link, no page                                     | **PG-177**   |
-| G-16 | `/analytics/saved/monthly`                | analytics.ts sidebar                    | **LOW**    | Sidebar link, no page                                     | **PG-177**   |
-| G-17 | `/analytics/saved/quarterly`              | analytics.ts sidebar                    | **LOW**    | Sidebar link, no page                                     | **PG-177**   |
-| G-18 | `/settings/appointments`                  | appointments.ts settingsHref            | **LOW**    | `showSettings: false` — link never rendered (HIDDEN)      | **PG-178**   |
-| G-19 | `/settings/cases`                         | cases.ts settingsHref                   | **LOW**    | `showSettings: false` — link never rendered (HIDDEN)      | **PG-178**   |
-| G-20 | `/settings/tasks`                         | tasks.ts settingsHref                   | **LOW**    | `showSettings: false` — link never rendered (HIDDEN)      | **PG-178**   |
-| G-21 | `/settings/leads`                         | leads.ts settingsHref                   | **LOW**    | Settings footer link (`showSettings: true`), no page      | **PG-178**   |
-| G-22 | `/settings/contacts`                      | contacts.ts settingsHref                | **LOW**    | Settings footer link (`showSettings: true`), no page      | **PG-178**   |
-| G-23 | `/settings/accounts`                      | accounts.ts settingsHref                | **LOW**    | Settings footer link (`showSettings: true`), no page      | **PG-178**   |
-| G-24 | `/settings/deals`                         | deals.ts settingsHref                   | **LOW**    | Settings footer link (`showSettings: true`), no page      | **PG-178**   |
-| G-25 | `/settings/tickets`                       | tickets.ts settingsHref                 | **LOW**    | Settings footer link (`showSettings: true`), no page      | **PG-178**   |
-| G-26 | `/settings/documents`                     | documents.ts settingsHref               | **LOW**    | Settings footer link (`showSettings: true`), no page      | **PG-178**   |
-| G-27 | `/settings/reports`                       | analytics.ts settingsHref               | **LOW**    | Settings footer link (`showSettings: true`), no page      | **PG-178**   |
-| G-28 | `/settings/billing`                       | ModulePaywall.tsx                       | **LOW**    | In-page link ("Upgrade Plan" CTA), no page                | **PG-178**   |
+| #    | Route                                     | Source                                  | Severity   | Status      | Resolved By |
+| ---- | ----------------------------------------- | --------------------------------------- | ---------- | ----------- | ----------- |
+| G-01 | `/billing/usage`                          | billing.ts sidebar                      | **HIGH**   | ✅ RESOLVED | PG-172      |
+| G-02 | `/billing/plans`                          | billing.ts sidebar + billing-portal.tsx | **HIGH**   | ✅ RESOLVED | PG-172      |
+| G-03 | `/billing/upgrade`                        | billing.ts sidebar                      | **HIGH**   | ✅ RESOLVED | PG-172      |
+| G-04 | `/billing/cancel`                         | billing-portal.tsx                      | **MEDIUM** | ✅ RESOLVED | PG-172      |
+| G-05 | `/billing/settings`                       | billing-portal.tsx                      | **MEDIUM** | ✅ RESOLVED | PG-172      |
+| G-06 | `/tickets/sla-policies`                   | tickets.ts sidebar                      | **MEDIUM** | ✅ RESOLVED | PG-173      |
+| G-07 | `/tickets/types`                          | tickets.ts sidebar                      | **MEDIUM** | ✅ RESOLVED | PG-173      |
+| G-08 | `/tickets/automations`                    | tickets.ts sidebar                      | **MEDIUM** | ✅ RESOLVED | PG-173      |
+| G-09 | `/notifications/channels`                 | notifications.ts sidebar                | **MEDIUM** | ✅ RESOLVED | PG-174      |
+| G-10 | `/notifications/quiet-hours`              | notifications.ts sidebar                | **MEDIUM** | ✅ RESOLVED | PG-174      |
+| G-11 | `/deals/trash`                            | deals.ts sidebar                        | **LOW**    | ✅ RESOLVED | PG-175      |
+| G-12 | `/governance/quality-reports/lighthouse`  | governance.ts sidebar                   | **LOW**    | ✅ RESOLVED | PG-176      |
+| G-13 | `/governance/quality-reports/coverage`    | governance.ts sidebar                   | **LOW**    | ✅ RESOLVED | PG-176      |
+| G-14 | `/governance/quality-reports/performance` | governance.ts sidebar                   | **LOW**    | ✅ RESOLVED | PG-176      |
+| G-15 | `/analytics/saved/weekly`                 | analytics.ts sidebar                    | **LOW**    | ✅ RESOLVED | PG-177      |
+| G-16 | `/analytics/saved/monthly`                | analytics.ts sidebar                    | **LOW**    | ✅ RESOLVED | PG-177      |
+| G-17 | `/analytics/saved/quarterly`              | analytics.ts sidebar                    | **LOW**    | ✅ RESOLVED | PG-177      |
+| G-18 | `/settings/appointments`                  | appointments.ts settingsHref            | **LOW**    | ✅ RESOLVED | PG-178      |
+| G-19 | `/settings/cases`                         | cases.ts settingsHref                   | **LOW**    | ✅ RESOLVED | PG-178      |
+| G-20 | `/settings/tasks`                         | tasks.ts settingsHref                   | **LOW**    | ✅ RESOLVED | PG-178      |
+| G-21 | `/settings/leads`                         | leads.ts settingsHref                   | **LOW**    | ✅ RESOLVED | PG-178      |
+| G-22 | `/settings/contacts`                      | contacts.ts settingsHref                | **LOW**    | ✅ RESOLVED | PG-178      |
+| G-23 | `/settings/accounts`                      | accounts.ts settingsHref                | **LOW**    | ✅ RESOLVED | PG-178      |
+| G-24 | `/settings/deals`                         | deals.ts settingsHref                   | **LOW**    | ✅ RESOLVED | PG-178      |
+| G-25 | `/settings/tickets`                       | tickets.ts settingsHref                 | **LOW**    | ✅ RESOLVED | PG-178      |
+| G-26 | `/settings/documents`                     | documents.ts settingsHref               | **LOW**    | ✅ RESOLVED | PG-178      |
+| G-27 | `/settings/reports`                       | analytics.ts settingsHref               | **LOW**    | ✅ RESOLVED | PG-178      |
+| G-28 | `/settings/billing`                       | ModulePaywall.tsx                       | **LOW**    | ✅ RESOLVED | PG-178      |
+
+**Current open ghost links**: None.
 
 ## 5. Issues: Broken In-Page Links
 
 Links in components that point to non-functional targets.
 
-| #    | Source                             | Target                | Issue                                                       | Severity   | Planned Task |
-| ---- | ---------------------------------- | --------------------- | ----------------------------------------------------------- | ---------- | ------------ |
-| B-01 | `agent-approvals/preview/page.tsx` | "View History" button | `<Button>` with no `href` or `onClick` — non-functional     | **LOW**    | --           |
-| B-02 | `billing-portal.tsx`               | `/billing/cancel`     | Link to non-existent page (= G-04)                          | **MEDIUM** | **PG-172**   |
-| B-03 | `billing-portal.tsx`               | `/billing/settings`   | Link to non-existent page (= G-05)                          | **MEDIUM** | **PG-172**   |
-| B-04 | `billing-portal.tsx`               | `/billing/plans`      | Link to non-existent page (= G-02, sidebar also links here) | **MEDIUM** | **PG-172**   |
+| #    | Source                             | Target                | Issue                                                        | Severity   | Status      |
+| ---- | ---------------------------------- | --------------------- | ------------------------------------------------------------ | ---------- | ----------- |
+| B-01 | `agent-approvals/preview/page.tsx` | "View History" button | `<Button>` with no `href` or `onClick` — non-functional      | **LOW**    | Open        |
+| B-02 | `billing-portal.tsx`               | `/billing/cancel`     | Previously linked to non-existent page (= G-04) — now exists | **MEDIUM** | ✅ RESOLVED |
+| B-03 | `billing-portal.tsx`               | `/billing/settings`   | Previously linked to non-existent page (= G-05) — now exists | **MEDIUM** | ✅ RESOLVED |
+| B-04 | `billing-portal.tsx`               | `/billing/plans`      | Previously linked to non-existent page (= G-02) — now exists | **MEDIUM** | ✅ RESOLVED |
 
 ---
 
@@ -400,7 +466,7 @@ How each module section can be initially reached by a user.
 | Notifications  |     --     |    --     |    YES    |                      --                       | **REACHABLE** |
 | Billing        |     --     |    --     |    --     |        Settings sidebar "More" section        | **REACHABLE** |
 | Developer Docs |     --     |    --     |    --     | Settings sidebar "More" section (SUPER_ADMIN) | **REACHABLE** |
-| Appointments   |     --     |    --     |    --     |            Redirect → `/calendar`             | **RESOLVED**  |
+| Appointments   |     --     |    --     |    --     |    Appointments sidebar (dedicated table)     | **REACHABLE** |
 
 ### Role-Based Sidebar Filtering
 
@@ -411,19 +477,40 @@ for Developer Docs (SUPER_ADMIN only).
 
 ---
 
-## 7. Planned Work (Sprint 16)
+## 7. Completed Work (Sprint 16)
 
-All ghost links are tracked as Sprint 16 tasks:
+All 28 ghost links tracked in Sprint 16 have been **implemented**. The
+corresponding `page.tsx` files now exist for all routes:
 
-| Task       | Pages                            | Routes                                                                                                                                       |
-| ---------- | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| **PG-172** | Billing ghost pages (5)          | `/billing/usage`, `/billing/plans`, `/billing/upgrade`, `/billing/cancel`, `/billing/settings`                                               |
-| **PG-173** | Ticket config pages (3)          | `/tickets/sla-policies`, `/tickets/types`, `/tickets/automations`                                                                            |
-| **PG-174** | Notification config pages (2)    | `/notifications/channels`, `/notifications/quiet-hours`                                                                                      |
-| **PG-175** | Deals trash page (1)             | `/deals/trash`                                                                                                                               |
-| **PG-176** | Governance quality sub-pages (3) | `/governance/quality-reports/lighthouse`, `/coverage`, `/performance`                                                                        |
-| **PG-177** | Analytics saved reports (3)      | `/analytics/saved/weekly`, `/monthly`, `/quarterly`                                                                                          |
-| **PG-178** | Module settings pages (11)       | `/settings/leads`, `/contacts`, `/accounts`, `/deals`, `/tickets`, `/documents`, `/reports`, `/billing`, `/appointments`, `/cases`, `/tasks` |
+| Task       | Pages                            | Routes                                                                                                                                       | Status  |
+| ---------- | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| **PG-172** | Billing ghost pages (5)          | `/billing/usage`, `/billing/plans`, `/billing/upgrade`, `/billing/cancel`, `/billing/settings`                                               | ✅ DONE |
+| **PG-173** | Ticket config pages (3)          | `/tickets/sla-policies`, `/tickets/types`, `/tickets/automations`                                                                            | ✅ DONE |
+| **PG-174** | Notification config pages (2)    | `/notifications/channels`, `/notifications/quiet-hours`                                                                                      | ✅ DONE |
+| **PG-175** | Deals trash page (1)             | `/deals/trash`                                                                                                                               | ✅ DONE |
+| **PG-176** | Governance quality sub-pages (3) | `/governance/quality-reports/lighthouse`, `/coverage`, `/performance`                                                                        | ✅ DONE |
+| **PG-177** | Analytics saved reports (3)      | `/analytics/saved/weekly`, `/monthly`, `/quarterly`                                                                                          | ✅ DONE |
+| **PG-178** | Module settings pages (11)       | `/settings/leads`, `/contacts`, `/accounts`, `/deals`, `/tickets`, `/documents`, `/reports`, `/billing`, `/appointments`, `/cases`, `/tasks` | ✅ DONE |
+
+Additionally, the following pages were built without a Sprint 16 task (docs not
+updated at ship time):
+
+- Accounts: `account-settings`, `account-tiers`, `territory-mapping`
+- AI: `ai-settings`, `approval-policies`, `model-config` (under
+  `/agent-approvals`)
+- Analytics: `report-templates`, `scheduled-reports`, `report-settings`
+- Appointments: dedicated `/appointments` section (separate from `/calendar`)
+- AUP: `/aup` public page
+- Calendar: `availability`, `event-types`, `calendar-settings`
+- Cases: `case-types`, `case-settings`, `case-workflows/[id]`,
+  `case-workflows/new`
+- Contacts: `contact-types`, `contact-settings`, `import-export`
+- Deals: `deal-stages`, `deal-settings`, `deal-automation`
+- Documents: `document-types`, `storage-policies`, `document-settings`
+- Email: `compose`, `templates`, `signatures`, `email-settings`
+- Governance: `quality-reports/trpc-benchmark`
+- Leads: `pipeline`, `routing`, `lead-settings`
+- Tasks: `task-types`, `task-settings`, `automation`
 
 ### Process Safeguards (implemented)
 
@@ -452,11 +539,11 @@ To prevent unreachable pages from shipping again:
 | Notifications      | `apps/web/src/components/header/notifications.tsx`            | Bell icon link                                             |
 | Layout files       | `apps/web/src/app/**/layout.tsx`                              | Which sidebar config is wired                              |
 | Page registry      | `docs/design/page-registry.md`                                | Planned pages with KPIs                                    |
-| Sitemap            | `docs/design/sitemap.md`                                      | Visual route map (68 pages)                                |
+| Sitemap            | `docs/design/sitemap.md`                                      | Visual route map (257 pages)                               |
 | Page map & flows   | `docs/design/PAGE_MAP_AND_FLOWS.md`                           | Complete page map + 42 user flows                          |
 | UI flow mapping    | `docs/design/ui-flow-mapping.md`                              | Route → Flow → Component → API matrix                      |
 | Sprint plan        | `apps/project-tracker/docs/metrics/_global/Sprint_plan_*.csv` | PG-\* task status                                          |
-| Dependency chains  | `docs/design/diagrams/complete-dependency-chains.md`          | UI → API dependencies                                      |
+| Dependency chains  | `docs/architecture/diagrams/complete-dependency-chains.md`    | UI → API dependencies                                      |
 | Billing components | `apps/web/src/components/billing/*.tsx`                       | In-page billing links                                      |
 | Case components    | `apps/web/src/components/cases/*.tsx`                         | In-page case links                                         |
 | Home components    | `apps/web/src/components/home/*.tsx`                          | Quick action links                                         |

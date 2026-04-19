@@ -41,15 +41,15 @@ build tRPC router, write tests, open PR.
 
 ### 3. AI Worker Development
 
-| Field               | Value                                                                  |
-| ------------------- | ---------------------------------------------------------------------- |
-| **Entrypoint**      | `pnpm --filter ai-worker dev`                                          |
-| **Ownership**       | AI Specialist                                                          |
-| **Prerequisites**   | Node 20+, pnpm 9+, OpenAI API key in env, Ollama running for local dev |
-| **Expected Output** | AI worker process ready to consume jobs                                |
-| **Key Files**       | `apps/ai-worker/src/chains/`, `apps/ai-worker/src/agents/`             |
-| **Testing**         | `pnpm --filter ai-worker test`                                         |
-| **Build**           | `pnpm --filter ai-worker build`                                        |
+| Field               | Value                                                                                                                                          |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Entrypoint**      | `pnpm --filter ai-worker dev`                                                                                                                  |
+| **Ownership**       | AI Specialist                                                                                                                                  |
+| **Prerequisites**   | Node 20+, pnpm 9+, LiteLLM proxy running (`docker compose -f infra/docker/docker-compose.litellm.yml up -d`) OR Ollama running for offline dev |
+| **Expected Output** | AI worker process ready to consume jobs                                                                                                        |
+| **Key Files**       | `apps/ai-worker/src/chains/`, `apps/ai-worker/src/agents/`                                                                                     |
+| **Testing**         | `pnpm --filter ai-worker test`                                                                                                                 |
+| **Build**           | `pnpm --filter ai-worker build`                                                                                                                |
 
 **Workflow**: Define chain/agent in `src/chains/` or `src/agents/`, add
 structured output schemas, write deterministic tests, open PR.

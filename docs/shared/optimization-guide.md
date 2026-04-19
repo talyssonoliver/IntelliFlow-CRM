@@ -665,6 +665,6 @@ alerts:
 
 ## Related Documentation
 
-- [Supabase Usage Report](../../artifacts/reports/supabase-usage-report.json)
-- [Cost Projection Analysis](../../artifacts/reports/cost-projection.json)
-- [Upgrade Triggers Configuration](../../artifacts/misc/upgrade-triggers.yaml)
+- [Supabase Usage Report](../../docs/planning/financial/supabase-usage-report.json)
+- [Cost Projection Analysis](../../docs/planning/financial/cost-projection.json)
+- [Upgrade Triggers Configuration](../../infra/monitoring/upgrade-triggers.yaml)

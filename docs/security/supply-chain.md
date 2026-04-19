@@ -390,7 +390,7 @@ For compliance audits, the following can be provided:
 
 - [Artifact Signing and Provenance](./signing.md)
 - [OWASP Checklist - A06 Vulnerable Components](./owasp-checklist.md)
-- [Security Baseline Configuration](../../artifacts/misc/security-baseline.json)
+- [Security Baseline Configuration](../../infra/monitoring/security-baseline.json)
 - [Zero Trust Design](./zero-trust-design.md)
 - [SBOM Workflow](../../.github/workflows/security-sbom.yml)
 - [Signing Workflow](../../.github/workflows/signing.yml)

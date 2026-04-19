@@ -764,7 +764,7 @@ Automated tests for common vulnerabilities:
 
 - [Supabase RLS Documentation](https://supabase.com/docs/guides/auth/row-level-security)
 - [PostgreSQL RLS Policies](https://www.postgresql.org/docs/current/ddl-rowsecurity.html)
-- [ADR-009: Zero Trust Security](../planning/adr/ADR-009-zero-trust-security.md)
+- [ADR-009: Zero Trust Security](../architecture/adr/ADR-009-zero-trust-security.md)
 - [Multi-Tenancy Strategy](../architecture/multi-tenancy.md)
 - Task: IFC-072 in Sprint_plan.csv
 

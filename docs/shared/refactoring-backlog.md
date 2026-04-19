@@ -159,9 +159,9 @@ A refactoring item is considered complete when:
 
 - [Complexity Metrics](../../artifacts/metrics/complexity-metrics.json)
 - [SonarQube Debt Report](../../artifacts/reports/sonarqube-debt-report.html)
-- [Team Velocity](../../artifacts/misc/team-velocity.csv)
+- [Team Velocity](../../artifacts/reports/team-velocity.csv)
 - [Quality Gates](../operations/quality-gates.md)
-- [TDD Guidelines](../tdd-guidelines.md)
+- [TDD Guidelines](../development/tdd-guidelines.md)
 
 ---
 

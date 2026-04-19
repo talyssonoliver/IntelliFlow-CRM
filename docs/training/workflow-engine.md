@@ -731,8 +731,8 @@ to durable execution.
 ## Resources
 
 - [Temporal TypeScript SDK](https://docs.temporal.io/typescript)
-- [ADR-005: Workflow Engine Choice](../planning/adr/ADR-005-workflow-engine.md)
-- [Comparison Matrix](../../artifacts/misc/workflow-comparison-matrix.md)
+- [ADR-005: Workflow Engine Choice](../architecture/adr/ADR-005-workflow-engine.md)
+- [Comparison Matrix](../../docs/planning/workflow-comparison-matrix.md)
 - [Troubleshooting Runbook](../operations/runbooks/workflow-troubleshooting.md)
 
 ---

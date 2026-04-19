@@ -68,7 +68,7 @@ tenantProcedure.query(async ({ ctx }) => {
 
 **Implementation:**
 
-- `packages/db/prisma/migrations/tenant-rls.sql`
+- `infra/supabase/rls-policies.sql`
 - `infra/supabase/rls-policies.sql`
 
 PostgreSQL Row Level Security (RLS) provides database-level enforcement:
@@ -361,7 +361,7 @@ CREATE INDEX idx_documents_owner ON documents("ownerId");
 ## References
 
 - [RLS Policies Documentation](./rls-policies.md)
-- [Zero Trust Security ADR](../planning/adr/ADR-009-zero-trust-security.md)
+- [Zero Trust Security ADR](../architecture/adr/ADR-009-zero-trust-security.md)
 - [Supabase RLS Guide](https://supabase.com/docs/guides/auth/row-level-security)
 - [PostgreSQL RLS Documentation](https://www.postgresql.org/docs/current/ddl-rowsecurity.html)
 

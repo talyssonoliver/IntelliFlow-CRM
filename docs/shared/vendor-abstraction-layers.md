@@ -480,7 +480,8 @@ pnpm run test:integration
 
 **Key Documents**:
 
-- Hexagonal Architecture: `docs/architecture/adr/001-hexagonal-architecture.md`
+- Hexagonal Architecture:
+  `docs/architecture/adr/ADR-047-hexagonal-architecture.md`
 - Domain Driven Design Context Map: `docs/shared/context-map.puml`
 - Artifact Conventions: `docs/architecture/artifact-conventions.md`
 

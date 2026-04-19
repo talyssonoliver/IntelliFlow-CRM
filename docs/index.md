@@ -51,10 +51,9 @@ intelliFlow-CRM/
   environment
 - [Architecture](./architecture/overview.md) - Learn about the system
   architecture
-- [API Reference](./api/overview.md) - Explore the tRPC API
-- [AI Integration](./ai/overview.md) - Understand AI components and agents
-- [Development Guide](./development/overview.md) - Best practices and patterns
-- [Deployment](./deployment/overview.md) - Deploy to production
+- [API Reference](./api/trpc-routes.md) - Explore the tRPC API
+- [AI Integration](./ai-architecture.md) - Understand AI components and agents
+- [Development Guide](./dev-guide.md) - Best practices and patterns
 
 ## Technology Stack
 
@@ -77,8 +76,9 @@ intelliFlow-CRM/
 
 - **LangChain** for AI chains and pipelines
 - **CrewAI** for multi-agent collaboration
-- **OpenAI API** for production
-- **Ollama** for local development
+- **LiteLLM proxy** as unified inference endpoint (port 4000)
+- **OpenAI / Anthropic / Mistral / Groq** routed by LiteLLM tier
+- **Ollama** as offline fallback only
 - **pgvector** for embeddings storage
 
 ### Infrastructure
@@ -125,8 +125,8 @@ The project is optimized for AI-assisted development:
 
 ## Contributing
 
-We welcome contributions! Please read our
-[Contributing Guide](./contributing.md) to get started.
+We welcome contributions! See the project README and open a pull request on
+[GitHub](https://github.com/yourusername/intelliflow-crm).
 
 ## License
 

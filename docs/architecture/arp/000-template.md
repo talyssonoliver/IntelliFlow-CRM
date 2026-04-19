@@ -383,5 +383,5 @@ Do NOT create ARPs for:
 
 **Related Templates:**
 
-- [ADR Template](../adr/000-template.md) - For documenting decisions
+- [ADR Template](../adr/template.md) - For documenting decisions
 - [Decision Workflow](../decision-workflow.md) - Process for making decisions

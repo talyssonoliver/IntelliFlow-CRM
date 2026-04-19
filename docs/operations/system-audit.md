@@ -8,7 +8,7 @@ This repo uses a tiered, evidence-first audit framework:
 - Sprint 0 views: `tools/audit/status_snapshot.py` and
   `tools/audit/sprint0_audit.py`
 - Attestations (per task): `tools/audit/attestation.py` (schema:
-  `docs/attestation-schema.yaml`)
+  `apps/project-tracker/docs/metrics/schemas/attestation-schema.yaml`)
 
 ## Local usage
 
@@ -37,8 +37,8 @@ python tools/audit/attestation.py generate --task-id IFC-160 --run-id "$RUN_ID" 
 python tools/audit/attestation.py validate --task-id IFC-160
 ```
 
-See `docs/ops/audit-performance-and-iteration.md` for affected-scope outputs,
-caching, resume, and concurrency details.
+See `docs/operations/audit-performance-and-iteration.md` for affected-scope
+outputs, caching, resume, and concurrency details.
 
 ## What reviewers look at
 

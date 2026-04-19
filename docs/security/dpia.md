@@ -629,7 +629,7 @@ and timeline outlined in Section 10.
 **Related Documents:**
 
 - [Data Flows Documentation](./data-flows.md)
-- [GDPR Compliance Checklist](../compliance/gdpr-checklist.md)
-- [Retention Policy](../compliance/retention-policy.md)
-- [ADR-007: Data Governance](../planning/adr/ADR-007-data-governance.md)
-- [ADR-008: Audit Logging](../planning/adr/ADR-008-audit-logging.md)
+- [GDPR Compliance Checklist](../compliance-and-governance/compliance/gdpr-checklist.md)
+- [Retention Policy](../compliance-and-governance/compliance/retention-policy.md)
+- [ADR-007: Data Governance](../architecture/adr/ADR-007-data-governance.md)
+- [ADR-008: Audit Logging](../architecture/adr/ADR-008-audit-logging.md)

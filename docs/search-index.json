@@ -7,7 +7,7 @@
     {
       "id": "architecture-adr-001",
       "title": "ADR-001: Modern Stack Selection",
-      "path": "/docs/planning/adr/ADR-001-modern-stack",
+      "path": "/docs/architecture/adr/ADR-001-modern-stack",
       "content": "Architecture decision record for selecting Next.js, tRPC, Prisma, and Supabase as the core technology stack.",
       "tags": ["adr", "architecture", "stack", "next.js", "trpc"],
       "section": "Architecture"
@@ -15,7 +15,7 @@
     {
       "id": "architecture-adr-002",
       "title": "ADR-002: Domain-Driven Design",
-      "path": "/docs/planning/adr/ADR-002-domain-driven-design",
+      "path": "/docs/architecture/adr/ADR-002-domain-driven-design",
       "content": "Decision to adopt DDD principles with hexagonal architecture for domain isolation and maintainability.",
       "tags": ["adr", "ddd", "hexagonal", "architecture"],
       "section": "Architecture"
@@ -23,7 +23,7 @@
     {
       "id": "architecture-adr-003",
       "title": "ADR-003: Type-Safe API Design",
-      "path": "/docs/planning/adr/ADR-003-type-safe-api-design",
+      "path": "/docs/architecture/adr/ADR-003-type-safe-api-design",
       "content": "Using tRPC for end-to-end type safety between frontend and backend APIs.",
       "tags": ["adr", "trpc", "typescript", "api"],
       "section": "Architecture"
@@ -31,7 +31,7 @@
     {
       "id": "architecture-adr-009",
       "title": "ADR-009: Zero Trust Security",
-      "path": "/docs/planning/adr/ADR-009-zero-trust-security",
+      "path": "/docs/architecture/adr/ADR-009-zero-trust-security",
       "content": "Implementing zero trust security model with defense in depth across all layers.",
       "tags": ["adr", "security", "zero-trust", "rls"],
       "section": "Architecture"

@@ -23,34 +23,50 @@ underspend** compared to budget, saving approximately $83/week.
 
 ## 1. Active Optimizations
 
-### 1.1 Ollama Local LLM (ACTIVE)
+### 1.1 LiteLLM Free-Tier Routing (ACTIVE)
 
 **Savings: $35/week | $1,820/year**
 
 **Implementation:**
 
-- Ollama installed for local development and testing
-- Models: Llama 3.1, Mistral for general tasks
-- OpenAI reserved for production and accuracy-critical operations
+- LiteLLM proxy (`infra/litellm/config.yaml`) routes non-PII, non-production
+  inference to Groq, Gemini (non-EU tenants), and OpenRouter `:free` models at
+  zero token cost.
+- Chain and agent code calls `createLLM(purpose, 'free')` from
+  `apps/ai-worker/src/lib/llm-factory.ts`; the proxy resolves the concrete
+  model. No code changes are needed to switch models.
+- OpenAI / Anthropic (Claude Sonnet) reserved for `premium`-tier inference only.
 
 **Configuration:**
 
 ```yaml
-# docker-compose.ollama.yml
-services:
-  ollama:
-    image: ollama/ollama:latest
-    ports:
-      - '11434:11434'
-    volumes:
-      - ollama-data:/root/.ollama
+# infra/litellm/config.yaml (excerpt)
+model_list:
+  - model_name: free
+    litellm_params:
+      model: groq/llama3-8b-8192
+  - model_name: standard
+    litellm_params:
+      model: mistral/mistral-small-latest
+  - model_name: premium
+    litellm_params:
+      model: anthropic/claude-sonnet-4-5
 ```
+
+Start the proxy:
+`docker compose -f infra/docker/docker-compose.litellm.yml up -d` Smoke-test:
+`curl http://localhost:4000/v1/models`
+
+**Compliance gate:** Gemini free tier trains on prompts — must not receive
+EU-tenant PII. Gate all Gemini routing behind `NODE_ENV !== 'production'` and
+use Mistral (standard tier) for EU-DPA workloads.
 
 **Best Practices:**
 
-- Use Ollama for: Development, testing, demos, non-critical scoring
-- Use OpenAI for: Production scoring, customer-facing AI, complex reasoning
-- Switch threshold: Confidence score < 0.8 → escalate to OpenAI
+- Use `free` tier for: development, testing, demos, non-critical scoring
+- Use `standard` tier for: EU-PII traffic, routine production scoring
+- Use `premium` tier for: customer-facing AI, complex multi-step reasoning
+- Switch threshold: Confidence < 0.8 → re-run at `standard` or `premium` tier
 
 ---
 
@@ -211,7 +227,8 @@ await promptCache.set(semanticKey, response, { ttl: 3600 });
 **Automated Alerts:**
 
 - 80% of daily OpenAI budget → Slack notification
-- 100% of daily OpenAI budget → Auto-switch to Ollama
+- 100% of daily OpenAI budget → Auto-route to LiteLLM free tier
+  (Groq/Gemini/OpenRouter)
 - Any service degradation → PagerDuty alert
 
 ---
@@ -220,7 +237,8 @@ await promptCache.set(semanticKey, response, { ttl: 3600 });
 
 **Every Monday:**
 
-1. Generate weekly cost report (`artifacts/reports/weekly-cost-report.csv`)
+1. Generate weekly cost report
+   (`docs/planning/financial/weekly-cost-report.csv`)
 2. Compare actual vs budget
 3. Identify cost anomalies
 4. Update projections
@@ -254,7 +272,7 @@ await promptCache.set(semanticKey, response, { ttl: 3600 });
 
 **Tier 1: Soft Measures**
 
-- Switch all dev/test to Ollama
+- Switch all dev/test to LiteLLM free tier (Groq/Gemini)
 - Enable aggressive caching
 - Reduce AI feature usage temporarily
 - Defer non-critical background jobs
@@ -290,13 +308,13 @@ await promptCache.set(semanticKey, response, { ttl: 3600 });
 
 ### 5.1 Optimization ROI
 
-| Optimization  | Investment  | Annual Savings | ROI      |
-| ------------- | ----------- | -------------- | -------- |
-| Ollama Setup  | 4 hours     | $1,820         | 45,500%  |
-| Supabase Free | 0 hours     | $1,300         | Infinite |
-| Vercel Hobby  | 0 hours     | $1,040         | Infinite |
-| Turborepo     | 2 hours     | $780           | 19,500%  |
-| **Total**     | **6 hours** | **$4,940**     | **N/A**  |
+| Optimization         | Investment  | Annual Savings | ROI      |
+| -------------------- | ----------- | -------------- | -------- |
+| LiteLLM Free Routing | 4 hours     | $1,820         | 45,500%  |
+| Supabase Free        | 0 hours     | $1,300         | Infinite |
+| Vercel Hobby         | 0 hours     | $1,040         | Infinite |
+| Turborepo            | 2 hours     | $780           | 19,500%  |
+| **Total**            | **6 hours** | **$4,940**     | **N/A**  |
 
 ### 5.2 Cost per Feature
 
@@ -343,9 +361,9 @@ await promptCache.set(semanticKey, response, { ttl: 3600 });
 
 All cost decisions are documented in:
 
-- `artifacts/reports/weekly-cost-report.csv` - Weekly tracking
+- `docs/planning/financial/weekly-cost-report.csv` - Weekly tracking
 - `artifacts/misc/invoice-tracker.csv` - Invoice reconciliation
-- `artifacts/misc/usage-alerts-config.yaml` - Alert configuration
+- `infra/monitoring/usage-alerts-config.yaml` - Alert configuration
 - Git commit history for configuration changes
 
 ### 7.2 Approval Requirements
@@ -363,11 +381,11 @@ All cost decisions are documented in:
 
 ### A. Related Documents
 
-- Budget Approval: `artifacts/reports/budget-approval.md`
-- Cost Projection: `artifacts/reports/cost-projection.json`
-- ROI Projection: `artifacts/reports/roi-projection.md`
-- Weekly Cost Report: `artifacts/reports/weekly-cost-report.csv`
-- Usage Alerts: `artifacts/misc/usage-alerts-config.yaml`
+- Budget Approval: `docs/planning/financial/budget-approval.md`
+- Cost Projection: `docs/planning/financial/cost-projection.json`
+- ROI Projection: `docs/planning/financial/roi-projection.md`
+- Weekly Cost Report: `docs/planning/financial/weekly-cost-report.csv`
+- Usage Alerts: `infra/monitoring/usage-alerts-config.yaml`
 - Invoice Tracker: `artifacts/misc/invoice-tracker.csv`
 
 ### B. Contact Information

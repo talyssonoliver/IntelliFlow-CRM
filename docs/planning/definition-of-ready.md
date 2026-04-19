@@ -327,7 +327,7 @@ In rare cases, a story may enter a sprint without meeting full DoR if:
 
 - **PRD Template**: `docs/planning/prd-template.md`
 - **User Journey Template**: `docs/planning/user-journey-template.md`
-- **ADR Template**: `docs/planning/adr/000-template.md`
+- **ADR Template**: `docs/architecture/adr/template.md`
 
 ### Sprint Plan Integration
 

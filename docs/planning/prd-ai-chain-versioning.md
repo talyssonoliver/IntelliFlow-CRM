@@ -115,6 +115,7 @@ router, Zep memory adapter).
 - PG-104 (Settings Infrastructure) - PLANNED (dependency for settings route).
 - ADR-022 (AI Features Quality).
 - ADR-028 (AI Chain Versioning).
+- ADR-048 (Hybrid AI Inference).
 
 ## Risks / Mitigations
 
