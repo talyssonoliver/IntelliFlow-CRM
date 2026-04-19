@@ -25,6 +25,7 @@ import {
   deleteAccountTagSchema,
   accountAutomationSettingsSchema,
 } from '@intelliflow/validators';
+import { assertCanCreateTag, loadAccountAutomation } from './account-automation';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -321,10 +322,11 @@ const DEFAULT_AUTOMATION = {
   autoCapitalizeAccountNames: true,
   notifyOnDuplicate: true,
   restrictTagCreationToAdmins: false,
-  aiIndustryInference: true,
+  // AI — opt-in stance per 20260414140000_account_settings_hardening.
+  aiIndustryInference: false,
   aiEnrichment: false,
-  aiTagSuggestions: true,
-  aiInsightGeneration: true,
+  aiTagSuggestions: false,
+  aiInsightGeneration: false,
   aiAccountScoring: false,
 };
 
@@ -341,7 +343,6 @@ const duplicateRulesRouter = createTRPCRouter({
 
     await ctx.prismaWithTenant.accountDuplicateRule.createMany({
       data: DEFAULT_DUPLICATE_RULES.map((r) => ({ ...r, tenantId, isActive: true })),
-      skipDuplicates: true,
     });
     return ctx.prismaWithTenant.accountDuplicateRule.findMany({
       where: { tenantId },
@@ -392,7 +393,6 @@ const requiredFieldsRouter = createTRPCRouter({
 
     await ctx.prismaWithTenant.accountRequiredField.createMany({
       data: DEFAULT_REQUIRED_FIELDS.map((f) => ({ ...f, tenantId })),
-      skipDuplicates: true,
     });
     return ctx.prismaWithTenant.accountRequiredField.findMany({ where: { tenantId } });
   }),
@@ -437,11 +437,20 @@ const tagsRouter = createTRPCRouter({
 
   create: tenantProcedure.input(createAccountTagSchema).mutation(async ({ ctx, input }) => {
     const tenantId = ctx.tenant.tenantId;
+
+    // PG-183: enforce "restrict tag creation to admins" toggle before
+    // touching the DB.
+    const flags = await loadAccountAutomation(ctx);
+    assertCanCreateTag(ctx, flags);
+
     const conflict = await ctx.prismaWithTenant.accountTag.findUnique({
       where: { tenantId_name: { tenantId, name: input.name } },
     });
     if (conflict) {
-      throw new TRPCError({ code: 'CONFLICT', message: `A tag named "${input.name}" already exists` });
+      throw new TRPCError({
+        code: 'CONFLICT',
+        message: `A tag named "${input.name}" already exists`,
+      });
     }
     let sortOrder = input.sortOrder;
     if (sortOrder === undefined) {

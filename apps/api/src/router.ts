@@ -14,10 +14,12 @@ import { accountRouter } from './modules/account/account.router';
 import { accountSettingsRouter } from './modules/account/account-settings.router';
 import { opportunityRouter } from './modules/opportunity/opportunity.router';
 import { pipelineConfigRouter } from './modules/opportunity/pipeline-config.router';
+import { dealSettingsRouter } from './modules/opportunity/deal-settings.router';
 import { taskRouter } from './modules/task/task.router';
 import { ticketRouter } from './modules/ticket/ticket.router';
 import { ticketRoutingRouter } from './modules/ticket/ticket-routing.router';
 import { ticketConfigRouter } from './modules/ticket/ticket-config.router';
+import { ticketSettingsRouter } from './modules/ticket/ticket-settings.router';
 import { analyticsRouter } from './modules/analytics/analytics.router';
 import { healthRouter } from './modules/misc/health.router';
 import { systemRouter } from './modules/misc/system.router';
@@ -26,6 +28,7 @@ import subscriptionRouter from './shared/subscription-demo';
 import { appointmentsRouter } from './modules/legal/appointments.router';
 import { casesRouter } from './modules/legal/cases.router';
 import { documentsRouter } from './modules/legal/documents.router';
+import { documentSettingsRouter } from './modules/legal/document-settings.router';
 import { uploadRouter } from './modules/documents/upload.router';
 import { agentRouter } from './modules/agent/agent.router';
 import { conversationRouter } from './modules/agent/conversation.router';
@@ -126,6 +129,8 @@ export const appRouter = createTRPCRouter({
   leadSettings: leadSettingsRouter, // PG-178: Lead Settings Configuration
   contactSettings: contactSettingsRouter, // PG-182: Contact Settings Configuration
   accountSettings: accountSettingsRouter, // PG-183: Account Settings Configuration
+  dealSettings: dealSettingsRouter, // PG-184: Deal Settings Configuration
+  ticketSettings: ticketSettingsRouter, // PG-185: Ticket Settings Configuration
 
   // Analytics & Reporting
   analytics: analyticsRouter,
@@ -134,6 +139,7 @@ export const appRouter = createTRPCRouter({
   cases: casesRouter,
   appointments: appointmentsRouter,
   documents: documentsRouter,
+  documentSettings: documentSettingsRouter, // PG-186: Document Settings Configuration
   upload: uploadRouter, // IFC-094: File upload endpoint (AC-005)
 
   // AI & Automation

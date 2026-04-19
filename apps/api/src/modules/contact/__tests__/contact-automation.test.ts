@@ -5,13 +5,14 @@
  * paths use to honor the contact-settings toggles.
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
   assertCanCreateTag,
   assertCanDeleteContact,
   assertRequiredContactFields,
   capitalizeName,
   normalizePhone,
+  notifyContactReassignment,
 } from '../contact-automation';
 
 const ON = { normalizePhoneNumbers: true } as const;
@@ -77,7 +78,7 @@ describe('assertCanDeleteContact', () => {
   it('throws PRECONDITION_FAILED when there are active deals and toggle is on', () => {
     expect(() =>
       assertCanDeleteContact({ activeOpportunities: 2 }, { preventDeleteWithOpenDeals: true })
-    ).toThrow(/active opportunity/i);
+    ).toThrow(/associated opportunities/i);
   });
 });
 
@@ -118,11 +119,7 @@ describe('assertRequiredContactFields', () => {
 
   it('create: passes when all required fields are present', () => {
     expect(() =>
-      assertRequiredContactFields(
-        { email: 'a@b.com', phone: '+4412345' },
-        required,
-        'create'
-      )
+      assertRequiredContactFields({ email: 'a@b.com', phone: '+4412345' }, required, 'create')
     ).not.toThrow();
   });
 
@@ -134,9 +131,7 @@ describe('assertRequiredContactFields', () => {
   });
 
   it('update: rejects explicit blank on a required field', () => {
-    expect(() =>
-      assertRequiredContactFields({ phone: '' }, required, 'update')
-    ).toThrow(/phone/);
+    expect(() => assertRequiredContactFields({ phone: '' }, required, 'update')).toThrow(/phone/);
   });
 
   it('update: treats explicit undefined as "do not touch"', () => {
@@ -148,8 +143,49 @@ describe('assertRequiredContactFields', () => {
   });
 
   it('update: rejects explicit null on a required field', () => {
-    expect(() =>
-      assertRequiredContactFields({ phone: null }, required, 'update')
-    ).toThrow(/phone/);
+    expect(() => assertRequiredContactFields({ phone: null }, required, 'update')).toThrow(/phone/);
+  });
+});
+
+describe('notifyContactReassignment', () => {
+  const args = {
+    tenantId: 'tenant-1',
+    contactId: 'contact-1',
+    contactName: 'Jane Doe',
+    previousOwnerId: 'user-a',
+    nextOwnerId: 'user-b',
+    actingUserId: 'user-admin',
+  };
+
+  it('no-op when the flag is off', async () => {
+    const create = vi.fn(async () => ({}));
+    await notifyContactReassignment(args, { notifyOnOwnerChange: false }, create);
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  it('no-op when previous and next owner are the same', async () => {
+    const create = vi.fn(async () => ({}));
+    await notifyContactReassignment(
+      { ...args, previousOwnerId: 'same', nextOwnerId: 'same' },
+      { notifyOnOwnerChange: true },
+      create
+    );
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  it('notifies both owners when flag is on and owners differ', async () => {
+    const create = vi.fn(async () => ({}));
+    await notifyContactReassignment(args, { notifyOnOwnerChange: true }, create as any);
+    expect(create).toHaveBeenCalledTimes(2);
+    const calls = create.mock.calls as unknown as Array<
+      [{ userId: string; type: string; entityType: string; entityId: string }]
+    >;
+    const recipients = calls.map((c) => c[0].userId).sort();
+    expect(recipients).toEqual(['user-a', 'user-b']);
+    for (const call of calls) {
+      expect(call[0].type).toBe('contact_reassigned');
+      expect(call[0].entityType).toBe('contact');
+      expect(call[0].entityId).toBe('contact-1');
+    }
   });
 });

@@ -10,6 +10,7 @@
  * Uses LeadService from application layer (hexagonal architecture)
  */
 
+import { context as otelContext, propagation } from '@opentelemetry/api';
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { Prisma } from '@intelliflow/db';
@@ -476,6 +477,8 @@ export const leadRouter = createTRPCRouter({
           port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
         },
       });
+      const _otelCarrierCreate: Record<string, string> = {};
+      propagation.inject(otelContext.active(), _otelCarrierCreate);
       await queue.add('score-lead', {
         leadId: result.value.id.value,
         tenantId: typedCtx.tenant.tenantId,
@@ -489,6 +492,7 @@ export const leadRouter = createTRPCRouter({
           phone: input.phone?.value,
         },
         correlationId: `lead-create-${result.value.id.value}`,
+        _otelCarrier: _otelCarrierCreate,
       });
       await queue.close();
     })().catch(() => {});
@@ -529,7 +533,7 @@ export const leadRouter = createTRPCRouter({
         files: {
           orderBy: { uploadedAt: 'desc' },
         },
-        aiInsight: true,
+        aiInsights: { take: 1 },
         tasks: {
           where: { status: { not: 'COMPLETED' } },
           orderBy: { dueDate: 'asc' },
@@ -545,8 +549,10 @@ export const leadRouter = createTRPCRouter({
       });
     }
 
+    const aiInsightRow = lead.aiInsights?.[0] ?? null;
+
     // Derive AI insights when none exist in DB (ensures entity pages always show data)
-    if (!lead.aiInsight) {
+    if (!aiInsightRow) {
       const derived = deriveLeadInsights({
         score: lead.score ?? 0,
         confidence: 0.5,
@@ -572,7 +578,7 @@ export const leadRouter = createTRPCRouter({
       // Fire-and-forget: persist so future visits read from DB
       typedCtx.prismaWithTenant.leadAIInsight
         ?.upsert({
-          where: { leadId: lead.id },
+          where: { leadId_tenantId: { leadId: lead.id, tenantId: typedCtx.tenant.tenantId } },
           create: {
             leadId: lead.id,
             tenantId: typedCtx.tenant.tenantId,
@@ -583,7 +589,7 @@ export const leadRouter = createTRPCRouter({
         })
         ?.catch(() => {}); // Best-effort persistence — silently ignore
 
-      return { ...lead, aiInsight: syntheticInsight };
+      return { ...lead, aiInsights: [syntheticInsight] };
     }
 
     return lead;
@@ -693,6 +699,8 @@ export const leadRouter = createTRPCRouter({
           port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
         },
       });
+      const _otelCarrierUpdate: Record<string, string> = {};
+      propagation.inject(otelContext.active(), _otelCarrierUpdate);
       await queue.add('score-lead', {
         leadId: id,
         tenantId: typedCtx.tenant.tenantId,
@@ -706,6 +714,7 @@ export const leadRouter = createTRPCRouter({
           phone: lead.phone?.value,
         },
         correlationId: `lead-update-${id}`,
+        _otelCarrier: _otelCarrierUpdate,
       });
       await queue.close();
     })().catch(() => {});
@@ -1027,7 +1036,9 @@ export const leadRouter = createTRPCRouter({
           });
 
           await typedCtx.prismaWithTenant.leadAIInsight.upsert({
-            where: { leadId: input.leadId },
+            where: {
+              leadId_tenantId: { leadId: input.leadId, tenantId: typedCtx.tenant.tenantId },
+            },
             update: {
               ...insights,
               recommendations: insights.recommendations,

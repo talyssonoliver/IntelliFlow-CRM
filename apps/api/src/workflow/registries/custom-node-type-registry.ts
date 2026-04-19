@@ -16,10 +16,7 @@
  * at the moment of validation.
  */
 
-import {
-  CustomNodeTypeDescriptorSchema,
-  type CustomNodeTypeDescriptor,
-} from '@intelliflow/domain';
+import { CustomNodeTypeDescriptorSchema, type CustomNodeTypeDescriptor } from '@intelliflow/domain';
 import type { PrismaClient } from '@intelliflow/db';
 
 type TenantId = string;
@@ -28,7 +25,10 @@ export class CustomNodeTypeRegistry {
   private readonly byTenant: Map<TenantId, Map<string, CustomNodeTypeDescriptor>> = new Map();
 
   /** Hydrate a tenant's cache from Prisma. Idempotent — safe to call on cache hit. */
-  async loadTenant(prisma: Pick<PrismaClient, 'customNodeType'>, tenantId: TenantId): Promise<void> {
+  async loadTenant(
+    prisma: Pick<PrismaClient, 'customNodeType'>,
+    tenantId: TenantId
+  ): Promise<void> {
     if (this.byTenant.has(tenantId)) return;
     const rows = await prisma.customNodeType.findMany({
       where: { tenantId, isActive: true },

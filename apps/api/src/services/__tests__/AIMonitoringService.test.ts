@@ -13,6 +13,9 @@ const mockPrisma = {
   },
 } as any;
 
+/** Shared tenantId used across all service tests. */
+const TEST_TENANT_ID = 'tenant-test-001';
+
 describe('AIMonitoringService', () => {
   let service: AIMonitoringService;
 
@@ -28,7 +31,7 @@ describe('AIMonitoringService', () => {
 
   describe('getStatus', () => {
     it('returns healthy status with available: true when no events', async () => {
-      const result = await service.getStatus();
+      const result = await service.getStatus({ tenantId: TEST_TENANT_ID });
 
       expect(result.available).toBe(true);
       expect(result.healthy).toBe(true);
@@ -48,7 +51,7 @@ describe('AIMonitoringService', () => {
         .mockResolvedValueOnce(0) // hallucination flagged
         .mockResolvedValueOnce(2); // drift flagged
 
-      const result = await service.getStatus();
+      const result = await service.getStatus({ tenantId: TEST_TENANT_ID });
 
       expect(result.available).toBe(true);
       expect(result.drift.trackedMetrics).toBe(10);
@@ -65,7 +68,7 @@ describe('AIMonitoringService', () => {
         .mockResolvedValueOnce(10) // hallucination flagged (10%)
         .mockResolvedValueOnce(0); // drift flagged
 
-      const result = await service.getStatus();
+      const result = await service.getStatus({ tenantId: TEST_TENANT_ID });
 
       expect(result.healthy).toBe(false);
       expect(result.issues.length).toBeGreaterThan(0);
@@ -95,7 +98,7 @@ describe('AIMonitoringService', () => {
       ];
       mockPrisma.aIMonitoringEvent.findMany.mockResolvedValue(mockEvents);
 
-      const result = await service.getDriftMetrics({ limit: 10 });
+      const result = await service.getDriftMetrics({ limit: 10, tenantId: TEST_TENANT_ID });
 
       expect(result.available).toBe(true);
       expect(result.status.trackedMetrics).toBe(1);
@@ -110,7 +113,7 @@ describe('AIMonitoringService', () => {
     it('returns empty results gracefully on empty DB', async () => {
       mockPrisma.aIMonitoringEvent.findMany.mockResolvedValue([]);
 
-      const result = await service.getDriftMetrics();
+      const result = await service.getDriftMetrics({ tenantId: TEST_TENANT_ID });
 
       expect(result.available).toBe(true);
       expect(result.status.trackedMetrics).toBe(0);
@@ -131,7 +134,7 @@ describe('AIMonitoringService', () => {
       }));
       mockPrisma.aIMonitoringEvent.findMany.mockResolvedValue(mockEvents);
 
-      const result = await service.getLatencyMetrics();
+      const result = await service.getLatencyMetrics({ tenantId: TEST_TENANT_ID });
 
       expect(result.available).toBe(true);
       expect(result.stats.sampleCount).toBe(100);
@@ -144,7 +147,7 @@ describe('AIMonitoringService', () => {
     it('returns empty stats on empty DB', async () => {
       mockPrisma.aIMonitoringEvent.findMany.mockResolvedValue([]);
 
-      const result = await service.getLatencyMetrics();
+      const result = await service.getLatencyMetrics({ tenantId: TEST_TENANT_ID });
 
       expect(result.available).toBe(true);
       expect(result.stats.sampleCount).toBe(0);
@@ -162,7 +165,11 @@ describe('AIMonitoringService', () => {
       ];
       mockPrisma.aIMonitoringEvent.findMany.mockResolvedValue(mockEvents);
 
-      const result = await service.getLatencyTrend({ periodMinutes: 60, bucketMinutes: 5 });
+      const result = await service.getLatencyTrend({
+        periodMinutes: 60,
+        bucketMinutes: 5,
+        tenantId: TEST_TENANT_ID,
+      });
 
       expect(result.available).toBe(true);
       expect(result.trend.length).toBeGreaterThan(0);
@@ -177,7 +184,7 @@ describe('AIMonitoringService', () => {
     it('returns empty trend on no events', async () => {
       mockPrisma.aIMonitoringEvent.findMany.mockResolvedValue([]);
 
-      const result = await service.getLatencyTrend();
+      const result = await service.getLatencyTrend({ tenantId: TEST_TENANT_ID });
 
       expect(result.available).toBe(true);
       expect(result.trend).toEqual([]);
@@ -218,7 +225,7 @@ describe('AIMonitoringService', () => {
       ];
       mockPrisma.aIMonitoringEvent.findMany.mockResolvedValue(mockEvents);
 
-      const result = await service.getHallucinationReport();
+      const result = await service.getHallucinationReport({ tenantId: TEST_TENANT_ID });
 
       expect(result.available).toBe(true);
       expect(result.stats.totalChecks).toBe(2);
@@ -241,7 +248,7 @@ describe('AIMonitoringService', () => {
       }));
       mockPrisma.aIMonitoringEvent.findMany.mockResolvedValue(mockEvents);
 
-      const result = await service.getHallucinationReport();
+      const result = await service.getHallucinationReport({ tenantId: TEST_TENANT_ID });
 
       expect(result.stats.kpiCompliant).toBe(true);
     });
@@ -260,7 +267,7 @@ describe('AIMonitoringService', () => {
         .mockResolvedValueOnce(costEvents)
         .mockResolvedValueOnce(valueEvents);
 
-      const result = await service.getROIMetrics();
+      const result = await service.getROIMetrics({ tenantId: TEST_TENANT_ID });
 
       expect(result.available).toBe(true);
       expect(result.roi.totalCost).toBe(30);
@@ -274,7 +281,7 @@ describe('AIMonitoringService', () => {
     it('returns zero ROI when no events exist', async () => {
       mockPrisma.aIMonitoringEvent.findMany.mockResolvedValueOnce([]).mockResolvedValueOnce([]);
 
-      const result = await service.getROIMetrics();
+      const result = await service.getROIMetrics({ tenantId: TEST_TENANT_ID });
 
       expect(result.available).toBe(true);
       expect(result.roi.totalCost).toBe(0);
@@ -284,10 +291,25 @@ describe('AIMonitoringService', () => {
   });
 
   describe('tenant filtering', () => {
-    it('passes tenantId filter to all query methods', async () => {
+    it('passes tenantId filter to drift query (includes null for global drift)', async () => {
       mockPrisma.aIMonitoringEvent.findMany.mockResolvedValue([]);
 
       await service.getDriftMetrics({ tenantId: 'tenant-1' });
+
+      // Drift uses OR filter: global drift (tenantId: null) + tenant-specific drift
+      expect(mockPrisma.aIMonitoringEvent.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            OR: expect.arrayContaining([{ tenantId: null }, { tenantId: 'tenant-1' }]),
+          }),
+        })
+      );
+    });
+
+    it('passes direct tenantId filter to non-drift query methods', async () => {
+      mockPrisma.aIMonitoringEvent.findMany.mockResolvedValue([]);
+
+      await service.getLatencyMetrics({ tenantId: 'tenant-1' });
 
       expect(mockPrisma.aIMonitoringEvent.findMany).toHaveBeenCalledWith(
         expect.objectContaining({

@@ -12,10 +12,8 @@
 
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-import {
-  FieldDescriptorArraySchema,
-  NODE_TYPE_IDS,
-} from '@intelliflow/domain';
+import { Prisma } from '@intelliflow/db';
+import { FieldDescriptorArraySchema, NODE_TYPE_IDS } from '@intelliflow/domain';
 import { createTRPCRouter, tenantProcedure, adminTenantProcedure } from '../../trpc';
 import { getCustomNodeTypeRegistry } from '../../workflow/registries/custom-node-type-registry';
 
@@ -54,10 +52,9 @@ export const customNodeTypeRouter = createTRPCRouter({
       orderBy: { createdAt: 'asc' },
     });
 
-    // Keep the in-memory registry warm on read so the workflow save path is fast.
-    const registry = getCustomNodeTypeRegistry();
-    registry.invalidateTenant(tenantId);
-    await registry.loadTenant(ctx.prismaWithTenant as never, tenantId);
+    // Cache contract: lazy-load on first workflow-save validation hit,
+    // invalidate on create/update/delete. Reads do NOT touch the registry
+    // — that would defeat the singleton cache (audit finding 2026-04-14).
 
     return {
       items: rows.map((r) => ({
@@ -130,7 +127,13 @@ export const customNodeTypeRouter = createTRPCRouter({
   }),
 
   delete: adminTenantProcedure
-    .input(z.object({ id: z.string().min(1) }))
+    .input(
+      z.object({
+        id: z.string().min(1),
+        /** When true, skip the reference-count check and hard-delete anyway. */
+        force: z.boolean().default(false),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
       const tenantId = ctx.tenant.tenantId;
       const existing = await ctx.prismaWithTenant.customNodeType.findFirst({
@@ -139,13 +142,34 @@ export const customNodeTypeRouter = createTRPCRouter({
       if (!existing) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Custom node type not found' });
       }
-      // Soft delete: set isActive=false so existing workflows that reference
-      // the type still validate until the admin explicitly migrates them.
-      await ctx.prismaWithTenant.customNodeType.update({
-        where: { id: input.id },
-        data: { isActive: false },
-      });
+
+      // Count workflows that reference this type via `steps.nodes[*].type`.
+      // Any match blocks a non-force delete — we don't want to silently
+      // break a live workflow definition.
+      if (!input.force) {
+        const rows = await ctx.prismaWithTenant.$queryRaw<Array<{ count: bigint }>>(
+          Prisma.sql`
+            SELECT COUNT(*)::bigint AS count
+            FROM workflow_definitions
+            WHERE "tenantId" = ${tenantId}
+              AND "deletedAt" IS NULL
+              AND EXISTS (
+                SELECT 1 FROM jsonb_array_elements(steps->'nodes') node
+                WHERE node->>'type' = ${existing.typeId}
+              )
+          `
+        );
+        const refCount = Number(rows[0]?.count ?? 0);
+        if (refCount > 0) {
+          throw new TRPCError({
+            code: 'CONFLICT',
+            message: `Cannot delete "${existing.typeId}" — ${refCount} workflow${refCount === 1 ? '' : 's'} still reference it. Migrate those workflows first, or pass force=true to delete anyway (breaks those workflows).`,
+          });
+        }
+      }
+
+      await ctx.prismaWithTenant.customNodeType.delete({ where: { id: input.id } });
       getCustomNodeTypeRegistry().invalidateTenant(tenantId);
-      return { id: input.id, deleted: true };
+      return { id: input.id, deleted: true, forced: input.force };
     }),
 });

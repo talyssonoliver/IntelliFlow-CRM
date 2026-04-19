@@ -13,6 +13,7 @@
  * KPIs: All endpoints <200ms; test coverage >=90%
  */
 
+import { context as otelContext, propagation } from '@opentelemetry/api';
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import { type Context } from '../../context';
@@ -443,6 +444,8 @@ async function enqueueInsightGeneration(
     // getAllInsights is deduplicated by BullMQ (same ID = same job).
     const jobId = `insight-${tenantId}-${userId}`;
 
+    const _otelCarrierInsight: Record<string, string> = {};
+    propagation.inject(otelContext.active(), _otelCarrierInsight);
     await queue.add(
       'generate-insights',
       {
@@ -456,6 +459,7 @@ async function enqueueInsightGeneration(
         overdueTasksCount: data.overdueTasksCount,
         staleContacts: contacts,
         correlationId: `insight-${tenantId}-${Date.now()}`,
+        _otelCarrier: _otelCarrierInsight,
       },
       { jobId }
     );

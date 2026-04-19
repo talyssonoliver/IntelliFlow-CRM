@@ -68,6 +68,12 @@ describe('Opportunity Router — Audit Logging (IFC-281 AC-006/AC-007/AC-008)', 
   beforeEach(() => {
     // Make prisma.$extends return the same mock so tenantMiddleware works
     (prismaMock.$extends as ReturnType<typeof vi.fn>).mockReturnValue(prismaMock);
+    // PG-184: deal-automation helpers read these tables on every mutation.
+    (prismaMock as any).dealAutomationSetting = {
+      findUnique: vi.fn().mockResolvedValue(null),
+    };
+    if (!(prismaMock as any).task) (prismaMock as any).task = {};
+    (prismaMock as any).task.count = vi.fn().mockResolvedValue(0);
 
     // Re-wire audit logger after clearAllMocks() resets all vi.fn() implementations
     mockLogAction = vi.fn().mockResolvedValue('audit-id');

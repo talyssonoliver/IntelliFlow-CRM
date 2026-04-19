@@ -12,6 +12,7 @@
  * @see Sprint 5 - IFC-089: Contacts Module - Create/Edit/Search
  */
 
+import { context as otelContext, propagation } from '@opentelemetry/api';
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
@@ -316,6 +317,52 @@ async function fetchContactNotes(
     ORDER BY "createdAt" DESC
     LIMIT ${fetchLimit}
   `.catch(handleError);
+}
+
+// ---------------------------------------------------------------------------
+// update procedure helpers (reduce cognitive complexity)
+// ---------------------------------------------------------------------------
+
+type ContactFlags = { autoCapitalizeNames: boolean; normalizePhoneNumbers: boolean };
+
+function extractRawPhone(phone: { value: string } | null | undefined): string | null | undefined {
+  if (phone === undefined) return undefined;
+  if (phone === null) return null;
+  return phone.value;
+}
+
+function buildContactCheckFields(
+  data: { company?: string | null; jobTitle?: string | null; ownerId?: string | null },
+  rawPhone: string | null | undefined
+): {
+  phone?: string | null;
+  company?: string | null;
+  jobTitle?: string | null;
+  ownerId?: string | null;
+} {
+  return {
+    ...(rawPhone !== undefined ? { phone: rawPhone } : {}),
+    ...(data.company !== undefined ? { company: data.company } : {}),
+    ...(data.jobTitle !== undefined ? { jobTitle: data.jobTitle } : {}),
+    ...(data.ownerId !== undefined ? { ownerId: data.ownerId } : {}),
+  };
+}
+
+function buildHygienedContactData(
+  data: UpdateContactData & { firstName?: string | null; lastName?: string | null },
+  rawPhone: string | null | undefined,
+  flags: ContactFlags
+): UpdateContactData {
+  return {
+    ...data,
+    ...(data.firstName !== undefined
+      ? { firstName: capitalizeName(data.firstName, flags) ?? data.firstName }
+      : {}),
+    ...(data.lastName !== undefined
+      ? { lastName: capitalizeName(data.lastName, flags) ?? data.lastName }
+      : {}),
+    ...(rawPhone !== undefined ? { phone: normalizePhone(rawPhone, flags) ?? undefined } : {}),
+  };
 }
 
 export const contactRouter = createTRPCRouter({
@@ -625,41 +672,18 @@ export const contactRouter = createTRPCRouter({
     // dedicated updateContactEmail service method), so nothing to check here.
     // Phone arrives as PhoneNumber VO; unwrap to plain string for the hygiene
     // + required-fields helpers.
-    const rawPhone: string | null | undefined =
-      data.phone === undefined ? undefined : data.phone === null ? null : data.phone.value;
+    const rawPhone = extractRawPhone(data.phone as { value: string } | null | undefined);
 
     assertRequiredContactFields(
-      {
-        ...(rawPhone !== undefined ? { phone: rawPhone } : {}),
-        ...((data as { company?: string | null }).company !== undefined
-          ? { company: (data as { company?: string | null }).company }
-          : {}),
-        ...((data as { jobTitle?: string | null }).jobTitle !== undefined
-          ? { jobTitle: (data as { jobTitle?: string | null }).jobTitle }
-          : {}),
-        ...((data as { ownerId?: string | null }).ownerId !== undefined
-          ? { ownerId: (data as { ownerId?: string | null }).ownerId }
-          : {}),
-      },
+      buildContactCheckFields(
+        data as { company?: string | null; jobTitle?: string | null; ownerId?: string | null },
+        rawPhone
+      ),
       requiredFields,
       'update'
     );
 
-    const hygienedData = {
-      ...data,
-      ...(data.firstName !== undefined
-        ? { firstName: capitalizeName(data.firstName, flags) ?? data.firstName }
-        : {}),
-      ...(data.lastName !== undefined
-        ? { lastName: capitalizeName(data.lastName, flags) ?? data.lastName }
-        : {}),
-      // Feed the service a plain string (or undefined for "unset") — it will
-      // re-wrap via PhoneNumber.create. This avoids the VO/string mismatch
-      // that the pre-refactor signature caused.
-      ...(rawPhone !== undefined
-        ? { phone: normalizePhone(rawPhone, flags) ?? undefined }
-        : {}),
-    };
+    const hygienedData = buildHygienedContactData(data as UpdateContactData, rawPhone, flags);
 
     // Build info update payload (all non-account, non-email fields)
     const infoUpdates = buildContactInfoUpdates(hygienedData as UpdateContactData);
@@ -740,10 +764,7 @@ export const contactRouter = createTRPCRouter({
 
     // PG-182: gate deletion on the preventDeleteWithOpenDeals toggle
     const flags = await loadContactAutomation(typedCtx);
-    assertCanDeleteContact(
-      { activeOpportunities: existingContact._count.opportunities },
-      flags
-    );
+    assertCanDeleteContact({ activeOpportunities: existingContact._count.opportunities }, flags);
 
     // Delete via service
     const result = await contactService.deleteContact(input.id);
@@ -1522,11 +1543,14 @@ export const contactRouter = createTRPCRouter({
             port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
           },
         });
+        const _otelCarrierContact: Record<string, string> = {};
+        propagation.inject(otelContext.active(), _otelCarrierContact);
         await queue.add('predict', {
           entityType: 'contact',
           entityId: input.contactId,
           predictionType: 'CHURN_RISK',
           tenantId: typedCtx.tenant.tenantId,
+          _otelCarrier: _otelCarrierContact,
         });
         await queue.close();
       } catch {

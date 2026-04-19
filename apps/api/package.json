@@ -24,6 +24,7 @@
     "@intelliflow/application": "workspace:*",
     "@intelliflow/db": "workspace:*",
     "@intelliflow/domain": "workspace:*",
+    "@intelliflow/observability": "workspace:*",
     "@intelliflow/platform": "workspace:*",
     "@intelliflow/validators": "workspace:*",
     "@opentelemetry/api": "1.9.0",

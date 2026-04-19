@@ -7,12 +7,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { contactSettingsRouter } from '../contact-settings.router';
-import {
-  prismaMock,
-  createTestContext,
-  createAdminContext,
-  TEST_UUIDS,
-} from '../../../test/setup';
+import { prismaMock, createTestContext, createAdminContext, TEST_UUIDS } from '../../../test/setup';
 
 const tenantId = TEST_UUIDS.tenant;
 
@@ -258,7 +253,13 @@ describe('Contact Settings Router', () => {
       await expect(
         caller.duplicateRules.updateAll({
           rules: [
-            { field: 'email', matchStrategy: 'exact', threshold: 100, isActive: true, sortOrder: 0 },
+            {
+              field: 'email',
+              matchStrategy: 'exact',
+              threshold: 100,
+              isActive: true,
+              sortOrder: 0,
+            },
             { field: 'email', matchStrategy: 'exact', threshold: 50, isActive: true, sortOrder: 1 },
           ],
         })
@@ -270,7 +271,13 @@ describe('Contact Settings Router', () => {
       await expect(
         caller.duplicateRules.updateAll({
           rules: [
-            { field: 'email', matchStrategy: 'exact', threshold: 100, isActive: true, sortOrder: 0 },
+            {
+              field: 'email',
+              matchStrategy: 'exact',
+              threshold: 100,
+              isActive: true,
+              sortOrder: 0,
+            },
           ],
         })
       ).rejects.toMatchObject({ code: 'CONFLICT' });

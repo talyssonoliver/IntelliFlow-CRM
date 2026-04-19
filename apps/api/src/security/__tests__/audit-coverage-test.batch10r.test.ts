@@ -360,16 +360,6 @@ describe('audit-coverage-test.ts source coverage - batch10r', () => {
     mockTenantFindUnique.mockResolvedValue({ id: TEST_TENANT_ID });
   });
 
-  it('should dynamically import the source file for coverage', async () => {
-    // Import the source file so its top-level code runs
-    try {
-      await import('../audit-coverage-test.js');
-    } catch {
-      // Expected - the file's describe/it calls will fail outside a test runner context
-    }
-    expect(true).toBe(true);
-  });
-
   describe('exercises source mockPrisma object setup', () => {
     it('should verify source mockPrisma shape matches expected structure', () => {
       // The source file creates a mockPrisma object at module scope

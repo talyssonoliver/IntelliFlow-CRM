@@ -21,13 +21,16 @@ import { createTRPCRouter, protectedProcedure } from '../../trpc';
 import {
   getAvailableToolNames,
   getAgentTool,
+  getForTenant,
   getToolsRequiringApproval,
   getToolsNotRequiringApproval,
   toolMetadata,
+  ToolDisabledError,
 } from '../../agent/tools';
 import { approvalWorkflowService, pendingActionsStore } from '../../agent/approval-workflow';
 import { agentAuthorizationService, buildAuthContext } from '../../agent/authorization';
 import { agentLogger } from '../../agent/logger';
+import { hasPermission } from '../../lib/rbac';
 import type { Context } from '../../context';
 import type { AgentAuthContext } from '../../agent/types';
 
@@ -96,25 +99,44 @@ export const agentRouter = createTRPCRouter({
 
   /**
    * Get details of a specific tool
+   * Tenant-gated: returns FORBIDDEN if the tool is disabled for this tenant.
    */
-  getTool: protectedProcedure.input(z.object({ toolName: z.string() })).query(({ input }) => {
-    const tool = getAgentTool(input.toolName);
+  getTool: protectedProcedure
+    .input(z.object({ toolName: z.string() }))
+    .query(async ({ ctx, input }) => {
+      if (!ctx.user?.tenantId) {
+        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Tenant context missing' });
+      }
 
-    if (!tool) {
-      throw new TRPCError({
-        code: 'NOT_FOUND',
-        message: `Tool not found: ${input.toolName}`,
-      });
-    }
+      let tool;
+      try {
+        tool = await getForTenant({
+          name: input.toolName,
+          tenantId: ctx.user.tenantId,
+          prisma: ctx.prisma,
+        });
+      } catch (err) {
+        if (err instanceof ToolDisabledError) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: err.message });
+        }
+        throw err;
+      }
 
-    return {
-      name: tool.name,
-      description: tool.description,
-      actionType: tool.actionType,
-      entityTypes: tool.entityTypes,
-      requiresApproval: tool.requiresApproval,
-    };
-  }),
+      if (!tool) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: `Tool not found: ${input.toolName}`,
+        });
+      }
+
+      return {
+        name: tool.name,
+        description: tool.description,
+        actionType: tool.actionType,
+        entityTypes: tool.entityTypes,
+        requiresApproval: tool.requiresApproval,
+      };
+    }),
 
   /**
    * Execute an agent tool
@@ -132,7 +154,24 @@ export const agentRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const tool = getAgentTool(input.toolName);
+      if (!ctx.user?.tenantId) {
+        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Tenant context missing' });
+      }
+
+      // Gate: check tool is enabled for this tenant BEFORE building approval prompt
+      let tool;
+      try {
+        tool = await getForTenant({
+          name: input.toolName,
+          tenantId: ctx.user.tenantId,
+          prisma: ctx.prisma,
+        });
+      } catch (err) {
+        if (err instanceof ToolDisabledError) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: err.message });
+        }
+        throw err;
+      }
 
       if (!tool) {
         throw new TRPCError({
@@ -288,6 +327,16 @@ export const agentRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      // RBAC gate: caller must hold the 'agent:tool-approval' / 'approve' permission.
+      // ADMIN role is short-circuited inside hasPermission; other roles need an
+      // active role-level or user-level grant in the permission graph.
+      if (!(await hasPermission(ctx, 'agent:tool-approval', 'approve'))) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'You do not have permission to approve agent actions.',
+        });
+      }
+
       const agentContext = buildAgentContext(ctx);
 
       const decision = {
@@ -325,6 +374,16 @@ export const agentRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      // RBAC gate: caller must hold the 'agent:tool-approval' / 'reject' permission.
+      // ADMIN role is short-circuited inside hasPermission; other roles need an
+      // active role-level or user-level grant in the permission graph.
+      if (!(await hasPermission(ctx, 'agent:tool-approval', 'reject'))) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'You do not have permission to reject agent actions.',
+        });
+      }
+
       const agentContext = buildAgentContext(ctx);
 
       const decision = {

@@ -7,8 +7,10 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TRPCError } from '@trpc/server';
+import { Result } from '@intelliflow/domain';
 import { appointmentsRouter } from '../appointments.router';
 import { prismaMock, createTestContext, TEST_UUIDS } from '../../../test/setup';
+import { container } from '../../../container';
 
 // Mock the AppointmentDomainService
 vi.mock('../../../services', () => ({
@@ -37,6 +39,39 @@ vi.mock('../../../services', () => ({
     })),
   },
 }));
+
+// Mock the container so use cases never hit the real database.
+// The five procedures migrated in Phase 2 (create, reschedule, complete, cancel,
+// checkConflicts/checkAvailability/findNextSlot) call container use cases instead
+// of prismaWithTenant directly, so each use case must return a predictable
+// Result.ok value. Prisma mocks are still needed for post-fetch calls that the
+// router makes after a successful use case execution.
+vi.mock('../../../container', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../../container')>();
+  return {
+    ...actual,
+    container: {
+      ...actual.container,
+      scheduleAppointmentUseCase: {
+        execute: vi.fn(),
+      },
+      rescheduleAppointmentUseCase: {
+        execute: vi.fn(),
+      },
+      cancelAppointmentUseCase: {
+        execute: vi.fn(),
+      },
+      completeAppointmentUseCase: {
+        execute: vi.fn(),
+      },
+      checkConflictsUseCase: {
+        checkConflicts: vi.fn(),
+        checkAvailability: vi.fn(),
+        findNextSlot: vi.fn(),
+      },
+    },
+  };
+});
 
 describe('Appointments Router - Caller Tests', () => {
   // Use a fixed UTC time well inside business hours (07:00-19:00) so tests
@@ -79,8 +114,16 @@ describe('Appointments Router - Caller Tests', () => {
       const ctx = createTestContext();
       const caller = appointmentsRouter.createCaller(ctx);
 
-      prismaMock.appointment.create.mockResolvedValue(mockAppointment as any);
-      prismaMock.appointment.findMany.mockResolvedValue([]);
+      // Phase 2e: create now routes through scheduleAppointmentUseCase.
+      // Mock the use case to return a domain appointment, then mock the
+      // post-fetch findUnique that the router performs to get the Prisma row.
+      vi.mocked(container.scheduleAppointmentUseCase.execute).mockResolvedValue(
+        Result.ok({
+          appointment: { id: { value: mockAppointment.id } } as any,
+          conflictWarnings: [],
+        })
+      );
+      prismaMock.appointment.findUnique.mockResolvedValue(mockAppointment as any);
 
       const result = await caller.create({
         title: 'Test Appointment',
@@ -91,14 +134,21 @@ describe('Appointments Router - Caller Tests', () => {
 
       expect(result).toBeDefined();
       expect(result.id).toBe(mockAppointment.id);
-      expect(prismaMock.appointment.create).toHaveBeenCalled();
+      // Assert the use case was invoked (replaces the old prisma.appointment.create assertion)
+      expect(vi.mocked(container.scheduleAppointmentUseCase.execute)).toHaveBeenCalled();
     });
 
     it('should handle conflict detection with forceOverrideConflicts', async () => {
       const ctx = createTestContext();
       const caller = appointmentsRouter.createCaller(ctx);
 
-      prismaMock.appointment.create.mockResolvedValue(mockAppointment as any);
+      vi.mocked(container.scheduleAppointmentUseCase.execute).mockResolvedValue(
+        Result.ok({
+          appointment: { id: { value: mockAppointment.id } } as any,
+          conflictWarnings: [],
+        })
+      );
+      prismaMock.appointment.findUnique.mockResolvedValue(mockAppointment as any);
 
       const result = await caller.create({
         title: 'Test Appointment',
@@ -109,8 +159,10 @@ describe('Appointments Router - Caller Tests', () => {
       });
 
       expect(result).toBeDefined();
-      // With forceOverrideConflicts, it should skip conflict check
-      expect(prismaMock.appointment.findMany).not.toHaveBeenCalled();
+      // With forceOverrideConflicts, the use case is called with the flag set
+      expect(vi.mocked(container.scheduleAppointmentUseCase.execute)).toHaveBeenCalledWith(
+        expect.objectContaining({ forceOverrideConflicts: true })
+      );
     });
   });
 
@@ -265,15 +317,20 @@ describe('Appointments Router - Caller Tests', () => {
       const ctx = createTestContext();
       const caller = appointmentsRouter.createCaller(ctx);
 
-      const newStartTime = new Date(now.getTime() + 86400000);
-      const newEndTime = new Date(newStartTime.getTime() + 3600000);
+      // Use a time slot guaranteed to be within business hours (10:00–11:00 UTC next day)
+      const newStartTime = new Date(now.getTime() + 86400000); // 10:00 UTC tomorrow
+      const newEndTime = new Date(newStartTime.getTime() + 3600000); // 11:00 UTC tomorrow
 
+      // Phase 2d: reschedule routes through rescheduleAppointmentUseCase.
+      // The use case handles the status check and conflict detection.
+      vi.mocked(container.rescheduleAppointmentUseCase.execute).mockResolvedValue(
+        Result.ok({
+          previousTimeSlot: { startTime: now, endTime: oneHourLater },
+          conflictWarnings: [],
+        } as any)
+      );
+      // Post-fetch findUnique after successful use case execution
       prismaMock.appointment.findUnique.mockResolvedValue({
-        ...mockAppointment,
-        attendees: [{ userId: TEST_UUIDS.user2 }],
-      } as any);
-      prismaMock.appointment.findMany.mockResolvedValue([]);
-      prismaMock.appointment.update.mockResolvedValue({
         ...mockAppointment,
         startTime: newStartTime,
         endTime: newEndTime,
@@ -293,16 +350,19 @@ describe('Appointments Router - Caller Tests', () => {
       const ctx = createTestContext();
       const caller = appointmentsRouter.createCaller(ctx);
 
-      prismaMock.appointment.findUnique.mockResolvedValue({
-        ...mockAppointment,
-        status: 'COMPLETED',
-      } as any);
+      // Phase 2d: use case returns a domain error for invalid status transitions
+      vi.mocked(container.rescheduleAppointmentUseCase.execute).mockResolvedValue(
+        Result.fail({
+          code: 'VALIDATION_ERROR',
+          message: 'Cannot reschedule a COMPLETED appointment',
+        } as any)
+      );
 
       await expect(
         caller.reschedule({
           id: mockAppointment.id,
-          newStartTime: new Date(),
-          newEndTime: new Date(Date.now() + 3600000),
+          newStartTime: now,
+          newEndTime: oneHourLater,
         })
       ).rejects.toThrow(TRPCError);
     });
@@ -311,16 +371,19 @@ describe('Appointments Router - Caller Tests', () => {
       const ctx = createTestContext();
       const caller = appointmentsRouter.createCaller(ctx);
 
-      prismaMock.appointment.findUnique.mockResolvedValue({
-        ...mockAppointment,
-        status: 'CANCELLED',
-      } as any);
+      // Phase 2d: use case returns a domain error for invalid status transitions
+      vi.mocked(container.rescheduleAppointmentUseCase.execute).mockResolvedValue(
+        Result.fail({
+          code: 'VALIDATION_ERROR',
+          message: 'Cannot reschedule a CANCELLED appointment',
+        } as any)
+      );
 
       await expect(
         caller.reschedule({
           id: mockAppointment.id,
-          newStartTime: new Date(),
-          newEndTime: new Date(Date.now() + 3600000),
+          newStartTime: now,
+          newEndTime: oneHourLater,
         })
       ).rejects.toThrow(TRPCError);
     });
@@ -329,16 +392,19 @@ describe('Appointments Router - Caller Tests', () => {
       const ctx = createTestContext();
       const caller = appointmentsRouter.createCaller(ctx);
 
-      prismaMock.appointment.findUnique.mockResolvedValue({
-        ...mockAppointment,
-        attendees: [],
-      } as any);
+      // Phase 2d: use case returns a domain error for invalid time ranges
+      vi.mocked(container.rescheduleAppointmentUseCase.execute).mockResolvedValue(
+        Result.fail({
+          code: 'VALIDATION_ERROR',
+          message: 'Start time must be before end time',
+        } as any)
+      );
 
       await expect(
         caller.reschedule({
           id: mockAppointment.id,
-          newStartTime: new Date(Date.now() + 7200000),
-          newEndTime: new Date(Date.now() + 3600000),
+          newStartTime: now,
+          newEndTime: oneHourLater,
         })
       ).rejects.toThrow(TRPCError);
     });
@@ -387,11 +453,12 @@ describe('Appointments Router - Caller Tests', () => {
       const ctx = createTestContext();
       const caller = appointmentsRouter.createCaller(ctx);
 
+      // Phase 2b: complete routes through completeAppointmentUseCase.
+      vi.mocked(container.completeAppointmentUseCase.execute).mockResolvedValue(
+        Result.ok({ completedAt: new Date() } as any)
+      );
+      // Post-fetch findUnique after successful use case execution
       prismaMock.appointment.findUnique.mockResolvedValue({
-        ...mockAppointment,
-        status: 'CONFIRMED',
-      } as any);
-      prismaMock.appointment.update.mockResolvedValue({
         ...mockAppointment,
         status: 'COMPLETED',
         notes: 'Meeting notes',
@@ -409,10 +476,13 @@ describe('Appointments Router - Caller Tests', () => {
       const ctx = createTestContext();
       const caller = appointmentsRouter.createCaller(ctx);
 
-      prismaMock.appointment.findUnique.mockResolvedValue({
-        ...mockAppointment,
-        status: 'CANCELLED',
-      } as any);
+      // Phase 2b: use case returns a domain error for invalid status transitions
+      vi.mocked(container.completeAppointmentUseCase.execute).mockResolvedValue(
+        Result.fail({
+          code: 'VALIDATION_ERROR',
+          message: 'Cannot complete a CANCELLED appointment',
+        } as any)
+      );
 
       await expect(caller.complete({ id: mockAppointment.id })).rejects.toThrow(TRPCError);
     });
@@ -421,10 +491,13 @@ describe('Appointments Router - Caller Tests', () => {
       const ctx = createTestContext();
       const caller = appointmentsRouter.createCaller(ctx);
 
-      prismaMock.appointment.findUnique.mockResolvedValue({
-        ...mockAppointment,
-        status: 'COMPLETED',
-      } as any);
+      // Phase 2b: use case returns a domain error for invalid status transitions
+      vi.mocked(container.completeAppointmentUseCase.execute).mockResolvedValue(
+        Result.fail({
+          code: 'VALIDATION_ERROR',
+          message: 'Appointment is already COMPLETED',
+        } as any)
+      );
 
       await expect(caller.complete({ id: mockAppointment.id })).rejects.toThrow(TRPCError);
     });
@@ -435,8 +508,12 @@ describe('Appointments Router - Caller Tests', () => {
       const ctx = createTestContext();
       const caller = appointmentsRouter.createCaller(ctx);
 
-      prismaMock.appointment.findUnique.mockResolvedValue(mockAppointment as any);
-      prismaMock.appointment.update.mockResolvedValue({
+      // Phase 2a: cancel routes through cancelAppointmentUseCase.
+      vi.mocked(container.cancelAppointmentUseCase.execute).mockResolvedValue(
+        Result.ok({ cancelledAt: new Date() } as any)
+      );
+      // Post-fetch findUnique after successful use case execution
+      prismaMock.appointment.findUnique.mockResolvedValue({
         ...mockAppointment,
         status: 'CANCELLED',
       } as any);
@@ -453,10 +530,13 @@ describe('Appointments Router - Caller Tests', () => {
       const ctx = createTestContext();
       const caller = appointmentsRouter.createCaller(ctx);
 
-      prismaMock.appointment.findUnique.mockResolvedValue({
-        ...mockAppointment,
-        status: 'CANCELLED',
-      } as any);
+      // Phase 2a: use case returns a domain error for invalid status transitions
+      vi.mocked(container.cancelAppointmentUseCase.execute).mockResolvedValue(
+        Result.fail({
+          code: 'VALIDATION_ERROR',
+          message: 'Appointment is already CANCELLED',
+        } as any)
+      );
 
       await expect(caller.cancel({ id: mockAppointment.id })).rejects.toThrow(TRPCError);
     });
@@ -465,10 +545,13 @@ describe('Appointments Router - Caller Tests', () => {
       const ctx = createTestContext();
       const caller = appointmentsRouter.createCaller(ctx);
 
-      prismaMock.appointment.findUnique.mockResolvedValue({
-        ...mockAppointment,
-        status: 'COMPLETED',
-      } as any);
+      // Phase 2a: use case returns a domain error for invalid status transitions
+      vi.mocked(container.cancelAppointmentUseCase.execute).mockResolvedValue(
+        Result.fail({
+          code: 'VALIDATION_ERROR',
+          message: 'Cannot cancel a COMPLETED appointment',
+        } as any)
+      );
 
       await expect(caller.cancel({ id: mockAppointment.id })).rejects.toThrow(TRPCError);
     });
@@ -534,7 +617,12 @@ describe('Appointments Router - Caller Tests', () => {
       const ctx = createTestContext();
       const caller = appointmentsRouter.createCaller(ctx);
 
-      prismaMock.appointment.findMany.mockResolvedValue([]);
+      // Phase 2c: checkConflicts routes through checkConflictsUseCase.checkConflicts.
+      // No conflicts → hasConflicts: false, empty conflicts array.
+      vi.mocked(container.checkConflictsUseCase.checkConflicts).mockResolvedValue(
+        Result.ok({ hasConflicts: false, conflicts: [] })
+      );
+      // Router post-fetches appointmentType for conflict IDs — no IDs so findMany not called.
 
       const result = await caller.checkConflicts({
         startTime: now,
@@ -544,6 +632,7 @@ describe('Appointments Router - Caller Tests', () => {
 
       expect(result).toBeDefined();
       expect(result.hasConflicts).toBe(false);
+      expect(vi.mocked(container.checkConflictsUseCase.checkConflicts)).toHaveBeenCalled();
     });
   });
 
@@ -552,7 +641,13 @@ describe('Appointments Router - Caller Tests', () => {
       const ctx = createTestContext();
       const caller = appointmentsRouter.createCaller(ctx);
 
-      prismaMock.appointment.findMany.mockResolvedValue([]);
+      // Phase 2c: checkAvailability routes through checkConflictsUseCase.checkAvailability.
+      vi.mocked(container.checkConflictsUseCase.checkAvailability).mockResolvedValue(
+        Result.ok({
+          availableSlots: [{ startTime: now, endTime: oneHourLater, durationMinutes: 60 }],
+          totalAvailableMinutes: 60,
+        })
+      );
 
       const result = await caller.checkAvailability({
         attendeeId: TEST_UUIDS.user1,
@@ -564,6 +659,7 @@ describe('Appointments Router - Caller Tests', () => {
       expect(result).toBeDefined();
       expect(result.availableSlots).toBeDefined();
       expect(typeof result.totalAvailableMinutes).toBe('number');
+      expect(vi.mocked(container.checkConflictsUseCase.checkAvailability)).toHaveBeenCalled();
     });
   });
 
@@ -572,7 +668,13 @@ describe('Appointments Router - Caller Tests', () => {
       const ctx = createTestContext();
       const caller = appointmentsRouter.createCaller(ctx);
 
-      prismaMock.appointment.findMany.mockResolvedValue([]);
+      // Phase 2c: findNextSlot routes through checkConflictsUseCase.findNextSlot.
+      vi.mocked(container.checkConflictsUseCase.findNextSlot).mockResolvedValue(
+        Result.ok({
+          slot: { startTime: now, endTime: oneHourLater, durationMinutes: 60 },
+          searchedUntil: oneHourLater,
+        })
+      );
 
       const result = await caller.findNextSlot({
         attendeeId: TEST_UUIDS.user1,
@@ -582,13 +684,20 @@ describe('Appointments Router - Caller Tests', () => {
 
       expect(result).toBeDefined();
       expect(result.slot).toBeDefined();
+      expect(vi.mocked(container.checkConflictsUseCase.findNextSlot)).toHaveBeenCalled();
     });
 
     it('should find next slot with buffer times', async () => {
       const ctx = createTestContext();
       const caller = appointmentsRouter.createCaller(ctx);
 
-      prismaMock.appointment.findMany.mockResolvedValue([]);
+      // Phase 2c: findNextSlot routes through checkConflictsUseCase.findNextSlot.
+      vi.mocked(container.checkConflictsUseCase.findNextSlot).mockResolvedValue(
+        Result.ok({
+          slot: { startTime: now, endTime: oneHourLater, durationMinutes: 60 },
+          searchedUntil: oneHourLater,
+        })
+      );
 
       const result = await caller.findNextSlot({
         attendeeId: TEST_UUIDS.user1,
@@ -600,6 +709,13 @@ describe('Appointments Router - Caller Tests', () => {
       });
 
       expect(result).toBeDefined();
+      expect(vi.mocked(container.checkConflictsUseCase.findNextSlot)).toHaveBeenCalledWith(
+        expect.objectContaining({
+          bufferMinutesBefore: 15,
+          bufferMinutesAfter: 15,
+          maxDaysAhead: 14,
+        })
+      );
     });
   });
 

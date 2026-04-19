@@ -20,6 +20,7 @@ import {
   createAuthEndpointRateLimitMiddleware,
 } from './middleware/rate-limit';
 import { createTenantScopedPrisma } from './security/tenant-context';
+import { runWithLogContext } from '@intelliflow/observability';
 
 /**
  * Initialize tRPC with context type
@@ -67,6 +68,24 @@ export const createTRPCRouter = t.router;
  * publicProcedure.query(() => ({ status: 'ok' }))
  */
 export const publicProcedure = t.procedure.use(tracingMiddleware);
+
+/**
+ * Middleware that binds correlationId / tenantId / userId into pino's
+ * AsyncLocalStorage so every log line inside the resolver automatically
+ * carries these fields without explicit passing.
+ *
+ * Applied to all authenticated procedures (protectedProcedure / tenantProcedure).
+ */
+const logContextMiddleware = t.middleware(({ ctx, next }) => {
+  return runWithLogContext(
+    {
+      correlationId: (ctx as Record<string, unknown>).correlationId as string | undefined,
+      tenantId: ctx.user?.tenantId,
+      userId: ctx.user?.userId,
+    },
+    () => next()
+  );
+});
 
 /**
  * Middleware to check if user is authenticated
@@ -163,6 +182,7 @@ const rateLimitMiddleware = t.middleware(async (opts) => {
 export const protectedProcedure = t.procedure
   .use(csrfMiddleware)
   .use(isAuthed)
+  .use(logContextMiddleware)
   .use(tracingMiddleware)
   .use(rateLimitMiddleware);
 

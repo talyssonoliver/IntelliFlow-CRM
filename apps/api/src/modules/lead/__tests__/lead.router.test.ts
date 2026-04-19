@@ -99,6 +99,7 @@ describe('Lead Router', () => {
         notes: [],
         files: [],
         aiInsight: null,
+        aiInsights: [],
         tasks: [],
       };
 

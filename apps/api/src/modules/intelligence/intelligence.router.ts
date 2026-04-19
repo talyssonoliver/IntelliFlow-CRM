@@ -13,6 +13,7 @@
  * @see Sprint 8 - IFC-095: Churn Risk & Next Best Action
  */
 
+import { context as otelContext, propagation } from '@opentelemetry/api';
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { Prisma } from '@intelliflow/db';
@@ -662,7 +663,7 @@ export const intelligenceRouter = createTRPCRouter({
       const lead = await typedCtx.prismaWithTenant.lead.findUnique({
         where: { id: input.leadId },
         include: {
-          aiInsight: true,
+          aiInsights: { take: 1 },
         },
       });
 
@@ -673,27 +674,28 @@ export const intelligenceRouter = createTRPCRouter({
         });
       }
 
-      if (!lead.aiInsight) {
+      const aiInsightRow = lead.aiInsights[0] ?? null;
+      if (!aiInsightRow) {
         return null;
       }
 
       return {
-        id: lead.aiInsight.id,
+        id: aiInsightRow.id,
         entityId: lead.id,
         entityType: 'lead' as const,
-        churnRisk: lead.aiInsight.churnRisk,
+        churnRisk: aiInsightRow.churnRisk,
         churnRiskScore: null, // Not stored directly, computed from churnRisk level
-        conversionProbability: lead.aiInsight.conversionProbability,
-        estimatedValue: lead.aiInsight.estimatedValue,
+        conversionProbability: aiInsightRow.conversionProbability,
+        estimatedValue: aiInsightRow.estimatedValue,
         lifetimeValue: null,
-        engagementScore: lead.aiInsight.engagementScore,
-        sentiment: lead.aiInsight.sentiment,
-        sentimentTrend: lead.aiInsight.sentimentTrend,
-        lastEngagementDays: lead.aiInsight.lastEngagementDays,
-        nextBestAction: lead.aiInsight.nextBestAction,
-        recommendations: lead.aiInsight.recommendations as string[] | null,
-        updatedAt: lead.aiInsight.updatedAt,
-        createdAt: lead.aiInsight.createdAt,
+        engagementScore: aiInsightRow.engagementScore,
+        sentiment: aiInsightRow.sentiment,
+        sentimentTrend: aiInsightRow.sentimentTrend,
+        lastEngagementDays: aiInsightRow.lastEngagementDays,
+        nextBestAction: aiInsightRow.nextBestAction,
+        recommendations: aiInsightRow.recommendations as string[] | null,
+        updatedAt: aiInsightRow.updatedAt,
+        createdAt: aiInsightRow.createdAt,
       };
     }),
 
@@ -771,10 +773,10 @@ export const intelligenceRouter = createTRPCRouter({
       if (entityType === 'lead') {
         const lead = await typedCtx.prismaWithTenant.lead.findUnique({
           where: { id: entityId },
-          include: { aiInsight: true },
+          include: { aiInsights: { take: 1 } },
         });
-        if (lead?.aiInsight) {
-          aiInsight = lead.aiInsight;
+        if (lead?.aiInsights[0]) {
+          aiInsight = lead.aiInsights[0];
         }
       } else if (entityType === 'contact') {
         const contact = await typedCtx.prismaWithTenant.contact.findUnique({
@@ -905,6 +907,8 @@ export const intelligenceRouter = createTRPCRouter({
           },
         });
 
+        const _otelCarrierPredict: Record<string, string> = {};
+        propagation.inject(otelContext.active(), _otelCarrierPredict);
         const job = await queue.add(
           'predict',
           {
@@ -917,6 +921,7 @@ export const intelligenceRouter = createTRPCRouter({
               userId: typedCtx.userId,
             },
             priority: priorityMap[priority],
+            _otelCarrier: _otelCarrierPredict,
           },
           {
             priority: priorityMap[priority],
@@ -1005,7 +1010,7 @@ export const intelligenceRouter = createTRPCRouter({
 
       // Upsert AI insight
       const aiInsight = await ctx.prismaWithTenant.leadAIInsight.upsert({
-        where: { leadId },
+        where: { leadId_tenantId: { leadId, tenantId: typedCtx.tenant.tenantId } },
         create: {
           tenantId: typedCtx.tenant.tenantId,
           leadId,

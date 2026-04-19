@@ -64,7 +64,8 @@ const EVENT_SUBSCRIPTIONS: ReadonlyArray<readonly [string, UserIdExtractor]> = [
   ['task.due_date_changed', (e) => extractUserIds(e, ['ownerId', 'changedBy'])],
   ['task.updated', (e) => extractUserIds(e, ['ownerId', 'updatedBy'])],
   ['task.deleted', (e) => extractUserIds(e, ['ownerId', 'deletedBy'])],
-  ['task.assigned', (e) => extractUserIds(e, ['ownerId', 'assignedBy'])],
+  ['task.assigned', (e) => extractUserIds(e, ['assigneeId', 'previousAssigneeId', 'assignedBy'])],
+  ['task.linked_to_entity', (e) => extractUserIds(e, ['linkedBy'])],
 ];
 
 export const HOME_CACHE_SUBSCRIBED_EVENT_TYPES: readonly string[] = EVENT_SUBSCRIPTIONS.map(

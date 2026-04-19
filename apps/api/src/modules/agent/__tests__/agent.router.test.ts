@@ -72,6 +72,17 @@ const mockLoggerLog = vi.fn().mockResolvedValue(undefined);
 
 // Mock the agent tools module
 vi.mock('../../../agent/tools', () => ({
+  ToolDisabledError: class ToolDisabledError extends Error {
+    constructor(toolName: string, reason: string) {
+      super(`Tool ${toolName} is disabled: ${reason}`);
+      this.name = 'ToolDisabledError';
+    }
+  },
+  isToolEnabledForTenant: vi.fn().mockResolvedValue(true),
+  __invalidateCache: vi.fn(),
+  agentToolRegistry: new Map(),
+  getForTenant: vi.fn(async ({ name }: { name: string }) => mockGetAgentTool(name)),
+  getToolsByActionType: vi.fn().mockReturnValue([]),
   getAvailableToolNames: () => [
     'search_leads',
     'search_contacts',
@@ -121,6 +132,9 @@ vi.mock('../../../agent/approval-workflow', () => ({
   },
 }));
 
+// Note: rbac hasPermission fast-paths for ADMIN role — approve action tests
+// use createAgentTestContext with admin=true to bypass DB permission checks
+
 // Mock the authorization module
 vi.mock('../../../agent/authorization', () => ({
   agentAuthorizationService: {
@@ -156,7 +170,8 @@ const TEST_UUIDS = {
 };
 
 // Create test context helper (standalone, not using setup.ts)
-function createAgentTestContext(authenticated = true): BaseContext {
+function createAgentTestContext(authenticated = true, admin = false): BaseContext {
+  const role = admin ? 'ADMIN' : 'USER';
   return {
     prisma: {} as any,
     container: {} as any,
@@ -167,7 +182,7 @@ function createAgentTestContext(authenticated = true): BaseContext {
       ? {
           userId: TEST_UUIDS.user1,
           email: 'test@example.com',
-          role: 'USER',
+          role,
           tenantId: TEST_UUIDS.tenant,
         }
       : undefined,
@@ -175,8 +190,8 @@ function createAgentTestContext(authenticated = true): BaseContext {
       tenantId: TEST_UUIDS.tenant,
       tenantType: 'user' as const,
       userId: TEST_UUIDS.user1,
-      role: 'USER',
-      canAccessAllTenantData: false,
+      role,
+      canAccessAllTenantData: admin,
     },
     prismaWithTenant: {} as any,
     req: undefined,
@@ -535,7 +550,8 @@ describe('agentRouter', () => {
 
       mockApprovalApproveAction.mockResolvedValue(mockExecutedAction);
 
-      const ctx = createAgentTestContext();
+      // ADMIN role required — hasPermission fast-paths for ADMIN
+      const ctx = createAgentTestContext(true, true);
       const caller = agentRouter.createCaller(ctx);
 
       const result = await caller.approveAction({
@@ -563,7 +579,8 @@ describe('agentRouter', () => {
 
       mockApprovalApproveAction.mockResolvedValue(mockExecutedAction);
 
-      const ctx = createAgentTestContext();
+      // ADMIN role required — hasPermission fast-paths for ADMIN
+      const ctx = createAgentTestContext(true, true);
       const caller = agentRouter.createCaller(ctx);
 
       await caller.approveAction({
@@ -594,7 +611,8 @@ describe('agentRouter', () => {
 
       mockApprovalApproveAction.mockResolvedValue(mockExecutedAction);
 
-      const ctx = createAgentTestContext();
+      // ADMIN role required — hasPermission fast-paths for ADMIN
+      const ctx = createAgentTestContext(true, true);
       const caller = agentRouter.createCaller(ctx);
 
       const result = await caller.approveAction({ actionId: 'action_123' });
@@ -619,7 +637,8 @@ describe('agentRouter', () => {
 
       mockApprovalRejectAction.mockResolvedValue(mockRejectedAction);
 
-      const ctx = createAgentTestContext();
+      // ADMIN role required — hasPermission fast-paths for ADMIN
+      const ctx = createAgentTestContext(true, true);
       const caller = agentRouter.createCaller(ctx);
 
       const result = await caller.rejectAction({
@@ -630,6 +649,21 @@ describe('agentRouter', () => {
       expect(result.success).toBe(true);
       expect(result.actionId).toBe('action_123');
       expect(result.status).toBe('REJECTED');
+    });
+
+    it('should throw FORBIDDEN for non-admin user without reject grant', async () => {
+      // RBAC gate added in M5 sweep: agent:tool-approval / reject
+      // Non-admin context — hasPermission slow path with no role grants returns false
+      const ctx = createAgentTestContext(true, false); // USER role, not ADMIN
+      // Inject permission-table stubs so hasPermission slow path returns false
+      (ctx.prisma as any).userPermission = { findFirst: vi.fn().mockResolvedValue(null) };
+      (ctx.prisma as any).userRoleAssignment = { findMany: vi.fn().mockResolvedValue([]) };
+
+      const caller = agentRouter.createCaller(ctx);
+
+      await expect(
+        caller.rejectAction({ actionId: 'action_123', reason: 'Not needed' })
+      ).rejects.toThrow(expect.objectContaining({ code: 'FORBIDDEN' }));
     });
   });
 

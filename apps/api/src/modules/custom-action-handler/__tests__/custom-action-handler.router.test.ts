@@ -3,6 +3,14 @@
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+
+// Mock node:dns BEFORE importing the router (which imports the dispatcher's
+// resolveAndPin). Default: every hostname resolves to a public IP.
+const { dnsLookupMock } = vi.hoisted(() => ({ dnsLookupMock: vi.fn() }));
+vi.mock('node:dns', () => ({
+  promises: { lookup: dnsLookupMock },
+}));
+
 import { customActionHandlerRouter } from '../custom-action-handler.router';
 import {
   prismaMock,
@@ -13,7 +21,11 @@ import {
 import { resetCustomActionHandlerRegistry } from '../../../workflow/registries/custom-action-handler-registry';
 
 describe('customActionHandlerRouter', () => {
-  beforeEach(() => resetCustomActionHandlerRegistry());
+  beforeEach(() => {
+    resetCustomActionHandlerRegistry();
+    dnsLookupMock.mockReset();
+    dnsLookupMock.mockResolvedValue([{ address: '8.8.8.8', family: 4 }]);
+  });
   afterEach(() => vi.restoreAllMocks());
 
   describe('list', () => {
@@ -117,10 +129,27 @@ describe('customActionHandlerRouter', () => {
       const result = await caller.test({ id: 'h1' });
       expect(result.status).toBe(200);
       expect(result.ok).toBe(true);
+      // After DNS-rebinding defense, the URL is pinned to the resolved IP
+      // and the original Host header is sent for SNI/virtual-hosting.
       expect(fetchMock).toHaveBeenCalledWith(
-        'https://httpbin.org/post',
-        expect.objectContaining({ method: 'POST' })
+        expect.stringMatching(/^https:\/\/(8\.8\.8\.8|httpbin\.org)\//),
+        expect.objectContaining({
+          method: 'POST',
+          headers: expect.objectContaining({ Host: 'httpbin.org' }),
+        })
       );
+    });
+
+    it('rejects non-admin callers with FORBIDDEN', async () => {
+      const ctx = createTestContext();
+      const caller = customActionHandlerRouter.createCaller(ctx);
+      await expect(caller.test({ id: 'h1' })).rejects.toThrow(/Admin/i);
+    });
+
+    it('rejects UNAUTHORIZED when no user present', async () => {
+      const ctx = createPublicContext();
+      const caller = customActionHandlerRouter.createCaller(ctx);
+      await expect(caller.test({ id: 'h1' })).rejects.toThrow();
     });
 
     it('captures fetch error message', async () => {
@@ -132,10 +161,7 @@ describe('customActionHandlerRouter', () => {
         timeoutMs: 1000,
         actionTypeId: 'test',
       } as never);
-      vi.stubGlobal(
-        'fetch',
-        vi.fn().mockRejectedValue(new Error('network down'))
-      );
+      vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network down')));
 
       const caller = customActionHandlerRouter.createCaller(ctx);
       const result = await caller.test({ id: 'h1' });

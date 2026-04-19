@@ -164,6 +164,41 @@ describe('Documents Router - Caller Tests', () => {
 
       expect(result).toBeDefined();
     });
+
+    it('should allow a custom document type label when type is OTHER', async () => {
+      const ctx = createTestContext();
+      const caller = documentsRouter.createCaller(ctx);
+
+      const result = await caller.create({
+        title: 'Expert Opinion',
+        documentType: 'OTHER',
+        documentTypeLabel: 'Expert Opinion',
+        classification: 'INTERNAL',
+        contentHash: 'c'.repeat(64),
+        mimeType: 'application/pdf',
+        sizeBytes: 4096,
+      });
+
+      expect(result).toBeDefined();
+      expect(mockRepo.save).toHaveBeenCalled();
+    });
+
+    it('should reject a custom document type label for non-OTHER system types', async () => {
+      const ctx = createTestContext();
+      const caller = documentsRouter.createCaller(ctx);
+
+      await expect(
+        caller.create({
+          title: 'Quarterly Report',
+          documentType: 'REPORT',
+          documentTypeLabel: 'Expert Opinion',
+          classification: 'INTERNAL',
+          contentHash: 'd'.repeat(64),
+          mimeType: 'application/pdf',
+          sizeBytes: 1024,
+        })
+      ).rejects.toThrow('documentTypeLabel is only allowed when documentType is OTHER');
+    });
   });
 
   describe('createVersion', () => {

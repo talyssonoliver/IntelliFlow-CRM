@@ -281,8 +281,8 @@ describe('Lead Router Contract Tests', () => {
       await expect(caller.getById({ id: 'not-a-uuid' })).rejects.toThrow();
     });
 
-    it('should return lead via LeadService', async () => {
-      // Mock the Prisma findUnique call with related data
+    it('should return lead with Lead 360 relations via Prisma findUnique', async () => {
+      // getById queries Prisma directly (not LeadService); mock findUnique with relations
       const mockLeadWithRelations = {
         ...mockLead,
         owner: {
@@ -290,11 +290,13 @@ describe('Lead Router Contract Tests', () => {
           email: 'user@example.com',
           name: 'Test User',
           avatarUrl: null,
+          role: 'USER',
         },
         activities: [],
         notes: [],
         files: [],
         aiInsight: null,
+        aiInsights: [],
         tasks: [],
       };
 
@@ -312,15 +314,42 @@ describe('Lead Router Contract Tests', () => {
       expect(result).toHaveProperty('score');
     });
 
-    it('should throw NOT_FOUND error with correct code', async () => {
+    it('should not throw when Prisma returns a lead without the aiInsights relation', async () => {
+      // Regression: `lead.aiInsights[0]` previously crashed with
+      // "Cannot read properties of undefined (reading '0')" when the relation was absent.
+      const mockLeadMissingAiInsights = {
+        ...mockLead,
+        owner: {
+          id: TEST_UUIDS.user1,
+          email: 'user@example.com',
+          name: 'Test User',
+          avatarUrl: null,
+          role: 'USER',
+        },
+        activities: [],
+        notes: [],
+        files: [],
+        tasks: [],
+        // aiInsights intentionally omitted
+      };
+
+      prismaMock.lead.findUnique.mockResolvedValue(mockLeadMissingAiInsights as any);
+
       const ctx = createTestContext();
       const callerWithService = leadRouter.createCaller(ctx);
 
-      ctx.services!.lead!.getLeadById = vi.fn().mockResolvedValue({
-        isSuccess: false,
-        isFailure: true,
-        error: { code: 'NOT_FOUND_ERROR', message: `Lead not found: ${TEST_UUIDS.nonExistent}` },
-      });
+      const result = await callerWithService.getById({ id: TEST_UUIDS.lead1 });
+
+      expect(result).toHaveProperty('id');
+      expect(result).toHaveProperty('aiInsights');
+      expect(Array.isArray((result as any).aiInsights)).toBe(true);
+    });
+
+    it('should throw NOT_FOUND when Prisma returns null', async () => {
+      prismaMock.lead.findUnique.mockResolvedValue(null as any);
+
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
 
       try {
         await callerWithService.getById({ id: TEST_UUIDS.nonExistent });

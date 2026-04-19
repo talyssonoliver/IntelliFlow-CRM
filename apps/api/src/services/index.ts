@@ -6,15 +6,7 @@
  */
 
 // Appointment Domain Service
-export {
-  AppointmentDomainService,
-  appointmentDomainService,
-  type CreateAppointmentInput,
-  type RescheduleInput,
-  type CheckConflictsInput,
-  type FindNextSlotInput,
-  type ConflictInfo,
-} from './appointment-domain.service';
+export { AppointmentDomainService, appointmentDomainService } from './appointment-domain.service';
 
 // Deadline Domain Service
 export {

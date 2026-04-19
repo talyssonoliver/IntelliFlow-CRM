@@ -421,9 +421,7 @@ describe('Account Settings Router', () => {
     });
 
     it('returns existing rules without seeding', async () => {
-      (prismaMock.accountDuplicateRule.findMany as any).mockResolvedValueOnce([
-        { id: 'd-1' },
-      ]);
+      (prismaMock.accountDuplicateRule.findMany as any).mockResolvedValueOnce([{ id: 'd-1' }]);
       await caller.duplicateRules.getAll();
       expect(prismaMock.accountDuplicateRule.createMany).not.toHaveBeenCalled();
     });
@@ -482,7 +480,9 @@ describe('Account Settings Router', () => {
     });
 
     it('returns existing without seeding', async () => {
-      (prismaMock.accountRequiredField.findMany as any).mockResolvedValueOnce([{ fieldKey: 'name' }]);
+      (prismaMock.accountRequiredField.findMany as any).mockResolvedValueOnce([
+        { fieldKey: 'name' },
+      ]);
       await caller.requiredFields.getAll();
       expect(prismaMock.accountRequiredField.createMany).not.toHaveBeenCalled();
     });

@@ -45,9 +45,7 @@ interface HasTenantContext {
   tenant: { tenantId: string };
   prismaWithTenant: {
     contactAutomationSetting: {
-      findUnique(args: {
-        where: { tenantId: string };
-      }): Promise<ContactAutomationSetting | null>;
+      findUnique(args: { where: { tenantId: string } }): Promise<ContactAutomationSetting | null>;
     };
     contactRequiredField: {
       findMany(args: {
@@ -168,18 +166,13 @@ export function assertCanDeleteContact(
 
   throw new TRPCError({
     code: 'PRECONDITION_FAILED',
-    message: `Contact has ${counts.activeOpportunities} active opportunity(ies). Disable "Prevent delete with open deals" in Contact Settings or close/reassign the deals first.`,
+    message: `Contact has ${counts.activeOpportunities} associated opportunities (active). Disable "Prevent delete with open deals" in Contact Settings or close/reassign the deals first.`,
   });
 }
 
 // ─── Required-fields enforcement ────────────────────────────────────────────
 
-export type ContactFieldKey =
-  | 'email'
-  | 'phone'
-  | 'company'
-  | 'jobTitle'
-  | 'ownerId';
+export type ContactFieldKey = 'email' | 'phone' | 'company' | 'jobTitle' | 'ownerId';
 
 /** Snapshot of a Contact create/update payload restricted to fields that can
  *  be marked required in the settings page. */
@@ -198,9 +191,10 @@ export interface ContactRequiredFieldPayload {
 export async function loadRequiredContactFields(
   ctx: HasTenantContext
 ): Promise<Set<ContactFieldKey>> {
-  const rows = await ctx.prismaWithTenant.contactRequiredField.findMany({
-    where: { tenantId: ctx.tenant.tenantId, isRequired: true },
-  });
+  const rows =
+    (await ctx.prismaWithTenant.contactRequiredField.findMany({
+      where: { tenantId: ctx.tenant.tenantId, isRequired: true },
+    })) ?? [];
   const known: ContactFieldKey[] = ['email', 'phone', 'company', 'jobTitle', 'ownerId'];
   const whitelist = new Set<ContactFieldKey>(known);
   return new Set(
@@ -255,6 +249,80 @@ export function assertRequiredContactFields(
 
 interface UserRoleContext {
   user?: { role?: string | null } | null;
+}
+
+// ─── Owner-change notification helper ───────────────────────────────────────
+
+/**
+ * Arguments for notifying both parties when a contact changes owner.
+ * Caller is responsible for computing `previousOwnerId`/`nextOwnerId`
+ * (usually by reading the contact row before + after the update).
+ */
+export interface OwnerChangeNotification {
+  tenantId: string;
+  contactId: string;
+  contactName: string;
+  previousOwnerId: string;
+  nextOwnerId: string;
+  actingUserId: string;
+}
+
+type NotificationCreator = (args: {
+  userId: string;
+  tenantId: string;
+  type: 'contact_reassigned';
+  title: string;
+  body: string;
+  priority?: 'high' | 'normal' | 'low';
+  entityType?: string;
+  entityId?: string;
+  entityName?: string;
+  actionUrl?: string;
+}) => Promise<unknown>;
+
+/**
+ * Emit "contact_reassigned" notifications to both the previous and the
+ * next owner when the `notifyOnOwnerChange` flag is on. Callers pass in
+ * the bound notification-creator so we don't take an import-time
+ * dependency on the notifications module (keeps the helper unit-testable).
+ *
+ * Wiring: once a contact-reassign endpoint is added (see
+ * FOLLOWUP-PG-182-OWNER), invoke this helper after the owner update with
+ * the real `createNotification` from
+ * `apps/api/src/modules/notifications/notifications.router.ts`.
+ */
+export async function notifyContactReassignment(
+  args: OwnerChangeNotification,
+  flags: Pick<ContactAutomationFlags, 'notifyOnOwnerChange'>,
+  createNotification: NotificationCreator
+): Promise<void> {
+  if (!flags.notifyOnOwnerChange) return;
+  if (args.previousOwnerId === args.nextOwnerId) return;
+
+  const commonPayload = {
+    tenantId: args.tenantId,
+    type: 'contact_reassigned' as const,
+    entityType: 'contact',
+    entityId: args.contactId,
+    entityName: args.contactName,
+    actionUrl: `/contacts/${args.contactId}`,
+    priority: 'normal' as const,
+  };
+
+  await Promise.all([
+    createNotification({
+      ...commonPayload,
+      userId: args.previousOwnerId,
+      title: `Contact reassigned: ${args.contactName}`,
+      body: `You are no longer the owner of ${args.contactName}. Handover to the new owner if needed.`,
+    }),
+    createNotification({
+      ...commonPayload,
+      userId: args.nextOwnerId,
+      title: `You now own: ${args.contactName}`,
+      body: `A contact was assigned to you. Review recent activity before reaching out.`,
+    }),
+  ]);
 }
 
 /**

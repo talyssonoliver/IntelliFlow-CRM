@@ -131,6 +131,14 @@ const mockContext = {
 describe('Documents Router - IFC-152', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // PG-186: Stub document automation models so loadDocumentAutomation
+    // (called from documents.router.ts create/update/delete) returns factory defaults.
+    (mockContext.prisma as any).documentAutomationSetting = {
+      findUnique: vi.fn().mockResolvedValue(null),
+    };
+    (mockContext.prisma as any).documentRequiredField = {
+      findMany: vi.fn().mockResolvedValue([]),
+    };
   });
 
   afterEach(() => {

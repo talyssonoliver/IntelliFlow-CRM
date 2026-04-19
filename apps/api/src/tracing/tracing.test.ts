@@ -176,31 +176,12 @@ describe('OpenTelemetry Configuration', () => {
   });
 });
 
-describe('Health Router Integration', () => {
-  it('should include correlation ID in health responses', () => {
-    // This would be an integration test
-    // Testing that health endpoints return correlation IDs
-    expect(true).toBe(true); // Placeholder
-  });
-});
-
-describe('Tracing Middleware', () => {
-  it('should create spans for tRPC procedures', () => {
-    // This would test the middleware
-    // Verify spans are created and ended correctly
-    expect(true).toBe(true); // Placeholder
-  });
-
-  it('should capture errors to Sentry', () => {
-    // Test error capture
-    expect(true).toBe(true); // Placeholder
-  });
-
-  it('should track performance metrics', () => {
-    // Test performance tracking
-    expect(true).toBe(true); // Placeholder
-  });
-});
+// Health / Middleware / Sentry integration tests removed — the placeholder
+// cases they held were already covered by:
+//   - createCorrelationHeaders suite above (health correlation headers)
+//   - middleware.test.ts "tRPC tracing middleware" (spans on procedures)
+//   - sentry.test.ts + middleware.test.ts:129 (error capture)
+//   - middleware.test.ts:156 (metricsMiddleware performance tracking)
 
 describe('Performance Requirements', () => {
   it('should meet p95 tracing overhead <5ms KPI', async () => {

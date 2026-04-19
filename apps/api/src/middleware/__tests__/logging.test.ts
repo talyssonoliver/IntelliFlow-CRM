@@ -778,9 +778,7 @@ describe('LoggingMiddleware', () => {
       expect(consoleWarnSpy).toHaveBeenCalled(); // Performance middleware (slow request)
     });
 
-    // Note: Middleware composition with nested next functions has complex
-    // context propagation that doesn't match this test pattern
-    it.skip('should compose all three middleware types', async () => {
+    it('should compose all three middleware types', async () => {
       const loggingMiddleware = createLoggingMiddleware();
       const performanceMiddleware = createPerformanceMiddleware(50);
       const errorTrackingMiddleware = createErrorTrackingMiddleware();
@@ -790,29 +788,38 @@ describe('LoggingMiddleware', () => {
         throw new Error('Test error');
       });
 
-      // Compose middleware without deep nesting
-      const composedMiddleware = async (opts: any) => {
+      const baseCtx = createMockContext();
+      const path = 'test.route';
+      const type = 'query';
+
+      // Compose: logging → performance → errorTracking → finalNext.
+      // Each middleware's `next` must close over the original ctx/path/type so that
+      // when the inner middleware calls next() with no args (as performanceMiddleware does),
+      // the next layer still gets a valid opts object.
+      const composedMiddleware = async () => {
         return loggingMiddleware({
-          ...opts,
-          next: async (loggingOpts: any) =>
-            performanceMiddleware({
-              ...loggingOpts,
-              next: async (perfOpts: any) =>
+          ctx: baseCtx,
+          path,
+          type,
+          next: async (loggingOpts: any) => {
+            const ctx = loggingOpts?.ctx ?? baseCtx;
+            return performanceMiddleware({
+              ctx,
+              path,
+              type,
+              next: async () =>
                 errorTrackingMiddleware({
-                  ...perfOpts,
+                  ctx,
+                  path,
+                  type,
                   next: finalNext,
                 }),
-            }),
+            });
+          },
         });
       };
 
-      await expect(
-        composedMiddleware({
-          ctx: createMockContext(),
-          path: 'test.route',
-          type: 'query',
-        })
-      ).rejects.toThrow('Test error');
+      await expect(composedMiddleware()).rejects.toThrow('Test error');
 
       expect(consoleLogSpy).toHaveBeenCalled(); // Request log
       expect(consoleErrorSpy).toHaveBeenCalledTimes(2); // Logging + Error tracking

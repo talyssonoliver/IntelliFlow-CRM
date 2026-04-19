@@ -27,6 +27,7 @@ import type {
 import type { Context } from '../../context';
 import { getTenantContext } from '../../security/tenant-context';
 import { mapErrorToTRPCError as centralizedErrorMapper } from '../../shared/error-mapper';
+import { hasPermission } from '../../lib/rbac';
 
 // ============================================================
 // Lazy-loaded repository (follows autoresponse.router.ts pattern)
@@ -293,6 +294,15 @@ export const aiReviewRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      // RBAC gate: caller must hold the 'ai:output-review' / 'claim' permission.
+      // ADMIN role is short-circuited inside hasPermission.
+      if (!(await hasPermission(ctx, 'ai:output-review', 'claim'))) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'You do not have permission to claim AI output reviews.',
+        });
+      }
+
       const typedCtx = getTenantContext(ctx);
       const repository = await getRepository(ctx);
 
@@ -333,6 +343,15 @@ export const aiReviewRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      // RBAC gate: caller must hold the 'ai:output-review' / 'approve' permission.
+      // ADMIN role is short-circuited inside hasPermission.
+      if (!(await hasPermission(ctx, 'ai:output-review', 'approve'))) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'You do not have permission to approve AI output reviews.',
+        });
+      }
+
       const typedCtx = getTenantContext(ctx);
       const repository = await getRepository(ctx);
 
@@ -371,6 +390,15 @@ export const aiReviewRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      // RBAC gate: caller must hold the 'ai:output-review' / 'reject' permission.
+      // ADMIN role is short-circuited inside hasPermission.
+      if (!(await hasPermission(ctx, 'ai:output-review', 'reject'))) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'You do not have permission to reject AI output reviews.',
+        });
+      }
+
       const typedCtx = getTenantContext(ctx);
       const repository = await getRepository(ctx);
 
@@ -411,6 +439,15 @@ export const aiReviewRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      // RBAC gate: caller must hold the 'ai:output-review' / 'escalate' permission.
+      // ADMIN role is short-circuited inside hasPermission.
+      if (!(await hasPermission(ctx, 'ai:output-review', 'escalate'))) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'You do not have permission to escalate AI output reviews.',
+        });
+      }
+
       const typedCtx = getTenantContext(ctx);
       const repository = await getRepository(ctx);
 
@@ -451,6 +488,15 @@ export const aiReviewRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      // RBAC gate: caller must hold the 'ai:output-review' / 'release' permission.
+      // ADMIN role is short-circuited inside hasPermission.
+      if (!(await hasPermission(ctx, 'ai:output-review', 'release'))) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'You do not have permission to release AI output reviews.',
+        });
+      }
+
       const typedCtx = getTenantContext(ctx);
       const repository = await getRepository(ctx);
 

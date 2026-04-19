@@ -214,6 +214,19 @@ vi.mock('@intelliflow/adapters', () => ({
     }
   },
   createEmailServiceAdapter: vi.fn().mockReturnValue({ name: 'emailServiceAdapter' }),
+  PrismaAppointmentRepository: class {
+    forTenant() {
+      return {};
+    }
+    save = vi.fn();
+    saveAll = vi.fn();
+    batchUpdateStatus = vi.fn();
+  },
+  PrismaConversationSearchRepository: class {
+    constructor() {
+      return { name: 'conversationSearchRepo' };
+    }
+  },
 }));
 
 vi.mock('../modules/calendar/calendar-webhook.service', () => ({
@@ -337,6 +350,36 @@ vi.mock('@intelliflow/application', () => ({
   ConversationSearchService: class {
     constructor() {
       return { name: 'conversationSearchService' };
+    }
+  },
+  ScheduleAppointmentUseCase: class {
+    constructor() {
+      return { name: 'scheduleAppointmentUseCase', execute: vi.fn() };
+    }
+  },
+  RescheduleAppointmentUseCase: class {
+    constructor() {
+      return { name: 'rescheduleAppointmentUseCase', execute: vi.fn() };
+    }
+  },
+  CancelAppointmentUseCase: class {
+    constructor() {
+      return { name: 'cancelAppointmentUseCase', execute: vi.fn() };
+    }
+  },
+  CompleteAppointmentUseCase: class {
+    constructor() {
+      return { name: 'completeAppointmentUseCase', execute: vi.fn() };
+    }
+  },
+  CheckConflictsUseCase: class {
+    constructor() {
+      return {
+        name: 'checkConflictsUseCase',
+        checkConflicts: vi.fn(),
+        checkAvailability: vi.fn(),
+        findNextSlot: vi.fn(),
+      };
     }
   },
 }));

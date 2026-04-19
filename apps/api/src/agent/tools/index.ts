@@ -34,6 +34,7 @@ export type { UpdatedCaseResult, UpdatedAppointmentResult } from './update';
 export { draftMessageTools, draftMessageTool } from './draft-message';
 export type { DraftedMessageResult } from './draft-message';
 
+import type { PrismaClient } from '@intelliflow/db';
 import { AgentToolDefinition } from '../types';
 import {
   searchLeadsTool,
@@ -44,6 +45,10 @@ import {
 import { createCaseTool, createAppointmentTool } from './create';
 import { updateCaseTool, updateAppointmentTool } from './update';
 import { draftMessageTool } from './draft-message';
+import { isToolEnabledForTenant, ToolDisabledError } from './tool-enablement';
+
+export { ToolDisabledError } from './tool-enablement';
+export { isToolEnabledForTenant, __invalidateCache } from './tool-enablement';
 
 /**
  * Registry of all available agent tools
@@ -73,6 +78,33 @@ export const agentToolRegistry: Map<string, AgentToolDefinition<unknown, unknown
  */
 export function getAgentTool(name: string): AgentToolDefinition<unknown, unknown> | undefined {
   return agentToolRegistry.get(name);
+}
+
+/**
+ * Get a tool by name, first verifying it is enabled for the given tenant.
+ *
+ * Throws ToolDisabledError when the tenant has explicitly disabled the tool.
+ * Returns undefined (same as getAgentTool) when the tool name is not registered.
+ *
+ * Use this variant everywhere tenant context is available (tRPC procedures,
+ * approval-workflow execution). Background jobs without tenant context should
+ * continue using getAgentTool() but MUST be updated to supply tenantId before
+ * invoking user-facing tools.
+ */
+export async function getForTenant(opts: {
+  name: string;
+  tenantId: string;
+  prisma: PrismaClient;
+}): Promise<AgentToolDefinition<unknown, unknown> | undefined> {
+  const tool = agentToolRegistry.get(opts.name);
+  if (!tool) return undefined;
+
+  const enabled = await isToolEnabledForTenant(opts.prisma, opts.tenantId, opts.name);
+  if (!enabled) {
+    throw new ToolDisabledError(opts.name, opts.tenantId);
+  }
+
+  return tool;
 }
 
 /**

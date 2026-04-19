@@ -19,7 +19,12 @@
 
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-import { createTRPCRouter, tenantProcedure } from '../../trpc';
+import {
+  createTRPCRouter,
+  adminProcedure,
+  adminTenantProcedure,
+  tenantProcedure,
+} from '../../trpc';
 import { loadBullMQ } from '../../lib/load-bullmq';
 
 // ============================================================
@@ -63,7 +68,7 @@ export const aiMonitoringRouter = createTRPCRouter({
    */
   getStatus: tenantProcedure.query(async ({ ctx }) => {
     try {
-      return await ctx.services!.aiMonitoringService!.getStatus();
+      return await ctx.services!.aiMonitoringService!.getStatus({ tenantId: ctx.tenant.tenantId });
     } catch (error) {
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
@@ -79,7 +84,10 @@ export const aiMonitoringRouter = createTRPCRouter({
    */
   getDriftMetrics: tenantProcedure.input(driftQuerySchema).query(async ({ ctx, input }) => {
     try {
-      return await ctx.services!.aiMonitoringService!.getDriftMetrics(input);
+      return await ctx.services!.aiMonitoringService!.getDriftMetrics({
+        ...input,
+        tenantId: ctx.tenant.tenantId,
+      });
     } catch (error) {
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
@@ -95,7 +103,10 @@ export const aiMonitoringRouter = createTRPCRouter({
    */
   getLatencyMetrics: tenantProcedure.input(latencyQuerySchema).query(async ({ ctx, input }) => {
     try {
-      return await ctx.services!.aiMonitoringService!.getLatencyMetrics(input);
+      return await ctx.services!.aiMonitoringService!.getLatencyMetrics({
+        ...input,
+        tenantId: ctx.tenant.tenantId,
+      });
     } catch (error) {
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
@@ -118,7 +129,10 @@ export const aiMonitoringRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       try {
-        return await ctx.services!.aiMonitoringService!.getLatencyTrend(input);
+        return await ctx.services!.aiMonitoringService!.getLatencyTrend({
+          ...input,
+          tenantId: ctx.tenant.tenantId,
+        });
       } catch (error) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
@@ -136,7 +150,10 @@ export const aiMonitoringRouter = createTRPCRouter({
     .input(hallucinationQuerySchema)
     .query(async ({ ctx, input }) => {
       try {
-        return await ctx.services!.aiMonitoringService!.getHallucinationReport(input);
+        return await ctx.services!.aiMonitoringService!.getHallucinationReport({
+          ...input,
+          tenantId: ctx.tenant.tenantId,
+        });
       } catch (error) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
@@ -152,7 +169,10 @@ export const aiMonitoringRouter = createTRPCRouter({
    */
   getROIMetrics: tenantProcedure.input(timeRangeSchema).query(async ({ ctx, input }) => {
     try {
-      return await ctx.services!.aiMonitoringService!.getROIMetrics(input);
+      return await ctx.services!.aiMonitoringService!.getROIMetrics({
+        ...input,
+        tenantId: ctx.tenant.tenantId,
+      });
     } catch (error) {
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
@@ -299,8 +319,9 @@ export const aiMonitoringRouter = createTRPCRouter({
   /**
    * Reset an agent's status from ERROR → IDLE.
    * Clears error fields so it shows as healthy on the dashboard.
+   * Admin-only: state-mutating operation that affects agent health visibility.
    */
-  resetAgentStatus: tenantProcedure
+  resetAgentStatus: adminTenantProcedure
     .input(z.object({ agentId: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
       try {
@@ -340,8 +361,9 @@ export const aiMonitoringRouter = createTRPCRouter({
   /**
    * Delete an agent record (removes from Active Agents dashboard).
    * Also deletes associated messages and tool calls.
+   * Admin-only: destructive operation that permanently removes agent data.
    */
-  deleteAgent: tenantProcedure
+  deleteAgent: adminTenantProcedure
     .input(z.object({ agentId: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
       try {
@@ -380,8 +402,9 @@ export const aiMonitoringRouter = createTRPCRouter({
   /**
    * Failed BullMQ jobs across AI queues.
    * Provides DLQ-like visibility into the /agent-approvals/logs page.
+   * Admin-only: exposes cross-queue infrastructure data (no tenant scoping in handler).
    */
-  getFailedJobs: tenantProcedure
+  getFailedJobs: adminProcedure
     .input(
       z.object({
         queue: z.enum(['ai-scoring', 'ai-prediction', 'ai-insights']).optional(),

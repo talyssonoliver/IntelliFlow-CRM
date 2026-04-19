@@ -52,6 +52,15 @@ vi.mock('@opentelemetry/api', () => ({
     }),
   },
   SpanStatusCode: { ERROR: 2, OK: 0 },
+  SpanKind: { INTERNAL: 0, SERVER: 1, CLIENT: 2, PRODUCER: 3, CONSUMER: 4 },
+  context: {
+    active: () => ({}),
+    with: (_ctx: unknown, fn: () => unknown) => fn(),
+  },
+  propagation: {
+    inject: vi.fn(),
+    extract: vi.fn(),
+  },
 }));
 
 vi.mock('../tracing/sentry', () => ({
@@ -193,6 +202,7 @@ export const mockAdapters = {
   notificationPreferenceRepository: mockDeep<any>(),
   notificationAuditLogger: mockDeep<any>(),
   experimentRepository: mockDeep<any>(),
+  appointmentRepository: mockDeep<any>(),
 };
 
 /**
@@ -478,6 +488,7 @@ export const mockTask = {
   contactId: null,
   opportunityId: null,
   ownerId: TEST_UUIDS.user1,
+  assigneeId: null,
   calendarId: null,
   createdAt: new Date('2024-01-01'),
   updatedAt: new Date('2024-01-01'),

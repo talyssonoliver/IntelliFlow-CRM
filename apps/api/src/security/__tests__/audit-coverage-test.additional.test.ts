@@ -182,15 +182,6 @@ describe('audit-coverage-test.ts source coverage', () => {
     vi.clearAllMocks();
   });
 
-  it('should import source file for coverage', async () => {
-    try {
-      await import('../audit-coverage-test.js');
-    } catch {
-      /* expected */
-    }
-    expect(true).toBe(true);
-  });
-
   it('should cover CRUD operations', async () => {
     const { AuditLogger, resetAuditLogger } = await import('../audit-logger.js');
     resetAuditLogger();

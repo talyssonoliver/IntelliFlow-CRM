@@ -394,9 +394,7 @@ async function validateCustomNodeConfigs(
       continue;
     }
     if (!descriptor.isActive) {
-      errors.push(
-        `Step ${u.stepId} uses deactivated custom node type "${u.type}"`
-      );
+      errors.push(`Step ${u.stepId} uses deactivated custom node type "${u.type}"`);
       continue;
     }
     const schema = buildZodFromDescriptors(descriptor.configSchema);
@@ -412,19 +410,29 @@ async function validateCustomNodeConfigs(
   return errors;
 }
 
-function validateWorkflowGraph(graph: GraphInput): string[] {
+// ---------------------------------------------------------------------------
+// validateWorkflowGraph helpers
+// ---------------------------------------------------------------------------
+
+type GraphStep = { id: number; type: string };
+type GraphEdge = { source: string; target: string };
+
+interface AdjacencyData {
+  outgoing: Map<string, string[]>;
+  inDegree: Map<string, number>;
+  nodeIds: Set<string>;
+}
+
+function checkNodeCounts(steps: GraphStep[]): string[] {
   const errors: string[] = [];
-  const { steps, edges } = graph;
+  if (steps.filter((s) => s.type === 'start').length !== 1)
+    errors.push('Workflow must have exactly one Start node');
+  if (steps.filter((s) => s.type === 'end').length !== 1)
+    errors.push('Workflow must have exactly one End node');
+  return errors;
+}
 
-  // Rule 1: exactly one start node
-  const startCount = steps.filter((s) => s.type === 'start').length;
-  if (startCount !== 1) errors.push('Workflow must have exactly one Start node');
-
-  // Rule 2: exactly one end node
-  const endCount = steps.filter((s) => s.type === 'end').length;
-  if (endCount !== 1) errors.push('Workflow must have exactly one End node');
-
-  // Build adjacency for connectivity + cycle checks
+function buildAdjacencyMap(steps: GraphStep[], edges: GraphEdge[]): AdjacencyData {
   const nodeIds = new Set(steps.map((s) => `node-${s.id}`));
   const outgoing = new Map<string, string[]>();
   const inDegree = new Map<string, number>();
@@ -438,52 +446,74 @@ function validateWorkflowGraph(graph: GraphInput): string[] {
       inDegree.set(e.target, (inDegree.get(e.target) ?? 0) + 1);
     }
   }
+  return { outgoing, inDegree, nodeIds };
+}
 
-  // Rule 3: all nodes reachable from start via BFS (catches disconnected subgraphs)
-  if (steps.length > 1 && startCount === 1) {
-    const startNode = steps.find((s) => s.type === 'start')!;
-    const startId = `node-${startNode.id}`;
-    const visited = new Set<string>();
-    const bfsQueue = [startId];
-    visited.add(startId);
-    while (bfsQueue.length > 0) {
-      const current = bfsQueue.shift()!;
-      for (const neighbor of outgoing.get(current) ?? []) {
-        if (!visited.has(neighbor)) {
-          visited.add(neighbor);
-          bfsQueue.push(neighbor);
-        }
-      }
-    }
-    if (visited.size < nodeIds.size) {
-      errors.push('All nodes must be connected');
-    }
-  } else if (steps.length > 1) {
-    // Fallback when start node is missing: check for fully isolated nodes
-    for (const s of steps) {
-      const nid = `node-${s.id}`;
-      const out = outgoing.get(nid)?.length ?? 0;
-      const inc = inDegree.get(nid) ?? 0;
-      if (out === 0 && inc === 0) {
-        errors.push('All nodes must be connected');
-        break;
+function checkBfsConnectivity(
+  nodeIds: Set<string>,
+  startId: string,
+  outgoing: Map<string, string[]>
+): string[] {
+  const visited = new Set<string>([startId]);
+  const bfsQueue = [startId];
+  while (bfsQueue.length > 0) {
+    const current = bfsQueue.shift()!;
+    for (const neighbor of outgoing.get(current) ?? []) {
+      if (!visited.has(neighbor)) {
+        visited.add(neighbor);
+        bfsQueue.push(neighbor);
       }
     }
   }
+  return visited.size < nodeIds.size ? ['All nodes must be connected'] : [];
+}
 
-  // Rule 4: decision nodes need ≥2 outgoing edges
+function checkFallbackConnectivity(
+  steps: GraphStep[],
+  outgoing: Map<string, string[]>,
+  inDegree: Map<string, number>
+): string[] {
+  for (const s of steps) {
+    const nid = `node-${s.id}`;
+    if ((outgoing.get(nid)?.length ?? 0) === 0 && (inDegree.get(nid) ?? 0) === 0)
+      return ['All nodes must be connected'];
+  }
+  return [];
+}
+
+function checkConnectivity(
+  steps: GraphStep[],
+  nodeIds: Set<string>,
+  outgoing: Map<string, string[]>,
+  inDegree: Map<string, number>
+): string[] {
+  if (steps.length <= 1) return [];
+  const startNode = steps.find((s) => s.type === 'start');
+  if (startNode) {
+    return checkBfsConnectivity(nodeIds, `node-${startNode.id}`, outgoing);
+  }
+  return checkFallbackConnectivity(steps, outgoing, inDegree);
+}
+
+function checkDecisionNodes(steps: GraphStep[], outgoing: Map<string, string[]>): string[] {
+  const errors: string[] = [];
   for (const s of steps) {
     if (s.type === 'decision') {
       const out = outgoing.get(`node-${s.id}`)?.length ?? 0;
-      if (out < 2) {
+      if (out < 2)
         errors.push(
           `Decision nodes must have at least 2 outgoing connections (node ${s.id} has ${out})`
         );
-      }
     }
   }
+  return errors;
+}
 
-  // Rule 5: cycle detection via Kahn's algorithm
+function checkCycles(
+  nodeIds: Set<string>,
+  inDegree: Map<string, number>,
+  outgoing: Map<string, string[]>
+): string[] {
   const degCopy = new Map(inDegree);
   const queue: string[] = [];
   for (const [id, d] of degCopy) if (d === 0) queue.push(id);
@@ -497,9 +527,43 @@ function validateWorkflowGraph(graph: GraphInput): string[] {
       if (nd === 0) queue.push(nb);
     }
   }
-  if (processed < nodeIds.size) errors.push('Workflow must not have cycles');
+  return processed < nodeIds.size ? ['Workflow must not have cycles'] : [];
+}
 
-  return errors;
+/** Extracts the node/edge arrays from the stored JSON graph envelope. */
+function extractGraphEnvelope(stored: unknown): { nodes: GraphStep[]; edges: GraphEdge[] } {
+  const g = stored as Record<string, unknown> | unknown[] | null;
+  const nodes = Array.isArray(g)
+    ? (g as GraphStep[])
+    : (((g as Record<string, unknown>)?.nodes ?? []) as GraphStep[]);
+  const edges = Array.isArray(g)
+    ? []
+    : (((g as Record<string, unknown>)?.edges ?? []) as GraphEdge[]);
+  return { nodes, edges };
+}
+
+/** Merges incoming step/edge updates with the existing stored graph envelope. */
+function mergeGraphEnvelope(
+  stored: unknown,
+  newSteps: GraphStep[] | undefined,
+  newEdges: GraphEdge[] | undefined
+): Prisma.InputJsonValue {
+  const prev = extractGraphEnvelope(stored);
+  return {
+    nodes: newSteps ?? prev.nodes,
+    edges: newEdges ?? prev.edges,
+  } as unknown as Prisma.InputJsonValue;
+}
+
+function validateWorkflowGraph(graph: GraphInput): string[] {
+  const { steps, edges } = graph;
+  const { outgoing, inDegree, nodeIds } = buildAdjacencyMap(steps, edges);
+  return [
+    ...checkNodeCounts(steps),
+    ...checkConnectivity(steps, nodeIds, outgoing, inDegree),
+    ...checkDecisionNodes(steps, outgoing),
+    ...checkCycles(nodeIds, inDegree, outgoing),
+  ];
 }
 
 // ---------------------------------------------------------------------------
@@ -589,22 +653,10 @@ export const workflowRouter = createTRPCRouter({
 
     // Server-side topology validation when steps or edges change (AC-008)
     if (data.steps || data.edges) {
-      const prevGraph = existing.steps as Record<string, unknown> | unknown[];
-      const prevNodes = Array.isArray(prevGraph)
-        ? (prevGraph as Array<{ id: number; type: string }>)
-        : (((prevGraph as Record<string, unknown>)?.nodes ?? []) as Array<{
-            id: number;
-            type: string;
-          }>);
-      const prevEdges = Array.isArray(prevGraph)
-        ? []
-        : (((prevGraph as Record<string, unknown>)?.edges ?? []) as Array<{
-            source: string;
-            target: string;
-          }>);
+      const prev = extractGraphEnvelope(existing.steps);
       const topologyErrors = validateWorkflowGraph({
-        steps: data.steps ?? prevNodes,
-        edges: (data.edges ?? prevEdges) as Array<{ source: string; target: string }>,
+        steps: data.steps ?? prev.nodes,
+        edges: (data.edges ?? prev.edges) as GraphEdge[],
       });
       if (topologyErrors.length > 0) {
         throw new TRPCError({
@@ -614,7 +666,7 @@ export const workflowRouter = createTRPCRouter({
       }
 
       // Custom node type validation (IFC-031 FU-011)
-      const stepsForCheck = (data.steps ?? prevNodes) as Array<{
+      const stepsForCheck = (data.steps ?? prev.nodes) as Array<{
         id: number;
         type: string;
         config?: Record<string, unknown>;
@@ -643,20 +695,7 @@ export const workflowRouter = createTRPCRouter({
           triggerConfig: data.triggerConfig as Prisma.InputJsonValue,
         }),
         ...((data.steps !== undefined || data.edges !== undefined) && {
-          steps: (() => {
-            // Merge nodes + edges into the graph envelope
-            const prevGraph = existing.steps as Record<string, unknown> | unknown[] | null;
-            const prevNodes = Array.isArray(prevGraph)
-              ? prevGraph
-              : ((prevGraph as Record<string, unknown>)?.nodes ?? []);
-            const prevEdges = Array.isArray(prevGraph)
-              ? []
-              : ((prevGraph as Record<string, unknown>)?.edges ?? []);
-            return {
-              nodes: data.steps ?? prevNodes,
-              edges: data.edges ?? prevEdges,
-            } as unknown as Prisma.InputJsonValue;
-          })(),
+          steps: mergeGraphEnvelope(existing.steps, data.steps, data.edges),
         }),
         version: existing.version + 1,
       },

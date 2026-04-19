@@ -80,7 +80,7 @@ describe('intelligenceRouter', () => {
       const aiInsight = createMockLeadAIInsight();
       prismaMock.lead.findUnique.mockResolvedValue({
         id: TEST_UUIDS.lead1,
-        aiInsight,
+        aiInsights: [aiInsight],
       } as any);
 
       const result = await caller.getLeadInsights({ leadId: TEST_UUIDS.lead1 });
@@ -102,7 +102,7 @@ describe('intelligenceRouter', () => {
     it('should return null when lead has no AI insight', async () => {
       prismaMock.lead.findUnique.mockResolvedValue({
         id: TEST_UUIDS.lead1,
-        aiInsight: null,
+        aiInsights: [],
       } as any);
 
       const result = await caller.getLeadInsights({ leadId: TEST_UUIDS.lead1 });
@@ -128,14 +128,14 @@ describe('intelligenceRouter', () => {
     it('should include aiInsight in the Prisma query', async () => {
       prismaMock.lead.findUnique.mockResolvedValue({
         id: TEST_UUIDS.lead1,
-        aiInsight: null,
+        aiInsights: [],
       } as any);
 
       await caller.getLeadInsights({ leadId: TEST_UUIDS.lead1 });
 
       expect(prismaMock.lead.findUnique).toHaveBeenCalledWith({
         where: { id: TEST_UUIDS.lead1 },
-        include: { aiInsight: true },
+        include: { aiInsights: { take: 1 } },
       });
     });
 
@@ -143,7 +143,7 @@ describe('intelligenceRouter', () => {
       const aiInsight = createMockLeadAIInsight();
       prismaMock.lead.findUnique.mockResolvedValue({
         id: TEST_UUIDS.lead1,
-        aiInsight,
+        aiInsights: [aiInsight],
       } as any);
 
       const result = await caller.getLeadInsights({ leadId: TEST_UUIDS.lead1 });
@@ -155,7 +155,7 @@ describe('intelligenceRouter', () => {
       const aiInsight = createMockLeadAIInsight();
       prismaMock.lead.findUnique.mockResolvedValue({
         id: TEST_UUIDS.lead1,
-        aiInsight,
+        aiInsights: [aiInsight],
       } as any);
 
       const result = await caller.getLeadInsights({ leadId: TEST_UUIDS.lead1 });
@@ -243,7 +243,7 @@ describe('intelligenceRouter', () => {
       const aiInsight = createMockLeadAIInsight();
       prismaMock.lead.findUnique.mockResolvedValue({
         id: TEST_UUIDS.lead1,
-        aiInsight,
+        aiInsights: [aiInsight],
       } as any);
 
       const result = await caller.getInsightsSummary({
@@ -282,7 +282,7 @@ describe('intelligenceRouter', () => {
     it('should return null when entity has no AI insight', async () => {
       prismaMock.lead.findUnique.mockResolvedValue({
         id: TEST_UUIDS.lead1,
-        aiInsight: null,
+        aiInsights: [],
       } as any);
 
       const result = await caller.getInsightsSummary({
@@ -307,7 +307,7 @@ describe('intelligenceRouter', () => {
       const aiInsight = createMockLeadAIInsight({ churnRisk: 'HIGH' });
       prismaMock.lead.findUnique.mockResolvedValue({
         id: TEST_UUIDS.lead1,
-        aiInsight,
+        aiInsights: [aiInsight],
       } as any);
 
       const result = await caller.getInsightsSummary({
@@ -322,7 +322,7 @@ describe('intelligenceRouter', () => {
       const aiInsight = createMockLeadAIInsight({ nextBestAction: null });
       prismaMock.lead.findUnique.mockResolvedValue({
         id: TEST_UUIDS.lead1,
-        aiInsight,
+        aiInsights: [aiInsight],
       } as any);
 
       const result = await caller.getInsightsSummary({
@@ -338,7 +338,7 @@ describe('intelligenceRouter', () => {
       const aiInsight = createMockLeadAIInsight();
       prismaMock.lead.findUnique.mockResolvedValue({
         id: TEST_UUIDS.lead1,
-        aiInsight,
+        aiInsights: [aiInsight],
       } as any);
 
       const result = await caller.getInsightsSummary({
@@ -354,7 +354,7 @@ describe('intelligenceRouter', () => {
       const aiInsight = createMockLeadAIInsight({ estimatedValue: 30000 });
       prismaMock.lead.findUnique.mockResolvedValue({
         id: TEST_UUIDS.lead1,
-        aiInsight,
+        aiInsights: [aiInsight],
       } as any);
 
       const result = await caller.getInsightsSummary({
@@ -581,7 +581,12 @@ describe('intelligenceRouter', () => {
 
       expect(prismaMock.leadAIInsight.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { leadId: TEST_UUIDS.lead1 },
+          where: {
+            leadId_tenantId: {
+              leadId: TEST_UUIDS.lead1,
+              tenantId: TEST_UUIDS.tenant,
+            },
+          },
           create: expect.objectContaining({
             tenantId: TEST_UUIDS.tenant,
             leadId: TEST_UUIDS.lead1,

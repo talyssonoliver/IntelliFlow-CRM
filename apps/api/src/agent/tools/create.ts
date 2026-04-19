@@ -450,7 +450,7 @@ export const createAppointmentTool: AgentToolDefinition<
     }
 
     // Check for weekend appointments
-    const dayOfWeek = input.startTime.getDay();
+    const dayOfWeek = input.startTime.getUTCDay();
     if (dayOfWeek === 0 || dayOfWeek === 6) {
       warnings.push('This appointment is scheduled on a weekend');
     }

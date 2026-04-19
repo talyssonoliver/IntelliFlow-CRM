@@ -17,32 +17,54 @@ import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import { container } from '../../container';
 import { loadBullMQ } from '../../lib/load-bullmq';
+import {
+  loadDocumentAutomation,
+  normalizeFilename,
+  assertNotDeleteGuarded,
+} from './document-automation';
+// PG-186 Cat-2 helpers (notifyDocumentReassignment, notifyOnDuplicate consumer)
+// are exported from document-automation.ts and will be consumed by:
+//   IFC-310 — duplicate-detection runtime (notifyOnDuplicate firing on collision)
+//   IFC-311 — document-reassign endpoint (notifyDocumentReassignment on owner change)
+// They are intentionally NOT imported here — the toggles persist (so user
+// preferences carry forward) but are gated as Cat-2 in the spec/UI.
 
 // ============================================================================
 // Input Schemas
 // ============================================================================
 
-const createDocumentInputSchema = z.object({
-  title: z.string().min(1).max(255),
-  description: z.string().max(2000).optional(),
-  documentType: z.enum([
-    'CONTRACT',
-    'AGREEMENT',
-    'EVIDENCE',
-    'CORRESPONDENCE',
-    'COURT_FILING',
-    'MEMO',
-    'REPORT',
-    'OTHER',
-  ]),
-  classification: z.enum(['PUBLIC', 'INTERNAL', 'CONFIDENTIAL', 'PRIVILEGED']),
-  tags: z.array(z.string().max(50)).max(20).default([]),
-  relatedCaseId: z.uuid().optional(),
-  relatedContactId: z.uuid().optional(),
-  contentHash: z.string().check(z.regex(/^[a-f0-9]{64}$/)),
-  mimeType: z.string().min(1),
-  sizeBytes: z.number().int().positive(),
-});
+const createDocumentInputSchema = z
+  .object({
+    title: z.string().min(1).max(255),
+    description: z.string().max(2000).optional(),
+    documentType: z.enum([
+      'CONTRACT',
+      'AGREEMENT',
+      'EVIDENCE',
+      'CORRESPONDENCE',
+      'COURT_FILING',
+      'MEMO',
+      'REPORT',
+      'OTHER',
+    ]),
+    documentTypeLabel: z.string().trim().min(1).max(100).optional(),
+    classification: z.enum(['PUBLIC', 'INTERNAL', 'CONFIDENTIAL', 'PRIVILEGED']),
+    tags: z.array(z.string().max(50)).max(20).default([]),
+    relatedCaseId: z.uuid().optional(),
+    relatedContactId: z.uuid().optional(),
+    contentHash: z.string().check(z.regex(/^[a-f0-9]{64}$/)),
+    mimeType: z.string().min(1),
+    sizeBytes: z.number().int().positive(),
+  })
+  .superRefine((input, ctx) => {
+    if (input.documentType !== 'OTHER' && input.documentTypeLabel) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'documentTypeLabel is only allowed when documentType is OTHER',
+        path: ['documentTypeLabel'],
+      });
+    }
+  });
 
 const grantAccessInputSchema = z.object({
   documentId: z.uuid(),
@@ -83,6 +105,10 @@ export const documentsRouter = createTRPCRouter({
       throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
     }
 
+    // PG-186: Load automation flags; apply filename normalization
+    const automationFlags = await loadDocumentAutomation(ctx);
+    const normalizedTitle = normalizeFilename(input.title, automationFlags);
+
     const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
 
     // Generate storageKey server-side (AC-011)
@@ -93,9 +119,10 @@ export const documentsRouter = createTRPCRouter({
     const document = CaseDocument.create({
       tenantId,
       metadata: {
-        title: input.title,
+        title: normalizedTitle,
         description: input.description,
         documentType: input.documentType as any,
+        documentTypeLabel: input.documentTypeLabel,
         classification: input.classification as DocumentClassification,
         tags: input.tags,
         relatedCaseId: input.relatedCaseId,
@@ -581,6 +608,10 @@ export const documentsRouter = createTRPCRouter({
       if (!document) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
       }
+
+      // PG-186: Check automation delete guard
+      const deleteFlags = await loadDocumentAutomation(ctx);
+      await assertNotDeleteGuarded(ctx, input.documentId, deleteFlags);
 
       // Soft delete using domain method (checks legal hold)
       try {

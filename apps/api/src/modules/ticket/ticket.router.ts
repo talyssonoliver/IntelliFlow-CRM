@@ -26,6 +26,16 @@ import { type Context } from '../../context';
 import { loadBullMQ } from '../../lib/load-bullmq';
 import { assertTenantContext } from '../../security/tenant-context';
 import { createNotification } from '../notifications/notifications.router';
+import {
+  assertCanDeleteTicket,
+  loadTicketAutomation,
+  normalizeTicketSubject,
+  notifyTicketEscalated,
+  notifyTicketReassignment,
+  notifyTicketResolved,
+  resolveDefaultSlaPolicyId,
+  trimTicketDescription,
+} from './ticket-automation';
 
 /**
  * Helper to get ticket service from context
@@ -288,9 +298,22 @@ export const ticketRouter = createTRPCRouter({
     const ticketService = getTicketService(ctx);
     const tenantId = ctx.tenant.tenantId;
 
+    // PG-185: apply category-1 automation (data hygiene + default SLA)
+    const automation = await loadTicketAutomation(ctx);
+    const normalizedSubject = normalizeTicketSubject(input.subject, automation);
+    const trimmedDescription = trimTicketDescription(input.description, automation);
+    let resolvedSlaPolicyId: string | undefined = input.slaPolicyId;
+    if (!resolvedSlaPolicyId) {
+      const fallback = await resolveDefaultSlaPolicyId(ctx, automation);
+      if (fallback) resolvedSlaPolicyId = fallback;
+    }
+
     try {
       const ticket = await ticketService.create({
         ...input,
+        subject: normalizedSubject ?? input.subject,
+        description: trimmedDescription ?? input.description,
+        slaPolicyId: resolvedSlaPolicyId ?? input.slaPolicyId,
         tenantId,
       });
 
@@ -419,34 +442,88 @@ export const ticketRouter = createTRPCRouter({
 
     const { id, ...updateData } = input;
 
+    // PG-185: snapshot "before" + load automation so we can gate
+    // notification emissions after the update lands.
+    const automation = await loadTicketAutomation(ctx);
+    const before = await ticketService.findById(id);
+    const normalizedSubject =
+      updateData.subject != null
+        ? normalizeTicketSubject(updateData.subject, automation)
+        : updateData.subject;
+    const trimmedDescription =
+      updateData.description != null
+        ? trimTicketDescription(updateData.description, automation)
+        : updateData.description;
+
     try {
       const ticket = await ticketService.update(id, {
-        subject: updateData.subject,
-        description: updateData.description,
+        subject: normalizedSubject ?? updateData.subject,
+        description: trimmedDescription ?? updateData.description,
         status: updateData.status,
         priority: updateData.priority,
         assigneeId: updateData.assigneeId ?? undefined,
       });
 
-      // Fire-and-forget: notification failure must not block the ticket update response
-      if (updateData.priority && ['URGENT', 'CRITICAL'].includes(updateData.priority)) {
-        const tenantId = ctx.tenant.tenantId;
-        createNotification(
-          ctx.prismaWithTenant,
+      const tenantId = ctx.tenant.tenantId;
+
+      // PG-185: notify assignee change (both old + new assignees)
+      if (before && before.assigneeId !== ticket.assigneeId) {
+        void notifyTicketReassignment(
           {
-            userId: ticket.assigneeId || 'system',
             tenantId,
-            type: 'ticket_escalated',
-            title: 'Ticket escalated',
-            body: `Ticket "${ticket.subject}" escalated to ${updateData.priority}`,
-            priority: 'high',
-            entityType: 'ticket',
-            entityId: ticket.id,
-            entityName: ticket.subject,
-            actionUrl: `/tickets/${ticket.id}`,
+            ticketId: ticket.id,
+            ticketNumber: ticket.ticketNumber ?? ticket.id,
+            subject: ticket.subject,
+            actingUserId: ctx.user?.userId ?? 'system',
+            previousAssigneeId: before.assigneeId ?? null,
+            nextAssigneeId: ticket.assigneeId ?? null,
           },
-          ctx.services?.notificationOrchestrator
-        ).catch(() => {}); // Swallow notification errors — non-critical side-effect
+          automation,
+          (args) =>
+            createNotification(ctx.prismaWithTenant, args, ctx.services?.notificationOrchestrator)
+        ).catch(() => {});
+      }
+
+      // PG-185: notify on status → RESOLVED transition
+      if (
+        before &&
+        before.status !== 'RESOLVED' &&
+        ticket.status === 'RESOLVED' &&
+        automation.notifyOnStatusResolved
+      ) {
+        void notifyTicketResolved(
+          {
+            tenantId,
+            ticketId: ticket.id,
+            ticketNumber: ticket.ticketNumber ?? ticket.id,
+            subject: ticket.subject,
+            actingUserId: ctx.user?.userId ?? 'system',
+            reporterUserId: before.assigneeId ?? null,
+          },
+          automation,
+          (args) =>
+            createNotification(ctx.prismaWithTenant, args, ctx.services?.notificationOrchestrator)
+        ).catch(() => {});
+      }
+
+      // PG-185: existing escalation notification — now gated on
+      // automation.notifyOnEscalation (default TRUE preserves legacy
+      // behavior for NULL-row tenants). Uses the new
+      // notifyTicketEscalated helper.
+      if (updateData.priority && ['URGENT', 'CRITICAL'].includes(updateData.priority)) {
+        void notifyTicketEscalated(
+          {
+            tenantId,
+            ticketId: ticket.id,
+            ticketNumber: ticket.ticketNumber ?? ticket.id,
+            subject: ticket.subject,
+            actingUserId: ctx.user?.userId ?? 'system',
+            recipientUserIds: [ticket.assigneeId || 'system'],
+          },
+          automation,
+          (args) =>
+            createNotification(ctx.prismaWithTenant, args, ctx.services?.notificationOrchestrator)
+        ).catch(() => {});
       }
 
       return ticket;
@@ -463,6 +540,18 @@ export const ticketRouter = createTRPCRouter({
    */
   delete: tenantProcedure.input(z.object({ id: idSchema })).mutation(async ({ ctx, input }) => {
     const ticketService = getTicketService(ctx);
+
+    // PG-185: delete guard — block when tenant has
+    // preventDeleteWithOpenChildren=true AND the ticket has open children.
+    const automation = await loadTicketAutomation(ctx);
+    const tenantId = ctx.tenant.tenantId;
+    const [openRelatedTickets, openActivities] = await Promise.all([
+      ctx.prismaWithTenant.relatedTicket?.count({ where: { ticketId: input.id, tenantId } }) ??
+        Promise.resolve(0),
+      ctx.prismaWithTenant.ticketActivity?.count({ where: { ticketId: input.id, tenantId } }) ??
+        Promise.resolve(0),
+    ]);
+    assertCanDeleteTicket({ openRelatedTickets, openActivities }, automation);
 
     try {
       await ticketService.delete(input.id);

@@ -12,13 +12,73 @@
  *   • authHeader NOT logged / returned to the workflow execution record
  */
 
+import { promises as dns } from 'node:dns';
 import type { PrismaClient } from '@intelliflow/db';
 import {
   buildZodFromDescriptors,
   isPublicHttpUrl,
+  isPublicIpAddress,
   type CustomActionHandlerDescriptor,
 } from '@intelliflow/domain';
 import { getCustomActionHandlerRegistry } from '../registries/custom-action-handler-registry';
+
+/**
+ * DNS-rebinding defense: resolve the hostname BEFORE the fetch, validate
+ * every returned address against the SSRF blocklist, and pin the connection
+ * to the first valid address by rewriting the URL to use the IP literal
+ * (with the original host preserved via a `Host` request header so TLS SNI
+ * + virtual-hosting still work).
+ *
+ * Returns either a safe `{ url, host }` pair to use for the fetch, or an
+ * error string explaining why the host was rejected.
+ */
+export async function resolveAndPin(
+  rawUrl: string
+): Promise<{ url: string; host: string } | { error: string }> {
+  let parsed: URL;
+  try {
+    parsed = new URL(rawUrl);
+  } catch {
+    return { error: 'Invalid URL' };
+  }
+
+  // If the host is already an IP literal, the static guard already covered it.
+  const rawHost = parsed.hostname;
+  const isLiteral = /^(\d{1,3}\.){3}\d{1,3}$/.test(rawHost) || rawHost.includes(':');
+  if (isLiteral) {
+    if (!isPublicIpAddress(rawHost)) {
+      return { error: `endpointUrl resolved IP ${rawHost} is in the SSRF blocklist` };
+    }
+    return { url: parsed.toString(), host: rawHost };
+  }
+
+  let addrs: { address: string; family: number }[];
+  try {
+    addrs = await dns.lookup(rawHost, { all: true });
+  } catch (err) {
+    return {
+      error: `DNS lookup failed for ${rawHost}: ${err instanceof Error ? err.message : String(err)}`,
+    };
+  }
+  if (addrs.length === 0) {
+    return { error: `DNS lookup returned no addresses for ${rawHost}` };
+  }
+  // Reject if ANY resolved address is private — DNS-rebinding mitigations
+  // typically reject the host outright rather than cherry-pick a public IP.
+  for (const a of addrs) {
+    if (!isPublicIpAddress(a.address)) {
+      return {
+        error: `endpointUrl ${rawHost} resolves to non-public address ${a.address}; rejected to prevent DNS-rebinding SSRF`,
+      };
+    }
+  }
+
+  // Pin to the first resolved address. Wrap IPv6 in brackets for URL syntax.
+  const pinned = addrs[0].address;
+  const pinnedUrl = new URL(parsed.toString());
+  pinnedUrl.hostname = addrs[0].family === 6 ? `[${pinned}]` : pinned;
+  return { url: pinnedUrl.toString(), host: rawHost };
+}
 
 export interface DispatchResult {
   ok: boolean;
@@ -104,9 +164,25 @@ async function executeDispatch(
   };
   if (descriptor.authHeader) headers['Authorization'] = descriptor.authHeader;
 
+  // Defense-in-depth: resolve DNS, verify each address, pin the connection
+  // to the resolved IP with the original Host header. Defeats DNS rebinding
+  // where the static URL guard inspected only the hostname string.
+  const pin = await resolveAndPin(descriptor.endpointUrl);
+  if ('error' in pin) {
+    clearTimeout(timer);
+    return {
+      ok: false,
+      status: 0,
+      body: null,
+      durationMs: 0,
+      errorMessage: pin.error,
+    };
+  }
+  headers['Host'] = pin.host;
+
   const start = Date.now();
   try {
-    const res = await fetch(descriptor.endpointUrl, {
+    const res = await fetch(pin.url, {
       method: 'POST',
       headers,
       body: JSON.stringify(parsed.data),

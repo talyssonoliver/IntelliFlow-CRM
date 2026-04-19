@@ -11,7 +11,7 @@
  *
  * Logs are written to:
  * 1. Console (structured JSON for observability)
- * 2. File (artifacts/misc/logs/agent-actions.log)
+ * 2. File (artifacts/logs/agent-actions.log)
  * 3. Database (in production, via event bus)
  */
 

@@ -125,7 +125,7 @@ export function getHourInTimezone(
   }).formatToParts(ref);
 
   const hourStr = parts.find((p) => p.type === 'hour')?.value ?? '0';
-  const hour = parseInt(hourStr, 10);
+  const hour = Number.parseInt(hourStr, 10);
   return hour === 24 ? 0 : hour;
 }
 
@@ -181,7 +181,7 @@ function getTimezoneOffsetMinutes(date: Date, timezone: string): number {
   }).formatToParts(date);
 
   const getPartValue = (parts: Intl.DateTimeFormatPart[], type: string) =>
-    parseInt(parts.find((p) => p.type === type)?.value ?? '0', 10);
+    Number.parseInt(parts.find((p) => p.type === type)?.value ?? '0', 10);
 
   const utcH = getPartValue(utcParts, 'hour');
   const utcM = getPartValue(utcParts, 'minute');

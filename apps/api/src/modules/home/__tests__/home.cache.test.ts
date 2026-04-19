@@ -217,16 +217,36 @@ describe('HomeCacheService.registerInvalidationHandlers', () => {
     expect(service.getMetrics().invalidations).toBe(2);
   });
 
-  it('TaskAssignedEvent invalidates ownerId and assignedBy', async () => {
+  it('TaskAssignedEvent invalidates assigneeId, previousAssigneeId, and assignedBy', async () => {
     await seedCache('u1');
     await seedCache('u2');
+    await seedCache('u3');
 
     await eventBus.publish(
-      new FakeEvent('task.assigned', { ownerId: 'u1', assignedBy: 'u2' }) as any
+      new FakeEvent('task.assigned', {
+        assigneeId: 'u1',
+        previousAssigneeId: 'u2',
+        assignedBy: 'u3',
+      }) as any
     );
 
     expect(await cache.get(buildHomeSummaryKey('u1'))).toBeNull();
     expect(await cache.get(buildHomeSummaryKey('u2'))).toBeNull();
+    expect(await cache.get(buildHomeSummaryKey('u3'))).toBeNull();
+  });
+
+  it('TaskLinkedToEntityEvent invalidates linkedBy', async () => {
+    await seedCache('u1');
+
+    await eventBus.publish(
+      new FakeEvent('task.linked_to_entity', {
+        entityType: 'lead',
+        entityId: 'lead-1',
+        linkedBy: 'u1',
+      }) as any
+    );
+
+    expect(await cache.get(buildHomeSummaryKey('u1'))).toBeNull();
   });
 
   it('malformed event (no userId fields) does not throw and does not invalidate', async () => {
@@ -258,6 +278,16 @@ describe('HomeCacheService.registerInvalidationHandlers', () => {
   });
 
   it('All subscribed event types trigger invalidation for matching owner', async () => {
+    // Payload carries every user-id field the various extractors look at so
+    // each event type can resolve 'u1' regardless of which actor field it
+    // subscribes to (ownerId, assigneeId, linkedBy, etc.).
+    const payload = {
+      ownerId: 'u1',
+      assigneeId: 'u1',
+      previousAssigneeId: 'u1',
+      linkedBy: 'u1',
+    };
+
     for (const eventType of HOME_CACHE_SUBSCRIBED_EVENT_TYPES) {
       service._resetForTest();
       const freshBus = new InMemoryEventBus();
@@ -266,7 +296,7 @@ describe('HomeCacheService.registerInvalidationHandlers', () => {
       await freshSvc.registerInvalidationHandlers();
 
       await freshSvc.getWelcomeSummary('t1', 'u1', () => Promise.resolve({ x: 1 }));
-      await freshBus.publish(new FakeEvent(eventType, { ownerId: 'u1' }) as any);
+      await freshBus.publish(new FakeEvent(eventType, payload) as any);
 
       expect(
         await freshCache.get(buildHomeSummaryKey('u1')),

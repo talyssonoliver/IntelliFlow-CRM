@@ -24,9 +24,12 @@ import {
   PrismaNotificationPreferenceRepository,
   PrismaNotificationAuditLogger,
   PrismaExperimentRepository,
+  PrismaAppointmentRepository,
+  PrismaConversationSearchRepository,
   InMemoryEventBus,
   MockAIService,
   OllamaAIService,
+  LiteLLMAIService,
   InMemoryCache,
   RedisCacheAdapter,
   type RedisLike,
@@ -63,10 +66,14 @@ import {
   ConvertLeadToDealUseCase,
   CloseDealWonUseCase,
   CloseDealLostUseCase,
+  ScheduleAppointmentUseCase,
+  RescheduleAppointmentUseCase,
+  CancelAppointmentUseCase,
+  CompleteAppointmentUseCase,
+  CheckConflictsUseCase,
   ExperimentService,
   NotificationService,
   ConversationSearchService,
-  type ConversationRepositoryPort,
 } from '@intelliflow/application';
 import {
   getAuditLogger,
@@ -87,7 +94,10 @@ import type { CachePort } from '@intelliflow/application';
  * Uses the shared singleton from @intelliflow/db so all API modules reuse a single
  * PrismaClient instance (avoids connection exhaustion in Next.js dev/HMR).
  */
-export const getApiPrisma = (): PrismaClient => sharedPrisma;
+// M4 encryption is ACTIVE — sharedPrisma from @intelliflow/db is the
+// $extends(fieldEncryptionExtension()) client (AES-256-GCM, bespoke).
+// The `as unknown as` cast aligns the extended type with PrismaClient for callers.
+export const getApiPrisma = (): PrismaClient => sharedPrisma as unknown as PrismaClient;
 
 /**
  * Direct export for backward compatibility
@@ -161,6 +171,7 @@ const createAdapters = (prismaClient: PrismaClient) => {
   const notificationPreferenceRepository = new PrismaNotificationPreferenceRepository(prismaClient);
   const notificationAuditLogger = new PrismaNotificationAuditLogger(prismaClient);
   const experimentRepository = new PrismaExperimentRepository(prismaClient);
+  const appointmentRepository = new PrismaAppointmentRepository(prismaClient);
 
   // Storage & AV (IFC-094)
   const storageService = new SupabaseStorageAdapter(
@@ -182,19 +193,36 @@ const createAdapters = (prismaClient: PrismaClient) => {
 
   // External services
   const eventBus = new InMemoryEventBus();
-  const baseAIService =
-    process.env.AI_PROVIDER === 'ollama'
-      ? new OllamaAIService({
-          baseUrl: process.env.OLLAMA_BASE_URL || 'http://localhost:11434',
-          model: process.env.OLLAMA_MODEL || 'mistral',
-          temperature: process.env.OLLAMA_TEMPERATURE
-            ? Number.parseFloat(process.env.OLLAMA_TEMPERATURE)
-            : 0.1,
-          timeout: process.env.OLLAMA_TIMEOUT
-            ? Number.parseInt(process.env.OLLAMA_TIMEOUT, 10)
-            : 60_000,
-        })
-      : new MockAIService();
+
+  // AI provider selection:
+  //   AI_PROVIDER=litellm (default) or openai → LiteLLMAIService (routes through LiteLLM proxy)
+  //   AI_PROVIDER=ollama                       → OllamaAIService (offline / local dev escape hatch)
+  //   AI_PROVIDER=mock (or unset in test env)  → MockAIService (deterministic, no network)
+  const aiProvider = process.env.AI_PROVIDER;
+  let baseAIService: MockAIService | OllamaAIService | LiteLLMAIService;
+  if (aiProvider === 'ollama') {
+    baseAIService = new OllamaAIService({
+      baseUrl: process.env.OLLAMA_BASE_URL || 'http://localhost:11434',
+      model: process.env.OLLAMA_MODEL || 'mistral',
+      temperature: process.env.OLLAMA_TEMPERATURE
+        ? Number.parseFloat(process.env.OLLAMA_TEMPERATURE)
+        : 0.1,
+      timeout: process.env.OLLAMA_TIMEOUT
+        ? Number.parseInt(process.env.OLLAMA_TIMEOUT, 10)
+        : 60_000,
+    });
+  } else if (aiProvider === 'mock' || (!aiProvider && process.env.NODE_ENV === 'test')) {
+    baseAIService = new MockAIService();
+  } else {
+    // Default: litellm or openai — LiteLLMAIService routes through the LiteLLM proxy
+    baseAIService = new LiteLLMAIService({
+      baseUrl: process.env.LITELLM_BASE_URL || 'http://localhost:4000/v1',
+      masterKey: process.env.LITELLM_MASTER_KEY || 'dev-master-key',
+      timeout: process.env.LITELLM_TIMEOUT
+        ? Number.parseInt(process.env.LITELLM_TIMEOUT, 10)
+        : 120_000,
+    });
+  }
   // IFC-196: Prefer Redis-backed cache, fall back to InMemoryCache.
   const cache: CachePort = createCacheAdapter();
 
@@ -255,6 +283,7 @@ const createAdapters = (prismaClient: PrismaClient) => {
     notificationPreferenceRepository,
     notificationAuditLogger,
     experimentRepository,
+    appointmentRepository,
     eventBus,
     aiService,
     cache,
@@ -384,6 +413,18 @@ const createServices = (prismaClient: PrismaClient) => {
   );
   const reminderScheduler = new ReminderSchedulerService(adapters.notificationService);
 
+  // IFC-155: Appointment scheduling use cases (hexagonal orchestration over
+  // AppointmentRepository). Router currently talks to AppointmentDomainService +
+  // direct Prisma; these use cases are the canonical path for new callers and
+  // will replace the direct-Prisma mutations in a follow-up refactor.
+  const scheduleAppointmentUseCase = new ScheduleAppointmentUseCase(adapters.appointmentRepository);
+  const rescheduleAppointmentUseCase = new RescheduleAppointmentUseCase(
+    adapters.appointmentRepository
+  );
+  const cancelAppointmentUseCase = new CancelAppointmentUseCase(adapters.appointmentRepository);
+  const completeAppointmentUseCase = new CompleteAppointmentUseCase(adapters.appointmentRepository);
+  const checkConflictsUseCase = new CheckConflictsUseCase(adapters.appointmentRepository);
+
   // IFC-062: Lead to Deal Conversion
   const convertLeadToDealUseCase = new ConvertLeadToDealUseCase(
     adapters.leadRepository,
@@ -431,17 +472,9 @@ const createServices = (prismaClient: PrismaClient) => {
   // IFC-297: AI Monitoring persistence service
   const aiMonitoringService = new AIMonitoringService(prismaClient);
 
-  // IFC-148: Conversation Search Service
-  // Stub repository implementation — replace with PrismaConversationRepository once adapter is built
-  const stubConversationRepository: ConversationRepositoryPort = {
-    findById: async () => null,
-    findBySessionId: async () => null,
-    search: async () => ({ conversations: [], total: 0 }),
-    searchByEmbedding: async () => [],
-    findByContext: async () => [],
-    exportUserConversations: async () => [],
-  };
-  const conversationSearchService = new ConversationSearchService(stubConversationRepository);
+  // IFC-148: Conversation Search Service — wired with real Prisma repository
+  const conversationSearchRepository = new PrismaConversationSearchRepository(prismaClient);
+  const conversationSearchService = new ConversationSearchService(conversationSearchRepository);
 
   // IFC-196: Home Page Response Caching
   const homeCacheService = new HomeCacheService(adapters.cache, adapters.eventBus);
@@ -465,6 +498,12 @@ const createServices = (prismaClient: PrismaClient) => {
     // IFC-158: Appointment scheduling services
     appointmentIcsHandler,
     reminderScheduler,
+    // IFC-155: Appointment scheduling use cases
+    scheduleAppointmentUseCase,
+    rescheduleAppointmentUseCase,
+    cancelAppointmentUseCase,
+    completeAppointmentUseCase,
+    checkConflictsUseCase,
     // IFC-062: Lead to Deal conversion
     convertLeadToDealUseCase,
     // IFC-065: Deal Won Closure

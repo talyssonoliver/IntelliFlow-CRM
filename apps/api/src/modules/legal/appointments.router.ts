@@ -22,8 +22,6 @@ import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import { AppointmentDomainService } from '../../services';
 import {
-  ConflictDetectionError,
-  AppointmentConflictDetectedEvent,
   AppointmentCreatedEvent,
   AppointmentRescheduledEvent,
   AppointmentCancelledEvent,
@@ -33,6 +31,7 @@ import {
 } from '@intelliflow/domain';
 import { container } from '../../container';
 import { createNotification } from '../notifications/notifications.router';
+import { mapDomainErrorToTRPC } from './helpers';
 import { safeTimezone } from '../../lib/timezone-utils';
 
 // Zod schemas for appointment operations
@@ -346,173 +345,93 @@ async function onAppointmentCancelled(
 export const appointmentsRouter = createTRPCRouter({
   /**
    * Create a new appointment
-   * Includes domain-based validation and conflict detection
    *
-   * Uses AppointmentDomainService for:
-   * - Input validation (time range, duration, buffer limits, title)
-   * - Recurrence validation
-   * - Sophisticated conflict detection via ConflictDetector
+   * Phase 2e: routed through ScheduleAppointmentUseCase (hexagonal migration).
+   * Use case handles domain validation, conflict detection, and persistence.
    */
   create: tenantProcedure.input(createAppointmentSchema).mutation(async ({ ctx, input }) => {
     const startTime = performance.now();
 
-    try {
-      // Reject appointments outside business hours (07:00 – 19:00).
-      assertWithinBusinessHours(input.startTime, input.endTime, input.timezone);
+    // Reject appointments outside business hours (07:00 – 19:00).
+    assertWithinBusinessHours(input.startTime, input.endTime, input.timezone);
 
-      // Use domain service for input validation
-      const validation = AppointmentDomainService.validateInput({
-        title: input.title,
-        description: input.description,
-        startTime: input.startTime,
-        endTime: input.endTime,
-        appointmentType: input.appointmentType as any,
-        location: input.location,
-        organizerId: ctx.user.userId,
-        attendeeIds: input.attendeeIds,
-        linkedCaseIds: input.linkedCaseIds,
-        bufferMinutesBefore: input.bufferMinutesBefore,
-        bufferMinutesAfter: input.bufferMinutesAfter,
-        recurrence: input.recurrence as any,
-        reminderMinutes: input.reminderMinutes,
+    const result = await container.scheduleAppointmentUseCase.execute({
+      title: input.title,
+      description: input.description,
+      startTime: input.startTime,
+      endTime: input.endTime,
+      timezone: input.timezone,
+      calendarId: input.calendarId || null,
+      appointmentType: input.appointmentType,
+      location: input.location,
+      organizerId: ctx.user.userId,
+      tenantId: ctx.user.tenantId,
+      attendeeIds: input.attendeeIds,
+      linkedCaseIds: input.linkedCaseIds,
+      bufferMinutesBefore: input.bufferMinutesBefore,
+      bufferMinutesAfter: input.bufferMinutesAfter,
+      recurrence: input.recurrence,
+      reminderMinutes: input.reminderMinutes,
+      forceOverrideConflicts: input.forceOverrideConflicts,
+    });
+    if (result.isFailure) throw mapDomainErrorToTRPC(result.error);
+
+    const { appointment: domainAppt, conflictWarnings } = result.value;
+
+    // Use case returns Ok with conflictWarnings when conflicts found and NOT overridden.
+    // Convert to the router's existing CONFLICT TRPCError shape.
+    if (conflictWarnings && conflictWarnings.length > 0 && !input.forceOverrideConflicts) {
+      const conflictDetails =
+        conflictWarnings.length > 0
+          ? await ctx.prismaWithTenant.appointment.findMany({
+              where: { id: { in: conflictWarnings.map((c) => c.appointmentId) } },
+              select: { id: true, title: true, startTime: true, endTime: true },
+            })
+          : [];
+
+      // Log conflict detection for audit/monitoring
+      console.warn('[appointments.create] Conflict detected:', {
+        attemptedTimeSlot: { start: input.startTime, end: input.endTime },
+        conflictCount: conflictWarnings.length,
+        attendeeIds: [ctx.user.userId, ...input.attendeeIds],
       });
 
-      if (!validation.valid) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: validation.errors.join('; '),
-        });
-      }
-
-      // Check for conflicts if not overriding
-      if (!input.forceOverrideConflicts) {
-        const allAttendees = [ctx.user.userId, ...input.attendeeIds];
-
-        // Fetch existing appointments for conflict detection
-        const dbAppointments = await ctx.prismaWithTenant.appointment.findMany({
-          where: {
-            AND: [
-              {
-                OR: [
-                  { organizerId: { in: allAttendees } },
-                  { attendees: { some: { userId: { in: allAttendees } } } },
-                ],
-              },
-              { status: { notIn: ['CANCELLED', 'NO_SHOW'] } },
-            ],
-          },
-          include: {
-            attendees: { select: { userId: true } },
-          },
-        });
-
-        // Convert to domain Appointments
-        const domainAppointments = AppointmentDomainService.toDomainAppointments(dbAppointments);
-
-        // Use domain service for sophisticated conflict detection
-        const conflictResult = AppointmentDomainService.checkConflicts(
-          {
-            startTime: input.startTime,
-            endTime: input.endTime,
-            attendeeIds: allAttendees,
-            bufferMinutesBefore: input.bufferMinutesBefore,
-            bufferMinutesAfter: input.bufferMinutesAfter,
-          },
-          domainAppointments
-        );
-
-        if (conflictResult.hasConflicts) {
-          // Get conflict details from database
-          const conflictDetails = await ctx.prismaWithTenant.appointment.findMany({
-            where: { id: { in: conflictResult.conflicts.map((c) => c.appointmentId) } },
-            select: { id: true, title: true, startTime: true, endTime: true },
-          });
-
-          // Log conflict detection for audit/monitoring
-          console.warn('[appointments.create] Conflict detected:', {
-            attemptedTimeSlot: { start: input.startTime, end: input.endTime },
-            conflictCount: conflictResult.conflicts.length,
-            attendees: allAttendees,
-          });
-
-          // Emit conflict detected domain event for audit trail
-          const appointmentIdResult = AppointmentId.create(input.title);
-          if (appointmentIdResult.isSuccess) {
-            const conflictIds = conflictResult.conflicts
-              .map((c) => AppointmentId.create(c.appointmentId))
-              .filter((r) => r.isSuccess)
-              .map((r) => r.value);
-            const conflictEvent = new AppointmentConflictDetectedEvent(
-              appointmentIdResult.value,
-              conflictIds,
-              new Date()
-            );
-            console.log('[appointments] Conflict detected:', conflictEvent.toPayload());
-          }
-
-          throw new TRPCError({
-            code: 'CONFLICT',
-            message: `Scheduling conflict detected with ${conflictResult.conflicts.length} appointment(s)`,
-            cause: {
-              conflicts: conflictResult.conflicts.map((c) => {
-                const details = conflictDetails.find((d) => d.id === c.appointmentId);
-                return {
-                  id: c.appointmentId,
-                  title: details?.title ?? 'Unknown',
-                  startTime: details?.startTime ?? c.conflictStart,
-                  endTime: details?.endTime ?? c.conflictEnd,
-                  overlapMinutes: c.overlapMinutes,
-                  conflictType: c.conflictType,
-                };
-              }),
-            },
-          });
-        }
-      }
-    } catch (error) {
-      // Handle domain-specific conflict detection errors
-      if (error instanceof ConflictDetectionError) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: `Conflict detection failed: ${error.message}`,
-        });
-      }
-      throw error;
+      throw new TRPCError({
+        code: 'CONFLICT',
+        message: `Scheduling conflict detected with ${conflictWarnings.length} appointment(s)`,
+        cause: {
+          conflicts: conflictWarnings.map((c) => {
+            const details = conflictDetails.find((d) => d.id === c.appointmentId);
+            return {
+              id: c.appointmentId,
+              title: details?.title ?? 'Unknown',
+              startTime: details?.startTime ?? new Date(),
+              endTime: details?.endTime ?? new Date(),
+              overlapMinutes: c.overlapMinutes,
+              conflictType: 'PARTIAL' as const,
+            };
+          }),
+        },
+      });
     }
 
-    // Create the appointment
-    const tenantId = ctx.user.tenantId;
-    const appointment = await ctx.prismaWithTenant.appointment.create({
-      data: {
-        title: input.title,
-        description: input.description,
-        startTime: input.startTime,
-        endTime: input.endTime,
-        timezone: input.timezone ?? null,
-        appointmentType: input.appointmentType,
-        location: input.location,
-        bufferMinutesBefore: input.bufferMinutesBefore,
-        bufferMinutesAfter: input.bufferMinutesAfter,
-        recurrence: input.recurrence ?? undefined,
-        reminderMinutes: input.reminderMinutes,
-        calendarId: input.calendarId || null,
-        organizerId: ctx.user.userId,
-        tenantId,
-        attendees: {
-          create: input.attendeeIds.map((userId) => ({ userId, tenantId })),
-        },
-        linkedCases: {
-          create: input.linkedCaseIds.map((caseId) => ({ caseId, tenantId })),
-        },
-      },
+    // Re-fetch via prismaWithTenant to preserve the current Prisma row response shape.
+    const appointment = await ctx.prismaWithTenant.appointment.findUnique({
+      where: { id: domainAppt.id.value },
       include: {
         attendees: true,
         linkedCases: true,
       },
     });
+    if (!appointment) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: `Appointment ${domainAppt.id.value} disappeared after create`,
+      });
+    }
 
     const duration = performance.now() - startTime;
-    console.log(`[appointments.create] Domain-validated and scheduled in ${duration.toFixed(2)}ms`);
+    console.log(`[appointments.create] Use-case scheduled in ${duration.toFixed(2)}ms`);
 
     // IFC-158: Fire-and-forget ICS, reminders, audit trail
     onAppointmentCreated(appointment, ctx.user.userId).catch((err) =>
@@ -524,7 +443,7 @@ export const appointmentsRouter = createTRPCRouter({
       ctx.prismaWithTenant,
       {
         userId: ctx.user.userId,
-        tenantId,
+        tenantId: ctx.user.tenantId,
         type: 'appointment_scheduled',
         title: 'Appointment scheduled',
         body: `Appointment "${input.title}" scheduled for ${input.startTime.toLocaleDateString('en-GB', { month: 'short', day: 'numeric', year: 'numeric', timeZone: safeTimezone(ctx.user?.timezone) })}`,
@@ -688,8 +607,8 @@ export const appointmentsRouter = createTRPCRouter({
   /**
    * Reschedule an appointment
    *
-   * Uses domain ConflictDetector for sophisticated conflict detection
-   * when checking the new time slot
+   * Phase 2d: routed through RescheduleAppointmentUseCase (hexagonal migration).
+   * Uses domain ConflictDetector for sophisticated conflict detection.
    */
   reschedule: tenantProcedure.input(rescheduleSchema).mutation(async ({ ctx, input }) => {
     const startTime = performance.now();
@@ -697,129 +616,72 @@ export const appointmentsRouter = createTRPCRouter({
     // Reject rescheduling outside business hours (07:00 – 19:00).
     assertWithinBusinessHours(input.newStartTime, input.newEndTime);
 
-    const existing = await ctx.prismaWithTenant.appointment.findUnique({
-      where: { id: input.id },
-      include: {
-        attendees: true,
-      },
+    const result = await container.rescheduleAppointmentUseCase.execute({
+      appointmentId: input.id,
+      tenantId: ctx.user.tenantId,
+      newStartTime: input.newStartTime,
+      newEndTime: input.newEndTime,
+      rescheduledBy: ctx.user.userId,
+      reason: input.reason,
+      forceOverrideConflicts: input.forceOverrideConflicts,
     });
+    if (result.isFailure) throw mapDomainErrorToTRPC(result.error);
 
-    if (!existing) {
+    const { previousTimeSlot, conflictWarnings } = result.value;
+
+    // Use case returns Ok with conflictWarnings when conflicts found and NOT overridden.
+    // Convert to the router's existing CONFLICT TRPCError shape.
+    if (conflictWarnings && conflictWarnings.length > 0 && !input.forceOverrideConflicts) {
+      const conflictDetails =
+        conflictWarnings.length > 0
+          ? await ctx.prismaWithTenant.appointment.findMany({
+              where: { id: { in: conflictWarnings.map((c) => c.appointmentId) } },
+              select: { id: true, title: true, startTime: true, endTime: true },
+            })
+          : [];
+
       throw new TRPCError({
-        code: 'NOT_FOUND',
-        message: `Appointment with ID ${input.id} not found`,
-      });
-    }
-
-    if (existing.status === 'CANCELLED') {
-      throw new TRPCError({
-        code: 'BAD_REQUEST',
-        message: 'Cannot reschedule a cancelled appointment',
-      });
-    }
-
-    if (existing.status === 'COMPLETED') {
-      throw new TRPCError({
-        code: 'BAD_REQUEST',
-        message: 'Cannot reschedule a completed appointment',
-      });
-    }
-
-    // Validate new time range
-    if (input.newStartTime >= input.newEndTime) {
-      throw new TRPCError({
-        code: 'BAD_REQUEST',
-        message: 'New start time must be before new end time',
-      });
-    }
-
-    // Check for conflicts if not overriding
-    if (!input.forceOverrideConflicts) {
-      const allAttendees = [existing.organizerId, ...existing.attendees.map((a) => a.userId)];
-
-      // Fetch existing appointments for conflict detection
-      const dbAppointments = await ctx.prismaWithTenant.appointment.findMany({
-        where: {
-          AND: [
-            {
-              OR: [
-                { organizerId: { in: allAttendees } },
-                { attendees: { some: { userId: { in: allAttendees } } } },
-              ],
-            },
-            { status: { notIn: ['CANCELLED', 'NO_SHOW'] } },
-          ],
-        },
-        include: {
-          attendees: { select: { userId: true } },
+        code: 'CONFLICT',
+        message: `Rescheduling conflict detected with ${conflictWarnings.length} appointment(s)`,
+        cause: {
+          conflicts: conflictWarnings.map((c) => {
+            const details = conflictDetails.find((d) => d.id === c.appointmentId);
+            return {
+              id: c.appointmentId,
+              title: details?.title ?? 'Unknown',
+              startTime: details?.startTime ?? new Date(),
+              endTime: details?.endTime ?? new Date(),
+              overlapMinutes: c.overlapMinutes,
+              conflictType: 'PARTIAL' as const,
+            };
+          }),
         },
       });
-
-      // Convert to domain Appointments
-      const domainAppointments = AppointmentDomainService.toDomainAppointments(dbAppointments);
-
-      // Use domain service for conflict detection, excluding the current appointment
-      const conflictResult = AppointmentDomainService.checkConflicts(
-        {
-          startTime: input.newStartTime,
-          endTime: input.newEndTime,
-          attendeeIds: allAttendees,
-          bufferMinutesBefore: existing.bufferMinutesBefore,
-          bufferMinutesAfter: existing.bufferMinutesAfter,
-          excludeAppointmentId: input.id,
-        },
-        domainAppointments
-      );
-
-      if (conflictResult.hasConflicts) {
-        // Get conflict details from database
-        const conflictDetails = await ctx.prismaWithTenant.appointment.findMany({
-          where: { id: { in: conflictResult.conflicts.map((c) => c.appointmentId) } },
-          select: { id: true, title: true, startTime: true, endTime: true },
-        });
-
-        throw new TRPCError({
-          code: 'CONFLICT',
-          message: `Rescheduling conflict detected with ${conflictResult.conflicts.length} appointment(s)`,
-          cause: {
-            conflicts: conflictResult.conflicts.map((c) => {
-              const details = conflictDetails.find((d) => d.id === c.appointmentId);
-              return {
-                id: c.appointmentId,
-                title: details?.title ?? 'Unknown',
-                startTime: details?.startTime ?? c.conflictStart,
-                endTime: details?.endTime ?? c.conflictEnd,
-                overlapMinutes: c.overlapMinutes,
-                conflictType: c.conflictType,
-              };
-            }),
-          },
-        });
-      }
     }
 
-    const appointment = await ctx.prismaWithTenant.appointment.update({
+    // Re-fetch via prismaWithTenant to preserve the current Prisma row response shape.
+    const appointment = await ctx.prismaWithTenant.appointment.findUnique({
       where: { id: input.id },
-      data: {
-        startTime: input.newStartTime,
-        endTime: input.newEndTime,
-      },
       include: {
         attendees: true,
         linkedCases: true,
       },
     });
+    if (!appointment) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: `Appointment ${input.id} disappeared after reschedule`,
+      });
+    }
 
     const duration = performance.now() - startTime;
-    console.log(
-      `[appointments.reschedule] Domain-validated reschedule in ${duration.toFixed(2)}ms`
-    );
+    console.log(`[appointments.reschedule] Use-case reschedule in ${duration.toFixed(2)}ms`);
 
     // IFC-158: Fire-and-forget ICS regeneration, reminder rescheduling, audit trail
     onAppointmentRescheduled(
       appointment,
-      existing.startTime,
-      existing.endTime,
+      previousTimeSlot.startTime,
+      previousTimeSlot.endTime,
       ctx.user.userId,
       input.reason
     ).catch((err) => console.error('[appointments.router] Side-effect failed:', err));
@@ -828,15 +690,15 @@ export const appointmentsRouter = createTRPCRouter({
     createNotification(
       ctx.prismaWithTenant,
       {
-        userId: existing.organizerId,
+        userId: appointment.organizerId,
         tenantId: ctx.user.tenantId,
         type: 'appointment_rescheduled',
         title: 'Appointment rescheduled',
-        body: `Appointment "${existing.title}" has been rescheduled`,
+        body: `Appointment "${appointment.title}" has been rescheduled`,
         priority: 'normal',
         entityType: 'appointment',
         entityId: appointment.id,
-        entityName: existing.title,
+        entityName: appointment.title,
         actionUrl: `/calendar/${appointment.id}`,
       },
       ctx.services?.notificationOrchestrator
@@ -845,8 +707,8 @@ export const appointmentsRouter = createTRPCRouter({
     return {
       appointment,
       previousTime: {
-        startTime: existing.startTime,
-        endTime: existing.endTime,
+        startTime: previousTimeSlot.startTime,
+        endTime: previousTimeSlot.endTime,
       },
     };
   }),
@@ -887,94 +749,64 @@ export const appointmentsRouter = createTRPCRouter({
 
   /**
    * Complete an appointment
+   * Phase 2b: routed through CompleteAppointmentUseCase (hexagonal migration)
    */
   complete: tenantProcedure
     .input(z.object({ id: z.string(), notes: z.string().max(5000).optional() }))
     .mutation(async ({ ctx, input }) => {
-      const existing = await ctx.prismaWithTenant.appointment.findUnique({
-        where: { id: input.id },
+      const result = await container.completeAppointmentUseCase.execute({
+        appointmentId: input.id,
+        tenantId: ctx.user.tenantId,
+        completedBy: ctx.user.userId,
+        notes: input.notes,
       });
+      if (result.isFailure) throw mapDomainErrorToTRPC(result.error);
 
-      if (!existing) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: `Appointment with ID ${input.id} not found`,
-        });
-      }
-
-      if (existing.status === 'CANCELLED') {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Cannot complete a cancelled appointment',
-        });
-      }
-
-      if (existing.status === 'COMPLETED') {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Appointment is already completed',
-        });
-      }
-
-      const appointment = await ctx.prismaWithTenant.appointment.update({
+      const appointment = await ctx.prismaWithTenant.appointment.findUnique({
         where: { id: input.id },
-        data: {
-          status: 'COMPLETED',
-          completedAt: new Date(),
-          notes: input.notes,
-        },
         include: {
           attendees: true,
           linkedCases: true,
         },
       });
+      if (!appointment) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: `Appointment ${input.id} disappeared after complete`,
+        });
+      }
 
       return appointment;
     }),
 
   /**
    * Cancel an appointment
+   * Phase 2a: routed through CancelAppointmentUseCase (hexagonal migration)
    */
   cancel: tenantProcedure
     .input(z.object({ id: z.string(), reason: z.string().max(500).optional() }))
     .mutation(async ({ ctx, input }) => {
-      const existing = await ctx.prismaWithTenant.appointment.findUnique({
-        where: { id: input.id },
+      const result = await container.cancelAppointmentUseCase.execute({
+        appointmentId: input.id,
+        tenantId: ctx.user.tenantId,
+        cancelledBy: ctx.user.userId,
+        reason: input.reason,
       });
+      if (result.isFailure) throw mapDomainErrorToTRPC(result.error);
 
-      if (!existing) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: `Appointment with ID ${input.id} not found`,
-        });
-      }
-
-      if (existing.status === 'CANCELLED') {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Appointment is already cancelled',
-        });
-      }
-
-      if (existing.status === 'COMPLETED') {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Cannot cancel a completed appointment',
-        });
-      }
-
-      const appointment = await ctx.prismaWithTenant.appointment.update({
+      const appointment = await ctx.prismaWithTenant.appointment.findUnique({
         where: { id: input.id },
-        data: {
-          status: 'CANCELLED',
-          cancelledAt: new Date(),
-          cancellationReason: input.reason,
-        },
         include: {
           attendees: true,
           linkedCases: true,
         },
       });
+      if (!appointment) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: `Appointment ${input.id} disappeared after cancel`,
+        });
+      }
 
       // IFC-158: Fire-and-forget ICS cancellation, cancel reminders, audit trail
       onAppointmentCancelled(appointment, ctx.user.userId, input.reason).catch((err) =>
@@ -1046,80 +878,54 @@ export const appointmentsRouter = createTRPCRouter({
    * Check for scheduling conflicts
    * Returns detailed conflict information
    *
+   * Phase 2c: routed through CheckConflictsUseCase (hexagonal migration).
    * Uses domain ConflictDetector for sophisticated conflict detection:
    * - O(n) algorithm for performance
    * - Proper buffer time handling
    * - Conflict type classification (EXACT, PARTIAL, BUFFER)
    */
   checkConflicts: tenantProcedure.input(checkConflictsSchema).query(async ({ ctx, input }) => {
-    const startTime = performance.now();
+    const checkStart = Date.now();
 
-    // Fetch existing appointments for the attendees
-    const dbAppointments = await ctx.prismaWithTenant.appointment.findMany({
-      where: {
-        AND: [
-          {
-            OR: [
-              { organizerId: { in: input.attendeeIds } },
-              { attendees: { some: { userId: { in: input.attendeeIds } } } },
-            ],
-          },
-          { status: { notIn: ['CANCELLED', 'NO_SHOW'] } },
-        ],
-      },
-      include: {
-        attendees: { select: { userId: true } },
-      },
+    const result = await container.checkConflictsUseCase.checkConflicts({
+      tenantId: ctx.user.tenantId,
+      startTime: input.startTime,
+      endTime: input.endTime,
+      attendeeIds: input.attendeeIds,
+      bufferMinutesBefore: input.bufferMinutesBefore,
+      bufferMinutesAfter: input.bufferMinutesAfter,
+      excludeAppointmentId: input.excludeAppointmentId,
     });
+    if (result.isFailure) throw mapDomainErrorToTRPC(result.error);
 
-    // Convert to domain Appointments for ConflictDetector
-    const domainAppointments = AppointmentDomainService.toDomainAppointments(dbAppointments);
+    // The use case enriches conflicts with title/startTime/endTime from domain entities,
+    // but does not include appointmentType (not part of CheckConflictsOutput interface).
+    // Post-fetch appointmentType from Prisma to preserve the current response shape.
+    const conflictIds = result.value.conflicts.map((c) => c.appointmentId);
+    const conflictDetails =
+      conflictIds.length > 0
+        ? await ctx.prismaWithTenant.appointment.findMany({
+            where: { id: { in: conflictIds } },
+            select: { id: true, appointmentType: true },
+          })
+        : [];
+    const typeMap = new Map(conflictDetails.map((c) => [c.id, c.appointmentType]));
 
-    // Use domain service for conflict detection
-    const result = AppointmentDomainService.checkConflicts(
-      {
-        startTime: input.startTime,
-        endTime: input.endTime,
-        attendeeIds: input.attendeeIds,
-        bufferMinutesBefore: input.bufferMinutesBefore,
-        bufferMinutesAfter: input.bufferMinutesAfter,
-        excludeAppointmentId: input.excludeAppointmentId,
-      },
-      domainAppointments
-    );
-
-    // Map conflict IDs to appointment details
-    const conflictDetails = await ctx.prismaWithTenant.appointment.findMany({
-      where: { id: { in: result.conflicts.map((c) => c.appointmentId) } },
-      select: {
-        id: true,
-        title: true,
-        startTime: true,
-        endTime: true,
-        appointmentType: true,
-      },
-    });
-
-    const conflictMap = new Map(conflictDetails.map((c) => [c.id, c]));
-
-    const duration = performance.now() - startTime;
-    console.log(`[appointments.checkConflicts] Domain-based check in ${duration.toFixed(2)}ms`);
+    const checkDurationMs = Date.now() - checkStart;
+    console.log(`[appointments.checkConflicts] Use-case check in ${checkDurationMs.toFixed(2)}ms`);
 
     return {
-      hasConflicts: result.hasConflicts,
-      conflicts: result.conflicts.map((c) => {
-        const details = conflictMap.get(c.appointmentId);
-        return {
-          id: c.appointmentId,
-          title: details?.title ?? 'Unknown',
-          startTime: details?.startTime ?? c.conflictStart,
-          endTime: details?.endTime ?? c.conflictEnd,
-          appointmentType: details?.appointmentType ?? 'OTHER',
-          overlapMinutes: c.overlapMinutes,
-          conflictType: c.conflictType,
-        };
-      }),
-      checkDurationMs: duration,
+      hasConflicts: result.value.hasConflicts,
+      conflicts: result.value.conflicts.map((c) => ({
+        id: c.appointmentId,
+        title: c.title,
+        startTime: c.startTime,
+        endTime: c.endTime,
+        appointmentType: typeMap.get(c.appointmentId) ?? 'OTHER',
+        overlapMinutes: c.overlapMinutes,
+        conflictType: c.conflictType,
+      })),
+      checkDurationMs,
     };
   }),
 
@@ -1127,135 +933,76 @@ export const appointmentsRouter = createTRPCRouter({
    * Check availability for an attendee
    * Returns available time slots
    *
-   * Uses domain ConflictDetector.checkAvailability for sophisticated slot finding
+   * Phase 2c: routed through CheckConflictsUseCase.checkAvailability (hexagonal migration).
    */
   checkAvailability: tenantProcedure
     .input(checkAvailabilitySchema)
     .query(async ({ ctx, input }) => {
-      const startTime = performance.now();
+      const checkStart = Date.now();
 
-      // Get all appointments for the attendee in the time range
-      const dbAppointments = await ctx.prismaWithTenant.appointment.findMany({
-        where: {
-          AND: [
-            {
-              OR: [
-                { organizerId: input.attendeeId },
-                { attendees: { some: { userId: input.attendeeId } } },
-              ],
-            },
-            { startTime: { lt: input.endTime } },
-            { endTime: { gt: input.startTime } },
-            { status: { notIn: ['CANCELLED', 'NO_SHOW'] } },
-          ],
-        },
-        include: {
-          attendees: { select: { userId: true } },
-        },
+      const result = await container.checkConflictsUseCase.checkAvailability({
+        tenantId: ctx.user.tenantId,
+        attendeeId: input.attendeeId,
+        startTime: input.startTime,
+        endTime: input.endTime,
+        minimumSlotMinutes: input.minimumSlotMinutes,
+        includeBuffer: true,
       });
+      if (result.isFailure) throw mapDomainErrorToTRPC(result.error);
 
-      // Convert to domain Appointments
-      const domainAppointments = AppointmentDomainService.toDomainAppointments(dbAppointments);
-
-      // Use domain service for availability check
-      const availableSlots = AppointmentDomainService.checkAvailability(
-        {
-          attendeeId: input.attendeeId,
-          startTime: input.startTime,
-          endTime: input.endTime,
-          minimumSlotMinutes: input.minimumSlotMinutes,
-          includeBuffer: true,
-        },
-        domainAppointments
-      );
-
-      const totalAvailableMinutes = availableSlots.reduce(
-        (sum, slot) => sum + slot.durationMinutes,
-        0
-      );
-
-      const duration = performance.now() - startTime;
+      const checkDurationMs = Date.now() - checkStart;
       console.log(
-        `[appointments.checkAvailability] Domain-based check in ${duration.toFixed(2)}ms`
+        `[appointments.checkAvailability] Use-case check in ${checkDurationMs.toFixed(2)}ms`
       );
 
       return {
-        availableSlots,
-        totalAvailableMinutes,
-        checkDurationMs: duration,
+        availableSlots: result.value.availableSlots,
+        totalAvailableMinutes: result.value.totalAvailableMinutes,
+        checkDurationMs,
       };
     }),
 
   /**
    * Find next available slot
    *
-   * Uses domain ConflictDetector.findNextAvailableSlot for sophisticated slot finding:
-   * - Working hours awareness (9 AM - 5 PM, weekdays)
-   * - Buffer time handling
-   * - Weekend exclusion
+   * Phase 2c: routed through CheckConflictsUseCase.findNextSlot (hexagonal migration).
+   * Working hours awareness (9 AM - 5 PM, weekdays), buffer time handling, weekend exclusion.
    */
   findNextSlot: tenantProcedure.input(findNextSlotSchema).query(async ({ ctx, input }) => {
-    const startTime = performance.now();
+    const searchStart = Date.now();
 
-    const searchEndDate = new Date(input.startFrom);
-    searchEndDate.setUTCDate(searchEndDate.getUTCDate() + input.maxDaysAhead);
-
-    // Get all appointments for the attendee in the search range
-    const dbAppointments = await ctx.prismaWithTenant.appointment.findMany({
-      where: {
-        AND: [
-          {
-            OR: [
-              { organizerId: input.attendeeId },
-              { attendees: { some: { userId: input.attendeeId } } },
-            ],
-          },
-          { endTime: { gt: input.startFrom } },
-          { startTime: { lt: searchEndDate } },
-          { status: { notIn: ['CANCELLED', 'NO_SHOW'] } },
-        ],
-      },
-      include: {
-        attendees: { select: { userId: true } },
-      },
+    const result = await container.checkConflictsUseCase.findNextSlot({
+      tenantId: ctx.user.tenantId,
+      attendeeId: input.attendeeId,
+      startFrom: input.startFrom,
+      durationMinutes: input.durationMinutes,
+      maxDaysAhead: input.maxDaysAhead,
+      bufferMinutesBefore: input.bufferMinutesBefore,
+      bufferMinutesAfter: input.bufferMinutesAfter,
+      workingHoursStart: 9,
+      workingHoursEnd: 17,
     });
+    if (result.isFailure) throw mapDomainErrorToTRPC(result.error);
 
-    // Convert to domain Appointments
-    const domainAppointments = AppointmentDomainService.toDomainAppointments(dbAppointments);
-
-    // Use domain service to find next available slot
-    const slot = AppointmentDomainService.findNextAvailableSlot(
-      {
-        attendeeId: input.attendeeId,
-        startFrom: input.startFrom,
-        durationMinutes: input.durationMinutes,
-        maxDaysAhead: input.maxDaysAhead,
-        bufferMinutesBefore: input.bufferMinutesBefore,
-        bufferMinutesAfter: input.bufferMinutesAfter,
-        workingHoursStart: 9,
-        workingHoursEnd: 17,
-      },
-      domainAppointments
-    );
-
-    const duration = performance.now() - startTime;
+    const searchDurationMs = Date.now() - searchStart;
+    const slot = result.value.slot;
 
     if (slot) {
-      console.log(`[appointments.findNextSlot] Domain-based found in ${duration.toFixed(2)}ms`);
+      console.log(`[appointments.findNextSlot] Use-case found in ${searchDurationMs.toFixed(2)}ms`);
       return {
         slot: {
           startTime: slot.startTime,
           endTime: slot.endTime,
           durationMinutes: slot.durationMinutes,
         },
-        searchDurationMs: duration,
+        searchDurationMs,
       };
     }
 
-    console.log(`[appointments.findNextSlot] No slot found in ${duration.toFixed(2)}ms`);
+    console.log(`[appointments.findNextSlot] No slot found in ${searchDurationMs.toFixed(2)}ms`);
     return {
       slot: null,
-      searchDurationMs: duration,
+      searchDurationMs,
     };
   }),
 

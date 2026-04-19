@@ -16,7 +16,7 @@ import {
   reorderTicketCategorySchema,
 } from '@intelliflow/validators';
 
-const slaPolicyRouter = createTRPCRouter({
+export const slaPolicyRouter = createTRPCRouter({
   list: tenantProcedure.query(async ({ ctx }) => {
     return ctx.prismaWithTenant.sLAPolicy.findMany({
       where: { tenantId: ctx.tenant.tenantId },

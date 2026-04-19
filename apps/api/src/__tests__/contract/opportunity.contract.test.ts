@@ -497,6 +497,15 @@ describe('Opportunity Router Contract Tests', () => {
   });
 
   describe('delete - Contract', () => {
+    beforeEach(() => {
+      // PG-184: opportunity.delete now runs the preventDeleteWithOpenTasks
+      // guard before the service call. Default the automation setting and the
+      // open-task count to zero so contract tests exercise the post-guard code
+      // path; dedicated deal-automation tests cover the guard itself.
+      (prismaMock.dealAutomationSetting as any).findUnique = vi.fn().mockResolvedValue(null);
+      prismaMock.task.count.mockResolvedValue(0);
+    });
+
     it('should return success response', async () => {
       ctx.services!.opportunity!.deleteOpportunity = vi.fn().mockResolvedValue({
         isSuccess: true,

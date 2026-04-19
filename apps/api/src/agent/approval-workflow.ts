@@ -23,7 +23,7 @@ import {
   EntityType,
 } from './types';
 import { agentLogger } from './logger';
-import { getAgentTool } from './tools';
+import { getAgentTool, getForTenant, ToolDisabledError } from './tools';
 import { PrismaAgentActionStore } from './prisma-action-store';
 import { prisma as sharedPrisma } from '@intelliflow/db';
 
@@ -39,7 +39,9 @@ const DEFAULT_TENANT_ID = process.env.DEFAULT_TENANT_ID || '00000000-0000-4000-8
  * ExecutedActionsStore, RollbackStore) with a single DB-backed
  * implementation using the AgentAction model.
  */
-export const actionStore = new PrismaAgentActionStore(sharedPrisma, DEFAULT_TENANT_ID);
+// M4 (Epsilon3): sharedPrisma is wrapped in $extends — cast to the expected base type
+// since the runtime behavior is identical.
+export const actionStore = new PrismaAgentActionStore(sharedPrisma as never, DEFAULT_TENANT_ID);
 
 // Legacy aliases for callers that import these directly
 export const pendingActionsStore = {
@@ -176,12 +178,41 @@ export class ApprovalWorkflowService {
       throw new Error('Action has expired');
     }
 
+    // Re-check tool enablement BEFORE execution.
+    // A tenant may have disabled the tool between the approval request and now.
+    // When tenantId + prisma are available on the context we use the gated path;
+    // background jobs that lack tenant context fall back to the plain registry lookup
+    // (TODO: wire tenantId through background job contexts before invoking tools).
+    let tool;
+    if (context.tenantId && context.prisma) {
+      try {
+        tool = await getForTenant({
+          name: action.toolName,
+          tenantId: context.tenantId,
+          prisma: context.prisma,
+        });
+      } catch (err) {
+        if (err instanceof ToolDisabledError) {
+          throw new Error(
+            `Cannot execute approved action: tool "${action.toolName}" has been ` +
+              `disabled for tenant ${context.tenantId} since the approval was requested.`
+          );
+        }
+        throw err;
+      }
+    } else {
+      // Bypass rationale: background-job / cron execution path where no tRPC
+      // request context is present (e.g. scheduled job retries, queue consumers).
+      // These callers do not hold a tenantId at invocation time.
+      // TODO: wire tenantId through background-job contexts before this call site
+      // so it can be migrated to getForTenant() for full tenant-gating coverage.
+      tool = getAgentTool(action.toolName);
+    }
+
     // Update action status
     action.status = 'APPROVED';
     await pendingActionsStore.update(action);
 
-    // Get the tool to execute
-    const tool = getAgentTool(action.toolName);
     if (!tool) {
       throw new Error(`Tool not found: ${action.toolName}`);
     }
@@ -330,7 +361,11 @@ export class ApprovalWorkflowService {
       };
     }
 
-    // Get the tool to perform rollback
+    // Bypass rationale: rollback is an infrastructure/admin operation that undoes
+    // an already-approved action. Tenant-level tool enablement should NOT block a
+    // rollback — an admin could disable a tool AFTER approval, and we still need
+    // to undo the executed action. Intentionally uses getAgentTool() without
+    // tenant-gating to ensure rollbacks are always executable.
     const tool = getAgentTool(executedAction.toolName);
     if (!tool?.rollback) {
       return {

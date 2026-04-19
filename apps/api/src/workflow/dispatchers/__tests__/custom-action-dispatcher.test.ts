@@ -1,4 +1,12 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
+
+// Mock node:dns BEFORE importing the dispatcher. vi.hoisted is required
+// because vi.mock factories are hoisted above local consts.
+const { dnsLookupMock } = vi.hoisted(() => ({ dnsLookupMock: vi.fn() }));
+vi.mock('node:dns', () => ({
+  promises: { lookup: dnsLookupMock },
+}));
+
 import { dispatchCustomAction } from '../custom-action-dispatcher';
 import {
   getCustomActionHandlerRegistry,
@@ -14,7 +22,12 @@ function makePrisma() {
 }
 
 describe('dispatchCustomAction', () => {
-  beforeEach(() => resetCustomActionHandlerRegistry());
+  beforeEach(() => {
+    resetCustomActionHandlerRegistry();
+    dnsLookupMock.mockReset();
+    // Default: every hostname resolves to a single public IP
+    dnsLookupMock.mockResolvedValue([{ address: '8.8.8.8', family: 4 }]);
+  });
   afterEach(() => vi.restoreAllMocks());
 
   it('returns error when handler not registered', async () => {
@@ -70,9 +83,7 @@ describe('dispatchCustomAction', () => {
       label: 'Strict',
       endpointUrl: 'https://httpbin.org/post',
       timeoutMs: 5000,
-      inputSchema: [
-        { key: 'count', label: 'Count', type: 'number', required: true },
-      ],
+      inputSchema: [{ key: 'count', label: 'Count', type: 'number', required: true }],
       outputSchema: [],
       isActive: true,
     });
@@ -111,6 +122,58 @@ describe('dispatchCustomAction', () => {
     });
     expect(result.ok).toBe(false);
     expect(result.errorMessage).toMatch(/SSRF/);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('blocks DNS rebinding — public hostname that resolves to private IP is rejected before fetch', async () => {
+    const registry = getCustomActionHandlerRegistry();
+    registry.register(TENANT, {
+      id: 'abc',
+      actionTypeId: 'rebind',
+      label: 'Rebind',
+      endpointUrl: 'https://attacker.example.com/hook',
+      timeoutMs: 5000,
+      inputSchema: [],
+      outputSchema: [],
+      isActive: true,
+    });
+    // Attacker's DNS returns AWS IMDS link-local address
+    dnsLookupMock.mockResolvedValueOnce([{ address: '169.254.169.254', family: 4 }]);
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await dispatchCustomAction(makePrisma(), {
+      tenantId: TENANT,
+      customActionId: 'abc',
+      params: {},
+    });
+    expect(result.ok).toBe(false);
+    expect(result.errorMessage).toMatch(/non-public address|rebinding/i);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('blocks DNS rebinding — IPv6 ULA address is rejected', async () => {
+    const registry = getCustomActionHandlerRegistry();
+    registry.register(TENANT, {
+      id: 'abc',
+      actionTypeId: 'v6rebind',
+      label: 'V6 Rebind',
+      endpointUrl: 'https://attacker.example.com/hook',
+      timeoutMs: 5000,
+      inputSchema: [],
+      outputSchema: [],
+      isActive: true,
+    });
+    dnsLookupMock.mockResolvedValueOnce([{ address: 'fc00::1', family: 6 }]);
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await dispatchCustomAction(makePrisma(), {
+      tenantId: TENANT,
+      customActionId: 'abc',
+      params: {},
+    });
+    expect(result.ok).toBe(false);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 

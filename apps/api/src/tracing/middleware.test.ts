@@ -104,8 +104,7 @@ describe('tRPC tracing middleware (middleware.ts)', () => {
     vi.restoreAllMocks();
   });
 
-  // TODO: Test timing out - investigate dynamic import issue
-  it.skip('records success spans and logs request', async () => {
+  it('records success spans and logs request', async () => {
     const { tracingMiddleware } = await import('./middleware.js');
 
     const next = vi.fn(async () => ({ ok: true }));

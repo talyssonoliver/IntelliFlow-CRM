@@ -48,6 +48,12 @@ describe('opportunityRouter additional coverage', () => {
       prismaWithTenant: prismaMock,
     });
     mockCreateTenantWhereClause.mockImplementation((_tenant: any, where: any) => where);
+    // PG-184: deal-automation helpers read these tables on every mutation.
+    (prismaMock as any).dealAutomationSetting = {
+      findUnique: vi.fn().mockResolvedValue(null),
+    };
+    if (!(prismaMock as any).task) (prismaMock as any).task = {};
+    (prismaMock as any).task.count = vi.fn().mockResolvedValue(0);
   });
 
   describe('create - generic BAD_REQUEST', () => {

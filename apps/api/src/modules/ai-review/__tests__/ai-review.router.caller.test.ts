@@ -179,14 +179,14 @@ function createCallerContext() {
     user: {
       userId: TEST_USER_ID,
       email: 'test@example.com',
-      role: 'SALES_REP',
+      role: 'ADMIN',
       tenantId: TEST_TENANT_ID,
     },
     tenant: {
       tenantId: TEST_TENANT_ID,
       tenantType: 'user' as const,
       userId: TEST_USER_ID,
-      role: 'SALES_REP',
+      role: 'ADMIN',
       canAccessAllTenantData: false,
     },
     prismaWithTenant: mockPrisma,
@@ -947,6 +947,96 @@ describe('aiReviewRouter (caller tests)', () => {
           }),
         })
       );
+    });
+  });
+
+  describe('RBAC gates', () => {
+    // Non-admin context that will fail hasPermission (role ≠ ADMIN → slow path returns
+    // false because the mock Prisma returns empty arrays for role assignments).
+    function createNonAdminContext() {
+      return {
+        prisma: mockPrisma,
+        user: {
+          userId: TEST_USER_ID,
+          email: 'test@example.com',
+          role: 'SALES_REP', // non-ADMIN — hasPermission slow path, no role grants
+          tenantId: TEST_TENANT_ID,
+        },
+        tenant: {
+          tenantId: TEST_TENANT_ID,
+          tenantType: 'user' as const,
+          userId: TEST_USER_ID,
+          role: 'SALES_REP',
+          canAccessAllTenantData: false,
+        },
+        prismaWithTenant: mockPrisma,
+      } as any;
+    }
+
+    // Extend mock Prisma with permission-table stubs needed by hasPermission slow path
+    beforeEach(() => {
+      (mockPrisma as any).userPermission = { findFirst: vi.fn().mockResolvedValue(null) };
+      (mockPrisma as any).userRoleAssignment = { findMany: vi.fn().mockResolvedValue([]) };
+    });
+
+    it('claim — non-admin user without grant is FORBIDDEN', async () => {
+      // RBAC gate added in M5 sweep: ai:output-review / claim
+      const nonAdminCaller = aiReviewRouter.createCaller(createNonAdminContext());
+      await expect(nonAdminCaller.claim({ reviewId: TEST_REVIEW_ID })).rejects.toMatchObject({
+        code: 'FORBIDDEN',
+      });
+    });
+
+    it('reject — non-admin user without grant is FORBIDDEN', async () => {
+      // RBAC gate added in M5 sweep: ai:output-review / reject
+      const nonAdminCaller = aiReviewRouter.createCaller(createNonAdminContext());
+      await expect(
+        nonAdminCaller.reject({
+          reviewId: TEST_REVIEW_ID,
+          lockToken: 'some-token',
+          notes: 'Rejection notes',
+        })
+      ).rejects.toMatchObject({ code: 'FORBIDDEN' });
+    });
+
+    it('escalate — non-admin user without grant is FORBIDDEN', async () => {
+      // RBAC gate added in M5 sweep: ai:output-review / escalate
+      const nonAdminCaller = aiReviewRouter.createCaller(createNonAdminContext());
+      await expect(
+        nonAdminCaller.escalate({
+          reviewId: TEST_REVIEW_ID,
+          lockToken: 'some-token',
+          reason: 'Escalation reason',
+        })
+      ).rejects.toMatchObject({ code: 'FORBIDDEN' });
+    });
+
+    it('release — non-admin user without grant is FORBIDDEN', async () => {
+      // RBAC gate added in M5 sweep: ai:output-review / release
+      const nonAdminCaller = aiReviewRouter.createCaller(createNonAdminContext());
+      await expect(
+        nonAdminCaller.release({
+          reviewId: TEST_REVIEW_ID,
+          lockToken: 'some-token',
+        })
+      ).rejects.toMatchObject({ code: 'FORBIDDEN' });
+    });
+
+    it('admin user bypasses RBAC gate and reaches use case for claim', async () => {
+      // ADMIN fast-path: hasPermission returns true without DB queries
+      const result = await caller.claim({ reviewId: TEST_REVIEW_ID });
+      expect(result.success).toBe(true);
+    });
+
+    it('approve — non-admin user without grant is FORBIDDEN', async () => {
+      // Existing gate (approve was already gated by Psi); confirm still enforced
+      const nonAdminCaller = aiReviewRouter.createCaller(createNonAdminContext());
+      await expect(
+        nonAdminCaller.approve({
+          reviewId: TEST_REVIEW_ID,
+          lockToken: 'some-token',
+        })
+      ).rejects.toMatchObject({ code: 'FORBIDDEN' });
     });
   });
 

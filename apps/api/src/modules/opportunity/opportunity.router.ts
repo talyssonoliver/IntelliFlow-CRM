@@ -33,6 +33,56 @@ import { type Context } from '../../context';
 import { getTenantContext, createTenantWhereClause } from '../../security/tenant-context';
 import { createNotification } from '../notifications/notifications.router';
 import { getAuditLogger } from '../../security/audit-logger';
+import {
+  loadDealAutomation,
+  capitalizeDealName,
+  normalizeDealValue,
+  assertCanCreateDealOrMerge,
+  assertCanDeleteDeal,
+  notifyDealDuplicate,
+  notifyDealReassignment,
+  notifyDealStageChange,
+  notifyHighValueStageMove,
+  type DealNotifier,
+} from './deal-automation';
+
+/**
+ * Build a fire-and-forget DealNotifier backed by createNotification. Used by
+ * the category-1 deal-automation toggles in create/update so the helpers can
+ * stay decoupled from the notification-orchestrator surface.
+ */
+function buildDealNotifier(ctx: Context, tenantId: string): DealNotifier {
+  const titleFor = (type: string) => {
+    if (type === 'deal_reassigned') return 'Deal reassigned';
+    if (type === 'deal_stage_changed') return 'Deal stage changed';
+    if (type === 'deal_high_value_moved') return 'High-value deal moved';
+    return 'Duplicate deal suspected';
+  };
+  return {
+    async send({ type, toUserIds, payload }) {
+      const opportunityId = String(payload.opportunityId ?? '');
+      const tasks = toUserIds.map((userId) =>
+        createNotification(
+          ctx.prismaWithTenant as unknown as Context['prisma'],
+          {
+            userId,
+            tenantId,
+            type,
+            title: titleFor(type),
+            body: `See deal ${opportunityId}`,
+            priority: type === 'deal_high_value_moved' ? 'high' : 'normal',
+            entityType: 'opportunity',
+            entityId: opportunityId,
+            actionUrl: `/deals/${opportunityId}`,
+            metadata: payload,
+          },
+          ctx.services?.notificationOrchestrator
+        ).catch((err) => console.error('[opportunity.router] deal notify failed:', err))
+      );
+      await Promise.all(tasks);
+    },
+  };
+}
 
 /**
  * Helper to get opportunity service from context
@@ -495,14 +545,92 @@ export const opportunityRouter = createTRPCRouter({
     const typedCtx = getTenantContext(ctx);
     const opportunityService = getOpportunityService(ctx);
 
+    // PG-184: Category-1 automation toggles — load once per mutation.
+    const automation = await loadDealAutomation({
+      tenant: typedCtx.tenant,
+      user: ctx.user ? { role: ctx.user.role } : undefined,
+      prismaWithTenant: ctx.prismaWithTenant,
+    });
+
+    const normalizedName = capitalizeDealName(input.name, automation) ?? input.name;
+    const normalizedValueRaw = normalizeDealValue(input.value?.amount, automation);
+    const normalizedValue =
+      typeof normalizedValueRaw === 'number'
+        ? normalizedValueRaw
+        : normalizedValueRaw != null
+          ? Number(normalizedValueRaw)
+          : (input.value?.amount ?? undefined);
+
+    // PG-184: autoMergeOnExactNameAccount — short-circuit to existing deal when enabled.
+    const mergeDecision = await assertCanCreateDealOrMerge(
+      {
+        tenant: typedCtx.tenant,
+        user: ctx.user ? { role: ctx.user.role } : undefined,
+        prismaWithTenant: ctx.prismaWithTenant,
+      },
+      { name: normalizedName, accountId: input.accountId, value: normalizedValue },
+      automation
+    );
+    if (mergeDecision.action === 'MERGE' && mergeDecision.duplicateId) {
+      const existing = await ctx.prismaWithTenant.opportunity.findFirst({
+        where: { id: mergeDecision.duplicateId, tenantId: typedCtx.tenant.tenantId },
+      });
+      if (existing) {
+        return mapOpportunityToResponse({
+          id: { value: existing.id },
+          name: existing.name,
+          stage: existing.stage,
+          value: { amount: Number(existing.value) },
+          probability: { value: existing.probability },
+          expectedCloseDate: existing.expectedCloseDate,
+          accountId: existing.accountId,
+          contactId: existing.contactId,
+          ownerId: existing.ownerId,
+          tenantId: existing.tenantId,
+          description: existing.description,
+          createdAt: existing.createdAt,
+          updatedAt: existing.updatedAt,
+        } as any);
+      }
+    }
+
     const result = await opportunityService.createOpportunity({
       ...input,
+      name: normalizedName,
+      value: input.value,
       ownerId: typedCtx.tenant.userId,
       tenantId: typedCtx.tenant.tenantId,
     });
 
     if (result.isFailure) {
       throwOpportunityCreateError(result.error);
+    }
+
+    // PG-184: Emit deal_duplicate_suspected when enabled and the merge audit
+    // saw a match but the user opted not to merge (toggle off path still runs
+    // the lookup when notifyOnDuplicate is on).
+    if (automation.notifyOnDuplicate) {
+      const notifier = buildDealNotifier(ctx, typedCtx.tenant.tenantId);
+      const suspect = await ctx.prismaWithTenant.opportunity.findFirst({
+        where: {
+          tenantId: typedCtx.tenant.tenantId,
+          name: normalizedName,
+          accountId: input.accountId,
+          NOT: { id: result.value.id.value },
+        },
+      });
+      if (suspect) {
+        void notifyDealDuplicate(
+          notifier,
+          {
+            opportunityId: result.value.id.value,
+            duplicateOpportunityId: suspect.id,
+            ownerId: typedCtx.tenant.userId,
+            actorId: typedCtx.tenant.userId,
+          },
+          automation
+        );
+      }
     }
 
     // Fire-and-forget notification
@@ -652,11 +780,35 @@ export const opportunityRouter = createTRPCRouter({
 
     const { id, ...data } = input;
 
+    // PG-184: Category-1 automation toggles — snapshot before state for diff.
+    const automation = await loadDealAutomation({
+      tenant: typedCtx.tenant,
+      user: ctx.user ? { role: ctx.user.role } : undefined,
+      prismaWithTenant: ctx.prismaWithTenant,
+    });
+    const before = await ctx.prismaWithTenant.opportunity.findFirst({
+      where: { id, tenantId: typedCtx.tenant.tenantId },
+    });
+
+    const normalizedName =
+      data.name != null ? (capitalizeDealName(data.name, automation) ?? data.name) : data.name;
+    const normalizedValueAmountRaw =
+      data.value?.amount != null
+        ? normalizeDealValue(data.value.amount, automation)
+        : data.value?.amount;
+    const normalizedValueAmount =
+      typeof normalizedValueAmountRaw === 'number'
+        ? normalizedValueAmountRaw
+        : normalizedValueAmountRaw != null
+          ? Number(normalizedValueAmountRaw)
+          : undefined;
+
     const result = await opportunityService.updateOpportunity(
       id,
       {
         ...data,
-        value: data.value?.amount,
+        name: normalizedName,
+        value: normalizedValueAmount ?? data.value?.amount,
         probability: data.probability?.value,
       },
       typedCtx.tenant.userId,
@@ -665,6 +817,63 @@ export const opportunityRouter = createTRPCRouter({
 
     if (result.isFailure) {
       throwOpportunityUpdateError(result.error);
+    }
+
+    // PG-184: Category-1 update-path notifications (owner change, stage change,
+    // high-value stage move). All are fire-and-forget.
+    if (before) {
+      const notifier = buildDealNotifier(ctx, typedCtx.tenant.tenantId);
+      // ownerId is not mutable via updateOpportunitySchema today, so the
+      // owner-change branch is effectively wired but inert. IFC-311 will add
+      // a reassign endpoint that reuses notifyDealReassignment.
+      const newOwnerId = before.ownerId;
+      const newStage = result.value.stage;
+      if (automation.notifyOnOwnerChange && before.ownerId !== newOwnerId) {
+        void notifyDealReassignment(
+          notifier,
+          {
+            opportunityId: id,
+            previousOwnerId: before.ownerId,
+            newOwnerId,
+            actorId: typedCtx.tenant.userId,
+          },
+          automation
+        );
+      }
+      if (automation.notifyOnStageChange && before.stage !== newStage) {
+        void notifyDealStageChange(
+          notifier,
+          {
+            opportunityId: id,
+            ownerId: newOwnerId,
+            fromStage: before.stage,
+            toStage: newStage,
+            actorId: typedCtx.tenant.userId,
+          },
+          automation
+        );
+      }
+      if (automation.notifyOnHighValueStageMove && before.stage !== newStage) {
+        const finalValue =
+          normalizedValueAmount ??
+          (data.value?.amount != null ? Number(data.value.amount) : Number(before.value));
+        if (finalValue >= automation.highValueThreshold) {
+          void notifyHighValueStageMove(
+            notifier,
+            {
+              opportunityId: id,
+              ownerId: newOwnerId,
+              fromStage: before.stage,
+              toStage: newStage,
+              value: finalValue,
+              threshold: automation.highValueThreshold,
+              actorId: typedCtx.tenant.userId,
+              toUserIds: [newOwnerId],
+            },
+            automation
+          );
+        }
+      }
     }
 
     // IFC-281: Fire-and-forget audit logging
@@ -685,6 +894,23 @@ export const opportunityRouter = createTRPCRouter({
   delete: tenantProcedure.input(z.object({ id: idSchema })).mutation(async ({ ctx, input }) => {
     const typedCtx = getTenantContext(ctx);
     const opportunityService = getOpportunityService(ctx);
+
+    // PG-184: preventDeleteWithOpenTasks guard.
+    const automation = await loadDealAutomation({
+      tenant: typedCtx.tenant,
+      user: ctx.user ? { role: ctx.user.role } : undefined,
+      prismaWithTenant: ctx.prismaWithTenant,
+    });
+    if (automation.preventDeleteWithOpenTasks) {
+      const openTasks = await ctx.prismaWithTenant.task.count({
+        where: {
+          tenantId: typedCtx.tenant.tenantId,
+          opportunityId: input.id,
+          status: { notIn: ['COMPLETED', 'CANCELLED', 'ARCHIVED'] },
+        },
+      });
+      assertCanDeleteDeal({ openTasks }, automation);
+    }
 
     const result = await opportunityService.deleteOpportunity(input.id, typedCtx.tenant.tenantId);
 

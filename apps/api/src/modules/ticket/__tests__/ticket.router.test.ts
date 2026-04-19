@@ -62,7 +62,7 @@ const mockTicketService = {
 };
 
 // Mock Prisma
-const mockPrisma = {
+const mockPrisma: Record<string, any> = {
   tenant: {
     findUnique: vi.fn().mockResolvedValue(mockTenant),
   },
@@ -74,6 +74,24 @@ const mockPrisma = {
       { status: 'OPEN', _count: 5 },
       { status: 'IN_PROGRESS', _count: 3 },
     ]),
+  },
+  // PG-185: ticket-automation dependencies (playbook §12 mock stubs).
+  // Without these, loadTicketAutomation throws "Cannot read properties of
+  // undefined (reading 'findUnique')" and breaks all ticket.router tests.
+  ticketAutomationSetting: {
+    findUnique: vi.fn().mockResolvedValue(null), // NULL row → factory defaults
+  },
+  ticketRequiredField: {
+    findMany: vi.fn().mockResolvedValue([]),
+  },
+  sLAPolicy: {
+    findFirst: vi.fn().mockResolvedValue(null),
+  },
+  relatedTicket: {
+    count: vi.fn().mockResolvedValue(0),
+  },
+  ticketActivity: {
+    count: vi.fn().mockResolvedValue(0),
   },
 };
 
@@ -118,6 +136,13 @@ describe('ticketRouter', () => {
     // Re-establish default mock values after clearing
     mockPrisma.tenant.findUnique.mockResolvedValue(mockTenant);
     mockPrisma.user.findMany.mockResolvedValue([]);
+    // PG-185 playbook §12: re-establish ticket-automation stub defaults
+    // so NULL automation row is returned (factory defaults apply).
+    mockPrisma.ticketAutomationSetting.findUnique.mockResolvedValue(null);
+    mockPrisma.ticketRequiredField.findMany.mockResolvedValue([]);
+    mockPrisma.sLAPolicy.findFirst.mockResolvedValue(null);
+    mockPrisma.relatedTicket.count.mockResolvedValue(0);
+    mockPrisma.ticketActivity.count.mockResolvedValue(0);
     mockTicketService.create.mockResolvedValue(mockTicket);
     mockTicketService.findById.mockResolvedValue(mockTicket);
     mockTicketService.findMany.mockResolvedValue({

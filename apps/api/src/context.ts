@@ -12,6 +12,7 @@
  */
 
 import type { PrismaClient } from '@intelliflow/db';
+import { TRPCError } from '@trpc/server';
 import { container, type Container, apiPrisma } from './container';
 import { supabaseAdmin, verifyToken } from './lib/supabase';
 
@@ -424,12 +425,11 @@ async function provisionNewUserWith(
     };
   } catch (provisionError) {
     console.error('[Auth] Failed to auto-provision user:', provisionError);
-    return {
-      userId: supabaseUser.id,
-      email: supabaseUser.email || '',
-      role: 'USER',
-      tenantId: '', // Will fail tenant isolation
-    };
+    throw new TRPCError({
+      code: 'INTERNAL_SERVER_ERROR',
+      message: 'JIT user provisioning failed',
+      cause: provisionError,
+    });
   }
 }
 

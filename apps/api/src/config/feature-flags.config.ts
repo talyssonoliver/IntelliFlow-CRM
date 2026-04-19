@@ -16,6 +16,23 @@ export function loadFeatureFlagsConfig(): FeatureFlagsConfig {
       { key: 'ai_email_generation', enabled: process.env.ENABLE_AI_EMAIL === 'true' },
       { key: 'ai_workflows', enabled: process.env.ENABLE_AI_WORKFLOWS === 'true' },
 
+      // AI BullMQ job flags — tenant-scoped, default enabled
+      {
+        key: 'ai.scoring.enabled',
+        description: 'Enable AI scoring job for tenant',
+        enabled: true,
+      },
+      {
+        key: 'ai.insights.enabled',
+        description: 'Enable AI insights job for tenant',
+        enabled: true,
+      },
+      {
+        key: 'ai.prediction.enabled',
+        description: 'Enable AI prediction job for tenant',
+        enabled: true,
+      },
+
       // Real-time features
       { key: 'subscriptions', enabled: process.env.ENABLE_SUBSCRIPTIONS === 'true' },
 
@@ -55,4 +72,7 @@ export const FLAG_KEY_TO_FEATURE: Record<string, string> = {
   custom_dashboards: 'customDashboards',
   api_integrations: 'apiIntegrations',
   notifications: 'notifications',
+  'ai.scoring.enabled': 'aiScoringJob',
+  'ai.insights.enabled': 'aiInsightsJob',
+  'ai.prediction.enabled': 'aiPredictionJob',
 };

@@ -28,6 +28,14 @@ import { mapAccountToResponse } from '../../shared/mappers';
 import { type Context } from '../../context';
 import { getTenantContext, createTenantWhereClause } from '../../security/tenant-context';
 import { getAuditLogger } from '../../security/audit-logger';
+import {
+  assertCanDeleteAccount,
+  assertRequiredAccountFields,
+  capitalizeAccountName,
+  loadAccountAutomation,
+  loadRequiredAccountFields,
+  normalizeWebsite,
+} from './account-automation';
 
 /**
  * Helper to get account service from context
@@ -50,8 +58,44 @@ export const accountRouter = createTRPCRouter({
     const typedCtx = getTenantContext(ctx);
     const accountService = getAccountService(ctx);
 
-    const result = await accountService.createAccount({
+    // PG-183: apply tenant automation + required-field policy before the
+    // domain service takes over.
+    const [flags, requiredFields] = await Promise.all([
+      loadAccountAutomation(typedCtx),
+      loadRequiredAccountFields(typedCtx),
+    ]);
+
+    const rawWebsite =
+      (input as { website?: { toValue?: () => string } | string | null | undefined }).website ??
+      null;
+    const websiteString =
+      typeof rawWebsite === 'object' && rawWebsite !== null && 'toValue' in rawWebsite
+        ? (rawWebsite.toValue?.() ?? null)
+        : (rawWebsite as string | null);
+
+    assertRequiredAccountFields(
+      {
+        name: input.name,
+        industry: (input as { industry?: string | null }).industry,
+        website: websiteString,
+        ownerId: typedCtx.tenant.userId, // always satisfied for create
+        employees: (input as { employees?: number | null }).employees,
+        revenue: (input as { revenue?: number | string | null }).revenue,
+      },
+      requiredFields,
+      'create'
+    );
+
+    const hygieneInput = {
       ...input,
+      name: capitalizeAccountName(input.name, flags) ?? input.name,
+      ...(websiteString !== null
+        ? { website: normalizeWebsite(websiteString, flags) ?? websiteString }
+        : {}),
+    };
+
+    const result = await accountService.createAccount({
+      ...hygieneInput,
       ownerId: typedCtx.tenant.userId,
       tenantId: typedCtx.tenant.tenantId,
     });
@@ -237,15 +281,47 @@ export const accountRouter = createTRPCRouter({
     const accountService = getAccountService(ctx);
     const { id, ...data } = input;
 
+    // PG-183: apply tenant automation + required-field policy before
+    // handing off to the service.
+    const [flags, requiredFields] = await Promise.all([
+      loadAccountAutomation(typedCtx),
+      loadRequiredAccountFields(typedCtx),
+    ]);
+
     // Convert WebsiteUrl Value Object to string for service
-    const updateData: {
-      name?: string;
-      website?: string;
-      description?: string;
-    } = {
+    const websiteString = data.website?.toValue?.() ?? (data.website as string | undefined);
+
+    assertRequiredAccountFields(
+      {
+        ...(Object.prototype.hasOwnProperty.call(data, 'name')
+          ? { name: (data as { name?: string }).name }
+          : {}),
+        ...(Object.prototype.hasOwnProperty.call(data, 'industry')
+          ? { industry: (data as { industry?: string | null }).industry }
+          : {}),
+        ...(Object.prototype.hasOwnProperty.call(data, 'website')
+          ? { website: websiteString ?? null }
+          : {}),
+        ...(Object.prototype.hasOwnProperty.call(data, 'employees')
+          ? { employees: (data as { employees?: number | null }).employees }
+          : {}),
+        ...(Object.prototype.hasOwnProperty.call(data, 'revenue')
+          ? { revenue: (data as { revenue?: number | string | null }).revenue }
+          : {}),
+      },
+      requiredFields,
+      'update'
+    );
+
+    const updateData = {
       ...data,
-      website: data.website?.toValue?.() ?? (data.website as string | undefined),
-    };
+      ...(data.name !== undefined
+        ? { name: capitalizeAccountName(data.name, flags) ?? data.name }
+        : {}),
+      ...(websiteString !== undefined
+        ? { website: normalizeWebsite(websiteString, flags) ?? websiteString }
+        : {}),
+    } as Record<string, unknown>;
 
     // IFC-269 B-05: Wrap in transaction to prevent TOCTOU
     const result = await accountService.updateAccountInfo(
@@ -304,6 +380,22 @@ export const accountRouter = createTRPCRouter({
   delete: tenantProcedure.input(z.object({ id: idSchema })).mutation(async ({ ctx, input }) => {
     const typedCtx = getTenantContext(ctx);
     const accountService = getAccountService(ctx);
+
+    // PG-183: respect the tenant's "prevent delete with open opportunities"
+    // toggle before touching the account. Counts closed as stage IN
+    // (CLOSED_WON, CLOSED_LOST); everything else is active.
+    const flags = await loadAccountAutomation(typedCtx);
+    if (flags.preventDeleteWithOpenOpportunities) {
+      const activeOpportunities = await typedCtx.prismaWithTenant.opportunity.count({
+        where: {
+          accountId: input.id,
+          tenantId: typedCtx.tenant.tenantId,
+          stage: { notIn: ['CLOSED_WON', 'CLOSED_LOST'] },
+          deletedAt: null,
+        },
+      });
+      assertCanDeleteAccount({ activeOpportunities }, flags);
+    }
 
     // IFC-269 B-02+B-05: Tenant isolation via service layer (repository enforces tenantId)
     const result = await accountService.deleteAccount(input.id, typedCtx.tenant.tenantId);

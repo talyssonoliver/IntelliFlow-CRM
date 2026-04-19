@@ -63,6 +63,14 @@ describe('Opportunity Router', () => {
   beforeEach(() => {
     // Make prisma.$extends return the same mock so tenantMiddleware works in tests
     (prismaMock.$extends as ReturnType<typeof vi.fn>).mockReturnValue(prismaMock);
+    // PG-184: deal-automation helpers read these tables on every mutation.
+    // Default to "no automation row" → factory defaults, and "no open tasks"
+    // so the delete guard doesn't fire unless a test opts in.
+    (prismaMock as any).dealAutomationSetting = {
+      findUnique: vi.fn().mockResolvedValue(null),
+    };
+    (prismaMock as any).dealRequiredField = { findMany: vi.fn().mockResolvedValue([]) };
+    (prismaMock as any).task.count = vi.fn().mockResolvedValue(0);
   });
 
   describe('create', () => {

@@ -55,6 +55,13 @@ describe('Account Router', () => {
     (prismaMock as any).$transaction = vi
       .fn()
       .mockImplementation(async (cb: (tx: any) => Promise<any>) => cb(prismaMock));
+    // PG-183: account.router now loads AccountAutomationSetting + queries
+    // opportunity.count on delete. Stub both so existing test cases stay
+    // focused on the behaviour under test (no row ⇒ factory defaults, no
+    // open opportunities ⇒ no delete guard).
+    (prismaMock.accountAutomationSetting.findUnique as any).mockResolvedValue(null);
+    (prismaMock.accountRequiredField.findMany as any).mockResolvedValue([]);
+    (prismaMock.opportunity.count as any).mockResolvedValue(0);
   });
 
   describe('create', () => {
@@ -806,10 +813,12 @@ describe('Account Router', () => {
         website: 'https://updated.com',
       });
 
+      // PG-183 hardening: `normalizeWebsiteDomain` is ON by default, so the
+      // router strips the scheme before handing to the service.
       expect(ctx.services!.account!.updateAccountInfo).toHaveBeenCalledWith(
         TEST_UUIDS.account1,
         expect.objectContaining({
-          website: 'https://updated.com',
+          website: 'updated.com',
         }),
         expect.any(String),
         expect.any(String)

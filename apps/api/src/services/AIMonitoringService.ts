@@ -7,7 +7,10 @@ import type { PrismaClient } from '@intelliflow/db';
 interface DateRangeOpts {
   startTime?: Date;
   endTime?: Date;
-  tenantId?: string;
+}
+
+interface TenantOpts {
+  tenantId: string;
 }
 
 interface DriftMetricsOpts extends DateRangeOpts {
@@ -38,31 +41,52 @@ export class AIMonitoringService {
         ...(opts.endTime ? { lte: opts.endTime } : {}),
       };
     }
-    if (opts.tenantId) {
-      where.tenantId = opts.tenantId;
-    }
     return where;
   }
 
-  async getStatus() {
+  /**
+   * Tenant filter for non-drift event types.
+   * Returns `{ tenantId }` so all events are scoped to the requesting tenant.
+   */
+  private tenantFilter(tenantId: string): Record<string, unknown> {
+    return { tenantId };
+  }
+
+  /**
+   * Drift events include both global signals (tenantId: null) and per-tenant
+   * signals. Return both so the tenant sees global model drift alongside their own.
+   */
+  private driftTenantFilter(tenantId: string): Record<string, unknown> {
+    return { OR: [{ tenantId: null }, { tenantId }] };
+  }
+
+  async getStatus({ tenantId }: TenantOpts) {
     const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const db = this.prisma as any;
+    const tf = this.tenantFilter(tenantId);
+    const dtf = this.driftTenantFilter(tenantId);
 
     const [driftCount, latencyCount, hallucinationCount, roiCostCount] = await Promise.all([
-      db.aIMonitoringEvent.count({ where: { eventType: 'drift', recordedAt: { gte: since } } }),
-      db.aIMonitoringEvent.count({ where: { eventType: 'latency', recordedAt: { gte: since } } }),
       db.aIMonitoringEvent.count({
-        where: { eventType: 'hallucination', recordedAt: { gte: since } },
+        where: { eventType: 'drift', recordedAt: { gte: since }, ...dtf },
       }),
-      db.aIMonitoringEvent.count({ where: { eventType: 'roi_cost', recordedAt: { gte: since } } }),
+      db.aIMonitoringEvent.count({
+        where: { eventType: 'latency', recordedAt: { gte: since }, ...tf },
+      }),
+      db.aIMonitoringEvent.count({
+        where: { eventType: 'hallucination', recordedAt: { gte: since }, ...tf },
+      }),
+      db.aIMonitoringEvent.count({
+        where: { eventType: 'roi_cost', recordedAt: { gte: since }, ...tf },
+      }),
     ]);
 
     const hallucinationFlagged = await db.aIMonitoringEvent.count({
-      where: { eventType: 'hallucination', flagged: true, recordedAt: { gte: since } },
+      where: { eventType: 'hallucination', flagged: true, recordedAt: { gte: since }, ...tf },
     });
 
     const driftFlagged = await db.aIMonitoringEvent.count({
-      where: { eventType: 'drift', flagged: true, recordedAt: { gte: since } },
+      where: { eventType: 'drift', flagged: true, recordedAt: { gte: since }, ...dtf },
     });
 
     const hallucinationRate =
@@ -76,7 +100,7 @@ export class AIMonitoringService {
 
     // Compute latency p95/p99 from recent events
     const latencyEvents = await db.aIMonitoringEvent.findMany({
-      where: { eventType: 'latency', recordedAt: { gte: since } },
+      where: { eventType: 'latency', recordedAt: { gte: since }, ...tf },
       select: { value: true },
       orderBy: { value: 'asc' },
     });
@@ -90,11 +114,11 @@ export class AIMonitoringService {
 
     // Compute ROI totals
     const roiCostSum = await db.aIMonitoringEvent.aggregate({
-      where: { eventType: 'roi_cost', recordedAt: { gte: since } },
+      where: { eventType: 'roi_cost', recordedAt: { gte: since }, ...tf },
       _sum: { value: true },
     });
     const roiValueSum = await db.aIMonitoringEvent.aggregate({
-      where: { eventType: 'roi_value', recordedAt: { gte: since } },
+      where: { eventType: 'roi_value', recordedAt: { gte: since }, ...tf },
       _sum: { value: true },
     });
     const totalCost = roiCostSum._sum?.value ?? 0;
@@ -124,13 +148,18 @@ export class AIMonitoringService {
     };
   }
 
-  async getDriftMetrics(opts: DriftMetricsOpts = {}) {
+  async getDriftMetrics(opts: DriftMetricsOpts & TenantOpts) {
     const db = this.prisma as any;
-    const where = { eventType: 'drift', ...this.dateFilter(opts) };
+    const { tenantId, ...rangeOpts } = opts;
+    const where = {
+      eventType: 'drift',
+      ...this.dateFilter(rangeOpts),
+      ...this.driftTenantFilter(tenantId),
+    };
     const events = await db.aIMonitoringEvent.findMany({
       where,
       orderBy: { recordedAt: 'desc' },
-      take: opts.limit ?? 100,
+      take: rangeOpts.limit ?? 100,
     });
 
     const driftFlagged = events.filter((e: any) => e.flagged);
@@ -161,9 +190,14 @@ export class AIMonitoringService {
     };
   }
 
-  async getLatencyMetrics(opts: LatencyMetricsOpts = {}) {
+  async getLatencyMetrics(opts: LatencyMetricsOpts & TenantOpts) {
     const db = this.prisma as any;
-    const where = { eventType: 'latency', ...this.dateFilter(opts) };
+    const { tenantId, ...rangeOpts } = opts;
+    const where = {
+      eventType: 'latency',
+      ...this.dateFilter(rangeOpts),
+      ...this.tenantFilter(tenantId),
+    };
     const events = await db.aIMonitoringEvent.findMany({
       where,
       orderBy: { recordedAt: 'desc' },
@@ -174,8 +208,8 @@ export class AIMonitoringService {
       return {
         available: true,
         stats: {
-          periodStart: opts.startTime ?? new Date(),
-          periodEnd: opts.endTime ?? new Date(),
+          periodStart: rangeOpts.startTime ?? new Date(),
+          periodEnd: rangeOpts.endTime ?? new Date(),
           sampleCount: 0,
           successRate: 1,
           percentiles: {
@@ -248,14 +282,20 @@ export class AIMonitoringService {
     };
   }
 
-  async getLatencyTrend(opts: LatencyTrendOpts = {}) {
+  async getLatencyTrend(opts: LatencyTrendOpts & TenantOpts) {
     const periodMinutes = opts.periodMinutes ?? 60;
     const bucketMinutes = opts.bucketMinutes ?? 5;
     const db = this.prisma as any;
+    const { tenantId, ...rangeOpts } = opts;
     const since = new Date(Date.now() - periodMinutes * 60 * 1000);
-    const where = { eventType: 'latency', recordedAt: { gte: since }, ...this.dateFilter(opts) };
+    const where = {
+      eventType: 'latency',
+      recordedAt: { gte: since },
+      ...this.dateFilter(rangeOpts),
+      ...this.tenantFilter(tenantId),
+    };
     // Ensure recordedAt gte uses the more recent of since and opts.startTime
-    if (!opts.startTime || since > opts.startTime) {
+    if (!rangeOpts.startTime || since > rangeOpts.startTime) {
       (where as any).recordedAt = { gte: since };
     }
 
@@ -289,13 +329,18 @@ export class AIMonitoringService {
     return { available: true, trend };
   }
 
-  async getHallucinationReport(opts: HallucinationReportOpts = {}) {
+  async getHallucinationReport(opts: HallucinationReportOpts & TenantOpts) {
     const db = this.prisma as any;
-    const where = { eventType: 'hallucination', ...this.dateFilter(opts) };
+    const { tenantId, ...rangeOpts } = opts;
+    const where = {
+      eventType: 'hallucination',
+      ...this.dateFilter(rangeOpts),
+      ...this.tenantFilter(tenantId),
+    };
     const events = await db.aIMonitoringEvent.findMany({
       where,
       orderBy: { recordedAt: 'desc' },
-      take: opts.limit ?? 100,
+      take: rangeOpts.limit ?? 100,
     });
 
     const total = events.length;
@@ -328,10 +373,12 @@ export class AIMonitoringService {
     };
   }
 
-  async getROIMetrics(opts: ROIMetricsOpts = {}) {
+  async getROIMetrics(opts: ROIMetricsOpts & TenantOpts) {
     const db = this.prisma as any;
-    const costWhere = { eventType: 'roi_cost', ...this.dateFilter(opts) };
-    const valueWhere = { eventType: 'roi_value', ...this.dateFilter(opts) };
+    const { tenantId, ...rangeOpts } = opts;
+    const tf = this.tenantFilter(tenantId);
+    const costWhere = { eventType: 'roi_cost', ...this.dateFilter(rangeOpts), ...tf };
+    const valueWhere = { eventType: 'roi_value', ...this.dateFilter(rangeOpts), ...tf };
 
     const [costEvents, valueEvents] = await Promise.all([
       db.aIMonitoringEvent.findMany({ where: costWhere }),
@@ -346,8 +393,8 @@ export class AIMonitoringService {
     return {
       available: true,
       roi: {
-        periodStart: opts.startTime ?? new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-        periodEnd: opts.endTime ?? new Date(),
+        periodStart: rangeOpts.startTime ?? new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+        periodEnd: rangeOpts.endTime ?? new Date(),
         totalCost,
         totalValue,
         netValue,

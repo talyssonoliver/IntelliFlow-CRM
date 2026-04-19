@@ -128,16 +128,46 @@ describe('customNodeTypeRouter', () => {
   });
 
   describe('delete', () => {
-    it('soft-deletes via isActive=false', async () => {
+    it('hard-deletes when no workflow references the type', async () => {
       const ctx = createAdminContext();
-      prismaMock.customNodeType.findFirst.mockResolvedValue({ id: 'n1' } as never);
-      prismaMock.customNodeType.update.mockResolvedValue({ id: 'n1', isActive: false } as never);
+      prismaMock.customNodeType.findFirst.mockResolvedValue({
+        id: 'n1',
+        typeId: 'slack_notify',
+      } as never);
+      prismaMock.$queryRaw.mockResolvedValue([{ count: 0n }] as never);
+      prismaMock.customNodeType.delete.mockResolvedValue({ id: 'n1' } as never);
       const caller = customNodeTypeRouter.createCaller(ctx);
-      const result = await caller.delete({ id: 'n1' });
-      expect(result.deleted).toBe(true);
-      expect(prismaMock.customNodeType.update).toHaveBeenCalledWith(
-        expect.objectContaining({ data: expect.objectContaining({ isActive: false }) })
+      const result = await caller.delete({ id: 'n1', force: false });
+      expect(result).toMatchObject({ deleted: true, forced: false });
+      expect(prismaMock.customNodeType.delete).toHaveBeenCalledWith({ where: { id: 'n1' } });
+    });
+
+    it('returns CONFLICT when workflows still reference the type', async () => {
+      const ctx = createAdminContext();
+      prismaMock.customNodeType.findFirst.mockResolvedValue({
+        id: 'n1',
+        typeId: 'slack_notify',
+      } as never);
+      prismaMock.$queryRaw.mockResolvedValue([{ count: 3n }] as never);
+      const caller = customNodeTypeRouter.createCaller(ctx);
+      await expect(caller.delete({ id: 'n1', force: false })).rejects.toThrow(
+        /3 workflows? still reference/
       );
+      expect(prismaMock.customNodeType.delete).not.toHaveBeenCalled();
+    });
+
+    it('force=true bypasses the reference check and hard-deletes anyway', async () => {
+      const ctx = createAdminContext();
+      prismaMock.customNodeType.findFirst.mockResolvedValue({
+        id: 'n1',
+        typeId: 'slack_notify',
+      } as never);
+      prismaMock.customNodeType.delete.mockResolvedValue({ id: 'n1' } as never);
+      const caller = customNodeTypeRouter.createCaller(ctx);
+      const result = await caller.delete({ id: 'n1', force: true });
+      expect(result.forced).toBe(true);
+      expect(prismaMock.$queryRaw).not.toHaveBeenCalled();
+      expect(prismaMock.customNodeType.delete).toHaveBeenCalled();
     });
   });
 });
