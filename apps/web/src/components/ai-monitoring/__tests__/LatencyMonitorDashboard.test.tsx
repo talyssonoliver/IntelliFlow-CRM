@@ -238,11 +238,15 @@ describe('LatencyMonitorDashboard', () => {
       expect(skeletons.length).toBeGreaterThan(0);
     });
 
-    it('renders empty state when sampleCount=0', () => {
-      setMockHook({ sampleCount: 0 });
+    it('renders empty state when sampleCount=0 and service is available', () => {
+      // LatencyMonitorDashboard.tsx:150 has two zero-sample branches:
+      //   - available=false → unavailable-banner (worker-isolated)
+      //   - available=true  → `<EmptyState entity="insights" />`
+      // Fixture default `available` is undefined (falsy), which routes to the
+      // banner. Force available=true to exercise the canonical EmptyState path.
+      setMockHook({ sampleCount: 0, available: true });
       render(<LatencyMonitorDashboard />);
-      expect(screen.getByTestId('empty-state')).toBeInTheDocument();
-      expect(screen.getByText('No latency data yet')).toBeInTheDocument();
+      expect(screen.getByText('No insights yet')).toBeInTheDocument();
     });
   });
 

@@ -90,13 +90,13 @@ describe('SLADisplay', () => {
     expect(progressBars.length).toBeGreaterThan(0);
   });
 
-  it('progress bar has aria-valuenow, aria-valuemin="0", aria-valuemax="100"', () => {
+  it('progress bar has value and max attributes', () => {
+    // Native <progress value max> (no aria-valuenow/valuemin/valuemax).
     render(<SLADisplay {...baseProps} />);
     const progressBars = screen.getAllByRole('progressbar');
     const bar = progressBars[0];
-    expect(bar.getAttribute('aria-valuemin')).toBe('0');
-    expect(bar.getAttribute('aria-valuemax')).toBe('100');
-    expect(bar.getAttribute('aria-valuenow')).toBeDefined();
+    expect(bar).toHaveAttribute('value');
+    expect(bar).toHaveAttribute('max', '100');
   });
 
   it('progress bar has descriptive aria-valuetext', () => {

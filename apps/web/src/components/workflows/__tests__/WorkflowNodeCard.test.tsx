@@ -95,7 +95,8 @@ describe('WorkflowNodeCard', () => {
     ['end', 'bg-red-100'],
   ] as const)('renders correct color class for %s node type', (type, expectedColor) => {
     const { container } = renderNode(type);
-    const card = container.querySelector('[role="figure"]');
+    // Source renders a native <figure> (implicit role="figure" — no attribute).
+    const card = container.querySelector('figure');
     expect(card?.className).toContain(expectedColor);
   });
 
@@ -159,7 +160,8 @@ describe('WorkflowNodeCard', () => {
     };
 
     const { container } = render(<WorkflowNodeCard {...(props as any)} />);
-    const card = container.querySelector('[role="figure"]');
+    // Source renders a native <figure> (implicit role="figure" — no attribute).
+    const card = container.querySelector('figure');
     // Should fall back to action styling
     expect(card?.className).toContain('bg-blue-100');
   });

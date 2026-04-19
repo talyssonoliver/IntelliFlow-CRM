@@ -204,32 +204,32 @@ describe('Backup Codes Utility', () => {
 
   describe('printBackupCodes', () => {
     it('should open print dialog with formatted codes', async () => {
+      // Source migrated from document.write to Blob URL + addEventListener('load')
+      // (backup-codes.ts:225-237). Stub URL.createObjectURL + mock window.
       const mockPrint = vi.fn();
       const mockClose = vi.fn();
-      const mockWrite = vi.fn();
       const mockWindow = {
-        document: {
-          write: mockWrite,
-          close: mockClose,
-        },
         print: mockPrint,
         close: mockClose,
+        addEventListener: vi.fn((_event: string, cb: () => void) => cb()),
       };
-      vi.spyOn(window, 'open').mockReturnValue(mockWindow as any as Window); // test-only mock
+      vi.spyOn(window, 'open').mockReturnValue(mockWindow as any as Window);
+
+      let capturedBlob: Blob | null = null;
+      vi.stubGlobal('URL', {
+        createObjectURL: vi.fn((blob: Blob) => { capturedBlob = blob; return 'blob:mock'; }),
+        revokeObjectURL: vi.fn(),
+      });
 
       const { printBackupCodes } = await import('../backup-codes');
-      const codes = ['A1B2C3D4E5'];
-      const email = 'user@example.com';
-      const date = new Date('2025-01-01T12:00:00Z');
-
-      printBackupCodes(codes, email, date);
+      printBackupCodes(['A1B2C3D4E5'], 'user@example.com', new Date('2025-01-01T12:00:00Z'));
 
       expect(window.open).toHaveBeenCalled();
-      expect(mockWrite).toHaveBeenCalled();
-      const printContent = mockWrite.mock.calls[0][0];
-      expect(printContent).toContain('IntelliFlow CRM');
-      expect(printContent).toContain('Backup Codes');
-      expect(printContent).toContain('A1B2C-3D4E5');
+      expect(capturedBlob).toBeInstanceOf(Blob);
+      const html = await capturedBlob!.text();
+      expect(html).toContain('IntelliFlow CRM');
+      expect(html).toContain('Backup Codes');
+      expect(html).toContain('A1B2C-3D4E5');
     });
 
     it('should handle popup blocker', async () => {

@@ -202,7 +202,9 @@ describe('Category 1: Rendering', () => {
       isLoading: false,
     });
     render(<ActiveAgentsDashboard />);
-    expect(screen.getByText(/no active agents/i)).toBeInTheDocument();
+    // "No active agents" appears both in the EmptyState title and in other
+    // status copy — assert at least one occurrence rather than a singleton.
+    expect(screen.getAllByText(/no active agents/i).length).toBeGreaterThan(0);
   });
 
   it('shows error state with retry button on error', () => {
@@ -284,13 +286,17 @@ describe('Category 2: Data Display', () => {
 
   it('View Logs link includes correct agentId', () => {
     render(<ActiveAgentsDashboard />);
-    const logLinks = screen.getAllByText('View Logs');
+    // Link label was shortened from "View Logs" to "Logs" in
+    // ActiveAgentsDashboard.tsx:202.
+    const logLinks = screen.getAllByText('Logs');
     expect(logLinks.length).toBe(4);
     // Each link should point to logs with an agentId param
+    // Link href is now path-style (`/agent-approvals/logs/<agentId>`), not
+    // query-string (see ActiveAgentsDashboard.tsx:199).
     logLinks.forEach((link) => {
       expect(link.closest('a')).toHaveAttribute(
         'href',
-        expect.stringMatching(/\/agent-approvals\/logs\?agentId=a-\d/)
+        expect.stringMatching(/\/agent-approvals\/logs\/a-\d/)
       );
     });
   });
@@ -365,7 +371,9 @@ describe('Category 3: Interactions', () => {
 
   it('View Logs link has correct href', () => {
     render(<ActiveAgentsDashboard />);
-    const logLinks = screen.getAllByText('View Logs');
+    // Link label was shortened from "View Logs" to "Logs" in
+    // ActiveAgentsDashboard.tsx:202.
+    const logLinks = screen.getAllByText('Logs');
     expect(logLinks[0].closest('a')).toHaveAttribute(
       'href',
       expect.stringContaining('/agent-approvals/logs')
@@ -439,7 +447,9 @@ describe('Category 4: Edge Cases', () => {
       isLoading: false,
     });
     render(<ActiveAgentsDashboard />);
-    expect(screen.getByText(/no active agents/i)).toBeInTheDocument();
+    // "No active agents" appears both in the EmptyState title and in other
+    // status copy — assert at least one occurrence rather than a singleton.
+    expect(screen.getAllByText(/no active agents/i).length).toBeGreaterThan(0);
     const { container } = render(<ActiveAgentsDashboard />);
     const skeletons = container.querySelectorAll('.animate-pulse');
     // Should not show loading skeletons

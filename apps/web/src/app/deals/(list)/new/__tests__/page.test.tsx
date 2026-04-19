@@ -6,12 +6,16 @@ import * as React from 'react';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 const mockPush = vi.fn();
-const mockUseRequireAuth = vi.fn().mockReturnValue({
-  isLoading: false,
-  isAuthenticated: true,
-  user: { id: 'user-1' },
-});
-const mockUseFormUnsavedChanges = vi.fn();
+// vi.hoisted ensures these mocks are initialised before hoisted vi.mock factories run,
+// avoiding the TDZ where `() => mockUseRequireAuth()` captured an undefined reference.
+const { mockUseRequireAuth, mockUseFormUnsavedChanges } = vi.hoisted(() => ({
+  mockUseRequireAuth: vi.fn().mockReturnValue({
+    isLoading: false,
+    isAuthenticated: true,
+    user: { id: 'user-1' },
+  }),
+  mockUseFormUnsavedChanges: vi.fn(),
+}));
 
 const validFormData = {
   name: 'Enterprise License',
@@ -48,12 +52,11 @@ vi.mock('next/navigation', () => ({
 }));
 
 vi.mock('@/lib/auth/AuthContext', () => ({
-  useRequireAuth: () => mockUseRequireAuth(),
+  useRequireAuth: mockUseRequireAuth,
 }));
 
 vi.mock('@/hooks/useUnsavedChanges', () => ({
-  useFormUnsavedChanges: (options: { formName: string; isDirty: boolean }) =>
-    mockUseFormUnsavedChanges(options),
+  useFormUnsavedChanges: mockUseFormUnsavedChanges,
 }));
 
 vi.mock('@/lib/trpc', () => ({
@@ -143,6 +146,13 @@ import NewDealPage from '../page';
 describe('NewDealPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Re-apply mock return values — vitest.config.ts sets `mockReset: true` which
+    // clears mockReturnValue between tests, so module-level mockReturnValue is wiped.
+    mockUseRequireAuth.mockReturnValue({
+      isLoading: false,
+      isAuthenticated: true,
+      user: { id: 'user-1' },
+    });
     capturedMutationConfig = {};
     mockCreateMutation.isPending = false;
   });

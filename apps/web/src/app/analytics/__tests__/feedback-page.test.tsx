@@ -84,7 +84,10 @@ describe('FeedbackAnalyticsPage', () => {
 
     render(<FeedbackAnalyticsPage />);
 
-    expect(screen.getByText('No responses yet')).toBeInTheDocument();
+    // feedback/page.tsx:98 renders `<EmptyState entity="insights" />` —
+    // canonical title 'No insights yet'. Semantic misuse noted (feedback
+    // responses) worth source-side follow-up.
+    expect(screen.getByText('No insights yet')).toBeInTheDocument();
   });
 
   it('renders NPS gauge when data is available', async () => {

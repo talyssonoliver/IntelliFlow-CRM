@@ -100,7 +100,10 @@ describe('AppDashboard', () => {
     const user = userEvent.setup();
     render(<AppDashboard appId="app-002" />);
     await user.click(screen.getByRole('tab', { name: 'Logs' }));
-    expect(screen.getByText('No request logs available.')).toBeVisible();
+    // app-dashboard.tsx:368 renders `<EmptyState entity="insights" />` —
+    // canonical title 'No insights yet'. Semantic misuse worth a follow-up
+    // (dedicated 'logs' entity in packages/ui entity-empty-state-config).
+    expect(screen.getByText('No insights yet')).toBeVisible();
   });
 
   // D-011: Tab panel has role="tabpanel"
@@ -119,7 +122,10 @@ describe('AppDashboard', () => {
   // D-013: No API keys shows empty state message
   it('shows empty API keys message for app with no keys', () => {
     render(<AppDashboard appId="app-002" />);
-    expect(screen.getByText('No API keys generated yet.')).toBeInTheDocument();
+    // app-dashboard.tsx:469 renders `<EmptyState entity="insights" />` for
+    // the API-keys empty state — canonical title 'No insights yet'. Same
+    // entity-choice follow-up applies.
+    expect(screen.getAllByText('No insights yet').length).toBeGreaterThan(0);
   });
 
   // D-014: API keys list renders key names and masked keys

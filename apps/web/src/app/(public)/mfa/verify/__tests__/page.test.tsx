@@ -147,9 +147,12 @@ describe('MfaVerifyPage (PG-022)', () => {
       expect(capturedMfaProps.redirectUrl).toBe('/settings');
     });
 
-    it('defaults redirectUrl to /dashboard when redirect param is missing (AC-002)', () => {
+    it('defaults redirectUrl to / when redirect param is missing (AC-002)', () => {
+      // Default post-login landing was updated from /dashboard to / (home)
+      // in commit 103b6642 so the server re-runs the (public)/layout cookie
+      // check and renders the authenticated home variant.
       renderPage({ challenge: 'c1' });
-      expect(capturedMfaProps.redirectUrl).toBe('/dashboard');
+      expect(capturedMfaProps.redirectUrl).toBe('/');
     });
 
     it('passes method param to MfaVerification (AC-002)', () => {
@@ -173,18 +176,18 @@ describe('MfaVerifyPage (PG-022)', () => {
       expect(capturedMfaProps.redirectUrl).toBe('/settings');
     });
 
-    it('external URL is rejected — falls back to /dashboard (AC-004, NF-004)', () => {
+    it('external URL is rejected — falls back to / (AC-004, NF-004)', () => {
       mockIsValidRedirectUrl.mockReturnValue(false);
       renderPage({ challenge: 'c1', redirect: 'https://evil.com' });
       expect(mockIsValidRedirectUrl).toHaveBeenCalledWith('https://evil.com');
-      expect(capturedMfaProps.redirectUrl).toBe('/dashboard');
+      expect(capturedMfaProps.redirectUrl).toBe('/');
     });
 
-    it('protocol-relative URL is rejected — falls back to /dashboard (AC-004)', () => {
+    it('protocol-relative URL is rejected — falls back to / (AC-004)', () => {
       mockIsValidRedirectUrl.mockReturnValue(false);
       renderPage({ challenge: 'c1', redirect: '//evil.com' });
       expect(mockIsValidRedirectUrl).toHaveBeenCalledWith('//evil.com');
-      expect(capturedMfaProps.redirectUrl).toBe('/dashboard');
+      expect(capturedMfaProps.redirectUrl).toBe('/');
     });
   });
 
@@ -207,9 +210,9 @@ describe('MfaVerifyPage (PG-022)', () => {
   // Auth Guard (1 test) — AC-003
   // -------------------------------------------
   describe('Auth Guard', () => {
-    it('calls useRedirectIfAuthenticated with /dashboard (AC-003)', () => {
+    it('calls useRedirectIfAuthenticated with / (AC-003)', () => {
       renderPage({ challenge: 'c1' });
-      expect(mockUseRedirectIfAuthenticated).toHaveBeenCalledWith('/dashboard');
+      expect(mockUseRedirectIfAuthenticated).toHaveBeenCalledWith('/');
     });
   });
 

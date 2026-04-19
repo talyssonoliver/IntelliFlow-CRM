@@ -1,15 +1,28 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// Mock fs module
+// Mock fs — both 'fs' and 'node:fs' specifiers must be mocked because the
+// route imports from 'node:fs'. Vitest treats them as distinct modules.
 vi.mock('fs', () => ({
   default: {
     readFileSync: vi.fn(),
   },
   readFileSync: vi.fn(),
 }));
+vi.mock('node:fs', () => ({
+  default: {
+    readFileSync: vi.fn(),
+  },
+  readFileSync: vi.fn(),
+}));
 
-// Mock path module
+// Mock path — same reasoning: also handle 'node:path'.
 vi.mock('path', () => ({
+  default: {
+    join: vi.fn((...args: string[]) => args.join('/')),
+  },
+  join: vi.fn((...args: string[]) => args.join('/')),
+}));
+vi.mock('node:path', () => ({
   default: {
     join: vi.fn((...args: string[]) => args.join('/')),
   },

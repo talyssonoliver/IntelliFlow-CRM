@@ -25,7 +25,8 @@ import type {
 // UI Mocks
 // ---------------------------------------------------------------------------
 
-vi.mock('@intelliflow/ui', () => ({
+vi.mock('@intelliflow/ui', async (importOriginal) => ({
+  ...((await importOriginal()) as Record<string, unknown>),
   Card: ({
     children,
     className,
@@ -354,7 +355,9 @@ describe('QueueSchedulerPanel', () => {
     it('shows empty data state when data is null and not loading', () => {
       render(<QueueSchedulerPanel {...createMockProps({ data: null })} />);
 
-      expect(screen.getByText(/no queue data/i)).toBeInTheDocument();
+      // EmptyState entity="agents" → canonical 'No active agents' (semantic
+      // misuse for the queue panel — dedicated 'queue' entity worth a follow-up).
+      expect(screen.getByText(/no active agents/i)).toBeInTheDocument();
     });
 
     it('action buttons disabled when mutation is in flight', () => {

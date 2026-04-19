@@ -266,7 +266,8 @@ describe('ReviewHistory', () => {
         total: 0,
       });
       render(<ReviewHistory />);
-      expect(screen.getByText(/no completed reviews/i)).toBeInTheDocument();
+      // Canonical EmptyState copy (entity="insights"): 'No insights yet'.
+      expect(screen.getByText(/no insights yet/i)).toBeInTheDocument();
     });
   });
 

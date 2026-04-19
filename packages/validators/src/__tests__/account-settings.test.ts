@@ -11,6 +11,7 @@ import {
   deleteAccountCustomFieldSchema,
   generateIndustryKey,
   DEFAULT_ACCOUNT_INDUSTRIES,
+  updateAccountDuplicateRulesSchema,
 } from '../account-settings';
 
 describe('account-settings validators', () => {
@@ -234,6 +235,45 @@ describe('account-settings validators', () => {
     });
     it('accepts id', () => {
       expect(deleteAccountCustomFieldSchema.safeParse({ id: 'abc' }).success).toBe(true);
+    });
+  });
+
+  describe('updateAccountDuplicateRulesSchema superRefine', () => {
+    const rule = (field: string, strat: string) => ({
+      field,
+      matchStrategy: strat,
+      threshold: 100,
+      isActive: true,
+      sortOrder: 0,
+    });
+
+    it('accepts unique (field, strategy) pairs', () => {
+      const result = updateAccountDuplicateRulesSchema.safeParse({
+        rules: [rule('name', 'fuzzy'), rule('website', 'normalized')],
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it('rejects duplicate (field, strategy) pairs', () => {
+      const result = updateAccountDuplicateRulesSchema.safeParse({
+        rules: [rule('name', 'fuzzy'), rule('name', 'fuzzy')],
+      });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].message).toMatch(/duplicate/i);
+      }
+    });
+
+    it('accepts same field with different strategy', () => {
+      const result = updateAccountDuplicateRulesSchema.safeParse({
+        rules: [rule('name', 'fuzzy'), rule('name', 'exact')],
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it('requires at least one rule', () => {
+      const result = updateAccountDuplicateRulesSchema.safeParse({ rules: [] });
+      expect(result.success).toBe(false);
     });
   });
 });

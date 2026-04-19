@@ -581,7 +581,8 @@ describe('SavedReportView', () => {
     mockQueries.getOverview = { data: mockOverview, isLoading: false };
     mockQueries.getTimeSeriesData = { data: mockTimeSeries7d, isLoading: false };
     render(<SavedReportView config={weeklyConfig} />);
-    // Revenue value 48500 rendered by MetricCard with format: 'currency' → $48,500
-    expect(screen.getByText('$48,500')).toBeInTheDocument();
+    // Revenue value 48500 rendered by MetricCard with en-GB GBP currency
+    // (Timezone Refactor locale migration) → £48,500.
+    expect(screen.getByText('£48,500')).toBeInTheDocument();
   });
 });

@@ -100,7 +100,7 @@ describe('NodeConfigPanel', () => {
     render(<NodeConfigPanel {...baseProps} nodeType="decision" config={{ conditions: [] }} />);
     fireEvent.click(screen.getByRole('button', { name: /add condition/i }));
     // After adding, an input with aria-label "Condition 1" should appear
-    expect(screen.getByLabelText('Condition 1')).toBeInTheDocument();
+    expect(screen.getByLabelText(/Condition 1 field/i)).toBeInTheDocument();
   });
 
   it('removes a condition row when × is clicked', () => {
@@ -112,18 +112,18 @@ describe('NodeConfigPanel', () => {
       />
     );
     // One condition input should be visible
-    expect(screen.getByLabelText('Condition 1')).toBeInTheDocument();
-    // Click × to remove
-    fireEvent.click(screen.getByRole('button', { name: '×' }));
+    expect(screen.getByLabelText(/Condition 1 field/i)).toBeInTheDocument();
+    // Click remove button (aria-label "Remove condition 1" — not "×").
+    fireEvent.click(screen.getByRole('button', { name: /remove condition 1/i }));
     // Input should be gone
-    expect(screen.queryByLabelText('Condition 1')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Condition 1 field/i)).not.toBeInTheDocument();
   });
 
   it('updates condition text when input is changed', () => {
     render(
       <NodeConfigPanel {...baseProps} nodeType="decision" config={{ conditions: ['old text'] }} />
     );
-    const input = screen.getByLabelText('Condition 1');
+    const input = screen.getByLabelText(/Condition 1 field/i);
     fireEvent.change(input, { target: { value: 'new text' } });
     // No error means update fired
     expect(input).toBeInTheDocument();

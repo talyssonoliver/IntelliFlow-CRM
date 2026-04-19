@@ -300,9 +300,11 @@ describe('DealDetailPage', () => {
     });
 
     it('displays deal value formatted as currency', async () => {
+      // formatCurrency (page.tsx:86) uses en-GB Intl with currency=GBP —
+      // values render as £N (not $N) post-Timezone-Refactor locale migration.
       const { default: DealDetailPage } = await import('../page');
       render(<DealDetailPage />);
-      expect(screen.getByText('$98,000')).toBeTruthy();
+      expect(screen.getByText('£98,000')).toBeTruthy();
     });
 
     it('displays probability from API data', async () => {
@@ -411,7 +413,7 @@ describe('DealDetailPage', () => {
       const { default: DealDetailPage } = await import('../page');
       render(<DealDetailPage />);
       expect(screen.getByText('Enterprise License')).toBeTruthy();
-      const priceElements = screen.getAllByText('$80,000');
+      const priceElements = screen.getAllByText('£80,000');
       expect(priceElements.length).toBeGreaterThan(0);
     });
 
@@ -419,7 +421,11 @@ describe('DealDetailPage', () => {
       mockProductsQueryState.data = { products: [], totalValue: 0 };
       const { default: DealDetailPage } = await import('../page');
       render(<DealDetailPage />);
-      expect(screen.getByText('No products added yet')).toBeTruthy();
+      // The local `@intelliflow/ui` mock (line 148-149) stubs EmptyState to
+      // `<p data-testid="empty-state">No {entity} yet</p>`, so for
+      // entity="products" the DOM text is 'No products yet' — not the
+      // canonical config title.
+      expect(screen.getByText('No products yet')).toBeTruthy();
     });
 
     it('shows skeleton when products loading', async () => {

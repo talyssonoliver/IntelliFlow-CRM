@@ -105,14 +105,21 @@ describe('EmailListItem formatRelativeTime branches', () => {
         onSelect={vi.fn()}
       />
     );
-    // formatDate from TimezoneProvider (UTC fallback) uses en-US month short format
-    const expected = date.toLocaleDateString('en-GB', {
-      year: 'numeric',
+    // formatDate uses en-GB with Europe/London timezone by default
+    // (TimezoneProvider's unauthenticated fallback — see timezone-utils.ts:38).
+    // That output may differ from the test's UTC computation by one day near
+    // midnight, so match on the en-GB month-short token + year instead of the
+    // exact 'D MMM YYYY' string.
+    const monthShort = date.toLocaleDateString('en-GB', {
       month: 'short',
-      day: 'numeric',
-      timeZone: 'UTC',
+      timeZone: 'Europe/London',
     });
-    expect(screen.getByText(expected)).toBeInTheDocument();
+    const year = date.toLocaleDateString('en-GB', {
+      year: 'numeric',
+      timeZone: 'Europe/London',
+    });
+    const pattern = new RegExp(`\\d{1,2}\\s+${monthShort}\\s+${year}`);
+    expect(screen.getByText(pattern)).toBeInTheDocument();
   });
 });
 
@@ -327,7 +334,10 @@ describe('EmailCompose handler coverage', () => {
     });
 
     await waitFor(() => {
-      expect(document.querySelector('[aria-live]')?.textContent).toContain(
+      // EmailCompose's status region is the unique aria-atomic="true" sr-only
+      // region. Recipient autocompletes also use aria-live for suggestions, so
+      // a plain [aria-live] querySelector picks the wrong one.
+      expect(document.querySelector('[aria-live][aria-atomic="true"]')?.textContent).toContain(
         'Email sent successfully'
       );
     });
@@ -360,7 +370,9 @@ describe('EmailCompose handler coverage', () => {
     fireEvent.submit(screen.getByRole('form', { name: /compose email/i }));
 
     await waitFor(() => {
-      expect(document.querySelector('[aria-live]')?.textContent).toContain('Failed to send');
+      expect(document.querySelector('[aria-live][aria-atomic="true"]')?.textContent).toContain(
+        'Failed to send'
+      );
     });
   });
 
@@ -384,7 +396,9 @@ describe('EmailCompose handler coverage', () => {
     });
 
     await waitFor(() => {
-      expect(document.querySelector('[aria-live]')?.textContent).toContain('Draft saved');
+      expect(document.querySelector('[aria-live][aria-atomic="true"]')?.textContent).toContain(
+        'Draft saved'
+      );
     });
   });
 
@@ -404,7 +418,9 @@ describe('EmailCompose handler coverage', () => {
     await user.click(screen.getByRole('button', { name: /save draft/i }));
 
     await waitFor(() => {
-      expect(document.querySelector('[aria-live]')?.textContent).toContain('Failed to save draft');
+      expect(document.querySelector('[aria-live][aria-atomic="true"]')?.textContent).toContain(
+        'Failed to save draft'
+      );
     });
   });
 
@@ -497,11 +513,12 @@ describe('EmailCompose handler coverage', () => {
     // Open template dropdown
     await user.click(screen.getByRole('button', { name: /template/i }));
 
-    // Select the template
+    // Select the template. TemplateSelector renders each option as a <button>
+    // inside a <ul>, not as role="option" on a listbox, so query by button name.
     await waitFor(() => {
-      expect(screen.getByRole('option', { name: /follow up/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /follow up/i })).toBeInTheDocument();
     });
-    await user.click(screen.getByRole('option', { name: /follow up/i }));
+    await user.click(screen.getByRole('button', { name: /follow up/i }));
 
     // Subject is populated from template (since initial subject was empty)
     expect(screen.getByLabelText(/subject/i)).toHaveValue('Template Subject');
@@ -534,9 +551,9 @@ describe('EmailCompose handler coverage', () => {
     await user.click(screen.getByRole('button', { name: /template/i }));
 
     await waitFor(() => {
-      expect(screen.getByRole('option', { name: /follow up/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /follow up/i })).toBeInTheDocument();
     });
-    await user.click(screen.getByRole('option', { name: /follow up/i }));
+    await user.click(screen.getByRole('button', { name: /follow up/i }));
 
     // Subject should NOT be overwritten
     expect(screen.getByLabelText(/subject/i)).toHaveValue('Re: Existing Subject');

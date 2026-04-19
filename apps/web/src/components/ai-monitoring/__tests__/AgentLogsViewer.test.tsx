@@ -384,14 +384,17 @@ describe('Category 4: Edge Cases', () => {
     expect(within(cards[1]).queryByTestId('tool-call-row')).not.toBeInTheDocument();
   });
 
-  it('conversation with zero messages shows fallback text (AC-003 edge)', () => {
+  it('conversation with zero messages shows fallback EmptyState (AC-003 edge)', () => {
     setupMock({
       logs: [{ ...mockLogs[0], messages: [], toolCalls: [] }],
       total: 1,
     });
     render(<AgentLogsViewer />);
     fireEvent.click(screen.getByTestId('expand-transcript'));
-    expect(screen.getByText(/no messages/i)).toBeInTheDocument();
+    // Source renders `<EmptyState entity="agents" />` which surfaces the
+    // canonical "No active agents" title — the conversation-specific fallback
+    // copy was removed when the EmptyState migration (PG-195) landed.
+    expect(screen.getAllByText(/no active agents/i).length).toBeGreaterThan(0);
   });
 
   it('very long message content truncates with "Show more" toggle (AC-003)', () => {
@@ -451,14 +454,15 @@ describe('Category 4: Edge Cases', () => {
     expect(within(transcript).getByText(/lead qualification agent/i)).toBeInTheDocument();
   });
 
-  it('empty state with active filters shows "No logs match" and "Clear filters" button', () => {
+  it('empty state with active filters shows filtered EmptyState + Clear filters button', () => {
     setupMock({ logs: [], total: 0 });
     render(<AgentLogsViewer />);
     // Type into search to activate the hasFilters flag
     const input = screen.getByPlaceholderText(/search/i);
     fireEvent.change(input, { target: { value: 'nonexistent' } });
-    // With search active and logs empty, it should show filter-specific empty message
-    expect(screen.getByText(/no logs match/i)).toBeInTheDocument();
+    // Source renders `<EmptyState entity="agents" variant="filtered" />` →
+    // canonical copy "No agents found" + "No agents match your current filters."
+    expect(screen.getByText(/no agents found/i)).toBeInTheDocument();
     expect(screen.getByText(/clear filters/i)).toBeInTheDocument();
   });
 
@@ -629,9 +633,12 @@ describe('Category 6: Queue Failures View', () => {
     expect(screen.getByText(/gpt-4o/)).toBeInTheDocument();
   });
 
-  it('shows "no failed jobs" empty state when queue is empty', () => {
+  it('shows empty-state fallback when queue is empty', () => {
     renderAndSwitchToQueueFailures({ jobs: [], total: 0 });
-    expect(screen.getByText('No failed jobs in the queues')).toBeInTheDocument();
+    // Same EmptyState migration as the conversation empty path — legacy
+    // "No failed jobs in the queues" copy was removed. Asserts on canonical
+    // agents empty-state title from entity-empty-state-config.
+    expect(screen.getAllByText(/no active agents/i).length).toBeGreaterThan(0);
   });
 
   it('shows failed jobs count text', () => {

@@ -119,7 +119,13 @@ export function setMockAuthenticated(authenticated: boolean) {
 
 vi.mock('@/lib/auth/AuthContext', () => ({
   useAuth: () => mockAuthContext,
-  useRequireAuth: () => ({ isLoading: false, isAuthenticated: mockAuthContext.isAuthenticated }),
+  // useRequireAuth returns the full AuthContextType — tests can assume `.user` exists
+  // (as null when unauthenticated, or mockAuthUser when setMockAuthenticated(true)).
+  useRequireAuth: () => ({
+    isLoading: false,
+    isAuthenticated: mockAuthContext.isAuthenticated,
+    user: mockAuthContext.user,
+  }),
   AuthProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 
@@ -161,6 +167,48 @@ if (typeof globalThis.localStorage === 'undefined' || !globalThis.localStorage.g
     value: localStorageMock,
     writable: true,
   });
+}
+
+// =============================================================================
+// IntersectionObserver / ResizeObserver Polyfills
+// =============================================================================
+// happy-dom does not ship IntersectionObserver or ResizeObserver. Components
+// like <EmptyState /> (packages/ui/src/hooks/use-empty-state-machine.ts) and
+// various scroll-aware widgets call `new IntersectionObserver(...)` inside
+// ref callbacks, which fires synchronously during render. Provide minimal
+// no-op implementations so rendering doesn't throw.
+
+class MockIntersectionObserver {
+  root = null;
+  rootMargin = '';
+  thresholds: ReadonlyArray<number> = [];
+  constructor(
+    _callback: IntersectionObserverCallback,
+    _options?: IntersectionObserverInit
+  ) {}
+  observe(): void {}
+  unobserve(): void {}
+  disconnect(): void {}
+  takeRecords(): IntersectionObserverEntry[] {
+    return [];
+  }
+}
+
+class MockResizeObserver {
+  constructor(_callback: ResizeObserverCallback) {}
+  observe(): void {}
+  unobserve(): void {}
+  disconnect(): void {}
+}
+
+if (typeof globalThis.IntersectionObserver === 'undefined') {
+  (globalThis as unknown as { IntersectionObserver: typeof IntersectionObserver }).IntersectionObserver =
+    MockIntersectionObserver as unknown as typeof IntersectionObserver;
+}
+
+if (typeof globalThis.ResizeObserver === 'undefined') {
+  (globalThis as unknown as { ResizeObserver: typeof ResizeObserver }).ResizeObserver =
+    MockResizeObserver as unknown as typeof ResizeObserver;
 }
 
 // CRITICAL: Clean up after each test to prevent memory leaks

@@ -13,7 +13,7 @@
  *
  * Output:
  *   - artifacts/benchmarks/accuracy-benchmarks.json (replaces simulated data)
- *   - artifacts/reports/ollama-real-benchmark-report.json (detailed report)
+ *   - artifacts/benchmarks/ollama-real-benchmark-report.json (detailed report)
  */
 
 import * as fs from 'node:fs';
@@ -538,7 +538,10 @@ async function runBenchmark(): Promise<void> {
     conclusions: accuracyBenchmarks.conclusions,
   };
 
-  const reportPath = path.join(projectRoot, 'artifacts/reports/ollama-real-benchmark-report.json');
+  const reportPath = path.join(
+    projectRoot,
+    'artifacts/benchmarks/ollama-real-benchmark-report.json'
+  );
   fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
   console.log(`Detailed report written to: ${reportPath}`);
   console.log();

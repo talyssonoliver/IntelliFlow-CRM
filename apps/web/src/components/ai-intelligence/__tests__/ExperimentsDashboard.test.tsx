@@ -301,9 +301,13 @@ describe('Data Display', () => {
   });
 
   it('progress bar reflects progressPercent value', () => {
+    // Source uses the native `<progress>` element (ExperimentsDashboard.tsx:360),
+    // which exposes its state via the `value` / `max` attributes, not ARIA
+    // attributes. happy-dom reflects the HTML attribute as `getAttribute('value')`
+    // (string). See https://html.spec.whatwg.org/#the-progress-element.
     render(<ExperimentsDashboard />);
     const progressBars = screen.getAllByRole('progressbar');
-    const runningBar = progressBars.find((pb) => pb.getAttribute('aria-valuenow') === '46');
+    const runningBar = progressBars.find((pb) => pb.getAttribute('value') === '46');
     expect(runningBar).toBeInTheDocument();
   });
 
@@ -489,7 +493,8 @@ describe('Edge Cases', () => {
   it('handles zero sample size (progress bar at 0%)', () => {
     render(<ExperimentsDashboard />);
     const progressBars = screen.getAllByRole('progressbar');
-    const zeroBar = progressBars.find((pb) => pb.getAttribute('aria-valuenow') === '0');
+    // Native <progress> uses `value` attr, not ARIA — see note above.
+    const zeroBar = progressBars.find((pb) => pb.getAttribute('value') === '0');
     expect(zeroBar).toBeInTheDocument();
   });
 
@@ -539,15 +544,18 @@ describe('Accessibility', () => {
     expect(pauseBtn).toBeInTheDocument();
   });
 
-  it('progress bars have role="progressbar" and aria-valuenow', () => {
+  it('progress bars expose value, max=100 and an aria-label', () => {
+    // Native <progress> elements announce progress to AT via value/max (with
+    // an implicit role=progressbar). ExperimentsDashboard does not apply
+    // aria-valuenow / aria-valuemin / aria-valuemax attributes — those would
+    // be redundant on a native element. Assert the real contract instead.
     render(<ExperimentsDashboard />);
     const progressBars = screen.getAllByRole('progressbar');
     expect(progressBars.length).toBe(5);
 
     progressBars.forEach((bar) => {
-      expect(bar).toHaveAttribute('aria-valuenow');
-      expect(bar).toHaveAttribute('aria-valuemin', '0');
-      expect(bar).toHaveAttribute('aria-valuemax', '100');
+      expect(bar).toHaveAttribute('value');
+      expect(bar).toHaveAttribute('max', '100');
       expect(bar).toHaveAttribute('aria-label');
     });
   });

@@ -29,9 +29,9 @@ beforeAll(async () => {
 
 describe('Sitemap Reconciliation', () => {
   // TC-25
-  it('total page.tsx count equals 204 (regression guard)', () => {
+  it('total page.tsx count equals 205 (regression guard)', () => {
     const pageFiles = findPageFiles(APP_DIR);
-    expect(pageFiles.length).toBe(204);
+    expect(pageFiles.length).toBe(205);
   });
 
   // TC-26

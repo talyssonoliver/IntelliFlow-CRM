@@ -77,6 +77,9 @@ vi.mock('@/lib/api', () => ({
   api: {
     useUtils: () => ({
       lead: { getById: { invalidate: vi.fn() } },
+      // TaskCreateSheet is rendered transitively (via EntityHoverCard's
+      // "Create Task" action) and calls `api.useUtils().task.list.invalidate`.
+      task: { list: { invalidate: vi.fn() } },
     }),
     lead: {
       getById: {
@@ -123,10 +126,17 @@ vi.mock('@/lib/api', () => ({
         useMutation: () => ({ mutate: vi.fn(), isPending: false }),
       },
     },
+    // TaskCreateSheet dependency (rendered via EntityHoverCard actions).
+    task: {
+      create: {
+        useMutation: () => ({ mutate: vi.fn(), isPending: false }),
+      },
+    },
   },
 }));
 
-vi.mock('@intelliflow/ui', () => ({
+vi.mock('@intelliflow/ui', async (importOriginal) => ({
+  ...((await importOriginal()) as Record<string, unknown>),
   Button: ({ children, onClick, disabled, className }: any) => (
     <button type="button" onClick={onClick} disabled={disabled} className={className}>
       {children}

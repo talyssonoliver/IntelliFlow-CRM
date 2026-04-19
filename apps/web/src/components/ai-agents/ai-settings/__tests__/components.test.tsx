@@ -184,7 +184,11 @@ describe('ChainVersionsDashboard', () => {
   it('shows "No active version" for chains without active version', () => {
     render(<ChainVersionsDashboard {...defaultProps} />);
 
-    const noActiveTexts = screen.getAllByText('No active version');
+    // ChainVersionsDashboard migrated to `<EmptyState entity="insights" />`
+    // (semantic misuse — 'insights' is the closest canonical entity in
+    // packages/ui entity-empty-state-config; consider adding a 'versions'
+    // entity as a source-side follow-up). Title is 'No insights yet'.
+    const noActiveTexts = screen.getAllByText('No insights yet');
     expect(noActiveTexts.length).toBe(3);
   });
 });
@@ -228,7 +232,9 @@ describe('ChainVersionsTable', () => {
   it('shows empty state when no versions match filter', () => {
     render(<ChainVersionsTable {...defaultProps} versions={[]} />);
 
-    expect(screen.getByText('No versions found')).toBeInTheDocument();
+    // ChainVersionsTable uses `entity="insights" variant="filtered"`; canonical
+    // filtered title from entity-empty-state-config is 'No insights found'.
+    expect(screen.getByText('No insights found')).toBeInTheDocument();
   });
 });
 
@@ -353,7 +359,8 @@ describe('VersionAuditLog', () => {
   it('shows empty state when no audit entries', () => {
     render(<VersionAuditLog {...defaultProps} auditLog={[]} />);
 
-    expect(screen.getByText('No audit entries found')).toBeInTheDocument();
+    // VersionAuditLog also uses `entity="insights" variant="filtered"`.
+    expect(screen.getByText('No insights found')).toBeInTheDocument();
   });
 
   it('renders filter dropdown', () => {

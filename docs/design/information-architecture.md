@@ -1,8 +1,8 @@
 # IntelliFlow CRM - Information Architecture
 
 > **Location**: `docs/design/information-architecture.md` **Last Updated**:
-> 2026-04-13 **Total Pages**: 201 | **Total Flows**: 48 | **API Routers**: 48
-> (366 procedures) | **Ghost Links**: 28
+> 2026-04-16 **Total Pages**: 205 | **Total Flows**: 48 | **API Routers**: 55
+> (366 procedures) | **Ghost Links**: 0
 
 ---
 
@@ -423,39 +423,14 @@ FLOW-020.
 
 ## 4. Ghost Links Register
 
-Sidebar or in-page links pointing to routes that have no `page.tsx`. All tracked
-for resolution in Sprint 16.
+Sidebar or in-page links pointing to routes that have no `page.tsx`. All 28
+previously-tracked ghosts (G-01 through G-28) were resolved in sprints 16–17.
+The register is currently empty. If a new ghost link is introduced, add a row
+below with the columns `# | Source Config | Link Label | Target URL | Issue
+Type | Resolution` (see git history for prior examples).
 
-| #    | Source Config                               | Link Label   | Target URL                                | Issue Type                   | Resolution |
-| ---- | ------------------------------------------- | ------------ | ----------------------------------------- | ---------------------------- | ---------- |
-| G-01 | `billing.ts` sidebar                        | Usage        | `/billing/usage`                          | Dead link                    | PG-172     |
-| G-02 | `billing.ts` sidebar + `billing-portal.tsx` | Plans        | `/billing/plans`                          | Dead link                    | PG-172     |
-| G-03 | `billing.ts` sidebar                        | Upgrade      | `/billing/upgrade`                        | Dead link                    | PG-172     |
-| G-04 | `billing-portal.tsx`                        | Cancel       | `/billing/cancel`                         | Dead link                    | PG-172     |
-| G-05 | `billing-portal.tsx`                        | Update Info  | `/billing/settings`                       | Dead link                    | PG-172     |
-| G-06 | `tickets.ts` sidebar                        | SLA Policies | `/tickets/sla-policies`                   | Dead link                    | PG-173     |
-| G-07 | `tickets.ts` sidebar                        | Types        | `/tickets/types`                          | Dead link                    | PG-173     |
-| G-08 | `tickets.ts` sidebar                        | Automations  | `/tickets/automations`                    | Dead link                    | PG-173     |
-| G-09 | `notifications.ts` sidebar                  | Channels     | `/notifications/channels`                 | Dead link                    | PG-174     |
-| G-10 | `notifications.ts` sidebar                  | Quiet Hours  | `/notifications/quiet-hours`              | Dead link                    | PG-174     |
-| G-11 | `deals.ts` sidebar                          | Trash        | `/deals/trash`                            | Dead link                    | PG-175     |
-| G-12 | `governance.ts` sidebar                     | Lighthouse   | `/governance/quality-reports/lighthouse`  | Dead link                    | PG-176     |
-| G-13 | `governance.ts` sidebar                     | Coverage     | `/governance/quality-reports/coverage`    | Dead link                    | PG-176     |
-| G-14 | `governance.ts` sidebar                     | Performance  | `/governance/quality-reports/performance` | Dead link                    | PG-176     |
-| G-15 | `analytics.ts` sidebar                      | Weekly       | `/analytics/saved/weekly`                 | Dead link                    | PG-177     |
-| G-16 | `analytics.ts` sidebar                      | Monthly      | `/analytics/saved/monthly`                | Dead link                    | PG-177     |
-| G-17 | `analytics.ts` sidebar                      | Quarterly    | `/analytics/saved/quarterly`              | Dead link                    | PG-177     |
-| G-18 | `appointments.ts` settingsHref              | Settings     | `/settings/appointments`                  | Hidden (showSettings: false) | PG-178     |
-| G-19 | `cases.ts` settingsHref                     | Settings     | `/settings/cases`                         | Hidden (showSettings: false) | PG-178     |
-| G-20 | `tasks.ts` settingsHref                     | Settings     | `/settings/tasks`                         | Hidden (showSettings: false) | PG-178     |
-| G-21 | `leads.ts` settingsHref                     | Settings     | `/settings/leads`                         | Dead link                    | PG-178     |
-| G-22 | `contacts.ts` settingsHref                  | Settings     | `/settings/contacts`                      | Dead link                    | PG-178     |
-| G-23 | `accounts.ts` settingsHref                  | Settings     | `/settings/accounts`                      | Dead link                    | PG-178     |
-| G-24 | `deals.ts` settingsHref                     | Settings     | `/settings/deals`                         | Dead link                    | PG-178     |
-| G-25 | `tickets.ts` settingsHref                   | Settings     | `/settings/tickets`                       | Dead link                    | PG-178     |
-| G-26 | `documents.ts` settingsHref                 | Settings     | `/settings/documents`                     | Dead link                    | PG-178     |
-| G-27 | `analytics.ts` settingsHref                 | Settings     | `/settings/reports`                       | Dead link                    | PG-178     |
-| G-28 | `ModulePaywall.tsx`                         | Upgrade Plan | `/settings/billing`                       | Dead link                    | PG-178     |
+| #   | Source Config | Link Label | Target URL | Issue Type | Resolution |
+| --- | ------------- | ---------- | ---------- | ---------- | ---------- |
 
 ---
 

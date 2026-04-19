@@ -128,6 +128,7 @@ export function StatusMonitor({ services, refreshInterval = 30000 }: Readonly<St
                 {}
                 <figure
                   className="flex gap-0.5"
+                  role="img"
                   aria-label={`${service.name} uptime chart: ${service.uptime}% over 90 days`}
                 >
                   {bars.map((bar) => (

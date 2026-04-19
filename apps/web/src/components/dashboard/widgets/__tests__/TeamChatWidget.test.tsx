@@ -4,11 +4,11 @@ import { describe, it, expect } from 'vitest';
 import { TeamChatWidget } from '../TeamChatWidget';
 
 describe('TeamChatWidget', () => {
-  it('renders chat messages and input', () => {
+  it('renders Coming Soon state', () => {
+    // TeamChatWidget was refactored to a placeholder 'Coming Soon' shell
+    // (no chat messages or input field).
     render(<TeamChatWidget />);
-
     expect(screen.getByText('Team Chat')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Type a message...')).toBeInTheDocument();
-    expect(screen.getByText('Just closed the deal with TechCorp!')).toBeInTheDocument();
+    expect(screen.getByText('Coming Soon')).toBeInTheDocument();
   });
 });

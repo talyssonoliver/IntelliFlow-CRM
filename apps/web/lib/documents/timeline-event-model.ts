@@ -279,15 +279,27 @@ export interface TimelineDateGroup {
  */
 export function groupEventsByDate(events: TimelineEvent[]): TimelineDateGroup[] {
   const groups = new Map<string, TimelineEvent[]>();
+  // Use local-time day boundaries consistently (grouping + comparison). Previous
+  // implementation mixed local `setHours(0,0,0,0)` with `toISOString()`
+  // (UTC-serializes), which crossed day boundaries when the local timezone was
+  // ahead of UTC — an event at 10:00 local on date X could land in the
+  // UTC-previous day and be labelled 'Yesterday' rather than 'Today'.
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
 
+  const dayKey = (d: Date): string => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
+
   for (const event of events) {
     const eventDate = new Date(event.timestamp);
     eventDate.setHours(0, 0, 0, 0);
-    const key = eventDate.toISOString().split('T')[0];
+    const key = dayKey(eventDate);
 
     if (!groups.has(key)) {
       groups.set(key, []);
@@ -298,7 +310,10 @@ export function groupEventsByDate(events: TimelineEvent[]): TimelineDateGroup[] 
   return Array.from(groups.entries())
     .sort(([a], [b]) => b.localeCompare(a)) // Descending
     .map(([dateStr, groupEvents]) => {
-      const date = new Date(dateStr);
+      // Parse key as local-time midnight so comparison with today/yesterday
+      // (also local) is unambiguous.
+      const [yy, mm, dd] = dateStr.split('-').map(Number);
+      const date = new Date(yy, mm - 1, dd);
       let label: string;
 
       if (date.getTime() === today.getTime()) {

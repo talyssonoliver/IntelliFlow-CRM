@@ -20,14 +20,17 @@ describe('DocumentLinks', () => {
   });
 
   it('renders empty state when no documents', () => {
+    // Source migrated to `<EmptyState entity="documents" />` (DocumentLinks.tsx:101).
+    // Canonical title: 'No documents yet'.
     render(<DocumentLinks caseId="case-1" />);
-    expect(screen.getByText(/No documents attached to this case/)).toBeInTheDocument();
+    expect(screen.getByText('No documents yet')).toBeInTheDocument();
   });
 
-  it('renders document page reference in empty state', () => {
+  it('renders empty-state description pointing to the documents area', () => {
+    // Canonical description from packages/ui entity-empty-state-config.
     render(<DocumentLinks caseId="case-999" />);
     expect(
-      screen.getByText(/Upload or link documents from the Documents page/)
+      screen.getByText(/Create or link proposals, contracts, and other business documents\./)
     ).toBeInTheDocument();
   });
 

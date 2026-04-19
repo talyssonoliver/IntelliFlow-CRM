@@ -393,9 +393,9 @@ describe('ContactForm', () => {
       await user.click(screen.getByText('Next Step'));
 
       await waitFor(() => {
-        const activeRadio = screen.getByRole('radio', {
-          name: /Active Currently engaged contact/i,
-        });
+        // The <label> aria-label is just the status label ('Active'); the
+        // description below is aria-hidden="true" (see ContactForm.tsx:396-418).
+        const activeRadio = screen.getByRole('radio', { name: /^Active$/i });
         expect(activeRadio).toBeChecked();
       });
     });
@@ -427,7 +427,7 @@ describe('ContactForm', () => {
         ).toBeInTheDocument();
       });
 
-      const prospectRadio = screen.getByRole('radio', { name: /Prospect Potential customer/i });
+      const prospectRadio = screen.getByRole('radio', { name: /^Prospect$/i });
       await user.click(prospectRadio);
 
       expect(prospectRadio).toBeChecked();
@@ -624,10 +624,12 @@ describe('ContactForm', () => {
         <ContactForm mode="create" onSubmit={handlers.onSubmit} onCancel={handlers.onCancel} />
       );
 
+      // Native <progress value={1} max={3}> (ContactForm.tsx:195) exposes state
+      // via value/max, not via aria-valuenow/valuemin/valuemax.
       const progress = screen.getByRole('progressbar');
-      expect(progress).toHaveAttribute('aria-valuenow', '1');
-      expect(progress).toHaveAttribute('aria-valuemin', '1');
-      expect(progress).toHaveAttribute('aria-valuemax', '3');
+      expect(progress).toHaveAttribute('value', '1');
+      expect(progress).toHaveAttribute('max', '3');
+      expect(progress).toHaveAttribute('aria-label');
     });
 
     it('marks current step with aria-current', () => {

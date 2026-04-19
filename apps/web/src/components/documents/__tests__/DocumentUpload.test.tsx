@@ -278,10 +278,13 @@ describe('DocumentUpload', () => {
   // ─── Accessibility ────────────────────────────────────────────────────────
 
   it('dropzone is keyboard accessible', () => {
+    // Source changed from a div with role="button" to a native <button>
+    // (DocumentUpload.tsx:253). Native buttons have implicit role="button"
+    // (no attribute) + tabIndex=0 by default.
     render(<DocumentUpload {...defaultProps} />);
     const dropzone = screen.getByTestId('dropzone');
+    expect(dropzone.tagName).toBe('BUTTON');
     expect(dropzone).toHaveAttribute('tabIndex', '0');
-    expect(dropzone).toHaveAttribute('role', 'button');
   });
 
   it('form fields have labels', () => {

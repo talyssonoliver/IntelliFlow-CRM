@@ -73,11 +73,13 @@ describe('SSOCallbackPage', () => {
     expect(screen.getByTestId('mock-oauth-callback')).toBeInTheDocument();
   });
 
-  it('T-02: mounts OAuthCallback with default redirectUrl=/dashboard', () => {
+  it('T-02: mounts OAuthCallback with default redirectUrl=/', () => {
+    // Default post-auth landing was updated from /dashboard to / (home)
+    // in commit 103b6642 — see mfa/verify test for the rationale.
     render(<SSOCallbackPage />);
 
     expect(mockOAuthCallbackProps).toHaveBeenCalledWith(
-      expect.objectContaining({ redirectUrl: '/dashboard' })
+      expect.objectContaining({ redirectUrl: '/' })
     );
   });
 
@@ -88,9 +90,9 @@ describe('SSOCallbackPage', () => {
     const call = mockOAuthCallbackProps.mock.calls[0][0];
     expect(call.onSuccess).toBeDefined();
 
-    // Call it and verify hard navigation
+    // Call it and verify hard navigation to the default landing (/)
     call.onSuccess();
-    expect(window.location.href).toBe('/dashboard');
+    expect(window.location.href).toBe('/');
   });
 
   // ============================================
@@ -123,10 +125,10 @@ describe('SSOCallbackPage', () => {
   // Auth Redirect Tests (T-07, T-08)
   // ============================================
 
-  it('T-07: calls useRedirectIfAuthenticated with /dashboard', () => {
+  it('T-07: calls useRedirectIfAuthenticated with /', () => {
     render(<SSOCallbackPage />);
 
-    expect(mockRedirectIfAuthenticated).toHaveBeenCalledWith('/dashboard');
+    expect(mockRedirectIfAuthenticated).toHaveBeenCalledWith('/');
   });
 
   it('T-08: does not redirect when unauthenticated (hook is no-op)', () => {

@@ -145,12 +145,14 @@ describe('SupportTicketDetailPage', () => {
 
   // ─── Not Found State ──────────────────────────────────────────────────────
 
-  it('renders not-found state with support breadcrumbs when ticket is null', () => {
+  it('renders not-found state when ticket is null', () => {
+    // Source renders a centered Card with "Ticket Not Found" heading and a
+    // "Back to Tickets" link (page.tsx:145-163). Breadcrumbs were removed
+    // from the not-found state.
     mockGetById.data = null as unknown as undefined;
     render(<SupportTicketDetailPage />);
-    expect(screen.getByText('Support')).toBeInTheDocument();
-    expect(screen.getByText('Tickets')).toBeInTheDocument();
-    expect(screen.getByText('Not Found')).toBeInTheDocument();
+    expect(screen.getByText('Ticket Not Found')).toBeInTheDocument();
+    expect(screen.getByText(/Back to Tickets/)).toBeInTheDocument();
   });
 
   // ─── Data Wiring ──────────────────────────────────────────────────────────

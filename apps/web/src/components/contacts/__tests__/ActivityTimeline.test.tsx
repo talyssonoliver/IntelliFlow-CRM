@@ -205,12 +205,16 @@ describe('ActivityTimeline', () => {
     });
 
     it('highlights active filter', () => {
+      // Filter uses native `<input type="radio" checked={...}>` wrapped in a
+      // <label> (ActivityTimeline.tsx:208-215). Native radios expose state via
+      // the `checked` property; `aria-checked` is not set on the element.
+      // Use `.toBeChecked()` from testing-library which works with native radios.
       render(<ActivityTimeline contactId="contact-1" activities={[]} />);
 
       const emailFilter = screen.getByRole('radio', { name: /Emails/i });
       fireEvent.click(emailFilter);
 
-      expect(emailFilter).toHaveAttribute('aria-checked', 'true');
+      expect(emailFilter).toBeChecked();
     });
   });
 
@@ -309,7 +313,9 @@ describe('ActivityTimeline', () => {
       // Filter to show only calls (no matches)
       fireEvent.click(screen.getByRole('radio', { name: /Calls/i }));
 
-      expect(screen.getByText('No activities match your filters')).toBeInTheDocument();
+      // Canonical EmptyState (entity="activity" variant="filtered") description
+      // includes a trailing period: 'No activities match your filters.'.
+      expect(screen.getByText('No activities match your filters.')).toBeInTheDocument();
     });
   });
 

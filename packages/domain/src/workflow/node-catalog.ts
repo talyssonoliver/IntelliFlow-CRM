@@ -532,9 +532,16 @@ export const PERMISSION_MANAGE_CUSTOM_NODE_TYPES = 'workflow:manage_custom_node_
 export const PERMISSION_MANAGE_CUSTOM_ACTIONS = 'workflow:manage_custom_actions' as const;
 
 /**
- * SSRF guard — reject URLs that target loopback, link-local, or private IP
- * ranges. Webhook-based action handlers run from the server so they MUST
- * only hit public endpoints.
+ * SSRF guard — reject URLs that target loopback, link-local, private, CGNAT,
+ * multicast, or broadcast IP ranges. Webhook-based action handlers run from
+ * the server so they MUST only hit public endpoints.
+ *
+ * NOTE — this is a static URL-string check only. A motivated attacker who
+ * controls DNS for a hostname can still bypass this guard by returning a
+ * private A/AAAA record at fetch time (DNS rebinding). The runtime fetch
+ * path in `apps/api/src/workflow/dispatchers/custom-action-dispatcher.ts`
+ * MUST also resolve the hostname and validate every returned address with
+ * `isPublicIpAddress` before connecting.
  */
 export function isPublicHttpUrl(raw: string): boolean {
   let url: URL;
@@ -549,26 +556,69 @@ export function isPublicHttpUrl(raw: string): boolean {
   const host = rawHost.startsWith('[') && rawHost.endsWith(']') ? rawHost.slice(1, -1) : rawHost;
   if (
     host === 'localhost' ||
+    host.endsWith('.localhost') ||
     host === '0.0.0.0' ||
     host === '127.0.0.1' ||
     host === '::1' ||
-    host.endsWith('.localhost')
+    host === '::' ||
+    host.startsWith('::ffff:127.')
   ) {
     return false;
   }
-  // Block ::1 when loopback is embedded as an IPv4-mapped IPv6 or full form
-  if (host.startsWith('::ffff:127.') || host === '::') {
-    return false;
+  // If the host parses as an IP literal, run the same checks the runtime
+  // will run on the resolved address. Otherwise the hostname is still a
+  // bare DNS name — defer to runtime DNS-resolution validation.
+  if (looksLikeIpLiteral(host) && !isPublicIpAddress(host)) return false;
+  return true;
+}
+
+/** True if the host string parses as an IPv4 dotted-quad or IPv6 literal. */
+function looksLikeIpLiteral(host: string): boolean {
+  return /^(\d{1,3}\.){3}\d{1,3}$/.test(host) || host.includes(':');
+}
+
+/** Returns true if the IPv4 a.b octets fall in a private/reserved range. */
+function isPrivateIpv4(a: number, b: number): boolean {
+  if (a === 0) return true; // 0.0.0.0/8 — "this network"
+  if (a === 10) return true; // RFC1918
+  if (a === 127) return true; // loopback
+  if (a === 169 && b === 254) return true; // link-local
+  if (a === 172 && b >= 16 && b <= 31) return true; // RFC1918
+  if (a === 192 && b === 168) return true; // RFC1918
+  if (a === 100 && b >= 64 && b <= 127) return true; // CGNAT 100.64.0.0/10
+  if (a >= 224 && a <= 239) return true; // multicast 224.0.0.0/4
+  if (a >= 240) return true; // reserved 240.0.0.0/4 + broadcast 255.255.255.255
+  return false;
+}
+
+/** Returns true if the IPv6 host literal is a private/reserved address. */
+function isPrivateIpv6(host: string): boolean {
+  if (host === '::' || host === '::1') return true;
+  if (host.startsWith('::ffff:')) {
+    // IPv4-mapped IPv6 — recurse on the embedded IPv4 portion
+    return !isPublicIpAddress(host.slice('::ffff:'.length));
   }
-  // Block RFC1918 + link-local IPv4 ranges
+  if (/^f[cd][0-9a-f]{2}:/.test(host)) return true; // Unique-local fc00::/7
+  if (/^fe[89ab][0-9a-f]:/.test(host)) return true; // Link-local fe80::/10
+  if (/^fe[cdef][0-9a-f]:/.test(host)) return true; // Site-local (deprecated) fec0::/10
+  if (host.startsWith('ff')) return true; // Multicast ff00::/8
+  return false;
+}
+
+/**
+ * True when the IP address is safe to connect to from the server. Mirrors
+ * the URL-level `isPublicHttpUrl` guard but operates on a resolved IP
+ * (string form). Use this in the runtime dispatcher AFTER DNS resolution
+ * to defend against DNS-rebinding attacks.
+ */
+export function isPublicIpAddress(addr: string): boolean {
+  const host = addr.toLowerCase();
+  // IPv4 dotted-quad
   const ipv4 = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(host);
   if (ipv4) {
     const [a, b] = [Number(ipv4[1]), Number(ipv4[2])];
-    if (a === 10) return false;
-    if (a === 127) return false;
-    if (a === 169 && b === 254) return false;
-    if (a === 172 && b >= 16 && b <= 31) return false;
-    if (a === 192 && b === 168) return false;
+    return !isPrivateIpv4(a, b);
   }
-  return true;
+  // IPv6 literal — case-insensitive
+  return !isPrivateIpv6(host);
 }

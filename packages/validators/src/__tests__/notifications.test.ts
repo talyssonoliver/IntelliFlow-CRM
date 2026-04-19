@@ -73,8 +73,8 @@ describe('Notifications Validators', () => {
   // Enum Arrays
   // =========================================================================
   describe('Enum arrays', () => {
-    it('should have 41 notification types', () => {
-      expect(NOTIFICATION_TYPES).toHaveLength(41);
+    it('should have 43 notification types', () => {
+      expect(NOTIFICATION_TYPES).toHaveLength(43);
     });
 
     it('should have 3 notification priorities', () => {

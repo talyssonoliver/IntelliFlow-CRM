@@ -301,7 +301,9 @@ describe('BillingPortal', () => {
     it('shows empty state when no payment methods', () => {
       mockGetPaymentMethods.mockReturnValue({ data: [], isLoading: false, error: null });
       render(<BillingPortal />);
-      expect(screen.getByText('No payment method on file')).toBeInTheDocument();
+      // Canonical EmptyState copy (entity="payment-methods" title) after
+      // billing-portal migrated to <EmptyState entity /> via billing-shared.
+      expect(screen.getByText('No payment methods')).toBeInTheDocument();
     });
 
     it('renders Payment Methods title with credit_card icon', () => {
@@ -439,7 +441,10 @@ describe('BillingPortal', () => {
         error: null,
       });
       render(<BillingPortal />);
-      expect(screen.getByText('No invoices yet')).toBeInTheDocument();
+      // "No invoices yet" appears twice (EmptyState title + description) because
+      // billing-shared passes the custom `message` through as the description
+      // while the canonical config title is also "No invoices yet".
+      expect(screen.getAllByText('No invoices yet').length).toBeGreaterThan(0);
     });
 
     it('formats dates and currency correctly', () => {
@@ -531,7 +536,9 @@ describe('BillingPortal', () => {
     it('shows no payment methods message', () => {
       mockGetPaymentMethods.mockReturnValue({ data: [], isLoading: false, error: null });
       render(<BillingPortal />);
-      expect(screen.getByText('No payment method on file')).toBeInTheDocument();
+      // Canonical EmptyState copy (entity="payment-methods" title) after
+      // billing-portal migrated to <EmptyState entity /> via billing-shared.
+      expect(screen.getByText('No payment methods')).toBeInTheDocument();
     });
 
     it('shows no invoices message', () => {
@@ -541,7 +548,10 @@ describe('BillingPortal', () => {
         error: null,
       });
       render(<BillingPortal />);
-      expect(screen.getByText('No invoices yet')).toBeInTheDocument();
+      // "No invoices yet" appears twice (EmptyState title + description) because
+      // billing-shared passes the custom `message` through as the description
+      // while the canonical config title is also "No invoices yet".
+      expect(screen.getAllByText('No invoices yet').length).toBeGreaterThan(0);
     });
 
     it('shows no billing info message', () => {

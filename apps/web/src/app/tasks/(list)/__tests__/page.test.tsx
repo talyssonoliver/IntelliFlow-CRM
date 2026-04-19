@@ -268,27 +268,22 @@ describe('TasksListPage', () => {
     expect(screen.getByTestId('search-bar')).toBeInTheDocument();
   });
 
-  it('renders view toggle buttons (list and calendar)', () => {
-    render(<TasksListPage />);
-    // Look for the toggle buttons by aria-label or text
-    const listBtn = screen.getByLabelText(/list view/i);
-    const calendarBtn = screen.getByLabelText(/calendar view/i);
-    expect(listBtn).toBeInTheDocument();
-    expect(calendarBtn).toBeInTheDocument();
-  });
+  // The list/calendar view toggle was removed from /tasks when the
+  // Appointments/Calendar Split migration (memory: project_appointments_split_migration)
+  // moved calendar rendering to a dedicated route. `tasks/(list)/page.tsx` now
+  // only reads `view=my` (for the "My tasks" narrowing) — there is no longer
+  // a TaskCalendar rendered inline. The three obsolete tests ("renders view
+  // toggle", "switches to calendar view", "reads URL params on mount (calendar
+  // view)") have been removed. A follow-up test covering the dedicated
+  // calendar route lives with that route's test file; searching for it
+  // separately is preferable to reviving the stale toggle assertions here.
 
-  it('switches to calendar view when calendar button clicked', () => {
+  it('reads sidebar URL params on mount (status/priority)', () => {
+    mockSearchParams = new URLSearchParams('status=IN_PROGRESS&priority=HIGH');
     render(<TasksListPage />);
-    const calendarBtn = screen.getByLabelText(/calendar view/i);
-    fireEvent.click(calendarBtn);
-    expect(screen.getByTestId('task-calendar')).toBeInTheDocument();
-  });
-
-  it('reads URL params on mount (calendar view)', () => {
-    mockSearchParams = new URLSearchParams('view=calendar');
-    render(<TasksListPage />);
-    // Calendar should be rendered when view=calendar param is present
-    expect(screen.getByTestId('task-calendar')).toBeInTheDocument();
+    // The useEffect at page.tsx:99 syncs sidebar URL filters into state; no
+    // direct DOM assertion needed — just confirms render does not crash.
+    expect(screen.getByTestId('page-header')).toBeInTheDocument();
   });
 
   it('does not show pagination when total <= limit', () => {

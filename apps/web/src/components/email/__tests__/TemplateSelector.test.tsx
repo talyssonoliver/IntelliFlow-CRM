@@ -115,8 +115,13 @@ describe('TemplateSelector', () => {
     const user = userEvent.setup();
     render(<TemplateSelector {...defaultProps} />);
     await user.click(screen.getByRole('button', { name: /template/i }));
+    // TemplateSelector's handleKeyDown lives on the search input (line 118).
+    // After clicking the toggle, focus stays on the button — explicitly focus
+    // the search input so ArrowDown dispatches through handleKeyDown.
+    const searchInput = screen.getByPlaceholderText(/search templates/i);
+    searchInput.focus();
     await user.keyboard('{ArrowDown}');
-    // First template should be highlighted
+    // First template should be highlighted via data-highlighted attr.
     expect(screen.getByText('Follow Up').closest('[data-highlighted]')).toBeTruthy();
   });
 });

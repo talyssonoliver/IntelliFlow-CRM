@@ -151,12 +151,14 @@ describe('DateRange', () => {
     });
 
     it('should end on the last day of the current month', () => {
+      // Source constructs dates in UTC (DateRange.ts:112). Use getUTC*
+      // to avoid timezone-offset day drift at month boundaries.
       const result = DateRange.thisMonth();
       const now = new Date();
       const end = result.value.end;
-      const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+      const lastDayOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0)).getUTCDate();
 
-      expect(end.getDate()).toBe(lastDayOfMonth);
+      expect(end.getUTCDate()).toBe(lastDayOfMonth);
     });
   });
 
@@ -168,23 +170,24 @@ describe('DateRange', () => {
     });
 
     it('should start on the first day of the current quarter', () => {
+      // Source uses UTC — use getUTC* for assertions.
       const result = DateRange.thisQuarter();
       const now = new Date();
-      const quarter = Math.floor(now.getMonth() / 3);
+      const quarter = Math.floor(now.getUTCMonth() / 3);
       const start = result.value.start;
 
-      expect(start.getMonth()).toBe(quarter * 3);
-      expect(start.getDate()).toBe(1);
+      expect(start.getUTCMonth()).toBe(quarter * 3);
+      expect(start.getUTCDate()).toBe(1);
     });
 
     it('should end on the last day of the current quarter', () => {
       const result = DateRange.thisQuarter();
       const now = new Date();
-      const quarter = Math.floor(now.getMonth() / 3);
+      const quarter = Math.floor(now.getUTCMonth() / 3);
       const expectedEndMonth = quarter * 3 + 2;
       const end = result.value.end;
 
-      expect(end.getMonth()).toBe(expectedEndMonth);
+      expect(end.getUTCMonth()).toBe(expectedEndMonth);
     });
   });
 

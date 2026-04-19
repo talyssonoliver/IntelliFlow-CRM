@@ -1,8 +1,9 @@
 import { describe, it, expect, vi } from 'vitest';
 import { transformPipelineData } from '../RevenueChart';
 
-// Mock @intelliflow/ui Card
-vi.mock('@intelliflow/ui', () => ({
+// Mock @intelliflow/ui Card (partial — preserve real exports like EmptyState)
+vi.mock('@intelliflow/ui', async (importOriginal) => ({
+  ...((await importOriginal()) as Record<string, unknown>),
   Card: ({ children, className }: Readonly<{ children: React.ReactNode; className?: string }>) => (
     <div data-testid="card" className={className}>
       {children}
@@ -84,7 +85,8 @@ describe('RevenueChart component', () => {
     const { RevenueChart } = await import('../RevenueChart');
 
     render(<RevenueChart accountId="acc-1" />);
-    expect(screen.getByText(/no opportunity data/i)).toBeDefined();
+    // EmptyState entity="deals" → canonical 'No deals yet'.
+    expect(screen.getByText(/no deals yet/i)).toBeDefined();
   });
 
   it('should render pipeline stage chart when stageBreakdown provided', async () => {

@@ -73,10 +73,10 @@ describe('UpcomingEventsCard', () => {
   });
 
   it('renders empty state when no events', () => {
+    // EmptyState entity="appointments" → canonical 'No appointments yet'.
     mockUseQuery.mockReturnValue({ data: apiResponse([]), isLoading: false, error: null });
     render(<UpcomingEventsCard />);
-    expect(screen.getByText('No upcoming events')).toBeInTheDocument();
-    expect(screen.getByText('Schedule an event')).toBeInTheDocument();
+    expect(screen.getByText('No appointments yet')).toBeInTheDocument();
   });
 
   it('renders events with date badge, title, and time', () => {

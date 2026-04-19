@@ -26,6 +26,17 @@ vi.mock('fs', () => ({
   readFileSync: (...a: unknown[]) => mockReadFileSync(...a),
 }));
 
+// Compliance routes import from 'node:fs' (see timeline/route.ts + risks/route.ts) —
+// Vitest 4 treats bare 'fs' and 'node:fs' as separate module IDs, so mock both.
+vi.mock('node:fs', () => ({
+  default: {
+    existsSync: (...a: unknown[]) => mockExistsSync(...a),
+    readFileSync: (...a: unknown[]) => mockReadFileSync(...a),
+  },
+  existsSync: (...a: unknown[]) => mockExistsSync(...a),
+  readFileSync: (...a: unknown[]) => mockReadFileSync(...a),
+}));
+
 const mockCalendarData = {
   events: [
     {

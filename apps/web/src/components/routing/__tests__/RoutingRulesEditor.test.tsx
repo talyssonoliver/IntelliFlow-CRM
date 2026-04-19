@@ -204,10 +204,12 @@ describe('RoutingRulesEditor', () => {
     expect(mockDeleteRule.mutate).toHaveBeenCalledWith({ id: 'rule-1' });
   });
 
-  it('has role="listbox" on draggable list', () => {
+  it('has list with aria-label on draggable rules list', () => {
+    // Source uses `<ul aria-label="Routing rules list">` (implicit role="list",
+    // not "listbox"). The listbox role was removed when DnD integration changed.
     render(<RoutingRulesEditor />);
 
-    expect(screen.getByRole('listbox')).toBeInTheDocument();
+    expect(screen.getByRole('list', { name: /routing rules/i })).toBeInTheDocument();
   });
 
   it('shows empty state when no rules', () => {

@@ -1,9 +1,9 @@
 # IntelliFlow CRM - UI Flow Mapping
 
-> **Location**: `docs/design/ui-flow-mapping.md` **Last Updated**: 2026-04-13
+> **Location**: `docs/design/ui-flow-mapping.md` **Last Updated**: 2026-04-16
 > **Purpose**: Cross-reference document linking Flows, Sitemap Routes, Style
-> Guide Components **Total Pages**: 201 implemented **Total Flows**: 42 **API
-> Routers**: 48 (366 procedures)
+> Guide Components **Total Pages**: 205 implemented **Total Flows**: 42 **API
+> Routers**: 55 (366 procedures)
 
 This document provides a comprehensive mapping between user flows, UI routes,
 and design system components to ensure consistent implementation across the

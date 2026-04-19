@@ -238,26 +238,47 @@ describe('LoginPage', () => {
       expect(submitButton).toBeDisabled();
     });
 
-    it('redirects to dashboard on successful login', async () => {
-      mockLogin.mockResolvedValue(true);
+    it('redirects to / on successful login via hard navigation', async () => {
+      // login/page.tsx changed from `router.push('/dashboard')` to a hard
+      // `globalThis.location.href = '/'` inside a 1000ms setTimeout (commit
+      // 103b6642) — so the server re-runs the (public)/layout cookie check
+      // and renders the authenticated home variant. Stub `location` so we
+      // can assert the href assignment instead of swallowing a real nav.
+      const originalLocation = globalThis.location;
+      const locationStub = { href: '' } as unknown as Location;
+      Object.defineProperty(globalThis, 'location', {
+        value: locationStub,
+        writable: true,
+        configurable: true,
+      });
 
-      render(<LoginPage />);
+      try {
+        mockLogin.mockResolvedValue(true);
 
-      const emailInput = screen.getByLabelText(/email address/i);
-      await user.type(emailInput, 'user@intelliflow.com');
+        render(<LoginPage />);
 
-      const passwordInput = screen.getByLabelText(/^password$/i);
-      await user.type(passwordInput, 'User@1234');
+        const emailInput = screen.getByLabelText(/email address/i);
+        await user.type(emailInput, 'user@intelliflow.com');
 
-      const submitButton = screen.getByRole('button', { name: /^sign in$/i });
-      await user.click(submitButton);
+        const passwordInput = screen.getByLabelText(/^password$/i);
+        await user.type(passwordInput, 'User@1234');
 
-      await waitFor(
-        () => {
-          expect(mockPush).toHaveBeenCalledWith('/dashboard');
-        },
-        { timeout: 3000 }
-      );
+        const submitButton = screen.getByRole('button', { name: /^sign in$/i });
+        await user.click(submitButton);
+
+        await waitFor(
+          () => {
+            expect(locationStub.href).toBe('/');
+          },
+          { timeout: 3000 }
+        );
+      } finally {
+        Object.defineProperty(globalThis, 'location', {
+          value: originalLocation,
+          writable: true,
+          configurable: true,
+        });
+      }
     });
 
     // Note: MFA redirect test skipped - requires component re-render when mfa.required changes
@@ -308,28 +329,46 @@ describe('LoginPage', () => {
       );
     });
 
-    it('uses custom redirect URL from search params', async () => {
-      mockGet.mockReturnValue('/settings');
-      mockLogin.mockResolvedValue(true);
+    it('ignores search-param redirect and goes to / (current behavior)', async () => {
+      // Per commit 103b6642 the login page unconditionally hard-navigates to
+      // `/` after success; the `redirect` search param is not used here.
+      // If that policy changes, this test needs to follow the redirect param.
+      const originalLocation = globalThis.location;
+      const locationStub = { href: '' } as unknown as Location;
+      Object.defineProperty(globalThis, 'location', {
+        value: locationStub,
+        writable: true,
+        configurable: true,
+      });
 
-      render(<LoginPage />);
+      try {
+        mockGet.mockReturnValue('/settings');
+        mockLogin.mockResolvedValue(true);
 
-      const emailInput = screen.getByLabelText(/email address/i);
-      await user.type(emailInput, 'user@intelliflow.com');
+        render(<LoginPage />);
 
-      const passwordInput = screen.getByLabelText(/^password$/i);
-      await user.type(passwordInput, 'User@1234');
+        const emailInput = screen.getByLabelText(/email address/i);
+        await user.type(emailInput, 'user@intelliflow.com');
 
-      const submitButton = screen.getByRole('button', { name: /^sign in$/i });
-      await user.click(submitButton);
+        const passwordInput = screen.getByLabelText(/^password$/i);
+        await user.type(passwordInput, 'User@1234');
 
-      // The redirect goes to /dashboard, not /settings - the component uses router.push('/dashboard')
-      await waitFor(
-        () => {
-          expect(mockPush).toHaveBeenCalledWith('/dashboard');
-        },
-        { timeout: 3000 }
-      );
+        const submitButton = screen.getByRole('button', { name: /^sign in$/i });
+        await user.click(submitButton);
+
+        await waitFor(
+          () => {
+            expect(locationStub.href).toBe('/');
+          },
+          { timeout: 3000 }
+        );
+      } finally {
+        Object.defineProperty(globalThis, 'location', {
+          value: originalLocation,
+          writable: true,
+          configurable: true,
+        });
+      }
     });
   });
 

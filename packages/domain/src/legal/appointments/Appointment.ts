@@ -87,6 +87,11 @@ interface AppointmentProps {
   tenantId: string;
   notes?: string;
   externalCalendarId?: string;
+  /**
+   * FK to the internal Calendar model (user's workspace calendar).
+   * Distinct from externalCalendarId which is the provider-side ID for 2-way sync.
+   */
+  calendarId?: string | null;
   reminderMinutes?: number;
   createdAt: Date;
   updatedAt: Date;
@@ -110,6 +115,13 @@ export interface CreateAppointmentProps {
   organizerId: string;
   tenantId: string;
   reminderMinutes?: number;
+  /** IANA timezone string (e.g. "America/New_York") for the appointment */
+  timezone?: string;
+  /**
+   * FK to the internal Calendar model (user's workspace calendar).
+   * Distinct from externalCalendarId which is the provider-side ID for 2-way sync.
+   */
+  calendarId?: string | null;
 }
 
 /**
@@ -183,6 +195,10 @@ export class Appointment extends AggregateRoot<AppointmentId> {
 
   get externalCalendarId(): string | undefined {
     return this.props.externalCalendarId;
+  }
+
+  get calendarId(): string | null | undefined {
+    return this.props.calendarId;
   }
 
   get reminderMinutes(): number | undefined {

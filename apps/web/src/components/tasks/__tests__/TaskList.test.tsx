@@ -8,8 +8,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { TaskList, type TaskListItem } from '../TaskList';
 
-// Mock @intelliflow/ui
-vi.mock('@intelliflow/ui', () => ({
+// Mock @intelliflow/ui (partial — preserve real exports like EmptyState)
+vi.mock('@intelliflow/ui', async (importOriginal) => ({
+  ...((await importOriginal()) as Record<string, unknown>),
   DataTable: ({ columns, data, onRowClick, bulkActions }: any) => (
     <div data-testid="data-table">
       <table>

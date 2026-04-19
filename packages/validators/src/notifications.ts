@@ -80,6 +80,7 @@ export const NOTIFICATION_TYPES = [
   'case_closed',
   // Contact notifications
   'contact_stale',
+  'contact_reassigned',
   // Email notifications
   'email_received',
   'email_opened',

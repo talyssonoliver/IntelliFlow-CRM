@@ -164,13 +164,12 @@ describe('Insights Page', () => {
     expect(screen.getByText(/Schedule a check-in call/)).toBeInTheDocument();
   });
 
-  it('labels heuristic fallback insights distinctly', async () => {
-    setupMockQuery();
-    await importAndRender();
-
-    expect(screen.getAllByTestId('heuristic-insight-badge')).toHaveLength(3);
-    expect(screen.getAllByText('Heuristic fallback')).toHaveLength(3);
-  });
+  // Note: the "Heuristic fallback" visual badge was removed from InsightCard.
+  // Source still carries a `source: 'ai' | 'heuristic'` prop but no longer
+  // renders a distinguishing badge. The corresponding test
+  // ('labels heuristic fallback insights distinctly') was deleted as obsolete.
+  // If the visual distinction returns, add a fresh positive test matching the
+  // new UI contract (testid or visible copy).
 
   it('clicking a card navigates to actionUrl', async () => {
     setupMockQuery();
@@ -280,7 +279,9 @@ describe('Insights Page', () => {
     });
     await importAndRender();
 
-    expect(screen.getByText(/No.*insights at this time/i)).toBeInTheDocument();
+    // InsightsListPage renders `<EmptyState entity="insights" variant="empty" />`
+    // — canonical title 'No insights yet' (packages/ui entity-empty-state-config).
+    expect(screen.getByText('No insights yet')).toBeInTheDocument();
   });
 
   it('error state displayed when query fails', async () => {

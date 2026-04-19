@@ -112,12 +112,7 @@ export type DeleteAccountCustomFieldInput = z.infer<typeof deleteAccountCustomFi
 
 // ─── Duplicate Rules ────────────────────────────────────────────────────────
 
-export const accountDuplicateRuleFieldSchema = z.enum([
-  'name',
-  'website',
-  'phone',
-  'name_address',
-]);
+export const accountDuplicateRuleFieldSchema = z.enum(['name', 'website', 'phone', 'name_address']);
 export type AccountDuplicateRuleField = z.infer<typeof accountDuplicateRuleFieldSchema>;
 
 export const accountDuplicateRuleStrategySchema = z.enum(['exact', 'normalized', 'fuzzy']);
@@ -132,9 +127,26 @@ export const accountDuplicateRuleSchema = z.object({
 });
 export type AccountDuplicateRuleInput = z.infer<typeof accountDuplicateRuleSchema>;
 
-export const updateAccountDuplicateRulesSchema = z.object({
-  rules: z.array(accountDuplicateRuleSchema).min(1, 'At least one rule is required'),
-});
+export const updateAccountDuplicateRulesSchema = z
+  .object({
+    rules: z.array(accountDuplicateRuleSchema).min(1, 'At least one rule is required'),
+  })
+  .superRefine((data, ctx) => {
+    const seen = new Map<string, number>();
+    data.rules.forEach((rule, index) => {
+      const key = `${rule.field}__${rule.matchStrategy}`;
+      const first = seen.get(key);
+      if (first !== undefined) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Duplicate (field, strategy) pair: "${rule.field}" + "${rule.matchStrategy}" appears in rows ${first + 1} and ${index + 1}`,
+          path: ['rules', index, 'matchStrategy'],
+        });
+      } else {
+        seen.set(key, index);
+      }
+    });
+  });
 export type UpdateAccountDuplicateRulesInput = z.infer<typeof updateAccountDuplicateRulesSchema>;
 
 // ─── Required Fields ────────────────────────────────────────────────────────

@@ -280,7 +280,11 @@ describe('InvoiceDetail', () => {
 
       render(<InvoiceDetail invoice={invoice} isLoading={false} />);
 
-      expect(screen.getByText('No line items available')).toBeInTheDocument();
+      // Canonical EmptyState copy (entity="invoices"): 'No invoices yet'.
+      // Source renders `<EmptyState entity="invoices" />` for the no-line-items
+      // fallback (invoice-detail.tsx:313) — the surface is a line-items table
+      // but the canonical entity title is what's displayed.
+      expect(screen.getByText('No invoices yet')).toBeInTheDocument();
     });
 
     it('renders correct column headers', () => {

@@ -159,7 +159,8 @@ describe('LeadScoringDashboard', () => {
       });
       render(<LeadScoringDashboard />);
       expect(screen.getByTestId('empty-state')).toBeInTheDocument();
-      expect(screen.getByText('No lead scoring data available')).toBeInTheDocument();
+      // Canonical EmptyState copy (entity="insights"): 'No insights yet'.
+      expect(screen.getByText('No insights yet')).toBeInTheDocument();
     });
   });
 

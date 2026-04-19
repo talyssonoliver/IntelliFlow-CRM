@@ -98,6 +98,7 @@ export function MfaQrGenerator({
         {}
         <figure
           className="bg-white p-4 rounded-lg"
+          role="img"
           aria-label={`QR code for setting up two-factor authentication for ${accountName}`}
         >
           <QRCodeSVG value={otpauthUrl} size={200} level="M" marginSize={0} />

@@ -159,7 +159,8 @@ describe('SentimentDashboard', () => {
       });
       render(<SentimentDashboard />);
       expect(screen.getByTestId('empty-state')).toBeInTheDocument();
-      expect(screen.getByText('No sentiment analyses found')).toBeInTheDocument();
+      // Canonical EmptyState copy (entity="insights"): 'No insights yet'.
+      expect(screen.getByText('No insights yet')).toBeInTheDocument();
     });
 
     it('renders error state when query fails', () => {

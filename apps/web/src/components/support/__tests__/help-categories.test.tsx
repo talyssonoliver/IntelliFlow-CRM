@@ -85,8 +85,11 @@ describe('HelpCategories', () => {
   it('empty categories array renders "No results found" message', () => {
     render(<HelpCategories categories={EMPTY_CATEGORIES} />);
 
+    // EmptyState entity="search" → canonical title 'No results found',
+    // description 'Try different keywords or broader filters.' (not the
+    // legacy 'Try adjusting your search terms').
     expect(screen.getByText('No results found')).toBeInTheDocument();
-    expect(screen.getByText('Try adjusting your search terms')).toBeInTheDocument();
+    expect(screen.getByText('Try different keywords or broader filters.')).toBeInTheDocument();
   });
 
   it('categories with articleCount: 0 render correctly', () => {

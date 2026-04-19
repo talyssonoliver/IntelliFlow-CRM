@@ -7,13 +7,22 @@
  * - createADR: no technicalStory branch
  * - getADRStats: status.split(' ')[0] fallback to 'Unknown'
  * - validateADR: existing related ADR found (no warning)
+ *
+ * @vitest-environment node
  */
 
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-vi.mock('fs', async () => ({
+vi.mock('fs', () => ({
+  readFileSync: vi.fn(),
+  existsSync: vi.fn(),
+  readdirSync: vi.fn(),
+  writeFileSync: vi.fn(),
+  mkdirSync: vi.fn(),
+}));
+vi.mock('node:fs', () => ({
   readFileSync: vi.fn(),
   existsSync: vi.fn(),
   readdirSync: vi.fn(),
@@ -22,25 +31,35 @@ vi.mock('fs', async () => ({
 }));
 
 vi.mock('path', async () => {
-  const actual = await vi.importActual<typeof import('node:path')>('node:path');
+  const actual = await vi.importActual<typeof import('node:path')>('path');
+  const resolve = vi.fn((...segments: string[]) => segments.join('/'));
+  const relative = vi.fn((from: string, to: string) =>
+    to.startsWith(from + '/') ? to.slice(from.length + 1) : to
+  );
+  const join = vi.fn((...segments: string[]) => segments.join('/'));
   return {
     __esModule: true,
-    default: {
-      ...actual,
-      resolve: vi.fn((...segments: string[]) => segments.join('/')),
-      relative: vi.fn((from: string, to: string) =>
-        to.startsWith(from + '/') ? to.slice(from.length + 1) : to
-      ),
-      join: vi.fn((...segments: string[]) => segments.join('/')),
-      basename: actual.basename,
-      dirname: actual.dirname,
-    },
+    default: { ...actual, resolve, relative, join },
     ...actual,
-    resolve: vi.fn((...segments: string[]) => segments.join('/')),
-    relative: vi.fn((from: string, to: string) =>
-      to.startsWith(from + '/') ? to.slice(from.length + 1) : to
-    ),
-    join: vi.fn((...segments: string[]) => segments.join('/')),
+    resolve,
+    relative,
+    join,
+  };
+});
+vi.mock('node:path', async () => {
+  const actual = await vi.importActual<typeof import('node:path')>('path');
+  const resolve = vi.fn((...segments: string[]) => segments.join('/'));
+  const relative = vi.fn((from: string, to: string) =>
+    to.startsWith(from + '/') ? to.slice(from.length + 1) : to
+  );
+  const join = vi.fn((...segments: string[]) => segments.join('/'));
+  return {
+    __esModule: true,
+    default: { ...actual, resolve, relative, join },
+    ...actual,
+    resolve,
+    relative,
+    join,
   };
 });
 
@@ -163,7 +182,7 @@ describe('adr-service (b11 coverage)', () => {
       existsSync.mockReturnValue(true);
       readdirSync.mockImplementation((dirPath: string) => {
         const p = String(dirPath);
-        if (p.includes('docs/planning/adr')) {
+        if (p.includes('docs/architecture/adr')) {
           return [
             'ADR-005-simple.md',
             'ADR-010-old.md',
@@ -262,7 +281,7 @@ describe('adr-service (b11 coverage)', () => {
       existsSync.mockReturnValue(true);
       readdirSync.mockImplementation((dirPath: string) => {
         const p = String(dirPath);
-        if (p.includes('docs/planning/adr')) {
+        if (p.includes('docs/architecture/adr')) {
           return ['ADR-010-old.md'];
         }
         return [];
@@ -281,7 +300,7 @@ describe('adr-service (b11 coverage)', () => {
       existsSync.mockReturnValue(true);
       readdirSync.mockImplementation((dirPath: string) => {
         const p = String(dirPath);
-        if (p.includes('docs/planning/adr')) {
+        if (p.includes('docs/architecture/adr')) {
           return ['ADR-010-old.md', 'ADR-011-new.md'];
         }
         return [];
@@ -295,7 +314,7 @@ describe('adr-service (b11 coverage)', () => {
         date: '2025-06-01',
         deciders: 'Unknown',
         technicalStory: 'IFC-001',
-        filePath: 'docs/planning/adr/ADR-010-old.md',
+        filePath: 'docs/architecture/adr/ADR-010-old.md',
         relatedADRs: ['ADR-011'],
         sprint: '2',
       };

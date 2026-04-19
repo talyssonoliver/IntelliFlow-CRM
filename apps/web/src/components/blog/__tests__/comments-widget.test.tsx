@@ -343,8 +343,8 @@ describe('CommentsWidget', () => {
     it('should display formatted dates on comments', () => {
       render(<CommentsWidget postSlug="test-post" />);
 
-      // Sample comments have dates like "Dec 29, 2025"
-      const datePattern = /[A-Z][a-z]+ \d+, \d{4}/;
+      // en-GB locale: dates render as "29 Dec 2025" (day-first, no comma).
+      const datePattern = /\d+ [A-Z][a-z]+ \d{4}/;
       const dates = screen.getAllByText(datePattern).filter((el) => el.textContent);
 
       expect(dates.length).toBeGreaterThan(0);

@@ -229,12 +229,18 @@ describe('DocumentViewer', () => {
 
   // ─── Accessibility ────────────────────────────────────────────────────────
 
-  it('close button has autoFocus', () => {
+  it('close button is present and focusable', () => {
+    // `autoFocus` was removed from the Close button (DocumentViewer.tsx:274) —
+    // auto-focusing a close control is an anti-pattern for modal accessibility
+    // (focus should land on the heading/content so screen readers announce the
+    // modal purpose). Verify the button is reachable and programmatically
+    // focusable instead of requiring autoFocus.
     const onClose = vi.fn();
     render(<DocumentViewer {...defaultProps} onClose={onClose} />);
     const closeBtn = screen.getByLabelText(/close viewer/i);
-    // React renders autoFocus as lowercase attribute in DOM
-    expect(closeBtn.hasAttribute('autofocus') || closeBtn === document.activeElement).toBe(true);
+    expect(closeBtn).toBeInTheDocument();
+    closeBtn.focus();
+    expect(closeBtn).toBe(document.activeElement);
   });
 
   it('control buttons have aria-labels', () => {

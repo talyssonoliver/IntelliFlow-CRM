@@ -76,9 +76,12 @@ describe('LighthouseReportView', () => {
     expect(screen.getByText('Best Practices')).toBeInTheDocument();
     expect(screen.getByText('SEO')).toBeInTheDocument();
 
-    // Score values should be displayed
+    // Score values should be displayed. Note: `92` appears twice — once as
+    // the overall score (data.score) and once as accessibility category —
+    // so use getAllByText for that value and require at least one of each
+    // distinct score.
     expect(screen.getByText('95')).toBeInTheDocument();
-    expect(screen.getByText('92')).toBeInTheDocument();
+    expect(screen.getAllByText('92').length).toBeGreaterThanOrEqual(2);
     expect(screen.getByText('88')).toBeInTheDocument();
     expect(screen.getByText('97')).toBeInTheDocument();
   });
@@ -186,11 +189,14 @@ describe('LighthouseReportView', () => {
   });
 
   it('renders overall score summary card', async () => {
+    // Overall banner is identified by `aria-label="Overall Lighthouse summary"`
+    // (LighthouseReportView.tsx:327) — the word 'Overall' is not surfaced as
+    // visible text. Assert via getByLabelText.
     mockFetch.mockResolvedValue(createMockResponse(mockLighthouseData));
     render(<LighthouseReportView />);
 
     await waitFor(() => {
-      expect(screen.getByText(/overall/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/Overall Lighthouse summary/i)).toBeInTheDocument();
     });
   });
 
@@ -251,6 +257,9 @@ describe('LighthouseReportView', () => {
   });
 
   it('has ARIA labels on score cards', async () => {
+    // Each category Card carries `aria-label="{Label} score"`
+    // (LighthouseReportView.tsx:364). Card root is a plain <div>, so the
+    // implicit role is not 'region' — query by accessible name instead.
     mockFetch.mockResolvedValue(createMockResponse(mockLighthouseData));
     render(<LighthouseReportView />);
 
@@ -258,8 +267,14 @@ describe('LighthouseReportView', () => {
       expect(screen.getByText('Performance')).toBeInTheDocument();
     });
 
-    const cards = screen.getAllByRole('region');
-    expect(cards.length).toBeGreaterThanOrEqual(4);
+    // Each category's accessible name matches the aria-label on the outer
+    // Card AND the aria-label on the inner progress bar (line 378:
+    // `{label} score: N out of 100`) — use getAllByLabelText to tolerate
+    // the duplicate and require at least one match per category.
+    expect(screen.getAllByLabelText(/Performance score/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByLabelText(/Accessibility score/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByLabelText(/Best Practices score/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByLabelText(/SEO score/i).length).toBeGreaterThan(0);
   });
 
   it('has proper heading structure for accessibility', async () => {

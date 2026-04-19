@@ -11,8 +11,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import type { CustomField } from '../components/CustomFieldsTab';
 
-// ─── @intelliflow/ui mock ───────────────────────────────────────────────────
-vi.mock('@intelliflow/ui', () => ({
+// ─── @intelliflow/ui mock (partial — preserve real exports like EmptyState) ─
+vi.mock('@intelliflow/ui', async (importOriginal) => ({
+  ...((await importOriginal()) as Record<string, unknown>),
   Card: ({ children, className }: any) => <div className={className}>{children}</div>,
   Button: ({
     children,
@@ -47,8 +48,11 @@ vi.mock('@intelliflow/ui', () => ({
     />
   ),
   Dialog: ({ children, open, onOpenChange }: any) =>
+    // happy-dom's implicit `role="dialog"` on `<dialog>` only applies when the
+    // element is actually open, so add the `open` attribute explicitly rather
+    // than relying on the conditional render.
     open ? (
-      <dialog data-testid="dialog">
+      <dialog data-testid="dialog" open role="dialog">
         {typeof children === 'function' ? children({ onOpenChange }) : children}
       </dialog>
     ) : null,
@@ -151,7 +155,9 @@ describe('CustomFieldsTab', () => {
       <CustomFieldsTab fields={[]} onCreate={onCreate} onUpdate={onUpdate} onDelete={onDelete} />
     );
 
-    expect(screen.getByText('No custom fields yet. Add one to get started.')).toBeInTheDocument();
+    // EmptyState entity="rules" → canonical 'No rules configured' (semantic
+    // misuse for custom fields — dedicated 'custom-fields' entity follow-up).
+    expect(screen.getByText('No rules configured')).toBeInTheDocument();
   });
 
   it('shows Add Field button even in empty state', () => {

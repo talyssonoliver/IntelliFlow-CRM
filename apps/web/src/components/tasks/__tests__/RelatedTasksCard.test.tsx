@@ -39,10 +39,19 @@ vi.mock('@/lib/api', () => ({
           isPending: false,
         }),
       },
+      // EntitySearchField also queries api.task.list (EntitySearchField.tsx:104)
+      // when the user searches for an existing task to link.
+      list: { useQuery: () => ({ data: undefined, isLoading: false }) },
     },
     lead: { list: { useQuery: () => ({ data: undefined, isLoading: false }) } },
     contact: { list: { useQuery: () => ({ data: undefined, isLoading: false }) } },
     opportunity: { list: { useQuery: () => ({ data: undefined, isLoading: false }) } },
+    // EntitySearchField (rendered transitively via TaskCreateSheet) queries
+    // account/user/team lists too — see EntitySearchField.tsx:88-99.
+    account: { list: { useQuery: () => ({ data: undefined, isLoading: false }) } },
+    user: { list: { useQuery: () => ({ data: undefined, isLoading: false }) } },
+    team: { list: { useQuery: () => ({ data: undefined, isLoading: false }) } },
+    cases: { list: { useQuery: () => ({ data: undefined, isLoading: false }) } },
   },
 }));
 
@@ -170,9 +179,13 @@ describe('RelatedTasksCard', () => {
     expect(onViewAll).toHaveBeenCalled();
   });
 
-  it('shows static message for account entity type', () => {
+  it('shows empty-state fallback for account entity type', () => {
+    // Account path renders `<EmptyState entity="tasks" />` (canonical title
+    // 'No tasks yet') — the 'No tasks linked to this account' copy was
+    // removed when the EmptyState migration (PG-195) landed. API does not
+    // support the account → tasks relationship so the card is always empty.
     render(<RelatedTasksCard entityType="account" entityId="acc-123" />);
-    expect(screen.getByText('No tasks linked to this account')).toBeInTheDocument();
+    expect(screen.getByText('No tasks yet')).toBeInTheDocument();
   });
 
   it('uses compact styling when compact prop is true', () => {
@@ -190,11 +203,16 @@ describe('RelatedTasksCard', () => {
     expect(screen.getByText('New Task')).toBeInTheDocument();
   });
 
-  it('opens create sheet from empty state "Add a task" button', () => {
+  it('opens create sheet from empty state via the card-level Add button', () => {
+    // EmptyState (phase="passive") hides its CTA button until the user hovers
+    // or scrolls it into view (see packages/ui/src/components/empty-state.tsx:387
+    // `showCta = phase === 'soft-cta'`). RelatedTasksCard uses the passive
+    // variant, so the card-level aria-labelled "Add task" button is the
+    // user-facing create path from the empty state.
     mockGetByEntity.mockReturnValue({ data: [], isLoading: false, error: null });
     render(<RelatedTasksCard {...defaultProps} />);
     expect(screen.getByText('No tasks yet')).toBeInTheDocument();
-    fireEvent.click(screen.getByText('Add a task'));
+    fireEvent.click(screen.getByLabelText('Add task'));
     expect(screen.getByTestId('sheet')).toBeInTheDocument();
   });
 

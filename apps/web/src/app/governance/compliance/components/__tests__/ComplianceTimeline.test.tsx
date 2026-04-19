@@ -269,10 +269,9 @@ describe('ComplianceTimeline', () => {
 
       await waitFor(
         () => {
-          // Events should show date format like "Feb 10" (future date)
-          // The component uses toLocaleDateString with { month: 'short', day: 'numeric' }
-          // which produces "Feb 10" format
-          expect(screen.getByText(/Feb 10/)).toBeInTheDocument();
+          // Component uses toLocaleDateString('en-GB', { month: 'short', day: 'numeric' })
+          // → '10 Feb' (day-first) after the Timezone Refactor locale migration.
+          expect(screen.getByText(/10 Feb/)).toBeInTheDocument();
         },
         { timeout: 3000 }
       );
@@ -330,7 +329,8 @@ describe('ComplianceTimeline', () => {
 
       await waitFor(() => {
         // Should show formatted date
-        expect(screen.getByText(/Wednesday, February 10, 2027/)).toBeInTheDocument();
+        // en-GB long date: 'Wednesday, 10 February 2027' (day-first).
+        expect(screen.getByText(/Wednesday, 10 February 2027/)).toBeInTheDocument();
       });
     });
 

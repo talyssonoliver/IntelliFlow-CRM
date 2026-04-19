@@ -233,24 +233,30 @@ describe('root proxy.ts', () => {
     });
   });
 
-  describe('appointments to calendar redirects', () => {
-    // TC-11: /appointments redirects to /calendar (permanent)
-    it('redirects /appointments to /calendar with permanent flag', async () => {
+  describe('calendar to appointments redirects (post-split migration)', () => {
+    // Direction was reversed in the Appointments/Calendar Split migration
+    // (started 2026-04-13 — memory: project_appointments_split_migration).
+    // next.config.js now redirects `/calendar/new` → `/appointments/new` and
+    // `/calendar/<id>` → `/appointments/<id>` (permanent), while settings
+    // sub-routes (availability, calendar-settings, event-types) remain under
+    // /calendar.
+    it('redirects /calendar/new to /appointments/new with permanent flag', async () => {
       const nextConfig = require('../../next.config.js');
       const redirects = await nextConfig.redirects();
-      const rule = redirects.find((r: { source: string }) => r.source === '/appointments');
+      const rule = redirects.find((r: { source: string }) => r.source === '/calendar/new');
       expect(rule).toBeDefined();
-      expect(rule.destination).toBe('/calendar');
+      expect(rule.destination).toBe('/appointments/new');
       expect(rule.permanent).toBe(true);
     });
 
-    // TC-12: /appointments/:path* redirects to /calendar/:path* (permanent)
-    it('redirects /appointments/:path* to /calendar/:path* with permanent flag', async () => {
+    it('redirects /calendar/:id (non-settings) to /appointments/:id with permanent flag', async () => {
       const nextConfig = require('../../next.config.js');
       const redirects = await nextConfig.redirects();
-      const rule = redirects.find((r: { source: string }) => r.source === '/appointments/:path*');
+      const rule = redirects.find((r: { source: string }) =>
+        r.source.startsWith('/calendar/:id((?!new')
+      );
       expect(rule).toBeDefined();
-      expect(rule.destination).toBe('/calendar/:path*');
+      expect(rule.destination).toBe('/appointments/:id');
       expect(rule.permanent).toBe(true);
     });
   });

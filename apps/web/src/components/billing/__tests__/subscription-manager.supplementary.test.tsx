@@ -338,7 +338,9 @@ describe('SubscriptionManager', () => {
     it('renders empty state when no subscription', () => {
       render(<SubscriptionManager />);
 
-      expect(screen.getByText('No Active Subscription')).toBeInTheDocument();
+      // Canonical copy from packages/ui entity-empty-state-config:
+      // subscriptions → 'No active subscription' (sentence case).
+      expect(screen.getByText('No active subscription')).toBeInTheDocument();
       expect(screen.getByText(/choose a plan/i)).toBeInTheDocument();
     });
 

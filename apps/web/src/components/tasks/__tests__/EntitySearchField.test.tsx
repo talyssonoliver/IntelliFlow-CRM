@@ -32,6 +32,12 @@ vi.mock('@/lib/api', () => ({
         useQuery: (...args: unknown[]) => mockAccountList(...args),
       },
     },
+    // EntitySearchField.tsx:92-104 also queries user/team/cases/task lists
+    // when those entity types are selected — provide no-op stubs.
+    user: { list: { useQuery: () => ({ data: undefined, isLoading: false }) } },
+    team: { list: { useQuery: () => ({ data: undefined, isLoading: false }) } },
+    cases: { list: { useQuery: () => ({ data: undefined, isLoading: false }) } },
+    task: { list: { useQuery: () => ({ data: undefined, isLoading: false }) } },
   },
 }));
 

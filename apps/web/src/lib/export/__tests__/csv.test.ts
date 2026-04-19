@@ -160,10 +160,10 @@ describe('downloadCSV', () => {
       setAttribute: vi.fn(),
       style: {},
       click: vi.fn(),
+      remove: vi.fn(),
     };
     vi.spyOn(document, 'createElement').mockReturnValue(mockLink as any as HTMLElement);
     vi.spyOn(document.body, 'appendChild').mockImplementation((node) => node);
-    vi.spyOn(document.body, 'removeChild').mockImplementation((node) => node);
 
     mockCreateObjectURL = vi.fn().mockReturnValue('blob:test-url');
     mockRevokeObjectURL = vi.fn();
@@ -179,7 +179,7 @@ describe('downloadCSV', () => {
     expect(mockLink.setAttribute).toHaveBeenCalledWith('download', 'test.csv');
     expect(mockLink.click).toHaveBeenCalled();
     expect(document.body.appendChild).toHaveBeenCalled();
-    expect(document.body.removeChild).toHaveBeenCalled();
+    expect(mockLink.remove).toHaveBeenCalled();
   });
 
   it('appends .csv extension if not present', () => {
@@ -216,10 +216,10 @@ describe('exportToCSV', () => {
       setAttribute: vi.fn(),
       style: {},
       click: vi.fn(),
+      remove: vi.fn(),
     };
     vi.spyOn(document, 'createElement').mockReturnValue(mockLink as any as HTMLElement);
     vi.spyOn(document.body, 'appendChild').mockImplementation((node) => node);
-    vi.spyOn(document.body, 'removeChild').mockImplementation((node) => node);
     globalThis.URL.createObjectURL = vi.fn().mockReturnValue('blob:url');
     globalThis.URL.revokeObjectURL = vi.fn();
   });
@@ -254,10 +254,10 @@ describe('exportAnalyticsToCSV', () => {
       setAttribute: vi.fn(),
       style: {},
       click: vi.fn(),
+      remove: vi.fn(),
     };
     vi.spyOn(document, 'createElement').mockReturnValue(mockLink as any as HTMLElement);
     vi.spyOn(document.body, 'appendChild').mockImplementation((node) => node);
-    vi.spyOn(document.body, 'removeChild').mockImplementation((node) => node);
     globalThis.URL.createObjectURL = vi.fn().mockReturnValue('blob:url');
     globalThis.URL.revokeObjectURL = vi.fn();
   });
@@ -289,10 +289,10 @@ describe('exportPipelineToCSV', () => {
       setAttribute: vi.fn(),
       style: {},
       click: vi.fn(),
+      remove: vi.fn(),
     };
     vi.spyOn(document, 'createElement').mockReturnValue(mockLink as any as HTMLElement);
     vi.spyOn(document.body, 'appendChild').mockImplementation((node) => node);
-    vi.spyOn(document.body, 'removeChild').mockImplementation((node) => node);
     globalThis.URL.createObjectURL = vi.fn().mockReturnValue('blob:url');
     globalThis.URL.revokeObjectURL = vi.fn();
   });

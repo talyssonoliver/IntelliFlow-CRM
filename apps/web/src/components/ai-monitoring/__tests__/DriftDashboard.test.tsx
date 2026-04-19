@@ -18,6 +18,13 @@ const mockRefetch = vi.fn();
 
 vi.mock('@/lib/ai-monitoring/hooks', () => ({
   useDriftDashboard: vi.fn(),
+  useFailedJobs: vi.fn(() => ({
+    total: 0,
+    jobs: [],
+    isLoading: false,
+    error: null,
+    refetch: vi.fn(),
+  })),
 }));
 
 vi.mock('next/navigation', () => ({
@@ -183,12 +190,10 @@ describe('DriftDashboard', () => {
         roi: null,
       });
       render(<DriftDashboard />);
-      expect(screen.getByTestId('empty-state')).toBeInTheDocument();
-      expect(
-        screen.getByText(
-          'No drift metrics tracked yet. Start using AI features to populate monitoring data.'
-        )
-      ).toBeInTheDocument();
+      // Source migrated to `<EmptyState entity="insights" />` (DriftDashboard.tsx:290).
+      // The outer empty panel + the CostTracker fallback both render this
+      // copy, so use getAllByText to tolerate multiple matches.
+      expect(screen.getAllByText('No insights yet').length).toBeGreaterThan(0);
     });
 
     it('renders loading skeletons when isLoading', () => {
@@ -427,11 +432,16 @@ describe('DriftDashboard', () => {
       expect(screen.getByTestId('trend-icon')).toBeInTheDocument();
     });
 
-    it('shows "No cost data" when ROI is null', () => {
+    it('shows empty state when ROI is null', () => {
+      // CostTracker.tsx:62 renders `<EmptyState entity="insights" />` when
+      // roi === null — canonical title 'No insights yet'. The legacy
+      // `data-testid="no-cost-data"` + 'No cost data available' text was
+      // removed in the EmptyState migration.
       setMockHook({ roi: null });
       render(<DriftDashboard />);
-      expect(screen.getByTestId('no-cost-data')).toBeInTheDocument();
-      expect(screen.getByText('No cost data available')).toBeInTheDocument();
+      // 'No insights yet' also appears in the outer empty-state panel when
+      // other data is missing — use getAllByText to tolerate multiple matches.
+      expect(screen.getAllByText('No insights yet').length).toBeGreaterThan(0);
     });
 
     it('shows trending_flat icon for stable trend direction', () => {

@@ -8,7 +8,8 @@ import type { DocumentVersion } from '../types';
 // Mocks
 // =============================================================================
 
-vi.mock('@intelliflow/ui', () => ({
+vi.mock('@intelliflow/ui', async (importOriginal) => ({
+  ...((await importOriginal()) as Record<string, unknown>),
   Button: ({ children, onClick, disabled, variant, _size, ...props }: any) => (
     <button onClick={onClick} disabled={disabled} data-variant={variant} {...props}>
       {children}
@@ -115,10 +116,13 @@ describe('VersionHistory', () => {
   // ─── Interaction ──────────────────────────────────────────────────────────
 
   it('calls onVersionSelect when version item clicked', () => {
+    // Source renders each version item as a native `<button>` (VersionHistory.tsx:145).
+    // Native buttons have implicit role="button" — `querySelector('[role="button"]')`
+    // won't match. Query the native button inside the testid wrapper directly.
     const onVersionSelect = vi.fn();
     render(<VersionHistory {...defaultProps} onVersionSelect={onVersionSelect} />);
 
-    fireEvent.click(screen.getByTestId('version-item-ver-1').querySelector('[role="button"]')!);
+    fireEvent.click(screen.getByTestId('version-item-ver-1').querySelector('button')!);
     expect(onVersionSelect).toHaveBeenCalledWith('ver-1');
   });
 
@@ -142,10 +146,12 @@ describe('VersionHistory', () => {
     render(<VersionHistory {...defaultProps} onRestoreVersion={onRestoreVersion} />);
 
     fireEvent.click(screen.getByLabelText('Restore version 1.0.0'));
-    // Dialog heading is visible in the DOM (aria-hidden on backdrop, not dialog content)
+    // Dialog heading is visible in the DOM.
     expect(screen.getByText('Restore version?')).toBeInTheDocument();
-    // Dialog div is present in the DOM (queryByText finds DOM text regardless of aria-hidden)
-    expect(document.querySelector('[role="dialog"]')).toBeInTheDocument();
+    // Source renders a native `<dialog>` element (VersionHistory.tsx:89) whose
+    // implicit role is 'dialog' — `[role="dialog"]` attribute selector doesn't
+    // match. Assert via the element selector instead.
+    expect(document.querySelector('dialog')).toBeInTheDocument();
   });
 
   it('calls onRestoreVersion after confirmation', () => {
@@ -174,9 +180,12 @@ describe('VersionHistory', () => {
   // ─── Edge Cases ───────────────────────────────────────────────────────────
 
   it('renders empty state when no versions', () => {
+    // VersionHistory.tsx:74 renders `<EmptyState entity="documents" />` —
+    // canonical title 'No documents yet'. Semantic misuse (should be a
+    // 'versions' entity) worth a source follow-up.
     render(<VersionHistory {...defaultProps} versions={[]} />);
     expect(screen.getByTestId('version-empty-state')).toBeInTheDocument();
-    expect(screen.getByText('No version history')).toBeInTheDocument();
+    expect(screen.getByText('No documents yet')).toBeInTheDocument();
   });
 
   it('handles single version (no delta)', () => {
@@ -222,13 +231,19 @@ describe('VersionHistory', () => {
     expect(screen.getByLabelText('Restore version 1.1.0')).toBeInTheDocument();
   });
 
-  it('version items are keyboard navigable', () => {
+  it('version items are keyboard navigable', async () => {
+    // Native `<button>` activation on Enter is browser-default behaviour —
+    // `fireEvent.keyDown` does not trigger the synthesised click. Use
+    // userEvent.keyboard after focus (same pattern as TicketList stat cards).
+    const userEvent = (await import('@testing-library/user-event')).default;
+    const user = userEvent.setup();
     const onVersionSelect = vi.fn();
     render(<VersionHistory {...defaultProps} onVersionSelect={onVersionSelect} />);
 
     const buttons = screen.getAllByRole('button', { name: /version/i });
     const firstVersionButton = buttons[0];
-    fireEvent.keyDown(firstVersionButton, { key: 'Enter' });
+    firstVersionButton.focus();
+    await user.keyboard('{Enter}');
     expect(onVersionSelect).toHaveBeenCalled();
   });
 });

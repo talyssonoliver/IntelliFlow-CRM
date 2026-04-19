@@ -222,7 +222,10 @@ describe('NotificationBell', () => {
       isLoading: false,
     });
     render(<NotificationBell />);
-    expect(screen.getByText('No unread notifications')).toBeInTheDocument();
+    // NotificationBell renders `<EmptyState entity="notifications" />` which
+    // surfaces the canonical copy from packages/ui's entity config
+    // (entity-empty-state-config.ts: notifications → "No notifications").
+    expect(screen.getByText('No notifications')).toBeInTheDocument();
   });
 
   it('subscription onData triggers cache invalidation', () => {

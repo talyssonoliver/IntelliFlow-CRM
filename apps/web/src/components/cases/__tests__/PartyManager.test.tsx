@@ -67,9 +67,11 @@ describe('PartyManager', () => {
     expect(defaultProps.onUpdate).toHaveBeenCalledWith([mockParties[1]]);
   });
 
-  it('empty state shows "No parties"', () => {
+  it('empty state shows canonical EmptyState title', () => {
+    // PartyManager migrated to `<EmptyState entity="contacts" />` —
+    // canonical title 'No contacts yet' (packages/ui entity-empty-state-config).
     render(<PartyManager {...defaultProps} parties={[]} />);
-    expect(screen.getByText('No parties')).toBeInTheDocument();
+    expect(screen.getByText('No contacts yet')).toBeInTheDocument();
   });
 
   it('validation: name required', () => {

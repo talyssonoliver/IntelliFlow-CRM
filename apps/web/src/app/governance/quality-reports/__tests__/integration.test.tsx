@@ -186,9 +186,10 @@ describe('QualityReportsPage', () => {
       render(<QualityReportsPage />);
 
       expect(screen.getByRole('heading', { name: 'Quality Reports' })).toBeInTheDocument();
+      // tRPC benchmark report was added — description now includes it.
       expect(
         screen.getByText(
-          'CI-generated quality reports for Lighthouse, test coverage, and performance'
+          'CI-generated quality reports for Lighthouse, test coverage, performance, and tRPC benchmarks'
         )
       ).toBeInTheDocument();
     });

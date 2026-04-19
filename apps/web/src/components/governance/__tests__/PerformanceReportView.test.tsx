@@ -27,6 +27,10 @@ function createMockResponse(data: Record<string, unknown>, ok = true) {
   } as unknown as Response;
 }
 
+// Fixture schema follows the new PerformanceReportView detail model
+// (see PerformanceReportView.tsx §§ Overall Health Banner / Executive KPI Grid /
+// Response Time Breakdown): p50_median, p95_median, p95_avg, p95_target,
+// endpoints_{tested,passing,failing}, violations, load_test_*.
 const mockPerformanceData = {
   success: true,
   data: {
@@ -38,10 +42,19 @@ const mockPerformanceData = {
     generatedAt: '2026-03-15T10:00:00Z',
     source: 'ci' as const,
     details: {
-      tRPC_p95: '12.5ms',
-      database_p95: '3.2ms',
+      p50_median: '12.5ms',
+      p95_median: '28.3ms',
+      p95_avg: '22.1ms',
+      p99_median: '55.0ms',
+      p95_target: '100ms',
       all_targets_met: true,
-      benchmarks: 42,
+      endpoints_tested: 42,
+      endpoints_passing: 42,
+      endpoints_failing: 0,
+      violations: [],
+      load_test_rps: 150,
+      load_test_vus: 50,
+      load_test_duration: '60s',
     },
   },
 };
@@ -69,7 +82,8 @@ describe('PerformanceReportView', () => {
     render(<PerformanceReportView />);
 
     await waitFor(() => {
-      expect(screen.getByText(/all targets met/i)).toBeInTheDocument();
+      // Overall Health Banner copy was updated in PerformanceReportView.tsx:466-468.
+      expect(screen.getByText(/all performance targets met/i)).toBeInTheDocument();
     });
   });
 
@@ -82,6 +96,9 @@ describe('PerformanceReportView', () => {
         details: {
           ...mockPerformanceData.data.details,
           all_targets_met: false,
+          endpoints_failing: 5,
+          endpoints_passing: 37,
+          violations: ['p95 budget exceeded'],
         },
       },
     };
@@ -89,32 +106,39 @@ describe('PerformanceReportView', () => {
     render(<PerformanceReportView />);
 
     await waitFor(() => {
-      expect(screen.getByText(/targets not met/i)).toBeInTheDocument();
+      expect(screen.getByText(/performance budget exceeded/i)).toBeInTheDocument();
     });
   });
 
-  it('renders key metrics cards with tRPC p95 and Database p95 values', async () => {
+  it('renders key metrics cards with p50 and p95 median values', async () => {
     mockFetch.mockResolvedValue(createMockResponse(mockPerformanceData));
     render(<PerformanceReportView />);
 
     await waitFor(() => {
-      expect(screen.getByText('12.5ms')).toBeInTheDocument();
+      // p50_median renders in both the KPI MetricCard and the Response Time
+      // Breakdown table — use getAllByText to tolerate both occurrences.
+      expect(screen.getAllByText('12.5ms').length).toBeGreaterThan(0);
     });
 
-    expect(screen.getByText('3.2ms')).toBeInTheDocument();
-    expect(screen.getByText(/trpc p95/i)).toBeInTheDocument();
-    expect(screen.getByText(/database p95/i)).toBeInTheDocument();
+    expect(screen.getAllByText('28.3ms').length).toBeGreaterThan(0);
+    // MetricCard labels are "p50 Median" / "p95 Median"; MetricCard appears
+    // twice (KPI grid) plus once again in the Response Time Breakdown table.
+    expect(screen.getAllByText(/p50 median/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/p95 median/i).length).toBeGreaterThan(0);
   });
 
-  it('shows threshold indicators: tRPC p95 <50ms, DB p95 <20ms', async () => {
+  it('shows threshold indicators: p50 <50ms, p95 <100ms', async () => {
     mockFetch.mockResolvedValue(createMockResponse(mockPerformanceData));
     render(<PerformanceReportView />);
 
     await waitFor(() => {
-      expect(screen.getByText('12.5ms')).toBeInTheDocument();
+      // p50_median renders in both the KPI MetricCard and the Response Time
+      // Breakdown table — use getAllByText to tolerate both occurrences.
+      expect(screen.getAllByText('12.5ms').length).toBeGreaterThan(0);
     });
 
-    // Both are within threshold, should show pass
+    // Overall banner + both MetricCards + endpoints card all render a
+    // PassFailPill on the happy path.
     const passIndicators = screen.getAllByText('Pass');
     expect(passIndicators.length).toBeGreaterThanOrEqual(2);
   });
@@ -126,10 +150,13 @@ describe('PerformanceReportView', () => {
         ...mockPerformanceData.data,
         status: 'failing',
         details: {
-          tRPC_p95: '75.0ms',
-          database_p95: '25.0ms',
+          ...mockPerformanceData.data.details,
+          p50_median: '75.0ms', // > P50_TARGET_MS (50)
+          p95_median: '250.0ms', // > P95_TARGET_MS (100)
           all_targets_met: false,
-          benchmarks: 42,
+          endpoints_failing: 5,
+          endpoints_passing: 37,
+          violations: ['p95 budget exceeded'],
         },
       },
     };
@@ -137,22 +164,25 @@ describe('PerformanceReportView', () => {
     render(<PerformanceReportView />);
 
     await waitFor(() => {
-      expect(screen.getByText('75.0ms')).toBeInTheDocument();
+      expect(screen.getAllByText('75.0ms').length).toBeGreaterThan(0);
     });
 
     const failIndicators = screen.getAllByText('Fail');
     expect(failIndicators.length).toBeGreaterThanOrEqual(2);
   });
 
-  it('renders benchmark count summary', async () => {
+  it('renders endpoint count summary', async () => {
     mockFetch.mockResolvedValue(createMockResponse(mockPerformanceData));
     render(<PerformanceReportView />);
 
+    // Overall banner copy: "{passing} of {tested} endpoints passing".
     await waitFor(() => {
-      expect(screen.getByText('42')).toBeInTheDocument();
+      expect(screen.getByText(/42 of 42 endpoints passing/i)).toBeInTheDocument();
     });
 
-    expect(screen.getByText('Benchmarks Executed')).toBeInTheDocument();
+    // Endpoints KPI card also renders "42/42" + "100% passing".
+    expect(screen.getByText('42/42')).toBeInTheDocument();
+    expect(screen.getByText(/100% passing/i)).toBeInTheDocument();
   });
 
   it('renders PageHeader with correct breadcrumbs', async () => {
@@ -216,10 +246,13 @@ describe('PerformanceReportView', () => {
     render(<PerformanceReportView />);
 
     await waitFor(() => {
-      expect(screen.getByText(/trpc p95/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/p50 median/i).length).toBeGreaterThan(0);
     });
 
-    const cards = screen.getAllByRole('region');
-    expect(cards.length).toBeGreaterThanOrEqual(2);
+    // Cards now expose explicit aria-labels — use them to verify ARIA coverage
+    // instead of relying on an implicit "region" role.
+    expect(screen.getByLabelText(/overall performance status/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/p50 median response time/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/p95 median response time/i)).toBeInTheDocument();
   });
 });

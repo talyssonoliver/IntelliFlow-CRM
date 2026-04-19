@@ -156,9 +156,11 @@ describe('AI Settings Content', () => {
     });
 
     it('renders breadcrumb navigation', () => {
+      // Breadcrumb was refactored from "Settings / AI Chains" to
+      // "AI & Agents / AI Chains" (AISettingsContent.tsx:249-253).
       renderWithProviders(<AISettingsContent />);
 
-      expect(screen.getByText('Settings')).toBeInTheDocument();
+      expect(screen.getByText('AI & Agents')).toBeInTheDocument();
       expect(screen.getByText('AI Chains')).toBeInTheDocument();
     });
 

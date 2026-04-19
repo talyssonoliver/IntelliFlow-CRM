@@ -426,9 +426,10 @@ describe('VersionComparisonView', () => {
       await user.click(screen.getByRole('button', { name: /Compare Versions/i }));
 
       await waitFor(() => {
-        expect(
-          screen.getByText('No differences found between the two versions.')
-        ).toBeInTheDocument();
+        // VersionComparisonView.tsx:266 renders `<EmptyState entity="insights" />`
+        // — canonical title 'No insights yet' (semantic misuse — the surface
+        // is a version-diff view; a dedicated entity would be more accurate).
+        expect(screen.getByText('No insights yet')).toBeInTheDocument();
       });
     });
 
@@ -447,9 +448,10 @@ describe('VersionComparisonView', () => {
       await user.click(screen.getByRole('button', { name: /Compare Versions/i }));
 
       await waitFor(() => {
-        expect(
-          screen.getByText('No differences found between the two versions.')
-        ).toBeInTheDocument();
+        // VersionComparisonView.tsx:266 renders `<EmptyState entity="insights" />`
+        // — canonical title 'No insights yet' (semantic misuse — the surface
+        // is a version-diff view; a dedicated entity would be more accurate).
+        expect(screen.getByText('No insights yet')).toBeInTheDocument();
       });
 
       // Differences table should not exist

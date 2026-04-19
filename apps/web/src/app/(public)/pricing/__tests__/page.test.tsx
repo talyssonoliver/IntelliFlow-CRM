@@ -162,8 +162,11 @@ describe('PricingPage', () => {
       const table = screen.getByRole('table');
       const tableText = table.textContent || '';
 
+      // Feature categories were reorganised: 'AI & Automation' split into
+      // 'AI & Insights' + 'Automation' as separate sections.
       expect(tableText).toContain('Core CRM');
-      expect(tableText).toContain('AI & Automation');
+      expect(tableText).toContain('AI & Insights');
+      expect(tableText).toContain('Automation');
       expect(tableText).toContain('Security');
     });
 

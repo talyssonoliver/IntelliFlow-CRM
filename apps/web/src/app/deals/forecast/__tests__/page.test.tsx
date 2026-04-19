@@ -193,8 +193,8 @@ describe('DealForecastPage', () => {
 
     // Forecast accuracy
     expect(screen.getByText('88%')).toBeInTheDocument();
-    // Pipeline value
-    expect(screen.getByText('$450,000')).toBeInTheDocument();
+    // Pipeline value (en-GB GBP: £450,000).
+    expect(screen.getByText('£450,000')).toBeInTheDocument();
   });
 
   it('renders auth loading skeleton', () => {

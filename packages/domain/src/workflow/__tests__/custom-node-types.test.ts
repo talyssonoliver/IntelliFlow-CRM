@@ -8,6 +8,7 @@ import {
   ActionCustomConfigSchema,
   ActionConfigSchema,
   isPublicHttpUrl,
+  isPublicIpAddress,
   PERMISSION_MANAGE_CUSTOM_NODE_TYPES,
   PERMISSION_MANAGE_CUSTOM_ACTIONS,
 } from '../node-catalog';
@@ -34,7 +35,13 @@ describe('buildZodFromDescriptors', () => {
     { key: 'title', label: 'Title', type: 'string', required: true },
     { key: 'count', label: 'Count', type: 'number' },
     { key: 'active', label: 'Active', type: 'boolean', required: true },
-    { key: 'severity', label: 'Severity', type: 'enum', required: true, enumValues: ['low', 'high'] },
+    {
+      key: 'severity',
+      label: 'Severity',
+      type: 'enum',
+      required: true,
+      enumValues: ['low', 'high'],
+    },
     { key: 'target', label: 'Target', type: 'entity' },
   ]);
   const schema = buildZodFromDescriptors(descriptors);
@@ -154,6 +161,68 @@ describe('isPublicHttpUrl', () => {
 
   it('rejects non-http schemes', () => {
     expect(isPublicHttpUrl('file:///etc/passwd')).toBe(false);
+  });
+});
+
+describe('isPublicIpAddress (DNS-rebinding runtime guard)', () => {
+  it('accepts public IPv4 + IPv6 addresses', () => {
+    expect(isPublicIpAddress('8.8.8.8')).toBe(true);
+    expect(isPublicIpAddress('1.1.1.1')).toBe(true);
+    expect(isPublicIpAddress('2001:4860:4860::8888')).toBe(true);
+  });
+
+  it('rejects RFC1918 + loopback + link-local IPv4', () => {
+    expect(isPublicIpAddress('10.0.0.1')).toBe(false);
+    expect(isPublicIpAddress('127.0.0.1')).toBe(false);
+    expect(isPublicIpAddress('169.254.169.254')).toBe(false);
+    expect(isPublicIpAddress('172.16.0.1')).toBe(false);
+    expect(isPublicIpAddress('172.31.0.1')).toBe(false);
+    expect(isPublicIpAddress('192.168.1.1')).toBe(false);
+  });
+
+  it('rejects 0.0.0.0/8, broadcast, and reserved IPv4', () => {
+    expect(isPublicIpAddress('0.0.0.0')).toBe(false);
+    expect(isPublicIpAddress('0.1.2.3')).toBe(false);
+    expect(isPublicIpAddress('255.255.255.255')).toBe(false);
+    expect(isPublicIpAddress('240.0.0.1')).toBe(false);
+  });
+
+  it('rejects CGNAT 100.64.0.0/10 and multicast 224.0.0.0/4', () => {
+    expect(isPublicIpAddress('100.64.0.1')).toBe(false);
+    expect(isPublicIpAddress('100.127.255.255')).toBe(false);
+    expect(isPublicIpAddress('100.128.0.1')).toBe(true); // outside CGNAT
+    expect(isPublicIpAddress('224.0.0.1')).toBe(false);
+    expect(isPublicIpAddress('239.255.255.255')).toBe(false);
+  });
+
+  it('rejects IPv6 loopback, ULA, link-local, site-local, multicast', () => {
+    expect(isPublicIpAddress('::1')).toBe(false);
+    expect(isPublicIpAddress('::')).toBe(false);
+    expect(isPublicIpAddress('fc00::1')).toBe(false);
+    expect(isPublicIpAddress('fd12:3456:789a::1')).toBe(false);
+    expect(isPublicIpAddress('fe80::1')).toBe(false);
+    expect(isPublicIpAddress('fec0::1')).toBe(false);
+    expect(isPublicIpAddress('ff02::1')).toBe(false);
+  });
+
+  it('rejects IPv4-mapped IPv6 loopback', () => {
+    expect(isPublicIpAddress('::ffff:127.0.0.1')).toBe(false);
+    expect(isPublicIpAddress('::ffff:10.0.0.1')).toBe(false);
+  });
+});
+
+describe('isPublicHttpUrl extended IP coverage', () => {
+  it('rejects link-local + ULA IPv6 literals at URL-parse time', () => {
+    expect(isPublicHttpUrl('http://[fe80::1]/')).toBe(false);
+    expect(isPublicHttpUrl('http://[fc00::1]/')).toBe(false);
+  });
+
+  it('rejects CGNAT IPv4 literals', () => {
+    expect(isPublicHttpUrl('http://100.64.0.1/')).toBe(false);
+  });
+
+  it('still ALLOWS bare DNS hostnames (runtime DNS check is the second gate)', () => {
+    expect(isPublicHttpUrl('https://example.com/hook')).toBe(true);
   });
 });
 

@@ -247,7 +247,9 @@ describe('EmailPage', () => {
     await user.click(unreadChip);
 
     await waitFor(() => {
-      expect(screen.getByText(/no emails match current filters/i)).toBeInTheDocument();
+      // EmailList.tsx:176 renders `<EmptyState entity="emails" variant="filtered" />`
+      // whose canonical copy is "No results found" (from entity-empty-state-config).
+      expect(screen.getByText(/no results found/i)).toBeInTheDocument();
     });
 
     // Click "Clear filters" to reset

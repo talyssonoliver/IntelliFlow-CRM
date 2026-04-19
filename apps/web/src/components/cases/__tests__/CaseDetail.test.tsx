@@ -329,13 +329,17 @@ describe('CaseDetail', () => {
     const caseNoTimeline = { ...mockCase, timeline: [] };
     render(<CaseDetail {...defaultProps} caseData={caseNoTimeline} />);
     expect(screen.getByText('A detailed test case description')).toBeInTheDocument();
-    expect(screen.getByText(/No timeline entries yet/)).toBeInTheDocument();
+    // Migrated to `<EmptyState entity="timeline" />`; canonical title is
+    // 'No activity yet' (packages/ui entity-empty-state-config).
+    expect(screen.getByText(/No activity yet/)).toBeInTheDocument();
   });
 
   it('renders empty timeline fallback without description', () => {
     const caseNoTimeline = { ...mockCase, timeline: [], description: null as any }; // test-only: testing null guard
     render(<CaseDetail {...defaultProps} caseData={caseNoTimeline} />);
-    expect(screen.getByText(/No timeline entries yet/)).toBeInTheDocument();
+    // Migrated to `<EmptyState entity="timeline" />`; canonical title is
+    // 'No activity yet' (packages/ui entity-empty-state-config).
+    expect(screen.getByText(/No activity yet/)).toBeInTheDocument();
   });
 
   it('renders team overflow when more than 3 team members', () => {
@@ -404,7 +408,9 @@ describe('CaseDetail', () => {
     };
     render(<CaseDetail {...defaultProps} caseData={caseWithBadParties} />);
     fireEvent.click(screen.getByText('Records'));
-    expect(screen.getByText('No parties')).toBeInTheDocument();
+    // PartyManager renders `<EmptyState entity="contacts" />` when parties is
+    // empty; canonical title is 'No contacts yet'.
+    expect(screen.getByText('No contacts yet')).toBeInTheDocument();
   });
 
   it('renders no upcoming deadlines when all tasks completed', () => {

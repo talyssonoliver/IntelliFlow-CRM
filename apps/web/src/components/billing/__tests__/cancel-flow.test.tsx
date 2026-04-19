@@ -145,7 +145,9 @@ describe('CancelFlow', () => {
       refetch: mockRefetch,
     });
     render(<CancelFlow />);
-    expect(screen.getByText('No Active Subscription')).toBeInTheDocument();
+    // Canonical EmptyState copy (entity="subscriptions"): sentence-case
+    // 'No active subscription' (packages/ui entity-empty-state-config).
+    expect(screen.getByText('No active subscription')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /back to billing/i })).toHaveAttribute(
       'href',
       '/billing'

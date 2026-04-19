@@ -35,10 +35,10 @@ structure, and user flows in the IntelliFlow CRM web application.
 
 | Category        | Count |
 | --------------- | ----- |
-| Total Pages     | 202   |
-| Public Pages    | 31    |
+| Total Pages     | 205   |
+| Public Pages    | 32    |
 | Developer Pages | 14    |
-| Protected Pages | 96    |
+| Protected Pages | 148   |
 | API Routes      | 19    |
 | Layouts         | 36    |
 
@@ -90,6 +90,7 @@ Located in `(public)` route group. Accessible without login.
 | `/careers`                 | Careers                  | Job listings                                                                                                                                                                                            |
 | `/careers/[id]`            | Job Detail               | Individual job posting                                                                                                                                                                                  |
 | `/lp/[slug]`               | Landing Page             | Dynamic marketing landing pages                                                                                                                                                                         |
+| `/aup`                     | Acceptable Use Policy    | Public Acceptable Use Policy page; linked from PublicFooter and legal index                                                                                                                             |
 
 ---
 
@@ -132,82 +133,112 @@ developer sidebar. These pages are accessible through the Settings sidebar
 
 ---
 
-### 4. CRM Core — Leads (4 pages)
+### 4. CRM Core — Leads (7 pages)
 
-| Route                     | Page            | Description                       | Sidebar Section |
-| ------------------------- | --------------- | --------------------------------- | --------------- |
-| `/leads`                  | Leads List      | All leads with filters and search | Lead Views      |
-| `/leads?view=my`          | My Leads        | Leads assigned to current user    | Lead Views      |
-| `/leads?view=starred`     | Starred Leads   | Bookmarked leads                  | Lead Views      |
-| `/leads?view=recent`      | Recent Leads    | Recently viewed leads             | Lead Views      |
-| `/leads?segment=new-week` | New This Week   | Leads created this week           | Segments        |
-| `/leads?segment=hot`      | Hot Leads       | Leads with score >80              | Segments        |
-| `/leads?segment=followup` | Needs Follow-up | Leads requiring action            | Segments        |
-| `/leads/new`              | New Lead        | Create lead form                  | -               |
-| `/leads/[id]`             | Lead Detail     | Lead 360° view with activities    | -               |
-| `/leads/[id]/edit`        | Edit Lead       | Edit lead fields and metadata     | -               |
-
----
-
-### 5. CRM Core — Contacts (4 pages)
-
-| Route                 | Page           | Description                 |
-| --------------------- | -------------- | --------------------------- |
-| `/contacts`           | Contacts List  | All contacts with filters   |
-| `/contacts/new`       | New Contact    | Create contact form         |
-| `/contacts/[id]`      | Contact Detail | Contact profile and history |
-| `/contacts/[id]/edit` | Edit Contact   | Edit contact fields         |
+| Route                     | Page            | Description                                         | Sidebar Section |
+| ------------------------- | --------------- | --------------------------------------------------- | --------------- |
+| `/leads`                  | Leads List      | All leads with filters and search                   | Lead Views      |
+| `/leads?view=my`          | My Leads        | Leads assigned to current user                      | Lead Views      |
+| `/leads?view=starred`     | Starred Leads   | Bookmarked leads                                    | Lead Views      |
+| `/leads?view=recent`      | Recent Leads    | Recently viewed leads                               | Lead Views      |
+| `/leads?segment=new-week` | New This Week   | Leads created this week                             | Segments        |
+| `/leads?segment=hot`      | Hot Leads       | Leads with score >80                                | Segments        |
+| `/leads?segment=followup` | Needs Follow-up | Leads requiring action                              | Segments        |
+| `/leads/new`              | New Lead        | Create lead form                                    | -               |
+| `/leads/[id]`             | Lead Detail     | Lead 360° view with activities                      | -               |
+| `/leads/[id]/edit`        | Edit Lead       | Edit lead fields and metadata                       | -               |
+| `/leads/pipeline`         | Lead Pipeline   | Kanban-style pipeline view of leads by stage        | Pipeline Views  |
+| `/leads/routing`          | Lead Routing    | Configure smart routing rules and assignment logic  | -               |
+| `/leads/lead-settings`    | Lead Settings   | Tenant-level lead config: stages, scoring, fields   | -               |
 
 ---
 
-### 6. CRM Core — Accounts (2 pages)
+### 5. CRM Core — Contacts (7 pages)
 
-| Route            | Page           | Description                                 |
-| ---------------- | -------------- | ------------------------------------------- |
-| `/accounts`      | Accounts List  | Company/account list with filters and stats |
-| `/accounts/[id]` | Account Detail | Account 360° view                           |
-
----
-
-### 7. CRM Core — Deals (7 pages)
-
-| Route                  | Page              | Description                                          |
-| ---------------------- | ----------------- | ---------------------------------------------------- |
-| `/deals`               | Deals List        | Pipeline view and deal list                          |
-| `/deals/new`           | New Deal          | Deal create form with entity search                  |
-| `/deals/[id]`          | Deal Detail       | Deal overview with stages                            |
-| `/deals/[id]/forecast` | Deal Forecast     | AI-powered deal probability                          |
-| `/deals/forecast`      | Forecast Overview | Sales forecasting dashboard                          |
-| `/deals/all/forecast`  | Legacy Forecast   | Redirects legacy forecast route to `/deals/forecast` |
-| `/deals/trash`         | Deals Trash       | Soft-deleted deals with restore and permanent delete |
+| Route                          | Page              | Description                                       |
+| ------------------------------ | ----------------- | ------------------------------------------------- |
+| `/contacts`                    | Contacts List     | All contacts with filters                         |
+| `/contacts/new`                | New Contact       | Create contact form                               |
+| `/contacts/[id]`               | Contact Detail    | Contact profile and history                       |
+| `/contacts/[id]/edit`          | Edit Contact      | Edit contact fields                               |
+| `/contacts/contact-types`      | Contact Types     | Configure contact type labels and custom fields   |
+| `/contacts/contact-settings`   | Contact Settings  | Tenant-level contact defaults and dedup rules     |
+| `/contacts/import-export`      | Import / Export   | Bulk CSV import and export with field mapping     |
 
 ---
 
-### 8. CRM Core — Tasks (2 pages)
+### 6. CRM Core — Accounts (5 pages)
 
-| Route         | Page        | Description                                             |
-| ------------- | ----------- | ------------------------------------------------------- |
-| `/tasks`      | Task List   | Task queue with list/calendar toggle, filters, priority |
-| `/tasks/[id]` | Task Detail | Task view with assignee and status                      |
-
----
-
-### 9. CRM Core — Calendar/Appointments (3 pages)
-
-| Route            | Page               | Description                                 |
-| ---------------- | ------------------ | ------------------------------------------- |
-| `/calendar`      | Calendar View      | Appointment calendar (month/week/day views) |
-| `/calendar/new`  | New Appointment    | Create appointment form                     |
-| `/calendar/[id]` | Appointment Detail | Appointment detail and edit                 |
+| Route                            | Page              | Description                                                   |
+| -------------------------------- | ----------------- | ------------------------------------------------------------- |
+| `/accounts`                      | Accounts List     | Company/account list with filters and stats                   |
+| `/accounts/[id]`                 | Account Detail    | Account 360° view                                             |
+| `/accounts/account-settings`     | Account Settings  | Tenant-level account configuration and defaults               |
+| `/accounts/account-tiers`        | Account Tiers     | Manage tier definitions (SMB, Mid-Market, Enterprise, Startup) |
+| `/accounts/territory-mapping`    | Territory Mapping | Assign accounts to sales territories by region/rep            |
 
 ---
 
-### 10. CRM Core — Email (2 pages)
+### 7. CRM Core — Deals (10 pages)
 
-| Route         | Page         | Description            |
-| ------------- | ------------ | ---------------------- |
-| `/email`      | Email Inbox  | Email list and compose |
-| `/email/[id]` | Email Detail | Email thread view      |
+| Route                  | Page              | Description                                                        |
+| ---------------------- | ----------------- | ------------------------------------------------------------------ |
+| `/deals`               | Deals List        | Pipeline view and deal list                                        |
+| `/deals/new`           | New Deal          | Deal create form with entity search                                |
+| `/deals/[id]`          | Deal Detail       | Deal overview with stages                                          |
+| `/deals/[id]/forecast` | Deal Forecast     | AI-powered deal probability                                        |
+| `/deals/forecast`      | Forecast Overview | Sales forecasting dashboard                                        |
+| `/deals/all/forecast`  | Legacy Forecast   | Redirects legacy forecast route to `/deals/forecast`               |
+| `/deals/trash`         | Deals Trash       | Soft-deleted deals with restore and permanent delete               |
+| `/deals/deal-stages`   | Deal Stages       | Redirects to `/deals/deal-settings#pipeline` (PG-184 consolidation under a single bento page) |
+| `/deals/deal-settings` | Deal Settings     | 7-card bento (PG-184): pipeline stages (REUSES pipelineConfig), win/loss reasons, scoring rules, duplicate detection, required fields, tags, automation (16 toggles incl. AI defaults off) |
+| `/deals/deal-automation` | Deal Automation | Redirects to `/deals/deal-settings#automation` (PG-184 consolidation) |
+
+---
+
+### 8. CRM Core — Tasks (5 pages)
+
+| Route                  | Page            | Description                                              |
+| ---------------------- | --------------- | -------------------------------------------------------- |
+| `/tasks`               | Task List       | Task queue with list/calendar toggle, filters, priority  |
+| `/tasks/[id]`          | Task Detail     | Task view with assignee and status                       |
+| `/tasks/task-types`    | Task Types      | Configure custom task type labels and icons              |
+| `/tasks/task-settings` | Task Settings   | Tenant-level task defaults: due-date rules, assignee     |
+| `/tasks/automation`    | Task Automation | Automation rules triggered on task status/priority changes |
+
+---
+
+### 9. CRM Core — Calendar / Appointments (9 pages)
+
+**Calendar** — month/week/day view with merged tasks:
+
+| Route                       | Page                 | Description                                              |
+| --------------------------- | -------------------- | -------------------------------------------------------- |
+| `/calendar`                 | Calendar View        | Appointment calendar (month/week/day views)              |
+| `/calendar/availability`    | Availability         | Set working hours, time zones, and booking windows       |
+| `/calendar/event-types`     | Event Types          | Configure reusable event type templates                  |
+| `/calendar/calendar-settings` | Calendar Settings  | Tenant-level calendar defaults and integrations          |
+
+**Appointments** — dedicated table view (separate from /calendar):
+
+| Route                    | Page               | Description                                              |
+| ------------------------ | ------------------ | -------------------------------------------------------- |
+| `/appointments`          | Appointments List  | Tabular appointment queue with filters and status        |
+| `/appointments/new`      | New Appointment    | Create appointment form                                  |
+| `/appointments/[id]`     | Appointment Detail | Appointment detail and edit                              |
+
+---
+
+### 10. CRM Core — Email (6 pages)
+
+| Route                   | Page            | Description                                        |
+| ----------------------- | --------------- | -------------------------------------------------- |
+| `/email`                | Email Inbox     | Email list and compose                             |
+| `/email/[id]`           | Email Detail    | Email thread view                                  |
+| `/email/compose`        | Compose Email   | Full-screen compose window with rich editor        |
+| `/email/templates`      | Email Templates | Manage reusable email templates                    |
+| `/email/signatures`     | Email Signatures | Manage HTML email signatures per user/team         |
+| `/email/email-settings` | Email Settings  | IMAP/SMTP configuration, sync rules, aliases       |
 
 ---
 
@@ -224,50 +255,60 @@ developer sidebar. These pages are accessible through the Settings sidebar
 
 ---
 
-### 12. Documents (3 pages)
+### 12. Documents (6 pages)
 
-| Route             | Page            | Description                   |
-| ----------------- | --------------- | ----------------------------- |
-| `/documents`      | Documents List  | Document repository           |
-| `/documents/new`  | Upload Document | Document upload form          |
-| `/documents/[id]` | Document Detail | Document preview and metadata |
-
----
-
-### 13. Cases (5 pages)
-
-| Route                   | Page                  | Description                                           |
-| ----------------------- | --------------------- | ----------------------------------------------------- |
-| `/cases`                | Cases List            | Legal/service case queue with stats and filters       |
-| `/cases/new`            | New Case              | Case creation form                                    |
-| `/cases/[id]`           | Case Detail           | Case detail with documents                            |
-| `/cases/timeline`       | Case Timeline         | Case history and deadline engine                      |
-| `/cases/case-workflows` | Case Workflow Builder | Visual workflow builder for case automation (IFC-031) |
+| Route                           | Page              | Description                                         |
+| ------------------------------- | ----------------- | --------------------------------------------------- |
+| `/documents`                    | Documents List    | Document repository                                 |
+| `/documents/new`                | Upload Document   | Document upload form                                |
+| `/documents/[id]`               | Document Detail   | Document preview and metadata                       |
+| `/documents/document-types`     | Document Types    | Configure document type labels and metadata fields  |
+| `/documents/storage-policies`   | Storage Policies  | Retention rules, archival thresholds, quota limits  |
+| `/documents/document-settings`  | Document Settings | Tenant-level document defaults and versioning rules |
 
 ---
 
-### 14. AI & Agent Actions (17 pages)
+### 13. Cases (9 pages)
 
-| Route                             | Page               | Task            |
-| --------------------------------- | ------------------ | --------------- |
-| `/agent-approvals`                | Approval Queue     | IFC-029/IFC-149 |
-| `/agent-approvals/agents`         | Active Agents      | PG-151          |
-| `/agent-approvals/ai-review`      | AI Review Queue    | IFC-181         |
-| `/agent-approvals/ai-review/[id]` | Review Detail      | IFC-181         |
-| `/agent-approvals/ai-search`      | AI Search (RAG)    | PG-144          |
-| `/agent-approvals/churn-risk`     | Churn Risk         | PG-143          |
-| `/agent-approvals/drift`          | Drift Detection    | PG-146          |
-| `/agent-approvals/experiments`    | Experiments        | PG-149          |
-| `/agent-approvals/history`        | Review History     | PG-150          |
-| `/agent-approvals/insights`       | AI Insights Hub    | PG-160          |
-| `/insights`                       | AI Insights        | PG-160          |
-| `/agent-approvals/latency`        | Latency Monitor    | PG-153          |
-| `/agent-approvals/lead-scoring`   | Lead Scoring       | PG-148          |
-| `/agent-approvals/logs`           | Agent Logs         | PG-152          |
-| `/agent-approvals/logs/[id]`      | Agent Log Detail   | PG-152          |
-| `/agent-approvals/preview`        | Preview Mode       | —               |
-| `/agent-approvals/sentiment`      | Sentiment Analysis | PG-142          |
-| `/agent-approvals/tools`          | Agent Tools        | IFC-191         |
+| Route                          | Page                  | Description                                                    |
+| ------------------------------ | --------------------- | -------------------------------------------------------------- |
+| `/cases`                       | Cases List            | Legal/service case queue with stats and filters                |
+| `/cases/new`                   | New Case              | Case creation form                                             |
+| `/cases/[id]`                  | Case Detail           | Case detail with documents                                     |
+| `/cases/timeline`              | Case Timeline         | Case history and deadline engine                               |
+| `/cases/case-workflows`        | Case Workflow Builder | Visual workflow builder for case automation (IFC-031)          |
+| `/cases/case-workflows/[id]`   | Workflow Detail       | Individual workflow view with step editor                      |
+| `/cases/case-workflows/new`    | New Workflow          | Create new case automation workflow                            |
+| `/cases/case-types`            | Case Types            | Configure case category labels and SLA defaults                |
+| `/cases/case-settings`         | Case Settings         | Tenant-level case defaults: numbering, escalation rules        |
+
+---
+
+### 14. AI & Agent Actions (20 pages)
+
+| Route                                | Page                  | Task            |
+| ------------------------------------ | --------------------- | --------------- |
+| `/agent-approvals`                   | Approval Queue        | IFC-029/IFC-149 |
+| `/agent-approvals/agents`            | Active Agents         | PG-151          |
+| `/agent-approvals/ai-review`         | AI Review Queue       | IFC-181         |
+| `/agent-approvals/ai-review/[id]`    | Review Detail         | IFC-181         |
+| `/agent-approvals/ai-search`         | AI Search (RAG)       | PG-144          |
+| `/agent-approvals/ai-settings`       | AI Settings           | —               |
+| `/agent-approvals/approval-policies` | Approval Policies     | —               |
+| `/agent-approvals/churn-risk`        | Churn Risk            | PG-143          |
+| `/agent-approvals/drift`             | Drift Detection       | PG-146          |
+| `/agent-approvals/experiments`       | Experiments           | PG-149          |
+| `/agent-approvals/history`           | Review History        | PG-150          |
+| `/agent-approvals/insights`          | AI Insights Hub       | PG-160          |
+| `/insights`                          | AI Insights           | PG-160          |
+| `/agent-approvals/latency`           | Latency Monitor       | PG-153          |
+| `/agent-approvals/lead-scoring`      | Lead Scoring          | PG-148          |
+| `/agent-approvals/logs`              | Agent Logs            | PG-152          |
+| `/agent-approvals/logs/[id]`         | Agent Log Detail      | PG-152          |
+| `/agent-approvals/model-config`      | Model Configuration   | —               |
+| `/agent-approvals/preview`           | Preview Mode          | —               |
+| `/agent-approvals/sentiment`         | Sentiment Analysis    | PG-142          |
+| `/agent-approvals/tools`             | Agent Tools           | IFC-191         |
 
 **Sidebar groupings** (from `agent-approvals.ts`):
 
@@ -279,15 +320,18 @@ developer sidebar. These pages are accessible through the Settings sidebar
 
 ---
 
-### 15. Analytics & Reports (2 pages)
+### 15. Analytics & Reports (8 pages)
 
-| Route                        | Page                | Description                                       |
-| ---------------------------- | ------------------- | ------------------------------------------------- |
-| `/analytics`                 | Analytics Dashboard | Charts, metrics, and KPIs                         |
-| `/analytics/feedback`        | Feedback Analytics  | NPS/CSAT/CES metrics, trend charts                |
-| `/analytics/saved/weekly`    | Weekly Summary      | Last 7 days: revenue, leads, pipeline trends      |
-| `/analytics/saved/monthly`   | Monthly Revenue     | Last 30 days: revenue breakdown, lead sources     |
-| `/analytics/saved/quarterly` | Q4 Performance      | Quarterly performance summary with YoY comparison |
+| Route                          | Page                | Description                                               |
+| ------------------------------ | ------------------- | --------------------------------------------------------- |
+| `/analytics`                   | Analytics Dashboard | Charts, metrics, and KPIs                                 |
+| `/analytics/feedback`          | Feedback Analytics  | NPS/CSAT/CES metrics, trend charts                        |
+| `/analytics/saved/weekly`      | Weekly Summary      | Last 7 days: revenue, leads, pipeline trends              |
+| `/analytics/saved/monthly`     | Monthly Revenue     | Last 30 days: revenue breakdown, lead sources             |
+| `/analytics/saved/quarterly`   | Q4 Performance      | Quarterly performance summary with YoY comparison         |
+| `/analytics/report-templates`  | Report Templates    | Manage reusable report templates                          |
+| `/analytics/scheduled-reports` | Scheduled Reports   | Configure automated report delivery schedules             |
+| `/analytics/report-settings`   | Report Settings     | Tenant-level report defaults: locale, currency, date range |
 
 ---
 
@@ -310,21 +354,32 @@ developer sidebar. These pages are accessible through the Settings sidebar
 
 ---
 
-### 18. Settings (10 pages)
+### 18. Settings (23 pages)
 
-| Route                          | Page                  | Description                                                                                |
-| ------------------------------ | --------------------- | ------------------------------------------------------------------------------------------ |
-| `/settings`                    | Settings Overview     | Settings navigation                                                                        |
-| `/settings/account`            | Account Settings      | Personal account settings                                                                  |
-| `/settings/team`               | Team Settings         | Team members and roles                                                                     |
-| `/settings/ai`                 | AI Chains             | AI configuration and chains                                                                |
-| `/settings/integrations`       | Integrations          | Third-party integrations                                                                   |
-| `/settings/notifications`      | Notification Settings | Alert preferences                                                                          |
-| `/settings/pipeline`           | Pipeline Settings     | Sales pipeline stages                                                                      |
-| `/settings/routing`            | Routing Settings      | Smart lead routing rules                                                                   |
-| `/settings/leads`              | Lead Settings         | Lead pipeline configuration - stages, scoring rules, custom fields, and automation toggles |
-| `/settings/security/mfa`       | MFA Settings          | MFA management dashboard                                                                   |
-| `/settings/security/mfa/setup` | MFA Setup Wizard      | Two-factor authentication setup wizard                                                     |
+| Route                                          | Page                         | Description                                                                                |
+| ---------------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------ |
+| `/settings`                                    | Settings Overview            | Settings navigation                                                                        |
+| `/settings/account`                            | Account Settings             | Personal account settings                                                                  |
+| `/settings/team`                               | Team Settings                | Team members and roles                                                                     |
+| `/settings/ai`                                 | AI Chains                    | AI configuration and chains                                                                |
+| `/settings/integrations`                       | Integrations                 | Third-party integrations                                                                   |
+| `/settings/notifications`                      | Notification Settings        | Alert preferences                                                                          |
+| `/settings/pipeline`                           | Pipeline Settings            | Sales pipeline stages                                                                      |
+| `/settings/routing`                            | Routing Settings             | Smart lead routing rules                                                                   |
+| `/settings/leads`                              | Lead Settings                | Lead pipeline configuration — stages, scoring rules, custom fields, and automation toggles |
+| `/settings/automation`                         | Automation                   | Unified bento page — tenant-wide custom workflow node types + webhook action handlers (IFC-031 FU-011/FU-012, admin-only mutations, follows module-settings-playbook) |
+| `/settings/security/mfa`                       | MFA Settings                 | MFA management dashboard                                                                   |
+| `/settings/security/mfa/setup`                 | MFA Setup Wizard             | Two-factor authentication setup wizard                                                     |
+| `/settings/accounts`                           | Accounts Settings            | Module-level account defaults (sidebar settingsHref)                                       |
+| `/settings/appointments`                       | Appointments Settings        | Module-level appointment defaults (sidebar settingsHref)                                   |
+| `/settings/billing`                            | Billing Settings             | Billing information, tax IDs, payment method defaults                                      |
+| `/settings/cases`                              | Cases Settings               | Module-level case defaults (sidebar settingsHref)                                          |
+| `/settings/contacts`                           | Contacts Settings            | Module-level contact defaults (sidebar settingsHref)                                       |
+| `/settings/deals`                              | Deals Settings               | Module-level deal defaults (sidebar settingsHref)                                          |
+| `/settings/documents`                          | Documents Settings           | Module-level document defaults (sidebar settingsHref)                                      |
+| `/settings/reports`                            | Reports Settings             | Analytics report defaults and export configuration                                         |
+| `/settings/tasks`                              | Tasks Settings               | Module-level task defaults (sidebar settingsHref)                                          |
+| `/settings/tickets`                            | Tickets Settings             | Module-level ticket defaults (sidebar settingsHref)                                        |
 
 ---
 
@@ -348,19 +403,20 @@ developer sidebar. These pages are accessible through the Settings sidebar
 
 ---
 
-### 20. Governance (9 pages)
+### 20. Governance (10 pages)
 
-| Route                                     | Page                | Description                       |
-| ----------------------------------------- | ------------------- | --------------------------------- |
-| `/governance`                             | Governance Overview | Compliance dashboard              |
-| `/governance/adr`                         | ADR Registry        | Architecture Decision Records     |
-| `/governance/compliance`                  | Compliance          | Compliance standards tracking     |
-| `/governance/policies`                    | Policies            | Policy management                 |
-| `/governance/quality-reports`             | Quality Reports     | Quality assessment reports        |
-| `/governance/quality-reports/[reportId]`  | Report Detail       | Individual quality report         |
-| `/governance/quality-reports/lighthouse`  | Lighthouse Report   | Lighthouse scores by category     |
-| `/governance/quality-reports/coverage`    | Coverage Report     | Test coverage by metric           |
-| `/governance/quality-reports/performance` | Performance Report  | API response times and benchmarks |
+| Route                                          | Page                    | Description                             |
+| ---------------------------------------------- | ----------------------- | --------------------------------------- |
+| `/governance`                                  | Governance Overview     | Compliance dashboard                    |
+| `/governance/adr`                              | ADR Registry            | Architecture Decision Records           |
+| `/governance/compliance`                       | Compliance              | Compliance standards tracking           |
+| `/governance/policies`                         | Policies                | Policy management                       |
+| `/governance/quality-reports`                  | Quality Reports         | Quality assessment reports              |
+| `/governance/quality-reports/[reportId]`       | Report Detail           | Individual quality report               |
+| `/governance/quality-reports/lighthouse`       | Lighthouse Report       | Lighthouse scores by category           |
+| `/governance/quality-reports/coverage`         | Coverage Report         | Test coverage by metric                 |
+| `/governance/quality-reports/performance`      | Performance Report      | API response times and benchmarks       |
+| `/governance/quality-reports/trpc-benchmark`   | tRPC Benchmark Report   | tRPC procedure latency and throughput   |
 
 ### 21. Support Portal (2 pages)
 

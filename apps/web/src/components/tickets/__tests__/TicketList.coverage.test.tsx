@@ -7,6 +7,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { TicketList } from '../TicketList';
 import {
   createMockTicketList,
@@ -353,47 +354,61 @@ describe('TicketList Coverage', () => {
       expect(defaultProps.onStatusChange).toHaveBeenCalledWith('RESOLVED');
     });
 
-    it('handles keyboard Enter on stats card', () => {
+    // Stat cards are native <button type="button"> elements now, so keyboard
+    // activation is implicit (browser dispatches `click` on Enter/Space).
+    // `fireEvent.keyDown` does NOT simulate that default — use userEvent.keyboard
+    // after focusing the button to exercise the real keyboard-activation path.
+    it('handles keyboard Enter on stats card', async () => {
+      const user = userEvent.setup();
       render(<TicketList {...defaultProps} />);
 
       const openCard = screen.getByLabelText(/Filter by Open tickets/);
-      fireEvent.keyDown(openCard, { key: 'Enter' });
+      openCard.focus();
+      await user.keyboard('{Enter}');
 
       expect(defaultProps.onStatusChange).toHaveBeenCalledWith('OPEN');
     });
 
-    it('handles keyboard Space on stats card', () => {
+    it('handles keyboard Space on stats card', async () => {
+      const user = userEvent.setup();
       render(<TicketList {...defaultProps} />);
 
       const openCard = screen.getByLabelText(/Filter by Open tickets/);
-      fireEvent.keyDown(openCard, { key: ' ' });
+      openCard.focus();
+      await user.keyboard(' ');
 
       expect(defaultProps.onStatusChange).toHaveBeenCalledWith('OPEN');
     });
 
-    it('handles keyboard Enter on In Progress card', () => {
+    it('handles keyboard Enter on In Progress card', async () => {
+      const user = userEvent.setup();
       render(<TicketList {...defaultProps} />);
 
       const card = screen.getByLabelText(/Filter by In Progress tickets/);
-      fireEvent.keyDown(card, { key: 'Enter' });
+      card.focus();
+      await user.keyboard('{Enter}');
 
       expect(defaultProps.onStatusChange).toHaveBeenCalledWith('IN_PROGRESS');
     });
 
-    it('handles keyboard Enter on SLA Breached card', () => {
+    it('handles keyboard Enter on SLA Breached card', async () => {
+      const user = userEvent.setup();
       render(<TicketList {...defaultProps} />);
 
       const card = screen.getByLabelText(/Filter by SLA Breached tickets/);
-      fireEvent.keyDown(card, { key: 'Enter' });
+      card.focus();
+      await user.keyboard('{Enter}');
 
       expect(defaultProps.onSLAChange).toHaveBeenCalledWith('BREACHED');
     });
 
-    it('handles keyboard Enter on Resolved card', () => {
+    it('handles keyboard Enter on Resolved card', async () => {
+      const user = userEvent.setup();
       render(<TicketList {...defaultProps} />);
 
       const card = screen.getByLabelText(/Filter by Resolved tickets/);
-      fireEvent.keyDown(card, { key: 'Enter' });
+      card.focus();
+      await user.keyboard('{Enter}');
 
       expect(defaultProps.onStatusChange).toHaveBeenCalledWith('RESOLVED');
     });

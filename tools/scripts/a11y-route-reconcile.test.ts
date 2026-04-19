@@ -114,7 +114,10 @@ This section has no backtick-enclosed routes.
 
   // P08: Parses real conformance statement and extracts >=26 routes
   it('P08: parses real conformance statement and extracts >=26 routes', () => {
-    const realPath = resolve(__dirname, '../../docs/compliance/wcag-conformance-statement.md');
+    const realPath = resolve(
+      __dirname,
+      '../../docs/compliance-and-governance/compliance/wcag-conformance-statement.md'
+    );
     const content = readFileSync(realPath, 'utf-8');
     const routes = parseConformanceRoutes(content);
     expect(routes.length).toBeGreaterThanOrEqual(26);
@@ -343,7 +346,10 @@ describe('runReconciliation', () => {
   it('RN01: calls exitFn(0) when all routes match', () => {
     const exitFn = vi.fn() as any; // mock for process.exit — (code: number) => never
     runReconciliation({
-      conformancePath: resolve(__dirname, '../../docs/compliance/wcag-conformance-statement.md'),
+      conformancePath: resolve(
+        __dirname,
+        '../../docs/compliance-and-governance/compliance/wcag-conformance-statement.md'
+      ),
       appDir: resolve(__dirname, '../../apps/web/src/app'),
       printSummary: false,
       exitFn,
@@ -383,7 +389,10 @@ Routes: \`/dashboard\`, \`/nonexistent-route-xyz\`
     const exitFn = vi.fn() as any; // mock for process.exit — (code: number) => never
     expect(() => {
       runReconciliation({
-        conformancePath: resolve(__dirname, '../../docs/compliance/wcag-conformance-statement.md'),
+        conformancePath: resolve(
+          __dirname,
+          '../../docs/compliance-and-governance/compliance/wcag-conformance-statement.md'
+        ),
         appDir: resolve(__dirname, '../../apps/web/src/app'),
         printSummary: false,
         exitFn,
@@ -394,7 +403,10 @@ Routes: \`/dashboard\`, \`/nonexistent-route-xyz\`
   // RN04: Reads conformancePath from options
   it('RN04: reads conformancePath from options', () => {
     const exitFn = vi.fn() as any; // mock for process.exit — (code: number) => never
-    const customPath = resolve(__dirname, '../../docs/compliance/wcag-conformance-statement.md');
+    const customPath = resolve(
+      __dirname,
+      '../../docs/compliance-and-governance/compliance/wcag-conformance-statement.md'
+    );
     runReconciliation({
       conformancePath: customPath,
       appDir: resolve(__dirname, '../../apps/web/src/app'),
@@ -410,7 +422,10 @@ Routes: \`/dashboard\`, \`/nonexistent-route-xyz\`
     const exitFn = vi.fn() as any; // mock for process.exit — (code: number) => never
     const customAppDir = resolve(__dirname, '../../apps/web/src/app');
     runReconciliation({
-      conformancePath: resolve(__dirname, '../../docs/compliance/wcag-conformance-statement.md'),
+      conformancePath: resolve(
+        __dirname,
+        '../../docs/compliance-and-governance/compliance/wcag-conformance-statement.md'
+      ),
       appDir: customAppDir,
       printSummary: false,
       exitFn,
@@ -434,7 +449,10 @@ Routes: \`/dashboard\`, \`/nonexistent-route-xyz\`
   it('exits 1 when appDir does not exist', () => {
     const exitFn = vi.fn() as any; // mock for process.exit — (code: number) => never
     runReconciliation({
-      conformancePath: resolve(__dirname, '../../docs/compliance/wcag-conformance-statement.md'),
+      conformancePath: resolve(
+        __dirname,
+        '../../docs/compliance-and-governance/compliance/wcag-conformance-statement.md'
+      ),
       appDir: '/nonexistent/app/dir',
       printSummary: false,
       exitFn,
@@ -447,7 +465,10 @@ Routes: \`/dashboard\`, \`/nonexistent-route-xyz\`
     const exitFn = vi.fn() as any; // mock for process.exit — (code: number) => never
     expect(() => {
       runReconciliation({
-        conformancePath: resolve(__dirname, '../../docs/compliance/wcag-conformance-statement.md'),
+        conformancePath: resolve(
+          __dirname,
+          '../../docs/compliance-and-governance/compliance/wcag-conformance-statement.md'
+        ),
         appDir: resolve(__dirname, '../../apps/web/src/app'),
         printSummary: true,
         exitFn,

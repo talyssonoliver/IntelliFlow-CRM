@@ -2,8 +2,10 @@
  * Tests for pdf.ts
  *
  * Tests the PDF export utility functions: exportToPDF and exportAnalyticsToPDF.
- * Mocks browser APIs (window.open, document.write, etc.) since these
- * functions rely on browser print functionality.
+ * Mocks browser APIs (window.open, URL.createObjectURL) since these
+ * functions rely on browser print functionality. The implementation passes
+ * HTML via a Blob URL rather than document.write — tests capture the Blob
+ * and read it back to inspect the generated HTML.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
@@ -15,50 +17,62 @@ import {
   type AnalyticsReportData,
 } from '../pdf';
 
-describe('exportToPDF', () => {
-  let mockPrintWindow: {
-    document: {
-      write: ReturnType<typeof vi.fn>;
-      close: ReturnType<typeof vi.fn>;
-    };
-    onload: (() => void) | null;
-    focus: ReturnType<typeof vi.fn>;
-    print: ReturnType<typeof vi.fn>;
+type MockPrintWindow = {
+  onload: (() => void) | null;
+  focus: ReturnType<typeof vi.fn>;
+  print: ReturnType<typeof vi.fn>;
+};
+
+function createMockPrintWindow(): MockPrintWindow {
+  return {
+    onload: null,
+    focus: vi.fn(),
+    print: vi.fn(),
   };
+}
+
+/** Extract HTML text from the Blob captured by URL.createObjectURL. */
+async function capturedHTML(capturedBlob: { current: Blob | null }): Promise<string> {
+  if (!capturedBlob.current) throw new Error('no blob captured');
+  return await capturedBlob.current.text();
+}
+
+describe('exportToPDF', () => {
+  let mockPrintWindow: MockPrintWindow;
+  const capturedBlob: { current: Blob | null } = { current: null };
 
   beforeEach(() => {
-    mockPrintWindow = {
-      document: {
-        write: vi.fn(),
-        close: vi.fn(),
-      },
-      onload: null,
-      focus: vi.fn(),
-      print: vi.fn(),
-    };
+    capturedBlob.current = null;
+    mockPrintWindow = createMockPrintWindow();
 
     vi.stubGlobal('open', vi.fn().mockReturnValue(mockPrintWindow));
+    vi.stubGlobal('URL', {
+      createObjectURL: vi.fn((blob: Blob) => {
+        capturedBlob.current = blob;
+        return 'blob:mock://pdf-export';
+      }),
+      revokeObjectURL: vi.fn(),
+    });
   });
 
   it('opens a new window for printing', () => {
-    const sections: ReportSection[] = [];
-    exportToPDF(sections);
-    expect(window.open).toHaveBeenCalledWith('', '_blank');
-  });
-
-  it('writes HTML to the print window', () => {
-    const sections: ReportSection[] = [];
-    exportToPDF(sections);
-    expect(mockPrintWindow.document.write).toHaveBeenCalled();
-    const writtenHTML = mockPrintWindow.document.write.mock.calls[0][0] as string;
-    expect(writtenHTML).toContain('<!DOCTYPE html>');
-    expect(writtenHTML).toContain('<html>');
-    expect(writtenHTML).toContain('</html>');
-  });
-
-  it('closes the document after writing', () => {
     exportToPDF([]);
-    expect(mockPrintWindow.document.close).toHaveBeenCalled();
+    expect(window.open).toHaveBeenCalledWith('blob:mock://pdf-export', '_blank');
+  });
+
+  it('passes HTML via a Blob URL', async () => {
+    exportToPDF([]);
+    expect(URL.createObjectURL).toHaveBeenCalled();
+    expect(capturedBlob.current).toBeInstanceOf(Blob);
+    const html = await capturedHTML(capturedBlob);
+    expect(html).toContain('<!DOCTYPE html>');
+    expect(html).toContain('<html>');
+    expect(html).toContain('</html>');
+  });
+
+  it('sets the Blob content-type to text/html', () => {
+    exportToPDF([]);
+    expect(capturedBlob.current?.type).toBe('text/html');
   });
 
   it('sets onload handler for printing', () => {
@@ -68,12 +82,15 @@ describe('exportToPDF', () => {
 
   it('triggers focus and print on load', () => {
     exportToPDF([]);
-    // Simulate onload
-    if (mockPrintWindow.onload) {
-      mockPrintWindow.onload();
-    }
+    if (mockPrintWindow.onload) mockPrintWindow.onload();
     expect(mockPrintWindow.focus).toHaveBeenCalled();
     expect(mockPrintWindow.print).toHaveBeenCalled();
+  });
+
+  it('revokes the Blob URL after print', () => {
+    exportToPDF([]);
+    if (mockPrintWindow.onload) mockPrintWindow.onload();
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:mock://pdf-export');
   });
 
   it('handles popup blocker gracefully', () => {
@@ -83,56 +100,57 @@ describe('exportToPDF', () => {
     exportToPDF([]);
 
     expect(consoleSpy).toHaveBeenCalledWith('Could not open print window. Please allow popups.');
+    // Blob URL must still be revoked when popup is blocked
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:mock://pdf-export');
     consoleSpy.mockRestore();
   });
 
-  it('uses default title when not provided', () => {
+  it('uses default title when not provided', async () => {
     exportToPDF([]);
-    const html = mockPrintWindow.document.write.mock.calls[0][0] as string;
+    const html = await capturedHTML(capturedBlob);
     expect(html).toContain('Analytics Report');
   });
 
-  it('uses custom title when provided', () => {
+  it('uses custom title when provided', async () => {
     exportToPDF([], { title: 'My Custom Report' });
-    const html = mockPrintWindow.document.write.mock.calls[0][0] as string;
+    const html = await capturedHTML(capturedBlob);
     expect(html).toContain('My Custom Report');
   });
 
-  it('includes subtitle when provided', () => {
+  it('includes subtitle when provided', async () => {
     exportToPDF([], { subtitle: 'Q1 2026 Summary' });
-    const html = mockPrintWindow.document.write.mock.calls[0][0] as string;
+    const html = await capturedHTML(capturedBlob);
     expect(html).toContain('Q1 2026 Summary');
   });
 
-  it('does not include subtitle when not provided', () => {
+  it('does not include subtitle when not provided', async () => {
     exportToPDF([], { title: 'Test' });
-    const html = mockPrintWindow.document.write.mock.calls[0][0] as string;
-    // subtitle class should not appear with content
+    const html = await capturedHTML(capturedBlob);
     expect(html).not.toContain('class="subtitle"');
   });
 
-  it('includes timestamp by default', () => {
+  it('includes timestamp by default', async () => {
     exportToPDF([]);
-    const html = mockPrintWindow.document.write.mock.calls[0][0] as string;
+    const html = await capturedHTML(capturedBlob);
     expect(html).toContain('Generated:');
   });
 
-  it('excludes timestamp when includeTimestamp is false', () => {
+  it('excludes timestamp when includeTimestamp is false', async () => {
     exportToPDF([], { includeTimestamp: false });
-    const html = mockPrintWindow.document.write.mock.calls[0][0] as string;
+    const html = await capturedHTML(capturedBlob);
     expect(html).not.toContain('Generated:');
   });
 
-  it('includes print color adjust styles', () => {
+  it('includes print color adjust styles', async () => {
     exportToPDF([]);
-    const html = mockPrintWindow.document.write.mock.calls[0][0] as string;
+    const html = await capturedHTML(capturedBlob);
     expect(html).toContain('@media print');
     expect(html).toContain('print-color-adjust: exact');
   });
 
-  it('includes footer', () => {
+  it('includes footer', async () => {
     exportToPDF([]);
-    const html = mockPrintWindow.document.write.mock.calls[0][0] as string;
+    const html = await capturedHTML(capturedBlob);
     expect(html).toContain('IntelliFlow CRM - Analytics Report');
   });
 
@@ -140,7 +158,7 @@ describe('exportToPDF', () => {
   // Section rendering
   // =========================================================================
   describe('metrics section', () => {
-    it('renders metrics grid with metric cards', () => {
+    it('renders metrics grid with metric cards', async () => {
       const sections: ReportSection[] = [
         {
           title: 'Key Metrics',
@@ -153,7 +171,7 @@ describe('exportToPDF', () => {
       ];
 
       exportToPDF(sections);
-      const html = mockPrintWindow.document.write.mock.calls[0][0] as string;
+      const html = await capturedHTML(capturedBlob);
 
       expect(html).toContain('Key Metrics');
       expect(html).toContain('metrics-grid');
@@ -164,7 +182,7 @@ describe('exportToPDF', () => {
       expect(html).toContain('150');
     });
 
-    it('renders positive trend with positive class', () => {
+    it('renders positive trend with positive class', async () => {
       const sections: ReportSection[] = [
         {
           title: 'Metrics',
@@ -174,12 +192,12 @@ describe('exportToPDF', () => {
       ];
 
       exportToPDF(sections);
-      const html = mockPrintWindow.document.write.mock.calls[0][0] as string;
+      const html = await capturedHTML(capturedBlob);
       expect(html).toContain('class="trend positive"');
       expect(html).toContain('+15%');
     });
 
-    it('renders negative trend with negative class', () => {
+    it('renders negative trend with negative class', async () => {
       const sections: ReportSection[] = [
         {
           title: 'Metrics',
@@ -189,12 +207,12 @@ describe('exportToPDF', () => {
       ];
 
       exportToPDF(sections);
-      const html = mockPrintWindow.document.write.mock.calls[0][0] as string;
+      const html = await capturedHTML(capturedBlob);
       expect(html).toContain('class="trend negative"');
       expect(html).toContain('-2%');
     });
 
-    it('omits trend when not provided', () => {
+    it('omits trend when not provided', async () => {
       const sections: ReportSection[] = [
         {
           title: 'Metrics',
@@ -204,13 +222,13 @@ describe('exportToPDF', () => {
       ];
 
       exportToPDF(sections);
-      const html = mockPrintWindow.document.write.mock.calls[0][0] as string;
+      const html = await capturedHTML(capturedBlob);
       expect(html).not.toContain('class="trend');
     });
   });
 
   describe('table section', () => {
-    it('renders table with headers and rows', () => {
+    it('renders table with headers and rows', async () => {
       const sections: ReportSection[] = [
         {
           title: 'Pipeline',
@@ -223,7 +241,7 @@ describe('exportToPDF', () => {
       ];
 
       exportToPDF(sections);
-      const html = mockPrintWindow.document.write.mock.calls[0][0] as string;
+      const html = await capturedHTML(capturedBlob);
 
       expect(html).toContain('Pipeline');
       expect(html).toContain('<table>');
@@ -237,16 +255,16 @@ describe('exportToPDF', () => {
       expect(html).toContain('<td>Closing</td>');
     });
 
-    it('renders empty content for empty table data', () => {
+    it('renders empty content for empty table data', async () => {
       const sections: ReportSection[] = [{ title: 'Empty Table', type: 'table', data: [] }];
 
       exportToPDF(sections);
-      const html = mockPrintWindow.document.write.mock.calls[0][0] as string;
+      const html = await capturedHTML(capturedBlob);
       expect(html).toContain('Empty Table');
       expect(html).not.toContain('<table>');
     });
 
-    it('handles null/undefined values in table data', () => {
+    it('handles null/undefined values in table data', async () => {
       const sections: ReportSection[] = [
         {
           title: 'Table',
@@ -256,13 +274,13 @@ describe('exportToPDF', () => {
       ];
 
       exportToPDF(sections);
-      const html = mockPrintWindow.document.write.mock.calls[0][0] as string;
+      const html = await capturedHTML(capturedBlob);
       expect(html).toContain('<td></td>');
     });
   });
 
   describe('text section', () => {
-    it('renders text content', () => {
+    it('renders text content', async () => {
       const sections: ReportSection[] = [
         {
           title: 'Summary',
@@ -272,7 +290,7 @@ describe('exportToPDF', () => {
       ];
 
       exportToPDF(sections);
-      const html = mockPrintWindow.document.write.mock.calls[0][0] as string;
+      const html = await capturedHTML(capturedBlob);
 
       expect(html).toContain('Summary');
       expect(html).toContain('text-content');
@@ -281,30 +299,30 @@ describe('exportToPDF', () => {
   });
 
   describe('HTML escaping', () => {
-    it('escapes HTML special characters in title', () => {
+    it('escapes HTML special characters in title', async () => {
       exportToPDF([], { title: '<script>alert("xss")</script>' });
-      const html = mockPrintWindow.document.write.mock.calls[0][0] as string;
+      const html = await capturedHTML(capturedBlob);
       expect(html).not.toContain('<script>');
       expect(html).toContain('&lt;script&gt;');
     });
 
-    it('escapes HTML special characters in subtitle', () => {
+    it('escapes HTML special characters in subtitle', async () => {
       exportToPDF([], { subtitle: 'A & B < C > D' });
-      const html = mockPrintWindow.document.write.mock.calls[0][0] as string;
+      const html = await capturedHTML(capturedBlob);
       expect(html).toContain('A &amp; B &lt; C &gt; D');
     });
 
-    it('escapes HTML in section titles', () => {
+    it('escapes HTML in section titles', async () => {
       const sections: ReportSection[] = [
         { title: 'Title with "quotes"', type: 'text', data: 'content' },
       ];
 
       exportToPDF(sections);
-      const html = mockPrintWindow.document.write.mock.calls[0][0] as string;
+      const html = await capturedHTML(capturedBlob);
       expect(html).toContain('Title with &quot;quotes&quot;');
     });
 
-    it('escapes HTML in metric names and values', () => {
+    it('escapes HTML in metric names and values', async () => {
       const sections: ReportSection[] = [
         {
           title: 'Metrics',
@@ -314,20 +332,20 @@ describe('exportToPDF', () => {
       ];
 
       exportToPDF(sections);
-      const html = mockPrintWindow.document.write.mock.calls[0][0] as string;
+      const html = await capturedHTML(capturedBlob);
       expect(html).toContain('&lt;b&gt;Revenue&lt;/b&gt;');
       expect(html).toContain('100 &amp; 200');
     });
 
-    it('escapes single quotes', () => {
+    it('escapes single quotes', async () => {
       exportToPDF([], { title: "It's a test" });
-      const html = mockPrintWindow.document.write.mock.calls[0][0] as string;
+      const html = await capturedHTML(capturedBlob);
       expect(html).toContain('It&#39;s a test');
     });
   });
 
   describe('multiple sections', () => {
-    it('renders all sections in order', () => {
+    it('renders all sections in order', async () => {
       const sections: ReportSection[] = [
         { title: 'First', type: 'text', data: 'Section 1' },
         { title: 'Second', type: 'text', data: 'Section 2' },
@@ -335,7 +353,7 @@ describe('exportToPDF', () => {
       ];
 
       exportToPDF(sections);
-      const html = mockPrintWindow.document.write.mock.calls[0][0] as string;
+      const html = await capturedHTML(capturedBlob);
 
       const firstIdx = html.indexOf('First');
       const secondIdx = html.indexOf('Second');
@@ -351,31 +369,24 @@ describe('exportToPDF', () => {
 // exportAnalyticsToPDF
 // ============================================================================
 describe('exportAnalyticsToPDF', () => {
-  let mockPrintWindow: {
-    document: {
-      write: ReturnType<typeof vi.fn>;
-      close: ReturnType<typeof vi.fn>;
-    };
-    onload: (() => void) | null;
-    focus: ReturnType<typeof vi.fn>;
-    print: ReturnType<typeof vi.fn>;
-  };
+  let mockPrintWindow: MockPrintWindow;
+  const capturedBlob: { current: Blob | null } = { current: null };
 
   beforeEach(() => {
-    mockPrintWindow = {
-      document: {
-        write: vi.fn(),
-        close: vi.fn(),
-      },
-      onload: null,
-      focus: vi.fn(),
-      print: vi.fn(),
-    };
+    capturedBlob.current = null;
+    mockPrintWindow = createMockPrintWindow();
 
     vi.stubGlobal('open', vi.fn().mockReturnValue(mockPrintWindow));
+    vi.stubGlobal('URL', {
+      createObjectURL: vi.fn((blob: Blob) => {
+        capturedBlob.current = blob;
+        return 'blob:mock://pdf-export';
+      }),
+      revokeObjectURL: vi.fn(),
+    });
   });
 
-  it('exports analytics data with metrics and pipeline sections', () => {
+  it('exports analytics data with metrics and pipeline sections', async () => {
     const data: AnalyticsReportData = {
       metrics: [{ name: 'Revenue', value: '$50,000', trend: '+10%' }],
       pipeline: [{ stage: 'Prospecting', value: 10000, deals: 5, percentage: 25 }],
@@ -385,7 +396,7 @@ describe('exportAnalyticsToPDF', () => {
     exportAnalyticsToPDF(data);
 
     expect(window.open).toHaveBeenCalled();
-    const html = mockPrintWindow.document.write.mock.calls[0][0] as string;
+    const html = await capturedHTML(capturedBlob);
 
     expect(html).toContain('Analytics Report');
     expect(html).toContain('Period: Q1 2026');
@@ -395,7 +406,7 @@ describe('exportAnalyticsToPDF', () => {
     expect(html).toContain('Prospecting');
   });
 
-  it('maps pipeline data to table format with correct column names', () => {
+  it('maps pipeline data to table format with correct column names', async () => {
     const data: AnalyticsReportData = {
       metrics: [],
       pipeline: [{ stage: 'Closing', value: 50000, deals: 3, percentage: 75 }],
@@ -403,7 +414,7 @@ describe('exportAnalyticsToPDF', () => {
     };
 
     exportAnalyticsToPDF(data);
-    const html = mockPrintWindow.document.write.mock.calls[0][0] as string;
+    const html = await capturedHTML(capturedBlob);
 
     expect(html).toContain('Stage');
     expect(html).toContain('Value');
@@ -415,7 +426,7 @@ describe('exportAnalyticsToPDF', () => {
     expect(html).toContain('75');
   });
 
-  it('uses custom options when provided', () => {
+  it('uses custom options when provided', async () => {
     const data: AnalyticsReportData = {
       metrics: [],
       pipeline: [],
@@ -427,7 +438,7 @@ describe('exportAnalyticsToPDF', () => {
       includeTimestamp: false,
     });
 
-    const html = mockPrintWindow.document.write.mock.calls[0][0] as string;
+    const html = await capturedHTML(capturedBlob);
     expect(html).toContain('Custom Title');
     expect(html).not.toContain('Generated:');
   });

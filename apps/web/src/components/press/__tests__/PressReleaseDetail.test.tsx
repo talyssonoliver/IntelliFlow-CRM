@@ -191,8 +191,9 @@ describe('Release Content', () => {
   });
 
   it('renders date in <time dateTime="YYYY-MM-DD"> format', () => {
+    // en-GB locale: '15 January 2025' (day-first).
     renderComponent();
-    const timeElement = screen.getByText('January 15, 2025');
+    const timeElement = screen.getByText('15 January 2025');
     expect(timeElement.closest('time')).toHaveAttribute('dateTime', '2025-01-15');
   });
 

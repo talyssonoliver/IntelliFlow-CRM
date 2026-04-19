@@ -9,7 +9,7 @@ const EMAIL_LIST_SKELETON_KEYS = [
   'em-skel-3',
   'em-skel-4',
 ] as const;
-import { AlertCircle, RotateCcw } from 'lucide-react';
+
 import { EmptyState } from '@intelliflow/ui';
 import { cn } from '@/lib/utils';
 import { SearchFilterBar } from '@/components/shared';
@@ -136,7 +136,7 @@ export function EmailList({
           className
         )}
       >
-        <AlertCircle className="h-8 w-8 text-destructive" />
+        <span className="material-symbols-outlined text-base text-destructive" aria-hidden="true">error</span>
         <p className="text-sm text-muted-foreground">Failed to load emails</p>
         <button
           type="button"
@@ -144,7 +144,7 @@ export function EmailList({
           className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
           onClick={onRetry}
         >
-          <RotateCcw className="h-3.5 w-3.5" /> Retry
+          <span className="material-symbols-outlined text-base" aria-hidden="true">refresh</span> Retry
         </button>
       </div>
     );
@@ -191,8 +191,15 @@ export function EmailList({
           )}
         </div>
       ) : (
-        <div role="none" onKeyDown={handleListKeyDown} className="flex-1 overflow-auto">
-          <ul ref={listRef} aria-label="Email list" className="space-y-0.5 p-1 list-none">
+        <div className="flex-1 overflow-auto">
+          <ul
+            ref={listRef}
+            role="listbox"
+            tabIndex={0}
+            aria-label="Email list"
+            onKeyDown={handleListKeyDown}
+            className="space-y-0.5 p-1 list-none focus:outline-none"
+          >
             {emails.map((email) => (
               <EmailListItem
                 key={email.id}

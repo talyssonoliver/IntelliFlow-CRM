@@ -197,7 +197,8 @@ describe('ChangelogDisplay', () => {
   describe('edge cases', () => {
     it('empty entries array renders gracefully (empty state message)', () => {
       render(<ChangelogDisplay entries={[]} />);
-      expect(screen.getByText('No changelog entries yet.')).toBeInTheDocument();
+      // EmptyState entity="insights" → canonical 'No insights yet'.
+      expect(screen.getByText('No insights yet')).toBeInTheDocument();
     });
 
     it('single entry renders without layout breakage', () => {

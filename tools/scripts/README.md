@@ -76,7 +76,7 @@ pnpm tsx tools/scripts/validate-env.ts
 pnpm tsx tools/scripts/validate-env.ts --env=production
 
 # Generate JSON report
-pnpm tsx tools/scripts/validate-env.ts --output=artifacts/misc/env-validation-results.json
+pnpm tsx tools/scripts/validate-env.ts --output=artifacts/reports/env-validation-results.json
 ```
 
 **Output:**
@@ -386,12 +386,12 @@ CI time. Introduced by PG-195.
 
 **Modes**:
 
-| Command                                                       | Purpose                                                                        | Exit code         |
-| ------------------------------------------------------------- | ------------------------------------------------------------------------------ | ----------------- |
-| `node tools/scripts/subset-material-symbols.mjs`              | Regenerate subsetted font + `artifacts/perf/material-symbols-glyph-audit.json` | 0 on success      |
-| `node tools/scripts/subset-material-symbols.mjs --verify`     | Scan source + diff against audit; fail on drift or unresolved dynamics         | 0 clean / 1 drift |
-| `node tools/scripts/subset-material-symbols.mjs --check-size` | Assert `apps/web/public/fonts/MaterialSymbolsOutlined.woff2` < 500 KB          | 0 / 1             |
-| `node tools/scripts/subset-material-symbols.mjs --help`       | Print usage                                                                    | 0                 |
+| Command                                                       | Purpose                                                                           | Exit code         |
+| ------------------------------------------------------------- | --------------------------------------------------------------------------------- | ----------------- |
+| `node tools/scripts/subset-material-symbols.mjs`              | Regenerate subsetted font + `artifacts/reports/material-symbols-glyph-audit.json` | 0 on success      |
+| `node tools/scripts/subset-material-symbols.mjs --verify`     | Scan source + diff against audit; fail on drift or unresolved dynamics            | 0 clean / 1 drift |
+| `node tools/scripts/subset-material-symbols.mjs --check-size` | Assert `apps/web/public/fonts/MaterialSymbolsOutlined.woff2` < 500 KB             | 0 / 1             |
+| `node tools/scripts/subset-material-symbols.mjs --help`       | Print usage                                                                       | 0                 |
 
 **Adding an icon** — two paths:
 
@@ -401,7 +401,7 @@ CI time. Introduced by PG-195.
 2. **Icon is NOT in upstream** (rare — upstream has ~3,500 glyphs): bump the
    committed upstream fixture at
    `tools/scripts/fixtures/MaterialSymbolsOutlined-upstream.woff2` per the
-   [ADR-046 Rollback Plan](../../docs/planning/adr/ADR-046-material-symbols-font-subsetting.md#rollback-plan).
+   [ADR-046 Rollback Plan](../../docs/architecture/adr/ADR-046-material-symbols-font-subsetting.md#rollback-plan).
 
 **CI integration**: the `--verify` guard runs in
 `.github/workflows/pr-checks.yml` (Quality Checks job) and

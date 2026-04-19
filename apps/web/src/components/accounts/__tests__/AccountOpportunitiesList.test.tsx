@@ -26,7 +26,8 @@ vi.mock('@/lib/pricing/calculator', () => ({
   formatCurrency: (v: number) => `$${v.toLocaleString('en-GB')}`,
 }));
 
-vi.mock('@intelliflow/ui', () => ({
+vi.mock('@intelliflow/ui', async (importOriginal) => ({
+  ...((await importOriginal()) as Record<string, unknown>),
   Button: ({
     children,
     ...props
@@ -74,7 +75,8 @@ describe('AccountOpportunitiesList', () => {
       error: null,
     });
     render(<AccountOpportunitiesList accountId="00000000-0000-4000-8000-000000000001" />);
-    expect(screen.getByText('No opportunities for this account')).toBeInTheDocument();
+    // EmptyState entity="deals" → canonical 'No deals yet'.
+    expect(screen.getByText('No deals yet')).toBeInTheDocument();
   });
 
   it('renders opportunity list with names and values', () => {

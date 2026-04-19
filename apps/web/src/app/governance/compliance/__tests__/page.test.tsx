@@ -8,6 +8,47 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+// Mock tRPC — the compliance page calls
+// `trpc.analytics.recentActivity.useQuery` for Recent Activity. Without a
+// QueryClientProvider we need to stub the hook so the fixture drives the UI.
+// formatActivityTime (page.tsx:207) produces "Just now" / "N hour(s) ago" /
+// "N day(s) ago" relative to now — fixtures use real ISO dates so the live
+// formatter produces the exact strings the test assertions check for.
+const twoHoursAgo = new Date(Date.now() - 2 * 3600 * 1000).toISOString();
+const oneDayAgo = new Date(Date.now() - 1 * 86400 * 1000).toISOString();
+vi.mock('@/lib/trpc', () => ({
+  trpc: {
+    analytics: {
+      recentActivity: {
+        useQuery: () => ({
+          data: [
+            {
+              id: 'act-1',
+              description: 'Audit completed for ISO 27001',
+              actorName: 'Alice Compliance',
+              createdAt: twoHoursAgo,
+            },
+            {
+              id: 'act-2',
+              description: 'New Risk Detected: AI Model Bias',
+              actorName: 'Bob Security',
+              createdAt: oneDayAgo,
+            },
+            {
+              id: 'act-3',
+              description: 'GDPR Policy Updated',
+              actorName: 'Carol Legal',
+              createdAt: oneDayAgo,
+            },
+          ],
+          isLoading: false,
+          error: null,
+        }),
+      },
+    },
+  },
+}));
+
 // Mock jsPDF for ExportReportButton
 vi.mock('jspdf', () => ({
   default: vi.fn().mockImplementation(() => ({
@@ -268,10 +309,14 @@ describe('ComplianceDashboardPage', () => {
     });
 
     it('should display activity timestamps', async () => {
+      // formatActivityTime produces relative strings: "N hours ago", "N day(s) ago".
+      // Fixture timestamps are 2h and 1d old so output is deterministic.
       render(<ComplianceDashboardPage />);
 
       expect(screen.getByText('2 hours ago')).toBeInTheDocument();
-      expect(screen.getByText('Yesterday, 4:30 PM')).toBeInTheDocument();
+      // Two activities share the 1-day-old timestamp; getAllByText to handle
+      // the duplicate rather than asserting a single element.
+      expect(screen.getAllByText('1 day ago').length).toBeGreaterThan(0);
     });
   });
 

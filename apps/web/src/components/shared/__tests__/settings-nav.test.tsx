@@ -80,7 +80,8 @@ describe('SettingsNav', () => {
 
     it('shows empty state when no items match', () => {
       render(<SettingsNav searchQuery="zzzznonexistent" />);
-      expect(screen.getByText('No settings match your search')).toBeInTheDocument();
+      // EmptyState entity="search" → canonical 'No results found'.
+      expect(screen.getByText('No results found')).toBeInTheDocument();
     });
   });
 

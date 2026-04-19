@@ -12,6 +12,20 @@ vi.mock('next/navigation', () => ({
   },
 }));
 
+// Mock tRPC — FeedbackWidget calls trpc.helpArticle.submitFeedback.useMutation.
+vi.mock('@/lib/trpc', () => ({
+  trpc: {
+    helpArticle: {
+      submitFeedback: {
+        useMutation: (opts: { onSuccess?: () => void }) => ({
+          mutate: (_data: unknown) => opts.onSuccess?.(),
+          isPending: false,
+        }),
+      },
+    },
+  },
+}));
+
 // Mock next/link to render as plain <a>
 vi.mock('next/link', () => ({
   default: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (

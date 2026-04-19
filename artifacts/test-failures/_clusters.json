@@ -12,6 +12,468 @@
         "status": "resolved",
         "failures_before": 38,
         "fix": "TicketDetail.coverage.test.tsx mocked @intelliflow/ui with a hand-maintained allow-list (Card, Button, Badge, Tabs, …) which broke when transitive imports (EntityHoverCard -> TooltipProvider, Sheet, etc.) tried to pull in non-mocked exports. Switched to partial mock with importOriginal: `vi.mock('@intelliflow/ui', async (importOriginal) => ({ ...(await importOriginal()), <overrides> }))`. Unmocked exports now pass through; behaviour-specific overrides retained."
+      },
+      {
+        "id": "web-intersectionobserver-polyfill",
+        "label": "test-bug",
+        "status": "resolved",
+        "failures_before": 61,
+        "unique_files": 18,
+        "fix": "happy-dom does not ship IntersectionObserver or ResizeObserver. Components like <EmptyState /> (packages/ui/src/hooks/use-empty-state-machine.ts:66) call `new IntersectionObserver(...)` during render and threw `ReferenceError: IntersectionObserver is not defined` across 18 test files (billing, ai-monitoring, ai-intelligence, accounts, appointments, documents, etc.). Added minimal no-op MockIntersectionObserver + MockResizeObserver polyfills to apps/web/vitest.setup.ts, guarded by typeof check so tests that want to stub their own instance can still do so. Verified on 5 billing tests: 0 IntersectionObserver errors remain."
+      },
+      {
+        "id": "web-entity-hover-card-primitive-value",
+        "label": "test-bug",
+        "status": "resolved-by-cascade",
+        "failures_before": 94,
+        "unique_files": 8,
+        "fix": "Cascade fix from web-intersectionobserver-polyfill. The `TypeError: Cannot convert object to primitive value` at apps/web/src/components/shared/entity-hover-card.tsx:186 was a downstream symptom of the IntersectionObserver throw inside EmptyState.useEmptyStateMachine — when the initial render threw, React attempted to re-render under degraded conditions where tRPC hook returns were proxies instead of `{ data: null, isLoading: false }` fallbacks, leading to the template-literal TypeError. With the polyfill in place, TicketDetail.coverage.test.tsx passes all 38 tests, and ActiveLeadsWidget no longer reports the primitive-value error (now reports a separate, unrelated assertion failure belonging to a different cluster)."
+      },
+      {
+        "id": "web-ticket-detail-test-tsx-hang",
+        "label": "needs-human",
+        "status": "deferred",
+        "notes": "apps/web/src/components/tickets/__tests__/TicketDetail.test.tsx hangs indefinitely when run in isolation (vitest prints `RUN v4.0.18` and never produces further output, times out >2min). Not reproducing primitive-value errors — different root cause. Likely infinite render loop, never-resolving promise, or OOM in isolated happy-dom environment. Needs human triage — distinct from the current cluster work."
+      },
+      {
+        "id": "web-pdf-test-document-write-refactor",
+        "label": "test-bug",
+        "status": "resolved",
+        "failures_before": 22,
+        "unique_files": 1,
+        "fix": "apps/web/src/lib/export/pdf.ts was refactored from `document.write` (deprecated in modern browsers) to Blob URL + `window.open(blobUrl)`. pdf.test.ts still mocked the old path — every content assertion read `mockPrintWindow.document.write.mock.calls[0][0]` which is now undefined, causing `TypeError: Cannot read properties of undefined (reading '0')` across all 22 HTML-content tests. Rewrote the suite: (1) mock `URL.createObjectURL` with a blob-capture ref, (2) mock `URL.revokeObjectURL`, (3) make content assertions async via `capturedHTML()` helper that reads `await blob.text()`, (4) new assertions cover blob content-type and revokeObjectURL behavior (including popup-blocker path), (5) dropped obsolete `document.close` assertion. Verified: 34/37 tests pass; 3 residual failures are a distinct source bug (`pdf.ts:237` `str.replaceAll` called with a number from `{ Value: 10000 }` table data — not part of this cluster)."
+      },
+      {
+        "id": "web-ia-reconciliation-doc-sync",
+        "label": "regression",
+        "status": "resolved",
+        "failures_before": 4,
+        "unique_files": 1,
+        "fix": "Cross-doc page/router counts drifted as new routes landed. Updated header counts across 5 design docs: information-architecture.md (201->205 pages, 48->55 routers, 28->0 ghost links), page-registry.md (202->205), ui-flow-mapping.md (201->205, 48->55), sitemap.md (255->205, 50->55), PAGE_MAP_AND_FLOWS.md (255->205). All 28 previously-tracked ghost links (G-01 through G-28) were resolved in sprints 16-17 and their table rows were removed; the register is now empty with a comment explaining the canonical schema for future entries. Relaxed ia-reconciliation.test.ts to allow a 0-row register (section-presence check unchanged). Verified: 4/4 tests pass."
+      },
+      {
+        "id": "web-content-audit-snapshot-drift-and-hardcoded-counts",
+        "label": "flaky",
+        "status": "resolved",
+        "failures_before": 1,
+        "unique_files": 1,
+        "fix": "Two-part drift. (1) content-audit-results.json snapshot was stale (had 198 routes; filesystem has 205). Regenerated via `npx tsx tools/scripts/content-audit.ts`. (2) After regen, two tests that hardcoded `31` for public-routes count became 32 (new public route added). Updated TC-04's `toBe(31)` -> `toBe(32)` and TC-05's `- 31` -> `- 32`. Added a comment pointing to the regen command so future drift is an easy fix. Verified: 14/14 tests pass."
+      },
+      {
+        "id": "web-root-proxy-appointments-calendar-direction-reversed",
+        "label": "test-bug",
+        "status": "resolved",
+        "failures_before": 2,
+        "unique_files": 1,
+        "fix": "Redirect direction was reversed in the Appointments/Calendar Split migration (memory: project_appointments_split_migration, started 2026-04-13). next.config.js now redirects `/calendar/new` -> `/appointments/new` and `/calendar/<id>` -> `/appointments/<id>` (permanent). Tests asserted the old `/appointments` -> `/calendar` direction. Rewrote both tests to the new direction (calendar -> appointments), with one matching the parameterised source regex via `startsWith('/calendar/:id((?!new')`. Verified: 31/31 tests pass."
+      },
+      {
+        "id": "web-version-comparison-view-emptystate-copy",
+        "label": "test-bug",
+        "status": "resolved",
+        "failures_before": 2,
+        "unique_files": 1,
+        "fix": "VersionComparisonView.tsx:266 renders `<EmptyState entity=\"insights\" />` — canonical title 'No insights yet', not inline 'No differences found between the two versions.'. Updated 2 assertions via replace_all. Noted semantic misuse (versions diff -> 'insights' entity) worth follow-up. Verified: 37/37 tests pass."
+      },
+      {
+        "id": "web-compliance-timeline-en-gb-date-format",
+        "label": "test-bug",
+        "status": "resolved",
+        "failures_before": 2,
+        "unique_files": 1,
+        "fix": "Timezone Refactor locale migration — compliance timeline uses `toLocaleDateString('en-GB', ...)`. Short format is '10 Feb' (day-first, not 'Feb 10'); long format is 'Wednesday, 10 February 2027' (not 'Wednesday, February 10, 2027'). Updated 2 regex assertions. Verified: 27/27 tests pass."
+      },
+      {
+        "id": "web-timeline-event-model-utc-local-mixup",
+        "label": "regression",
+        "status": "resolved",
+        "failures_before": 2,
+        "unique_files": 1,
+        "fix": "apps/web/lib/documents/timeline-event-model.ts:groupEventsByDate mixed UTC and local date boundaries: today/yesterday used `setUTCHours`, but event grouping called `eventDate.setHours(0,0,0,0)` (local) and then `toISOString()` which re-serialises in UTC. In timezones ahead of UTC this crossed day boundaries — a 10:00 local event on date X got the UTC key for day X-1 and was labelled 'Yesterday' instead of 'Today'. Rewrote the day-key builder to use local-time year/month/day components and parse the key back as local midnight for comparison. Source-side fix, not test masking. Verified: 31/31 tests pass."
+      },
+      {
+        "id": "web-relationship-graph-emptystate-copy",
+        "label": "test-bug",
+        "status": "resolved",
+        "failures_before": 1,
+        "unique_files": 1,
+        "fix": "RelationshipGraph.tsx:163 renders `<EmptyState entity=\"contacts\" />` — canonical title 'No contacts yet', not inline 'No relationships yet'. Updated one assertion. Noted as semantic misuse worth a follow-up (add dedicated 'relationships' entity). Verified: 33/33 tests pass."
+      },
+      {
+        "id": "web-mfa-qr-generator-figure-missing-img-role",
+        "label": "regression",
+        "status": "resolved",
+        "failures_before": 2,
+        "unique_files": 1,
+        "fix": "Same pattern as status-monitor (iter 32). mfa-qr-generator.tsx rendered the QR code wrapper as `<figure aria-label=...>` with no explicit role — `<figure>`'s implicit ARIA role is 'figure', not 'img', so `getByRole('img', ...)` queries failed. Added `role=\"img\"` to the `<figure>` — aria-label already describes the QR code semantically. Source change, not test change. Verified: 19/19 tests pass."
+      },
+      {
+        "id": "web-lighthouse-report-view-schema-refactor",
+        "label": "test-bug",
+        "status": "resolved",
+        "failures_before": 3,
+        "unique_files": 1,
+        "fix": "LighthouseReportView refactor dropped implicit role='region' on Cards in favor of aria-labels, and added an aria-label-only 'Overall Lighthouse summary' banner. Three tests failed: (1) '92' appeared twice (overall score + accessibility category) — switched to getAllByText('92').length >= 2. (2) 'Overall' was only in aria-label, not visible text — swapped /overall/i getByText for getByLabelText(/Overall Lighthouse summary/i). (3) getAllByRole('region') matched 0 elements; query by the 4 category aria-labels ('Performance score' etc.) with getAllByLabelText to tolerate the duplicate label on Card + progressbar. Verified: 13/13 tests pass."
+      },
+      {
+        "id": "web-activity-timeline-native-radio-and-emptystate-period",
+        "label": "test-bug",
+        "status": "resolved",
+        "failures_before": 2,
+        "unique_files": 1,
+        "fix": "Two drifts. (1) Filter chips use native `<input type=\"radio\" checked>` (ActivityTimeline.tsx:208-215). Native radios expose state via the `checked` property, not `aria-checked`. Swapped `toHaveAttribute('aria-checked', 'true')` -> `toBeChecked()`. (2) Canonical EmptyState filtered description includes a trailing period: 'No activities match your filters.' (entity-empty-state-config activity.variants.filtered). Test asserted without the period. Added the period. Verified: 33/33 tests pass."
+      },
+      {
+        "id": "web-app-dashboard-emptystate-canonical-copy",
+        "label": "test-bug",
+        "status": "resolved",
+        "failures_before": 2,
+        "unique_files": 1,
+        "fix": "Two EmptyState migrations in app-dashboard.tsx (lines 368, 469) — Logs empty-state and API-keys empty-state both render `<EmptyState entity=\"insights\" />`. Canonical title 'No insights yet' (semantic misuse — both surfaces are logs/keys, not insights; follow-up worth tracking to add dedicated 'logs' / 'api-keys' entities). Updated 2 assertions ('No request logs available.' → 'No insights yet'; 'No API keys generated yet.' → getAllByText 'No insights yet'). Verified: 30/30 tests pass."
+      },
+      {
+        "id": "web-document-links-emptystate-canonical-copy",
+        "label": "test-bug",
+        "status": "resolved",
+        "failures_before": 2,
+        "unique_files": 1,
+        "fix": "DocumentLinks.tsx:101 migrated to `<EmptyState entity=\"documents\" />`. Canonical title 'No documents yet' and description 'Create or link proposals, contracts, and other business documents.' — not legacy 'No documents attached to this case' / 'Upload or link documents from the Documents page'. Updated 2 assertions. Verified: 15/15 tests pass."
+      },
+      {
+        "id": "web-insights-heuristic-badge-removed-and-emptystate",
+        "label": "test-bug",
+        "status": "resolved",
+        "failures_before": 2,
+        "unique_files": 1,
+        "fix": "Two drifts. (1) 'labels heuristic fallback insights distinctly' expected a `data-testid=\"heuristic-insight-badge\"` + visible 'Heuristic fallback' text. InsightCard no longer renders this visual badge (source still carries `source: 'ai' | 'heuristic'` prop but the badge was removed). Deleted the obsolete test with a note pointing future contributors at the positive-test pattern if the distinction returns. (2) Empty-state assertion expected `/No.*insights at this time/i` but InsightsListPage renders `<EmptyState entity=\"insights\" />` — canonical title 'No insights yet'. Updated assertion. Verified: 18/18 tests pass."
+      },
+      {
+        "id": "web-invoice-list-currency-fixture-mismatch",
+        "label": "test-bug",
+        "status": "resolved",
+        "failures_before": 1,
+        "unique_files": 1,
+        "fix": "'formats USD amounts correctly' test had a GBP fixture (`currency: 'GBP'`) but asserted on `$99.99`. formatCurrency produces `£99.99` for en-GB+GBP — the test title was also misleading. Updated assertion to `£99.99` and renamed to 'formats sub-unit amounts correctly' to reflect the actual GBP fixture. Verified: 34/34 tests pass."
+      },
+      {
+        "id": "web-deal-card-en-gb-locale-and-ambiguous-role-button",
+        "label": "test-bug",
+        "status": "resolved",
+        "failures_before": 3,
+        "unique_files": 1,
+        "fix": "Three drifts. (1) formatCurrencyFull (deals/types.ts:52) now uses en-GB GBP so '£75,000' (not '$75,000'). (2) toLocaleDateString('en-GB', {month:short, day:numeric}) produces '15 Mar' (day-first), not 'Mar 15'. (3) `container.querySelector('[role=\"button\"]')` was ambiguous — DealCard.tsx:61 renders a native `<button>` for the card wrapper AND a nested drag handle `<button>` (line 81) — the query matched the drag handle first. Switched to `screen.getByRole('button', { name: /View deal:/i })` to pin to the outer wrapper by its aria-label. Updated 4 assertions across 3 tests. Verified: 16/16 tests pass."
+      },
+      {
+        "id": "web-total-leads-widget-analytics-overview-mock",
+        "label": "mock-drift",
+        "status": "resolved",
+        "failures_before": 3,
+        "unique_files": 1,
+        "fix": "TotalLeadsWidget.tsx:23 was extended to also call `trpc.analytics.getOverview.useQuery` for the dashboard headline, but the test only mocked `trpc.lead.stats.useQuery`. All 3 tests crashed at `Cannot read properties of undefined (reading 'getOverview')`. Added `trpc.analytics.getOverview.useQuery` stub returning `{ data: null, isLoading: false, error: null }`. Verified: 3/3 tests pass."
+      },
+      {
+        "id": "web-ai-settings-insights-empty-state-copy",
+        "label": "test-bug",
+        "status": "resolved",
+        "failures_before": 3,
+        "unique_files": 1,
+        "fix": "Three empty-state paths in ai-agents/ai-settings migrated to `<EmptyState entity=\"insights\" />` (with variant=\"filtered\" on two of them): ChainVersionsDashboard, ChainVersionsTable, VersionAuditLog. Canonical copy is 'No insights yet' / 'No insights found' — not the previous inline 'No active version' / 'No versions found' / 'No audit entries found'. Updated 3 assertions. Noted in comments that the entity choice is a semantic mismatch (none of these surfaces is actually 'insights'); a source-side follow-up could add a dedicated 'versions'/'audit' entity to entity-empty-state-config. Verified: 26/26 tests pass."
+      },
+      {
+        "id": "web-lead-detail-activity-empty-state-cta-removed",
+        "label": "test-bug",
+        "status": "resolved",
+        "failures_before": 3,
+        "unique_files": 1,
+        "fix": "Two drifts. (1) CTA button 'Log your first activity' was removed when source migrated to `<EmptyState entity=\"activity\" phase=\"passive\" />` — EmptyState gates its CTA behind `phase === 'soft-cta'` (empty-state.tsx:387). Deleted the CTA-rendering and CTA-click tests (AC-001/AC-002 coverage) with inline comment explaining the phase gating; AC-003 already covers the positive path (CTA hidden when activities exist). (2) 'No activities yet' assertion replaced with `getByTestId('empty-state-activity')` — the test file locally stubs EmptyState (line 200-214) as `<div data-testid=\"empty-state-{entity}\">No {entity} yet</div>`, so the rendered text is 'No activity yet' (not canonical 'No recent activity'); asserting on the stub contract is more robust than its placeholder text. Verified: 17/17 tests pass."
+      },
+      {
+        "id": "web-tasks-list-calendar-view-toggle-removed",
+        "label": "test-bug",
+        "status": "resolved",
+        "failures_before": 3,
+        "unique_files": 1,
+        "fix": "List/calendar view toggle was removed from /tasks when the Appointments/Calendar Split migration moved calendar rendering to a dedicated route (see memory: project_appointments_split_migration, started 2026-04-13). tasks/(list)/page.tsx no longer renders a TaskCalendar inline; it only reads `view=my` for the My-tasks narrowing. The three obsolete tests (`renders view toggle buttons`, `switches to calendar view when calendar button clicked`, `reads URL params on mount (calendar view)`) were deleted and replaced with a single positive 'reads sidebar URL params on mount (status/priority)' test that exercises the real useEffect at page.tsx:99. Removed assertions are obsolete, not masked — calendar coverage should move to the dedicated calendar route's test file. Verified: 7/7 tests pass."
+      },
+      {
+        "id": "web-deal-detail-currency-and-emptystate-stub",
+        "label": "test-bug",
+        "status": "resolved",
+        "failures_before": 3,
+        "unique_files": 1,
+        "fix": "Two drifts. (1) formatCurrency (page.tsx:86) migrated to en-GB Intl with currency=GBP (Timezone Refactor locale policy) so deal values render as '£98,000' / '£80,000' instead of '$98,000' / '$80,000'. Updated 2 assertions. (2) Empty-state test asserted the canonical EmptyState title 'No products added', but this test file locally stubs EmptyState as `<p data-testid=\"empty-state\">No {entity} yet</p>` (line 148-149) — so the stubbed DOM text is 'No products yet'. Updated the assertion to match the local stub, not the canonical config. Verified: 23/23 tests pass."
+      },
+      {
+        "id": "web-quality-reports-route-test-node-fs-and-new-report",
+        "label": "test-bug",
+        "status": "resolved",
+        "failures_before": 5,
+        "unique_files": 1,
+        "fix": "Two drifts. (1) Same `'fs'` vs `'node:fs'` Vitest-4 module-ID split as earlier compliance-api/adr-service fixes — added mirror `vi.mock('node:fs', ...)` — this alone fixed 3 of the 5 failures (performance/debt/sonarqube assertions). (2) getAllReports (route.ts:875-883) now returns 6 reports (added a tRPC benchmark alongside lighthouse/coverage/performance/debt/sonarqube). Updated both `expect(reports).toHaveLength(5)` assertions to `toHaveLength(6)`. Verified: 13/13 tests pass."
+      },
+      {
+        "id": "web-related-tasks-card-emptystate-cta-and-api-mocks",
+        "label": "test-bug",
+        "status": "resolved",
+        "failures_before": 3,
+        "unique_files": 1,
+        "fix": "Three drifts. (1) Account-entity fallback migrated from inline 'No tasks linked to this account' to `<EmptyState entity=\"tasks\" />` ('No tasks yet'). Updated assertion + test title. (2) EmptyState CTA button is gated by `showCta = phase === 'soft-cta'` (packages/ui empty-state.tsx:387) and the card uses the passive phase, so 'Create a task'/'Add a task' button is not in the DOM by default. Reworked that test to click the card-level aria-labelled 'Add task' button instead (the real user path from the empty state in this component). (3) EntitySearchField — rendered transitively via TaskCreateSheet — queries `api.account.list`, `api.user.list`, `api.team.list`, `api.cases.list`, `api.task.list` (EntitySearchField.tsx:88-104). The test mock only exposed lead/contact/opportunity. Added the missing endpoints (each stub: `useQuery: () => ({ data: undefined, isLoading: false })`). Verified: 18/18 tests pass."
+      },
+      {
+        "id": "web-email-list-listbox-aria-pattern",
+        "label": "regression",
+        "status": "resolved",
+        "failures_before": 1,
+        "unique_files": 1,
+        "fix": "EmailList rendered children with `role=\"option\"` inside a `<div role=\"none\"><ul>...`. This is an invalid ARIA listbox pattern — `role=\"option\"` requires a parent `role=\"listbox\"`. Merged the keyboard-handling div into the `<ul>` and gave the `<ul>` `role=\"listbox\"` + `tabIndex={0}` so the arrow-key navigation test can focus a listbox and dispatch keys through the same element that owns `handleListKeyDown`. Source-side ARIA fix, not test masking — it makes the pattern screen-reader-correct. Verified: EmailList 16/16 + EmailPage 18/18 still pass (no regression)."
+      },
+      {
+        "id": "web-contact-form-radio-label-and-progress-aria",
+        "label": "test-bug",
+        "status": "resolved",
+        "failures_before": 3,
+        "unique_files": 1,
+        "fix": "Two drifts. (1) Status radio inputs' accessible name is now just 'Active' / 'Prospect' — the descriptions ('Currently engaged contact' etc.) sit in an aria-hidden <div> (ContactForm.tsx:412), while the <label> has aria-label=opt.label. Updated 2 `getByRole('radio')` queries from `/Active Currently engaged contact/i` / `/Prospect Potential customer/i` to `/^Active$/i` / `/^Prospect$/i`. (2) The form's step indicator was refactored to a native `<progress value max>` (ContactForm.tsx:195); native progress announces state via value/max, not aria-valuenow/valuemin/valuemax. Updated the aria test to assert `value='1'` + `max='3'` + `aria-label` presence. Verified: 34/34 tests pass."
+      },
+      {
+        "id": "web-case-detail-emptystate-copy-migration",
+        "label": "test-bug",
+        "status": "resolved",
+        "failures_before": 3,
+        "unique_files": 1,
+        "fix": "Two empty-state code paths migrated to canonical `<EmptyState entity />`. (1) CaseDetail.tsx:495 uses `entity=\"timeline\"` → 'No activity yet' (not 'No timeline entries yet'). (2) PartyManager.tsx:100 uses `entity=\"contacts\"` → 'No contacts yet' (not 'No parties'). Updated 3 assertions via 2 replace_all + 1 edit. Verified: 39/39 tests pass."
+      },
+      {
+        "id": "web-subscription-manager-emptystate-casing",
+        "label": "test-bug",
+        "status": "resolved",
+        "failures_before": 1,
+        "unique_files": 1,
+        "fix": "subscription-manager.tsx migrated to `<EmptyState entity=\"subscriptions\" />`. Canonical title is sentence-case 'No active subscription'; test asserted title-case 'No Active Subscription'. Updated one assertion. Also payment-methods.supplementary.test.tsx was already cascade-resolved (32/32 pass) by earlier EmptyState + importOriginal fixes. Verified: 37/37 subscription-manager tests pass."
+      },
+      {
+        "id": "web-experiments-dashboard-native-progress-aria",
+        "label": "test-bug",
+        "status": "resolved",
+        "failures_before": 3,
+        "unique_files": 1,
+        "fix": "ExperimentsDashboard.tsx:360 renders a native `<progress value={...} max={100}>` element. The native progress element is an ARIA `progressbar` by default and announces state via `value`/`max` — not via `aria-valuenow` / `aria-valuemin` / `aria-valuemax` attributes (those would be redundant and happy-dom does not synthesise them from the properties). Three tests queried `getAttribute('aria-valuenow')` / asserted `toHaveAttribute('aria-valuenow')` etc. and failed. Swapped to `getAttribute('value')` and assertions on `value` + `max=100` + `aria-label` — the real contract the component offers. Verified: 36/36 tests pass."
+      },
+      {
+        "id": "web-agent-logs-viewer-emptystate-legacy-copy",
+        "label": "test-bug",
+        "status": "resolved",
+        "failures_before": 3,
+        "unique_files": 1,
+        "fix": "AgentLogsViewer.tsx migrated three empty-state code paths to `<EmptyState entity=\"agents\" />` / `<EmptyState entity=\"agents\" variant=\"filtered\" />` per PG-195. Legacy inline copy ('no messages', 'No logs match', 'No failed jobs in the queues') was removed, replaced with canonical entity-config titles 'No active agents' and 'No agents found'. Updated 3 assertions to canonical copy. Noted in each updated test that the entity is 'agents' even in conversation/queue contexts — that's a source-side semantic mismatch worth a follow-up (e.g. a dedicated 'logs' or 'failed-jobs' entity) but unrelated to this cluster's test-green scope. Verified: 51/51 tests pass."
+      },
+      {
+        "id": "web-compliance-api-additional-node-fs-mock",
+        "label": "test-bug",
+        "status": "resolved",
+        "failures_before": 4,
+        "unique_files": 1,
+        "fix": "Same `'fs'` vs `'node:fs'` Vitest-4 module-ID split as earlier adr-service/openapi clusters. compliance-api.additional.test.ts mocked bare `'fs'` but timeline/route.ts + risks/route.ts both `import fs from 'node:fs'`. Added a mirror `vi.mock('node:fs')` alongside the existing `vi.mock('fs')` with the same hoisted mock fn references. Verified: 11/11 tests pass."
+      },
+      {
+        "id": "web-job-detail-template-en-gb-locale-drift",
+        "label": "test-bug",
+        "status": "resolved",
+        "failures_before": 4,
+        "unique_files": 1,
+        "fix": "job-detail-template.tsx was migrated to en-GB Intl formatters as part of the Timezone Refactor Initiative. formatDate produces '15 December 2025' (day-first) instead of en-US 'December 15, 2025'. formatSalary uses en-GB NumberFormat with GBP so values render as '£100,000 - £150,000' (not '$100,000 - $150,000'). Updated 3 assertions to '15 December 2025' / '15 January 2026' and swapped the salary regex to `£100,000\\s*-\\s*£150,000`. Renamed the test variable from `jobWithUSD` to `jobWithGBP` to match the actual currency. Verified: 46/46 tests pass."
+      },
+      {
+        "id": "web-status-monitor-figure-missing-img-role",
+        "label": "regression",
+        "status": "resolved",
+        "failures_before": 4,
+        "unique_files": 1,
+        "fix": "status-monitor.tsx rendered each uptime chart as `<figure aria-label=... />` with no explicit role. `<figure>`'s implicit ARIA role is 'figure', not 'img', so the 4 accessibility tests that query `getByRole('img', ...)` and `getAllByRole('img')` all failed. Added `role=\"img\"` to the `<figure>` (line 130) — the aria-label already describes the chart semantically, and role=\"img\" is the canonical WAI-ARIA pattern for a described, non-interactive graphical element. Source change, not test change — restores the accessibility contract the tests encode. Verified: 18/18 tests pass."
+      },
+      {
+        "id": "web-active-agents-dashboard-three-drifts",
+        "label": "test-bug",
+        "status": "resolved",
+        "failures_before": 4,
+        "unique_files": 1,
+        "fix": "Three drifts in ActiveAgentsDashboard.test.tsx. (1) `getByText(/no active agents/i)` threw 'Found multiple' because the canonical EmptyState title 'No active agents' also matches a stat-label elsewhere — relaxed to `getAllByText(...).length > 0` in 2 tests. (2) Link label shortened from 'View Logs' to 'Logs' (ActiveAgentsDashboard.tsx:202) — updated `screen.getAllByText('View Logs')` → `'Logs'` in 2 tests. (3) Link href moved from `?agentId=...` query param to path-style `/agent-approvals/logs/<agentId>` (line 199) — updated the href regex to match `/a-\\d/` instead of `\\?agentId=a-\\d/`. Verified: 43/43 tests pass."
+      },
+      {
+        "id": "web-ticket-list-coverage-native-button-keyboard",
+        "label": "test-bug",
+        "status": "resolved",
+        "failures_before": 5,
+        "unique_files": 1,
+        "fix": "TicketList stat cards were refactored from `<div role=\"button\" onKeyDown={...} onClick={...}>` to native `<button type=\"button\" onClick={...}>`. Native buttons activate on Enter/Space via the browser dispatching a synthetic `click` event — but `fireEvent.keyDown` does NOT simulate that default action, so `onClick` was never fired and `onStatusChange` was never called. Swapped the 5 keyboard tests from `fireEvent.keyDown(el, { key: 'Enter' })` to `userEvent.keyboard('{Enter}')` (and ' ') after focusing the button, which exercises the real keyboard-activation path including the native click dispatch. Added `import userEvent from '@testing-library/user-event'`. Verified: 38/38 tests pass."
+      },
+      {
+        "id": "web-app-metrics-role-img-and-emptystate",
+        "label": "test-bug",
+        "status": "resolved",
+        "failures_before": 5,
+        "unique_files": 1,
+        "fix": "Two drifts in app-metrics.test.tsx. (1) Charts use `<div aria-label=...>` without explicit `role=\"img\"` — tests using `getByRole('img', ...)` and `getAllByRole('img')` all failed. Swapped to `getByLabelText(...)` (3 tests) and rewrote the M-012 role-img coverage test to assert on the two known aria-labelled chart containers instead. (2) Empty state migrated to `<EmptyState entity=\"insights\" />` (canonical 'No insights yet' title) from inline 'No usage data available.' copy — updated 2 tests. Verified: 14/14 tests pass."
+      },
+      {
+        "id": "web-email-coverage-supplementary-three-drifts",
+        "label": "test-bug",
+        "status": "resolved",
+        "failures_before": 6,
+        "unique_files": 1,
+        "fix": "Three distinct drifts in one test file. (1) `document.querySelector('[aria-live]')` matched recipient-autocomplete 'Type to search to see suggestions' before EmailCompose's sr-only status region. Narrowed to `[aria-live][aria-atomic=\"true\"]` — 4 assertions updated via replace_all. (2) 'shows locale date string for email older than 7 days' expected `date.toLocaleDateString('en-GB', { timeZone: 'UTC' })` but formatDate uses Europe/London — drifts by one day near midnight. Replaced exact string match with a regex `\\d{1,2}\\s+<MonthShort>\\s+<Year>` computed in Europe/London. (3) TemplateSelector renders options as `<button>` inside `<ul>`, not `role=\"option\"` on a listbox, so `getByRole('option', …)` threw — swapped to `getByRole('button', …)` in 2 tests. Verified: 31/31 tests pass."
+      },
+      {
+        "id": "web-timezone-utils-locale-switch-en-gb",
+        "label": "test-bug",
+        "status": "resolved",
+        "failures_before": 7,
+        "unique_files": 1,
+        "fix": "Per the Timezone Refactor Initiative (MEMORY.md), formatTime/formatDateTime/formatDateShort/formatTimeRange moved from en-US 12-hour output to en-GB 24-hour output (UTC-first, display-in-user-tz policy). Tests still asserted '2:30 PM' / '3/15/2026' / '3:30 PM'. Updated 5 assertions to the en-GB equivalents: '14:30' (no AM/PM), '15 Mar 2026, 14:30', '15/03/2026', '14:00 - 15:30', and removed the hardcoded PM/AM checks. Sixth failure was `getTimezoneAbbreviation('America/New_York') === 'EDT'` — Node's V8 ICU now returns 'GMT-4' under en-GB; relaxed to `.toMatch(/^(EDT|GMT-4)$/)` so the test accepts either runtime's abbreviation. Verified: 32/32 tests pass."
+      },
+      {
+        "id": "web-billing-portal-emptystate-canonical-copy",
+        "label": "test-bug",
+        "status": "resolved",
+        "failures_before": 4,
+        "unique_files": 1,
+        "fix": "billing-portal.tsx migrated empty states to `<EmptyState entity=... />` via billing-shared (which delegates to `@intelliflow/ui`'s SharedEmptyState, using the canonical entity-config title and passing `message` as the description). Tests still expected 'No payment method on file' → canonical title is 'No payment methods'. Also 'No invoices yet' now renders twice (title + description) when the source passes `message=\"No invoices yet\"` — `getByText` threw 'Found multiple'. Updated `replace_all` changes: `No payment method on file` → `No payment methods` (2 occurrences), `getByText('No invoices yet')` → `getAllByText('No invoices yet').length` (2 occurrences). Verified: 63/63 tests pass."
+      },
+      {
+        "id": "web-performance-report-view-schema-refactor",
+        "label": "test-bug",
+        "status": "resolved",
+        "failures_before": 9,
+        "unique_files": 1,
+        "fix": "PerformanceReportView.tsx was significantly refactored: old keys tRPC_p95/database_p95/benchmarks replaced with p50_median/p95_median/p95_avg/p95_target/endpoints_{tested,passing,failing}/violations/load_test_*; banner copy 'All targets met' / 'Targets not met' became 'All Performance Targets Met' / 'Performance Budget Exceeded'; MetricCard labels became 'p50 Median' / 'p95 Median' with targets 50ms / 100ms (was 50/20); 'Benchmarks Executed' banner removed in favor of 'N of M endpoints passing'; KPI cards expose explicit aria-labels instead of implicit region roles. Rewrote fixture to new schema, updated 6 assertions: banner copy (pass/fail), p50/p95 median values (now use getAllByText because the breakdown table also renders them), threshold indicators, endpoint count summary (42/42 + '100% passing'), ARIA via getByLabelText('overall performance status' / 'p50 median response time' / 'p95 median response time'). Verified: 12/12 tests pass."
+      },
+      {
+        "id": "web-convert-lead-hovercard-and-task-mock",
+        "label": "mock-drift",
+        "status": "resolved",
+        "failures_before": 14,
+        "unique_files": 1,
+        "fix": "convert-lead.test.tsx hit two compounding mock-drift failures. (1) `@intelliflow/ui` was mocked with a hand-maintained allow-list (Button/Card/Skeleton/etc.) — migrated to `importOriginal` partial-mock so HoverCard + other transitive exports (from EntityHoverCard render path) pass through. (2) After the HoverCard error was gone, TaskCreateSheet (rendered via EntityHoverCard's quick actions) hit `api.task.create is undefined` — the `@/lib/api` mock only exposed lead.* and home.*. Added `task.create.useMutation` plus `useUtils().task.list.invalidate` shims. Verified: 14/14 tests pass."
+      },
+      {
+        "id": "web-email-page-emptystate-filtered-copy",
+        "label": "test-bug",
+        "status": "resolved",
+        "failures_before": 16,
+        "unique_files": 1,
+        "fix": "EmailList.tsx:176 renders `<EmptyState entity=\"emails\" variant=\"filtered\" />` whose canonical copy is 'No results found' (packages/ui entity-empty-state-config). Test matched old inline string /no emails match current filters/i. Updated one regex to /no results found/i. Baseline 16 → live residual 1 after cascade fixes (EmptyState ui-mock, etc.). Verified: 18/18 tests pass."
+      },
+      {
+        "id": "web-notification-bell-emptystate-copy-migration",
+        "label": "test-bug",
+        "status": "resolved",
+        "failures_before": 18,
+        "unique_files": 1,
+        "fix": "apps/web/src/components/notifications/NotificationBell.tsx (line 157) was migrated to `<EmptyState entity=\"notifications\" phase=\"passive\" />` per the PG-195 canonical empty-state pattern. Test asserted the legacy inline copy 'No unread notifications'. Updated assertion to 'No notifications' — the canonical string sourced from `packages/ui/src/components/entity-empty-state-config.ts` (notifications entity title). Baseline reported 18 failures; live residual was 1 after cascade fixes (ui-mock/EmptyState importOriginal from iter 8 resolved the other 17). Verified: 24/24 tests pass."
+      },
+      {
+        "id": "web-compliance-page-activity-fake-data-removed",
+        "label": "regression",
+        "status": "resolved",
+        "failures_before": 23,
+        "unique_files": 1,
+        "fix": "apps/web/src/app/governance/compliance/page.tsx was refactored from hardcoded fake activity strings ('Audit completed for ISO 27001', '2 hours ago', 'Yesterday, 4:30 PM') to `trpc.analytics.recentActivity.useQuery({ limit: 10 })` + `formatActivityTime(activity.createdAt, timezone)` — matching the 'no fake data' policy (CLAUDE.md Critical Rules). Test file mocked nothing, so hook returned `[]` and the 'display activity items' and 'display activity timestamps' tests failed. Added `vi.mock('@/lib/trpc')` with three fixture activities using real ISO timestamps (2h ago, 1d ago) so `formatActivityTime` renders the exact strings under assertion. Updated the timestamp test to use `getAllByText('1 day ago')` since two fixtures share the timestamp. Baseline reported 23 failures but live run shows 2 — this file was cascade-resolved for 21 of them by earlier fixes. Verified: 26/26 tests pass."
+      },
+      {
+        "id": "web-password-policy-tightening",
+        "label": "test-bug",
+        "status": "resolved",
+        "failures_before": 13,
+        "unique_files": 1,
+        "fix": "password-validation.ts tightened its policy: MIN_PASSWORD_LENGTH 8→12, added STRONG_PASSWORD_LENGTH 16 (bonus longLength requirement). MAX_SCORE is now 6 (was 5). The test suite still used <12-char sample passwords ('Password', 'Password1', 'Pass1!ab', 'Password123!'), the old 'at least 8 characters' error message, and the old 8/12 constants in the Constants assertions. Rewrote 11 assertions: updated every sample password to 12+ chars (and 16+ chars for 'strong' cases: `PasswordPass123!`), switched `'password'` percentage/unmet-requirement fixtures to `'passwordpass'` (12 chars) so length requirement is met but upper/num/special remain unmet. Updated Constants expectations to 12/16. Updated error-message assertion from 'at least 8 characters' → 'at least 12 characters'. Updated `checkRequirement('longenough', 'length')` → `'longenoughpw'` (12). Updated unicode sample and getUnmetRequirements('Password123!') → `PasswordPass123!` (16). Updated test titles + added inline comments explaining the 12/16 thresholds. Verified: 43/43 tests pass."
+      },
+      {
+        "id": "web-quality-reports-supplementary-passing-vs-failing",
+        "label": "flaky",
+        "status": "resolved-by-cascade",
+        "failures_before": 4,
+        "unique_files": 1,
+        "fix": "apps/web/src/app/api/quality-reports/__tests__/route.supplementary.test.ts 34 tests now pass in isolation. Baseline reported 4 `expected 'failing' to be 'passing'` assertion failures on the TDD status branch (`handles passed/partial/unknown TDD status`). Root cause was likely shared test-harness state bleed (mock pollution from earlier-running tests in the baseline run order) — the test file's own `beforeEach` initializes the mocks cleanly, so running it isolated or as part of a smaller shard produces green. Fix is not a code change; upstream hygiene from earlier iterations (removing mockReset traps, pinning `importOriginal` partial mocks across the suite) likely eliminated the cross-test bleed. Revisit if a fresh baseline shows this re-surfacing."
+      },
+      {
+        "id": "web-default-redirect-slash-vs-dashboard",
+        "label": "test-bug",
+        "status": "resolved",
+        "failures_before": 8,
+        "unique_files": 3,
+        "fix": "Source intentionally changed the default post-auth landing from `/dashboard` to `/` in commit 103b6642 (\"web/public: home page restructure\") — the home route now handles the authenticated variant so the (public)/layout cookie check re-runs on hard nav. Three test files still asserted the old `/dashboard` default. Fix spanned two iterations. Iter 17: updated mfa/verify/__tests__/page.test.tsx (4 assertions) and auth/callback/__tests__/page.test.tsx (3 assertions) from `/dashboard` → `/`. Iter 18: login/__tests__/page.test.tsx needed a bigger rewrite because login/page.tsx now calls `globalThis.location.href = '/'` inside a 1000ms setTimeout rather than `router.push('/dashboard')`. Rewrote the two failing tests (\"redirects to dashboard on successful login\", \"uses custom redirect URL from search params\") to stub `globalThis.location` via `Object.defineProperty(..., { value: { href: '' }, writable: true, configurable: true })` inside a try/finally, then `waitFor(() => expect(locationStub.href).toBe('/'))`. Also documented the current-behavior policy in the search-param test. Verified: mfa/verify 17/17, auth/callback 17/17, login 31/31 (3 unrelated skipped), total 65/68. The redirect param policy is now covered by a single test that asserts the current behavior (ignore the param) rather than the old."
+      },
+      {
+        "id": "web-email-layout-shell-usesidebaroptional-mock-missing",
+        "label": "mock-drift",
+        "status": "resolved",
+        "failures_before": 3,
+        "unique_files": 1,
+        "fix": "apps/web/src/app/email/__tests__/_layout-shell.test.tsx mocked @/components/sidebar with allow-list (SidebarProvider, SidebarInset, SidebarTrigger, SidebarWithSuspense, createEmailSidebarConfig). Layout shell transitively used `useSidebarOptional` → mock missing → `[vitest] No \"useSidebarOptional\" export is defined`. Migrated to partial-mock pattern via `importOriginal`. Verified: 2/3 tests pass; 1 residual failure is an unrelated assertion (call-count mismatch on createEmailSidebarConfig)."
+      },
+      {
+        "id": "web-recent-activity-widget-activityfeedstatsbar-mock-missing",
+        "label": "mock-drift",
+        "status": "resolved",
+        "failures_before": 6,
+        "unique_files": 1,
+        "fix": "apps/web/src/components/dashboard/widgets/__tests__/RecentActivityWidget.test.tsx mocked @/components/shared/activity-feed with a hand-maintained allow-list (ActivityFeedItem + ActivityFeedTypeFilter). When RecentActivityWidget.tsx added `<ActivityFeedStatsBar />`, the mock didn't include that export → `[vitest] No \"ActivityFeedStatsBar\" export is defined`. Migrated to the partial-mock pattern using `importOriginal` so future additions pass through without test changes. Verified: 5/6 tests pass; 1 residual failure is a text-matcher issue (\"No recent activity yet.\") — unrelated cluster."
+      },
+      {
+        "id": "web-openapi-route-node-module-mocking",
+        "label": "test-bug",
+        "status": "resolved",
+        "failures_before": 7,
+        "unique_files": 1,
+        "fix": "apps/web/src/app/api/openapi/__tests__/route.test.ts mocked bare `'fs'`/`'path'` but the route imports `from 'node:fs'`. With Vitest 4.x bare and `node:` specifiers are distinct modules, so `fs.readFileSync` at runtime pointed at the real implementation — `vi.mocked(fs.readFileSync).mockReturnValue(...)` threw because the real function is not a vi mock. Same pattern as the earlier `web-adr-service-b11-node-module-mocking` fix. Added parallel `vi.mock('node:fs', ...)` + `vi.mock('node:path', ...)` with identical factory shapes. Verified: 7/7 tests pass."
+      },
+      {
+        "id": "web-deals-new-mockReset-wipes-return-value",
+        "label": "test-bug",
+        "status": "resolved",
+        "failures_before": 8,
+        "unique_files": 1,
+        "fix": "Two bugs stacked. (1) apps/web/vitest.setup.ts's global `useRequireAuth` mock returned `{isLoading, isAuthenticated}` with no `user` field — added `user: mockAuthContext.user` so consumers can safely destructure. (2) deals/(list)/new/page.test.tsx declared `mockUseRequireAuth = vi.fn().mockReturnValue({...})` at module scope, but vitest.config.ts sets `mockReset: true` which wipes `mockReturnValue` *before each test* — so by the time the first test rendered, `mockUseRequireAuth()` returned undefined and `const {user} = useRequireAuth()` threw. Fix: (a) switched to `vi.hoisted()` to guarantee the mock reference is valid when the hoisted `vi.mock` factory captures it, (b) re-apply `mockUseRequireAuth.mockReturnValue({...})` inside `beforeEach` so it survives the global mockReset. Simplified `vi.mock` factories to pass `mockUseRequireAuth` / `mockUseFormUnsavedChanges` directly (vi.fn is already a function). Verified: 8/8 tests pass. The `mockReset`-wiping pattern is a latent trap in any test that seeds module-level mock return values — flag for follow-up if more clusters surface the same symptom."
+      },
+      {
+        "id": "web-csv-link-remove-mock-drift",
+        "label": "mock-drift",
+        "status": "resolved",
+        "failures_before": 12,
+        "unique_files": 1,
+        "fix": "apps/web/src/lib/export/csv.ts:103 was refactored from `document.body.removeChild(link)` to `link.remove()` (modern DOM API) across downloadCSV + exportToCSV + exportAnalyticsToCSV + exportPipelineToCSV. csv.test.ts' mockLink didn't include a `remove` method, so all 12 tests that called any download path threw `TypeError: link.remove is not a function`. Added `remove: vi.fn()` to all 4 mockLink definitions and swapped the obsolete `expect(document.body.removeChild).toHaveBeenCalled()` assertion for `expect(mockLink.remove).toHaveBeenCalled()`. Removed the now-unused `vi.spyOn(document.body, 'removeChild')` stub from all 4 beforeEach blocks. Verified: 29/29 csv.test.ts tests pass."
+      },
+      {
+        "id": "web-pdf-escape-html-replaceAll-number-regression",
+        "label": "regression",
+        "status": "resolved",
+        "failures_before": 3,
+        "unique_files": 1,
+        "fix": "apps/web/src/lib/export/pdf.ts:182 (table-row render) passed `row[h] as string | null | undefined` to escapeHTML, but that type-cast was a lie at runtime — numeric table cells (e.g. `{ Value: 10000, Deals: 5 }`) hit escapeHTML's `str.replaceAll` and threw `TypeError: str.replaceAll is not a function`. Coerced at the call site: `row[h] == null ? '' : String(row[h])` — matches the existing pattern at lines 157 and 191. Verified: all 37 pdf.test.ts tests pass."
+      },
+      {
+        "id": "web-drift-dashboard-usefailedjobs-mock-missing",
+        "label": "mock-drift",
+        "status": "resolved",
+        "failures_before": 29,
+        "unique_files": 1,
+        "fix": "DriftDashboard.tsx imports `useDriftDashboard` + `useFailedJobs` from `@/lib/ai-monitoring/hooks` (added in a subsequent refactor), but DriftDashboard.test.tsx only mocked `useDriftDashboard`. All 29 tests failed at module resolution with `[vitest] No \"useFailedJobs\" export is defined on the \"@/lib/ai-monitoring/hooks\" mock`. Added `useFailedJobs: vi.fn(() => ({ total: 0, jobs: [], isLoading: false, error: null, refetch: vi.fn() }))` to the mock shape (matches FailedJobsData contract). Verified: 27/29 tests now pass; the 2 remaining failures (empty-state text, 'No cost data' text) are unrelated text-matcher assertion failures, not mock-drift."
+      },
+      {
+        "id": "web-emptystate-ui-mock-missing-export",
+        "label": "test-bug",
+        "status": "resolved",
+        "failures_before": 36,
+        "unique_files": 12,
+        "fix": "12 test files mocked @intelliflow/ui with `vi.mock('@intelliflow/ui', () => ({ ... }))` using hand-maintained allow-lists (Button, Card, DataTable). When consumer components added `<EmptyState />` (PG-195 follow-on: mandatory for every CRM-entity zero state), transitive imports broke with `[vitest] No \"EmptyState\" export is defined on the \"@intelliflow/ui\" mock`. Migrated all 12 files to the partial-mock pattern: `vi.mock('@intelliflow/ui', async (importOriginal) => ({ ...(await importOriginal() as Record<string, unknown>), <overrides> }))`. Unmocked exports now pass through. Files: settings/page, ai-monitoring/QueueSchedulerPanel, accounts/AccountContactsList+AccountOpportunitiesList+RevenueChart, contacts/ContactList, documents/ACLManager+DocumentList+VersionHistory, tasks/TaskList, contacts/[id]/page, settings/leads/CustomFieldsTab. Verified: 222/249 tests pass (up from 213/249); zero `EmptyState`-mock errors. The 27 residual failures are different clusters (assertion failures on empty-state text matchers, dialog interactions) — not mock-drift."
+      },
+      {
+        "id": "web-adr-service-b11-node-module-mocking",
+        "label": "test-bug",
+        "status": "resolved",
+        "failures_before": 9,
+        "unique_files": 1,
+        "fix": "apps/web/src/lib/adr/__tests__/adr-service.b11.test.ts had three layered bugs: (1) it imported `* as fs from 'node:fs'` + `* as path from 'node:path'` but only mocked the bare `'fs'`/`'path'` specifiers, so mocked functions were never observed through the node: imports (adr-service.test.ts had both mocks). (2) It was missing `@vitest-environment node` — default happy-dom env can't resolve `vi.importActual('path')`/`'node:path'` via Vite SSR (fails with `file:///@id/__vite-browser-external:path`). (3) `vi.importActual('node:path')` also fails even under node env — must use bare `'path'`. Fix: added `vi.mock('node:fs')`/`vi.mock('node:path')` next to `vi.mock('fs')`/`vi.mock('path')`, added `@vitest-environment node` directive, and switched `importActual` target from `'node:path'` to `'path'`. All 9 tests pass. Baseline's original count of 75 failures / 2 files was stale — adr-service.test.ts already passes (66/66); only the b11 file was red."
       }
     ]
   }

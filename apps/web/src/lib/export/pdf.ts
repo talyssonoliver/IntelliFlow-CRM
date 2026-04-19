@@ -179,7 +179,7 @@ function generatePDFHTML(sections: ReportSection[], options: PDFExportOptions = 
               ${rows
                 .map(
                   (row) => `
-                <tr>${headers.map((h) => `<td>${escapeHTML((row[h] as string | null | undefined) ?? '')}</td>`).join('')}</tr>
+                <tr>${headers.map((h) => `<td>${escapeHTML(row[h] == null ? '' : String(row[h]))}</td>`).join('')}</tr>
               `
                 )
                 .join('')}

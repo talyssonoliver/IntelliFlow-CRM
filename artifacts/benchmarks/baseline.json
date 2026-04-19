@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-04-14T23:28:22.618Z",
+  "timestamp": "2026-04-19T10:34:40.485Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1317,25 +1317,25 @@
     ]
   },
   "database_inventory": {
-    "total_tables": 139,
-    "total_fields": 2111,
-    "total_indexes": 705,
-    "total_relations": 201,
+    "total_tables": 159,
+    "total_fields": 2355,
+    "total_indexes": 763,
+    "total_relations": 224,
     "tables_with_embeddings": 4,
     "enums": 71,
     "tables": [
       {
         "name": "Tenant",
-        "fields": 120,
+        "fields": 140,
         "indexes": 4,
         "relations": 1,
         "hasEmbedding": false
       },
       {
         "name": "User",
-        "fields": 39,
+        "fields": 40,
         "indexes": 7,
-        "relations": 3,
+        "relations": 5,
         "hasEmbedding": false
       },
       {
@@ -1353,17 +1353,17 @@
         "hasEmbedding": true
       },
       {
+        "name": "CaseDocument",
+        "fields": 34,
+        "indexes": 11,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "ToolCallRecord",
         "fields": 33,
         "indexes": 8,
         "relations": 3,
-        "hasEmbedding": false
-      },
-      {
-        "name": "CaseDocument",
-        "fields": 33,
-        "indexes": 11,
-        "relations": 1,
         "hasEmbedding": false
       },
       {
@@ -1399,6 +1399,13 @@
         "fields": 29,
         "indexes": 11,
         "relations": 3,
+        "hasEmbedding": false
+      },
+      {
+        "name": "TicketAutomationSetting",
+        "fields": 28,
+        "indexes": 3,
+        "relations": 2,
         "hasEmbedding": false
       },
       {
@@ -1444,6 +1451,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "Task",
+        "fields": 23,
+        "indexes": 13,
+        "relations": 7,
+        "hasEmbedding": false
+      },
+      {
         "name": "AutoResponseDraft",
         "fields": 23,
         "indexes": 6,
@@ -1458,10 +1472,10 @@
         "hasEmbedding": false
       },
       {
-        "name": "Task",
+        "name": "DealAutomationSetting",
         "fields": 21,
-        "indexes": 11,
-        "relations": 6,
+        "indexes": 2,
+        "relations": 1,
         "hasEmbedding": false
       },
       {
@@ -1479,6 +1493,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "SLAPolicy",
+        "fields": 20,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "Account",
         "fields": 19,
         "indexes": 6,
@@ -1490,13 +1511,6 @@
         "fields": 19,
         "indexes": 6,
         "relations": 2,
-        "hasEmbedding": false
-      },
-      {
-        "name": "SLAPolicy",
-        "fields": 19,
-        "indexes": 3,
-        "relations": 1,
         "hasEmbedding": false
       },
       {
@@ -1544,7 +1558,7 @@
       {
         "name": "LeadAIInsight",
         "fields": 17,
-        "indexes": 5,
+        "indexes": 6,
         "relations": 2,
         "hasEmbedding": false
       },
@@ -1585,6 +1599,13 @@
       },
       {
         "name": "ContactAutomationSetting",
+        "fields": 17,
+        "indexes": 2,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "DocumentAutomationSetting",
         "fields": 17,
         "indexes": 2,
         "relations": 1,
@@ -2018,6 +2039,62 @@
         "hasEmbedding": false
       },
       {
+        "name": "DocumentGeneralConfig",
+        "fields": 11,
+        "indexes": 2,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "TenantAIConfig",
+        "fields": 10,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "TenantMemoryPolicy",
+        "fields": 10,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "DealWinLossReason",
+        "fields": 10,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "DealDuplicateRule",
+        "fields": 10,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "DealTag",
+        "fields": 10,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "TicketDuplicateRule",
+        "fields": 10,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "TicketTag",
+        "fields": 10,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "TicketNextStep",
         "fields": 10,
         "indexes": 5,
@@ -2075,6 +2152,20 @@
       },
       {
         "name": "ContactTag",
+        "fields": 10,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "DocumentDuplicateRule",
+        "fields": 10,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "DocumentTag",
         "fields": 10,
         "indexes": 3,
         "relations": 1,
@@ -2148,6 +2239,27 @@
         "fields": 9,
         "indexes": 3,
         "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "DocumentTypeDefinition",
+        "fields": 9,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "DocumentRetentionPolicy",
+        "fields": 9,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "TenantToolEnablement",
+        "fields": 8,
+        "indexes": 3,
+        "relations": 1,
         "hasEmbedding": false
       },
       {
@@ -2228,10 +2340,24 @@
         "hasEmbedding": false
       },
       {
+        "name": "DealRequiredField",
+        "fields": 7,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "AppointmentAttendee",
         "fields": 7,
         "indexes": 4,
         "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "TicketRequiredField",
+        "fields": 7,
+        "indexes": 3,
+        "relations": 1,
         "hasEmbedding": false
       },
       {
@@ -2270,6 +2396,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "DocumentRequiredField",
+        "fields": 7,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "Session",
         "fields": 6,
         "indexes": 1,
@@ -2280,6 +2413,13 @@
         "name": "AccountRequiredField",
         "fields": 6,
         "indexes": 3,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "DealScoringRule",
+        "fields": 5,
+        "indexes": 1,
         "relations": 0,
         "hasEmbedding": false
       },
@@ -2666,10 +2806,10 @@
     ]
   },
   "validators_inventory": {
-    "total_validators": 40,
-    "total_schemas": 472,
+    "total_validators": 43,
+    "total_schemas": 517,
     "by_complexity": {
-      "complex": 27,
+      "complex": 30,
       "moderate": 9,
       "simple": 4
     },
@@ -2711,6 +2851,12 @@
         "complexity": "complex"
       },
       {
+        "name": "deal-settings",
+        "file": "deal-settings.ts",
+        "schemas": 19,
+        "complexity": "complex"
+      },
+      {
         "name": "notifications",
         "file": "notifications.ts",
         "schemas": 19,
@@ -2737,6 +2883,12 @@
       {
         "name": "account",
         "file": "account.ts",
+        "schemas": 17,
+        "complexity": "complex"
+      },
+      {
+        "name": "document-settings",
+        "file": "document-settings.ts",
         "schemas": 17,
         "complexity": "complex"
       },
@@ -2810,6 +2962,12 @@
         "name": "opportunity",
         "file": "opportunity.ts",
         "schemas": 10,
+        "complexity": "complex"
+      },
+      {
+        "name": "ticket-settings",
+        "file": "ticket-settings.ts",
+        "schemas": 9,
         "complexity": "complex"
       },
       {

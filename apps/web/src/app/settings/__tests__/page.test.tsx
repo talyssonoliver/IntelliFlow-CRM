@@ -3,8 +3,10 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import SettingsPage from '../page';
 
-// Mock SearchInput from @intelliflow/ui
-vi.mock('@intelliflow/ui', () => ({
+// Mock SearchInput from @intelliflow/ui; partial mock so real exports (EmptyState,
+// PageHeader, etc.) still pass through.
+vi.mock('@intelliflow/ui', async (importOriginal) => ({
+  ...((await importOriginal()) as Record<string, unknown>),
   SearchInput: vi.fn(({ value, onChange, _onClear, onKeyDown, placeholder, ...props }: any) => (
     <input
       data-testid="search-input"

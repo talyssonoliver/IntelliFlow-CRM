@@ -171,9 +171,10 @@ describe('AppointmentCalendar', () => {
   });
 
   it('shows empty state when no appointments or tasks', () => {
+    // Source migrated to `<EmptyState entity="appointments" />` — canonical
+    // title 'No appointments yet' (packages/ui entity-empty-state-config).
     render(<AppointmentCalendar {...defaultProps} appointments={[]} tasks={[]} />);
-    expect(screen.getByTestId('calendar-empty')).toBeInTheDocument();
-    expect(screen.getByText('No events this period')).toBeInTheDocument();
+    expect(screen.getByText('No appointments yet')).toBeInTheDocument();
   });
 
   it('does not show empty state when tasks exist but no appointments', () => {

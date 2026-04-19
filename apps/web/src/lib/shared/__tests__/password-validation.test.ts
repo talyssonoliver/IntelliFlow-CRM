@@ -49,29 +49,34 @@ describe('calculatePasswordStrength', () => {
     expect(result.meetsMinimum).toBe(false);
   });
 
-  it('returns fair for 8+ chars with mixed case', () => {
-    const result = calculatePasswordStrength('Password');
+  it('returns fair for 12+ chars with mixed case', () => {
+    // Password policy tightened to 12-char minimum (see password-validation.ts
+    // MIN_PASSWORD_LENGTH). 12 chars + lower + upper = 3 weighted points = 'fair'.
+    const result = calculatePasswordStrength('PasswordPass');
     expect(result.strength).toBe('fair');
     expect(result.score).toBe(3);
     expect(result.meetsMinimum).toBe(true);
   });
 
-  it('returns good for mixed case with numbers', () => {
-    const result = calculatePasswordStrength('Password1');
+  it('returns good for 12+ chars with mixed case and numbers', () => {
+    const result = calculatePasswordStrength('PasswordPass1');
     expect(result.strength).toBe('good');
     expect(result.score).toBe(4);
     expect(result.meetsMinimum).toBe(true);
   });
 
-  it('returns good for 8+ chars with all character types', () => {
-    const result = calculatePasswordStrength('Pass1!ab');
+  it('returns good for 12+ chars with all character types (below longLength)', () => {
+    // 12–15 chars with all types yields 5 points: length + lower + upper + num + special.
+    // longLength bonus (16+) still unmet.
+    const result = calculatePasswordStrength('Pass1!abcdef');
     expect(result.strength).toBe('good');
     expect(result.score).toBe(5);
     expect(result.meetsMinimum).toBe(true);
   });
 
-  it('returns strong for 12+ chars with all character types', () => {
-    const result = calculatePasswordStrength('Password123!');
+  it('returns strong for 16+ chars with all character types', () => {
+    // Full score (6): length + longLength + lower + upper + num + special.
+    const result = calculatePasswordStrength('PasswordPass123!');
     expect(result.strength).toBe('strong');
     expect(result.score).toBe(6);
     expect(result.percentage).toBe(100);
@@ -84,17 +89,19 @@ describe('calculatePasswordStrength', () => {
     expect(result.feedback).toContain('Uppercase letter');
     expect(result.feedback).toContain('Number');
     expect(result.feedback).toContain('Special character (!@#$%^&*...)');
-    expect(result.feedback).not.toContain('12+ characters (recommended)');
+    // longLength bonus is never listed as a missing requirement.
+    expect(result.feedback).not.toContain('16+ characters (recommended)');
   });
 
   it('calculates percentage correctly', () => {
     const result1 = calculatePasswordStrength('');
     expect(result1.percentage).toBe(0);
 
-    const result2 = calculatePasswordStrength('Password123!');
+    const result2 = calculatePasswordStrength('PasswordPass123!');
     expect(result2.percentage).toBe(100);
 
-    const result3 = calculatePasswordStrength('password');
+    // 12-char lowercase-only password scores 2 (length + lowercase) of MAX_SCORE 6.
+    const result3 = calculatePasswordStrength('passwordpass');
     expect(result3.percentage).toBe(Math.round((2 / MAX_SCORE) * 100));
   });
 });
@@ -110,10 +117,10 @@ describe('validatePassword', () => {
     expect(result.errors).toContain('Password is required');
   });
 
-  it('fails for passwords under 8 characters', () => {
+  it('fails for passwords under 12 characters', () => {
     const result = validatePassword('Pass1!');
     expect(result.valid).toBe(false);
-    expect(result.errors[0]).toContain('at least 8 characters');
+    expect(result.errors[0]).toContain('at least 12 characters');
   });
 
   it('fails for weak passwords', () => {
@@ -122,20 +129,20 @@ describe('validatePassword', () => {
     expect(result.errors.some((e) => e.includes('too weak'))).toBe(true);
   });
 
-  it('passes for fair passwords', () => {
-    const result = validatePassword('Password');
+  it('passes for fair passwords (12+ chars mixed case)', () => {
+    const result = validatePassword('PasswordPass');
     expect(result.valid).toBe(true);
     expect(result.errors).toHaveLength(0);
   });
 
-  it('passes for good passwords', () => {
-    const result = validatePassword('Password1');
+  it('passes for good passwords (12+ chars with number)', () => {
+    const result = validatePassword('PasswordPass1');
     expect(result.valid).toBe(true);
     expect(result.errors).toHaveLength(0);
   });
 
-  it('passes for strong passwords', () => {
-    const result = validatePassword('Password123!');
+  it('passes for strong passwords (16+ chars with all types)', () => {
+    const result = validatePassword('PasswordPass123!');
     expect(result.valid).toBe(true);
     expect(result.errors).toHaveLength(0);
   });
@@ -181,11 +188,13 @@ describe('checkRequirement', () => {
   });
 
   it('checks length requirement correctly', () => {
+    // MIN_PASSWORD_LENGTH is 12 chars.
     expect(checkRequirement('short', 'length')).toBe(false);
-    expect(checkRequirement('longenough', 'length')).toBe(true);
+    expect(checkRequirement('longenoughpw', 'length')).toBe(true);
   });
 
   it('checks longLength requirement correctly', () => {
+    // STRONG_PASSWORD_LENGTH is 16 chars; 'verylongpassword' is exactly 16.
     expect(checkRequirement('short', 'longLength')).toBe(false);
     expect(checkRequirement('verylongpassword', 'longLength')).toBe(true);
   });
@@ -224,7 +233,8 @@ describe('getUnmetRequirements', () => {
   });
 
   it('returns unmet requirements correctly', () => {
-    const unmet = getUnmetRequirements('password');
+    // 12-char lowercase-only password meets length+lowercase but not upper/num/special.
+    const unmet = getUnmetRequirements('passwordpass');
     const unmetIds = unmet.map((r) => r.id);
     expect(unmetIds).toContain('uppercase');
     expect(unmetIds).toContain('number');
@@ -234,7 +244,7 @@ describe('getUnmetRequirements', () => {
   });
 
   it('returns empty array for strong password', () => {
-    const unmet = getUnmetRequirements('Password123!');
+    const unmet = getUnmetRequirements('PasswordPass123!');
     expect(unmet).toHaveLength(0);
   });
 
@@ -285,11 +295,11 @@ describe('getStrengthWidth', () => {
 
 describe('Constants', () => {
   it('has correct MIN_PASSWORD_LENGTH', () => {
-    expect(MIN_PASSWORD_LENGTH).toBe(8);
+    expect(MIN_PASSWORD_LENGTH).toBe(12);
   });
 
   it('has correct STRONG_PASSWORD_LENGTH', () => {
-    expect(STRONG_PASSWORD_LENGTH).toBe(12);
+    expect(STRONG_PASSWORD_LENGTH).toBe(16);
   });
 
   it('has correct MAX_SCORE', () => {
@@ -320,7 +330,8 @@ describe('Edge Cases', () => {
   });
 
   it('handles unicode characters in passwords', () => {
-    const result = calculatePasswordStrength('Password123!é');
+    // 16 chars with all types (unicode counts toward length and special).
+    const result = calculatePasswordStrength('PasswordPass123!é');
     expect(result.strength).toBe('strong');
   });
 

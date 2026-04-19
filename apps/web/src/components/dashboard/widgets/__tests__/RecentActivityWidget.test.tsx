@@ -9,12 +9,16 @@ vi.mock('@/hooks/useActivityFeed', () => ({
   useActivityFeed: (...args: unknown[]) => feedMock(...args),
 }));
 
-// Stub shared activity-feed components
-vi.mock('@/components/shared/activity-feed', () => ({
+// Stub shared activity-feed components. Use partial-mock so additional exports
+// (ActivityFeed, ActivityFeedFilters, ActivityFeedStatsBar, types, etc.) pass
+// through without requiring hand-maintained allow-list updates on every change.
+vi.mock('@/components/shared/activity-feed', async (importOriginal) => ({
+  ...((await importOriginal()) as Record<string, unknown>),
   ActivityFeedItem: (props: { title: string }) => (
     <div data-testid="activity-feed-item">{props.title}</div>
   ),
   ActivityFeedTypeFilter: () => <div data-testid="activity-type-filter" />,
+  ActivityFeedStatsBar: () => <div data-testid="activity-feed-stats-bar" />,
 }));
 
 const sampleItem = {
@@ -72,7 +76,8 @@ describe('RecentActivityWidget', () => {
 
     render(<RecentActivityWidget />);
 
-    expect(screen.getByText('No recent activity yet.')).toBeInTheDocument();
+    // EmptyState entity="activity" → canonical 'No recent activity' (no period).
+    expect(screen.getByText('No recent activity')).toBeInTheDocument();
   });
 
   it('shows loading state', () => {

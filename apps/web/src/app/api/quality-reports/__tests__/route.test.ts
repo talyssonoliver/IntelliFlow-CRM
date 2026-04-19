@@ -22,6 +22,16 @@ vi.mock('fs', () => ({
   existsSync: (...a: unknown[]) => mockExistsSync(...a),
   readFileSync: (...a: unknown[]) => mockReadFileSync(...a),
 }));
+// route.ts imports from 'node:fs' — Vitest 4 treats bare 'fs' and 'node:fs'
+// as separate module IDs; mirror the mock for the prefixed specifier.
+vi.mock('node:fs', () => ({
+  default: {
+    existsSync: (...a: unknown[]) => mockExistsSync(...a),
+    readFileSync: (...a: unknown[]) => mockReadFileSync(...a),
+  },
+  existsSync: (...a: unknown[]) => mockExistsSync(...a),
+  readFileSync: (...a: unknown[]) => mockReadFileSync(...a),
+}));
 
 import { GET } from '../route';
 
@@ -49,7 +59,10 @@ describe('/api/quality-reports', () => {
     const res = await GET(makeReq());
     const d = await res.json();
     expect(d.success).toBe(true);
-    expect(d.data.reports).toHaveLength(5);
+    // Route now returns 6 reports (route.ts:875-883): lighthouse, coverage,
+    // performance, tRPC benchmark, debt, sonarqube (tRPC benchmark was added
+    // post-baseline).
+    expect(d.data.reports).toHaveLength(6);
     expect(d.data.overallHealth).toBeDefined();
     expect(d.data.lastUpdated).toBeDefined();
   });
@@ -198,6 +211,9 @@ describe('/api/quality-reports', () => {
     const res = await GET(makeReq());
     const d = await res.json();
     expect(d.success).toBe(true);
-    expect(d.data.reports).toHaveLength(5);
+    // Route now returns 6 reports (route.ts:875-883): lighthouse, coverage,
+    // performance, tRPC benchmark, debt, sonarqube (tRPC benchmark was added
+    // post-baseline).
+    expect(d.data.reports).toHaveLength(6);
   });
 });

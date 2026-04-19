@@ -281,7 +281,11 @@ describe('InvoiceList', () => {
       expect(screen.getByText('£79.00')).toBeInTheDocument();
     });
 
-    it('formats USD amounts correctly', () => {
+    it('formats sub-unit amounts correctly', () => {
+      // Fixture uses currency=GBP and amountDue=9999 (in minor units / pence).
+      // formatCurrency with en-GB + GBP produces '£99.99'. Test title
+      // previously said 'USD' which conflicted with the GBP fixture; renamed
+      // to reflect the actual assertion.
       render(
         <InvoiceList
           invoices={[createMockInvoice({ amountDue: 9999, currency: 'GBP' })]}
@@ -292,7 +296,7 @@ describe('InvoiceList', () => {
         />
       );
 
-      expect(screen.getByText('$99.99')).toBeInTheDocument();
+      expect(screen.getByText('£99.99')).toBeInTheDocument();
     });
   });
 

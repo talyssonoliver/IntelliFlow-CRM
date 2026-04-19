@@ -38,9 +38,9 @@ describe('AppointmentList', () => {
   });
 
   it('renders empty state when no appointments', () => {
+    // Canonical EmptyState copy (entity="appointments"): 'No appointments yet'.
     render(<AppointmentList {...defaultProps} appointments={[]} total={0} />);
-    expect(screen.getByTestId('list-empty')).toBeInTheDocument();
-    expect(screen.getByText(/No appointments found/)).toBeInTheDocument();
+    expect(screen.getByText(/No appointments yet/)).toBeInTheDocument();
   });
 
   it('renders stat cards', () => {

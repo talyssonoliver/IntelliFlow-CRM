@@ -197,7 +197,9 @@ describe('Content Audit Results Schema Validation', () => {
   // TC-04: All public routes have seo_score as integer 0-100 (AC-003; updated as public-route count grows)
   it('TC-04: all public routes have integer seo_score 0-100', () => {
     const publicRoutes = auditData.routes.filter((r) => r.access_tier === 'public');
-    expect(publicRoutes.length).toBe(31);
+    // Regenerate content-audit-results.json (`npx tsx tools/scripts/content-audit.ts`)
+    // whenever the public route set grows. Current baseline: 32 public routes.
+    expect(publicRoutes.length).toBe(32);
 
     for (const route of publicRoutes) {
       expect(typeof route.seo_score).toBe('number');
@@ -212,7 +214,7 @@ describe('Content Audit Results Schema Validation', () => {
     const nonPublicRoutes = auditData.routes.filter(
       (r) => r.access_tier === 'auth-gated' || r.access_tier === 'developer'
     );
-    expect(nonPublicRoutes.length).toBe(auditData.routes.length - 31);
+    expect(nonPublicRoutes.length).toBe(auditData.routes.length - 32);
 
     for (const route of nonPublicRoutes) {
       expect(route.seo_score).toBeNull();

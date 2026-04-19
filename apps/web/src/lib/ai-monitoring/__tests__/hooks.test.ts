@@ -523,11 +523,14 @@ describe('useAgentLogs', () => {
     expect(result.logs[2].id).toBe('log-1');
   });
 
-  it('validates agentId with UUID regex — invalid ID is discarded', () => {
+  it('passes agentId through without UUID validation', () => {
+    // UUID client-side validation was removed — agentId is passed through
+    // as-is (hooks.ts:176 uses `params.agentId || undefined`). Server-side
+    // validation handles invalid IDs.
     setupAgentLogsMocks();
     useAgentLogs({ agentId: 'not-a-uuid' });
     expect(mockAgentLogsQuery).toHaveBeenCalledWith(
-      expect.objectContaining({ agentId: undefined }),
+      expect.objectContaining({ agentId: 'not-a-uuid' }),
       expect.any(Object)
     );
   });

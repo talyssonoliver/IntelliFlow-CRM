@@ -23,8 +23,9 @@ import {
   resetAllMocks,
 } from './contact-test-utils';
 
-// Mock the DataTable component from @intelliflow/ui
-vi.mock('@intelliflow/ui', () => ({
+// Mock the DataTable component from @intelliflow/ui (partial — preserve EmptyState etc.)
+vi.mock('@intelliflow/ui', async (importOriginal) => ({
+  ...((await importOriginal()) as Record<string, unknown>),
   DataTable: ({
     columns,
     data,
@@ -236,10 +237,16 @@ describe('ContactList', () => {
         />
       );
 
-      expect(screen.getByText('No contacts found')).toBeInTheDocument();
+      // EmptyState entity="contacts" → canonical 'No contacts yet'.
+      expect(screen.getByText('No contacts yet')).toBeInTheDocument();
     });
 
-    it('renders empty icon', () => {
+    it('renders empty-state illustration area', () => {
+      // Post-EmptyState migration, empty-states use SVG illustrations from
+      // `packages/ui/src/components/empty-state-illustrations.tsx` (entity
+      // 'contacts') rather than a material-symbols 'person_off' icon. The
+      // `emptyIcon` prop on the shared SearchFilterBar is ignored by the
+      // EmptyState component. Verify the empty-state container renders.
       const { container } = render(
         <ContactList
           contacts={[]}
@@ -253,8 +260,8 @@ describe('ContactList', () => {
         />
       );
 
-      const icon = container.querySelector('.material-symbols-outlined');
-      expect(icon).toHaveTextContent('person_off');
+      // EmptyState renders an SVG illustration inside the empty-state panel.
+      expect(container.querySelector('svg')).toBeTruthy();
     });
   });
 
@@ -333,26 +340,46 @@ describe('ContactList', () => {
     });
 
     it('navigates to compose page when email action clicked', async () => {
-      const user = userEvent.setup();
-      const contacts = [createMockContact({ email: 'test@example.com' })];
-
-      render(
-        <ContactList
-          contacts={contacts}
-          total={1}
-          isLoading={false}
-          onRowClick={handlers.onRowClick}
-          onDelete={handlers.onDelete}
-          onBulkDelete={handlers.onBulkDelete}
-          onBulkEmail={handlers.onBulkEmail}
-          onBulkExport={handlers.onBulkExport}
-        />
-      );
-
-      await user.click(screen.getByText('Send Email'));
-      await waitFor(() => {
-        expect(window.location.href).toContain('/email/compose?to=test%40example.com');
+      // happy-dom/jsdom's real `window.location.href` setter triggers a
+      // navigation (which the test env ignores) without persisting the
+      // assigned value. Stub the `location` object so the assignment at
+      // ContactList.tsx:206 is observable (same pattern as login iter 18).
+      const originalLocation = globalThis.location;
+      const locationStub = { href: '' } as unknown as Location;
+      Object.defineProperty(globalThis, 'location', {
+        value: locationStub,
+        writable: true,
+        configurable: true,
       });
+
+      try {
+        const user = userEvent.setup();
+        const contacts = [createMockContact({ email: 'test@example.com' })];
+
+        render(
+          <ContactList
+            contacts={contacts}
+            total={1}
+            isLoading={false}
+            onRowClick={handlers.onRowClick}
+            onDelete={handlers.onDelete}
+            onBulkDelete={handlers.onBulkDelete}
+            onBulkEmail={handlers.onBulkEmail}
+            onBulkExport={handlers.onBulkExport}
+          />
+        );
+
+        await user.click(screen.getByText('Send Email'));
+        await waitFor(() => {
+          expect(locationStub.href).toContain('/email/compose?to=test%40example.com');
+        });
+      } finally {
+        Object.defineProperty(globalThis, 'location', {
+          value: originalLocation,
+          writable: true,
+          configurable: true,
+        });
+      }
     });
   });
 

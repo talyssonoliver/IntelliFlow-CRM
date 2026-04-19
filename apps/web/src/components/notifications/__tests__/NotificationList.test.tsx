@@ -129,7 +129,10 @@ describe('NotificationList', () => {
         onDismiss={vi.fn()}
       />
     );
-    expect(screen.getByText("You're all caught up!")).toBeInTheDocument();
+    // EmptyState entity="notifications" → canonical 'No notifications'.
+    // Canonical description includes "You're all caught up!" but the primary
+    // title is 'No notifications' (packages/ui entity-empty-state-config).
+    expect(screen.getByText('No notifications')).toBeInTheDocument();
   });
 
   it('shows "No notifications match your filters." when empty with active filters', () => {

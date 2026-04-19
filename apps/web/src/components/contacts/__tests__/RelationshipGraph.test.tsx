@@ -47,7 +47,12 @@ describe('RelationshipGraph', () => {
         />
       );
 
-      expect(screen.getByText('No relationships yet')).toBeInTheDocument();
+      // RelationshipGraph.tsx:163 renders `<EmptyState entity="contacts" />`
+      // — canonical title is 'No contacts yet' (semantic misuse — the
+      // surface is a relationship graph; a dedicated 'relationships'
+      // entity in packages/ui entity-empty-state-config would be more
+      // accurate source-side follow-up).
+      expect(screen.getByText('No contacts yet')).toBeInTheDocument();
     });
 
     it('does not show relationship items when empty', () => {

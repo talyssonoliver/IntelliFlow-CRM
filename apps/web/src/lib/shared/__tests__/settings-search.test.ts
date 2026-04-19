@@ -10,8 +10,9 @@ import {
 
 describe('settings-search', () => {
   describe('SETTINGS_ITEMS', () => {
-    it('contains 7 settings items', () => {
-      expect(SETTINGS_ITEMS).toHaveLength(7);
+    it('contains 9 settings items', () => {
+      // 2 items were added post-baseline (9 = previous 7 + 2 new).
+      expect(SETTINGS_ITEMS).toHaveLength(9);
     });
 
     it('each item has required fields', () => {
@@ -54,9 +55,10 @@ describe('settings-search', () => {
     });
 
     it('filters by exact title match (case-insensitive)', () => {
+      // Item ID was pluralised from 'account' to 'accounts'.
       const result = filterSettings('account', SETTINGS_ITEMS);
       expect(result.length).toBeGreaterThan(0);
-      expect(result[0].id).toBe('account');
+      expect(result[0].id).toBe('accounts');
     });
 
     it('filters by partial title match', () => {

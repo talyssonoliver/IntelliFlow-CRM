@@ -4,12 +4,20 @@ import { beforeEach, describe, it, expect, vi } from 'vitest';
 import { TotalLeadsWidget } from '../TotalLeadsWidget';
 
 const useQueryMock = vi.fn();
+const overviewQueryMock = vi.fn(() => ({ data: null, isLoading: false, error: null }));
 
 vi.mock('@/lib/trpc', () => ({
   trpc: {
     lead: {
       stats: {
         useQuery: (...args: unknown[]) => useQueryMock(...args),
+      },
+    },
+    // TotalLeadsWidget also calls trpc.analytics.getOverview.useQuery for the
+    // dashboard headline (TotalLeadsWidget.tsx:23).
+    analytics: {
+      getOverview: {
+        useQuery: (...args: unknown[]) => overviewQueryMock(...args),
       },
     },
   },

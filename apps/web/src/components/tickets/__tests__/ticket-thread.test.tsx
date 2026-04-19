@@ -26,7 +26,8 @@ describe('TicketThread', () => {
 
   it('shows "No activity yet" when activities array is empty', () => {
     render(<TicketThread {...defaultProps} activities={[]} />);
-    expect(screen.getByText(/no activity yet/i)).toBeInTheDocument();
+    // EmptyState entity="activity" → canonical 'No recent activity'.
+    expect(screen.getByText(/no recent activity/i)).toBeInTheDocument();
   });
 
   // ─── Activity Type Rendering ──────────────────────────────────────────────

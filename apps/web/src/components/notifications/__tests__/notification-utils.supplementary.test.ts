@@ -150,10 +150,12 @@ describe('notification-utils', () => {
       expect(groupNames).toContain('Case');
     });
 
-    it('contains all 40 types across all groups', () => {
+    it('contains all 42 types across all groups', () => {
+      // 2 types were added post-baseline (42 = previous 40 + 2 new).
+      // Bump when new notification types are registered.
       const groups = getTypesByGroup();
       const allTypes = Object.values(groups).flat();
-      expect(allTypes).toHaveLength(40);
+      expect(allTypes).toHaveLength(42);
     });
 
     it('places lead types in Lead group', () => {

@@ -22,7 +22,8 @@ vi.mock('@/lib/api', () => ({
   },
 }));
 
-vi.mock('@intelliflow/ui', () => ({
+vi.mock('@intelliflow/ui', async (importOriginal) => ({
+  ...((await importOriginal()) as Record<string, unknown>),
   Button: ({
     children,
     ...props
@@ -67,7 +68,8 @@ describe('AccountContactsList', () => {
       error: null,
     });
     render(<AccountContactsList accountId="00000000-0000-4000-8000-000000000001" />);
-    expect(screen.getByText('No contacts linked to this account')).toBeInTheDocument();
+    // EmptyState entity="contacts" → canonical 'No contacts yet'.
+    expect(screen.getByText('No contacts yet')).toBeInTheDocument();
   });
 
   it('renders contacts list with names and emails', () => {

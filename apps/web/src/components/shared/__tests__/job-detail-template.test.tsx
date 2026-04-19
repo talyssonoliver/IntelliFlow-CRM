@@ -279,8 +279,9 @@ describe('JobDetailTemplate', () => {
     it('should render formatted post date', () => {
       render(<JobDetailTemplate job={mockJob} />);
 
-      // December 15, 2025 format
-      expect(screen.getByText('December 15, 2025')).toBeInTheDocument();
+      // en-GB long date format: "15 December 2025" (job-detail-template uses
+      // toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })).
+      expect(screen.getByText('15 December 2025')).toBeInTheDocument();
     });
 
     it('should render questions card', () => {
@@ -442,7 +443,7 @@ describe('JobDetailTemplate', () => {
     it('should format posted date correctly', () => {
       render(<JobDetailTemplate job={mockJob} />);
 
-      expect(screen.getByText('December 15, 2025')).toBeInTheDocument();
+      expect(screen.getByText('15 December 2025')).toBeInTheDocument();
     });
 
     it('should format closing date when present', () => {
@@ -452,7 +453,7 @@ describe('JobDetailTemplate', () => {
       };
       render(<JobDetailTemplate job={jobWithClosingDate} />);
 
-      expect(screen.getByText('January 15, 2026')).toBeInTheDocument();
+      expect(screen.getByText('15 January 2026')).toBeInTheDocument();
     });
   });
 
@@ -466,14 +467,15 @@ describe('JobDetailTemplate', () => {
     });
 
     it('should format USD salary correctly', () => {
-      const jobWithUSD = {
+      const jobWithGBP = {
         ...mockJob,
         salary: { min: 100000, max: 150000, currency: 'GBP' },
       };
-      render(<JobDetailTemplate job={jobWithUSD} />);
+      render(<JobDetailTemplate job={jobWithGBP} />);
 
-      // Salary appears in both header and sidebar
-      const salaryElements = screen.getAllByText(/\$100,000 - \$150,000/);
+      // Salary appears in both header and sidebar. formatSalary uses en-GB
+      // Intl.NumberFormat with GBP, so values render as "£100,000 - £150,000".
+      const salaryElements = screen.getAllByText(/£100,000\s*-\s*£150,000/);
       expect(salaryElements.length).toBeGreaterThanOrEqual(1);
     });
 

@@ -71,11 +71,13 @@ describe('DealCard', () => {
     expect(screen.queryByText('person')).not.toBeInTheDocument();
   });
 
-  it('formats value as full currency ($75,000)', () => {
+  it('formats value as full currency (en-GB GBP £75,000)', () => {
     const deal = createMockDeal({ value: 75000 });
     render(<DealCard deal={deal} onNavigate={mockOnNavigate} />);
 
-    expect(screen.getByText('$75,000')).toBeInTheDocument();
+    // formatCurrencyFull (deals/types.ts:52) uses en-GB Intl with GBP, so
+    // 75000 renders as £75,000 (Timezone Refactor locale migration).
+    expect(screen.getByText('£75,000')).toBeInTheDocument();
   });
 
   it('shows "No date" when expectedCloseDate is null', () => {
@@ -89,7 +91,8 @@ describe('DealCard', () => {
     const deal = createMockDeal({ expectedCloseDate: '2026-03-15' });
     render(<DealCard deal={deal} onNavigate={mockOnNavigate} />);
 
-    expect(screen.getByText('Mar 15')).toBeInTheDocument();
+    // en-GB locale produces '15 Mar' (day first), not en-US 'Mar 15'.
+    expect(screen.getByText('15 Mar')).toBeInTheDocument();
   });
 
   it('shows probability bar at correct width percentage', () => {
@@ -163,24 +166,24 @@ describe('DealCard', () => {
 
   it('renders with pending visual state when isPending=true', () => {
     const deal = createMockDeal();
-    const { container } = render(
-      <DealCard deal={deal} onNavigate={mockOnNavigate} isPending={true} />
-    );
+    render(<DealCard deal={deal} onNavigate={mockOnNavigate} isPending={true} />);
 
-    const card = container.querySelector('[role="button"]');
-    // cn() mock concatenates classes — isPending adds animate-pulse
-    expect(card?.className).toContain('animate-pulse');
-    expect(card?.className).toContain('ring-primary/50');
-    expect(card?.className).toContain('opacity-75');
+    // DealCard.tsx:61 renders a native <button> for the card wrapper with
+    // aria-label="View deal: <name>" (line 77). A second <button> is the
+    // nested drag handle with aria-label="Drag to move deal" (line 83), so
+    // `querySelector('[role="button"]')` ambiguously matches the drag handle.
+    // Query by the card's aria-label to pin to the outer wrapper.
+    const card = screen.getByRole('button', { name: new RegExp(`View deal:.*${deal.name}`, 'i') });
+    expect(card.className).toContain('animate-pulse');
+    expect(card.className).toContain('ring-primary/50');
+    expect(card.className).toContain('opacity-75');
   });
 
   it('renders normal state when isPending is false', () => {
     const deal = createMockDeal();
-    const { container } = render(
-      <DealCard deal={deal} onNavigate={mockOnNavigate} isPending={false} />
-    );
+    render(<DealCard deal={deal} onNavigate={mockOnNavigate} isPending={false} />);
 
-    const card = container.querySelector('[role="button"]');
-    expect(card?.className).not.toContain('animate-pulse');
+    const card = screen.getByRole('button', { name: new RegExp(`View deal:.*${deal.name}`, 'i') });
+    expect(card.className).not.toContain('animate-pulse');
   });
 });

@@ -44,21 +44,25 @@ describe('AppMetrics', () => {
 
   // M-006: Daily API calls chart container has aria-label
   it('daily API calls chart has aria-label', () => {
+    // Chart is a <div aria-label="Daily API calls chart"> — no explicit
+    // role="img", so query by accessible name via getByLabelText.
     render(<AppMetrics app={activeApp} />);
-    expect(screen.getByRole('img', { name: /daily api calls/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/daily api calls/i)).toBeInTheDocument();
   });
 
   // M-007: Error breakdown bar present for active apps
   it('error breakdown bar present for active app', () => {
     render(<AppMetrics app={activeApp} />);
     expect(screen.getByText('Error Breakdown')).toBeInTheDocument();
-    expect(screen.getByRole('img', { name: /error breakdown/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/error breakdown/i)).toBeInTheDocument();
   });
 
   // M-008: Empty/pending state for app with no activity
   it('shows empty state for pending app with no activity', () => {
+    // AppMetrics now renders <EmptyState entity="insights" /> (canonical
+    // "No insights yet" title) — see app-metrics.tsx:79.
     render(<AppMetrics app={pendingApp} />);
-    expect(screen.getByText('No usage data available.')).toBeInTheDocument();
+    expect(screen.getByText('No insights yet')).toBeInTheDocument();
   });
 
   // M-009: App with zero API keys shows empty state
@@ -68,7 +72,7 @@ describe('AppMetrics', () => {
       apiKeys: [],
     });
     render(<AppMetrics app={noKeysApp} />);
-    expect(screen.getByText('No usage data available.')).toBeInTheDocument();
+    expect(screen.getByText('No insights yet')).toBeInTheDocument();
   });
 
   // M-010: Active app (app-001) shows non-zero metrics
@@ -84,14 +88,13 @@ describe('AppMetrics', () => {
     expect(screen.getByText('341ms')).toBeInTheDocument();
   });
 
-  // M-012: Chart containers have role="img" or descriptive aria-label
-  it('chart containers have role="img" with aria-label', () => {
+  // M-012: Chart containers expose aria-label for SR users (no explicit
+  // role="img" — the WAI-ARIA graphics pattern is opt-in and not used here).
+  it('chart containers have descriptive aria-labels', () => {
     render(<AppMetrics app={activeApp} />);
-    const imgElements = screen.getAllByRole('img');
-    expect(imgElements.length).toBeGreaterThanOrEqual(1);
-    imgElements.forEach((el) => {
-      expect(el).toHaveAttribute('aria-label');
-    });
+    // Both the daily-calls and error-breakdown charts expose aria-labels.
+    expect(screen.getByLabelText(/daily api calls/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/error breakdown/i)).toBeInTheDocument();
   });
 
   // M-013: Per-key usage breakdown table present for apps with keys
