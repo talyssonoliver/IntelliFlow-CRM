@@ -1,5 +1,5 @@
 {
-  "$schema": "../../schemas/task-status.schema.json",
+  "$schema": "../schemas/task-status.schema.json",
   "task_id": "IFC-296",
   "section": "AI Foundation",
   "description": "Queue Scheduler Administration — Implement queuesAdmin tRPC router with live BullMQ stats and scheduler CRUD (list/pause/resume/retry/delete), wire to /agent-approvals/agents page. Replace stub router with live Redis/BullMQ data. Add queue health panel to ActiveAgentsDashboard showing scheduler cron patterns, queue counts, and action buttons.",
@@ -9,19 +9,11 @@
   "stream": null,
   "status": "DONE",
   "dependencies": {
-    "required": [
-      "IFC-015",
-      "IFC-197",
-      "PG-151"
-    ],
+    "required": ["IFC-015", "IFC-197", "PG-151"],
     "all_satisfied": true,
-    "verified_at": "2026-04-14T19:39:53.316Z"
+    "verified_at": "2026-04-19T10:06:56.868Z"
   },
-  "dependencies_resolved": [
-    "IFC-015",
-    "IFC-197",
-    "PG-151"
-  ],
+  "dependencies_resolved": ["IFC-015", "IFC-197", "PG-151"],
   "started_at": "2026-03-08T00:00:00Z",
   "completed_at": "2026-03-08T13:45:26.211Z",
   "target_duration_minutes": 240,

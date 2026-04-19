@@ -1,5 +1,5 @@
 {
-  "$schema": "../../schemas/task-status.schema.json",
+  "$schema": "../schemas/task-status.schema.json",
   "task_id": "IFC-309",
   "section": "Compliance",
   "description": "Server-side terms acceptance — persist immutable TermsAcceptance audit record (tenantId, userId, termsVersion, acceptedAt, ipAddress, userAgent, route) via tRPC legal.acceptTerms mutation and legal.getAcceptance query; wire Confirm UI on /terms for authenticated users only; replaces client-only localStorage tracker removed from PG-051 as a misleading legal-compliance signal.",
@@ -9,13 +9,9 @@
   "phase": "",
   "stream": null,
   "dependencies": {
-    "required": [
-      "PG-051",
-      "IFC-058",
-      "IFC-124"
-    ],
+    "required": ["PG-051", "IFC-058", "IFC-124"],
     "all_satisfied": true,
-    "verified_at": "2026-04-14T19:39:53.431Z"
+    "verified_at": "2026-04-19T10:06:56.938Z"
   },
   "started_at": null,
   "completed_at": null,
@@ -32,9 +28,7 @@
       ".specify/sprints/sprint-18/attestations/IFC-309/context_ack.json",
       ".specify/sprints/sprint-18/attestations/IFC-309/attestation.json"
     ],
-    "created": [
-      "packages/db/prisma/schema.prisma"
-    ],
+    "created": ["packages/db/prisma/schema.prisma"],
     "missing": [
       "packages/domain/src/legal/TermsAcceptance.ts",
       "apps/api/src/modules/legal/legal.router.ts",
@@ -75,9 +69,5 @@
   "current_phase": "BACKLOG",
   "updated_at": "2026-04-13T00:30:00Z",
   "attempt": 0,
-  "dependencies_resolved": [
-    "PG-051",
-    "IFC-058",
-    "IFC-124"
-  ]
+  "dependencies_resolved": ["PG-051", "IFC-058", "IFC-124"]
 }

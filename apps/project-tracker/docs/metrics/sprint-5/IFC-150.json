@@ -1,16 +1,12 @@
 {
-  "$schema": "../../schemas/task-status.schema.json",
+  "$schema": "../schemas/task-status.schema.json",
   "task_id": "IFC-150",
   "section": "Platform",
   "description": "Domain events infrastructure: event contracts + versioning + outbox pattern + idempotent publishing",
   "owner": "Backend Dev + Architect (STOA-Domain)",
   "dependencies": {
-    "required": [
-      "IFC-002",
-      "IFC-106",
-      "IFC-098"
-    ],
-    "verified_at": "2026-04-14T19:39:53.773Z",
+    "required": ["IFC-002", "IFC-106", "IFC-098"],
+    "verified_at": "2026-04-19T10:06:57.061Z",
     "all_satisfied": true
   },
   "status": "DONE",
@@ -74,7 +70,7 @@
   "artifacts": {
     "expected": [
       "docs/events/contracts-v1.yaml",
-      "docs/planning/adr/ADR-011-domain-events.md",
+      "docs/architecture/adr/ADR-011-domain-events.md",
       ".specify/sprints/sprint-5/attestations/IFC-150/context_ack.json",
       ".specify/sprints/sprint-8/specifications/IFC-150-spec.md",
       "packages/adapters/src/repositories/PrismaOutboxRepository.ts",
@@ -84,7 +80,7 @@
     ],
     "created": [
       "docs/events/contracts-v1.yaml",
-      "docs/planning/adr/ADR-011-domain-events.md",
+      "docs/architecture/adr/ADR-011-domain-events.md",
       ".specify/sprints/sprint-5/attestations/IFC-150/context_ack.json",
       ".specify/sprints/sprint-8/specifications/IFC-150-spec.md",
       "packages/adapters/src/repositories/PrismaOutboxRepository.ts",
@@ -178,9 +174,5 @@
     }
   ],
   "notes": "TDD implementation completed successfully. Phase 1 RED: 4 test files created. Phase 2 GREEN: 3 implementation files created, Prisma schema extended. Phase 3 REFACTOR: 2 helper files created (event-metadata, Zod schemas). Phase 4 VALIDATION: All 33 tests pass (24 unit + 9 integration), lint clean, build successful. Database migration applied to cloud (Supabase) and test (Docker) databases. Attestation created.",
-  "dependencies_resolved": [
-    "IFC-002",
-    "IFC-106",
-    "IFC-098"
-  ]
+  "dependencies_resolved": ["IFC-002", "IFC-106", "IFC-098"]
 }

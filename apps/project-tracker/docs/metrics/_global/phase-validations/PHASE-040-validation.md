@@ -16,16 +16,17 @@ observability/AI infra tests not run)
 
 - [x] Zero trust security model documentation
       (docs/security/zero-trust-design.md)
-- [x] Privacy impact assessment reports (artifacts/reports/gdpr-compliance.md)
+- [x] Privacy impact assessment reports
+      (docs/compliance-and-governance/compliance/gdpr-compliance.md)
 - [ ] Observability architecture design
 - [ ] AI infrastructure setup guides
 
 ### Artifacts (A)
 
 - [x] docs/security/zero-trust-design.md
-- [x] artifacts/reports/gdpr-compliance.md
-- [x] artifacts/misc/sentry-project-config.json
-- [x] artifacts/misc/ollama-setup.sh
+- [x] docs/compliance-and-governance/compliance/gdpr-compliance.md
+- [x] infra/monitoring/sentry-project-config.json
+- [x] tools/scripts/ollama-setup.sh
 
 ### Tests (T)
 
@@ -127,9 +128,9 @@ pnpm run ai-infra-test  # AI infrastructure validation
 **Evidence:**
 
 - Zero trust model: docs/security/zero-trust-design.md
-- GDPR/DPIA: artifacts/reports/gdpr-compliance.md
-- Sentry config: artifacts/misc/sentry-project-config.json
-- Ollama setup: artifacts/misc/ollama-setup.sh
+- GDPR/DPIA: docs/compliance-and-governance/compliance/gdpr-compliance.md
+- Sentry config: infra/monitoring/sentry-project-config.json
+- Ollama setup: tools/scripts/ollama-setup.sh
 
 **Current Gaps / Next Steps:**
 

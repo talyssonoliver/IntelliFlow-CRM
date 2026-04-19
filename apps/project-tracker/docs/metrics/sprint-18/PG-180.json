@@ -1,5 +1,5 @@
 {
-  "$schema": "../../schemas/task-status.schema.json",
+  "$schema": "../schemas/task-status.schema.json",
   "task_id": "PG-180",
   "section": "Support Pages",
   "description": "Help Article Admin List Page",
@@ -9,11 +9,9 @@
   "phase": "",
   "stream": null,
   "dependencies": {
-    "required": [
-      "IFC-299"
-    ],
+    "required": ["IFC-299"],
     "all_satisfied": true,
-    "verified_at": "2026-04-14T19:39:53.425Z"
+    "verified_at": "2026-04-19T10:06:56.934Z"
   },
   "started_at": null,
   "completed_at": null,
@@ -43,7 +41,5 @@
     }
   ],
   "notes": "Admin page at /settings/help-center/articles with article list, status badges (draft/published), category filters, search, create/edit/delete actions.",
-  "dependencies_resolved": [
-    "IFC-299"
-  ]
+  "dependencies_resolved": ["IFC-299"]
 }

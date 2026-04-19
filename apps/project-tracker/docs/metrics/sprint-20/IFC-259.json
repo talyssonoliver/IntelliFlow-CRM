@@ -11,7 +11,7 @@
   "dependencies": {
     "required": [],
     "all_satisfied": true,
-    "verified_at": "2026-04-14T19:39:53.489Z"
+    "verified_at": "2026-04-19T10:06:56.969Z"
   },
   "dependencies_resolved": [],
   "started_at": null,
@@ -40,9 +40,7 @@
       "apps/web/src/app/contacts/[id]/page.tsx",
       "apps/web/src/components/contacts/ContactCard.tsx"
     ],
-    "missing": [
-      "apps/web/src/components/contacts/ContactDetail.tsx"
-    ]
+    "missing": ["apps/web/src/components/contacts/ContactDetail.tsx"]
   },
   "validations": [],
   "blockers": [],

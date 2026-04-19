@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../schemas/task-status.schema.json",
+  "$schema": "../../schemas/task-status.schema.json",
   "task_id": "PG-134",
   "section": "Core CRM",
   "description": "Account List & Detail Pages - Hierarchy view contacts opportunities revenue charts",
@@ -13,11 +13,9 @@
   "target_duration_minutes": 390,
   "actual_duration_minutes": 1202,
   "dependencies": {
-    "required": [
-      "IFC-185"
-    ],
+    "required": ["IFC-185"],
     "all_satisfied": true,
-    "verified_at": "2026-04-14T19:39:53.783Z"
+    "verified_at": "2026-04-19T10:06:57.067Z"
   },
   "status_history": [
     {
@@ -46,11 +44,7 @@
     "completed_at": "2026-02-08T11:02:00.000Z",
     "duration_minutes": 1202,
     "executor": "Claude Code /exec",
-    "agents": [
-      "Foundation",
-      "Quality",
-      "Domain"
-    ],
+    "agents": ["Foundation", "Quality", "Domain"],
     "retry_count": 0,
     "last_error": null
   },
@@ -139,7 +133,5 @@
   },
   "blockers": [],
   "notes": "Full-stack implementation across 4 sessions. Backend: domain hierarchy (setParent, removeParent, cycle detection), service layer (getHierarchy, setParent with depth check), InMemoryAccountRepository hierarchy methods. Frontend: AccountCard (tier logic, columns), AccountDetail (6-tab detail with lazy loading), AccountHierarchy (accessible tree with keyboard nav, ARIA roles), RevenueChart (pipeline data transformation), AccountContactsList (cursor pagination), AccountOpportunitiesList (stage filter, summary cards). 109 tests total (47 backend + 62 frontend). All 7 completion gates PASS. Attestation created. Dependency chains updated.",
-  "dependencies_resolved": [
-    "IFC-185"
-  ]
+  "dependencies_resolved": ["IFC-185"]
 }

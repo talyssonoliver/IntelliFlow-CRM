@@ -1,5 +1,5 @@
 {
-  "$schema": "../../schemas/task-status.schema.json",
+  "$schema": "../schemas/task-status.schema.json",
   "task_id": "DOC-009",
   "section": "Documentation",
   "description": "Create content audit framework and perform initial audit: quantitative URL inventory (103 routes with HTTP status, response time, title, meta), qualitative content review, SEO audit for public pages, stale content detection",
@@ -9,17 +9,11 @@
   "stream": null,
   "status": "DONE",
   "dependencies": {
-    "required": [
-      "DOC-002",
-      "DOC-005"
-    ],
+    "required": ["DOC-002", "DOC-005"],
     "all_satisfied": true,
-    "verified_at": "2026-04-14T19:39:53.272Z"
+    "verified_at": "2026-04-19T10:06:56.847Z"
   },
-  "dependencies_resolved": [
-    "DOC-002",
-    "DOC-005"
-  ],
+  "dependencies_resolved": ["DOC-002", "DOC-005"],
   "started_at": "2026-02-24T21:00:00Z",
   "completed_at": "2026-02-24T21:54:17.340Z",
   "target_duration_minutes": null,

@@ -273,12 +273,12 @@ interface SearchResponse {
 
 ## Success Metrics
 
-| KPI                       | Target                 | Validation                           |
-| ------------------------- | ---------------------- | ------------------------------------ |
-| Zero cross-tenant leakage | 0 violations           | ACL tests passing                    |
-| Search relevance          | >80% on test set       | `artifacts/misc/relevance-eval.json` |
-| User adoption             | >50% DAU use search    | Analytics tracking                   |
-| Search success rate       | >90% find relevant doc | User feedback                        |
+| KPI                       | Target                 | Validation                              |
+| ------------------------- | ---------------------- | --------------------------------------- |
+| Zero cross-tenant leakage | 0 violations           | ACL tests passing                       |
+| Search relevance          | >80% on test set       | `artifacts/reports/relevance-eval.json` |
+| User adoption             | >50% DAU use search    | Analytics tracking                      |
+| Search success rate       | >90% find relevant doc | User feedback                           |
 
 ---
 

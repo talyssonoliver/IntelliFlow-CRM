@@ -228,7 +228,7 @@ function findRelatedDocs(taskId: string, _section: string): TraceLink[] {
           fileName.includes(taskId.toLowerCase()) ||
           fileName.includes(taskId.replaceAll('-', '_').toLowerCase())
         ) {
-          const filePath = `docs/planning/adr/${file}`;
+          const filePath = `docs/architecture/adr/${file}`;
           const info = getFileInfo(filePath);
           docs.push({
             type: 'documentation',

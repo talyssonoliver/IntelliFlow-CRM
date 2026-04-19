@@ -407,6 +407,6 @@ plan, review recent invoices, and update an expiring credit card.
 
 **Documentacao Relacionada**:
 
-- [ADR-029: Billing Architecture](../../../../../docs/planning/adr/ADR-029-billing-architecture.md)
+- [ADR-029: Billing Architecture](../../../../../docs/architecture/adr/ADR-029-billing-architecture.md)
 - [PRD: Billing Portal](../../../../../docs/planning/prd-billing-portal.md)
 - [PRD: Billing Domain Core](../../../../../docs/planning/prd-billing-domain.md)

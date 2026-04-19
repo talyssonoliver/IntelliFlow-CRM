@@ -508,9 +508,9 @@ IFC-039:
   acceptance_owner: 'AI Specialist'
   debt_allowed: no
   evidence_required:
-    - artifacts/misc/embeddings-quality-test.json
+    - artifacts/reports/embeddings-quality-test.json
     - artifacts/metrics/sentiment-accuracy.csv
-    - artifacts/misc/nba-demo.md
+    - docs/planning/nba-demo.md
   acceptance_criteria:
     - RAG integration working with pgvector
     - Sentiment analysis accuracy >80%
@@ -529,7 +529,7 @@ IFC-095:
   acceptance_owner: 'AI Specialist'
   debt_allowed: no
   evidence_required:
-    - artifacts/misc/model-evaluation.ipynb
+    - tools/scripts/model-evaluation.ipynb
     - .specify/sprints/sprint-8/attestations/IFC-095/context_ack.json
   acceptance_criteria:
     - Churn risk predictions <2s latency
@@ -1389,7 +1389,7 @@ IFC-000:
   evidence_required:
     - artifacts/reports/business-case.pdf
     - artifacts/reports/swot-analysis.xlsx
-    - docs/planning/adr/ADR-000-feasibility.md
+    - docs/architecture/adr/ADR-000-feasibility.md
   acceptance_criteria:
     - Business case document reviewed and approved
     - SWOT analysis covers all key risks
@@ -1410,7 +1410,7 @@ EXC-INIT-001:
   evidence_required:
     - docs/agent/setup-complete-checklist.md
     - artifacts/metrics/automation-metrics.json
-    - artifacts/misc/pipeline-status.yaml
+    - infra/monitoring/pipeline-status.yaml
   acceptance_criteria:
     - Setup checklist 100% complete
     - All automation metrics captured
@@ -1432,7 +1432,7 @@ AI-SETUP-001:
   evidence_required:
     - .claude/commands/*
     - .claude/hooks/*
-    - artifacts/misc/command-test-results.csv
+    - artifacts/reports/command-test-results.csv
   acceptance_criteria:
     - All Claude commands functional and tested
     - Hooks execute without errors
@@ -1451,7 +1451,7 @@ AI-SETUP-002:
   evidence_required:
     - docs/shared/copilot-instructions.md
     - .github/copilot/*
-    - artifacts/misc/team-licenses.csv
+    - docs/planning/team-licenses.csv
   acceptance_criteria:
     - Copilot instructions documented
     - All team members have valid licenses
@@ -1471,7 +1471,7 @@ AI-SETUP-003:
   evidence_required:
     - tools/integrations/codex/*
     - tools/integrations/jules/*
-    - artifacts/misc/sandbox-security.json
+    - infra/monitoring/sandbox-security.json
   notes: 'External tool integration. Waiver extended 2026-03-09: Codex/Jules remain config scaffolding with stub test suites, fabricated sandbox-security.json, and zero runtime integration. Debt unresolved.'
 
 ENV-001-AI:
@@ -1508,7 +1508,7 @@ ENV-002-AI:
     - eslint.config.mjs
     - .prettierrc
     - .husky/*
-    - artifacts/misc/commitlint.config.js
+    - tools/scripts/commitlint.config.js
   acceptance_criteria:
     - ESLint runs without config errors
     - Prettier formats code correctly
@@ -1528,7 +1528,7 @@ ENV-003-AI:
   evidence_required:
     - docker-compose.yml
     - infra/docker/*
-    - artifacts/misc/health-check.yaml
+    - infra/monitoring/health-check.yaml
   acceptance_criteria:
     - docker compose up starts all services
     - All containers healthy after 60 seconds
@@ -1652,7 +1652,7 @@ ENV-008-AI:
   debt_allowed: no
   evidence_required:
     - infra/monitoring/*
-    - artifacts/misc/otel-config.yaml
+    - infra/monitoring/otel-config.yaml
   notes: 'Observability setup. Waiver closed 2026-03-09: All 4 gates pass. Real OTel SDK in api/tracing/otel.ts, collector config, Prometheus/Loki/Tempo exporters, 22 alert rules.'
 
 ENV-009-AI:
@@ -1717,7 +1717,7 @@ ENV-012-AI:
   debt_allowed: no
   evidence_required:
     - docs/*
-    - artifacts/misc/docusaurus.config.js
+    - tools/scripts/docusaurus.config.js
   notes: 'Documentation generation. Waiver closed 2026-03-09: Fixed prism-react-renderer v2 import in docusaurus.config.js. 284 .md files, real Docusaurus config.'
 
 ENV-013-AI:
@@ -1732,7 +1732,7 @@ ENV-013-AI:
   debt_allowed: no
   evidence_required:
     - docs/security/*
-    - artifacts/misc/security-scan-results.json
+    - artifacts/reports/security-scan-results.json
   acceptance_criteria:
     - Zero high/critical vulnerabilities in pnpm audit
     - OWASP ZAP scan passes
@@ -1778,7 +1778,7 @@ ENV-016-AI:
   debt_allowed: no
   evidence_required:
     - artifacts/misc/analytics/*
-    - artifacts/misc/privacy-config.json
+    - infra/monitoring/privacy-config.json
   notes: 'Privacy-first analytics. Waiver closed 2026-03-09: All 4 gates pass. Real privacy config, PII filtering in prompt-sanitizer, analytics router wired in container.ts.'
 
 # -----------------------------------------------------------------------------
@@ -1797,7 +1797,7 @@ ENV-017-AI:
   debt_allowed: no
   evidence_required:
     - tests/integration/*
-    - artifacts/misc/test-orchestration.json
+    - infra/monitoring/test-orchestration.json
   notes: |
     DEBT-009 RESOLVED: IFC-001 completed 2025-12-26, ENV-017-AI completed
     2025-12-23. Stub contract exception removed. Full dependency restored.
@@ -1814,7 +1814,7 @@ ENV-018-AI:
   waiver_expiry: '2026-01-31'
   evidence_required:
     - artifacts/misc/sprint-planning/*
-    - artifacts/misc/velocity-prediction.json
+    - packages/test-fixtures/velocity-prediction.json
   notes: 'Sprint planning. Depends on ENV-017-AI completing.'
 
 AUTOMATION-001:
@@ -1829,7 +1829,7 @@ AUTOMATION-001:
   debt_allowed: no
   evidence_required:
     - artifacts/misc/agent-coordination/*
-    - artifacts/misc/orchestration-config.yaml
+    - infra/monitoring/orchestration-config.yaml
   notes: 'AI agent coordination. Waiver closed 2026-03-09: All 5 gates pass (lint fixed). Real Crew class with 3 execution modes, 17 agents, 41 agent tests passing, MATOP/STOA framework.'
 
 AUTOMATION-002:
@@ -1843,7 +1843,7 @@ AUTOMATION-002:
   debt_allowed: no
   evidence_required:
     - artifacts/misc/ai-dashboard/*
-    - artifacts/misc/optimization-loop.yaml
+    - infra/monitoring/optimization-loop.yaml
   notes: 'AI performance dashboard. Waiver closed 2026-03-09: build/typecheck/lint pass (lint fixed). DashboardView, SwarmMonitor, ExecutiveSummary components real. dashboard_test has no dedicated suite but dashboard is functional at localhost:3002.'
 
 EXC-SEC-001:
@@ -1857,7 +1857,7 @@ EXC-SEC-001:
   acceptance_owner: 'Security Engineer'
   debt_allowed: no
   evidence_required:
-    - artifacts/misc/vault-config.yaml
+    - infra/monitoring/vault-config.yaml
   acceptance_criteria:
     - Vault server responds to health check
     - Secrets are encrypted at rest
@@ -1914,8 +1914,8 @@ IFC-030:
   acceptance_owner: 'Backend Dev'
   debt_allowed: no
   evidence_required:
-    - artifacts/misc/routing-rules-config.yaml
-    - artifacts/misc/routing-simulation-results.csv
+    - infra/monitoring/routing-rules-config.yaml
+    - artifacts/reports/routing-simulation-results.csv
     - artifacts/reports/sla-compliance.pdf
     - .specify/sprints/sprint-17/attestations/IFC-030/context_ack.json
   notes: 'Smart Lead Routing. Score-based routing with load balancing and real routing data.'
@@ -2011,8 +2011,8 @@ IFC-117:
   debt_allowed: no
   evidence_required:
     - artifacts/metrics/ai-metrics.json
-    - artifacts/misc/drift-dashboard.md
-    - artifacts/misc/alerts-config.yaml
+    - docs/planning/drift-dashboard.md
+    - infra/monitoring/alerts-config.yaml
     - infra/monitoring/ai-grafana-dashboard.json
     - infra/monitoring/ai-prometheus-rules.yaml
     - .specify/sprints/sprint-10/attestations/IFC-117/context_ack.json
@@ -2332,7 +2332,7 @@ gate_profiles:
     timeout: 600
 
   privacy_check:
-    command: 'test -f artifacts/misc/privacy-config.json'
+    command: 'test -f infra/monitoring/privacy-config.json'
     description: 'Privacy configuration exists'
     required: true
 
@@ -2343,7 +2343,7 @@ gate_profiles:
     timeout: 600
 
   metrics_validate:
-    command: 'test -f artifacts/misc/velocity-prediction.json'
+    command: 'test -f packages/test-fixtures/velocity-prediction.json'
     description: 'Sprint metrics exist'
     required: true
 
@@ -2358,7 +2358,7 @@ gate_profiles:
     required: true
 
   vault_check:
-    command: 'vault status || test -f artifacts/misc/vault-config.yaml'
+    command: 'vault status || test -f infra/monitoring/vault-config.yaml'
     description: 'Vault configuration'
     required: true
 
@@ -2378,7 +2378,7 @@ gate_profiles:
     required: false
 
   command_test:
-    command: 'test -f artifacts/misc/command-test-results.csv'
+    command: 'test -f artifacts/reports/command-test-results.csv'
     description: 'Claude command tests'
     required: true
 
@@ -2410,7 +2410,7 @@ DOC-007:
   acceptance_owner: 'QA Lead'
   debt_allowed: no
   evidence_required:
-    - docs/compliance/accessibility-gap-assessment.md
+    - docs/compliance-and-governance/compliance/accessibility-gap-assessment.md
     - artifacts/reports/accessibility-audit-results.json
   notes: 'WCAG 2.1 AA gap assessment. 16 failures fixed, 56% to 96% conformance.'
 
@@ -2425,10 +2425,10 @@ DOC-008:
   acceptance_owner: 'QA Lead'
   debt_allowed: no
   evidence_required:
-    - docs/compliance/vpat-2.5.md
-    - docs/compliance/wcag-conformance-statement.md
+    - docs/compliance-and-governance/compliance/vpat-2.5.md
+    - docs/compliance-and-governance/compliance/wcag-conformance-statement.md
     - tests/a11y/axe-core.spec.ts
-    - docs/planning/adr/ADR-038-accessibility-architecture.md
+    - docs/architecture/adr/ADR-038-accessibility-architecture.md
   notes: 'VPAT 2.5, conformance statement, axe-core test suite, ADR-038.'
 
 DOC-009:
@@ -3356,6 +3356,42 @@ PG-178:
     - apps/web/src/components/settings/ModuleSettingsLayout.tsx
   notes: 'Module Settings Pages - 11 per-module configuration pages'
 
+PG-182:
+  tier: B
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - unit
+  acceptance_owner: 'Frontend Dev'
+  debt_allowed: no
+  evidence_required:
+    - apps/web/src/app/contacts/(list)/contact-settings/page.tsx
+    - apps/web/src/app/contacts/(list)/contact-settings/ContactSettingsContent.tsx
+    - apps/api/src/modules/contact/contact-settings.router.ts
+    - apps/api/src/modules/contact/contact-automation.ts
+    - packages/validators/src/contact-settings.ts
+    - .specify/sprints/sprint-17/attestations/PG-182/attestation.json
+  notes: 'Module Settings - Contacts. Contact settings page with duplicate detection, required fields, tags config, and automation toggles. Downstream: PG-183, PG-184.'
+
+PG-183:
+  tier: B
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - unit
+  acceptance_owner: 'Frontend Dev'
+  debt_allowed: no
+  evidence_required:
+    - apps/web/src/app/accounts/(list)/account-settings/page.tsx
+    - apps/web/src/app/accounts/(list)/account-settings/AccountSettingsContent.tsx
+    - apps/api/src/modules/account/account-settings.router.ts
+    - apps/api/src/modules/account/account-automation.ts
+    - packages/validators/src/account-settings.ts
+    - .specify/sprints/sprint-17/attestations/PG-183/attestation.json
+  notes: 'Module Settings - Accounts. 8 bento sections (hierarchy, industry taxonomy, custom fields, duplicate detection, required fields, automation, AI & intelligence, tags). Bento grid layout mirroring contact-settings. Downstream: PG-184.'
+
 # -----------------------------------------------------------------------------
 # METADATA
 # -----------------------------------------------------------------------------
@@ -3367,7 +3403,7 @@ _meta:
   author: 'Plan Linter System'
   version: '2.0.0'
   sprint_scope: 'all'
-  total_overrides: 158
+  total_overrides: 160
   cycles_fixed: 2
   cross_sprint_fixes: 25
   tier_a_definitions: 132

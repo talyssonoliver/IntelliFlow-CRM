@@ -1,16 +1,13 @@
 {
-  "$schema": "../../schemas/task-status.schema.json",
+  "$schema": "../schemas/task-status.schema.json",
   "task_id": "IFC-125",
   "section": "AI Foundation",
   "description": "Implement guardrails for prompt injection, data leakage, and monitor AI bias",
   "owner": "AI Specialist + Security (STOA-Security)",
   "sprint": "sprint-6",
   "dependencies": {
-    "required": [
-      "IFC-005",
-      "IFC-008"
-    ],
-    "verified_at": "2026-04-14T19:39:53.200Z",
+    "required": ["IFC-005", "IFC-008"],
+    "verified_at": "2026-04-19T10:06:56.802Z",
     "all_satisfied": true
   },
   "status": "DONE",
@@ -60,12 +57,7 @@
     "completed_at": "2026-02-08T12:16:30.000Z",
     "duration_minutes": 45,
     "executor": "Claude Code /exec",
-    "agents": [
-      "Foundation",
-      "Security",
-      "Quality",
-      "Domain"
-    ],
+    "agents": ["Foundation", "Security", "Quality", "Domain"],
     "retry_count": 0,
     "last_error": null
   },
@@ -166,9 +158,6 @@
     "specification_path": ".specify/sprints/sprint-11/specifications/IFC-125-spec.md"
   },
   "notes": "Implementation complete and verified. All 78 tests pass: 21 AISecurityEventTypes, 18 DurableAuditLogAdapter, 20 GuardrailsAIService.audit, 19 errors. GuardrailsAIService requires AuditLogPort (mandatory dependency), DurableAuditLogAdapter implements hash chain integrity with HMAC-SHA256, cross-tenant isolation, GDPR retention, PII encryption. Container.ts wires DurableAuditLogAdapter into GuardrailsAIService. No deferred TODO comments remain.",
-  "dependencies_resolved": [
-    "IFC-005",
-    "IFC-008"
-  ],
+  "dependencies_resolved": ["IFC-005", "IFC-008"],
   "actual_duration_minutes": 15
 }

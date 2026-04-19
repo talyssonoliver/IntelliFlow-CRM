@@ -66,8 +66,9 @@ apps/web/src/app/leads/
 
 ### Artifacts Created
 
-1. `artifacts/reports/web-vitals-report.json` - Core Web Vitals performance data
-2. `artifacts/misc/axe-audit-results.json` - Accessibility audit results
+1. `artifacts/benchmarks/web-vitals-report.json` - Core Web Vitals performance
+   data
+2. `artifacts/reports/axe-audit-results.json` - Accessibility audit results
 3. `apps/project-tracker/docs/metrics/_global/flows/FLOW-002.md` - (already
    exists)
 

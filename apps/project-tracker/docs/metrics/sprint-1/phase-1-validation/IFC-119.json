@@ -6,7 +6,7 @@
   "owner": "Scrum Master + PM",
   "dependencies": {
     "required": [],
-    "verified_at": "2026-04-14T19:39:53.106Z",
+    "verified_at": "2026-04-19T10:06:56.739Z",
     "all_satisfied": true
   },
   "status": "DONE",
@@ -33,20 +33,17 @@
   },
   "artifacts": {
     "expected": [
-      "artifacts/misc/ceremony-calendar.ics",
+      "docs/planning/ceremony-calendar.ics",
       "artifacts/misc/templates/*.md",
       "artifacts/reports/retro-action-items.md"
     ],
-    "created": [
-      "artifacts/misc/ceremony-calendar.ics",
-      "artifacts/reports/retro-action-items.md"
-    ],
-    "missing": []
+    "created": ["docs/planning/ceremony-calendar.ics"],
+    "missing": ["artifacts/reports/retro-action-items.md"]
   },
   "validations": [
     {
       "name": "calendar_exists",
-      "command": "test -f artifacts/misc/ceremony-calendar.ics",
+      "command": "test -f docs/planning/ceremony-calendar.ics",
       "passed": true,
       "exit_code": 0,
       "executed_at": "2025-12-21T17:30:00Z",
@@ -54,7 +51,7 @@
     },
     {
       "name": "templates_exist",
-      "command": "test -f artifacts/misc/templates/sprint-planning.md",
+      "command": "test -f docs/planning/templates/sprint-planning.md",
       "passed": true,
       "exit_code": 0,
       "executed_at": "2025-12-21T17:30:00Z",

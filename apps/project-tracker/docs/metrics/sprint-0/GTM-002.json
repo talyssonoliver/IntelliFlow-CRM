@@ -2,12 +2,9 @@
   "task_id": "GTM-002",
   "status": "DONE",
   "dependencies": {
-    "required": [
-      "GTM-001",
-      "BRAND-001"
-    ],
+    "required": ["GTM-001", "BRAND-001"],
     "all_satisfied": true,
-    "verified_at": "2026-04-14T19:39:53.065Z"
+    "verified_at": "2026-04-19T10:06:56.713Z"
   },
   "validations": [
     {
@@ -28,8 +25,5 @@
   "started_at": "2026-04-13T00:27:36.752Z",
   "actual_duration_minutes": 15,
   "description": "Messaging Framework (positioning, value props, copy blocks)",
-  "dependencies_resolved": [
-    "GTM-001",
-    "BRAND-001"
-  ]
+  "dependencies_resolved": ["GTM-001", "BRAND-001"]
 }

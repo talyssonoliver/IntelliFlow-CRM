@@ -12,13 +12,9 @@
   "target_duration_minutes": 90,
   "actual_duration_minutes": 90,
   "dependencies": {
-    "required": [
-      "IFC-105",
-      "IFC-107",
-      "IFC-003"
-    ],
+    "required": ["IFC-105", "IFC-107", "IFC-003"],
     "all_satisfied": true,
-    "verified_at": "2026-04-14T19:39:53.778Z"
+    "verified_at": "2026-04-19T10:06:57.064Z"
   },
   "status_history": [
     {
@@ -52,10 +48,7 @@
     "completed_at": "2026-02-07T18:16:00.000Z",
     "duration_minutes": 20,
     "executor": "Claude Code /exec",
-    "agents": [
-      "Foundation",
-      "Domain"
-    ],
+    "agents": ["Foundation", "Domain"],
     "retry_count": 0,
     "last_error": null
   },
@@ -122,9 +115,5 @@
   },
   "blockers": [],
   "notes": "Completed: 4 new tRPC procedures (assign, reschedule, getReminders, getByEntity) + 4 Zod schemas + 22 new tests. 63/63 tests pass. All 10 DoD endpoints verified. PERT was 195 min, actual exec ~20 min.",
-  "dependencies_resolved": [
-    "IFC-105",
-    "IFC-107",
-    "IFC-003"
-  ]
+  "dependencies_resolved": ["IFC-105", "IFC-107", "IFC-003"]
 }

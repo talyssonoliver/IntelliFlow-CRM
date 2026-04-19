@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../schemas/task-status.schema.json",
+  "$schema": "../../schemas/task-status.schema.json",
   "taskId": "ENV-018-AI",
   "description": "Sprint Planning and Velocity Prediction",
   "owner": "PM + AI Planning Tools",
@@ -9,14 +9,10 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-04-14T19:39:53.087Z",
-    "required": [
-      "ENV-017-AI"
-    ]
+    "verified_at": "2026-04-19T10:06:56.727Z",
+    "required": ["ENV-017-AI"]
   },
-  "dependencies_resolved": [
-    "ENV-017-AI"
-  ],
+  "dependencies_resolved": ["ENV-017-AI"],
   "started_at": "2025-12-15T00:15:00Z",
   "completed_at": "2025-12-15T00:45:00Z",
   "target_duration_minutes": 120,

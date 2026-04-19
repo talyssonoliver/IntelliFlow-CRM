@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../schemas/task-status.schema.json",
+  "$schema": "../schemas/task-status.schema.json",
   "task_id": "IFC-198",
   "section": "Billing Pages",
   "description": "Billing Domain Core - Invoice/Receipt aggregates, payment state machine, tax/refund rules",

@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../schemas/task-status.schema.json",
+  "$schema": "../../schemas/task-status.schema.json",
   "task_id": "IFC-186",
   "section": "Core CRM",
   "description": "Deal/Opportunity tRPC Router - CRUD pipeline stages probability history products",
@@ -8,19 +8,11 @@
   "started_at": "2026-02-05T14:00:00.000Z",
   "completed_at": "2026-02-05T23:10:00.000Z",
   "dependencies": {
-    "required": [
-      "IFC-104",
-      "IFC-107",
-      "IFC-003"
-    ],
-    "verified_at": "2026-04-14T19:39:53.777Z",
+    "required": ["IFC-104", "IFC-107", "IFC-003"],
+    "verified_at": "2026-04-19T10:06:57.063Z",
     "all_satisfied": true
   },
-  "dependencies_resolved": [
-    "IFC-104",
-    "IFC-107",
-    "IFC-003"
-  ],
+  "dependencies_resolved": ["IFC-104", "IFC-107", "IFC-003"],
   "status_history": [
     {
       "status": "Backlog",

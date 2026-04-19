@@ -1,5 +1,5 @@
 {
-  "$schema": "../../schemas/task-status.schema.json",
+  "$schema": "../schemas/task-status.schema.json",
   "task_id": "IFC-202",
   "section": "Core CRM",
   "description": "Activity Feed Stats Endpoint - getStats aggregation with counts by type source and entity over time windows",
@@ -10,10 +10,8 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-04-14T19:39:53.332Z",
-    "required": [
-      "IFC-069"
-    ]
+    "verified_at": "2026-04-19T10:06:56.876Z",
+    "required": ["IFC-069"]
   },
   "started_at": "2026-03-10T12:00:00+00:00",
   "completed_at": "2026-03-10T03:05:17.745Z",
@@ -68,8 +66,6 @@
   "current_phase": "SPEC_COMPLETE",
   "updated_at": "2026-03-10T12:00:00+00:00",
   "attempt": 0,
-  "dependencies_resolved": [
-    "IFC-069"
-  ],
+  "dependencies_resolved": ["IFC-069"],
   "actual_duration_minutes": 15
 }

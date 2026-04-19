@@ -1,5 +1,5 @@
 {
-  "$schema": "../../schemas/task-status.schema.json",
+  "$schema": "../schemas/task-status.schema.json",
   "task_id": "IFC-174",
   "section": "AI/ML",
   "description": "Run REAL Ollama benchmarks - Follow-up to IFC-085",
@@ -10,11 +10,8 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-04-14T19:39:53.252Z",
-    "required": [
-      "IFC-085",
-      "IFC-168"
-    ]
+    "verified_at": "2026-04-19T10:06:56.837Z",
+    "required": ["IFC-085", "IFC-168"]
   },
   "started_at": "2026-02-13T23:23:20+00:00",
   "completed_at": "2026-02-23T22:15:19.563Z",
@@ -54,8 +51,5 @@
   "updated_at": "2026-02-13T23:23:22+00:00",
   "attempt": 0,
   "actual_duration_minutes": 15,
-  "dependencies_resolved": [
-    "IFC-085",
-    "IFC-168"
-  ]
+  "dependencies_resolved": ["IFC-085", "IFC-168"]
 }

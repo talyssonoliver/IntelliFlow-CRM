@@ -1,5 +1,5 @@
 {
-  "$schema": "../../schemas/task-status.schema.json",
+  "$schema": "../schemas/task-status.schema.json",
   "task_id": "IFC-305",
   "section": "Core CRM",
   "description": "Componentize CRM entity detail pages (Leads, Contacts) — extract shared SOLID-compliant components from 5284 lines of duplicated god-files; wire bypassed shared components (EntityHeader, SearchFilterBar, ActivityFeed); create cross-entity reusable components (EntityProfileCard, ActivityFilterBar, AiInsightMetricsGrid, ai-insight-transforms utility, EntityErrorState, EntityDetailSkeleton, ConfirmationDialog); reduce page files from 2691/2593 to ~200 lines each",
@@ -9,15 +9,11 @@
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
-    "required": [
-      "IFC-226"
-    ],
+    "required": ["IFC-226"],
     "all_satisfied": true,
-    "verified_at": "2026-04-14T19:39:53.466Z"
+    "verified_at": "2026-04-19T10:06:56.956Z"
   },
-  "dependencies_resolved": [
-    "IFC-226"
-  ],
+  "dependencies_resolved": ["IFC-226"],
   "started_at": null,
   "completed_at": null,
   "target_duration_minutes": 360,

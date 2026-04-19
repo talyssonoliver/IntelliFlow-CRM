@@ -90,7 +90,7 @@ function calculateSprintSchedule(
   const summaryPath = join(metricsDir, `sprint-${sprintNum}`, '_summary.json');
   let sprintStart = new Date();
   let sprintEnd = new Date();
-  sprintEnd.setDate(sprintEnd.getDate() + 14); // Default 2-week sprint
+  sprintEnd.setUTCDate(sprintEnd.getUTCDate() + 14); // Default 2-week sprint
 
   if (existsSync(summaryPath)) {
     try {

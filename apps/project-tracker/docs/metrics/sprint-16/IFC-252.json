@@ -11,7 +11,7 @@
   "dependencies": {
     "required": [],
     "all_satisfied": true,
-    "verified_at": "2026-04-14T19:39:53.347Z"
+    "verified_at": "2026-04-19T10:06:56.884Z"
   },
   "dependencies_resolved": [],
   "started_at": "2026-03-12T22:06:12.217Z",
@@ -31,12 +31,8 @@
     }
   },
   "artifacts": {
-    "expected": [
-      "apps/api/src/modules/contact/contact.router.ts"
-    ],
-    "created": [
-      "apps/api/src/modules/contact/contact.router.ts"
-    ],
+    "expected": ["apps/api/src/modules/contact/contact.router.ts"],
+    "created": ["apps/api/src/modules/contact/contact.router.ts"],
     "missing": []
   },
   "validations": [

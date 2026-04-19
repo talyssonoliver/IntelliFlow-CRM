@@ -14,7 +14,7 @@
     "failed": 0
   },
   "completed_tasks": [],
-  "notes": "0/14 tasks DONE (0%). Last synced: 2026-04-14T19:39:53.569Z",
+  "notes": "0/14 tasks DONE (0%). Last synced: 2026-04-19T10:06:56.992Z",
   "schedule": {
     "sprint_start_date": null,
     "sprint_end_date": null,
@@ -38,6 +38,6 @@
       "spi": 0,
       "status": "critical"
     },
-    "calculated_at": "2026-04-14T19:39:53.869Z"
+    "calculated_at": "2026-04-19T10:06:57.118Z"
   }
 }

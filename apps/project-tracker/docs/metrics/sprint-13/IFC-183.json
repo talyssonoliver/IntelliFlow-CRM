@@ -1,5 +1,5 @@
 {
-  "$schema": "../../schemas/task-status.schema.json",
+  "$schema": "../schemas/task-status.schema.json",
   "task_id": "IFC-183",
   "section": "Infrastructure",
   "description": "Notifications tRPC Router - List mark read preferences real-time subscription",
@@ -10,11 +10,8 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-04-14T19:39:53.809Z",
-    "required": [
-      "IFC-003",
-      "IFC-157"
-    ]
+    "verified_at": "2026-04-19T10:06:57.081Z",
+    "required": ["IFC-003", "IFC-157"]
   },
   "started_at": "2026-02-13T23:23:53+00:00",
   "completed_at": "2026-02-23T22:15:19.714Z",
@@ -194,8 +191,5 @@
   "updated_at": "2026-02-13T23:40:26+00:00",
   "attempt": 0,
   "actual_duration_minutes": 15,
-  "dependencies_resolved": [
-    "IFC-003",
-    "IFC-157"
-  ]
+  "dependencies_resolved": ["IFC-003", "IFC-157"]
 }

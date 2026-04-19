@@ -31,8 +31,8 @@ export async function POST(request: NextRequest) {
     const projectRoot = path.resolve(process.cwd(), '../..');
     const scriptPath =
       testType === 'quick'
-        ? 'artifacts/misc/k6/scripts/authenticated-load-test.js'
-        : 'artifacts/misc/k6/scripts/comprehensive-load-test.js';
+        ? 'tools/scripts/k6/authenticated-load-test.js'
+        : 'tools/scripts/k6/comprehensive-load-test.js';
 
     const fullScriptPath = path.join(projectRoot, scriptPath);
 

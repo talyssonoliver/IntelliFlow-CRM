@@ -30,7 +30,7 @@ skill gaps.
 ### IFC-001: Technical Architecture Spike
 
 - **Status:** DONE (Verified)
-- **Evidence:** `docs/planning/adr/ADR-001-modern-stack.md`
+- **Evidence:** `docs/architecture/adr/ADR-001-modern-stack.md`
 - **Verification Date:** 2025-12-26
 
 ### IFC-005: Technology Stack Validation
@@ -43,11 +43,11 @@ skill gaps.
 
 ## Pre-requisites Read
 
-| Document                | Path                                        | Read Status                   |
-| ----------------------- | ------------------------------------------- | ----------------------------- |
-| Framework.md            | `artifacts/sprint0/codex-run/Framework.md`  | VERIFIED                      |
-| ADR-001-modern-stack.md | `docs/planning/adr/ADR-001-modern-stack.md` | VERIFIED                      |
-| audit-matrix.yml        | Root directory                              | FILE NOT FOUND (non-blocking) |
+| Document                | Path                                            | Read Status                   |
+| ----------------------- | ----------------------------------------------- | ----------------------------- |
+| Framework.md            | `artifacts/sprint0/codex-run/Framework.md`      | VERIFIED                      |
+| ADR-001-modern-stack.md | `docs/architecture/adr/ADR-001-modern-stack.md` | VERIFIED                      |
+| audit-matrix.yml        | Root directory                                  | FILE NOT FOUND (non-blocking) |
 
 ---
 
@@ -62,7 +62,7 @@ skill gaps.
 - Team average calculated: 81.2%
 - Gap analysis performed
 
-**Evidence:** `artifacts/reports/team-skills-matrix.csv`
+**Evidence:** `docs/training/team-skills-matrix.csv`
 
 ### 2. Training Plan Created
 
@@ -79,12 +79,12 @@ skill gaps.
 
 **Status:** COMPLETE
 
-| Artifact                | Path                                         | Status  |
-| ----------------------- | -------------------------------------------- | ------- |
-| team-skills-matrix      | `artifacts/reports/team-skills-matrix.csv`   | CREATED |
-| training-plan           | `docs/planning/training-plan.md`             | CREATED |
-| competency-test-results | `artifacts/misc/competency-test-results.csv` | CREATED |
-| confidence-survey       | `artifacts/reports/confidence-survey.md`     | CREATED |
+| Artifact                | Path                                            | Status  |
+| ----------------------- | ----------------------------------------------- | ------- |
+| team-skills-matrix      | `docs/training/team-skills-matrix.csv`          | CREATED |
+| training-plan           | `docs/planning/training-plan.md`                | CREATED |
+| competency-test-results | `artifacts/reports/competency-test-results.csv` | CREATED |
+| confidence-survey       | `artifacts/reports/confidence-survey.md`        | CREATED |
 
 ### 4. Target Met (>=80% Team Confidence)
 

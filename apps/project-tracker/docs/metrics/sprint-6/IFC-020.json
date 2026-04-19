@@ -5,10 +5,8 @@
   "description": "PHASE-011: LangChain Pipeline Design",
   "owner": "AI/ML Eng",
   "dependencies": {
-    "required": [
-      "IFC-019"
-    ],
-    "verified_at": "2026-04-14T19:39:53.188Z",
+    "required": ["IFC-019"],
+    "verified_at": "2026-04-19T10:06:56.794Z",
     "all_satisfied": true
   },
   "status": "DONE",
@@ -53,7 +51,5 @@
   "started_at": "2025-12-31T02:50:00Z",
   "completed_at": "2025-12-31T03:36:53Z",
   "actual_duration_minutes": 45,
-  "dependencies_resolved": [
-    "IFC-019"
-  ]
+  "dependencies_resolved": ["IFC-019"]
 }

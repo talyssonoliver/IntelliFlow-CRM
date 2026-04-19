@@ -5,10 +5,8 @@
   "description": "FLOW-002, FLOW-011: LangChain AI Scoring Prototype",
   "owner": "AI Specialist + Backend Dev",
   "dependencies": {
-    "required": [
-      "IFC-004"
-    ],
-    "verified_at": "2026-04-14T19:39:53.114Z",
+    "required": ["IFC-004"],
+    "verified_at": "2026-04-19T10:06:56.745Z",
     "all_satisfied": true,
     "notes": "IFC-004 Lead Capture UI completed - form integrates with tRPC API"
   },
@@ -150,10 +148,7 @@
   },
   "stoa_verdicts": {
     "lead": "Intelligence",
-    "supporting": [
-      "Quality",
-      "Domain"
-    ],
+    "supporting": ["Quality", "Domain"],
     "intelligence_verdict": "PASS",
     "quality_verdict": "PASS",
     "domain_verdict": "PASS",
@@ -171,7 +166,5 @@
   "notes": "LangChain AI scoring pipeline implemented with: ChatOpenAI model integration, StructuredOutputParser for type-safe output, Zod schema validation, cost tracking, batch scoring capability, error handling with graceful degradation. Scoring framework analyzes 4 factors: Contact Completeness (25pts), Engagement (25pts), Qualification Signals (25pts), Data Quality (25pts). Output includes score (0-100), confidence (0-1), factor breakdown, and model version tracking.",
   "completed_at": "2025-12-22T20:40:00Z",
   "started_at": "2025-12-22T20:30:00Z",
-  "dependencies_resolved": [
-    "IFC-004"
-  ]
+  "dependencies_resolved": ["IFC-004"]
 }

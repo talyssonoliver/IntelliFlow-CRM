@@ -162,18 +162,18 @@ export function addWorkingMinutes(date: Date, minutes: number, config: ScheduleC
 
   while (remainingMinutes > 0) {
     const minutesToday = Math.min(remainingMinutes, workingMinutesPerDay);
-    result.setMinutes(result.getMinutes() + minutesToday);
+    result.setUTCMinutes(result.getUTCMinutes() + minutesToday);
     remainingMinutes -= minutesToday;
 
     if (remainingMinutes > 0) {
       // Move to next working day
-      result.setDate(result.getDate() + 1);
+      result.setUTCDate(result.getUTCDate() + 1);
       // Skip weekends
-      while (result.getDay() === 0 || result.getDay() === 6) {
-        result.setDate(result.getDate() + 1);
+      while (result.getUTCDay() === 0 || result.getUTCDay() === 6) {
+        result.setUTCDate(result.getUTCDate() + 1);
       }
       // Reset to start of day
-      result.setHours(9, 0, 0, 0);
+      result.setUTCHours(9, 0, 0, 0);
     }
   }
 
@@ -257,7 +257,7 @@ function computeSprintBasedStart(
   taskPositionInSprint: Map<string, number>
 ): Date {
   const sprintStartDate = new Date(sprintStart);
-  sprintStartDate.setDate(sprintStartDate.getDate() + task.targetSprint! * 14);
+  sprintStartDate.setUTCDate(sprintStartDate.getUTCDate() + task.targetSprint! * 14);
   const sprintTasks = tasksBySpint.get(task.targetSprint!) || [];
   const position = taskPositionInSprint.get(task.taskId) || 0;
   const totalTasksInSprint = sprintTasks.length;
@@ -267,7 +267,7 @@ function computeSprintBasedStart(
       ? Math.floor((position / (totalTasksInSprint - 1)) * daysToDistribute)
       : 0;
   const result = new Date(sprintStartDate);
-  result.setDate(result.getDate() + dayOffset);
+  result.setUTCDate(result.getUTCDate() + dayOffset);
   return result;
 }
 

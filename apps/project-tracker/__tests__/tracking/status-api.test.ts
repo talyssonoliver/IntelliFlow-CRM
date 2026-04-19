@@ -341,7 +341,10 @@ IFC-001,"Architecture, Design","Technical Architecture Spike, Phase 1",Completed
       expect(data.status).toBe('error');
     });
 
-    it.todo('<5s refresh KPI — requires Playwright E2E test (NF-001 placeholder)');
+    // NOTE: "<5s refresh KPI" (NF-001) is a performance requirement that must be
+    // verified via a Playwright E2E test measuring actual browser refresh timing.
+    // It cannot be expressed as a unit test. Add to packages/e2e/ when the
+    // project-tracker E2E suite is set up.
   });
 
   describe('CSV Parsing', () => {

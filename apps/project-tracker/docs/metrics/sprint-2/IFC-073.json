@@ -1,14 +1,12 @@
 {
-  "$schema": "../../schemas/task-status.schema.json",
+  "$schema": "../schemas/task-status.schema.json",
   "task_id": "IFC-073",
   "section": "Compliance",
   "description": "PHASE-040: Privacy Impact Assessment",
   "owner": "DPO + Legal",
   "dependencies": {
-    "required": [
-      "IFC-072"
-    ],
-    "verified_at": "2026-04-14T19:39:53.118Z",
+    "required": ["IFC-072"],
+    "verified_at": "2026-04-19T10:06:56.749Z",
     "all_satisfied": true
   },
   "status": "DONE",
@@ -37,12 +35,12 @@
     "expected": [
       "docs/security/dpia.md",
       "docs/security/data-flows.md",
-      "docs/compliance/gdpr-checklist.md"
+      "docs/compliance-and-governance/compliance/gdpr-checklist.md"
     ],
     "created": [
       "docs/security/dpia.md",
       "docs/security/data-flows.md",
-      "docs/compliance/gdpr-checklist.md"
+      "docs/compliance-and-governance/compliance/gdpr-checklist.md"
     ],
     "missing": []
   },
@@ -75,7 +73,5 @@
   "completed_at": "2025-12-27T11:33:39.467Z",
   "started_at": "2025-12-27T11:18:39.467Z",
   "actual_duration_minutes": 15,
-  "dependencies_resolved": [
-    "IFC-072"
-  ]
+  "dependencies_resolved": ["IFC-072"]
 }

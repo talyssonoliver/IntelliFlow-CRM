@@ -9,11 +9,9 @@
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
-    "required": [
-      "IFC-278:FS"
-    ],
+    "required": ["IFC-278:FS"],
     "all_satisfied": false,
-    "verified_at": "2026-04-14T19:39:53.421Z"
+    "verified_at": "2026-04-19T10:06:56.931Z"
   },
   "dependencies_resolved": [],
   "started_at": null,
@@ -37,9 +35,7 @@
       "apps/web/src/app/deals/[id]/page.tsx",
       ".specify/sprints/sprint-18/attestations/IFC-280/context_ack.json"
     ],
-    "created": [
-      "apps/web/src/app/deals/[id]/page.tsx"
-    ],
+    "created": ["apps/web/src/app/deals/[id]/page.tsx"],
     "missing": [
       ".specify/sprints/sprint-18/attestations/IFC-280/context_ack.json"
     ]

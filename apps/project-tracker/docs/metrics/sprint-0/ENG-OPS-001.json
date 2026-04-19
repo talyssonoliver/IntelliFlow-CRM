@@ -2,13 +2,9 @@
   "task_id": "ENG-OPS-001",
   "status": "DONE",
   "dependencies": {
-    "required": [
-      "ENV-002-AI",
-      "ENV-005-AI",
-      "ENV-010-AI"
-    ],
+    "required": ["ENV-002-AI", "ENV-005-AI", "ENV-010-AI"],
     "all_satisfied": true,
-    "verified_at": "2026-04-14T19:39:53.068Z"
+    "verified_at": "2026-04-19T10:06:56.716Z"
   },
   "validations": [
     {
@@ -29,9 +25,5 @@
   "started_at": "2026-04-13T00:27:36.754Z",
   "actual_duration_minutes": 15,
   "description": "Engineering Playbook (SDLC, PR rules, quality gates, release/rollback)",
-  "dependencies_resolved": [
-    "ENV-002-AI",
-    "ENV-005-AI",
-    "ENV-010-AI"
-  ]
+  "dependencies_resolved": ["ENV-002-AI", "ENV-005-AI", "ENV-010-AI"]
 }

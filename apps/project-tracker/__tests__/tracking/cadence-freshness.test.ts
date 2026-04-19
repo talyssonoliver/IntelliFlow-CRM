@@ -82,9 +82,9 @@ describe('Cadence Freshness Checker', () => {
 
     it('extracts only ARTIFACT: from mixed prefixes', () => {
       const result = parseArtifacts(
-        'ARTIFACT:docs/debt-ledger.yaml;EVIDENCE:.specify/foo/bar.json'
+        'ARTIFACT:artifacts/metrics/debt-ledger.yaml;EVIDENCE:.specify/foo/bar.json'
       );
-      expect(result).toEqual(['docs/debt-ledger.yaml']);
+      expect(result).toEqual(['artifacts/metrics/debt-ledger.yaml']);
     });
 
     it('skips raw paths without ARTIFACT: prefix', () => {

@@ -287,5 +287,5 @@ All actions are logged in `ChainVersionAudit` with:
 
 ### Artifacts
 
-- `artifacts/misc/prompt-versions/prompt-versions-latest.json`
-- `artifacts/misc/ab-test-config.yaml`
+- `artifacts/prompts/prompt-versions-latest.json`
+- `infra/monitoring/ab-test-config.yaml`

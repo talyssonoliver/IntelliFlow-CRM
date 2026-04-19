@@ -1,5 +1,5 @@
 {
-  "$schema": "../../schemas/task-status.schema.json",
+  "$schema": "../schemas/task-status.schema.json",
   "task_id": "IFC-207",
   "section": "Core CRM",
   "description": "Ticket Query Performance Tracking - add queryDurationMs to ticket list and stats endpoints using performance.now pattern from timeline router",
@@ -10,10 +10,8 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-04-14T19:39:53.225Z",
-    "required": [
-      "IFC-189"
-    ]
+    "verified_at": "2026-04-19T10:06:56.821Z",
+    "required": ["IFC-189"]
   },
   "started_at": "2026-02-14T22:00:00+00:00",
   "completed_at": "2026-02-14T22:43:00+00:00",
@@ -104,7 +102,5 @@
   "current_phase": "COMPLETED",
   "updated_at": "2026-02-14T22:43:00+00:00",
   "attempt": 0,
-  "dependencies_resolved": [
-    "IFC-189"
-  ]
+  "dependencies_resolved": ["IFC-189"]
 }

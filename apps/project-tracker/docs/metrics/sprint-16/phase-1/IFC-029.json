@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../schemas/task-status.schema.json",
+  "$schema": "../../schemas/task-status.schema.json",
   "task_id": "IFC-029",
   "section": "Automation",
   "description": "PHASE-005: Auto-Response with Approval Gate",
@@ -46,10 +46,8 @@
     }
   ],
   "dependencies": {
-    "required": [
-      "IFC-028"
-    ],
-    "verified_at": "2026-04-14T19:39:53.324Z",
+    "required": ["IFC-028"],
+    "verified_at": "2026-04-19T10:06:56.871Z",
     "all_satisfied": true,
     "notes": "IFC-028 completed"
   },
@@ -168,7 +166,7 @@
     "total_estimated_hours": "5.5-9.25",
     "actual_duration_minutes": 62,
     "decision_records": [
-      "docs/planning/adr/ADR-017-workflow-reliability.md"
+      "docs/architecture/adr/ADR-017-workflow-reliability.md"
     ],
     "coverage_targets": {
       "overall": ">90%",
@@ -216,7 +214,5 @@
   ],
   "blockers": [],
   "notes": "AI-generated responses with human approval workflow. Must call real LLM chain, not return template placeholders. Spec session completed with 4 agents across 4 rounds. Implementation completed via TDD - all domain layer code with comprehensive tests. Key features: AutoResponseDraft aggregate with 8 status states, 9 domain events, tenant isolation, lead status validation, approval workflow with escalation support.",
-  "dependencies_resolved": [
-    "IFC-028"
-  ]
+  "dependencies_resolved": ["IFC-028"]
 }

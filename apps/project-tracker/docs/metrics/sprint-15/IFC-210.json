@@ -1,5 +1,5 @@
 {
-  "$schema": "../../schemas/task-status.schema.json",
+  "$schema": "../schemas/task-status.schema.json",
   "task_id": "IFC-210",
   "section": "SEO",
   "description": "Fill SEO metadata gaps on public pages - add description OG and Twitter tags to /pricing, complete OG tags on /about and /features, add layout-level metadata for auth-flow pages (content audit findings F-010 F-011 F-012)",
@@ -9,15 +9,11 @@
   "stream": null,
   "status": "DONE",
   "dependencies": {
-    "required": [
-      "DOC-009"
-    ],
+    "required": ["DOC-009"],
     "all_satisfied": true,
-    "verified_at": "2026-04-14T19:39:53.314Z"
+    "verified_at": "2026-04-19T10:06:56.866Z"
   },
-  "dependencies_resolved": [
-    "DOC-009"
-  ],
+  "dependencies_resolved": ["DOC-009"],
   "started_at": "2026-03-03T01:40:43.818Z",
   "completed_at": "2026-03-03T01:55:43.818Z",
   "target_duration_minutes": null,

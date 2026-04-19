@@ -12,7 +12,7 @@
 
 - [x] docs/docusaurus.config.js - Site configuration
 - [x] docs/sidebars.js - Navigation structure
-- [x] docs/glossary.md - Terminology reference
+- [x] docs/shared/glossary.md - Terminology reference
 - [x] docs/templates/chunking-strategy.md - Content optimization
 - [x] .github/workflows/ci.yml - Deployment pipeline
 - [x] docs/search-index.json - Search functionality

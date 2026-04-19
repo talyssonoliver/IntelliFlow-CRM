@@ -359,13 +359,13 @@ amounts
 
 ### Backend (PARTIAL)
 
-| Artifact             | Path                                                          | Status              |
-| -------------------- | ------------------------------------------------------------- | ------------------- |
-| Home Router          | `apps/api/src/modules/home/home.router.ts`                    | PARTIAL             |
-| AI Insights Endpoint | `apps/api/src/modules/home/insights.ts`                       | **NOT IMPLEMENTED** |
-| Daily Goals Endpoint | `apps/api/src/modules/home/goals.ts`                          | **NOT IMPLEMENTED** |
-| Home Page Spec       | `docs/specs/HOME-PAGE-SPEC.md`                                | **NOT IMPLEMENTED** |
-| ADR-027              | `docs/planning/adr/ADR-027-authenticated-home-composition.md` | **NOT IMPLEMENTED** |
+| Artifact             | Path                                                              | Status              |
+| -------------------- | ----------------------------------------------------------------- | ------------------- |
+| Home Router          | `apps/api/src/modules/home/home.router.ts`                        | PARTIAL             |
+| AI Insights Endpoint | `apps/api/src/modules/home/insights.ts`                           | **NOT IMPLEMENTED** |
+| Daily Goals Endpoint | `apps/api/src/modules/home/goals.ts`                              | **NOT IMPLEMENTED** |
+| Home Page Spec       | `docs/specs/HOME-PAGE-SPEC.md`                                    | **NOT IMPLEMENTED** |
+| ADR-027              | `docs/architecture/adr/ADR-027-authenticated-home-composition.md` | **NOT IMPLEMENTED** |
 
 ---
 

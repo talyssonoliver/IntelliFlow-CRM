@@ -1,5 +1,5 @@
 {
-  "$schema": "../../schemas/task-status.schema.json",
+  "$schema": "../schemas/task-status.schema.json",
   "task_id": "IFC-195",
   "section": "Core CRM",
   "description": "Customizable Daily Goals - Multi-type goal support (revenue calls meetings tasks custom) with user preferences",
@@ -10,10 +10,8 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-04-14T19:39:53.299Z",
-    "required": [
-      "IFC-182"
-    ]
+    "verified_at": "2026-04-19T10:06:56.859Z",
+    "required": ["IFC-182"]
   },
   "started_at": "2026-02-27T00:00:00+00:00",
   "completed_at": "2026-02-28T00:28:01.895Z",
@@ -136,8 +134,6 @@
   "current_phase": "COMPLETED",
   "updated_at": "2026-02-28T00:26:00+00:00",
   "attempt": 0,
-  "dependencies_resolved": [
-    "IFC-182"
-  ],
+  "dependencies_resolved": ["IFC-182"],
   "actual_duration_minutes": 15
 }

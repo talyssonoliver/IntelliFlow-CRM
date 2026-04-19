@@ -187,7 +187,7 @@ AI-SETUP-001:
       description: 'Count Claude commands (>0)'
       type: auto
       required: true
-    - command: 'test -f artifacts/misc/command-test-results.csv'
+    - command: 'test -f artifacts/reports/command-test-results.csv'
       description: 'Command test results'
       type: auto
       required: true
@@ -335,7 +335,7 @@ ENV-010-AI:
 
 EXC-SEC-001:
   validation_commands:
-    - command: 'test -f artifacts/misc/vault-config.yaml'
+    - command: 'test -f infra/monitoring/vault-config.yaml'
       description: 'Vault configuration'
       type: auto
       required: true
@@ -396,7 +396,7 @@ EP-001-AI:
       description: 'Config hashes artifact exists'
       type: auto
       required: true
-    - command: 'test -f docs/operations/monitoring-runbook.md'
+    - command: 'test -f docs/operations/runbooks/monitoring-runbook.md'
       description: 'Monitoring runbook exists'
       type: auto
       required: true
@@ -477,7 +477,7 @@ ENV-012-AI:
 
 ENV-015-AI:
   validation_commands:
-    - command: 'test -d packages/platform/src/feature-flags || test -f artifacts/misc/rollout-config.json'
+    - command: 'test -d packages/platform/src/feature-flags || test -f infra/monitoring/rollout-config.json'
       description: 'Feature flag system exists'
       type: auto
       required: true
@@ -491,7 +491,7 @@ ENV-015-AI:
 
 ENV-016-AI:
   validation_commands:
-    - command: 'test -d artifacts/misc/analytics || test -f artifacts/misc/privacy-config.json'
+    - command: 'test -d artifacts/misc/analytics || test -f infra/monitoring/privacy-config.json'
       description: 'Analytics configuration exists'
       type: auto
       required: true
@@ -525,7 +525,7 @@ ENV-018-AI:
       description: 'Sprint plan exists'
       type: auto
       required: true
-    - command: 'test -d artifacts/misc/sprint-planning || test -f artifacts/misc/velocity-prediction.json'
+    - command: 'test -d artifacts/misc/sprint-planning || test -f packages/test-fixtures/velocity-prediction.json'
       description: 'Sprint planning artifacts exist'
       type: auto
       required: true
@@ -543,7 +543,7 @@ AUTOMATION-001:
       description: 'AI agent coordination system exists'
       type: auto
       required: true
-    - command: 'test -f artifacts/misc/orchestration-config.yaml || test -d .claude/commands'
+    - command: 'test -f infra/monitoring/orchestration-config.yaml || test -d .claude/commands'
       description: 'Orchestration configuration exists'
       type: auto
       required: true
@@ -557,7 +557,7 @@ AUTOMATION-002:
       description: 'AI dashboard artifacts exist'
       type: auto
       required: true
-    - command: 'test -f artifacts/misc/optimization-loop.yaml || test -f artifacts/misc/roi-tracking.csv'
+    - command: 'test -f infra/monitoring/optimization-loop.yaml || test -f artifacts/reports/roi-tracking.csv'
       description: 'Optimization loop configuration exists'
       type: auto
       required: true
@@ -813,7 +813,7 @@ ANALYTICS-001:
 
 IFC-001:
   validation_commands:
-    - command: 'test -f docs/architecture/technical-spike.md || test -d docs/planning/adr'
+    - command: 'test -f docs/architecture/technical-spike.md || test -d docs/architecture/adr'
       description: 'Architecture spike documentation exists'
       type: auto
       required: true
@@ -877,7 +877,7 @@ IFC-073:
       description: 'Data flows documentation exists'
       type: auto
       required: true
-    - command: 'test -f docs/compliance/gdpr-checklist.md'
+    - command: 'test -f docs/compliance-and-governance/compliance/gdpr-checklist.md'
       description: 'GDPR checklist exists'
       type: auto
       required: true
@@ -937,23 +937,23 @@ IFC-106:
 
 IFC-135:
   validation_commands:
-    - command: 'test -f docs/planning/adr/ADR-004-multi-tenancy.md'
+    - command: 'test -f docs/architecture/adr/ADR-004-multi-tenancy.md'
       description: 'Multi-tenancy ADR exists'
       type: auto
       required: true
-    - command: 'test -f docs/planning/adr/ADR-005-workflow-engine.md'
+    - command: 'test -f docs/architecture/adr/ADR-005-workflow-engine.md'
       description: 'Workflow engine ADR exists'
       type: auto
       required: true
-    - command: 'test -f docs/planning/adr/ADR-006-agent-tools.md'
+    - command: 'test -f docs/architecture/adr/ADR-006-agent-tools.md'
       description: 'Agent tools ADR exists'
       type: auto
       required: true
-    - command: 'test -f docs/planning/adr/ADR-007-data-governance.md'
+    - command: 'test -f docs/architecture/adr/ADR-007-data-governance.md'
       description: 'Data governance ADR exists'
       type: auto
       required: true
-    - command: 'test -f docs/planning/adr/ADR-008-audit-logging.md'
+    - command: 'test -f docs/architecture/adr/ADR-008-audit-logging.md'
       description: 'Audit logging ADR exists'
       type: auto
       required: true
@@ -963,7 +963,7 @@ IFC-135:
 
 GOV-001:
   validation_commands:
-    - command: 'test -f docs/architecture/adr/000-template.md'
+    - command: 'test -f docs/architecture/adr/template.md'
       description: 'ADR template exists'
       type: auto
       required: true
@@ -1017,15 +1017,15 @@ IFC-077:
       description: 'Rate limiting middleware implementation exists'
       type: auto
       required: true
-    - command: 'test -f artifacts/misc/rate-limit-config.yaml'
+    - command: 'test -f infra/monitoring/rate-limit-config.yaml'
       description: 'Rate limit configuration exists'
       type: auto
       required: true
-    - command: 'test -f artifacts/misc/load-test-with-limits.json'
+    - command: 'test -f artifacts/reports/load-test-with-limits.json'
       description: 'Load test results exist'
       type: auto
       required: true
-    - command: 'test -f artifacts/misc/false-positive.csv'
+    - command: 'test -f artifacts/reports/false-positive.csv'
       description: 'False positive analysis exists'
       type: auto
       required: true
@@ -1037,19 +1037,19 @@ IFC-077:
 
 IFC-119:
   validation_commands:
-    - command: 'test -f artifacts/misc/ceremony-calendar.ics'
+    - command: 'test -f docs/planning/ceremony-calendar.ics'
       description: 'Ceremony calendar exists'
       type: auto
       required: true
-    - command: 'test -f artifacts/misc/templates/sprint-planning.md'
+    - command: 'test -f docs/planning/templates/sprint-planning.md'
       description: 'Sprint planning template exists'
       type: auto
       required: true
-    - command: 'test -f artifacts/misc/templates/sprint-retrospective.md'
+    - command: 'test -f docs/planning/templates/sprint-retrospective.md'
       description: 'Retrospective template exists'
       type: auto
       required: true
-    - command: 'test -f artifacts/misc/templates/backlog-refinement.md'
+    - command: 'test -f docs/planning/templates/backlog-refinement.md'
       description: 'Backlog refinement template exists'
       type: auto
       required: true

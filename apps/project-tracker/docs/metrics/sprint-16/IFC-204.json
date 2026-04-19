@@ -1,5 +1,5 @@
 {
-  "$schema": "../../schemas/task-status.schema.json",
+  "$schema": "../schemas/task-status.schema.json",
   "task_id": "IFC-204",
   "section": "Core CRM",
   "description": "Activity Feed Performance Observability - queryDurationMs tracking structured logging and latency alerting",

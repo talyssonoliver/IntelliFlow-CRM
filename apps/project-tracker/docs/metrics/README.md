@@ -167,6 +167,6 @@ Get-Content "sprint-0/_summary.json" | ConvertFrom-Json | ConvertTo-Json -Depth 
 ## Related Documentation
 
 - [Sprint Plan](_global/Sprint_plan.json) - Master task list
-- [Architecture Decision Records](../../../../docs/planning/adr/) - Design
+- [Architecture Decision Records](../../../../docs/architecture/adr/) - Design
   decisions
 - [Setup Guide](../../../../SETUP.md) - Environment setup instructions

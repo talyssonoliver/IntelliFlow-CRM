@@ -2,11 +2,9 @@
   "task_id": "ENV-001-AI",
   "status": "DONE",
   "dependencies": {
-    "required": [
-      "AI-SETUP-001"
-    ],
+    "required": ["AI-SETUP-001"],
     "all_satisfied": true,
-    "verified_at": "2026-04-14T19:39:53.038Z"
+    "verified_at": "2026-04-19T10:06:56.688Z"
   },
   "validations": [
     {
@@ -27,7 +25,5 @@
   "started_at": "2026-04-13T00:27:36.724Z",
   "actual_duration_minutes": 15,
   "description": "Automated Monorepo Creation",
-  "dependencies_resolved": [
-    "AI-SETUP-001"
-  ]
+  "dependencies_resolved": ["AI-SETUP-001"]
 }

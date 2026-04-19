@@ -1,5 +1,5 @@
 {
-  "$schema": "../../schemas/task-status.schema.json",
+  "$schema": "../schemas/task-status.schema.json",
   "task_id": "DOC-014",
   "section": "Documentation",
   "description": "Automated content audit script - TypeScript CLI that scans page.tsx files, resolves metadata chains, calculates SEO scores, detects ghost links, and regenerates content-audit-results.json; integrates as CI check on PR modifying app routes",
@@ -9,15 +9,11 @@
   "stream": null,
   "status": "DONE",
   "dependencies": {
-    "required": [
-      "DOC-009"
-    ],
+    "required": ["DOC-009"],
     "all_satisfied": true,
-    "verified_at": "2026-04-14T19:39:53.315Z"
+    "verified_at": "2026-04-19T10:06:56.867Z"
   },
-  "dependencies_resolved": [
-    "DOC-009"
-  ],
+  "dependencies_resolved": ["DOC-009"],
   "started_at": "2026-03-07T11:52:12.108Z",
   "completed_at": "2026-03-07T12:07:12.108Z",
   "target_duration_minutes": null,

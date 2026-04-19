@@ -1,5 +1,5 @@
 {
-  "$schema": "../../schemas/task-status.schema.json",
+  "$schema": "../schemas/task-status.schema.json",
   "task_id": "DOC-012",
   "section": "Documentation",
   "description": "Establish quarterly accessibility documentation review cadence with recurring sprint task template",
@@ -9,15 +9,11 @@
   "stream": null,
   "status": "DONE",
   "dependencies": {
-    "required": [
-      "DOC-008"
-    ],
+    "required": ["DOC-008"],
     "all_satisfied": true,
-    "verified_at": "2026-04-14T19:39:53.308Z"
+    "verified_at": "2026-04-19T10:06:56.864Z"
   },
-  "dependencies_resolved": [
-    "DOC-008"
-  ],
+  "dependencies_resolved": ["DOC-008"],
   "started_at": "2026-03-02T21:50:25.111Z",
   "completed_at": "2026-03-02T22:05:25.111Z",
   "target_duration_minutes": null,
@@ -36,10 +32,10 @@
   },
   "artifacts": {
     "expected": [
-      "docs/compliance/quarterly-a11y-review-template.md"
+      "docs/compliance-and-governance/compliance/quarterly-a11y-review-template.md"
     ],
     "created": [
-      "docs/compliance/quarterly-a11y-review-template.md"
+      "docs/compliance-and-governance/compliance/quarterly-a11y-review-template.md"
     ],
     "missing": []
   },

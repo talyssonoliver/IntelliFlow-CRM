@@ -11,7 +11,7 @@
   "dependencies": {
     "required": [],
     "all_satisfied": true,
-    "verified_at": "2026-04-14T19:39:53.415Z"
+    "verified_at": "2026-04-19T10:06:56.927Z"
   },
   "dependencies_resolved": [],
   "started_at": null,
@@ -31,12 +31,8 @@
     }
   },
   "artifacts": {
-    "expected": [
-      "apps/web/src/app/contacts/[id]/page.tsx"
-    ],
-    "created": [
-      "apps/web/src/app/contacts/[id]/page.tsx"
-    ],
+    "expected": ["apps/web/src/app/contacts/[id]/page.tsx"],
+    "created": ["apps/web/src/app/contacts/[id]/page.tsx"],
     "missing": []
   },
   "validations": [],

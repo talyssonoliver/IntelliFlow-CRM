@@ -1,5 +1,5 @@
 {
-  "$schema": "../../schemas/task-status.schema.json",
+  "$schema": "../schemas/task-status.schema.json",
   "task_id": "DOC-002",
   "section": "Documentation",
   "description": "Update sitemap.md to reflect actual 101 page.tsx files, add app/sitemap.ts XML generator, app/robots.ts, reconcile against navigation-reachability-audit.md",
@@ -11,7 +11,7 @@
   "dependencies": {
     "required": [],
     "all_satisfied": true,
-    "verified_at": "2026-04-14T19:39:53.258Z"
+    "verified_at": "2026-04-19T10:06:56.841Z"
   },
   "dependencies_resolved": [],
   "started_at": "2026-02-23T00:00:00Z",

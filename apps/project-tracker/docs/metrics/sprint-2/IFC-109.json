@@ -5,10 +5,8 @@
   "description": "Define TDD Process, Coverage & Review Checklist",
   "owner": "QA Lead + Tech Lead",
   "dependencies": {
-    "required": [
-      "IFC-002"
-    ],
-    "verified_at": "2026-04-14T19:39:53.126Z",
+    "required": ["IFC-002"],
+    "verified_at": "2026-04-19T10:06:56.755Z",
     "all_satisfied": true,
     "notes": "IFC-002 Domain Model Design completed - testing infrastructure ready"
   },
@@ -37,13 +35,13 @@
   },
   "artifacts": {
     "expected": [
-      "docs/tdd-guidelines.md",
-      "artifacts/misc/ci-coverage-config.yml",
+      "docs/development/tdd-guidelines.md",
+      "infra/monitoring/ci-coverage-config.yml",
       "docs/shared/review-checklist.md"
     ],
     "created": [
-      "docs/tdd-guidelines.md",
-      "artifacts/misc/ci-coverage-config.yml",
+      "docs/development/tdd-guidelines.md",
+      "infra/monitoring/ci-coverage-config.yml",
       "docs/shared/review-checklist.md"
     ],
     "missing": []
@@ -51,7 +49,7 @@
   "validations": [
     {
       "name": "tdd_guidelines_exist",
-      "command": "ls docs/tdd-guidelines.md",
+      "command": "ls docs/development/tdd-guidelines.md",
       "executed_at": "2025-12-22T20:52:00Z",
       "exit_code": 0,
       "passed": true,
@@ -59,7 +57,7 @@
     },
     {
       "name": "tdd_has_red_green_refactor",
-      "command": "grep 'Red-Green-Refactor' docs/tdd-guidelines.md",
+      "command": "grep 'Red-Green-Refactor' docs/development/tdd-guidelines.md",
       "executed_at": "2025-12-22T20:52:00Z",
       "exit_code": 0,
       "passed": true,
@@ -85,7 +83,7 @@
     },
     {
       "name": "coverage_config_exists",
-      "command": "ls artifacts/misc/ci-coverage-config.yml",
+      "command": "ls infra/monitoring/ci-coverage-config.yml",
       "executed_at": "2025-12-22T20:52:00Z",
       "exit_code": 0,
       "passed": true,
@@ -93,7 +91,7 @@
     },
     {
       "name": "coverage_enforces_90_percent",
-      "command": "grep 'lines: 90' artifacts/misc/ci-coverage-config.yml",
+      "command": "grep 'lines: 90' infra/monitoring/ci-coverage-config.yml",
       "executed_at": "2025-12-22T20:52:00Z",
       "exit_code": 0,
       "passed": true,
@@ -102,7 +100,7 @@
     },
     {
       "name": "domain_coverage_95_percent",
-      "command": "grep -A4 'domain:' artifacts/misc/ci-coverage-config.yml | grep 'lines: 95'",
+      "command": "grep -A4 'domain:' infra/monitoring/ci-coverage-config.yml | grep 'lines: 95'",
       "executed_at": "2025-12-22T20:52:00Z",
       "exit_code": 0,
       "passed": true,
@@ -148,9 +146,7 @@
   },
   "stoa_verdicts": {
     "lead": "Quality",
-    "supporting": [
-      "Foundation"
-    ],
+    "supporting": ["Foundation"],
     "quality_verdict": "PASS",
     "foundation_verdict": "PASS",
     "consensus": "PASS"
@@ -160,7 +156,5 @@
   "notes": "TDD process documentation completed. Guidelines cover Red-Green-Refactor workflow with TypeScript examples. Coverage configuration enforces 90% global, 95% domain, 90% application, 85% API thresholds. Review checklist includes tests, code quality, security, documentation, architecture, and performance categories. All artifacts reference DDD layer architecture.",
   "completed_at": "2025-12-22T20:55:00Z",
   "started_at": "2025-12-22T20:50:00Z",
-  "dependencies_resolved": [
-    "IFC-002"
-  ]
+  "dependencies_resolved": ["IFC-002"]
 }

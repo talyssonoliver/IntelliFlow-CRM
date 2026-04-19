@@ -20,15 +20,15 @@ components, ADRs, performance benchmarks **Last Validated:**
 
 **Evidence:**
 
-- ADR file: docs/planning/adr/ADR-001-modern-stack.md (Status: Accepted, Date:
-  2025-12-20)
+- ADR file: docs/architecture/adr/ADR-001-modern-stack.md (Status: Accepted,
+  Date: 2025-12-20)
 - Benchmark: artifacts/benchmarks/performance-benchmark.json
 - Component connectivity proofs:
   artifacts/context/20251225-181500/IFC-001/context_pack.md
 
 ### Artifacts (A)
 
-- [x] docs/planning/adr/ADR-001-modern-stack.md
+- [x] docs/architecture/adr/ADR-001-modern-stack.md
 - [x] artifacts/benchmarks/performance-benchmark.json
 - [x] apps/api/src/trpc.ts (tRPC foundation)
 - [x] packages/db/prisma/schema.prisma (DDD model)
@@ -118,7 +118,7 @@ Result: pnpm run typecheck --filter @intelliflow/adapters: PASS
   - tRPC_p95_under_50ms: true
   - database_p95_under_20ms: true
   - all_targets_met: true
-- ADR: docs/planning/adr/ADR-001-modern-stack.md
+- ADR: docs/architecture/adr/ADR-001-modern-stack.md
 
 ### IFC-002: Domain Model Design (DDD)
 

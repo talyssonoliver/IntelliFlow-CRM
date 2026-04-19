@@ -1,5 +1,5 @@
 {
-  "$schema": "../../schemas/task-status.schema.json",
+  "$schema": "../schemas/task-status.schema.json",
   "task_id": "DOC-011",
   "section": "Documentation",
   "description": "Add compliance-check Section 11 requiring VPAT/conformance review when PG-*/IFC-* UI tasks add or modify routes",
@@ -9,15 +9,11 @@
   "stream": null,
   "status": "DONE",
   "dependencies": {
-    "required": [
-      "DOC-008"
-    ],
+    "required": ["DOC-008"],
     "all_satisfied": true,
-    "verified_at": "2026-04-14T19:39:53.306Z"
+    "verified_at": "2026-04-19T10:06:56.863Z"
   },
-  "dependencies_resolved": [
-    "DOC-008"
-  ],
+  "dependencies_resolved": ["DOC-008"],
   "started_at": "2026-03-01T19:07:11.564Z",
   "completed_at": "2026-03-01T19:22:11.564Z",
   "target_duration_minutes": null,

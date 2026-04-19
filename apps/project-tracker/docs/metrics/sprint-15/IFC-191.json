@@ -1,5 +1,5 @@
 {
-  "$schema": "../../schemas/task-status.schema.json",
+  "$schema": "../schemas/task-status.schema.json",
   "task_id": "IFC-191",
   "section": "Platform",
   "description": "User Timezone Support - Add timezone field to User model with preference UI and timezone-aware greeting",
@@ -10,10 +10,8 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-04-14T19:39:53.297Z",
-    "required": [
-      "IFC-182"
-    ]
+    "verified_at": "2026-04-19T10:06:56.857Z",
+    "required": ["IFC-182"]
   },
   "started_at": "2026-02-25T12:00:00+00:00",
   "completed_at": "2026-02-27T19:20:00Z",
@@ -115,8 +113,6 @@
   "current_phase": "DONE",
   "updated_at": "2026-02-27T19:20:00Z",
   "attempt": 1,
-  "dependencies_resolved": [
-    "IFC-182"
-  ],
+  "dependencies_resolved": ["IFC-182"],
   "actual_duration_minutes": 15
 }

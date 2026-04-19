@@ -1,5 +1,5 @@
 {
-  "$schema": "../../schemas/task-status.schema.json",
+  "$schema": "../schemas/task-status.schema.json",
   "task_id": "IFC-211",
   "section": "Core CRM",
   "description": "Goal Settings RBAC - Role-based permissions for daily goal management (manager team goals and admin org defaults)",
@@ -9,17 +9,11 @@
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
-    "required": [
-      "IFC-195",
-      "IFC-098"
-    ],
+    "required": ["IFC-195", "IFC-098"],
     "all_satisfied": true,
-    "verified_at": "2026-04-14T19:39:53.399Z"
+    "verified_at": "2026-04-19T10:06:56.916Z"
   },
-  "dependencies_resolved": [
-    "IFC-195",
-    "IFC-098"
-  ],
+  "dependencies_resolved": ["IFC-195", "IFC-098"],
   "started_at": null,
   "completed_at": null,
   "target_duration_minutes": 240,

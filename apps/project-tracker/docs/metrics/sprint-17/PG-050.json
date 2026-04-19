@@ -1,5 +1,5 @@
 {
-  "$schema": "../../schemas/task-status.schema.json",
+  "$schema": "../schemas/task-status.schema.json",
   "task_id": "PG-050",
   "section": "Legal Pages",
   "description": "Privacy Policy",
@@ -10,10 +10,8 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-04-14T19:39:53.373Z",
-    "required": [
-      "IFC-058"
-    ]
+    "verified_at": "2026-04-19T10:06:56.897Z",
+    "required": ["IFC-058"]
   },
   "started_at": "2026-03-08T17:17:11Z",
   "completed_at": "2026-03-10T20:54:00Z",
@@ -111,8 +109,6 @@
   "current_phase": "DONE",
   "updated_at": "2026-03-10T20:54:00Z",
   "attempt": 1,
-  "dependencies_resolved": [
-    "IFC-058"
-  ],
+  "dependencies_resolved": ["IFC-058"],
   "actual_duration_minutes": 22
 }

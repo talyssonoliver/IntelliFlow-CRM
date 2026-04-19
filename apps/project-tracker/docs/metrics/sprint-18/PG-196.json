@@ -1,0 +1,50 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "PG-196",
+  "section": "Settings",
+  "description": "Module Settings - Account Tiers (/accounts/(list)/account-tiers)",
+  "owner": "Frontend Dev (STOA-Foundation)",
+  "status": "BACKLOG",
+  "sprint": "sprint-18",
+  "phase": "",
+  "stream": null,
+  "dependencies": {
+    "required": ["PG-178", "PG-183"],
+    "all_satisfied": true,
+    "verified_at": "2026-04-19T10:06:56.939Z"
+  },
+  "dependencies_resolved": ["PG-178", "PG-183"],
+  "started_at": null,
+  "completed_at": null,
+  "execution": {
+    "retry_count": 0,
+    "last_error": null
+  },
+  "artifacts": {
+    "expected": [
+      "apps/web/src/app/accounts/(list)/account-tiers/page.tsx",
+      "apps/web/src/app/accounts/(list)/account-tiers/AccountTiersContent.tsx",
+      "apps/api/src/modules/account/account-tiers.router.ts",
+      "packages/validators/src/account-tiers.ts",
+      ".specify/sprints/sprint-18/attestations/PG-196/context_ack.json"
+    ],
+    "created": ["apps/web/src/app/accounts/(list)/account-tiers/page.tsx"],
+    "missing": [
+      "apps/web/src/app/accounts/(list)/account-tiers/AccountTiersContent.tsx",
+      "apps/api/src/modules/account/account-tiers.router.ts",
+      "packages/validators/src/account-tiers.ts",
+      ".specify/sprints/sprint-18/attestations/PG-196/context_ack.json"
+    ]
+  },
+  "validations": [],
+  "kpis": {},
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-04-18T00:00:00Z",
+      "note": "Task created — playbook-compliant module settings sub-page (PG-182/183/186 pattern)"
+    }
+  ],
+  "notes": "Account tiers at /accounts/(list)/account-tiers: tier definitions (bronze/silver/gold/platinum), point thresholds, benefits matrix, default tier, upgrade/downgrade rules. MUST follow docs/planning/module-settings-playbook.md. Wire every Boolean toggle in account-automation.ts OR declare as category-2 follow-up under IFC-310/311/312."
+}

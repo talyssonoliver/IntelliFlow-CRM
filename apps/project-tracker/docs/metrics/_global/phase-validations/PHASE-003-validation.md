@@ -15,14 +15,15 @@ tests and performance targets not executed)
 ### Materials (M)
 
 - [ ] Performance baseline documentation
-- [x] Security assessment reports (artifacts/reports/compliance-report.md)
+- [x] Security assessment reports
+      (docs/compliance-and-governance/compliance/compliance-report.md)
 - [x] OWASP compliance checklist (docs/security/owasp-checklist.md)
 - [ ] ISO 42001 gap analysis
 
 ### Artifacts (A)
 
-- [x] artifacts/misc/k6/scripts/load-test.js
-- [x] artifacts/reports/compliance-report.md
+- [x] tools/scripts/k6/load-test.js
+- [x] docs/compliance-and-governance/compliance/compliance-report.md
 - [x] docs/security/owasp-checklist.md
 - [x] artifacts/reports/zap-scan-report.json
 
@@ -96,10 +97,11 @@ pnpm run compliance-check  # Compliance validation
 
 **Evidence:**
 
-- k6 script for load test: artifacts/misc/k6/scripts/load-test.js (targets 1000
-  users, p99<100ms)
-- Security report: artifacts/reports/compliance-report.md (OWASP/ISO coverage, 0
-  critical/high)
+- k6 script for load test: tools/scripts/k6/load-test.js (targets 1000 users,
+  p99<100ms)
+- Security report:
+  docs/compliance-and-governance/compliance/compliance-report.md (OWASP/ISO
+  coverage, 0 critical/high)
 - OWASP checklist: docs/security/owasp-checklist.md
 - ZAP scan: artifacts/reports/zap-scan-report.json (0 high/medium; 45 checks
   passed)

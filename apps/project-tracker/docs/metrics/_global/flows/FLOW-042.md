@@ -265,7 +265,7 @@ interface ExportRequest {
 | Analytics Router | `apps/api/src/modules/analytics/analytics.router.ts`                | COMPLETE |
 | Analytics Tests  | `apps/api/src/modules/analytics/__tests__/analytics.router.test.ts` | COMPLETE |
 | PRD              | `docs/planning/prd-analytics-reporting.md`                          | COMPLETE |
-| ADR              | `docs/planning/adr/ADR-016-analytics-integrity.md`                  | COMPLETE |
+| ADR              | `docs/architecture/adr/ADR-016-analytics-integrity.md`              | COMPLETE |
 
 ### Frontend (PARTIAL)
 

@@ -1,5 +1,5 @@
 {
-  "$schema": "../../schemas/task-status.schema.json",
+  "$schema": "../schemas/task-status.schema.json",
   "task_id": "IFC-070",
   "section": "Migration",
   "description": "Data Migration from Legacy",
@@ -10,10 +10,8 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-04-14T19:39:53.391Z",
-    "required": [
-      "IFC-017"
-    ]
+    "verified_at": "2026-04-19T10:06:56.912Z",
+    "required": ["IFC-017"]
   },
   "started_at": "2026-02-13T23:22:38+00:00",
   "completed_at": "2026-02-23T22:15:19.612Z",
@@ -53,7 +51,5 @@
   "updated_at": "2026-02-13T23:22:40+00:00",
   "attempt": 0,
   "actual_duration_minutes": 15,
-  "dependencies_resolved": [
-    "IFC-017"
-  ]
+  "dependencies_resolved": ["IFC-017"]
 }

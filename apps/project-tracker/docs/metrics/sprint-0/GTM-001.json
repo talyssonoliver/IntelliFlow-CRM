@@ -2,11 +2,9 @@
   "task_id": "GTM-001",
   "status": "DONE",
   "dependencies": {
-    "required": [
-      "DOC-001"
-    ],
+    "required": ["DOC-001"],
     "all_satisfied": true,
-    "verified_at": "2026-04-14T19:39:53.064Z"
+    "verified_at": "2026-04-19T10:06:56.712Z"
   },
   "validations": [
     {
@@ -27,7 +25,5 @@
   "started_at": "2026-04-13T00:27:36.751Z",
   "actual_duration_minutes": 15,
   "description": "ICP & Personas Pack (target customers, job stories, objections)",
-  "dependencies_resolved": [
-    "DOC-001"
-  ]
+  "dependencies_resolved": ["DOC-001"]
 }

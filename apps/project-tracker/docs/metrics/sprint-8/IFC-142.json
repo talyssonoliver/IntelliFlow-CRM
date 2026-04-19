@@ -9,11 +9,9 @@
   "started_at": "2026-03-08T21:44:04.583Z",
   "completed_at": "2026-03-08T21:59:04.583Z",
   "dependencies": {
-    "required": [
-      "ENV-008-AI"
-    ],
+    "required": ["ENV-008-AI"],
     "all_satisfied": true,
-    "verified_at": "2026-04-14T19:39:53.679Z"
+    "verified_at": "2026-04-19T10:06:57.027Z"
   },
   "artifacts": {
     "expected": [],
@@ -30,7 +28,5 @@
   ],
   "notes": "Evidence stub. Task marked Completed in Sprint_plan.csv. Full evidence may be recorded in sprint attestations or audit reports.",
   "actual_duration_minutes": 15,
-  "dependencies_resolved": [
-    "ENV-008-AI"
-  ]
+  "dependencies_resolved": ["ENV-008-AI"]
 }

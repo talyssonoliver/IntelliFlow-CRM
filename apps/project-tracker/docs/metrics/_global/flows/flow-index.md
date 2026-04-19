@@ -529,7 +529,7 @@ routes, UI components, and style guide patterns.
 - `apps/web/src/components/analytics/WidgetBuilder.tsx` [IFC-037]
 - `apps/web/src/components/analytics/ExportButton.tsx` [IFC-037]
 - `docs/planning/prd-analytics-reporting.md` (EXISTS)
-- `docs/planning/adr/ADR-016-analytics-integrity.md` (EXISTS)
+- `docs/architecture/adr/ADR-016-analytics-integrity.md` (EXISTS)
 
 **Backend Dependencies (IFC-096)**:
 
@@ -563,7 +563,7 @@ routes, UI components, and style guide patterns.
 
 - `apps/api/src/shared/forecast-algorithm.test.ts` (EXISTS)
 - `artifacts/metrics/accuracy-backtest.csv` (EXISTS)
-- `docs/planning/adr/ADR-019-core-crm-foundation.md` (EXISTS)
+- `docs/architecture/adr/ADR-019-core-crm-foundation.md` (EXISTS)
 - `apps/web/src/app/deals/forecast/page.tsx` [PLANNED]
 - `apps/web/src/components/analytics/StageBreakdownChart.tsx` [PLANNED]
 
@@ -839,7 +839,7 @@ routes, UI components, and style guide patterns.
 
 **Key Artifacts**:
 
-- `artifacts/misc/vault-config.yaml` (EXISTS - EXC-SEC-001)
+- `infra/monitoring/vault-config.yaml` (EXISTS - EXC-SEC-001)
 - `docs/security/zero-trust-design.md` (EXISTS - IFC-072)
 - `apps/project-tracker/docs/metrics/sprint-0/.../EXC-SEC-001.json` (EXISTS)
 - `packages/adapters/src/security/vault-client.ts` [PLANNED]
@@ -925,7 +925,7 @@ routes, UI components, and style guide patterns.
 - `apps/web/src/components/home/HomePageContent.tsx` (EXISTS)
 - `docs/planning/prd-home-page.md` (EXISTS)
 - `docs/specs/HOME-PAGE-SPEC.md` [PLANNED]
-- `docs/planning/adr/ADR-027-authenticated-home-composition.md` [PLANNED]
+- `docs/architecture/adr/ADR-027-authenticated-home-composition.md` [PLANNED]
 
 **Backend Dependencies (IFC-182)**:
 

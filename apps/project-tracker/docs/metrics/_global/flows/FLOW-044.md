@@ -108,7 +108,7 @@ with IntelliFlow's zero trust security model.
 **Trigger**: Security Admin creates encryption keys during initial setup or key
 rotation
 
-**Keys Defined** (from `artifacts/misc/vault-config.yaml`):
+**Keys Defined** (from `infra/monitoring/vault-config.yaml`):
 
 | Key Name                  | Algorithm   | Purpose                            | Auto-Rotate | Exportable |
 | ------------------------- | ----------- | ---------------------------------- | ----------- | ---------- |
@@ -323,7 +323,7 @@ re-encryption
 
 | Artifact          | Path                                                              | Status   |
 | ----------------- | ----------------------------------------------------------------- | -------- |
-| Vault Config      | `artifacts/misc/vault-config.yaml`                                | COMPLETE |
+| Vault Config      | `infra/monitoring/vault-config.yaml`                              | COMPLETE |
 | Zero Trust Design | `docs/security/zero-trust-design.md`                              | COMPLETE |
 | Task Status       | `apps/project-tracker/docs/metrics/sprint-0/.../EXC-SEC-001.json` | COMPLETE |
 

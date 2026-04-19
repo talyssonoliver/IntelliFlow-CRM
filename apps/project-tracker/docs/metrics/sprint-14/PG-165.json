@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../schemas/task-status.schema.json",
+  "$schema": "../schemas/task-status.schema.json",
   "task_id": "PG-165",
   "status": "DONE",
   "started_at": "2026-02-23T17:25:00.000Z",
@@ -22,19 +22,13 @@
     "completed_at": "2026-02-23T17:30:00.000Z",
     "duration_minutes": 5,
     "executor": "Claude Code /exec",
-    "agents": [
-      "Foundation"
-    ],
+    "agents": ["Foundation"],
     "retry_count": 0,
     "last_error": null
   },
   "artifacts": {
-    "expected": [
-      "docs/planning/prd-home-page.md"
-    ],
-    "created": [
-      "docs/planning/prd-home-page.md"
-    ],
+    "expected": ["docs/planning/prd-home-page.md"],
+    "created": ["docs/planning/prd-home-page.md"],
     "missing": []
   },
   "validations": [

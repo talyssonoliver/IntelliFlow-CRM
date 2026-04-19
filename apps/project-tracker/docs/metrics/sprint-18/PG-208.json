@@ -1,0 +1,50 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "PG-208",
+  "section": "Settings",
+  "description": "Module Settings - Task Automation (/tasks/(list)/automation)",
+  "owner": "Frontend Dev (STOA-Foundation)",
+  "status": "BACKLOG",
+  "sprint": "sprint-18",
+  "phase": "",
+  "stream": null,
+  "dependencies": {
+    "required": ["PG-178", "PG-191"],
+    "all_satisfied": false,
+    "verified_at": "2026-04-19T10:06:56.949Z"
+  },
+  "dependencies_resolved": [],
+  "started_at": null,
+  "completed_at": null,
+  "execution": {
+    "retry_count": 0,
+    "last_error": null
+  },
+  "artifacts": {
+    "expected": [
+      "apps/web/src/app/tasks/(list)/automation/page.tsx",
+      "apps/web/src/app/tasks/(list)/automation/TaskAutomationContent.tsx",
+      "apps/api/src/modules/task/task-automation.router.ts",
+      "packages/validators/src/task-automation.ts",
+      ".specify/sprints/sprint-18/attestations/PG-208/context_ack.json"
+    ],
+    "created": ["apps/web/src/app/tasks/(list)/automation/page.tsx"],
+    "missing": [
+      "apps/web/src/app/tasks/(list)/automation/TaskAutomationContent.tsx",
+      "apps/api/src/modules/task/task-automation.router.ts",
+      "packages/validators/src/task-automation.ts",
+      ".specify/sprints/sprint-18/attestations/PG-208/context_ack.json"
+    ]
+  },
+  "validations": [],
+  "kpis": {},
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-04-18T00:00:00Z",
+      "note": "Task created — playbook-compliant module settings sub-page (PG-182/183/186 pattern)"
+    }
+  ],
+  "notes": "Task automation at /tasks/(list)/automation: rule builder (when X happens, create/assign task). Trigger types: entity event (deal.won, contact.created), schedule, webhook. Actions: create task, assign by round-robin, notify. MUST follow docs/planning/module-settings-playbook.md. Wire every Boolean toggle in task automation OR declare as category-2 follow-up under IFC-310/311/312."
+}

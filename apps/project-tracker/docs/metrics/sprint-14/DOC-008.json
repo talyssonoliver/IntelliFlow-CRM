@@ -1,5 +1,5 @@
 {
-  "$schema": "../../schemas/task-status.schema.json",
+  "$schema": "../schemas/task-status.schema.json",
   "task_id": "DOC-008",
   "section": "Documentation",
   "description": "Create VPAT 2.5 document, WCAG 2.1 AA conformance statement, axe-core/pa11y test suite, enforce accessibility in CI (error not warn), accessibility ADR, screen reader testing plan",
@@ -9,15 +9,11 @@
   "stream": null,
   "status": "DONE",
   "dependencies": {
-    "required": [
-      "DOC-007"
-    ],
+    "required": ["DOC-007"],
     "all_satisfied": true,
-    "verified_at": "2026-04-14T19:39:53.265Z"
+    "verified_at": "2026-04-19T10:06:56.846Z"
   },
-  "dependencies_resolved": [
-    "DOC-007"
-  ],
+  "dependencies_resolved": ["DOC-007"],
   "started_at": "2026-02-23T23:45:00Z",
   "completed_at": "2026-02-24T01:00:00Z",
   "target_duration_minutes": null,
@@ -44,8 +40,8 @@
   },
   "artifacts": {
     "expected": [
-      "docs/compliance/vpat-2.5.md",
-      "docs/compliance/wcag-conformance-statement.md",
+      "docs/compliance-and-governance/compliance/vpat-2.5.md",
+      "docs/compliance-and-governance/compliance/wcag-conformance-statement.md",
       "tests/a11y/axe-core.spec.ts",
       "tests/a11y/vitest.config.ts",
       "tests/a11y/setup.ts",
@@ -53,12 +49,12 @@
       "audit-matrix.yml",
       ".github/workflows/pr-checks.yml",
       "apps/web/eslint.config.mjs",
-      "docs/planning/adr/ADR-038-accessibility-architecture.md",
-      "docs/design/diagrams/complete-dependency-chains.md"
+      "docs/architecture/adr/ADR-038-accessibility-architecture.md",
+      "docs/architecture/diagrams/complete-dependency-chains.md"
     ],
     "created": [
-      "docs/compliance/vpat-2.5.md",
-      "docs/compliance/wcag-conformance-statement.md",
+      "docs/compliance-and-governance/compliance/vpat-2.5.md",
+      "docs/compliance-and-governance/compliance/wcag-conformance-statement.md",
       "tests/a11y/axe-core.spec.ts",
       "tests/a11y/vitest.config.ts",
       "tests/a11y/setup.ts",
@@ -66,8 +62,8 @@
       "audit-matrix.yml",
       ".github/workflows/pr-checks.yml",
       "apps/web/eslint.config.mjs",
-      "docs/planning/adr/ADR-038-accessibility-architecture.md",
-      "docs/design/diagrams/complete-dependency-chains.md"
+      "docs/architecture/adr/ADR-038-accessibility-architecture.md",
+      "docs/architecture/diagrams/complete-dependency-chains.md"
     ],
     "missing": []
   },

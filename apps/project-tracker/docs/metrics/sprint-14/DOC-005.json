@@ -1,5 +1,5 @@
 {
-  "$schema": "../../schemas/task-status.schema.json",
+  "$schema": "../schemas/task-status.schema.json",
   "task_id": "DOC-005",
   "section": "Documentation",
   "description": "Complete overhaul of page-registry.md from 8 routes to all 101 routes with task ID, KPI targets, code file path, component breakdown, API router, E2E test path, RACI assignments",
@@ -9,27 +9,19 @@
   "stream": null,
   "status": "DONE",
   "dependencies": {
-    "required": [
-      "DOC-002"
-    ],
+    "required": ["DOC-002"],
     "all_satisfied": true,
-    "verified_at": "2026-04-14T19:39:53.262Z"
+    "verified_at": "2026-04-19T10:06:56.843Z"
   },
-  "dependencies_resolved": [
-    "DOC-002"
-  ],
+  "dependencies_resolved": ["DOC-002"],
   "started_at": "2026-02-24T00:28:34.803Z",
   "completed_at": "2026-02-24T00:43:34.803Z",
   "target_duration_minutes": null,
   "actual_duration_minutes": 15,
   "kpis": {},
   "artifacts": {
-    "expected": [
-      "docs/design/page-registry.md"
-    ],
-    "created": [
-      "docs/design/page-registry.md"
-    ],
+    "expected": ["docs/design/page-registry.md"],
+    "created": ["docs/design/page-registry.md"],
     "missing": []
   },
   "validations": [

@@ -1,5 +1,5 @@
 {
-  "$schema": "../../schemas/task-status.schema.json",
+  "$schema": "../schemas/task-status.schema.json",
   "task_id": "PG-181",
   "section": "Support Pages",
   "description": "Help Article Editor Page",
@@ -9,12 +9,9 @@
   "phase": "",
   "stream": null,
   "dependencies": {
-    "required": [
-      "PG-180",
-      "IFC-301"
-    ],
+    "required": ["PG-180", "IFC-301"],
     "all_satisfied": false,
-    "verified_at": "2026-04-14T19:39:53.427Z"
+    "verified_at": "2026-04-19T10:06:56.935Z"
   },
   "started_at": null,
   "completed_at": null,

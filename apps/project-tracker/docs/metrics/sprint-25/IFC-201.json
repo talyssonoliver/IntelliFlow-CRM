@@ -1,5 +1,5 @@
 {
-  "$schema": "../../schemas/task-status.schema.json",
+  "$schema": "../schemas/task-status.schema.json",
   "task_id": "IFC-201",
   "section": "Settings",
   "description": "Settings Control Plane Foundations - domain models, adapters, and router for users/teams/roles/permissions/audit/integrations/webhooks/security",
@@ -10,14 +10,8 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-04-14T19:39:53.566Z",
-    "required": [
-      "IFC-072",
-      "IFC-098",
-      "IFC-099",
-      "IFC-106",
-      "IFC-124"
-    ]
+    "verified_at": "2026-04-19T10:06:56.991Z",
+    "required": ["IFC-072", "IFC-098", "IFC-099", "IFC-106", "IFC-124"]
   },
   "started_at": "2026-02-13T23:42:10+00:00",
   "completed_at": null,

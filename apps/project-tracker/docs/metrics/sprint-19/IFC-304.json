@@ -1,5 +1,5 @@
 {
-  "$schema": "../../schemas/task-status.schema.json",
+  "$schema": "../schemas/task-status.schema.json",
   "task_id": "IFC-304",
   "section": "Support",
   "description": "Article Analytics Dashboard",
@@ -9,12 +9,9 @@
   "phase": "",
   "stream": null,
   "dependencies": {
-    "required": [
-      "IFC-303",
-      "PG-180"
-    ],
+    "required": ["IFC-303", "PG-180"],
     "all_satisfied": false,
-    "verified_at": "2026-04-14T19:39:53.465Z"
+    "verified_at": "2026-04-19T10:06:56.955Z"
   },
   "started_at": null,
   "completed_at": null,
@@ -27,12 +24,8 @@
       "apps/web/src/components/support/article-analytics.tsx",
       "apps/api/src/modules/help-article/help-article.router.ts"
     ],
-    "created": [
-      "apps/api/src/modules/help-article/help-article.router.ts"
-    ],
-    "missing": [
-      "apps/web/src/components/support/article-analytics.tsx"
-    ]
+    "created": ["apps/api/src/modules/help-article/help-article.router.ts"],
+    "missing": ["apps/web/src/components/support/article-analytics.tsx"]
   },
   "validations": [],
   "kpis": {},

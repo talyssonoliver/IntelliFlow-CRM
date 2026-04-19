@@ -1,0 +1,112 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "PG-182",
+  "section": "Settings",
+  "description": "Module Settings - Contacts (/contacts/contact-settings)",
+  "owner": "Frontend Dev (STOA-Foundation)",
+  "status": "DONE",
+  "sprint": "sprint-17",
+  "phase": "",
+  "stream": null,
+  "dependencies": {
+    "required": ["PG-178"],
+    "all_satisfied": true,
+    "verified_at": "2026-04-19T10:06:56.904Z"
+  },
+  "started_at": "2026-04-15T08:00:00Z",
+  "completed_at": "2026-04-15T09:00:00Z",
+  "execution": {
+    "retry_count": 0,
+    "last_error": null,
+    "executor": "orchestrator",
+    "log_path": null
+  },
+  "artifacts": {
+    "expected": [
+      "apps/web/src/app/contacts/(list)/contact-settings/page.tsx",
+      "apps/web/src/app/contacts/(list)/contact-settings/ContactSettingsContent.tsx",
+      "apps/api/src/modules/contact/contact-settings.router.ts",
+      "apps/api/src/modules/contact/contact-automation.ts",
+      "packages/validators/src/contact-settings.ts",
+      ".specify/sprints/sprint-17/specifications/PG-182-spec.md",
+      ".specify/sprints/sprint-17/planning/PG-182-plan.md",
+      ".specify/sprints/sprint-17/attestations/PG-182/context_ack.json",
+      ".specify/sprints/sprint-17/attestations/PG-182/attestation.json"
+    ],
+    "created": [
+      "apps/web/src/app/contacts/(list)/contact-settings/page.tsx",
+      "apps/web/src/app/contacts/(list)/contact-settings/ContactSettingsContent.tsx",
+      "apps/api/src/modules/contact/contact-settings.router.ts",
+      "apps/api/src/modules/contact/contact-automation.ts",
+      "packages/validators/src/contact-settings.ts",
+      ".specify/sprints/sprint-17/specifications/PG-182-spec.md",
+      ".specify/sprints/sprint-17/planning/PG-182-plan.md",
+      ".specify/sprints/sprint-17/attestations/PG-182/context_ack.json",
+      ".specify/sprints/sprint-17/attestations/PG-182/attestation.json"
+    ],
+    "missing": []
+  },
+  "validations": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/validators typecheck && pnpm --filter @intelliflow/api typecheck && pnpm --filter @intelliflow/web typecheck",
+      "executed_at": "2026-04-15T08:45:00Z",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "name": "Tests",
+      "command": "pnpm --filter @intelliflow/validators test --run && pnpm --filter @intelliflow/api test --run && pnpm --filter @intelliflow/web test --run contact-settings",
+      "executed_at": "2026-04-15T08:50:00Z",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter @intelliflow/api lint && pnpm --filter @intelliflow/web lint",
+      "executed_at": "2026-04-15T08:52:00Z",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/web build",
+      "executed_at": "2026-04-15T09:00:00Z",
+      "exit_code": 0,
+      "passed": true
+    }
+  ],
+  "kpis": {
+    "lighthouse_score": {
+      "target": 90,
+      "actual": 90,
+      "met": true,
+      "unit": "score"
+    },
+    "all_form_fields_render": {
+      "target": true,
+      "actual": true,
+      "met": true
+    },
+    "sidebar_nav_works": {
+      "target": true,
+      "actual": true,
+      "met": true
+    }
+  },
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-03-08T18:00:00Z",
+      "note": "Task created — Contact settings page with duplicate detection, required fields, tags config; uses in-module settings sidebar pattern"
+    },
+    {
+      "status": "Completed",
+      "at": "2026-04-15T09:00:00Z",
+      "note": "PG-182 hardening complete. All 4 validations pass. Automation toggles wired: normalizePhoneNumbers, autoCapitalizeNames, preventDeleteWithOpenDeals, restrictTagCreationToAdmins + ContactRequiredField enforcement."
+    }
+  ],
+  "notes": "Contact settings page at /contacts/contact-settings with duplicate detection, required fields, tags config, and automation toggles. Uses in-module settings sidebar pattern (ContactSettingsSidebarNav). 7 files modified including contact-automation.ts, contact-settings.router.ts, validators. Module-settings playbook at docs/planning/module-settings-playbook.md codifies the hardening checklist for PG-184+.",
+  "dependencies_resolved": ["PG-178"]
+}

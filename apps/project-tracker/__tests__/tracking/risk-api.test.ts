@@ -36,9 +36,9 @@ const mockFs = fs as any as {
 // Sample CSV content matching actual risk-register.csv format
 const SAMPLE_RISK_CSV = `Risk ID,Category,Description,Likelihood (1-5),Impact (1-5),Score,Mitigation Strategy,Owner,Status,Review Date,Escalation Path,Evidence,Notes
 RISK-001,Technology,LangChain API breaking changes may disrupt AI chains,4,4,16,Version pinning at 0.3.x; abstraction layer via ports pattern,Tech Lead,Mitigated,2025-01-15,CTO if migration required > 5 days,apps/ai-worker/package.json shows pinned versions,LangChain releases frequently
-RISK-002,Vendor,Supabase vendor lock-in could limit migration options,2,3,6,Prisma ORM abstracts database; standard PostgreSQL features only,DevOps Lead,Mitigated,2025-03-01,CTO for strategic vendor decisions,docs/planning/adr/001-supabase-choice.md,Migration path documented
+RISK-002,Vendor,Supabase vendor lock-in could limit migration options,2,3,6,Prisma ORM abstracts database; standard PostgreSQL features only,DevOps Lead,Mitigated,2025-03-01,CTO for strategic vendor decisions,docs/architecture/adr/001-supabase-choice.md,Migration path documented
 RISK-003,Team,Learning curve for modern stack slows delivery,3,2,6,Training plan executed; pair programming mandatory,PM,Mitigated,2025-02-01,Scrum Master for resource allocation,artifacts/reports/confidence-survey.md,Team confidence improving
-RISK-004,Cost,AI API costs exceed monthly budget thresholds,3,4,12,Ollama for development environments; usage monitoring dashboard,DevOps Lead,Monitored,2025-01-20,CFO if > $500/mo projected,artifacts/reports/weekly-cost-report.csv,Daily tracking active
+RISK-004,Cost,AI API costs exceed monthly budget thresholds,3,4,12,Ollama for development environments; usage monitoring dashboard,DevOps Lead,Monitored,2025-01-20,CFO if > $500/mo projected,docs/planning/financial/weekly-cost-report.csv,Daily tracking active
 RISK-005,Security,Authentication bypass vulnerability exposes user data,5,1,5,Supabase Auth with JWT validation; RLS policies on all tables,Security Lead,Mitigated,2025-02-01,CISO for critical findings,docs/security/zero-trust-design.md,Zero critical vulnerabilities`;
 
 describe('Risk Register API Route', () => {

@@ -140,7 +140,7 @@ export async function GET(_request: NextRequest) {
         lastScan: axeResults?.timestamp || null,
         recommendation:
           score < 90
-            ? 'Run: npx axe-core http://localhost:3000 --save artifacts/misc/accessibility-audit.json'
+            ? 'Run: npx axe-core http://localhost:3000 --save artifacts/reports/accessibility-audit.json'
             : 'Accessibility standards met',
       },
       {

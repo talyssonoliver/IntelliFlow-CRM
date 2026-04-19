@@ -49,8 +49,8 @@
       "packages/application/src/services/ExperimentService.ts",
       "apps/api/src/modules/experiment/experiment.router.ts",
       "packages/ui/src/components/experiment/ExperimentDashboard.tsx",
-      "artifacts/misc/ab-test-config.json",
-      "artifacts/misc/statistical-analysis-report.json"
+      "infra/monitoring/ab-test-config.json",
+      "artifacts/reports/statistical-analysis-report.json"
     ],
     "created": [
       {
@@ -79,12 +79,12 @@
         "created_at": "2026-01-03T00:00:00Z"
       },
       {
-        "path": "artifacts/misc/ab-test-config.json",
+        "path": "infra/monitoring/ab-test-config.json",
         "sha256": "1b1d158efcbc464f44b43dcca8919dc466e0d82c1e95e44ec84b10585a3fc67e",
         "created_at": "2026-01-03T00:00:00Z"
       },
       {
-        "path": "artifacts/misc/statistical-analysis-report.json",
+        "path": "artifacts/reports/statistical-analysis-report.json",
         "sha256": "983ed3e00ad909a9875eb5f3505b4364a7ec9b904e88a1948db9953242146399",
         "created_at": "2026-01-03T00:00:00Z"
       }
@@ -142,7 +142,7 @@
     },
     "artifacts_generated": {
       "target": "ab-test-config.json, statistical-analysis report",
-      "actual": "artifacts/misc/ab-test-config.json + artifacts/misc/statistical-analysis-report.json verified with SHA256",
+      "actual": "infra/monitoring/ab-test-config.json + artifacts/reports/statistical-analysis-report.json verified with SHA256",
       "met": true
     }
   },

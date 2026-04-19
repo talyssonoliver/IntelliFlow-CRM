@@ -9,13 +9,9 @@
   "started_at": "2026-03-08T21:44:04.193Z",
   "completed_at": "2026-03-08T21:59:04.193Z",
   "dependencies": {
-    "required": [
-      "IFC-002",
-      "IFC-004",
-      "IFC-104"
-    ],
+    "required": ["IFC-002", "IFC-004", "IFC-104"],
     "all_satisfied": true,
-    "verified_at": "2026-04-14T19:39:53.196Z"
+    "verified_at": "2026-04-19T10:06:56.799Z"
   },
   "artifacts": {
     "expected": [],
@@ -32,9 +28,5 @@
   ],
   "notes": "Evidence stub. Task marked Completed in Sprint_plan.csv. Full evidence may be recorded in sprint attestations or audit reports.",
   "actual_duration_minutes": 15,
-  "dependencies_resolved": [
-    "IFC-002",
-    "IFC-004",
-    "IFC-104"
-  ]
+  "dependencies_resolved": ["IFC-002", "IFC-004", "IFC-104"]
 }

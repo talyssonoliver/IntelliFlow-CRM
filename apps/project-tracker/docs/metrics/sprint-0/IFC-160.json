@@ -2,12 +2,9 @@
   "task_id": "IFC-160",
   "status": "DONE",
   "dependencies": {
-    "required": [
-      "ENV-001-AI",
-      "ENV-002-AI"
-    ],
+    "required": ["ENV-001-AI", "ENV-002-AI"],
     "all_satisfied": true,
-    "verified_at": "2026-04-14T19:39:53.071Z"
+    "verified_at": "2026-04-19T10:06:56.719Z"
   },
   "validations": [
     {
@@ -28,8 +25,5 @@
   "started_at": "2026-04-13T00:27:36.756Z",
   "actual_duration_minutes": 15,
   "description": "Artifact path conventions + CI lint to prevent repo drift",
-  "dependencies_resolved": [
-    "ENV-001-AI",
-    "ENV-002-AI"
-  ]
+  "dependencies_resolved": ["ENV-001-AI", "ENV-002-AI"]
 }

@@ -24,8 +24,8 @@ missing; load/quota ops not validated)
 - [x] apps/api/src/middleware/rate-limit.ts (in-memory + Redis scaffolding;
       tests present)
 - [ ] apps/api/src/services/quota-manager.service.ts (not found)
-- [x] artifacts/misc/rate-limit-config.yaml
-- [x] artifacts/misc/load-test-with-limits.json
+- [x] infra/monitoring/rate-limit-config.yaml
+- [x] artifacts/reports/load-test-with-limits.json
 
 ### Tests (T)
 
@@ -115,8 +115,8 @@ pnpm run quota-check  # Quota management validation
 
 - Rate limit middleware: apps/api/src/middleware/rate-limit.ts (in-memory; tests
   in **tests**/rate-limit.test.ts)
-- Config: artifacts/misc/rate-limit-config.yaml
-- Load test data: artifacts/misc/load-test-with-limits.json
+- Config: infra/monitoring/rate-limit-config.yaml
+- Load test data: artifacts/reports/load-test-with-limits.json
 
 **Current Gaps / Next Steps:**
 

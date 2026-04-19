@@ -1,0 +1,117 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "PG-186",
+  "section": "Settings",
+  "description": "Module Settings - Documents (/documents/document-settings)",
+  "owner": "Frontend Dev (STOA-Foundation)",
+  "status": "DONE",
+  "sprint": "sprint-17",
+  "phase": "",
+  "stream": null,
+  "dependencies": {
+    "required": ["PG-178", "PG-182", "PG-183"],
+    "all_satisfied": true,
+    "verified_at": "2026-04-19T10:06:56.908Z"
+  },
+  "started_at": "2026-04-16T18:32:33Z",
+  "completed_at": "2026-04-16T19:47:38.056Z",
+  "execution": {
+    "retry_count": 0,
+    "last_error": null,
+    "executor": "Claude Code /exec",
+    "log_path": null
+  },
+  "artifacts": {
+    "expected": [
+      "apps/web/src/app/documents/(list)/document-settings/page.tsx",
+      "apps/web/src/app/documents/(list)/document-settings/DocumentSettingsContent.tsx",
+      "apps/api/src/modules/legal/document-settings.router.ts",
+      "apps/api/src/modules/legal/document-automation.ts",
+      "packages/validators/src/document-settings.ts",
+      ".specify/sprints/sprint-17/specifications/PG-186-spec.md",
+      ".specify/sprints/sprint-17/planning/PG-186-plan.md",
+      ".specify/sprints/sprint-17/attestations/PG-186/context_ack.json",
+      ".specify/sprints/sprint-17/attestations/PG-186/attestation.json"
+    ],
+    "created": [
+      "apps/web/src/app/documents/(list)/document-settings/page.tsx",
+      "apps/web/src/app/documents/(list)/document-settings/DocumentSettingsContent.tsx",
+      "apps/api/src/modules/legal/document-settings.router.ts",
+      "apps/api/src/modules/legal/document-automation.ts",
+      "packages/validators/src/document-settings.ts",
+      ".specify/sprints/sprint-17/specifications/PG-186-spec.md",
+      ".specify/sprints/sprint-17/planning/PG-186-plan.md",
+      ".specify/sprints/sprint-17/attestations/PG-186/context_ack.json",
+      ".specify/sprints/sprint-17/attestations/PG-186/attestation.json"
+    ],
+    "missing": []
+  },
+  "validations": [
+    {
+      "name": "Task completion verification",
+      "command": "echo \"Task PG-186 completed\"",
+      "type": "auto",
+      "required": true,
+      "executed_at": "2026-04-16T19:47:38.057Z",
+      "exit_code": 0,
+      "passed": true,
+      "notes": "Task marked as completed in Sprint_plan.csv"
+    }
+  ],
+  "kpis": {
+    "lighthouse_score": {
+      "target": 90,
+      "met": false,
+      "unit": "score"
+    },
+    "all_form_fields_render": {
+      "target": true,
+      "met": false
+    },
+    "sidebar_nav_works": {
+      "target": true,
+      "met": false
+    },
+    "test_count": {
+      "target": 30,
+      "met": false,
+      "unit": "tests"
+    }
+  },
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-03-08T18:00:00Z",
+      "note": "Task created — Document settings page (file types, size limits, antivirus, retention, tags, duplicate rules, required fields, automation)"
+    },
+    {
+      "status": "Specifying",
+      "at": "2026-04-15T21:53:05Z",
+      "note": "Spec session started — full-pipeline iteration 1"
+    },
+    {
+      "status": "Spec Complete",
+      "at": "2026-04-15T23:37:00Z",
+      "note": "PG-186-spec.md written (50KB). Confirmed API module is legal/. Layout correction: move document-settings/ under (list)/."
+    },
+    {
+      "status": "Planning",
+      "at": "2026-04-16T19:00:00Z",
+      "note": "Plan session started — full-pipeline iteration 2"
+    },
+    {
+      "status": "Plan Complete",
+      "at": "2026-04-16T19:21:00Z",
+      "note": "PG-186-plan.md written (70KB, 9 TDD phases, 66 tests). Plan-Reviewer subagent APPROVE."
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-04-16T18:32:33Z",
+      "note": "Exec session started — full-pipeline iteration 3"
+    }
+  ],
+  "notes": "Document settings page at /documents/(list)/document-settings — 3rd in module-settings series after PG-182 (Contacts) and PG-183 (Accounts). Follows docs/planning/module-settings-playbook.md.",
+  "dependencies_resolved": ["PG-178", "PG-182", "PG-183"],
+  "actual_duration_minutes": 15
+}

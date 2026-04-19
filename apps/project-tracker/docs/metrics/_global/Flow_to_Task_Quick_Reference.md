@@ -59,7 +59,7 @@
 
 | ID       | Type         | Description                                         | Documentation Location                                    |
 | -------- | ------------ | --------------------------------------------------- | --------------------------------------------------------- |
-| FLOW-039 | Architecture | Domain Architecture (DDD, aggregates, repositories) | `docs/planning/adr/ADR-002-domain-driven-design.md`       |
+| FLOW-039 | Architecture | Domain Architecture (DDD, aggregates, repositories) | `docs/architecture/adr/ADR-002-domain-driven-design.md`   |
 | FLOW-040 | Architecture | Infrastructure (zero-trust, monitoring, security)   | `docs/security/zero-trust-design.md`, `infra/monitoring/` |
 | FLOW-041 | Architecture | Documentation Infrastructure                        | `docs/docusaurus.config.js`, `docs/templates/`            |
 
@@ -194,14 +194,14 @@ task requirements.
 
 ### Pre-requisites Column Tags
 
-| Tag           | Purpose                             | Example                             |
-| ------------- | ----------------------------------- | ----------------------------------- |
-| `FILE:`       | Exact file path required to exist   | `FILE:docs/planning/adr/ADR-001.md` |
-| `DIR:`        | Directory required to exist         | `DIR:packages/domain/src/`          |
-| `ENV:`        | Environment configuration required  | `ENV:Supabase configured`           |
-| `POLICY:`     | Policy or approval required         | `POLICY:Budget approved`            |
-| `GLOB:`       | Wildcard pattern (multiple files)   | `GLOB:apps/api/**/*.router.ts`      |
-| `IMPLEMENTS:` | **References user flow (FLOW-XXX)** | `IMPLEMENTS:FLOW-001`               |
+| Tag           | Purpose                             | Example                                 |
+| ------------- | ----------------------------------- | --------------------------------------- |
+| `FILE:`       | Exact file path required to exist   | `FILE:docs/architecture/adr/ADR-001.md` |
+| `DIR:`        | Directory required to exist         | `DIR:packages/domain/src/`              |
+| `ENV:`        | Environment configuration required  | `ENV:Supabase configured`               |
+| `POLICY:`     | Policy or approval required         | `POLICY:Budget approved`                |
+| `GLOB:`       | Wildcard pattern (multiple files)   | `GLOB:apps/api/**/*.router.ts`          |
+| `IMPLEMENTS:` | **References user flow (FLOW-XXX)** | `IMPLEMENTS:FLOW-001`                   |
 
 ### Artifacts To Track Column Tags
 

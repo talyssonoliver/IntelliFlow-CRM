@@ -108,7 +108,7 @@
       "duration_minutes": 15
     }
   ],
-  "notes": "13/13 tasks DONE (100%). Last synced: 2026-04-14T19:39:53.600Z",
+  "notes": "13/13 tasks DONE (100%). Last synced: 2026-04-19T10:06:57.003Z",
   "section": "Public Pages",
   "dependencies": {
     "all_satisfied": true,
@@ -151,11 +151,7 @@
     "working_hours_per_day": 8,
     "working_days_per_week": 5,
     "critical_path": {
-      "task_ids": [
-        "PG-009",
-        "PG-010",
-        "PG-014"
-      ],
+      "task_ids": ["PG-009", "PG-010", "PG-014"],
       "total_duration_minutes": 390,
       "completion_percentage": 100,
       "bottleneck_task_id": null
@@ -165,6 +161,6 @@
       "spi": 1,
       "status": "on_track"
     },
-    "calculated_at": "2026-04-14T19:39:53.870Z"
+    "calculated_at": "2026-04-19T10:06:57.119Z"
   }
 }

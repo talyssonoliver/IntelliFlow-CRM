@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../schemas/task-status.schema.json",
+  "$schema": "../../schemas/task-status.schema.json",
   "task_id": "IFC-027",
   "section": "Investment Gate",
   "description": "PHASE-001: Gate 2 Review - £2000 Investment",
@@ -8,10 +8,8 @@
   "phase": "phase-1",
   "stream": null,
   "dependencies": {
-    "required": [
-      "IFC-026"
-    ],
-    "verified_at": "2026-04-14T19:39:53.288Z",
+    "required": ["IFC-026"],
+    "verified_at": "2026-04-19T10:06:56.853Z",
     "all_satisfied": true,
     "notes": "IFC-026 completed with status 'Completed'"
   },
@@ -109,13 +107,13 @@
   },
   "artifacts": {
     "expected": [
-      "artifacts/reports/investment-gate-2-analysis.md",
+      "docs/planning/gate-2/investment-gate-2-analysis.md",
       "docs/planning/financial/npv-model.md",
       "docs/planning/gate-2/remediation-plan.md",
       "tools/scripts/gate-2/validate-typecheck.ts",
       "tools/scripts/gate-2/validate-coverage.ts",
       "tools/scripts/gate-2/validate-benchmarks.ts",
-      "artifacts/misc/k6/gate2-benchmark.js",
+      "tools/scripts/k6/gate2-benchmark.js",
       ".specify/sprints/sprint-15/specifications/IFC-027-spec.md",
       ".specify/sprints/sprint-15/specifications/IFC-027-discussion.md",
       ".specify/sprints/sprint-15/planning/IFC-027-plan.md",
@@ -125,13 +123,13 @@
       "artifacts/gate-2/benchmark-validation.json"
     ],
     "created": [
-      "artifacts/reports/investment-gate-2-analysis.md",
+      "docs/planning/gate-2/investment-gate-2-analysis.md",
       "docs/planning/financial/npv-model.md",
       "docs/planning/gate-2/remediation-plan.md",
       "tools/scripts/gate-2/validate-typecheck.ts",
       "tools/scripts/gate-2/validate-coverage.ts",
       "tools/scripts/gate-2/validate-benchmarks.ts",
-      "artifacts/misc/k6/gate2-benchmark.js",
+      "tools/scripts/k6/gate2-benchmark.js",
       ".specify/sprints/sprint-15/specifications/IFC-027-spec.md",
       ".specify/sprints/sprint-15/specifications/IFC-027-discussion.md",
       ".specify/sprints/sprint-15/planning/IFC-027-plan.md",
@@ -171,7 +169,7 @@
           "status": "EXISTS"
         },
         {
-          "path": "artifacts/misc/k6/gate2-benchmark.js",
+          "path": "tools/scripts/k6/gate2-benchmark.js",
           "status": "EXISTS"
         }
       ]
@@ -279,7 +277,7 @@
     },
     {
       "name": "Plan deliverables file verification",
-      "command": "ls tools/scripts/gate-2/*.ts && ls docs/planning/financial/npv-model.md && ls docs/planning/gate-2/remediation-plan.md && ls artifacts/misc/k6/gate2-benchmark.js",
+      "command": "ls tools/scripts/gate-2/*.ts && ls docs/planning/financial/npv-model.md && ls docs/planning/gate-2/remediation-plan.md && ls tools/scripts/k6/gate2-benchmark.js",
       "type": "auto",
       "required": true,
       "executed_at": "2026-01-30T21:30:00.000Z",
@@ -337,9 +335,7 @@
     }
   ],
   "notes": "Task completed with CONDITIONAL GO. Investment decision: £2000 in tranches (£500/£750/£750). T1 conditions met - remediation plan accepted, NPV documented, data discrepancy corrected. T2/T3 conditions pending quality remediation.",
-  "dependencies_resolved": [
-    "IFC-026"
-  ],
+  "dependencies_resolved": ["IFC-026"],
   "spec_session_results": {
     "decision": "CONDITIONAL_GO",
     "consensus": "4/4 agents (100%)",

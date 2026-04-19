@@ -1,5 +1,5 @@
 {
-  "$schema": "../../schemas/task-status.schema.json",
+  "$schema": "../schemas/task-status.schema.json",
   "task_id": "DOC-004",
   "section": "Documentation",
   "description": "Update ui-flow-mapping.md cross-reference matrix to 103 routes, verify API router procedure counts (39 routers, 366 procedures), update implementation and backend integration status",
@@ -9,15 +9,11 @@
   "stream": null,
   "status": "DONE",
   "dependencies": {
-    "required": [
-      "DOC-002"
-    ],
+    "required": ["DOC-002"],
     "all_satisfied": true,
-    "verified_at": "2026-04-14T19:39:53.261Z"
+    "verified_at": "2026-04-19T10:06:56.842Z"
   },
-  "dependencies_resolved": [
-    "DOC-002"
-  ],
+  "dependencies_resolved": ["DOC-002"],
   "started_at": "2026-02-23T12:00:00Z",
   "completed_at": "2026-02-24T01:15:00Z",
   "target_duration_minutes": null,

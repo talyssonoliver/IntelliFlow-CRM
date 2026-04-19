@@ -1,5 +1,5 @@
 {
-  "$schema": "../../schemas/task-status.schema.json",
+  "$schema": "../schemas/task-status.schema.json",
   "task_id": "IFC-194",
   "section": "Architecture",
   "description": "Router Middleware Standardization - Migrate all routers from manual getTenantId to tenantProcedure",
@@ -10,11 +10,8 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-04-14T19:39:53.331Z",
-    "required": [
-      "IFC-182",
-      "IFC-003"
-    ]
+    "verified_at": "2026-04-19T10:06:56.875Z",
+    "required": ["IFC-182", "IFC-003"]
   },
   "started_at": "2026-02-13T23:41:00+00:00",
   "completed_at": "2026-03-10T21:21:39.484Z",
@@ -53,9 +50,6 @@
   "current_phase": "ARCHITECT_SPEC",
   "updated_at": "2026-02-13T23:41:01+00:00",
   "attempt": 0,
-  "dependencies_resolved": [
-    "IFC-182",
-    "IFC-003"
-  ],
+  "dependencies_resolved": ["IFC-182", "IFC-003"],
   "actual_duration_minutes": 15
 }

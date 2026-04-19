@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../schemas/task-status.schema.json",
+  "$schema": "../schemas/task-status.schema.json",
   "task_id": "IFC-185",
   "section": "Core CRM",
   "description": "Account tRPC Router - CRUD hierarchy contacts opportunities activity feed",
@@ -62,12 +62,7 @@
     "completed_at": "2026-02-05T21:25:00.000Z",
     "duration_minutes": 45,
     "executor": "Claude Code /exec",
-    "agents": [
-      "Foundation",
-      "Security",
-      "Quality",
-      "Domain"
-    ],
+    "agents": ["Foundation", "Security", "Quality", "Domain"],
     "execution_log": ".specify/sprints/sprint-4/execution/IFC-185/20260205-212300-revalidation/summary.json",
     "retry_count": 0,
     "last_error": null
@@ -95,12 +90,8 @@
     ],
     "pending": [],
     "all_satisfied": true,
-    "verified_at": "2026-04-14T19:39:53.171Z",
-    "required": [
-      "IFC-103",
-      "IFC-107",
-      "IFC-003"
-    ]
+    "verified_at": "2026-04-19T10:06:56.780Z",
+    "required": ["IFC-103", "IFC-107", "IFC-003"]
   },
   "artifacts": {
     "expected": [
@@ -197,9 +188,5 @@
   ],
   "blockers": [],
   "notes": "Account tRPC Router implementation complete. 3 new endpoints (getContacts, getOpportunities, getActivity) with cursor-based pagination, filtering, tenant isolation, and 30+ new tests. Fixed 11 pre-existing test failures. getHierarchy deferred to IFC-186. Re-validated 2026-02-05 with full exec protocol compliance.",
-  "dependencies_resolved": [
-    "IFC-103",
-    "IFC-107",
-    "IFC-003"
-  ]
+  "dependencies_resolved": ["IFC-103", "IFC-107", "IFC-003"]
 }

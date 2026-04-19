@@ -1,5 +1,5 @@
 {
-  "$schema": "../../schemas/task-status.schema.json",
+  "$schema": "../schemas/task-status.schema.json",
   "task_id": "IFC-301",
   "section": "Infrastructure",
   "description": "Rich Text Editor Integration — Tiptap",
@@ -9,11 +9,9 @@
   "phase": "",
   "stream": null,
   "dependencies": {
-    "required": [
-      "PG-180"
-    ],
+    "required": ["PG-180"],
     "all_satisfied": false,
-    "verified_at": "2026-04-14T19:39:53.426Z"
+    "verified_at": "2026-04-19T10:06:56.934Z"
   },
   "started_at": null,
   "completed_at": null,

@@ -1,0 +1,118 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "PG-183",
+  "section": "Settings",
+  "description": "Module Settings - Accounts (/accounts/account-settings)",
+  "owner": "Frontend Dev (STOA-Foundation)",
+  "status": "DONE",
+  "sprint": "sprint-17",
+  "phase": "",
+  "stream": null,
+  "dependencies": {
+    "required": ["PG-178"],
+    "all_satisfied": true,
+    "verified_at": "2026-04-19T10:06:56.905Z"
+  },
+  "started_at": "2026-04-15T09:30:00Z",
+  "completed_at": "2026-04-15T10:20:00Z",
+  "execution": {
+    "retry_count": 0,
+    "last_error": null,
+    "executor": "orchestrator",
+    "log_path": null
+  },
+  "artifacts": {
+    "expected": [
+      "apps/web/src/app/accounts/(list)/account-settings/page.tsx",
+      "apps/web/src/app/accounts/(list)/account-settings/AccountSettingsContent.tsx",
+      "apps/api/src/modules/account/account-settings.router.ts",
+      "apps/api/src/modules/account/account-automation.ts",
+      "packages/validators/src/account-settings.ts",
+      ".specify/sprints/sprint-17/specifications/PG-183-spec.md",
+      ".specify/sprints/sprint-17/planning/PG-183-plan.md",
+      ".specify/sprints/sprint-17/attestations/PG-183/context_ack.json",
+      ".specify/sprints/sprint-17/attestations/PG-183/attestation.json"
+    ],
+    "created": [
+      "apps/web/src/app/accounts/(list)/account-settings/page.tsx",
+      "apps/web/src/app/accounts/(list)/account-settings/AccountSettingsContent.tsx",
+      "apps/api/src/modules/account/account-settings.router.ts",
+      "apps/api/src/modules/account/account-automation.ts",
+      "packages/validators/src/account-settings.ts",
+      ".specify/sprints/sprint-17/specifications/PG-183-spec.md",
+      ".specify/sprints/sprint-17/planning/PG-183-plan.md",
+      ".specify/sprints/sprint-17/attestations/PG-183/context_ack.json",
+      ".specify/sprints/sprint-17/attestations/PG-183/attestation.json"
+    ],
+    "missing": []
+  },
+  "validations": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/validators --filter @intelliflow/api --filter @intelliflow/web run typecheck",
+      "executed_at": "2026-04-15T10:00:00Z",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run packages/validators/src/__tests__/account-settings.test.ts apps/api/src/modules/account/__tests__ 'apps/web/src/app/accounts/(list)/account-settings'",
+      "executed_at": "2026-04-15T10:05:00Z",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter @intelliflow/web --filter @intelliflow/api --filter @intelliflow/validators run lint",
+      "executed_at": "2026-04-15T10:10:00Z",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/web run build",
+      "executed_at": "2026-04-15T10:20:00Z",
+      "exit_code": 0,
+      "passed": true
+    }
+  ],
+  "kpis": {
+    "lighthouse_score": {
+      "target": 90,
+      "actual": 90,
+      "met": true,
+      "unit": "score"
+    },
+    "all_form_fields_render": {
+      "target": true,
+      "actual": true,
+      "met": true
+    },
+    "sidebar_nav_works": {
+      "target": true,
+      "actual": true,
+      "met": true
+    },
+    "test_count": {
+      "target": 200,
+      "actual": 212,
+      "met": true,
+      "unit": "tests"
+    }
+  },
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-03-08T18:00:00Z",
+      "note": "Task created — Account settings page with 8 sections (hierarchy, industry taxonomy, custom fields, duplicate detection, required fields, automation, AI & intelligence, tags)"
+    },
+    {
+      "status": "Completed",
+      "at": "2026-04-15T10:20:00Z",
+      "note": "PG-183 complete. 8 bento sections, 7 Prisma models, 7 tRPC sub-routers, 212 tests passing. Audit hardening: superRefine dedup, skipDuplicates removed, colorToken CHECK constraint, AI defaults opt-in."
+    }
+  ],
+  "notes": "Account settings page at /accounts/account-settings with 8 bento sections: Hierarchy, Industry Taxonomy, Custom Fields, Duplicate Detection, Required Fields, Automation, AI & Intelligence, Tags. Mirrors /contacts/contact-settings layout. 7 new Prisma models, 7 tRPC sub-routers wired in account.router.ts. Scoped router coverage: 100% stmts / 91.66% branches / 100% fns / 100% lines.",
+  "dependencies_resolved": ["PG-178"]
+}

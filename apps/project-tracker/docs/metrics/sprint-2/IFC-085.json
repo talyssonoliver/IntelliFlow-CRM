@@ -6,10 +6,8 @@
   "owner": "AI Specialist + DevOps",
   "completion_status": "COMPLETE",
   "dependencies": {
-    "required": [
-      "IFC-005"
-    ],
-    "verified_at": "2026-04-14T19:39:53.119Z",
+    "required": ["IFC-005"],
+    "verified_at": "2026-04-19T10:06:56.750Z",
     "all_satisfied": true,
     "notes": "IFC-005 LangChain AI Scoring completed - scoring chain supports provider switching"
   },
@@ -49,14 +47,14 @@
   },
   "artifacts": {
     "expected": [
-      "artifacts/misc/ollama-setup.sh",
-      "artifacts/misc/model-comparison.csv",
+      "tools/scripts/ollama-setup.sh",
+      "artifacts/reports/model-comparison.csv",
       "artifacts/reports/cost-savings-report.json",
       "artifacts/benchmarks/accuracy-benchmarks.json"
     ],
     "created": [
-      "artifacts/misc/ollama-setup.sh",
-      "artifacts/misc/model-comparison.csv",
+      "tools/scripts/ollama-setup.sh",
+      "artifacts/reports/model-comparison.csv",
       "artifacts/reports/cost-savings-report.json",
       "artifacts/benchmarks/accuracy-benchmarks.json"
     ],
@@ -209,10 +207,7 @@
   },
   "stoa_verdicts": {
     "lead": "Intelligence",
-    "supporting": [
-      "Foundation",
-      "Quality"
-    ],
+    "supporting": ["Foundation", "Quality"],
     "intelligence_verdict": "PASS",
     "foundation_verdict": "PASS",
     "quality_verdict": "PASS",
@@ -223,7 +218,5 @@
   "notes": "Ollama local development fully implemented. ChatOllama from @langchain/ollama integrated into scoring.chain.ts with proper configuration. 8 dedicated unit tests verify functionality. All build validations pass. Tests use mocks for CI; live benchmarks require running Ollama instance.",
   "completed_at": "2026-01-26T23:27:00.000Z",
   "started_at": "2026-01-26T23:00:00.000Z",
-  "dependencies_resolved": [
-    "IFC-005"
-  ]
+  "dependencies_resolved": ["IFC-005"]
 }

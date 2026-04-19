@@ -286,7 +286,7 @@ ${patterns.map((p) => `- ${p}`).join('\n') || '- No patterns identified'}
 ## Project Knowledge
 
 - **CLAUDE.md**: Project conventions and standards
-- **Architecture docs**: docs/planning/adr/
+- **Architecture docs**: docs/architecture/adr/
 - **Domain models**: packages/domain/src/
 - **Validators**: packages/validators/src/
 

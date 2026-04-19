@@ -3,7 +3,7 @@
   "title": "Help Article Seed Script — Static to DB Migration",
   "section": "Support",
   "owner": "Backend Dev (STOA-Foundation)",
-  "sprint": 17,
+  "sprint": "sprint-17",
   "status": "Completed",
   "percent_complete": 100,
   "planned_start": "2026-04-13",
@@ -101,12 +101,42 @@
     { "gate_id": "coverage-measurement", "passed": true, "score": 100 },
     { "gate_id": "stoa-foundation", "passed": true }
   ],
-  "kpis": [
-    { "name": "articles_seeded", "target": "17", "actual": "17", "met": true, "unit": "count" },
-    { "name": "scoped_coverage_statements", "target": "90", "actual": "100", "met": true, "unit": "percent" },
-    { "name": "scoped_coverage_branches", "target": "80", "actual": "90", "met": true, "unit": "percent" },
-    { "name": "scoped_coverage_functions", "target": "90", "actual": "100", "met": true, "unit": "percent" },
-    { "name": "scoped_coverage_lines", "target": "90", "actual": "100", "met": true, "unit": "percent" },
-    { "name": "tests_passing", "target": "9", "actual": "11", "met": true, "unit": "count" }
-  ]
+  "kpis": {
+    "articles_seeded": {
+      "target": "17",
+      "actual": "17",
+      "met": true,
+      "unit": "count"
+    },
+    "scoped_coverage_statements": {
+      "target": "90",
+      "actual": "100",
+      "met": true,
+      "unit": "percent"
+    },
+    "scoped_coverage_branches": {
+      "target": "80",
+      "actual": "90",
+      "met": true,
+      "unit": "percent"
+    },
+    "scoped_coverage_functions": {
+      "target": "90",
+      "actual": "100",
+      "met": true,
+      "unit": "percent"
+    },
+    "scoped_coverage_lines": {
+      "target": "90",
+      "actual": "100",
+      "met": true,
+      "unit": "percent"
+    },
+    "tests_passing": {
+      "target": "9",
+      "actual": "11",
+      "met": true,
+      "unit": "count"
+    }
+  }
 }

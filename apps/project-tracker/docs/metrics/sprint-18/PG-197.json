@@ -1,0 +1,50 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "PG-197",
+  "section": "Settings",
+  "description": "Module Settings - Territory Mapping (/accounts/(list)/territory-mapping)",
+  "owner": "Frontend Dev (STOA-Foundation)",
+  "status": "BACKLOG",
+  "sprint": "sprint-18",
+  "phase": "",
+  "stream": null,
+  "dependencies": {
+    "required": ["PG-178", "PG-183"],
+    "all_satisfied": true,
+    "verified_at": "2026-04-19T10:06:56.940Z"
+  },
+  "dependencies_resolved": ["PG-178", "PG-183"],
+  "started_at": null,
+  "completed_at": null,
+  "execution": {
+    "retry_count": 0,
+    "last_error": null
+  },
+  "artifacts": {
+    "expected": [
+      "apps/web/src/app/accounts/(list)/territory-mapping/page.tsx",
+      "apps/web/src/app/accounts/(list)/territory-mapping/TerritoryMappingContent.tsx",
+      "apps/api/src/modules/account/account-territories.router.ts",
+      "packages/validators/src/account-territories.ts",
+      ".specify/sprints/sprint-18/attestations/PG-197/context_ack.json"
+    ],
+    "created": ["apps/web/src/app/accounts/(list)/territory-mapping/page.tsx"],
+    "missing": [
+      "apps/web/src/app/accounts/(list)/territory-mapping/TerritoryMappingContent.tsx",
+      "apps/api/src/modules/account/account-territories.router.ts",
+      "packages/validators/src/account-territories.ts",
+      ".specify/sprints/sprint-18/attestations/PG-197/context_ack.json"
+    ]
+  },
+  "validations": [],
+  "kpis": {},
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-04-18T00:00:00Z",
+      "note": "Task created — playbook-compliant module settings sub-page (PG-182/183/186 pattern)"
+    }
+  ],
+  "notes": "Territory mapping at /accounts/(list)/territory-mapping: geographic territory rules (region/country/postcode), assignment strategies (round-robin/load-balance/manual), overlap resolution priority. MUST follow docs/planning/module-settings-playbook.md. Wire every Boolean toggle in account-automation.ts OR declare as category-2 follow-up under IFC-310/311/312."
+}

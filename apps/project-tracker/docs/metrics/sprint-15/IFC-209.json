@@ -1,5 +1,5 @@
 {
-  "$schema": "../../schemas/task-status.schema.json",
+  "$schema": "../schemas/task-status.schema.json",
   "task_id": "IFC-209",
   "section": "SEO",
   "description": "Fix sitemap.ts defects - replace new Date() lastModified with actual file modification timestamps, add all 6 blog post slugs, add dynamic route entries for /careers/[id] and /lp/[slug] (content audit findings F-007 F-008 F-009)",
@@ -9,17 +9,11 @@
   "stream": null,
   "status": "DONE",
   "dependencies": {
-    "required": [
-      "DOC-002",
-      "DOC-009"
-    ],
+    "required": ["DOC-002", "DOC-009"],
     "all_satisfied": true,
-    "verified_at": "2026-04-14T19:39:53.312Z"
+    "verified_at": "2026-04-19T10:06:56.866Z"
   },
-  "dependencies_resolved": [
-    "DOC-002",
-    "DOC-009"
-  ],
+  "dependencies_resolved": ["DOC-002", "DOC-009"],
   "started_at": "2026-03-02T10:00:00Z",
   "completed_at": "2026-03-03T00:34:48.398Z",
   "target_duration_minutes": null,

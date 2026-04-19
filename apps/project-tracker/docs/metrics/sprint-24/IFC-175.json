@@ -1,5 +1,5 @@
 {
-  "$schema": "../../schemas/task-status.schema.json",
+  "$schema": "../schemas/task-status.schema.json",
   "task_id": "IFC-175",
   "section": "Validation",
   "description": "RAG Production Validation - Follow-up to IFC-039",
@@ -10,10 +10,8 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-04-14T19:39:53.823Z",
-    "required": [
-      "IFC-039"
-    ]
+    "verified_at": "2026-04-19T10:06:57.087Z",
+    "required": ["IFC-039"]
   },
   "started_at": "2026-02-13T23:23:51+00:00",
   "completed_at": null,
@@ -181,7 +179,5 @@
   "current_phase": "ARCHITECT_SPEC",
   "updated_at": "2026-02-13T23:40:24+00:00",
   "attempt": 0,
-  "dependencies_resolved": [
-    "IFC-039"
-  ]
+  "dependencies_resolved": ["IFC-039"]
 }

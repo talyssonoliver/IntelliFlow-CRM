@@ -1208,9 +1208,7 @@ export default function PerformanceReportView() {
                   %
                 </strong>{' '}
                 | To test all endpoints, add them to{' '}
-                <code className="bg-amber-100 px-1 rounded">
-                  artifacts/misc/k6/scripts/quick-test.js
-                </code>
+                <code className="bg-amber-100 px-1 rounded">tools/scripts/k6/quick-test.js</code>
               </p>
             </div>
 

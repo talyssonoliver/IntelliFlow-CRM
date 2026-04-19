@@ -1,5 +1,5 @@
 {
-  "$schema": "../../schemas/task-status.schema.json",
+  "$schema": "../schemas/task-status.schema.json",
   "task_id": "IFC-208",
   "section": "SEO",
   "description": "Lighthouse SEO CI enforcement and og:image - change lighthouserc.js SEO assertion from warn to error and add og:image meta tag to root layout (content audit findings F-005 F-006)",

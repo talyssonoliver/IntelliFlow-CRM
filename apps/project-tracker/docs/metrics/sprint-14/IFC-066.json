@@ -1,5 +1,5 @@
 {
-  "$schema": "../../schemas/task-status.schema.json",
+  "$schema": "../schemas/task-status.schema.json",
   "task_id": "IFC-066",
   "section": "Core CRM",
   "description": "FLOW-009: Deal Lost Closure Workflow",
@@ -10,11 +10,8 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-04-14T19:39:53.241Z",
-    "required": [
-      "IFC-091",
-      "IFC-092"
-    ]
+    "verified_at": "2026-04-19T10:06:56.831Z",
+    "required": ["IFC-091", "IFC-092"]
   },
   "started_at": "2026-02-13T23:22:04+00:00",
   "completed_at": "2026-02-23T22:15:19.557Z",
@@ -54,8 +51,5 @@
   "updated_at": "2026-02-13T23:22:06+00:00",
   "attempt": 0,
   "actual_duration_minutes": 15,
-  "dependencies_resolved": [
-    "IFC-091",
-    "IFC-092"
-  ]
+  "dependencies_resolved": ["IFC-091", "IFC-092"]
 }

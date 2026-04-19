@@ -269,13 +269,13 @@ interface AccuracyBacktest {
 
 ### Backend (IMPLEMENTED)
 
-| Artifact           | Path                                               | Status   |
-| ------------------ | -------------------------------------------------- | -------- |
-| Forecast Algorithm | `apps/api/src/shared/forecast-algorithm`           | COMPLETE |
-| Forecast Tests     | `apps/api/src/shared/forecast-algorithm.test.ts`   | COMPLETE |
-| Accuracy Backtest  | `artifacts/metrics/accuracy-backtest.csv`          | COMPLETE |
-| ADR                | `docs/planning/adr/ADR-019-core-crm-foundation.md` | COMPLETE |
-| PRD                | `docs/planning/prd-core-crm.md`                    | COMPLETE |
+| Artifact           | Path                                                   | Status   |
+| ------------------ | ------------------------------------------------------ | -------- |
+| Forecast Algorithm | `apps/api/src/shared/forecast-algorithm`               | COMPLETE |
+| Forecast Tests     | `apps/api/src/shared/forecast-algorithm.test.ts`       | COMPLETE |
+| Accuracy Backtest  | `artifacts/metrics/accuracy-backtest.csv`              | COMPLETE |
+| ADR                | `docs/architecture/adr/ADR-019-core-crm-foundation.md` | COMPLETE |
+| PRD                | `docs/planning/prd-core-crm.md`                        | COMPLETE |
 
 ### Frontend (GAP)
 
