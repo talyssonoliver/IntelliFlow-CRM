@@ -149,6 +149,7 @@ export const caseDocumentMetadataSchema = z.object({
   title: z.string().min(1).max(255),
   description: z.string().max(2000).optional(),
   documentType: z.enum(DOCUMENT_TYPES),
+  documentTypeLabel: z.string().trim().min(1).max(100).optional(),
   classification: z.enum(DocumentClassification),
   tags: z.array(z.string().max(50)).max(20).default([]),
   relatedCaseId: z.uuid().optional(),

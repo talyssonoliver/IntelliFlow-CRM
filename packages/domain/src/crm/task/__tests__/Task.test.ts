@@ -20,6 +20,7 @@ import {
   TaskPriorityChangedEvent,
   TaskDueDateChangedEvent,
   TaskAssignedEvent,
+  TaskLinkedToEntityEvent,
 } from '../TaskEvents';
 
 describe('Task Aggregate', () => {
@@ -589,18 +590,18 @@ describe('Task Aggregate', () => {
       expect(task.opportunityId).toBeUndefined();
     });
 
-    it('should emit TaskAssignedEvent', () => {
+    it('should emit TaskLinkedToEntityEvent', () => {
       task.assignToLead('lead-789', 'user-999');
 
       const events = task.getDomainEvents();
       expect(events).toHaveLength(1);
-      expect(events[0]).toBeInstanceOf(TaskAssignedEvent);
+      expect(events[0]).toBeInstanceOf(TaskLinkedToEntityEvent);
 
-      const assignedEvent = events[0] as TaskAssignedEvent;
-      expect(assignedEvent.taskId).toBe(task.id);
-      expect(assignedEvent.entityType).toBe('lead');
-      expect(assignedEvent.entityId).toBe('lead-789');
-      expect(assignedEvent.assignedBy).toBe('user-999');
+      const linkedEvent = events[0] as TaskLinkedToEntityEvent;
+      expect(linkedEvent.taskId).toBe(task.id);
+      expect(linkedEvent.entityType).toBe('lead');
+      expect(linkedEvent.entityId).toBe('lead-789');
+      expect(linkedEvent.linkedBy).toBe('user-999');
     });
 
     it('should clear previous contact assignment', () => {
@@ -644,16 +645,16 @@ describe('Task Aggregate', () => {
       expect(task.opportunityId).toBeUndefined();
     });
 
-    it('should emit TaskAssignedEvent', () => {
+    it('should emit TaskLinkedToEntityEvent', () => {
       task.assignToContact('contact-789', 'user-999');
 
       const events = task.getDomainEvents();
       expect(events).toHaveLength(1);
-      expect(events[0]).toBeInstanceOf(TaskAssignedEvent);
+      expect(events[0]).toBeInstanceOf(TaskLinkedToEntityEvent);
 
-      const assignedEvent = events[0] as TaskAssignedEvent;
-      expect(assignedEvent.entityType).toBe('contact');
-      expect(assignedEvent.entityId).toBe('contact-789');
+      const linkedEvent = events[0] as TaskLinkedToEntityEvent;
+      expect(linkedEvent.entityType).toBe('contact');
+      expect(linkedEvent.entityId).toBe('contact-789');
     });
 
     it('should clear previous lead assignment', () => {
@@ -687,16 +688,16 @@ describe('Task Aggregate', () => {
       expect(task.contactId).toBeUndefined();
     });
 
-    it('should emit TaskAssignedEvent', () => {
+    it('should emit TaskLinkedToEntityEvent', () => {
       task.assignToOpportunity('opportunity-789', 'user-999');
 
       const events = task.getDomainEvents();
       expect(events).toHaveLength(1);
-      expect(events[0]).toBeInstanceOf(TaskAssignedEvent);
+      expect(events[0]).toBeInstanceOf(TaskLinkedToEntityEvent);
 
-      const assignedEvent = events[0] as TaskAssignedEvent;
-      expect(assignedEvent.entityType).toBe('opportunity');
-      expect(assignedEvent.entityId).toBe('opportunity-789');
+      const linkedEvent = events[0] as TaskLinkedToEntityEvent;
+      expect(linkedEvent.entityType).toBe('opportunity');
+      expect(linkedEvent.entityId).toBe('opportunity-789');
     });
 
     it('should clear previous contact assignment', () => {
@@ -707,6 +708,79 @@ describe('Task Aggregate', () => {
 
       expect(task.opportunityId).toBe('opportunity-456');
       expect(task.contactId).toBeUndefined();
+    });
+  });
+
+  describe('assignTo() — user assignment', () => {
+    let task: Task;
+    const dueDate = new Date('2026-05-01T12:00:00Z');
+
+    beforeEach(() => {
+      const result = Task.create({
+        title: 'Assign to user',
+        dueDate,
+        ownerId: 'owner-123',
+      });
+      task = result.value;
+      task.clearDomainEvents();
+    });
+
+    it('should set assigneeId and emit TaskAssignedEvent', () => {
+      task.assignTo('user-assignee', 'user-actor');
+
+      expect(task.assigneeId).toBe('user-assignee');
+
+      const events = task.getDomainEvents();
+      expect(events).toHaveLength(1);
+      expect(events[0]).toBeInstanceOf(TaskAssignedEvent);
+
+      const assigned = events[0] as TaskAssignedEvent;
+      expect(assigned.taskId).toBe(task.id);
+      expect(assigned.assigneeId).toBe('user-assignee');
+      expect(assigned.previousAssigneeId).toBeNull();
+      expect(assigned.assignedBy).toBe('user-actor');
+      expect(assigned.title).toBe('Assign to user');
+      expect(assigned.dueDate).toBe(dueDate);
+    });
+
+    it('should record the previous assignee when reassigning', () => {
+      task.assignTo('user-first', 'user-actor');
+      task.clearDomainEvents();
+
+      task.assignTo('user-second', 'user-manager');
+
+      expect(task.assigneeId).toBe('user-second');
+
+      const events = task.getDomainEvents();
+      expect(events).toHaveLength(1);
+      const assigned = events[0] as TaskAssignedEvent;
+      expect(assigned.assigneeId).toBe('user-second');
+      expect(assigned.previousAssigneeId).toBe('user-first');
+      expect(assigned.assignedBy).toBe('user-manager');
+    });
+
+    it('should support unassigning with null', () => {
+      task.assignTo('user-first', 'user-actor');
+      task.clearDomainEvents();
+
+      task.assignTo(null, 'user-manager');
+
+      expect(task.assigneeId).toBeNull();
+
+      const events = task.getDomainEvents();
+      expect(events).toHaveLength(1);
+      const assigned = events[0] as TaskAssignedEvent;
+      expect(assigned.assigneeId).toBeNull();
+      expect(assigned.previousAssigneeId).toBe('user-first');
+    });
+
+    it('should be idempotent when assignee is unchanged', () => {
+      task.assignTo('user-first', 'user-actor');
+      task.clearDomainEvents();
+
+      task.assignTo('user-first', 'user-manager');
+
+      expect(task.getDomainEvents()).toHaveLength(0);
     });
   });
 

@@ -209,7 +209,7 @@ describe('Lead Validators', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should strip status field (status changes use dedicated endpoints)', () => {
+    it('should accept status field as optional (dedicated status endpoint still preferred)', () => {
       const dataWithStatus = {
         id: '123e4567-e89b-12d3-a456-426614174000',
         firstName: 'Jane',
@@ -219,7 +219,7 @@ describe('Lead Validators', () => {
       const result = updateLeadSchema.safeParse(dataWithStatus);
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data).not.toHaveProperty('status');
+        expect(result.data.status).toBe('CONTACTED');
       }
     });
   });

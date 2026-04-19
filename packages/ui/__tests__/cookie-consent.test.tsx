@@ -420,7 +420,10 @@ describe('Accessibility', () => {
     render(<CookieConsentBanner />);
 
     const banner = screen.getByTestId('cookie-consent-banner');
-    expect(banner).toHaveAttribute('role', 'dialog');
+    // `<dialog open>` exposes role="dialog" implicitly; check ARIA semantics
+    // via accessible role + the explicit aria-* wiring we author in markup.
+    expect(banner.tagName).toBe('DIALOG');
+    expect(banner).toHaveAttribute('open');
     expect(banner).toHaveAttribute('aria-modal', 'true');
     expect(banner).toHaveAttribute('aria-labelledby', 'cookie-consent-title');
     expect(banner).toHaveAttribute('aria-describedby', 'cookie-consent-description');

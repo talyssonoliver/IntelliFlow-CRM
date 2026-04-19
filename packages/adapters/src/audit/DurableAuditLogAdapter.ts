@@ -367,7 +367,7 @@ export class DurableAuditLogAdapter implements AuditLogPort {
     const years = retentionYears[jurisdiction ?? 'GLOBAL'] ?? this.config.defaultRetentionYears;
 
     const date = new Date();
-    date.setFullYear(date.getFullYear() + years);
+    date.setUTCFullYear(date.getUTCFullYear() + years);
     return date;
   }
 

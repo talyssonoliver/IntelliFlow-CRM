@@ -1,0 +1,25 @@
+{
+  "generated_at": "2025-12-14T23:09:42Z",
+  "vault_version": "1.21.1",
+  "environment": "development",
+  "policies": {
+    "intelliflow-api": {
+      "description": "Policy for API service",
+      "capabilities": ["read", "list"],
+      "paths": [
+        "secret/data/intelliflow/config",
+        "secret/data/intelliflow/supabase"
+      ]
+    },
+    "intelliflow-ai-worker": {
+      "description": "Policy for AI worker",
+      "capabilities": ["read"],
+      "paths": ["secret/data/intelliflow/openai"]
+    }
+  },
+  "audit": {
+    "enabled": false,
+    "note": "Enable in production"
+  },
+  "notes": ["DEV MODE: Using root token", "Policies defined but not applied"]
+}

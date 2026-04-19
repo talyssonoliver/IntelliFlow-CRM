@@ -10,6 +10,7 @@ import {
 import { PersistenceError } from '../../errors';
 
 export interface CheckConflictsInput {
+  tenantId: string;
   startTime: Date;
   endTime: Date;
   attendeeIds: string[];
@@ -32,6 +33,7 @@ export interface CheckConflictsOutput {
 }
 
 export interface CheckAvailabilityInput {
+  tenantId: string;
   attendeeId: string;
   startTime: Date;
   endTime: Date;
@@ -45,6 +47,7 @@ export interface CheckAvailabilityOutput {
 }
 
 export interface FindNextSlotInput {
+  tenantId: string;
   attendeeId: string;
   startFrom: Date;
   durationMinutes: number;
@@ -93,14 +96,13 @@ export class CheckConflictsUseCase {
         buffer = bufferResult.value;
       }
 
-      // Find potentially conflicting appointments
-      const existingAppointments = await this.appointmentRepository.findForConflictCheck(
-        input.attendeeIds,
-        {
+      // Find potentially conflicting appointments (tenant-scoped)
+      const existingAppointments = await this.appointmentRepository
+        .forTenant(input.tenantId)
+        .findForConflictCheck(input.attendeeIds, {
           startTime: buffer.adjustStartTime(input.startTime),
           endTime: buffer.adjustEndTime(input.endTime),
-        }
-      );
+        });
 
       // Check for conflicts
       const conflictResult = ConflictDetector.checkTimeSlotConflicts(
@@ -110,21 +112,19 @@ export class CheckConflictsUseCase {
       );
 
       // Enrich conflict data with appointment details
-      const enrichedConflicts = await Promise.all(
-        conflictResult.conflicts.map(async (conflict) => {
-          const apt = existingAppointments.find(
-            (a) => a.id.value === conflict.conflictingAppointmentId.value
-          );
-          return {
-            appointmentId: conflict.conflictingAppointmentId.value,
-            title: apt?.title ?? 'Unknown',
-            startTime: apt?.startTime ?? new Date(),
-            endTime: apt?.endTime ?? new Date(),
-            overlapMinutes: conflict.overlapMinutes,
-            conflictType: conflict.conflictType,
-          };
-        })
-      );
+      const enrichedConflicts = conflictResult.conflicts.map((conflict) => {
+        const apt = existingAppointments.find(
+          (a) => a.id.value === conflict.conflictingAppointmentId.value
+        );
+        return {
+          appointmentId: conflict.conflictingAppointmentId.value,
+          title: apt?.title ?? 'Unknown',
+          startTime: apt?.startTime ?? new Date(),
+          endTime: apt?.endTime ?? new Date(),
+          overlapMinutes: conflict.overlapMinutes,
+          conflictType: conflict.conflictType,
+        };
+      });
 
       return Result.ok({
         hasConflicts: conflictResult.hasConflicts,
@@ -146,14 +146,13 @@ export class CheckConflictsUseCase {
     input: CheckAvailabilityInput
   ): Promise<Result<CheckAvailabilityOutput, DomainError>> {
     try {
-      // Find existing appointments for the attendee
-      const existingAppointments = await this.appointmentRepository.findForConflictCheck(
-        [input.attendeeId],
-        {
+      // Find existing appointments for the attendee (tenant-scoped)
+      const existingAppointments = await this.appointmentRepository
+        .forTenant(input.tenantId)
+        .findForConflictCheck([input.attendeeId], {
           startTime: input.startTime,
           endTime: input.endTime,
-        }
-      );
+        });
 
       // Calculate available slots
       const availableSlots = ConflictDetector.checkAvailability(
@@ -205,16 +204,15 @@ export class CheckConflictsUseCase {
 
       // Calculate search range
       const searchEndDate = new Date(input.startFrom);
-      searchEndDate.setDate(searchEndDate.getDate() + (input.maxDaysAhead ?? 30));
+      searchEndDate.setUTCDate(searchEndDate.getUTCDate() + (input.maxDaysAhead ?? 30));
 
-      // Find existing appointments in the search range
-      const existingAppointments = await this.appointmentRepository.findForConflictCheck(
-        [input.attendeeId],
-        {
+      // Find existing appointments in the search range (tenant-scoped)
+      const existingAppointments = await this.appointmentRepository
+        .forTenant(input.tenantId)
+        .findForConflictCheck([input.attendeeId], {
           startTime: input.startFrom,
           endTime: searchEndDate,
-        }
-      );
+        });
 
       // Find next available slot
       const slot = ConflictDetector.findNextAvailableSlot(

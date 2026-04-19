@@ -41,6 +41,10 @@ export const NOTIFICATION_TYPES = [
   'deal_won',
   'deal_lost',
   'deal_at_risk',
+  // PG-184 deal automation notifications
+  'deal_reassigned',
+  'deal_high_value_moved',
+  'deal_duplicate_suspected',
   // Task notifications
   'task_assigned',
   'task_due_soon',
@@ -74,6 +78,11 @@ export const NOTIFICATION_TYPES = [
   'ticket_assigned',
   'ticket_created',
   'ticket_escalated',
+  // PG-185 ticket automation notifications
+  'ticket_reassigned',
+  'ticket_resolved',
+  'ticket_duplicate_suspected',
+  'ticket_auto_closed',
   // Case notifications
   'case_assigned',
   'case_status_changed',
@@ -81,6 +90,8 @@ export const NOTIFICATION_TYPES = [
   // Contact notifications
   'contact_stale',
   'contact_reassigned',
+  // Document notifications (PG-186)
+  'document_reassigned',
   // Email notifications
   'email_received',
   'email_opened',

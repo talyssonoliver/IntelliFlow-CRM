@@ -63,6 +63,7 @@ import {
   TaskUpdatedEvent,
   TaskDeletedEvent,
   TaskAssignedEvent,
+  TaskLinkedToEntityEvent,
 } from '../../task/TaskEvents';
 import {
   TicketCreatedEvent,
@@ -225,7 +226,7 @@ function getAllDomainEventTypes(): string[] {
     new OpportunityReopenedEvent({} as any),
     new DealWonEnrichedEvent({} as any),
     new DealLostEnrichedEvent({} as any),
-    // Task (9)
+    // Task (10)
     new TaskCreatedEvent({} as any),
     new TaskStatusChangedEvent({} as any),
     new TaskCompletedEvent({} as any),
@@ -234,7 +235,8 @@ function getAllDomainEventTypes(): string[] {
     new TaskDueDateChangedEvent({} as any),
     new TaskUpdatedEvent({} as any),
     new TaskDeletedEvent({} as any),
-    new TaskAssignedEvent({} as any),
+    new TaskAssignedEvent({} as any, null, null, 'system', '', null),
+    new TaskLinkedToEntityEvent({} as any, 'lead', '', 'system'),
     // Ticket (14)
     new TicketCreatedEvent({} as any),
     new TicketStatusChangedEvent({} as any),

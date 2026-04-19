@@ -156,7 +156,9 @@ describe('DateRange', () => {
       const result = DateRange.thisMonth();
       const now = new Date();
       const end = result.value.end;
-      const lastDayOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0)).getUTCDate();
+      const lastDayOfMonth = new Date(
+        Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0)
+      ).getUTCDate();
 
       expect(end.getUTCDate()).toBe(lastDayOfMonth);
     });

@@ -180,7 +180,7 @@ describe('Queue Configuration', () => {
       expect(QUEUE_NAMES.AI_SCORING).toBe('ai-scoring');
       expect(QUEUE_NAMES.AI_PREDICTION).toBe('ai-prediction');
       expect(QUEUE_NAMES.AI_INSIGHTS).toBe('ai-insights');
-      expect(QUEUE_NAMES.EMAIL_NOTIFICATIONS).toBe('intelliflow:email-notifications');
+      expect(QUEUE_NAMES.EMAIL_NOTIFICATIONS).toBe('intelliflow-notifications-email');
       expect(QUEUE_NAMES.WEBHOOK_DELIVERY).toBe('intelliflow:webhook-delivery');
     });
   });

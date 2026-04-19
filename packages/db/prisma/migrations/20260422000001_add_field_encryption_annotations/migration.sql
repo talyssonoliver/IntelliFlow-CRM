@@ -1,0 +1,20 @@
+-- Migration: add_field_encryption_annotations
+--
+-- This migration records the activation of application-layer field encryption
+-- for ChainVersion.prompt, ChainVersion.systemPrompt, and WebhookEndpoint.secret.
+--
+-- No DDL changes are required: the /// @encrypted doc-comment annotations in
+-- schema.prisma are read at runtime by the `prisma-field-encryption` Prisma
+-- client extension. The column types (text / varchar) are unchanged.
+--
+-- After deploying the application code change, run the backfill script to
+-- encrypt existing plaintext rows:
+--
+--   PRISMA_FIELD_ENCRYPTION_KEY=<key> \
+--     pnpm tsx tools/scripts/encrypt-existing-prompts.ts
+--
+-- See docs/planning/sprint-18-prompt-encryption.md §6 and §7 for the full
+-- deployment runbook.
+--
+-- Related: DBA-015 (ChainVersion.prompt, WebhookEndpoint.secret), DBA-018 (ChainVersion.systemPrompt)
+-- ADR: ADR-049 (Application-Layer Field Encryption for Sensitive Prisma Models)

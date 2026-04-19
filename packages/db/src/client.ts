@@ -1,9 +1,29 @@
 import { PrismaClient, Prisma } from '../generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
+import { fieldEncryptionExtension, deriveKey } from './field-encryption.js';
+
+// ---------------------------------------------------------------------------
+// M4 prompt encryption — ACTIVE via bespoke $extends (AES-256-GCM)
+// ---------------------------------------------------------------------------
+// `prisma-field-encryption@1.6.x` was incompatible with Prisma 7.x.
+// We now ship a bespoke extension in packages/db/src/field-encryption.ts that
+// mirrors the AES-256-GCM pattern from DurableAuditLogAdapter.ts.
+//
+// Key: PRISMA_FIELD_ENCRYPTION_KEY — 32-byte base64 string.
+// Encrypted fields: ChainVersion.prompt, ChainVersion.systemPrompt, WebhookEndpoint.secret
+// ---------------------------------------------------------------------------
+if (process.env['NODE_ENV'] === 'production' && !process.env['PRISMA_FIELD_ENCRYPTION_KEY']) {
+  throw new Error(
+    '[M4] PRISMA_FIELD_ENCRYPTION_KEY must be set in production — field-level ' +
+      'encryption is ACTIVE via the bespoke $extends extension. ' +
+      "Generate a key: node -e \"console.log(require('crypto').randomBytes(32).toString('base64'))\""
+  );
+}
 
 // Global instance for development hot-reload
 declare global {
-  var __prisma: PrismaClient | undefined;
+  // eslint-disable-next-line no-var
+  var __prisma: unknown;
 }
 
 /**
@@ -111,11 +131,26 @@ const createPrismaClient = () => {
     });
   }
 
+  // M4 ENCRYPTION WIRING — ACTIVE via bespoke field-encryption extension.
+  // Encrypts ChainVersion.prompt, ChainVersion.systemPrompt, WebhookEndpoint.secret
+  // transparently on write; decrypts on read.
+  const encKey = process.env['PRISMA_FIELD_ENCRYPTION_KEY'];
+  if (encKey) {
+    const key = deriveKey(encKey);
+    return client.$extends(fieldEncryptionExtension({ key }));
+  }
+  // In non-production environments without a key, return the base client so
+  // development / test runs continue to function without encryption configured.
   return client;
 };
 
+// Type alias capturing the extended client shape.
+// Downstream code that already has `as unknown as` casts will continue to work.
+export type EncryptedPrismaClient = ReturnType<typeof createPrismaClient>;
+
 // Use global instance in development to prevent connection exhaustion
-export const prisma = globalThis.__prisma ?? createPrismaClient();
+export const prisma: EncryptedPrismaClient =
+  (globalThis.__prisma as EncryptedPrismaClient | undefined) ?? createPrismaClient();
 
 if (process.env.NODE_ENV !== 'production') {
   globalThis.__prisma = prisma;
@@ -133,7 +168,11 @@ export type TransactionClient = Omit<
  * Utility for type-safe transactions with automatic rollback on error
  */
 export async function withTransaction<T>(fn: (tx: TransactionClient) => Promise<T>): Promise<T> {
-  return prisma.$transaction(fn);
+  // Cast via `as any` because the $extends() wrapper changes the transaction
+  // callback parameter type; at runtime the extended and base clients expose
+  // the same model APIs inside a transaction.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (prisma as any).$transaction(fn);
 }
 
 /**
@@ -147,7 +186,8 @@ export async function withTransactionOptions<T>(
     isolationLevel?: Prisma.TransactionIsolationLevel;
   }
 ): Promise<T> {
-  return prisma.$transaction(fn, options);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (prisma as any).$transaction(fn, options);
 }
 
 /**

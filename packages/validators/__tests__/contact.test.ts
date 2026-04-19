@@ -601,7 +601,7 @@ describe('Contact Validators', () => {
   describe('contactListResponseSchema', () => {
     it('should validate valid contact list response', () => {
       const validList = {
-        data: [
+        contacts: [
           {
             id: '123e4567-e89b-12d3-a456-426614174000',
             email: 'john@example.com',
@@ -640,7 +640,7 @@ describe('Contact Validators', () => {
 
     it('should validate empty contact list', () => {
       const emptyList = {
-        data: [],
+        contacts: [],
         total: 0,
         page: 1,
         limit: 20,
@@ -653,7 +653,7 @@ describe('Contact Validators', () => {
 
     it('should reject negative total', () => {
       const invalidList = {
-        data: [],
+        contacts: [],
         total: -1,
         page: 1,
         limit: 20,
@@ -666,7 +666,7 @@ describe('Contact Validators', () => {
 
     it('should reject zero page', () => {
       const invalidList = {
-        data: [],
+        contacts: [],
         total: 0,
         page: 0,
         limit: 20,
@@ -679,7 +679,7 @@ describe('Contact Validators', () => {
 
     it('should validate multiple contacts', () => {
       const multipleContacts = {
-        data: [
+        contacts: [
           {
             id: '123e4567-e89b-12d3-a456-426614174000',
             email: 'john@example.com',

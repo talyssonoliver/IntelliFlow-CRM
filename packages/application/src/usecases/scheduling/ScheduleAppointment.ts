@@ -18,6 +18,10 @@ export interface ScheduleAppointmentInput {
   description?: string;
   startTime: Date;
   endTime: Date;
+  /** IANA timezone string (e.g. "America/New_York") stored on the appointment. Phase 1d. */
+  timezone?: string;
+  /** FK to internal Calendar model (user's workspace calendar). Phase 1d. */
+  calendarId?: string | null;
   appointmentType: AppointmentType;
   location?: string;
   organizerId: string;
@@ -81,6 +85,8 @@ export class ScheduleAppointmentUseCase {
         description: input.description,
         startTime: input.startTime,
         endTime: input.endTime,
+        timezone: input.timezone,
+        calendarId: input.calendarId,
         appointmentType: input.appointmentType,
         location: input.location,
         organizerId: input.organizerId,
@@ -149,10 +155,12 @@ export class ScheduleAppointmentUseCase {
   ): Promise<Appointment[]> {
     const allAttendees = [input.organizerId, ...(input.attendeeIds ?? [])];
     try {
-      return await this.appointmentRepository.findForConflictCheck(allAttendees, {
-        startTime: buffer.adjustStartTime(input.startTime),
-        endTime: buffer.adjustEndTime(input.endTime),
-      });
+      return await this.appointmentRepository
+        .forTenant(input.tenantId)
+        .findForConflictCheck(allAttendees, {
+          startTime: buffer.adjustStartTime(input.startTime),
+          endTime: buffer.adjustEndTime(input.endTime),
+        });
     } catch (error) {
       throw new ConflictDetectionError(
         `Failed to fetch appointments for conflict check: ${error instanceof Error ? error.message : 'Unknown error'}`

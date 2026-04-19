@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "1.0",
+  "taskId": "ENV-018-AI",
+  "generatedAt": "2026-01-28T21:30:00Z",
+  "config": {
+    "sprintLengthDays": 14,
+    "targetVelocity": 80,
+    "forecastErrorThreshold": 20,
+    "minVelocityWarning": 50,
+    "velocityGoal": "Maintain >80% sprint completion rate"
+  },
+  "forecast": {
+    "method": "rolling-3-sprint-average",
+    "lookbackSprints": 3,
+    "confidenceThresholds": {
+      "high": 80,
+      "medium": 60,
+      "low": 40
+    }
+  },
+  "notes": "Target velocity of 80% based on team capacity. Forecast uses rolling 3-sprint average."
+}

@@ -72,6 +72,9 @@ export {
   type Logger,
 } from './logging';
 
+// Export request-scoped log context (AsyncLocalStorage-backed)
+export { runWithLogContext, getCurrentLogContext, type LogRequestContext } from './log-context';
+
 /**
  * Initialize all observability systems
  *

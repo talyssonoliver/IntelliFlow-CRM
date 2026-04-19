@@ -22,6 +22,7 @@ describe('CheckConflictsUseCase', () => {
   describe('checkConflicts', () => {
     it('should return no conflicts when time slot is free', async () => {
       const input = {
+        tenantId: 'tenant-1',
         startTime: new Date(2025, 0, 2, 14, 0, 0),
         endTime: new Date(2025, 0, 2, 15, 0, 0),
         attendeeIds: ['user-123'],
@@ -35,17 +36,19 @@ describe('CheckConflictsUseCase', () => {
     });
 
     it('should detect conflicts with existing appointments', async () => {
-      // Create existing appointment
+      // Create existing appointment with matching tenantId
       const existing = Appointment.create({
         title: 'Existing Meeting',
         startTime: new Date(2025, 0, 2, 14, 0, 0),
         endTime: new Date(2025, 0, 2, 15, 0, 0),
         appointmentType: 'INTERNAL_MEETING',
         organizerId: 'user-123',
+        tenantId: 'tenant-1',
       }).value;
       await repository.save(existing);
 
       const input = {
+        tenantId: 'tenant-1',
         startTime: new Date(2025, 0, 2, 14, 30, 0),
         endTime: new Date(2025, 0, 2, 15, 30, 0),
         attendeeIds: ['user-123'],
@@ -65,10 +68,12 @@ describe('CheckConflictsUseCase', () => {
         endTime: new Date(2025, 0, 2, 15, 0, 0),
         appointmentType: 'INTERNAL_MEETING',
         organizerId: 'user-123',
+        tenantId: 'tenant-1',
       }).value;
       await repository.save(existing);
 
       const input = {
+        tenantId: 'tenant-1',
         startTime: new Date(2025, 0, 2, 14, 30, 0),
         endTime: new Date(2025, 0, 2, 15, 30, 0),
         attendeeIds: ['user-123'],
@@ -81,13 +86,14 @@ describe('CheckConflictsUseCase', () => {
     });
 
     it('should check conflicts for multiple attendees', async () => {
-      // Create appointments for different users
+      // Create appointments for different users (same tenant)
       const apt1 = Appointment.create({
         title: 'User 1 Meeting',
         startTime: new Date(2025, 0, 2, 14, 0, 0),
         endTime: new Date(2025, 0, 2, 15, 0, 0),
         appointmentType: 'INTERNAL_MEETING',
         organizerId: 'user-1',
+        tenantId: 'tenant-1',
       }).value;
 
       const apt2 = Appointment.create({
@@ -96,12 +102,14 @@ describe('CheckConflictsUseCase', () => {
         endTime: new Date(2025, 0, 2, 15, 30, 0),
         appointmentType: 'INTERNAL_MEETING',
         organizerId: 'user-2',
+        tenantId: 'tenant-1',
       }).value;
 
       await repository.save(apt1);
       await repository.save(apt2);
 
       const input = {
+        tenantId: 'tenant-1',
         startTime: new Date(2025, 0, 2, 14, 45, 0),
         endTime: new Date(2025, 0, 2, 15, 45, 0),
         attendeeIds: ['user-1', 'user-2'],
@@ -120,11 +128,13 @@ describe('CheckConflictsUseCase', () => {
         endTime: new Date(2025, 0, 2, 15, 0, 0),
         appointmentType: 'INTERNAL_MEETING',
         organizerId: 'user-123',
+        tenantId: 'tenant-1',
       }).value;
       await repository.save(existing);
 
       // Propose appointment that starts right after, but buffer would conflict
       const input = {
+        tenantId: 'tenant-1',
         startTime: new Date(2025, 0, 2, 15, 0, 0),
         endTime: new Date(2025, 0, 2, 16, 0, 0),
         attendeeIds: ['user-123'],
@@ -140,6 +150,7 @@ describe('CheckConflictsUseCase', () => {
 
     it('should fail for invalid time slot', async () => {
       const input = {
+        tenantId: 'tenant-1',
         startTime: new Date(2025, 0, 2, 15, 0, 0),
         endTime: new Date(2025, 0, 2, 14, 0, 0), // End before start
         attendeeIds: ['user-123'],
@@ -154,6 +165,7 @@ describe('CheckConflictsUseCase', () => {
   describe('checkAvailability', () => {
     it('should return full availability when no appointments exist', async () => {
       const input = {
+        tenantId: 'tenant-1',
         attendeeId: 'user-123',
         startTime: new Date(2025, 0, 2, 9, 0, 0),
         endTime: new Date(2025, 0, 2, 17, 0, 0),
@@ -172,10 +184,12 @@ describe('CheckConflictsUseCase', () => {
         endTime: new Date(2025, 0, 2, 13, 0, 0),
         appointmentType: 'INTERNAL_MEETING',
         organizerId: 'user-123',
+        tenantId: 'tenant-1',
       }).value;
       await repository.save(existing);
 
       const input = {
+        tenantId: 'tenant-1',
         attendeeId: 'user-123',
         startTime: new Date(2025, 0, 2, 9, 0, 0),
         endTime: new Date(2025, 0, 2, 17, 0, 0),
@@ -196,6 +210,7 @@ describe('CheckConflictsUseCase', () => {
         endTime: new Date(2025, 0, 2, 9, 45, 0),
         appointmentType: 'INTERNAL_MEETING',
         organizerId: 'user-123',
+        tenantId: 'tenant-1',
       }).value;
 
       const apt2 = Appointment.create({
@@ -204,12 +219,14 @@ describe('CheckConflictsUseCase', () => {
         endTime: new Date(2025, 0, 2, 11, 0, 0),
         appointmentType: 'INTERNAL_MEETING',
         organizerId: 'user-123',
+        tenantId: 'tenant-1',
       }).value;
 
       await repository.save(apt1);
       await repository.save(apt2);
 
       const input = {
+        tenantId: 'tenant-1',
         attendeeId: 'user-123',
         startTime: new Date(2025, 0, 2, 9, 0, 0),
         endTime: new Date(2025, 0, 2, 11, 0, 0),
@@ -229,6 +246,7 @@ describe('CheckConflictsUseCase', () => {
   describe('findNextSlot', () => {
     it('should find next available slot', async () => {
       const input = {
+        tenantId: 'tenant-1',
         attendeeId: 'user-123',
         startFrom: new Date(2025, 0, 2, 9, 0, 0),
         durationMinutes: 60,
@@ -248,10 +266,12 @@ describe('CheckConflictsUseCase', () => {
         endTime: new Date(2025, 0, 2, 12, 0, 0),
         appointmentType: 'INTERNAL_MEETING',
         organizerId: 'user-123',
+        tenantId: 'tenant-1',
       }).value;
       await repository.save(existing);
 
       const input = {
+        tenantId: 'tenant-1',
         attendeeId: 'user-123',
         startFrom: new Date(2025, 0, 2, 9, 0, 0),
         durationMinutes: 60,
@@ -274,10 +294,12 @@ describe('CheckConflictsUseCase', () => {
         endTime: new Date(2025, 0, 2, 10, 0, 0),
         appointmentType: 'INTERNAL_MEETING',
         organizerId: 'user-123',
+        tenantId: 'tenant-1',
       }).value;
       await repository.save(existing);
 
       const input = {
+        tenantId: 'tenant-1',
         attendeeId: 'user-123',
         startFrom: new Date(2025, 0, 2, 9, 0, 0),
         durationMinutes: 60,
@@ -293,6 +315,7 @@ describe('CheckConflictsUseCase', () => {
 
     it('should respect max days ahead limit', async () => {
       const input = {
+        tenantId: 'tenant-1',
         attendeeId: 'user-123',
         startFrom: new Date(2025, 0, 2, 9, 0, 0),
         durationMinutes: 60,

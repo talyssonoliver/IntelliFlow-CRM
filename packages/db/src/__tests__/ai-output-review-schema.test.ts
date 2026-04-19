@@ -11,7 +11,7 @@
  * @see packages/db/prisma/schema.prisma
  * @see .specify/sprints/sprint-4/specifications/IFC-178-spec.md
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, expectTypeOf } from 'vitest';
 import type { Prisma } from '../../generated/prisma/client';
 
 // Use Prisma's CreateInput types to verify model fields exist at compile time.
@@ -78,14 +78,12 @@ describe('AI Output Review Schema Validation', () => {
   });
 
   describe('Table mapping', () => {
-    it('should have models accessible via Prisma namespace', () => {
-      // Verify model names are valid Prisma model names
-      // These would cause TypeScript errors if the models don't exist
-      type HasAIOutputReview = Prisma.AIOutputReviewDelegate;
-      type HasAIOutputReviewAudit = Prisma.AIOutputReviewAuditDelegate;
-
-      // Runtime check that types resolve
-      expect(true).toBe(true);
+    it('exposes AIOutputReview + AIOutputReviewAudit delegates on the Prisma namespace', () => {
+      // Real type assertion via Vitest's expectTypeOf — fails if the delegate
+      // is removed or renamed in the schema. Replaces the old
+      // expect(true).toBe(true) placeholder.
+      expectTypeOf<Prisma.AIOutputReviewDelegate>().not.toBeNever();
+      expectTypeOf<Prisma.AIOutputReviewAuditDelegate>().not.toBeNever();
     });
   });
 });

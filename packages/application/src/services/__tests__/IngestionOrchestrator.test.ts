@@ -133,33 +133,10 @@ describe('IngestionOrchestrator', () => {
       expect(result.error).toContain('not allowed');
     });
 
-    // Skip: checkDuplicate() is not yet implemented (always returns null)
-    // When implemented, this test should verify duplicate detection behavior
-    it.skip('should handle duplicate files idempotently', async () => {
-      const file = Buffer.from('duplicate content');
-      const hash = createHash('sha256').update(file).digest('hex');
-
-      const existingDoc = {
-        id: 'existing-doc-123',
-        contentHash: hash,
-      };
-
-      mockRepository.findById = vi.fn().mockResolvedValue(existingDoc);
-
-      const metadata = {
-        tenantId: TEST_TENANT_ID,
-        filename: 'duplicate.pdf',
-        mimeType: 'application/pdf',
-        uploadedBy: TEST_USER_ID,
-      };
-
-      const result = await orchestrator.ingestFile(file, metadata);
-
-      expect(result.success).toBe(true);
-      expect(result.documentId).toBe('existing-doc-123');
-      expect(result.duplicate).toBe(true);
-      expect(mockRepository.save).not.toHaveBeenCalled();
-    });
+    // NOTE: Duplicate-detection test omitted — IngestionOrchestrator.checkDuplicate()
+    // always returns null (stubbed, not yet implemented). There is no hash-index lookup,
+    // so the idempotency path can never be exercised. Add a test here once
+    // checkDuplicate() is wired to a real repository query.
 
     it('should retry on transient failures', async () => {
       mockStorageService.uploadToQuarantine

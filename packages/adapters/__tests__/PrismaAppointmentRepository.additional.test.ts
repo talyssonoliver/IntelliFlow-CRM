@@ -12,6 +12,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { PrismaClient } from '@intelliflow/db';
 import { PrismaAppointmentRepository } from '../src/repositories/PrismaAppointmentRepository';
 
+const TENANT = 'tenant-1';
+
 // Mock the withTransaction function from @intelliflow/db
 vi.mock('@intelliflow/db', async () => {
   const actual = await vi.importActual('@intelliflow/db');
@@ -54,6 +56,7 @@ const createMockPrismaClient = () => {
       findMany: vi.fn(),
       findFirst: vi.fn(),
       delete: vi.fn().mockResolvedValue({}),
+      deleteMany: vi.fn().mockResolvedValue({}),
       count: vi.fn(),
       groupBy: vi.fn(),
       updateMany: vi.fn().mockResolvedValue({}),
@@ -85,6 +88,7 @@ const createMockDbRecord = (overrides?: Record<string, unknown>) => ({
   bufferMinutesAfter: 5,
   recurrence: null,
   organizerId: 'user-123',
+  tenantId: TENANT,
   notes: null,
   externalCalendarId: null,
   reminderMinutes: 15,
@@ -447,7 +451,7 @@ describe('PrismaAppointmentRepository - Additional', () => {
       (mockPrisma.appointment.findMany as any).mockResolvedValue([]);
       (mockPrisma.appointment.count as any).mockResolvedValue(0);
 
-      await repository.findWithFilters({ isRecurring: true });
+      await repository.forTenant(TENANT).findWithFilters({ isRecurring: true });
 
       expect(mockPrisma.appointment.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -462,7 +466,7 @@ describe('PrismaAppointmentRepository - Additional', () => {
       (mockPrisma.appointment.findMany as any).mockResolvedValue([]);
       (mockPrisma.appointment.count as any).mockResolvedValue(0);
 
-      await repository.findWithFilters({ isRecurring: false });
+      await repository.forTenant(TENANT).findWithFilters({ isRecurring: false });
 
       expect(mockPrisma.appointment.findMany).toHaveBeenCalled();
     });
@@ -474,7 +478,7 @@ describe('PrismaAppointmentRepository - Additional', () => {
       const endTimeFrom = new Date('2025-01-01');
       const endTimeTo = new Date('2025-01-31');
 
-      await repository.findWithFilters({ endTimeFrom, endTimeTo });
+      await repository.forTenant(TENANT).findWithFilters({ endTimeFrom, endTimeTo });
 
       expect(mockPrisma.appointment.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -494,7 +498,7 @@ describe('PrismaAppointmentRepository - Additional', () => {
 
       const endTimeFrom = new Date('2025-01-01');
 
-      await repository.findWithFilters({ endTimeFrom });
+      await repository.forTenant(TENANT).findWithFilters({ endTimeFrom });
 
       expect(mockPrisma.appointment.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -511,7 +515,7 @@ describe('PrismaAppointmentRepository - Additional', () => {
 
       const endTimeTo = new Date('2025-01-31');
 
-      await repository.findWithFilters({ endTimeTo });
+      await repository.forTenant(TENANT).findWithFilters({ endTimeTo });
 
       expect(mockPrisma.appointment.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -526,7 +530,7 @@ describe('PrismaAppointmentRepository - Additional', () => {
       (mockPrisma.appointment.findMany as any).mockResolvedValue([]);
       (mockPrisma.appointment.count as any).mockResolvedValue(0);
 
-      const result = await repository.findWithFilters({});
+      const result = await repository.forTenant(TENANT).findWithFilters({});
 
       expect(result.limit).toBe(50);
       expect(result.offset).toBe(0);
@@ -543,7 +547,9 @@ describe('PrismaAppointmentRepository - Additional', () => {
       (mockPrisma.appointment.findMany as any).mockResolvedValue(mockRecords);
       (mockPrisma.appointment.count as any).mockResolvedValue(1);
 
-      const result = await repository.findWithFilters({}, { limit: 10, offset: 0 });
+      const result = await repository
+        .forTenant(TENANT)
+        .findWithFilters({}, { limit: 10, offset: 0 });
 
       expect(result.hasMore).toBe(false);
     });
@@ -554,7 +560,7 @@ describe('PrismaAppointmentRepository - Additional', () => {
 
       const startTimeFrom = new Date('2025-01-01');
 
-      await repository.findWithFilters({ startTimeFrom });
+      await repository.forTenant(TENANT).findWithFilters({ startTimeFrom });
 
       expect(mockPrisma.appointment.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -576,11 +582,11 @@ describe('PrismaAppointmentRepository - Additional', () => {
           exceptionDates: [],
         },
       });
-      (mockPrisma.appointment.findUnique as any).mockResolvedValue(mockRecord);
+      (mockPrisma.appointment.findFirst as any).mockResolvedValue(mockRecord);
 
       const { AppointmentId } = await import('@intelliflow/domain');
       const id = AppointmentId.create(mockRecord.id as string).value;
-      const result = await repository.findById(id);
+      const result = await repository.forTenant(TENANT).findById(id);
 
       expect(result).not.toBeNull();
     });
@@ -590,11 +596,11 @@ describe('PrismaAppointmentRepository - Additional', () => {
         attendees: [{ userId: 'user-a' }, { userId: 'user-b' }],
         linkedCases: [{ caseId: '550e8400-e29b-41d4-a716-446655440010' }],
       });
-      (mockPrisma.appointment.findUnique as any).mockResolvedValue(mockRecord);
+      (mockPrisma.appointment.findFirst as any).mockResolvedValue(mockRecord);
 
       const { AppointmentId } = await import('@intelliflow/domain');
       const id = AppointmentId.create(mockRecord.id as string).value;
-      const result = await repository.findById(id);
+      const result = await repository.forTenant(TENANT).findById(id);
 
       expect(result).not.toBeNull();
       expect(result!.attendeeIds).toHaveLength(2);
@@ -613,11 +619,11 @@ describe('PrismaAppointmentRepository - Additional', () => {
         cancellationReason: 'Rescheduled',
         tenantId: 'tenant-custom',
       });
-      (mockPrisma.appointment.findUnique as any).mockResolvedValue(mockRecord);
+      (mockPrisma.appointment.findFirst as any).mockResolvedValue(mockRecord);
 
       const { AppointmentId } = await import('@intelliflow/domain');
       const id = AppointmentId.create(mockRecord.id as string).value;
-      const result = await repository.findById(id);
+      const result = await repository.forTenant('tenant-custom').findById(id);
 
       expect(result).not.toBeNull();
       expect(result!.title).toBe('Test Meeting');
@@ -627,11 +633,11 @@ describe('PrismaAppointmentRepository - Additional', () => {
       const mockRecord = createMockDbRecord();
       // Remove tenantId to test fallback
       delete (mockRecord as any).tenantId;
-      (mockPrisma.appointment.findUnique as any).mockResolvedValue(mockRecord);
+      (mockPrisma.appointment.findFirst as any).mockResolvedValue(mockRecord);
 
       const { AppointmentId } = await import('@intelliflow/domain');
       const id = AppointmentId.create(mockRecord.id as string).value;
-      const result = await repository.findById(id);
+      const result = await repository.forTenant(TENANT).findById(id);
 
       expect(result).not.toBeNull();
       expect(result!.tenantId).toBe('default');

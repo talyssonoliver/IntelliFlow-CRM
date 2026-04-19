@@ -11,6 +11,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { PrismaClient, Prisma } from '@intelliflow/db';
 import { PrismaAppointmentRepository } from '../src/repositories/PrismaAppointmentRepository';
 
+const TENANT = 'tenant-1';
+
 // Mock Prisma transaction
 const createMockTransaction = () => {
   return {
@@ -39,6 +41,7 @@ const createMockPrismaClient = () => {
       findMany: vi.fn(),
       findFirst: vi.fn(),
       delete: vi.fn().mockResolvedValue({}),
+      deleteMany: vi.fn().mockResolvedValue({}),
       count: vi.fn(),
       groupBy: vi.fn(),
       updateMany: vi.fn().mockResolvedValue({}),
@@ -80,6 +83,7 @@ const createMockDbRecord = (
     completedAt: Date | null;
     cancellationReason: string | null;
     parentAppointmentId: string | null;
+    tenantId: string;
     attendees: { userId: string }[];
     linkedCases: { caseId: string }[];
   }>
@@ -97,6 +101,7 @@ const createMockDbRecord = (
     bufferMinutesAfter: 5,
     recurrence: null,
     organizerId: 'user-123',
+    tenantId: TENANT,
     notes: null,
     externalCalendarId: null,
     reminderMinutes: 15,
@@ -126,30 +131,30 @@ describe('PrismaAppointmentRepository', () => {
   describe('findById()', () => {
     it('should return appointment when found', async () => {
       const mockRecord = createMockDbRecord();
-      (mockPrisma.appointment.findUnique as any).mockResolvedValue(mockRecord);
+      (mockPrisma.appointment.findFirst as any).mockResolvedValue(mockRecord);
 
       // Create a mock AppointmentId
       const { AppointmentId } = await import('@intelliflow/domain');
       const idResult = AppointmentId.create(mockRecord.id);
       expect(idResult.isSuccess).toBe(true);
 
-      const result = await repository.findById(idResult.value);
+      const result = await repository.forTenant(TENANT).findById(idResult.value);
 
       expect(result).not.toBeNull();
       expect(result?.title).toBe('Test Meeting');
-      expect(mockPrisma.appointment.findUnique).toHaveBeenCalledWith({
-        where: { id: mockRecord.id },
+      expect(mockPrisma.appointment.findFirst).toHaveBeenCalledWith({
+        where: { id: mockRecord.id, tenantId: TENANT },
         include: { attendees: true, linkedCases: true },
       });
     });
 
     it('should return null when not found', async () => {
-      (mockPrisma.appointment.findUnique as any).mockResolvedValue(null);
+      (mockPrisma.appointment.findFirst as any).mockResolvedValue(null);
 
       const { AppointmentId } = await import('@intelliflow/domain');
       const idResult = AppointmentId.create('550e8400-e29b-41d4-a716-446655440001');
 
-      const result = await repository.findById(idResult.value);
+      const result = await repository.forTenant(TENANT).findById(idResult.value);
 
       expect(result).toBeNull();
     });
@@ -166,7 +171,7 @@ describe('PrismaAppointmentRepository', () => {
       const { AppointmentId } = await import('@intelliflow/domain');
       const ids = mockRecords.map((r) => AppointmentId.create(r.id).value);
 
-      const result = await repository.findByIds(ids);
+      const result = await repository.forTenant(TENANT).findByIds(ids);
 
       expect(result).toHaveLength(2);
       expect(result[0].title).toBe('Meeting 1');
@@ -176,7 +181,7 @@ describe('PrismaAppointmentRepository', () => {
     it('should return empty array when no ids provided', async () => {
       (mockPrisma.appointment.findMany as any).mockResolvedValue([]);
 
-      const result = await repository.findByIds([]);
+      const result = await repository.forTenant(TENANT).findByIds([]);
 
       expect(result).toHaveLength(0);
     });
@@ -187,10 +192,10 @@ describe('PrismaAppointmentRepository', () => {
       const { AppointmentId } = await import('@intelliflow/domain');
       const idResult = AppointmentId.create('550e8400-e29b-41d4-a716-446655440000');
 
-      await repository.delete(idResult.value);
+      await repository.forTenant(TENANT).delete(idResult.value);
 
-      expect(mockPrisma.appointment.delete).toHaveBeenCalledWith({
-        where: { id: '550e8400-e29b-41d4-a716-446655440000' },
+      expect(mockPrisma.appointment.deleteMany).toHaveBeenCalledWith({
+        where: { id: '550e8400-e29b-41d4-a716-446655440000', tenantId: TENANT },
       });
     });
   });
@@ -207,12 +212,12 @@ describe('PrismaAppointmentRepository', () => {
       ];
       (mockPrisma.appointment.findMany as any).mockResolvedValue(mockRecords);
 
-      const result = await repository.findByOrganizer('user-123');
+      const result = await repository.forTenant(TENANT).findByOrganizer('user-123');
 
       expect(result).toHaveLength(2);
       expect(mockPrisma.appointment.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { organizerId: 'user-123' },
+          where: { organizerId: 'user-123', tenantId: TENANT },
           include: { attendees: true, linkedCases: true },
         })
       );
@@ -221,7 +226,7 @@ describe('PrismaAppointmentRepository', () => {
     it('should apply pagination options', async () => {
       (mockPrisma.appointment.findMany as any).mockResolvedValue([]);
 
-      await repository.findByOrganizer('user-123', {
+      await repository.forTenant(TENANT).findByOrganizer('user-123', {
         limit: 10,
         offset: 20,
         sortBy: 'title',
@@ -243,12 +248,13 @@ describe('PrismaAppointmentRepository', () => {
       const mockRecords = [createMockDbRecord()];
       (mockPrisma.appointment.findMany as any).mockResolvedValue(mockRecords);
 
-      const result = await repository.findByAttendee('user-123');
+      const result = await repository.forTenant(TENANT).findByAttendee('user-123');
 
       expect(result).toHaveLength(1);
       expect(mockPrisma.appointment.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: {
+            tenantId: TENANT,
             OR: [{ organizerId: 'user-123' }, { attendees: { some: { userId: 'user-123' } } }],
           },
         })
@@ -268,12 +274,13 @@ describe('PrismaAppointmentRepository', () => {
       const { CaseId } = await import('@intelliflow/domain');
       const caseIdResult = CaseId.create('550e8400-e29b-41d4-a716-446655440010');
 
-      const result = await repository.findByCase(caseIdResult.value);
+      const result = await repository.forTenant(TENANT).findByCase(caseIdResult.value);
 
       expect(result).toHaveLength(1);
       expect(mockPrisma.appointment.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: {
+            tenantId: TENANT,
             linkedCases: { some: { caseId: '550e8400-e29b-41d4-a716-446655440010' } },
           },
         })
@@ -289,12 +296,13 @@ describe('PrismaAppointmentRepository', () => {
       const startTime = new Date('2025-01-15T00:00:00Z');
       const endTime = new Date('2025-01-15T23:59:59Z');
 
-      const result = await repository.findInTimeRange(startTime, endTime);
+      const result = await repository.forTenant(TENANT).findInTimeRange(startTime, endTime);
 
       expect(result).toHaveLength(1);
       expect(mockPrisma.appointment.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: {
+            tenantId: TENANT,
             AND: [{ startTime: { lt: endTime } }, { endTime: { gt: startTime } }],
           },
         })
@@ -313,12 +321,13 @@ describe('PrismaAppointmentRepository', () => {
         new Date('2025-01-15T11:30:00Z')
       );
 
-      const result = await repository.findOverlapping(timeSlotResult.value);
+      const result = await repository.forTenant(TENANT).findOverlapping(timeSlotResult.value);
 
       expect(result).toHaveLength(1);
       expect(mockPrisma.appointment.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: {
+            tenantId: TENANT,
             AND: expect.arrayContaining([
               { startTime: { lt: expect.any(Date) } },
               { endTime: { gt: expect.any(Date) } },
@@ -339,11 +348,14 @@ describe('PrismaAppointmentRepository', () => {
       );
       const excludeIdResult = AppointmentId.create('550e8400-e29b-41d4-a716-446655440099');
 
-      await repository.findOverlapping(timeSlotResult.value, excludeIdResult.value);
+      await repository
+        .forTenant(TENANT)
+        .findOverlapping(timeSlotResult.value, excludeIdResult.value);
 
       expect(mockPrisma.appointment.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: {
+            tenantId: TENANT,
             AND: expect.arrayContaining([{ id: { not: '550e8400-e29b-41d4-a716-446655440099' } }]),
           },
         })
@@ -360,11 +372,12 @@ describe('PrismaAppointmentRepository', () => {
         endTime: new Date('2025-01-15T11:00:00Z'),
       };
 
-      await repository.findForConflictCheck(['user-1', 'user-2'], timeRange);
+      await repository.forTenant(TENANT).findForConflictCheck(['user-1', 'user-2'], timeRange);
 
       expect(mockPrisma.appointment.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: {
+            tenantId: TENANT,
             AND: expect.arrayContaining([
               {
                 OR: [
@@ -391,7 +404,9 @@ describe('PrismaAppointmentRepository', () => {
         new Date('2025-01-15T11:00:00Z')
       );
 
-      const result = await repository.hasConflicts(timeSlotResult.value, ['user-1']);
+      const result = await repository
+        .forTenant(TENANT)
+        .hasConflicts(timeSlotResult.value, ['user-1']);
 
       expect(result).toBe(true);
     });
@@ -405,7 +420,9 @@ describe('PrismaAppointmentRepository', () => {
         new Date('2025-01-15T11:00:00Z')
       );
 
-      const result = await repository.hasConflicts(timeSlotResult.value, ['user-1']);
+      const result = await repository
+        .forTenant(TENANT)
+        .hasConflicts(timeSlotResult.value, ['user-1']);
 
       expect(result).toBe(false);
     });
@@ -419,7 +436,7 @@ describe('PrismaAppointmentRepository', () => {
         { status: 'COMPLETED', _count: 10 },
       ]);
 
-      const result = await repository.countByStatus();
+      const result = await repository.forTenant(TENANT).countByStatus();
 
       expect(result.SCHEDULED).toBe(5);
       expect(result.CONFIRMED).toBe(3);
@@ -432,11 +449,11 @@ describe('PrismaAppointmentRepository', () => {
     it('should filter by organizer when provided', async () => {
       (mockPrisma.appointment.groupBy as any).mockResolvedValue([]);
 
-      await repository.countByStatus('user-123');
+      await repository.forTenant(TENANT).countByStatus('user-123');
 
       expect(mockPrisma.appointment.groupBy).toHaveBeenCalledWith({
         by: ['status'],
-        where: { organizerId: 'user-123' },
+        where: { tenantId: TENANT, organizerId: 'user-123' },
         _count: true,
       });
     });
@@ -447,12 +464,13 @@ describe('PrismaAppointmentRepository', () => {
       const mockRecords = [createMockDbRecord()];
       (mockPrisma.appointment.findMany as any).mockResolvedValue(mockRecords);
 
-      const result = await repository.findUpcoming('user-123', 5);
+      const result = await repository.forTenant(TENANT).findUpcoming('user-123', 5);
 
       expect(result).toHaveLength(1);
       expect(mockPrisma.appointment.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: {
+            tenantId: TENANT,
             AND: expect.arrayContaining([
               {
                 OR: [{ organizerId: 'user-123' }, { attendees: { some: { userId: 'user-123' } } }],
@@ -473,12 +491,13 @@ describe('PrismaAppointmentRepository', () => {
       const mockRecords = [createMockDbRecord()];
       (mockPrisma.appointment.findMany as any).mockResolvedValue(mockRecords);
 
-      const result = await repository.findPast('user-123');
+      const result = await repository.forTenant(TENANT).findPast('user-123');
 
       expect(result).toHaveLength(1);
       expect(mockPrisma.appointment.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: {
+            tenantId: TENANT,
             AND: expect.arrayContaining([{ endTime: { lt: expect.any(Date) } }]),
           },
           orderBy: { startTime: 'desc' },
@@ -492,11 +511,13 @@ describe('PrismaAppointmentRepository', () => {
       const mockRecord = createMockDbRecord({ externalCalendarId: 'google-event-123' });
       (mockPrisma.appointment.findFirst as any).mockResolvedValue(mockRecord);
 
-      const result = await repository.findByExternalCalendarId('google-event-123');
+      const result = await repository
+        .forTenant(TENANT)
+        .findByExternalCalendarId('google-event-123');
 
       expect(result).not.toBeNull();
       expect(mockPrisma.appointment.findFirst).toHaveBeenCalledWith({
-        where: { externalCalendarId: 'google-event-123' },
+        where: { externalCalendarId: 'google-event-123', tenantId: TENANT },
         include: { attendees: true, linkedCases: true },
       });
     });
@@ -504,7 +525,7 @@ describe('PrismaAppointmentRepository', () => {
     it('should return null when not found', async () => {
       (mockPrisma.appointment.findFirst as any).mockResolvedValue(null);
 
-      const result = await repository.findByExternalCalendarId('non-existent');
+      const result = await repository.forTenant(TENANT).findByExternalCalendarId('non-existent');
 
       expect(result).toBeNull();
     });
@@ -521,11 +542,11 @@ describe('PrismaAppointmentRepository', () => {
       const { AppointmentId } = await import('@intelliflow/domain');
       const parentId = AppointmentId.create('550e8400-e29b-41d4-a716-446655440000').value;
 
-      const result = await repository.findRecurringInstances(parentId);
+      const result = await repository.forTenant(TENANT).findRecurringInstances(parentId);
 
       expect(result).toHaveLength(2);
       expect(mockPrisma.appointment.findMany).toHaveBeenCalledWith({
-        where: { parentAppointmentId: '550e8400-e29b-41d4-a716-446655440000' },
+        where: { parentAppointmentId: '550e8400-e29b-41d4-a716-446655440000', tenantId: TENANT },
         include: { attendees: true, linkedCases: true },
         orderBy: { startTime: 'asc' },
       });
@@ -540,13 +561,14 @@ describe('PrismaAppointmentRepository', () => {
         AppointmentId.create('550e8400-e29b-41d4-a716-446655440002').value,
       ];
 
-      await repository.batchUpdateStatus(ids, 'CONFIRMED');
+      await repository.batchUpdateStatus(ids, TENANT, 'CONFIRMED');
 
       expect(mockPrisma.appointment.updateMany).toHaveBeenCalledWith({
         where: {
           id: {
             in: ['550e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440002'],
           },
+          tenantId: TENANT,
         },
         data: expect.objectContaining({
           status: 'CONFIRMED',
@@ -559,7 +581,7 @@ describe('PrismaAppointmentRepository', () => {
       const { AppointmentId } = await import('@intelliflow/domain');
       const ids = [AppointmentId.create('550e8400-e29b-41d4-a716-446655440001').value];
 
-      await repository.batchUpdateStatus(ids, 'CANCELLED');
+      await repository.batchUpdateStatus(ids, TENANT, 'CANCELLED');
 
       expect(mockPrisma.appointment.updateMany).toHaveBeenCalledWith({
         where: expect.any(Object),
@@ -574,7 +596,7 @@ describe('PrismaAppointmentRepository', () => {
       const { AppointmentId } = await import('@intelliflow/domain');
       const ids = [AppointmentId.create('550e8400-e29b-41d4-a716-446655440001').value];
 
-      await repository.batchUpdateStatus(ids, 'COMPLETED');
+      await repository.batchUpdateStatus(ids, TENANT, 'COMPLETED');
 
       expect(mockPrisma.appointment.updateMany).toHaveBeenCalledWith({
         where: expect.any(Object),
@@ -591,12 +613,13 @@ describe('PrismaAppointmentRepository', () => {
       const mockRecords = [createMockDbRecord({ reminderMinutes: 15 })];
       (mockPrisma.appointment.findMany as any).mockResolvedValue(mockRecords);
 
-      const result = await repository.findNeedingReminder(30);
+      const result = await repository.forTenant(TENANT).findNeedingReminder(30);
 
       expect(result).toHaveLength(1);
       expect(mockPrisma.appointment.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: {
+            tenantId: TENANT,
             AND: expect.arrayContaining([
               { startTime: { gt: expect.any(Date) } },
               { startTime: { lte: expect.any(Date) } },
@@ -616,7 +639,7 @@ describe('PrismaAppointmentRepository', () => {
       (mockPrisma.appointment.findMany as any).mockResolvedValue(mockRecords);
       (mockPrisma.appointment.count as any).mockResolvedValue(1);
 
-      const result = await repository.findWithFilters(
+      const result = await repository.forTenant(TENANT).findWithFilters(
         {
           organizerId: 'user-123',
           status: 'SCHEDULED',
@@ -641,7 +664,7 @@ describe('PrismaAppointmentRepository', () => {
       (mockPrisma.appointment.findMany as any).mockResolvedValue([]);
       (mockPrisma.appointment.count as any).mockResolvedValue(0);
 
-      await repository.findWithFilters({
+      await repository.forTenant(TENANT).findWithFilters({
         status: ['SCHEDULED', 'CONFIRMED'],
         appointmentType: ['MEETING', 'CALL'],
       });
@@ -658,7 +681,9 @@ describe('PrismaAppointmentRepository', () => {
       (mockPrisma.appointment.findMany as any).mockResolvedValue(mockRecords);
       (mockPrisma.appointment.count as any).mockResolvedValue(25);
 
-      const result = await repository.findWithFilters({}, { limit: 10, offset: 0 });
+      const result = await repository
+        .forTenant(TENANT)
+        .findWithFilters({}, { limit: 10, offset: 0 });
 
       expect(result.items).toHaveLength(10);
       expect(result.total).toBe(25);
@@ -674,7 +699,7 @@ describe('PrismaAppointmentRepository', () => {
       const { CaseId } = await import('@intelliflow/domain');
       const caseIdResult = CaseId.create('550e8400-e29b-41d4-a716-446655440010');
 
-      await repository.findWithFilters({ caseId: caseIdResult.value });
+      await repository.forTenant(TENANT).findWithFilters({ caseId: caseIdResult.value });
 
       expect(mockPrisma.appointment.findMany).toHaveBeenCalled();
     });
@@ -683,7 +708,7 @@ describe('PrismaAppointmentRepository', () => {
       (mockPrisma.appointment.findMany as any).mockResolvedValue([]);
       (mockPrisma.appointment.count as any).mockResolvedValue(0);
 
-      await repository.findWithFilters({ attendeeId: 'attendee-123' });
+      await repository.forTenant(TENANT).findWithFilters({ attendeeId: 'attendee-123' });
 
       expect(mockPrisma.appointment.findMany).toHaveBeenCalled();
     });

@@ -8,7 +8,7 @@
  * @see packages/db/prisma/schema.prisma
  * @see .specify/sprints/sprint-17/specifications/IFC-298-spec.md
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, expectTypeOf } from 'vitest';
 import type { Prisma } from '../../generated/prisma/client';
 import { ArticleStatus } from '../../generated/prisma/client';
 
@@ -126,11 +126,10 @@ describe('HelpArticle Schema Validation', () => {
   });
 
   describe('Table mapping', () => {
-    it('should have models accessible via Prisma namespace', () => {
-      type HasHelpArticle = Prisma.HelpArticleDelegate;
-      type HasArticleSection = Prisma.ArticleSectionDelegate;
-      type HasArticleFeedback = Prisma.ArticleFeedbackDelegate;
-      expect(true).toBe(true);
+    it('exposes HelpArticle + ArticleSection + ArticleFeedback delegates on the Prisma namespace', () => {
+      expectTypeOf<Prisma.HelpArticleDelegate>().not.toBeNever();
+      expectTypeOf<Prisma.ArticleSectionDelegate>().not.toBeNever();
+      expectTypeOf<Prisma.ArticleFeedbackDelegate>().not.toBeNever();
     });
   });
 });

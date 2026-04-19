@@ -156,6 +156,46 @@ describe('Appointment Aggregate', () => {
       expect(result.value.isRecurring).toBe(true);
       expect(result.value.recurrence).toBeDefined();
     });
+
+    it('should accept and store timezone', () => {
+      const props = createValidAppointmentProps({ timezone: 'America/New_York' });
+      const result = Appointment.create(props);
+
+      expect(result.isSuccess).toBe(true);
+      expect(result.value.timezone).toBe('America/New_York');
+    });
+
+    it('should accept and store calendarId', () => {
+      const props = createValidAppointmentProps({ calendarId: 'cal-abc-123' });
+      const result = Appointment.create(props);
+
+      expect(result.isSuccess).toBe(true);
+      expect(result.value.calendarId).toBe('cal-abc-123');
+    });
+
+    it('should accept calendarId as null', () => {
+      const props = createValidAppointmentProps({ calendarId: null });
+      const result = Appointment.create(props);
+
+      expect(result.isSuccess).toBe(true);
+      expect(result.value.calendarId).toBeNull();
+    });
+
+    it('should default timezone to undefined when not provided', () => {
+      const props = createValidAppointmentProps();
+      const result = Appointment.create(props);
+
+      expect(result.isSuccess).toBe(true);
+      expect(result.value.timezone).toBeUndefined();
+    });
+
+    it('should default calendarId to undefined when not provided', () => {
+      const props = createValidAppointmentProps();
+      const result = Appointment.create(props);
+
+      expect(result.isSuccess).toBe(true);
+      expect(result.value.calendarId).toBeUndefined();
+    });
   });
 
   describe('reschedule()', () => {
@@ -904,6 +944,7 @@ describe('Appointment Aggregate', () => {
         attendeeIds: ['attendee-1'],
         linkedCaseIds: [],
         organizerId: 'organizer-1',
+        tenantId: 'tenant-1',
         createdAt: new Date(),
         updatedAt: new Date(),
       });
@@ -911,6 +952,106 @@ describe('Appointment Aggregate', () => {
       expect(apt.id.value).toBe(id.value);
       expect(apt.title).toBe('Reconstituted');
       expect(apt.status).toBe('CONFIRMED');
+    });
+
+    it('should round-trip timezone through reconstitute', () => {
+      const id = AppointmentId.generate();
+      const timeSlot = TimeSlot.create(
+        getFutureDate(24),
+        new Date(getFutureDate(24).getTime() + 60 * 60 * 1000)
+      ).value;
+
+      const apt = Appointment.reconstitute(id, {
+        title: 'TZ Test',
+        timeSlot,
+        appointmentType: 'MEETING',
+        status: 'SCHEDULED',
+        buffer: Buffer.none(),
+        attendeeIds: [],
+        linkedCaseIds: [],
+        organizerId: 'organizer-1',
+        tenantId: 'tenant-1',
+        timezone: 'Europe/London',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      expect(apt.timezone).toBe('Europe/London');
+    });
+
+    it('should round-trip calendarId through reconstitute', () => {
+      const id = AppointmentId.generate();
+      const timeSlot = TimeSlot.create(
+        getFutureDate(24),
+        new Date(getFutureDate(24).getTime() + 60 * 60 * 1000)
+      ).value;
+
+      const apt = Appointment.reconstitute(id, {
+        title: 'CalId Test',
+        timeSlot,
+        appointmentType: 'MEETING',
+        status: 'SCHEDULED',
+        buffer: Buffer.none(),
+        attendeeIds: [],
+        linkedCaseIds: [],
+        organizerId: 'organizer-1',
+        tenantId: 'tenant-1',
+        calendarId: 'internal-cal-xyz',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      expect(apt.calendarId).toBe('internal-cal-xyz');
+    });
+
+    it('should round-trip null calendarId through reconstitute', () => {
+      const id = AppointmentId.generate();
+      const timeSlot = TimeSlot.create(
+        getFutureDate(24),
+        new Date(getFutureDate(24).getTime() + 60 * 60 * 1000)
+      ).value;
+
+      const apt = Appointment.reconstitute(id, {
+        title: 'CalId Null Test',
+        timeSlot,
+        appointmentType: 'MEETING',
+        status: 'SCHEDULED',
+        buffer: Buffer.none(),
+        attendeeIds: [],
+        linkedCaseIds: [],
+        organizerId: 'organizer-1',
+        tenantId: 'tenant-1',
+        calendarId: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      expect(apt.calendarId).toBeNull();
+    });
+
+    it('should default timezone and calendarId to undefined when not provided in reconstitute', () => {
+      const id = AppointmentId.generate();
+      const timeSlot = TimeSlot.create(
+        getFutureDate(24),
+        new Date(getFutureDate(24).getTime() + 60 * 60 * 1000)
+      ).value;
+
+      const apt = Appointment.reconstitute(id, {
+        title: 'Defaults Test',
+        timeSlot,
+        appointmentType: 'MEETING',
+        status: 'SCHEDULED',
+        buffer: Buffer.none(),
+        attendeeIds: [],
+        linkedCaseIds: [],
+        organizerId: 'organizer-1',
+        tenantId: 'tenant-1',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      expect(apt.timezone).toBeUndefined();
+      expect(apt.calendarId).toBeUndefined();
     });
   });
 

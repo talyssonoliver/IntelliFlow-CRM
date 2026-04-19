@@ -352,73 +352,80 @@ describe('Webhook Framework', () => {
     });
 
     describe('Retry Mechanism', () => {
-      // TODO: Investigate timing issue - retry queue not being populated correctly
-      it.skip('should retry failed events with exponential backoff', async () => {
-        framework.registerSource({
-          name: 'test',
-          secret: '',
-          signatureHeader: 'x-sig',
-          signatureVerifier: () => true,
-        });
+      it('should retry failed events with exponential backoff', async () => {
+        vi.useFakeTimers();
+        try {
+          framework.registerSource({
+            name: 'test',
+            secret: '',
+            signatureHeader: 'x-sig',
+            signatureVerifier: () => true,
+          });
 
-        let attempts = 0;
-        framework.on('failing.event', async () => {
-          attempts++;
-          throw new Error('Simulated failure');
-        });
+          let attempts = 0;
+          framework.on('failing.event', async () => {
+            attempts++;
+            throw new Error('Simulated failure');
+          });
 
-        const payload = JSON.stringify({
-          id: 'evt-fail',
-          type: 'failing.event',
-          data: {},
-        });
+          const payload = JSON.stringify({
+            id: 'evt-fail',
+            type: 'failing.event',
+            data: {},
+          });
 
-        // Initial attempt fails
-        const result = await framework.handle('test', payload, {});
-        expect(result.success).toBe(false);
+          // Initial attempt fails
+          const result = await framework.handle('test', payload, {});
+          expect(result.success).toBe(false);
 
-        // Process retries
-        await new Promise((resolve) => setTimeout(resolve, 1100)); // Wait for retry window
-        const retryResult = await framework.processRetries();
+          // Advance past the exponential backoff delay (attempt=1 → 2000ms)
+          vi.advanceTimersByTime(3000);
 
-        expect(retryResult.processed).toBeGreaterThan(0);
+          const retryResult = await framework.processRetries();
+          expect(retryResult.processed).toBeGreaterThan(0);
+        } finally {
+          vi.useRealTimers();
+        }
       });
 
-      // TODO: Investigate timing issue - DLQ not receiving entries
-      it.skip('should move to DLQ after max retries', async () => {
-        const shortRetryFramework = new WebhookFramework({
-          maxRetries: 2,
-          deadLetterEnabled: true,
-        });
+      it('should move to DLQ after max retries', async () => {
+        vi.useFakeTimers();
+        try {
+          const shortRetryFramework = new WebhookFramework({
+            maxRetries: 2,
+            deadLetterEnabled: true,
+          });
 
-        shortRetryFramework.registerSource({
-          name: 'test',
-          secret: '',
-          signatureHeader: 'x-sig',
-          signatureVerifier: () => true,
-        });
+          shortRetryFramework.registerSource({
+            name: 'test',
+            secret: '',
+            signatureHeader: 'x-sig',
+            signatureVerifier: () => true,
+          });
 
-        shortRetryFramework.on('persistent.failure', async () => {
-          throw new Error('Always fails');
-        });
+          shortRetryFramework.on('persistent.failure', async () => {
+            throw new Error('Always fails');
+          });
 
-        const payload = JSON.stringify({
-          id: 'evt-dlq',
-          type: 'persistent.failure',
-          data: {},
-        });
+          const payload = JSON.stringify({
+            id: 'evt-dlq',
+            type: 'persistent.failure',
+            data: {},
+          });
 
-        // Initial failure
-        await shortRetryFramework.handle('test', payload, {});
+          // Initial failure — adds to retry queue with attempts=1, delay=2000ms
+          await shortRetryFramework.handle('test', payload, {});
 
-        // Exhaust retries
-        for (let i = 0; i < 3; i++) {
-          await new Promise((resolve) => setTimeout(resolve, 100));
+          // Advance past the backoff window and process retries.
+          // maxRetries=2: when attempts >= maxRetries-1 (i.e. >= 1) the entry moves to DLQ.
+          vi.advanceTimersByTime(3000);
           await shortRetryFramework.processRetries();
-        }
 
-        const dlqEntries = shortRetryFramework.getDeadLetterEntries();
-        expect(dlqEntries.length).toBeGreaterThan(0);
+          const dlqEntries = shortRetryFramework.getDeadLetterEntries();
+          expect(dlqEntries.length).toBeGreaterThan(0);
+        } finally {
+          vi.useRealTimers();
+        }
       });
     });
 
@@ -503,32 +510,39 @@ describe('Webhook Framework', () => {
     });
 
     describe('Cleanup', () => {
-      // TODO: Investigate timing issue - cleanup not finding expired entries
-      it.skip('should cleanup expired idempotency entries', async () => {
-        const shortTtlFramework = new WebhookFramework({
-          idempotencyTtlMs: 100, // 100ms
-        });
+      it('should cleanup expired idempotency entries', async () => {
+        vi.useFakeTimers();
+        try {
+          const shortTtlFramework = new WebhookFramework({
+            idempotencyTtlMs: 100, // 100ms
+          });
 
-        shortTtlFramework.registerSource({
-          name: 'test',
-          secret: '',
-          signatureHeader: 'x-sig',
-          signatureVerifier: () => true,
-        });
+          shortTtlFramework.registerSource({
+            name: 'test',
+            secret: '',
+            signatureHeader: 'x-sig',
+            signatureVerifier: () => true,
+          });
 
-        const payload = JSON.stringify({
-          id: 'evt-expire',
-          type: 'test.event',
-          data: {},
-        });
+          // Register a handler so the event is processed and the idempotency entry is stored
+          shortTtlFramework.on('test.event', async () => {});
 
-        await shortTtlFramework.handle('test', payload, {});
+          const payload = JSON.stringify({
+            id: 'evt-expire',
+            type: 'test.event',
+            data: {},
+          });
 
-        // Wait for TTL expiry
-        await new Promise((resolve) => setTimeout(resolve, 150));
+          await shortTtlFramework.handle('test', payload, {});
 
-        const cleaned = shortTtlFramework.cleanup();
-        expect(cleaned.idempotencyRemoved).toBeGreaterThan(0);
+          // Advance past the TTL (100ms)
+          vi.advanceTimersByTime(200);
+
+          const cleaned = shortTtlFramework.cleanup();
+          expect(cleaned.idempotencyRemoved).toBeGreaterThan(0);
+        } finally {
+          vi.useRealTimers();
+        }
       });
     });
 

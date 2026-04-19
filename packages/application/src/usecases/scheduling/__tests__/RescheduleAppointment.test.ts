@@ -32,6 +32,7 @@ describe('RescheduleAppointmentUseCase', () => {
       endTime: overrides.endTime ?? new Date(2025, 0, 2, 15, 0, 0),
       appointmentType: 'INTERNAL_MEETING',
       organizerId: 'user-123',
+      tenantId: 'tenant-1',
     });
     await repository.save(result.value);
     return result.value;
@@ -43,6 +44,7 @@ describe('RescheduleAppointmentUseCase', () => {
 
       const input = {
         appointmentId: appointment.id.value,
+        tenantId: 'tenant-1',
         newStartTime: new Date(2025, 0, 3, 10, 0, 0),
         newEndTime: new Date(2025, 0, 3, 11, 0, 0),
         rescheduledBy: 'user-123',
@@ -63,6 +65,7 @@ describe('RescheduleAppointmentUseCase', () => {
 
       const input = {
         appointmentId: appointment.id.value,
+        tenantId: 'tenant-1',
         newStartTime: new Date(2025, 0, 3, 10, 0, 0),
         newEndTime: new Date(2025, 0, 3, 11, 0, 0),
         rescheduledBy: 'user-123',
@@ -79,6 +82,7 @@ describe('RescheduleAppointmentUseCase', () => {
 
       const input = {
         appointmentId: appointment.id.value,
+        tenantId: 'tenant-1',
         newStartTime: new Date(2025, 0, 3, 10, 0, 0),
         newEndTime: new Date(2025, 0, 3, 11, 0, 0),
         rescheduledBy: 'user-123',
@@ -86,7 +90,7 @@ describe('RescheduleAppointmentUseCase', () => {
 
       await useCase.execute(input);
 
-      const saved = await repository.findById(appointment.id);
+      const saved = await repository.forTenant('tenant-1').findById(appointment.id);
       expect(saved?.startTime).toEqual(new Date(2025, 0, 3, 10, 0, 0));
     });
 
@@ -102,6 +106,7 @@ describe('RescheduleAppointmentUseCase', () => {
 
       const input = {
         appointmentId: appointment.id.value,
+        tenantId: 'tenant-1',
         newStartTime: new Date(2025, 0, 3, 10, 30, 0),
         newEndTime: new Date(2025, 0, 3, 11, 30, 0),
         rescheduledBy: 'user-123',
@@ -127,6 +132,7 @@ describe('RescheduleAppointmentUseCase', () => {
 
       const input = {
         appointmentId: appointment.id.value,
+        tenantId: 'tenant-1',
         newStartTime: new Date(2025, 0, 3, 10, 30, 0),
         newEndTime: new Date(2025, 0, 3, 11, 30, 0),
         rescheduledBy: 'user-123',
@@ -136,7 +142,7 @@ describe('RescheduleAppointmentUseCase', () => {
       await useCase.execute(input);
 
       // Should not have changed the time
-      const saved = await repository.findById(appointment.id);
+      const saved = await repository.forTenant('tenant-1').findById(appointment.id);
       expect(saved?.startTime).toEqual(originalStartTime);
     });
 
@@ -152,6 +158,7 @@ describe('RescheduleAppointmentUseCase', () => {
 
       const input = {
         appointmentId: appointment.id.value,
+        tenantId: 'tenant-1',
         newStartTime: new Date(2025, 0, 3, 10, 30, 0),
         newEndTime: new Date(2025, 0, 3, 11, 30, 0),
         rescheduledBy: 'user-123',
@@ -169,6 +176,7 @@ describe('RescheduleAppointmentUseCase', () => {
 
       const input = {
         appointmentId: appointment.id.value,
+        tenantId: 'tenant-1',
         newStartTime: new Date(2025, 0, 3, 10, 0, 0),
         newEndTime: new Date(2025, 0, 3, 11, 0, 0),
         rescheduledBy: 'user-123',
@@ -188,6 +196,7 @@ describe('RescheduleAppointmentUseCase', () => {
     it('should fail for non-existent appointment', async () => {
       const input = {
         appointmentId: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+        tenantId: 'tenant-1',
         newStartTime: new Date(2025, 0, 3, 10, 0, 0),
         newEndTime: new Date(2025, 0, 3, 11, 0, 0),
         rescheduledBy: 'user-123',
@@ -202,6 +211,7 @@ describe('RescheduleAppointmentUseCase', () => {
     it('should fail for invalid appointment ID', async () => {
       const input = {
         appointmentId: 'invalid-id',
+        tenantId: 'tenant-1',
         newStartTime: new Date(2025, 0, 3, 10, 0, 0),
         newEndTime: new Date(2025, 0, 3, 11, 0, 0),
         rescheduledBy: 'user-123',
@@ -217,6 +227,7 @@ describe('RescheduleAppointmentUseCase', () => {
 
       const input = {
         appointmentId: appointment.id.value,
+        tenantId: 'tenant-1',
         newStartTime: new Date(2025, 0, 3, 11, 0, 0),
         newEndTime: new Date(2025, 0, 3, 10, 0, 0), // End before start
         rescheduledBy: 'user-123',
@@ -232,6 +243,7 @@ describe('RescheduleAppointmentUseCase', () => {
 
       const input = {
         appointmentId: appointment.id.value,
+        tenantId: 'tenant-1',
         newStartTime: new Date(2025, 0, 3, 10, 0, 0),
         newEndTime: new Date(2025, 0, 3, 11, 0, 0),
         rescheduledBy: 'user-123',
@@ -242,6 +254,47 @@ describe('RescheduleAppointmentUseCase', () => {
 
       expect(result.isSuccess).toBe(true);
       // The domain should handle the reason in the event
+    });
+
+    it('should NOT mutate buffer in store when reschedule is blocked by conflict without override', async () => {
+      // Regression test for buffer mutation bug:
+      // Previously, applyBufferUpdate ran BEFORE the conflict gate, leaving
+      // the in-memory entity dirty even when the reschedule was blocked.
+      const appointment = await createAndSaveAppointment();
+      const originalBufferBefore = appointment.buffer.beforeMinutes;
+      const originalBufferAfter = appointment.buffer.afterMinutes;
+
+      // Create a conflicting appointment at the target time
+      await createAndSaveAppointment({
+        title: 'Blocker',
+        startTime: new Date(2025, 0, 3, 10, 0, 0),
+        endTime: new Date(2025, 0, 3, 11, 0, 0),
+      });
+
+      // Attempt to reschedule WITH a buffer update but WITHOUT force override
+      const input = {
+        appointmentId: appointment.id.value,
+        tenantId: 'tenant-1',
+        newStartTime: new Date(2025, 0, 3, 10, 30, 0),
+        newEndTime: new Date(2025, 0, 3, 11, 30, 0),
+        rescheduledBy: 'user-123',
+        forceOverrideConflicts: false,
+        updateBuffer: {
+          bufferMinutesBefore: 30,
+          bufferMinutesAfter: 30,
+        },
+      };
+
+      const result = await useCase.execute(input);
+
+      // Reschedule was blocked by conflict
+      expect(result.isSuccess).toBe(true);
+      expect(result.value.conflictWarnings).toBeDefined();
+
+      // The stored entity must NOT have the new buffer values
+      const stored = await repository.forTenant('tenant-1').findById(appointment.id);
+      expect(stored?.buffer.beforeMinutes).toBe(originalBufferBefore);
+      expect(stored?.buffer.afterMinutes).toBe(originalBufferAfter);
     });
   });
 });

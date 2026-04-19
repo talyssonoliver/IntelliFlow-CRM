@@ -7,7 +7,7 @@
  * These tests require a running database and test the actual tRPC procedures.
  */
 
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest';
 import { AutoResponseDraft, ResponseContent, type TriggerType } from '../index';
 
 // Test constants
@@ -286,9 +286,43 @@ describe('Auto-Response Integration Tests', () => {
     });
 
     it('should reject operations on expired drafts', () => {
-      // This test would require time manipulation
-      // In a real scenario, we'd use jest.useFakeTimers() or similar
-      expect(true).toBe(true); // Placeholder
+      const content = ResponseContent.create({
+        subject: 'Test',
+        body: 'Test body',
+      });
+
+      const createResult = AutoResponseDraft.create({
+        tenantId: TEST_TENANT_ID,
+        leadId: TEST_LEAD_ID,
+        leadTenantId: TEST_TENANT_ID,
+        leadStatus: 'NEW',
+        triggerType: 'EMAIL_RECEIVED' as TriggerType,
+        content,
+        aiConfidence: 0.92,
+        modelVersion: 'openai:gpt-4:v1',
+        recipientEmail: 'lead@example.com',
+        expiryHours: 1,
+      });
+
+      expect(createResult.isSuccess).toBe(true);
+      const draft = createResult.value;
+      expect(draft.isExpired).toBe(false);
+
+      // Fast-forward past expiry using vi.useFakeTimers + setSystemTime;
+      // AutoResponseDraft.isExpired calls `new Date() > expiresAt`, which
+      // setSystemTime reliably intercepts.
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date(Date.now() + 2 * 60 * 60 * 1000)); // +2h
+
+      try {
+        expect(draft.isExpired).toBe(true);
+
+        const submitResult = draft.submitForApproval(TEST_APPROVER_ID);
+        expect(submitResult.isFailure).toBe(true);
+        expect(submitResult.error?.constructor.name).toBe('DraftExpiredError');
+      } finally {
+        vi.useRealTimers();
+      }
     });
   });
 

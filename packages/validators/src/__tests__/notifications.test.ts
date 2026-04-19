@@ -73,8 +73,21 @@ describe('Notifications Validators', () => {
   // Enum Arrays
   // =========================================================================
   describe('Enum arrays', () => {
-    it('should have 43 notification types', () => {
-      expect(NOTIFICATION_TYPES).toHaveLength(43);
+    it('should have 51 notification types', () => {
+      expect(NOTIFICATION_TYPES).toHaveLength(51);
+    });
+
+    it('should include PG-184 deal automation notification types', () => {
+      expect(NOTIFICATION_TYPES).toContain('deal_reassigned');
+      expect(NOTIFICATION_TYPES).toContain('deal_high_value_moved');
+      expect(NOTIFICATION_TYPES).toContain('deal_duplicate_suspected');
+    });
+
+    it('should include PG-185 ticket automation notification types', () => {
+      expect(NOTIFICATION_TYPES).toContain('ticket_reassigned');
+      expect(NOTIFICATION_TYPES).toContain('ticket_resolved');
+      expect(NOTIFICATION_TYPES).toContain('ticket_duplicate_suspected');
+      expect(NOTIFICATION_TYPES).toContain('ticket_auto_closed');
     });
 
     it('should have 3 notification priorities', () => {

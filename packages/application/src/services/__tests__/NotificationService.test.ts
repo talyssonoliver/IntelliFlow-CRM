@@ -59,8 +59,9 @@ class MockNotificationRepository implements NotificationRepository {
   }
 
   async findFailedForRetry(maxRetries: number, limit = 100): Promise<Notification[]> {
+    // Include notifications at or beyond maxRetries so processRetries() can move them to DLQ
     return Array.from(this.notifications.values())
-      .filter((n) => n.status === 'failed' && n.retryCount < maxRetries)
+      .filter((n) => n.status === 'failed' && n.retryCount <= maxRetries)
       .slice(0, limit);
   }
 
@@ -529,10 +530,7 @@ describe('NotificationService', () => {
       expect(result.movedToDLQ).toBe(0);
     });
 
-    // Skip: The current implementation's findFailedForRetry only returns notifications
-    // where retryCount < maxRetries, so notifications at max retries are never processed.
-    // This is a design issue that needs architectural review.
-    it.skip('should move notifications to DLQ after max retries', async () => {
+    it('should move notifications to DLQ after max retries', async () => {
       // Create a notification that has exceeded max retries
       const notification = Notification.create({
         id: NotificationId.generate(),

@@ -221,8 +221,7 @@ describe('Case Document Lifecycle Integration', () => {
       expect(retrieved?.isDeleted).toBe(true);
     });
 
-    // Note: Mock repository doesn't implement findAccessibleByUser correctly
-    it.skip('should handle ACL workflow with multiple users', async () => {
+    it('should handle ACL workflow with multiple users', async () => {
       const document = CaseDocument.create({
         tenantId: '123e4567-e89b-12d3-a456-426614174000',
         metadata: {
@@ -284,11 +283,11 @@ describe('Case Document Lifecycle Integration', () => {
       // Test findAccessibleByUser
       const viewerDocs = await repository.findAccessibleByUser(
         '123e4567-e89b-12d3-a456-426614174006',
-        'tenant-123'
+        '123e4567-e89b-12d3-a456-426614174000'
       );
       const editorDocs = await repository.findAccessibleByUser(
         '123e4567-e89b-12d3-a456-426614174007',
-        'tenant-123'
+        '123e4567-e89b-12d3-a456-426614174000'
       );
 
       expect(viewerDocs).toHaveLength(1);
@@ -303,7 +302,7 @@ describe('Case Document Lifecycle Integration', () => {
 
       const viewerDocsAfter = await repository.findAccessibleByUser(
         '123e4567-e89b-12d3-a456-426614174006',
-        'tenant-123'
+        '123e4567-e89b-12d3-a456-426614174000'
       );
       expect(viewerDocsAfter).toHaveLength(0);
     });
@@ -461,38 +460,11 @@ describe('Case Document Lifecycle Integration', () => {
       expect(attachResult.error.code).toBe('CASE_ALREADY_CLOSED');
     });
 
-    // Note: Case aggregate doesn't emit domain events for document attachment
-    it.skip('should handle document attachment domain events', async () => {
-      const caseResult = Case.create({
-        title: 'Event Test Case',
-        clientId: '123e4567-e89b-12d3-a456-426614174011',
-        assignedTo: '123e4567-e89b-12d3-a456-426614174012',
-      });
-
-      const legalCase = caseResult.value;
-      legalCase.clearDomainEvents(); // Clear creation event
-
-      // Attach document
-      legalCase.attachDocument(
-        '123e4567-e89b-12d3-a456-426614174013',
-        '123e4567-e89b-12d3-a456-426614174014'
-      );
-
-      const events = legalCase.getDomainEvents();
-      expect(events).toHaveLength(1);
-      expect(events[0].eventType).toBe('case.document_attached');
-
-      // Detach document
-      legalCase.clearDomainEvents();
-      legalCase.detachDocument(
-        '123e4567-e89b-12d3-a456-426614174013',
-        '123e4567-e89b-12d3-a456-426614174014'
-      );
-
-      const detachEvents = legalCase.getDomainEvents();
-      expect(detachEvents).toHaveLength(1);
-      expect(detachEvents[0].eventType).toBe('case.document_detached');
-    });
+    // NOTE: Domain-event test omitted — Case.attachDocument() and Case.detachDocument()
+    // intentionally do NOT emit domain events. The Case aggregate source comment reads:
+    // "Document attachment events should be emitted at the application service layer
+    // where full document details are available." Add an application-service-level test
+    // when CaseDocumentService is implemented.
   });
 
   describe('Multi-Tenant Document Isolation', () => {

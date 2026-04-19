@@ -12,7 +12,7 @@
  * - Confidence & quality (override, chain failure, validation)
  * - Compliance (consent, retention, cross-tenant, bias)
  *
- * @see docs/planning/adr/ADR-007-data-governance.md
+ * @see docs/architecture/adr/ADR-007-data-governance.md
  * @see docs/security/owasp-checklist.md
  */
 

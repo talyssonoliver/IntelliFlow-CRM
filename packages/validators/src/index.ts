@@ -104,5 +104,14 @@ export * from './contact-settings';
 // Account Settings Schemas (PG-183)
 export * from './account-settings';
 
+// Deal Settings Schemas (PG-184)
+export * from './deal-settings';
+
+// Ticket Settings Schemas (PG-185)
+export * from './ticket-settings';
+
+// Document Settings Schemas (PG-186)
+export * from './document-settings';
+
 // Help Article Schemas (IFC-299)
 export * from './help-article';

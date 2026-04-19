@@ -2,6 +2,8 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { InMemoryAppointmentRepository } from '../src/repositories/InMemoryAppointmentRepository';
 import { Appointment, AppointmentId, TimeSlot, CaseId, Buffer } from '@intelliflow/domain';
 
+const TENANT = 'tenant-1';
+
 describe('InMemoryAppointmentRepository', () => {
   let repository: InMemoryAppointmentRepository;
 
@@ -49,6 +51,7 @@ describe('InMemoryAppointmentRepository', () => {
         attendeeIds: overrides.attendeeIds ?? [],
         linkedCaseIds: overrides.linkedCaseIds ?? [],
         organizerId: overrides.organizerId ?? 'user-123',
+        tenantId: TENANT,
         notes: undefined,
         externalCalendarId: undefined,
         reminderMinutes: overrides.reminderMinutes,
@@ -69,6 +72,7 @@ describe('InMemoryAppointmentRepository', () => {
       attendeeIds: overrides.attendeeIds,
       linkedCaseIds: overrides.linkedCaseIds,
       reminderMinutes: overrides.reminderMinutes,
+      tenantId: TENANT,
     }).value;
   }
 
@@ -77,7 +81,7 @@ describe('InMemoryAppointmentRepository', () => {
       const appointment = createAppointment();
 
       await repository.save(appointment);
-      const found = await repository.findById(appointment.id);
+      const found = await repository.forTenant(TENANT).findById(appointment.id);
 
       expect(found).not.toBeNull();
       expect(found?.id.value).toBe(appointment.id.value);
@@ -86,7 +90,7 @@ describe('InMemoryAppointmentRepository', () => {
 
     it('should return null for non-existent appointment', async () => {
       const id = AppointmentId.generate();
-      const found = await repository.findById(id);
+      const found = await repository.forTenant(TENANT).findById(id);
 
       expect(found).toBeNull();
     });
@@ -98,7 +102,7 @@ describe('InMemoryAppointmentRepository', () => {
       appointment.updateDetails({ title: 'Updated' });
       await repository.save(appointment);
 
-      const found = await repository.findById(appointment.id);
+      const found = await repository.forTenant(TENANT).findById(appointment.id);
       expect(found?.title).toBe('Updated');
       expect(repository.count()).toBe(1);
     });
@@ -126,7 +130,7 @@ describe('InMemoryAppointmentRepository', () => {
 
       await repository.saveAll([apt1, apt2, apt3]);
 
-      const found = await repository.findByIds([apt1.id, apt3.id]);
+      const found = await repository.forTenant(TENANT).findByIds([apt1.id, apt3.id]);
 
       expect(found).toHaveLength(2);
       expect(found.map((a) => a.title)).toContain('Meeting 1');
@@ -134,7 +138,7 @@ describe('InMemoryAppointmentRepository', () => {
     });
 
     it('should return empty array when no IDs match', async () => {
-      const found = await repository.findByIds([AppointmentId.generate()]);
+      const found = await repository.forTenant(TENANT).findByIds([AppointmentId.generate()]);
       expect(found).toHaveLength(0);
     });
   });
@@ -144,15 +148,15 @@ describe('InMemoryAppointmentRepository', () => {
       const appointment = createAppointment();
       await repository.save(appointment);
 
-      await repository.delete(appointment.id);
+      await repository.forTenant(TENANT).delete(appointment.id);
 
-      const found = await repository.findById(appointment.id);
+      const found = await repository.forTenant(TENANT).findById(appointment.id);
       expect(found).toBeNull();
     });
 
     it('should not throw when deleting non-existent appointment', async () => {
       const id = AppointmentId.generate();
-      await expect(repository.delete(id)).resolves.not.toThrow();
+      await expect(repository.forTenant(TENANT).delete(id)).resolves.not.toThrow();
     });
   });
 
@@ -162,7 +166,7 @@ describe('InMemoryAppointmentRepository', () => {
       await repository.save(createAppointment({ organizerId: 'user-1' }));
       await repository.save(createAppointment({ organizerId: 'user-2' }));
 
-      const found = await repository.findByOrganizer('user-1');
+      const found = await repository.forTenant(TENANT).findByOrganizer('user-1');
 
       expect(found).toHaveLength(2);
     });
@@ -181,7 +185,7 @@ describe('InMemoryAppointmentRepository', () => {
         })
       );
 
-      const found = await repository.findByOrganizer('user-1');
+      const found = await repository.forTenant(TENANT).findByOrganizer('user-1');
 
       expect(found[0].startTime.getTime()).toBeLessThan(found[1].startTime.getTime());
     });
@@ -196,7 +200,9 @@ describe('InMemoryAppointmentRepository', () => {
         );
       }
 
-      const found = await repository.findByOrganizer('user-1', { limit: 2, offset: 1 });
+      const found = await repository
+        .forTenant(TENANT)
+        .findByOrganizer('user-1', { limit: 2, offset: 1 });
 
       expect(found).toHaveLength(2);
     });
@@ -206,7 +212,7 @@ describe('InMemoryAppointmentRepository', () => {
     it('should find appointments where user is organizer', async () => {
       await repository.save(createAppointment({ organizerId: 'user-1' }));
 
-      const found = await repository.findByAttendee('user-1');
+      const found = await repository.forTenant(TENANT).findByAttendee('user-1');
 
       expect(found).toHaveLength(1);
     });
@@ -219,7 +225,7 @@ describe('InMemoryAppointmentRepository', () => {
         })
       );
 
-      const found = await repository.findByAttendee('user-2');
+      const found = await repository.forTenant(TENANT).findByAttendee('user-2');
 
       expect(found).toHaveLength(1);
     });
@@ -233,7 +239,7 @@ describe('InMemoryAppointmentRepository', () => {
         })
       );
 
-      const found = await repository.findByAttendee('user-1');
+      const found = await repository.forTenant(TENANT).findByAttendee('user-1');
 
       expect(found).toHaveLength(2);
     });
@@ -245,7 +251,7 @@ describe('InMemoryAppointmentRepository', () => {
       await repository.save(createAppointment({ linkedCaseIds: [caseId] }));
       await repository.save(createAppointment());
 
-      const found = await repository.findByCase(caseId);
+      const found = await repository.forTenant(TENANT).findByCase(caseId);
 
       expect(found).toHaveLength(1);
     });
@@ -272,10 +278,9 @@ describe('InMemoryAppointmentRepository', () => {
         })
       );
 
-      const found = await repository.findInTimeRange(
-        new Date(2025, 0, 16, 0, 0, 0),
-        new Date(2025, 0, 18, 0, 0, 0)
-      );
+      const found = await repository
+        .forTenant(TENANT)
+        .findInTimeRange(new Date(2025, 0, 16, 0, 0, 0), new Date(2025, 0, 18, 0, 0, 0));
 
       expect(found).toHaveLength(2);
     });
@@ -288,10 +293,9 @@ describe('InMemoryAppointmentRepository', () => {
         })
       );
 
-      const found = await repository.findInTimeRange(
-        new Date(2025, 0, 17, 0, 0, 0),
-        new Date(2025, 0, 18, 0, 0, 0)
-      );
+      const found = await repository
+        .forTenant(TENANT)
+        .findInTimeRange(new Date(2025, 0, 17, 0, 0, 0), new Date(2025, 0, 18, 0, 0, 0));
 
       expect(found).toHaveLength(1);
     });
@@ -311,7 +315,7 @@ describe('InMemoryAppointmentRepository', () => {
         new Date(2025, 0, 16, 15, 30, 0)
       ).value;
 
-      const found = await repository.findOverlapping(timeSlot);
+      const found = await repository.forTenant(TENANT).findOverlapping(timeSlot);
 
       expect(found).toHaveLength(1);
     });
@@ -329,7 +333,7 @@ describe('InMemoryAppointmentRepository', () => {
         new Date(2025, 0, 16, 15, 30, 0)
       ).value;
 
-      const found = await repository.findOverlapping(timeSlot);
+      const found = await repository.forTenant(TENANT).findOverlapping(timeSlot);
 
       expect(found).toHaveLength(0);
     });
@@ -346,7 +350,7 @@ describe('InMemoryAppointmentRepository', () => {
         new Date(2025, 0, 16, 15, 30, 0)
       ).value;
 
-      const found = await repository.findOverlapping(timeSlot, apt.id);
+      const found = await repository.forTenant(TENANT).findOverlapping(timeSlot, apt.id);
 
       expect(found).toHaveLength(0);
     });
@@ -362,7 +366,7 @@ describe('InMemoryAppointmentRepository', () => {
         })
       );
 
-      const found = await repository.findForConflictCheck(['user-1'], {
+      const found = await repository.forTenant(TENANT).findForConflictCheck(['user-1'], {
         startTime: new Date(2025, 0, 16, 14, 30, 0),
         endTime: new Date(2025, 0, 16, 15, 30, 0),
       });
@@ -379,7 +383,7 @@ describe('InMemoryAppointmentRepository', () => {
         })
       );
 
-      const found = await repository.findForConflictCheck(['user-2'], {
+      const found = await repository.forTenant(TENANT).findForConflictCheck(['user-2'], {
         startTime: new Date(2025, 0, 16, 14, 30, 0),
         endTime: new Date(2025, 0, 16, 15, 30, 0),
       });
@@ -393,7 +397,7 @@ describe('InMemoryAppointmentRepository', () => {
       await repository.save(createAppointment({ organizerId: 'user-1' }));
       await repository.save(createAppointment({ organizerId: 'user-2' }));
 
-      const result = await repository.findWithFilters({ organizerId: 'user-1' });
+      const result = await repository.forTenant(TENANT).findWithFilters({ organizerId: 'user-1' });
 
       expect(result.items).toHaveLength(1);
       expect(result.total).toBe(1);
@@ -405,7 +409,7 @@ describe('InMemoryAppointmentRepository', () => {
       apt2.cancel('user', 'test');
       await repository.saveAll([apt1, apt2]);
 
-      const result = await repository.findWithFilters({ status: 'SCHEDULED' });
+      const result = await repository.forTenant(TENANT).findWithFilters({ status: 'SCHEDULED' });
 
       expect(result.items).toHaveLength(1);
     });
@@ -422,7 +426,7 @@ describe('InMemoryAppointmentRepository', () => {
         })
       );
 
-      const result = await repository.findWithFilters({
+      const result = await repository.forTenant(TENANT).findWithFilters({
         startTimeFrom: new Date(2025, 0, 15),
         startTimeTo: new Date(2025, 0, 17),
       });
@@ -439,7 +443,9 @@ describe('InMemoryAppointmentRepository', () => {
         );
       }
 
-      const result = await repository.findWithFilters({}, { limit: 3, offset: 2 });
+      const result = await repository
+        .forTenant(TENANT)
+        .findWithFilters({}, { limit: 3, offset: 2 });
 
       expect(result.items).toHaveLength(3);
       expect(result.total).toBe(10);
@@ -456,7 +462,7 @@ describe('InMemoryAppointmentRepository', () => {
       apt3.complete('user');
       await repository.saveAll([apt1, apt2, apt3]);
 
-      const counts = await repository.countByStatus();
+      const counts = await repository.forTenant(TENANT).countByStatus();
 
       expect(counts.SCHEDULED).toBe(1);
       expect(counts.CANCELLED).toBe(1);
@@ -467,7 +473,7 @@ describe('InMemoryAppointmentRepository', () => {
       await repository.save(createAppointment({ organizerId: 'user-1' }));
       await repository.save(createAppointment({ organizerId: 'user-2' }));
 
-      const counts = await repository.countByStatus('user-1');
+      const counts = await repository.forTenant(TENANT).countByStatus('user-1');
 
       expect(counts.SCHEDULED).toBe(1);
     });
@@ -493,7 +499,7 @@ describe('InMemoryAppointmentRepository', () => {
         })
       );
 
-      const found = await repository.findUpcoming('user-1');
+      const found = await repository.forTenant(TENANT).findUpcoming('user-1');
 
       expect(found).toHaveLength(1);
     });
@@ -507,7 +513,7 @@ describe('InMemoryAppointmentRepository', () => {
       apt.cancel('user', 'test');
       await repository.save(apt);
 
-      const found = await repository.findUpcoming('user-1');
+      const found = await repository.forTenant(TENANT).findUpcoming('user-1');
 
       expect(found).toHaveLength(0);
     });
@@ -523,7 +529,7 @@ describe('InMemoryAppointmentRepository', () => {
         );
       }
 
-      const found = await repository.findUpcoming('user-1', 3);
+      const found = await repository.forTenant(TENANT).findUpcoming('user-1', 3);
 
       expect(found).toHaveLength(3);
     });
@@ -549,7 +555,7 @@ describe('InMemoryAppointmentRepository', () => {
         })
       );
 
-      const found = await repository.findPast('user-1');
+      const found = await repository.forTenant(TENANT).findPast('user-1');
 
       expect(found).toHaveLength(1);
     });
@@ -572,7 +578,7 @@ describe('InMemoryAppointmentRepository', () => {
         })
       );
 
-      const found = await repository.findPast('user-1');
+      const found = await repository.forTenant(TENANT).findPast('user-1');
 
       expect(found[0].startTime.getTime()).toBeGreaterThan(found[1].startTime.getTime());
     });
@@ -586,18 +592,21 @@ describe('InMemoryAppointmentRepository', () => {
         endTime: new Date(2025, 0, 16, 15, 0, 0),
         appointmentType: 'INTERNAL_MEETING',
         organizerId: 'user-123',
+        tenantId: TENANT,
       }).value;
       apt.setExternalCalendarId('google-calendar-123');
       await repository.save(apt);
 
-      const found = await repository.findByExternalCalendarId('google-calendar-123');
+      const found = await repository
+        .forTenant(TENANT)
+        .findByExternalCalendarId('google-calendar-123');
 
       expect(found).not.toBeNull();
       expect(found?.title).toBe('Synced Meeting');
     });
 
     it('should return null when not found', async () => {
-      const found = await repository.findByExternalCalendarId('non-existent');
+      const found = await repository.forTenant(TENANT).findByExternalCalendarId('non-existent');
       expect(found).toBeNull();
     });
   });
@@ -617,7 +626,7 @@ describe('InMemoryAppointmentRepository', () => {
         new Date(2025, 0, 16, 15, 30, 0)
       ).value;
 
-      const hasConflicts = await repository.hasConflicts(timeSlot, ['user-1']);
+      const hasConflicts = await repository.forTenant(TENANT).hasConflicts(timeSlot, ['user-1']);
 
       expect(hasConflicts).toBe(true);
     });
@@ -636,7 +645,7 @@ describe('InMemoryAppointmentRepository', () => {
         new Date(2025, 0, 16, 17, 0, 0)
       ).value;
 
-      const hasConflicts = await repository.hasConflicts(timeSlot, ['user-1']);
+      const hasConflicts = await repository.forTenant(TENANT).hasConflicts(timeSlot, ['user-1']);
 
       expect(hasConflicts).toBe(false);
     });
@@ -654,7 +663,9 @@ describe('InMemoryAppointmentRepository', () => {
         new Date(2025, 0, 16, 15, 30, 0)
       ).value;
 
-      const hasConflicts = await repository.hasConflicts(timeSlot, ['user-1'], apt.id);
+      const hasConflicts = await repository
+        .forTenant(TENANT)
+        .hasConflicts(timeSlot, ['user-1'], apt.id);
 
       expect(hasConflicts).toBe(false);
     });
@@ -670,7 +681,7 @@ describe('InMemoryAppointmentRepository', () => {
         })
       );
 
-      const found = await repository.findNeedingReminder(60);
+      const found = await repository.forTenant(TENANT).findNeedingReminder(60);
 
       expect(found).toHaveLength(1);
     });
@@ -683,7 +694,7 @@ describe('InMemoryAppointmentRepository', () => {
         })
       );
 
-      const found = await repository.findNeedingReminder(60);
+      const found = await repository.forTenant(TENANT).findNeedingReminder(60);
 
       expect(found).toHaveLength(0);
     });

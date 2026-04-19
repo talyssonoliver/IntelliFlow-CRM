@@ -32,6 +32,7 @@ describe('CancelAppointmentUseCase', () => {
       endTime: overrides.endTime ?? new Date(2025, 0, 2, 15, 0, 0),
       appointmentType: 'INTERNAL_MEETING',
       organizerId: 'user-123',
+      tenantId: 'tenant-1',
     });
     await repository.save(result.value);
     return result.value;
@@ -43,6 +44,7 @@ describe('CancelAppointmentUseCase', () => {
 
       const input = {
         appointmentId: appointment.id.value,
+        tenantId: 'tenant-1',
         cancelledBy: 'user-123',
       };
 
@@ -57,6 +59,7 @@ describe('CancelAppointmentUseCase', () => {
 
       const input = {
         appointmentId: appointment.id.value,
+        tenantId: 'tenant-1',
         cancelledBy: 'user-123',
       };
 
@@ -71,12 +74,13 @@ describe('CancelAppointmentUseCase', () => {
 
       const input = {
         appointmentId: appointment.id.value,
+        tenantId: 'tenant-1',
         cancelledBy: 'user-123',
       };
 
       await useCase.execute(input);
 
-      const saved = await repository.findById(appointment.id);
+      const saved = await repository.forTenant('tenant-1').findById(appointment.id);
       expect(saved?.status).toBe('CANCELLED');
     });
 
@@ -85,6 +89,7 @@ describe('CancelAppointmentUseCase', () => {
 
       const input = {
         appointmentId: appointment.id.value,
+        tenantId: 'tenant-1',
         cancelledBy: 'user-123',
         reason: 'Client requested rescheduling',
       };
@@ -98,6 +103,7 @@ describe('CancelAppointmentUseCase', () => {
     it('should fail for non-existent appointment', async () => {
       const input = {
         appointmentId: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+        tenantId: 'tenant-1',
         cancelledBy: 'user-123',
       };
 
@@ -110,6 +116,7 @@ describe('CancelAppointmentUseCase', () => {
     it('should fail for invalid appointment ID', async () => {
       const input = {
         appointmentId: 'invalid-id',
+        tenantId: 'tenant-1',
         cancelledBy: 'user-123',
       };
 
@@ -124,6 +131,7 @@ describe('CancelAppointmentUseCase', () => {
       // Cancel once
       const firstCancel = {
         appointmentId: appointment.id.value,
+        tenantId: 'tenant-1',
         cancelledBy: 'user-123',
       };
       await useCase.execute(firstCancel);
@@ -131,6 +139,7 @@ describe('CancelAppointmentUseCase', () => {
       // Try to cancel again
       const secondCancel = {
         appointmentId: appointment.id.value,
+        tenantId: 'tenant-1',
         cancelledBy: 'user-456',
       };
       const result = await useCase.execute(secondCancel);
@@ -148,6 +157,7 @@ describe('CancelAppointmentUseCase', () => {
       // Try to cancel
       const input = {
         appointmentId: appointment.id.value,
+        tenantId: 'tenant-1',
         cancelledBy: 'user-456',
       };
       const result = await useCase.execute(input);

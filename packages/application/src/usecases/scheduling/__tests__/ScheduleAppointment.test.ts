@@ -27,6 +27,7 @@ describe('ScheduleAppointmentUseCase', () => {
         endTime: new Date(2025, 0, 2, 15, 0, 0),
         appointmentType: 'CLIENT_MEETING' as const,
         organizerId: 'user-123',
+        tenantId: 'tenant-1',
       };
 
       const result = await useCase.execute(input);
@@ -44,6 +45,7 @@ describe('ScheduleAppointmentUseCase', () => {
         endTime: new Date(2025, 0, 2, 14, 30, 0),
         appointmentType: 'INTERNAL_MEETING' as const,
         organizerId: 'user-123',
+        tenantId: 'tenant-1',
       };
 
       await useCase.execute(input);
@@ -62,6 +64,7 @@ describe('ScheduleAppointmentUseCase', () => {
         endTime: new Date(2025, 0, 2, 11, 0, 0),
         appointmentType: 'CONSULTATION' as const,
         organizerId: 'user-123',
+        tenantId: 'tenant-1',
       };
 
       const result = await useCase.execute(input);
@@ -79,6 +82,7 @@ describe('ScheduleAppointmentUseCase', () => {
         appointmentType: 'INTERNAL_MEETING' as const,
         organizerId: 'user-123',
         attendeeIds: ['user-456', 'user-789'],
+        tenantId: 'tenant-1',
       };
 
       const result = await useCase.execute(input);
@@ -97,6 +101,7 @@ describe('ScheduleAppointmentUseCase', () => {
         organizerId: 'user-123',
         bufferMinutesBefore: 15,
         bufferMinutesAfter: 10,
+        tenantId: 'tenant-1',
       };
 
       const result = await useCase.execute(input);
@@ -114,6 +119,7 @@ describe('ScheduleAppointmentUseCase', () => {
         appointmentType: 'COURT_HEARING' as const,
         organizerId: 'user-123',
         reminderMinutes: 60,
+        tenantId: 'tenant-1',
       };
 
       const result = await useCase.execute(input);
@@ -123,13 +129,14 @@ describe('ScheduleAppointmentUseCase', () => {
     });
 
     it('should detect conflicts with existing appointments', async () => {
-      // Create an existing appointment
+      // Create an existing appointment with the same tenantId
       const existingResult = Appointment.create({
         title: 'Existing Meeting',
         startTime: new Date(2025, 0, 2, 14, 0, 0),
         endTime: new Date(2025, 0, 2, 15, 0, 0),
         appointmentType: 'INTERNAL_MEETING',
         organizerId: 'user-123',
+        tenantId: 'tenant-1',
       });
       await repository.save(existingResult.value);
 
@@ -140,6 +147,7 @@ describe('ScheduleAppointmentUseCase', () => {
         endTime: new Date(2025, 0, 2, 15, 30, 0),
         appointmentType: 'CLIENT_MEETING' as const,
         organizerId: 'user-123',
+        tenantId: 'tenant-1',
       };
 
       const result = await useCase.execute(input);
@@ -157,6 +165,7 @@ describe('ScheduleAppointmentUseCase', () => {
         endTime: new Date(2025, 0, 2, 15, 0, 0),
         appointmentType: 'INTERNAL_MEETING',
         organizerId: 'user-123',
+        tenantId: 'tenant-1',
       });
       await repository.save(existingResult.value);
 
@@ -170,6 +179,7 @@ describe('ScheduleAppointmentUseCase', () => {
         appointmentType: 'CLIENT_MEETING' as const,
         organizerId: 'user-123',
         forceOverrideConflicts: false,
+        tenantId: 'tenant-1',
       };
 
       await useCase.execute(input);
@@ -186,6 +196,7 @@ describe('ScheduleAppointmentUseCase', () => {
         endTime: new Date(2025, 0, 2, 15, 0, 0),
         appointmentType: 'INTERNAL_MEETING',
         organizerId: 'user-123',
+        tenantId: 'tenant-1',
       });
       await repository.save(existingResult.value);
 
@@ -199,6 +210,7 @@ describe('ScheduleAppointmentUseCase', () => {
         appointmentType: 'CLIENT_MEETING' as const,
         organizerId: 'user-123',
         forceOverrideConflicts: true,
+        tenantId: 'tenant-1',
       };
 
       const result = await useCase.execute(input);
@@ -214,6 +226,7 @@ describe('ScheduleAppointmentUseCase', () => {
         endTime: new Date(2025, 0, 2, 14, 0, 0), // End before start
         appointmentType: 'CLIENT_MEETING' as const,
         organizerId: 'user-123',
+        tenantId: 'tenant-1',
       };
 
       const result = await useCase.execute(input);
@@ -229,6 +242,7 @@ describe('ScheduleAppointmentUseCase', () => {
           endTime: new Date(2025, 0, 2, 9, 15, 0),
           appointmentType: 'INTERNAL_MEETING' as const,
           organizerId: 'user-123',
+          tenantId: 'tenant-1',
           recurrence: {
             frequency: 'DAILY' as const,
             interval: 1,
@@ -249,6 +263,7 @@ describe('ScheduleAppointmentUseCase', () => {
           endTime: new Date(2025, 0, 6, 15, 0, 0),
           appointmentType: 'INTERNAL_MEETING' as const,
           organizerId: 'user-123',
+          tenantId: 'tenant-1',
           recurrence: {
             frequency: 'WEEKLY' as const,
             interval: 1,
@@ -270,6 +285,7 @@ describe('ScheduleAppointmentUseCase', () => {
           endTime: new Date(2025, 0, 2, 15, 0, 0),
           appointmentType: 'INTERNAL_MEETING' as const,
           organizerId: 'user-123',
+          tenantId: 'tenant-1',
           recurrence: {
             frequency: 'WEEKLY' as const,
             interval: 1,
@@ -290,6 +306,7 @@ describe('ScheduleAppointmentUseCase', () => {
           endTime: new Date(2025, 0, 15, 11, 0, 0),
           appointmentType: 'INTERNAL_MEETING' as const,
           organizerId: 'user-123',
+          tenantId: 'tenant-1',
           recurrence: {
             frequency: 'MONTHLY' as const,
             interval: 1,
@@ -311,6 +328,7 @@ describe('ScheduleAppointmentUseCase', () => {
           endTime: new Date(2025, 0, 2, 15, 0, 0),
           appointmentType: 'INTERNAL_MEETING' as const,
           organizerId: 'user-123',
+          tenantId: 'tenant-1',
           recurrence: {
             frequency: 'MONTHLY' as const,
             interval: 1,
@@ -331,6 +349,7 @@ describe('ScheduleAppointmentUseCase', () => {
           endTime: new Date(2025, 0, 15, 12, 0, 0),
           appointmentType: 'INTERNAL_MEETING' as const,
           organizerId: 'user-123',
+          tenantId: 'tenant-1',
           recurrence: {
             frequency: 'YEARLY' as const,
             interval: 1,
@@ -356,6 +375,7 @@ describe('ScheduleAppointmentUseCase', () => {
           endTime: new Date(2025, 0, 2, 15, 0, 0),
           appointmentType: 'CLIENT_MEETING' as const,
           organizerId: 'user-123',
+          tenantId: 'tenant-1',
           linkedCaseIds: [
             '123e4567-e89b-12d3-a456-426614174000',
             '550e8400-e29b-41d4-a716-446655440000',
@@ -375,6 +395,7 @@ describe('ScheduleAppointmentUseCase', () => {
           endTime: new Date(2025, 0, 2, 15, 0, 0),
           appointmentType: 'CLIENT_MEETING' as const,
           organizerId: 'user-123',
+          tenantId: 'tenant-1',
           linkedCaseIds: ['invalid-case-id'],
         };
 

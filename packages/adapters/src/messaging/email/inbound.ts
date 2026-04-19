@@ -174,9 +174,17 @@ export function parseMimeBoundary(contentType: string): string | null {
  * Decode quoted-printable content
  */
 export function decodeQuotedPrintable(input: string): string {
-  return input
-    .replaceAll(/=\r?\n/g, '')
-    .replaceAll(/=([0-9A-Fa-f]{2})/g, (_, hex) => String.fromCodePoint(Number.parseInt(hex, 16)));
+  // Remove soft line breaks first.
+  const cleaned = input.replaceAll(/=\r?\n/g, '');
+  // Decode contiguous =XX sequences as a single UTF-8 byte sequence so
+  // multi-byte characters like é (=C3=A9) decode correctly.
+  return cleaned.replaceAll(/(?:=[0-9A-Fa-f]{2})+/g, (match) => {
+    const bytes = match
+      .split('=')
+      .filter(Boolean)
+      .map((hex) => Number.parseInt(hex, 16));
+    return Buffer.from(bytes).toString('utf-8');
+  });
 }
 
 /**
@@ -432,16 +440,13 @@ function parseMimeSection(section: string, endMarkerSuffix: string): MimePart | 
  */
 export function parseMimeParts(raw: string, boundary?: string): MimePart[] {
   if (!boundary) {
-    const [headerSection, ...bodyParts] = raw.split(/\r?\n\r?\n/);
-    const headers = parseHeaders(headerSection);
-    const body = bodyParts.join('\n\n');
-
+    // Single-part message — `raw` IS the body (headers were already split
+    // off by the caller). Don't re-split on blank lines.
     return [
       {
-        headers,
-        body,
-        contentType: headers['content-type'] || 'text/plain',
-        contentTransferEncoding: headers['content-transfer-encoding'],
+        headers: {},
+        body: raw,
+        contentType: 'text/plain',
         isAttachment: false,
       },
     ];

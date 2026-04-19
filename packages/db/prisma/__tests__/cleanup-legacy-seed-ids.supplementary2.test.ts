@@ -508,21 +508,9 @@ describe('cleanup-legacy-seed-ids - supplementary2', () => {
     });
   });
 
-  describe('dynamic import for coverage', () => {
-    it('should import the source module for statement coverage', async () => {
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-      try {
-        await import('../cleanup-legacy-seed-ids.js');
-      } catch {
-        // Expected - module invokes main() which may fail
-      }
-
-      consoleSpy.mockRestore();
-      errorSpy.mockRestore();
-      // The import itself exercises the top-level code
-      expect(true).toBe(true);
-    });
-  });
+  // Removed "dynamic import for coverage" — it imported the CLI script solely
+  // for statement-coverage numbers, triggered real Prisma $connect side
+  // effects (caught), and asserted expect(true).toBe(true). Real coverage
+  // should come from testing the exported functions directly, not from
+  // invoking the top-level main().
 });

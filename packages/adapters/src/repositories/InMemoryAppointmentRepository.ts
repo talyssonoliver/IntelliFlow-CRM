@@ -2,6 +2,7 @@ import {
   Appointment,
   AppointmentId,
   AppointmentRepository,
+  TenantScopedAppointmentRepository,
   AppointmentFilter,
   PaginationOptions,
   PaginatedResult,
@@ -10,39 +11,48 @@ import {
   AppointmentStatus,
 } from '@intelliflow/domain';
 
-/**
- * In-Memory Appointment Repository
- * For testing purposes
- */
-export class InMemoryAppointmentRepository implements AppointmentRepository {
-  private readonly appointments: Map<string, Appointment> = new Map();
+// ---------------------------------------------------------------------------
+// Tenant-scoped inner class (not exported — obtain via forTenant())
+// ---------------------------------------------------------------------------
 
-  async save(appointment: Appointment): Promise<void> {
-    this.appointments.set(appointment.id.value, appointment);
+class TenantScopedInMemoryAppointmentRepository implements TenantScopedAppointmentRepository {
+  constructor(
+    private readonly tenantId: string,
+    private readonly store: Map<string, Appointment>
+  ) {}
+
+  // ------------------------------------------------------------------
+  // Helpers
+  // ------------------------------------------------------------------
+
+  private tenantValues(): Appointment[] {
+    return Array.from(this.store.values()).filter((apt) => apt.tenantId === this.tenantId);
   }
 
-  async saveAll(appointments: Appointment[]): Promise<void> {
-    for (const appointment of appointments) {
-      this.appointments.set(appointment.id.value, appointment);
-    }
+  private paginate(items: Appointment[], options?: PaginationOptions): Appointment[] {
+    if (!options) return items;
+    const { limit, offset = 0 } = options;
+    return items.slice(offset, limit ? offset + limit : undefined);
   }
+
+  // ------------------------------------------------------------------
+  // Read methods — all implicitly scoped to this.tenantId
+  // ------------------------------------------------------------------
 
   async findById(id: AppointmentId): Promise<Appointment | null> {
-    return this.appointments.get(id.value) ?? null;
+    const apt = this.store.get(id.value);
+    if (!apt || apt.tenantId !== this.tenantId) return null;
+    return apt;
   }
 
   async findByIds(ids: AppointmentId[]): Promise<Appointment[]> {
     return ids
-      .map((id) => this.appointments.get(id.value))
-      .filter((apt): apt is Appointment => apt !== undefined);
-  }
-
-  async delete(id: AppointmentId): Promise<void> {
-    this.appointments.delete(id.value);
+      .map((id) => this.store.get(id.value))
+      .filter((apt): apt is Appointment => apt !== undefined && apt.tenantId === this.tenantId);
   }
 
   async findByOrganizer(organizerId: string, options?: PaginationOptions): Promise<Appointment[]> {
-    const results = Array.from(this.appointments.values())
+    const results = this.tenantValues()
       .filter((apt) => apt.organizerId === organizerId)
       .sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
 
@@ -50,7 +60,7 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
   }
 
   async findByAttendee(attendeeId: string, options?: PaginationOptions): Promise<Appointment[]> {
-    const results = Array.from(this.appointments.values())
+    const results = this.tenantValues()
       .filter((apt) => apt.organizerId === attendeeId || apt.attendeeIds.includes(attendeeId))
       .sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
 
@@ -58,7 +68,7 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
   }
 
   async findByCase(caseId: CaseId, options?: PaginationOptions): Promise<Appointment[]> {
-    const results = Array.from(this.appointments.values())
+    const results = this.tenantValues()
       .filter((apt) => apt.linkedCaseIds.some((id) => id.value === caseId.value))
       .sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
 
@@ -70,7 +80,7 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
     endTime: Date,
     options?: PaginationOptions
   ): Promise<Appointment[]> {
-    const results = Array.from(this.appointments.values())
+    const results = this.tenantValues()
       .filter((apt) => apt.startTime < endTime && apt.endTime > startTime)
       .sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
 
@@ -78,7 +88,7 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
   }
 
   async findOverlapping(timeSlot: TimeSlot, excludeId?: AppointmentId): Promise<Appointment[]> {
-    return Array.from(this.appointments.values())
+    return this.tenantValues()
       .filter((apt) => {
         if (apt.id.value === excludeId?.value) return false;
         if (apt.status === 'CANCELLED' || apt.status === 'NO_SHOW') return false;
@@ -92,7 +102,7 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
     timeRange: { startTime: Date; endTime: Date },
     excludeId?: AppointmentId
   ): Promise<Appointment[]> {
-    return Array.from(this.appointments.values())
+    return this.tenantValues()
       .filter((apt) => {
         if (apt.id.value === excludeId?.value) return false;
         if (apt.status === 'CANCELLED' || apt.status === 'NO_SHOW') return false;
@@ -111,7 +121,8 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
     filter: AppointmentFilter,
     options?: PaginationOptions
   ): Promise<PaginatedResult<Appointment>> {
-    let results = Array.from(this.appointments.values());
+    // Always inject tenantId — port contract guarantees it is never passed by callers
+    let results = this.tenantValues();
 
     if (filter.organizerId) {
       results = results.filter((apt) => apt.organizerId === filter.organizerId);
@@ -180,7 +191,7 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
       NO_SHOW: 0,
     };
 
-    for (const apt of this.appointments.values()) {
+    for (const apt of this.tenantValues()) {
       if (organizerId && apt.organizerId !== organizerId) continue;
       counts[apt.status]++;
     }
@@ -191,7 +202,7 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
   async findUpcoming(attendeeId: string, limit: number = 10): Promise<Appointment[]> {
     const now = new Date();
 
-    return Array.from(this.appointments.values())
+    return this.tenantValues()
       .filter((apt) => {
         if (apt.status === 'CANCELLED' || apt.status === 'COMPLETED' || apt.status === 'NO_SHOW') {
           return false;
@@ -206,7 +217,7 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
   async findPast(attendeeId: string, options?: PaginationOptions): Promise<Appointment[]> {
     const now = new Date();
 
-    const results = Array.from(this.appointments.values())
+    const results = this.tenantValues()
       .filter((apt) => {
         if (apt.endTime >= now) return false;
         return apt.organizerId === attendeeId || apt.attendeeIds.includes(attendeeId);
@@ -216,9 +227,9 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
     return this.paginate(results, options);
   }
 
-  async findByExternalCalendarId(calendarId: string): Promise<Appointment | null> {
-    for (const apt of this.appointments.values()) {
-      if (apt.externalCalendarId === calendarId) {
+  async findByExternalCalendarId(externalCalendarId: string): Promise<Appointment | null> {
+    for (const apt of this.tenantValues()) {
+      if (apt.externalCalendarId === externalCalendarId) {
         return apt;
       }
     }
@@ -230,7 +241,7 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
     attendeeIds: string[],
     excludeId?: AppointmentId
   ): Promise<boolean> {
-    for (const apt of this.appointments.values()) {
+    for (const apt of this.tenantValues()) {
       if (apt.id.value === excludeId?.value) continue;
       if (apt.status === 'CANCELLED' || apt.status === 'NO_SHOW') continue;
 
@@ -247,27 +258,29 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
     return false;
   }
 
+  /**
+   * Find recurring instances for a parent appointment.
+   *
+   * Limitation: The domain entity (`AppointmentProps`) does not currently track
+   * a `parentAppointmentId` field.  When that field is added to the domain, replace
+   * the `(apt as any).parentAppointmentId` access below with the proper getter.
+   * Until then, this method always returns [] for real Appointment instances but
+   * works for test doubles that carry a plain `parentAppointmentId` property.
+   */
   async findRecurringInstances(parentId: AppointmentId): Promise<Appointment[]> {
-    // In a real implementation, this would track parent/child relationships
-    // For testing, we just return empty
-    return [];
-  }
-
-  async batchUpdateStatus(ids: AppointmentId[], status: AppointmentStatus): Promise<void> {
-    for (const id of ids) {
-      const apt = this.appointments.get(id.value);
-      if (apt) {
-        // Note: In a real scenario, we'd need to mutate or replace the appointment
-        // This is a simplified implementation
-      }
-    }
+    return this.tenantValues().filter((apt) => {
+      const parentApptId = (apt as any).parentAppointmentId;
+      if (!parentApptId) return false;
+      const raw = typeof parentApptId === 'string' ? parentApptId : parentApptId?.value;
+      return raw === parentId.value;
+    });
   }
 
   async findNeedingReminder(reminderThresholdMinutes: number): Promise<Appointment[]> {
     const now = new Date();
     const thresholdTime = new Date(now.getTime() + reminderThresholdMinutes * 60 * 1000);
 
-    return Array.from(this.appointments.values())
+    return this.tenantValues()
       .filter((apt) => {
         if (apt.status !== 'SCHEDULED' && apt.status !== 'CONFIRMED') return false;
         if (!apt.reminderMinutes) return false;
@@ -276,7 +289,79 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
       .sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
   }
 
-  // Test helpers
+  /** Delete by ID — no-op (silent) if ID belongs to a different tenant. */
+  async delete(id: AppointmentId): Promise<void> {
+    const apt = this.store.get(id.value);
+    if (apt && apt.tenantId !== this.tenantId) {
+      // Cross-tenant delete attempt — silent safety no-op
+      return;
+    }
+    this.store.delete(id.value);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Root repository (exported)
+// ---------------------------------------------------------------------------
+
+/**
+ * In-Memory Appointment Repository
+ *
+ * Implements the root `AppointmentRepository` port.  Obtain a tenant-scoped
+ * view via `forTenant(tenantId)` before calling any read method.
+ *
+ * For testing purposes only — not for production use.
+ */
+export class InMemoryAppointmentRepository implements AppointmentRepository {
+  private readonly appointments: Map<string, Appointment> = new Map();
+
+  // ------------------------------------------------------------------
+  // Root port — AppointmentRepository
+  // ------------------------------------------------------------------
+
+  forTenant(tenantId: string): TenantScopedAppointmentRepository {
+    return new TenantScopedInMemoryAppointmentRepository(tenantId, this.appointments);
+  }
+
+  async save(appointment: Appointment): Promise<void> {
+    this.appointments.set(appointment.id.value, appointment);
+  }
+
+  async saveAll(appointments: Appointment[]): Promise<void> {
+    for (const appointment of appointments) {
+      this.appointments.set(appointment.id.value, appointment);
+    }
+  }
+
+  /**
+   * Batch update appointment status with explicit tenant guard.
+   *
+   * BUGFIX: the original implementation had an empty loop body.
+   * Fixed: iterates ids, verifies tenant ownership, then force-sets the status
+   * directly on the entity's internal props (the only mutation available without
+   * raising domain business-rule errors that would block test scenarios such as
+   * double-cancellation).
+   */
+  async batchUpdateStatus(
+    ids: AppointmentId[],
+    tenantId: string,
+    status: AppointmentStatus
+  ): Promise<void> {
+    for (const id of ids) {
+      const apt = this.appointments.get(id.value);
+      if (!apt) continue;
+      // Cross-tenant guard — skip silently
+      if (apt.tenantId !== tenantId) continue;
+      // Force-set status directly since the entity's mutation methods enforce
+      // business-rule guards that may block batch operations in test scenarios.
+      (apt as any).props.status = status;
+    }
+  }
+
+  // ------------------------------------------------------------------
+  // Test helpers (not part of the port)
+  // ------------------------------------------------------------------
+
   clear(): void {
     this.appointments.clear();
   }
@@ -287,11 +372,5 @@ export class InMemoryAppointmentRepository implements AppointmentRepository {
 
   count(): number {
     return this.appointments.size;
-  }
-
-  private paginate(items: Appointment[], options?: PaginationOptions): Appointment[] {
-    if (!options) return items;
-    const { limit, offset = 0 } = options;
-    return items.slice(offset, limit ? offset + limit : undefined);
   }
 }

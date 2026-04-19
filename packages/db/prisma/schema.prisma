@@ -138,13 +138,97 @@ model Tenant {
   contactRequiredFields  ContactRequiredField[]   @ignore
   contactTags            ContactTag[]             @ignore
   contactAutomationSettings ContactAutomationSetting[] @ignore
+  dealWinLossReasons     DealWinLossReason[]      @ignore
+  dealScoringRules       DealScoringRule[]        @ignore
+  dealDuplicateRules     DealDuplicateRule[]      @ignore
+  dealRequiredFields     DealRequiredField[]      @ignore
+  dealTags               DealTag[]                @ignore
+  dealAutomationSettings DealAutomationSetting[]  @ignore
+  ticketDuplicateRules   TicketDuplicateRule[]    @ignore
+  ticketRequiredFields   TicketRequiredField[]    @ignore
+  ticketTags             TicketTag[]              @ignore
+  ticketAutomationSettings TicketAutomationSetting[] @ignore
   aiMonitoringEvents     AIMonitoringEvent[]      @ignore
   customNodeTypes        CustomNodeType[]         @ignore
   customActionHandlers   CustomActionHandler[]    @ignore
+  documentGeneralConfigs DocumentGeneralConfig[]  @ignore
+  documentDuplicateRules DocumentDuplicateRule[]  @ignore
+  documentRequiredFields DocumentRequiredField[]  @ignore
+  documentTags           DocumentTag[]            @ignore
+  documentTypeDefinitions DocumentTypeDefinition[] @ignore
+  documentAutomationSettings DocumentAutomationSetting[] @ignore
+  documentRetentionPolicies DocumentRetentionPolicy[] @ignore
+  toolEnablements           TenantToolEnablement[]    // H6: per-tenant tool on/off
+  aiConfigs                 TenantAIConfig[]           // M8/M9: per-tenant LLM tier overrides
+  memoryPolicy              TenantMemoryPolicy?        // P2.7: per-tenant memory retention
 
   @@index([slug])
   @@index([status])
   @@map("tenants")
+}
+
+// H6 — Per-tenant tool enable/disable (ADR-006 tools)
+model TenantToolEnablement {
+  id        String   @id @default(cuid())
+  tenantId  String
+  toolName  String   // e.g. "search_leads", "create_case"
+  enabled   Boolean  @default(true)
+  reason    String?  // optional: why it was disabled (audit)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, toolName])
+  @@index([tenantId, enabled])
+  @@map("tenant_tool_enablement")
+}
+
+// M8/M9 — Per-tenant LLM tier override for createLLM(purpose, tier)
+// P2.8 — rateLimitPerMinute added: per-tenant rate-limit override; null falls back to the
+//        global AI_RATE_LIMIT_PER_MINUTE env var (see apps/ai-worker/src/config/ai.config.ts).
+model TenantAIConfig {
+  id                 String   @id @default(cuid())
+  tenantId           String
+  purpose            String   // "scoring" | "qualification" | "email" | "reasoning" | "structured" | "rag"
+  tier               String   // "free" | "standard" | "premium"
+  temperature        Float?
+  maxTokens          Int?
+  rateLimitPerMinute Int?     // P2.8: null = use global env default
+  // Absent row = use factory default. A row overrides the default tier for that purpose.
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  tenant             Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, purpose])
+  @@index([tenantId])
+  @@map("tenant_ai_config")
+}
+
+// P2.7 — Per-tenant retention policy for conversation/memory artifacts.
+// Absent row = platform default. Pruning job (memory-retention.job.ts) joins
+// against this model daily. See docs/architecture/adr/schema-proposal-2026-04-19-tenant-memory-and-rate-limits.md.
+model TenantMemoryPolicy {
+  id                           String   @id @default(cuid())
+  tenantId                     String   @unique
+  /// Delete ConversationRecord + MessageRecord older than N days (null = never).
+  conversationRetentionDays    Int?
+  /// Delete ChainVersion rows archived >= N days (null = keep forever).
+  chainVersionRetentionDays    Int?
+  /// Delete AIMonitoringEvent rows older than N days (null = keep forever).
+  monitoringEventRetentionDays Int?
+  /// If true, PII-scrub conversation bodies at the retention boundary rather than delete.
+  scrubRatherThanDelete        Boolean  @default(false)
+  /// Optional free-text justification surfaced in audit logs.
+  reason                       String?
+  createdAt                    DateTime @default(now())
+  updatedAt                    DateTime @updatedAt
+
+  tenant                       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@map("tenant_memory_policy")
 }
 
 enum TenantStatus {
@@ -230,7 +314,8 @@ model User {
   contacts            Contact[]
   accounts            Account[]
   opportunities       Opportunity[]
-  tasks               Task[]
+  tasks               Task[]  @relation("TaskOwner")
+  tasksAssigned       Task[]  @relation("TaskAssignee")
   aiScores            AIScore[]
   auditLogs           AuditLog[]
   auditLogEntries     AuditLogEntry[]
@@ -334,7 +419,7 @@ model Lead {
   owner         User        @relation(fields: [ownerId], references: [id])
   contact       Contact?
   aiScores      AIScore[]
-  aiInsight     LeadAIInsight?
+  aiInsights    LeadAIInsight[]  // M2: compound unique (leadId, tenantId) — one row per tenant
   tasks         Task[]
   activities              LeadActivity[]
   notes                   LeadNote[]
@@ -843,6 +928,136 @@ enum FileType {
 }
 
 // ============================================
+// DEAL SETTINGS (PG-184)
+// ============================================
+
+model DealWinLossReason {
+  id        String   @id @default(cuid())
+  category  String   // "WON" | "LOST" (CHECK constraint in hardening migration)
+  label     String
+  key       String
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, key])
+  @@index([tenantId, category, sortOrder])
+  @@map("deal_win_loss_reasons")
+}
+
+model DealScoringRule {
+  id        String   @id @default(cuid())
+  name      String
+  field     String   // "value" | "stage" | "expectedCloseDate" | "ownerId" | "accountIndustry"
+  operator  String   // "eq" | "neq" | "gt" | "gte" | "lt" | "lte" | "contains" | "in"
+  valueJson Json     // { type: "number"|"string"|"array", value: unknown }
+  points    Int
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, sortOrder])
+  @@map("deal_scoring_rules")
+}
+
+model DealDuplicateRule {
+  id            String   @id @default(cuid())
+  field         String   // "name_account" | "name_amount_stage" | "expected_close"
+  matchStrategy String   // "exact" | "normalized" | "fuzzy"
+  threshold     Int      @default(100)
+  isActive      Boolean  @default(true)
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, field, matchStrategy])
+  @@index([tenantId])
+  @@map("deal_duplicate_rules")
+}
+
+model DealRequiredField {
+  id         String   @id @default(cuid())
+  fieldKey   String
+  isRequired Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, fieldKey])
+  @@index([tenantId])
+  @@map("deal_required_fields")
+}
+
+model DealTag {
+  id          String   @id @default(cuid())
+  name        String
+  colorToken  String   @default("slate")
+  description String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, name])
+  @@index([tenantId, sortOrder])
+  @@map("deal_tags")
+}
+
+model DealAutomationSetting {
+  id String @id @default(cuid())
+
+  // Duplicate detection
+  autoMergeOnExactNameAccount Boolean @default(false)
+  notifyOnDuplicate           Boolean @default(true)
+
+  // Tags / RBAC
+  restrictTagCreationToAdmins Boolean @default(false)
+
+  // Data hygiene
+  normalizeCurrency          Boolean @default(true)
+  autoCapitalizeDealNames    Boolean @default(true)
+  preventDeleteWithOpenTasks Boolean @default(true)
+
+  // Notifications
+  notifyOnOwnerChange        Boolean @default(false)
+  notifyOnStageChange        Boolean @default(false)
+  notifyOnHighValueStageMove Boolean @default(false)
+  highValueThreshold         Decimal @db.Decimal(15, 2) @default(50000)
+
+  // AI & Intelligence (defaults FALSE — playbook §7)
+  aiDuplicateDetection     Boolean @default(false)
+  aiDealScoring            Boolean @default(false)
+  aiNextStepRecommendation Boolean @default(false)
+  aiTagSuggestions         Boolean @default(false)
+  aiInsightGeneration      Boolean @default(false)
+  aiWinLossPrediction      Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenantId String @unique
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("deal_automation_settings")
+}
+
+// ============================================
 // ACTIVITY EVENTS (Timeline)
 // ============================================
 
@@ -1033,7 +1248,12 @@ model Task {
 
   // Relations
   ownerId       String
-  owner         User        @relation(fields: [ownerId], references: [id])
+  owner         User        @relation("TaskOwner", fields: [ownerId], references: [id])
+  // Assignee is the user currently responsible for working the task. Distinct
+  // from ownerId (the creator / accountable user). Nullable so an owner can
+  // leave a task unassigned.
+  assigneeId    String?
+  assignee      User?       @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
   leadId        String?
   lead          Lead?       @relation(fields: [leadId], references: [id])
   contactId     String?
@@ -1045,6 +1265,7 @@ model Task {
 
   @@index([status])
   @@index([ownerId])
+  @@index([assigneeId])
   @@index([tenantId])
   @@index([dueDate])
   @@index([contactId])
@@ -1055,6 +1276,7 @@ model Task {
   // HOME-PERF: Composite indexes for getWelcomeSummary queries
   @@index([tenantId, ownerId, priority, status])
   @@index([tenantId, ownerId, status, dueDate])
+  @@index([tenantId, assigneeId, status, dueDate])
   @@map("tasks")
 }
 
@@ -1186,6 +1408,8 @@ model MessageRecord {
   @@index([conversationId])
   @@index([role])
   @@index([createdAt])
+  // GIN tsvector index for full-text search on message content (reviewer follow-up)
+  // Prisma does not natively emit tsvector GIN syntax; raw SQL is appended in the migration.
   @@map("message_records")
 }
 
@@ -1664,6 +1888,7 @@ model SLAPolicy {
   updatedAt               DateTime      @updatedAt
 
   tickets                 Ticket[]
+  ticketAutomationSettings TicketAutomationSetting[]
 
   @@index([tenantId])
   // DBA-014: Tenant-scoped name uniqueness
@@ -1691,6 +1916,97 @@ model SLANotification {
   @@index([sentAt])
   @@index([tenantId])
   @@map("sla_notifications")
+}
+
+// ─── PG-185 Module Settings — Tickets ───────────────────────────────────────
+
+model TicketDuplicateRule {
+  id             String   @id @default(cuid())
+  field          String   // "contact_subject" | "contact_24h" | "email_subject" | "contact_description_5min"
+  matchStrategy  String   // "exact" | "normalized" | "fuzzy"
+  threshold      Int      @default(100)
+  isActive       Boolean  @default(true)
+  sortOrder      Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  tenantId       String
+  tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, field, matchStrategy])
+  @@index([tenantId])
+  @@map("ticket_duplicate_rules")
+}
+
+model TicketRequiredField {
+  id         String   @id @default(cuid())
+  fieldKey   String   // "subject" | "description" | "contactEmail" | "contactName" | "priority" | "category" | "slaPolicy"
+  isRequired Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  tenantId   String
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, fieldKey])
+  @@index([tenantId])
+  @@map("ticket_required_fields")
+}
+
+model TicketTag {
+  id          String   @id @default(cuid())
+  name        String
+  colorToken  String   @default("slate") // CHECK constraint: 18 allowed tokens (hardening migration)
+  description String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, name])
+  @@index([tenantId, sortOrder])
+  @@map("ticket_tags")
+}
+
+model TicketAutomationSetting {
+  id                                  String   @id @default(cuid())
+  // Default SLA selection (FK; ON DELETE SET NULL per hardening migration)
+  defaultSlaPolicyId                  String?
+  defaultSlaPolicy                    SLAPolicy? @relation(fields: [defaultSlaPolicyId], references: [id], onDelete: SetNull)
+  // Auto-close rules (DoD explicit requirement)
+  autoCloseIdleDays                   Int      @default(7)
+  autoCloseAppliesToWaitingCustomer   Boolean  @default(true)
+  autoCloseAppliesToResolved          Boolean  @default(true)
+  autoCloseNotifyCustomer             Boolean  @default(true)
+  // Duplicate-detection hygiene
+  autoMergeOnExactContactSubject      Boolean  @default(false)
+  notifyOnDuplicate                   Boolean  @default(true)
+  // Tags & RBAC
+  restrictTagCreationToAdmins         Boolean  @default(false)
+  // Data hygiene
+  normalizeSubjectCasing              Boolean  @default(true)
+  trimDescriptionWhitespace           Boolean  @default(true)
+  preventDeleteWithOpenChildren       Boolean  @default(true)
+  // Notification triggers
+  notifyOnAssigneeChange              Boolean  @default(true)
+  notifyOnSlaBreach                   Boolean  @default(true)
+  notifyOnSlaWarning                  Boolean  @default(false)
+  notifyOnStatusResolved              Boolean  @default(false)
+  notifyOnEscalation                  Boolean  @default(true)
+  // AI & Intelligence — defaults FALSE (opt-in privacy; playbook §7)
+  aiDuplicateDetection                Boolean  @default(false)
+  aiAutoCategorization                Boolean  @default(false)
+  aiSentimentAnalysis                 Boolean  @default(false)
+  aiNextStepRecommendation            Boolean  @default(false)
+  aiTagSuggestions                    Boolean  @default(false)
+  aiInsightGeneration                 Boolean  @default(false)
+  createdAt                           DateTime @default(now())
+  updatedAt                           DateTime @updatedAt
+  tenantId                            String   @unique
+  tenant                              Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([defaultSlaPolicyId])
+  @@map("ticket_automation_settings")
 }
 
 enum TicketStatus {
@@ -2177,7 +2493,7 @@ model ContactNote {
 /// AI insights for leads (from lead 360 view / IFC-095)
 model LeadAIInsight {
   id                    String    @id @default(cuid())
-  leadId                String    @unique
+  leadId                String
   lead                  Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
   tenantId              String
   tenant                Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -2194,6 +2510,7 @@ model LeadAIInsight {
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
+  @@unique([leadId, tenantId])  // M2: compound unique — replaces @unique on leadId alone
   @@index([churnRisk])
   @@index([conversionProbability])
   @@index([tenantId])
@@ -3722,7 +4039,8 @@ model WebhookEndpoint {
   description String?
   url         String
   // DBA-015: SECURITY — must be encrypted at app level before storage
-  secret      String?  // For signature verification — ENCRYPT before write
+  /// @encrypted
+  secret      String?  // For signature verification — encrypted at rest via prisma-field-encryption
   events      Json     // Array of event types to send
   headers     Json?    // Custom headers
   isActive    Boolean  @default(true)
@@ -3881,6 +4199,7 @@ model CaseDocument {
   title             String
   description       String?  @db.Text
   documentType      String   @map("document_type") // CONTRACT, AGREEMENT, EVIDENCE, etc.
+  documentTypeLabel String?  @db.Text @map("document_type_label")
   classification    String   // PUBLIC, INTERNAL, CONFIDENTIAL, PRIVILEGED
   tags              String[] @default([])
 
@@ -4308,11 +4627,13 @@ model ChainVersion {
   tenantId        String
   chainType       String   // SCORING, QUALIFICATION, EMAIL_WRITER, FOLLOWUP
   version         String   // Semantic version: 1.0.0
-  // DBA-015: SECURITY — prompt content must be encrypted at rest (app-level, follow-up)
+  // DBA-015: SECURITY — prompt content encrypted at rest via prisma-field-encryption
+  /// @encrypted
   prompt          String   @db.Text
-  // DBA-018: System prompt field — SECURITY: must be encrypted at rest (app-level, follow-up)
+  // DBA-018: System prompt field — encrypted at rest via prisma-field-encryption
+  /// @encrypted
   systemPrompt    String?  @db.Text
-  promptHash      String   // SHA256 for integrity
+  promptHash      String   // SHA256 for integrity — intentionally NOT encrypted (non-reversible hash)
   model           String   @default("gpt-4o-mini")
   temperature     Float    @default(0.7)
   maxTokens       Int?
@@ -4877,4 +5198,133 @@ model CustomActionHandler {
   @@unique([tenantId, actionTypeId])
   @@index([tenantId])
   @@map("custom_action_handlers")
+}
+
+// ─── Document Settings (PG-186) ──────────────────────────────────────────────
+
+model DocumentGeneralConfig {
+  id                  String   @id @default(cuid())
+  tenantId            String   @unique
+  allowedMimeTypes    String[] @default([])
+  maxUploadSizeMb     Int      @default(50)
+  defaultRetentionDays Int     @default(365)
+  enableAntivirusScan Boolean  @default(true)
+  quarantineOnDetect  Boolean  @default(true)
+  blockOnScanFailure  Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  tenant              Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("document_general_config")
+}
+
+model DocumentDuplicateRule {
+  id              String   @id @default(cuid())
+  tenantId        String
+  field           String
+  matchStrategy   String
+  collisionAction String   @default("warn")
+  isActive        Boolean  @default(true)
+  sortOrder       Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, field, matchStrategy])
+  @@index([tenantId])
+  @@map("document_duplicate_rules")
+}
+
+model DocumentRequiredField {
+  id        String   @id @default(cuid())
+  tenantId  String
+  fieldKey  String
+  isRequired Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, fieldKey])
+  @@index([tenantId])
+  @@map("document_required_fields")
+}
+
+model DocumentTag {
+  id          String   @id @default(cuid())
+  tenantId    String
+  name        String
+  colorToken  String   @default("slate")
+  description String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+  @@map("document_tags")
+}
+
+model DocumentTypeDefinition {
+  id          String   @id @default(cuid())
+  tenantId    String
+  name        String
+  description String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+  @@map("document_type_definitions")
+}
+
+model DocumentAutomationSetting {
+  id                          String   @id @default(cuid())
+  tenantId                    String   @unique
+  // Category 1 — wired in PG-186
+  normalizeFilename           Boolean  @default(true)
+  preventDeleteIfReferenced   Boolean  @default(true)
+  notifyOnOwnerChange         Boolean  @default(false)
+  restrictTagCreationToAdmins Boolean  @default(false)
+  notifyOnDuplicate           Boolean  @default(true)
+  // Category 2 — follow-up (IFC-310 / IFC-312) — all false by default
+  autoVersionOnCollision      Boolean  @default(false)
+  autoDetectDuplicates        Boolean  @default(false)
+  autoExtractText             Boolean  @default(false)
+  autoClassifyCategory        Boolean  @default(false)
+  autoDetectPii               Boolean  @default(false)
+  aiTagSuggestions            Boolean  @default(false)
+  aiInsightGeneration         Boolean  @default(false)
+  createdAt                   DateTime @default(now())
+  updatedAt                   DateTime @updatedAt
+
+  tenant                      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("document_automation_settings")
+}
+
+model DocumentRetentionPolicy {
+  id                String   @id @default(cuid())
+  tenantId          String
+  categoryKey       String
+  retentionDays     Int      @default(365)
+  autoArchive       Boolean  @default(false)
+  legalHoldOverride Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  tenant            Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, categoryKey])
+  @@index([tenantId])
+  @@map("document_retention_policies")
 }

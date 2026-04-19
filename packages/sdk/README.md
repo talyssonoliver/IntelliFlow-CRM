@@ -943,7 +943,7 @@ const queryClient = new QueryClient({
 
 ## Related Documentation
 
-- [ADR-001: Modern AI-First Stack](../docs/planning/adr/ADR-001-modern-stack.md)
+- [ADR-001: Modern AI-First Stack](../docs/architecture/adr/ADR-001-modern-stack.md)
 - [tRPC Official Documentation](https://trpc.io/docs)
 - [TanStack Query Documentation](https://tanstack.com/query/latest)
 - [IntelliFlow API Documentation](../apps/api/README.md)

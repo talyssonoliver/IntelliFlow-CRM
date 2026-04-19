@@ -13,6 +13,25 @@ import {
 } from '@intelliflow/domain';
 
 /**
+ * Luhn algorithm — returns true when the digit string is a valid card number.
+ * Used internally by `sanitizeText` to avoid false-positive credit-card redaction.
+ */
+function luhnCheck(digits: string): boolean {
+  let sum = 0;
+  let alternate = false;
+  for (let i = digits.length - 1; i >= 0; i--) {
+    let n = parseInt(digits[i], 10);
+    if (alternate) {
+      n *= 2;
+      if (n > 9) n -= 9;
+    }
+    sum += n;
+    alternate = !alternate;
+  }
+  return sum % 10 === 0;
+}
+
+/**
  * Guardrails AI Service - IFC-125 Integration
  *
  * Decorator that wraps any AIServicePort implementation with:
@@ -462,33 +481,61 @@ export class GuardrailsAIService implements AIServicePort {
   }
 
   /**
-   * Sanitize arbitrary text (synchronous version for simple cases)
+   * Sanitize arbitrary text (synchronous version for simple cases).
+   *
+   * Redacts the following PII patterns:
+   *  - Email addresses
+   *  - UK mobile phone numbers
+   *  - US Social Security Numbers (SSN)
+   *  - Credit card numbers (Luhn-validated)
+   *  - IBAN (EU/international bank account numbers)
+   *  - NHS numbers (UK) — only when preceded by keyword context
+   *  - Brazilian CPF numbers
    */
   private sanitizeText(text: string, context: string): string {
-    // Simple synchronous redaction for common PII patterns
-    // For full sanitization, use the async sanitizeOutput from prompt-sanitizer
-
-    // Redact emails
-    const emailRedacted = text.replaceAll(
+    // 1. Email
+    let result = text.replaceAll(
       /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
       '[EMAIL_REDACTED]'
     );
 
-    // Redact UK phone numbers
-    const phoneRedacted = emailRedacted.replaceAll(
+    // 2. UK mobile phone numbers
+    result = result.replaceAll(
       /(\+44\s?7\d{3}|\(?07\d{3}\)?)\s?\d{3}\s?\d{3}/g,
       '[PHONE_REDACTED]'
     );
 
-    // Log if PII was found
-    if (phoneRedacted !== text) {
+    // 3. US Social Security Number  (NNN-NN-NNNN)
+    result = result.replaceAll(/\b\d{3}-\d{2}-\d{4}\b/g, '[REDACTED_SSN]');
+
+    // 4. Credit card numbers (13–19 contiguous/spaced/dashed digits, Luhn-validated)
+    result = result.replaceAll(/\b(?:\d[ -]?){13,19}\d\b/g, (match) => {
+      const digits = match.replace(/[ -]/g, '');
+      if (digits.length < 13 || digits.length > 19) return match;
+      return luhnCheck(digits) ? '[REDACTED_CC]' : match;
+    });
+
+    // 5. IBAN  (2-letter country code + 2 check digits + 11–30 alphanumeric chars)
+    result = result.replaceAll(/\b[A-Z]{2}\d{2}[A-Z0-9]{11,30}\b/g, '[REDACTED_IBAN]');
+
+    // 6. NHS number (UK) — 10-digit groups; only redact when an NHS keyword appears
+    //    nearby to cut false positives (e.g. phone numbers, order IDs).
+    if (/\bNHS\b/i.test(result)) {
+      result = result.replaceAll(/\b\d{3}[\s-]?\d{3}[\s-]?\d{4}\b/g, '[REDACTED_NHS]');
+    }
+
+    // 7. Brazilian CPF  (NNN.NNN.NNN-NN)
+    result = result.replaceAll(/\b\d{3}\.\d{3}\.\d{3}-\d{2}\b/g, '[REDACTED_CPF]');
+
+    // Log if anything was redacted
+    if (result !== text) {
       this.logSecurityEvent('AI_PII_EXPOSURE_BLOCKED', {
         context,
         redactionCount: (text.match(/@/g) || []).length,
       });
     }
 
-    return phoneRedacted;
+    return result;
   }
 
   /**

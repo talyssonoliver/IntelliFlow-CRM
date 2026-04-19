@@ -5,8 +5,10 @@
  * Source: packages/validators/src/env.ts
  *
  * This file uses inline enum definitions (no @intelliflow/domain imports).
- * devEnvSchema defaults DATABASE_URL to postgresql://localhost:5432/intelliflow_dev.
- * testEnvSchema defaults DATABASE_URL to postgresql://localhost:5432/intelliflow_test.
+ * devEnvSchema requires DATABASE_URL to be set (no default, for safety —
+ * prevents accidental connection to wrong DB).
+ * testEnvSchema accepts missing DATABASE_URL (optional, no default — set via
+ * .env.test when integration tests need a real DB).
  *
  * Coverage target: >90% for validator layer
  */
@@ -275,31 +277,30 @@ describe('Env Validators', () => {
   // devEnvSchema
   // =========================================================================
   describe('devEnvSchema', () => {
-    it('should default DATABASE_URL when not provided', () => {
+    const devEnvWithDb = { DATABASE_URL: 'postgresql://localhost:5432/intelliflow_dev' };
+
+    it('should require DATABASE_URL (no default, for safety)', () => {
       const result = devEnvSchema.safeParse({});
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.DATABASE_URL).toBe('postgresql://localhost:5432/intelliflow_dev');
-      }
+      expect(result.success).toBe(false);
     });
 
-    it('should default JWT_SECRET in dev mode', () => {
-      const result = devEnvSchema.safeParse({});
+    it('should default JWT_SECRET in dev mode when DATABASE_URL is provided', () => {
+      const result = devEnvSchema.safeParse(devEnvWithDb);
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.JWT_SECRET).toBe('dev-secret-change-in-production-min-32-chars');
       }
     });
 
-    it('should default SESSION_SECRET in dev mode', () => {
-      const result = devEnvSchema.safeParse({});
+    it('should default SESSION_SECRET in dev mode when DATABASE_URL is provided', () => {
+      const result = devEnvSchema.safeParse(devEnvWithDb);
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.SESSION_SECRET).toBe('dev-session-secret-change-in-production');
       }
     });
 
-    it('should accept custom DATABASE_URL overriding default', () => {
+    it('should accept explicit DATABASE_URL', () => {
       const result = devEnvSchema.safeParse({
         DATABASE_URL: 'postgresql://custom-host:5432/custom_db',
       });
@@ -311,6 +312,7 @@ describe('Env Validators', () => {
 
     it('should allow custom JWT_SECRET in dev mode', () => {
       const result = devEnvSchema.safeParse({
+        ...devEnvWithDb,
         JWT_SECRET: 'my-custom-dev-jwt-secret-thats-long',
       });
       expect(result.success).toBe(true);
@@ -319,8 +321,8 @@ describe('Env Validators', () => {
       }
     });
 
-    it('should accept empty object (all defaults apply)', () => {
-      const result = devEnvSchema.safeParse({});
+    it('should accept DATABASE_URL-only input (secret defaults apply)', () => {
+      const result = devEnvSchema.safeParse(devEnvWithDb);
       expect(result.success).toBe(true);
     });
   });
@@ -410,11 +412,11 @@ describe('Env Validators', () => {
       expect(result.success).toBe(false);
     });
 
-    it('should default DATABASE_URL in test mode', () => {
+    it('should leave DATABASE_URL optional in test mode (no default)', () => {
       const result = testEnvSchema.safeParse({ NODE_ENV: 'test' });
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.DATABASE_URL).toBe('postgresql://localhost:5432/intelliflow_test');
+        expect(result.data.DATABASE_URL).toBeUndefined();
       }
     });
 
@@ -455,9 +457,10 @@ describe('Env Validators', () => {
     it('should use devEnvSchema for development NODE_ENV', () => {
       const env = {
         NODE_ENV: 'development',
+        DATABASE_URL: 'postgresql://localhost:5432/intelliflow_dev',
       } as any; // intentional wrong type for validation test — plain object passed where NodeJS.ProcessEnv is expected;
 
-      // devEnvSchema has defaults for DATABASE_URL, JWT_SECRET, SESSION_SECRET
+      // devEnvSchema requires DATABASE_URL and has defaults for JWT_SECRET, SESSION_SECRET
       const result = validateEnv(env);
       expect(result.NODE_ENV).toBe('development');
     });
@@ -486,7 +489,9 @@ describe('Env Validators', () => {
     });
 
     it('should default to devEnvSchema when NODE_ENV is not set', () => {
-      const env = {} as any; // intentional wrong type for validation test — plain object passed where NodeJS.ProcessEnv is expected;
+      const env = {
+        DATABASE_URL: 'postgresql://localhost:5432/intelliflow_dev',
+      } as any; // intentional wrong type for validation test — plain object passed where NodeJS.ProcessEnv is expected;
 
       const result = validateEnv(env);
       expect(result.NODE_ENV).toBe('development');
@@ -528,6 +533,7 @@ describe('Env Validators', () => {
     it('should use devEnvSchema for staging NODE_ENV', () => {
       const env = {
         NODE_ENV: 'staging',
+        DATABASE_URL: 'postgresql://localhost:5432/intelliflow_dev',
       } as any; // intentional wrong type for validation test — plain object passed where NodeJS.ProcessEnv is expected;
 
       const result = validateEnv(env);
@@ -579,7 +585,9 @@ describe('Env Validators', () => {
     });
 
     it('should default to dev schema when NODE_ENV is missing', () => {
-      const env = {} as any; // intentional wrong type for validation test — plain object passed where NodeJS.ProcessEnv is expected;
+      const env = {
+        DATABASE_URL: 'postgresql://localhost:5432/intelliflow_dev',
+      } as any; // intentional wrong type for validation test — plain object passed where NodeJS.ProcessEnv is expected;
 
       const result = safeValidateEnv(env);
       expect(result.success).toBe(true);

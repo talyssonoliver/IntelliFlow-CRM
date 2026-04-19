@@ -47,6 +47,9 @@ const aiConfigSchema = z.object({
   OLLAMA_BASE_URL: z.url().default('http://localhost:11434'),
   AI_TIMEOUT_MS: z.coerce.number().int().positive().default(30000),
   AI_MAX_RETRIES: z.coerce.number().int().nonnegative().default(3),
+  // LiteLLM proxy (Phase B0). Model routing handled server-side by LiteLLM model_list.
+  LITELLM_BASE_URL: z.url().default('http://localhost:4000/v1'),
+  LITELLM_MASTER_KEY: z.string().default(''),
 });
 
 // Email configuration

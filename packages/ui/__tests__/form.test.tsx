@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import * as React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { useForm } from 'react-hook-form';
@@ -168,21 +168,20 @@ describe('Form', () => {
       expect(onSubmit).not.toHaveBeenCalled();
     });
 
-    // TODO: Flaky test due to timing issues with react-hook-form validation
-    it.skip('should validate field format on submit', async () => {
-      const user = userEvent.setup();
+    it('should validate field format on submit', async () => {
       const onSubmit = vi.fn();
       render(<TestForm onSubmit={onSubmit} />);
 
       const emailInput = screen.getByTestId('email-input');
-      const submitButton = screen.getByTestId('submit-button');
 
-      await user.type(emailInput, 'not-valid');
-      await user.click(submitButton);
+      // type invalid email, then bypass HTML5 type="email" validation with fireEvent.submit
+      fireEvent.change(emailInput, { target: { value: 'not-valid' } });
+      const form = emailInput.closest('form')!;
+      fireEvent.submit(form);
 
       await waitFor(
         () => {
-          // Should show an error message (either "Invalid email" or pattern mismatch)
+          // Should show an error message (either "Invalid email address" or "Email is required")
           const errorMessages = screen.queryAllByText(/invalid|required/i);
           expect(errorMessages.length).toBeGreaterThan(0);
         },
@@ -192,18 +191,16 @@ describe('Form', () => {
       expect(onSubmit).not.toHaveBeenCalled();
     });
 
-    // TODO: Flaky test due to timing issues with react-hook-form validation
-    it.skip('should clear validation error when valid input provided', async () => {
-      const user = userEvent.setup();
+    it('should clear validation error when valid input provided', async () => {
       const onSubmit = vi.fn();
       render(<TestForm onSubmit={onSubmit} />);
 
       const emailInput = screen.getByTestId('email-input');
-      const submitButton = screen.getByTestId('submit-button');
+      const form = emailInput.closest('form')!;
 
-      // Submit with invalid email
-      await user.type(emailInput, 'not-an-email');
-      await user.click(submitButton);
+      // Submit with invalid email — bypass HTML5 type="email" validation with fireEvent.submit
+      fireEvent.change(emailInput, { target: { value: 'not-an-email' } });
+      fireEvent.submit(form);
 
       await waitFor(
         () => {
@@ -217,9 +214,8 @@ describe('Form', () => {
       expect(onSubmit).not.toHaveBeenCalled();
 
       // Clear and enter valid email, then submit again
-      await user.clear(emailInput);
-      await user.type(emailInput, 'test@example.com');
-      await user.click(submitButton);
+      fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+      fireEvent.submit(form);
 
       await waitFor(
         () => {

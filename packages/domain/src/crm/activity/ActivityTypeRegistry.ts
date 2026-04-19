@@ -261,6 +261,12 @@ export const ACTIVITY_TYPE_REGISTRY: Record<string, ActivityTypeMetadata> = {
     label: 'Task Assigned',
     color: 'indigo-500',
   },
+  'task.linked_to_entity': {
+    feedType: 'TASK',
+    icon: 'link',
+    label: 'Task Linked to Entity',
+    color: 'indigo-500',
+  },
 
   // ── Ticket Events (14) ───────────────────────────────────────────────
   'ticket.created': { feedType: 'TICKET', icon: 'tag', label: 'Ticket Created', color: 'rose-500' },

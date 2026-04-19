@@ -51,6 +51,9 @@ export * from './PrismaLeadConversionRepository';
 // Ticket Repositories
 export * from './PrismaTicketRepository';
 
+// Conversation Search Repository (IFC-148)
+export * from './PrismaConversationSearchRepository';
+
 // In-memory implementations (testing)
 export * from './InMemoryLeadRepository';
 export * from './InMemoryContactRepository';

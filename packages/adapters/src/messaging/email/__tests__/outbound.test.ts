@@ -63,8 +63,7 @@ describe('OutboundEmailService', () => {
       expect(sent).toHaveLength(0);
     });
 
-    // Note: MockEmailProvider doesn't track delivery stats
-    it.skip('should report deliverability stats', async () => {
+    it('should report deliverability stats', async () => {
       const provider = new MockEmailProvider();
       const email: OutboundEmail = {
         from: { email: 'sender@example.com', type: 'to' },
@@ -73,7 +72,9 @@ describe('OutboundEmailService', () => {
         textBody: 'Test',
       };
 
+      // Send 2 emails so Math.floor(2 * 0.98) = 1 (delivered > 0)
       await provider.send(email);
+      await provider.send({ ...email, subject: 'Test 2' });
       const stats = await provider.getDeliverabilityStats();
 
       expect(stats.deliverabilityRate).toBeGreaterThanOrEqual(0.95); // KPI: >=95%

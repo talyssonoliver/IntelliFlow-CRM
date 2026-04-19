@@ -75,11 +75,11 @@ export class DateRange extends ValueObject<DateRangeProps> {
 
     const end = new Date();
     const start = new Date();
-    start.setDate(start.getDate() - (days - 1));
+    start.setUTCDate(start.getUTCDate() - (days - 1));
 
     // Reset to start of day
-    start.setHours(0, 0, 0, 0);
-    end.setHours(23, 59, 59, 999);
+    start.setUTCHours(0, 0, 0, 0);
+    end.setUTCHours(23, 59, 59, 999);
 
     return DateRange.create(start, end);
   }
@@ -94,11 +94,11 @@ export class DateRange extends ValueObject<DateRangeProps> {
 
     const end = new Date();
     const start = new Date();
-    start.setMonth(start.getMonth() - months);
+    start.setUTCMonth(start.getUTCMonth() - months);
 
     // Reset to start/end of day
-    start.setHours(0, 0, 0, 0);
-    end.setHours(23, 59, 59, 999);
+    start.setUTCHours(0, 0, 0, 0);
+    end.setUTCHours(23, 59, 59, 999);
 
     return DateRange.create(start, end);
   }
@@ -108,8 +108,8 @@ export class DateRange extends ValueObject<DateRangeProps> {
    */
   static thisMonth(): Result<DateRange, InvalidDateRangeError> {
     const now = new Date();
-    const start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
-    const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+    const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0, 0));
+    const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999));
 
     return DateRange.create(start, end);
   }
@@ -119,9 +119,9 @@ export class DateRange extends ValueObject<DateRangeProps> {
    */
   static thisQuarter(): Result<DateRange, InvalidDateRangeError> {
     const now = new Date();
-    const quarter = Math.floor(now.getMonth() / 3);
-    const start = new Date(now.getFullYear(), quarter * 3, 1, 0, 0, 0, 0);
-    const end = new Date(now.getFullYear(), quarter * 3 + 3, 0, 23, 59, 59, 999);
+    const quarter = Math.floor(now.getUTCMonth() / 3);
+    const start = new Date(Date.UTC(now.getUTCFullYear(), quarter * 3, 1, 0, 0, 0, 0));
+    const end = new Date(Date.UTC(now.getUTCFullYear(), quarter * 3 + 3, 0, 23, 59, 59, 999));
 
     return DateRange.create(start, end);
   }
@@ -131,8 +131,8 @@ export class DateRange extends ValueObject<DateRangeProps> {
    */
   static thisYear(): Result<DateRange, InvalidDateRangeError> {
     const now = new Date();
-    const start = new Date(now.getFullYear(), 0, 1, 0, 0, 0, 0);
-    const end = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
+    const start = new Date(Date.UTC(now.getUTCFullYear(), 0, 1, 0, 0, 0, 0));
+    const end = new Date(Date.UTC(now.getUTCFullYear(), 11, 31, 23, 59, 59, 999));
 
     return DateRange.create(start, end);
   }
@@ -176,8 +176,8 @@ export class DateRange extends ValueObject<DateRangeProps> {
    * Get the duration in months (approximate)
    */
   get durationInMonths(): number {
-    const yearsDiff = this.props.end.getFullYear() - this.props.start.getFullYear();
-    const monthsDiff = this.props.end.getMonth() - this.props.start.getMonth();
+    const yearsDiff = this.props.end.getUTCFullYear() - this.props.start.getUTCFullYear();
+    const monthsDiff = this.props.end.getUTCMonth() - this.props.start.getUTCMonth();
     return yearsDiff * 12 + monthsDiff;
   }
 

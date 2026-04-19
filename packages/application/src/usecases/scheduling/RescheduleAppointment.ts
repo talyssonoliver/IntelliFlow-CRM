@@ -13,6 +13,7 @@ import { PersistenceError, ValidationError } from '../../errors';
 
 export interface RescheduleAppointmentInput {
   appointmentId: string;
+  tenantId: string;
   newStartTime: Date;
   newEndTime: Date;
   rescheduledBy: string;
@@ -74,14 +75,16 @@ export class RescheduleAppointmentUseCase {
   ): Promise<Result<Appointment[], DomainError>> {
     try {
       const allAttendees = [appointment.organizerId, ...appointment.attendeeIds];
-      const appointments = await this.appointmentRepository.findForConflictCheck(
-        allAttendees,
-        {
-          startTime: appointment.buffer.adjustStartTime(input.newStartTime),
-          endTime: appointment.buffer.adjustEndTime(input.newEndTime),
-        },
-        appointmentId
-      );
+      const appointments = await this.appointmentRepository
+        .forTenant(input.tenantId)
+        .findForConflictCheck(
+          allAttendees,
+          {
+            startTime: appointment.buffer.adjustStartTime(input.newStartTime),
+            endTime: appointment.buffer.adjustEndTime(input.newEndTime),
+          },
+          appointmentId
+        );
       return Result.ok(appointments);
     } catch (error) {
       return Result.fail(
@@ -104,7 +107,9 @@ export class RescheduleAppointmentUseCase {
       const appointmentId = appointmentIdResult.value;
 
       // Find the appointment
-      const appointment = await this.appointmentRepository.findById(appointmentId);
+      const appointment = await this.appointmentRepository
+        .forTenant(input.tenantId)
+        .findById(appointmentId);
       if (!appointment) {
         return Result.fail(new ValidationError(`Appointment not found: ${input.appointmentId}`));
       }
@@ -115,13 +120,10 @@ export class RescheduleAppointmentUseCase {
         endTime: appointment.endTime,
       };
 
-      // Update buffer if provided
-      if (input.updateBuffer) {
-        const bufferError = this.applyBufferUpdate(appointment, input.updateBuffer);
-        if (bufferError) return Result.fail(bufferError);
-      }
-
-      // Check for conflicts at new time
+      // Check for conflicts at new time BEFORE mutating the entity.
+      // Buffer update is intentionally deferred until after the conflict gate so
+      // that a blocked reschedule (conflict without forceOverride) never leaves the
+      // in-memory entity in a dirty/mutated state.
       const newTimeSlotResult = TimeSlot.create(input.newStartTime, input.newEndTime);
       if (newTimeSlotResult.isFailure) {
         return Result.fail(newTimeSlotResult.error);
@@ -144,6 +146,13 @@ export class RescheduleAppointmentUseCase {
 
       if (conflictResult.hasConflicts && !input.forceOverrideConflicts) {
         return Result.ok({ appointment, previousTimeSlot, conflictWarnings });
+      }
+
+      // Apply buffer update AFTER the conflict gate — entity is only mutated
+      // when we know the reschedule will proceed.
+      if (input.updateBuffer) {
+        const bufferError = this.applyBufferUpdate(appointment, input.updateBuffer);
+        if (bufferError) return Result.fail(bufferError);
       }
 
       // Perform the reschedule

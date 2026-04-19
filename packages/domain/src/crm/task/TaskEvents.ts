@@ -220,16 +220,20 @@ export class TaskDeletedEvent extends DomainEvent {
 }
 
 /**
- * Event: Task was assigned to entity
+ * Event: Task was linked to a CRM entity (lead, contact, or opportunity)
+ *
+ * This is strictly about the entity association on the Task aggregate — it
+ * carries no information about *who* owns or works the task. For user
+ * assignment, see {@link TaskAssignedEvent}.
  */
-export class TaskAssignedEvent extends DomainEvent {
-  readonly eventType = 'task.assigned';
+export class TaskLinkedToEntityEvent extends DomainEvent {
+  readonly eventType = 'task.linked_to_entity';
 
   constructor(
     public readonly taskId: TaskId,
     public readonly entityType: 'lead' | 'contact' | 'opportunity',
     public readonly entityId: string,
-    public readonly assignedBy: string
+    public readonly linkedBy: string
   ) {
     super();
   }
@@ -239,7 +243,41 @@ export class TaskAssignedEvent extends DomainEvent {
       taskId: this.taskId.value,
       entityType: this.entityType,
       entityId: this.entityId,
+      linkedBy: this.linkedBy,
+    };
+  }
+}
+
+/**
+ * Event: Task was assigned to a user (or unassigned).
+ *
+ * Emitted when Task.assigneeId changes. `assigneeId` is null when the task is
+ * being unassigned. The realtime bridge consumes this to notify the new
+ * assignee; home-cache consumes it to invalidate per-user summaries for both
+ * the previous and current assignee plus the actor.
+ */
+export class TaskAssignedEvent extends DomainEvent {
+  readonly eventType = 'task.assigned';
+
+  constructor(
+    public readonly taskId: TaskId,
+    public readonly assigneeId: string | null,
+    public readonly previousAssigneeId: string | null,
+    public readonly assignedBy: string,
+    public readonly title: string,
+    public readonly dueDate: Date | null
+  ) {
+    super();
+  }
+
+  toPayload(): Record<string, unknown> {
+    return {
+      taskId: this.taskId.value,
+      assigneeId: this.assigneeId,
+      previousAssigneeId: this.previousAssigneeId,
       assignedBy: this.assignedBy,
+      title: this.title,
+      dueDate: this.dueDate?.toISOString() ?? null,
     };
   }
 }

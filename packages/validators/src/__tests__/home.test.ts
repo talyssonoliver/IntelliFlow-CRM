@@ -9,7 +9,7 @@
  * Target: ≥95% coverage
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, expectTypeOf } from 'vitest';
 import {
   welcomeSummarySchema,
   aiInsightTypeSchema,
@@ -976,23 +976,22 @@ describe('Home Page Validators', () => {
   // =============================================================================
   describe('Type Inference', () => {
     it('exports types correctly', () => {
-      // These imports should exist and compile without errors
-      type WelcomeSummaryType = import('../home').WelcomeSummary;
-      type AIInsightType = import('../home').AIInsight;
-      type AIInsightsResponseType = import('../home').AIInsightsResponse;
-      type ActivityFeedItemType = import('../home').ActivityFeedItem;
-      type ActivityFeedQueryType = import('../home').ActivityFeedQuery;
-      type ActivityFeedResponseType = import('../home').ActivityFeedResponse;
-      type DailyGoalType = import('../home').DailyGoal;
-      type DailyGoalResponseType = import('../home').DailyGoalResponse;
-      type PinnedItemType = import('../home').PinnedItem;
-      type PinnedItemsResponseType = import('../home').PinnedItemsResponse;
-      type PinItemInputType = import('../home').PinItemInput;
-      type UnpinItemInputType = import('../home').UnpinItemInput;
-      type ReorderPinnedItemsInputType = import('../home').ReorderPinnedItemsInput;
-
-      // If this compiles, types are exported correctly
-      expect(true).toBe(true);
+      // expectTypeOf gives a real assertion (fails if an export is removed or
+      // renamed) and also documents the intent; replaces the old
+      // expect(true).toBe(true) placeholder.
+      expectTypeOf<import('../home').WelcomeSummary>().not.toBeNever();
+      expectTypeOf<import('../home').AIInsight>().not.toBeNever();
+      expectTypeOf<import('../home').AIInsightsResponse>().not.toBeNever();
+      expectTypeOf<import('../home').ActivityFeedItem>().not.toBeNever();
+      expectTypeOf<import('../home').ActivityFeedQuery>().not.toBeNever();
+      expectTypeOf<import('../home').ActivityFeedResponse>().not.toBeNever();
+      expectTypeOf<import('../home').DailyGoal>().not.toBeNever();
+      expectTypeOf<import('../home').DailyGoalResponse>().not.toBeNever();
+      expectTypeOf<import('../home').PinnedItem>().not.toBeNever();
+      expectTypeOf<import('../home').PinnedItemsResponse>().not.toBeNever();
+      expectTypeOf<import('../home').PinItemInput>().not.toBeNever();
+      expectTypeOf<import('../home').UnpinItemInput>().not.toBeNever();
+      expectTypeOf<import('../home').ReorderPinnedItemsInput>().not.toBeNever();
     });
   });
 });

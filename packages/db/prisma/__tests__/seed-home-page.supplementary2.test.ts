@@ -534,23 +534,7 @@ describe('seed-home-page - supplementary2', () => {
     });
   });
 
-  describe('dynamic import for coverage', () => {
-    it('should import the source module for statement coverage', async () => {
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-      // Setup mocks for the auto-executing IIFE
-      mockFindFirst.mockResolvedValue(null); // tenant not found -> early return
-
-      try {
-        await import('../seed-home-page.js');
-      } catch {
-        // Expected - module auto-executes and may fail
-      }
-
-      consoleSpy.mockRestore();
-      errorSpy.mockRestore();
-      expect(true).toBe(true);
-    });
-  });
+  // Removed "dynamic import for coverage" — see cleanup-legacy-seed-ids
+  // counterpart. Importing the auto-executing seed module solely for
+  // statement-coverage numbers is not a real test.
 });

@@ -11,6 +11,7 @@ import {
   TaskPriorityChangedEvent,
   TaskDueDateChangedEvent,
   TaskAssignedEvent,
+  TaskLinkedToEntityEvent,
   TaskUpdatedEvent,
 } from './TaskEvents';
 
@@ -52,6 +53,7 @@ interface TaskProps {
   contactId?: string;
   opportunityId?: string;
   ownerId: string;
+  assigneeId?: string | null;
   tenantId: string;
   createdAt: Date;
   updatedAt: Date;
@@ -67,6 +69,7 @@ export interface CreateTaskProps {
   contactId?: string;
   opportunityId?: string;
   ownerId: string;
+  assigneeId?: string | null;
   tenantId: string;
 }
 
@@ -117,6 +120,10 @@ export class Task extends AggregateRoot<TaskId> {
 
   get ownerId(): string {
     return this.props.ownerId;
+  }
+
+  get assigneeId(): string | null {
+    return this.props.assigneeId ?? null;
   }
 
   get tenantId(): string {
@@ -178,6 +185,7 @@ export class Task extends AggregateRoot<TaskId> {
       contactId: props.contactId,
       opportunityId: props.opportunityId,
       ownerId: props.ownerId,
+      assigneeId: props.assigneeId ?? null,
       tenantId: props.tenantId,
       createdAt: now,
       updatedAt: now,
@@ -299,31 +307,59 @@ export class Task extends AggregateRoot<TaskId> {
     return Result.ok(undefined);
   }
 
-  assignToLead(leadId: string, assignedBy: string): void {
+  assignToLead(leadId: string, linkedBy: string): void {
     this.props.leadId = leadId;
     this.props.contactId = undefined;
     this.props.opportunityId = undefined;
     this.props.updatedAt = new Date();
 
-    this.addDomainEvent(new TaskAssignedEvent(this.id, 'lead', leadId, assignedBy));
+    this.addDomainEvent(new TaskLinkedToEntityEvent(this.id, 'lead', leadId, linkedBy));
   }
 
-  assignToContact(contactId: string, assignedBy: string): void {
+  assignToContact(contactId: string, linkedBy: string): void {
     this.props.contactId = contactId;
     this.props.leadId = undefined;
     this.props.opportunityId = undefined;
     this.props.updatedAt = new Date();
 
-    this.addDomainEvent(new TaskAssignedEvent(this.id, 'contact', contactId, assignedBy));
+    this.addDomainEvent(new TaskLinkedToEntityEvent(this.id, 'contact', contactId, linkedBy));
   }
 
-  assignToOpportunity(opportunityId: string, assignedBy: string): void {
+  assignToOpportunity(opportunityId: string, linkedBy: string): void {
     this.props.opportunityId = opportunityId;
     this.props.leadId = undefined;
     this.props.contactId = undefined;
     this.props.updatedAt = new Date();
 
-    this.addDomainEvent(new TaskAssignedEvent(this.id, 'opportunity', opportunityId, assignedBy));
+    this.addDomainEvent(
+      new TaskLinkedToEntityEvent(this.id, 'opportunity', opportunityId, linkedBy)
+    );
+  }
+
+  /**
+   * Assign (or unassign) this task to a user. Pass `null` to clear the
+   * current assignee. Idempotent: no event is emitted when the new assignee
+   * equals the existing one.
+   */
+  assignTo(assigneeId: string | null, assignedBy: string): void {
+    const previousAssigneeId = this.props.assigneeId ?? null;
+    if (previousAssigneeId === assigneeId) {
+      return;
+    }
+
+    this.props.assigneeId = assigneeId;
+    this.props.updatedAt = new Date();
+
+    this.addDomainEvent(
+      new TaskAssignedEvent(
+        this.id,
+        assigneeId,
+        previousAssigneeId,
+        assignedBy,
+        this.props.title,
+        this.props.dueDate ?? null
+      )
+    );
   }
 
   updateTaskInfo(
@@ -359,6 +395,7 @@ export class Task extends AggregateRoot<TaskId> {
       contactId: this.contactId,
       opportunityId: this.opportunityId,
       ownerId: this.ownerId,
+      assigneeId: this.assigneeId,
       isOverdue: this.isOverdue,
       isDueSoon: this.isDueSoon,
       createdAt: this.createdAt.toISOString(),

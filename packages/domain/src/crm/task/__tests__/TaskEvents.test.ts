@@ -7,6 +7,7 @@ import {
   TaskPriorityChangedEvent,
   TaskDueDateChangedEvent,
   TaskAssignedEvent,
+  TaskLinkedToEntityEvent,
 } from '../TaskEvents';
 import { TaskId } from '../TaskId';
 
@@ -177,30 +178,30 @@ describe('TaskDueDateChangedEvent', () => {
   });
 });
 
-describe('TaskAssignedEvent', () => {
-  it('should create event when task is assigned to a lead', () => {
+describe('TaskLinkedToEntityEvent', () => {
+  it('should create event when task is linked to a lead', () => {
     const taskId = TaskId.generate();
-    const event = new TaskAssignedEvent(taskId, 'lead', 'lead-123', 'user-456');
+    const event = new TaskLinkedToEntityEvent(taskId, 'lead', 'lead-123', 'user-456');
 
-    expect(event.eventType).toBe('task.assigned');
+    expect(event.eventType).toBe('task.linked_to_entity');
     expect(event.taskId).toBe(taskId);
     expect(event.entityType).toBe('lead');
     expect(event.entityId).toBe('lead-123');
-    expect(event.assignedBy).toBe('user-456');
+    expect(event.linkedBy).toBe('user-456');
     expect(event.occurredAt).toBeInstanceOf(Date);
   });
 
-  it('should create event when task is assigned to a contact', () => {
+  it('should create event when task is linked to a contact', () => {
     const taskId = TaskId.generate();
-    const event = new TaskAssignedEvent(taskId, 'contact', 'contact-123', 'user-456');
+    const event = new TaskLinkedToEntityEvent(taskId, 'contact', 'contact-123', 'user-456');
 
     expect(event.entityType).toBe('contact');
     expect(event.entityId).toBe('contact-123');
   });
 
-  it('should create event when task is assigned to an opportunity', () => {
+  it('should create event when task is linked to an opportunity', () => {
     const taskId = TaskId.generate();
-    const event = new TaskAssignedEvent(taskId, 'opportunity', 'opportunity-123', 'user-456');
+    const event = new TaskLinkedToEntityEvent(taskId, 'opportunity', 'opportunity-123', 'user-456');
 
     expect(event.entityType).toBe('opportunity');
     expect(event.entityId).toBe('opportunity-123');
@@ -208,12 +209,87 @@ describe('TaskAssignedEvent', () => {
 
   it('should serialize to payload correctly', () => {
     const taskId = TaskId.generate();
-    const event = new TaskAssignedEvent(taskId, 'lead', 'lead-123', 'user-456');
+    const event = new TaskLinkedToEntityEvent(taskId, 'lead', 'lead-123', 'user-456');
     const payload = event.toPayload();
 
     expect(payload.taskId).toBe(taskId.value);
     expect(payload.entityType).toBe('lead');
     expect(payload.entityId).toBe('lead-123');
-    expect(payload.assignedBy).toBe('user-456');
+    expect(payload.linkedBy).toBe('user-456');
+  });
+});
+
+describe('TaskAssignedEvent', () => {
+  it('should create event when a task is assigned to a user', () => {
+    const taskId = TaskId.generate();
+    const dueDate = new Date('2026-05-01T12:00:00Z');
+    const event = new TaskAssignedEvent(
+      taskId,
+      'user-assignee',
+      null,
+      'user-actor',
+      'Follow up',
+      dueDate
+    );
+
+    expect(event.eventType).toBe('task.assigned');
+    expect(event.taskId).toBe(taskId);
+    expect(event.assigneeId).toBe('user-assignee');
+    expect(event.previousAssigneeId).toBeNull();
+    expect(event.assignedBy).toBe('user-actor');
+    expect(event.title).toBe('Follow up');
+    expect(event.dueDate).toBe(dueDate);
+    expect(event.occurredAt).toBeInstanceOf(Date);
+  });
+
+  it('should carry a null assigneeId when a task is unassigned', () => {
+    const taskId = TaskId.generate();
+    const event = new TaskAssignedEvent(
+      taskId,
+      null,
+      'user-previous',
+      'user-actor',
+      'Follow up',
+      null
+    );
+
+    expect(event.assigneeId).toBeNull();
+    expect(event.previousAssigneeId).toBe('user-previous');
+    expect(event.dueDate).toBeNull();
+  });
+
+  it('should serialize to payload correctly', () => {
+    const taskId = TaskId.generate();
+    const dueDate = new Date('2026-05-01T12:00:00Z');
+    const event = new TaskAssignedEvent(
+      taskId,
+      'user-assignee',
+      'user-previous',
+      'user-actor',
+      'Follow up',
+      dueDate
+    );
+    const payload = event.toPayload();
+
+    expect(payload.taskId).toBe(taskId.value);
+    expect(payload.assigneeId).toBe('user-assignee');
+    expect(payload.previousAssigneeId).toBe('user-previous');
+    expect(payload.assignedBy).toBe('user-actor');
+    expect(payload.title).toBe('Follow up');
+    expect(payload.dueDate).toBe(dueDate.toISOString());
+  });
+
+  it('should serialize null dueDate as null in payload', () => {
+    const taskId = TaskId.generate();
+    const event = new TaskAssignedEvent(
+      taskId,
+      'user-assignee',
+      null,
+      'user-actor',
+      'Follow up',
+      null
+    );
+
+    expect(event.toPayload().dueDate).toBeNull();
   });
 });

@@ -49,6 +49,22 @@ export type {
   AccountRequiredField,
   AccountTag,
   AccountAutomationSetting,
+  DealWinLossReason,
+  DealScoringRule,
+  DealDuplicateRule,
+  DealRequiredField,
+  DealTag,
+  DealAutomationSetting,
+  TicketDuplicateRule,
+  TicketRequiredField,
+  TicketTag,
+  TicketAutomationSetting,
+  DocumentGeneralConfig,
+  DocumentDuplicateRule,
+  DocumentRequiredField,
+  DocumentTag,
+  DocumentAutomationSetting,
+  DocumentRetentionPolicy,
 } from '../generated/prisma/client';
 
 // Re-export performance tracking utilities

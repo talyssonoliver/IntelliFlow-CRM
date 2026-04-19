@@ -9,6 +9,7 @@ import { PersistenceError, ValidationError } from '../../errors';
 
 export interface CompleteAppointmentInput {
   appointmentId: string;
+  tenantId: string;
   completedBy: string;
   notes?: string;
 }
@@ -36,8 +37,9 @@ export class CompleteAppointmentUseCase {
       }
       const appointmentId = appointmentIdResult.value;
 
-      // Find the appointment
-      const appointment = await this.appointmentRepository.findById(appointmentId);
+      // Find the appointment (tenant-scoped read)
+      const scoped = this.appointmentRepository.forTenant(input.tenantId);
+      const appointment = await scoped.findById(appointmentId);
       if (!appointment) {
         return Result.fail(new ValidationError(`Appointment not found: ${input.appointmentId}`));
       }
@@ -48,7 +50,7 @@ export class CompleteAppointmentUseCase {
         return Result.fail(completeResult.error);
       }
 
-      // Save changes
+      // Save changes via root repo — entity already carries tenantId
       await this.appointmentRepository.save(appointment);
 
       return Result.ok({

@@ -259,9 +259,10 @@ describe('EntityAvatar', () => {
 
   describe('Ref', () => {
     it('should forward ref correctly', () => {
-      const ref = React.createRef<HTMLDivElement>();
+      const ref = React.createRef<HTMLSpanElement>();
       render(<EntityAvatar ref={ref} name="John" />);
-      expect(ref.current).toBeInstanceOf(HTMLDivElement);
+      // EntityAvatar composes Avatar (a <span>) — see entity-avatar.tsx:135
+      expect(ref.current).toBeInstanceOf(HTMLSpanElement);
     });
   });
 });

@@ -24,7 +24,8 @@
  */
 
 import pino from 'pino';
-import { getTraceId, getSpanId } from './tracing';
+import { trace } from '@opentelemetry/api';
+import { getCurrentLogContext } from './log-context';
 
 /**
  * Logger configuration options
@@ -93,12 +94,21 @@ export function createLogger(config: LoggerConfig): pino.Logger {
       },
     },
 
-    // Hooks to add trace context
+    // Hooks to add trace context + request-scoped log context (correlationId, tenantId, userId).
+    // OTel active span is read at log-call time so every line emitted inside a span
+    // automatically carries trace_id + span_id for Grafana / Jaeger correlation.
     mixin: () => {
-      return {
-        traceId: getTraceId(),
-        spanId: getSpanId(),
-      };
+      const reqCtx = getCurrentLogContext() ?? {};
+      const activeSpan = trace.getActiveSpan();
+      if (activeSpan) {
+        const spanCtx = activeSpan.spanContext();
+        return {
+          ...reqCtx,
+          trace_id: spanCtx.traceId,
+          span_id: spanCtx.spanId,
+        };
+      }
+      return { ...reqCtx };
     },
   };
 

@@ -34,9 +34,10 @@ describe('MetricCard', () => {
       expect(screen.getByText('1,234,567')).toBeInTheDocument();
     });
 
-    it('should format currency in USD', () => {
+    it('should format currency in GBP (default)', () => {
       render(<MetricCard title="Revenue" value={125000} format="currency" />);
-      expect(screen.getByText('$125,000')).toBeInTheDocument();
+      // Default currency is GBP via Intl.NumberFormat('en-GB', currency:'GBP')
+      expect(screen.getByText('£125,000')).toBeInTheDocument();
     });
 
     it('should format currency in EUR', () => {
@@ -174,7 +175,7 @@ describe('formatValue utility', () => {
   });
 
   it('should format currency', () => {
-    expect(formatValue(125000, 'currency', 'GBP')).toBe('$125,000');
+    expect(formatValue(125000, 'currency', 'GBP')).toBe('£125,000');
   });
 
   it('should format percentage', () => {
@@ -191,7 +192,7 @@ describe('formatValue utility', () => {
 
   it('should handle zero', () => {
     expect(formatValue(0, 'number')).toBe('0');
-    expect(formatValue(0, 'currency')).toBe('$0');
+    expect(formatValue(0, 'currency')).toBe('£0');
     expect(formatValue(0, 'percentage')).toBe('0%');
   });
 });

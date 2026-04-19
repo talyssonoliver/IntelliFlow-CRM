@@ -137,16 +137,11 @@ describe('Avatar', () => {
       expect(ref.current).toBeInstanceOf(HTMLSpanElement);
     });
 
-    // Skip: In jsdom, images don't load, so image ref is not available
-    it.skip('should forward ref to AvatarImage', () => {
-      const ref = React.createRef<HTMLImageElement>();
-      render(
-        <Avatar>
-          <AvatarImage ref={ref} src="https://example.com/avatar.jpg" alt="User" />
-          <AvatarFallback>JD</AvatarFallback>
-        </Avatar>
-      );
-      expect(ref.current).toBeInstanceOf(HTMLImageElement);
-    });
+    // NOTE: AvatarImage ref-forwarding cannot be tested in jsdom.
+    // @radix-ui/react-avatar defers mounting the <img> element until the image
+    // fires an onLoad event. jsdom never fires load events for remote URLs, so
+    // the img element is never inserted and ref.current stays null.
+    // The forwardRef wiring is verified at the Radix level; no additional test
+    // is needed here.
   });
 });
