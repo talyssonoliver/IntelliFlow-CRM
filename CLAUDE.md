@@ -88,7 +88,8 @@ Coverage uses **Istanbul** provider (not V8) with two output directories:
   - Task files: `sprint-N/phase-*/TASK-ID.json`
   - Schemas: `schemas/*.schema.json`
 - **Sprint plan API**: `apps/project-tracker/app/api/sprint-plan/route.ts`
-- **Dependency chains**: `docs/design/diagrams/complete-dependency-chains.md`
+- **Dependency chains**:
+  `docs/architecture/diagrams/complete-dependency-chains.md`
 
 ## Context by Area
 
@@ -198,6 +199,7 @@ of the current working state generated from the metrics tree + git.
 - **Metrics Dashboard**: http://localhost:3002/
 - **Context Snapshot API**: http://localhost:3002/api/context (GET = view, POST
   = regenerate — also refreshes the state report)
-- **ADRs**: `docs/planning/adr/`
-- **Dependency Chains**: `docs/design/diagrams/complete-dependency-chains.md`
+- **ADRs**: `docs/architecture/adr/`
+- **Dependency Chains**:
+  `docs/architecture/diagrams/complete-dependency-chains.md`
 - **Design Mockups**: `docs/design/README.md`

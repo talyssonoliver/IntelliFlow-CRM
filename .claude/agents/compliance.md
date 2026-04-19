@@ -56,5 +56,5 @@ concerns.
 
 - `docs/security/` — Security documentation
 - `packages/domain/src/platform/` — Platform domain (audit, security)
-- `artifacts/misc/access-policy.json` — Access policies
+- `packages/test-fixtures/access-policy.json` — Access policies
 - `apps/api/src/middleware/` — API middleware (auth, audit)

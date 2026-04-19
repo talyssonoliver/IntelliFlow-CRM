@@ -150,7 +150,7 @@ Before reviewing, you MUST read:
 ### N. Dependency Chain Update Step (caught in PG-137)
 
 47. Plan MUST include a step to update
-    `docs/design/diagrams/complete-dependency-chains.md`
+    `docs/architecture/diagrams/complete-dependency-chains.md`
 48. Plan MUST include updating the domain-specific chain file
 49. Missing dependency chain update → **ERROR**
 
@@ -412,9 +412,38 @@ Before reviewing, you MUST read:
 125. If the plan introduces new icon literals and does NOT include a step that
      runs `node tools/scripts/subset-material-symbols.mjs` (or at minimum
      regenerates `apps/web/public/fonts/MaterialSymbolsOutlined.woff2` and
-     `artifacts/perf/material-symbols-glyph-audit.json`) → **WARN** ("new icons
-     will fail the `--verify` CI guard until the font is regenerated; see
+     `artifacts/reports/material-symbols-glyph-audit.json`) → **WARN** ("new
+     icons will fail the `--verify` CI guard until the font is regenerated; see
      docs/design/ICON_USAGE.md")
+
+### II. Empty-State Pattern Compliance (PG-195 follow-on)
+
+126. If the plan describes a list, detail, search, tab, or any other surface
+     that can render a zero state AND does not wire
+     `<EmptyState entity='...' />` from `@intelliflow/ui` → **ERROR**
+     ("Empty-state policy violation — use `<EmptyState entity='<one-of-30>' />`.
+     The 30 entities are: `leads`, `contacts`, `accounts`, `deals`, `tickets`,
+     `cases`, `tasks`, `appointments`, `activity`, `timeline`, `notes`, `chats`,
+     `emails`, `comments`, `files`, `documents`, `signatures`, `invoices`,
+     `receipts`, `payment-methods`, `subscriptions`, `products`, `reports`,
+     `insights`, `notifications`, `pinned`, `agents`, `rules`, `experiments`,
+     `search`. See docs/design/EMPTY_STATES.md.")
+127. If the plan proposes a new `FooIllustration`-style component outside
+     `packages/ui/src/components/empty-state-illustrations.tsx`, or inlines an
+     `<svg>` in a page/component to represent a zero state → **ERROR**
+     ("Parallel illustration — register the new entity in
+     `entity-empty-state-config.ts` + `empty-state-illustrations.tsx` instead.
+     Inline empty-state `<svg>` is forbidden.")
+128. If the plan uses `<EmptyState>` WITHOUT either `entity=` OR a complete
+     `title + description + illustration` trio → **WARN** ("degraded empty state
+     — add `entity='...'` so the illustration, CTA, and hotkey are auto-wired;
+     see docs/design/EMPTY_STATES.md")
+129. If the plan needs a zero state that does not match any of the 30 entities
+     AND does not add the new entity to the shared library → **WARN** ("add the
+     new entity to `EmptyStateEntity` union + `ENTITY_EMPTY_STATE_CONFIG` +
+     `ENTITY_ILLUSTRATIONS` map rather than inlining; see
+     docs/design/EMPTY_STATES.md §'When a genuine custom illustration is
+     needed'")
 
 ## Output Format
 

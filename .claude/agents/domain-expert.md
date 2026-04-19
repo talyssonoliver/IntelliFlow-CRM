@@ -52,7 +52,7 @@ authority.
 - Follow the DRY enum pattern: domain const arrays -> validator Zod schemas ->
   API
 - Verify dependency chains at
-  `docs/design/diagrams/complete-dependency-chains.md`
+  `docs/architecture/diagrams/complete-dependency-chains.md`
 - All cross-context communication MUST go through domain events
 
 ## Key Files
@@ -61,5 +61,5 @@ authority.
 - `packages/domain/src/events/` — Domain events
 - `packages/application/src/` — Use cases and ports
 - `docs/planning/DDD-context-map.puml` — Context map
-- `docs/design/diagrams/complete-dependency-chains.md` — Dependency chains
+- `docs/architecture/diagrams/complete-dependency-chains.md` — Dependency chains
 - `docs/domain/` — Domain documentation

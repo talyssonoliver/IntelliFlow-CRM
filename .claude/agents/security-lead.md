@@ -58,5 +58,5 @@ concerns.
 - `apps/api/src/middleware/` — Auth and security middleware
 - `packages/domain/src/platform/` — Security domain models
 - `docs/security/` — Security documentation
-- `artifacts/misc/access-policy.json` — Access policies
-- `artifacts/misc/vault-config.yaml` — Vault configuration
+- `packages/test-fixtures/access-policy.json` — Access policies
+- `infra/monitoring/vault-config.yaml` — Vault configuration
