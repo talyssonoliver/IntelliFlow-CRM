@@ -18,6 +18,7 @@
 
 import { Job } from 'bullmq';
 import pino from 'pino';
+import { getCurrentLogContext } from '@intelliflow/observability';
 import type { WorkerConfig } from './worker-config';
 import { loadWorkerConfig } from './worker-config';
 import { QueueConnector } from './queue-connector';
@@ -69,10 +70,11 @@ export abstract class BaseWorker<TJobData = unknown, TJobResult = unknown> {
     const baseConfig = loadWorkerConfig(options.name);
     this.config = { ...baseConfig, ...options.config };
 
-    // Setup logger
+    // Setup logger with request-scoped context mixin
     this.logger = pino({
       name: this.name,
       level: this.config.telemetry.logLevel,
+      mixin: () => getCurrentLogContext() ?? {},
       transport:
         this.config.telemetry.environment === 'development'
           ? {

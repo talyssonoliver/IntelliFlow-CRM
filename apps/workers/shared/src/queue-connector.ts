@@ -12,6 +12,7 @@ import { Queue, Worker, Job, QueueEvents } from 'bullmq';
 import type { ConnectionOptions } from 'bullmq';
 import IORedis from 'ioredis';
 import pino from 'pino';
+import { getCurrentLogContext } from '@intelliflow/observability';
 import { DEFAULT_QUEUE_CONFIGS } from '@intelliflow/platform/queues/types';
 import type { RedisConfig, QueueConfig } from './worker-config';
 import type { ComponentHealth } from './types';
@@ -61,6 +62,7 @@ export class QueueConnector {
       pino({
         name: 'queue-connector',
         level: 'info',
+        mixin: () => getCurrentLogContext() ?? {},
       });
   }
 

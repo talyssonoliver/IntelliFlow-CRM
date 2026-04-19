@@ -259,6 +259,7 @@ describe('DOMAIN_EVENT_TYPES', () => {
     expect(DOMAIN_EVENT_TYPES.TASK_CREATED).toBe('task.created');
     expect(DOMAIN_EVENT_TYPES.TASK_COMPLETED).toBe('task.completed');
     expect(DOMAIN_EVENT_TYPES.TASK_ASSIGNED).toBe('task.assigned');
+    expect(DOMAIN_EVENT_TYPES.TASK_LINKED_TO_ENTITY).toBe('task.linked_to_entity');
   });
 
   it('should export notification event types', () => {

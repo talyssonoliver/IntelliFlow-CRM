@@ -45,21 +45,33 @@ export function mapLeadScoredEvent(event: OutboxEvent): LeadScoredEvent | null {
 }
 
 /**
- * Map OutboxEvent to TaskAssigned subscription event
+ * Map a `task.assigned` OutboxEvent (user-assignment semantics) to the realtime
+ * TaskAssigned subscription event.
+ *
+ * Returns `null` when the event carries no assignee — either because the task
+ * was unassigned (assigneeId: null) or because the payload is malformed — so
+ * the bridge can skip the emission cleanly. The domain event contract lives in
+ * `packages/domain/src/crm/task/TaskEvents.ts`.
  */
 export function mapTaskAssignedEvent(event: OutboxEvent): TaskAssignedEvent | null {
   const payload = event.payload as Record<string, unknown>;
 
-  // Validate required fields
-  if (!payload.assigneeId && !payload.assignedTo) {
+  const assigneeId = typeof payload.assigneeId === 'string' ? payload.assigneeId : null;
+  if (!assigneeId) {
+    // Unassignments do not need to be pushed to the realtime assignee channel;
+    // the home-cache bridge handles invalidation for the previous assignee.
     return null;
   }
 
+  const dueDateRaw = payload.dueDate;
+  const dueDate =
+    typeof dueDateRaw === 'string' || dueDateRaw instanceof Date ? new Date(dueDateRaw) : null;
+
   return {
     taskId: String(payload.taskId || event.aggregateId),
-    assigneeId: String(payload.assigneeId || payload.assignedTo || ''),
-    title: String(payload.title || 'Task'),
-    dueDate: payload.dueDate ? new Date(String(payload.dueDate)) : new Date(),
+    assigneeId,
+    title: typeof payload.title === 'string' ? payload.title : 'Task',
+    dueDate: dueDate ?? new Date(),
   };
 }
 

@@ -126,7 +126,7 @@ export class MaintenanceScheduler {
     const now = new Date();
 
     // Find tickets where SLA deadline has passed but status is not breached
-    const breachedTickets = await (this.prisma as any).ticket.findMany({
+    const breachedTickets = await this.prisma.ticket.findMany({
       where: {
         slaResolutionDue: { lte: now },
         slaStatus: { not: 'BREACHED' },
@@ -148,15 +148,19 @@ export class MaintenanceScheduler {
     this.logger.info({ count: breachedTickets.length }, 'SLA breaches detected');
 
     for (const ticket of breachedTickets) {
+      // `slaResolutionDue: { lte: now }` in the where clause excludes NULL rows
+      // in SQL, but the Prisma-generated type is still `Date | null`.
+      if (!ticket.slaResolutionDue) continue;
+
       // Mark ticket as breached
-      await (this.prisma as any).ticket.update({
+      await this.prisma.ticket.update({
         where: { id: ticket.id },
         data: { slaStatus: 'BREACHED', slaBreachedAt: now },
       });
 
       // Create notification for the assignee (or tenant admins if unassigned)
       if (ticket.assigneeId) {
-        await (this.prisma as any).notification.create({
+        await this.prisma.notification.create({
           data: {
             tenantId: ticket.tenantId,
             recipientId: ticket.assigneeId,
@@ -181,7 +185,7 @@ export class MaintenanceScheduler {
 
     // Also check for SLA warnings (tickets approaching deadline within 30 min)
     const warningThreshold = new Date(now.getTime() + 30 * 60_000);
-    const warningTickets = await (this.prisma as any).ticket.findMany({
+    const warningTickets = await this.prisma.ticket.findMany({
       where: {
         slaResolutionDue: { gt: now, lte: warningThreshold },
         slaStatus: { notIn: ['BREACHED', 'AT_RISK'] },
@@ -198,7 +202,9 @@ export class MaintenanceScheduler {
     });
 
     for (const ticket of warningTickets) {
-      await (this.prisma as any).ticket.update({
+      if (!ticket.slaResolutionDue) continue;
+
+      await this.prisma.ticket.update({
         where: { id: ticket.id },
         data: { slaStatus: 'AT_RISK' },
       });
@@ -207,7 +213,7 @@ export class MaintenanceScheduler {
         const minutesLeft = Math.round(
           (ticket.slaResolutionDue.getTime() - now.getTime()) / 60_000
         );
-        await (this.prisma as any).notification.create({
+        await this.prisma.notification.create({
           data: {
             tenantId: ticket.tenantId,
             recipientId: ticket.assigneeId,
@@ -240,7 +246,7 @@ export class MaintenanceScheduler {
     const staleCutoff = new Date(now.getTime() - this.config.staleLeadDays * 24 * 60 * 60_000);
 
     // --- Stale leads: no activity in N days, not converted/disqualified ---
-    const staleLeads = await (this.prisma as any).lead.findMany({
+    const staleLeads = await this.prisma.lead.findMany({
       where: {
         updatedAt: { lte: staleCutoff },
         status: { notIn: ['CONVERTED', 'DISQUALIFIED', 'ARCHIVED'] },
@@ -265,7 +271,7 @@ export class MaintenanceScheduler {
       );
 
       // Deduplicate: check if we already sent a stale reminder recently (within 24h)
-      const recentReminder = await (this.prisma as any).notification.findFirst({
+      const recentReminder = await this.prisma.notification.findFirst({
         where: {
           sourceId: lead.id,
           sourceType: 'stale_lead_reminder',
@@ -275,7 +281,7 @@ export class MaintenanceScheduler {
       if (recentReminder) continue;
 
       const leadName = [lead.firstName, lead.lastName].filter(Boolean).join(' ') || lead.email;
-      await (this.prisma as any).notification.create({
+      await this.prisma.notification.create({
         data: {
           tenantId: lead.tenantId,
           recipientId: lead.ownerId,
@@ -301,7 +307,7 @@ export class MaintenanceScheduler {
     }
 
     // --- Overdue tasks ---
-    const overdueTasks = await (this.prisma as any).task.findMany({
+    const overdueTasks = await this.prisma.task.findMany({
       where: {
         dueDate: { lt: now },
         status: { notIn: ['COMPLETED', 'CANCELLED'] },
@@ -309,6 +315,7 @@ export class MaintenanceScheduler {
       select: {
         id: true,
         title: true,
+        ownerId: true,
         assigneeId: true,
         tenantId: true,
         dueDate: true,
@@ -317,9 +324,14 @@ export class MaintenanceScheduler {
     });
 
     for (const task of overdueTasks) {
-      if (!task.assigneeId) continue;
+      // `dueDate: { lt: now }` filter excludes NULL in SQL, but Prisma types
+      // it as `Date | null` — narrow explicitly for the math below.
+      if (!task.dueDate) continue;
 
-      const recentReminder = await (this.prisma as any).notification.findFirst({
+      // Prefer the user currently working the task; fall back to the owner.
+      const recipientId = task.assigneeId ?? task.ownerId;
+
+      const recentReminder = await this.prisma.notification.findFirst({
         where: {
           sourceId: task.id,
           sourceType: 'overdue_task_reminder',
@@ -329,10 +341,10 @@ export class MaintenanceScheduler {
       if (recentReminder) continue;
 
       const daysOverdue = Math.round((now.getTime() - task.dueDate.getTime()) / (24 * 60 * 60_000));
-      await (this.prisma as any).notification.create({
+      await this.prisma.notification.create({
         data: {
           tenantId: task.tenantId,
-          recipientId: task.assigneeId,
+          recipientId,
           channel: 'IN_APP',
           subject: `Overdue task: ${task.title}`,
           body: `Task "${task.title}" is ${daysOverdue} day(s) overdue. Please complete or reschedule it.`,
@@ -363,7 +375,7 @@ export class MaintenanceScheduler {
     const now = new Date();
     const staleCutoff = new Date(now.getTime() - this.config.staleDealDays * 24 * 60 * 60_000);
 
-    const staleDeals = await (this.prisma as any).opportunity.findMany({
+    const staleDeals = await this.prisma.opportunity.findMany({
       where: {
         updatedAt: { lte: staleCutoff },
         stage: { notIn: ['CLOSED_WON', 'CLOSED_LOST'] },
@@ -384,7 +396,7 @@ export class MaintenanceScheduler {
       if (!deal.ownerId) continue;
 
       // Deduplicate within 48h for deals (less frequent alerts)
-      const recentReminder = await (this.prisma as any).notification.findFirst({
+      const recentReminder = await this.prisma.notification.findFirst({
         where: {
           sourceId: deal.id,
           sourceType: 'stale_deal_alert',
@@ -396,7 +408,7 @@ export class MaintenanceScheduler {
       const daysSinceUpdate = Math.round(
         (now.getTime() - deal.updatedAt.getTime()) / (24 * 60 * 60_000)
       );
-      await (this.prisma as any).notification.create({
+      await this.prisma.notification.create({
         data: {
           tenantId: deal.tenantId,
           recipientId: deal.ownerId,
@@ -432,7 +444,7 @@ export class MaintenanceScheduler {
     const now = new Date();
 
     // Delete expired sessions from the database
-    const result = await (this.prisma as any).session.deleteMany({
+    const result = await this.prisma.session.deleteMany({
       where: {
         OR: [
           { expiresAt: { lte: now } },
@@ -457,7 +469,7 @@ export class MaintenanceScheduler {
     // Find appointments starting in the next 15 min
     const reminderWindow = new Date(now.getTime() + 15 * 60_000);
 
-    const upcomingAppointments = await (this.prisma as any).appointment.findMany({
+    const upcomingAppointments = await this.prisma.appointment.findMany({
       where: {
         startTime: { gt: now, lte: reminderWindow },
         status: { notIn: ['CANCELLED', 'COMPLETED'] },
@@ -478,7 +490,7 @@ export class MaintenanceScheduler {
       if (!appt.organizerId) continue;
 
       // Deduplicate: skip if reminder already sent for this appointment
-      const alreadySent = await (this.prisma as any).notification.findFirst({
+      const alreadySent = await this.prisma.notification.findFirst({
         where: {
           sourceId: appt.id,
           sourceType: 'appointment_reminder',
@@ -489,7 +501,7 @@ export class MaintenanceScheduler {
 
       const minutesUntilStart = Math.round((appt.startTime.getTime() - now.getTime()) / 60_000);
 
-      await (this.prisma as any).notification.create({
+      await this.prisma.notification.create({
         data: {
           tenantId: appt.tenantId,
           recipientId: appt.organizerId,

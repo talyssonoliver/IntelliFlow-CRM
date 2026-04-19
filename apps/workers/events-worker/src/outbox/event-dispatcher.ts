@@ -252,6 +252,7 @@ export const DOMAIN_EVENT_TYPES = {
   TASK_CREATED: 'task.created',
   TASK_COMPLETED: 'task.completed',
   TASK_ASSIGNED: 'task.assigned',
+  TASK_LINKED_TO_ENTITY: 'task.linked_to_entity',
   TASK_STATUS_CHANGED: 'task.status_changed',
   TASK_PRIORITY_CHANGED: 'task.priority_changed',
   TASK_DUE_DATE_CHANGED: 'task.due_date_changed',
