@@ -33,8 +33,10 @@ receivers:
 
         - job_name: 'intelliflow-ai-worker'
           scrape_interval: 60s
+          # ai-worker /metrics port: 5000 (see AIWorker constructor HEALTH_PORT default)
+          # Do NOT change to 3002 — that is the project-tracker dashboard port
           static_configs:
-            - targets: ['localhost:3002']
+            - targets: ['localhost:5000']
               labels:
                 service: 'intelliflow-ai-worker'
                 environment: '${env:ENVIRONMENT}'

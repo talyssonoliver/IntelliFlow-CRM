@@ -322,7 +322,7 @@
   "references": {
     "sprintPlan": "Sprint_plan.csv",
     "tasks": ["ENV-015-AI"],
-    "documentation": ["docs/planning/adr/", "CLAUDE.md"],
+    "documentation": ["docs/architecture/adr/", "CLAUDE.md"],
     "externalStandards": [
       "https://web.dev/vitals/",
       "https://web.dev/performance-scoring/",

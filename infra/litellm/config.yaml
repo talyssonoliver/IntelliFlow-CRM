@@ -1,0 +1,141 @@
+# IntelliFlow CRM — LiteLLM Proxy Configuration
+# Single gateway for all AI chains. Set OPENAI_BASE_URL=http://localhost:4000 in ai-worker.
+# Docs: https://docs.litellm.ai/docs/proxy/configs
+
+model_list:
+  # ============================================================
+  # FREE tier — zero-cost models for dev / high-volume work
+  # ============================================================
+
+  # Lead scoring (fast, cheap)
+  - model_name: scoring-free
+    litellm_params:
+      model: groq/llama-3.1-8b-instant
+      api_key: os.environ/GROQ_API_KEY
+
+  # Lead qualification (larger free model)
+  - model_name: qualification-free
+    litellm_params:
+      model: groq/llama-3.3-70b-versatile
+      api_key: os.environ/GROQ_API_KEY
+
+  # Email generation (fast/cheap)
+  - model_name: email-free
+    litellm_params:
+      model: groq/llama-3.1-8b-instant
+      api_key: os.environ/GROQ_API_KEY
+
+  # Reasoning / chain-of-thought (OpenRouter free tier)
+  # NOTE: "openai/gpt-oss-20b:free" is routed through OpenRouter's free tier.
+  # If this model is retired on OpenRouter, replace with any openrouter/*:free slug.
+  - model_name: reasoning-free
+    litellm_params:
+      model: openrouter/openai/gpt-oss-20b:free
+      api_key: os.environ/OPENROUTER_API_KEY
+
+  # Structured outputs / JSON extraction (Gemini Flash)
+  - model_name: structured-free
+    litellm_params:
+      model: gemini/gemini-2.5-flash
+      api_key: os.environ/GEMINI_API_KEY
+
+  # ============================================================
+  # STANDARD tier — paid but low-cost models
+  # ============================================================
+
+  - model_name: scoring-standard
+    litellm_params:
+      model: mistral/mistral-small-latest
+      api_key: os.environ/MISTRAL_API_KEY
+
+  - model_name: qualification-standard
+    litellm_params:
+      model: mistral/mistral-medium-latest
+      api_key: os.environ/MISTRAL_API_KEY
+
+  - model_name: email-standard
+    litellm_params:
+      model: groq/llama-3.3-70b-versatile
+      api_key: os.environ/GROQ_API_KEY
+
+  # Reasoning standard — Claude Haiku 4.5 (fast + affordable, latest generation)
+  - model_name: reasoning-standard
+    litellm_params:
+      model: anthropic/claude-haiku-4-5
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  - model_name: structured-standard
+    litellm_params:
+      model: mistral/mistral-small-latest
+      api_key: os.environ/MISTRAL_API_KEY
+
+  # ============================================================
+  # PREMIUM tier — highest-capability models
+  # ============================================================
+
+  - model_name: scoring-premium
+    litellm_params:
+      model: openai/gpt-4o-mini
+      api_key: os.environ/OPENAI_API_KEY
+
+  - model_name: qualification-premium
+    litellm_params:
+      model: openai/gpt-4o
+      api_key: os.environ/OPENAI_API_KEY
+
+  # Email premium — Claude Haiku 4.5 (fast, high quality)
+  - model_name: email-premium
+    litellm_params:
+      model: anthropic/claude-haiku-4-5
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  # Reasoning premium — Claude Sonnet 4.5
+  - model_name: reasoning-premium
+    litellm_params:
+      model: anthropic/claude-sonnet-4-5
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  - model_name: structured-premium
+    litellm_params:
+      model: openai/gpt-4o
+      api_key: os.environ/OPENAI_API_KEY
+
+  # ============================================================
+  # Embeddings — local first, cloud fallback
+  # ============================================================
+
+  # Local Ollama embeddings (zero cost in dev)
+  - model_name: rag-free
+    litellm_params:
+      model: ollama/nomic-embed-text
+      api_base: os.environ/OLLAMA_BASE_URL
+
+  # Cloud embeddings fallback (OpenAI)
+  - model_name: rag-premium
+    litellm_params:
+      model: openai/text-embedding-3-small
+      api_key: os.environ/OPENAI_API_KEY
+
+# ============================================================
+# Router settings
+# ============================================================
+router_settings:
+  routing_strategy: simple-shuffle
+  num_retries: 2
+  timeout: 120
+  # Automatic fallback chains (free → standard on quota/rate errors)
+  fallbacks:
+    - scoring-free: [scoring-standard]
+    - qualification-free: [qualification-standard]
+    - reasoning-free: [reasoning-standard]
+    - structured-free: [structured-standard]
+
+# ============================================================
+# General / security settings
+# ============================================================
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  # Optional PostgreSQL for virtual keys + budget tracking.
+  # Leave LITELLM_DATABASE_URL unset to skip (proxy works without it).
+  database_url: os.environ/LITELLM_DATABASE_URL
+  store_model_in_db: false

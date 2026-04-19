@@ -112,6 +112,18 @@ The stack provides:
 - Health: `http://localhost:13133`
 - Metrics: `http://localhost:8888/metrics`
 
+**Prometheus scrape port registry** (do NOT mix these up):
+
+| Service                             | Port   | Notes                                                           |
+| ----------------------------------- | ------ | --------------------------------------------------------------- |
+| `intelliflow-api`                   | `3001` | tRPC API server                                                 |
+| `intelliflow-ai-worker`             | `5000` | AIWorker `HEALTH_PORT` default — see `ai-worker.ts` constructor |
+| `intelliflow-crm` (project-tracker) | `3002` | Sprint dashboard — NOT the ai-worker                            |
+
+The ai-worker binds `/metrics` on port **5000** (env `HEALTH_PORT`, default
+5000). The scrape target in `otel-config.yaml` must point to `:5000`. Port 3002
+is the project-tracker dashboard — do not use it for ai-worker scrapes.
+
 ### Prometheus
 
 **Purpose**: Metrics storage and querying

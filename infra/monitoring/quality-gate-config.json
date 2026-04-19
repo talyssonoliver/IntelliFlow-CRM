@@ -1,0 +1,132 @@
+{
+  "$schema": "./quality-gate-config.schema.json",
+  "version": "1.0.0",
+  "lastUpdated": "2026-01-03",
+  "maintainer": "QA Lead",
+  "qualityGate": {
+    "name": "IntelliFlow CRM Quality Gate",
+    "description": "Default quality gate for IntelliFlow CRM ensuring code quality, security, and maintainability standards",
+    "conditions": [
+      {
+        "metric": "reliability_rating",
+        "operator": "GT",
+        "threshold": 1,
+        "description": "Reliability Rating must be A (no bugs)",
+        "blocking": true
+      },
+      {
+        "metric": "security_rating",
+        "operator": "GT",
+        "threshold": 1,
+        "description": "Security Rating must be A (no vulnerabilities)",
+        "blocking": true
+      },
+      {
+        "metric": "maintainability_rating",
+        "operator": "GT",
+        "threshold": 1,
+        "description": "Maintainability Rating must be A (low technical debt)",
+        "blocking": true
+      },
+      {
+        "metric": "new_coverage",
+        "operator": "LT",
+        "threshold": 80,
+        "description": "Coverage on New Code must be >= 80%",
+        "blocking": true
+      },
+      {
+        "metric": "new_duplicated_lines_density",
+        "operator": "GT",
+        "threshold": 3,
+        "description": "Duplications on New Code must be < 3%",
+        "blocking": true
+      },
+      {
+        "metric": "blocker_violations",
+        "operator": "GT",
+        "threshold": 0,
+        "description": "Zero Blocker Issues allowed",
+        "blocking": true
+      },
+      {
+        "metric": "critical_violations",
+        "operator": "GT",
+        "threshold": 0,
+        "description": "Zero Critical Issues allowed",
+        "blocking": true
+      }
+    ]
+  },
+  "thresholds": {
+    "technicalDebtRatioMax": 3,
+    "coverageMinOverall": 90,
+    "coverageMinDomain": 95,
+    "coverageMinApplication": 90,
+    "coverageMinAPI": 85,
+    "duplicationsMax": 3,
+    "complexityMax": 15,
+    "cognitiveComplexityMax": 25
+  },
+  "ruleSets": [
+    {
+      "name": "owasp-top-10",
+      "description": "OWASP Top 10 security vulnerability rules",
+      "enabled": true,
+      "severity": "blocker"
+    },
+    {
+      "name": "clean-code",
+      "description": "Clean code maintainability rules",
+      "enabled": true,
+      "severity": "major"
+    },
+    {
+      "name": "typescript-best-practices",
+      "description": "TypeScript/JavaScript best practices",
+      "enabled": true,
+      "severity": "major"
+    },
+    {
+      "name": "react-best-practices",
+      "description": "React and Next.js specific rules",
+      "enabled": true,
+      "severity": "major"
+    }
+  ],
+  "enforcement": {
+    "blockPR": true,
+    "requireQualityGatePass": true,
+    "failOnNewIssues": true,
+    "notifyOnFailure": ["slack", "email"],
+    "allowOverride": false,
+    "overrideRequiresApproval": ["Tech Lead", "CTO"]
+  },
+  "ciIntegration": {
+    "sonarQubeWait": true,
+    "failBuildOnQualityGateFailure": true,
+    "publishResults": true,
+    "decoratePullRequests": true
+  },
+  "exemptions": [
+    {
+      "pattern": "**/migrations/**",
+      "reason": "Database migrations are auto-generated",
+      "approvedBy": "Tech Lead",
+      "approvedDate": "2025-12-17"
+    },
+    {
+      "pattern": "**/*.config.ts",
+      "reason": "Configuration files have different quality requirements",
+      "approvedBy": "Tech Lead",
+      "approvedDate": "2025-12-17"
+    }
+  ],
+  "auditMatrix": {
+    "reference": "audit-matrix.yml",
+    "sonarScannerToolId": "sonarqube-scanner",
+    "qualityGateToolId": "sonarqube-quality-gate",
+    "tier": 1,
+    "required": true
+  }
+}
