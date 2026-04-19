@@ -160,12 +160,24 @@ export function RemindersProvider({
     setReadNotifications((prev) => new Set([...prev, reminderId]));
   }, []);
 
-  // Subscribe to notifications on mount
-  React.useEffect(() => {
-    const unsubscribe = remindersService.onNotification(handleNotification);
+  // Subscribe to notifications on mount. Props captured via refs so the
+  // lifecycle effect does not fire again when autoStart/checkInterval toggle
+  // mid-session — behaviour matches the original "one-shot subscription"
+  // contract, but with no stale-closure risk on handleNotification.
+  const autoStartRef = React.useRef(autoStart);
+  autoStartRef.current = autoStart;
+  const checkIntervalRef = React.useRef(checkInterval);
+  checkIntervalRef.current = checkInterval;
+  const handleNotificationRef = React.useRef(handleNotification);
+  handleNotificationRef.current = handleNotification;
 
-    if (autoStart) {
-      remindersService.start(checkInterval);
+  React.useEffect(() => {
+    const unsubscribe = remindersService.onNotification((notification) =>
+      handleNotificationRef.current(notification)
+    );
+
+    if (autoStartRef.current) {
+      remindersService.start(checkIntervalRef.current);
       setIsRunning(true);
     }
 
@@ -177,7 +189,7 @@ export function RemindersProvider({
       remindersService.stop();
       setIsRunning(false);
     };
-  }, []); // Only run once on mount
+  }, []);
 
   // Calculate unread count
   const unreadCount = React.useMemo(() => {

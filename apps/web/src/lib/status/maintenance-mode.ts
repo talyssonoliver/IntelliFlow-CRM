@@ -11,8 +11,7 @@ export type MaintenanceWindowActive = {
 
 export type MaintenanceWindow = MaintenanceWindowInactive | MaintenanceWindowActive;
 
-export const DEFAULT_MAINTENANCE_MESSAGE =
-  'IntelliFlow CRM is performing scheduled maintenance.';
+export const DEFAULT_MAINTENANCE_MESSAGE = 'IntelliFlow CRM is performing scheduled maintenance.';
 
 type EnvLike = Readonly<Record<string, string | undefined>>;
 

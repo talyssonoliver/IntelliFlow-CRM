@@ -8,11 +8,31 @@ const AI_KEYS: {
   title: string;
   description: string;
 }[] = [
-  { key: 'aiIndustryInference', title: 'AI industry inference', description: 'Infer industry from website and description when not provided.' },
-  { key: 'aiEnrichment', title: 'AI company enrichment', description: 'Enrich accounts with firmographic data (employees, revenue, description).' },
-  { key: 'aiTagSuggestions', title: 'AI tag suggestions', description: 'Suggest tags based on account activity and metadata.' },
-  { key: 'aiInsightGeneration', title: 'AI insight generation', description: 'Generate weekly insight summaries for each account.' },
-  { key: 'aiAccountScoring', title: 'AI account scoring', description: 'Produce an engagement / fit score for every account nightly.' },
+  {
+    key: 'aiIndustryInference',
+    title: 'AI industry inference',
+    description: 'Infer industry from website and description when not provided.',
+  },
+  {
+    key: 'aiEnrichment',
+    title: 'AI company enrichment',
+    description: 'Enrich accounts with firmographic data (employees, revenue, description).',
+  },
+  {
+    key: 'aiTagSuggestions',
+    title: 'AI tag suggestions',
+    description: 'Suggest tags based on account activity and metadata.',
+  },
+  {
+    key: 'aiInsightGeneration',
+    title: 'AI insight generation',
+    description: 'Generate weekly insight summaries for each account.',
+  },
+  {
+    key: 'aiAccountScoring',
+    title: 'AI account scoring',
+    description: 'Produce an engagement / fit score for every account nightly.',
+  },
 ];
 
 export interface AISettingsTabProps {

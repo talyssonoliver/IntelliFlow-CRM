@@ -272,6 +272,7 @@ function GoalSection({ isLoading, goal }: Readonly<GoalSectionProps>) {
     <>
       <div className="relative w-32 h-32 mx-auto mb-4">
         {}
+        {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- complex SVG/chart visualization requires div wrapper */}
         <svg
           className="size-full -rotate-90"
           viewBox="0 0 36 36"

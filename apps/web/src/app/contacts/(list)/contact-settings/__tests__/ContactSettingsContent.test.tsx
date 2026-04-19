@@ -134,19 +134,13 @@ import ContactSettingsContent from '../ContactSettingsContent';
 describe('ContactSettingsContent', () => {
   it('renders the PageHeader and four bento sections', () => {
     render(<ContactSettingsContent />);
-    expect(
-      screen.getByRole('heading', { name: 'Contact Settings', level: 1 })
-    ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Contact Settings', level: 1 })).toBeInTheDocument();
     expect(
       screen.getByRole('heading', { name: /Duplicate Detection/i, level: 3 })
     ).toBeInTheDocument();
-    expect(
-      screen.getByRole('heading', { name: /Required Fields/i, level: 3 })
-    ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Required Fields/i, level: 3 })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /^Tags$/i, level: 3 })).toBeInTheDocument();
-    expect(
-      screen.getByRole('heading', { name: /Automation/i, level: 3 })
-    ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Automation/i, level: 3 })).toBeInTheDocument();
     expect(
       screen.getByRole('heading', { name: /AI & Intelligence/i, level: 3 })
     ).toBeInTheDocument();

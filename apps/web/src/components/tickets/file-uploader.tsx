@@ -165,7 +165,7 @@ export function FileUploader({
       </label>
 
       {/* Drop zone */}
-      {}
+      {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- file drop zone requires drag event handlers */}
       <section
         aria-label="File upload area"
         onDragOver={handleDragOver}

@@ -60,10 +60,34 @@ export const settingsSidebarConfig: SidebarConfig = {
           href: '/settings/leads',
         },
         {
+          id: 'automation',
+          label: 'Automation',
+          icon: 'bolt',
+          href: '/settings/automation',
+        },
+        {
           id: 'accounts',
           label: 'Accounts',
           icon: 'business_center',
           href: '/accounts/account-settings',
+        },
+        {
+          id: 'deal-settings',
+          label: 'Deals',
+          icon: 'trending_up',
+          href: '/deals/deal-settings',
+        },
+        {
+          id: 'tickets',
+          label: 'Tickets',
+          icon: 'support_agent',
+          href: '/tickets/sla-policies',
+        },
+        {
+          id: 'document-settings',
+          label: 'Documents',
+          icon: 'description',
+          href: '/documents/document-settings',
         },
         {
           id: 'security',

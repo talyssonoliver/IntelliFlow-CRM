@@ -25,7 +25,7 @@ export function ErrorPageContent({
             <div className="inline-flex items-center gap-2 rounded-full border border-red-500/20 bg-red-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-red-600 dark:text-red-400">
               <span className="material-symbols-outlined text-base" aria-hidden="true">
                 report
-              </span>
+              </span>{' '}
               Server error
             </div>
 
@@ -64,7 +64,7 @@ export function ErrorPageContent({
                 >
                   <span className="material-symbols-outlined text-lg" aria-hidden="true">
                     refresh
-                  </span>
+                  </span>{' '}
                   Try again
                 </button>
               ) : (
@@ -74,7 +74,7 @@ export function ErrorPageContent({
                 >
                   <span className="material-symbols-outlined text-lg" aria-hidden="true">
                     dashboard
-                  </span>
+                  </span>{' '}
                   Go to Dashboard
                 </Link>
               )}
@@ -84,7 +84,7 @@ export function ErrorPageContent({
               >
                 <span className="material-symbols-outlined text-lg" aria-hidden="true">
                   home
-                </span>
+                </span>{' '}
                 Back to Home
               </Link>
             </div>

@@ -11,9 +11,8 @@
  * ReactFlow canvas (`canvas-drop-zone`), wired in ReactFlowComponent.
  */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useDraggable } from '@dnd-kit/core';
-import { Plus } from 'lucide-react';
 import {
   Card,
   CardHeader,
@@ -49,16 +48,15 @@ function PaletteItem({ item, onActivate }: { item: PaletteItem; onActivate?: () 
 
   return (
     <li className="list-none">
-      <div
+      <button
         ref={setNodeRef}
         {...attributes}
         {...listeners}
-        tabIndex={0}
-        role="button"
+        type="button"
         aria-label={`Drag ${item.label} node`}
         onClickCapture={onActivate}
         className={[
-          'flex items-start gap-2 rounded-lg border border-input bg-background px-3 py-2.5',
+          'flex items-start gap-2 rounded-lg border border-input bg-background px-3 py-2.5 w-full text-left',
           'cursor-grab select-none transition-shadow',
           'hover:border-primary/50 hover:shadow-sm',
           'focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
@@ -71,7 +69,7 @@ function PaletteItem({ item, onActivate }: { item: PaletteItem; onActivate?: () 
           <p className="text-sm font-medium leading-none">{item.label}</p>
           <p className="text-xs text-muted-foreground mt-0.5 truncate">{item.description}</p>
         </div>
-      </div>
+      </button>
     </li>
   );
 }
@@ -80,13 +78,7 @@ function PaletteItem({ item, onActivate }: { item: PaletteItem; onActivate?: () 
 // Palette entries (shared between desktop + mobile sheet)
 // ---------------------------------------------------------------------------
 
-function PaletteEntries({
-  items,
-  onActivate,
-}: {
-  items: PaletteItem[];
-  onActivate?: () => void;
-}) {
+function PaletteEntries({ items, onActivate }: { items: PaletteItem[]; onActivate?: () => void }) {
   return (
     <ul className="flex flex-col gap-2">
       {items.map((item) => (
@@ -109,26 +101,31 @@ function useHydratedPaletteItems(): PaletteItem[] {
     retry: false,
   });
 
-  useEffect(() => {
-    if (!query.data) return;
-    clearCustomNodeTypeRegistry();
-    for (const row of query.data.items) {
-      if (!row.isActive) continue;
-      const descriptor: CustomNodeTypeDescriptor = {
-        id: row.id,
-        typeId: row.typeId,
-        label: row.label,
-        description: row.description ?? undefined,
-        iconKey: row.iconKey,
-        accentClass: row.accentClass,
-        configSchema: (row.configSchema as CustomNodeTypeDescriptor['configSchema']) ?? [],
-        isActive: row.isActive,
-      };
-      registerCustomNodeType(descriptor);
+  // Hydrate the registry inside useMemo (no useEffect → no setState → no
+  // re-render loop when the query mock returns a fresh object reference).
+  // In production react-query memoizes `data` so this only re-runs when the
+  // upstream items genuinely change.
+  const items = query.data?.items;
+  return useMemo(() => {
+    if (items) {
+      clearCustomNodeTypeRegistry();
+      for (const row of items) {
+        if (!row.isActive) continue;
+        const descriptor: CustomNodeTypeDescriptor = {
+          id: row.id,
+          typeId: row.typeId,
+          label: row.label,
+          description: row.description ?? undefined,
+          iconKey: row.iconKey,
+          accentClass: row.accentClass,
+          configSchema: (row.configSchema as CustomNodeTypeDescriptor['configSchema']) ?? [],
+          isActive: row.isActive,
+        };
+        registerCustomNodeType(descriptor);
+      }
     }
-  }, [query.data]);
-
-  return useMemo(() => getAllPaletteEntries(), [query.data]);
+    return getAllPaletteEntries();
+  }, [items]);
 }
 
 // ---------------------------------------------------------------------------
@@ -144,7 +141,7 @@ export function NodePalette() {
     // Desktop: left rail
     return (
       <aside
-        className="hidden lg:block w-56 flex-shrink-0 p-3 overflow-y-auto"
+        className="hidden lg:block w-56 shrink-0 p-3 overflow-y-auto"
         aria-label="Node palette"
       >
         <Card className="h-fit">
@@ -172,7 +169,9 @@ export function NodePalette() {
         aria-label="Add node"
         className="fixed bottom-6 right-6 z-40 h-14 w-14 rounded-full p-0 shadow-lg lg:hidden"
       >
-        <Plus className="h-6 w-6" aria-hidden="true" />
+        <span className="material-symbols-outlined text-2xl" aria-hidden="true">
+          add
+        </span>
       </Button>
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>

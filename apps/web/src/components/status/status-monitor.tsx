@@ -126,6 +126,7 @@ export function StatusMonitor({ services, refreshInterval = 30000 }: Readonly<St
                   </span>
                 </div>
                 {}
+                {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- bar chart of <div>s, not an image; role="img" groups for screen readers */}
                 <figure
                   className="flex gap-0.5"
                   role="img"

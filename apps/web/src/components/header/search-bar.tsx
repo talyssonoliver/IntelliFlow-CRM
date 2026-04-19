@@ -50,18 +50,19 @@ export function SearchBar({ placeholder = 'Search...', className = '' }: Readonl
     { query: deferredQuery.trim(), limit: 5 },
     { enabled: isQueryValid }
   );
+  const searchData = searchResult.data;
 
   // Group results by entity type
   const grouped = React.useMemo(() => {
-    if (!searchResult.data?.results) return [];
-    const map = new Map<string, typeof searchResult.data.results>();
-    for (const hit of searchResult.data.results) {
+    if (!searchData?.results) return [];
+    const map = new Map<string, typeof searchData.results>();
+    for (const hit of searchData.results) {
       const group = map.get(hit.entityType) ?? [];
       group.push(hit);
       map.set(hit.entityType, group);
     }
     return Array.from(map.entries());
-  }, [searchResult.data]);
+  }, [searchData]);
 
   // Show dropdown when typing, hide when empty
   React.useEffect(() => {

@@ -15,6 +15,13 @@ export function DocsSearch({ categories, onFilter }: Readonly<DocsSearchProps>) 
   const [resultCount, setResultCount] = useState(categories.length);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Latest-value refs so the mount-only sync effect below does not capture
+  // stale props and does not require re-runs on every parent re-render.
+  const categoriesRef = useRef(categories);
+  categoriesRef.current = categories;
+  const onFilterRef = useRef(onFilter);
+  onFilterRef.current = onFilter;
+
   const filterCategories = useDebouncedCallback((searchQuery: string) => {
     if (!searchQuery.trim()) {
       onFilter(categories);
@@ -30,9 +37,10 @@ export function DocsSearch({ categories, onFilter }: Readonly<DocsSearchProps>) 
     setResultCount(filtered.length);
   }, 300);
 
-  // Initial call to set all categories — only on mount
+  // Initial call to set all categories — fires once, uses latest refs so the
+  // callback runs against current props without re-triggering on changes.
   useEffect(() => {
-    onFilter(categories);
+    onFilterRef.current(categoriesRef.current);
   }, []);
 
   const handleChange = useCallback(

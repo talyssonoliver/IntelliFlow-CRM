@@ -1,24 +1,56 @@
 'use client';
 
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { trpc } from '@/lib/trpc';
-import { toast } from '@intelliflow/ui';
-import {
-  ModuleSettingsLayout,
-  type ModuleSettingsTab,
-} from '@/components/settings/ModuleSettingsLayout';
+import { Button, Card, ConfirmationDialog, toast } from '@intelliflow/ui';
+import { PageHeader } from '@/components/shared/page-header';
 import { LeadStagesTab } from './components/LeadStagesTab';
 import { ScoringRulesTab, type ScoringRule } from './components/ScoringRulesTab';
 import {
   CustomFieldsTab,
   type CustomField,
+  type CustomFieldsTabHandle,
   type CreateFieldData,
   type UpdateFieldData,
 } from './components/CustomFieldsTab';
 import { AutomationTab, type AutomationSettings } from './components/AutomationTab';
+import { ConfigurationSummary } from './components/ConfigurationSummary';
 import type { StageItem } from './components/SortableStageItem';
 import { LeadSettingsLoading } from './LeadSettingsLoading';
+
+interface SectionHeaderProps {
+  icon: string;
+  iconBg: string;
+  iconFg: string;
+  title: string;
+  description: string;
+  action?: React.ReactNode;
+}
+
+function SectionHeader({
+  icon,
+  iconBg,
+  iconFg,
+  title,
+  description,
+  action,
+}: Readonly<SectionHeaderProps>) {
+  return (
+    <div className="flex items-start gap-3 mb-4">
+      <div className={`w-9 h-9 rounded-lg ${iconBg} flex items-center justify-center shrink-0`}>
+        <span className={`material-symbols-outlined text-[20px] ${iconFg}`} aria-hidden="true">
+          {icon}
+        </span>
+      </div>
+      <div className="min-w-0 flex-1">
+        <h3 className="text-base font-semibold text-foreground">{title}</h3>
+        <p className="text-sm text-muted-foreground">{description}</p>
+      </div>
+      {action && <div className="shrink-0 self-center">{action}</div>}
+    </div>
+  );
+}
 
 export default function LeadSettingsContent() {
   const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
@@ -73,6 +105,9 @@ export default function LeadSettingsContent() {
     leadRecurrence: true,
   });
   const [isDirty, setIsDirty] = useState(false);
+  const [resetOpen, setResetOpen] = useState(false);
+
+  const customFieldsTabRef = useRef<CustomFieldsTabHandle>(null);
 
   // Sync server data to local state
   useEffect(() => {
@@ -187,9 +222,11 @@ export default function LeadSettingsContent() {
     try {
       await Promise.all([stagesReset.mutateAsync(), scoringReset.mutateAsync()]);
       setIsDirty(false);
+      setResetOpen(false);
       toast({
         title: 'Settings reset',
-        description: 'Lead settings have been restored to defaults.',
+        description:
+          'Pipeline stages and scoring rules restored to defaults. Custom fields and automation toggles are preserved.',
       });
     } catch (err) {
       toast({
@@ -221,59 +258,32 @@ export default function LeadSettingsContent() {
     return new Date(Math.max(...dates.map((d) => d.getTime())));
   }, [stagesQuery.data, automationQuery.data]);
 
-  // ─── Tab Config ─────────────────────────────────────────────────────────
-  const tabs = useMemo<ModuleSettingsTab[]>(
+  const actions = useMemo(
     () => [
       {
-        value: 'stages',
-        label: 'Lead Stages',
-        content: <LeadStagesTab stages={localStages} onStagesChange={handleStagesChange} />,
+        label: 'Reset to Defaults',
+        onClick: () => setResetOpen(true),
+        variant: 'secondary' as const,
+        icon: 'restart_alt',
+        hideOnMobile: true,
       },
       {
-        value: 'scoring',
-        label: 'Scoring Rules',
-        content: <ScoringRulesTab rules={localRules} onRulesChange={handleRulesChange} />,
-      },
-      {
-        value: 'custom-fields',
-        label: 'Custom Fields',
-        content: (
-          <CustomFieldsTab
-            fields={(fieldsQuery.data as unknown as CustomField[]) ?? []}
-            onCreate={handleFieldCreate}
-            onUpdate={handleFieldUpdate}
-            onDelete={handleFieldDelete}
-          />
-        ),
-      },
-      {
-        value: 'automation',
-        label: 'Automation',
-        content: (
-          <AutomationTab settings={localAutomation} onSettingsChange={handleAutomationChange} />
-        ),
+        label: isSaving ? 'Saving…' : 'Save Changes',
+        onClick: handleSave,
+        variant: 'primary' as const,
+        icon: 'save',
+        disabled: !isDirty || isSaving,
+        loading: isSaving,
       },
     ],
-    [
-      localStages,
-      handleStagesChange,
-      localRules,
-      handleRulesChange,
-      fieldsQuery.data,
-      handleFieldCreate,
-      handleFieldUpdate,
-      handleFieldDelete,
-      localAutomation,
-      handleAutomationChange,
-    ]
+    [handleSave, isDirty, isSaving]
   );
 
-  // ─── Early Returns (after all hooks) ──────────────────────────────────
   if (isLoading) return <LeadSettingsLoading />;
 
   if (error) {
     return (
-      <div className="max-w-7xl text-center py-12">
+      <div className="w-full text-center py-12">
         <p className="text-destructive mb-4">Failed to load settings: {error.message}</p>
         <button
           onClick={() => {
@@ -290,21 +300,113 @@ export default function LeadSettingsContent() {
     );
   }
 
+  const fields = (fieldsQuery.data as unknown as CustomField[]) ?? [];
+
   return (
-    <ModuleSettingsLayout
-      title="Lead Settings"
-      description="Configure lead pipeline stages, scoring rules, custom fields, and automation."
-      breadcrumbs={[
-        { label: 'Dashboard', href: '/' },
-        { label: 'Settings', href: '/settings' },
-        { label: 'Lead Settings' },
-      ]}
-      tabs={tabs}
-      onSave={handleSave}
-      onReset={handleReset}
-      isSaving={isSaving}
-      isDirty={isDirty}
-      lastUpdated={lastUpdated}
-    />
+    <div className="w-full">
+      <PageHeader
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/' },
+          { label: 'Leads', href: '/leads' },
+          { label: 'Lead Settings' },
+        ]}
+        title="Lead Settings"
+        description="Configure lead pipeline stages, scoring rules, custom fields, and automation."
+        actions={actions}
+        className="mb-6"
+      />
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          BENTO GRID — 12 columns (stacks on mobile)
+          Row 1: Pipeline Stages (8)       + Automation (4)
+          Row 2: Scoring Rules (7)         + Custom Fields (5)
+          Row 3: Configuration Summary (12)
+          The Pipeline Stages card keeps its own Card wrapper — per product
+          direction its visual design is already canonical and was
+          deliberately preserved in this refactor.
+          ═══════════════════════════════════════════════════════════════════ */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5">
+        {/* Pipeline Stages — preserved as-is */}
+        <div className="lg:col-span-8">
+          <LeadStagesTab stages={localStages} onStagesChange={handleStagesChange} />
+        </div>
+
+        {/* Automation */}
+        <Card className="lg:col-span-4 p-4 sm:p-5">
+          <SectionHeader
+            icon="bolt"
+            iconBg="bg-amber-100 dark:bg-amber-900/30"
+            iconFg="text-amber-600 dark:text-amber-400"
+            title="Automation"
+            description="Automated behaviours for lead management."
+          />
+          <AutomationTab settings={localAutomation} onSettingsChange={handleAutomationChange} />
+        </Card>
+
+        {/* Scoring Rules */}
+        <Card className="lg:col-span-7 p-4 sm:p-5">
+          <SectionHeader
+            icon="trending_up"
+            iconBg="bg-emerald-100 dark:bg-emerald-900/30"
+            iconFg="text-emerald-600 dark:text-emerald-400"
+            title="Scoring Rules"
+            description="Assign point values to lead activities for automatic scoring."
+          />
+          <ScoringRulesTab rules={localRules} onRulesChange={handleRulesChange} />
+        </Card>
+
+        {/* Custom Fields */}
+        <Card className="lg:col-span-5 p-4 sm:p-5">
+          <SectionHeader
+            icon="tune"
+            iconBg="bg-violet-100 dark:bg-violet-900/30"
+            iconFg="text-violet-600 dark:text-violet-400"
+            title="Custom Fields"
+            description="Custom data fields to capture lead-specific information."
+            action={
+              <Button size="sm" onClick={() => customFieldsTabRef.current?.openCreate()}>
+                New Field
+              </Button>
+            }
+          />
+          <CustomFieldsTab
+            ref={customFieldsTabRef}
+            fields={fields}
+            onCreate={handleFieldCreate}
+            onUpdate={handleFieldUpdate}
+            onDelete={handleFieldDelete}
+          />
+        </Card>
+
+        {/* Configuration Summary */}
+        <Card className="lg:col-span-12 p-4 sm:p-5">
+          <SectionHeader
+            icon="summarize"
+            iconBg="bg-slate-100 dark:bg-slate-800"
+            iconFg="text-slate-600 dark:text-slate-300"
+            title="Configuration Summary"
+            description="Live overview of what you have configured on this page."
+          />
+          <ConfigurationSummary
+            stages={localStages}
+            rules={localRules}
+            fields={fields}
+            automation={localAutomation}
+            lastUpdated={lastUpdated}
+            isDirty={isDirty}
+          />
+        </Card>
+      </div>
+
+      <ConfirmationDialog
+        open={resetOpen}
+        onOpenChange={setResetOpen}
+        title="Reset to Defaults"
+        description="Restore pipeline stages and scoring rules to factory defaults. Custom fields and automation toggles are preserved. This action cannot be undone."
+        confirmLabel="Reset"
+        variant="destructive"
+        onConfirm={handleReset}
+      />
+    </div>
   );
 }

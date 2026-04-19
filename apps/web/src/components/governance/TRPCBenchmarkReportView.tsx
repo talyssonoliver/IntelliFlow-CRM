@@ -204,8 +204,8 @@ function FullReportSection({ htmlPath }: { htmlPath: string | undefined }) {
           </Button>
           <Button variant="outline" size="sm" asChild>
             <a href={htmlPath} target="_blank" rel="noopener noreferrer">
-              <span className="material-symbols-outlined text-sm mr-1">open_in_new</span>
-              Open in Tab
+              <span className="material-symbols-outlined text-sm mr-1">open_in_new</span> Open in
+              Tab
             </a>
           </Button>
         </div>
@@ -222,6 +222,30 @@ function FullReportSection({ htmlPath }: { htmlPath: string | undefined }) {
       )}
     </Card>
   );
+}
+
+function getStatusBgClass(status: string | undefined): string {
+  if (status === 'passing') return 'bg-emerald-100 dark:bg-emerald-900/30';
+  if (status === 'failing') return 'bg-red-100 dark:bg-red-900/30';
+  return 'bg-muted';
+}
+
+function getStatusIconClass(status: string | undefined): string {
+  if (status === 'passing') return 'text-emerald-600 dark:text-emerald-400';
+  if (status === 'failing') return 'text-red-600 dark:text-red-400';
+  return 'text-muted-foreground';
+}
+
+function getStatusHeading(status: string | undefined): string {
+  if (status === 'passing') return 'All benchmarks pass IFC-003 KPI';
+  if (status === 'failing') return 'Some benchmarks regressed';
+  return 'No benchmarks completed';
+}
+
+function getScoreClass(score: number): string {
+  if (score >= 90) return 'text-emerald-600 dark:text-emerald-400';
+  if (score >= 50) return 'text-amber-600 dark:text-amber-400';
+  return 'text-red-600 dark:text-red-400';
 }
 
 export default function TRPCBenchmarkReportView() {
@@ -251,6 +275,11 @@ export default function TRPCBenchmarkReportView() {
 
   const details = report?.details;
   const isPlaceholder = report?.isPlaceholder || report?.source === 'placeholder';
+
+  const _statusBgClass = getStatusBgClass(report?.status);
+  const _statusIconClass = getStatusIconClass(report?.status);
+  const _statusHeading = getStatusHeading(report?.status);
+  const _scoreClass = getScoreClass(report?.score ?? 0);
 
   return (
     <>

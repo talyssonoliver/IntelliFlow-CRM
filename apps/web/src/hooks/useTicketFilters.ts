@@ -30,7 +30,7 @@ const DEFAULT_FILTERS: TicketFilters = {
 };
 
 export function useTicketFilters(defaults?: Partial<TicketFilters>) {
-  const initialFilters = useMemo(() => ({ ...DEFAULT_FILTERS, ...defaults }), []);
+  const [initialFilters] = useState<TicketFilters>(() => ({ ...DEFAULT_FILTERS, ...defaults }));
   const [filters, setFilters] = useState<TicketFilters>(initialFilters);
   const [debouncedSearch, setDebouncedSearch] = useState(initialFilters.search);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);

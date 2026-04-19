@@ -39,6 +39,7 @@ export function RiskIndicators({ distribution, total }: Readonly<RiskIndicatorsP
               >
                 {level}
               </span>
+              {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role */}
               <span
                 role="progressbar"
                 aria-valuenow={pct}

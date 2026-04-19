@@ -383,6 +383,7 @@ export function CaseForm({
             {/* ── Dropdown results ── */}
             {}
             {clientDropdownOpen && !formData.clientId && debouncedClientSearch.length >= 2 && (
+              // eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- custom dropdown requires div for positioning
               <ul
                 id="client-listbox"
                 className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-background shadow-lg max-h-56 overflow-y-auto list-none m-0 p-0"

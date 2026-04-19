@@ -52,7 +52,7 @@ export function MaintenanceContent({ maintenanceWindow }: MaintenanceContentProp
                       <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
                         <span className="material-symbols-outlined text-base" aria-hidden="true">
                           schedule
-                        </span>
+                        </span>{' '}
                         Estimated completion
                       </p>
                       <p className="mt-2 text-lg font-semibold text-slate-900 dark:text-white">
@@ -63,7 +63,7 @@ export function MaintenanceContent({ maintenanceWindow }: MaintenanceContentProp
                       <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
                         <span className="material-symbols-outlined text-base" aria-hidden="true">
                           tune
-                        </span>
+                        </span>{' '}
                         Affected services
                       </p>
                       {maintenanceWindow.affectedServices.length > 0 ? (
@@ -87,8 +87,8 @@ export function MaintenanceContent({ maintenanceWindow }: MaintenanceContentProp
                 </>
               ) : (
                 <p className="text-base text-slate-600 dark:text-slate-300 sm:text-lg">
-                  IntelliFlow CRM is running normally. Visit the status page for live
-                  signals and the latest incident history.
+                  IntelliFlow CRM is running normally. Visit the status page for live signals and
+                  the latest incident history.
                 </p>
               )}
             </section>
@@ -100,7 +100,7 @@ export function MaintenanceContent({ maintenanceWindow }: MaintenanceContentProp
               >
                 <span className="material-symbols-outlined text-lg" aria-hidden="true">
                   monitoring
-                </span>
+                </span>{' '}
                 Check status page
               </Link>
               <Link
@@ -109,7 +109,7 @@ export function MaintenanceContent({ maintenanceWindow }: MaintenanceContentProp
               >
                 <span className="material-symbols-outlined text-lg" aria-hidden="true">
                   home
-                </span>
+                </span>{' '}
                 Back to Home
               </Link>
             </div>

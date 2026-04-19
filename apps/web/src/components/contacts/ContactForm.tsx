@@ -100,7 +100,7 @@ export function ContactForm({
   onDirtyChange,
 }: Readonly<ContactFormProps>) {
   const [currentStep, setCurrentStep] = useState<StepId>('personal');
-  const initialData = useMemo(() => ({ ...initialFormData, ...contact }), []);
+  const [initialData] = useState<ContactFormData>(() => ({ ...initialFormData, ...contact }));
   const [formData, setFormData] = useState<ContactFormData>(initialData);
   const [errors, setErrors] = useState<Partial<Record<keyof ContactFormData, string>>>({});
   const errorSummaryRef = useRef<HTMLDivElement>(null);

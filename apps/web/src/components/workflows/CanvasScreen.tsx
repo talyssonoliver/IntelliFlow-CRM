@@ -9,7 +9,7 @@
  * name instead of an auto-generated timestamp.
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Input, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@intelliflow/ui';
 import { WorkflowCanvas } from './WorkflowCanvas';
@@ -36,6 +36,7 @@ export function CanvasScreen({ workflowId }: CanvasScreenProps) {
   // remote name once it lands. Empty string for /new (placeholder shown).
   const [name, setName] = useState<string>('');
   const [editing, setEditing] = useState<boolean>(isNew);
+  const nameInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (remoteName && !name) {
@@ -43,8 +44,21 @@ export function CanvasScreen({ workflowId }: CanvasScreenProps) {
     }
   }, [remoteName, name]);
 
-  const displayName =
-    name.trim().length > 0 ? name.trim() : isNew ? 'New workflow' : (remoteName ?? 'Workflow');
+  // Programmatic focus on entering edit mode — replaces autoFocus attribute
+  // which is flagged by jsx-a11y/no-autofocus. Only fires on transition into
+  // editing, not on every re-render.
+  useEffect(() => {
+    if (editing) {
+      nameInputRef.current?.focus();
+      nameInputRef.current?.select();
+    }
+  }, [editing]);
+
+  const trimmedName = name.trim();
+  let displayName: string;
+  if (trimmedName.length > 0) displayName = trimmedName;
+  else if (isNew) displayName = 'New workflow';
+  else displayName = remoteName ?? 'Workflow';
 
   const goToList = () => router.push('/cases/case-workflows');
 
@@ -76,7 +90,7 @@ export function CanvasScreen({ workflowId }: CanvasScreenProps) {
           <div className="min-w-0 flex-1">
             {editing ? (
               <Input
-                autoFocus
+                ref={nameInputRef}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 onBlur={() => setEditing(false)}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { LayoutTemplate, Search, ChevronDown } from 'lucide-react';
+
 import { trpc } from '@/lib/trpc';
 import { cn } from '@/lib/utils';
 
@@ -97,16 +97,25 @@ export function TemplateSelector({
         )}
         onClick={() => setIsOpen(!isOpen)}
       >
-        <LayoutTemplate className="h-4 w-4" />
+        <span className="material-symbols-outlined text-base" aria-hidden="true">
+          view_quilt
+        </span>
         <span>Template</span>
-        <ChevronDown className="h-3 w-3" />
+        <span className="material-symbols-outlined text-base" aria-hidden="true">
+          expand_more
+        </span>
       </button>
 
       {isOpen && (
         <div className="absolute bottom-full right-0 z-50 mb-1 w-80 rounded-md border border-border bg-popover p-2 shadow-lg">
           {/* Search input */}
           <div className="relative mb-2">
-            <Search className="absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <span
+              className="material-symbols-outlined text-base absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground"
+              aria-hidden="true"
+            >
+              search
+            </span>
             <input
               type="text"
               placeholder="Search templates..."

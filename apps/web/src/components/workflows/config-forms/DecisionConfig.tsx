@@ -29,9 +29,7 @@ function toRows(raw: unknown): ConditionRow[] {
         ? (obj.op as ConditionRow['op'])
         : 'eq',
       value:
-        obj.value === undefined || obj.value === null
-          ? ''
-          : (obj.value as ConditionRow['value']),
+        obj.value === undefined || obj.value === null ? '' : (obj.value as ConditionRow['value']),
     };
   });
 }
@@ -55,8 +53,8 @@ export function DecisionConfig({ config, update }: NodeConfigFormProps) {
     <div className="flex flex-col gap-2">
       <Label>Conditions</Label>
       <p className="text-sm text-muted-foreground">
-        Define the branch conditions for this decision node. Each row is evaluated as
-        &nbsp;<code>field &nbsp;op&nbsp; value</code>.
+        Define the branch conditions for this decision node. Each row is evaluated as{' '}
+        <code>field op value</code>.
       </p>
       {conditions.map((cond, idx) => (
         <div key={idx} className="flex gap-2 items-center">
@@ -116,9 +114,7 @@ export function DecisionConfig({ config, update }: NodeConfigFormProps) {
         type="button"
         variant="outline"
         size="sm"
-        onClick={() =>
-          writeConditions([...conditions, { field: '', op: 'eq', value: '' }])
-        }
+        onClick={() => writeConditions([...conditions, { field: '', op: 'eq', value: '' }])}
       >
         + Add Condition
       </Button>

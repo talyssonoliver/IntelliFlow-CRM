@@ -7,10 +7,7 @@ const REPORT_PATHS: Record<string, string[]> = {
     'artifacts/lighthouse/lighthouse-report.html',
     'artifacts/lighthouse/lighthouse-360-report.html',
   ],
-  coverage: [
-    'artifacts/misc/coverage-reports/ui-coverage.html',
-    'artifacts/coverage/lcov-report/index.html',
-  ],
+  coverage: ['artifacts/reports/ui-coverage.html', 'artifacts/coverage/lcov-report/index.html'],
   performance: ['artifacts/benchmarks/performance-report.html'],
   'trpc-benchmark': ['artifacts/benchmarks/trpc-benchmark-report.html'],
 };

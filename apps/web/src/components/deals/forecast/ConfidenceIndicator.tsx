@@ -51,6 +51,7 @@ export function ConfidenceIndicator({
   const label = getConfidenceLabel(clamped);
 
   return (
+    // eslint-disable-next-line jsx-a11y/prefer-tag-over-role
     <span
       className={`inline-flex flex-col ${size === 'sm' ? 'gap-0.5' : 'gap-1'}`}
       data-testid="confidence-indicator"

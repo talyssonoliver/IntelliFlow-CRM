@@ -283,10 +283,7 @@ describe('ExportReportButton', () => {
     });
   });
 
-  // Note: PDF content tests skipped - dynamic import mocking for jsPDF
-  // doesn't properly intercept the module in Vitest with async imports.
-  // The core functionality (button, API calls, save) is covered above.
-  describe.skip('PDF Content', () => {
+  describe('PDF Content', () => {
     it('should add title to PDF', async () => {
       const user = userEvent.setup();
       render(<ExportReportButton />);

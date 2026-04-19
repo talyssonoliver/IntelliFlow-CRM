@@ -4,7 +4,8 @@
  * PG-178: Lead Settings
  *
  * Tests the skeleton loading state component rendered while
- * auth and data queries are in flight.
+ * auth and data queries are in flight. The skeleton mirrors the
+ * 12-col bento grid so there is no layout shift on hydration.
  */
 
 import { describe, it, expect, vi } from 'vitest';
@@ -27,7 +28,6 @@ describe('LeadSettingsLoading', () => {
   it('renders without crashing', () => {
     render(<LeadSettingsLoading />);
 
-    // Multiple skeletons should be present
     const skeletons = screen.getAllByTestId('skeleton');
     expect(skeletons.length).toBeGreaterThan(0);
   });
@@ -35,16 +35,16 @@ describe('LeadSettingsLoading', () => {
   it('renders multiple skeleton elements for loading animation', () => {
     render(<LeadSettingsLoading />);
 
-    // The component renders at least 9 skeleton placeholders
     const skeletons = screen.getAllByTestId('skeleton');
     expect(skeletons.length).toBeGreaterThanOrEqual(9);
   });
 
-  it('renders card elements for content skeleton', () => {
+  it('renders card elements for each bento section', () => {
     render(<LeadSettingsLoading />);
 
     const cards = screen.getAllByTestId('card');
-    expect(cards.length).toBeGreaterThanOrEqual(1);
+    // 5 bento cells: stages, automation, scoring, custom fields, summary
+    expect(cards).toHaveLength(5);
   });
 
   it('renders a breadcrumb-sized skeleton (h-4 w-48)', () => {
@@ -67,19 +67,26 @@ describe('LeadSettingsLoading', () => {
     expect(headerSkeleton).toBeTruthy();
   });
 
-  it('renders tab skeleton placeholders (h-10)', () => {
+  it('renders action button skeletons (h-10 w-36) in the header', () => {
     render(<LeadSettingsLoading />);
 
     const skeletons = screen.getAllByTestId('skeleton');
-    const tabSkeletons = skeletons.filter((el) => el.className.includes('h-10'));
-    expect(tabSkeletons.length).toBeGreaterThanOrEqual(4);
+    const actionBtnSkeletons = skeletons.filter(
+      (el) => el.className.includes('h-10') && el.className.includes('w-36')
+    );
+    expect(actionBtnSkeletons.length).toBeGreaterThanOrEqual(2);
   });
 
-  it('renders 5 content row cards', () => {
+  it('renders cards with the canonical bento col-span classes', () => {
     render(<LeadSettingsLoading />);
 
     const cards = screen.getAllByTestId('card');
-    // 5 content row cards + 1 sidebar card = 6 total
-    expect(cards.length).toBeGreaterThanOrEqual(5);
+    const spans = cards.map((c) => c.className);
+
+    expect(spans.some((s) => s.includes('lg:col-span-8'))).toBe(true);
+    expect(spans.some((s) => s.includes('lg:col-span-4'))).toBe(true);
+    expect(spans.some((s) => s.includes('lg:col-span-7'))).toBe(true);
+    expect(spans.some((s) => s.includes('lg:col-span-5'))).toBe(true);
+    expect(spans.some((s) => s.includes('lg:col-span-12'))).toBe(true);
   });
 });

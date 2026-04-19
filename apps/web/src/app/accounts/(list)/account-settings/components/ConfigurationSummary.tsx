@@ -61,15 +61,9 @@ export function ConfigurationSummary({
     <div className="space-y-4">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <Stat label="Max hierarchy depth" value={hierarchy.maxDepth} />
-        <Stat
-          label="Industries (active)"
-          value={`${activeIndustries} / ${industries.length}`}
-        />
+        <Stat label="Industries (active)" value={`${activeIndustries} / ${industries.length}`} />
         <Stat label="Custom fields" value={customFields.length} />
-        <Stat
-          label="Required custom"
-          value={requiredCustomFields}
-        />
+        <Stat label="Required custom" value={requiredCustomFields} />
         <Stat
           label="Duplicate rules (on)"
           value={`${activeDuplicateRules} / ${duplicateRules.length}`}
@@ -83,9 +77,7 @@ export function ConfigurationSummary({
       </div>
 
       <div className="flex items-center justify-between text-xs pt-3 border-t border-border">
-        <span
-          className={isDirty ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground'}
-        >
+        <span className={isDirty ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground'}>
           {isDirty ? 'Unsaved changes' : 'All changes saved'}
         </span>
         <span className="text-muted-foreground">

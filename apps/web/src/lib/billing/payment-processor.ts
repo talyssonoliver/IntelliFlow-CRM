@@ -162,8 +162,8 @@ export function validateExpiry(expiry: string): ValidationResult {
 
   // Check if expired
   const now = new Date();
-  const currentMonth = now.getMonth() + 1;
-  const currentYear = now.getFullYear();
+  const currentMonth = now.getUTCMonth() + 1;
+  const currentYear = now.getUTCFullYear();
 
   if (fullYear < currentYear || (fullYear === currentYear && month < currentMonth)) {
     return { valid: false, error: 'Card has expired' };

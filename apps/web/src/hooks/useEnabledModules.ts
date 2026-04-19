@@ -39,7 +39,10 @@ export function useEnabledModules(): UseEnabledModulesResult {
   });
 
   // Fail closed: if query hasn't resolved, only grant CORE_CRM
-  const enabledModules = (data?.modules ?? ['CORE_CRM']) as ModuleId[];
+  const enabledModules = useMemo<ModuleId[]>(
+    () => (data?.modules ?? ['CORE_CRM']) as ModuleId[],
+    [data?.modules]
+  );
   const plan = data?.plan;
 
   const isModuleEnabled = useMemo(() => {

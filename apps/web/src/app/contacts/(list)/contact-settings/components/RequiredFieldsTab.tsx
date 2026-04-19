@@ -56,10 +56,7 @@ export function RequiredFieldsTab({ fields, onFieldsChange }: Readonly<RequiredF
         return (
           <div key={row.fieldKey} className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
-              <label
-                htmlFor={`req-${row.fieldKey}`}
-                className="text-sm font-medium cursor-pointer"
-              >
+              <label htmlFor={`req-${row.fieldKey}`} className="text-sm font-medium cursor-pointer">
                 {meta.label}
               </label>
               <p className="text-xs text-muted-foreground mt-0.5">{meta.description}</p>

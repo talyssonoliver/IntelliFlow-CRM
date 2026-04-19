@@ -10,7 +10,7 @@
  */
 
 import { Panel, useReactFlow } from '@xyflow/react';
-import { Save, Undo2, Redo2, ZoomIn, ZoomOut, Maximize, Loader2 } from 'lucide-react';
+
 import { Button, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@intelliflow/ui';
 import { useIsMobile } from '@/hooks/useIsMobile';
 
@@ -74,11 +74,11 @@ export function WorkflowToolbar({
   const isMobile = useIsMobile();
 
   const saveDisabled = !isValid || isSaving;
-  const saveTooltip = isSaving
-    ? 'Saving…'
-    : !isValid
-      ? (validationError ?? 'Connect every node between a Start and an End before saving.')
-      : 'Save workflow';
+  let saveTooltip: string;
+  if (isSaving) saveTooltip = 'Saving…';
+  else if (!isValid)
+    saveTooltip = validationError ?? 'Connect every node between a Start and an End before saving.';
+  else saveTooltip = 'Save workflow';
 
   const pillContent = (
     <TooltipProvider delayDuration={200}>
@@ -99,9 +99,16 @@ export function WorkflowToolbar({
                 className="gap-1.5 h-8"
               >
                 {isSaving ? (
-                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                  <span
+                    className="material-symbols-outlined text-base animate-spin"
+                    aria-hidden="true"
+                  >
+                    sync
+                  </span>
                 ) : (
-                  <Save className="h-4 w-4" aria-hidden="true" />
+                  <span className="material-symbols-outlined text-base" aria-hidden="true">
+                    save
+                  </span>
                 )}
                 {isSaving ? 'Saving…' : 'Save'}
               </Button>
@@ -115,14 +122,22 @@ export function WorkflowToolbar({
         {/* Undo / Redo */}
         <IconAction
           label="Undo"
-          icon={<Undo2 className="h-4 w-4" aria-hidden="true" />}
+          icon={
+            <span className="material-symbols-outlined text-base" aria-hidden="true">
+              undo
+            </span>
+          }
           onClick={onUndo}
           disabled={!canUndo}
           disabledReason="Nothing to undo"
         />
         <IconAction
           label="Redo"
-          icon={<Redo2 className="h-4 w-4" aria-hidden="true" />}
+          icon={
+            <span className="material-symbols-outlined text-base" aria-hidden="true">
+              redo
+            </span>
+          }
           onClick={onRedo}
           disabled={!canRedo}
           disabledReason="Nothing to redo"
@@ -133,17 +148,29 @@ export function WorkflowToolbar({
         {/* Zoom controls */}
         <IconAction
           label="Zoom in"
-          icon={<ZoomIn className="h-4 w-4" aria-hidden="true" />}
+          icon={
+            <span className="material-symbols-outlined text-base" aria-hidden="true">
+              zoom_in
+            </span>
+          }
           onClick={() => void zoomIn()}
         />
         <IconAction
           label="Zoom out"
-          icon={<ZoomOut className="h-4 w-4" aria-hidden="true" />}
+          icon={
+            <span className="material-symbols-outlined text-base" aria-hidden="true">
+              zoom_out
+            </span>
+          }
           onClick={() => void zoomOut()}
         />
         <IconAction
           label="Fit view"
-          icon={<Maximize className="h-4 w-4" aria-hidden="true" />}
+          icon={
+            <span className="material-symbols-outlined text-base" aria-hidden="true">
+              open_in_full
+            </span>
+          }
           onClick={() => void fitView()}
         />
       </div>

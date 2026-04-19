@@ -81,14 +81,14 @@ describe('DocumentLinks', () => {
     expect(screen.getByText('v2.0')).toBeInTheDocument();
   });
 
-  it('renders FILING document type', () => {
+  it('renders COURT_FILING document type', () => {
     mockUseQuery.mockReturnValue({
       data: {
         documents: [
           {
             id: 'doc-filing',
             title: 'Court Filing',
-            document_type: 'FILING',
+            document_type: 'COURT_FILING',
             status: 'SIGNED',
             version_major: 1,
             version_minor: 0,
@@ -245,7 +245,7 @@ describe('DocumentLinks', () => {
           {
             id: 'doc-camel',
             title: 'CamelCase Doc',
-            documentType: 'MOTION',
+            documentType: 'COURT_FILING',
             status: 'APPROVED',
             versionMajor: 2,
             versionMinor: 3,
@@ -314,7 +314,7 @@ describe('DocumentLinks', () => {
           {
             id: 'doc-no-ver',
             title: 'No Version Doc',
-            document_type: 'BRIEF',
+            document_type: 'MEMO',
             status: 'DRAFT',
             size_bytes: 500,
             created_at: '2026-02-01T10:00:00Z',

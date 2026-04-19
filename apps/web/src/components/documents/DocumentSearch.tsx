@@ -179,6 +179,7 @@ export function DocumentSearch({
           </span>
         </Button>
         {isOpen && (
+          // eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- custom dropdown requires div for positioning
           <ul
             className="absolute top-full left-0 mt-1 w-56 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg z-20 py-2 list-none m-0 p-0"
             role="listbox"

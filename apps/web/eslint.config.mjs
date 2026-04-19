@@ -51,6 +51,40 @@ export default [
       'jsx-a11y/no-redundant-roles': 'error',
       'jsx-a11y/role-has-required-aria-props': 'error',
       'jsx-a11y/role-supports-aria-props': 'error',
+      // PG-195 / ADR-046: Material Symbols Outlined is the ONLY icon library.
+      // Foreign icon packages defeat the subsetted font (234 KB, 359 glyphs)
+      // and re-introduce the Lighthouse ≥90 regression this task fixed.
+      // See docs/design/ICON_USAGE.md for the full policy.
+      'no-restricted-imports': ['error', {
+        paths: [
+          {
+            name: 'lucide-react',
+            message: 'Use Material Symbols: <span className="material-symbols-outlined">name</span>. See docs/design/ICON_USAGE.md + ADR-046.',
+          },
+          {
+            name: '@heroicons/react',
+            message: 'Use Material Symbols instead. See docs/design/ICON_USAGE.md + ADR-046.',
+          },
+          {
+            name: 'react-icons',
+            message: 'Use Material Symbols instead. See docs/design/ICON_USAGE.md + ADR-046.',
+          },
+          {
+            name: '@radix-ui/react-icons',
+            message: 'Use Material Symbols instead. See docs/design/ICON_USAGE.md + ADR-046.',
+          },
+          {
+            name: 'react-feather',
+            message: 'Use Material Symbols instead. See docs/design/ICON_USAGE.md + ADR-046.',
+          },
+        ],
+        patterns: [
+          {
+            group: ['@heroicons/react/*', 'react-icons/*', '@radix-ui/react-icons/*'],
+            message: 'Use Material Symbols. See docs/design/ICON_USAGE.md + ADR-046.',
+          },
+        ],
+      }],
     },
   },
   // Timezone Safety: prevent server/browser-local time usage

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback, useMemo } from 'react';
-import { Send, X, AlertCircle } from 'lucide-react';
+
 import DOMPurify from 'isomorphic-dompurify';
 import { trpc } from '@/lib/trpc';
 import { toast } from '@intelliflow/ui';
@@ -144,7 +144,9 @@ export function InlineCompose({
           className="inline-flex h-6 w-6 items-center justify-center rounded hover:bg-accent"
           onClick={onDiscard}
         >
-          <X className="h-3.5 w-3.5" />
+          <span className="material-symbols-outlined text-base" aria-hidden="true">
+            close
+          </span>
         </button>
       </div>
 
@@ -172,7 +174,7 @@ export function InlineCompose({
 
       {/* Body */}
       <div className="px-3 py-2">
-        {}
+        {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- contenteditable div requires div for rich text editing */}
         <div
           ref={bodyRef}
           role="textbox"
@@ -193,7 +195,9 @@ export function InlineCompose({
           className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-destructive"
           role="alert"
         >
-          <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+          <span className="material-symbols-outlined text-base shrink-0" aria-hidden="true">
+            error
+          </span>
           <span>{validationErrors[0]}</span>
         </div>
       )}
@@ -211,7 +215,9 @@ export function InlineCompose({
           )}
           onClick={handleSend}
         >
-          <Send className="h-3.5 w-3.5" />
+          <span className="material-symbols-outlined text-base" aria-hidden="true">
+            send
+          </span>{' '}
           Send
         </button>
         <button

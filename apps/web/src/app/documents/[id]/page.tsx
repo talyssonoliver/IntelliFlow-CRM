@@ -9,6 +9,7 @@ import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { AppAvatar } from '@/components/shared/app-avatar';
 import { ActivityFeed } from '@/components/shared/activity-feed';
 import { formatFileSize } from '@/components/documents';
+import { getDocumentTypeDisplayLabel } from '@/components/documents/document-type-utils';
 import type { AccessLevel, DocumentStatus } from '@/components/documents';
 
 // Tab types
@@ -790,7 +791,10 @@ export default function DocumentDetailPage() {
     id: documentData.id,
     title: documentData.metadata.title,
     description: documentData.metadata.description || '',
-    documentType: documentData.metadata.documentType,
+    documentType: getDocumentTypeDisplayLabel({
+      documentType: documentData.metadata.documentType,
+      documentTypeLabel: documentData.metadata.documentTypeLabel,
+    }),
     status: documentData.status,
     classification: documentData.metadata.classification,
     version: `${documentData.version.major}.${documentData.version.minor}.${documentData.version.patch}`,

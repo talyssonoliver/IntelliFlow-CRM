@@ -87,17 +87,9 @@ const ACTION_LABEL: Record<string, string> = {
   log: 'Log',
 };
 
-/**
- * Build a list of summary chips from the node's config, ordered from
- * "what kind of action" to "who/where" to "constraints". Returns at most
- * 4 chips so a node card stays compact at typical zoom levels.
- */
-function configChips(
-  nodeType: WFNodeType,
-  cfg: WorkflowNodeConfig
-): Array<{ key: string; text: string; className: string }> {
-  const chips: Array<{ key: string; text: string; className: string }> = [];
+type Chip = { key: string; text: string; className: string };
 
+function addActionChips(chips: Chip[], nodeType: WFNodeType, cfg: WorkflowNodeConfig): void {
   if (nodeType === 'action' && cfg.actionType) {
     chips.push({
       key: 'actionType',
@@ -113,8 +105,9 @@ function configChips(
       className: PRIORITY_CHIP_CLASS[cfg.priority] ?? 'bg-slate-200 text-slate-700',
     });
   }
+}
 
-  // Recipient or assignee summary
+function addRecipientChips(chips: Chip[], cfg: WorkflowNodeConfig): void {
   const recipientCount = Array.isArray(cfg.recipients) ? cfg.recipients.length : 0;
   const approverCount = Array.isArray(cfg.approvers) ? cfg.approvers.length : 0;
   if (recipientCount > 0) {
@@ -149,8 +142,9 @@ function configChips(
       className: 'bg-indigo-100 text-indigo-800',
     });
   }
+}
 
-  // Trigger / decision specifics
+function addTriggerChips(chips: Chip[], nodeType: WFNodeType, cfg: WorkflowNodeConfig): void {
   if (nodeType === 'start' && cfg.triggerType) {
     chips.push({
       key: 'trigger',
@@ -168,8 +162,9 @@ function configChips(
       });
     }
   }
+}
 
-  // Deadline (human / create_task)
+function addDeadlineChips(chips: Chip[], cfg: WorkflowNodeConfig): void {
   if (typeof cfg.deadlineInHours === 'number' && cfg.deadlineInHours > 0) {
     chips.push({
       key: 'deadline',
@@ -183,7 +178,22 @@ function configChips(
       className: 'bg-rose-100 text-rose-800',
     });
   }
+}
 
+/**
+ * Build a list of summary chips from the node's config, ordered from
+ * "what kind of action" to "who/where" to "constraints". Returns at most
+ * 4 chips so a node card stays compact at typical zoom levels.
+ */
+function configChips(
+  nodeType: WFNodeType,
+  cfg: WorkflowNodeConfig
+): Array<{ key: string; text: string; className: string }> {
+  const chips: Chip[] = [];
+  addActionChips(chips, nodeType, cfg);
+  addRecipientChips(chips, cfg);
+  addTriggerChips(chips, nodeType, cfg);
+  addDeadlineChips(chips, cfg);
   return chips.slice(0, 4);
 }
 
@@ -204,9 +214,8 @@ function WorkflowNodeCardInner(props: NodeProps) {
   const isSelected = props.selected ?? false;
 
   return (
-    <div
+    <figure
       className={`relative rounded-lg border-2 shadow-sm min-w-[180px] ${cfg.color}`}
-      role="figure"
       aria-label={`${cfg.label} node: ${data.label}`}
       style={{ width: '100%', height: '100%' }}
     >
@@ -267,7 +276,7 @@ function WorkflowNodeCardInner(props: NodeProps) {
       {nodeType !== 'end' && (
         <Handle type="source" position={Position.Bottom} className="w-3 h-3 !bg-gray-400" />
       )}
-    </div>
+    </figure>
   );
 }
 

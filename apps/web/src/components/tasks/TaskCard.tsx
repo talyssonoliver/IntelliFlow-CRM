@@ -101,7 +101,6 @@ export function TaskCard({ task, onClick }: Readonly<TaskCardProps>) {
     <Card
       className="p-3 cursor-pointer hover:bg-accent/50 transition-colors"
       onClick={() => onClick?.(task.id)}
-      role="button"
       tabIndex={0}
       onKeyDown={(e: React.KeyboardEvent) => {
         if (e.key === 'Enter' || e.key === ' ') {

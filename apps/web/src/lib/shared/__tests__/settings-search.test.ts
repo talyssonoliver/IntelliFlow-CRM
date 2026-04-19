@@ -10,9 +10,9 @@ import {
 
 describe('settings-search', () => {
   describe('SETTINGS_ITEMS', () => {
-    it('contains 9 settings items', () => {
-      // 2 items were added post-baseline (9 = previous 7 + 2 new).
-      expect(SETTINGS_ITEMS).toHaveLength(9);
+    it('contains 12 settings items', () => {
+      // Item count tracked against SETTINGS_ITEMS source; bump when adding/removing hubs.
+      expect(SETTINGS_ITEMS).toHaveLength(12);
     });
 
     it('each item has required fields', () => {

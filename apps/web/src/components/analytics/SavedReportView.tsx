@@ -595,6 +595,7 @@ function RevenueBarChart({
       />
     );
   }
+  // eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- complex SVG/chart visualization requires div wrapper
   return (
     <div className="h-64" role="img" aria-label="Revenue bar chart">
       <ResponsiveContainer width="100%" height="100%">

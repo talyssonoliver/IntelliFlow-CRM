@@ -1,6 +1,7 @@
+import { createRef } from 'react';
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
-import { TagsTab, type TagRow } from '../TagsTab';
+import { act, render, screen, fireEvent } from '@testing-library/react';
+import { TagsTab, type TagRow, type TagsTabHandle } from '../TagsTab';
 
 const tags: TagRow[] = [
   {
@@ -13,6 +14,11 @@ const tags: TagRow[] = [
   },
 ];
 
+/**
+ * TagsTab exposes `openCreate()` via imperative handle (mirror of the
+ * /accounts/account-settings TagsTab). Parent SectionHeader renders the
+ * "New Tag" button and calls `ref.current.openCreate()` on click.
+ */
 describe('TagsTab', () => {
   it('renders existing tags', () => {
     render(<TagsTab tags={tags} onCreate={vi.fn()} onUpdate={vi.fn()} onDelete={vi.fn()} />);
@@ -25,19 +31,27 @@ describe('TagsTab', () => {
     expect(screen.getByText(/No tags yet/i)).toBeInTheDocument();
   });
 
-  it('opens new-tag dialog from New tag button', () => {
-    render(<TagsTab tags={[]} onCreate={vi.fn()} onUpdate={vi.fn()} onDelete={vi.fn()} />);
-    fireEvent.click(screen.getByRole('button', { name: /New tag/i }));
-    expect(
-      screen.getByText(/^New tag$/, { selector: 'h2, [role="heading"]' }) ??
-        screen.getByText(/New tag/)
-    ).toBeTruthy();
+  it('opens the new-tag dialog when ref.openCreate is invoked', () => {
+    const ref = createRef<TagsTabHandle>();
+    render(
+      <TagsTab ref={ref} tags={[]} onCreate={vi.fn()} onUpdate={vi.fn()} onDelete={vi.fn()} />
+    );
+    expect(ref.current?.openCreate).toBeTypeOf('function');
+    act(() => {
+      ref.current?.openCreate();
+    });
+    expect(screen.getByRole('heading', { name: /^New tag$/i })).toBeInTheDocument();
   });
 
   it('rejects empty name on submit', async () => {
+    const ref = createRef<TagsTabHandle>();
     const onCreate = vi.fn();
-    render(<TagsTab tags={[]} onCreate={onCreate} onUpdate={vi.fn()} onDelete={vi.fn()} />);
-    fireEvent.click(screen.getByRole('button', { name: /New tag/i }));
+    render(
+      <TagsTab ref={ref} tags={[]} onCreate={onCreate} onUpdate={vi.fn()} onDelete={vi.fn()} />
+    );
+    act(() => {
+      ref.current?.openCreate();
+    });
     const createBtn = screen.getByRole('button', { name: /^Create$/ });
     fireEvent.click(createBtn);
     expect(onCreate).not.toHaveBeenCalled();

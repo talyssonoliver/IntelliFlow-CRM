@@ -53,9 +53,19 @@ export function useWorkflowCanvas(
 
   useEffect(() => {
     const prev = prevInitialNodesRef.current;
+    // Content hash includes id, type, position, and a stable serialization
+    // of `data.config` so that a background refetch returning the same node
+    // ids with updated configs / positions actually triggers re-hydration.
+    // (Audit finding 2026-04-14: previous id+type-only check left stale
+    // canvases when the upstream config changed.)
     const sameContent =
       prev.length === initialNodes.length &&
-      prev.every((n, i) => n.id === initialNodes[i].id && n.type === initialNodes[i].type);
+      prev.every((n, i) => {
+        const next = initialNodes[i];
+        if (n.id !== next.id || n.type !== next.type) return false;
+        if (n.position?.x !== next.position?.x || n.position?.y !== next.position?.y) return false;
+        return JSON.stringify(n.data?.config ?? null) === JSON.stringify(next.data?.config ?? null);
+      });
     if (!sameContent) {
       prevInitialNodesRef.current = initialNodes;
       setNodes(initialNodes);
@@ -70,7 +80,8 @@ export function useWorkflowCanvas(
         (e, i) =>
           e.id === initialEdges[i].id &&
           e.source === initialEdges[i].source &&
-          e.target === initialEdges[i].target
+          e.target === initialEdges[i].target &&
+          (e.label ?? null) === (initialEdges[i].label ?? null)
       );
     if (!sameContent) {
       prevInitialEdgesRef.current = initialEdges;

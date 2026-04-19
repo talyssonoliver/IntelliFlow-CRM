@@ -134,17 +134,19 @@ export default function LoginPage() {
   }, [rateLimitInfo.timeRemaining]);
 
   // Handle auth errors from context
+  const authError = auth.error;
+  const authClearError = auth.clearError;
   useEffect(() => {
-    if (auth.error) {
+    if (authError) {
       setToast({
         open: true,
         variant: 'destructive',
         title: 'Authentication failed',
-        description: auth.error,
+        description: authError,
       });
-      auth.clearError();
+      authClearError();
     }
-  }, [auth.error, auth.clearError]);
+  }, [authError, authClearError]);
 
   // Handle MFA required state
   useEffect(() => {

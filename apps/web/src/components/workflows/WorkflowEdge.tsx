@@ -17,7 +17,6 @@ import {
   useReactFlow,
   type EdgeProps,
 } from '@xyflow/react';
-import { X } from 'lucide-react';
 
 function WorkflowEdgeInner(props: EdgeProps) {
   const {
@@ -86,7 +85,9 @@ function WorkflowEdgeInner(props: EdgeProps) {
               selected ? 'opacity-100' : 'opacity-0 hover:opacity-100',
             ].join(' ')}
           >
-            <X className="h-3 w-3" aria-hidden="true" />
+            <span className="material-symbols-outlined text-base" aria-hidden="true">
+              close
+            </span>
           </button>
         </div>
       </EdgeLabelRenderer>

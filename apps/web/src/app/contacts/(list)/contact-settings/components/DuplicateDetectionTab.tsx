@@ -104,7 +104,7 @@ export function DuplicateDetectionTab({
         return (
           <div
             key={rowKey}
-            className="rounded-lg border border-border p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1fr_1fr_140px_auto_auto] gap-3 items-end"
+            className="rounded-lg border border-border p-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1fr_1fr_140px_auto_auto] gap-3 items-end"
           >
             <div>
               <Label htmlFor={`${rowKey}-field`} className="text-xs text-muted-foreground">
@@ -112,9 +112,7 @@ export function DuplicateDetectionTab({
               </Label>
               <Select
                 value={rule.field}
-                onValueChange={(v) =>
-                  updateRule(index, { field: v as DuplicateRuleField })
-                }
+                onValueChange={(v) => updateRule(index, { field: v as DuplicateRuleField })}
               >
                 <SelectTrigger id={`${rowKey}-field`}>
                   <SelectValue />
@@ -153,10 +151,7 @@ export function DuplicateDetectionTab({
             </div>
 
             <div>
-              <Label
-                htmlFor={`${rowKey}-threshold`}
-                className="text-xs text-muted-foreground"
-              >
+              <Label htmlFor={`${rowKey}-threshold`} className="text-xs text-muted-foreground">
                 Threshold
               </Label>
               <Input
@@ -172,10 +167,7 @@ export function DuplicateDetectionTab({
             </div>
 
             <div className="flex items-center gap-2">
-              <Label
-                htmlFor={`${rowKey}-active`}
-                className="text-xs text-muted-foreground"
-              >
+              <Label htmlFor={`${rowKey}-active`} className="text-xs text-muted-foreground">
                 Active
               </Label>
               <Switch
@@ -198,12 +190,9 @@ export function DuplicateDetectionTab({
             </Button>
 
             {duplicatePair && (
-              <p
-                className="md:col-span-2 lg:col-span-5 text-xs text-destructive"
-                role="alert"
-              >
-                Another rule already uses this field + strategy combination — saving
-                is blocked until one is changed.
+              <p className="md:col-span-2 lg:col-span-5 text-xs text-destructive" role="alert">
+                Another rule already uses this field + strategy combination — saving is blocked
+                until one is changed.
               </p>
             )}
           </div>
@@ -214,22 +203,22 @@ export function DuplicateDetectionTab({
         <EmptyState
           entity="rules"
           size="sm"
+          phase="passive"
           title="No duplicate rules"
           description="Add a rule to start flagging potential duplicate contacts on save."
-          action={{ label: 'Add rule', icon: 'add', onClick: addRule }}
+          className="py-4 px-3 gap-2"
         />
       )}
 
-      <Button
-        variant="outline"
-        onClick={addRule}
-        disabled={rules.length >= FIELD_OPTIONS.length * STRATEGY_OPTIONS.length}
-      >
-        <span className="material-symbols-outlined text-base mr-1" aria-hidden="true">
-          add
-        </span>
-        Add rule
-      </Button>
+      <div className="flex justify-end">
+        <Button
+          size="sm"
+          onClick={addRule}
+          disabled={rules.length >= FIELD_OPTIONS.length * STRATEGY_OPTIONS.length}
+        >
+          Add Rule
+        </Button>
+      </div>
     </div>
   );
 }

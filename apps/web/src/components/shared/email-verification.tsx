@@ -15,7 +15,7 @@
  * - Auto-redirect on success
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { cn } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
@@ -171,18 +171,28 @@ export function EmailVerification({
   const verifyEmailMutation = trpc.auth.verifyEmail.useMutation();
   const resendMutation = trpc.auth.resendVerification.useMutation();
 
-  // Verify token on mount via tRPC
+  // Verification is a one-shot action against the token/hash present at mount.
+  // Props captured in refs so the mount-only effect has no stale-closure risk
+  // and does not re-fire if a parent re-renders with a different onVerified.
+  const tokenRef = useRef(token);
+  const tokenHashRef = useRef(tokenHash);
+  const typeRef = useRef(type);
+  const mutateAsyncRef = useRef(verifyEmailMutation.mutateAsync);
+  mutateAsyncRef.current = verifyEmailMutation.mutateAsync;
+  const onVerifiedRef = useRef(onVerified);
+  onVerifiedRef.current = onVerified;
+  const onErrorRef = useRef(onError);
+  onErrorRef.current = onError;
+
   useEffect(() => {
-    // Resolve the actual token hash — prefer tokenHash prop, fallback to legacy token
-    const hash = tokenHash || token;
-    runEmailVerification(hash || '', type, verifyEmailMutation.mutateAsync, {
+    const hash = tokenHashRef.current || tokenRef.current;
+    runEmailVerification(hash || '', typeRef.current, mutateAsyncRef.current, {
       setStatus,
       setMessage,
       setVerifiedEmail,
-      onVerified,
-      onError,
+      onVerified: () => onVerifiedRef.current?.(),
+      onError: (err: string) => onErrorRef.current?.(err),
     });
-    // Run only once on mount — deps intentionally empty
   }, []);
 
   // Handle resend via tRPC

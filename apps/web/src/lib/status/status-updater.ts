@@ -52,9 +52,7 @@ export function buildMaintenanceStatusPayload(
   };
 }
 
-export function publishStatusUpdate(
-  input: MaintenanceStatusInput
-): MaintenanceStatusUpdatePayload {
+export function publishStatusUpdate(input: MaintenanceStatusInput): MaintenanceStatusUpdatePayload {
   const payload = buildMaintenanceStatusPayload(input);
 
   if (typeof window !== 'undefined') {

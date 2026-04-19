@@ -135,12 +135,20 @@ export function EmailPage({ initialEmailId, className }: Readonly<EmailPageProps
     },
   });
 
+  // Mark-as-read fires 800ms after the user lands on an email. We want that
+  // single debounce cycle per selectedEmailId — not to re-arm every time the
+  // mutation object identity or thread id changes — so both are read off refs.
+  const markAsReadMutateRef = useRef(markAsReadMutation.mutate);
+  markAsReadMutateRef.current = markAsReadMutation.mutate;
+  const realThreadIdRef = useRef(realThreadId);
+  realThreadIdRef.current = realThreadId;
+
   useEffect(() => {
     if (!selectedEmailId) return;
     const timer = setTimeout(() => {
-      markAsReadMutation.mutate({
+      markAsReadMutateRef.current({
         emailId: selectedEmailId,
-        threadId: realThreadId ?? undefined,
+        threadId: realThreadIdRef.current ?? undefined,
       });
     }, 800);
     return () => clearTimeout(timer);

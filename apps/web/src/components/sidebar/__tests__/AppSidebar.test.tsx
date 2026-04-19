@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AppSidebar, SidebarTrigger, SidebarInset } from '../AppSidebar';
@@ -234,9 +234,7 @@ describe('AppSidebar', () => {
       expect(screen.getByRole('button', { name: /pin sidebar/i })).toBeInTheDocument();
     });
 
-    // Note: Skipped - localStorage is persisted via useEffect which depends
-    // on hasMounted state. In jsdom, the effect timing doesn't sync with test.
-    it.skip('should pin sidebar when pin button is clicked', async () => {
+    it('should pin sidebar when pin button is clicked', async () => {
       const user = userEvent.setup();
       render(
         <SidebarProvider>
@@ -248,10 +246,18 @@ describe('AppSidebar', () => {
       await user.hover(sidebar);
 
       const pinButton = screen.getByRole('button', { name: /pin sidebar/i });
-      await user.click(pinButton);
+      // Use fireEvent.click instead of userEvent.click to avoid triggering
+      // mouseleave on the sidebar element before the click handler fires.
+      // userEvent.click may trigger mouseleave which collapses the sidebar
+      // before togglePinned() can set isPinned=true.
+      fireEvent.click(pinButton);
 
-      // Should persist localStorage
-      expect(localStorageMock.setItem).toHaveBeenCalledWith('intelliflow-sidebar-pinned', 'true');
+      // SidebarContext calls localStorage.setItem(key, 'false') on initial mount,
+      // then setItem(key, 'true') after togglePinned() is called.
+      // waitFor ensures React effects have completed.
+      await waitFor(() => {
+        expect(localStorageMock.setItem).toHaveBeenCalledWith('intelliflow-sidebar-pinned', 'true');
+      });
     });
 
     it('should stay expanded when pinned and mouse leaves', async () => {
@@ -430,9 +436,7 @@ describe('SidebarTrigger', () => {
     expect(screen.getByRole('button', { name: /open menu|close menu/i })).toBeInTheDocument();
   });
 
-  // Note: Skipped - localStorage interaction depends on SidebarContext
-  // internals which may use useEffect that doesn't run in test environment
-  it.skip('should toggle sidebar on click', async () => {
+  it('should toggle sidebar on click', async () => {
     const user = userEvent.setup();
     render(
       <SidebarProvider>

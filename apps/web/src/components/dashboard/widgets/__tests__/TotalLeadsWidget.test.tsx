@@ -4,7 +4,11 @@ import { beforeEach, describe, it, expect, vi } from 'vitest';
 import { TotalLeadsWidget } from '../TotalLeadsWidget';
 
 const useQueryMock = vi.fn();
-const overviewQueryMock = vi.fn(() => ({ data: null, isLoading: false, error: null }));
+const overviewQueryMock = vi.fn((..._args: unknown[]) => ({
+  data: null,
+  isLoading: false,
+  error: null,
+}));
 
 vi.mock('@/lib/trpc', () => ({
   trpc: {

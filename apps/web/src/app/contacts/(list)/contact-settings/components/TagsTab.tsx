@@ -1,10 +1,9 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { forwardRef, useCallback, useImperativeHandle, useState } from 'react';
 import {
   Button,
   EmptyState,
-  NotesIllustration,
   Input,
   Label,
   Textarea,
@@ -21,6 +20,10 @@ import {
   DialogFooter,
   ConfirmationDialog,
 } from '@intelliflow/ui';
+
+export interface TagsTabHandle {
+  openCreate: () => void;
+}
 import {
   TAG_COLOR_TOKENS,
   type CreateContactTagInput,
@@ -39,11 +42,11 @@ export interface TagRow {
   isActive: boolean;
 }
 
-interface TagsTabProps {
-  tags: TagRow[];
-  onCreate: (input: CreateContactTagInput) => Promise<void> | void;
-  onUpdate: (input: UpdateContactTagInput) => Promise<void> | void;
-  onDelete: (id: string) => Promise<void> | void;
+export interface TagsTabProps {
+  readonly tags: TagRow[];
+  readonly onCreate: (input: CreateContactTagInput) => Promise<void> | void;
+  readonly onUpdate: (input: UpdateContactTagInput) => Promise<void> | void;
+  readonly onDelete: (id: string) => Promise<void> | void;
 }
 
 type DraftTag = {
@@ -80,7 +83,10 @@ const COLOR_SWATCH_CLASSES: Record<TagColorToken, string> = {
   rose: 'bg-rose-200 text-rose-900',
 };
 
-export function TagsTab({ tags, onCreate, onUpdate, onDelete }: Readonly<TagsTabProps>) {
+export const TagsTab = forwardRef<TagsTabHandle, TagsTabProps>(function TagsTab(
+  { tags, onCreate, onUpdate, onDelete },
+  ref
+) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [draft, setDraft] = useState<DraftTag>(EMPTY_DRAFT);
   const [nameError, setNameError] = useState<string | null>(null);
@@ -91,6 +97,9 @@ export function TagsTab({ tags, onCreate, onUpdate, onDelete }: Readonly<TagsTab
     setNameError(null);
     setDialogOpen(true);
   }, []);
+
+  // Canonical handle pattern (mirror of /accounts/account-settings TagsTab).
+  useImperativeHandle(ref, () => ({ openCreate }), [openCreate]);
 
   const openEdit = useCallback((tag: TagRow) => {
     // Narrow legacy unknown tokens back to the enum before the Select trigger
@@ -145,15 +154,6 @@ export function TagsTab({ tags, onCreate, onUpdate, onDelete }: Readonly<TagsTab
 
   return (
     <div>
-      <div className="mb-4 flex items-start justify-end">
-        <Button onClick={openCreate}>
-          <span className="material-symbols-outlined text-base mr-1" aria-hidden="true">
-            add
-          </span>
-          New tag
-        </Button>
-      </div>
-
       <div className="space-y-2">
         {tags.map((tag) => (
           <div
@@ -193,11 +193,12 @@ export function TagsTab({ tags, onCreate, onUpdate, onDelete }: Readonly<TagsTab
 
         {tags.length === 0 && (
           <EmptyState
+            entity="pinned"
             size="sm"
-            illustration={<NotesIllustration className="h-20 w-20" />}
+            phase="passive"
             title="No tags yet"
-            description="Create a tag to start labelling contacts with your team's vocabulary."
-            action={{ label: 'Create first tag', icon: 'add', onClick: openCreate }}
+            description="Add your first contact tag."
+            className="py-4 px-3 gap-2"
           />
         )}
       </div>
@@ -281,4 +282,4 @@ export function TagsTab({ tags, onCreate, onUpdate, onDelete }: Readonly<TagsTab
       />
     </div>
   );
-}
+});

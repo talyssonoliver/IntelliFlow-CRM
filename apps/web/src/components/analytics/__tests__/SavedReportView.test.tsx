@@ -572,7 +572,8 @@ describe('SavedReportView', () => {
   // --- use client directive (NF-005) ---
   it('has use client directive', async () => {
     const fs = await import('node:fs');
-    const content = fs.readFileSync('src/components/analytics/SavedReportView.tsx', 'utf-8');
+    const { resolve } = await import('node:path');
+    const content = fs.readFileSync(resolve(__dirname, '../SavedReportView.tsx'), 'utf-8');
     expect(content.startsWith("'use client'")).toBe(true);
   });
 

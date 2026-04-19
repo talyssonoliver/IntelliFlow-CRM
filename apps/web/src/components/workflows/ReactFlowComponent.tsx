@@ -459,7 +459,7 @@ function CanvasInner({
         category: 'custom',
         triggerType: 'manual',
         triggerConfig: {},
-        steps: stepsPayload.length > 0 ? stepsPayload : [{ id: 1, type: 'action', config: {} }],
+        steps: stepsPayload,
         edges: edgesPayload,
       });
     }

@@ -17,6 +17,7 @@ vi.mock('../SLAIndicator', () => ({
 // Mock Card from @intelliflow/ui
 vi.mock('@intelliflow/ui', () => ({
   Card: ({ children, className, onClick, role, ...props }: any) => (
+    // eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/prefer-tag-over-role -- test renders component with event handlers
     <div
       className={className}
       onClick={onClick}

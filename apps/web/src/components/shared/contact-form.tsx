@@ -34,10 +34,13 @@ export function ContactForm() {
 
   const handleSubmit = async (event: React.SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
+    // Capture form ref BEFORE any await — React nullifies event.currentTarget
+    // after the handler's synchronous phase completes (event pooling).
+    const formElement = event.currentTarget;
     setFormErrors({});
     setFormState({ isSubmitting: true, isSuccess: false, error: null });
 
-    const formData = new FormData(event.currentTarget);
+    const formData = new FormData(formElement);
 
     // Build form input object (raw input before Zod transformation)
     const input = {
@@ -69,8 +72,8 @@ export function ContactForm() {
 
     if (result.ok) {
       setFormState({ isSubmitting: false, isSuccess: true, error: null });
-      // Clear form
-      event.currentTarget?.reset();
+      // Clear form using the pre-captured ref (event.currentTarget is null here)
+      formElement?.reset();
 
       // Reset success message after 5 seconds
       setTimeout(() => {

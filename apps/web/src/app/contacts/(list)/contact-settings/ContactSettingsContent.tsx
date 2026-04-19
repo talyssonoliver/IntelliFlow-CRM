@@ -1,9 +1,9 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { trpc } from '@/lib/trpc';
-import { Card, ConfirmationDialog, toast } from '@intelliflow/ui';
+import { Button, Card, ConfirmationDialog, toast } from '@intelliflow/ui';
 import { PageHeader } from '@/components/shared/page-header';
 import type {
   ContactRequiredFieldKey,
@@ -11,12 +11,9 @@ import type {
   UpdateContactTagInput,
 } from '@intelliflow/validators';
 import { ContactSettingsLoading } from './ContactSettingsLoading';
-import {
-  DuplicateDetectionTab,
-  type DuplicateRuleRow,
-} from './components/DuplicateDetectionTab';
+import { DuplicateDetectionTab, type DuplicateRuleRow } from './components/DuplicateDetectionTab';
 import { RequiredFieldsTab, type RequiredFieldRow } from './components/RequiredFieldsTab';
-import { TagsTab, type TagRow } from './components/TagsTab';
+import { TagsTab, type TagRow, type TagsTabHandle } from './components/TagsTab';
 import { AutomationTab, type ContactAutomationSettings } from './components/AutomationTab';
 import { AISettingsTab } from './components/AISettingsTab';
 import { ConfigurationSummary } from './components/ConfigurationSummary';
@@ -43,6 +40,9 @@ interface SectionHeaderProps {
   iconFg: string;
   title: string;
   description: string;
+  /** Optional action slot rendered on the right of the header, aligned with
+   *  the title row (same pattern as shared/page-header.tsx actions). */
+  action?: React.ReactNode;
 }
 
 function SectionHeader({
@@ -51,23 +51,20 @@ function SectionHeader({
   iconFg,
   title,
   description,
+  action,
 }: Readonly<SectionHeaderProps>) {
   return (
-    <div className="flex items-start gap-3 mb-5">
-      <div
-        className={`w-9 h-9 rounded-lg ${iconBg} flex items-center justify-center shrink-0`}
-      >
-        <span
-          className={`material-symbols-outlined text-[20px] ${iconFg}`}
-          aria-hidden="true"
-        >
+    <div className="flex items-start gap-3 mb-4">
+      <div className={`w-9 h-9 rounded-lg ${iconBg} flex items-center justify-center shrink-0`}>
+        <span className={`material-symbols-outlined text-[20px] ${iconFg}`} aria-hidden="true">
           {icon}
         </span>
       </div>
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1">
         <h3 className="text-base font-semibold text-foreground">{title}</h3>
         <p className="text-sm text-muted-foreground">{description}</p>
       </div>
+      {action && <div className="shrink-0 self-center">{action}</div>}
     </div>
   );
 }
@@ -126,6 +123,11 @@ export default function ContactSettingsContent() {
     useState<ContactAutomationSettings>(DEFAULT_AUTOMATION);
   const [isDirty, setIsDirty] = useState(false);
   const [resetOpen, setResetOpen] = useState(false);
+
+  // Canonical handle pattern (mirror of /accounts/account-settings): the
+  // TagsTab exposes `openCreate()` via its imperative handle so the SectionHeader
+  // CTA can trigger the new-tag dialog without lifting state.
+  const tagsTabRef = useRef<TagsTabHandle>(null);
 
   useEffect(() => {
     if (duplicateRulesQuery.data) {
@@ -248,9 +250,7 @@ export default function ContactSettingsContent() {
   );
 
   const isSaving =
-    duplicateRulesUpdate.isPending ||
-    requiredFieldsUpdate.isPending ||
-    automationUpdate.isPending;
+    duplicateRulesUpdate.isPending || requiredFieldsUpdate.isPending || automationUpdate.isPending;
 
   const handleSave = useCallback(async () => {
     try {
@@ -377,7 +377,7 @@ export default function ContactSettingsContent() {
           ═══════════════════════════════════════════════════════════════════ */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5">
         {/* Duplicate Detection */}
-        <Card className="lg:col-span-7 p-4 sm:p-6">
+        <Card className="lg:col-span-7 p-4 sm:p-5">
           <SectionHeader
             icon="content_copy"
             iconBg="bg-blue-100 dark:bg-blue-900/30"
@@ -389,7 +389,7 @@ export default function ContactSettingsContent() {
         </Card>
 
         {/* Automation */}
-        <Card className="lg:col-span-5 p-4 sm:p-6">
+        <Card className="lg:col-span-5 p-4 sm:p-5">
           <SectionHeader
             icon="bolt"
             iconBg="bg-amber-100 dark:bg-amber-900/30"
@@ -397,14 +397,11 @@ export default function ContactSettingsContent() {
             title="Automation"
             description="Automated behaviours for contact management."
           />
-          <AutomationTab
-            settings={localAutomation}
-            onSettingsChange={handleAutomationChange}
-          />
+          <AutomationTab settings={localAutomation} onSettingsChange={handleAutomationChange} />
         </Card>
 
         {/* AI & Intelligence */}
-        <Card className="lg:col-span-7 p-4 sm:p-6">
+        <Card className="lg:col-span-7 p-4 sm:p-5">
           <SectionHeader
             icon="neurology"
             iconBg="bg-fuchsia-100 dark:bg-fuchsia-900/30"
@@ -412,14 +409,11 @@ export default function ContactSettingsContent() {
             title="AI & Intelligence"
             description="Control how IntelliFlow's AI augments contact records, duplicates, tags, and replies."
           />
-          <AISettingsTab
-            settings={localAutomation}
-            onSettingsChange={handleAutomationChange}
-          />
+          <AISettingsTab settings={localAutomation} onSettingsChange={handleAutomationChange} />
         </Card>
 
         {/* Required Fields */}
-        <Card className="lg:col-span-5 p-4 sm:p-6">
+        <Card className="lg:col-span-5 p-4 sm:p-5">
           <SectionHeader
             icon="checklist"
             iconBg="bg-emerald-100 dark:bg-emerald-900/30"
@@ -431,15 +425,21 @@ export default function ContactSettingsContent() {
         </Card>
 
         {/* Tags */}
-        <Card className="lg:col-span-8 p-4 sm:p-6">
+        <Card className="lg:col-span-8 p-4 sm:p-5">
           <SectionHeader
             icon="sell"
             iconBg="bg-violet-100 dark:bg-violet-900/30"
             iconFg="text-violet-600 dark:text-violet-400"
             title="Tags"
             description="Vocabulary of tags available across the contacts module."
+            action={
+              <Button size="sm" onClick={() => tagsTabRef.current?.openCreate()}>
+                New Tag
+              </Button>
+            }
           />
           <TagsTab
+            ref={tagsTabRef}
             tags={(tagsQuery.data ?? []) as TagRow[]}
             onCreate={handleTagCreate}
             onUpdate={handleTagUpdate}
@@ -448,7 +448,7 @@ export default function ContactSettingsContent() {
         </Card>
 
         {/* Configuration Summary */}
-        <Card className="lg:col-span-4 p-4 sm:p-6">
+        <Card className="lg:col-span-4 p-4 sm:p-5">
           <SectionHeader
             icon="summarize"
             iconBg="bg-slate-100 dark:bg-slate-800"
@@ -462,9 +462,7 @@ export default function ContactSettingsContent() {
             tags={(tagsQuery.data ?? []) as TagRow[]}
             automation={localAutomation}
             lastUpdated={
-              automationQuery.data?.updatedAt
-                ? new Date(automationQuery.data.updatedAt)
-                : null
+              automationQuery.data?.updatedAt ? new Date(automationQuery.data.updatedAt) : null
             }
             isDirty={isDirty}
           />

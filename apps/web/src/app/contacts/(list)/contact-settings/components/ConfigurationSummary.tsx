@@ -27,9 +27,9 @@ const ALL_AUTOMATION_KEYS = Object.keys(
 const AI_KEYS = ALL_AUTOMATION_KEYS.filter((k) => k.startsWith('ai')) as Array<
   keyof ContactAutomationSettingsInput
 >;
-const NON_AI_AUTOMATION_KEYS = ALL_AUTOMATION_KEYS.filter(
-  (k) => !k.startsWith('ai')
-) as Array<keyof ContactAutomationSettingsInput>;
+const NON_AI_AUTOMATION_KEYS = ALL_AUTOMATION_KEYS.filter((k) => !k.startsWith('ai')) as Array<
+  keyof ContactAutomationSettingsInput
+>;
 
 export function ConfigurationSummary({
   rules,
@@ -116,7 +116,7 @@ export function ConfigurationSummary({
             <span className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400">
               <span className="material-symbols-outlined text-[14px]" aria-hidden="true">
                 edit
-              </span>
+              </span>{' '}
               Unsaved changes
             </span>
           ) : (
@@ -126,7 +126,7 @@ export function ConfigurationSummary({
                 aria-hidden="true"
               >
                 check_circle
-              </span>
+              </span>{' '}
               Saved
             </span>
           )}

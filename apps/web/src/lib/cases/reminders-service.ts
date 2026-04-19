@@ -202,7 +202,7 @@ class RemindersService {
     if (!reminder) return null;
 
     const snoozeUntil = new Date();
-    snoozeUntil.setMinutes(snoozeUntil.getMinutes() + snoozeMinutes);
+    snoozeUntil.setUTCMinutes(snoozeUntil.getUTCMinutes() + snoozeMinutes);
 
     reminder.status = 'snoozed';
     reminder.snoozeUntil = snoozeUntil;
@@ -256,7 +256,7 @@ class RemindersService {
       // Check if reminder is due
       const leadTime = PRIORITY_LEAD_TIMES[reminder.priority] || DEFAULT_REMINDER_CONFIG.leadTime;
       const reminderTime = new Date(reminder.dueDate);
-      reminderTime.setMinutes(reminderTime.getMinutes() - leadTime);
+      reminderTime.setUTCMinutes(reminderTime.getUTCMinutes() - leadTime);
 
       if (reminder.status === 'pending' && reminderTime <= now) {
         this.triggerNotification(reminder);

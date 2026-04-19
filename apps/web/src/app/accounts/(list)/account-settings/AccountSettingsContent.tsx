@@ -1,9 +1,9 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { trpc } from '@/lib/trpc';
-import { Card, ConfirmationDialog, toast } from '@intelliflow/ui';
+import { Button, Card, ConfirmationDialog, toast } from '@intelliflow/ui';
 import { PageHeader } from '@/components/shared/page-header';
 import type {
   AccountHierarchyConfigInput,
@@ -12,19 +12,17 @@ import type {
   UpdateAccountTagInput,
 } from '@intelliflow/validators';
 import { HierarchyTab } from './components/HierarchyTab';
-import { IndustryTab, type IndustryRow } from './components/IndustryTab';
+import { IndustryTab, type IndustryRow, type IndustryTabHandle } from './components/IndustryTab';
 import {
   CustomFieldsTab,
   type CustomFieldRow,
   type CreateFieldData,
   type UpdateFieldData,
+  type CustomFieldsTabHandle,
 } from './components/CustomFieldsTab';
-import {
-  DuplicateDetectionTab,
-  type DuplicateRuleRow,
-} from './components/DuplicateDetectionTab';
+import { DuplicateDetectionTab, type DuplicateRuleRow } from './components/DuplicateDetectionTab';
 import { RequiredFieldsTab, type RequiredFieldRow } from './components/RequiredFieldsTab';
-import { TagsTab, type TagRow } from './components/TagsTab';
+import { TagsTab, type TagRow, type TagsTabHandle } from './components/TagsTab';
 import { AutomationTab, type AccountAutomationSettings } from './components/AutomationTab';
 import { AISettingsTab } from './components/AISettingsTab';
 import { ConfigurationSummary } from './components/ConfigurationSummary';
@@ -58,9 +56,17 @@ interface SectionHeaderProps {
   iconFg: string;
   title: string;
   description: string;
+  action?: React.ReactNode;
 }
 
-function SectionHeader({ icon, iconBg, iconFg, title, description }: Readonly<SectionHeaderProps>) {
+function SectionHeader({
+  icon,
+  iconBg,
+  iconFg,
+  title,
+  description,
+  action,
+}: Readonly<SectionHeaderProps>) {
   return (
     <div className="flex items-start gap-3 mb-5">
       <div className={`w-9 h-9 rounded-lg ${iconBg} flex items-center justify-center shrink-0`}>
@@ -68,10 +74,11 @@ function SectionHeader({ icon, iconBg, iconFg, title, description }: Readonly<Se
           {icon}
         </span>
       </div>
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1">
         <h3 className="text-base font-semibold text-foreground">{title}</h3>
         <p className="text-sm text-muted-foreground">{description}</p>
       </div>
+      {action && <div className="shrink-0">{action}</div>}
     </div>
   );
 }
@@ -103,13 +110,27 @@ export default function AccountSettingsContent() {
   const utils = trpc.useUtils();
 
   // ── Queries ──────────────────────────────────────────────
-  const hierarchyQuery = trpc.accountSettings.hierarchy.get.useQuery(undefined, { enabled: isAuthenticated });
-  const industryQuery = trpc.accountSettings.industry.list.useQuery(undefined, { enabled: isAuthenticated });
-  const customFieldsQuery = trpc.accountSettings.customFields.list.useQuery(undefined, { enabled: isAuthenticated });
-  const duplicateRulesQuery = trpc.accountSettings.duplicateRules.getAll.useQuery(undefined, { enabled: isAuthenticated });
-  const requiredFieldsQuery = trpc.accountSettings.requiredFields.getAll.useQuery(undefined, { enabled: isAuthenticated });
-  const tagsQuery = trpc.accountSettings.tags.list.useQuery(undefined, { enabled: isAuthenticated });
-  const automationQuery = trpc.accountSettings.automation.get.useQuery(undefined, { enabled: isAuthenticated });
+  const hierarchyQuery = trpc.accountSettings.hierarchy.get.useQuery(undefined, {
+    enabled: isAuthenticated,
+  });
+  const industryQuery = trpc.accountSettings.industry.list.useQuery(undefined, {
+    enabled: isAuthenticated,
+  });
+  const customFieldsQuery = trpc.accountSettings.customFields.list.useQuery(undefined, {
+    enabled: isAuthenticated,
+  });
+  const duplicateRulesQuery = trpc.accountSettings.duplicateRules.getAll.useQuery(undefined, {
+    enabled: isAuthenticated,
+  });
+  const requiredFieldsQuery = trpc.accountSettings.requiredFields.getAll.useQuery(undefined, {
+    enabled: isAuthenticated,
+  });
+  const tagsQuery = trpc.accountSettings.tags.list.useQuery(undefined, {
+    enabled: isAuthenticated,
+  });
+  const automationQuery = trpc.accountSettings.automation.get.useQuery(undefined, {
+    enabled: isAuthenticated,
+  });
 
   // ── Mutations ────────────────────────────────────────────
   const hierarchyUpdate = trpc.accountSettings.hierarchy.update.useMutation({
@@ -165,12 +186,19 @@ export default function AccountSettingsContent() {
   });
 
   // ── Local state (dirty-tracked) ──────────────────────────
-  const [localHierarchy, setLocalHierarchy] = useState<AccountHierarchyConfigInput>(DEFAULT_HIERARCHY);
+  const [localHierarchy, setLocalHierarchy] =
+    useState<AccountHierarchyConfigInput>(DEFAULT_HIERARCHY);
   const [localRules, setLocalRules] = useState<DuplicateRuleRow[]>([]);
   const [localRequired, setLocalRequired] = useState<RequiredFieldRow[]>([]);
-  const [localAutomation, setLocalAutomation] = useState<AccountAutomationSettings>(DEFAULT_AUTOMATION);
+  const [localAutomation, setLocalAutomation] =
+    useState<AccountAutomationSettings>(DEFAULT_AUTOMATION);
   const [isDirty, setIsDirty] = useState(false);
   const [resetOpen, setResetOpen] = useState(false);
+
+  // Imperative handles so section headers can fire each tab's create dialog.
+  const industryRef = useRef<IndustryTabHandle>(null);
+  const customFieldsRef = useRef<CustomFieldsTabHandle>(null);
+  const tagsRef = useRef<TagsTabHandle>(null);
 
   useEffect(() => {
     if (hierarchyQuery.data) {
@@ -525,7 +553,8 @@ export default function AccountSettingsContent() {
     const dates: Date[] = [];
     if (hierarchyQuery.data?.updatedAt) dates.push(new Date(hierarchyQuery.data.updatedAt));
     if (automationQuery.data?.updatedAt) dates.push(new Date(automationQuery.data.updatedAt));
-    for (const row of industryQuery.data ?? []) if (row.updatedAt) dates.push(new Date(row.updatedAt));
+    for (const row of industryQuery.data ?? [])
+      if (row.updatedAt) dates.push(new Date(row.updatedAt));
     if (dates.length === 0) return null;
     return new Date(Math.max(...dates.map((d) => d.getTime())));
   }, [hierarchyQuery.data, automationQuery.data, industryQuery.data]);
@@ -659,8 +688,22 @@ export default function AccountSettingsContent() {
             iconFg="text-teal-600 dark:text-teal-400"
             title="Industry"
             description="Admin-configurable taxonomy of industries for account records."
+            action={
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => industryRef.current?.openCreate()}
+                disabled={industryIsBusy}
+              >
+                <span className="material-symbols-outlined text-sm mr-1" aria-hidden>
+                  add
+                </span>{' '}
+                Add Industry
+              </Button>
+            }
           />
           <IndustryTab
+            ref={industryRef}
             rows={industryRows}
             onCreate={handleIndustryCreate}
             onUpdate={handleIndustryUpdate}
@@ -689,8 +732,22 @@ export default function AccountSettingsContent() {
             iconFg="text-violet-600 dark:text-violet-400"
             title="Custom Fields"
             description="Additional data captured on account records."
+            action={
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => customFieldsRef.current?.openCreate()}
+                disabled={fieldsIsBusy}
+              >
+                <span className="material-symbols-outlined text-sm mr-1" aria-hidden>
+                  add
+                </span>{' '}
+                Add Field
+              </Button>
+            }
           />
           <CustomFieldsTab
+            ref={customFieldsRef}
             rows={fieldRows}
             onCreate={handleFieldCreate}
             onUpdate={handleFieldUpdate}
@@ -707,8 +764,22 @@ export default function AccountSettingsContent() {
             iconFg="text-indigo-600 dark:text-indigo-400"
             title="Tags"
             description="Tag vocabulary for the Accounts module."
+            action={
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => tagsRef.current?.openCreate()}
+                disabled={tagsIsBusy}
+              >
+                <span className="material-symbols-outlined text-sm mr-1" aria-hidden>
+                  add
+                </span>{' '}
+                Add Tag
+              </Button>
+            }
           />
           <TagsTab
+            ref={tagsRef}
             tags={tagRows}
             onCreate={handleTagCreate}
             onUpdate={handleTagUpdate}

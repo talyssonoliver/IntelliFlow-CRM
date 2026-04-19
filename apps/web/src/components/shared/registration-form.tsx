@@ -152,7 +152,7 @@ function PasswordStrengthIndicator({
         </span>
       </div>
       <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
-        {}
+        {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role */}
         <span
           className={cn(
             'h-full rounded-full transition-all duration-300 block',

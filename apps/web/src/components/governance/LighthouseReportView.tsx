@@ -221,8 +221,8 @@ function FullReportSection({ htmlPath }: { htmlPath?: string }) {
           </Button>
           <Button variant="outline" size="sm" asChild>
             <a href={htmlPath} target="_blank" rel="noopener noreferrer">
-              <span className="material-symbols-outlined text-sm mr-1">open_in_new</span>
-              Open in Tab
+              <span className="material-symbols-outlined text-sm mr-1">open_in_new</span> Open in
+              Tab
             </a>
           </Button>
         </div>

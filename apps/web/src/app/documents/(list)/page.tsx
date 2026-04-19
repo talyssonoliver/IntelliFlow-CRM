@@ -20,17 +20,16 @@ import {
   type DocumentRecord,
   type DocumentStatus,
 } from '@/components/documents';
+import {
+  getDocumentTypeDisplayLabel,
+  SYSTEM_DOCUMENT_TYPE_OPTIONS,
+} from '@/components/documents/document-type-utils';
 
 // =============================================================================
 // Filter Options
 // =============================================================================
 
-const DOCUMENT_TYPE_OPTIONS = [
-  { value: 'contract', label: 'Contract' },
-  { value: 'motion', label: 'Motion' },
-  { value: 'evidence', label: 'Evidence' },
-  { value: 'agreement', label: 'Agreement' },
-];
+const CUSTOM_DOCUMENT_TYPE_FILTER_PREFIX = 'custom:';
 
 const DOCUMENT_STATUS_OPTIONS = [
   { value: 'DRAFT', label: 'Draft' },
@@ -84,7 +83,7 @@ const columns: ColumnDef<DocumentRecord>[] = [
     header: 'Type',
     cell: ({ row }) => (
       <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
-        {row.original.metadata.documentType}
+        {getDocumentTypeDisplayLabel(row.original.metadata)}
       </span>
     ),
   },
@@ -216,28 +215,72 @@ export default function DocumentsPage() {
     { limit: 100, offset: 0 },
     { enabled: isAuthenticated && !authLoading }
   );
+  const { data: customDocumentTypes = [] } = trpc.documentSettings.documentTypes.list.useQuery(
+    undefined,
+    { enabled: isAuthenticated && !authLoading }
+  );
 
   // tRPC mutations
   const bulkDownloadMutation = trpc.documents.bulkDownload.useMutation();
   const bulkArchiveMutation = trpc.documents.bulkArchive.useMutation();
   const bulkDeleteMutation = trpc.documents.bulkDelete.useMutation();
 
-  const documents = (data?.data || []) as DocumentRecord[];
+  const documents = useMemo<DocumentRecord[]>(
+    () => (data?.data ?? []) as DocumentRecord[],
+    [data?.data]
+  );
+
+  const documentTypeOptions = useMemo(
+    () => [
+      ...SYSTEM_DOCUMENT_TYPE_OPTIONS.map((option) => ({
+        value: option.value,
+        label: option.label,
+        group: 'Built-in',
+      })),
+      ...customDocumentTypes.map((documentType) => ({
+        value: `${CUSTOM_DOCUMENT_TYPE_FILTER_PREFIX}${documentType.id}`,
+        label: documentType.name,
+        group: 'Custom',
+      })),
+    ],
+    [customDocumentTypes]
+  );
 
   // Filter and sort documents
   const filteredDocuments = useMemo(() => {
-    let docs = documents.filter(
-      (doc) =>
-        searchQuery === '' ||
-        doc.metadata.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        doc.metadata.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        doc.metadata.documentType.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    let docs = documents.filter((doc) => {
+      if (searchQuery === '') {
+        return true;
+      }
+
+      const normalizedQuery = searchQuery.toLowerCase();
+      const documentTypeLabel = getDocumentTypeDisplayLabel(doc.metadata).toLowerCase();
+
+      return (
+        doc.metadata.title.toLowerCase().includes(normalizedQuery) ||
+        doc.metadata.description?.toLowerCase().includes(normalizedQuery) ||
+        doc.metadata.documentType.toLowerCase().includes(normalizedQuery) ||
+        documentTypeLabel.includes(normalizedQuery)
+      );
+    });
 
     if (typeFilter) {
-      docs = docs.filter(
-        (doc) => doc.metadata.documentType.toLowerCase() === typeFilter.toLowerCase()
-      );
+      if (typeFilter.startsWith(CUSTOM_DOCUMENT_TYPE_FILTER_PREFIX)) {
+        const customTypeId = typeFilter.slice(CUSTOM_DOCUMENT_TYPE_FILTER_PREFIX.length);
+        const customTypeName = customDocumentTypes.find(
+          (documentType) => documentType.id === customTypeId
+        )?.name;
+
+        if (customTypeName) {
+          docs = docs.filter(
+            (doc) =>
+              getDocumentTypeDisplayLabel(doc.metadata).toLowerCase() ===
+              customTypeName.toLowerCase()
+          );
+        }
+      } else {
+        docs = docs.filter((doc) => doc.metadata.documentType === typeFilter);
+      }
     }
 
     if (statusFilter) {
@@ -257,7 +300,7 @@ export default function DocumentsPage() {
     }
 
     return docs;
-  }, [documents, searchQuery, typeFilter, statusFilter, sortOrder]);
+  }, [customDocumentTypes, documents, searchQuery, typeFilter, statusFilter, sortOrder]);
 
   // Handle row click - navigate to document detail
   const handleRowClick = (doc: DocumentRecord) => {
@@ -440,6 +483,12 @@ export default function DocumentsPage() {
         description="Manage legal documents with versioning, e-signatures, and access control."
         actions={[
           {
+            label: 'Document Types',
+            icon: 'category',
+            variant: 'secondary',
+            href: '/documents/document-types',
+          },
+          {
             label: 'Upload Document',
             icon: 'upload_file',
             variant: 'primary',
@@ -459,7 +508,7 @@ export default function DocumentsPage() {
             id: 'type',
             label: 'Document Type',
             icon: 'description',
-            options: DOCUMENT_TYPE_OPTIONS,
+            options: documentTypeOptions,
             value: typeFilter,
             onChange: setTypeFilter,
           },

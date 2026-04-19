@@ -43,6 +43,7 @@ export function ProbabilityGauge({
   const colorClass = getGaugeColor(clamped, isAtRisk);
 
   return (
+    // eslint-disable-next-line jsx-a11y/prefer-tag-over-role
     <div // NOSONAR — SVG gauge; role="meter" is the correct ARIA pattern, no native HTML equivalent for SVG-based meters
       className="flex flex-col items-center gap-1"
       data-testid="probability-gauge"

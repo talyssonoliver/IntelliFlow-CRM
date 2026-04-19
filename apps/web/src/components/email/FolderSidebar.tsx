@@ -1,17 +1,17 @@
 'use client';
 
 import { useCallback, useRef } from 'react';
-import { Inbox, Send, FileText, Archive, AlertTriangle, Trash2, PenSquare } from 'lucide-react';
+
 import { cn } from '@/lib/utils';
 import { EmailStorageIndicator } from '@/components/sidebar/configs/EmailSidebarContent';
 
 const FOLDERS = [
-  { id: 'inbox', label: 'Inbox', icon: Inbox },
-  { id: 'sent', label: 'Sent', icon: Send },
-  { id: 'drafts', label: 'Drafts', icon: FileText },
-  { id: 'archive', label: 'Archive', icon: Archive },
-  { id: 'spam', label: 'Spam', icon: AlertTriangle },
-  { id: 'trash', label: 'Trash', icon: Trash2 },
+  { id: 'inbox', label: 'Inbox', icon: 'inbox' },
+  { id: 'sent', label: 'Sent', icon: 'send' },
+  { id: 'drafts', label: 'Drafts', icon: 'description' },
+  { id: 'archive', label: 'Archive', icon: 'archive' },
+  { id: 'spam', label: 'Spam', icon: 'warning' },
+  { id: 'trash', label: 'Trash', icon: 'delete' },
 ] as const;
 
 const LABELS = [
@@ -63,7 +63,9 @@ export function FolderSidebar({
           )}
           onClick={onCompose}
         >
-          <PenSquare className="h-4 w-4" />
+          <span className="material-symbols-outlined text-base" aria-hidden="true">
+            edit_note
+          </span>{' '}
           Compose
         </button>
       </div>
@@ -71,7 +73,6 @@ export function FolderSidebar({
       {/* Folder list */}
       <div className="flex-1 space-y-0.5 px-2">
         {FOLDERS.map((folder, i) => {
-          const Icon = folder.icon;
           const isActive = activeFolder === folder.id;
           const count = unreadCounts[folder.id];
 
@@ -93,7 +94,9 @@ export function FolderSidebar({
               onClick={() => onFolderSelect(folder.id)}
               onKeyDown={(e) => handleKeyDown(e, i)}
             >
-              <Icon className="h-4 w-4" />
+              <span className="material-symbols-outlined text-base" aria-hidden="true">
+                {folder.icon}
+              </span>
               <span className="flex-1 text-left">{folder.label}</span>
               {count != null && count > 0 && (
                 <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-medium text-primary-foreground">

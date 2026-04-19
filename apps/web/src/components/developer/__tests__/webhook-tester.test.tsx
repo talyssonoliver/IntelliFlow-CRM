@@ -12,6 +12,7 @@ vi.mock('@intelliflow/ui', async (importOriginal) => {
       <SelectContext.Provider value={{ value, onValueChange }}>{children}</SelectContext.Provider>
     ),
     SelectTrigger: ({ children, ...props }: any) => (
+      // eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- test renders custom modal/dropdown
       <div role="combobox" aria-controls="select-listbox" aria-expanded={false} {...props}>
         {children}
       </div>
@@ -21,6 +22,7 @@ vi.mock('@intelliflow/ui', async (importOriginal) => {
     SelectItem: ({ children, value: itemValue }: any) => (
       <SelectContext.Consumer>
         {(ctx: any) => (
+          // eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- test renders custom modal/dropdown
           <div
             role="option"
             tabIndex={0}

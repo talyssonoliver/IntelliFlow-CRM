@@ -250,8 +250,8 @@ export function DocumentUpload({
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Drop Zone */}
       {}
-      <div // NOSONAR — file drop zone with nested interactive elements (Remove button); drag events require div wrapper
-        role="button"
+      <button // NOSONAR — file drop zone with nested interactive elements (Remove button)
+        type="button"
         tabIndex={0}
         aria-label="Drop files here or click to browse"
         className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer
@@ -315,7 +315,7 @@ export function DocumentUpload({
             </p>
           </div>
         )}
-      </div>
+      </button>
 
       {/* Upload Progress */}
       {}

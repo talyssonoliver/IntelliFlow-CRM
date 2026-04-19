@@ -107,6 +107,64 @@ export const SETTINGS_ITEMS: SettingItem[] = [
     color: 'bg-primary/70',
     keywords: ['account', 'hierarchy', 'industry', 'custom field', 'parent', 'child', 'tier'],
   },
+  {
+    id: 'deals',
+    title: 'Deals',
+    description:
+      'Pipeline stages, win/loss reasons, scoring, duplicate detection, tags and automation for deals',
+    href: '/deals/deal-settings',
+    icon: 'trending_up',
+    color: 'bg-primary/68',
+    keywords: [
+      'deal',
+      'pipeline',
+      'stage',
+      'win',
+      'loss',
+      'scoring',
+      'duplicate',
+      'tag',
+      'automation',
+    ],
+  },
+  {
+    id: 'tickets',
+    title: 'Tickets',
+    description:
+      'Default SLA, auto-close, duplicate detection, required fields, tags, and automation for tickets',
+    href: '/tickets/sla-policies',
+    icon: 'support_agent',
+    color: 'bg-primary/65',
+    keywords: [
+      'ticket',
+      'sla',
+      'auto-close',
+      'duplicate',
+      'tag',
+      'automation',
+      'support',
+      'notification',
+    ],
+  },
+  {
+    id: 'documents',
+    title: 'Documents',
+    description:
+      'File types, size limits, antivirus, retention, and duplicate detection for documents',
+    href: '/documents/document-settings',
+    icon: 'description',
+    color: 'bg-teal-600',
+    keywords: [
+      'document',
+      'file',
+      'upload',
+      'antivirus',
+      'retention',
+      'duplicate',
+      'tag',
+      'required',
+    ],
+  },
 ];
 
 /**
@@ -121,7 +179,7 @@ export const SETTINGS_CATEGORIES: SettingCategory[] = [
   {
     id: 'ai-automation',
     title: 'AI & Automation',
-    itemIds: ['ai', 'pipeline', 'leads', 'accounts'],
+    itemIds: ['ai', 'pipeline', 'leads', 'accounts', 'deals', 'tickets', 'documents'],
   },
   {
     id: 'integrations-comms',

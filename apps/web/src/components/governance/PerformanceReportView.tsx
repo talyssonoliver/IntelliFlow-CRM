@@ -107,7 +107,7 @@ function MetricCard({
       : 0;
 
   return (
-    <Card className="p-4" role="region" aria-label={ariaLabel}>
+    <Card className="p-4" aria-label={ariaLabel}>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <span className="material-symbols-outlined text-base text-muted-foreground">{icon}</span>

@@ -38,7 +38,7 @@ export default function TermsPage() {
             <div className="inline-flex items-center gap-2 rounded-full bg-[#137fec]/10 px-4 py-2 text-sm font-medium text-[#137fec]">
               <span className="material-symbols-outlined text-base" aria-hidden="true">
                 gavel
-              </span>
+              </span>{' '}
               Legal agreement governing your use of IntelliFlow CRM
             </div>
 

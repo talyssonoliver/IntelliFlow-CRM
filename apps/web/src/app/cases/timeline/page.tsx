@@ -1022,7 +1022,7 @@ function CaseTimelinePageContent() {
       }));
       reminders.createFromTimelineEvents(reminderEvents);
     }
-  }, [apiEvents]);
+  }, [apiEvents, reminders]);
 
   const handleEventClick = (event: TimelineEvent) => {
     console.log('Event clicked:', event);

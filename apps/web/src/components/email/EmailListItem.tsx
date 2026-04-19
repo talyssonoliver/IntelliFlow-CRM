@@ -1,6 +1,5 @@
 'use client';
 
-import { Paperclip } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { EMAIL_LABELS } from '@/components/sidebar/configs/EmailSidebarContent';
 import { EntityHoverCard } from '@/components/shared';
@@ -61,7 +60,7 @@ export function EmailListItem({ email, isSelected, onSelect }: Readonly<EmailLis
       side="right"
       align="start"
     >
-      {}
+      {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- custom dropdown option */}
       <li
         role="option"
         aria-selected={isSelected}
@@ -121,10 +120,13 @@ export function EmailListItem({ email, isSelected, onSelect }: Readonly<EmailLis
               </span>
             )}
             {email.attachments.length > 0 ? (
-              <Paperclip
+              <span
+                className="material-symbols-outlined text-base shrink-0 text-muted-foreground"
                 data-testid="attachment-icon"
-                className="h-3 w-3 shrink-0 text-muted-foreground"
-              />
+                aria-hidden="true"
+              >
+                attach_file
+              </span>
             ) : null}
           </div>
         </div>

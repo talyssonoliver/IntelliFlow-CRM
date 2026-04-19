@@ -32,8 +32,6 @@ describe('AISettingsTab', () => {
     const onSettingsChange = vi.fn();
     render(<AISettingsTab settings={baseSettings} onSettingsChange={onSettingsChange} />);
     fireEvent.click(screen.getByLabelText(/AI data enrichment/i));
-    expect(onSettingsChange).toHaveBeenCalledWith(
-      expect.objectContaining({ aiEnrichment: true })
-    );
+    expect(onSettingsChange).toHaveBeenCalledWith(expect.objectContaining({ aiEnrichment: true }));
   });
 });

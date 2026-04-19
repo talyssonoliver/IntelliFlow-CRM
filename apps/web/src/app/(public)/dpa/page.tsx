@@ -113,7 +113,7 @@ export default function DpaPage() {
                 >
                   <span className="material-symbols-outlined text-base" aria-hidden="true">
                     download
-                  </span>
+                  </span>{' '}
                   Download DPA Template
                 </a>
               </div>

@@ -228,16 +228,22 @@ describe('TaskList', () => {
 
   it('renders overdue date styling', () => {
     const pastDate = new Date();
-    pastDate.setDate(pastDate.getDate() - 5);
+    pastDate.setUTCDate(pastDate.getUTCDate() - 5);
     const overdueTask = createMockTask({ dueDate: pastDate.toISOString() });
     render(<TaskList {...defaultProps} tasks={[overdueTask]} />);
     expect(screen.getByTestId('due-overdue')).toBeInTheDocument();
   });
 
   it('renders today date styling', () => {
-    const today = new Date();
-    today.setHours(12, 0, 0, 0);
-    const todayTask = createMockTask({ dueDate: today.toISOString() });
+    // getDueDateStatus in TaskList.tsx compares dueDay vs now by UTC day, so
+    // build the fixture from UTC noon of the current UTC day — otherwise a
+    // local-time noon near either side of 00:00 UTC lands on the adjacent UTC
+    // day and the component returns 'overdue' / 'normal' instead of 'today'.
+    const now = new Date();
+    const todayUtcNoon = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 12, 0, 0, 0)
+    );
+    const todayTask = createMockTask({ dueDate: todayUtcNoon.toISOString() });
     render(<TaskList {...defaultProps} tasks={[todayTask]} />);
     expect(screen.getByTestId('due-today')).toBeInTheDocument();
   });

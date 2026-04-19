@@ -10,6 +10,7 @@ import { TaskCard } from '../TaskCard';
 
 vi.mock('@intelliflow/ui', () => ({
   Card: ({ children, className, onClick, role, ...props }: any) => (
+    // eslint-disable-next-line jsx-a11y/no-static-element-interactions -- test renders component with event handlers
     <div
       className={className}
       onClick={onClick}

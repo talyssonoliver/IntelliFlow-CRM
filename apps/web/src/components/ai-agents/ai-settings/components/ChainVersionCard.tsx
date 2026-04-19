@@ -118,7 +118,6 @@ export function ChainVersionCard({
         isSelected ? 'border-primary ring-1 ring-primary' : ''
       }`}
       onClick={() => onSelect?.(id)}
-      role="button"
       tabIndex={0}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {

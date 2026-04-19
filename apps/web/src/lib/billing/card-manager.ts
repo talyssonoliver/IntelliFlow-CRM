@@ -54,8 +54,8 @@ const EXPIRING_SOON_MONTHS = 3;
  */
 export function isCardExpired(expMonth: number, expYear: number): boolean {
   const now = new Date();
-  const currentMonth = now.getMonth() + 1; // 1-indexed
-  const currentYear = now.getFullYear();
+  const currentMonth = now.getUTCMonth() + 1; // 1-indexed
+  const currentYear = now.getUTCFullYear();
 
   // Convert 2-digit year to 4-digit if needed
   const fullYear = expYear < 100 ? 2000 + expYear : expYear;
@@ -84,7 +84,7 @@ export function isCardExpiringSoon(
   }
 
   const now = new Date();
-  const futureDate = new Date(now.getFullYear(), now.getMonth() + monthsAhead, 1);
+  const futureDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + monthsAhead, 1));
 
   // Convert 2-digit year to 4-digit if needed
   const fullYear = expYear < 100 ? 2000 + expYear : expYear;
@@ -109,8 +109,8 @@ export function formatCardExpiry(expMonth: number, expYear: number): string {
  */
 export function getMonthsUntilExpiry(expMonth: number, expYear: number): number {
   const now = new Date();
-  const currentMonth = now.getMonth() + 1;
-  const currentYear = now.getFullYear();
+  const currentMonth = now.getUTCMonth() + 1;
+  const currentYear = now.getUTCFullYear();
   const fullYear = expYear < 100 ? 2000 + expYear : expYear;
 
   const monthsRemaining = (fullYear - currentYear) * 12 + (expMonth - currentMonth);

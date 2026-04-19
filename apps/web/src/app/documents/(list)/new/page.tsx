@@ -1,22 +1,25 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Card, toast } from '@intelliflow/ui';
+import { DOCUMENT_TYPES, type DocumentType } from '@intelliflow/domain';
 import { trpc } from '@/lib/trpc';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
-// Document types from domain model (matching API schema)
-type DocumentType =
-  | 'CONTRACT'
-  | 'AGREEMENT'
-  | 'EVIDENCE'
-  | 'CORRESPONDENCE'
-  | 'COURT_FILING'
-  | 'MEMO'
-  | 'REPORT'
-  | 'OTHER';
+import { SYSTEM_DOCUMENT_TYPE_LABELS } from '@/components/documents/document-type-utils';
 type DocumentClassification = 'PUBLIC' | 'INTERNAL' | 'CONFIDENTIAL' | 'PRIVILEGED';
+type DocumentTypeField = DocumentType | `custom:${string}` | '';
+
+interface CustomDocumentTypeDefinition {
+  id: string;
+  name: string;
+  description: string | null;
+  sortOrder: number;
+}
+
+const CUSTOM_DOCUMENT_TYPE_PREFIX = 'custom:';
+const DOCUMENT_LIST_QUERY = { limit: 100, offset: 0 } as const;
 
 // Form data structure
 interface DocumentFormData {
@@ -25,7 +28,8 @@ interface DocumentFormData {
   // Metadata
   title: string;
   description: string;
-  documentType: DocumentType;
+  documentType: DocumentTypeField;
+  documentTypeLabel: string;
   classification: DocumentClassification;
   tags: string[];
   // Relations
@@ -37,26 +41,13 @@ const initialFormData: DocumentFormData = {
   file: null,
   title: '',
   description: '',
-  documentType: 'OTHER' as DocumentType, // Default to OTHER until user selects
+  documentType: '',
+  documentTypeLabel: '',
   classification: 'INTERNAL' as DocumentClassification,
   tags: [],
   relatedCaseId: '',
   relatedContactId: '',
 };
-
-// Document type options
-const documentTypeOptions = [
-  { value: '', label: 'Select document type...' },
-  { value: 'CONTRACT', label: 'Contract' },
-  { value: 'AGREEMENT', label: 'Agreement' },
-  { value: 'MOTION', label: 'Motion' },
-  { value: 'BRIEF', label: 'Brief' },
-  { value: 'EVIDENCE', label: 'Evidence' },
-  { value: 'CORRESPONDENCE', label: 'Correspondence' },
-  { value: 'MEMO', label: 'Memo' },
-  { value: 'REPORT', label: 'Report' },
-  { value: 'OTHER', label: 'Other' },
-];
 
 // Classification options
 const classificationOptions = [
@@ -85,9 +76,53 @@ const availableTags = [
   'Real Estate',
 ];
 
+function getCustomDocumentTypeValue(id: string): `custom:${string}` {
+  return `${CUSTOM_DOCUMENT_TYPE_PREFIX}${id}`;
+}
+
+function resolveDocumentTypeSelection(
+  selection: DocumentTypeField,
+  customDocumentTypes: CustomDocumentTypeDefinition[],
+  manualLabel: string
+): { documentType: DocumentType; documentTypeLabel?: string } | null {
+  if (!selection) {
+    return null;
+  }
+
+  if ((DOCUMENT_TYPES as readonly string[]).includes(selection)) {
+    if (selection === 'OTHER') {
+      const trimmedLabel = manualLabel.trim();
+      return {
+        documentType: 'OTHER',
+        documentTypeLabel: trimmedLabel || undefined,
+      };
+    }
+
+    return {
+      documentType: selection as DocumentType,
+    };
+  }
+
+  if (!selection.startsWith(CUSTOM_DOCUMENT_TYPE_PREFIX)) {
+    return null;
+  }
+
+  const customTypeId = selection.slice(CUSTOM_DOCUMENT_TYPE_PREFIX.length);
+  const customType = customDocumentTypes.find((item) => item.id === customTypeId);
+  if (!customType) {
+    return null;
+  }
+
+  return {
+    documentType: 'OTHER',
+    documentTypeLabel: customType.name,
+  };
+}
+
 export default function UploadDocumentPage() {
   const router = useRouter();
-  useRequireAuth();
+  const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
+  const utils = trpc.useUtils();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState<DocumentFormData>(initialFormData);
   const [errors, setErrors] = useState<Partial<Record<keyof DocumentFormData, string>>>({});
@@ -95,6 +130,30 @@ export default function UploadDocumentPage() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [tagInput, setTagInput] = useState('');
+
+  const { data: customDocumentTypes = [] } = trpc.documentSettings.documentTypes.list.useQuery(
+    undefined,
+    {
+      enabled: isAuthenticated && !authLoading,
+    }
+  );
+
+  const resolvedDocumentType = useMemo(
+    () =>
+      resolveDocumentTypeSelection(
+        formData.documentType,
+        customDocumentTypes as CustomDocumentTypeDefinition[],
+        formData.documentTypeLabel
+      ),
+    [customDocumentTypes, formData.documentType, formData.documentTypeLabel]
+  );
+
+  const isManualOtherType = formData.documentType === 'OTHER';
+  const selectedCustomDocumentType =
+    formData.documentType.startsWith(CUSTOM_DOCUMENT_TYPE_PREFIX) &&
+    resolvedDocumentType?.documentTypeLabel
+      ? resolvedDocumentType.documentTypeLabel
+      : null;
 
   // tRPC mutation for creating documents
   const createDocument = trpc.documents.create.useMutation();
@@ -109,6 +168,19 @@ export default function UploadDocumentPage() {
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
+  };
+
+  const handleDocumentTypeChange = (value: DocumentTypeField) => {
+    setFormData((prev) => ({
+      ...prev,
+      documentType: value,
+      documentTypeLabel: value === 'OTHER' ? prev.documentTypeLabel : '',
+    }));
+    setErrors((prev) => ({
+      ...prev,
+      documentType: undefined,
+      documentTypeLabel: undefined,
+    }));
   };
 
   // Handle file selection
@@ -232,6 +304,13 @@ export default function UploadDocumentPage() {
 
     if (!formData.documentType) {
       newErrors.documentType = 'Please select a document type';
+    } else if (!resolvedDocumentType) {
+      newErrors.documentType = 'Please select a valid document type';
+    } else if (
+      resolvedDocumentType.documentType === 'OTHER' &&
+      !resolvedDocumentType.documentTypeLabel?.trim()
+    ) {
+      newErrors.documentTypeLabel = 'Enter a custom document type';
     }
 
     setErrors(newErrors);
@@ -245,10 +324,11 @@ export default function UploadDocumentPage() {
     if (!validateForm()) return;
 
     setIsSubmitting(true);
+    let progressInterval: ReturnType<typeof setInterval> | undefined;
 
     try {
       // Simulate upload progress
-      const progressInterval = setInterval(() => {
+      progressInterval = setInterval(() => {
         setUploadProgress((prev) => {
           if (prev >= 90) {
             clearInterval(progressInterval);
@@ -259,6 +339,15 @@ export default function UploadDocumentPage() {
       }, 100);
 
       const file = formData.file!;
+      if (!resolvedDocumentType) {
+        if (progressInterval) {
+          clearInterval(progressInterval);
+        }
+        setErrors((prev) => ({ ...prev, documentType: 'Please select a valid document type' }));
+        setIsSubmitting(false);
+        setUploadProgress(0);
+        return;
+      }
 
       // Calculate file hash
       setUploadProgress(30);
@@ -268,10 +357,11 @@ export default function UploadDocumentPage() {
       setUploadProgress(50);
 
       // Create document via tRPC mutation — server generates storageKey (AC-011)
-      await createDocument.mutateAsync({
+      const createdDocument = await createDocument.mutateAsync({
         title: formData.title.trim(),
         description: formData.description.trim() || undefined,
-        documentType: formData.documentType,
+        documentType: resolvedDocumentType.documentType,
+        documentTypeLabel: resolvedDocumentType.documentTypeLabel,
         classification: formData.classification,
         tags: formData.tags,
         sizeBytes: file.size,
@@ -281,15 +371,35 @@ export default function UploadDocumentPage() {
         relatedContactId: formData.relatedContactId || undefined,
       });
 
-      clearInterval(progressInterval);
+      if (progressInterval) {
+        clearInterval(progressInterval);
+      }
       setUploadProgress(100);
 
-      // Success - redirect to documents list
-      setTimeout(() => {
-        router.push('/documents');
-      }, 500);
+      utils.documents.list.setData(DOCUMENT_LIST_QUERY, (current) => {
+        if (!current) {
+          return current;
+        }
+
+        const alreadyExists = current.data.some((document) => document.id === createdDocument.id);
+        const nextData = [
+          createdDocument,
+          ...current.data.filter((document) => document.id !== createdDocument.id),
+        ].slice(0, DOCUMENT_LIST_QUERY.limit);
+
+        return {
+          ...current,
+          data: nextData,
+          total: alreadyExists ? current.total : current.total + 1,
+        };
+      });
+
+      await utils.documents.list.invalidate();
+      router.push('/documents');
     } catch (err) {
-      console.error('Failed to upload document:', err);
+      if (progressInterval) {
+        clearInterval(progressInterval);
+      }
       toast({
         title: 'Upload Failed',
         description:
@@ -497,19 +607,44 @@ export default function UploadDocumentPage() {
                   <select
                     id="doc-document-type"
                     value={formData.documentType}
-                    onChange={(e) => updateField('documentType', e.target.value)}
+                    onChange={(e) => handleDocumentTypeChange(e.target.value as DocumentTypeField)}
                     className={`w-full px-4 py-2 border rounded-lg bg-white dark:bg-[#1e2936] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#137fec] transition-colors ${
                       errors.documentType
                         ? 'border-red-500'
                         : 'border-slate-300 dark:border-slate-700'
                     }`}
                   >
-                    {documentTypeOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
+                    <option value="">Select document type...</option>
+                    <optgroup label="Built-in Types">
+                      {DOCUMENT_TYPES.map((value) => (
+                        <option key={value} value={value}>
+                          {SYSTEM_DOCUMENT_TYPE_LABELS[value]}
+                        </option>
+                      ))}
+                    </optgroup>
+                    {customDocumentTypes.length > 0 && (
+                      <optgroup label="Custom Types">
+                        {customDocumentTypes.map((customDocumentType) => (
+                          <option
+                            key={customDocumentType.id}
+                            value={getCustomDocumentTypeValue(customDocumentType.id)}
+                          >
+                            {customDocumentType.name}
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
                   </select>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                    Need a reusable custom label?{' '}
+                    <Link
+                      href="/documents/document-types"
+                      className="font-medium text-[#137fec] hover:underline"
+                    >
+                      Manage document types
+                    </Link>
+                    .
+                  </p>
                   {errors.documentType && (
                     <p className="mt-1 text-sm text-red-600 dark:text-red-400">
                       {errors.documentType}
@@ -539,6 +674,50 @@ export default function UploadDocumentPage() {
                   </select>
                 </div>
               </div>
+
+              {resolvedDocumentType?.documentType === 'OTHER' && (
+                <div>
+                  <label
+                    htmlFor="doc-document-type-label"
+                    className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2"
+                  >
+                    Custom Type Label <span className="text-red-500">*</span>
+                  </label>
+                  {isManualOtherType ? (
+                    <>
+                      <input
+                        id="doc-document-type-label"
+                        type="text"
+                        value={formData.documentTypeLabel}
+                        onChange={(e) => updateField('documentTypeLabel', e.target.value)}
+                        className={`w-full px-4 py-2 border rounded-lg bg-white dark:bg-[#1e2936] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#137fec] transition-colors ${
+                          errors.documentTypeLabel
+                            ? 'border-red-500'
+                            : 'border-slate-300 dark:border-slate-700'
+                        }`}
+                        placeholder="e.g. Deposition Transcript"
+                      />
+                      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                        This is stored under the system `OTHER` category with your custom label.
+                      </p>
+                    </>
+                  ) : (
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-800/50">
+                      <p className="font-semibold text-slate-900 dark:text-white">
+                        {selectedCustomDocumentType}
+                      </p>
+                      <p className="mt-1 text-slate-500 dark:text-slate-400">
+                        This saved custom type will be stored as `OTHER` with the label above.
+                      </p>
+                    </div>
+                  )}
+                  {errors.documentTypeLabel && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      {errors.documentTypeLabel}
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* Tags */}
               <div>

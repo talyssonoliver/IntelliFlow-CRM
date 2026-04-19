@@ -24,13 +24,14 @@ export default function ActivityPage() {
   const deferredSearch = useDeferredValue(searchInput);
   const selectedActivityId = searchParams.get('activityId');
 
-  // Sync URL ?q= param when navigating from header search
+  // Sync URL ?q= param when navigating from header search.
+  // Functional update avoids reading searchInput from closure, so the effect
+  // only fires on URL changes without needing searchInput as a dep.
   useEffect(() => {
     const q = searchParams.get('q');
-    if (q && q !== searchInput) {
-      setSearchInput(q);
+    if (q) {
+      setSearchInput((prev) => (q === prev ? prev : q));
     }
-    // Only react to URL changes, not searchInput changes
   }, [searchParams]);
 
   const feedTypes = useMemo(

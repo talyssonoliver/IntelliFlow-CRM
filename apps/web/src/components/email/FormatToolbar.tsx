@@ -1,15 +1,6 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
-import {
-  Bold,
-  Italic,
-  Underline,
-  List,
-  ListOrdered,
-  Link as LinkIcon,
-  RemoveFormatting,
-} from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface FormatToolbarProps {
@@ -19,13 +10,29 @@ interface FormatToolbarProps {
 }
 
 const BUTTONS = [
-  { command: 'bold', label: 'Bold', icon: Bold, shortcut: 'Ctrl+B', toggle: true },
-  { command: 'italic', label: 'Italic', icon: Italic, shortcut: 'Ctrl+I', toggle: true },
-  { command: 'underline', label: 'Underline', icon: Underline, shortcut: 'Ctrl+U', toggle: true },
-  { command: 'insertOrderedList', label: 'Ordered list', icon: ListOrdered, toggle: true },
-  { command: 'insertUnorderedList', label: 'Unordered list', icon: List, toggle: true },
-  { command: 'createLink', label: 'Link', icon: LinkIcon, toggle: false },
-  { command: 'removeFormat', label: 'Clear formatting', icon: RemoveFormatting, toggle: false },
+  { command: 'bold', label: 'Bold', symbol: 'format_bold', shortcut: 'Ctrl+B', toggle: true },
+  { command: 'italic', label: 'Italic', symbol: 'format_italic', shortcut: 'Ctrl+I', toggle: true },
+  {
+    command: 'underline',
+    label: 'Underline',
+    symbol: 'format_underlined',
+    shortcut: 'Ctrl+U',
+    toggle: true,
+  },
+  {
+    command: 'insertOrderedList',
+    label: 'Ordered list',
+    symbol: 'format_list_bulleted',
+    toggle: true,
+  },
+  {
+    command: 'insertUnorderedList',
+    label: 'Unordered list',
+    symbol: 'format_list_bulleted',
+    toggle: true,
+  },
+  { command: 'createLink', label: 'Link', symbol: 'link', toggle: false },
+  { command: 'removeFormat', label: 'Clear formatting', symbol: 'format_clear', toggle: false },
 ] as const;
 
 export function FormatToolbar({
@@ -90,7 +97,6 @@ export function FormatToolbar({
         onKeyDown={handleKeyDown}
       >
         {BUTTONS.map((btn, i) => {
-          const Icon = btn.icon;
           const isActive = activeFormats.includes(btn.command);
 
           return (
@@ -117,7 +123,9 @@ export function FormatToolbar({
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => handleButtonClick(btn.command)}
             >
-              <Icon className="h-4 w-4" />
+              <span className="material-symbols-outlined text-base" aria-hidden="true">
+                {btn.symbol}
+              </span>
             </button>
           );
         })}
@@ -126,7 +134,12 @@ export function FormatToolbar({
       {/* Inline link URL input */}
       {showLinkInput && (
         <div className="flex items-center gap-2 border-t border-border px-2 py-1.5">
-          <LinkIcon className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+          <span
+            className="material-symbols-outlined text-base text-muted-foreground flex-shrink-0"
+            aria-hidden="true"
+          >
+            link
+          </span>
           <input
             ref={linkInputRef}
             type="url"

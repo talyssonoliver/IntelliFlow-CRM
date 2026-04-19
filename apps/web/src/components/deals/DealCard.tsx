@@ -58,7 +58,7 @@ export const DealCard = React.memo(function DealCard({
   };
 
   return (
-    <div // NOSONAR — DnD draggable card with nested interactive elements (drag handle button); cannot be a native <button>
+    <div
       ref={setNodeRef}
       style={style}
       role="button"

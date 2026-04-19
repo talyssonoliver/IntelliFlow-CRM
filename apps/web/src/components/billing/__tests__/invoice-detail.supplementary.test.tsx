@@ -30,11 +30,25 @@ import type { InvoiceDetailData } from '../invoice-detail';
 
 vi.mock('@/lib/billing/stripe-portal', () => ({
   formatBillingDate: (d: string | Date) => {
-    const date = typeof d === 'string' ? new Date(d) : d instanceof Date ? d : new Date();
+    let date: Date;
+    if (typeof d === 'string') {
+      date = new Date(d);
+    } else if (d instanceof Date) {
+      date = d;
+    } else {
+      date = new Date();
+    }
     return date.toLocaleDateString('en-GB');
   },
   formatBillingDateTime: (d: string | Date) => {
-    const date = typeof d === 'string' ? new Date(d) : d instanceof Date ? d : new Date();
+    let date: Date;
+    if (typeof d === 'string') {
+      date = new Date(d);
+    } else if (d instanceof Date) {
+      date = d;
+    } else {
+      date = new Date();
+    }
     return date.toLocaleString('en-GB');
   },
   formatCurrency: (amount: number, currency: string) =>

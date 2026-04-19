@@ -29,6 +29,7 @@ vi.mock('next/dynamic', () => ({
               {task.title}
             </button>
           ))}
+          {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- test renders custom modal/dropdown */}
           <div
             data-testid="mock-cell"
             role="gridcell"

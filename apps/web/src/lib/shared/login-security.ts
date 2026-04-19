@@ -400,7 +400,7 @@ export function recordFailedAttempt(identifier: string): void {
   // Lock after 5 attempts for 15 minutes
   if (data.attempts >= 5) {
     const lockUntil = new Date();
-    lockUntil.setMinutes(lockUntil.getMinutes() + 15);
+    lockUntil.setUTCMinutes(lockUntil.getUTCMinutes() + 15);
     data.lockedUntil = lockUntil.toISOString();
   }
 

@@ -263,10 +263,6 @@ export function WorkflowProgressPanel({
         <Progress
           value={completedPercent}
           className="h-1.5 mb-4"
-          role="progressbar"
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-valuenow={completedPercent}
           aria-label={`Workflow progress: ${completedPercent}% (${completedCount} of ${totalSteps} steps completed)`}
         />
 

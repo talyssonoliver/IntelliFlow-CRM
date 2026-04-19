@@ -136,7 +136,9 @@ export function EmailList({
           className
         )}
       >
-        <span className="material-symbols-outlined text-base text-destructive" aria-hidden="true">error</span>
+        <span className="material-symbols-outlined text-base text-destructive" aria-hidden="true">
+          error
+        </span>
         <p className="text-sm text-muted-foreground">Failed to load emails</p>
         <button
           type="button"
@@ -144,7 +146,10 @@ export function EmailList({
           className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
           onClick={onRetry}
         >
-          <span className="material-symbols-outlined text-base" aria-hidden="true">refresh</span> Retry
+          <span className="material-symbols-outlined text-base" aria-hidden="true">
+            refresh
+          </span>{' '}
+          Retry
         </button>
       </div>
     );
@@ -191,15 +196,8 @@ export function EmailList({
           )}
         </div>
       ) : (
-        <div className="flex-1 overflow-auto">
-          <ul
-            ref={listRef}
-            role="listbox"
-            tabIndex={0}
-            aria-label="Email list"
-            onKeyDown={handleListKeyDown}
-            className="space-y-0.5 p-1 list-none focus:outline-none"
-          >
+        <div role="none" onKeyDown={handleListKeyDown} className="flex-1 overflow-auto">
+          <ul ref={listRef} aria-label="Email list" className="space-y-0.5 p-1 list-none">
             {emails.map((email) => (
               <EmailListItem
                 key={email.id}

@@ -2,20 +2,7 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import Link from 'next/link';
-import {
-  CheckSquare,
-  TrendingUp,
-  Target,
-  AtSign,
-  Calendar,
-  Brain,
-  Ticket,
-  FileText,
-  Mail,
-  Shield,
-  ChevronDown,
-  type LucideIcon,
-} from 'lucide-react';
+
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { PageHeader } from '@/components/shared';
 import { trpc } from '@/lib/trpc';
@@ -80,13 +67,26 @@ const TYPE_LABELS: Record<string, string> = {
   document_shared: 'Document Shared',
   document_comment: 'Document Comment',
   document_approval_needed: 'Document Approval Needed',
+  // PG-184 deal automation notifications
+  deal_reassigned: 'Deal Reassigned',
+  deal_high_value_moved: 'High-Value Deal Stage Move',
+  deal_duplicate_suspected: 'Possible Duplicate Deal',
+  // PG-185 ticket automation notifications
   ticket_assigned: 'Ticket Assigned',
   ticket_created: 'Ticket Created',
   ticket_escalated: 'Ticket Escalated',
+  ticket_reassigned: 'Ticket Reassigned',
+  ticket_resolved: 'Ticket Resolved',
+  ticket_duplicate_suspected: 'Possible Duplicate Ticket',
+  ticket_auto_closed: 'Ticket Auto-Closed',
   case_assigned: 'Case Assigned',
   case_status_changed: 'Case Status Changed',
   case_closed: 'Case Closed',
+  // PG-182 contact automation notifications
   contact_stale: 'Stale Contact Alert',
+  contact_reassigned: 'Contact Reassigned',
+  // PG-186 document automation notifications
+  document_reassigned: 'Document Reassigned',
   email_received: 'Email Received',
   email_opened: 'Email Opened',
   email_replied: 'Email Replied',
@@ -104,7 +104,7 @@ interface CategoryDef {
   id: string;
   label: string;
   description: string;
-  icon: LucideIcon;
+  icon: string;
   iconBg: string;
   prefixes: string[];
 }
@@ -114,7 +114,7 @@ const CATEGORIES: CategoryDef[] = [
     id: 'tasks',
     label: 'Tasks & Deadlines',
     description: 'Task assignments, due dates, and reminders',
-    icon: CheckSquare,
+    icon: 'check_box',
     iconBg: 'bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400',
     prefixes: ['task_'],
   },
@@ -122,7 +122,7 @@ const CATEGORIES: CategoryDef[] = [
     id: 'deals',
     label: 'Deals & Pipeline',
     description: 'Deal stage changes, won/lost deals, and risk alerts',
-    icon: TrendingUp,
+    icon: 'trending_up',
     iconBg: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400',
     prefixes: ['deal_'],
   },
@@ -130,7 +130,7 @@ const CATEGORIES: CategoryDef[] = [
     id: 'leads',
     label: 'Leads & Contacts',
     description: 'Lead scoring, conversions, and stale contact alerts',
-    icon: Target,
+    icon: 'track_changes',
     iconBg: 'bg-amber-50 text-amber-600 dark:bg-amber-950 dark:text-amber-400',
     prefixes: ['lead_', 'contact_'],
   },
@@ -138,7 +138,7 @@ const CATEGORIES: CategoryDef[] = [
     id: 'team',
     label: 'Mentions & Team',
     description: 'When someone mentions you or sends team updates',
-    icon: AtSign,
+    icon: 'alternate_email',
     iconBg: 'bg-orange-50 text-orange-600 dark:bg-orange-950 dark:text-orange-400',
     prefixes: ['team_'],
   },
@@ -146,7 +146,7 @@ const CATEGORIES: CategoryDef[] = [
     id: 'appointments',
     label: 'Appointments & Calendar',
     description: 'Scheduling, reminders, and cancellations',
-    icon: Calendar,
+    icon: 'calendar_month',
     iconBg: 'bg-cyan-50 text-cyan-600 dark:bg-cyan-950 dark:text-cyan-400',
     prefixes: ['appointment_'],
   },
@@ -154,7 +154,7 @@ const CATEGORIES: CategoryDef[] = [
     id: 'tickets',
     label: 'Tickets & Cases',
     description: 'Support ticket assignments, escalations, and case updates',
-    icon: Ticket,
+    icon: 'confirmation_number',
     iconBg: 'bg-rose-50 text-rose-600 dark:bg-rose-950 dark:text-rose-400',
     prefixes: ['ticket_', 'case_'],
   },
@@ -162,7 +162,7 @@ const CATEGORIES: CategoryDef[] = [
     id: 'ai',
     label: 'AI Insights',
     description: 'Smart suggestions, predictions, and agent actions',
-    icon: Brain,
+    icon: 'psychology',
     iconBg: 'bg-purple-50 text-purple-600 dark:bg-purple-950 dark:text-purple-400',
     prefixes: ['ai_'],
   },
@@ -170,7 +170,7 @@ const CATEGORIES: CategoryDef[] = [
     id: 'documents',
     label: 'Documents',
     description: 'Shared documents, comments, and approval requests',
-    icon: FileText,
+    icon: 'description',
     iconBg: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400',
     prefixes: ['document_'],
   },
@@ -178,7 +178,7 @@ const CATEGORIES: CategoryDef[] = [
     id: 'email',
     label: 'Email Activity',
     description: 'Incoming emails, opens, and replies',
-    icon: Mail,
+    icon: 'mail',
     iconBg: 'bg-sky-50 text-sky-600 dark:bg-sky-950 dark:text-sky-400',
     prefixes: ['email_'],
   },
@@ -186,7 +186,7 @@ const CATEGORIES: CategoryDef[] = [
     id: 'system',
     label: 'System & Security',
     description: 'Password changes, maintenance, and system alerts',
-    icon: Shield,
+    icon: 'security',
     iconBg: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400',
     prefixes: ['system_'],
   },
@@ -450,7 +450,6 @@ export default function NotificationSettingsPage() {
 
           {/* Category rows */}
           {categorized.map(({ category, items }) => {
-            const Icon = category.icon;
             const expanded = expandedCategories.has(category.id);
 
             return (
@@ -465,19 +464,24 @@ export default function NotificationSettingsPage() {
                     aria-expanded={expanded}
                     aria-controls={`category-${category.id}`}
                   >
-                    <ChevronDown
+                    <span
                       className={cn(
-                        'h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200',
+                        'material-symbols-outlined text-base shrink-0 text-muted-foreground transition-transform duration-200',
                         expanded && 'rotate-180'
                       )}
-                    />
+                      aria-hidden="true"
+                    >
+                      expand_more
+                    </span>
                     <div
                       className={cn(
                         'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg',
                         category.iconBg
                       )}
                     >
-                      <Icon className="h-[18px] w-[18px]" />
+                      <span className="material-symbols-outlined text-base" aria-hidden="true">
+                        {category.icon}
+                      </span>
                     </div>
                     <div className="min-w-0">
                       <div className="text-sm font-semibold truncate">{category.label}</div>

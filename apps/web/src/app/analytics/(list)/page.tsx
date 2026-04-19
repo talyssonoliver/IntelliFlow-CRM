@@ -120,8 +120,7 @@ export default function AnalyticsPage() {
             className="inline-flex items-center gap-2 border border-border hover:bg-muted text-foreground font-medium py-2.5 px-4 rounded-lg transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
             aria-label="Refresh analytics data"
           >
-            <span className="material-symbols-outlined text-lg">refresh</span>
-            Refresh
+            <span className="material-symbols-outlined text-lg">refresh</span> Refresh
           </button>
 
           {/* Export Dropdown */}

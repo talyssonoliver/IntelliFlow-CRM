@@ -196,7 +196,7 @@ describe('adr-service', () => {
     it('should parse a complete ADR file and extract metadata', () => {
       readFileSync.mockReturnValue(SAMPLE_ADR_CONTENT);
 
-      const result = parseADR('/project/docs/planning/adr/ADR-001-use-typescript.md');
+      const result = parseADR('/project/docs/architecture/adr/ADR-001-use-typescript.md');
 
       expect(result).not.toBeNull();
       expect(result!.id).toBe('ADR-001');
@@ -217,7 +217,7 @@ describe('adr-service', () => {
         '# ADR-005: Some Decision\n\n**Status:** Proposed\n**Date:** 2025-01-01'
       );
 
-      const result = parseADR('/project/docs/planning/adr/ADR-005-some-decision.md');
+      const result = parseADR('/project/docs/architecture/adr/ADR-005-some-decision.md');
 
       expect(result).not.toBeNull();
       expect(result!.id).toBe('ADR-005');
@@ -228,7 +228,7 @@ describe('adr-service', () => {
         '# Some Decision Without ID\n\n**Status:** Proposed\n**Date:** 2025-01-01'
       );
 
-      const result = parseADR('/project/docs/planning/adr/ADR-010-some-decision.md');
+      const result = parseADR('/project/docs/architecture/adr/ADR-010-some-decision.md');
 
       expect(result).not.toBeNull();
       expect(result!.id).toBe('ADR-010');
@@ -237,7 +237,7 @@ describe('adr-service', () => {
     it('should extract numeric ID from filename starting with digits', () => {
       readFileSync.mockReturnValue('# Some Decision\n\n**Status:** Proposed\n**Date:** 2025-01-01');
 
-      const result = parseADR('/project/docs/planning/adr/005-some-decision.md');
+      const result = parseADR('/project/docs/architecture/adr/005-some-decision.md');
 
       expect(result).not.toBeNull();
       expect(result!.id).toBe('ADR-005');
@@ -246,7 +246,7 @@ describe('adr-service', () => {
     it('should use filename as ID when no numeric pattern found', () => {
       readFileSync.mockReturnValue('# Some Decision\n\n**Status:** Proposed\n**Date:** 2025-01-01');
 
-      const result = parseADR('/project/docs/planning/adr/some-decision.md');
+      const result = parseADR('/project/docs/architecture/adr/some-decision.md');
 
       expect(result).not.toBeNull();
       expect(result!.id).toBe('some-decision');
@@ -255,7 +255,7 @@ describe('adr-service', () => {
     it('should handle missing metadata fields gracefully', () => {
       readFileSync.mockReturnValue('# Just a Title\n\nSome content.');
 
-      const result = parseADR('/project/docs/planning/adr/test.md');
+      const result = parseADR('/project/docs/architecture/adr/test.md');
 
       expect(result).not.toBeNull();
       expect(result!.title).toBe('Just a Title');
@@ -273,7 +273,7 @@ describe('adr-service', () => {
       });
 
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      const result = parseADR('/project/docs/planning/adr/nonexistent.md');
+      const result = parseADR('/project/docs/architecture/adr/nonexistent.md');
 
       expect(result).toBeNull();
       expect(consoleSpy).toHaveBeenCalled();
@@ -283,7 +283,7 @@ describe('adr-service', () => {
     it('should strip ADR-NNN prefix from title', () => {
       readFileSync.mockReturnValue('# ADR-001: My Cool Decision\n\n**Status:** Accepted');
 
-      const result = parseADR('/project/docs/planning/adr/ADR-001.md');
+      const result = parseADR('/project/docs/architecture/adr/ADR-001.md');
 
       expect(result!.title).toBe('My Cool Decision');
     });
@@ -293,7 +293,7 @@ describe('adr-service', () => {
         '# ADR-001: Test\n\n**Status:** Accepted\n\nReferences ADR-002 and also ADR-002 again.'
       );
 
-      const result = parseADR('/project/docs/planning/adr/ADR-001.md');
+      const result = parseADR('/project/docs/architecture/adr/ADR-001.md');
 
       expect(result!.relatedADRs).toEqual(['ADR-002']);
     });
@@ -301,7 +301,7 @@ describe('adr-service', () => {
     it('should pad ID to 3 digits', () => {
       readFileSync.mockReturnValue('# ADR-1: Short ID\n\n**Status:** Proposed');
 
-      const result = parseADR('/project/docs/planning/adr/ADR-1.md');
+      const result = parseADR('/project/docs/architecture/adr/ADR-1.md');
 
       expect(result!.id).toBe('ADR-001');
     });
@@ -312,11 +312,14 @@ describe('adr-service', () => {
       existsSync.mockReturnValue(true);
       readdirSync.mockImplementation((dirPath: string) => {
         const p = String(dirPath);
-        if (p.includes('docs/planning/adr')) {
-          return ['ADR-001-typescript.md', 'ADR-002-postgres.md', 'readme.md'];
-        }
         if (p.includes('docs/architecture/adr')) {
-          return ['003-caching.md', 'notes.txt'];
+          return [
+            'ADR-001-typescript.md',
+            'ADR-002-postgres.md',
+            'readme.md',
+            '003-caching.md',
+            'notes.txt',
+          ];
         }
         if (p.includes('docs/shared')) {
           return ['adr-index.md', 'other.md'];
@@ -343,7 +346,7 @@ describe('adr-service', () => {
       existsSync.mockReturnValue(true);
       readdirSync.mockImplementation((dirPath: string) => {
         const p = String(dirPath);
-        if (p.includes('docs/planning/adr')) {
+        if (p.includes('docs/architecture/adr')) {
           return ['ADR-002-b.md', 'ADR-001-a.md'];
         }
         return [];
@@ -362,7 +365,7 @@ describe('adr-service', () => {
       existsSync.mockReturnValue(true);
       readdirSync.mockImplementation((dirPath: string) => {
         const p = String(dirPath);
-        if (p.includes('docs/planning/adr')) {
+        if (p.includes('docs/architecture/adr')) {
           return ['ADR-001-typescript.md', 'ADR-002-postgres.md'];
         }
         return [];
@@ -387,7 +390,7 @@ describe('adr-service', () => {
     it('should filter out template files', () => {
       readdirSync.mockImplementation((dirPath: string) => {
         const p = String(dirPath);
-        if (p.includes('docs/planning/adr')) {
+        if (p.includes('docs/architecture/adr')) {
           return ['ADR-000-template.md', 'ADR-001-typescript.md'];
         }
         return [];
@@ -409,7 +412,7 @@ describe('adr-service', () => {
     it('should skip unparseable files', () => {
       readdirSync.mockImplementation((dirPath: string) => {
         const p = String(dirPath);
-        if (p.includes('docs/planning/adr')) {
+        if (p.includes('docs/architecture/adr')) {
           return ['ADR-001-typescript.md'];
         }
         return [];
@@ -428,7 +431,7 @@ describe('adr-service', () => {
     it('should sort ADRs by id', () => {
       readdirSync.mockImplementation((dirPath: string) => {
         const p = String(dirPath);
-        if (p.includes('docs/planning/adr')) {
+        if (p.includes('docs/architecture/adr')) {
           return ['ADR-002-postgres.md', 'ADR-001-typescript.md'];
         }
         return [];
@@ -452,7 +455,7 @@ describe('adr-service', () => {
       existsSync.mockReturnValue(true);
       readdirSync.mockImplementation((dirPath: string) => {
         const p = String(dirPath);
-        if (p.includes('docs/planning/adr')) {
+        if (p.includes('docs/architecture/adr')) {
           return ['ADR-001-typescript.md', 'ADR-002-postgres.md'];
         }
         return [];
@@ -534,7 +537,7 @@ describe('adr-service', () => {
       date: '2025-12-15',
       deciders: 'Team',
       technicalStory: 'IFC-001',
-      filePath: 'docs/planning/adr/ADR-001.md',
+      filePath: 'docs/architecture/adr/ADR-001.md',
       relatedADRs: [],
       sprint: '1',
       ...overrides,
@@ -675,7 +678,7 @@ describe('adr-service', () => {
       existsSync.mockReturnValue(true);
       readdirSync.mockImplementation((dirPath: string) => {
         const p = String(dirPath);
-        if (p.includes('docs/planning/adr')) {
+        if (p.includes('docs/architecture/adr')) {
           return ['ADR-001-typescript.md'];
         }
         return [];
@@ -697,7 +700,7 @@ describe('adr-service', () => {
       existsSync.mockImplementation((p: string) => {
         const filePath = String(p);
         if (filePath.includes('000-template.md') || filePath.includes('template')) return true;
-        if (filePath.includes('docs/planning/adr')) return true;
+        if (filePath.includes('docs/architecture/adr')) return true;
         return false;
       });
       readFileSync.mockImplementation((filePath: string) => {
@@ -727,7 +730,7 @@ describe('adr-service', () => {
       });
       readdirSync.mockImplementation((dirPath: string) => {
         const p = String(dirPath);
-        if (p.includes('docs/planning/adr')) return ['ADR-005-existing.md'];
+        if (p.includes('docs/architecture/adr')) return ['ADR-005-existing.md'];
         return [];
       });
       writeFileSync.mockImplementation(() => {});
@@ -833,7 +836,7 @@ describe('adr-service', () => {
       existsSync.mockReturnValue(true);
       readdirSync.mockImplementation((dirPath: string) => {
         const p = String(dirPath);
-        if (p.includes('docs/planning/adr')) {
+        if (p.includes('docs/architecture/adr')) {
           return ['ADR-001-typescript.md'];
         }
         return [];
@@ -912,7 +915,7 @@ describe('adr-service', () => {
       existsSync.mockReturnValue(true);
       readdirSync.mockImplementation((dirPath: string) => {
         const p = String(dirPath);
-        if (p.includes('docs/planning/adr')) {
+        if (p.includes('docs/architecture/adr')) {
           return ['ADR-001-typescript.md', 'ADR-002-postgres.md'];
         }
         return [];
@@ -953,7 +956,7 @@ describe('adr-service', () => {
       existsSync.mockReturnValue(true);
       readdirSync.mockImplementation((dirPath: string) => {
         const p = String(dirPath);
-        if (p.includes('docs/planning/adr')) {
+        if (p.includes('docs/architecture/adr')) {
           return ['ADR-001-typescript.md', 'ADR-002-postgres.md'];
         }
         return [];
@@ -1006,7 +1009,7 @@ describe('adr-service', () => {
       existsSync.mockReturnValue(true);
       readdirSync.mockImplementation((dirPath: string) => {
         const p = String(dirPath);
-        if (p.includes('docs/planning/adr')) {
+        if (p.includes('docs/architecture/adr')) {
           return ['ADR-001-typescript.md', 'ADR-002-postgres.md'];
         }
         return [];
@@ -1076,7 +1079,7 @@ describe('adr-service', () => {
       existsSync.mockReturnValue(true);
       readdirSync.mockImplementation((dirPath: string) => {
         const p = String(dirPath);
-        if (p.includes('docs/planning/adr')) {
+        if (p.includes('docs/architecture/adr')) {
           return ['ADR-001-typescript.md'];
         }
         return [];

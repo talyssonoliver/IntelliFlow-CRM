@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback } from 'react';
-import { Card, Switch } from '@intelliflow/ui';
+import { Switch } from '@intelliflow/ui';
 
 export interface AutomationSettings {
   autoAssignment: boolean;
@@ -43,34 +43,25 @@ export function AutomationTab({ settings, onSettingsChange }: Readonly<Automatio
   );
 
   return (
-    <Card className="p-6">
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold">Automation</h3>
-        <p className="text-sm text-muted-foreground">
-          Configure automated behaviors for lead management.
-        </p>
-      </div>
-
-      <div className="space-y-6">
-        {AUTOMATION_ITEMS.map((item) => (
-          <div key={item.key} className="flex items-center justify-between gap-4">
-            <div className="flex-1">
-              <label
-                htmlFor={`automation-${item.key}`}
-                className="text-sm font-medium cursor-pointer"
-              >
-                {item.title}
-              </label>
-              <p className="text-sm text-muted-foreground mt-0.5">{item.description}</p>
-            </div>
-            <Switch
-              id={`automation-${item.key}`}
-              checked={settings[item.key]}
-              onCheckedChange={(checked) => handleToggle(item.key, checked)}
-            />
+    <div className="space-y-5">
+      {AUTOMATION_ITEMS.map((item) => (
+        <div key={item.key} className="flex items-center justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <label
+              htmlFor={`automation-${item.key}`}
+              className="text-sm font-medium cursor-pointer"
+            >
+              {item.title}
+            </label>
+            <p className="text-sm text-muted-foreground mt-0.5">{item.description}</p>
           </div>
-        ))}
-      </div>
-    </Card>
+          <Switch
+            id={`automation-${item.key}`}
+            checked={settings[item.key]}
+            onCheckedChange={(checked) => handleToggle(item.key, checked)}
+          />
+        </div>
+      ))}
+    </div>
   );
 }

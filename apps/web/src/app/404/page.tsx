@@ -27,7 +27,7 @@ export default function NotFoundPage() {
               <div className="inline-flex items-center gap-2 rounded-full border border-[#137fec]/20 bg-[#137fec]/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-[#137fec]">
                 <span className="material-symbols-outlined text-base" aria-hidden="true">
                   route
-                </span>
+                </span>{' '}
                 Missing route
               </div>
 
@@ -48,7 +48,7 @@ export default function NotFoundPage() {
                 >
                   <span className="material-symbols-outlined text-lg" aria-hidden="true">
                     dashboard
-                  </span>
+                  </span>{' '}
                   Go to Dashboard
                 </Link>
                 <Link
@@ -57,7 +57,7 @@ export default function NotFoundPage() {
                 >
                   <span className="material-symbols-outlined text-lg" aria-hidden="true">
                     home
-                  </span>
+                  </span>{' '}
                   Back to Home
                 </Link>
               </div>

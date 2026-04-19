@@ -272,6 +272,7 @@ export default function QualityReportDetailClient() {
                 </div>
               )}
               {}
+              {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- report section handles keyboard navigation */}
               <iframe
                 src={`/api/quality-reports/view?report=${reportId}`}
                 className="w-full h-full border-0"

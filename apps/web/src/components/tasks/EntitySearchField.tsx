@@ -107,63 +107,62 @@ export function EntitySearchField({
   );
 
   const getResults = useCallback((): Array<{ id: string; name: string }> => {
-    if (entityType === 'lead' && leadQuery.data) {
-      return (
-        leadQuery.data.data?.map((l) => ({
-          id: l.id,
-          name: `${l.firstName} ${l.lastName}`,
-        })) ?? []
-      );
+    switch (entityType) {
+      case 'lead':
+        return (
+          leadQuery.data?.data?.map((l) => ({
+            id: l.id,
+            name: `${l.firstName} ${l.lastName}`,
+          })) ?? []
+        );
+      case 'contact':
+        return (
+          contactQuery.data?.contacts?.map((c) => ({
+            id: c.id,
+            name: `${c.firstName} ${c.lastName}`,
+          })) ?? []
+        );
+      case 'opportunity':
+        return (
+          opportunityQuery.data?.opportunities?.map((o) => ({
+            id: o.id,
+            name: o.name,
+          })) ?? []
+        );
+      case 'account':
+        return (
+          accountQuery.data?.accounts?.map((a: { id: string; name: string }) => ({
+            id: a.id,
+            name: a.name,
+          })) ?? []
+        );
+      case 'user':
+        return (
+          userQuery.data?.users?.map((u: { id: string; name: string }) => ({
+            id: u.id,
+            name: u.name,
+          })) ?? []
+        );
+      case 'team':
+        return (
+          teamQuery.data?.teams?.map((t: { id: string; name: string }) => ({
+            id: t.id,
+            name: t.name,
+          })) ?? []
+        );
+      case 'case': {
+        const casesData = (caseQuery.data as { cases?: Array<{ id: string; title: string }> })
+          ?.cases;
+        return casesData?.map((c) => ({ id: c.id, name: c.title })) ?? [];
+      }
+      case 'task': {
+        const tasksData = (taskQuery.data as { tasks?: Array<{ id: string; title: string }> })
+          ?.tasks;
+        return tasksData?.map((t) => ({ id: t.id, name: t.title })) ?? [];
+      }
+      default:
+        return [];
     }
-    if (entityType === 'contact' && contactQuery.data) {
-      return (
-        contactQuery.data.contacts?.map((c) => ({
-          id: c.id,
-          name: `${c.firstName} ${c.lastName}`,
-        })) ?? []
-      );
-    }
-    if (entityType === 'opportunity' && opportunityQuery.data) {
-      return (
-        opportunityQuery.data.opportunities?.map((o) => ({
-          id: o.id,
-          name: o.name,
-        })) ?? []
-      );
-    }
-    if (entityType === 'account' && accountQuery.data) {
-      return (
-        accountQuery.data.accounts?.map((a: { id: string; name: string }) => ({
-          id: a.id,
-          name: a.name,
-        })) ?? []
-      );
-    }
-    if (entityType === 'user' && userQuery.data) {
-      return (
-        userQuery.data.users?.map((u: { id: string; name: string }) => ({
-          id: u.id,
-          name: u.name,
-        })) ?? []
-      );
-    }
-    if (entityType === 'team' && teamQuery.data) {
-      return (
-        teamQuery.data.teams?.map((t: { id: string; name: string }) => ({
-          id: t.id,
-          name: t.name,
-        })) ?? []
-      );
-    }
-    if (entityType === 'case' && caseQuery.data) {
-      const casesData = (caseQuery.data as { cases?: Array<{ id: string; title: string }> }).cases;
-      return casesData?.map((c) => ({ id: c.id, name: c.title })) ?? [];
-    }
-    if (entityType === 'task' && taskQuery.data) {
-      const tasksData = (taskQuery.data as { tasks?: Array<{ id: string; title: string }> }).tasks;
-      return tasksData?.map((t) => ({ id: t.id, name: t.title })) ?? [];
-    }
-    return [];
   }, [
     entityType,
     leadQuery.data,
@@ -189,17 +188,20 @@ export function EntitySearchField({
   };
   const isLoading = loadingByType[entityType] ?? false;
 
-  function handleSelect(id: string, name: string) {
-    onChange(id, name);
-    setSearch('');
-    setOpen(false);
-    setHighlightIndex(-1);
-  }
+  const handleSelect = useCallback(
+    (id: string, name: string) => {
+      onChange(id, name);
+      setSearch('');
+      setOpen(false);
+      setHighlightIndex(-1);
+    },
+    [onChange]
+  );
 
-  function handleClear() {
+  const handleClear = useCallback(() => {
     onChange('', '');
     setSearch('');
-  }
+  }, [onChange]);
 
   const handleInputChange = useCallback(
     (nextValue: string) => {
@@ -247,7 +249,7 @@ export function EntitySearchField({
         handleSelect(exactMatch.id, exactMatch.name);
       }
     },
-    [highlightIndex, open, results, search]
+    [highlightIndex, open, results, search, handleSelect]
   );
 
   const highlightedResult = highlightIndex >= 0 ? results[highlightIndex] : undefined;

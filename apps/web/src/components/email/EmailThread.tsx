@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
-import { Archive, Trash2, MailOpen, Tag } from 'lucide-react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { EmptyState } from '@intelliflow/ui';
 import { cn } from '@/lib/utils';
 import { EMAIL_LABELS } from '@/components/sidebar/configs/EmailSidebarContent';
@@ -81,10 +80,17 @@ export function EmailThread({
     [labels, onLabelsChange]
   );
 
-  // Sync expandedIds when thread changes — auto-expand last message
+  // Sync expandedIds when thread changes — auto-expand last message.
+  // Intentionally scoped to threadId, not thread.emails, so new messages
+  // arriving in the same thread do not clobber the user's expand/collapse
+  // state. Thread is read from a ref to get the current list without making
+  // emails a dep.
+  const threadRef = useRef(thread);
+  threadRef.current = thread;
   useEffect(() => {
-    if (thread?.emails.length) {
-      const lastId = thread.emails.at(-1)!.id;
+    const current = threadRef.current;
+    if (current?.emails.length) {
+      const lastId = current.emails.at(-1)!.id;
       setExpandedIds(new Set([lastId]));
     } else {
       setExpandedIds(new Set());
@@ -209,7 +215,9 @@ export function EmailThread({
               )}
               onClick={() => setShowLabelPicker((prev) => !prev)}
             >
-              <Tag className="h-4 w-4" />
+              <span className="material-symbols-outlined text-base" aria-hidden="true">
+                label
+              </span>
             </button>
             {showLabelPicker && (
               <div className="absolute right-0 top-full z-10 mt-1 w-44 rounded-lg border border-border bg-popover p-1 shadow-md">
@@ -244,7 +252,9 @@ export function EmailThread({
             className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring"
             onClick={onArchive}
           >
-            <Archive className="h-4 w-4" />
+            <span className="material-symbols-outlined text-base" aria-hidden="true">
+              archive
+            </span>
           </button>
           <button
             type="button"
@@ -252,7 +262,9 @@ export function EmailThread({
             className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring"
             onClick={onDelete}
           >
-            <Trash2 className="h-4 w-4" />
+            <span className="material-symbols-outlined text-base" aria-hidden="true">
+              delete
+            </span>
           </button>
           <button
             type="button"
@@ -260,7 +272,9 @@ export function EmailThread({
             className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring"
             onClick={onMarkUnread}
           >
-            <MailOpen className="h-4 w-4" />
+            <span className="material-symbols-outlined text-base" aria-hidden="true">
+              mark_email_unread
+            </span>
           </button>
         </div>
       </div>

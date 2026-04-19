@@ -195,6 +195,7 @@ export function AccountHierarchy({ accountId }: Readonly<AccountHierarchyProps>)
 
   const hierarchyQuery = api.account.getHierarchy.useQuery({ accountId });
   const data: HierarchyData | undefined = hierarchyQuery.data;
+  const hierarchyRoot = data?.current;
   const isLoading = hierarchyQuery.isLoading;
   const error = hierarchyQuery.error;
   const setParentMutation = api.account.setParent.useMutation({
@@ -225,9 +226,9 @@ export function AccountHierarchy({ accountId }: Readonly<AccountHierarchyProps>)
   );
 
   const visibleNodes = useMemo(() => {
-    if (!data?.current) return [];
-    return flattenVisibleNodes(data.current, expandedNodes);
-  }, [data?.current, expandedNodes]);
+    if (!hierarchyRoot) return [];
+    return flattenVisibleNodes(hierarchyRoot, expandedNodes);
+  }, [hierarchyRoot, expandedNodes]);
 
   const focusNode = useCallback((id: string) => {
     setFocusedNodeId(id);
@@ -275,7 +276,7 @@ export function AccountHierarchy({ accountId }: Readonly<AccountHierarchyProps>)
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLUListElement>) => {
-      if (!focusedNodeId || !data?.current) return;
+      if (!focusedNodeId || !hierarchyRoot) return;
       const idx = visibleNodes.indexOf(focusedNodeId);
       if (idx === -1) return;
       const ARROW_KEYS = new Set([
@@ -291,8 +292,8 @@ export function AccountHierarchy({ accountId }: Readonly<AccountHierarchyProps>)
       e.preventDefault();
       if (e.key === 'ArrowDown') handleArrowDown(idx);
       else if (e.key === 'ArrowUp') handleArrowUp(idx);
-      else if (e.key === 'ArrowRight') handleArrowRight(focusedNodeId, data.current);
-      else if (e.key === 'ArrowLeft') handleArrowLeft(focusedNodeId, data.current);
+      else if (e.key === 'ArrowRight') handleArrowRight(focusedNodeId, hierarchyRoot);
+      else if (e.key === 'ArrowLeft') handleArrowLeft(focusedNodeId, hierarchyRoot);
       else if (e.key === 'Enter') onNavigate(focusedNodeId);
       else if (e.key === 'Home' && visibleNodes.length > 0) focusNode(visibleNodes[0]);
       else if (e.key === 'End' && visibleNodes.length > 0) focusNode(visibleNodes.at(-1)!);
@@ -300,7 +301,7 @@ export function AccountHierarchy({ accountId }: Readonly<AccountHierarchyProps>)
     [
       focusedNodeId,
       visibleNodes,
-      data?.current,
+      hierarchyRoot,
       onNavigate,
       focusNode,
       handleArrowDown,

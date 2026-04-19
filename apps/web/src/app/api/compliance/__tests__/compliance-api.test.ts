@@ -10,14 +10,30 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
 
-// Mock fs module — do not use importOriginal (Node builtins fail in JSDOM)
+// Mock 'node:fs' — the route files use `import fs from 'node:fs'` (default
+// import). We share the same fn instances for both the default object and the
+// named exports so that vi.mocked(fs.existsSync/readFileSync) in tests patches
+// the same function that the route module calls via its default-import `fs.*`.
+const { mockExistsSync, mockReadFileSync } = vi.hoisted(() => ({
+  mockExistsSync: vi.fn(() => true),
+  mockReadFileSync: vi.fn(),
+}));
+
+vi.mock('node:fs', () => ({
+  default: {
+    existsSync: mockExistsSync,
+    readFileSync: mockReadFileSync,
+  },
+  existsSync: mockExistsSync,
+  readFileSync: mockReadFileSync,
+}));
 vi.mock('fs', () => ({
   default: {
-    existsSync: vi.fn(() => true),
-    readFileSync: vi.fn(),
+    existsSync: mockExistsSync,
+    readFileSync: mockReadFileSync,
   },
-  existsSync: vi.fn(() => true),
-  readFileSync: vi.fn(),
+  existsSync: mockExistsSync,
+  readFileSync: mockReadFileSync,
 }));
 
 import * as fs from 'node:fs';
@@ -89,14 +105,17 @@ const mockCalendarData = {
 describe('Compliance API Routes', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Restore safe defaults after clearAllMocks resets implementations.
+    // mockExistsSync and mockReadFileSync are the shared instances used by
+    // both the named-export facade (fs.*) and the route's default-import (fs.*).
+    mockExistsSync.mockReturnValue(true);
+    mockReadFileSync.mockReturnValue('{}');
   });
 
-  // Note: Risk API tests skipped - fs module mocking with dynamic imports
-  // doesn't reliably intercept the route module's fs calls in Vitest.
-  // The routes work correctly when tested via integration tests.
   describe('GET /api/compliance/risks', () => {
-    it.skip('should return risk data with summary statistics', async () => {
-      vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(mockRiskData));
+    it('should return risk data with summary statistics', async () => {
+      mockExistsSync.mockReturnValue(true);
+      mockReadFileSync.mockReturnValue(JSON.stringify(mockRiskData));
 
       const { GET } = await import('../risks/route');
       const response = await GET();
@@ -108,8 +127,9 @@ describe('Compliance API Routes', () => {
       expect(data.data.summary.total).toBe(3);
     });
 
-    it.skip('should calculate summary by status correctly', async () => {
-      vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(mockRiskData));
+    it('should calculate summary by status correctly', async () => {
+      mockExistsSync.mockReturnValue(true);
+      mockReadFileSync.mockReturnValue(JSON.stringify(mockRiskData));
 
       const { GET } = await import('../risks/route');
       const response = await GET();
@@ -120,8 +140,9 @@ describe('Compliance API Routes', () => {
       expect(data.data.summary.byStatus.mitigated).toBe(1);
     });
 
-    it.skip('should calculate summary by probability correctly', async () => {
-      vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(mockRiskData));
+    it('should calculate summary by probability correctly', async () => {
+      mockExistsSync.mockReturnValue(true);
+      mockReadFileSync.mockReturnValue(JSON.stringify(mockRiskData));
 
       const { GET } = await import('../risks/route');
       const response = await GET();
@@ -132,8 +153,9 @@ describe('Compliance API Routes', () => {
       expect(data.data.summary.byProbability.low).toBe(1);
     });
 
-    it.skip('should calculate summary by impact correctly', async () => {
-      vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(mockRiskData));
+    it('should calculate summary by impact correctly', async () => {
+      mockExistsSync.mockReturnValue(true);
+      mockReadFileSync.mockReturnValue(JSON.stringify(mockRiskData));
 
       const { GET } = await import('../risks/route');
       const response = await GET();
@@ -144,11 +166,9 @@ describe('Compliance API Routes', () => {
       expect(data.data.summary.byImpact.low).toBe(1);
     });
 
-    it.skip('should handle missing data file gracefully', async () => {
-      vi.mocked(fs.existsSync).mockReturnValue(false);
+    it('should handle missing data file gracefully', async () => {
+      mockExistsSync.mockReturnValue(false);
 
-      // Re-import to get fresh module
-      vi.resetModules();
       const { GET } = await import('../risks/route');
       const response = await GET();
       const data = await response.json();
@@ -158,10 +178,10 @@ describe('Compliance API Routes', () => {
     });
   });
 
-  // Note: Timeline API tests skipped - same fs module mocking issue as risks tests.
   describe('GET /api/compliance/timeline', () => {
-    it.skip('should return all events without filter', async () => {
-      vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(mockCalendarData));
+    it('should return all events without filter', async () => {
+      mockExistsSync.mockReturnValue(true);
+      mockReadFileSync.mockReturnValue(JSON.stringify(mockCalendarData));
 
       const { GET } = await import('../timeline/route');
       const request = new NextRequest('http://localhost/api/compliance/timeline');
@@ -172,8 +192,9 @@ describe('Compliance API Routes', () => {
       expect(data.data.events).toHaveLength(3);
     });
 
-    it.skip('should filter events by month', async () => {
-      vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(mockCalendarData));
+    it('should filter events by month', async () => {
+      mockExistsSync.mockReturnValue(true);
+      mockReadFileSync.mockReturnValue(JSON.stringify(mockCalendarData));
 
       const { GET } = await import('../timeline/route');
       const request = new NextRequest('http://localhost/api/compliance/timeline?month=2026-01');
@@ -187,8 +208,9 @@ describe('Compliance API Routes', () => {
       );
     });
 
-    it.skip('should return currentMonth in response', async () => {
-      vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(mockCalendarData));
+    it('should return currentMonth in response', async () => {
+      mockExistsSync.mockReturnValue(true);
+      mockReadFileSync.mockReturnValue(JSON.stringify(mockCalendarData));
 
       const { GET } = await import('../timeline/route');
       const request = new NextRequest('http://localhost/api/compliance/timeline?month=2026-01');
@@ -198,8 +220,9 @@ describe('Compliance API Routes', () => {
       expect(data.data.currentMonth).toBe('2026-01');
     });
 
-    it.skip('should count upcoming events correctly', async () => {
-      vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(mockCalendarData));
+    it('should count upcoming events correctly', async () => {
+      mockExistsSync.mockReturnValue(true);
+      mockReadFileSync.mockReturnValue(JSON.stringify(mockCalendarData));
 
       const { GET } = await import('../timeline/route');
       const request = new NextRequest('http://localhost/api/compliance/timeline');

@@ -65,19 +65,6 @@ vi.mock('@intelliflow/ui', () => ({
   ),
 }));
 
-// lucide-react icons render to SVG; stub them to simple spans for the
-// aria-label assertions (names come from the Button's aria-label, not the
-// icon, so this is just to silence react-dom warnings about unknown elements).
-vi.mock('lucide-react', () => ({
-  Save: () => <span>icon-save</span>,
-  Undo2: () => <span>icon-undo</span>,
-  Redo2: () => <span>icon-redo</span>,
-  ZoomIn: () => <span>icon-zoom-in</span>,
-  ZoomOut: () => <span>icon-zoom-out</span>,
-  Maximize: () => <span>icon-fit</span>,
-  Loader2: () => <span>icon-loader</span>,
-}));
-
 const { WorkflowToolbar } = await import('../WorkflowToolbar');
 
 // ---------------------------------------------------------------------------

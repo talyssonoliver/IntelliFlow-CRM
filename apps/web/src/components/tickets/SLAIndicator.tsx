@@ -124,13 +124,12 @@ export function SLAIndicator({
 
       {/* Status Badge (no timer) */}
       {!showTimer && (
-        <span
+        <output
           className={`inline-flex items-center rounded text-xs font-bold px-2 py-0.5 w-fit ${config.bg} ${config.text}`}
-          role="status"
           aria-label={`SLA status: ${config.label}`}
         >
           {config.label}
-        </span>
+        </output>
       )}
 
       {/* Progress Bar */}

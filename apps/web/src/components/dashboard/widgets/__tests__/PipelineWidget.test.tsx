@@ -11,7 +11,12 @@ vi.mock('@/lib/trpc', () => ({
         useQuery: () => ({
           data: {
             stages: [
-              { stageKey: 'QUALIFICATION', displayName: 'Qualification', count: 5, totalValue: 10000 },
+              {
+                stageKey: 'QUALIFICATION',
+                displayName: 'Qualification',
+                count: 5,
+                totalValue: 10000,
+              },
               { stageKey: 'CLOSED_WON', displayName: 'Closed Won', count: 1, totalValue: 5000 },
             ],
             totalPipelineValue: 15000,

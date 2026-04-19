@@ -61,6 +61,79 @@ vi.mock('@/components/home/PinButton', () => ({
   PinButton: () => <button data-testid="pin-button" aria-label="Pin" />,
 }));
 
+// Mock tRPC client — EntityHoverCard / useActivityFeed resolve real tRPC
+// calls on import which hang without a QueryClientProvider in tests.
+vi.mock('@/lib/trpc', () => {
+  const noopQuery = () => ({
+    data: undefined,
+    isLoading: false,
+    isPending: false,
+    error: null,
+    refetch: vi.fn(),
+  });
+  const noopInfinite = () => ({
+    data: { pages: [], pageParams: [] },
+    fetchNextPage: vi.fn(),
+    hasNextPage: false,
+    isFetchingNextPage: false,
+    isLoading: false,
+    isPending: false,
+    error: null,
+    refetch: vi.fn(),
+  });
+  const noopMutation = () => ({
+    mutate: vi.fn(),
+    mutateAsync: vi.fn().mockResolvedValue(undefined),
+    isPending: false,
+  });
+  const handler: ProxyHandler<any> = {
+    get: (target, prop) => {
+      if (prop in target) return target[prop];
+      if (prop === 'useQuery') return noopQuery;
+      if (prop === 'useInfiniteQuery') return noopInfinite;
+      if (prop === 'useMutation') return noopMutation;
+      if (prop === 'useUtils') return () => ({ invalidate: vi.fn() });
+      return new Proxy({}, handler);
+    },
+  };
+  return { trpc: new Proxy({}, handler) };
+});
+
+// Mock activity-feed hook — uses tRPC useInfiniteQuery internally.
+vi.mock('@/hooks/useActivityFeed', () => ({
+  useActivityFeed: () => ({
+    activities: [],
+    isLoading: false,
+    isFetchingNextPage: false,
+    hasNextPage: false,
+    fetchNextPage: vi.fn(),
+    refetch: vi.fn(),
+    error: null,
+  }),
+}));
+
+// Mock activity-feed component wholesale — not under test here.
+vi.mock('@/components/shared/activity-feed', () => ({
+  ActivityFeed: () => <div data-testid="activity-feed" />,
+}));
+
+// Mock EntityHoverCard — wraps children with a hover behavior; render children
+// directly in tests.
+vi.mock('@/components/shared/entity-hover-card', () => ({
+  EntityHoverCard: ({ children }: any) => <>{children}</>,
+}));
+
+// Mock QuickLogComposer — internal form not under test here.
+vi.mock('@/components/shared/quick-log-composer', () => ({
+  QuickLogComposer: () => <div data-testid="quick-log-composer" />,
+}));
+
+// Mock useActivityDeepLink — reads URL state we don't exercise.
+vi.mock('@/hooks/useActivityDeepLink', () => ({
+  useActivityDeepLink: () => ({ deepLinkedActivityId: null, clearDeepLink: vi.fn() }),
+  isDeepLinkedActivity: () => false,
+}));
+
 // Mock SLAIndicator
 vi.mock('../SLAIndicator', () => ({
   SLAIndicator: ({ slaStatus }: any) => <div data-testid="sla-indicator">{slaStatus}</div>,
@@ -137,9 +210,14 @@ vi.mock('@intelliflow/ui', () => {
     ),
   };
   return new Proxy(explicit, {
-    get(target, prop: string) {
-      if (prop in target) return target[prop];
+    get(target, prop: string | symbol) {
+      if (typeof prop === 'symbol') return undefined;
+      if (prop in target) return target[prop as string];
       if (prop === '__esModule') return true;
+      // Critical: `then` must NOT be a function — otherwise `await import(...)`
+      // treats the whole mock as a thenable and hangs forever because the
+      // React component returned never calls resolve/reject.
+      if (prop === 'then') return undefined;
       return Passthrough;
     },
   });

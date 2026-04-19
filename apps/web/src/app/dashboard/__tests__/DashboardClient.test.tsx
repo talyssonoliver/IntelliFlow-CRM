@@ -97,20 +97,11 @@ describe('DashboardClient', () => {
     expect(screen.getByTestId('widget-total-leads')).toBeInTheDocument();
   });
 
-  it('shows auth loading skeleton while auth is pending', () => {
-    // Override the mock for this test
-    vi.doMock('@/lib/auth/AuthContext', () => ({
-      useRequireAuth: () => ({ isLoading: true }),
-      useAuth: () => ({ isAuthenticated: false, isLoading: true }),
-    }));
-
-    // The component is already loaded; test the branch via snapshot of DOM
-    // (We don't re-import, so just verify the heading is absent when mocked
-    // inline — this covers the auth loading branch via unit inspection.)
-    // The branch is tested by the auth module returning isLoading:true.
-    // In the unmocked render above, the widget grid is always rendered.
-    expect(true).toBe(true); // branch coverage handled by TypeScript type-check
-  });
+  // Removed "shows auth loading skeleton while auth is pending" — stale.
+  // DashboardClient was refactored to render widgets immediately via Suspense
+  // skeletons; authLoading is destructured but intentionally unused, so there
+  // is no branch to cover. The "no monolithic isLoaded gate" test below is the
+  // replacement contract.
 
   it('does not gate widgets behind a monolithic isLoaded state', () => {
     // All 8 widgets must be present immediately (no isLoaded flag)

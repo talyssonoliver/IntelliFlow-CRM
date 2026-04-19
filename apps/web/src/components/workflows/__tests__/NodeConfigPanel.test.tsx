@@ -173,14 +173,10 @@ describe('NodeConfigPanel', () => {
     expect(mockOnClose).toHaveBeenCalled();
   });
 
-  it('pressing Escape dismisses the panel via sheet onOpenChange', () => {
-    render(<NodeConfigPanel {...baseProps} nodeType="action" config={{}} open={true} />);
-    // Simulate Escape key to trigger Radix Sheet close → onOpenChange(false) → onClose()
-    fireEvent.keyDown(document, { key: 'Escape', code: 'Escape' });
-    // onClose may or may not be called depending on jsdom Radix behavior
-    // but it exercises the Escape code path
-    expect(true).toBe(true);
-  });
+  // Removed "pressing Escape dismisses the panel" — non-deterministic in
+  // jsdom because Radix Sheet's Escape handling depends on portal+focus state
+  // that jsdom doesn't fully emulate. The Cancel-button close path above is
+  // the deterministic coverage for onClose.
 
   it('syncs config when nodeType changes (useEffect initialConfig)', () => {
     const { rerender } = render(

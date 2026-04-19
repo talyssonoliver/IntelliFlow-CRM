@@ -15,7 +15,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createMockSubscription } from '@/test/fixtures/billing-data';
 
 const futureDate = new Date();
-futureDate.setDate(futureDate.getDate() + 20);
+futureDate.setUTCDate(futureDate.getUTCDate() + 20);
 const mockSubscription = createMockSubscription({ currentPeriodEnd: futureDate });
 
 type MockQueryReturn<T> = {
@@ -181,7 +181,7 @@ describe('CancelFlow', () => {
 
   it('step 1: no retention offer when <=14 days', () => {
     const nearEndDate = new Date();
-    nearEndDate.setDate(nearEndDate.getDate() + 10);
+    nearEndDate.setUTCDate(nearEndDate.getUTCDate() + 10);
     mockGetSubscription.mockReturnValue({
       data: createMockSubscription({ currentPeriodEnd: nearEndDate }),
       isLoading: false,

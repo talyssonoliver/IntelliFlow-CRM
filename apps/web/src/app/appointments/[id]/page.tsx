@@ -150,7 +150,7 @@ export default function AppointmentDetailPage() {
     });
 
     return `${appointmentTypeLabel} - ${dateLabel} - ${formatTimeRange(detailData.startTime, detailData.endTime)} (${formatDuration(detailData.startTime, detailData.endTime)})`;
-  }, [detailData]);
+  }, [detailData, timezone]);
 
   const pageHeader = (
     <PageHeader

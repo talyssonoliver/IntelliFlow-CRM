@@ -255,7 +255,7 @@ export default function AccountSettingsContent() {
               >
                 <span className="material-symbols-outlined text-[16px] mr-1.5" aria-hidden="true">
                   upload
-                </span>
+                </span>{' '}
                 Upload New Photo
               </Button>
             </div>
@@ -352,7 +352,7 @@ export default function AccountSettingsContent() {
                   >
                     <span className="material-symbols-outlined text-[12px] mr-1" aria-hidden="true">
                       workspace_premium
-                    </span>
+                    </span>{' '}
                     Professional
                   </Badge>
                 </Link>
@@ -362,6 +362,7 @@ export default function AccountSettingsContent() {
                   <span className="text-sm text-muted-foreground">Signed in with</span>
                   <Badge variant="secondary" className="capitalize">
                     <span className="material-symbols-outlined text-[12px] mr-1" aria-hidden="true">
+                      {/* eslint-disable-next-line no-nested-ternary */}
                       {provider === 'google'
                         ? 'g_translate'
                         : provider === 'github'
@@ -483,7 +484,7 @@ export default function AccountSettingsContent() {
                         aria-hidden="true"
                       >
                         verified
-                      </span>
+                      </span>{' '}
                       Verified
                     </Badge>
                   )}
@@ -966,7 +967,7 @@ export default function AccountSettingsContent() {
                     aria-hidden="true"
                   >
                     progress_activity
-                  </span>
+                  </span>{' '}
                   Saving...
                 </span>
               ) : (

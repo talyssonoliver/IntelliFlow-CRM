@@ -24,6 +24,7 @@ export interface DocumentRecord {
     title: string;
     description?: string;
     documentType: string;
+    documentTypeLabel?: string | null;
   };
   status: DocumentStatus;
   classification?: DocumentClassification;

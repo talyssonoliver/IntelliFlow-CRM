@@ -5,16 +5,20 @@
  *
  * Tests empty state, table rendering, add/edit dialog flows,
  * and delete confirmation trigger.
+ *
+ * The tab is a forwardRef — the parent owns the "New Field" CTA and
+ * opens the create dialog via `ref.openCreate()`. Tests mount through
+ * a harness that exposes that same entry point.
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import type { CustomField } from '../components/CustomFieldsTab';
+import { useRef } from 'react';
+import type { CustomField, CustomFieldsTabHandle } from '../components/CustomFieldsTab';
 
 // ─── @intelliflow/ui mock (partial — preserve real exports like EmptyState) ─
 vi.mock('@intelliflow/ui', async (importOriginal) => ({
   ...((await importOriginal()) as Record<string, unknown>),
-  Card: ({ children, className }: any) => <div className={className}>{children}</div>,
   Button: ({
     children,
     onClick,
@@ -48,10 +52,8 @@ vi.mock('@intelliflow/ui', async (importOriginal) => ({
     />
   ),
   Dialog: ({ children, open, onOpenChange }: any) =>
-    // happy-dom's implicit `role="dialog"` on `<dialog>` only applies when the
-    // element is actually open, so add the `open` attribute explicitly rather
-    // than relying on the conditional render.
     open ? (
+      // eslint-disable-next-line jsx-a11y/no-redundant-roles -- happy-dom only sets implicit role when `open`; keep explicit for test queries
       <dialog data-testid="dialog" open role="dialog">
         {typeof children === 'function' ? children({ onOpenChange }) : children}
       </dialog>
@@ -106,6 +108,33 @@ import React from 'react';
 // Import after mocks
 import { CustomFieldsTab } from '../components/CustomFieldsTab';
 
+// Harness — exposes the forwardRef handle through a plain DOM button so
+// tests can invoke `openCreate()` via a click instead of wiring a ref dance.
+interface HarnessProps {
+  fields: CustomField[];
+  onCreate: (data: any) => void;
+  onUpdate: (data: any) => void;
+  onDelete: (id: string) => void;
+}
+
+function Harness({ fields, onCreate, onUpdate, onDelete }: Readonly<HarnessProps>) {
+  const ref = useRef<CustomFieldsTabHandle>(null);
+  return (
+    <div>
+      <button data-testid="open-create" onClick={() => ref.current?.openCreate()}>
+        New Field
+      </button>
+      <CustomFieldsTab
+        ref={ref}
+        fields={fields}
+        onCreate={onCreate}
+        onUpdate={onUpdate}
+        onDelete={onDelete}
+      />
+    </div>
+  );
+}
+
 const mockFields: CustomField[] = [
   {
     id: 'field-1',
@@ -151,27 +180,15 @@ describe('CustomFieldsTab', () => {
   // ─── Empty state ──────────────────────────────────────────────────────────
 
   it('shows empty state message when no fields', () => {
-    render(
-      <CustomFieldsTab fields={[]} onCreate={onCreate} onUpdate={onUpdate} onDelete={onDelete} />
-    );
+    render(<Harness fields={[]} onCreate={onCreate} onUpdate={onUpdate} onDelete={onDelete} />);
 
     // EmptyState entity="rules" → canonical 'No rules configured' (semantic
     // misuse for custom fields — dedicated 'custom-fields' entity follow-up).
     expect(screen.getByText('No rules configured')).toBeInTheDocument();
   });
 
-  it('shows Add Field button even in empty state', () => {
-    render(
-      <CustomFieldsTab fields={[]} onCreate={onCreate} onUpdate={onUpdate} onDelete={onDelete} />
-    );
-
-    expect(screen.getByText('Add Field')).toBeInTheDocument();
-  });
-
   it('does not render table in empty state', () => {
-    render(
-      <CustomFieldsTab fields={[]} onCreate={onCreate} onUpdate={onUpdate} onDelete={onDelete} />
-    );
+    render(<Harness fields={[]} onCreate={onCreate} onUpdate={onUpdate} onDelete={onDelete} />);
 
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
   });
@@ -180,12 +197,7 @@ describe('CustomFieldsTab', () => {
 
   it('renders table with field data when fields are provided', () => {
     render(
-      <CustomFieldsTab
-        fields={mockFields}
-        onCreate={onCreate}
-        onUpdate={onUpdate}
-        onDelete={onDelete}
-      />
+      <Harness fields={mockFields} onCreate={onCreate} onUpdate={onUpdate} onDelete={onDelete} />
     );
 
     expect(screen.getByText('Company Size')).toBeInTheDocument();
@@ -195,12 +207,7 @@ describe('CustomFieldsTab', () => {
 
   it('renders table headers', () => {
     render(
-      <CustomFieldsTab
-        fields={mockFields}
-        onCreate={onCreate}
-        onUpdate={onUpdate}
-        onDelete={onDelete}
-      />
+      <Harness fields={mockFields} onCreate={onCreate} onUpdate={onUpdate} onDelete={onDelete} />
     );
 
     expect(screen.getByText('Field Name')).toBeInTheDocument();
@@ -211,12 +218,7 @@ describe('CustomFieldsTab', () => {
 
   it('renders data types for each field', () => {
     render(
-      <CustomFieldsTab
-        fields={mockFields}
-        onCreate={onCreate}
-        onUpdate={onUpdate}
-        onDelete={onDelete}
-      />
+      <Harness fields={mockFields} onCreate={onCreate} onUpdate={onUpdate} onDelete={onDelete} />
     );
 
     expect(screen.getByText('text')).toBeInTheDocument();
@@ -226,12 +228,7 @@ describe('CustomFieldsTab', () => {
 
   it('renders Yes/No for isRequired correctly', () => {
     render(
-      <CustomFieldsTab
-        fields={mockFields}
-        onCreate={onCreate}
-        onUpdate={onUpdate}
-        onDelete={onDelete}
-      />
+      <Harness fields={mockFields} onCreate={onCreate} onUpdate={onUpdate} onDelete={onDelete} />
     );
 
     // Annual Revenue is required
@@ -243,12 +240,7 @@ describe('CustomFieldsTab', () => {
 
   it('renders edit and delete buttons for each field', () => {
     render(
-      <CustomFieldsTab
-        fields={mockFields}
-        onCreate={onCreate}
-        onUpdate={onUpdate}
-        onDelete={onDelete}
-      />
+      <Harness fields={mockFields} onCreate={onCreate} onUpdate={onUpdate} onDelete={onDelete} />
     );
 
     const editBtns = screen.getAllByRole('button', { name: /Edit/ });
@@ -258,53 +250,42 @@ describe('CustomFieldsTab', () => {
     expect(deleteBtns).toHaveLength(mockFields.length);
   });
 
-  // ─── Add Field dialog ──────────────────────────────────────────────────────
+  // ─── Add Field dialog (opened via parent's ref handle) ────────────────────
 
-  it('Add Field button opens the create dialog', () => {
+  it('openCreate handle opens the create dialog', () => {
     render(
-      <CustomFieldsTab
-        fields={mockFields}
-        onCreate={onCreate}
-        onUpdate={onUpdate}
-        onDelete={onDelete}
-      />
+      <Harness fields={mockFields} onCreate={onCreate} onUpdate={onUpdate} onDelete={onDelete} />
     );
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByText('Add Field'));
+    fireEvent.click(screen.getByTestId('open-create'));
 
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.getByText('Add Custom Field')).toBeInTheDocument();
   });
 
-  it('Add Field dialog contains a field name input', () => {
-    render(
-      <CustomFieldsTab fields={[]} onCreate={onCreate} onUpdate={onUpdate} onDelete={onDelete} />
-    );
+  it('Add dialog contains a field name input', () => {
+    render(<Harness fields={[]} onCreate={onCreate} onUpdate={onUpdate} onDelete={onDelete} />);
 
-    fireEvent.click(screen.getByText('Add Field'));
+    fireEvent.click(screen.getByTestId('open-create'));
 
     expect(screen.getByPlaceholderText('e.g., Company Size')).toBeInTheDocument();
   });
 
   it('Create button is disabled when field name is empty', () => {
-    render(
-      <CustomFieldsTab fields={[]} onCreate={onCreate} onUpdate={onUpdate} onDelete={onDelete} />
-    );
+    render(<Harness fields={[]} onCreate={onCreate} onUpdate={onUpdate} onDelete={onDelete} />);
 
-    fireEvent.click(screen.getByText('Add Field'));
+    fireEvent.click(screen.getByTestId('open-create'));
 
     const createBtn = screen.getByRole('button', { name: 'Create' });
     expect(createBtn).toBeDisabled();
   });
 
   it('Create button is enabled when field name is filled in', () => {
-    render(
-      <CustomFieldsTab fields={[]} onCreate={onCreate} onUpdate={onUpdate} onDelete={onDelete} />
-    );
+    render(<Harness fields={[]} onCreate={onCreate} onUpdate={onUpdate} onDelete={onDelete} />);
 
-    fireEvent.click(screen.getByText('Add Field'));
+    fireEvent.click(screen.getByTestId('open-create'));
 
     const nameInput = screen.getByPlaceholderText('e.g., Company Size');
     fireEvent.change(nameInput, { target: { value: 'New Field' } });
@@ -314,11 +295,9 @@ describe('CustomFieldsTab', () => {
   });
 
   it('Submitting add form calls onCreate with field data', () => {
-    render(
-      <CustomFieldsTab fields={[]} onCreate={onCreate} onUpdate={onUpdate} onDelete={onDelete} />
-    );
+    render(<Harness fields={[]} onCreate={onCreate} onUpdate={onUpdate} onDelete={onDelete} />);
 
-    fireEvent.click(screen.getByText('Add Field'));
+    fireEvent.click(screen.getByTestId('open-create'));
 
     const nameInput = screen.getByPlaceholderText('e.g., Company Size');
     fireEvent.change(nameInput, { target: { value: 'Budget Range' } });
@@ -338,12 +317,7 @@ describe('CustomFieldsTab', () => {
 
   it('Edit button opens dialog pre-filled with field data', () => {
     render(
-      <CustomFieldsTab
-        fields={mockFields}
-        onCreate={onCreate}
-        onUpdate={onUpdate}
-        onDelete={onDelete}
-      />
+      <Harness fields={mockFields} onCreate={onCreate} onUpdate={onUpdate} onDelete={onDelete} />
     );
 
     const editBtns = screen.getAllByRole('button', { name: /Edit Company Size/ });
@@ -352,19 +326,13 @@ describe('CustomFieldsTab', () => {
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.getByText('Edit Custom Field')).toBeInTheDocument();
 
-    // The input should be pre-filled with the existing field name
     const nameInput = screen.getByDisplayValue('Company Size');
     expect(nameInput).toBeInTheDocument();
   });
 
   it('Submitting edit form calls onUpdate with field id and updated data', () => {
     render(
-      <CustomFieldsTab
-        fields={mockFields}
-        onCreate={onCreate}
-        onUpdate={onUpdate}
-        onDelete={onDelete}
-      />
+      <Harness fields={mockFields} onCreate={onCreate} onUpdate={onUpdate} onDelete={onDelete} />
     );
 
     const editBtns = screen.getAllByRole('button', { name: /Edit Company Size/ });
@@ -388,12 +356,7 @@ describe('CustomFieldsTab', () => {
 
   it('Delete button triggers confirmation dialog', () => {
     render(
-      <CustomFieldsTab
-        fields={mockFields}
-        onCreate={onCreate}
-        onUpdate={onUpdate}
-        onDelete={onDelete}
-      />
+      <Harness fields={mockFields} onCreate={onCreate} onUpdate={onUpdate} onDelete={onDelete} />
     );
 
     const deleteBtns = screen.getAllByRole('button', { name: /Delete Company Size/ });
@@ -405,12 +368,7 @@ describe('CustomFieldsTab', () => {
 
   it('Confirming delete calls onDelete with the field id', () => {
     render(
-      <CustomFieldsTab
-        fields={mockFields}
-        onCreate={onCreate}
-        onUpdate={onUpdate}
-        onDelete={onDelete}
-      />
+      <Harness fields={mockFields} onCreate={onCreate} onUpdate={onUpdate} onDelete={onDelete} />
     );
 
     const deleteBtns = screen.getAllByRole('button', { name: /Delete Annual Revenue/ });
@@ -424,12 +382,7 @@ describe('CustomFieldsTab', () => {
 
   it('Cancelling delete does not call onDelete', () => {
     render(
-      <CustomFieldsTab
-        fields={mockFields}
-        onCreate={onCreate}
-        onUpdate={onUpdate}
-        onDelete={onDelete}
-      />
+      <Harness fields={mockFields} onCreate={onCreate} onUpdate={onUpdate} onDelete={onDelete} />
     );
 
     const deleteBtns = screen.getAllByRole('button', { name: /Delete Company Size/ });
@@ -444,11 +397,9 @@ describe('CustomFieldsTab', () => {
   // ─── Dialog cancel ────────────────────────────────────────────────────────
 
   it('Cancel button in the create dialog closes the dialog', () => {
-    render(
-      <CustomFieldsTab fields={[]} onCreate={onCreate} onUpdate={onUpdate} onDelete={onDelete} />
-    );
+    render(<Harness fields={[]} onCreate={onCreate} onUpdate={onUpdate} onDelete={onDelete} />);
 
-    fireEvent.click(screen.getByText('Add Field'));
+    fireEvent.click(screen.getByTestId('open-create'));
     expect(screen.getByRole('dialog')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
@@ -458,12 +409,7 @@ describe('CustomFieldsTab', () => {
 
   it('Cancel button in the edit dialog closes the dialog without calling onUpdate', () => {
     render(
-      <CustomFieldsTab
-        fields={mockFields}
-        onCreate={onCreate}
-        onUpdate={onUpdate}
-        onDelete={onDelete}
-      />
+      <Harness fields={mockFields} onCreate={onCreate} onUpdate={onUpdate} onDelete={onDelete} />
     );
 
     const editBtns = screen.getAllByRole('button', { name: /Edit Company Size/ });
@@ -479,39 +425,23 @@ describe('CustomFieldsTab', () => {
   // ─── Data type selection ──────────────────────────────────────────────────
 
   it('clicking a SelectItem calls onValueChange and updates the dataType passed to onCreate', () => {
-    render(
-      <CustomFieldsTab fields={[]} onCreate={onCreate} onUpdate={onUpdate} onDelete={onDelete} />
-    );
+    render(<Harness fields={[]} onCreate={onCreate} onUpdate={onUpdate} onDelete={onDelete} />);
 
-    fireEvent.click(screen.getByText('Add Field'));
+    fireEvent.click(screen.getByTestId('open-create'));
 
-    // Fill in the field name
     const nameInput = screen.getByPlaceholderText('e.g., Company Size');
     fireEvent.change(nameInput, { target: { value: 'Budget' } });
 
-    // The Select mock now passes onValueChange down through SelectContent to SelectItem.
-    // Clicking the 'number' option fires onValueChange('number').
     const numberItem = screen
       .getAllByRole('option')
       .find((el) => el.getAttribute('data-value') === 'number');
     expect(numberItem).toBeTruthy();
     fireEvent.click(numberItem!);
 
-    // Submit — dataType should now be 'number'
     fireEvent.click(screen.getByRole('button', { name: 'Create' }));
 
     expect(onCreate).toHaveBeenCalledWith(
       expect.objectContaining({ fieldName: 'Budget', dataType: 'number' })
     );
-  });
-
-  // ─── Heading ──────────────────────────────────────────────────────────────
-
-  it('renders Custom Fields heading', () => {
-    render(
-      <CustomFieldsTab fields={[]} onCreate={onCreate} onUpdate={onUpdate} onDelete={onDelete} />
-    );
-
-    expect(screen.getByText('Custom Fields')).toBeInTheDocument();
   });
 });

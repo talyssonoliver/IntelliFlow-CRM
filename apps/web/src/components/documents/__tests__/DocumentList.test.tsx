@@ -119,7 +119,10 @@ describe('DocumentList', () => {
         id: 'doc-a',
         metadata: { title: 'Alpha', documentType: 'CONTRACT' },
       }),
-      createDocumentFactory({ id: 'doc-b', metadata: { title: 'Beta', documentType: 'MOTION' } }),
+      createDocumentFactory({
+        id: 'doc-b',
+        metadata: { title: 'Beta', documentType: 'COURT_FILING' },
+      }),
     ];
     render(<DocumentList {...defaultProps} initialDocuments={docs} />);
     expect(screen.getByTestId('data-table')).toBeInTheDocument();

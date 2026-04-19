@@ -69,6 +69,7 @@ export function AppAvatar({
   const fallbackLabel = trimmedFallback || sourceFallback || initials;
 
   return (
+    // eslint-disable-next-line jsx-a11y/prefer-tag-over-role, jsx-a11y/no-noninteractive-element-interactions -- complex avatar visualization requires span with role
     <span
       className={cn(
         'relative flex shrink-0 items-center justify-center overflow-hidden rounded-full',

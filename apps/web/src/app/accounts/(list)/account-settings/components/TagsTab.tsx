@@ -1,6 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { forwardRef, useImperativeHandle, useState } from 'react';
+
+export interface TagsTabHandle {
+  openCreate: () => void;
+}
 import {
   Button,
   Card,
@@ -51,10 +55,14 @@ interface DialogState {
 
 const EMPTY: DialogState = { open: false, name: '', colorToken: 'slate', description: '' };
 
-export function TagsTab({ tags, onCreate, onUpdate, onDelete, isBusy = false }: Readonly<TagsTabProps>) {
+export const TagsTab = forwardRef<TagsTabHandle, TagsTabProps>(function TagsTab(
+  { tags, onCreate, onUpdate, onDelete, isBusy = false },
+  ref
+) {
   const [dialog, setDialog] = useState<DialogState>(EMPTY);
 
   const openCreate = () => setDialog({ ...EMPTY, open: true });
+  useImperativeHandle(ref, () => ({ openCreate }));
   const openEdit = (tag: TagRow) =>
     setDialog({
       open: true,
@@ -79,17 +87,15 @@ export function TagsTab({ tags, onCreate, onUpdate, onDelete, isBusy = false }: 
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-end">
-        <Button type="button" size="sm" onClick={openCreate} disabled={isBusy}>
-          <span className="material-symbols-outlined text-sm mr-1" aria-hidden>
-            add
-          </span>
-          Add Tag
-        </Button>
-      </div>
-
       {tags.length === 0 ? (
-        <EmptyState icon="sell" title="No tags yet" description="Add the first account tag." />
+        <EmptyState
+          entity="pinned"
+          size="sm"
+          phase="passive"
+          title="No tags yet"
+          description="Add your first account tag."
+          className="py-4 px-3 gap-2"
+        />
       ) : (
         <Card className="divide-y divide-border">
           {tags.map((tag) => (
@@ -186,4 +192,4 @@ export function TagsTab({ tags, onCreate, onUpdate, onDelete, isBusy = false }: 
       </Dialog>
     </div>
   );
-}
+});

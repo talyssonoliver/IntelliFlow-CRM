@@ -32,7 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@intelliflow/ui';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+
 import { ConfigEmptyState, ConfigCardSkeleton } from './ticket-config-shared';
 import { toast } from '@intelliflow/ui';
 
@@ -156,7 +156,9 @@ export function TicketTypeManager() {
     <div className="space-y-4">
       <div className="flex justify-end">
         <Button onClick={openCreate} aria-label="Add new ticket type">
-          <Plus className="mr-2 h-4 w-4" />
+          <span className="material-symbols-outlined text-base mr-2" aria-hidden="true">
+            add
+          </span>{' '}
           Add Type
         </Button>
       </div>
@@ -209,7 +211,9 @@ export function TicketTypeManager() {
                       onClick={() => openEdit(parent)}
                       aria-label={`Edit ${parent.name}`}
                     >
-                      <Pencil className="h-4 w-4" />
+                      <span className="material-symbols-outlined text-base" aria-hidden="true">
+                        edit
+                      </span>
                     </Button>
                     <Button
                       variant="ghost"
@@ -217,7 +221,9 @@ export function TicketTypeManager() {
                       onClick={() => deleteMutation.mutate({ id: parent.id })}
                       aria-label={`Delete ${parent.name}`}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <span className="material-symbols-outlined text-base" aria-hidden="true">
+                        delete
+                      </span>
                     </Button>
                   </div>
                 </TableCell>
@@ -256,7 +262,9 @@ export function TicketTypeManager() {
                         onClick={() => openEdit(child)}
                         aria-label={`Edit ${child.name}`}
                       >
-                        <Pencil className="h-4 w-4" />
+                        <span className="material-symbols-outlined text-base" aria-hidden="true">
+                          edit
+                        </span>
                       </Button>
                       <Button
                         variant="ghost"
@@ -264,7 +272,9 @@ export function TicketTypeManager() {
                         onClick={() => deleteMutation.mutate({ id: child.id })}
                         aria-label={`Delete ${child.name}`}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <span className="material-symbols-outlined text-base" aria-hidden="true">
+                          delete
+                        </span>
                       </Button>
                     </div>
                   </TableCell>

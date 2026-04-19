@@ -3,16 +3,14 @@
  *
  * PG-178: Lead Settings
  *
- * Tests the orchestration layer: tRPC data fetching, tab wiring,
- * loading/error states, and save/reset delegation to ModuleSettingsLayout.
+ * Tests the orchestration layer: tRPC data fetching, bento-grid wiring,
+ * loading/error states, and save/reset delegation to PageHeader actions.
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 
 // ─── Hoisted mock references ────────────────────────────────────────────────
-// vi.mock factories are hoisted before variable declarations, so all fn refs
-// that the factory closes over must be created with vi.hoisted().
 const {
   mockUseRequireAuth,
   mockStagesGetAllQuery,
@@ -115,30 +113,42 @@ vi.mock('../components/ScoringRulesTab', () => ({
   ),
 }));
 
-vi.mock('../components/CustomFieldsTab', () => ({
-  CustomFieldsTab: ({ fields, onCreate, onUpdate, onDelete }: any) => (
-    <div data-testid="custom-fields-tab">
-      Fields: {fields?.length ?? 0}
-      <button
-        data-testid="trigger-create"
-        onClick={() => onCreate({ fieldName: 'Test', dataType: 'text', isRequired: false })}
-      >
-        TriggerCreate
-      </button>
-      <button
-        data-testid="trigger-update"
-        onClick={() =>
-          onUpdate({ id: 'f1', fieldName: 'Updated', dataType: 'text', isRequired: false })
-        }
-      >
-        TriggerUpdate
-      </button>
-      <button data-testid="trigger-delete" onClick={() => onDelete('f1')}>
-        TriggerDelete
-      </button>
-    </div>
-  ),
-}));
+vi.mock('../components/CustomFieldsTab', async () => {
+  const React = await import('react');
+  return {
+    // The real component is a forwardRef exposing `openCreate()`. Use a real
+    // forwardRef in the mock too so React doesn't warn about refs and so
+    // `customFieldsTabRef.current?.openCreate()` is safely callable.
+    CustomFieldsTab: React.forwardRef(function CustomFieldsTabMock(
+      { fields, onCreate, onUpdate, onDelete }: any,
+      ref: React.Ref<{ openCreate: () => void }>
+    ) {
+      React.useImperativeHandle(ref, () => ({ openCreate: () => {} }), []);
+      return (
+        <div data-testid="custom-fields-tab">
+          Fields: {fields?.length ?? 0}
+          <button
+            data-testid="trigger-create"
+            onClick={() => onCreate({ fieldName: 'Test', dataType: 'text', isRequired: false })}
+          >
+            TriggerCreate
+          </button>
+          <button
+            data-testid="trigger-update"
+            onClick={() =>
+              onUpdate({ id: 'f1', fieldName: 'Updated', dataType: 'text', isRequired: false })
+            }
+          >
+            TriggerUpdate
+          </button>
+          <button data-testid="trigger-delete" onClick={() => onDelete('f1')}>
+            TriggerDelete
+          </button>
+        </div>
+      );
+    }),
+  };
+});
 
 vi.mock('../components/AutomationTab', () => ({
   AutomationTab: ({ settings, onSettingsChange }: any) => (
@@ -160,33 +170,62 @@ vi.mock('../components/AutomationTab', () => ({
   ),
 }));
 
+vi.mock('../components/ConfigurationSummary', () => ({
+  ConfigurationSummary: ({ stages, rules, fields, isDirty }: any) => (
+    <div data-testid="config-summary">
+      stages={stages?.length ?? 0} rules={rules?.length ?? 0} fields={fields?.length ?? 0} dirty=
+      {String(isDirty)}
+    </div>
+  ),
+}));
+
 vi.mock('../LeadSettingsLoading', () => ({
   LeadSettingsLoading: () => <div data-testid="lead-settings-loading">Loading...</div>,
 }));
 
-vi.mock('@/components/settings/ModuleSettingsLayout', () => ({
-  ModuleSettingsLayout: ({ title, tabs, onSave, onReset, isDirty, isSaving }: any) => (
-    <div data-testid="module-layout">
+// PageHeader is a shared UI element — stub it with a lightweight fake that
+// exposes the actions array so save/reset buttons are clickable in tests.
+vi.mock('@/components/shared/page-header', () => ({
+  PageHeader: ({ title, description, actions }: any) => (
+    <div data-testid="page-header">
       <h1>{title}</h1>
-      <div data-testid="tab-count">{tabs?.length}</div>
-      <button onClick={onSave} disabled={!isDirty || isSaving} data-testid="save-btn">
-        Save
-      </button>
-      <button onClick={onReset} data-testid="reset-btn">
-        Reset
-      </button>
-      <div data-testid="tabs-content">
-        {tabs?.map((tab: any) => (
-          <div key={tab.value} data-testid={`tab-${tab.value}`}>
-            {tab.content}
-          </div>
+      {description && <p>{description}</p>}
+      <div data-testid="page-header-actions">
+        {actions?.map((a: any, i: number) => (
+          <button
+            key={i}
+            data-testid={`pg-action-${a.label.toLowerCase().replace(/\s+/g, '-')}`}
+            onClick={a.onClick}
+            disabled={a.disabled}
+          >
+            {a.label}
+          </button>
         ))}
       </div>
     </div>
   ),
 }));
 
-vi.mock('@intelliflow/ui', () => ({
+vi.mock('@intelliflow/ui', async (importOriginal) => ({
+  ...((await importOriginal()) as Record<string, unknown>),
+  Card: ({ children, className }: any) => (
+    <div data-testid="card" className={className}>
+      {children}
+    </div>
+  ),
+  Button: ({ children, onClick, size, ...props }: any) => (
+    <button onClick={onClick} data-size={size} {...props}>
+      {children}
+    </button>
+  ),
+  ConfirmationDialog: ({ open, onConfirm }: any) =>
+    open ? (
+      <div data-testid="confirm-reset">
+        <button onClick={onConfirm} data-testid="confirm-reset-btn">
+          Confirm
+        </button>
+      </div>
+    ) : null,
   toast: vi.fn(),
 }));
 
@@ -234,14 +273,12 @@ const mockAutomation = {
   updatedAt: '2026-01-01T00:00:00.000Z',
 };
 
-// Default mutation return value
 const makeMutationReturn = () => ({
   mutateAsync: mockMutateAsync,
   mutate: mockMutate,
   isPending: false,
 });
 
-// Helper to set up standard tRPC query mocks for success scenario
 function setupSuccessfulMocks() {
   mockStagesGetAllQuery.mockReturnValue({
     data: mockStages,
@@ -278,60 +315,56 @@ function setupSuccessfulMocks() {
   mockFieldsDeleteMutation.mockReturnValue(makeMutationReturn());
 }
 
-// Import after all mocks
 import LeadSettingsContent from '../LeadSettingsContent';
 
 describe('LeadSettingsContent', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Re-apply default returns after clearAllMocks wipes them
     mockUseRequireAuth.mockReturnValue({ isLoading: false, isAuthenticated: true });
     setupSuccessfulMocks();
   });
 
-  it('renders 4 tabs via the ModuleSettingsLayout mock', () => {
-    render(<LeadSettingsContent />);
-
-    expect(screen.getByTestId('tab-count')).toHaveTextContent('4');
-  });
-
-  it('renders with title "Lead Settings"', () => {
+  it('renders the PageHeader with "Lead Settings" title', () => {
     render(<LeadSettingsContent />);
 
     expect(screen.getByRole('heading', { name: 'Lead Settings' })).toBeInTheDocument();
   });
 
-  it('renders all 4 tab content areas', () => {
+  it('renders all 5 bento sections (stages, automation, scoring, custom fields, summary)', () => {
     render(<LeadSettingsContent />);
 
-    expect(screen.getByTestId('tab-stages')).toBeInTheDocument();
-    expect(screen.getByTestId('tab-scoring')).toBeInTheDocument();
-    expect(screen.getByTestId('tab-custom-fields')).toBeInTheDocument();
-    expect(screen.getByTestId('tab-automation')).toBeInTheDocument();
+    expect(screen.getByTestId('stages-tab')).toBeInTheDocument();
+    expect(screen.getByTestId('automation-tab')).toBeInTheDocument();
+    expect(screen.getByTestId('scoring-tab')).toBeInTheDocument();
+    expect(screen.getByTestId('custom-fields-tab')).toBeInTheDocument();
+    expect(screen.getByTestId('config-summary')).toBeInTheDocument();
   });
 
   it('passes stage data to LeadStagesTab', () => {
     render(<LeadSettingsContent />);
-
     expect(screen.getByTestId('stages-tab')).toHaveTextContent('Stages: 2');
   });
 
   it('passes rules data to ScoringRulesTab', () => {
     render(<LeadSettingsContent />);
-
     expect(screen.getByTestId('scoring-tab')).toHaveTextContent('Rules: 2');
   });
 
   it('passes fields data to CustomFieldsTab', () => {
     render(<LeadSettingsContent />);
-
     expect(screen.getByTestId('custom-fields-tab')).toHaveTextContent('Fields: 1');
   });
 
   it('passes automation settings to AutomationTab', () => {
     render(<LeadSettingsContent />);
-
     expect(screen.getByTestId('automation-tab')).toHaveTextContent('autoAssignment: true');
+  });
+
+  it('passes combined state to ConfigurationSummary', () => {
+    render(<LeadSettingsContent />);
+    expect(screen.getByTestId('config-summary')).toHaveTextContent(
+      'stages=2 rules=2 fields=1 dirty=false'
+    );
   });
 
   it('shows LeadSettingsLoading when auth is loading', () => {
@@ -340,7 +373,7 @@ describe('LeadSettingsContent', () => {
     render(<LeadSettingsContent />);
 
     expect(screen.getByTestId('lead-settings-loading')).toBeInTheDocument();
-    expect(screen.queryByTestId('module-layout')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('page-header')).not.toBeInTheDocument();
   });
 
   it('shows LeadSettingsLoading when queries are loading', () => {
@@ -352,7 +385,6 @@ describe('LeadSettingsContent', () => {
     });
 
     render(<LeadSettingsContent />);
-
     expect(screen.getByTestId('lead-settings-loading')).toBeInTheDocument();
   });
 
@@ -379,7 +411,6 @@ describe('LeadSettingsContent', () => {
     });
 
     render(<LeadSettingsContent />);
-
     expect(screen.getByText('Retry')).toBeInTheDocument();
   });
 
@@ -415,7 +446,6 @@ describe('LeadSettingsContent', () => {
     });
 
     render(<LeadSettingsContent />);
-
     fireEvent.click(screen.getByText('Retry'));
 
     expect(refetchStages).toHaveBeenCalled();
@@ -424,24 +454,33 @@ describe('LeadSettingsContent', () => {
     expect(refetchAutomation).toHaveBeenCalled();
   });
 
-  it('save button is disabled initially (isDirty starts false)', () => {
+  it('Save Changes button is disabled initially (isDirty starts false)', () => {
     render(<LeadSettingsContent />);
-
-    expect(screen.getByTestId('save-btn')).toBeDisabled();
+    expect(screen.getByTestId('pg-action-save-changes')).toBeDisabled();
   });
 
-  it('module layout renders with save and reset controls', () => {
+  it('PageHeader exposes Save Changes and Reset to Defaults actions', () => {
     render(<LeadSettingsContent />);
 
-    expect(screen.getByTestId('module-layout')).toBeInTheDocument();
-    expect(screen.getByTestId('save-btn')).toBeInTheDocument();
-    expect(screen.getByTestId('reset-btn')).toBeInTheDocument();
+    expect(screen.getByTestId('pg-action-save-changes')).toBeInTheDocument();
+    expect(screen.getByTestId('pg-action-reset-to-defaults')).toBeInTheDocument();
   });
 
-  it('calls reset mutations when reset button is clicked', async () => {
+  it('Reset to Defaults action opens the confirmation dialog', () => {
     render(<LeadSettingsContent />);
 
-    fireEvent.click(screen.getByTestId('reset-btn'));
+    expect(screen.queryByTestId('confirm-reset')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('pg-action-reset-to-defaults'));
+
+    expect(screen.getByTestId('confirm-reset')).toBeInTheDocument();
+  });
+
+  it('Confirming reset calls stages and scoring reset mutations', async () => {
+    render(<LeadSettingsContent />);
+
+    fireEvent.click(screen.getByTestId('pg-action-reset-to-defaults'));
+    fireEvent.click(screen.getByTestId('confirm-reset-btn'));
 
     await waitFor(() => {
       expect(mockMutateAsync).toHaveBeenCalled();
@@ -484,32 +523,26 @@ describe('LeadSettingsContent', () => {
   it('handleSave calls all 3 mutateAsync calls (stages, scoring, automation)', async () => {
     render(<LeadSettingsContent />);
 
-    // Make isDirty=true by triggering a stages change via the mock button
+    // Mark dirty via stages change
     fireEvent.click(screen.getByTestId('trigger-stages-change'));
 
-    // Save button should now be enabled (isDirty=true, isSaving=false)
-    const saveBtn = screen.getByTestId('save-btn');
+    const saveBtn = screen.getByTestId('pg-action-save-changes');
     expect(saveBtn).not.toBeDisabled();
 
     fireEvent.click(saveBtn);
 
     await waitFor(() => {
-      // stagesUpdate, scoringUpdate, automationUpdate mutateAsync all called
       expect(mockMutateAsync).toHaveBeenCalledTimes(3);
     });
   });
 
   it('handleSave shows error toast when a mutation throws', async () => {
     const { toast: mockToast } = await import('@intelliflow/ui');
-    // Make the first mutateAsync reject
     mockMutateAsync.mockRejectedValueOnce(new Error('Save failed'));
 
     render(<LeadSettingsContent />);
-
-    // Make isDirty=true to enable the save button
     fireEvent.click(screen.getByTestId('trigger-stages-change'));
-
-    fireEvent.click(screen.getByTestId('save-btn'));
+    fireEvent.click(screen.getByTestId('pg-action-save-changes'));
 
     await waitFor(() => {
       expect(mockToast).toHaveBeenCalledWith(
@@ -526,8 +559,8 @@ describe('LeadSettingsContent', () => {
     mockMutateAsync.mockRejectedValueOnce(new Error('Reset failed'));
 
     render(<LeadSettingsContent />);
-
-    fireEvent.click(screen.getByTestId('reset-btn'));
+    fireEvent.click(screen.getByTestId('pg-action-reset-to-defaults'));
+    fireEvent.click(screen.getByTestId('confirm-reset-btn'));
 
     await waitFor(() => {
       expect(mockToast).toHaveBeenCalledWith(
@@ -543,10 +576,8 @@ describe('LeadSettingsContent', () => {
     const { toast: mockToast } = await import('@intelliflow/ui');
 
     render(<LeadSettingsContent />);
-
     fireEvent.click(screen.getByTestId('trigger-create'));
 
-    // Extract and invoke the onSuccess callback passed to fieldCreate.mutate
     const mutateCall = mockMutate.mock.calls[0];
     const { onSuccess } = mutateCall[1];
     onSuccess();
@@ -558,7 +589,6 @@ describe('LeadSettingsContent', () => {
     const { toast: mockToast } = await import('@intelliflow/ui');
 
     render(<LeadSettingsContent />);
-
     fireEvent.click(screen.getByTestId('trigger-create'));
 
     const mutateCall = mockMutate.mock.calls[0];
@@ -578,7 +608,6 @@ describe('LeadSettingsContent', () => {
     const { toast: mockToast } = await import('@intelliflow/ui');
 
     render(<LeadSettingsContent />);
-
     fireEvent.click(screen.getByTestId('trigger-update'));
 
     const mutateCall = mockMutate.mock.calls[0];
@@ -598,7 +627,6 @@ describe('LeadSettingsContent', () => {
     const { toast: mockToast } = await import('@intelliflow/ui');
 
     render(<LeadSettingsContent />);
-
     fireEvent.click(screen.getByTestId('trigger-delete'));
 
     const mutateCall = mockMutate.mock.calls[0];
@@ -618,7 +646,6 @@ describe('LeadSettingsContent', () => {
     const { toast: mockToast } = await import('@intelliflow/ui');
 
     render(<LeadSettingsContent />);
-
     fireEvent.click(screen.getByTestId('trigger-update'));
 
     const mutateCall = mockMutate.mock.calls[0];
@@ -632,7 +659,6 @@ describe('LeadSettingsContent', () => {
     const { toast: mockToast } = await import('@intelliflow/ui');
 
     render(<LeadSettingsContent />);
-
     fireEvent.click(screen.getByTestId('trigger-delete'));
 
     const mutateCall = mockMutate.mock.calls[0];
@@ -642,33 +668,29 @@ describe('LeadSettingsContent', () => {
     expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Field deleted' }));
   });
 
-  it('handleAutomationChange sets isDirty and updates localAutomation', () => {
+  it('handleAutomationChange sets isDirty and enables the save button', () => {
     render(<LeadSettingsContent />);
 
-    // Initially save button is disabled (isDirty=false)
-    expect(screen.getByTestId('save-btn')).toBeDisabled();
+    expect(screen.getByTestId('pg-action-save-changes')).toBeDisabled();
 
-    // Trigger automation change
     fireEvent.click(screen.getByTestId('trigger-automation-change'));
 
-    // isDirty should now be true → save button enabled
-    expect(screen.getByTestId('save-btn')).not.toBeDisabled();
+    expect(screen.getByTestId('pg-action-save-changes')).not.toBeDisabled();
   });
 
   it('handleRulesChange sets isDirty and enables the save button', () => {
     render(<LeadSettingsContent />);
 
-    expect(screen.getByTestId('save-btn')).toBeDisabled();
+    expect(screen.getByTestId('pg-action-save-changes')).toBeDisabled();
 
     fireEvent.click(screen.getByTestId('trigger-rules-change'));
 
-    expect(screen.getByTestId('save-btn')).not.toBeDisabled();
+    expect(screen.getByTestId('pg-action-save-changes')).not.toBeDisabled();
   });
 
   it('fieldUpdate useMutation onSuccess calls invalidate', () => {
     render(<LeadSettingsContent />);
 
-    // Extract the onSuccess passed to fieldUpdate.useMutation
     const callArgs = mockFieldsUpdateMutation.mock.calls[0]?.[0];
     expect(callArgs).toBeDefined();
     callArgs.onSuccess();
@@ -679,7 +701,6 @@ describe('LeadSettingsContent', () => {
   it('fieldDelete useMutation onSuccess calls invalidate', () => {
     render(<LeadSettingsContent />);
 
-    // Extract the onSuccess passed to fieldDelete.useMutation
     const callArgs = mockFieldsDeleteMutation.mock.calls[0]?.[0];
     expect(callArgs).toBeDefined();
     callArgs.onSuccess();

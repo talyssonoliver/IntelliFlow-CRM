@@ -91,7 +91,10 @@ export function InsightsListPage() {
     types,
   });
 
-  const allInsights = (data?.insights ?? []) as SerializedAIInsight[];
+  const allInsights = useMemo<SerializedAIInsight[]>(
+    () => (data?.insights ?? []) as SerializedAIInsight[],
+    [data?.insights]
+  );
   const hasMore = data?.hasMore ?? false;
   const nextCursor = data?.nextCursor;
 

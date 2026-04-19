@@ -268,7 +268,7 @@ export function getActiveIncidents(): Incident[] {
  */
 export function getRecentIncidents(days = 30): Incident[] {
   const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - days);
+  cutoff.setUTCDate(cutoff.getUTCDate() - days);
 
   return getAllIncidents().filter((i) => i.startedAt >= cutoff);
 }
@@ -323,7 +323,7 @@ export function calculateUptime(serviceId: string, days = 90): number {
   }
 
   const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - days);
+  cutoff.setUTCDate(cutoff.getUTCDate() - days);
 
   const windowRecords = history.filter((r) => r.timestamp >= cutoff);
 

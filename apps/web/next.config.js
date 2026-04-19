@@ -17,7 +17,12 @@ const nextConfig = {
     '@intelliflow/db',
     '@sentry/node',
     '@fastify/otel',
+    '@opentelemetry/api',
+    '@opentelemetry/auto-instrumentations-node',
     '@opentelemetry/instrumentation',
+    '@opentelemetry/resources',
+    '@opentelemetry/sdk-node',
+    '@opentelemetry/semantic-conventions',
     'require-in-the-middle',
     '@bull-board/api',
     'bullmq',
@@ -42,7 +47,7 @@ const nextConfig = {
       bodySizeLimit: '2mb',
     },
     // Optimize package imports
-    optimizePackageImports: ['@intelliflow/ui', 'recharts'],
+    optimizePackageImports: ['@intelliflow/ui', '@intelliflow/validators', '@intelliflow/domain', 'recharts'],
     // Enable 'use cache' directive, cacheLife(), cacheTag() without PPR
     useCache: true,
   },

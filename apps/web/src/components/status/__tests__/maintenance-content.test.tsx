@@ -24,9 +24,7 @@ describe('MaintenanceContent', () => {
   it('renders ETA, message, and affected services when active', () => {
     render(<MaintenanceContent maintenanceWindow={activeWindow} />);
 
-    expect(
-      screen.getByRole('heading', { name: /scheduled maintenance/i })
-    ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /scheduled maintenance/i })).toBeInTheDocument();
     expect(screen.getByText('Upgrading database engines.')).toBeInTheDocument();
     expect(screen.getByText(/estimated completion/i)).toBeInTheDocument();
 
@@ -50,10 +48,7 @@ describe('MaintenanceContent', () => {
       'href',
       '/status'
     );
-    expect(screen.getByRole('link', { name: /back to home/i })).toHaveAttribute(
-      'href',
-      '/'
-    );
+    expect(screen.getByRole('link', { name: /back to home/i })).toHaveAttribute('href', '/');
   });
 
   it('falls back to "ETA unavailable" when etaIso is null', () => {

@@ -105,6 +105,13 @@ vi.mock('next/navigation', () => ({
   useRouter: vi.fn(() => ({ push: mockRouterPush })),
 }));
 
+// Mock Next.js server action — revalidateTag requires static generation store
+// which doesn't exist in vitest jsdom environment
+vi.mock('@/app/notifications/actions', () => ({
+  revalidateNotifications: vi.fn().mockResolvedValue(undefined),
+  revalidateActivityFeed: vi.fn().mockResolvedValue(undefined),
+}));
+
 import { NotificationBell } from '../NotificationBell';
 
 describe('NotificationBell', () => {

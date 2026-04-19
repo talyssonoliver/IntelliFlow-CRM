@@ -67,6 +67,9 @@ const PRIORITY_STRIPE: Record<string, string> = {
 function formatRelativeDate(date: Date): string {
   const now = new Date();
   const d = new Date(date);
+  // Use local getters consistently — comparing two local midnights avoids
+  // timezone-induced off-by-one errors when both values use the same getter.
+  // eslint-disable-next-line no-restricted-syntax
   const nowDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
   const targetDay = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
   const diffDays = Math.round((targetDay - nowDay) / 86400000);
@@ -171,7 +174,7 @@ function AppointmentHoverBody({ data }: Readonly<{ data: CalendarEventHoverCardA
             <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold uppercase tracking-wider text-destructive">
               <span className="material-symbols-outlined text-[12px]" aria-hidden="true">
                 warning
-              </span>
+              </span>{' '}
               Conflict
             </span>
           )}
@@ -260,14 +263,14 @@ function TaskHoverBody({ data }: Readonly<{ data: CalendarEventHoverCardTask }>)
           <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-teal-50 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300">
             <span className="material-symbols-outlined text-[12px]" aria-hidden="true">
               task_alt
-            </span>
+            </span>{' '}
             Task
           </span>
           {isOverdue && (
             <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold uppercase tracking-wider text-destructive">
               <span className="material-symbols-outlined text-[12px]" aria-hidden="true">
                 warning
-              </span>
+              </span>{' '}
               Overdue
             </span>
           )}

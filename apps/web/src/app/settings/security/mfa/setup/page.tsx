@@ -235,14 +235,14 @@ function VerificationInput({
           <span className="flex items-center gap-2">
             <span className="material-symbols-outlined animate-spin text-sm" aria-hidden="true">
               progress_activity
-            </span>
+            </span>{' '}
             Verifying...
           </span>
         ) : (
           <span className="flex items-center gap-2">
             <span className="material-symbols-outlined text-lg" aria-hidden="true">
               verified
-            </span>
+            </span>{' '}
             Verify Code
           </span>
         )}
@@ -328,17 +328,17 @@ export default function MfaSetupPage() {
           description: 'Select how you want to receive verification codes',
           icon: 'key',
         };
-      case 'setup':
+      case 'setup': {
+        let setupTitle: string;
+        if (selectedMethod === 'totp') setupTitle = 'Set Up Authenticator App';
+        else if (selectedMethod === 'sms') setupTitle = 'Set Up SMS Verification';
+        else setupTitle = 'Set Up Email Verification';
         return {
-          title:
-            selectedMethod === 'totp'
-              ? 'Set Up Authenticator App'
-              : selectedMethod === 'sms'
-                ? 'Set Up SMS Verification'
-                : 'Set Up Email Verification',
+          title: setupTitle,
           description: 'Follow the instructions below to complete setup',
           icon: 'qr_code_scanner',
         };
+      }
       case 'verify':
         return {
           title: 'Verify Your Setup',
@@ -446,14 +446,14 @@ export default function MfaSetupPage() {
                       aria-hidden="true"
                     >
                       progress_activity
-                    </span>
+                    </span>{' '}
                     Setting up...
                   </span>
                 ) : (
                   <span className="flex items-center gap-2">
                     <span className="material-symbols-outlined text-lg" aria-hidden="true">
                       arrow_forward
-                    </span>
+                    </span>{' '}
                     Continue with {MFA_METHODS.find((m) => m.id === selectedMethod)?.name}
                   </span>
                 )}
@@ -488,7 +488,7 @@ export default function MfaSetupPage() {
               <Button onClick={handleSetupComplete} className="w-full h-12">
                 <span className="material-symbols-outlined text-lg mr-1.5" aria-hidden="true">
                   send
-                </span>
+                </span>{' '}
                 Send Code
               </Button>
             </div>
@@ -537,7 +537,7 @@ export default function MfaSetupPage() {
               <Button onClick={handleComplete} className="w-full h-12">
                 <span className="material-symbols-outlined text-lg mr-1.5" aria-hidden="true">
                   arrow_back
-                </span>
+                </span>{' '}
                 Return to Account Settings
               </Button>
             </div>
@@ -569,19 +569,19 @@ export default function MfaSetupPage() {
                 <li className="flex items-center gap-1.5">
                   <span className="material-symbols-outlined text-[14px] text-slate-400">
                     check
-                  </span>
+                  </span>{' '}
                   Google Authenticator
                 </li>
                 <li className="flex items-center gap-1.5">
                   <span className="material-symbols-outlined text-[14px] text-slate-400">
                     check
-                  </span>
+                  </span>{' '}
                   Authy
                 </li>
                 <li className="flex items-center gap-1.5">
                   <span className="material-symbols-outlined text-[14px] text-slate-400">
                     check
-                  </span>
+                  </span>{' '}
                   1Password
                 </li>
               </ul>

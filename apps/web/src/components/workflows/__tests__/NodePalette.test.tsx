@@ -81,13 +81,14 @@ describe('NodePalette', () => {
     expect(nodeTypes).toContain('end');
   });
 
-  it('palette items are keyboard-accessible (tabIndex present)', () => {
+  it('palette items are keyboard-accessible (native <button> elements)', () => {
     render(<NodePalette />);
     const draggables = screen.getAllByRole('button', { name: /drag/i });
     expect(draggables.length).toBe(5);
     draggables.forEach((item) => {
-      // Each draggable div has tabIndex=0
-      expect(item).toHaveAttribute('tabindex', '0');
+      // Native <button> elements are inherently focusable; assert tag instead
+      // of an explicit tabindex (PG-195: switched from div+role to <button>).
+      expect(item.tagName).toBe('BUTTON');
     });
   });
 

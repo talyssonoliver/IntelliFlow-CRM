@@ -116,6 +116,104 @@ export function TestRunnerModal({ isOpen, onClose, onComplete }: Readonly<TestRu
     }
   }, [isOpen]);
 
+  const handleProgressEvent = useCallback(
+    (data: TestProgress) => {
+      switch (data.type) {
+        case 'test_pass':
+          setProgress((prev) => ({
+            ...prev,
+            testsRun: prev.testsRun + 1,
+            testsPassed: prev.testsPassed + 1,
+            currentTest: data.data?.testName || prev.currentTest,
+          }));
+          if (data.data?.testName) {
+            setLogs((prev) => [...prev, { type: 'pass', text: data.data?.testName || '' }]);
+          }
+          break;
+
+        case 'test_fail':
+          setProgress((prev) => ({
+            ...prev,
+            testsRun: prev.testsRun + 1,
+            testsFailed: prev.testsFailed + 1,
+            currentTest: data.data?.testName || prev.currentTest,
+          }));
+          if (data.data?.testName) {
+            setLogs((prev) => [...prev, { type: 'fail', text: data.data?.testName || '' }]);
+          }
+          break;
+
+        case 'test_skip':
+          setProgress((prev) => ({
+            ...prev,
+            testsRun: prev.testsRun + 1,
+            testsSkipped: prev.testsSkipped + 1,
+            currentTest: data.data?.testName || prev.currentTest,
+          }));
+          if (data.data?.testName) {
+            setLogs((prev) => [...prev, { type: 'skip', text: data.data?.testName || '' }]);
+          }
+          break;
+
+        case 'suite_start':
+          if (data.data?.file) {
+            setLogs((prev) => [
+              ...prev,
+              { type: 'info', text: `Running: ${data.data?.suiteName || data.data?.file}` },
+            ]);
+          }
+          break;
+
+        case 'coverage_complete':
+          if (data.data?.coverage) {
+            setCoverage({
+              lines: data.data.coverage.lines.pct,
+              statements: data.data.coverage.statements.pct,
+              functions: data.data.coverage.functions.pct,
+              branches: data.data.coverage.branches.pct,
+            });
+          }
+          break;
+
+        case 'complete':
+          setIsRunning(false);
+          setIsComplete(true);
+          eventSourceRef.current?.close();
+
+          // Update final counts from complete event
+          if (data.data?.testsRun !== undefined) {
+            setProgress((prev) => ({
+              ...prev,
+              testsRun: data.data?.testsRun || prev.testsRun,
+              testsPassed: data.data?.testsPassed || prev.testsPassed,
+              testsFailed: data.data?.testsFailed || prev.testsFailed,
+              testsSkipped: data.data?.testsSkipped || prev.testsSkipped,
+            }));
+          }
+
+          if (data.data?.coverage) {
+            setCoverage({
+              lines: data.data.coverage.lines.pct,
+              statements: data.data.coverage.statements.pct,
+              functions: data.data.coverage.functions.pct,
+              branches: data.data.coverage.branches.pct,
+            });
+          }
+
+          setLogs((prev) => [...prev, { type: 'info', text: 'Test run complete!' }]);
+          onComplete();
+          break;
+
+        case 'error':
+          setError(data.data?.error || 'An error occurred');
+          setIsRunning(false);
+          eventSourceRef.current?.close();
+          break;
+      }
+    },
+    [onComplete]
+  );
+
   const handleStart = useCallback(async () => {
     setIsRunning(true);
     setLogs([]);
@@ -167,102 +265,7 @@ export function TestRunnerModal({ isOpen, onClose, onComplete }: Readonly<TestRu
       setError(err instanceof Error ? err.message : 'Failed to start test run');
       setIsRunning(false);
     }
-  }, [scope, withCoverage, isComplete]);
-
-  const handleProgressEvent = (data: TestProgress) => {
-    switch (data.type) {
-      case 'test_pass':
-        setProgress((prev) => ({
-          ...prev,
-          testsRun: prev.testsRun + 1,
-          testsPassed: prev.testsPassed + 1,
-          currentTest: data.data?.testName || prev.currentTest,
-        }));
-        if (data.data?.testName) {
-          setLogs((prev) => [...prev, { type: 'pass', text: data.data?.testName || '' }]);
-        }
-        break;
-
-      case 'test_fail':
-        setProgress((prev) => ({
-          ...prev,
-          testsRun: prev.testsRun + 1,
-          testsFailed: prev.testsFailed + 1,
-          currentTest: data.data?.testName || prev.currentTest,
-        }));
-        if (data.data?.testName) {
-          setLogs((prev) => [...prev, { type: 'fail', text: data.data?.testName || '' }]);
-        }
-        break;
-
-      case 'test_skip':
-        setProgress((prev) => ({
-          ...prev,
-          testsRun: prev.testsRun + 1,
-          testsSkipped: prev.testsSkipped + 1,
-          currentTest: data.data?.testName || prev.currentTest,
-        }));
-        if (data.data?.testName) {
-          setLogs((prev) => [...prev, { type: 'skip', text: data.data?.testName || '' }]);
-        }
-        break;
-
-      case 'suite_start':
-        if (data.data?.file) {
-          setLogs((prev) => [
-            ...prev,
-            { type: 'info', text: `Running: ${data.data?.suiteName || data.data?.file}` },
-          ]);
-        }
-        break;
-
-      case 'coverage_complete':
-        if (data.data?.coverage) {
-          setCoverage({
-            lines: data.data.coverage.lines.pct,
-            statements: data.data.coverage.statements.pct,
-            functions: data.data.coverage.functions.pct,
-            branches: data.data.coverage.branches.pct,
-          });
-        }
-        break;
-
-      case 'complete':
-        setIsRunning(false);
-        setIsComplete(true);
-        eventSourceRef.current?.close();
-
-        // Update final counts from complete event
-        if (data.data?.testsRun !== undefined) {
-          setProgress((prev) => ({
-            ...prev,
-            testsRun: data.data?.testsRun || prev.testsRun,
-            testsPassed: data.data?.testsPassed || prev.testsPassed,
-            testsFailed: data.data?.testsFailed || prev.testsFailed,
-            testsSkipped: data.data?.testsSkipped || prev.testsSkipped,
-          }));
-        }
-
-        if (data.data?.coverage) {
-          setCoverage({
-            lines: data.data.coverage.lines.pct,
-            statements: data.data.coverage.statements.pct,
-            functions: data.data.coverage.functions.pct,
-            branches: data.data.coverage.branches.pct,
-          });
-        }
-
-        setLogs((prev) => [...prev, { type: 'info', text: 'Test run complete!' }]);
-        onComplete();
-        break;
-
-      case 'error':
-        setError(data.data?.error || 'An error occurred');
-        setIsRunning(false);
-        eventSourceRef.current?.close();
-        break;
-    }
-  };
+  }, [scope, withCoverage, isComplete, handleProgressEvent]);
 
   const handleCancel = useCallback(async () => {
     if (runId) {

@@ -18,14 +18,46 @@ interface ToggleConfig {
 
 // Non-AI toggles only; AI settings live in AISettingsTab.
 const AUTOMATION_KEYS: ToggleConfig[] = [
-  { key: 'autoAssignOwner', title: 'Auto-assign owner', description: 'Assign a new account to the current user if no owner is selected.' },
-  { key: 'autoLinkContactsByDomain', title: 'Auto-link contacts by domain', description: 'Match contacts whose email domain matches the account website.' },
-  { key: 'preventDeleteWithOpenOpportunities', title: 'Prevent delete with open opportunities', description: 'Block account deletion while any opportunity is still open.' },
-  { key: 'notifyOnOwnerChange', title: 'Notify on owner change', description: 'Send a notification when the account owner changes.' },
-  { key: 'normalizeWebsiteDomain', title: 'Normalize website domain', description: 'Strip protocol/www/trailing slash before saving website.' },
-  { key: 'autoCapitalizeAccountNames', title: 'Auto-capitalize account names', description: 'Title-case account names on create and edit.' },
-  { key: 'notifyOnDuplicate', title: 'Notify on duplicate', description: 'Notify the owner when a likely duplicate is detected.' },
-  { key: 'restrictTagCreationToAdmins', title: 'Restrict tag creation to admins', description: 'Only admins can create new tags from the accounts module.' },
+  {
+    key: 'autoAssignOwner',
+    title: 'Auto-assign owner',
+    description: 'Assign a new account to the current user if no owner is selected.',
+  },
+  {
+    key: 'autoLinkContactsByDomain',
+    title: 'Auto-link contacts by domain',
+    description: 'Match contacts whose email domain matches the account website.',
+  },
+  {
+    key: 'preventDeleteWithOpenOpportunities',
+    title: 'Prevent delete with open opportunities',
+    description: 'Block account deletion while any opportunity is still open.',
+  },
+  {
+    key: 'notifyOnOwnerChange',
+    title: 'Notify on owner change',
+    description: 'Send a notification when the account owner changes.',
+  },
+  {
+    key: 'normalizeWebsiteDomain',
+    title: 'Normalize website domain',
+    description: 'Strip protocol/www/trailing slash before saving website.',
+  },
+  {
+    key: 'autoCapitalizeAccountNames',
+    title: 'Auto-capitalize account names',
+    description: 'Title-case account names on create and edit.',
+  },
+  {
+    key: 'notifyOnDuplicate',
+    title: 'Notify on duplicate',
+    description: 'Notify the owner when a likely duplicate is detected.',
+  },
+  {
+    key: 'restrictTagCreationToAdmins',
+    title: 'Restrict tag creation to admins',
+    description: 'Only admins can create new tags from the accounts module.',
+  },
 ];
 
 export function AutomationTab({ settings, onSettingsChange }: Readonly<AutomationTabProps>) {

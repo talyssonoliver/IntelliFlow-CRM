@@ -146,17 +146,25 @@ describe('welcome-email', () => {
     });
 
     it('logs email in development mode', async () => {
-      // In test environment, NODE_ENV is typically 'test'
-      // The sendWelcomeEmail function logs in development mode
-      // We verify the function executes successfully
-      await sendWelcomeEmail({
-        fullName: 'Test User',
-        email: 'test@example.com',
-      });
+      // Force development mode so the console.log branch in
+      // sendWelcomeEmail (welcome-email.ts:415) runs, then assert the log
+      // actually fired with the expected payload shape.
+      vi.stubEnv('NODE_ENV', 'development');
+      const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
-      // Function completes without error, which is the expected behavior
-      // Console logging only occurs in development mode
-      expect(true).toBe(true);
+      try {
+        await sendWelcomeEmail({
+          fullName: 'Test User',
+          email: 'test@example.com',
+        });
+
+        expect(logSpy).toHaveBeenCalled();
+        const firstCall = logSpy.mock.calls[0]?.[0];
+        expect(String(firstCall)).toContain('[Welcome Email]');
+      } finally {
+        logSpy.mockRestore();
+        vi.unstubAllEnvs();
+      }
     });
   });
 

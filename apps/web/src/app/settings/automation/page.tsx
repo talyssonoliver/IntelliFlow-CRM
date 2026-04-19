@@ -7,20 +7,20 @@
  */
 
 import Link from 'next/link';
-import { Boxes, Zap } from 'lucide-react';
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@intelliflow/ui';
 import { PageHeader } from '@/components/shared/page-header';
 
 const SECTIONS = [
   {
     href: '/settings/automation/custom-node-types',
-    icon: Boxes,
+    icon: 'widgets',
     title: 'Custom Node Types',
     description: 'Register tenant-specific workflow node types.',
   },
   {
     href: '/settings/automation/custom-actions',
-    icon: Zap,
+    icon: 'bolt',
     title: 'Custom Actions',
     description: 'Register webhook-based action handlers.',
   },
@@ -46,7 +46,9 @@ export default function AutomationSettingsPage() {
               <CardHeader>
                 <div className="flex items-center gap-3">
                   <div className="rounded-lg border border-input bg-muted/40 p-2">
-                    <s.icon className="h-5 w-5" aria-hidden="true" />
+                    <span className="material-symbols-outlined text-base" aria-hidden="true">
+                      {s.icon}
+                    </span>
                   </div>
                   <CardTitle className="text-base">{s.title}</CardTitle>
                 </div>

@@ -56,6 +56,7 @@ export function ErrorRateGauge({ driftResult, isLoading }: Readonly<ErrorRateGau
           <Skeleton className="h-24 w-40" />
         ) : (
           <>
+            {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role */}
             <span
               role="meter"
               aria-valuenow={clampedScore}

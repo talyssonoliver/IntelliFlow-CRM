@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { forwardRef, useImperativeHandle, useState } from 'react';
 import {
   Button,
   Card,
@@ -13,6 +13,10 @@ import {
   Input,
   Switch,
 } from '@intelliflow/ui';
+
+export interface IndustryTabHandle {
+  openCreate: () => void;
+}
 
 export interface IndustryRow {
   id: string;
@@ -35,16 +39,17 @@ export interface IndustryTabProps {
 
 type EditState = { open: boolean; editing?: IndustryRow; label: string };
 
-export function IndustryTab({
-  rows,
-  onCreate,
-  onUpdate,
-  onDelete,
-  isBusy = false,
-}: IndustryTabProps) {
+export const IndustryTab = forwardRef<IndustryTabHandle, IndustryTabProps>(function IndustryTab(
+  { rows, onCreate, onUpdate, onDelete, isBusy = false },
+  ref
+) {
   const [dialog, setDialog] = useState<EditState>({ open: false, label: '' });
 
-  const openCreate = () => setDialog({ open: true, editing: undefined, label: '' });
+  useImperativeHandle(ref, () => ({
+    openCreate: () => setDialog({ open: true, editing: undefined, label: '' }),
+  }));
+
+  const _openCreate = () => setDialog({ open: true, editing: undefined, label: '' });
   const openEdit = (row: IndustryRow) => setDialog({ open: true, editing: row, label: row.label });
   const close = () => setDialog({ open: false, label: '' });
 
@@ -61,20 +66,14 @@ export function IndustryTab({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-end">
-        <Button type="button" onClick={openCreate} disabled={isBusy}>
-          <span className="material-symbols-outlined text-sm mr-1" aria-hidden>
-            add
-          </span>
-          Add Industry
-        </Button>
-      </div>
-
       {rows.length === 0 ? (
         <EmptyState
-          icon="business_center"
+          entity="accounts"
+          size="sm"
+          phase="passive"
           title="No industries yet"
-          description="Add your first industry or reset to the canonical taxonomy."
+          description="Add the first industry or reset to defaults."
+          className="py-4 px-3 gap-2"
         />
       ) : (
         <Card className="divide-y divide-border">
@@ -147,4 +146,4 @@ export function IndustryTab({
       </Dialog>
     </div>
   );
-}
+});

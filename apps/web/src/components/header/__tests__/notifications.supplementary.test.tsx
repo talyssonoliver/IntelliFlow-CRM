@@ -178,10 +178,8 @@ describe('Notifications header component - logic tests', () => {
     });
 
     it('should handle null reminders gracefully', () => {
-      const reminders: any = null;
-      // Should not throw
-      reminders?.markAllAsRead();
-      expect(true).toBe(true);
+      const reminders = null as { markAllAsRead: () => void } | null;
+      expect(() => reminders?.markAllAsRead()).not.toThrow();
     });
   });
 

@@ -169,8 +169,7 @@ export function ProfilePhotoDialog({
             <p className="text-sm font-medium text-foreground">Add a photo</p>
             <p className="text-xs text-muted-foreground mt-0.5">
               Accepts JPG, PNG, GIF or WebP.
-              <br />
-              Max size of 5MB.
+              <br /> Max size of 5MB.
             </p>
             {fileName && (
               <div className="mt-2 flex items-center gap-1.5 overflow-hidden">
@@ -186,8 +185,8 @@ export function ProfilePhotoDialog({
         </div>
 
         {/* Drop zone */}
-        <div
-          role="button"
+        <button
+          type="button"
           tabIndex={0}
           onClick={() => fileInputRef.current?.click()}
           onKeyDown={(e) => {
@@ -213,7 +212,7 @@ export function ProfilePhotoDialog({
           </div>
           <p className="text-sm font-medium text-foreground">Drag and drop your photo here</p>
           <p className="text-xs text-muted-foreground">or click to browse from your computer</p>
-        </div>
+        </button>
 
         <input
           ref={fileInputRef}
@@ -229,7 +228,7 @@ export function ProfilePhotoDialog({
           <Button onClick={handleUpload} disabled={!preview} className="w-full">
             <span className="material-symbols-outlined text-[18px] mr-1.5" aria-hidden="true">
               upload
-            </span>
+            </span>{' '}
             Upload New Photo
           </Button>
 
@@ -242,7 +241,7 @@ export function ProfilePhotoDialog({
             >
               <span className="material-symbols-outlined text-[16px] mr-1.5" aria-hidden="true">
                 delete
-              </span>
+              </span>{' '}
               Remove Photo
             </Button>
             <Button variant="outline" onClick={() => handleOpenChange(false)} className="flex-1">

@@ -1,0 +1,122 @@
+src\app\(public)\aup\page.tsx:118 [react/jsx-child-element-spacing] Ambiguous spacing after previous element span
+src\app\(public)\dpa\page.tsx:116 [react/jsx-child-element-spacing] Ambiguous spacing after previous element span
+src\app\(public)\terms\page.tsx:41 [react/jsx-child-element-spacing] Ambiguous spacing after previous element span
+src\app\404\page.tsx:30 [react/jsx-child-element-spacing] Ambiguous spacing after previous element span
+src\app\404\page.tsx:51 [react/jsx-child-element-spacing] Ambiguous spacing after previous element span
+src\app\404\page.tsx:60 [react/jsx-child-element-spacing] Ambiguous spacing after previous element span
+src\app\accounts\(list)\account-settings\components\TagsTab.tsx:195 [] Parsing error: ')' expected.
+src\app\agent-approvals\logs\[id]\page.tsx:292 [react/jsx-child-element-spacing] Ambiguous spacing after previous element span
+src\app\analytics\(list)\page.tsx:123 [react/jsx-child-element-spacing] Ambiguous spacing after previous element span
+src\app\contacts\(list)\contact-settings\components\TagsTab.tsx:152 [react/jsx-child-element-spacing] Ambiguous spacing after previous element span
+src\app\email\compose\_compose-client.tsx:6 [no-restricted-imports] 'lucide-react' import is restricted from being used. Migration pending ÔÇö see docs/design/ICON_USAGE.md.
+src\app\governance\quality-reports\[reportId]\QualityReportDetailClient.tsx:275 [jsx-a11y/no-noninteractive-element-interactions] Non-interactive elements should not be assigned mouse or keyboard event listeners.
+src\app\notifications\settings\page.tsx:5 [no-restricted-imports] 'lucide-react' import is restricted from being used. Migration pending ÔÇö see docs/design/ICON_USAGE.md.
+src\app\settings\account\AccountSettingsContent.tsx:258 [react/jsx-child-element-spacing] Ambiguous spacing after previous element span
+src\app\settings\account\AccountSettingsContent.tsx:355 [react/jsx-child-element-spacing] Ambiguous spacing after previous element span
+src\app\settings\account\AccountSettingsContent.tsx:486 [react/jsx-child-element-spacing] Ambiguous spacing after previous element span
+src\app\settings\account\AccountSettingsContent.tsx:969 [react/jsx-child-element-spacing] Ambiguous spacing after previous element span
+src\app\settings\account\ProfilePhotoDialog.tsx:189 [jsx-a11y/prefer-tag-over-role] Use <input type="button">, <input type="image">, <input type="reset">, <input type="submit">, or <button> instead of the "button" role to ensure accessibility across all devices.
+src\app\settings\account\ProfilePhotoDialog.tsx:232 [react/jsx-child-element-spacing] Ambiguous spacing after previous element span
+src\app\settings\account\ProfilePhotoDialog.tsx:245 [react/jsx-child-element-spacing] Ambiguous spacing after previous element span
+src\app\settings\automation\page.tsx:10 [no-restricted-imports] 'lucide-react' import is restricted from being used. Migration pending ÔÇö see docs/design/ICON_USAGE.md.
+src\app\settings\security\mfa\MfaContent.tsx:234 [react/jsx-child-element-spacing] Ambiguous spacing after previous element span
+src\app\settings\security\mfa\MfaContent.tsx:259 [react/jsx-child-element-spacing] Ambiguous spacing after previous element span
+src\app\settings\security\mfa\MfaContent.tsx:366 [react/jsx-child-element-spacing] Ambiguous spacing after previous element span
+src\app\settings\security\mfa\setup\page.tsx:238 [react/jsx-child-element-spacing] Ambiguous spacing after previous element span
+src\app\settings\security\mfa\setup\page.tsx:245 [react/jsx-child-element-spacing] Ambiguous spacing after previous element span
+src\app\settings\security\mfa\setup\page.tsx:449 [react/jsx-child-element-spacing] Ambiguous spacing after previous element span
+src\app\settings\security\mfa\setup\page.tsx:491 [react/jsx-child-element-spacing] Ambiguous spacing after previous element span
+src\app\settings\security\mfa\setup\page.tsx:540 [react/jsx-child-element-spacing] Ambiguous spacing after previous element span
+src\app\settings\security\mfa\setup\page.tsx:572 [react/jsx-child-element-spacing] Ambiguous spacing after previous element span
+src\app\settings\security\mfa\setup\page.tsx:578 [react/jsx-child-element-spacing] Ambiguous spacing after previous element span
+src\app\settings\security\mfa\setup\page.tsx:584 [react/jsx-child-element-spacing] Ambiguous spacing after previous element span
+src\app\support\tickets\__tests__\page.test.tsx:134 [jsx-a11y/prefer-tag-over-role] Use <input type="button">, <input type="image">, <input type="reset">, <input type="submit">, or <button> instead of the "button" role to ensure accessibility across all devices.
+src\components\ai-agents\ai-settings\components\ChainVersionCard.tsx:116 [jsx-a11y/prefer-tag-over-role] Use <input type="button">, <input type="image">, <input type="reset">, <input type="submit">, or <button> instead of the "button" role to ensure accessibility across all devices.
+src\components\ai-intelligence\HealthScoreGauge.tsx:56 [jsx-a11y/prefer-tag-over-role] Use <meter> instead of the "meter" role to ensure accessibility across all devices.
+src\components\ai-intelligence\RiskIndicators.tsx:42 [jsx-a11y/prefer-tag-over-role] Use <progress> instead of the "progressbar" role to ensure accessibility across all devices.
+src\components\ai-monitoring\ErrorRateGauge.tsx:59 [jsx-a11y/prefer-tag-over-role] Use <meter> instead of the "meter" role to ensure accessibility across all devices.
+src\components\ai-monitoring\WorkflowProgressPanel.tsx:263 [jsx-a11y/prefer-tag-over-role] Use <progress> instead of the "progressbar" role to ensure accessibility across all devices.
+src\components\analytics\SavedReportView.tsx:599 [jsx-a11y/prefer-tag-over-role] Use <img alt=...>, or <img alt=...> instead of the "img" role to ensure accessibility across all devices.
+src\components\analytics\SavedReportView.tsx:653 [jsx-a11y/prefer-tag-over-role] Use <img alt=...>, or <img alt=...> instead of the "img" role to ensure accessibility across all devices.
+src\components\analytics\SavedReportView.tsx:712 [jsx-a11y/prefer-tag-over-role] Use <img alt=...>, or <img alt=...> instead of the "img" role to ensure accessibility across all devices.
+src\components\appointments\AppointmentList.tsx:414 [react/jsx-child-element-spacing] Ambiguous spacing before next element span
+src\components\appointments\CalendarEventHoverCard.tsx:174 [react/jsx-child-element-spacing] Ambiguous spacing after previous element span
+src\components\appointments\CalendarEventHoverCard.tsx:263 [react/jsx-child-element-spacing] Ambiguous spacing after previous element span
+src\components\appointments\CalendarEventHoverCard.tsx:270 [react/jsx-child-element-spacing] Ambiguous spacing after previous element span
+src\components\cases\CaseForm.tsx:386 [jsx-a11y/prefer-tag-over-role] Use <select size=...>, <select multiple=...>, or <datalist> instead of the "listbox" role to ensure accessibility across all devices.
+src\components\cases\CaseForm.tsx:409 [jsx-a11y/prefer-tag-over-role] Use <option> instead of the "option" role to ensure accessibility across all devices.
+src\components\deals\DealCard.tsx:61 [jsx-a11y/prefer-tag-over-role] Use <input type="button">, <input type="image">, <input type="reset">, <input type="submit">, or <button> instead of the "button" role to ensure accessibility across all devices.
+src\components\deals\DealCard.tsx:128 [jsx-a11y/prefer-tag-over-role] Use <progress> instead of the "progressbar" role to ensure accessibility across all devices.
+src\components\deals\forecast\ConfidenceIndicator.tsx:54 [jsx-a11y/prefer-tag-over-role] Use <meter> instead of the "meter" role to ensure accessibility across all devices.
+src\components\deals\forecast\ProbabilityGauge.tsx:46 [jsx-a11y/prefer-tag-over-role] Use <meter> instead of the "meter" role to ensure accessibility across all devices.
+src\components\developer\__tests__\webhook-tester.test.tsx:15 [jsx-a11y/prefer-tag-over-role] Use <input list=...>, <input list=...>, <input list=...>, <input list=...>, <input list=...>, <input list=...>, or <select multiple=...> instead of the "combobox" role to ensure accessibility across all devices.
+src\components\developer\__tests__\webhook-tester.test.tsx:24 [jsx-a11y/prefer-tag-over-role] Use <option> instead of the "option" role to ensure accessibility across all devices.
+src\components\documents\DocumentSearch.tsx:182 [jsx-a11y/prefer-tag-over-role] Use <select size=...>, <select multiple=...>, or <datalist> instead of the "listbox" role to ensure accessibility across all devices.
+src\components\documents\DocumentSearch.tsx:190 [jsx-a11y/prefer-tag-over-role] Use <option> instead of the "option" role to ensure accessibility across all devices.
+src\components\documents\DocumentUpload.tsx:253 [jsx-a11y/prefer-tag-over-role] Use <input type="button">, <input type="image">, <input type="reset">, <input type="submit">, or <button> instead of the "button" role to ensure accessibility across all devices.
+src\components\documents\__tests__\DocumentList.test.tsx:43 [jsx-a11y/prefer-tag-over-role] Use <dialog> instead of the "dialog" role to ensure accessibility across all devices.
+src\components\email\AttachmentManager.tsx:4 [no-restricted-imports] 'lucide-react' import is restricted from being used. Migration pending ÔÇö see docs/design/ICON_USAGE.md.
+src\components\email\AttachmentManager.tsx:79 [jsx-a11y/prefer-tag-over-role] Use <section aria-label=...>, or <section aria-labelledby=...> instead of the "region" role to ensure accessibility across all devices.
+src\components\email\AttachmentManager.tsx:79 [jsx-a11y/no-noninteractive-element-interactions] Non-interactive elements should not be assigned mouse or keyboard event listeners.
+src\components\email\EmailList.tsx:12 [no-restricted-imports] 'lucide-react' import is restricted from being used. Migration pending ÔÇö see docs/design/ICON_USAGE.md.
+src\components\email\EmailListItem.tsx:3 [no-restricted-imports] 'lucide-react' import is restricted from being used. Migration pending ÔÇö see docs/design/ICON_USAGE.md.
+src\components\email\EmailListItem.tsx:65 [jsx-a11y/prefer-tag-over-role] Use <option> instead of the "option" role to ensure accessibility across all devices.
+src\components\email\EmailMessage.tsx:4 [no-restricted-imports] 'lucide-react' import is restricted from being used. Migration pending ÔÇö see docs/design/ICON_USAGE.md.
+src\components\email\EmailMessage.tsx:57 [jsx-a11y/prefer-tag-over-role] Use <input type="button">, <input type="image">, <input type="reset">, <input type="submit">, or <button> instead of the "button" role to ensure accessibility across all devices.
+src\components\email\FolderSidebar.tsx:4 [no-restricted-imports] 'lucide-react' import is restricted from being used. Migration pending ÔÇö see docs/design/ICON_USAGE.md.
+src\components\email\FormatToolbar.tsx:4 [no-restricted-imports] 'lucide-react' import is restricted from being used. Migration pending ÔÇö see docs/design/ICON_USAGE.md.
+src\components\email\InlineCompose.tsx:4 [no-restricted-imports] 'lucide-react' import is restricted from being used. Migration pending ÔÇö see docs/design/ICON_USAGE.md.
+src\components\email\InlineCompose.tsx:176 [jsx-a11y/prefer-tag-over-role] Use <input type=...>, <input list=...>, <input list=...>, <input list=...>, <input list=...>, or <textarea> instead of the "textbox" role to ensure accessibility across all devices.
+src\components\email\RecipientPicker.tsx:4 [no-restricted-imports] 'lucide-react' import is restricted from being used. Migration pending ÔÇö see docs/design/ICON_USAGE.md.
+src\components\email\TemplateSelector.tsx:4 [no-restricted-imports] 'lucide-react' import is restricted from being used. Migration pending ÔÇö see docs/design/ICON_USAGE.md.
+src\components\governance\CoverageReportView.tsx:130 [jsx-a11y/prefer-tag-over-role] Use <section aria-label=...>, or <section aria-labelledby=...> instead of the "region" role to ensure accessibility across all devices.
+src\components\governance\CoverageReportView.tsx:162 [jsx-a11y/prefer-tag-over-role] Use <section aria-label=...>, or <section aria-labelledby=...> instead of the "region" role to ensure accessibility across all devices.
+src\components\governance\CoverageReportView.tsx:191 [jsx-a11y/prefer-tag-over-role] Use <section aria-label=...>, or <section aria-labelledby=...> instead of the "region" role to ensure accessibility across all devices.
+src\components\governance\LighthouseReportView.tsx:114 [jsx-a11y/prefer-tag-over-role] Use <section aria-label=...>, or <section aria-labelledby=...> instead of the "region" role to ensure accessibility across all devices.
+src\components\governance\LighthouseReportView.tsx:173 [jsx-a11y/prefer-tag-over-role] Use <section aria-label=...>, or <section aria-labelledby=...> instead of the "region" role to ensure accessibility across all devices.
+src\components\governance\LighthouseReportView.tsx:224 [react/jsx-child-element-spacing] Ambiguous spacing after previous element span
+src\components\governance\LighthouseReportView.tsx:327 [jsx-a11y/prefer-tag-over-role] Use <section aria-label=...>, or <section aria-labelledby=...> instead of the "region" role to ensure accessibility across all devices.
+src\components\governance\LighthouseReportView.tsx:364 [jsx-a11y/prefer-tag-over-role] Use <section aria-label=...>, or <section aria-labelledby=...> instead of the "region" role to ensure accessibility across all devices.
+src\components\governance\PerformanceReportView.tsx:110 [jsx-a11y/prefer-tag-over-role] Use <section aria-label=...>, or <section aria-labelledby=...> instead of the "region" role to ensure accessibility across all devices.
+src\components\governance\PerformanceReportView.tsx:142 [jsx-a11y/prefer-tag-over-role] Use <section aria-label=...>, or <section aria-labelledby=...> instead of the "region" role to ensure accessibility across all devices.
+src\components\governance\PerformanceReportView.tsx:173 [jsx-a11y/prefer-tag-over-role] Use <section aria-label=...>, or <section aria-labelledby=...> instead of the "region" role to ensure accessibility across all devices.
+src\components\governance\PerformanceReportView.tsx:234 [jsx-a11y/prefer-tag-over-role] Use <section aria-label=...>, or <section aria-labelledby=...> instead of the "region" role to ensure accessibility across all devices.
+src\components\governance\PerformanceReportView.tsx:447 [jsx-a11y/prefer-tag-over-role] Use <section aria-label=...>, or <section aria-labelledby=...> instead of the "region" role to ensure accessibility across all devices.
+src\components\governance\PerformanceReportView.tsx:520 [jsx-a11y/prefer-tag-over-role] Use <section aria-label=...>, or <section aria-labelledby=...> instead of the "region" role to ensure accessibility across all devices.
+src\components\governance\PerformanceReportView.tsx:601 [jsx-a11y/prefer-tag-over-role] Use <section aria-label=...>, or <section aria-labelledby=...> instead of the "region" role to ensure accessibility across all devices.
+src\components\governance\TRPCBenchmarkReportView.tsx:207 [react/jsx-child-element-spacing] Ambiguous spacing after previous element span
+src\components\governance\TRPCBenchmarkReportView.tsx:307 [jsx-a11y/prefer-tag-over-role] Use <section aria-label=...>, or <section aria-labelledby=...> instead of the "region" role to ensure accessibility across all devices.
+src\components\governance\TRPCBenchmarkReportView.tsx:381 [jsx-a11y/prefer-tag-over-role] Use <section aria-label=...>, or <section aria-labelledby=...> instead of the "region" role to ensure accessibility across all devices.
+src\components\home\AuthenticatedHomePage.tsx:275 [jsx-a11y/prefer-tag-over-role] Use <img alt=...>, or <img alt=...> instead of the "img" role to ensure accessibility across all devices.
+src\components\legal\dpa-signature-panel.tsx:52 [react/jsx-child-element-spacing] Ambiguous spacing after previous element a
+src\components\legal\dpa-signature-panel.tsx:95 [react/jsx-child-element-spacing] Ambiguous spacing after previous element input
+src\components\legal\dpa-signature-panel.tsx:110 [jsx-a11y/prefer-tag-over-role] Use <output> instead of the "status" role to ensure accessibility across all devices.
+src\components\legal\dpa-signature-panel.tsx:144 [jsx-a11y/prefer-tag-over-role] Use <output> instead of the "status" role to ensure accessibility across all devices.
+src\components\notifications\NotificationItem.tsx:88 [jsx-a11y/no-static-element-interactions] Avoid non-native interactive elements. If using native HTML is not possible, add an appropriate role and support for tabbing, mouse, keyboard, and touch inputs to an interactive content element.
+src\components\routing\__tests__\AgentWorkload.test.tsx:49 [jsx-a11y/prefer-tag-over-role] Use <progress> instead of the "progressbar" role to ensure accessibility across all devices.
+src\components\shared\app-avatar.tsx:72 [jsx-a11y/prefer-tag-over-role] Use <img alt=...>, or <img alt=...> instead of the "img" role to ensure accessibility across all devices.
+src\components\shared\app-avatar.tsx:86 [jsx-a11y/no-noninteractive-element-interactions] Non-interactive elements should not be assigned mouse or keyboard event listeners.
+src\components\shared\registration-form.tsx:156 [jsx-a11y/prefer-tag-over-role] Use <progress> instead of the "progressbar" role to ensure accessibility across all devices.
+src\components\shared\variable-picker.tsx:18 [no-restricted-imports] 'lucide-react' import is restricted from being used. Migration pending ÔÇö see docs/design/ICON_USAGE.md.
+src\components\sidebar\AppSidebar.tsx:146 [jsx-a11y/no-noninteractive-element-interactions] Non-interactive elements should not be assigned mouse or keyboard event listeners.
+src\components\status\error-page-content.tsx:28 [react/jsx-child-element-spacing] Ambiguous spacing after previous element span
+src\components\status\error-page-content.tsx:67 [react/jsx-child-element-spacing] Ambiguous spacing after previous element span
+src\components\status\error-page-content.tsx:77 [react/jsx-child-element-spacing] Ambiguous spacing after previous element span
+src\components\status\error-page-content.tsx:87 [react/jsx-child-element-spacing] Ambiguous spacing after previous element span
+src\components\tasks\TaskCard.tsx:101 [jsx-a11y/prefer-tag-over-role] Use <input type="button">, <input type="image">, <input type="reset">, <input type="submit">, or <button> instead of the "button" role to ensure accessibility across all devices.
+src\components\tasks\__tests__\TaskCalendar.test.tsx:32 [jsx-a11y/prefer-tag-over-role] Use <td> instead of the "gridcell" role to ensure accessibility across all devices.
+src\components\tasks\__tests__\TaskCard.test.tsx:13 [jsx-a11y/no-static-element-interactions] Avoid non-native interactive elements. If using native HTML is not possible, add an appropriate role and support for tabbing, mouse, keyboard, and touch inputs to an interactive content element.
+src\components\tasks\__tests__\TaskForm.test.tsx:17 [jsx-a11y/prefer-tag-over-role] Use <dialog> instead of the "dialog" role to ensure accessibility across all devices.
+src\components\tickets\AutomationRuleBuilder.tsx:36 [no-restricted-imports] 'lucide-react' import is restricted from being used. Migration pending ÔÇö see docs/design/ICON_USAGE.md.
+src\components\tickets\SLAIndicator.tsx:127 [jsx-a11y/prefer-tag-over-role] Use <output> instead of the "status" role to ensure accessibility across all devices.
+src\components\tickets\SLAPolicyManager.tsx:39 [no-restricted-imports] 'lucide-react' import is restricted from being used. Migration pending ÔÇö see docs/design/ICON_USAGE.md.
+src\components\tickets\TicketCard.tsx:30 [jsx-a11y/prefer-tag-over-role] Use <article> instead of the "article" role to ensure accessibility across all devices.
+src\components\tickets\TicketTypeManager.tsx:35 [no-restricted-imports] 'lucide-react' import is restricted from being used. Migration pending ÔÇö see docs/design/ICON_USAGE.md.
+src\components\tickets\__tests__\TicketCard.test.tsx:20 [jsx-a11y/no-static-element-interactions] Avoid non-native interactive elements. If using native HTML is not possible, add an appropriate role and support for tabbing, mouse, keyboard, and touch inputs to an interactive content element.
+src\components\tickets\file-uploader.tsx:169 [jsx-a11y/no-noninteractive-element-interactions] Non-interactive elements should not be assigned mouse or keyboard event listeners.
+src\components\tickets\status-updater.tsx:87 [jsx-a11y/prefer-tag-over-role] Use <select size=...>, <select multiple=...>, or <datalist> instead of the "listbox" role to ensure accessibility across all devices.
+src\components\tickets\status-updater.tsx:95 [jsx-a11y/prefer-tag-over-role] Use <option> instead of the "option" role to ensure accessibility across all devices.
+src\components\workflows\WorkflowCanvas.tsx:21 [jsx-a11y/prefer-tag-over-role] Use <output> instead of the "status" role to ensure accessibility across all devices.
+src\components\workflows\WorkflowEdge.tsx:20 [no-restricted-imports] 'lucide-react' import is restricted from being used. Migration pending ÔÇö see docs/design/ICON_USAGE.md.
+src\components\workflows\WorkflowNodeCard.tsx:207 [jsx-a11y/prefer-tag-over-role] Use <figure> instead of the "figure" role to ensure accessibility across all devices.
+src\components\workflows\WorkflowToolbar.tsx:13 [no-restricted-imports] 'lucide-react' import is restricted from being used. Migration pending ÔÇö see docs/design/ICON_USAGE.md.

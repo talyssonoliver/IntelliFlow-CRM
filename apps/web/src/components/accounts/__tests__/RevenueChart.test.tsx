@@ -13,7 +13,7 @@ vi.mock('@intelliflow/ui', async (importOriginal) => ({
 
 // Mock formatCurrency
 vi.mock('@/lib/pricing/calculator', () => ({
-  formatCurrency: (v: number) => `$${v.toLocaleString()}`,
+  formatCurrency: (v: number) => `£${v.toLocaleString('en-GB')}`,
 }));
 
 describe('transformPipelineData', () => {

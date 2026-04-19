@@ -168,6 +168,43 @@ export function MfaChallenge({
   // Handlers
   // ==========================================
 
+  const handleSubmit = useCallback(
+    async (submittedCode?: string) => {
+      const codeToVerify =
+        submittedCode || (selectedMethod === 'backup' ? backupCode : code.join(''));
+
+      if (
+        !codeToVerify ||
+        codeToVerify.length < (selectedMethod === 'backup' ? BACKUP_CODE_LENGTH : CODE_LENGTH)
+      ) {
+        setLocalError('Please enter the complete code');
+        return;
+      }
+
+      setIsVerifying(true);
+      setLocalError(null);
+
+      try {
+        const success = await onVerify(codeToVerify, selectedMethod);
+        if (!success) {
+          setLocalError('Invalid code. Please try again.');
+          // Clear the code on failure
+          if (selectedMethod === 'backup') {
+            setBackupCode('');
+          } else {
+            setCode(new Array(CODE_LENGTH).fill(''));
+            inputRefs.current[0]?.focus();
+          }
+        }
+      } catch (err) {
+        setLocalError(err instanceof Error ? err.message : 'Verification failed');
+      } finally {
+        setIsVerifying(false);
+      }
+    },
+    [selectedMethod, code, backupCode, onVerify]
+  );
+
   const handleCodeChange = useCallback(
     (index: number, value: string) => {
       // Only allow digits
@@ -188,7 +225,7 @@ export function MfaChallenge({
         handleSubmit(newCode.join(''));
       }
     },
-    [code]
+    [code, handleSubmit]
   );
 
   const handleKeyDown = useCallback(
@@ -229,44 +266,7 @@ export function MfaChallenge({
         handleSubmit(newCode.slice(0, CODE_LENGTH).join(''));
       }
     },
-    [code]
-  );
-
-  const handleSubmit = useCallback(
-    async (submittedCode?: string) => {
-      const codeToVerify =
-        submittedCode || (selectedMethod === 'backup' ? backupCode : code.join(''));
-
-      if (
-        !codeToVerify ||
-        codeToVerify.length < (selectedMethod === 'backup' ? BACKUP_CODE_LENGTH : CODE_LENGTH)
-      ) {
-        setLocalError('Please enter the complete code');
-        return;
-      }
-
-      setIsVerifying(true);
-      setLocalError(null);
-
-      try {
-        const success = await onVerify(codeToVerify, selectedMethod);
-        if (!success) {
-          setLocalError('Invalid code. Please try again.');
-          // Clear the code on failure
-          if (selectedMethod === 'backup') {
-            setBackupCode('');
-          } else {
-            setCode(new Array(CODE_LENGTH).fill(''));
-            inputRefs.current[0]?.focus();
-          }
-        }
-      } catch (err) {
-        setLocalError(err instanceof Error ? err.message : 'Verification failed');
-      } finally {
-        setIsVerifying(false);
-      }
-    },
-    [selectedMethod, code, backupCode, onVerify]
+    [code, handleSubmit]
   );
 
   const handleResend = useCallback(async () => {

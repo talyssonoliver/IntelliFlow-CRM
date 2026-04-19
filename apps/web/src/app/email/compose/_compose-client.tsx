@@ -3,7 +3,7 @@
 import { useCallback, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+
 import { trpc } from '@/lib/trpc';
 import { EmailCompose } from '@/components/email/EmailCompose';
 
@@ -51,7 +51,9 @@ export function ComposeClient() {
           href="/email"
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <span className="material-symbols-outlined text-base" aria-hidden="true">
+            arrow_back
+          </span>{' '}
           Back to Email
         </Link>
         <div className="h-4 w-px bg-border" />

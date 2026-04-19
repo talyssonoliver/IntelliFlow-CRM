@@ -13,7 +13,6 @@ import type { AutomationSettings } from '../components/AutomationTab';
 
 // ─── @intelliflow/ui mock ───────────────────────────────────────────────────
 vi.mock('@intelliflow/ui', () => ({
-  Card: ({ children, className }: any) => <div className={className}>{children}</div>,
   Switch: ({ checked, onCheckedChange, id }: any) => (
     <button
       role="switch"
@@ -45,12 +44,6 @@ describe('AutomationTab', () => {
   });
 
   // ─── Rendering ────────────────────────────────────────────────────────────
-
-  it('renders the Automation heading', () => {
-    render(<AutomationTab settings={defaultSettings} onSettingsChange={onSettingsChange} />);
-
-    expect(screen.getByText('Automation')).toBeInTheDocument();
-  });
 
   it('renders exactly 3 toggle switches', () => {
     render(<AutomationTab settings={defaultSettings} onSettingsChange={onSettingsChange} />);

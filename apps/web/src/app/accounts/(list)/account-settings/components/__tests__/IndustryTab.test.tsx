@@ -1,6 +1,7 @@
+import { createRef } from 'react';
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
-import { IndustryTab, type IndustryRow } from '../IndustryTab';
+import { act, render, screen, fireEvent } from '@testing-library/react';
+import { IndustryTab, type IndustryRow, type IndustryTabHandle } from '../IndustryTab';
 
 describe('IndustryTab', () => {
   const rows: IndustryRow[] = [
@@ -27,10 +28,19 @@ describe('IndustryTab', () => {
     expect(onDelete).toHaveBeenCalledWith('a');
   });
 
-  it('opens add-industry dialog and submits create', () => {
+  it('exposes openCreate via ref and submits a create', () => {
     const onCreate = vi.fn();
-    render(<IndustryTab rows={rows} onCreate={onCreate} onUpdate={vi.fn()} onDelete={vi.fn()} />);
-    fireEvent.click(screen.getByRole('button', { name: /add industry/i }));
+    const ref = createRef<IndustryTabHandle>();
+    render(
+      <IndustryTab
+        ref={ref}
+        rows={rows}
+        onCreate={onCreate}
+        onUpdate={vi.fn()}
+        onDelete={vi.fn()}
+      />
+    );
+    act(() => ref.current?.openCreate());
     const labelInput = screen.getByLabelText(/^label$/i) as HTMLInputElement;
     fireEvent.change(labelInput, { target: { value: 'Agriculture' } });
     fireEvent.click(screen.getByRole('button', { name: /^create$/i }));

@@ -15,7 +15,7 @@
  */
 
 import { useRef, useState } from 'react';
-import { Braces } from 'lucide-react';
+
 import { Button, Input, Popover, PopoverContent, PopoverTrigger } from '@intelliflow/ui';
 
 export interface VariableSuggestion {
@@ -111,7 +111,9 @@ export function VariablePicker({
             aria-label="Insert variable"
             className={multiline ? 'self-end' : ''}
           >
-            <Braces className="h-4 w-4" aria-hidden="true" />
+            <span className="material-symbols-outlined text-base" aria-hidden="true">
+              data_object
+            </span>
             <span className="ml-1.5 hidden sm:inline">Insert variable</span>
           </Button>
         </PopoverTrigger>

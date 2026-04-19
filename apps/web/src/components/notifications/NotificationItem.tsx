@@ -85,6 +85,7 @@ export const NotificationItem = React.memo(function NotificationItem({
   else if (isClickable) divRole = 'button';
 
   return (
+    // eslint-disable-next-line jsx-a11y/no-static-element-interactions -- notification item handles keyboard dismiss
     <div
       onClick={handleItemClick}
       onKeyDown={handleKeyDown}

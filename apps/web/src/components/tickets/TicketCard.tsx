@@ -6,7 +6,6 @@
  * @implements AC-13 (Components extracted to components/tickets/)
  */
 
-import { Card } from '@intelliflow/ui';
 import { SLAIndicator } from './SLAIndicator';
 import { getPriorityConfig } from '@/lib/tickets/ticket-utils';
 import type { TicketListItem } from './types';
@@ -27,10 +26,10 @@ export function TicketCard({
   const priorityConfig = getPriorityConfig(ticket.priority);
 
   return (
-    <Card
-      className="p-4 hover:shadow-md transition-shadow cursor-pointer group bg-card border-border"
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/click-events-have-key-events -- ticket card handles click for navigation
+    <article
+      className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 hover:shadow-md transition-shadow cursor-pointer group border-border"
       onClick={onClick}
-      role="article"
       aria-label={`Ticket ${ticket.ticketNumber}: ${ticket.subject}`}
     >
       {/* Header: Subject + Ticket ID */}
@@ -111,6 +110,6 @@ export function TicketCard({
           </button>
         </div>
       )}
-    </Card>
+    </article>
   );
 }

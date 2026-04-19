@@ -13,7 +13,6 @@ import type { ScoringRule } from '../components/ScoringRulesTab';
 
 // ─── @intelliflow/ui mock ───────────────────────────────────────────────────
 vi.mock('@intelliflow/ui', () => ({
-  Card: ({ children, className }: any) => <div className={className}>{children}</div>,
   Input: ({ value, onChange, id, type, min, max, step, className, ...props }: any) => (
     <input
       id={id}
@@ -47,12 +46,6 @@ describe('ScoringRulesTab', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     onRulesChange = vi.fn();
-  });
-
-  it('renders the Scoring Rules heading', () => {
-    render(<ScoringRulesTab rules={mockRules} onRulesChange={onRulesChange} />);
-
-    expect(screen.getByText('Scoring Rules')).toBeInTheDocument();
   });
 
   it('renders activity types with human-readable labels', () => {
@@ -147,7 +140,6 @@ describe('ScoringRulesTab', () => {
   it('renders with empty rules list without crashing', () => {
     render(<ScoringRulesTab rules={[]} onRulesChange={onRulesChange} />);
 
-    expect(screen.getByText('Scoring Rules')).toBeInTheDocument();
     expect(screen.queryAllByRole('spinbutton')).toHaveLength(0);
   });
 

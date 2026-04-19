@@ -179,11 +179,13 @@ describe('EmailList', () => {
   it('supports arrow key navigation', async () => {
     const user = userEvent.setup();
     render(<EmailList {...defaultProps} />);
-    const list = screen.getByRole('listbox');
-    list.focus();
-    await user.keyboard('{ArrowDown}');
+    // Email list uses a role="none" wrapper with the arrow-key handler on the
+    // <div>; keyboard events bubble from the focused option, so focus an item
+    // first to mirror real keyboard flow.
     const items = screen.getAllByRole('option');
-    expect(document.activeElement).toBe(items[0]);
+    items[0].focus();
+    await user.keyboard('{ArrowDown}');
+    expect(document.activeElement).toBe(items[1]);
   });
 
   it('selects email on Enter key', async () => {

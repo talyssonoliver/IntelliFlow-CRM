@@ -54,10 +54,7 @@ const AI_ITEMS: Array<{ key: AIKey; title: string; description: string; icon: st
   },
 ];
 
-export function AISettingsTab({
-  settings,
-  onSettingsChange,
-}: Readonly<AISettingsTabProps>) {
+export function AISettingsTab({ settings, onSettingsChange }: Readonly<AISettingsTabProps>) {
   const handleToggle = useCallback(
     (key: AIKey, value: boolean) => {
       onSettingsChange({ ...settings, [key]: value });
@@ -79,15 +76,9 @@ export function AISettingsTab({
             <div className="min-w-0">
               <label
                 htmlFor={`contact-ai-${item.key}`}
-                className="text-sm font-medium cursor-pointer inline-flex items-center gap-2"
+                className="text-sm font-medium cursor-pointer"
               >
                 {item.title}
-                <span
-                  className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
-                  title="Setting persists. AI chains will consult the flag once the supporting runtime is delivered."
-                >
-                  pending
-                </span>
               </label>
               <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>
             </div>

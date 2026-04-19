@@ -143,6 +143,7 @@ export function AppSidebar({
   );
 
   return (
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- sidebar navigation item handles keyboard events
     <nav
       className={cn(
         'fixed left-0 top-16 bottom-0 z-30 flex flex-col bg-card border-r border-border',

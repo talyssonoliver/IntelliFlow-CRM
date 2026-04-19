@@ -21,7 +21,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@intelliflow/ui';
-import { Plus, Trash2 } from 'lucide-react';
 import { FIELD_DESCRIPTOR_TYPES, type FieldDescriptor } from '@intelliflow/domain';
 
 export interface FieldDescriptorBuilderProps {
@@ -39,11 +38,7 @@ function emptyRow(): FieldDescriptor {
   };
 }
 
-export function FieldDescriptorBuilder({
-  value,
-  onChange,
-  disabled,
-}: FieldDescriptorBuilderProps) {
+export function FieldDescriptorBuilder({ value, onChange, disabled }: FieldDescriptorBuilderProps) {
   const writeRow = (idx: number, patch: Partial<FieldDescriptor>) => {
     const next = [...value];
     next[idx] = { ...next[idx], ...patch } as FieldDescriptor;
@@ -61,7 +56,10 @@ export function FieldDescriptorBuilder({
           disabled={disabled}
           onClick={() => onChange([...value, emptyRow()])}
         >
-          <Plus className="h-4 w-4 mr-1" aria-hidden="true" /> Add field
+          <span className="material-symbols-outlined text-base mr-1" aria-hidden="true">
+            add
+          </span>{' '}
+          Add field
         </Button>
       </div>
       {value.length === 0 ? (
@@ -94,9 +92,7 @@ export function FieldDescriptorBuilder({
                 <Select
                   value={row.type}
                   disabled={disabled}
-                  onValueChange={(val) =>
-                    writeRow(idx, { type: val as FieldDescriptor['type'] })
-                  }
+                  onValueChange={(val) => writeRow(idx, { type: val as FieldDescriptor['type'] })}
                 >
                   <SelectTrigger className="w-[130px]" aria-label={`Field ${idx + 1} type`}>
                     <SelectValue />
@@ -130,7 +126,9 @@ export function FieldDescriptorBuilder({
                   onClick={() => onChange(value.filter((_, i) => i !== idx))}
                   aria-label={`Remove field ${idx + 1}`}
                 >
-                  <Trash2 className="h-4 w-4" aria-hidden="true" />
+                  <span className="material-symbols-outlined text-base" aria-hidden="true">
+                    delete
+                  </span>
                 </Button>
               </div>
               {row.type === 'enum' && (

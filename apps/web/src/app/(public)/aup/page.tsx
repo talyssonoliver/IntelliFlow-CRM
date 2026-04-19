@@ -115,7 +115,7 @@ export default function AupPage() {
                 >
                   <span className="material-symbols-outlined text-base" aria-hidden="true">
                     flag
-                  </span>
+                  </span>{' '}
                   Report a violation
                 </a>
               </div>

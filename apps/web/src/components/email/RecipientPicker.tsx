@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback, useId, useMemo, useEffect } from 'react';
-import { X, User, Briefcase, Mail } from 'lucide-react';
+
 import { trpc } from '@/lib/trpc';
 import { useDebounce } from '@/hooks/useDebounce';
 import { cn } from '@/lib/utils';
@@ -30,12 +30,11 @@ interface RecipientPickerProps {
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@.]+\.[^\s@.]+$/;
 
-const SOURCE_CONFIG: Record<SuggestionSource, { icon: typeof User; label: string; color: string }> =
-  {
-    contact: { icon: User, label: 'Contact', color: 'text-blue-500 bg-blue-500/10' },
-    lead: { icon: Briefcase, label: 'Lead', color: 'text-amber-500 bg-amber-500/10' },
-    email: { icon: Mail, label: 'Email', color: 'text-emerald-500 bg-emerald-500/10' },
-  };
+const SOURCE_CONFIG: Record<SuggestionSource, { symbol: string; label: string; color: string }> = {
+  contact: { symbol: 'person', label: 'Contact', color: 'text-blue-500 bg-blue-500/10' },
+  lead: { symbol: 'work', label: 'Lead', color: 'text-amber-500 bg-amber-500/10' },
+  email: { symbol: 'mail', label: 'Email', color: 'text-emerald-500 bg-emerald-500/10' },
+};
 
 function getTypeScore(source: SuggestionSource): number {
   if (source === 'contact') return 1.0;
@@ -303,7 +302,9 @@ export function RecipientPicker({
               className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full hover:bg-destructive/20 focus:outline-none focus:ring-1 focus:ring-ring"
               onClick={() => removeRecipient(i)}
             >
-              <X className="h-2.5 w-2.5" />
+              <span className="material-symbols-outlined text-base" aria-hidden="true">
+                close
+              </span>
             </button>
           </span>
         ))}
@@ -356,7 +357,6 @@ export function RecipientPicker({
           )}
           {suggestions.map((suggestion, i) => {
             const config = SOURCE_CONFIG[suggestion.source];
-            const Icon = config.icon;
 
             return (
               <li key={`${suggestion.source}-${suggestion.email}`}>
@@ -381,7 +381,9 @@ export function RecipientPicker({
                       config.color
                     )}
                   >
-                    <Icon className="h-3.5 w-3.5" />
+                    <span className="material-symbols-outlined text-base" aria-hidden="true">
+                      {config.symbol}
+                    </span>
                   </div>
 
                   <div className="min-w-0 flex-1">

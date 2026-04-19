@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
-import { Paperclip, X, FileText, Image, File, AlertCircle } from 'lucide-react';
+
 import { cn } from '@/lib/utils';
 
 interface AttachmentManagerProps {
@@ -18,10 +18,11 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function getFileIcon(type: string) {
-  if (type.startsWith('image/')) return Image;
-  if (type.includes('pdf') || type.includes('document') || type.includes('text')) return FileText;
-  return File;
+function getFileIcon(type: string): string {
+  if (type.startsWith('image/')) return 'image';
+  if (type.includes('pdf') || type.includes('document') || type.includes('text'))
+    return 'description';
+  return 'attach_file';
 }
 
 export function AttachmentManager({
@@ -76,8 +77,8 @@ export function AttachmentManager({
   return (
     <div className={cn('space-y-2', className)}>
       {/* Drop zone */}
-      <div
-        role="region"
+      {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- drag/drop handlers required on drop zone */}
+      <section
         aria-label="File drop zone"
         data-testid="drop-zone"
         onDragOver={handleDragOver}
@@ -90,7 +91,9 @@ export function AttachmentManager({
             : 'border-border'
         )}
       >
-        <Paperclip className="mr-2 h-4 w-4" />
+        <span className="material-symbols-outlined text-base mr-2" aria-hidden="true">
+          attach_file
+        </span>
         <span>Drop files here or</span>
         <button
           type="button"
@@ -107,18 +110,22 @@ export function AttachmentManager({
           hidden
           onChange={(e) => e.target.files && addFiles(e.target.files)}
         />
-      </div>
+      </section>
 
       {/* File size errors */}
       {oversizedFiles.length > 0 && (
         <div className="flex items-center gap-1 text-xs text-destructive">
-          <AlertCircle className="h-3.5 w-3.5" />
+          <span className="material-symbols-outlined text-base" aria-hidden="true">
+            error
+          </span>
           <span>{oversizedFiles.map((f) => f.name).join(', ')} exceeds 25MB limit</span>
         </div>
       )}
       {totalExceeded && (
         <div className="flex items-center gap-1 text-xs text-destructive">
-          <AlertCircle className="h-3.5 w-3.5" />
+          <span className="material-symbols-outlined text-base" aria-hidden="true">
+            error
+          </span>
           <span>Total size exceeds 50MB limit ({formatFileSize(totalSize)})</span>
         </div>
       )}
@@ -127,11 +134,13 @@ export function AttachmentManager({
       {files.length > 0 && (
         <div className="space-y-1">
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <Paperclip className="h-3 w-3" />
+            <span className="material-symbols-outlined text-base" aria-hidden="true">
+              attach_file
+            </span>
             <span>{files.length}</span> file{files.length === 1 ? '' : 's'} attached
           </div>
           {files.map((file, i) => {
-            const Icon = getFileIcon(file.type);
+            const iconName = getFileIcon(file.type);
             const isImage = file.type.startsWith('image/');
             return (
               <div
@@ -145,7 +154,12 @@ export function AttachmentManager({
                     className="h-8 w-8 rounded object-cover"
                   />
                 ) : (
-                  <Icon className="h-4 w-4 text-muted-foreground" />
+                  <span
+                    className="material-symbols-outlined text-base text-muted-foreground"
+                    aria-hidden="true"
+                  >
+                    {iconName}
+                  </span>
                 )}
                 <div className="flex-1 truncate">
                   <div className="truncate font-medium">{file.name}</div>
@@ -157,7 +171,9 @@ export function AttachmentManager({
                   className="inline-flex h-6 w-6 items-center justify-center rounded-md hover:bg-destructive/10 focus:outline-none focus:ring-2 focus:ring-ring"
                   onClick={() => removeFile(i)}
                 >
-                  <X className="h-3.5 w-3.5" />
+                  <span className="material-symbols-outlined text-base" aria-hidden="true">
+                    close
+                  </span>
                 </button>
               </div>
             );

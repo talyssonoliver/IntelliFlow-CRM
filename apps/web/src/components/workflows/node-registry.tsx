@@ -126,9 +126,7 @@ export function unregisterCustomNodeType(typeId: string): void {
   customDescriptorRegistry.delete(typeId);
 }
 
-export function getCustomNodeTypeDescriptor(
-  typeId: string
-): CustomNodeTypeDescriptor | undefined {
+export function getCustomNodeTypeDescriptor(typeId: string): CustomNodeTypeDescriptor | undefined {
   return customDescriptorRegistry.get(typeId);
 }
 

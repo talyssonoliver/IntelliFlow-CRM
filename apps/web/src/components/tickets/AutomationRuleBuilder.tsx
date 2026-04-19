@@ -33,7 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@intelliflow/ui';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+
 import { ConfigEmptyState, ConfigCardSkeleton } from './ticket-config-shared';
 import { toast } from '@intelliflow/ui';
 
@@ -246,7 +246,9 @@ export function AutomationRuleBuilder() {
     <div className="space-y-4">
       <div className="flex justify-end">
         <Button onClick={openCreate} aria-label="Create new automation rule">
-          <Plus className="mr-2 h-4 w-4" />
+          <span className="material-symbols-outlined text-base mr-2" aria-hidden="true">
+            add
+          </span>{' '}
           Create Rule
         </Button>
       </div>
@@ -320,7 +322,9 @@ export function AutomationRuleBuilder() {
                       onClick={() => openEdit(rule)}
                       aria-label={`Edit ${rule.name}`}
                     >
-                      <Pencil className="h-4 w-4" />
+                      <span className="material-symbols-outlined text-base" aria-hidden="true">
+                        edit
+                      </span>
                     </Button>
                     <Button
                       variant="ghost"
@@ -328,7 +332,9 @@ export function AutomationRuleBuilder() {
                       onClick={() => deleteMutation.mutate({ id: rule.id })}
                       aria-label={`Delete ${rule.name}`}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <span className="material-symbols-outlined text-base" aria-hidden="true">
+                        delete
+                      </span>
                     </Button>
                   </div>
                 </TableCell>

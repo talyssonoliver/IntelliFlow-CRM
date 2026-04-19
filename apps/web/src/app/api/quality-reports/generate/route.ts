@@ -381,7 +381,7 @@ async function generatePerformanceReport(
 
     if (hasK6) {
       // Run k6 load test if script exists
-      const k6Script = path.join(projectRoot, 'artifacts/misc/k6/scripts/load-test.js');
+      const k6Script = path.join(projectRoot, 'tools/scripts/k6/load-test.js');
       if (fs.existsSync(k6Script)) {
         await execAsync(`k6 run --out json=artifacts/benchmarks/k6-results.json ${k6Script}`, {
           cwd: projectRoot,

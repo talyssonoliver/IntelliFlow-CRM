@@ -9,12 +9,12 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 // Configuration
-const ADR_PATHS = ['docs/planning/adr', 'docs/architecture/adr', 'docs/shared'];
+const ADR_PATHS = ['docs/architecture/adr', 'docs/shared'];
 
 const VALID_STATUSES = ['Proposed', 'Accepted', 'Rejected', 'Deprecated', 'Superseded'] as const;
 export type ADRStatus = (typeof VALID_STATUSES)[number];
 
-const TEMPLATE_PATH = 'docs/architecture/adr/000-template.md';
+const TEMPLATE_PATH = 'docs/architecture/adr/template.md';
 
 export interface ADRMetadata {
   id: string;
@@ -275,7 +275,7 @@ export function createADR(
       .toLowerCase()
       .replaceAll(/\s+/g, '-')
       .replaceAll(/[^a-z0-9-]/g, '')}.md`;
-    const outputPath = path.resolve(baseDir, 'docs/planning/adr', fileName);
+    const outputPath = path.resolve(baseDir, 'docs/architecture/adr', fileName);
 
     // Ensure directory exists
     const outputDir = path.dirname(outputPath);

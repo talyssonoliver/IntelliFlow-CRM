@@ -131,6 +131,7 @@ vi.mock('@/components/shared', () => ({
 // Mock SupportTicketList
 vi.mock('@/components/tickets/ticket-list', () => ({
   SupportTicketList: (props: Record<string, unknown>) => (
+    // eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- test helper renders custom interactive element
     <div
       data-testid="support-ticket-list"
       data-is-loading={String(props.isLoading)}

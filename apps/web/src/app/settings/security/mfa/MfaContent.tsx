@@ -76,40 +76,21 @@ function MfaMethodRow({
 }
 
 // ============================================
-// Main Component
+// Backup Codes Sub-component
 // ============================================
 
-export default function MfaContent() {
-  const router = useRouter();
-  const { data: mfaStatus, isLoading } = useMfaStatus();
-  const disableMfa = useDisableMfa();
-  const regenerateBackupCodes = useRegenerateBackupCodes();
-
-  // Disable MFA state
-  const [disableInput, setDisableInput] = useState({ totpCode: '', password: '' });
-  const [disableMethod, setDisableMethod] = useState<'totp' | 'password'>('totp');
-  const disableBtnRef = useRef<HTMLButtonElement>(null);
-
-  // Regenerate codes state
+function BackupCodesCard({
+  isEnabled,
+  mfaStatus,
+  regenerateBackupCodes,
+}: Readonly<{
+  isEnabled: boolean;
+  mfaStatus: ReturnType<typeof useMfaStatus>['data'];
+  regenerateBackupCodes: ReturnType<typeof useRegenerateBackupCodes>;
+}>) {
   const [regenTotpCode, setRegenTotpCode] = useState('');
   const [newCodes, setNewCodes] = useState<string[] | null>(null);
   const regenBtnRef = useRef<HTMLButtonElement>(null);
-
-  const isEnabled = mfaStatus?.enabled ?? false;
-
-  const handleDisableMfa = useCallback(async () => {
-    try {
-      const input =
-        disableMethod === 'totp'
-          ? { totpCode: disableInput.totpCode }
-          : { password: disableInput.password };
-      await disableMfa.mutateAsync(input);
-      setDisableInput({ totpCode: '', password: '' });
-      router.push('/settings/account');
-    } catch {
-      // Error handled by mutation state
-    }
-  }, [disableMfa, disableInput, disableMethod, router]);
 
   const handleRegenerateBackupCodes = useCallback(async () => {
     try {
@@ -120,6 +101,274 @@ export default function MfaContent() {
       // Error handled by mutation state
     }
   }, [regenerateBackupCodes, regenTotpCode]);
+
+  return (
+    <Card className="lg:col-span-5 p-6 md:p-8">
+      <div className="flex items-center gap-2 mb-6">
+        <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+          <span className="material-symbols-outlined text-amber-600 dark:text-amber-400 text-[18px]">
+            vpn_key
+          </span>
+        </div>
+        <h3 className="text-lg font-semibold text-foreground">Backup Codes</h3>
+      </div>
+
+      {!isEnabled && (
+        <p className="text-sm text-muted-foreground">
+          Enable two-factor authentication to generate backup codes.
+        </p>
+      )}
+      {isEnabled && newCodes && (
+        <div data-testid="new-backup-codes-display" className="space-y-4">
+          <Alert>
+            <AlertDescription>
+              Save these codes securely. Your previous codes have been invalidated.
+            </AlertDescription>
+          </Alert>
+          <div className="grid grid-cols-2 gap-2 font-mono text-sm">
+            {newCodes.map((code, i) => (
+              <div key={i} className="p-2 bg-muted rounded text-foreground text-center">
+                {code}
+              </div>
+            ))}
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => downloadBackupCodes(newCodes, '', new Date())}
+            className="w-full"
+          >
+            <span className="material-symbols-outlined text-[16px] mr-1.5" aria-hidden="true">
+              download
+            </span>{' '}
+            Download codes
+          </Button>
+        </div>
+      )}
+      {isEnabled && !newCodes && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">Remaining</span>
+            <Badge variant="secondary">{mfaStatus?.backupCodesRemaining ?? 0} codes</Badge>
+          </div>
+
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                ref={regenBtnRef}
+                variant="outline"
+                size="sm"
+                data-testid="regen-backup-btn"
+                className="w-full"
+              >
+                <span className="material-symbols-outlined text-[16px] mr-1.5" aria-hidden="true">
+                  refresh
+                </span>{' '}
+                Regenerate backup codes
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Regenerate Backup Codes</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will invalidate all existing backup codes. Enter your authenticator code to
+                  continue.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <div className="py-4 space-y-2">
+                <Label htmlFor="regen-totp-code">Authenticator Code</Label>
+                <Input
+                  id="regen-totp-code"
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={regenTotpCode}
+                  onChange={(e) => setRegenTotpCode(e.target.value.replaceAll(/\D/g, ''))}
+                  placeholder="000000"
+                  data-testid="regen-totp-input"
+                />
+                {regenerateBackupCodes.error && (
+                  <p className="text-sm text-destructive">{regenerateBackupCodes.error.message}</p>
+                )}
+              </div>
+              <AlertDialogFooter>
+                <AlertDialogCancel
+                  onClick={() => {
+                    setRegenTotpCode('');
+                    regenBtnRef.current?.focus();
+                  }}
+                >
+                  Cancel
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleRegenerateBackupCodes}
+                  disabled={regenTotpCode.length !== 6 || regenerateBackupCodes.isPending}
+                >
+                  {regenerateBackupCodes.isPending ? 'Regenerating...' : 'Regenerate'}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      )}
+    </Card>
+  );
+}
+
+// ============================================
+// Disable MFA Sub-component
+// ============================================
+
+function DisableMfaCard({
+  disableMfa,
+  onDisabled,
+}: Readonly<{
+  disableMfa: ReturnType<typeof useDisableMfa>;
+  onDisabled: () => void;
+}>) {
+  const [disableInput, setDisableInput] = useState({ totpCode: '', password: '' });
+  const [disableMethod, setDisableMethod] = useState<'totp' | 'password'>('totp');
+  const disableBtnRef = useRef<HTMLButtonElement>(null);
+
+  const handleDisableMfa = useCallback(async () => {
+    try {
+      const input =
+        disableMethod === 'totp'
+          ? { totpCode: disableInput.totpCode }
+          : { password: disableInput.password };
+      await disableMfa.mutateAsync(input);
+      setDisableInput({ totpCode: '', password: '' });
+      onDisabled();
+    } catch {
+      // Error handled by mutation state
+    }
+  }, [disableMfa, disableInput, disableMethod, onDisabled]);
+
+  return (
+    <Card className="lg:col-span-6 p-6 md:p-8 border-destructive/30">
+      <div className="flex items-center gap-2 mb-4">
+        <div className="w-8 h-8 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+          <span className="material-symbols-outlined text-red-600 dark:text-red-400 text-[18px]">
+            warning
+          </span>
+        </div>
+        <h3 className="text-lg font-semibold text-foreground">Danger Zone</h3>
+      </div>
+
+      <Alert variant="destructive" className="mb-4">
+        <AlertDescription>
+          Disabling two-factor authentication will make your account less secure.
+        </AlertDescription>
+      </Alert>
+
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button ref={disableBtnRef} variant="destructive" size="sm" data-testid="disable-mfa-btn">
+            <span className="material-symbols-outlined text-[16px] mr-1.5" aria-hidden="true">
+              shield_lock
+            </span>{' '}
+            Disable two-factor authentication
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent data-testid="disable-confirm-dialog">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Disable Two-Factor Authentication</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will remove all MFA methods and invalidate your backup codes. Verify your
+              identity to continue.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-4 space-y-4">
+            <div className="flex gap-2">
+              <Button
+                variant={disableMethod === 'totp' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setDisableMethod('totp')}
+              >
+                Authenticator
+              </Button>
+              <Button
+                variant={disableMethod === 'password' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setDisableMethod('password')}
+              >
+                Password
+              </Button>
+            </div>
+            {disableMethod === 'totp' ? (
+              <div className="space-y-2">
+                <Label htmlFor="disable-totp-code">Authenticator Code</Label>
+                <Input
+                  id="disable-totp-code"
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={disableInput.totpCode}
+                  onChange={(e) =>
+                    setDisableInput({
+                      ...disableInput,
+                      totpCode: e.target.value.replaceAll(/\D/g, ''),
+                    })
+                  }
+                  placeholder="000000"
+                  data-testid="disable-totp-input"
+                />
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Label htmlFor="disable-password">Password</Label>
+                <Input
+                  id="disable-password"
+                  type="password"
+                  value={disableInput.password}
+                  onChange={(e) => setDisableInput({ ...disableInput, password: e.target.value })}
+                  placeholder="Enter your password"
+                  data-testid="disable-password-input"
+                />
+              </div>
+            )}
+            {disableMfa.error && (
+              <p className="text-sm text-destructive">{disableMfa.error.message}</p>
+            )}
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                setDisableInput({ totpCode: '', password: '' });
+                disableBtnRef.current?.focus();
+              }}
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDisableMfa}
+              disabled={
+                (disableMethod === 'totp' && disableInput.totpCode.length !== 6) ||
+                (disableMethod === 'password' && disableInput.password.length < 8) ||
+                disableMfa.isPending
+              }
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {disableMfa.isPending ? 'Disabling...' : 'Disable MFA'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </Card>
+  );
+}
+
+// ============================================
+// Main Component
+// ============================================
+
+export default function MfaContent() {
+  const router = useRouter();
+  const { data: mfaStatus, isLoading } = useMfaStatus();
+  const disableMfa = useDisableMfa();
+  const regenerateBackupCodes = useRegenerateBackupCodes();
+
+  const isEnabled = mfaStatus?.enabled ?? false;
 
   if (isLoading) return <MfaLoading />;
 
@@ -195,118 +444,11 @@ export default function MfaContent() {
         </Card>
 
         {/* ─── Backup Codes Card ─────────────────────────────────────── */}
-        <Card className="lg:col-span-5 p-6 md:p-8">
-          <div className="flex items-center gap-2 mb-6">
-            <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-              <span className="material-symbols-outlined text-amber-600 dark:text-amber-400 text-[18px]">
-                vpn_key
-              </span>
-            </div>
-            <h3 className="text-lg font-semibold text-foreground">Backup Codes</h3>
-          </div>
-
-          {!isEnabled ? (
-            <p className="text-sm text-muted-foreground">
-              Enable two-factor authentication to generate backup codes.
-            </p>
-          ) : newCodes ? (
-            <div data-testid="new-backup-codes-display" className="space-y-4">
-              <Alert>
-                <AlertDescription>
-                  Save these codes securely. Your previous codes have been invalidated.
-                </AlertDescription>
-              </Alert>
-              <div className="grid grid-cols-2 gap-2 font-mono text-sm">
-                {newCodes.map((code, i) => (
-                  <div key={i} className="p-2 bg-muted rounded text-foreground text-center">
-                    {code}
-                  </div>
-                ))}
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => downloadBackupCodes(newCodes, '', new Date())}
-                className="w-full"
-              >
-                <span className="material-symbols-outlined text-[16px] mr-1.5" aria-hidden="true">
-                  download
-                </span>
-                Download codes
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Remaining</span>
-                <Badge variant="secondary">{mfaStatus?.backupCodesRemaining ?? 0} codes</Badge>
-              </div>
-
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    ref={regenBtnRef}
-                    variant="outline"
-                    size="sm"
-                    data-testid="regen-backup-btn"
-                    className="w-full"
-                  >
-                    <span
-                      className="material-symbols-outlined text-[16px] mr-1.5"
-                      aria-hidden="true"
-                    >
-                      refresh
-                    </span>
-                    Regenerate backup codes
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Regenerate Backup Codes</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This will invalidate all existing backup codes. Enter your authenticator code
-                      to continue.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <div className="py-4 space-y-2">
-                    <Label htmlFor="regen-totp-code">Authenticator Code</Label>
-                    <Input
-                      id="regen-totp-code"
-                      type="text"
-                      inputMode="numeric"
-                      maxLength={6}
-                      value={regenTotpCode}
-                      onChange={(e) => setRegenTotpCode(e.target.value.replaceAll(/\D/g, ''))}
-                      placeholder="000000"
-                      data-testid="regen-totp-input"
-                    />
-                    {regenerateBackupCodes.error && (
-                      <p className="text-sm text-destructive">
-                        {regenerateBackupCodes.error.message}
-                      </p>
-                    )}
-                  </div>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel
-                      onClick={() => {
-                        setRegenTotpCode('');
-                        regenBtnRef.current?.focus();
-                      }}
-                    >
-                      Cancel
-                    </AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={handleRegenerateBackupCodes}
-                      disabled={regenTotpCode.length !== 6 || regenerateBackupCodes.isPending}
-                    >
-                      {regenerateBackupCodes.isPending ? 'Regenerating...' : 'Regenerate'}
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
-          )}
-        </Card>
+        <BackupCodesCard
+          isEnabled={isEnabled}
+          mfaStatus={mfaStatus}
+          regenerateBackupCodes={regenerateBackupCodes}
+        />
 
         {/* ─── Setup Prompt Card ─────────────────────────────────────── */}
         <Card className="lg:col-span-6 p-6 md:p-8">
@@ -337,123 +479,10 @@ export default function MfaContent() {
 
         {/* ─── Danger Zone Card ──────────────────────────────────────── */}
         {isEnabled && (
-          <Card className="lg:col-span-6 p-6 md:p-8 border-destructive/30">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-                <span className="material-symbols-outlined text-red-600 dark:text-red-400 text-[18px]">
-                  warning
-                </span>
-              </div>
-              <h3 className="text-lg font-semibold text-foreground">Danger Zone</h3>
-            </div>
-
-            <Alert variant="destructive" className="mb-4">
-              <AlertDescription>
-                Disabling two-factor authentication will make your account less secure.
-              </AlertDescription>
-            </Alert>
-
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button
-                  ref={disableBtnRef}
-                  variant="destructive"
-                  size="sm"
-                  data-testid="disable-mfa-btn"
-                >
-                  <span className="material-symbols-outlined text-[16px] mr-1.5" aria-hidden="true">
-                    shield_lock
-                  </span>
-                  Disable two-factor authentication
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent data-testid="disable-confirm-dialog">
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Disable Two-Factor Authentication</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This will remove all MFA methods and invalidate your backup codes. Verify your
-                    identity to continue.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <div className="py-4 space-y-4">
-                  <div className="flex gap-2">
-                    <Button
-                      variant={disableMethod === 'totp' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setDisableMethod('totp')}
-                    >
-                      Authenticator
-                    </Button>
-                    <Button
-                      variant={disableMethod === 'password' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setDisableMethod('password')}
-                    >
-                      Password
-                    </Button>
-                  </div>
-                  {disableMethod === 'totp' ? (
-                    <div className="space-y-2">
-                      <Label htmlFor="disable-totp-code">Authenticator Code</Label>
-                      <Input
-                        id="disable-totp-code"
-                        type="text"
-                        inputMode="numeric"
-                        maxLength={6}
-                        value={disableInput.totpCode}
-                        onChange={(e) =>
-                          setDisableInput({
-                            ...disableInput,
-                            totpCode: e.target.value.replaceAll(/\D/g, ''),
-                          })
-                        }
-                        placeholder="000000"
-                        data-testid="disable-totp-input"
-                      />
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <Label htmlFor="disable-password">Password</Label>
-                      <Input
-                        id="disable-password"
-                        type="password"
-                        value={disableInput.password}
-                        onChange={(e) =>
-                          setDisableInput({ ...disableInput, password: e.target.value })
-                        }
-                        placeholder="Enter your password"
-                        data-testid="disable-password-input"
-                      />
-                    </div>
-                  )}
-                  {disableMfa.error && (
-                    <p className="text-sm text-destructive">{disableMfa.error.message}</p>
-                  )}
-                </div>
-                <AlertDialogFooter>
-                  <AlertDialogCancel
-                    onClick={() => {
-                      setDisableInput({ totpCode: '', password: '' });
-                      disableBtnRef.current?.focus();
-                    }}
-                  >
-                    Cancel
-                  </AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={handleDisableMfa}
-                    disabled={
-                      (disableMethod === 'totp' && disableInput.totpCode.length !== 6) ||
-                      (disableMethod === 'password' && disableInput.password.length < 8) ||
-                      disableMfa.isPending
-                    }
-                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                  >
-                    {disableMfa.isPending ? 'Disabling...' : 'Disable MFA'}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </Card>
+          <DisableMfaCard
+            disableMfa={disableMfa}
+            onDisabled={() => router.push('/settings/account')}
+          />
         )}
 
         {/* ─── Footer ────────────────────────────────────────────────── */}

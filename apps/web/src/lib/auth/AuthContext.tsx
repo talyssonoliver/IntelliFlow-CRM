@@ -408,14 +408,22 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     }
 
     // IFC-007: Handle all query states to prevent stuck loading spinner
-    console.log('[AuthContext] Query completed:', {
+    const queryView = {
+      isPending: statusQuery.isPending,
+      isFetching: statusQuery.isFetching,
       isSuccess: statusQuery.isSuccess,
       isError: statusQuery.isError,
       data: statusQuery.data,
       error: statusQuery.error,
+    };
+    console.log('[AuthContext] Query completed:', {
+      isSuccess: queryView.isSuccess,
+      isError: queryView.isError,
+      data: queryView.data,
+      error: queryView.error,
     });
 
-    const result = resolveQueryStateUpdate(statusQuery);
+    const result = resolveQueryStateUpdate(queryView);
     if (!result.handled) {
       console.log('[AuthContext] Query still pending/fetching...');
       return;
@@ -423,10 +431,10 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
 
     if (result.update.isAuthenticated) {
       console.log('[AuthContext] User authenticated:', result.update.user);
-    } else if (statusQuery.isError) {
-      console.error('[AuthContext] Query error:', statusQuery.error);
+    } else if (queryView.isError) {
+      console.error('[AuthContext] Query error:', queryView.error);
     } else {
-      console.log('[AuthContext] Not authenticated - data:', statusQuery.data);
+      console.log('[AuthContext] Not authenticated - data:', queryView.data);
     }
 
     setState((prev) => ({ ...prev, ...result.update }));
@@ -436,6 +444,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     statusQuery.isSuccess,
     statusQuery.isError,
     statusQuery.data,
+    statusQuery.error,
     isLoggedOutPage,
   ]);
 

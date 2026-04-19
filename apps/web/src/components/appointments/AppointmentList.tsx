@@ -297,11 +297,12 @@ export function AppointmentList({
       </div>
 
       {/* Appointments table */}
-      {appointments.length === 0 && visibleTasks.length === 0 ? (
+      {appointments.length === 0 && visibleTasks.length === 0 && (
         <div data-testid="list-empty">
           <EmptyState entity="appointments" phase="passive" />
         </div>
-      ) : appointments.length === 0 ? null : (
+      )}
+      {appointments.length > 0 && (
         <div className="border rounded-lg overflow-hidden">
           <table className="w-full text-sm">
             <thead>
@@ -410,7 +411,7 @@ export function AppointmentList({
               task_alt
             </span>
             <h3 className="text-sm font-semibold text-gray-800">
-              Tasks due
+              Tasks due{' '}
               <span className="ml-2 text-xs font-normal text-gray-500">
                 ({visibleTasks.length})
               </span>

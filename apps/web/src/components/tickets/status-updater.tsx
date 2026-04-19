@@ -84,6 +84,7 @@ export function StatusUpdater({
 
       {}
       {isOpen && !isDisabled && (
+        // eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- custom dropdown requires div for positioning
         <div
           role="listbox"
           aria-label="Status options"

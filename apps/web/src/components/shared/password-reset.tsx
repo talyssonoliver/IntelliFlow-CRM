@@ -94,16 +94,14 @@ export function PasswordStrengthIndicator({
 
       {/* Progress bar */}
       <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
-        <span
+        <progress
           className={cn(
-            'h-full rounded-full transition-all duration-300 block',
+            'h-full rounded-full transition-all duration-300 block w-full appearance-none',
             config.color,
             config.width
           )}
-          role="progressbar"
-          aria-valuenow={result.percentage}
-          aria-valuemin={0}
-          aria-valuemax={100}
+          value={result.percentage}
+          max={100}
           aria-label={`Password strength: ${config.label}`}
         />
       </div>
@@ -401,7 +399,7 @@ export function PasswordResetForm({
         setIsSubmitting(false);
       }
     },
-    [password, confirmPassword, token, onSuccess]
+    [password, confirmPassword, token, onSuccess, resetPasswordMutation]
   );
 
   // Masked email display

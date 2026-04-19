@@ -182,10 +182,7 @@ class MockIntersectionObserver {
   root = null;
   rootMargin = '';
   thresholds: ReadonlyArray<number> = [];
-  constructor(
-    _callback: IntersectionObserverCallback,
-    _options?: IntersectionObserverInit
-  ) {}
+  constructor(_callback: IntersectionObserverCallback, _options?: IntersectionObserverInit) {}
   observe(): void {}
   unobserve(): void {}
   disconnect(): void {}
@@ -202,8 +199,9 @@ class MockResizeObserver {
 }
 
 if (typeof globalThis.IntersectionObserver === 'undefined') {
-  (globalThis as unknown as { IntersectionObserver: typeof IntersectionObserver }).IntersectionObserver =
-    MockIntersectionObserver as unknown as typeof IntersectionObserver;
+  (
+    globalThis as unknown as { IntersectionObserver: typeof IntersectionObserver }
+  ).IntersectionObserver = MockIntersectionObserver as unknown as typeof IntersectionObserver;
 }
 
 if (typeof globalThis.ResizeObserver === 'undefined') {

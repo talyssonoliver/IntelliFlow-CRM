@@ -21,7 +21,7 @@ const mockAdrs = [
     date: '2025-12-20',
     deciders: 'CTO',
     technicalStory: 'IFC-001',
-    filePath: 'docs/planning/adr/ADR-001.md',
+    filePath: 'docs/architecture/adr/ADR-001.md',
     relatedADRs: [],
     sprint: '1',
   },

@@ -96,6 +96,7 @@ export function MfaQrGenerator({
       {/* QR Code Section */}
       <div className="flex flex-col items-center">
         {}
+        {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- QR is an SVG, figure + role="img" groups it for AT */}
         <figure
           className="bg-white p-4 rounded-lg"
           role="img"

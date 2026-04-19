@@ -1,7 +1,7 @@
 'use client';
 
 import { useId } from 'react';
-import { ChevronDown, ChevronUp, Reply, ReplyAll, Forward, Paperclip } from 'lucide-react';
+
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import { EntityHoverCard } from '@/components/shared';
 import DOMPurify from 'isomorphic-dompurify';
@@ -52,10 +52,10 @@ export function EmailMessage({
 
   return (
     <article className="rounded-lg border border-border">
-      {/* Header — always visible (div instead of button to allow nested interactive elements) */}
+      {/* Header — always visible */}
       {}
-      <div
-        role="button"
+      <button
+        type="button"
         tabIndex={0}
         aria-expanded={isExpanded}
         aria-controls={contentId}
@@ -125,11 +125,21 @@ export function EmailMessage({
 
         {/* Expand icon */}
         {isExpanded ? (
-          <ChevronUp className="h-4 w-4 text-muted-foreground" />
+          <span
+            className="material-symbols-outlined text-base text-muted-foreground"
+            aria-hidden="true"
+          >
+            expand_less
+          </span>
         ) : (
-          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+          <span
+            className="material-symbols-outlined text-base text-muted-foreground"
+            aria-hidden="true"
+          >
+            expand_more
+          </span>
         )}
-      </div>
+      </button>
 
       {/* Content — only when expanded */}
       {isExpanded && (
@@ -150,7 +160,9 @@ export function EmailMessage({
           {message.attachments.length > 0 && (
             <div className="border-t border-border px-4 py-2">
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                <Paperclip className="h-3 w-3" />
+                <span className="material-symbols-outlined text-base" aria-hidden="true">
+                  attach_file
+                </span>
                 <span>{message.attachments.length} attachment(s)</span>
               </div>
               <div className="mt-1 flex flex-wrap gap-2">
@@ -159,7 +171,9 @@ export function EmailMessage({
                     key={att.checksum}
                     className="inline-flex items-center gap-1 rounded border border-border px-2 py-1 text-xs"
                   >
-                    <Paperclip className="h-3 w-3" />
+                    <span className="material-symbols-outlined text-base" aria-hidden="true">
+                      attach_file
+                    </span>
                     {att.filename}
                   </span>
                 ))}
@@ -175,7 +189,9 @@ export function EmailMessage({
               className="inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
               onClick={() => onReply(message.id)}
             >
-              <Reply className="h-3.5 w-3.5" />
+              <span className="material-symbols-outlined text-base" aria-hidden="true">
+                reply
+              </span>{' '}
               Reply
             </button>
             <button
@@ -184,7 +200,9 @@ export function EmailMessage({
               className="inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
               onClick={() => onReplyAll(message.id)}
             >
-              <ReplyAll className="h-3.5 w-3.5" />
+              <span className="material-symbols-outlined text-base" aria-hidden="true">
+                reply_all
+              </span>{' '}
               Reply All
             </button>
             <button
@@ -193,7 +211,9 @@ export function EmailMessage({
               className="inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
               onClick={() => onForward(message.id)}
             >
-              <Forward className="h-3.5 w-3.5" />
+              <span className="material-symbols-outlined text-base" aria-hidden="true">
+                forward
+              </span>{' '}
               Forward
             </button>
           </div>

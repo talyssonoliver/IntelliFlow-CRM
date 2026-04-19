@@ -1,10 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { MaintenanceWindow } from '../maintenance-mode';
-import {
-  buildMaintenanceStatusPayload,
-  publishStatusUpdate,
-} from '../status-updater';
+import { buildMaintenanceStatusPayload, publishStatusUpdate } from '../status-updater';
 
 const FIXED_TS = '2026-04-13T12:00:00.000Z';
 

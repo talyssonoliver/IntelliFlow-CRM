@@ -65,9 +65,15 @@ const mockRules = [
   },
 ];
 
+// Per-test mutable rules handle — flip between populated & empty before
+// render(), since vi.doMock cannot retroactively replace an already-imported
+// module. Tests that want a different rules array mutate `currentRules` via
+// the exported setter in beforeEach.
+const rulesState = { current: mockRules as typeof mockRules };
+
 vi.mock('@/app/settings/routing/hooks/useRouting', () => ({
   useRouting: () => ({
-    rules: mockRules,
+    rules: rulesState.current,
     rulesLoading: false,
     createRule: mockCreateRule,
     updateRule: mockUpdateRule,
@@ -78,7 +84,6 @@ vi.mock('@/app/settings/routing/hooks/useRouting', () => ({
 }));
 
 vi.mock('@intelliflow/ui', async () => {
-  const React = await import('react');
   return {
     Button: ({ children, onClick, ...props }: any) => (
       <button onClick={onClick} {...props}>
@@ -89,6 +94,12 @@ vi.mock('@intelliflow/ui', async () => {
     CardContent: ({ children, ...props }: any) => <div {...props}>{children}</div>,
     CardHeader: ({ children, ...props }: any) => <div {...props}>{children}</div>,
     CardTitle: ({ children }: any) => <h3>{children}</h3>,
+    EmptyState: ({ entity, title, description }: any) => (
+      <div data-testid={`empty-state-${entity ?? 'custom'}`}>
+        {title ?? (entity === 'rules' ? 'No rules' : '')}
+        {description}
+      </div>
+    ),
     Input: (props: any) => <input {...props} />,
     Label: ({ children, ...props }: any) => <label {...props}>{children}</label>,
     Select: ({ children, value, onValueChange: _onValueChange }: any) => (
@@ -212,24 +223,17 @@ describe('RoutingRulesEditor', () => {
     expect(screen.getByRole('list', { name: /routing rules/i })).toBeInTheDocument();
   });
 
-  it('shows empty state when no rules', () => {
-    // Override the mock to return empty rules
-    const useRoutingMock = vi.fn(() => ({
-      rules: [],
-      rulesLoading: false,
-      createRule: mockCreateRule,
-      updateRule: mockUpdateRule,
-      deleteRule: mockDeleteRule,
-      reorderRules: mockReorderRules,
-      toggleRule: mockToggleRule,
-    }));
-
-    vi.doMock('@/app/settings/routing/hooks/useRouting', () => ({
-      useRouting: useRoutingMock,
-    }));
-
-    // This test verifies the empty state message exists in the component code
-    // Full integration would need module re-import
-    expect(true).toBe(true);
+  it('shows empty state when no rules', async () => {
+    rulesState.current = [];
+    try {
+      // Re-import the component so the hook reads the flipped rulesState.
+      const { RoutingRulesEditor: EmptyVariant } = await import('../RoutingRulesEditor');
+      render(<EmptyVariant />);
+      // EmptyState for entity="rules" renders the curated "No rules" title
+      // from packages/ui entity-empty-state-config.
+      expect(await screen.findByText(/no rules/i)).toBeInTheDocument();
+    } finally {
+      rulesState.current = mockRules;
+    }
   });
 });

@@ -24,7 +24,13 @@ vi.mock('@/lib/trpc', () => {
     if (!queryCache.has(key)) {
       queryCache.set(key, { data, isLoading: false, error: null, refetch: vi.fn() });
     }
-    return () => queryCache.get(key) as { data: unknown; isLoading: boolean; error: null; refetch: () => void };
+    return () =>
+      queryCache.get(key) as {
+        data: unknown;
+        isLoading: boolean;
+        error: null;
+        refetch: () => void;
+      };
   };
   const mkMutation = (key: string) => {
     if (!mutationCache.has(key)) {

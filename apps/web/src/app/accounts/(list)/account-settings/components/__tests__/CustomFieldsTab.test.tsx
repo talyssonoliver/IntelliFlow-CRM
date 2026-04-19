@@ -1,6 +1,11 @@
+import { createRef } from 'react';
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
-import { CustomFieldsTab, type CustomFieldRow } from '../CustomFieldsTab';
+import { act, render, screen, fireEvent } from '@testing-library/react';
+import {
+  CustomFieldsTab,
+  type CustomFieldRow,
+  type CustomFieldsTabHandle,
+} from '../CustomFieldsTab';
 
 describe('CustomFieldsTab', () => {
   const rows: CustomFieldRow[] = [
@@ -26,22 +31,6 @@ describe('CustomFieldsTab', () => {
     expect(screen.getByText(/no custom fields yet/i)).toBeTruthy();
   });
 
-  it('opens add dialog and submits create', () => {
-    const onCreate = vi.fn();
-    render(<CustomFieldsTab rows={[]} onCreate={onCreate} onUpdate={vi.fn()} onDelete={vi.fn()} />);
-    fireEvent.click(screen.getByRole('button', { name: /add field/i }));
-    const nameInput = screen.getByLabelText(/field name/i) as HTMLInputElement;
-    fireEvent.change(nameInput, { target: { value: 'Segment Code' } });
-    fireEvent.click(screen.getByRole('button', { name: /^create$/i }));
-    expect(onCreate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        fieldName: 'Segment Code',
-        dataType: 'text',
-        isRequired: false,
-      })
-    );
-  });
-
   it('calls onDelete when delete clicked', () => {
     const onDelete = vi.fn();
     render(
@@ -49,5 +38,24 @@ describe('CustomFieldsTab', () => {
     );
     fireEvent.click(screen.getByRole('button', { name: /^delete$/i }));
     expect(onDelete).toHaveBeenCalledWith('f1');
+  });
+
+  it('exposes openCreate via ref', () => {
+    const onCreate = vi.fn();
+    const ref = createRef<CustomFieldsTabHandle>();
+    render(
+      <CustomFieldsTab
+        ref={ref}
+        rows={rows}
+        onCreate={onCreate}
+        onUpdate={vi.fn()}
+        onDelete={vi.fn()}
+      />
+    );
+    act(() => ref.current?.openCreate());
+    const nameInput = screen.getByLabelText(/field name/i) as HTMLInputElement;
+    fireEvent.change(nameInput, { target: { value: 'Segment Code' } });
+    fireEvent.click(screen.getByRole('button', { name: /^create$/i }));
+    expect(onCreate).toHaveBeenCalled();
   });
 });

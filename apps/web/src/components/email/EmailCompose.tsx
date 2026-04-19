@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { Send, Save, X, Paperclip } from 'lucide-react';
 import DOMPurify from 'isomorphic-dompurify';
 import { trpc } from '@/lib/trpc';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -351,19 +350,33 @@ export function EmailCompose({
   // Auto-save draft after 2s debounce when body changes
   const debouncedBody = useDebounce(bodyHtml, 2000);
 
+  // Auto-save is triggered only by debouncedBody changes. All other reads are
+  // pulled off latest-value refs so the effect does not re-register on every
+  // keystroke (which would thrash mutateAsync promises and spam the backend).
+  const autoSaveStateRef = useRef({ initialBody, toRecipients, subject, draftId });
+  autoSaveStateRef.current = { initialBody, toRecipients, subject, draftId };
+  const draftMutateAsyncRef = useRef(draftMutation.mutateAsync);
+  draftMutateAsyncRef.current = draftMutation.mutateAsync;
+
   useEffect(() => {
-    if (!debouncedBody || debouncedBody === initialBody) return;
+    const {
+      initialBody: initial,
+      toRecipients: to,
+      subject: subj,
+      draftId: id,
+    } = autoSaveStateRef.current;
+    if (!debouncedBody || debouncedBody === initial) return;
     const hasContent =
-      toRecipients.length > 0 ||
-      subject.trim().length > 0 ||
+      to.length > 0 ||
+      subj.trim().length > 0 ||
       debouncedBody.replaceAll(/<[^<>]*>/g, '').trim().length > 0;
     if (!hasContent) return;
 
-    draftMutation
-      .mutateAsync({
-        id: draftId,
-        to: toRecipients.map((r) => r.email),
-        subject,
+    draftMutateAsyncRef
+      .current({
+        id,
+        to: to.map((r) => r.email),
+        subject: subj,
         htmlBody: debouncedBody,
       })
       .then((result) => {
@@ -542,7 +555,9 @@ export function EmailCompose({
               'disabled:opacity-50 disabled:cursor-not-allowed'
             )}
           >
-            <Send className="h-4 w-4" />
+            <span className="material-symbols-outlined text-base" aria-hidden="true">
+              send
+            </span>{' '}
             Send
           </button>
 
@@ -552,7 +567,9 @@ export function EmailCompose({
             onClick={handleSaveDraft}
             className="inline-flex items-center gap-1 rounded-md px-3 py-2 text-sm hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring"
           >
-            <Save className="h-4 w-4" />
+            <span className="material-symbols-outlined text-base" aria-hidden="true">
+              save
+            </span>{' '}
             Save Draft
           </button>
         </div>
@@ -573,7 +590,9 @@ export function EmailCompose({
               input.click();
             }}
           >
-            <Paperclip className="h-4 w-4" />
+            <span className="material-symbols-outlined text-base" aria-hidden="true">
+              attach_file
+            </span>
           </button>
 
           <TemplateSelector onSelect={handleTemplateSelect} currentBody={getBodyHtml()} />
@@ -584,7 +603,9 @@ export function EmailCompose({
             className="inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-sm text-destructive hover:bg-destructive/10 focus:outline-none focus:ring-2 focus:ring-ring"
             onClick={handleDiscard}
           >
-            <X className="h-4 w-4" />
+            <span className="material-symbols-outlined text-base" aria-hidden="true">
+              close
+            </span>{' '}
             Discard
           </button>
         </div>

@@ -1,6 +1,16 @@
 'use client';
 
-import { Button, Card, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Switch } from '@intelliflow/ui';
+import {
+  Button,
+  Card,
+  Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Switch,
+} from '@intelliflow/ui';
 
 export interface DuplicateRuleRow {
   field: 'name' | 'website' | 'phone' | 'name_address';
@@ -28,7 +38,10 @@ export interface DuplicateDetectionTabProps {
   readonly onRulesChange: (rules: DuplicateRuleRow[]) => void;
 }
 
-export function DuplicateDetectionTab({ rules, onRulesChange }: Readonly<DuplicateDetectionTabProps>) {
+export function DuplicateDetectionTab({
+  rules,
+  onRulesChange,
+}: Readonly<DuplicateDetectionTabProps>) {
   const update = (index: number, patch: Partial<DuplicateRuleRow>) => {
     const next = rules.map((r, i) => (i === index ? { ...r, ...patch } : r));
     onRulesChange(next);
@@ -60,7 +73,10 @@ export function DuplicateDetectionTab({ rules, onRulesChange }: Readonly<Duplica
           {rules.map((rule, idx) => (
             <Card key={`${rule.field}-${rule.matchStrategy}`} className="p-3 space-y-2">
               <div className="flex items-center gap-2">
-                <Select value={rule.field} onValueChange={(v) => update(idx, { field: v as DuplicateRuleRow['field'] })}>
+                <Select
+                  value={rule.field}
+                  onValueChange={(v) => update(idx, { field: v as DuplicateRuleRow['field'] })}
+                >
                   <SelectTrigger className="min-w-[140px]">
                     <SelectValue />
                   </SelectTrigger>
@@ -111,7 +127,10 @@ export function DuplicateDetectionTab({ rules, onRulesChange }: Readonly<Duplica
                     value={rule.threshold}
                     onChange={(e) =>
                       update(idx, {
-                        threshold: Math.min(100, Math.max(0, Number.parseInt(e.target.value || '0', 10))),
+                        threshold: Math.min(
+                          100,
+                          Math.max(0, Number.parseInt(e.target.value || '0', 10))
+                        ),
                       })
                     }
                     className="max-w-[100px]"

@@ -36,7 +36,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@intelliflow/ui';
-import { Star, Plus, Pencil, Trash2 } from 'lucide-react';
+
 import {
   ConfigEmptyState,
   ConfigCardSkeleton,
@@ -168,7 +168,9 @@ export function SLAPolicyManager() {
     <div className="space-y-4">
       <div className="flex justify-end">
         <Button onClick={openCreate} aria-label="Create new SLA policy">
-          <Plus className="mr-2 h-4 w-4" />
+          <span className="material-symbols-outlined text-base mr-2" aria-hidden="true">
+            add
+          </span>{' '}
           Create Policy
         </Button>
       </div>
@@ -205,7 +207,10 @@ export function SLAPolicyManager() {
               <TableCell>
                 {policy.isDefault ? (
                   <Badge variant="secondary" aria-label="Default policy">
-                    <Star className="mr-1 h-3 w-3" /> Default
+                    <span className="material-symbols-outlined text-base mr-1" aria-hidden="true">
+                      star
+                    </span>{' '}
+                    Default
                   </Badge>
                 ) : (
                   <Button
@@ -233,7 +238,9 @@ export function SLAPolicyManager() {
                     onClick={() => openEdit(policy)}
                     aria-label={`Edit ${policy.name}`}
                   >
-                    <Pencil className="h-4 w-4" />
+                    <span className="material-symbols-outlined text-base" aria-hidden="true">
+                      edit
+                    </span>
                   </Button>
                   <Button
                     variant="ghost"
@@ -241,7 +248,9 @@ export function SLAPolicyManager() {
                     onClick={() => setDeleteId(policy.id)}
                     aria-label={`Delete ${policy.name}`}
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <span className="material-symbols-outlined text-base" aria-hidden="true">
+                      delete
+                    </span>
                   </Button>
                 </div>
               </TableCell>

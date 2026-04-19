@@ -217,7 +217,10 @@ describe('Backup Codes Utility', () => {
 
       let capturedBlob: Blob | null = null;
       vi.stubGlobal('URL', {
-        createObjectURL: vi.fn((blob: Blob) => { capturedBlob = blob; return 'blob:mock'; }),
+        createObjectURL: vi.fn((blob: Blob) => {
+          capturedBlob = blob;
+          return 'blob:mock';
+        }),
         revokeObjectURL: vi.fn(),
       });
 

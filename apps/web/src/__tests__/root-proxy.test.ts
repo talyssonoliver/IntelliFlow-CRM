@@ -241,20 +241,38 @@ describe('root proxy.ts', () => {
     // sub-routes (availability, calendar-settings, event-types) remain under
     // /calendar.
     it('redirects /calendar/new to /appointments/new with permanent flag', async () => {
-      const nextConfig = require('../../next.config.js');
-      const redirects = await nextConfig.redirects();
-      const rule = redirects.find((r: { source: string }) => r.source === '/calendar/new');
+      const nextConfigModule = (await import('../../next.config.js')) as {
+        default?: {
+          redirects: () => Promise<
+            Array<{ source: string; destination: string; permanent: boolean }>
+          >;
+        };
+        redirects?: () => Promise<
+          Array<{ source: string; destination: string; permanent: boolean }>
+        >;
+      };
+      const nextConfig = nextConfigModule.default ?? nextConfigModule;
+      const redirects = await nextConfig.redirects!();
+      const rule = redirects.find((r) => r.source === '/calendar/new')!;
       expect(rule).toBeDefined();
       expect(rule.destination).toBe('/appointments/new');
       expect(rule.permanent).toBe(true);
     });
 
     it('redirects /calendar/:id (non-settings) to /appointments/:id with permanent flag', async () => {
-      const nextConfig = require('../../next.config.js');
-      const redirects = await nextConfig.redirects();
-      const rule = redirects.find((r: { source: string }) =>
-        r.source.startsWith('/calendar/:id((?!new')
-      );
+      const nextConfigModule = (await import('../../next.config.js')) as {
+        default?: {
+          redirects: () => Promise<
+            Array<{ source: string; destination: string; permanent: boolean }>
+          >;
+        };
+        redirects?: () => Promise<
+          Array<{ source: string; destination: string; permanent: boolean }>
+        >;
+      };
+      const nextConfig = nextConfigModule.default ?? nextConfigModule;
+      const redirects = await nextConfig.redirects!();
+      const rule = redirects.find((r) => r.source.startsWith('/calendar/:id((?!new'))!;
       expect(rule).toBeDefined();
       expect(rule.destination).toBe('/appointments/:id');
       expect(rule.permanent).toBe(true);

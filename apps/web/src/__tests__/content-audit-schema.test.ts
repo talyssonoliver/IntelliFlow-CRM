@@ -221,10 +221,10 @@ describe('Content Audit Results Schema Validation', () => {
     }
   });
 
-  // TC-06: findings contains the current count of ghost-link references (AC-004, TR-005; many targets now exist after PG-050/051/052)
+  // TC-06: findings contains the current count of unresolved ghost-link references after route-group-aware reconciliation
   it('TC-06: findings contains the current ghost links with required fields', () => {
-    expect(auditData.findings.ghost_links.length).toBe(4);
-    expect(auditData.summary.ghost_link_count).toBe(4);
+    expect(auditData.findings.ghost_links.length).toBe(0);
+    expect(auditData.summary.ghost_link_count).toBe(0);
 
     for (const gl of auditData.findings.ghost_links) {
       expect(gl).toHaveProperty('ghost_link_id');

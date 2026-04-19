@@ -49,7 +49,7 @@ export function DpaSignaturePanel({ currentVersion, downloadPath }: DpaSignature
       records, contact{' '}
       <a href="mailto:legal@intelliflow-crm.com" className="underline">
         legal@intelliflow-crm.com
-      </a>
+      </a>{' '}
       .
     </p>
   );
@@ -92,7 +92,7 @@ export function DpaSignaturePanel({ currentVersion, downloadPath }: DpaSignature
           checked={checked}
           onChange={(e) => setChecked(e.target.checked)}
           className="h-4 w-4 rounded border-slate-300 accent-[#137fec]"
-        />
+        />{' '}
         I have read and I agree to the Data Processing Addendum
       </label>
       <button
@@ -107,10 +107,7 @@ export function DpaSignaturePanel({ currentVersion, downloadPath }: DpaSignature
 
   if (state === 'updated') {
     return (
-      <div
-        role="status"
-        className="fixed bottom-0 left-0 right-0 z-50 border-t border-amber-200 bg-amber-50 px-4 py-4 shadow-lg dark:border-amber-800 dark:bg-amber-950"
-      >
+      <output className="fixed bottom-0 left-0 right-0 z-50 border-t border-amber-200 bg-amber-50 px-4 py-4 shadow-lg dark:border-amber-800 dark:bg-amber-950">
         <div className="container mx-auto max-w-6xl">
           <div className="flex items-start gap-4">
             <span
@@ -135,16 +132,13 @@ export function DpaSignaturePanel({ currentVersion, downloadPath }: DpaSignature
             </div>
           </div>
         </div>
-      </div>
+      </output>
     );
   }
 
   // state === 'pending'
   return (
-    <div
-      role="status"
-      className="fixed bottom-0 left-0 right-0 z-50 border-t border-[#137fec]/20 bg-white px-4 py-4 shadow-lg dark:border-[#137fec]/30 dark:bg-[#162231]"
-    >
+    <output className="fixed bottom-0 left-0 right-0 z-50 border-t border-[#137fec]/20 bg-white px-4 py-4 shadow-lg dark:border-[#137fec]/30 dark:bg-[#162231]">
       <div className="container mx-auto max-w-6xl">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-6">
           <div className="flex-1">
@@ -163,6 +157,6 @@ export function DpaSignaturePanel({ currentVersion, downloadPath }: DpaSignature
           </div>
         </div>
       </div>
-    </div>
+    </output>
   );
 }

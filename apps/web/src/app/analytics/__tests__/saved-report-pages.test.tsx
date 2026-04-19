@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import React from 'react';
+import { resolve } from 'node:path';
 
 // ============================================
 // Mock SavedReportView to isolate page tests
@@ -60,7 +61,10 @@ describe('Saved Report Pages', () => {
 
     it('has use client directive', async () => {
       const fs = await import('node:fs');
-      const content = fs.readFileSync('src/app/analytics/(list)/saved/weekly/page.tsx', 'utf-8');
+      const content = fs.readFileSync(
+        resolve(__dirname, '../(list)/saved/weekly/page.tsx'),
+        'utf-8'
+      );
       expect(content.startsWith("'use client'")).toBe(true);
     });
   });
@@ -94,7 +98,10 @@ describe('Saved Report Pages', () => {
 
     it('has use client directive', async () => {
       const fs = await import('node:fs');
-      const content = fs.readFileSync('src/app/analytics/(list)/saved/monthly/page.tsx', 'utf-8');
+      const content = fs.readFileSync(
+        resolve(__dirname, '../(list)/saved/monthly/page.tsx'),
+        'utf-8'
+      );
       expect(content.startsWith("'use client'")).toBe(true);
     });
   });
@@ -131,7 +138,10 @@ describe('Saved Report Pages', () => {
 
     it('has use client directive', async () => {
       const fs = await import('node:fs');
-      const content = fs.readFileSync('src/app/analytics/(list)/saved/quarterly/page.tsx', 'utf-8');
+      const content = fs.readFileSync(
+        resolve(__dirname, '../(list)/saved/quarterly/page.tsx'),
+        'utf-8'
+      );
       expect(content.startsWith("'use client'")).toBe(true);
     });
   });

@@ -127,7 +127,7 @@ export default function CoverageReportView() {
               const passing = value >= threshold;
 
               return (
-                <Card key={key} className="p-4" role="region" aria-label={`${label} coverage`}>
+                <Card key={key} className="p-4" aria-label={`${label} coverage`}>
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="font-medium text-foreground">{label}</h3>
                     <span

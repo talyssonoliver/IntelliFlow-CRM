@@ -460,11 +460,13 @@ export function groupEventsByDate(events: TimelineEvent[]): Map<string, Timeline
  */
 export function getRelativeDateLabel(date: Date): string {
   const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
   const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
+  yesterday.setUTCDate(yesterday.getUTCDate() - 1);
 
-  const eventDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const eventDate = new Date(
+    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())
+  );
 
   if (eventDate.getTime() === today.getTime()) {
     return 'Today';
