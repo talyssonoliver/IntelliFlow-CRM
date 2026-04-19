@@ -1,201 +1,156 @@
 /**
  * Document Settings Validators - PG-186
  *
- * Zod schemas for document file-type config, duplicate detection rules,
- * required fields, tags, automation toggles, and retention policies.
- * Mirrors the PG-183 account-settings pattern.
+ * Zod schemas for document file types, size limits, antivirus,
+ * retention policy, and automation toggles. Mirrors the PG-182/PG-183
+ * settings-validators pattern.
  */
 
 import { z } from 'zod';
 
-// ─── Tag Color Tokens ────────────────────────────────────────────────────────
+// ─── Defaults (exported for router + tests) ──────────────────────────────────
 
-export const DOCUMENT_TAG_COLOR_TOKENS = [
-  'slate',
-  'red',
-  'orange',
-  'amber',
-  'yellow',
-  'lime',
-  'green',
-  'emerald',
-  'teal',
-  'cyan',
-  'sky',
-  'blue',
-  'indigo',
-  'violet',
-  'purple',
-  'fuchsia',
-  'pink',
-  'rose',
+export const DEFAULT_ALLOWED_EXTENSIONS = [
+  'pdf',
+  'doc',
+  'docx',
+  'xls',
+  'xlsx',
+  'ppt',
+  'pptx',
+  'txt',
+  'csv',
+  'rtf',
+  'odt',
+  'ods',
+  'odp',
+  'jpg',
+  'jpeg',
+  'png',
+  'gif',
+  'webp',
+  'svg',
+  'mp4',
+  'mov',
+  'avi',
+  'zip',
 ] as const;
 
-export const documentTagColorTokenSchema = z.enum(DOCUMENT_TAG_COLOR_TOKENS);
-export type DocumentTagColorToken = z.infer<typeof documentTagColorTokenSchema>;
+export const DEFAULT_BLOCKED_EXTENSIONS = [
+  'exe',
+  'bat',
+  'sh',
+  'cmd',
+  'ps1',
+  'vbs',
+  'com',
+  'scr',
+  'msi',
+] as const;
 
-// ─── General Config ──────────────────────────────────────────────────────────
+export const DEFAULT_ALLOWED_MIME_TYPES = [
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'text/plain',
+  'text/csv',
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+  'video/mp4',
+  'application/zip',
+] as const;
 
-export const documentGeneralConfigSchema = z.object({
-  allowedMimeTypes: z.array(z.string().min(1)).default([]),
-  maxUploadSizeMb: z.number().int().min(1).max(500),
-  defaultRetentionDays: z.number().int().min(0),
+// ─── File Type Config ────────────────────────────────────────────────────────
+
+export const documentFileTypeConfigSchema = z.object({
+  allowedExtensions: z
+    .array(
+      z
+        .string()
+        .min(1)
+        .max(20)
+        .regex(/^[a-z0-9]+$/i, 'Extension must be alphanumeric')
+    )
+    .min(1, 'At least one allowed extension is required'),
+  blockedExtensions: z.array(z.string().min(1).max(20)),
+  allowedMimeTypes: z.array(z.string().min(1)),
+});
+export type DocumentFileTypeConfigInput = z.infer<typeof documentFileTypeConfigSchema>;
+
+// ─── Size Limits ─────────────────────────────────────────────────────────────
+
+export const documentSizeLimitConfigSchema = z.object({
+  maxFileSizeMB: z
+    .number()
+    .int()
+    .min(1, 'Max file size must be at least 1 MB')
+    .max(10000, 'Max file size cannot exceed 10000 MB (10 GB)'),
+  maxTotalStorageMB: z
+    .number()
+    .int()
+    .min(1, 'Max total storage must be at least 1 MB')
+    .max(1_000_000, 'Max total storage cannot exceed 1 TB'),
+  maxFilesPerUpload: z.number().int().min(1).max(1000),
+});
+export type DocumentSizeLimitConfigInput = z.infer<typeof documentSizeLimitConfigSchema>;
+
+// ─── Antivirus ───────────────────────────────────────────────────────────────
+
+export const documentAntivirusConfigSchema = z.object({
   enableAntivirusScan: z.boolean(),
-  quarantineOnDetect: z.boolean(),
-  blockOnScanFailure: z.boolean(),
+  quarantineInfected: z.boolean(),
+  notifyAdminOnThreat: z.boolean(),
 });
-export type DocumentGeneralConfigInput = z.infer<typeof documentGeneralConfigSchema>;
+export type DocumentAntivirusConfigInput = z.infer<typeof documentAntivirusConfigSchema>;
 
-// ─── Duplicate Rules ─────────────────────────────────────────────────────────
+// ─── Retention Policy ────────────────────────────────────────────────────────
 
-export const documentDuplicateFieldSchema = z.enum(['content_hash', 'filename_normalized']);
-export type DocumentDuplicateField = z.infer<typeof documentDuplicateFieldSchema>;
-
-export const documentDuplicateStrategySchema = z.enum(['exact', 'normalized']);
-export type DocumentDuplicateStrategy = z.infer<typeof documentDuplicateStrategySchema>;
-
-export const documentCollisionActionSchema = z.enum(['warn', 'skip', 'replace', 'version']);
-export type DocumentCollisionAction = z.infer<typeof documentCollisionActionSchema>;
-
-export const documentDuplicateRuleSchema = z.object({
-  field: documentDuplicateFieldSchema,
-  matchStrategy: documentDuplicateStrategySchema,
-  collisionAction: documentCollisionActionSchema,
+export const documentRetentionPolicySchema = z.object({
+  retentionDays: z
+    .number()
+    .int()
+    .min(1, 'Retention must be at least 1 day')
+    .max(3650, 'Retention cannot exceed 10 years (3650 days)'),
+  archiveInsteadOfDelete: z.boolean(),
+  preserveVersions: z.number().int().min(0).max(100),
   isActive: z.boolean(),
-  sortOrder: z.number().int().min(0),
 });
-export type DocumentDuplicateRuleInput = z.infer<typeof documentDuplicateRuleSchema>;
-
-export const updateDocumentDuplicateRulesSchema = z
-  .object({
-    rules: z.array(documentDuplicateRuleSchema).min(1, 'At least one rule is required'),
-  })
-  .superRefine((data, ctx) => {
-    const seen = new Map<string, number>();
-    data.rules.forEach((rule, index) => {
-      const key = `${rule.field}__${rule.matchStrategy}`;
-      const first = seen.get(key);
-      if (first !== undefined) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: `Duplicate (field, strategy) pair: "${rule.field}" + "${rule.matchStrategy}" appears in rows ${first + 1} and ${index + 1}`,
-          path: ['rules', index, 'matchStrategy'],
-        });
-      } else {
-        seen.set(key, index);
-      }
-    });
-  });
-export type UpdateDocumentDuplicateRulesInput = z.infer<typeof updateDocumentDuplicateRulesSchema>;
-
-// ─── Required Fields ─────────────────────────────────────────────────────────
-
-export const documentRequiredFieldKeySchema = z.enum([
-  'title',
-  'description',
-  'category',
-  'tags',
-  'expiresAt',
-]);
-export type DocumentRequiredFieldKey = z.infer<typeof documentRequiredFieldKeySchema>;
-
-export const documentRequiredFieldSchema = z.object({
-  fieldKey: documentRequiredFieldKeySchema,
-  isRequired: z.boolean(),
-});
-export type DocumentRequiredFieldInput = z.infer<typeof documentRequiredFieldSchema>;
-
-export const updateDocumentRequiredFieldsSchema = z
-  .object({
-    fields: z.array(documentRequiredFieldSchema).min(1, 'At least one field is required'),
-  })
-  .refine((data) => data.fields.find((f) => f.fieldKey === 'title')?.isRequired === true, {
-    message: 'The title field must remain required',
-    path: ['fields'],
-  });
-export type UpdateDocumentRequiredFieldsInput = z.infer<typeof updateDocumentRequiredFieldsSchema>;
-
-// ─── Tags ────────────────────────────────────────────────────────────────────
-
-export const createDocumentTagSchema = z.object({
-  name: z.string().min(1).max(50),
-  colorToken: documentTagColorTokenSchema.default('slate'),
-  description: z.string().max(200).optional(),
-  sortOrder: z.number().int().min(0).optional(),
-});
-export type CreateDocumentTagInput = z.infer<typeof createDocumentTagSchema>;
-
-export const updateDocumentTagSchema = z.object({
-  id: z.string().min(1),
-  name: z.string().min(1).max(50).optional(),
-  colorToken: documentTagColorTokenSchema.optional(),
-  description: z.string().max(200).optional(),
-  sortOrder: z.number().int().min(0).optional(),
-  isActive: z.boolean().optional(),
-});
-export type UpdateDocumentTagInput = z.infer<typeof updateDocumentTagSchema>;
-
-export const deleteDocumentTagSchema = z.object({
-  id: z.string().min(1),
-});
-export type DeleteDocumentTagInput = z.infer<typeof deleteDocumentTagSchema>;
-
-// ─── Custom Document Types ───────────────────────────────────────────────────
-
-export const createDocumentTypeDefinitionSchema = z.object({
-  name: z.string().trim().min(1).max(100),
-  description: z.string().trim().max(200).optional(),
-  sortOrder: z.number().int().min(0).optional(),
-});
-export type CreateDocumentTypeDefinitionInput = z.infer<typeof createDocumentTypeDefinitionSchema>;
-
-export const updateDocumentTypeDefinitionSchema = z.object({
-  id: z.string().min(1),
-  name: z.string().trim().min(1).max(100).optional(),
-  description: z.string().trim().max(200).optional(),
-  sortOrder: z.number().int().min(0).optional(),
-  isActive: z.boolean().optional(),
-});
-export type UpdateDocumentTypeDefinitionInput = z.infer<typeof updateDocumentTypeDefinitionSchema>;
-
-export const deleteDocumentTypeDefinitionSchema = z.object({
-  id: z.string().min(1),
-});
-export type DeleteDocumentTypeDefinitionInput = z.infer<typeof deleteDocumentTypeDefinitionSchema>;
+export type DocumentRetentionPolicyInput = z.infer<typeof documentRetentionPolicySchema>;
 
 // ─── Automation Settings ─────────────────────────────────────────────────────
 
 export const documentAutomationSettingsSchema = z.object({
-  // Category 1 — wired in this PR
+  // Cat-1: wired now
   normalizeFilename: z.boolean(),
   preventDeleteIfReferenced: z.boolean(),
+  // Cat-2: pending IFC-310/311
   notifyOnOwnerChange: z.boolean(),
-  restrictTagCreationToAdmins: z.boolean(),
-  notifyOnDuplicate: z.boolean(),
-  // Category 2 — follow-up (IFC-310 / IFC-312)
-  autoVersionOnCollision: z.boolean(),
-  autoDetectDuplicates: z.boolean(),
-  autoExtractText: z.boolean(),
-  autoClassifyCategory: z.boolean(),
-  autoDetectPii: z.boolean(),
-  aiTagSuggestions: z.boolean(),
-  aiInsightGeneration: z.boolean(),
+  notifyOnUpload: z.boolean(),
+  // Cat-3: AI (opt-in, default false)
+  aiDocumentClassification: z.boolean(),
+  aiSensitiveDataDetection: z.boolean(),
+  aiSummarization: z.boolean(),
 });
 export type DocumentAutomationSettingsInput = z.infer<typeof documentAutomationSettingsSchema>;
 
-// ─── Retention Policies ──────────────────────────────────────────────────────
+// ─── Automation Category Metadata (for UI) ───────────────────────────────────
 
-export const documentRetentionPolicySchema = z.object({
-  categoryKey: z.string().min(1).max(100),
-  retentionDays: z.number().int().min(0),
-  autoArchive: z.boolean(),
-  legalHoldOverride: z.boolean(),
-});
-export type DocumentRetentionPolicyInput = z.infer<typeof documentRetentionPolicySchema>;
+export const DOCUMENT_AUTOMATION_CAT1_KEYS = [
+  'normalizeFilename',
+  'preventDeleteIfReferenced',
+] as const;
 
-export const updateDocumentRetentionPoliciesSchema = z.object({
-  policies: z.array(documentRetentionPolicySchema),
-});
-export type UpdateDocumentRetentionPoliciesInput = z.infer<
-  typeof updateDocumentRetentionPoliciesSchema
->;
+export const DOCUMENT_AUTOMATION_CAT2_PENDING: Record<string, string> = {
+  notifyOnOwnerChange: 'IFC-311',
+  notifyOnUpload: 'IFC-310',
+};
+
+export const DOCUMENT_AUTOMATION_CAT3_AI_KEYS = [
+  'aiDocumentClassification',
+  'aiSensitiveDataDetection',
+  'aiSummarization',
+] as const;
