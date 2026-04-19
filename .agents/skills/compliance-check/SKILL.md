@@ -89,8 +89,10 @@ VPAT/conformance statement updates fail compliance.
 
 Detects new or modified Next.js routes in the task's plan file. Verifies that:
 
-- `docs/compliance/wcag-conformance-statement.md` Section 2 includes the route
-- `docs/compliance/vpat-2.5.md` header route count is updated
+- `docs/compliance-and-governance/compliance/wcag-conformance-statement.md`
+  Section 2 includes the route
+- `docs/compliance-and-governance/compliance/vpat-2.5.md` header route count is
+  updated
 - Both documents have current Document Control entries
 
 See `references/accessibility-doc-gate.md` for full verification procedure.

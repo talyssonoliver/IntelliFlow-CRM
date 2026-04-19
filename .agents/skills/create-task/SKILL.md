@@ -94,7 +94,7 @@ Read titles to find related documents.
 **Related ADRs** — Search for architectural decisions:
 
 ```
-Read docs/planning/adr/README.md
+Read docs/architecture/adr/README.md
 ```
 
 Scan the index for related ADRs.
@@ -102,7 +102,7 @@ Scan the index for related ADRs.
 **Dependency chains** — Find where this task fits:
 
 ```
-Read docs/design/diagrams/complete-dependency-chains.md
+Read docs/architecture/diagrams/complete-dependency-chains.md
 ```
 
 Search for related entity names.
@@ -264,7 +264,7 @@ Files:
   - apps/project-tracker/docs/metrics/_global/task-registry.json (updated)
   - apps/project-tracker/docs/metrics/_global/dependency-graph.json (updated)
   - docs/planning/prd-{slug}.md (created, if applicable)
-  - docs/planning/adr/ADR-{NNN}-{slug}.md (created, if applicable)
+  - docs/architecture/adr/ADR-{NNN}-{slug}.md (created, if applicable)
 
 Next steps:
   1. Regenerate split files: npx tsx tools/scripts/split-sprint-plan.ts

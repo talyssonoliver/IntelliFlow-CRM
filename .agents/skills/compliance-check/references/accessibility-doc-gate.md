@@ -6,8 +6,10 @@ fail compliance.
 ## Purpose
 
 Detects when PG-_/IFC-_ tasks add or modify Next.js routes and blocks task
-completion unless the VPAT 2.5 (`docs/compliance/vpat-2.5.md`) and WCAG
-conformance statement (`docs/compliance/wcag-conformance-statement.md`) have
+completion unless the VPAT 2.5
+(`docs/compliance-and-governance/compliance/vpat-2.5.md`) and WCAG conformance
+statement
+(`docs/compliance-and-governance/compliance/wcag-conformance-statement.md`) have
 been updated to reflect the change.
 
 Without this gate, every new route silently widens the gap between documented
@@ -101,7 +103,8 @@ For each detected route, run these 4 checks:
 
 ### Check 1: Conformance Statement Scope (BLOCKING)
 
-Read `docs/compliance/wcag-conformance-statement.md` Section 2 (line 20 area).
+Read `docs/compliance-and-governance/compliance/wcag-conformance-statement.md`
+Section 2 (line 20 area).
 
 - Verify the route appears in the Section 2 bullet list (backtick-enclosed route
   names)
@@ -117,7 +120,7 @@ missing, treat as new route.
 
 ### Check 2: VPAT Route Count (BLOCKING)
 
-Read `docs/compliance/vpat-2.5.md` header (line 9).
+Read `docs/compliance-and-governance/compliance/vpat-2.5.md` header (line 9).
 
 - Verify the `(N routes)` count in the "Evaluation Methods Used" field reflects
   the new total
@@ -128,13 +131,15 @@ Read `docs/compliance/vpat-2.5.md` header (line 9).
 
 Verify BOTH documents have a new version row for the current sprint:
 
-**Conformance Statement** — `docs/compliance/wcag-conformance-statement.md`
+**Conformance Statement** —
+`docs/compliance-and-governance/compliance/wcag-conformance-statement.md`
 Document Control (lines 163-165 area):
 
 - Must have a new row with version, date, author, and changes referencing the
   current task ID
 
-**VPAT** — `docs/compliance/vpat-2.5.md` Document Control (lines 129-133 area):
+**VPAT** — `docs/compliance-and-governance/compliance/vpat-2.5.md` Document
+Control (lines 129-133 area):
 
 - Must have a new row with version, date, author, and changes referencing the
   current task ID
@@ -180,7 +185,8 @@ If Section 11 fails, follow these steps to remediate:
 
 ### Missing route in conformance statement scope
 
-1. Open `docs/compliance/wcag-conformance-statement.md`
+1. Open
+   `docs/compliance-and-governance/compliance/wcag-conformance-statement.md`
 2. Go to Section 2 (line 20 area)
 3. Add the route to the appropriate bullet list (public or authenticated)
 4. Update the aggregate count: "all N configured routes" → "all N+1 configured
@@ -191,7 +197,7 @@ If Section 11 fails, follow these steps to remediate:
 
 ### Wrong route count in VPAT
 
-1. Open `docs/compliance/vpat-2.5.md`
+1. Open `docs/compliance-and-governance/compliance/vpat-2.5.md`
 2. Go to line 9 (Evaluation Methods Used)
 3. Update `(N routes)` to the new total count
 

@@ -50,14 +50,14 @@ spec.
 
 **If ADR is required:**
 
-1. Search `docs/planning/adr/ADR-*.md` for an ADR whose `Technical Story`
+1. Search `docs/architecture/adr/ADR-*.md` for an ADR whose `Technical Story`
    references this task or whose decision area matches
 2. If found: read it, verify the decision still applies, extract constraints for
    the spec
-3. If NOT found: create a new ADR stub using `docs/planning/adr/template.md`
-   - Determine next number: `ls docs/planning/adr/ADR-*.md | sort | tail -1` →
-     increment
-   - File: `docs/planning/adr/ADR-{NNN}-<decision-slug>.md`
+3. If NOT found: create a new ADR stub using `docs/architecture/adr/template.md`
+   - Determine next number: `ls docs/architecture/adr/ADR-*.md | sort | tail -1`
+     → increment
+   - File: `docs/architecture/adr/ADR-{NNN}-<decision-slug>.md`
    - Fill in: Status=Proposed, Date, Technical Story=TASK_ID
    - Fill in: Context and Problem Statement, Decision Drivers, Considered
      Options
@@ -65,7 +65,7 @@ spec.
      consensus"
 4. If found but needs update: update the ADR (add new context, update Technical
    Story)
-5. Update `docs/planning/adr/README.md` index table if a new ADR was created
+5. Update `docs/architecture/adr/README.md` index table if a new ADR was created
 
 **If ADR is NOT required:** note `ADR: N/A (no architectural decision)` in the
 spec.
@@ -77,10 +77,10 @@ The spec's output (Phase 5) MUST include a `## Related Documents` section:
 ```markdown
 ## Related Documents
 
-| Type | Path                                               | Status   | Action                         |
-| ---- | -------------------------------------------------- | -------- | ------------------------------ |
-| PRD  | `docs/planning/prd-core-crm.md`                    | Updated  | Added TASK_ID to Related Tasks |
-| ADR  | `docs/planning/adr/ADR-019-core-crm-foundation.md` | Accepted | Referenced existing            |
+| Type | Path                                                   | Status   | Action                         |
+| ---- | ------------------------------------------------------ | -------- | ------------------------------ |
+| PRD  | `docs/planning/prd-core-crm.md`                        | Updated  | Added TASK_ID to Related Tasks |
+| ADR  | `docs/architecture/adr/ADR-019-core-crm-foundation.md` | Accepted | Referenced existing            |
 ```
 
 This section is consumed by:

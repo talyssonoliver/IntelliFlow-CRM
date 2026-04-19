@@ -63,7 +63,7 @@ Semicolon-separated entries using these prefixes:
 
 Standard pre-requisites always included for IFC-_/PG-_:
 
-- `FILE:docs/planning/adr/ADR-NNN-slug.md` (if ADR exists)
+- `FILE:docs/architecture/adr/ADR-NNN-slug.md` (if ADR exists)
 - `FILE:docs/planning/prd-slug.md` (if PRD exists)
 
 Search for related PRDs/ADRs and include their paths.

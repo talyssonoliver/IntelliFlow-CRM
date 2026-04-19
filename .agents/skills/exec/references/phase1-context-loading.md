@@ -38,7 +38,7 @@ For each declared PRD/ADR path (not `N/A`):
 1. Verify the file EXISTS on disk at the declared path
 2. If missing → create it using the appropriate template before proceeding:
    - PRD template: `docs/planning/prd-template.md`
-   - ADR template: `docs/planning/adr/template.md`
+   - ADR template: `docs/architecture/adr/template.md`
 3. If the plan lists PRD/ADR under "Files to Modify", note them for Phase 2
 
 If the spec has NO `## Related Documents` section (older spec format):
@@ -72,8 +72,8 @@ added.
 
 - `FILE:docs/design/PAGE_MAP_AND_FLOWS.md` — route entry + total count update
 - `FILE:docs/design/sitemap.md` — total count update (if page count changes)
-- `FILE:docs/design/diagrams/complete-dependency-chains.md` — UI layer status
-  update
+- `FILE:docs/architecture/diagrams/complete-dependency-chains.md` — UI layer
+  status update
 
 ## Phase 1.4: Preflight Checkbox Enforcement (MANDATORY)
 

@@ -119,8 +119,8 @@ files:
 2. Flag `docs/design/sitemap.md` as **recommended co-artifact**
 3. Flag `docs/design/navigation-reachability-audit.md` as **recommended
    co-artifact**
-4. Flag `docs/design/diagrams/complete-dependency-chains.md` as **recommended
-   co-artifact** (UI layer status update)
+4. Flag `docs/architecture/diagrams/complete-dependency-chains.md` as
+   **recommended co-artifact** (UI layer status update)
 
 Detection triggers (any of these in exploration findings):
 

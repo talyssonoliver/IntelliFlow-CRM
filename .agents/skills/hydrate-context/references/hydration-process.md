@@ -30,7 +30,7 @@ For each task listed in the Dependencies column:
 ## §4 Load Project Knowledge
 
 - CLAUDE.md project guidelines (`CLAUDE.md` at repo root)
-- Architecture documentation (ADRs at `docs/planning/adr/`)
+- Architecture documentation (ADRs at `docs/architecture/adr/`)
 - Product Requirements Documents (PRDs at `docs/planning/prd-*.md`)
 - Domain model files (`packages/domain/src/`)
 - Prisma schemas (`packages/db/prisma/schema.prisma`)
@@ -42,7 +42,7 @@ For the task being hydrated, identify the **most relevant** PRD and ADR:
 1. **PRD resolution**: Search `docs/planning/prd-*.md` for PRDs whose
    `Related Tasks` field or feature area matches the task's section/description.
    Store the path in `relatedPrd` (or `null` if no match).
-2. **ADR resolution**: Search `docs/planning/adr/ADR-*.md` for ADRs whose
+2. **ADR resolution**: Search `docs/architecture/adr/ADR-*.md` for ADRs whose
    `Technical Story` field references the task ID or related task IDs. Store in
    `relatedAdrs[]`.
 3. Include both in the hydrated context output so downstream skills can

@@ -67,7 +67,7 @@ If ADR is required:
 
 If a new ADR was created during this task:
 
-1. Read `docs/planning/adr/README.md`
+1. Read `docs/architecture/adr/README.md`
 2. Verify the new ADR appears in the index table
 3. If missing from index → WARN (README needs update)
 
@@ -87,7 +87,7 @@ PRD Check:
 
 ADR Check:
   Required: YES/NO (reason)
-  Path: docs/planning/adr/ADR-{NNN}-{slug}.md
+  Path: docs/architecture/adr/ADR-{NNN}-{slug}.md
   Exists: YES/NO
   Status field: Accepted/Proposed
   Status: PASS/FAIL/WARN/SKIP
@@ -106,7 +106,7 @@ If Section 10 fails:
 
 1. Create the missing PRD/ADR using templates at:
    - `docs/planning/prd-template.md`
-   - `docs/planning/adr/template.md`
+   - `docs/architecture/adr/template.md`
 2. Link the task ID in the document
 3. Update ADR README index if needed
 4. Re-run compliance check

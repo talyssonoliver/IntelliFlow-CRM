@@ -18,7 +18,7 @@ Plans that skip layers or implement out of order will fail architecture tests.
 ### Verification Steps
 
 1. **Read Dependency Chain** - Load from
-   `docs/design/diagrams/complete-dependency-chains.md`
+   `docs/architecture/diagrams/complete-dependency-chains.md`
 
 2. **Identify Current Layer** - What hexagonal layer does this task implement?
    - Domain (entities, value objects, aggregates)

@@ -67,7 +67,8 @@ At session **END**, record:
 - **PRD/ADR resolution is handled in Phase 0.97** — see
   `references/prd-adr-resolution.md`.
   - User-facing tasks → create or reference PRD in `docs/planning/`
-  - Architectural decisions → create or reference ADR in `docs/planning/adr/`
+  - Architectural decisions → create or reference ADR in
+    `docs/architecture/adr/`
   - Spec output MUST include `## Related Documents` section with PRD/ADR paths
 - Specs link PRD/ADR and feed into plan-session DoR/DoD checks.
 

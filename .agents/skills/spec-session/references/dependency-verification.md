@@ -5,7 +5,7 @@
 Verify dependency chain diagram exists for the entity/feature being specified.
 
 1. Identify entity/feature
-2. Read relevant chain file from `docs/design/diagrams/`
+2. Read relevant chain file from `docs/architecture/diagrams/`
 3. Verify layer alignment (domain → validators → application → database →
    adapters → API → UI)
 4. Check task ID appears in the chain

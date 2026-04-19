@@ -41,6 +41,21 @@ Verify before executing:
 
 If missing: run `/spec-session {{task_id}}` or `/plan-session {{task_id}}`.
 
+## MANDATORY Preflight Scripts (MUST RUN before Phase 1)
+
+Before reading the spec/plan, run each preflight script. These are deterministic
+gates — a non-zero exit is a BLOCKER, not a warning.
+
+| Preflight              | Command                                                                          | Blocks on                                                                                                                                                                                                                 |
+| ---------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Page Doc Co-Change     | `node tools/scripts/exec-preflight/check-page-doc-cochange.mjs {{task_id}}`      | Plan creates `page.tsx` but omits `PAGE_MAP_AND_FLOWS.md` / `sitemap.md` / `navigation-reachability-audit.md` from Files to Modify. Source: `references/phase1-context-loading.md` §3.2.                                  |
+| Plan-Reviewer Subagent | `node tools/scripts/exec-preflight/check-plan-reviewer-subagent.mjs {{task_id}}` | Plan's "Plan-Reviewer Sign-off" section contains self-review language with no real subagent marker. Source: plan-session SKILL.md + `phase1-context-loading.md` Gate CC.                                                  |
+| Exec Readiness bundle  | `node tools/scripts/exec-preflight/check-exec-readiness.mjs {{task_id}}`         | Any of five checks BLOCK: (1) task JSON `$schema` path resolves; (2) session-start metrics recorded; (3) coverage before-capture exists; (4) dep attestations on disk; (5) plan has `## Preflight Checks` section (WARN). |
+| Task JSON schema sweep | `node tools/scripts/validate-task-json-schemas.mjs`                              | Any task JSON `$schema` is unresolvable. Run with `--fix` to rewrite.                                                                                                                                                     |
+
+If any preflight exits non-zero, STOP. Fix the plan, rerun the preflight, then
+proceed to Phase 1. See `memory/feedback_exec_phase1_preflight.md`.
+
 ## Workflow Phases
 
 ### Phase 1: Load Context
@@ -166,6 +181,19 @@ Based on MATOP + Compliance verdict, update Sprint_plan.csv status. **See
    commands that actually ran in this session.
 5. **Broader Failures Stay Visible**: If a touched existing suite fails, do not
    present a passing subset as complete validation.
+
+## Final Ralph-iteration Output (MANDATORY when closing the loop)
+
+When you believe the task is complete, run:
+
+```
+node tools/scripts/generate-final-report.mjs {{task_id}} --promise "<completion_promise from ralph state file>"
+```
+
+The script runs all four preflights + workflow audit + attestation check, then
+emits `<promise>…</promise>` ONLY when every gate is green. Never fabricate a
+promise tag yourself. If the script exits 1, report the blockers and let Ralph
+fire the next iteration.
 
 ## Output Format
 

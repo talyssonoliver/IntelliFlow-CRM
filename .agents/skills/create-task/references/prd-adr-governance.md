@@ -7,7 +7,7 @@ Is the task PG-* or IFC-* with UI component?
   YES → Needs PRD (docs/planning/prd-<slug>.md)
   NO  →
     Is the task ENV-* or an architecture/infrastructure decision?
-      YES → Needs ADR (docs/planning/adr/ADR-{NNN}-<slug>.md)
+      YES → Needs ADR (docs/architecture/adr/ADR-{NNN}-<slug>.md)
       NO  →
         Is the task cross-functional (GOV-*, DOC-*, BRAND-*, etc.)?
           YES → Skip PRD/ADR (optional based on scope)
@@ -27,7 +27,7 @@ Is the task PG-* or IFC-* with UI component?
 2. **Search ADRs**:
 
    ```
-   Glob pattern="docs/planning/adr/ADR-*.md"
+   Glob pattern="docs/architecture/adr/ADR-*.md"
    ```
 
    Check the ADR README.md index for related decisions.
@@ -76,14 +76,14 @@ spec-session.
 
 ## ADR Stub Creation
 
-File: `docs/planning/adr/ADR-{NNN}-<slug>.md`
+File: `docs/architecture/adr/ADR-{NNN}-<slug>.md`
 
 ### ADR Number Allocation
 
-1. Read `docs/planning/adr/README.md`
+1. Read `docs/architecture/adr/README.md`
 2. Find the "Next Steps" section — it states the next available number
    (currently 038+)
-3. Glob `docs/planning/adr/ADR-*.md` to find the actual highest number
+3. Glob `docs/architecture/adr/ADR-*.md` to find the actual highest number
 4. Allocate MAX + 1
 
 ### ADR Naming
@@ -123,13 +123,13 @@ lowercase-hyphenated. Example: `ADR-038-contact-merge-strategy.md`
 Chosen option: TBD — to be decided during implementation.
 ```
 
-The full ADR template is at `docs/planning/adr/template.md`.
+The full ADR template is at `docs/architecture/adr/template.md`.
 
 ### Update ADR README
 
 After creating a new ADR stub, add it to the index table in
-`docs/planning/adr/README.md` and update the "Next Steps" section to reflect the
-new highest number.
+`docs/architecture/adr/README.md` and update the "Next Steps" section to reflect
+the new highest number.
 
 ## Linking Back
 
@@ -137,6 +137,6 @@ After creating PRD/ADR stubs:
 
 1. Add the file path to the task's Pre-requisites column:
    `FILE:docs/planning/prd-<slug>.md` or
-   `FILE:docs/planning/adr/ADR-NNN-slug.md`
+   `FILE:docs/architecture/adr/ADR-NNN-slug.md`
 2. Add to Artifacts To Track: `ARTIFACT:docs/planning/prd-<slug>.md` or
-   `ARTIFACT:docs/planning/adr/ADR-NNN-slug.md`
+   `ARTIFACT:docs/architecture/adr/ADR-NNN-slug.md`

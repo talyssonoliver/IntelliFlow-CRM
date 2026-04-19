@@ -57,6 +57,13 @@ rules.
   affected existing regression suites.
 - Plans must not rely on "create file now, wire later" unless a later step names
   the exact consumer and validation command.
+- **Plan-Reviewer is a real subagent, not a self-review.** Phase 4 MUST spawn
+  `.claude/agents/plan-reviewer.md` via the Task tool. The resulting plan's
+  `## Plan-Reviewer Sign-off` section MUST carry one of:
+  `<!-- plan-reviewer: subagent -->`, `reviewer_subagent: <id>`, or
+  `Subagent transcript: <path>`. Plans with self-review language and no marker
+  are auto-rejected by
+  `tools/scripts/exec-preflight/check-plan-reviewer-subagent.mjs`.
 
 ## Agent Mode
 

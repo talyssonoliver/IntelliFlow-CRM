@@ -52,10 +52,10 @@ Every spec MUST include this section, populated during Phase 0.97:
 ```markdown
 ## Related Documents
 
-| Type | Path                                  | Status            | Action                     |
-| ---- | ------------------------------------- | ----------------- | -------------------------- |
-| PRD  | `docs/planning/prd-<area>.md`         | Draft/Updated     | Created/Updated/Referenced |
-| ADR  | `docs/planning/adr/ADR-NNN-<slug>.md` | Proposed/Accepted | Created/Updated/Referenced |
+| Type | Path                                      | Status            | Action                     |
+| ---- | ----------------------------------------- | ----------------- | -------------------------- |
+| PRD  | `docs/planning/prd-<area>.md`             | Draft/Updated     | Created/Updated/Referenced |
+| ADR  | `docs/architecture/adr/ADR-NNN-<slug>.md` | Proposed/Accepted | Created/Updated/Referenced |
 ```
 
 If PRD or ADR is not applicable, include the row with `N/A` and reason:

@@ -84,7 +84,8 @@ Coverage uses **Istanbul** provider (not V8) with two output directories:
   - Task files: `sprint-N/phase-*/TASK-ID.json`
   - Schemas: `schemas/*.schema.json`
 - **Sprint plan API**: `apps/project-tracker/app/api/sprint-plan/route.ts`
-- **Dependency chains**: `docs/design/diagrams/complete-dependency-chains.md`
+- **Dependency chains**:
+  `docs/architecture/diagrams/complete-dependency-chains.md`
 
 ## Context by Area
 
@@ -161,6 +162,7 @@ Safe alternatives: `git restore --staged` (unstage only), `git diff -- <file>`
 
 - **Sprint Plan**: `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv`
 - **Metrics Dashboard**: http://localhost:3002/
-- **ADRs**: `docs/planning/adr/`
-- **Dependency Chains**: `docs/design/diagrams/complete-dependency-chains.md`
+- **ADRs**: `docs/architecture/adr/`
+- **Dependency Chains**:
+  `docs/architecture/diagrams/complete-dependency-chains.md`
 - **Design Mockups**: `docs/design/README.md`

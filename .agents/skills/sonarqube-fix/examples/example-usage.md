@@ -760,7 +760,7 @@ Impact:
 - Server no longer vulnerable to ReDoS DoS
 - All regex patterns now validated
 - Comprehensive security tests added
-- ADR documented: docs/planning/adr/029-redos-prevention.md
+- ADR documented: docs/architecture/adr/029-redos-prevention.md
 ```
 
 ---
