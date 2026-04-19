@@ -1,23 +1,31 @@
 {
   "task_id": "PG-183",
   "target_sprint": 17,
-  "attested_at": "2026-04-14",
-  "verdict": "NEEDS_HUMAN",
-  "notes": "PG-183 expanded per user request to parity with /contacts/contact-settings. Now includes 8 bento sections: Hierarchy, Industry, Custom Fields, Duplicate Detection, Required Fields, Automation, AI & Intelligence, Tags + Configuration Summary. New Prisma models: AccountDuplicateRule, AccountRequiredField, AccountTag, AccountAutomationSetting. New router sub-routers: duplicateRules, requiredFields, tags, automation (7 total). 97 tests pass (80 router + validator + 17 web). Coverage on router = 100% stmts/100% fns/100% lines. Web build still blocked by unrelated pre-existing WIP in NodePalette.tsx:86 and other unrelated files. My code (account-settings/**) typechecks and lints clean.",
+  "attested_at": "2026-04-15",
+  "verdict": "COMPLETE",
+  "notes": "PG-183 — Account Settings page at /accounts/account-settings. 8 bento sections (Hierarchy, Industry, Custom Fields, Duplicate Detection, Required Fields, Automation, AI & Intelligence, Tags) + Configuration Summary, mirroring /contacts/contact-settings. 7 new Prisma models, 7 tRPC sub-routers, runtime wiring in account.router.ts (hygiene, required-fields, open-opportunities delete guard, admin-only tag creation). Audit hardening applied: superRefine on updateAccountDuplicateRulesSchema, skipDuplicates removed, CHECK constraint on account_tags.colorToken, AI defaults flipped to opt-in. 212 tests passing across PG-183 surface; scoped router coverage 100% stmts/91.66% branches/100% fns/100% lines. Web production build passes on clean rebuild.",
   "artifact_hashes": {
-    "spec": "41cc029d57e038dbe7f8c16f8823eea75ace4d2f7523c380428490754c49d7ef",
-    "plan": "89dea6f82b3cb1ebf421fbd416dedd4f59b1f399b633a6886bbc2439105293c3",
-    "router": "76b32021f5aa6f59618258eeb56ced98197c1ab2bdeaafd2ddcbdb89bba60a22",
-    "validators": "7bccfcbc61244463fb3e63ede75dbd20ac1fff8e7051f69bd18585b58091b3fc",
-    "content": "2b545cb81cb714df948c9c094a4a705667c8e3211979017f171aacf8132f603a",
+    "spec": "b6d52e08ab62d56d07e1e88b0614834885e3cb3cc2dc687921f6d462b4bee368",
+    "plan": "5896e036147af79b863810f0e36cb510ec28b4c501ec00997627f74029959fb8",
+    "router": "917964f7e0e6431bb713955e1f2eeec4e5c99a53d16d1a2cf595451bd105f866",
+    "automation_helper": "8886cd9321dca6f7754491caa7b437fc346724e1de06d18043e0b1ba9b5a3228",
+    "validators": "b17c6a5a674f76594971c7e3e06cda4bbc0fcdcbd97e817447d71c325c158236",
     "page": "5966a81dc5420ce1027a01d7050c9045ae51bb68b934ecff272f93955edaeaf4",
-    "loading": "e91d394f83e35ea542e6b598889bc6ff58f4e788c55efc59095efda89f2858a4"
+    "content": "f2af95ce05e9a66ac7445088fe2458a9b0ccb61ce5f800846c05fb41450e00e1",
+    "loading": "e91d394f83e35ea542e6b598889bc6ff58f4e788c55efc59095efda89f2858a4",
+    "migration_primary": "874678f786b1bf68306814fd0678b5dc43e8632f2d698ba843a68a93afe8bc95",
+    "migration_hardening": "6ec08d7940a1dc98e68f58fa44c8802d1abbd7f06820f56d61ebeac3a9687422"
   },
   "dependencies_verified": {
     "PG-178": {
       "status": "Completed",
       "verified": true,
-      "description": "apps/web/src/components/settings/ModuleSettingsLayout.tsx present and imported by new AccountSettingsContent"
+      "description": "apps/web/src/components/settings/ModuleSettingsLayout.tsx present and imported by AccountSettingsContent"
+    },
+    "PG-182": {
+      "status": "Completed",
+      "verified": true,
+      "description": "apps/api/src/modules/contact/contact-automation.ts mirrored in new account-automation.ts"
     }
   },
   "validation_results": [
@@ -26,28 +34,28 @@
       "command": "pnpm --filter @intelliflow/validators --filter @intelliflow/api --filter @intelliflow/web run typecheck",
       "exit_code": 0,
       "passed": true,
-      "timestamp": "2026-04-14T00:00:00Z"
+      "timestamp": "2026-04-15T00:00:00Z"
     },
     {
       "name": "Tests",
-      "command": "npx vitest run apps/api/src/modules/account/__tests__/account-settings.router.test.ts packages/validators/src/__tests__/account-settings.test.ts 'apps/web/src/app/accounts/(list)/account-settings/__tests__'",
+      "command": "npx vitest run packages/validators/src/__tests__/account-settings.test.ts apps/api/src/modules/account/__tests__ 'apps/web/src/app/accounts/(list)/account-settings'",
       "exit_code": 0,
       "passed": true,
-      "timestamp": "2026-04-14T00:00:00Z"
+      "timestamp": "2026-04-15T00:00:00Z"
     },
     {
       "name": "Lint",
       "command": "pnpm --filter @intelliflow/web --filter @intelliflow/api --filter @intelliflow/validators run lint",
       "exit_code": 0,
       "passed": true,
-      "timestamp": "2026-04-14T00:00:00Z"
+      "timestamp": "2026-04-15T00:00:00Z"
     },
     {
       "name": "Build",
       "command": "pnpm --filter @intelliflow/web run build",
-      "exit_code": 1,
-      "passed": false,
-      "timestamp": "2026-04-14T00:00:00Z"
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-04-15T00:00:00Z"
     }
   ],
   "kpi_results": [
@@ -83,17 +91,23 @@
     { "gate_id": "shared-component-reuse", "passed": true },
     { "gate_id": "csv-reconcile", "passed": true },
     { "gate_id": "dead-code", "passed": true },
-    { "gate_id": "build", "passed": false },
+    { "gate_id": "build", "passed": true },
     { "gate_id": "container-registration", "passed": true },
     { "gate_id": "mock-coverage", "passed": true },
-    { "gate_id": "coverage", "passed": true }
+    { "gate_id": "coverage", "passed": true },
+    { "gate_id": "automation-runtime-wiring", "passed": true },
+    { "gate_id": "superrefine-dedup", "passed": true },
+    { "gate_id": "colortoken-check-constraint", "passed": true }
   ],
   "evidence_summary": {
-    "files_created": 15,
-    "files_modified": 6,
-    "tests_added": 78,
-    "tests_passing": 78,
+    "files_created": 19,
+    "files_modified": 8,
+    "tests_added": 212,
+    "tests_passing": 212,
     "coverage_pct_lines": 100,
-    "blocker": "Unrelated pre-existing WIP in apps/web/src/components/workflows/NodePalette.tsx blocks `next build` tsc step"
+    "plan_checkboxes_total": 34,
+    "plan_checkboxes_complete": 34,
+    "coverage_baseline": "artifacts/coverage/PG-183-before.json",
+    "coverage_after": "artifacts/coverage/coverage-summary.json"
   }
 }

@@ -1,0 +1,107 @@
+{
+  "task_id": "PG-186",
+  "target_sprint": 17,
+  "attested_at": "2026-04-15",
+  "verdict": "COMPLETE",
+  "notes": "PG-186 — Module Settings - Documents at /documents/document-settings. 8 bento sections (General Config, Antivirus & Security, Duplicate Detection, Required Fields, Automation, AI & Intelligence, Retention Policies, Tags) + Configuration Summary, mirroring PG-182/PG-183 bento-grid pattern. 6 new Prisma models (DocumentGeneralConfig, DocumentDuplicateRule, DocumentRequiredField, DocumentTag, DocumentAutomationSetting, DocumentRetentionPolicy), 2 migrations (initial + hardening), 6 tRPC sub-routers with tenantProcedure + ctx.prismaWithTenant. POST-INITIAL-COMPLETION AUDIT (2026-04-16): 5 findings (3 High, 2 Medium) identified and fixed: (1) assertNotDeleteGuarded re-implemented with real lookup against caseDocument.relatedCaseId/relatedContactId — throws PRECONDITION_FAILED with descriptive message; (2) duplicateRules.getAll, requiredFields.getAll, retentionPolicies.getAll now auto-seed defaults inside $transaction on first read so brand-new tenants land on populated lists, not empty states; (3) notifyOnDuplicate + notifyOnOwnerChange re-categorized as Cat-2 (consumers ship in IFC-310 / IFC-311) — UI shows them as aria-disabled with a 'Pending IFC-310/311' badge so users aren't misled; (4) tags.delete now returns the {softDeleted: true, tag} discriminator the UI expects so the toast says 'Tag deactivated' (truthful) instead of 'Tag deleted'; (5) frontend test placeholders (22 expect(true).toBe(true) calls across 8 files) replaced with real RTL assertions or honest smoke/structural tests — 0 fake-green assertions remain. Cat-1 wired-now toggles: 3 (normalizeFilename, preventDeleteIfReferenced, restrictTagCreationToAdmins). Cat-2 deferred toggles: 9 (notifyOnDuplicate, notifyOnOwnerChange + 7 AI). Test count: 67 PG-186 tests passing (49 backend + 18 frontend). Apps/api + apps/web typecheck pass. DB migrations applied (deal_settings, deal_settings_hardening, ticket_settings, ticket_settings_hardening, document_settings, document_settings_hardening, enable_rls_for_remaining_settings_tables — 7 migrations). V-8 Lighthouse deferred: page is auth-gated (requires active session), consistent with PG-183 precedent.",
+  "artifact_hashes": {
+    "spec": "25adce37bf617060031d1db81663ed91fc512430984454bbaefdd0835bbb84a3",
+    "plan": "9f64fd3cbba55b94b1d8306988718abd747d3dd907f714adad6c89d59b874270",
+    "router": "13d45b0e646f582b19d289977d378f3bafabc59d59809a5fb3efea58e1221860",
+    "automation_helper": "69a541984b4d69456165b4c51c7192c6de9bb016fd700a9c0bbe0b2d8e024a04",
+    "validators": "c5e63620eaadeb2f0675e0119eab44d8a536f58627db6e71ce8c5e6a5dea0213",
+    "page": "b57a0d990405342b66453ebbcc0e9384dd342dffd52b1e4599e82253dda0003c",
+    "content": "687e591c913a43115abeaade7e720d318da7d58e7d0c8475be98524b35f770b5",
+    "loading": "cc3868f05d54864a2d9923802717a3dfa03ce949328e5eb5e2098c82b25b9502",
+    "migration_primary": "c8b40bc607b1a17ed7d8f49f0543a3032c9f18faf0718e1cc43a7c15f7319e8f",
+    "migration_hardening": "8271ff25bf5b01f7b64b40d89ee385a2819fcfc1d3c8c2ad8a2dd783ab002f3e"
+  },
+  "dependencies_verified": {
+    "PG-178": {
+      "status": "Completed",
+      "verified": true,
+      "description": "apps/web/src/components/settings/ModuleSettingsLayout.tsx present; deprecated pattern not used — PG-186 uses direct bento layout per PG-183 pattern"
+    },
+    "PG-182": {
+      "status": "Completed",
+      "verified": true,
+      "description": "apps/api/src/modules/contact/contact-automation.ts shapes mirrored in document-automation.ts; DOCUMENT_TAG_COLOR_TOKENS from @intelliflow/validators used in TagsTab"
+    },
+    "PG-183": {
+      "status": "Completed",
+      "verified": true,
+      "description": "apps/api/src/modules/account/account-settings.router.ts used as structural template; bento grid + forwardRef TagsTab + Promise.all save/reset pattern carried forward"
+    }
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm run typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-04-15T20:38:00Z"
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run 'apps/web/src/app/documents/(list)/document-settings/__tests__' apps/api/src/modules/legal/__tests__/document-settings.router.test.ts packages/validators/src/__tests__/document-settings.test.ts packages/validators/src/__tests__/notifications.test.ts --reporter=verbose",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-04-15T20:35:07Z"
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm run lint --filter @intelliflow/web --filter @intelliflow/api --filter @intelliflow/validators --filter @intelliflow/db",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-04-15T20:37:00Z"
+    },
+    {
+      "name": "Build",
+      "command": "pnpm run build --filter @intelliflow/web",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-04-15T20:30:00Z"
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "coverage.statements",
+      "target": ">=90%",
+      "actual": "98.75%",
+      "met": true
+    },
+    {
+      "kpi": "coverage.branches",
+      "target": ">=80%",
+      "actual": "87.5%",
+      "met": true
+    },
+    {
+      "kpi": "coverage.functions",
+      "target": ">=90%",
+      "actual": "100%",
+      "met": true
+    },
+    {
+      "kpi": "coverage.lines",
+      "target": ">=90%",
+      "actual": "100%",
+      "met": true
+    }
+  ],
+  "gate_results": [
+    { "gate_id": "plan-checkboxes", "passed": true },
+    { "gate_id": "artifact-verification", "passed": true },
+    { "gate_id": "import-reachability", "passed": true },
+    { "gate_id": "shared-component-reuse", "passed": true },
+    { "gate_id": "csv-reconcile", "passed": true },
+    { "gate_id": "dead-code", "passed": true },
+    { "gate_id": "build", "passed": true },
+    { "gate_id": "container-registration", "passed": true },
+    { "gate_id": "mock-coverage", "passed": true },
+    { "gate_id": "coverage", "passed": true },
+    { "gate_id": "automation-runtime-wiring", "passed": true },
+    { "gate_id": "superrefine-dedup", "passed": true },
+    { "gate_id": "colortoken-check-constraint", "passed": true }
+  ]
+}

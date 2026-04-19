@@ -125,7 +125,7 @@ The `Sprint_plan.csv` at `apps/project-tracker/docs/metrics/_global/Sprint_plan.
 ## 10) Documentation Rules
 
 1. **CLAUDE.md files per area** (`apps/*/CLAUDE.md`, `packages/*/CLAUDE.md`) carry area-specific rules. The root `CLAUDE.md` points to them.
-2. **ADRs for architectural decisions** at `docs/planning/adr/ADR-{NNN}-<slug>.md`. Template: `docs/planning/adr/template.md`.
+2. **ADRs for architectural decisions** at `docs/architecture/adr/ADR-{NNN}-<slug>.md`. Template: `docs/architecture/adr/template.md`.
 3. **PRDs for product features** at `docs/planning/prd-<feature>.md`. Template: `docs/planning/prd-template.md`.
 4. **PG-*/IFC-* UI tasks require a PRD.** ENV-*/architecture tasks require an ADR. Enforced at multiple pipeline checkpoints (hydrate-context §4.1, spec-session Phase 0.97, plan-session step 2, plan-reviewer BB).
 

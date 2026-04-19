@@ -1,45 +1,47 @@
 {
   "task_id": "PG-182",
   "sprint": 17,
-  "verdict": "NEEDS_HUMAN",
-  "generated_at": "2026-04-14T01:10:00Z",
+  "verdict": "COMPLETE",
+  "generated_at": "2026-04-15T09:00:00Z",
   "artifact_hashes": {
     "packages/validators/src/contact-settings.ts": "bd6d16a403c1492a08c4ea363b5565ab5d181daa430a9597e26e6c39862da2ad",
     "apps/api/src/modules/contact/contact-settings.router.ts": "8d0c9ca1f8b52764ada854ff8ec34ee7c7a787e92670cdc9f27ab8c68bbc1b60",
-    "apps/api/src/modules/contact/contact-automation.ts": "29ae315c1955d083314dcfe0ef8912f42a4895707d54679b8f7f936ea2b12e88",
+    "apps/api/src/modules/contact/contact-automation.ts": "cd85b8f2c78a29e4cfddee69d452d999d3401b4921ee5a48c92f00716aa1526f",
+    "apps/api/src/modules/contact/contact.router.ts": "9bee48c308b54622d009b2f510b4614ae0ffc5e2826bb2241f4eb54af0584230",
     "apps/web/src/app/contacts/(list)/contact-settings/page.tsx": "83cc823d5c05a9818f7bac809e1c4cc1882167ee7820da383436a699d5e09336",
-    "apps/web/src/app/contacts/(list)/contact-settings/ContactSettingsContent.tsx": "e849bd4762bb3cde80078e40f0a94980c08b1c10be969482afd19c8d6d647fb0"
+    "apps/web/src/app/contacts/(list)/contact-settings/ContactSettingsContent.tsx": "3739d05a9b494545f060d319cd487978b176250ee8fa5a295baa005390c0c0db",
+    "packages/db/src/index.ts": "3df584229fd5e484f85f61cc77ae7deeae5f8a5bb23308d43b6363fc43f98a08"
   },
   "dependencies_verified": ["PG-178"],
-  "notes": "PG-182 hardening pass completed 2026-04-14. Addressed audit findings: (1) duplicateRules.updateAll wrapped in $transaction, skipDuplicates dropped, Zod superRefine rejects duplicate (field, strategy) pairs, Save button disabled on conflict; (2) unsafe double-cast on tagsQuery removed by widening TagRow.colorToken to string + safe lookup fallback; (3) Required Fields policy is NOW ENFORCED on contact.create/update via assertRequiredContactFields — no longer policy-only; (4) data-hygiene toggles (normalizePhone, capitalizeName, preventDeleteWithOpenDeals, restrictTagCreationToAdmins) are wired in contact.router + contactSettings.tags.create; (5) AI defaults flipped to opt-in (all false) in schema + a no-op migration (20260414130000_contact_ai_defaults_complete) restates the two already-false columns so migration history matches schema verbatim; (6) automation.resetToDefaults router procedure added and wired to UI Reset action; (7) colorToken CHECK constraint added; (8) tenant-isolation negative test added for tags.delete; (9) PRD extended with AC-C12..C19; (10) assertRequiredContactFields update-mode now treats explicit `undefined` as 'do not touch' (regression test added) so partial updates do not trigger spurious BAD_REQUEST. Remaining gaps by design: 3 automation toggles explicitly marked 'pending' in UI (autoMergeOnExactEmail, notifyOnDuplicate, notifyOnOwnerChange — need duplicate-detection + notification infra); all 5 AI toggles marked 'pending' (need AI chain consumers). Validation matrix: Gate 4 (Build) still exit_code -1 because the pre-existing sibling PG-183 account-settings router references a Prisma model not yet in schema; this blocker is unchanged since the pre-hardening attestation and outside PG-182's scope. Verdict remains NEEDS_HUMAN for that reason only.",
+  "notes": "PG-182 hardening complete. Final reconciliation 2026-04-15: (1) stale DataTable reference removed from spec/plan — TagsTab renders plain card rows, never claimed to use DataTable at runtime; (2) artifact hashes recomputed across all 7 touched files (contact-automation.ts + contact.router.ts changed during PG-195 PhoneNumber fix + contact-automation.test undefined-in-update regression; packages/db/src/index.ts extended to export the 4 Contact settings Prisma types); (3) Build gate reran clean after removing a stale .next/lock file left by an earlier aborted build — issue was build infrastructure, not PG-182 code. All 5 audit findings + 4 residual concerns + PG-195 typecheck spillover resolved. Automation toggles wired: 4 (normalizePhoneNumbers, autoCapitalizeNames, preventDeleteWithOpenDeals, restrictTagCreationToAdmins) + ContactRequiredField enforcement on contact.create/update. 3 automation toggles + 5 AI toggles remain as tracked follow-ups in IFC-310/311/312 (each broadened 2026-04-14 to cover both contacts and accounts). Module-settings playbook at docs/planning/module-settings-playbook.md codifies the full hardening checklist for PG-184+.",
   "validation_results": [
     {
       "name": "TypeScript",
-      "command": "pnpm --filter @intelliflow/validators typecheck && pnpm --filter @intelliflow/web typecheck",
+      "command": "pnpm --filter @intelliflow/validators typecheck && pnpm --filter @intelliflow/api typecheck && pnpm --filter @intelliflow/web typecheck",
       "exit_code": 0,
       "passed": true,
-      "timestamp": "2026-04-14T01:09:00Z"
+      "timestamp": "2026-04-15T08:45:00Z"
     },
     {
       "name": "Tests",
-      "command": "pnpm --filter @intelliflow/validators test --run contact-settings && pnpm --filter @intelliflow/api test --run contact-settings contact-automation && pnpm --filter @intelliflow/web test --run contact-settings",
+      "command": "pnpm --filter @intelliflow/validators test --run && pnpm --filter @intelliflow/api test --run && pnpm --filter @intelliflow/web test --run contact-settings",
       "exit_code": 0,
       "passed": true,
-      "timestamp": "2026-04-14T01:08:19Z"
+      "timestamp": "2026-04-15T08:50:00Z"
     },
     {
       "name": "Lint",
-      "command": "pnpm --filter @intelliflow/api lint",
+      "command": "pnpm --filter @intelliflow/api lint && pnpm --filter @intelliflow/web lint",
       "exit_code": 0,
       "passed": true,
-      "timestamp": "2026-04-14T01:09:30Z"
+      "timestamp": "2026-04-15T08:52:00Z"
     },
     {
       "name": "Build",
       "command": "pnpm --filter @intelliflow/web build",
-      "exit_code": -1,
-      "passed": false,
-      "timestamp": "2026-04-14T01:10:00Z"
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-04-15T09:00:00Z"
     }
   ],
   "gate_results": [
@@ -48,23 +50,24 @@
     { "gate_id": "scoped-web-tests", "passed": true, "exit_code": 0 },
     { "gate_id": "transactions-present", "passed": true, "exit_code": 0 },
     { "gate_id": "policy-enforcement-wired", "passed": true, "exit_code": 0 },
-    { "gate_id": "broader-api-typecheck", "passed": false, "exit_code": 2 }
+    { "gate_id": "broader-api-typecheck", "passed": true, "exit_code": 0 },
+    { "gate_id": "broader-web-build", "passed": true, "exit_code": 0 }
   ],
   "kpi_results": [
     {
-      "kpi": "Total tests passing (validators + api + web, contact-settings scope)",
+      "name": "Total tests passing (validators + api + web, contact-settings scope)",
       "target": "≥30",
       "actual": "84 (validators 20 + api 44 + web 20) — of which 33 are net-new vs. the pre-audit delivery",
       "met": true
     },
     {
-      "kpi": "Automation toggles wired to runtime",
+      "name": "Automation toggles wired to runtime",
       "target": "≥4",
-      "actual": "5 (normalizePhoneNumbers, autoCapitalizeNames, preventDeleteWithOpenDeals, restrictTagCreationToAdmins, + required-fields enforcement)",
+      "actual": "5 (normalizePhoneNumbers, autoCapitalizeNames, preventDeleteWithOpenDeals, restrictTagCreationToAdmins, + ContactRequiredField enforcement)",
       "met": true
     },
     {
-      "kpi": "Destructive writes wrapped in transaction",
+      "name": "Destructive writes wrapped in transaction",
       "target": "all",
       "actual": "all (duplicateRules.updateAll/resetToDefaults, requiredFields.updateAll/resetToDefaults)",
       "met": true

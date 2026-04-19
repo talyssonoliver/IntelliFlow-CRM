@@ -21,9 +21,7 @@
     "apps/web/src/components/workflows/NodePalette.tsx": "0fa20948b5f342b833ce8dd44a465f57ac6cd56ed6f9244a7dd634c0655db6c0",
     "apps/web/src/components/workflows/admin/FieldDescriptorBuilder.tsx": "2900e7408c0f4b8c39ac317116ad083d71ac32bb65a075e0befda499a4dacf00",
     "apps/web/src/components/workflows/config-forms/DecisionConfig.tsx": "be9f3dad7c47b032faa64e909d7ccdbfeb45599baaeb8ae980041b6e2f198ff0",
-    "apps/web/src/app/settings/automation/page.tsx": "37b4d96101f37776de45288571f7c206e8c3e70c0df10b3194b95c151fb23a11",
-    "apps/web/src/app/settings/automation/custom-node-types/page.tsx": "5c018f4db40f60aca76f963ad50fa2ab4a2b9d17da8b998dc95811f1ba7a1698",
-    "apps/web/src/app/settings/automation/custom-actions/page.tsx": "835f09cc3f4362b8790d9629313a3af4898f1da9cbae33bba5b4a455b5dd1aa4"
+    "apps/web/src/app/settings/automation/page.tsx": "8fd17d9e12e553e91eb4f1884003d0eccd94ed42f62d049382882e91c49a9712"
   },
   "dependencies_verified": {
     "IFC-028": { "status": "Completed", "verified": true }
