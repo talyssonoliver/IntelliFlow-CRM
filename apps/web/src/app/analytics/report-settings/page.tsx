@@ -1,18 +1,20 @@
-'use client';
+// Report Settings Page — PG-187
+// Replaces the 19-line stub at this path with a Suspense-wrapped client component.
+
+import { Suspense } from 'react';
+import ReportSettingsContent from './ReportSettingsContent';
+import ReportSettingsLoading from './loading';
+
+export const metadata = {
+  title: 'Report Settings — IntelliFlow',
+  description:
+    'Configure default date range, currency, and scheduled delivery for analytics reports.',
+};
 
 export default function ReportSettingsPage() {
   return (
-    <div className="flex flex-1 flex-col p-6">
-      <h1 className="text-2xl font-semibold tracking-tight">Report Settings</h1>
-      <p className="text-muted-foreground mt-1">Configure defaults, filters, and permissions.</p>
-      <div className="mt-8 flex flex-1 items-center justify-center">
-        <div className="text-center">
-          <span className="material-symbols-outlined text-5xl text-muted-foreground/40">tune</span>
-          <p className="mt-4 text-sm text-muted-foreground">
-            Report settings configuration coming soon.
-          </p>
-        </div>
-      </div>
-    </div>
+    <Suspense fallback={<ReportSettingsLoading />}>
+      <ReportSettingsContent />
+    </Suspense>
   );
 }
