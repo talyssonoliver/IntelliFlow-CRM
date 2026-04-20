@@ -329,6 +329,14 @@
     "notes": {
       "description": "Additional notes or context",
       "type": "string"
+    },
+    "nav_wiring_confirmed": {
+      "description": "Set to true when the task creates an apps/web/src/app/**/page.tsx AND the route is wired from at least one sidebar config or parent-link / breadcrumb. Gate 12 (check-nav-wiring.mjs) verifies this at exec time. Guard 5 added 2026-04-20 after PG-180 shipped a page unreachable from navigation. For tasks that do not create a new page.tsx, omit this field or set to true; see phase4-completion-gates.md Gate 12.",
+      "type": "boolean"
+    },
+    "lighthouse_waiver_approved_by": {
+      "description": "If any kpi_results entry has kpi matching /lighthouse/i and met: false, and this is not the first such waiver in the sprint, this field MUST be a human name or email accepting the risk that CI-only Lighthouse enforcement may drift. Guard 4 gate (check-lighthouse-waiver.mjs) enforces this at exec time. Introduced 2026-04-20 to break the PG-047 -> PG-053 -> PG-054 -> PG-056 -> PG-180 -> PG-189 precedent chain.",
+      "type": "string"
     }
   },
   "required": [

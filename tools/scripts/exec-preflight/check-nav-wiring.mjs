@@ -258,6 +258,21 @@ function countInboundReferences(route, pagePath) {
   };
 }
 
+// If the page.tsx body calls `redirect('/path/...')`, return that path. This
+// lets short server-component redirect stubs satisfy reachability as long as
+// their redirect target is itself wired.
+function detectRedirectTarget(pagePathRel) {
+  const abs = join(REPO_ROOT, pagePathRel);
+  let content;
+  try {
+    content = readFileSync(abs, 'utf8');
+  } catch {
+    return null;
+  }
+  const m = content.match(/redirect\(\s*['"]([^'"]+)['"]\s*\)/);
+  return m ? m[1] : null;
+}
+
 function main() {
   const [taskId, sprintArg] = process.argv.slice(2);
   if (!taskId) {
@@ -283,9 +298,25 @@ function main() {
   for (const page of newPages) {
     const route = pagePathToRoute(page);
     const counts = countInboundReferences(route, page);
-    const reachable = counts.sidebar > 0 || counts.components > 0;
+    let reachable = counts.sidebar > 0 || counts.components > 0;
+    let redirectTarget = null;
+
+    // Second chance: redirect pages. If the new page.tsx body calls
+    // Next.js `redirect(...)` or is a server-component one-liner that just
+    // forwards to another route, follow that target and check its
+    // reachability. Pattern used by PG-184's /settings/deals -> /deals/deal-settings.
+    if (!reachable) {
+      redirectTarget = detectRedirectTarget(page);
+      if (redirectTarget) {
+        const targetCounts = countInboundReferences(redirectTarget, page);
+        if (targetCounts.sidebar > 0 || targetCounts.components > 0) {
+          reachable = true;
+        }
+      }
+    }
+
     if (!reachable) blocking = true;
-    report.push({ page, route, ...counts, reachable });
+    report.push({ page, route, ...counts, reachable, redirectTarget });
   }
 
   // Pretty-print the findings.
@@ -293,8 +324,9 @@ function main() {
   info(`| Route | Sidebar refs | Component refs | Reachable? |`);
   info(`|-------|--------------|----------------|------------|`);
   for (const r of report) {
+    const redirectNote = r.redirectTarget ? ` (redirect -> ${r.redirectTarget})` : '';
     info(
-      `| ${r.route ?? '?'} | ${r.sidebar} | ${r.components} | ${r.reachable ? 'YES' : 'NO'} |`
+      `| ${r.route ?? '?'} | ${r.sidebar} | ${r.components} | ${r.reachable ? 'YES' : 'NO'}${redirectNote} |`
     );
   }
 
