@@ -41,6 +41,9 @@ const mutationMocks = {
 const listQueryCalls: Array<{ input: unknown; options: unknown }> = [];
 const refetchMock = vi.fn();
 
+// Mutable so individual tests can drive view/segment params.
+let currentSearchParams = new URLSearchParams();
+
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
     push: mockPush,
@@ -49,7 +52,7 @@ vi.mock('next/navigation', () => ({
     refresh: vi.fn(),
     prefetch: vi.fn(),
   }),
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => currentSearchParams,
   usePathname: () => '/leads',
   useParams: () => ({}),
 }));
@@ -225,6 +228,7 @@ function resetAll() {
   mockListQueryState.isLoading = false;
   mockListQueryState.error = null;
   mockListQueryState.data = { data: twoLeads, total: 2, hasMore: false };
+  currentSearchParams = new URLSearchParams();
 }
 
 describe('LeadList — rendering', () => {
@@ -404,6 +408,60 @@ describe('LeadList — search debounce', () => {
     });
     const after = listQueryCalls[listQueryCalls.length - 1]?.input as { search?: string };
     expect(after.search).toBe('acme');
+  });
+});
+
+describe('LeadList — sidebar view + segment wiring', () => {
+  beforeEach(resetAll);
+
+  it('view=my → query includes ownerId of current user + page title "My Leads"', () => {
+    currentSearchParams = new URLSearchParams('view=my');
+    render(<LeadList />);
+    expect(screen.getByText(/My Leads/)).toBeTruthy();
+    const last = listQueryCalls[listQueryCalls.length - 1]?.input as { ownerId?: string };
+    expect(last.ownerId).toBe('u1');
+  });
+
+  it('view=starred → renders pending-backend notice; query has no new filter', () => {
+    currentSearchParams = new URLSearchParams('view=starred');
+    render(<LeadList />);
+    expect(screen.getByTestId('lead-scope-pending-notice').textContent).toMatch(/isStarred/);
+    const last = listQueryCalls[listQueryCalls.length - 1]?.input as {
+      ownerId?: string;
+      minScore?: number;
+    };
+    expect(last.ownerId).toBeUndefined();
+    expect(last.minScore).toBeUndefined();
+  });
+
+  it('segment=hot → query includes minScore 80 + title "Hot Leads"', () => {
+    currentSearchParams = new URLSearchParams('segment=hot');
+    render(<LeadList />);
+    expect(screen.getByText(/Hot Leads/)).toBeTruthy();
+    const last = listQueryCalls[listQueryCalls.length - 1]?.input as { minScore?: number };
+    expect(last.minScore).toBe(80);
+  });
+
+  it('segment=new-week → query includes dateFrom ~7 days ago + title "New This Week"', () => {
+    currentSearchParams = new URLSearchParams('segment=new-week');
+    render(<LeadList />);
+    expect(screen.getByText(/New This Week/)).toBeTruthy();
+    const last = listQueryCalls[listQueryCalls.length - 1]?.input as { dateFrom?: Date };
+    expect(last.dateFrom).toBeInstanceOf(Date);
+    const diffDays = (Date.now() - (last.dateFrom as Date).getTime()) / (24 * 60 * 60 * 1000);
+    expect(diffDays).toBeGreaterThanOrEqual(6.9);
+    expect(diffDays).toBeLessThanOrEqual(7.1);
+  });
+
+  it('segment=followup → query includes status [CONTACTED] + pending notice', () => {
+    currentSearchParams = new URLSearchParams('segment=followup');
+    render(<LeadList />);
+    expect(screen.getByText(/Needs Follow-up/)).toBeTruthy();
+    expect(screen.getByTestId('lead-scope-pending-notice').textContent).toMatch(/last touch/i);
+    const last = listQueryCalls[listQueryCalls.length - 1]?.input as {
+      status?: string[];
+    };
+    expect(last.status).toEqual(['CONTACTED']);
   });
 });
 

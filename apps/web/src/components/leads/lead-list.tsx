@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ColumnDef } from '@tanstack/react-table';
 import {
   DataTable,
@@ -27,6 +27,7 @@ import {
   SCORE_FILTER_OPTIONS,
   buildLeadBulkActions,
   createBulkActionRunners,
+  getLeadScope,
   getScoreParams,
   getSortParams,
   type BulkDialogKind,
@@ -219,6 +220,7 @@ export interface LeadListProps {
 export default function LeadList({ initialData: serverData }: LeadListProps = {}) {
   const { timezone } = useTimezoneContext();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [scoreFilter, setScoreFilter] = useState<string>('');
@@ -229,6 +231,17 @@ export default function LeadList({ initialData: serverData }: LeadListProps = {}
   const { isLoading: authLoading, isAuthenticated, user } = useRequireAuth();
 
   const debouncedSearch = useDebounce(searchQuery, 300);
+
+  // Sidebar-driven scope: /leads?view=my|starred|recent OR /leads?segment=new-week|hot|followup
+  const scope = useMemo(
+    () => getLeadScope(searchParams?.get('view'), searchParams?.get('segment'), user?.id ?? null),
+    [searchParams, user?.id]
+  );
+
+  // Reset to page 1 whenever the scope (view/segment) changes.
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [scope.view, scope.segment]);
 
   const [showConvertDialog, setShowConvertDialog] = useState(false);
   const [showStatusDialog, setShowStatusDialog] = useState(false);
@@ -248,15 +261,26 @@ export default function LeadList({ initialData: serverData }: LeadListProps = {}
     !debouncedSearch &&
     !statusFilter &&
     !scoreFilter &&
-    sortOrder === 'newest';
+    sortOrder === 'newest' &&
+    scope.view === 'all' &&
+    scope.segment === null;
+
+  // Scope params (from view/segment) merge with the in-page filters.
+  // In-page filters win when both set the same key (explicit user intent).
+  const statusFromScope = scope.params.status ? [...scope.params.status] : undefined;
+  const statusForQuery = statusFilter ? [statusFilter as LeadStatus] : statusFromScope;
 
   const { data, isLoading, error, refetch } = api.lead.list.useQuery(
     {
       page: currentPage,
       limit: pageSize,
       search: debouncedSearch || undefined,
-      status: statusFilter ? [statusFilter as LeadStatus] : undefined,
-      ...scoreParams,
+      status: statusForQuery,
+      ownerId: scope.params.ownerId,
+      dateFrom: scope.params.dateFrom,
+      dateTo: scope.params.dateTo,
+      minScore: scoreParams.minScore ?? scope.params.minScore,
+      maxScore: scoreParams.maxScore ?? scope.params.maxScore,
       sortBy: sortParams.sortBy,
       sortOrder: sortParams.sortOrder,
     },
@@ -482,12 +506,17 @@ export default function LeadList({ initialData: serverData }: LeadListProps = {}
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Leads' }]}
-        title="Lead List"
-        description={
-          `Manage and track your potential customers effectively.` +
-          (totalItems > 0 ? ` (${totalItems} total)` : '')
+        breadcrumbs={
+          scope.view === 'all' && scope.segment === null
+            ? [{ label: 'Dashboard', href: '/dashboard' }, { label: 'Leads' }]
+            : [
+                { label: 'Dashboard', href: '/dashboard' },
+                { label: 'Leads', href: '/leads' },
+                { label: scope.title },
+              ]
         }
+        title={scope.title}
+        description={scope.description + (totalItems > 0 ? ` (${totalItems} total)` : '')}
         actions={[
           {
             label: 'New Lead',
@@ -497,6 +526,19 @@ export default function LeadList({ initialData: serverData }: LeadListProps = {}
           },
         ]}
       />
+
+      {scope.pendingNotice && (
+        <output
+          aria-live="polite"
+          data-testid="lead-scope-pending-notice"
+          className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200"
+        >
+          <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
+            info
+          </span>
+          <span>{scope.pendingNotice}</span>
+        </output>
+      )}
 
       <SearchFilterBar
         searchValue={searchQuery}

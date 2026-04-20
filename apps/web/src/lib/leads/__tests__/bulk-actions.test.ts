@@ -536,3 +536,95 @@ describe('createBulkActionRunners — empty-selection guard', () => {
     expect(onFinally).not.toHaveBeenCalled();
   });
 });
+
+describe('getLeadScope — sidebar view + segment wiring', () => {
+  const now = new Date('2026-04-20T12:00:00Z');
+
+  it('default (no params) → all-leads scope with no filters and no notice', async () => {
+    const { getLeadScope } = await import('../bulk-actions');
+    const scope = getLeadScope(null, null, 'user-1', now);
+    expect(scope.view).toBe('all');
+    expect(scope.segment).toBe(null);
+    expect(scope.title).toBe('Lead List');
+    expect(scope.params).toEqual({});
+    expect(scope.pendingNotice).toBe(null);
+  });
+
+  it('view=my with current user → ownerId filter, no notice', async () => {
+    const { getLeadScope } = await import('../bulk-actions');
+    const scope = getLeadScope('my', null, 'user-42', now);
+    expect(scope.view).toBe('my');
+    expect(scope.title).toBe('My Leads');
+    expect(scope.params.ownerId).toBe('user-42');
+    expect(scope.pendingNotice).toBe(null);
+  });
+
+  it('view=my without current user → empty filter + sign-in notice', async () => {
+    const { getLeadScope } = await import('../bulk-actions');
+    const scope = getLeadScope('my', null, null, now);
+    expect(scope.params.ownerId).toBeUndefined();
+    expect(scope.pendingNotice).toMatch(/sign in/i);
+  });
+
+  it('view=starred → no filter + pending-backend notice', async () => {
+    const { getLeadScope } = await import('../bulk-actions');
+    const scope = getLeadScope('starred', null, 'user-1', now);
+    expect(scope.view).toBe('starred');
+    expect(scope.title).toBe('Starred Leads');
+    expect(scope.params).toEqual({});
+    expect(scope.pendingNotice).toMatch(/isStarred/);
+  });
+
+  it('view=recent → no filter + pending-backend notice', async () => {
+    const { getLeadScope } = await import('../bulk-actions');
+    const scope = getLeadScope('recent', null, 'user-1', now);
+    expect(scope.view).toBe('recent');
+    expect(scope.title).toBe('Recently Viewed');
+    expect(scope.params).toEqual({});
+    expect(scope.pendingNotice).toMatch(/recently/i);
+  });
+
+  it('segment=new-week → dateFrom 7 days ago, no notice', async () => {
+    const { getLeadScope } = await import('../bulk-actions');
+    const scope = getLeadScope(null, 'new-week', 'user-1', now);
+    expect(scope.segment).toBe('new-week');
+    expect(scope.title).toBe('New This Week');
+    expect(scope.params.dateFrom).toEqual(new Date('2026-04-13T12:00:00Z'));
+    expect(scope.pendingNotice).toBe(null);
+  });
+
+  it('segment=hot → minScore 80, no notice', async () => {
+    const { getLeadScope } = await import('../bulk-actions');
+    const scope = getLeadScope(null, 'hot', 'user-1', now);
+    expect(scope.segment).toBe('hot');
+    expect(scope.title).toBe('Hot Leads');
+    expect(scope.params.minScore).toBe(80);
+    expect(scope.pendingNotice).toBe(null);
+  });
+
+  it('segment=followup → status CONTACTED + pending notice for precise last-touch filter', async () => {
+    const { getLeadScope } = await import('../bulk-actions');
+    const scope = getLeadScope(null, 'followup', 'user-1', now);
+    expect(scope.segment).toBe('followup');
+    expect(scope.title).toBe('Needs Follow-up');
+    expect(scope.params.status).toEqual(['CONTACTED']);
+    expect(scope.pendingNotice).toMatch(/last touch/i);
+  });
+
+  it('unknown view + unknown segment → default all scope', async () => {
+    const { getLeadScope } = await import('../bulk-actions');
+    const scope = getLeadScope('bogus', 'also-bogus', 'user-1', now);
+    expect(scope.view).toBe('all');
+    expect(scope.segment).toBe(null);
+    expect(scope.params).toEqual({});
+  });
+
+  it('segment beats view when both set', async () => {
+    const { getLeadScope } = await import('../bulk-actions');
+    const scope = getLeadScope('my', 'hot', 'user-1', now);
+    expect(scope.segment).toBe('hot');
+    expect(scope.title).toBe('Hot Leads');
+    expect(scope.params.minScore).toBe(80);
+    expect(scope.params.ownerId).toBeUndefined();
+  });
+});

@@ -96,6 +96,140 @@ export function getScoreParams(scoreFilter: string): {
   }
 }
 
+/**
+ * Sidebar view + segment wiring. The leads sidebar
+ * (apps/web/src/components/sidebar/configs/leads.ts) links to
+ * /leads?view=… and /leads?segment=…. getLeadScope() turns those URL params
+ * into (a) extra API filters, (b) page title/description, and (c) an optional
+ * pending-feature banner for views that need backend work beyond the
+ * current leadQuerySchema.
+ */
+export type LeadView = 'all' | 'my' | 'starred' | 'recent';
+export type LeadSegment = 'new-week' | 'hot' | 'followup';
+
+export interface LeadScopeParams {
+  readonly ownerId?: string;
+  readonly minScore?: number;
+  readonly maxScore?: number;
+  readonly dateFrom?: Date;
+  readonly dateTo?: Date;
+  readonly status?: readonly LeadStatus[];
+}
+
+export interface LeadScope {
+  readonly view: LeadView;
+  readonly segment: LeadSegment | null;
+  readonly title: string;
+  readonly description: string;
+  readonly params: LeadScopeParams;
+  readonly pendingNotice: string | null;
+}
+
+function parseView(raw: string | null | undefined): LeadView {
+  if (raw === 'my' || raw === 'starred' || raw === 'recent') return raw;
+  return 'all';
+}
+
+function parseSegment(raw: string | null | undefined): LeadSegment | null {
+  if (raw === 'new-week' || raw === 'hot' || raw === 'followup') return raw;
+  return null;
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+export function getLeadScope(
+  viewParam: string | null | undefined,
+  segmentParam: string | null | undefined,
+  currentUserId: string | undefined | null,
+  now: Date = new Date()
+): LeadScope {
+  const segment = parseSegment(segmentParam);
+  if (segment === 'new-week') {
+    return {
+      view: 'all',
+      segment,
+      title: 'New This Week',
+      description: 'Leads created in the last 7 days.',
+      params: { dateFrom: new Date(now.getTime() - 7 * DAY_MS) },
+      pendingNotice: null,
+    };
+  }
+  if (segment === 'hot') {
+    return {
+      view: 'all',
+      segment,
+      title: 'Hot Leads',
+      description: 'Leads scored 80 or higher by the AI scorer.',
+      params: { minScore: 80 },
+      pendingNotice: null,
+    };
+  }
+  if (segment === 'followup') {
+    return {
+      view: 'all',
+      segment,
+      title: 'Needs Follow-up',
+      description: 'Contacted leads awaiting the next touch.',
+      params: { status: ['CONTACTED'] },
+      pendingNotice:
+        'Showing all Contacted leads. A precise "last touch > 7 days" filter is pending a lead.list API extension.',
+    };
+  }
+
+  const view = parseView(viewParam);
+  if (view === 'my') {
+    if (!currentUserId) {
+      return {
+        view,
+        segment: null,
+        title: 'My Leads',
+        description: 'Leads assigned to you.',
+        params: {},
+        pendingNotice: 'Sign in to see leads assigned to you.',
+      };
+    }
+    return {
+      view,
+      segment: null,
+      title: 'My Leads',
+      description: 'Leads assigned to you.',
+      params: { ownerId: currentUserId },
+      pendingNotice: null,
+    };
+  }
+  if (view === 'starred') {
+    return {
+      view,
+      segment: null,
+      title: 'Starred Leads',
+      description: 'Leads you have starred.',
+      params: {},
+      pendingNotice:
+        'Starred leads are pending an isStarred field on the lead model — showing all leads for now.',
+    };
+  }
+  if (view === 'recent') {
+    return {
+      view,
+      segment: null,
+      title: 'Recently Viewed',
+      description: 'Leads you recently opened.',
+      params: {},
+      pendingNotice:
+        'Recently-viewed tracking is pending a dedicated endpoint — showing all leads for now.',
+    };
+  }
+
+  return {
+    view: 'all',
+    segment: null,
+    title: 'Lead List',
+    description: 'Manage and track your potential customers effectively.',
+    params: {},
+    pendingNotice: null,
+  };
+}
+
 export type BulkDialogKind = 'convert' | 'status' | 'archive' | 'delete';
 
 export interface BulkActionFactoryDeps {
