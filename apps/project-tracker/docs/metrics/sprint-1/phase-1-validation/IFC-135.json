@@ -6,7 +6,7 @@
   "owner": "Tech Lead",
   "dependencies": {
     "required": ["IFC-002", "GOV-001"],
-    "verified_at": "2026-04-19T10:06:56.740Z",
+    "verified_at": "2026-04-19T21:18:02.529Z",
     "all_satisfied": true
   },
   "status": "DONE",

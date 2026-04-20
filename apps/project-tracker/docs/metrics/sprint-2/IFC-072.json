@@ -6,7 +6,7 @@
   "owner": "Security Eng + CTO",
   "dependencies": {
     "required": ["IFC-001", "IFC-008"],
-    "verified_at": "2026-04-19T10:06:56.748Z",
+    "verified_at": "2026-04-19T21:18:02.533Z",
     "all_satisfied": true
   },
   "status": "DONE",

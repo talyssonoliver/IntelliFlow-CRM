@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "required": ["IFC-003"],
-    "verified_at": "2026-04-19T10:06:56.759Z",
+    "verified_at": "2026-04-19T21:18:02.541Z",
     "all_satisfied": true,
     "notes": "IFC-003 (tRPC API Foundation) completed - apps/api/src/trpc.ts exists and passes typecheck"
   },

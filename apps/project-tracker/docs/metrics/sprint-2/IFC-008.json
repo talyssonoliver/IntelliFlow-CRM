@@ -6,7 +6,7 @@
   "owner": "Security Eng + CTO (STOA-Security)",
   "dependencies": {
     "required": ["IFC-001"],
-    "verified_at": "2026-04-19T10:06:56.746Z",
+    "verified_at": "2026-04-19T21:18:02.533Z",
     "all_satisfied": true,
     "notes": "IFC-001 Technical Architecture Spike completed"
   },

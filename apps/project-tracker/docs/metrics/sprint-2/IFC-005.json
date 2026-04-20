@@ -6,7 +6,7 @@
   "owner": "AI Specialist + Backend Dev",
   "dependencies": {
     "required": ["IFC-004"],
-    "verified_at": "2026-04-19T10:06:56.745Z",
+    "verified_at": "2026-04-19T21:18:02.532Z",
     "all_satisfied": true,
     "notes": "IFC-004 Lead Capture UI completed - form integrates with tRPC API"
   },
