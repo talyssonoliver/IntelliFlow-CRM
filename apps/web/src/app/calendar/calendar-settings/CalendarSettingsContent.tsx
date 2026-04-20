@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { trpc } from '@/lib/trpc';
 import { toast } from '@intelliflow/ui';
@@ -21,6 +21,50 @@ interface LocalSettings {
   calendar: CalendarIntegrationSettings;
 }
 
+function mapSettings(s: {
+  defaultDurationMinutes: number;
+  minDurationMinutes: number;
+  maxDurationMinutes: number;
+  defaultBufferBeforeMinutes: number;
+  defaultBufferAfterMinutes: number;
+  defaultReminderMinutes: number | null;
+  primaryCalendarId: string | null;
+  syncExternalCalendars: boolean;
+  defaultTimezone: string;
+}): LocalSettings {
+  return {
+    duration: {
+      defaultDurationMinutes: s.defaultDurationMinutes,
+      minDurationMinutes: s.minDurationMinutes,
+      maxDurationMinutes: s.maxDurationMinutes,
+    },
+    buffer: {
+      defaultBufferBeforeMinutes: s.defaultBufferBeforeMinutes,
+      defaultBufferAfterMinutes: s.defaultBufferAfterMinutes,
+      defaultReminderMinutes: s.defaultReminderMinutes,
+    },
+    calendar: {
+      primaryCalendarId: s.primaryCalendarId,
+      syncExternalCalendars: s.syncExternalCalendars,
+      defaultTimezone: s.defaultTimezone,
+    },
+  };
+}
+
+function normalize(s: LocalSettings): string {
+  // Stable serialization for dirty-state comparison. Coerces undefined/''
+  // to null on nullable fields so empty-input round-trips do not produce
+  // false positives.
+  return JSON.stringify({
+    duration: s.duration,
+    buffer: {
+      ...s.buffer,
+      defaultReminderMinutes: s.buffer.defaultReminderMinutes ?? null,
+    },
+    calendar: s.calendar,
+  });
+}
+
 export default function CalendarSettingsContent() {
   const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
 
@@ -35,37 +79,36 @@ export default function CalendarSettingsContent() {
   const utils = trpc.useUtils();
 
   const updateMutation = trpc.appointmentSettings.update.useMutation({
-    onSuccess: () => utils.appointmentSettings.get.invalidate(),
+    onSuccess: (data) => {
+      utils.appointmentSettings.get.invalidate();
+      setInitialSettings(mapSettings(data));
+      setLocalSettings(mapSettings(data));
+    },
   });
 
   const resetMutation = trpc.appointmentSettings.resetToDefaults.useMutation({
-    onSuccess: () => utils.appointmentSettings.get.invalidate(),
+    onSuccess: (data) => {
+      utils.appointmentSettings.get.invalidate();
+      setInitialSettings(mapSettings(data));
+      setLocalSettings(mapSettings(data));
+    },
   });
 
   const [localSettings, setLocalSettings] = useState<LocalSettings | null>(null);
+  const [initialSettings, setInitialSettings] = useState<LocalSettings | null>(null);
 
   useEffect(() => {
     if (settingsQuery.data) {
-      const s = settingsQuery.data;
-      setLocalSettings({
-        duration: {
-          defaultDurationMinutes: s.defaultDurationMinutes,
-          minDurationMinutes: s.minDurationMinutes,
-          maxDurationMinutes: s.maxDurationMinutes,
-        },
-        buffer: {
-          defaultBufferBeforeMinutes: s.defaultBufferBeforeMinutes,
-          defaultBufferAfterMinutes: s.defaultBufferAfterMinutes,
-          defaultReminderMinutes: s.defaultReminderMinutes,
-        },
-        calendar: {
-          primaryCalendarId: s.primaryCalendarId,
-          syncExternalCalendars: s.syncExternalCalendars,
-          defaultTimezone: s.defaultTimezone,
-        },
-      });
+      const mapped = mapSettings(settingsQuery.data);
+      setLocalSettings(mapped);
+      setInitialSettings(mapped);
     }
   }, [settingsQuery.data]);
+
+  const isDirty = useMemo(() => {
+    if (!localSettings || !initialSettings) return false;
+    return normalize(localSettings) !== normalize(initialSettings);
+  }, [localSettings, initialSettings]);
 
   const handleSave = useCallback(async () => {
     if (!localSettings) return;
@@ -157,6 +200,7 @@ export default function CalendarSettingsContent() {
       onSave={handleSave}
       onReset={handleReset}
       isSaving={updateMutation.isPending || resetMutation.isPending}
+      isDirty={isDirty}
       lastUpdated={settingsQuery.data?.updatedAt ? new Date(settingsQuery.data.updatedAt) : null}
     />
   );

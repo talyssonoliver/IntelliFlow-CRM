@@ -67,7 +67,7 @@ vi.mock('@intelliflow/ui', () => ({
 }));
 
 vi.mock('@/components/settings/ModuleSettingsLayout', () => ({
-  ModuleSettingsLayout: ({ tabs, onSave, onReset, isSaving }: any) => (
+  ModuleSettingsLayout: ({ tabs, onSave, onReset, isSaving, isDirty }: any) => (
     <div data-testid="module-settings-layout">
       {tabs.map((tab: any) => (
         <div key={tab.value} data-testid={`tab-${tab.value}`}>
@@ -75,8 +75,8 @@ vi.mock('@/components/settings/ModuleSettingsLayout', () => ({
           <div data-testid={`tab-content-${tab.value}`}>{tab.content}</div>
         </div>
       ))}
-      <button data-testid="save-btn" onClick={onSave} disabled={isSaving}>
-        Save
+      <button data-testid="save-btn" onClick={onSave} disabled={!isDirty || isSaving}>
+        Save Changes
       </button>
       <button data-testid="reset-btn" onClick={onReset} disabled={isSaving}>
         Reset
@@ -166,8 +166,14 @@ describe('CalendarSettingsContent', () => {
     expect(mockCalendarListQuery).toHaveBeenCalled();
   });
 
-  it('save button triggers update mutation', async () => {
+  it('save button triggers update mutation (after dirtying the form)', async () => {
     render(<CalendarSettingsContent />);
+    // Save is disabled until the form is dirty — simulate a field change first
+    const input = screen.getByLabelText('Default Duration (minutes)');
+    fireEvent.change(input, { target: { value: '45' } });
+    await waitFor(() => {
+      expect(screen.getByTestId('save-btn')).not.toBeDisabled();
+    });
     fireEvent.click(screen.getByTestId('save-btn'));
     await waitFor(() => {
       expect(mockMutateAsync).toHaveBeenCalled();
@@ -199,6 +205,13 @@ describe('CalendarSettingsContent', () => {
       isPending: false,
     });
     render(<CalendarSettingsContent />);
+    // Dirty the form first so Save is enabled
+    fireEvent.change(screen.getByLabelText('Default Duration (minutes)'), {
+      target: { value: '45' },
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('save-btn')).not.toBeDisabled();
+    });
     fireEvent.click(screen.getByTestId('save-btn'));
     await waitFor(() => {
       expect(mockUpdateMutation).toHaveBeenCalled();
@@ -276,8 +289,61 @@ describe('CalendarSettingsContent', () => {
     // Verify the mutation was called with onSuccess option
     const updateCall = mockUpdateMutation.mock.calls[0]?.[0];
     if (updateCall?.onSuccess) {
-      updateCall.onSuccess();
+      updateCall.onSuccess(mockSettings);
       expect(mockInvalidate).toHaveBeenCalled();
     }
+  });
+
+  // ── isDirty transitions (PG-189 AC-006) ──────────────────
+
+  it('Save button is disabled on initial render after settings load', async () => {
+    render(<CalendarSettingsContent />);
+    await waitFor(() => {
+      expect(screen.getByLabelText('Default Duration (minutes)')).toHaveValue(30);
+    });
+    expect(screen.getByTestId('save-btn')).toBeDisabled();
+  });
+
+  it('Save button becomes enabled after changing defaultDurationMinutes', async () => {
+    render(<CalendarSettingsContent />);
+    await waitFor(() => {
+      expect(screen.getByLabelText('Default Duration (minutes)')).toHaveValue(30);
+    });
+    fireEvent.change(screen.getByLabelText('Default Duration (minutes)'), {
+      target: { value: '45' },
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('save-btn')).not.toBeDisabled();
+    });
+  });
+
+  it('Save button returns to disabled after a successful save', async () => {
+    const savedSettings = { ...mockSettings, defaultDurationMinutes: 45 };
+    const successfulMutateAsync = vi.fn().mockResolvedValue(savedSettings);
+    mockUpdateMutation.mockImplementation((opts?: { onSuccess?: (data: unknown) => void }) => ({
+      mutateAsync: async (input: unknown) => {
+        const result = await successfulMutateAsync(input);
+        opts?.onSuccess?.(result);
+        return result;
+      },
+      isPending: false,
+    }));
+    render(<CalendarSettingsContent />);
+    await waitFor(() => {
+      expect(screen.getByLabelText('Default Duration (minutes)')).toHaveValue(30);
+    });
+    fireEvent.change(screen.getByLabelText('Default Duration (minutes)'), {
+      target: { value: '45' },
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('save-btn')).not.toBeDisabled();
+    });
+    fireEvent.click(screen.getByTestId('save-btn'));
+    await waitFor(() => {
+      expect(successfulMutateAsync).toHaveBeenCalled();
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('save-btn')).toBeDisabled();
+    });
   });
 });

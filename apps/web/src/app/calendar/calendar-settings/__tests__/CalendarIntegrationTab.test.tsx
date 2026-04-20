@@ -138,4 +138,39 @@ describe('CalendarIntegrationTab', () => {
     expect(onSettingsChange).toHaveBeenCalledOnce();
     expect(onSettingsChange.mock.calls[0][0].syncExternalCalendars).toBe(true);
   });
+
+  // ── Editable timezone Select (PG-189 AC-007) ─────────────
+
+  it('renders an editable timezone Select populated with options', () => {
+    render(
+      <CalendarIntegrationTab
+        settings={defaultSettings}
+        onSettingsChange={onSettingsChange}
+        availableCalendars={mockCalendars}
+      />
+    );
+    // The Label is rendered for 'defaultTimezone' — its native <select> must exist
+    const tzLabel = screen.getByText('Default Timezone');
+    expect(tzLabel).toBeInTheDocument();
+    // Native selects render as comboboxes. The primary-calendar select also
+    // uses the same mock, so we assert on >=1 and that at least one option is UTC.
+    expect(screen.getAllByRole('combobox').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByRole('option').some((o) => o.textContent === 'UTC')).toBe(true);
+  });
+
+  it('emits onSettingsChange with the new timezone when user selects', () => {
+    render(
+      <CalendarIntegrationTab
+        settings={defaultSettings}
+        onSettingsChange={onSettingsChange}
+        availableCalendars={[]}
+      />
+    );
+    // With availableCalendars=[], only ONE <select> renders (the timezone one).
+    const combobox = screen.getByRole('combobox');
+    fireEvent.change(combobox, { target: { value: 'America/New_York' } });
+    expect(onSettingsChange).toHaveBeenCalledWith(
+      expect.objectContaining({ defaultTimezone: 'America/New_York' })
+    );
+  });
 });

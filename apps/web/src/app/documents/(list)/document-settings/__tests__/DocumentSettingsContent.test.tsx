@@ -6,7 +6,6 @@
  * follow-up (PG-186 audit finding #5).
  */
 import { describe, it, expect, vi } from 'vitest';
-import { render } from '@testing-library/react';
 
 // Mock tRPC
 vi.mock('@/lib/trpc', () => ({

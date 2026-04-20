@@ -13,7 +13,7 @@
 
 export async function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
-    const { startTracing } = await import('./tracing/otel.js');
+    const { startTracing } = await import('./tracing/otel');
     startTracing();
   }
 }

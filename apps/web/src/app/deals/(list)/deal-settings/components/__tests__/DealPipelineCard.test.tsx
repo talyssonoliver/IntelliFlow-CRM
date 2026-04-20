@@ -27,30 +27,33 @@ vi.mock('@/lib/trpc', () => {
       },
     ],
   };
+  const pipelineBranch = {
+    getAll: {
+      useQuery: () => ({ data, isLoading: false, error: null, refetch: vi.fn() }),
+    },
+    updateStage: {
+      useMutation: ({ onSuccess }: any) => ({
+        mutate: vi.fn(),
+        mutateAsync: vi.fn(async () => {
+          onSuccess?.();
+          return {};
+        }),
+        isPending: false,
+      }),
+    },
+    resetToDefaults: {
+      useMutation: ({ onSuccess }: any) => ({
+        mutate: vi.fn(() => onSuccess?.()),
+        isPending: false,
+      }),
+    },
+  };
   return {
     trpc: {
-      useUtils: () => ({ pipelineConfig: { getAll: { invalidate: vi.fn() } } }),
-      pipelineConfig: {
-        getAll: {
-          useQuery: () => ({ data, isLoading: false, error: null, refetch: vi.fn() }),
-        },
-        updateStage: {
-          useMutation: ({ onSuccess }: any) => ({
-            mutate: vi.fn(),
-            mutateAsync: vi.fn(async () => {
-              onSuccess?.();
-              return {};
-            }),
-            isPending: false,
-          }),
-        },
-        resetToDefaults: {
-          useMutation: ({ onSuccess }: any) => ({
-            mutate: vi.fn(() => onSuccess?.()),
-            isPending: false,
-          }),
-        },
-      },
+      useUtils: () => ({
+        dealSettings: { pipeline: { getAll: { invalidate: vi.fn() } } },
+      }),
+      dealSettings: { pipeline: pipelineBranch },
     },
   };
 });

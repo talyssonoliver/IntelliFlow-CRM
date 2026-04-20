@@ -44,12 +44,17 @@ const OPERATOR_OPTIONS: { value: ScoringOperator; label: string }[] = [
   { value: 'in', label: 'in list' },
 ];
 
+type ScoringValue =
+  | { type: 'number'; value: number }
+  | { type: 'string'; value: string }
+  | { type: 'array'; value: (string | number)[] };
+
 export interface DealScoringRuleRow {
   id: string;
   name: string;
   field: ScoringField;
   operator: ScoringOperator;
-  valueJson: { type: 'number' | 'string' | 'array'; value: unknown };
+  valueJson: ScoringValue;
   points: number;
   isActive: boolean;
   sortOrder: number;
@@ -84,25 +89,23 @@ const EMPTY: DialogState = {
   points: 10,
 };
 
-function parseValue(
-  type: 'number' | 'string' | 'array',
-  raw: string
-): { type: 'number' | 'string' | 'array'; value: unknown } {
-  if (type === 'number') return { type, value: Number.parseFloat(raw) || 0 };
-  if (type === 'array')
+function parseValue(type: 'number' | 'string' | 'array', raw: string): ScoringValue {
+  if (type === 'number') return { type: 'number', value: Number.parseFloat(raw) || 0 };
+  if (type === 'array') {
     return {
-      type,
+      type: 'array',
       value: raw
         .split(',')
         .map((s) => s.trim())
         .filter(Boolean),
     };
-  return { type, value: raw };
+  }
+  return { type: 'string', value: raw };
 }
 
-function formatValue(value: { type: 'number' | 'string' | 'array'; value: unknown }): string {
-  if (value.type === 'array' && Array.isArray(value.value)) {
-    return (value.value as unknown[]).join(', ');
+function formatValue(value: ScoringValue): string {
+  if (value.type === 'array') {
+    return value.value.join(', ');
   }
   return String(value.value ?? '');
 }

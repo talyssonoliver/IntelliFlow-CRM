@@ -301,3 +301,73 @@ export function getTimezoneLabel(timezone: string): string {
     return timezone;
   }
 }
+
+/**
+ * Curated list of IANA timezones offered as defaults in Appointment /
+ * Availability / Event Type settings (PG-189, PG-202, PG-203).
+ *
+ * Prefer `Intl.supportedValuesOf('timeZone')` at runtime (modern browsers
+ * and Node 20+) for an exhaustive list; fall back to this curated subset
+ * so the list is deterministic across environments.
+ */
+const CURATED_IANA_TIMEZONES: readonly string[] = [
+  'UTC',
+  'Europe/London',
+  'Europe/Dublin',
+  'Europe/Paris',
+  'Europe/Berlin',
+  'Europe/Amsterdam',
+  'Europe/Madrid',
+  'Europe/Rome',
+  'Europe/Lisbon',
+  'Europe/Warsaw',
+  'Europe/Athens',
+  'Europe/Istanbul',
+  'Europe/Moscow',
+  'America/New_York',
+  'America/Chicago',
+  'America/Denver',
+  'America/Los_Angeles',
+  'America/Toronto',
+  'America/Vancouver',
+  'America/Mexico_City',
+  'America/Sao_Paulo',
+  'America/Argentina/Buenos_Aires',
+  'Africa/Johannesburg',
+  'Africa/Lagos',
+  'Africa/Nairobi',
+  'Asia/Dubai',
+  'Asia/Kolkata',
+  'Asia/Bangkok',
+  'Asia/Singapore',
+  'Asia/Shanghai',
+  'Asia/Tokyo',
+  'Asia/Seoul',
+  'Asia/Jerusalem',
+  'Australia/Sydney',
+  'Australia/Melbourne',
+  'Australia/Perth',
+  'Pacific/Auckland',
+  'Pacific/Honolulu',
+];
+
+export function getAvailableTimezones(): readonly string[] {
+  const supported = (
+    Intl as typeof Intl & {
+      supportedValuesOf?: (key: string) => string[];
+    }
+  ).supportedValuesOf;
+  if (typeof supported === 'function') {
+    try {
+      const list = supported('timeZone');
+      if (Array.isArray(list) && list.length > 0) {
+        // Intl lists `Etc/UTC` but not `UTC`; prepend the short form so the
+        // Appointment Settings default value has a matching SelectItem.
+        return list.includes('UTC') ? list : ['UTC', ...list];
+      }
+    } catch {
+      // fall through to curated fallback
+    }
+  }
+  return CURATED_IANA_TIMEZONES;
+}

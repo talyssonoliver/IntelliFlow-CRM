@@ -19,6 +19,7 @@ export const TASKS_LIST = 'tasks:list';
 export const TASKS_STATS = 'tasks:stats';
 export const DEALS_LIST = 'deals:list';
 export const DEALS_FORECAST = 'deals:forecast';
+export const HELP_ARTICLES_LIST = 'help-articles:list';
 
 // ── Per-user hot-path tags ───────────────────────────────────────
 /** Unread notification count — short TTL, per-user isolated */

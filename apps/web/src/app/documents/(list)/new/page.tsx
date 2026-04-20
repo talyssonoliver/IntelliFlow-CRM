@@ -138,6 +138,17 @@ export default function UploadDocumentPage() {
     }
   );
 
+  // PG-186: pull the tenant's upload policy so client-side validation
+  // stays in lockstep with the server. `generalPolicy` falls back to
+  // reasonable defaults while the query is loading so the picker is
+  // usable immediately; the server is the source of truth on submit.
+  const { data: generalPolicy } = trpc.documentSettings.general.get.useQuery(undefined, {
+    enabled: isAuthenticated && !authLoading,
+  });
+
+  const maxUploadSizeMb = generalPolicy?.maxUploadSizeMb ?? 50;
+  const allowedMimeTypes = generalPolicy?.allowedMimeTypes ?? [];
+
   const resolvedDocumentType = useMemo(
     () =>
       resolveDocumentTypeSelection(
@@ -185,28 +196,26 @@ export default function UploadDocumentPage() {
 
   // Handle file selection
   const handleFileSelect = (file: File) => {
-    // Validate file
-    const maxSize = 50 * 1024 * 1024; // 50MB
-    const allowedTypes = [
-      'application/pdf',
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'application/vnd.ms-excel',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'text/plain',
-      'image/png',
-      'image/jpeg',
-    ];
+    // PG-186: client validation now mirrors the server-side policy
+    // (`documentSettings.general`). Server is authoritative — these
+    // checks just surface the failure earlier for a better UX.
+    const maxSize = maxUploadSizeMb * 1024 * 1024;
 
     if (file.size > maxSize) {
-      setErrors((prev) => ({ ...prev, file: 'File size must be less than 50MB' }));
+      setErrors((prev) => ({
+        ...prev,
+        file: `File size must be less than ${maxUploadSizeMb}MB (tenant policy).`,
+      }));
       return;
     }
 
-    if (!allowedTypes.includes(file.type)) {
+    // Empty allowedMimeTypes == tenant hasn't configured a list yet, so
+    // pass through. Once configured in Document Settings, only listed
+    // types are accepted.
+    if (allowedMimeTypes.length > 0 && !allowedMimeTypes.includes(file.type)) {
       setErrors((prev) => ({
         ...prev,
-        file: 'File type not supported. Please upload PDF, Word, Excel, Text, or Image files.',
+        file: `File type "${file.type}" is not in the tenant's allowed list. Update it in Document Settings → File Types.`,
       }));
       return;
     }
@@ -523,7 +532,9 @@ export default function UploadDocumentPage() {
                   Drop your file here, or click to browse
                 </p>
                 <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
-                  Supports PDF, Word, Excel, Text, and Image files up to 50MB
+                  {allowedMimeTypes.length > 0
+                    ? `Allowed types: ${allowedMimeTypes.length} configured in tenant settings. Max ${maxUploadSizeMb}MB per file.`
+                    : `Max ${maxUploadSizeMb}MB per file. Configure allowed types in Document Settings → File Types.`}
                 </p>
                 <input
                   ref={fileInputRef}

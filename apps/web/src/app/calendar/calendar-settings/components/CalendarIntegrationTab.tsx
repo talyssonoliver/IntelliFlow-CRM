@@ -10,6 +10,7 @@ import {
   SelectValue,
   Switch,
 } from '@intelliflow/ui';
+import { getAvailableTimezones } from '@/lib/shared/timezone-utils';
 
 export interface CalendarIntegrationSettings {
   primaryCalendarId: string | null;
@@ -33,6 +34,8 @@ export function CalendarIntegrationTab({
   onSettingsChange,
   availableCalendars,
 }: Readonly<CalendarIntegrationTabProps>) {
+  const timezones = getAvailableTimezones();
+
   return (
     <Card className="p-6">
       <div className="mb-4">
@@ -88,7 +91,23 @@ export function CalendarIntegrationTab({
 
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="defaultTimezone">Default Timezone</Label>
-          <p className="text-sm text-muted-foreground">{settings.defaultTimezone}</p>
+          <Select
+            value={settings.defaultTimezone}
+            onValueChange={(value: string) =>
+              onSettingsChange({ ...settings, defaultTimezone: value })
+            }
+          >
+            <SelectTrigger id="defaultTimezone">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {timezones.map((tz) => (
+                <SelectItem key={tz} value={tz}>
+                  {tz}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
     </Card>

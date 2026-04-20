@@ -62,19 +62,19 @@ vi.mock('@/lib/trpc', () => {
       requiredFields: { getAll: mkInvalidate('u.req.getAll') },
       tags: { list: mkInvalidate('u.tags.list') },
       automation: { get: mkInvalidate('u.auto.get') },
+      pipeline: { getAll: mkInvalidate('u.pipe.getAll') },
     },
-    pipelineConfig: { getAll: mkInvalidate('u.pipe.getAll') },
   };
 
   return {
     trpc: {
       useUtils: () => utilsRef,
-      pipelineConfig: {
-        getAll: { useQuery: mkQuery('pipe.getAll', { stages: [] }) },
-        updateStage: { useMutation: mkMutation('pipe.updateStage') },
-        resetToDefaults: { useMutation: mkMutation('pipe.reset') },
-      },
       dealSettings: {
+        pipeline: {
+          getAll: { useQuery: mkQuery('pipe.getAll', { stages: [] }) },
+          updateStage: { useMutation: mkMutation('pipe.updateStage') },
+          resetToDefaults: { useMutation: mkMutation('pipe.reset') },
+        },
         winLossReasons: {
           list: { useQuery: mkQuery('winLoss.list', []) },
           create: { useMutation: mkMutation('winLoss.create') },

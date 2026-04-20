@@ -52,6 +52,34 @@ function normalizeColorToken(raw: string): DocumentTagColorToken {
     : 'slate';
 }
 
+// Static swatch class map (module-settings-playbook §4). Tailwind's JIT
+// purges dynamic class names like `bg-${token}-500`, so every swatch must
+// be spelled out literally.
+const COLOR_SWATCH_CLASSES: Record<DocumentTagColorToken, string> = {
+  slate: 'bg-slate-500',
+  red: 'bg-red-500',
+  orange: 'bg-orange-500',
+  amber: 'bg-amber-500',
+  yellow: 'bg-yellow-500',
+  lime: 'bg-lime-500',
+  green: 'bg-green-500',
+  emerald: 'bg-emerald-500',
+  teal: 'bg-teal-500',
+  cyan: 'bg-cyan-500',
+  sky: 'bg-sky-500',
+  blue: 'bg-blue-500',
+  indigo: 'bg-indigo-500',
+  violet: 'bg-violet-500',
+  purple: 'bg-purple-500',
+  fuchsia: 'bg-fuchsia-500',
+  pink: 'bg-pink-500',
+  rose: 'bg-rose-500',
+};
+
+function swatchClass(token: string): string {
+  return COLOR_SWATCH_CLASSES[normalizeColorToken(token)];
+}
+
 interface DialogState {
   open: boolean;
   editing?: DocumentTagRow;
@@ -107,7 +135,7 @@ export const TagsTab = forwardRef<TagsTabHandle, TagsTabProps>(function TagsTab(
               data-testid={`tag-row-${tag.id}`}
             >
               <span
-                className={`inline-block w-3 h-3 rounded-full bg-${normalizeColorToken(tag.colorToken)}-500`}
+                className={`inline-block w-3 h-3 rounded-full ${swatchClass(tag.colorToken)}`}
                 aria-hidden
               />
               <div className="flex-1 min-w-0">

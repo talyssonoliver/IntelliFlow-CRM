@@ -90,6 +90,13 @@ export const settingsSidebarConfig: SidebarConfig = {
           href: '/documents/document-settings',
         },
         {
+          id: 'help-center-articles',
+          label: 'Help Articles',
+          icon: 'menu_book',
+          href: '/settings/help-center/articles',
+          roles: ['ADMIN', 'MANAGER'],
+        },
+        {
           id: 'security',
           label: 'Security',
           icon: 'security',

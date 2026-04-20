@@ -15,9 +15,9 @@ interface PipelineStageRow {
 
 export function DealPipelineCard() {
   const utils = trpc.useUtils();
-  const stagesQuery = trpc.pipelineConfig.getAll.useQuery();
-  const updateStageMutation = trpc.pipelineConfig.updateStage.useMutation({
-    onSuccess: () => utils.pipelineConfig.getAll.invalidate(),
+  const stagesQuery = trpc.dealSettings.pipeline.getAll.useQuery();
+  const updateStageMutation = trpc.dealSettings.pipeline.updateStage.useMutation({
+    onSuccess: () => utils.dealSettings.pipeline.getAll.invalidate(),
     onError: (err) =>
       toast({
         title: 'Could not update stage',
@@ -25,9 +25,9 @@ export function DealPipelineCard() {
         variant: 'destructive',
       }),
   });
-  const resetMutation = trpc.pipelineConfig.resetToDefaults.useMutation({
+  const resetMutation = trpc.dealSettings.pipeline.resetToDefaults.useMutation({
     onSuccess: () => {
-      utils.pipelineConfig.getAll.invalidate();
+      utils.dealSettings.pipeline.getAll.invalidate();
       toast({ title: 'Pipeline reset', description: 'Stages restored to defaults.' });
     },
   });
@@ -55,9 +55,10 @@ export function DealPipelineCard() {
     | null;
   const stages: PipelineStageRow[] = Array.isArray(raw)
     ? raw
-    : Array.isArray((raw as { stages?: PipelineStageRow[] })?.stages)
-      ? (raw as { stages: PipelineStageRow[] }).stages
-      : [];
+    : (() => {
+        const nested = (raw as { stages?: PipelineStageRow[] })?.stages;
+        return Array.isArray(nested) ? (nested as PipelineStageRow[]) : [];
+      })();
 
   if (stages.length === 0) {
     return (

@@ -240,18 +240,29 @@ export default function DealSettingsContent() {
       isActive: boolean;
       sortOrder: number;
     }>;
-    return raw.map((r) => {
+    return raw.map((r): DealScoringRuleRow => {
       const rawVal = (r.valueJson ?? {}) as { type?: string; value?: unknown };
-      const type =
-        rawVal.type === 'string' || rawVal.type === 'array' || rawVal.type === 'number'
-          ? rawVal.type
-          : 'number';
+      // Narrow the persisted JSON back into the discriminated-union row type.
+      // Unknown types fall back to a zero-number rule so the card still renders.
+      let valueJson: DealScoringRuleRow['valueJson'];
+      if (rawVal.type === 'string') {
+        valueJson = { type: 'string', value: String(rawVal.value ?? '') };
+      } else if (rawVal.type === 'array' && Array.isArray(rawVal.value)) {
+        valueJson = {
+          type: 'array',
+          value: (rawVal.value as unknown[]).filter(
+            (v): v is string | number => typeof v === 'string' || typeof v === 'number'
+          ),
+        };
+      } else {
+        valueJson = { type: 'number', value: Number(rawVal.value) || 0 };
+      }
       return {
         id: r.id,
         name: r.name,
         field: r.field as DealScoringRuleRow['field'],
         operator: r.operator as DealScoringRuleRow['operator'],
-        valueJson: { type, value: rawVal.value ?? '' },
+        valueJson,
         points: r.points,
         isActive: r.isActive,
         sortOrder: r.sortOrder,
@@ -434,13 +445,17 @@ export default function DealSettingsContent() {
   ]);
 
   const handleReset = useCallback(async () => {
+    // Each mutateAsync is typed through a deep tRPC generic; Promise.all
+    // on the raw promises triggers TS2589. Wrapping in `void` collapses the
+    // inferred type to `Promise<void>` and keeps the parallel execution.
+    const run = (p: Promise<unknown>): Promise<void> => p.then(() => undefined);
     try {
       await Promise.all([
-        duplicateRulesReset.mutateAsync(),
-        requiredFieldsReset.mutateAsync(),
-        winLossReset.mutateAsync(),
-        scoringReset.mutateAsync(),
-        automationReset.mutateAsync(),
+        run(duplicateRulesReset.mutateAsync()),
+        run(requiredFieldsReset.mutateAsync()),
+        run(winLossReset.mutateAsync()),
+        run(scoringReset.mutateAsync()),
+        run(automationReset.mutateAsync()),
       ]);
       setIsDirty(false);
       setResetOpen(false);

@@ -13,6 +13,7 @@ import {
   parseDateInputValue,
   getTimezoneAbbreviation,
   getTimezoneLabel,
+  getAvailableTimezones,
 } from '../timezone-utils';
 
 // Fixed UTC timestamp: March 15, 2026 at 14:30:00 UTC
@@ -253,6 +254,23 @@ describe('timezone-utils', () => {
     it('handles unknown timezone gracefully', () => {
       const label = getTimezoneLabel('Invalid/Timezone');
       expect(label).toBe('Invalid/Timezone');
+    });
+  });
+
+  describe('getAvailableTimezones (PG-189 AC-007)', () => {
+    it('returns a non-empty list', () => {
+      const list = getAvailableTimezones();
+      expect(list.length).toBeGreaterThan(0);
+    });
+
+    it('includes UTC', () => {
+      expect(getAvailableTimezones()).toContain('UTC');
+    });
+
+    it('includes at least one America/ and one Europe/ zone', () => {
+      const list = getAvailableTimezones();
+      expect(list.some((tz) => tz.startsWith('America/'))).toBe(true);
+      expect(list.some((tz) => tz.startsWith('Europe/'))).toBe(true);
     });
   });
 });
