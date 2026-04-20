@@ -5,23 +5,36 @@
  * turn the stored toggles into actual runtime behavior. Policy rows are
  * owned by case-settings.router.ts; this module is the runtime consumer.
  *
- * Coverage of the 12 toggles on CaseAutomationSetting:
+ * Runtime coverage of the 12 toggles on CaseAutomationSetting (honest state):
  *
- *   Category-1 (wired here / in cases.router.ts):
- *     - restrictTagCreationToAdmins  → assertCanCreateTag
- *     - preventDeleteWithOpenTasks   → assertCanDeleteCase (cases.router)
- *     - notifyOnDuplicate            → assertRespectNotifyOnDuplicate (cases.router)
- *     - notifyOnAssignmentChange     → emitAssignmentChangeNotification (cases.router)
- *     - notifyOnStatusChange         → emitStatusChangeNotification (cases.router)
+ *   WIRED in this file (1 of 12):
+ *     - restrictTagCreationToAdmins → assertCanCreateTag (used by tags.create)
  *
- *   Category-2 (follow-up tasks filed in PG-190 attestation notes):
- *     - autoEscalateOverdue          → workers/case-escalation (IFC-310)
- *     - notifyOnDeadlineApproaching  → workers/case-deadline-reminder (IFC-311)
- *     - aiCaseSummarization          → ai-worker/case-summarize (IFC-312)
- *     - aiPriorityPrediction         → ai-worker/case-priority (IFC-312)
- *     - aiResolutionSuggestion       → ai-worker/case-resolution (IFC-312)
- *     - aiTagSuggestions             → ai-worker/case-tag-suggest (IFC-312)
- *     - aiInsightGeneration          → ai-worker/case-insights (IFC-312)
+ *   NOT YET WIRED (11 of 12 — no production consumer exists today):
+ *     - preventDeleteWithOpenTasks
+ *     - notifyOnDuplicate
+ *     - notifyOnAssignmentChange
+ *     - notifyOnStatusChange
+ *     - autoEscalateOverdue
+ *     - notifyOnDeadlineApproaching
+ *     - aiCaseSummarization
+ *     - aiPriorityPrediction
+ *     - aiResolutionSuggestion
+ *     - aiTagSuggestions
+ *     - aiInsightGeneration
+ *
+ * Pending consumers are tracked as dedicated follow-up tasks in
+ * `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv`:
+ *   - PG-190-FU-01 — notify-on-change consumers in cases.router.ts
+ *   - PG-190-FU-02 — preventDeleteWithOpenTasks + notifyOnDuplicate enforcement
+ *   - PG-190-FU-03 — autoEscalate + deadline-reminder workers
+ *   - PG-190-FU-04 — AI chains for cases (summarization, priority, resolution,
+ *                    tag suggestions, insights)
+ *
+ * Until those follow-ups land, the UI toggles are stored but do nothing on the
+ * server side. MEMORY "PG-186 audit lessons — Cat-1 toggles loaded but with
+ * zero production callers" applies — this header documents the dead state
+ * honestly instead of pretending wiring exists.
  */
 
 import type { CaseAutomationSetting } from '@intelliflow/db';
