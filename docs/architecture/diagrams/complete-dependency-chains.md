@@ -2166,8 +2166,17 @@ PG-039 (Dev Apps) ✅ ──► PG-040 (New Dev App) ✅
 PG-043 (Help Center Index) ✅ ──► PG-044 (Help Search) ✅
                              └──► PG-045 (Article Detail) ✅ ──► IFC-298 (DB Models) ✅ ──► IFC-299 (CRUD Router)
                                                                                       ├──► IFC-300 (Seed Script)
-                                                                                      └──► IFC-303 (Feedback Mutation)
+                                                                                      ├──► IFC-303 (Feedback Mutation)
+                                                                                      └──► PG-180 (Admin List Page) ──► PG-181 (Editor)
 ```
+
+### Admin Surface (sprint-18)
+
+PG-180 consumes `helpArticle.list/publish/unpublish/delete` from IFC-299 at the
+server-prefetched route `/settings/help-center/articles` (ADMIN|MANAGER role
+gate). PG-181 builds the editor at `/settings/help-center/articles/new` +
+`[id]/edit` on top of `helpArticle.create/update` plus IFC-301 (Tiptap rich text
+editor). Both land in the same sprint.
 
 ---
 
@@ -2230,6 +2239,22 @@ IFC-137 (NotificationService MVP)
                     Resolves ghost links G-09 and G-10
 ```
 
+## Leads List Dependency Chain
+
+### Leads List (PG-059 — refactor/extract from IFC-014)
+
+```
+apps/web/src/lib/leads/lead-types.ts            (Lead row shape, single source)
+  └─ apps/web/src/lib/leads/bulk-actions.ts     (pure module: options, factories, runners)
+      └─ apps/web/src/components/leads/lead-list.tsx (client composition)
+          └─ apps/web/src/app/leads/(list)/LeadsPageClient.tsx (wrapper)
+              └─ apps/web/src/app/leads/(list)/page.tsx (server shell + prefetch)
+```
+
+Status: ✅ Complete (PG-059 sprint 18). Pure module `bulk-actions.ts` meets
+strict coverage thresholds (100 / 97.87 / 100 / 100 Istanbul). `lead-list.tsx`
+coverage tracked informationally (extracted production code).
+
 ## Lead Settings Dependency Chain
 
 ### Lead Settings (PG-178)
@@ -2240,6 +2265,41 @@ LeadScoringRule (Prisma) → lead-settings validators → lead-settings.router �
 LeadCustomField (Prisma) → lead-settings validators → lead-settings.router → /settings/leads page
 LeadAutomationSetting (Prisma) → lead-settings validators → lead-settings.router → /settings/leads page
 ModuleSettingsLayout → /settings/leads page (reusable across all module settings)
+```
+
+### Case Settings (PG-190 v2 — playbook parity)
+
+```
+Prisma models (all tenant-scoped, RLS on):
+  CaseSettings           @@map "case_settings"              (singleton)
+  CaseDuplicateRule      @@map "case_duplicate_rules"       (1..N)
+  CaseRequiredField      @@map "case_required_fields"       (1..N)
+  CaseTag                @@map "case_tags"                  (0..N)
+  CaseAutomationSetting  @@map "case_automation_settings"   (singleton)
+    ├─ FK tenantId → Tenant (ON DELETE CASCADE)  — all 5
+    └─ FK autoAssignUserId → User (ON DELETE SET NULL) — CaseSettings only
+
+Migrations:
+  20260419200000_case_settings/migration.sql              (v1 — general)
+  20260419210000_case_settings_scope_up/migration.sql     (v2 — 4 new tables)
+
+appRouter.caseSettings (5 sub-routers):
+  .general        get / update / resetToDefaults
+  .duplicateRules list / update / resetToDefaults
+  .requiredFields list / update / resetToDefaults
+  .tags           list / create / update / delete
+  .automation     get / update / resetToDefaults
+
+/cases/(list)/case-settings/page.tsx (Suspense-wrapped, inherits list layout sidebar)
+  └── CaseSettingsContent (client, 9 bento sections)
+        → trpc.caseSettings.{general,duplicateRules,requiredFields,tags,automation}.*
+        → trpc.user.list (IFC-191)
+
+Sidebar entry: apps/web/src/components/sidebar/configs/cases.ts:13
+Parent hub:    apps/web/src/components/cases/CaseSettingsPanel.tsx:8-30
+Smoke guard:   apps/api/src/__tests__/app-router.smoke.test.ts (asserts
+               every sub-router + procedures — closes PG-187/PG-189/PG-190
+               de-registration defect class)
 ```
 
 ---

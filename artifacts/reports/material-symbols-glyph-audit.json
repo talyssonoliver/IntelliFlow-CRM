@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-16T19:39:46.968Z",
+  "generated_at": "2026-04-19T22:35:54.610Z",
   "upstream_font_sha256": "b9a28e5c5328940ee287c3d7f6b626e32a9afa92f86b055295cdf6fd5d1c004b",
   "subsetter_version": "subset-font@^2.5.0",
   "variation_axes": {
@@ -92,6 +92,7 @@
     "dashboard_customize",
     "data_object",
     "database",
+    "date_range",
     "delete",
     "delete_forever",
     "description",
@@ -339,6 +340,7 @@
     "trending_up",
     "tune",
     "undo",
+    "unfold_more",
     "update",
     "update_disabled",
     "upgrade",
@@ -369,8 +371,8 @@
     "zoom_in",
     "zoom_out"
   ],
-  "icons_count": 359,
-  "scanned_files_count": 1083,
+  "icons_count": 361,
+  "scanned_files_count": 1118,
   "source_scan_patterns": [
     "apps/web/src",
     "packages/ui/src"

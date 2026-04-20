@@ -1,13 +1,13 @@
 {
   "audit_metadata": {
-    "generated_at": "2026-04-19T10:08:11.451Z",
+    "generated_at": "2026-04-19T20:21:19.337Z",
     "audit_type": "PHANTOM_COMPLETION_DETECTION",
     "sprint_scope": "all",
     "severity": "CRITICAL"
   },
   "summary": {
-    "total_completed_tasks": 383,
-    "verified_completions": 254,
+    "total_completed_tasks": 384,
+    "verified_completions": 255,
     "phantom_completions": 129,
     "sprint_path_mismatches": 0,
     "integrity_score": "66%",
@@ -2898,6 +2898,13 @@
         "apps/api/src/modules/legal/document-settings.router.ts",
         "apps/api/src/modules/legal/document-automation.ts",
         "packages/validators/src/document-settings.ts"
+      ]
+    },
+    {
+      "task_id": "PG-190",
+      "description": "Module Settings - Cases (/cases/case-settings)",
+      "artifacts_verified": [
+        "apps/web/src/app/cases/case-settings/page.tsx"
       ]
     },
     {

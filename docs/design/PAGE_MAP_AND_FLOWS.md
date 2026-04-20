@@ -274,17 +274,17 @@ developer sidebar. These pages are accessible through the Settings sidebar
 
 ### 13. Cases (9 pages)
 
-| Route                        | Page                  | Description                                             |
-| ---------------------------- | --------------------- | ------------------------------------------------------- |
-| `/cases`                     | Cases List            | Legal/service case queue with stats and filters         |
-| `/cases/new`                 | New Case              | Case creation form                                      |
-| `/cases/[id]`                | Case Detail           | Case detail with documents                              |
-| `/cases/timeline`            | Case Timeline         | Case history and deadline engine                        |
-| `/cases/case-workflows`      | Case Workflow Builder | Visual workflow builder for case automation (IFC-031)   |
-| `/cases/case-workflows/[id]` | Workflow Detail       | Individual workflow view with step editor               |
-| `/cases/case-workflows/new`  | New Workflow          | Create new case automation workflow                     |
-| `/cases/case-types`          | Case Types            | Configure case category labels and SLA defaults         |
-| `/cases/case-settings`       | Case Settings         | Tenant-level case defaults: numbering, escalation rules |
+| Route                        | Page                  | Description                                                                              |
+| ---------------------------- | --------------------- | ---------------------------------------------------------------------------------------- |
+| `/cases`                     | Cases List            | Legal/service case queue with stats and filters                                          |
+| `/cases/new`                 | New Case              | Case creation form                                                                       |
+| `/cases/[id]`                | Case Detail           | Case detail with documents                                                               |
+| `/cases/timeline`            | Case Timeline         | Case history and deadline engine                                                         |
+| `/cases/case-workflows`      | Case Workflow Builder | Visual workflow builder for case automation (IFC-031)                                    |
+| `/cases/case-workflows/[id]` | Workflow Detail       | Individual workflow view with step editor                                                |
+| `/cases/case-workflows/new`  | New Workflow          | Create new case automation workflow                                                      |
+| `/cases/case-types`          | Case Types            | Configure case category labels and SLA defaults                                          |
+| `/cases/case-settings`       | Case Settings         | Tenant-level case defaults: case prefix, default priority, auto-assign (PG-190 — active) |
 
 ---
 
@@ -430,13 +430,16 @@ developer sidebar. These pages are accessible through the Settings sidebar
 | `/support/tickets/new`  | New Support Ticket    | Ticket creation form with file attachments (PG-047)           |
 | `/support/tickets/[id]` | Support Ticket Detail | Ticket detail with thread, status updater, no delete (PG-048) |
 
-### 22. Support / Help Center (2 pages)
+### 22. Support / Help Center (3 pages)
 
-| Route                    | Page              | Description                                                   |
-| ------------------------ | ----------------- | ------------------------------------------------------------- |
-| `/help-center`           | Help Center Index | Searchable category grid for self-service support             |
-| `/help-center/search`    | Help Search       | URL-driven search with scoring, filters, and category results |
-| `/help-center/[article]` | Help Article      | Individual help article detail page (PG-045)                  |
+| Route                                               | Page                       | Description                                                                                                                                                       |
+| --------------------------------------------------- | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/help-center`                                      | Help Center Index          | Searchable category grid for self-service support                                                                                                                 |
+| `/help-center/search`                               | Help Search                | URL-driven search with scoring, filters, and category results                                                                                                     |
+| `/help-center/[article]`                            | Help Article               | Individual help article detail page (PG-045)                                                                                                                      |
+| `/settings/help-center/articles`                    | Help Article Admin List    | ADMIN/MANAGER CRUD list: status, category, search, publish/unpublish/delete (PG-180). Reachable via settings sidebar item `help-center-articles` (role-filtered). |
+| `/settings/help-center/articles/new` (PG-181)       | Help Article Editor — New  | Tiptap editor for drafting new articles (downstream, same sprint)                                                                                                 |
+| `/settings/help-center/articles/[id]/edit` (PG-181) | Help Article Editor — Edit | Tiptap editor for existing articles (downstream, same sprint)                                                                                                     |
 
 ---
 

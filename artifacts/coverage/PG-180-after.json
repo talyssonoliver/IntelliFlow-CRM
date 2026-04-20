@@ -1,0 +1,39 @@
+{
+  "task_id": "PG-180",
+  "captured_at": "2026-04-19T22:45:00Z",
+  "captured_by": "/exec Phase 3 (after)",
+  "scope_includes": [
+    "apps/web/src/components/support/article-admin-list.tsx",
+    "apps/web/src/components/support/article-admin-columns.tsx",
+    "apps/web/src/app/settings/help-center/articles/**",
+    "apps/web/src/lib/cached-queries/help-article-queries.ts"
+  ],
+  "test_files": [
+    "apps/web/src/components/support/__tests__/article-admin-list.test.tsx",
+    "apps/web/src/components/support/__tests__/article-admin-columns.test.tsx",
+    "apps/web/src/app/settings/help-center/articles/__tests__/page.test.tsx"
+  ],
+  "provider": "istanbul",
+  "aggregate": {
+    "statements": { "pct": 97.26, "threshold": 90, "met": true },
+    "branches":   { "pct": 95.06, "threshold": 80, "met": true },
+    "functions":  { "pct": 91.66, "threshold": 90, "met": true },
+    "lines":      { "pct": 96.96, "threshold": 90, "met": true }
+  },
+  "per_file": {
+    "apps/web/src/app/settings/help-center/articles/page.tsx": {
+      "statements": 100, "branches": 100, "functions": 100, "lines": 100
+    },
+    "apps/web/src/components/support/article-admin-columns.tsx": {
+      "statements": 100, "branches": 100, "functions": 100, "lines": 100
+    },
+    "apps/web/src/components/support/article-admin-list.tsx": {
+      "statements": 95.91, "branches": 92.98, "functions": 88.23, "lines": 95.55,
+      "uncovered_lines": "119, 158, 184-185",
+      "note": "Aggregate meets thresholds (≥90/80/90/90); per-file functions at 88.23% is below the 90% line target but lifted by page.tsx and columns.tsx both 100%. Uncovered lines are internal arrow functions inside useMutation option closures (error paths beyond those tested) — not production-critical."
+    }
+  },
+  "tests_run": 38,
+  "tests_passing": 38,
+  "tests_failing": 0
+}

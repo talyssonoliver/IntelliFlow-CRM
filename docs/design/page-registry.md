@@ -693,18 +693,18 @@ Each route entry uses this standard table format:
 
 ### Leads List (`/leads`)
 
-| Field          | Value                                                                             |
-| -------------- | --------------------------------------------------------------------------------- |
-| **Task ID**    | PG-059, IFC-004, IFC-014                                                          |
-| **File Path**  | `apps/web/src/app/leads/(list)/page.tsx`                                          |
-| **Layout**     | `apps/web/src/app/leads/(list)/layout.tsx`                                        |
-| **API Router** | `apps/api/src/modules/lead/lead.router.ts`                                        |
-| **E2E Test**   | None                                                                              |
-| **Unit Tests** | None                                                                              |
-| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms; JS <300KB                        |
-| **Status**     | Implemented                                                                       |
-| **RACI**       | R: Frontend / A: Product / C: Backend / I: QA                                     |
-| **Components** | Server shell, LeadsPageClient (client island), fetchLeadsFirstPage (cached query) |
+| Field          | Value                                                                                                                                      |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Task ID**    | PG-059, IFC-004, IFC-014                                                                                                                   |
+| **File Path**  | `apps/web/src/app/leads/(list)/page.tsx`                                                                                                   |
+| **Layout**     | `apps/web/src/app/leads/(list)/layout.tsx`                                                                                                 |
+| **API Router** | `apps/api/src/modules/lead/lead.router.ts`                                                                                                 |
+| **E2E Test**   | None                                                                                                                                       |
+| **Unit Tests** | None                                                                                                                                       |
+| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms; JS <300KB                                                                                 |
+| **Status**     | Implemented                                                                                                                                |
+| **RACI**       | R: Frontend / A: Product / C: Backend / I: QA                                                                                              |
+| **Components** | Server shell, LeadsPageClient (wrapper), LeadList (extracted component), bulk-actions.ts (pure module), fetchLeadsFirstPage (cached query) |
 
 ### New Lead (`/leads/new`)
 

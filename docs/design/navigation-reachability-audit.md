@@ -428,6 +428,12 @@ Legend:
 
 **Current open ghost links**: None.
 
+### New route introduced by PG-180 (sprint-18, 2026-04-20)
+
+| Route                            | Reachability                                                                                                                                                                                                                                                                                                                                                                  | Notes                                                                                                                                                                                                                  |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/settings/help-center/articles` | **Settings sidebar** — `apps/web/src/components/sidebar/configs/settings.ts` item id `help-center-articles` (label "Help Articles", icon `menu_book`, `roles: ['ADMIN', 'MANAGER']`). Server-side role gate in `apps/web/src/app/settings/help-center/articles/page.tsx` provides defence-in-depth (renders `ForbiddenSurface` if the server session role is not privileged). | USER role sees neither the sidebar item (filtered by `AppSidebar.tsx:110`) nor any content (server shell short-circuits). No ghost-link risk. Spec §2 "sidebar deferred" exemption reversed in this correction commit. |
+
 ## 5. Issues: Broken In-Page Links
 
 Links in components that point to non-functional targets.

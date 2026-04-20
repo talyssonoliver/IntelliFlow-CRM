@@ -1,0 +1,30 @@
+{
+  "task_id": "PG-190",
+  "captured_at": "2026-04-19T21:12:30Z",
+  "provider": "istanbul",
+  "scope": "PG-190 touched files only",
+  "files": [
+    {
+      "path": "packages/validators/src/case-settings.ts",
+      "stmts_pct": 100, "branch_pct": 100, "funcs_pct": 100, "lines_pct": 100
+    },
+    {
+      "path": "apps/api/src/modules/legal/case-settings.router.ts",
+      "stmts_pct": 100, "branch_pct": 100, "funcs_pct": 100, "lines_pct": 100
+    },
+    {
+      "path": "apps/web/src/app/cases/case-settings/CaseSettingsContent.tsx",
+      "stmts_pct": 100, "branch_pct": 84.44, "funcs_pct": 100, "lines_pct": 100
+    },
+    {
+      "path": "apps/web/src/app/cases/case-settings/CaseSettingsLoading.tsx",
+      "stmts_pct": 100, "branch_pct": 100, "funcs_pct": 100, "lines_pct": 100
+    },
+    {
+      "path": "apps/web/src/app/cases/case-settings/page.tsx",
+      "stmts_pct": 100, "branch_pct": 100, "funcs_pct": 100, "lines_pct": 100
+    }
+  ],
+  "thresholds": { "stmts": 90, "branch": 80, "funcs": 90, "lines": 90 },
+  "all_thresholds_met": true
+}

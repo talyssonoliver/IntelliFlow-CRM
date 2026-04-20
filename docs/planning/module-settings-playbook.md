@@ -66,6 +66,24 @@ Reference implementations:
   conflict flag comes from local client-side validation (e.g., duplicate
   `(field, matchStrategy)` pairs in duplicate-rule rows).
 
+### Save button behaviour (mandatory — PG-189 follow-on, 2026-04-19)
+
+When a module-settings page is built on the legacy `ModuleSettingsLayout` (still
+used by `/calendar/calendar-settings` and similar), the page owner MUST:
+
+1. Track an `initialSettings` snapshot captured from the tRPC `get` query.
+2. Compute `isDirty` from a stable comparator (e.g. `JSON.stringify` of a
+   normalized value object — normalize `''`/`undefined` on nullable fields to
+   `null` so empty-input round-trips do not produce false positives).
+3. Pass the computed `isDirty` to `ModuleSettingsLayout` via its `isDirty` prop.
+4. After a successful save or reset, refresh `initialSettings` from the mutation
+   response (via `onSuccess(data)`) so Save re-disables correctly.
+
+Without step 3, the Save button is permanently disabled — the exact defect
+PG-189's remediation fixed. Sibling tasks inherit this rule automatically by
+reading this playbook during `/spec-session` Phase 0.97 (PRD/playbook
+resolution).
+
 ## 4. Tags card
 
 - `TagsTab` MUST use **`forwardRef<TagsTabHandle, TagsTabProps>`** with

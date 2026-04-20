@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-04-19T10:06:58.177Z",
+  "generated_at": "2026-04-19T21:18:03.697Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
-    "total_specs_analyzed": 383,
-    "completed": 383,
-    "partially_done": 0,
-    "spec_only": 0,
-    "uncertain": 0
+    "total_specs_analyzed": 388,
+    "completed": 384,
+    "partially_done": 1,
+    "spec_only": 1,
+    "uncertain": 2
   },
   "status_legend": {
     "COMPLETED": "All evidence confirms task is done: attestation present, CSV=Completed, plan checkboxes done",
@@ -5193,6 +5193,22 @@
       "real_status": "COMPLETED"
     },
     {
+      "task_id": "PG-059",
+      "title": "Leads List",
+      "sprint": 18,
+      "spec_path": ".specify/sprints/sprint-18/specifications/PG-059-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": false,
+      "csv_status": "Plan Complete",
+      "metric_status": "PLANNED",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-089"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
       "task_id": "PG-104",
       "title": "Settings Home",
       "sprint": 13,
@@ -6054,6 +6070,22 @@
       "real_status": "COMPLETED"
     },
     {
+      "task_id": "PG-180",
+      "title": "Help Article Admin List Page",
+      "sprint": 18,
+      "spec_path": ".specify/sprints/sprint-18/specifications/PG-180-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Plan Complete",
+      "metric_status": "PLANNED",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-299"
+      ],
+      "real_status": "PARTIALLY_DONE"
+    },
+    {
       "task_id": "PG-182",
       "title": "Module Settings - Contacts (/contacts/contact-settings)",
       "sprint": 17,
@@ -6136,6 +6168,54 @@
         "PG-178",
         "PG-182",
         "PG-183"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-187",
+      "title": "Module Settings - Reports (/analytics/report-settings)",
+      "sprint": 18,
+      "spec_path": ".specify/sprints/sprint-18/specifications/PG-187-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Plan Complete",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-178"
+      ],
+      "real_status": "UNCERTAIN"
+    },
+    {
+      "task_id": "PG-189",
+      "title": "Module Settings - Appointments (/calendar/calendar-settings)",
+      "sprint": 18,
+      "spec_path": ".specify/sprints/sprint-18/specifications/PG-189-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "In Progress",
+      "metric_status": "IN_PROGRESS",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-178"
+      ],
+      "real_status": "UNCERTAIN"
+    },
+    {
+      "task_id": "PG-190",
+      "title": "Module Settings - Cases (/cases/case-settings)",
+      "sprint": 18,
+      "spec_path": ".specify/sprints/sprint-18/specifications/PG-190-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-178"
       ],
       "real_status": "COMPLETED"
     },

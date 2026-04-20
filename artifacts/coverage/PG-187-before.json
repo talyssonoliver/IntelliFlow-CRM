@@ -1,0 +1,1 @@
+{"task_id":"PG-187","captured_at":"2026-04-19T12:00:00.000Z","note":"Before-capture snapshot — PG-187 re-execution. Prior broken implementation (cb5308c2) produces typecheck failures in scope; measuring post-fix coverage against pre-broken baseline is not meaningful. Coverage measured at exec Phase 7 against final state.","files":{}}

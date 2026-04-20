@@ -446,3 +446,87 @@ Reference implementation: `apps/web/src/app/tickets/(list)/sla-policies/**`,
   Automation" category).
 - AC-T14: Lighthouse production build score ≥ 0.9 (performance + accessibility)
   on `/tickets/sla-policies`.
+
+## PG-187 Addendum: Report Settings (2026-04-19)
+
+### User Stories
+
+- **US-R1 (Analyst)**: As an analyst, I want to set a tenant-wide default date
+  range for analytics reports (7d/14d/30d/90d) so that every chart and export
+  starts consistent without me adjusting the range on each page.
+- **US-R2 (Analyst)**: As an analyst, I want to pick the display currency (ISO
+  4217 code) that applies to every revenue chart and export.
+- **US-R3 (Ops manager)**: As an ops manager, I want to turn on scheduled email
+  delivery of standard reports, pick the frequency (daily / weekly / monthly),
+  the weekday (for weekly), delivery time, recipient list, and format
+  (pdf/csv/excel), so that stakeholders get reports on a cadence without logging
+  in.
+- **US-R4 (Tenant admin)**: As a tenant admin, I need a "Reset to defaults"
+  action that restores `30d / USD / scheduled delivery disabled` in one click
+  with explicit confirmation.
+
+### Acceptance Criteria (Reports)
+
+- AC-R1: Page lives at `/analytics/report-settings` and is routed through
+  `apps/web/src/app/analytics/(list)/report-settings/page.tsx` so it inherits
+  the `AnalyticsSettingsSidebarNav` rendered by `analytics/(list)/layout.tsx`
+  when `isReportSettingsPage(pathname) === true`.
+- AC-R2: Prior `apps/web/src/app/analytics/report-settings/**` (broken prior
+  implementation, commit `cb5308c2`) is DELETED — no duplicate route, no
+  orphaned files.
+- AC-R3: Layout uses `PageHeader` + 12-column bento grid with 3 `Card`s (Default
+  Range, Currency, Scheduled Delivery). `ModuleSettingsLayout` is NOT used, per
+  playbook §1 deprecation.
+- AC-R4: Prisma model `ReportGeneralConfig` exists in
+  `packages/db/prisma/schema.prisma` with `@@unique([tenantId])`, `Tenant`
+  relation, and columns `defaultRange String @default("30d")`,
+  `currency String @default("USD")`, `scheduledDelivery Json @default("...")`.
+  Migration SQL under
+  `packages/db/prisma/migrations/<ts>_add_report_general_config/`.
+- AC-R5: `ReportGeneralConfig` exported from the `export type { … }` list in
+  `packages/db/src/index.ts` (playbook §10).
+- AC-R6: `packages/validators/src/index.ts` includes
+  `export * from './report-settings';` — `updateReportSettingsSchema`,
+  `DEFAULT_REPORT_SETTINGS`, `ScheduledDelivery`, and peers are reachable from
+  `@intelliflow/validators`.
+- AC-R7: `reportSettingsRouter` is imported and merged into
+  `apps/api/src/modules/analytics/analytics.router.ts` under the
+  `reportSettings` namespace, so
+  `trpc.analytics.reportSettings.{get, update, resetToDefaults}` resolves.
+- AC-R8: All 3 section components (`DefaultRangeSection`, `CurrencySection`,
+  `ScheduledDeliverySection`) derive their enum option lists from the Zod
+  schemas in `packages/validators/src/report-settings.ts`
+  (`defaultRangeSchema.options`, `scheduledDeliveryFrequencySchema.options`,
+  `scheduledDeliveryFormatSchema.options`). No duplicated string-literal union
+  types in the UI.
+- AC-R9: `ReportSettingsContent.tsx` parses server-returned settings through the
+  Zod schemas before seeding local state. Unknown values fall back to
+  `DEFAULT_REPORT_SETTINGS`. No `as DefaultRangeValue` unchecked casts.
+- AC-R10: Scheduled delivery enforces `recipients.length >= 1` when
+  `enabled === true`. Save button disables and a `role="alert"` message explains
+  the requirement. Server-side Zod `.superRefine` enforces the same rule so a
+  malformed client cannot bypass.
+- AC-R11: `onReset` triggers a `ConfirmationDialog` then calls
+  `analytics.reportSettings.resetToDefaults`; toast on success/failure; dirty
+  flag clears after server round-trip.
+- AC-R12: Page accessibility: every form control has `htmlFor`/`id` pair or
+  `aria-label`; decorative icons use `aria-hidden="true"`; validation errors use
+  `role="alert"`.
+- AC-R13: `/analytics/report-settings` is present in the `url` array in
+  `lighthouserc.js`.
+- AC-R14: Lighthouse production-build run achieves ≥ 0.9 on both performance and
+  accessibility (measured in CI).
+- AC-R15: Unit/integration tests: validator (happy + 4 negative paths), router
+  (`get`, `update` × 3 fields, `resetToDefaults`, cross-tenant negative, Zod
+  rejection paths; 13+ cases), frontend (3 section components, orchestrator
+  Save/Reset/dirty logic, page.tsx smoke; 79+ cases). All 4 validations
+  (TypeScript / Tests / Lint / Build) pass honestly — no fabricated exit codes.
+- AC-R16: Attestation file hashes are produced via
+  `certutil -hashfile <path> SHA256` and verified against the committed tree.
+  Attestation `notes` records any deviation from the plan honestly.
+
+### Follow-up tasks (2026-04-19)
+
+None blocking. Sibling stubs `/analytics/report-templates` and
+`/analytics/scheduled-reports` remain at the wrong route-group level (no
+sidebar). Their own tasks in later sprints should address the move.

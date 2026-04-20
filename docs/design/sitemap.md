@@ -273,7 +273,8 @@ intelliflow.com
 │   ├── /settings/billing                 Billing info, tax IDs, payment defaults
 │   ├── /settings/appointments            Appointment defaults
 │   ├── /settings/cases                   Case defaults
-│   └── /settings/tasks                   Task defaults
+│   ├── /settings/tasks                   Task defaults
+│   └── /settings/help-center/articles    Help article admin list (PG-180 — ADMIN/MANAGER)
 │
 ├── BILLING ──────────────────────────────── Layout: billing
 │   │

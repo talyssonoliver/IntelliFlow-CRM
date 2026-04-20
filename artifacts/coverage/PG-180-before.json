@@ -1,0 +1,21 @@
+{
+  "task_id": "PG-180",
+  "captured_at": "2026-04-19T22:15:00Z",
+  "captured_by": "/exec Phase 1.5 (before)",
+  "scope": "Files covered by this task do not yet exist on HEAD — baseline is N/A for new surfaces.",
+  "files_expected": [
+    "apps/web/src/app/settings/help-center/articles/page.tsx",
+    "apps/web/src/app/settings/help-center/articles/loading.tsx",
+    "apps/web/src/app/settings/help-center/articles/layout.tsx",
+    "apps/web/src/components/support/article-admin-list.tsx",
+    "apps/web/src/components/support/article-admin-columns.tsx",
+    "apps/web/src/lib/cached-queries/help-article-queries.ts"
+  ],
+  "baseline": {
+    "statements": { "covered": 0, "total": 0, "pct": 0 },
+    "branches":   { "covered": 0, "total": 0, "pct": 0 },
+    "functions":  { "covered": 0, "total": 0, "pct": 0 },
+    "lines":      { "covered": 0, "total": 0, "pct": 0 }
+  },
+  "notes": "All task-scope files are NEW as of PG-180. No prior coverage to compare against. After-capture will record actual %s."
+}
