@@ -1,4 +1,5 @@
 artifacts/**
+packages/db/generated/**
 .scannerwork/**
 .specify/**
 .claude/worktrees/**

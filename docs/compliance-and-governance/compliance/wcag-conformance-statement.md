@@ -20,64 +20,97 @@ partially supported on the `/deals` pipeline view.
 
 ## 2. Scope
 
-This statement covers the IntelliFlow CRM web application across all 90
-user-facing routes (excluding developer portal). Dynamic segment routes (e.g.,
-`/contacts/[id]`) inherit conformance status from their parent static route and
-are not listed separately.
+This statement covers the IntelliFlow CRM web application across all 179
+user-facing routes. Dynamic segment routes (e.g., `/contacts/[id]`) inherit
+conformance status from their parent static route and are not listed separately.
 
-- **Public & marketing (13):** `/`, `/about`, `/blog`, `/careers`, `/contact`,
-  `/features`, `/partners`, `/press`, `/pricing`, `/security`, `/signup`,
-  `/status`, `/terms`
+- **Public & marketing (18):** `/`, `/about`, `/aup`, `/blog`, `/careers`,
+  `/contact`, `/cookies`, `/dpa`, `/features`, `/partners`, `/press`,
+  `/pricing`, `/privacy`, `/security`, `/signup`, `/status`, `/terms`,
+  `/upgrade`
 - **Auth flows (9):** `/auth/callback`, `/forgot-password`, `/login`, `/logout`,
   `/mfa/verify`, `/reset-password/callback`, `/signup/success`, `/sso`,
   `/verify-email/callback`
 - **Dashboard (3):** `/dashboard`, `/dashboard/customize`, `/dashboard/new`
-- **CRM — Leads, Contacts & Accounts (5):** `/accounts`, `/contacts`,
-  `/contacts/new`, `/leads`, `/leads/new`
-- **CRM — Deals (2):** `/deals`, `/deals/forecast`
-- **CRM — Cases & Documents (7):** `/cases`, `/cases/case-workflows`,
-  `/cases/new`, `/cases/timeline`, `/documents`, `/documents/new`,
-  `/documents/document-settings`
-- **CRM — Calendar & Email (3):** `/calendar`, `/appointments/new`, `/email`
-- **CRM — Tasks & Tickets (6):** `/tasks`, `/tickets`, `/tickets/new`,
-  `/tickets/sla-policies`, `/tickets/types`, `/tickets/automations`
-- **Agent Approvals & AI (13):** `/agent-approvals`, `/agent-approvals/agents`,
+- **Activity (1):** `/activity`
+- **CRM — Leads, Contacts & Accounts (14):** `/accounts`,
+  `/accounts/account-settings`, `/accounts/account-tiers`,
+  `/accounts/territory-mapping`, `/contacts`, `/contacts/contact-settings`,
+  `/contacts/contact-types`, `/contacts/import-export`, `/contacts/new`,
+  `/leads`, `/leads/lead-settings`, `/leads/new`, `/leads/pipeline`,
+  `/leads/routing`
+- **CRM — Deals (8):** `/deals`, `/deals/all/forecast`,
+  `/deals/deal-automation`, `/deals/deal-settings`, `/deals/deal-stages`,
+  `/deals/forecast`, `/deals/new`, `/deals/trash`
+- **CRM — Cases & Documents (12):** `/cases`, `/cases/case-settings`,
+  `/cases/case-types`, `/cases/case-workflows`, `/cases/case-workflows/new`,
+  `/cases/new`, `/cases/timeline`, `/documents`, `/documents/document-settings`,
+  `/documents/document-types`, `/documents/new`, `/documents/storage-policies`
+- **CRM — Calendar & Email (11):** `/appointments`, `/appointments/new`,
+  `/calendar`, `/calendar/availability`, `/calendar/calendar-settings`,
+  `/calendar/event-types`, `/email`, `/email/compose`, `/email/email-settings`,
+  `/email/signatures`, `/email/templates`
+- **CRM — Tasks & Tickets (11):** `/tasks`, `/tasks/automation`,
+  `/tasks/task-settings`, `/tasks/task-types`, `/tickets`,
+  `/tickets/automations`, `/tickets/new`, `/tickets/sla-policies`,
+  `/tickets/types`, `/support/tickets`, `/support/tickets/new`
+- **Agent Approvals & AI (18):** `/agent-approvals`, `/agent-approvals/agents`,
   `/agent-approvals/ai-review`, `/agent-approvals/ai-search`,
+  `/agent-approvals/ai-settings`, `/agent-approvals/approval-policies`,
   `/agent-approvals/churn-risk`, `/agent-approvals/drift`,
   `/agent-approvals/experiments`, `/agent-approvals/history`,
-  `/agent-approvals/latency`, `/agent-approvals/lead-scoring`,
-  `/agent-approvals/logs`, `/agent-approvals/preview`,
-  `/agent-approvals/sentiment`
-- **Analytics & Insights (3):** `/analytics`, `/analytics/feedback`, `/insights`
-- **Governance (5):** `/governance`, `/governance/adr`,
+  `/agent-approvals/insights`, `/agent-approvals/latency`,
+  `/agent-approvals/lead-scoring`, `/agent-approvals/logs`,
+  `/agent-approvals/model-config`, `/agent-approvals/preview`,
+  `/agent-approvals/sentiment`, `/agent-approvals/tools`
+- **Analytics & Insights (9):** `/analytics`, `/analytics/feedback`,
+  `/analytics/report-settings`, `/analytics/report-templates`,
+  `/analytics/saved/monthly`, `/analytics/saved/quarterly`,
+  `/analytics/saved/weekly`, `/analytics/scheduled-reports`, `/insights`
+- **Governance (9):** `/governance`, `/governance/adr`,
   `/governance/compliance`, `/governance/policies`,
-  `/governance/quality-reports`
-- **Billing (6):** `/billing`, `/billing/checkout`, `/billing/invoices`,
-  `/billing/payment-methods`, `/billing/receipts`, `/billing/subscriptions`
-- **Notifications, Help & Profile (6):** `/help-center`, `/notifications`,
-  `/notifications/channels`, `/notifications/quiet-hours`,
+  `/governance/quality-reports`, `/governance/quality-reports/coverage`,
+  `/governance/quality-reports/lighthouse`,
+  `/governance/quality-reports/performance`,
+  `/governance/quality-reports/trpc-benchmark`
+- **Billing (11):** `/billing`, `/billing/cancel`, `/billing/checkout`,
+  `/billing/invoices`, `/billing/payment-methods`, `/billing/plans`,
+  `/billing/receipts`, `/billing/settings`, `/billing/subscriptions`,
+  `/billing/upgrade`, `/billing/usage`
+- **Notifications, Help & Profile (7):** `/help-center`, `/help-center/search`,
+  `/notifications`, `/notifications/channels`, `/notifications/quiet-hours`,
   `/notifications/settings`, `/profile`
-- **Settings (10):** `/settings`, `/settings/account`, `/settings/billing`,
+- **Settings (24):** `/settings`, `/settings/account`, `/settings/accounts`,
+  `/settings/appointments`, `/settings/automation`,
+  `/settings/automation/custom-actions`,
+  `/settings/automation/custom-node-types`, `/settings/billing`,
+  `/settings/cases`, `/settings/contacts`, `/settings/deals`,
+  `/settings/documents`, `/settings/help-center/articles`,
   `/settings/integrations`, `/settings/leads`, `/settings/notifications`,
-  `/settings/pipeline`, `/settings/routing`, `/settings/security/mfa`,
-  `/settings/team`
-- **System pages (1):** `/500`
+  `/settings/pipeline`, `/settings/reports`, `/settings/routing`,
+  `/settings/security/mfa`, `/settings/security/mfa/setup`, `/settings/tasks`,
+  `/settings/team`, `/settings/tickets`
+- **Developer portal (2):** `/developers/apps`, `/developers/apps/new`
+- **Docs portal (9):** `/docs`, `/docs/architecture`, `/docs/auth`,
+  `/docs/changelog`, `/docs/cli`, `/docs/guides`, `/docs/integrations`,
+  `/docs/sdk`, `/docs/webhooks`
+- **System pages (3):** `/404`, `/500`, `/maintenance`
 
 ---
 
 ## 3. Conformance Details
 
-| Metric                           | Value              |
-| -------------------------------- | ------------------ |
-| Total WCAG 2.1 Level A criteria  | 30                 |
-| Total WCAG 2.1 Level AA criteria | 20                 |
-| Level A: Supports                | 25                 |
-| Level A: Partially Supports      | 1 (SC 1.4.1)       |
-| Level A: Not Applicable          | 4                  |
-| Level AA: Supports               | 16                 |
-| Level AA: Not Applicable         | 4                  |
-| Routes fully conformant          | 89 of 90           |
-| Routes partially conformant      | 1 of 90 (`/deals`) |
+| Metric                           | Value               |
+| -------------------------------- | ------------------- |
+| Total WCAG 2.1 Level A criteria  | 30                  |
+| Total WCAG 2.1 Level AA criteria | 20                  |
+| Level A: Supports                | 25                  |
+| Level A: Partially Supports      | 1 (SC 1.4.1)        |
+| Level A: Not Applicable          | 4                   |
+| Level AA: Supports               | 16                  |
+| Level AA: Not Applicable         | 4                   |
+| Routes fully conformant          | 178 of 179          |
+| Routes partially conformant      | 1 of 179 (`/deals`) |
 
 ---
 
