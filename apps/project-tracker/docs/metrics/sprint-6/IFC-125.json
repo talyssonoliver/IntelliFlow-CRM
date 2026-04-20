@@ -7,7 +7,7 @@
   "sprint": "sprint-6",
   "dependencies": {
     "required": ["IFC-005", "IFC-008"],
-    "verified_at": "2026-04-19T10:06:56.802Z",
+    "verified_at": "2026-04-19T21:18:02.574Z",
     "all_satisfied": true
   },
   "status": "DONE",

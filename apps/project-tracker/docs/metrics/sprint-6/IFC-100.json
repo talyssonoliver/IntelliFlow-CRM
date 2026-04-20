@@ -11,7 +11,7 @@
   "dependencies": {
     "required": ["IFC-008", "GOV-001"],
     "all_satisfied": true,
-    "verified_at": "2026-04-19T10:06:56.800Z"
+    "verified_at": "2026-04-19T21:18:02.572Z"
   },
   "artifacts": {
     "expected": [],

@@ -14,7 +14,7 @@
   "dependencies": {
     "required": ["IFC-180", "IFC-149"],
     "all_satisfied": true,
-    "verified_at": "2026-04-19T10:06:56.813Z",
+    "verified_at": "2026-04-19T21:18:02.582Z",
     "notes": "IFC-180 (tRPC Router) completed 2026-02-05. IFC-149 (Agent Approvals) completed."
   },
   "status_history": [

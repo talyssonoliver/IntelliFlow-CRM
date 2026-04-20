@@ -9,7 +9,7 @@
   "stream": null,
   "dependencies": {
     "required": ["IFC-001", "IFC-005"],
-    "verified_at": "2026-04-19T10:06:56.769Z",
+    "verified_at": "2026-04-19T21:18:02.547Z",
     "all_satisfied": true,
     "notes": "IFC-001 (Technical Architecture Spike) and IFC-005 (Technology Stack Validation) verified as DONE"
   },

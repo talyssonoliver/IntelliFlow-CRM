@@ -14,7 +14,7 @@
   "dependencies": {
     "required": ["IFC-105", "IFC-107", "IFC-003"],
     "all_satisfied": true,
-    "verified_at": "2026-04-19T10:06:57.064Z"
+    "verified_at": "2026-04-19T21:18:02.808Z"
   },
   "status_history": [
     {

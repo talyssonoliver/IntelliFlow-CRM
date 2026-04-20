@@ -14,7 +14,7 @@
   "dependencies": {
     "required": ["IFC-187"],
     "all_satisfied": true,
-    "verified_at": "2026-04-19T10:06:56.816Z",
+    "verified_at": "2026-04-19T21:18:02.584Z",
     "notes": "IFC-187 (Task tRPC Router) marked Completed. All 10 endpoints available in router (create, getById, list, update, delete, complete, assign, reschedule, getReminders, getByEntity)."
   },
   "status_history": [

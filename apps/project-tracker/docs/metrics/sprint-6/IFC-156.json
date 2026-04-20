@@ -11,7 +11,7 @@
   "dependencies": {
     "required": ["IFC-155", "IFC-139", "IFC-125"],
     "all_satisfied": true,
-    "verified_at": "2026-04-19T10:06:56.812Z"
+    "verified_at": "2026-04-19T21:18:02.581Z"
   },
   "artifacts": {
     "expected": [],
