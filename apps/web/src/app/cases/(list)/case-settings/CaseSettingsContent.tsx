@@ -213,12 +213,16 @@ export default function CaseSettingsContent() {
 
   const duplicateRules = (duplicateRulesQuery.data ?? []) as CaseDuplicateRuleInput[];
   const requiredFields = (requiredFieldsQuery.data ?? []) as CaseRequiredFieldInput[];
+  // Playbook §4: colorToken is typed as `string` on the row so a legacy or
+  // out-of-allowlist value can't be cast-narrowed into a broken class lookup.
   const tags = (tagsQuery.data ?? []) as Array<{
     id: string;
     name: string;
-    colorToken: CaseTagColorToken;
+    colorToken: string;
     description: string | null;
   }>;
+  const swatchClass = (token: string): string =>
+    TAG_COLOR_CLASSES[token as CaseTagColorToken] ?? TAG_COLOR_CLASSES.slate;
   const automation = (automationQuery.data ?? null) as CaseAutomationSettingsInput | null;
 
   const toggleDuplicateActive = (idx: number, next: boolean) => {
@@ -236,9 +240,11 @@ export default function CaseSettingsContent() {
     requiredFieldsUpdate.mutate({ fields });
   };
 
+  // Send only the changed field — the automation input schema is .partial()
+  // so last-write-wins is scoped to the single key, not the whole object.
   const toggleAutomation = (key: keyof CaseAutomationSettingsInput, next: boolean) => {
     if (!automation) return;
-    automationUpdate.mutate({ ...automation, [key]: next } as CaseAutomationSettingsInput);
+    automationUpdate.mutate({ [key]: next } as Partial<CaseAutomationSettingsInput>);
   };
 
   if (authLoading || generalQuery.isLoading) {
@@ -523,9 +529,9 @@ export default function CaseSettingsContent() {
               {tags.map((t) => (
                 <span
                   key={t.id}
-                  className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium ${
-                    TAG_COLOR_CLASSES[t.colorToken]
-                  }`}
+                  className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium ${swatchClass(
+                    t.colorToken
+                  )}`}
                 >
                   {t.name}
                   <button

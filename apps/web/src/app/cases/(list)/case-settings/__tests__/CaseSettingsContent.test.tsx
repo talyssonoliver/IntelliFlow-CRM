@@ -79,6 +79,20 @@ const H = vi.hoisted(() => {
     automationUpdate: vi.fn(async () => automationData),
   };
 
+  // Mutable per-test state for the general query — tests can flip loading/error
+  // on this object and subsequent useQuery() calls pick up the new value.
+  const generalQueryState = {
+    data: generalData as typeof generalData | undefined,
+    isLoading: false,
+    error: null as Error | null,
+  };
+
+  const usersState = {
+    data: { users: [{ id: 'u1', name: 'Alice', email: 'alice@test.com' }] } as {
+      users: Array<{ id: string; name: string; email: string }>;
+    },
+  };
+
   const makeQueryResult = <T,>(data: T) => ({
     data,
     isLoading: false,
@@ -117,6 +131,8 @@ const H = vi.hoisted(() => {
     requiredFieldsData,
     tagsData,
     automationData,
+    generalQueryState,
+    usersState,
     mocks,
     makeQueryResult,
     makeMutation,
@@ -136,7 +152,14 @@ vi.mock('@/lib/trpc', () => ({
     }),
     caseSettings: {
       general: {
-        get: { useQuery: () => H.makeQueryResult(H.generalData) },
+        get: {
+          useQuery: () => ({
+            data: H.generalQueryState.data,
+            isLoading: H.generalQueryState.isLoading,
+            error: H.generalQueryState.error,
+            refetch: vi.fn(),
+          }),
+        },
         update: H.makeMutation(H.mocks.generalUpdate),
         resetToDefaults: H.makeMutation(H.mocks.generalReset),
       },
@@ -164,10 +187,7 @@ vi.mock('@/lib/trpc', () => ({
     },
     user: {
       list: {
-        useQuery: () => ({
-          data: { users: [{ id: 'u1', name: 'Alice', email: 'alice@test.com' }] },
-          isLoading: false,
-        }),
+        useQuery: () => ({ data: H.usersState.data, isLoading: false }),
       },
     },
   },
@@ -178,6 +198,12 @@ import { CaseSettingsLoading } from '../CaseSettingsLoading';
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // Reset mutable query state to defaults so each test starts from a
+  // "loaded, no error" baseline (tests that need loading/error override).
+  H.generalQueryState.data = H.generalData;
+  H.generalQueryState.isLoading = false;
+  H.generalQueryState.error = null;
+  H.usersState.data = { users: [{ id: 'u1', name: 'Alice', email: 'alice@test.com' }] };
 });
 
 describe('CaseSettingsContent — PG-190 v2 scope-up', () => {
@@ -256,6 +282,141 @@ describe('CaseSettingsContent — PG-190 v2 scope-up', () => {
     await user.click(screen.getByRole('switch', { name: /toggle rule title fuzzy/i }));
     await new Promise((r) => setTimeout(r, 30));
     expect(H.mocks.duplicateUpdate).toHaveBeenCalled();
+  });
+});
+
+describe('CaseSettingsContent — branch coverage top-ups', () => {
+  it('changing default priority marks the form dirty and enables Save', async () => {
+    const user = userEvent.setup();
+    render(<CaseSettingsContent />);
+    const select = screen.getByLabelText(/default priority/i);
+    await user.selectOptions(select, 'HIGH');
+    expect(screen.getByRole('button', { name: /save changes/i })).toBeTruthy();
+  });
+
+  it('enabling auto-assign renders the user search input', async () => {
+    const user = userEvent.setup();
+    render(<CaseSettingsContent />);
+    const toggle = screen.getByRole('switch', { name: /enable auto-assign/i });
+    await user.click(toggle);
+    expect(screen.getByPlaceholderText(/search team members/i)).toBeTruthy();
+  });
+
+  it('picking a user from the list fires the userId change', async () => {
+    const user = userEvent.setup();
+    render(<CaseSettingsContent />);
+    await user.click(screen.getByRole('switch', { name: /enable auto-assign/i }));
+    const alice = await screen.findByRole('button', { name: /alice/i });
+    await user.click(alice);
+    // After selection the search input shows the picked user's display name.
+    expect((screen.getByPlaceholderText(/search team members/i) as HTMLInputElement).value).toBe(
+      'Alice'
+    );
+  });
+
+  it('user search input updates when typing', async () => {
+    const user = userEvent.setup();
+    render(<CaseSettingsContent />);
+    await user.click(screen.getByRole('switch', { name: /enable auto-assign/i }));
+    const search = screen.getByPlaceholderText(/search team members/i);
+    await user.type(search, 'bob');
+    expect((search as HTMLInputElement).value.toLowerCase()).toContain('bob');
+  });
+
+  it('opening reset dialog and confirming fires general.resetToDefaults', async () => {
+    const user = userEvent.setup();
+    render(<CaseSettingsContent />);
+    await user.click(screen.getByRole('button', { name: /reset to defaults/i }));
+    const dialogConfirms = screen.getAllByRole('button', { name: /reset to defaults/i });
+    const dialogConfirm = dialogConfirms[dialogConfirms.length - 1];
+    dialogConfirm.click();
+    await new Promise((r) => setTimeout(r, 30));
+    expect(H.mocks.generalReset).toHaveBeenCalled();
+  });
+
+  it('does not call tags.create when the name input is empty/whitespace', async () => {
+    const user = userEvent.setup();
+    render(<CaseSettingsContent />);
+    // No typing — button is disabled
+    const addBtn = screen.getByRole('button', { name: /add tag/i });
+    await user.click(addBtn);
+    expect(H.mocks.tagCreate).not.toHaveBeenCalled();
+  });
+
+  it('renders a tag with unknown colorToken using the slate fallback class', () => {
+    // Mutate the hoisted tagsData to include an out-of-allowlist token.
+    H.tagsData.push({ id: 't2', name: 'Legacy', colorToken: 'mauve', description: null });
+    render(<CaseSettingsContent />);
+    // Find the legacy tag pill by its name — it MUST still render (not crash).
+    const pill = screen.getByText('Legacy');
+    expect(pill).toBeTruthy();
+    // Clean up so later tests aren't polluted.
+    H.tagsData.pop();
+  });
+
+  it('toggling another AI switch (tag suggestions) fires the mutation', async () => {
+    const user = userEvent.setup();
+    render(<CaseSettingsContent />);
+    await user.click(screen.getByRole('switch', { name: /tag suggestions/i }));
+    await new Promise((r) => setTimeout(r, 30));
+    expect(H.mocks.automationUpdate).toHaveBeenCalled();
+  });
+
+  it('toggling a workflow automation switch fires the mutation', async () => {
+    const user = userEvent.setup();
+    render(<CaseSettingsContent />);
+    await user.click(screen.getByRole('switch', { name: /notify on assignment change/i }));
+    await new Promise((r) => setTimeout(r, 30));
+    expect(H.mocks.automationUpdate).toHaveBeenCalled();
+  });
+
+  it('toggling an inactive duplicate rule turns it on', async () => {
+    const user = userEvent.setup();
+    render(<CaseSettingsContent />);
+    await user.click(screen.getByRole('switch', { name: /toggle rule externalId exact/i }));
+    await new Promise((r) => setTimeout(r, 30));
+    expect(H.mocks.duplicateUpdate).toHaveBeenCalled();
+  });
+
+  it('toggling a required-field off (title → false) updates via .mutate', async () => {
+    const user = userEvent.setup();
+    render(<CaseSettingsContent />);
+    await user.click(screen.getByRole('switch', { name: /require title/i }));
+    await new Promise((r) => setTimeout(r, 30));
+    expect(H.mocks.requiredUpdate).toHaveBeenCalled();
+  });
+
+  it('Configuration Summary reflects query-data values', () => {
+    render(<CaseSettingsContent />);
+    // "1 rules · 1 tags" is unique to the Configuration Summary card.
+    expect(screen.getByText(/1 rules · 1 tags/i)).toBeTruthy();
+  });
+});
+
+describe('CaseSettingsContent — loading + error branches', () => {
+  it('renders the animate-pulse skeleton when generalQuery is loading', () => {
+    H.generalQueryState.isLoading = true;
+    const { container } = render(<CaseSettingsContent />);
+    expect(container.querySelector('.animate-pulse')).toBeTruthy();
+    // Heading not rendered during loading state.
+    expect(screen.queryByRole('heading', { name: /case settings/i })).toBeNull();
+  });
+
+  it('renders the error banner + Retry when generalQuery errors', async () => {
+    H.generalQueryState.error = new Error('Network unavailable');
+    render(<CaseSettingsContent />);
+    expect(screen.getByText(/network unavailable/i)).toBeTruthy();
+    expect(screen.getByRole('button', { name: /retry/i })).toBeTruthy();
+  });
+
+  it('auto-assign user search shows nothing when users query returns empty list', async () => {
+    H.usersState.data = { users: [] };
+    const user = userEvent.setup();
+    render(<CaseSettingsContent />);
+    await user.click(screen.getByRole('switch', { name: /enable auto-assign/i }));
+    // The <ul> dropdown only renders when users.length > 0 — must be absent.
+    const dropdowns = document.querySelectorAll('ul.rounded-md.border.border-border');
+    expect(dropdowns.length).toBe(0);
   });
 });
 

@@ -9,6 +9,7 @@
  *   automation     — CaseAutomationSetting singleton (get / update / resetToDefaults)
  */
 
+import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import {
   updateCaseSettingsSchema,
@@ -23,6 +24,7 @@ import {
   DEFAULT_CASE_REQUIRED_FIELDS,
 } from '@intelliflow/validators';
 import { assertTenantContext } from '../../security/tenant-context';
+import { loadCaseAutomation, assertCanCreateTag } from './case-automation';
 
 // ─── General ────────────────────────────────────────────────────────────────
 
@@ -186,6 +188,10 @@ const tagsRouter = createTRPCRouter({
   create: tenantProcedure.input(createCaseTagSchema).mutation(async ({ ctx, input }) => {
     assertTenantContext(ctx);
     const tenantId = ctx.tenant.tenantId;
+    // Wire the `restrictTagCreationToAdmins` toggle — loaded per-request so
+    // the enforcement flips immediately when an admin changes the setting.
+    const flags = await loadCaseAutomation(ctx);
+    assertCanCreateTag(ctx, flags);
     return ctx.prismaWithTenant.caseTag.create({
       data: {
         tenantId,
@@ -204,7 +210,8 @@ const tagsRouter = createTRPCRouter({
     const existing = await ctx.prismaWithTenant.caseTag.findFirst({
       where: { id, tenantId },
     });
-    if (!existing) throw new Error('Tag not found');
+    if (!existing) throw new TRPCError({ code: 'NOT_FOUND', message: 'Tag not found' });
+    // tenant check done by the findFirst above; RLS is the real enforcement.
     return ctx.prismaWithTenant.caseTag.update({
       where: { id },
       data: rest,
@@ -217,7 +224,7 @@ const tagsRouter = createTRPCRouter({
     const existing = await ctx.prismaWithTenant.caseTag.findFirst({
       where: { id: input.id, tenantId },
     });
-    if (!existing) throw new Error('Tag not found');
+    if (!existing) throw new TRPCError({ code: 'NOT_FOUND', message: 'Tag not found' });
     await ctx.prismaWithTenant.caseTag.delete({ where: { id: input.id } });
     return { success: true };
   }),

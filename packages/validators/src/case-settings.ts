@@ -59,9 +59,26 @@ export const caseDuplicateRuleSchema = z.object({
 });
 export type CaseDuplicateRuleInput = z.infer<typeof caseDuplicateRuleSchema>;
 
-export const updateCaseDuplicateRulesSchema = z.object({
-  rules: z.array(caseDuplicateRuleSchema),
-});
+export const updateCaseDuplicateRulesSchema = z
+  .object({
+    rules: z.array(caseDuplicateRuleSchema),
+  })
+  .superRefine((data, ctx) => {
+    const seen = new Map<string, number>();
+    data.rules.forEach((rule, idx) => {
+      const key = `${rule.field}::${rule.matchStrategy}`;
+      const first = seen.get(key);
+      if (first !== undefined) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Duplicate rule: (${rule.field}, ${rule.matchStrategy}) is already defined at index ${first}`,
+          path: ['rules', idx, 'matchStrategy'],
+        });
+      } else {
+        seen.set(key, idx);
+      }
+    });
+  });
 export type UpdateCaseDuplicateRulesInput = z.infer<typeof updateCaseDuplicateRulesSchema>;
 
 // ─── Required Fields (v2) ───────────────────────────────────────────────────

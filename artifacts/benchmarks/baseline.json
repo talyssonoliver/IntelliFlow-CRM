@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-04-20T18:29:31.100Z",
+  "timestamp": "2026-04-20T19:24:40.007Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -2922,7 +2922,7 @@
   },
   "validators_inventory": {
     "total_validators": 46,
-    "total_schemas": 535,
+    "total_schemas": 534,
     "by_complexity": {
       "complex": 31,
       "moderate": 11,
@@ -3046,7 +3046,7 @@
       {
         "name": "case-settings",
         "file": "case-settings.ts",
-        "schemas": 13,
+        "schemas": 12,
         "complexity": "complex"
       },
       {
