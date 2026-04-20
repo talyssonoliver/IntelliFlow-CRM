@@ -33,13 +33,13 @@ describe('caseSettings router', () => {
     caller = caseSettingsRouter.createCaller(ctx);
   });
 
-  describe('get', () => {
+  describe('general.get', () => {
     it('returns default settings when no row exists (upsert auto-seeds)', async () => {
-      (prismaMock.caseSetting.upsert as any).mockResolvedValue(mockSettings);
+      (prismaMock.caseSettings.upsert as any).mockResolvedValue(mockSettings);
 
-      const result = await caller.get();
+      const result = await caller.general.get();
 
-      expect(prismaMock.caseSetting.upsert).toHaveBeenCalledWith(
+      expect(prismaMock.caseSettings.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { tenantId },
           create: expect.objectContaining({
@@ -59,31 +59,31 @@ describe('caseSettings router', () => {
     });
 
     it('returns existing row without re-seeding', async () => {
-      (prismaMock.caseSetting.upsert as any).mockResolvedValue({
+      (prismaMock.caseSettings.upsert as any).mockResolvedValue({
         ...mockSettings,
         casePrefix: 'CS-',
         defaultPriority: 'HIGH' as const,
       });
 
-      const result = await caller.get();
+      const result = await caller.general.get();
 
       expect(result.casePrefix).toBe('CS-');
       expect(result.defaultPriority).toBe('HIGH');
     });
   });
 
-  describe('update', () => {
+  describe('general.update', () => {
     it('updates all three fields atomically', async () => {
-      (prismaMock.caseSetting.upsert as any).mockResolvedValue(mockUpdatedSettings);
+      (prismaMock.caseSettings.upsert as any).mockResolvedValue(mockUpdatedSettings);
 
-      const result = await caller.update({
+      const result = await caller.general.update({
         casePrefix: 'CS-',
         defaultPriority: 'HIGH',
         autoAssignEnabled: true,
         autoAssignUserId: VALID_CUID,
       });
 
-      expect(prismaMock.caseSetting.upsert).toHaveBeenCalledWith(
+      expect(prismaMock.caseSettings.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { tenantId },
           update: expect.objectContaining({
@@ -101,7 +101,7 @@ describe('caseSettings router', () => {
 
     it('rejects lowercase casePrefix with Zod error', async () => {
       await expect(
-        caller.update({
+        caller.general.update({
           casePrefix: 'case-',
           defaultPriority: 'MEDIUM',
           autoAssignEnabled: false,
@@ -112,7 +112,7 @@ describe('caseSettings router', () => {
 
     it('rejects autoAssignEnabled:true with null user (cross-field)', async () => {
       await expect(
-        caller.update({
+        caller.general.update({
           casePrefix: 'CASE-',
           defaultPriority: 'MEDIUM',
           autoAssignEnabled: true,
@@ -122,13 +122,42 @@ describe('caseSettings router', () => {
     });
   });
 
-  describe('resetToDefaults', () => {
+  describe('general.update — autoAssignEnabled normalization', () => {
+    it('with autoAssignEnabled:false clears autoAssignUserId regardless of incoming field value', async () => {
+      (prismaMock.caseSettings.upsert as any).mockResolvedValue(mockSettings);
+
+      // Case A: autoAssignEnabled:false with autoAssignUserId OMITTED from input
+      await caller.general.update({
+        casePrefix: 'CASE-',
+        defaultPriority: 'MEDIUM',
+        autoAssignEnabled: false,
+      });
+
+      const firstCall = (prismaMock.caseSettings.upsert as any).mock.calls[0][0];
+      expect(firstCall.update.autoAssignUserId).toBeNull();
+      expect(firstCall.create.autoAssignUserId).toBeNull();
+
+      // Case B: autoAssignEnabled:false with autoAssignUserId explicitly set — disable still wins
+      await caller.general.update({
+        casePrefix: 'CASE-',
+        defaultPriority: 'MEDIUM',
+        autoAssignEnabled: false,
+        autoAssignUserId: VALID_CUID,
+      });
+
+      const secondCall = (prismaMock.caseSettings.upsert as any).mock.calls[1][0];
+      expect(secondCall.update.autoAssignUserId).toBeNull();
+      expect(secondCall.create.autoAssignUserId).toBeNull();
+    });
+  });
+
+  describe('general.resetToDefaults', () => {
     it('restores factory defaults via upsert', async () => {
-      (prismaMock.caseSetting.upsert as any).mockResolvedValue(mockSettings);
+      (prismaMock.caseSettings.upsert as any).mockResolvedValue(mockSettings);
 
-      const result = await caller.resetToDefaults();
+      const result = await caller.general.resetToDefaults();
 
-      expect(prismaMock.caseSetting.upsert).toHaveBeenCalledWith(
+      expect(prismaMock.caseSettings.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { tenantId },
           update: expect.objectContaining({
@@ -147,11 +176,11 @@ describe('caseSettings router', () => {
 
   describe('tenant isolation', () => {
     it('uses tenantId from context — not a caller-supplied value', async () => {
-      (prismaMock.caseSetting.upsert as any).mockResolvedValue(mockSettings);
+      (prismaMock.caseSettings.upsert as any).mockResolvedValue(mockSettings);
 
-      await caller.get();
+      await caller.general.get();
 
-      const call = (prismaMock.caseSetting.upsert as any).mock.calls[0][0];
+      const call = (prismaMock.caseSettings.upsert as any).mock.calls[0][0];
       expect(call.where.tenantId).toBe(tenantId);
       expect(call.create.tenantId).toBe(tenantId);
     });

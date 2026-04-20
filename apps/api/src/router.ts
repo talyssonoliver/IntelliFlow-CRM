@@ -29,6 +29,9 @@ import { appointmentsRouter } from './modules/legal/appointments.router';
 import { casesRouter } from './modules/legal/cases.router';
 import { documentsRouter } from './modules/legal/documents.router';
 import { documentSettingsRouter } from './modules/legal/document-settings.router';
+import { caseSettingsRouter } from './modules/legal/case-settings.router';
+import { appointmentSettingsRouter } from './modules/legal/appointment-settings.router';
+import { reportSettingsRouter } from './modules/analytics/report-settings.router';
 import { uploadRouter } from './modules/documents/upload.router';
 import { agentRouter } from './modules/agent/agent.router';
 import { conversationRouter } from './modules/agent/conversation.router';
@@ -131,6 +134,9 @@ export const appRouter = createTRPCRouter({
   accountSettings: accountSettingsRouter, // PG-183: Account Settings Configuration
   dealSettings: dealSettingsRouter, // PG-184: Deal Settings Configuration
   ticketSettings: ticketSettingsRouter, // PG-185: Ticket Settings Configuration
+  caseSettings: caseSettingsRouter, // PG-190: Case Settings Configuration
+  appointmentSettings: appointmentSettingsRouter, // PG-189: Appointment/Calendar Settings (wired alongside PG-190)
+  reportSettings: reportSettingsRouter, // PG-187: Report Settings (wired alongside PG-190)
 
   // Analytics & Reporting
   analytics: analyticsRouter,

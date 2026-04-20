@@ -88,6 +88,7 @@ describe('ensureAppUserSession — JIT provisioning failure (L5)', () => {
       userCreate: vi.fn().mockRejectedValue(PROVISION_ERROR),
     });
 
+    // eslint-disable-next-line no-useless-assignment -- sentinel value read after both branches
     let result: unknown = 'did-not-throw';
     try {
       result = await ensureAppUserSession(prisma as any, SUPABASE_USER);

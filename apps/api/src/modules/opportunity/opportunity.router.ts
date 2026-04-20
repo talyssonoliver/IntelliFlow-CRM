@@ -40,11 +40,67 @@ import {
   assertCanCreateDealOrMerge,
   assertCanDeleteDeal,
   notifyDealDuplicate,
-  notifyDealReassignment,
   notifyDealStageChange,
   notifyHighValueStageMove,
+  type DealAutomationFlags,
   type DealNotifier,
 } from './deal-automation';
+
+/**
+ * Helper to coerce a nullable value to number, falling back to a default.
+ */
+function coerceValue(
+  raw: number | string | bigint | null | undefined,
+  fallback: number | string | bigint | null | undefined
+): number | undefined {
+  if (typeof raw === 'number') return raw;
+  if (raw != null) return Number(raw);
+  if (fallback == null) return undefined;
+  return Number(fallback);
+}
+
+/**
+ * Fire-and-forget deal notifications after an update. Extracted to reduce
+ * cognitive complexity of the update procedure.
+ */
+function triggerUpdateNotifications(
+  ctx: Context,
+  tenantId: string,
+  actorId: string,
+  id: string,
+  automation: DealAutomationFlags,
+  before: { stage: string; ownerId: string; value: unknown },
+  newStage: string,
+  finalValue: number
+): void {
+  const notifier = buildDealNotifier(ctx, tenantId);
+  const { ownerId } = before;
+  if (automation.notifyOnStageChange && before.stage !== newStage) {
+    void notifyDealStageChange(
+      notifier,
+      { opportunityId: id, ownerId, fromStage: before.stage, toStage: newStage, actorId },
+      automation
+    );
+  }
+  if (automation.notifyOnHighValueStageMove && before.stage !== newStage) {
+    if (finalValue >= automation.highValueThreshold) {
+      void notifyHighValueStageMove(
+        notifier,
+        {
+          opportunityId: id,
+          ownerId,
+          fromStage: before.stage,
+          toStage: newStage,
+          value: finalValue,
+          threshold: automation.highValueThreshold,
+          actorId,
+          toUserIds: [ownerId],
+        },
+        automation
+      );
+    }
+  }
+}
 
 /**
  * Build a fire-and-forget DealNotifier backed by createNotification. Used by
@@ -554,12 +610,7 @@ export const opportunityRouter = createTRPCRouter({
 
     const normalizedName = capitalizeDealName(input.name, automation) ?? input.name;
     const normalizedValueRaw = normalizeDealValue(input.value?.amount, automation);
-    const normalizedValue =
-      typeof normalizedValueRaw === 'number'
-        ? normalizedValueRaw
-        : normalizedValueRaw != null
-          ? Number(normalizedValueRaw)
-          : (input.value?.amount ?? undefined);
+    const normalizedValue = coerceValue(normalizedValueRaw, input.value?.amount);
 
     // PG-184: autoMergeOnExactNameAccount — short-circuit to existing deal when enabled.
     const mergeDecision = await assertCanCreateDealOrMerge(
@@ -576,12 +627,22 @@ export const opportunityRouter = createTRPCRouter({
         where: { id: mergeDecision.duplicateId, tenantId: typedCtx.tenant.tenantId },
       });
       if (existing) {
+        // mapOpportunityToResponse reads weightedValue + isClosed/isWon/isLost,
+        // so derive them from the Prisma row here. Without these the mapper
+        // throws on `.weightedValue.amount`.
+        const numericValue = Number(existing.value);
+        const isWon = existing.stage === 'CLOSED_WON';
+        const isLost = existing.stage === 'CLOSED_LOST';
         return mapOpportunityToResponse({
           id: { value: existing.id },
           name: existing.name,
           stage: existing.stage,
-          value: { amount: Number(existing.value) },
+          value: { amount: numericValue, currency: 'GBP' },
           probability: { value: existing.probability },
+          weightedValue: { amount: numericValue * (existing.probability / 100), currency: 'GBP' },
+          isClosed: isWon || isLost,
+          isWon,
+          isLost,
           expectedCloseDate: existing.expectedCloseDate,
           accountId: existing.accountId,
           contactId: existing.contactId,
@@ -796,12 +857,7 @@ export const opportunityRouter = createTRPCRouter({
       data.value?.amount != null
         ? normalizeDealValue(data.value.amount, automation)
         : data.value?.amount;
-    const normalizedValueAmount =
-      typeof normalizedValueAmountRaw === 'number'
-        ? normalizedValueAmountRaw
-        : normalizedValueAmountRaw != null
-          ? Number(normalizedValueAmountRaw)
-          : undefined;
+    const normalizedValueAmount = coerceValue(normalizedValueAmountRaw, undefined);
 
     const result = await opportunityService.updateOpportunity(
       id,
@@ -819,61 +875,26 @@ export const opportunityRouter = createTRPCRouter({
       throwOpportunityUpdateError(result.error);
     }
 
-    // PG-184: Category-1 update-path notifications (owner change, stage change,
-    // high-value stage move). All are fire-and-forget.
+    // PG-184: Category-1 update-path notifications (stage change, high-value
+    // stage move). `notifyOnOwnerChange` is explicitly Category-2 — the
+    // consumer will land with IFC-311's reassign endpoint, which is the
+    // only caller that can actually diff ownerId. Wiring it here against a
+    // schema that cannot carry ownerId would be fake-wiring.
     if (before) {
-      const notifier = buildDealNotifier(ctx, typedCtx.tenant.tenantId);
-      // ownerId is not mutable via updateOpportunitySchema today, so the
-      // owner-change branch is effectively wired but inert. IFC-311 will add
-      // a reassign endpoint that reuses notifyDealReassignment.
-      const newOwnerId = before.ownerId;
       const newStage = result.value.stage;
-      if (automation.notifyOnOwnerChange && before.ownerId !== newOwnerId) {
-        void notifyDealReassignment(
-          notifier,
-          {
-            opportunityId: id,
-            previousOwnerId: before.ownerId,
-            newOwnerId,
-            actorId: typedCtx.tenant.userId,
-          },
-          automation
-        );
-      }
-      if (automation.notifyOnStageChange && before.stage !== newStage) {
-        void notifyDealStageChange(
-          notifier,
-          {
-            opportunityId: id,
-            ownerId: newOwnerId,
-            fromStage: before.stage,
-            toStage: newStage,
-            actorId: typedCtx.tenant.userId,
-          },
-          automation
-        );
-      }
-      if (automation.notifyOnHighValueStageMove && before.stage !== newStage) {
-        const finalValue =
-          normalizedValueAmount ??
-          (data.value?.amount != null ? Number(data.value.amount) : Number(before.value));
-        if (finalValue >= automation.highValueThreshold) {
-          void notifyHighValueStageMove(
-            notifier,
-            {
-              opportunityId: id,
-              ownerId: newOwnerId,
-              fromStage: before.stage,
-              toStage: newStage,
-              value: finalValue,
-              threshold: automation.highValueThreshold,
-              actorId: typedCtx.tenant.userId,
-              toUserIds: [newOwnerId],
-            },
-            automation
-          );
-        }
-      }
+      const finalValue =
+        normalizedValueAmount ??
+        (data.value?.amount != null ? Number(data.value.amount) : Number(before.value));
+      triggerUpdateNotifications(
+        ctx,
+        typedCtx.tenant.tenantId,
+        typedCtx.tenant.userId,
+        id,
+        automation,
+        before,
+        newStage,
+        finalValue
+      );
     }
 
     // IFC-281: Fire-and-forget audit logging

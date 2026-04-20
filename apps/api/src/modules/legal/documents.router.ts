@@ -17,11 +17,8 @@ import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import { container } from '../../container';
 import { loadBullMQ } from '../../lib/load-bullmq';
-import {
-  loadDocumentAutomation,
-  normalizeFilename,
-  assertNotDeleteGuarded,
-} from './document-automation';
+import { loadDocumentAutomation, assertNotDeleteGuarded } from './document-automation';
+import { enforceDocumentPolicies } from './document-policies';
 // PG-186 Cat-2 helpers (notifyDocumentReassignment, notifyOnDuplicate consumer)
 // are exported from document-automation.ts and will be consumed by:
 //   IFC-310 — duplicate-detection runtime (notifyOnDuplicate firing on collision)
@@ -105,9 +102,18 @@ export const documentsRouter = createTRPCRouter({
       throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
     }
 
-    // PG-186: Load automation flags; apply filename normalization
-    const automationFlags = await loadDocumentAutomation(ctx);
-    const normalizedTitle = normalizeFilename(input.title, automationFlags);
+    // PG-186: Enforce tenant policies (MIME allowlist, size ceiling, required
+    // fields) before any persistence side-effect. Throws TRPCError on
+    // violation, so `create` cannot succeed with a payload the Document
+    // Settings page has marked disallowed.
+    await enforceDocumentPolicies(ctx, input);
+
+    // PG-186: automation flags are still loaded in case future Cat-1
+    // toggles need to run at create-time, but `normalizeFilename` is no
+    // longer applied to `input.title` — the user's display title is
+    // preserved as typed. Filename normalization only makes sense for an
+    // actual filename (see upload.router.ts, which operates on `filename`).
+    void (await loadDocumentAutomation(ctx));
 
     const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
 
@@ -119,7 +125,7 @@ export const documentsRouter = createTRPCRouter({
     const document = CaseDocument.create({
       tenantId,
       metadata: {
-        title: normalizedTitle,
+        title: input.title,
         description: input.description,
         documentType: input.documentType as any,
         documentTypeLabel: input.documentTypeLabel,

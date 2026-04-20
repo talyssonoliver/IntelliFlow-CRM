@@ -14,6 +14,7 @@ import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import { type Context } from '../../context';
 import { getTenantContext } from '../../security/tenant-context';
+import { reportSettingsRouter } from './report-settings.router';
 
 /**
  * Helper to get analytics service from context
@@ -29,6 +30,8 @@ function getAnalyticsService(ctx: Context) {
 }
 
 export const analyticsRouter = createTRPCRouter({
+  reportSettings: reportSettingsRouter,
+
   /**
    * Get deals won trend (last N months)
    */

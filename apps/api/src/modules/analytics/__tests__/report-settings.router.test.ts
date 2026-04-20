@@ -180,6 +180,35 @@ describe('Report Settings Router (PG-187)', () => {
       const result = await caller.update({});
       expect(result).toEqual(mockExistingSettings);
     });
+
+    it('rejects recipients=[] when enabled=true via superRefine at router boundary', async () => {
+      await expect(
+        caller.update({
+          scheduledDelivery: {
+            enabled: true,
+            frequency: 'weekly',
+            dayOfWeek: 1,
+            time: '09:00',
+            recipients: [],
+            format: 'pdf',
+          },
+        })
+      ).rejects.toThrow(/recipient/i);
+    });
+
+    it('filters by caller tenantId (cross-tenant negative)', async () => {
+      (prismaMock.reportSettings.upsert as any).mockResolvedValueOnce(mockExistingSettings);
+
+      await caller.update({ defaultRange: '90d' });
+
+      // Verify the upsert where-clause carries the caller's own tenantId,
+      // not any value that could be hinted by the input.
+      expect(prismaMock.reportSettings.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { tenantId },
+        })
+      );
+    });
   });
 
   // ─── resetToDefaults ──────────────────────────────────────────────────────

@@ -143,4 +143,75 @@ describe('Appointment Settings Router', () => {
       expect(result.defaultDurationMinutes).toBe(30);
     });
   });
+
+  // ── AC-005: primaryCalendar include ──────────────────────
+
+  describe('primaryCalendar relation (PG-189 AC-005)', () => {
+    it('get returns primaryCalendar: { id, name } when primaryCalendarId is set', async () => {
+      const withCalendar = {
+        ...mockSettings,
+        primaryCalendarId: 'cal-1',
+        primaryCalendar: { id: 'cal-1', name: 'Primary' },
+      };
+      (prismaMock.appointmentSettings.findUnique as any).mockResolvedValue(withCalendar);
+
+      const result = await caller.get();
+
+      expect(result.primaryCalendar).toEqual({ id: 'cal-1', name: 'Primary' });
+      expect(prismaMock.appointmentSettings.findUnique).toHaveBeenCalledWith(
+        expect.objectContaining({
+          include: { primaryCalendar: { select: { id: true, name: true } } },
+        })
+      );
+    });
+
+    it('get returns primaryCalendar: null when primaryCalendarId is null', async () => {
+      const withoutCalendar = { ...mockSettings, primaryCalendar: null };
+      (prismaMock.appointmentSettings.findUnique as any).mockResolvedValue(withoutCalendar);
+
+      const result = await caller.get();
+
+      expect(result.primaryCalendar).toBeNull();
+    });
+  });
+
+  // ── AC-013 + NF-001: cross-tenant isolation ──────────────
+
+  describe('cross-tenant isolation (PG-189 AC-013)', () => {
+    it('get always filters by tenantId from ctx', async () => {
+      (prismaMock.appointmentSettings.findUnique as any).mockResolvedValue(mockSettings);
+
+      await caller.get();
+
+      expect(prismaMock.appointmentSettings.findUnique).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { tenantId } })
+      );
+    });
+
+    it('update mutation uses ctx tenantId (not input-derived)', async () => {
+      (prismaMock.appointmentSettings.upsert as any).mockResolvedValue(mockSettings);
+
+      await caller.update({ defaultDurationMinutes: 45 });
+
+      expect(prismaMock.appointmentSettings.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { tenantId },
+          create: expect.objectContaining({ tenantId }),
+        })
+      );
+    });
+
+    it('resetToDefaults uses ctx tenantId', async () => {
+      (prismaMock.appointmentSettings.upsert as any).mockResolvedValue(mockSettings);
+
+      await caller.resetToDefaults();
+
+      expect(prismaMock.appointmentSettings.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { tenantId },
+          create: expect.objectContaining({ tenantId }),
+        })
+      );
+    });
+  });
 });

@@ -484,24 +484,68 @@ describe('Document Settings Router', () => {
   });
 
   describe('tags.delete', () => {
-    it('soft-deletes and returns the { softDeleted, tag } discriminator', async () => {
+    it('soft-deletes when at least one document still references the tag', async () => {
       (prismaMock.documentTag as any).findFirst = vi.fn().mockResolvedValue(mockTag);
-      (prismaMock.documentTag as any).update = vi
+
+      const txMock: Record<string, any> = {
+        caseDocument: {
+          count: vi.fn().mockResolvedValue(3),
+        },
+        documentTag: {
+          update: vi.fn().mockResolvedValue({ ...mockTag, isActive: false }),
+          delete: vi.fn(),
+        },
+      };
+      (prismaMock.$transaction as any) = vi
         .fn()
-        .mockResolvedValue({ ...mockTag, isActive: false });
+        .mockImplementation(async (cb: (tx: typeof txMock) => unknown) => cb(txMock));
 
       const result = await caller.tags.delete({ id: 'tag-1' });
 
-      expect(prismaMock.documentTag.update).toHaveBeenCalledWith(
+      expect(txMock.caseDocument.count).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ tenantId, tags: { has: mockTag.name } }),
+        })
+      );
+      expect(txMock.documentTag.update).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({ id: 'tag-1' }),
           data: expect.objectContaining({ isActive: false }),
         })
       );
+      expect(txMock.documentTag.delete).not.toHaveBeenCalled();
       expect(result).toEqual(
         expect.objectContaining({
           softDeleted: true,
           tag: expect.objectContaining({ id: 'tag-1', isActive: false }),
+        })
+      );
+    });
+
+    it('hard-deletes when no document references the tag', async () => {
+      (prismaMock.documentTag as any).findFirst = vi.fn().mockResolvedValue(mockTag);
+
+      const txMock: Record<string, any> = {
+        caseDocument: {
+          count: vi.fn().mockResolvedValue(0),
+        },
+        documentTag: {
+          update: vi.fn(),
+          delete: vi.fn().mockResolvedValue(mockTag),
+        },
+      };
+      (prismaMock.$transaction as any) = vi
+        .fn()
+        .mockImplementation(async (cb: (tx: typeof txMock) => unknown) => cb(txMock));
+
+      const result = await caller.tags.delete({ id: 'tag-1' });
+
+      expect(txMock.documentTag.delete).toHaveBeenCalledWith({ where: { id: 'tag-1' } });
+      expect(txMock.documentTag.update).not.toHaveBeenCalled();
+      expect(result).toEqual(
+        expect.objectContaining({
+          softDeleted: false,
+          tag: expect.objectContaining({ id: 'tag-1' }),
         })
       );
     });

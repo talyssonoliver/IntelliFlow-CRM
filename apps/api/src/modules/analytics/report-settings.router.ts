@@ -8,8 +8,29 @@
  * Follows the direct-Prisma pattern established by lead-settings.router.ts (PG-178).
  */
 
+import type { Prisma, ReportSettings } from '@intelliflow/db';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
-import { updateReportSettingsSchema, DEFAULT_REPORT_SETTINGS } from '@intelliflow/validators';
+import {
+  updateReportSettingsSchema,
+  scheduledDeliverySchema,
+  DEFAULT_REPORT_SETTINGS,
+  type ScheduledDelivery,
+} from '@intelliflow/validators';
+
+/**
+ * Parse the Prisma Json scheduledDelivery column through Zod. Corrupt DB rows
+ * fall back to DEFAULT_REPORT_SETTINGS.scheduledDelivery so the page never
+ * hands the client an invalid shape.
+ */
+function normalizeRow(row: ReportSettings): ReportSettings & {
+  scheduledDelivery: ScheduledDelivery;
+} {
+  const parsed = scheduledDeliverySchema.safeParse(row.scheduledDelivery);
+  return {
+    ...row,
+    scheduledDelivery: parsed.success ? parsed.data : DEFAULT_REPORT_SETTINGS.scheduledDelivery,
+  };
+}
 
 export const reportSettingsRouter = createTRPCRouter({
   /**
@@ -18,39 +39,47 @@ export const reportSettingsRouter = createTRPCRouter({
    */
   get: tenantProcedure.query(async ({ ctx }) => {
     const tenantId = ctx.tenant.tenantId;
-    return ctx.prismaWithTenant.reportSettings.upsert({
+    const row = await ctx.prismaWithTenant.reportSettings.upsert({
       where: { tenantId },
       create: {
         tenantId,
         defaultRange: DEFAULT_REPORT_SETTINGS.defaultRange,
         currency: DEFAULT_REPORT_SETTINGS.currency,
-        scheduledDelivery: DEFAULT_REPORT_SETTINGS.scheduledDelivery,
+        scheduledDelivery:
+          DEFAULT_REPORT_SETTINGS.scheduledDelivery as unknown as Prisma.InputJsonValue,
       },
       update: {},
     });
+    return normalizeRow(row);
   }),
 
   /**
    * Update report settings (partial update of any subset of fields).
+   * The Zod superRefine on scheduledDeliverySchema enforces the
+   * "recipients non-empty when enabled" invariant at the router boundary.
    */
   update: tenantProcedure.input(updateReportSettingsSchema).mutation(async ({ ctx, input }) => {
     const tenantId = ctx.tenant.tenantId;
     const { defaultRange, currency, scheduledDelivery } = input;
 
-    return ctx.prismaWithTenant.reportSettings.upsert({
+    const row = await ctx.prismaWithTenant.reportSettings.upsert({
       where: { tenantId },
       create: {
         tenantId,
         defaultRange: defaultRange ?? DEFAULT_REPORT_SETTINGS.defaultRange,
         currency: currency ?? DEFAULT_REPORT_SETTINGS.currency,
-        scheduledDelivery: scheduledDelivery ?? DEFAULT_REPORT_SETTINGS.scheduledDelivery,
+        scheduledDelivery: (scheduledDelivery ??
+          DEFAULT_REPORT_SETTINGS.scheduledDelivery) as unknown as Prisma.InputJsonValue,
       },
       update: {
         ...(defaultRange !== undefined && { defaultRange }),
         ...(currency !== undefined && { currency }),
-        ...(scheduledDelivery !== undefined && { scheduledDelivery }),
+        ...(scheduledDelivery !== undefined && {
+          scheduledDelivery: scheduledDelivery as unknown as Prisma.InputJsonValue,
+        }),
       },
     });
+    return normalizeRow(row);
   }),
 
   /**
@@ -58,19 +87,22 @@ export const reportSettingsRouter = createTRPCRouter({
    */
   resetToDefaults: tenantProcedure.mutation(async ({ ctx }) => {
     const tenantId = ctx.tenant.tenantId;
-    return ctx.prismaWithTenant.reportSettings.upsert({
+    const row = await ctx.prismaWithTenant.reportSettings.upsert({
       where: { tenantId },
       create: {
         tenantId,
         defaultRange: DEFAULT_REPORT_SETTINGS.defaultRange,
         currency: DEFAULT_REPORT_SETTINGS.currency,
-        scheduledDelivery: DEFAULT_REPORT_SETTINGS.scheduledDelivery,
+        scheduledDelivery:
+          DEFAULT_REPORT_SETTINGS.scheduledDelivery as unknown as Prisma.InputJsonValue,
       },
       update: {
         defaultRange: DEFAULT_REPORT_SETTINGS.defaultRange,
         currency: DEFAULT_REPORT_SETTINGS.currency,
-        scheduledDelivery: DEFAULT_REPORT_SETTINGS.scheduledDelivery,
+        scheduledDelivery:
+          DEFAULT_REPORT_SETTINGS.scheduledDelivery as unknown as Prisma.InputJsonValue,
       },
     });
+    return normalizeRow(row);
   }),
 });

@@ -20,6 +20,18 @@ vi.mock('../../security/audit-logger', () => ({
   })),
 }));
 
+// PG-184: replace createNotification with a spy so Category-1 wiring tests
+// can assert which notification types fire without needing a full prisma
+// notification.create mock or orchestrator plumbing. vi.hoisted so the spy
+// exists when vi.mock's factory runs above the `import` block.
+const { createNotificationSpy } = vi.hoisted(() => ({
+  createNotificationSpy: vi.fn(() => Promise.resolve({ id: 'notif-stub' })),
+}));
+vi.mock('../../notifications/notifications.router', () => ({
+  createNotification: (...args: unknown[]) =>
+    (createNotificationSpy as unknown as (...a: unknown[]) => Promise<unknown>)(...args),
+}));
+
 import { opportunityRouter } from '../opportunity.router';
 import {
   prismaMock,
@@ -71,6 +83,7 @@ describe('Opportunity Router', () => {
     };
     (prismaMock as any).dealRequiredField = { findMany: vi.fn().mockResolvedValue([]) };
     (prismaMock as any).task.count = vi.fn().mockResolvedValue(0);
+    createNotificationSpy.mockClear();
   });
 
   describe('create', () => {
@@ -450,6 +463,259 @@ describe('Opportunity Router', () => {
           code: 'PRECONDITION_FAILED',
         })
       );
+    });
+  });
+
+  // ─── PG-184 Category-1 runtime wiring ──────────────────────────────────
+  //
+  // These tests pin the category-1 automation toggles to actual runtime
+  // behavior. The `beforeEach` stubs above default every flag to factory
+  // defaults (autoCapitalize + normalize + notifyOnDuplicate + preventDelete
+  // are ON; all notify* owner/stage/high-value are OFF). Each test opts
+  // individual toggles in or out.
+  describe('PG-184 category-1 wiring', () => {
+    function automationFlags(overrides: Record<string, unknown> = {}) {
+      return {
+        autoMergeOnExactNameAccount: false,
+        notifyOnDuplicate: true,
+        restrictTagCreationToAdmins: false,
+        normalizeCurrency: true,
+        autoCapitalizeDealNames: true,
+        preventDeleteWithOpenTasks: true,
+        notifyOnOwnerChange: false,
+        notifyOnStageChange: false,
+        notifyOnHighValueStageMove: false,
+        highValueThreshold: 50000,
+        aiDuplicateDetection: false,
+        aiDealScoring: false,
+        aiNextStepRecommendation: false,
+        aiTagSuggestions: false,
+        aiInsightGeneration: false,
+        aiWinLossPrediction: false,
+        ...overrides,
+      };
+    }
+
+    function stubAutomationRow(overrides: Record<string, unknown> = {}) {
+      (prismaMock as any).dealAutomationSetting.findUnique = vi
+        .fn()
+        .mockResolvedValue(automationFlags(overrides));
+    }
+
+    it('create: applies capitalizeDealName before handing input to the service', async () => {
+      const input = {
+        name: 'acme renewal q1',
+        value: { amount: 75000 },
+        stage: 'PROPOSAL' as const,
+        probability: 50,
+        expectedCloseDate: new Date('2025-06-30'),
+        accountId: TEST_UUIDS.account1,
+      };
+      stubAutomationRow({ autoCapitalizeDealNames: true });
+      (prismaMock.opportunity.findFirst as any).mockResolvedValue(null);
+      ctx.services!.opportunity!.createOpportunity = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: createMockDomainOpportunity({ name: 'Acme Renewal Q1' }),
+      });
+
+      await caller.create(input);
+
+      expect(ctx.services!.opportunity!.createOpportunity).toHaveBeenCalledWith(
+        expect.objectContaining({ name: 'Acme Renewal Q1' })
+      );
+    });
+
+    it('create: skips capitalization when autoCapitalizeDealNames=false', async () => {
+      const input = {
+        name: 'acme renewal',
+        value: { amount: 75000 },
+        stage: 'PROPOSAL' as const,
+        probability: 50,
+        expectedCloseDate: new Date('2025-06-30'),
+        accountId: TEST_UUIDS.account1,
+      };
+      stubAutomationRow({ autoCapitalizeDealNames: false });
+      (prismaMock.opportunity.findFirst as any).mockResolvedValue(null);
+      ctx.services!.opportunity!.createOpportunity = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: createMockDomainOpportunity({ name: 'acme renewal' }),
+      });
+
+      await caller.create(input);
+
+      expect(ctx.services!.opportunity!.createOpportunity).toHaveBeenCalledWith(
+        expect.objectContaining({ name: 'acme renewal' })
+      );
+    });
+
+    it('create: short-circuits to the existing deal when autoMergeOnExactNameAccount finds a dup', async () => {
+      const input = {
+        name: 'Acme Renewal',
+        value: { amount: 75000 },
+        stage: 'PROPOSAL' as const,
+        probability: 50,
+        expectedCloseDate: new Date('2025-06-30'),
+        accountId: TEST_UUIDS.account1,
+      };
+      stubAutomationRow({ autoMergeOnExactNameAccount: true });
+      const existingRecord = {
+        id: TEST_UUIDS.opportunity1,
+        name: 'Acme Renewal',
+        stage: 'PROPOSAL',
+        value: new Prisma.Decimal(50000),
+        probability: 60,
+        expectedCloseDate: new Date('2025-06-30'),
+        accountId: TEST_UUIDS.account1,
+        contactId: null,
+        ownerId: TEST_UUIDS.user1,
+        tenantId: TEST_UUIDS.tenant,
+        description: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      // First findFirst is inside assertCanCreateDealOrMerge, second is the
+      // merge read-back in the router.
+      (prismaMock.opportunity.findFirst as any)
+        .mockResolvedValueOnce(existingRecord)
+        .mockResolvedValueOnce(existingRecord);
+      ctx.services!.opportunity!.createOpportunity = vi.fn();
+
+      const result = await caller.create(input);
+
+      expect(result.id).toBe(TEST_UUIDS.opportunity1);
+      expect(ctx.services!.opportunity!.createOpportunity).not.toHaveBeenCalled();
+    });
+
+    it('create: emits deal_duplicate_suspected when notifyOnDuplicate and a suspect exists', async () => {
+      const input = {
+        name: 'Acme Renewal',
+        value: { amount: 75000 },
+        stage: 'PROPOSAL' as const,
+        probability: 50,
+        expectedCloseDate: new Date('2025-06-30'),
+        accountId: TEST_UUIDS.account1,
+      };
+      stubAutomationRow({ autoMergeOnExactNameAccount: false, notifyOnDuplicate: true });
+      const suspect = { id: 'suspect-id', ownerId: TEST_UUIDS.user1 };
+      // No merge-lookup call when autoMerge is off. Only the post-create
+      // suspect lookup runs — return the suspect.
+      (prismaMock.opportunity.findFirst as any).mockResolvedValueOnce(suspect);
+      ctx.services!.opportunity!.createOpportunity = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: createMockDomainOpportunity({ name: input.name }),
+      });
+
+      await caller.create(input);
+      // The fire-and-forget notifier runs after the response resolves.
+      await new Promise((r) => setImmediate(r));
+
+      const types = createNotificationSpy.mock.calls.map((call: unknown[]) => {
+        const params = call[1] as { type: string };
+        return params.type;
+      });
+      expect(types).toContain('deal_duplicate_suspected');
+    });
+
+    it('update: emits deal_stage_changed when notifyOnStageChange and the stage actually changes', async () => {
+      stubAutomationRow({ notifyOnStageChange: true });
+      (prismaMock.opportunity.findFirst as any).mockResolvedValue({
+        id: TEST_UUIDS.opportunity1,
+        ownerId: TEST_UUIDS.user1,
+        stage: 'PROPOSAL',
+        value: new Prisma.Decimal(10000),
+        tenantId: TEST_UUIDS.tenant,
+      });
+      ctx.services!.opportunity!.updateOpportunity = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: createMockDomainOpportunity({ stage: 'NEGOTIATION' }),
+      });
+
+      await caller.update({ id: TEST_UUIDS.opportunity1, stage: 'NEGOTIATION' });
+      await new Promise((r) => setImmediate(r));
+
+      const types = createNotificationSpy.mock.calls.map((call: unknown[]) => {
+        const params = call[1] as { type: string };
+        return params.type;
+      });
+      expect(types).toContain('deal_stage_changed');
+    });
+
+    it('update: emits deal_high_value_moved when threshold met and stage changes', async () => {
+      stubAutomationRow({ notifyOnHighValueStageMove: true, highValueThreshold: 50000 });
+      (prismaMock.opportunity.findFirst as any).mockResolvedValue({
+        id: TEST_UUIDS.opportunity1,
+        ownerId: TEST_UUIDS.user1,
+        stage: 'PROPOSAL',
+        value: new Prisma.Decimal(100000),
+        tenantId: TEST_UUIDS.tenant,
+      });
+      ctx.services!.opportunity!.updateOpportunity = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: createMockDomainOpportunity({ stage: 'NEGOTIATION' }),
+      });
+
+      await caller.update({ id: TEST_UUIDS.opportunity1, stage: 'NEGOTIATION' });
+      await new Promise((r) => setImmediate(r));
+
+      const types = createNotificationSpy.mock.calls.map((call: unknown[]) => {
+        const params = call[1] as { type: string };
+        return params.type;
+      });
+      expect(types).toContain('deal_high_value_moved');
+    });
+
+    it('update: does NOT emit high-value when value is below threshold', async () => {
+      stubAutomationRow({ notifyOnHighValueStageMove: true, highValueThreshold: 50000 });
+      (prismaMock.opportunity.findFirst as any).mockResolvedValue({
+        id: TEST_UUIDS.opportunity1,
+        ownerId: TEST_UUIDS.user1,
+        stage: 'PROPOSAL',
+        value: new Prisma.Decimal(10000),
+        tenantId: TEST_UUIDS.tenant,
+      });
+      ctx.services!.opportunity!.updateOpportunity = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: createMockDomainOpportunity({ stage: 'NEGOTIATION' }),
+      });
+
+      await caller.update({ id: TEST_UUIDS.opportunity1, stage: 'NEGOTIATION' });
+      await new Promise((r) => setImmediate(r));
+
+      const types = createNotificationSpy.mock.calls.map((call: unknown[]) => {
+        const params = call[1] as { type: string };
+        return params.type;
+      });
+      expect(types).not.toContain('deal_high_value_moved');
+    });
+
+    it('delete: blocks with PRECONDITION_FAILED when preventDeleteWithOpenTasks and open tasks exist', async () => {
+      stubAutomationRow({ preventDeleteWithOpenTasks: true });
+      (prismaMock as any).task.count = vi.fn().mockResolvedValue(2);
+      ctx.services!.opportunity!.deleteOpportunity = vi.fn();
+
+      await expect(caller.delete({ id: TEST_UUIDS.opportunity1 })).rejects.toThrow(
+        expect.objectContaining({ code: 'PRECONDITION_FAILED' })
+      );
+      expect(ctx.services!.opportunity!.deleteOpportunity).not.toHaveBeenCalled();
+    });
+
+    it('delete: proceeds when preventDeleteWithOpenTasks is off regardless of open tasks', async () => {
+      stubAutomationRow({ preventDeleteWithOpenTasks: false });
+      (prismaMock as any).task.count = vi.fn().mockResolvedValue(3);
+      ctx.services!.opportunity!.deleteOpportunity = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: undefined,
+      });
+
+      const result = await caller.delete({ id: TEST_UUIDS.opportunity1 });
+      expect(result.success).toBe(true);
     });
   });
 

@@ -238,6 +238,20 @@ const tagsRouter = createTRPCRouter({
     const flags = await loadDocumentAutomation(ctx);
     assertCanCreateDocumentTag(ctx, flags);
 
+    // If a soft-deleted row already owns this (tenantId, name), reactivate
+    // it instead of hitting the unique-constraint failure. This keeps the
+    // "delete when unreferenced / soft-delete when referenced" contract
+    // honest: users can always recreate a tag name they previously removed.
+    const existing = await ctx.prismaWithTenant.documentTag.findFirst({
+      where: { tenantId, name: input.name },
+    });
+    if (existing && !existing.isActive) {
+      return ctx.prismaWithTenant.documentTag.update({
+        where: { id: existing.id },
+        data: { ...input, isActive: true },
+      });
+    }
+
     return ctx.prismaWithTenant.documentTag.create({
       data: { tenantId, ...input },
     });
@@ -270,16 +284,29 @@ const tagsRouter = createTRPCRouter({
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Tag not found' });
     }
 
-    // Always soft-delete — preserves referential integrity for documents
-    // already labelled with this tag. The `softDeleted: true` discriminator
-    // lets the UI render the correct toast ("Tag deactivated" instead of
-    // "Tag deleted") so users aren't misled about the outcome.
-    const tag = await ctx.prismaWithTenant.documentTag.update({
-      where: { id: input.id },
-      data: { isActive: false },
+    // Spec §4.3: hard-delete when no document still references the tag
+    // name, soft-delete when at least one does. CaseDocument stores tags
+    // as a String[] (not a FK), so we count membership via Postgres
+    // array-contains (`tags ? name`). Running inside a $transaction keeps
+    // the reference check + write atomic across concurrent uploads.
+    const result = await ctx.prismaWithTenant.$transaction(async (tx) => {
+      const referencingCount = await tx.caseDocument.count({
+        where: { tenantId, tags: { has: existing.name } },
+      });
+
+      if (referencingCount === 0) {
+        const tag = await tx.documentTag.delete({ where: { id: input.id } });
+        return { softDeleted: false as const, tag };
+      }
+
+      const tag = await tx.documentTag.update({
+        where: { id: input.id },
+        data: { isActive: false },
+      });
+      return { softDeleted: true as const, tag };
     });
 
-    return { softDeleted: true as const, tag };
+    return result;
   }),
 });
 

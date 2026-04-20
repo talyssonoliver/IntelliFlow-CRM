@@ -139,6 +139,12 @@ describe('Documents Router - IFC-152', () => {
     (mockContext.prisma as any).documentRequiredField = {
       findMany: vi.fn().mockResolvedValue([]),
     };
+    // PG-186: Stub documentGeneralConfig so loadDocumentPolicies (called
+    // from documents.create via enforceDocumentPolicies) returns factory
+    // defaults — empty MIME allowlist == pass-through, generous size cap.
+    (mockContext.prisma as any).documentGeneralConfig = {
+      findUnique: vi.fn().mockResolvedValue(null),
+    };
   });
 
   afterEach(() => {

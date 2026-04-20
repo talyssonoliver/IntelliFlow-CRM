@@ -16,13 +16,18 @@
  *   - normalizeCurrency           → normalizeDealValue
  *   - autoCapitalizeDealNames     → capitalizeDealName
  *   - preventDeleteWithOpenTasks  → assertCanDeleteDeal
- *   - notifyOnOwnerChange         → notifyDealReassignment
  *   - notifyOnStageChange         → notifyDealStageChange
  *   - notifyOnHighValueStageMove  → notifyHighValueStageMove
  *   - highValueThreshold          → consumed by notifyHighValueStageMove
  *
- * Category-2 toggles (follow-ups on IFC-312) read the flag for UI display
- * only; the AI chains themselves are out of scope for PG-184.
+ * Category-2 toggles (follow-ups):
+ *   - notifyOnOwnerChange → IFC-311 reassign endpoint. `notifyDealReassignment`
+ *     below is the helper that endpoint will call; it is not invoked from
+ *     opportunity.router.ts because updateOpportunitySchema cannot carry an
+ *     ownerId diff, and wiring an unreachable branch violates the playbook's
+ *     no-fake-wiring rule (PG-186 memory).
+ *   - aiDuplicateDetection / aiDealScoring / aiNextStepRecommendation /
+ *     aiTagSuggestions / aiInsightGeneration / aiWinLossPrediction → IFC-312.
  */
 
 import type { DealAutomationSetting } from '@intelliflow/db';
@@ -76,7 +81,6 @@ export const AUTOMATION_FACTORY_DEFAULTS: DealAutomationFlags = {
 export interface HasTenantContext {
   tenant: { tenantId: string };
   user?: { role?: string | null | undefined };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   prismaWithTenant: any;
 }
 

@@ -149,6 +149,19 @@ describe('Deal Settings Router', () => {
       expect(prismaMock.dealDuplicateRule.createMany).not.toHaveBeenCalled();
       expect(result).toEqual([mockDuplicateRule]);
     });
+
+    it('swallows P2002 from a concurrent seed and returns the populated list', async () => {
+      // Simulate the race: we see empty, then another request already seeded,
+      // so our createMany fails P2002. The refetch must still return the list.
+      (prismaMock.dealDuplicateRule.findMany as any)
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([mockDuplicateRule]);
+      (prismaMock.dealDuplicateRule.createMany as any).mockRejectedValue({ code: 'P2002' });
+
+      const result = await caller.duplicateRules.getAll();
+
+      expect(result).toEqual([mockDuplicateRule]);
+    });
   });
 
   describe('duplicateRules.updateAll', () => {
@@ -260,6 +273,17 @@ describe('Deal Settings Router', () => {
       );
       expect(result).toHaveLength(1);
     });
+
+    it('swallows P2002 from a concurrent seed and returns the populated list', async () => {
+      (prismaMock.dealRequiredField.findMany as any)
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([mockRequiredField]);
+      (prismaMock.dealRequiredField.createMany as any).mockRejectedValue({ code: 'P2002' });
+
+      const result = await caller.requiredFields.getAll();
+
+      expect(result).toEqual([mockRequiredField]);
+    });
   });
 
   describe('requiredFields.updateAll', () => {
@@ -332,42 +356,20 @@ describe('Deal Settings Router', () => {
   });
 
   describe('winLossReasons.delete', () => {
-    it('hard-deletes when no opportunity references the key', async () => {
-      (prismaMock.opportunity.count as any).mockResolvedValue(0);
-      (prismaMock.dealWinLossReason.findUnique as any).mockResolvedValue(mockWinLossReason);
+    it('hard-deletes the row scoped to the current tenant', async () => {
       (prismaMock.dealWinLossReason.delete as any).mockResolvedValue(mockWinLossReason);
 
       const result = await caller.winLossReasons.delete({ id: 'reason-1' });
 
       expect(result.softDeleted).toBe(false);
-    });
-
-    it('soft-deletes (isActive=false) when an opportunity references the key', async () => {
-      (prismaMock.opportunity.count as any).mockResolvedValue(1);
-      (prismaMock.dealWinLossReason.findUnique as any).mockResolvedValue(mockWinLossReason);
-      (prismaMock.dealWinLossReason.update as any).mockResolvedValue({
-        ...mockWinLossReason,
-        isActive: false,
-      });
-
-      const result = await caller.winLossReasons.delete({ id: 'reason-1' });
-
-      expect(result.softDeleted).toBe(true);
-      expect(prismaMock.dealWinLossReason.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { id: 'reason-1', tenantId },
-          data: { isActive: false },
-        })
+      expect(prismaMock.dealWinLossReason.delete).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: 'reason-1', tenantId } })
       );
     });
 
     it('throws NOT_FOUND for foreign-tenant id (cross-tenant negative)', async () => {
-      (prismaMock.opportunity.count as any).mockResolvedValue(0);
-      // Row exists but belongs to another tenant → treated as not found.
-      (prismaMock.dealWinLossReason.findUnique as any).mockResolvedValue({
-        ...mockWinLossReason,
-        tenantId: 'other-tenant',
-      });
+      // `where: { id, tenantId }` makes a foreign-tenant row miss → P2025.
+      (prismaMock.dealWinLossReason.delete as any).mockRejectedValue({ code: 'P2025' });
 
       await expect(caller.winLossReasons.delete({ id: 'reason-1' })).rejects.toMatchObject({
         code: 'NOT_FOUND',
@@ -428,12 +430,16 @@ describe('Deal Settings Router', () => {
   });
 
   describe('scoringRules.resetToDefaults', () => {
-    it('wipes the tenant list (no opinionated defaults)', async () => {
+    it('wipes the tenant list and returns the fresh (empty) list', async () => {
       (prismaMock.dealScoringRule.deleteMany as any).mockResolvedValue({ count: 3 });
+      (prismaMock.dealScoringRule.findMany as any).mockResolvedValue([]);
 
       const result = await caller.scoringRules.resetToDefaults();
 
       expect(prismaMock.dealScoringRule.deleteMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { tenantId } })
+      );
+      expect(prismaMock.dealScoringRule.findMany).toHaveBeenCalledWith(
         expect.objectContaining({ where: { tenantId } })
       );
       expect(result).toEqual([]);
@@ -509,25 +515,25 @@ describe('Deal Settings Router', () => {
   // ─── Automation ────────────────────────────────────────────────────────
 
   describe('automation.get', () => {
-    it('creates defaults row on first call', async () => {
-      (prismaMock.dealAutomationSetting.findUnique as any).mockResolvedValue(null);
-      (prismaMock.dealAutomationSetting.create as any).mockResolvedValue(mockAutomation);
+    it('upserts with defaults on first call (atomic — no read-then-write race)', async () => {
+      (prismaMock.dealAutomationSetting.upsert as any).mockResolvedValue(mockAutomation);
 
       const result = await caller.automation.get();
 
-      expect(prismaMock.dealAutomationSetting.create).toHaveBeenCalledWith(
+      expect(prismaMock.dealAutomationSetting.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.objectContaining({ tenantId, aiDuplicateDetection: false }),
+          where: { tenantId },
+          update: {},
+          create: expect.objectContaining({ tenantId, aiDuplicateDetection: false }),
         })
       );
       expect(result.aiDuplicateDetection).toBe(false);
     });
 
-    it('returns existing row without create', async () => {
-      (prismaMock.dealAutomationSetting.findUnique as any).mockResolvedValue(mockAutomation);
+    it('returns existing row via upsert no-op on subsequent calls', async () => {
+      (prismaMock.dealAutomationSetting.upsert as any).mockResolvedValue(mockAutomation);
 
       const result = await caller.automation.get();
-      expect(prismaMock.dealAutomationSetting.create).not.toHaveBeenCalled();
       expect(result).toEqual(mockAutomation);
     });
   });

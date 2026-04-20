@@ -67,9 +67,16 @@ const duplicateRulesRouter = createTRPCRouter({
 
     if (existing.length > 0) return existing;
 
-    await ctx.prismaWithTenant.dealDuplicateRule.createMany({
-      data: DEFAULT_DEAL_DUPLICATE_RULES.map((r) => ({ ...r, tenantId })),
-    });
+    // First-call auto-seed. Concurrent initial page loads can race here —
+    // swallow P2002 from the loser and re-read, so both callers end with
+    // the same populated list instead of a 500.
+    try {
+      await ctx.prismaWithTenant.dealDuplicateRule.createMany({
+        data: DEFAULT_DEAL_DUPLICATE_RULES.map((r) => ({ ...r, tenantId })),
+      });
+    } catch (err) {
+      if (!isUniqueConstraintError(err)) throw err;
+    }
 
     return ctx.prismaWithTenant.dealDuplicateRule.findMany({
       where: { tenantId },
@@ -132,9 +139,14 @@ const requiredFieldsRouter = createTRPCRouter({
 
     if (existing.length > 0) return existing;
 
-    await ctx.prismaWithTenant.dealRequiredField.createMany({
-      data: DEFAULT_DEAL_REQUIRED_FIELDS.map((f) => ({ ...f, tenantId })),
-    });
+    // Same race-safe seed pattern as duplicateRules.getAll.
+    try {
+      await ctx.prismaWithTenant.dealRequiredField.createMany({
+        data: DEFAULT_DEAL_REQUIRED_FIELDS.map((f) => ({ ...f, tenantId })),
+      });
+    } catch (err) {
+      if (!isUniqueConstraintError(err)) throw err;
+    }
 
     return ctx.prismaWithTenant.dealRequiredField.findMany({
       where: { tenantId },
@@ -229,34 +241,11 @@ const winLossReasonsRouter = createTRPCRouter({
   delete: tenantProcedure.input(deleteDealWinLossReasonSchema).mutation(async ({ ctx, input }) => {
     const tenantId = ctx.tenant.tenantId;
 
-    // Soft-delete path if any Opportunity references the reason key. The
-    // FK column (`Opportunity.closeReasonKey`) lands with FOLLOWUP-PG-184-WINLOSS
-    // (IFC-310). Until then, this count is always 0 — the mock stubs it in
-    // tests so we exercise the branch.
-    const referenced = await ((
-      ctx.prismaWithTenant as unknown as {
-        opportunity?: { count?: (args: unknown) => Promise<number> };
-      }
-    ).opportunity?.count?.({ where: { tenantId, id: input.id } }) ?? Promise.resolve(0));
-
-    const existing = await ctx.prismaWithTenant.dealWinLossReason.findUnique({
-      where: { id: input.id },
-    });
-    if (!existing || existing.tenantId !== tenantId) {
-      throw new TRPCError({
-        code: 'NOT_FOUND',
-        message: 'Win/loss reason not found in this tenant.',
-      });
-    }
-
-    if (referenced > 0) {
-      await ctx.prismaWithTenant.dealWinLossReason.update({
-        where: { id: input.id, tenantId },
-        data: { isActive: false },
-      });
-      return { softDeleted: true };
-    }
-
+    // AC-D4's soft-delete branch requires `Opportunity.closeReasonKey`, which
+    // is not on the schema today — it lands with FOLLOWUP-PG-184-WINLOSS
+    // (IFC-310). Until that FK exists, this procedure hard-deletes. The
+    // branch will be re-added by IFC-310 with the correct predicate
+    // (`closeReasonKey = existing.key`), not a placeholder.
     try {
       await ctx.prismaWithTenant.dealWinLossReason.delete({
         where: { id: input.id, tenantId },
@@ -315,10 +304,7 @@ const scoringRulesRouter = createTRPCRouter({
         name: input.name,
         field: input.field,
         operator: input.operator,
-        // Validator narrows valueJson.value to `unknown`; Prisma wants
-        // InputJsonValue. The payload is validated by Zod at the edge, so
-        // the cast is safe.
-        valueJson: input.valueJson as unknown as object,
+        valueJson: input.valueJson,
         points: input.points,
         isActive: input.isActive,
         sortOrder: input.sortOrder ?? 0,
@@ -332,10 +318,7 @@ const scoringRulesRouter = createTRPCRouter({
     try {
       return await ctx.prismaWithTenant.dealScoringRule.update({
         where: { id, tenantId },
-        // Same InputJsonValue cast as on create.
-        data: rest as unknown as Parameters<
-          typeof ctx.prismaWithTenant.dealScoringRule.update
-        >[0]['data'],
+        data: rest,
       });
     } catch (err: unknown) {
       if (isRecordNotFoundError(err)) {
@@ -371,7 +354,10 @@ const scoringRulesRouter = createTRPCRouter({
     // Reset wipes the tenant's list — admins author their own rules; no
     // opinionated defaults (spec §Defaults).
     await ctx.prismaWithTenant.dealScoringRule.deleteMany({ where: { tenantId } });
-    return [];
+    return ctx.prismaWithTenant.dealScoringRule.findMany({
+      where: { tenantId },
+      orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+    });
   }),
 });
 
@@ -462,13 +448,13 @@ const tagsRouter = createTRPCRouter({
 const automationRouter = createTRPCRouter({
   get: tenantProcedure.query(async ({ ctx }) => {
     const tenantId = ctx.tenant.tenantId;
-    const existing = await ctx.prismaWithTenant.dealAutomationSetting.findUnique({
+    // upsert is atomic on `@@unique([tenantId])`, so concurrent first-call
+    // page loads can't P2002-race each other like the earlier findUnique +
+    // create pattern did.
+    return ctx.prismaWithTenant.dealAutomationSetting.upsert({
       where: { tenantId },
-    });
-    if (existing) return existing;
-
-    return ctx.prismaWithTenant.dealAutomationSetting.create({
-      data: { tenantId, ...DEFAULT_DEAL_AUTOMATION },
+      update: {},
+      create: { tenantId, ...DEFAULT_DEAL_AUTOMATION },
     });
   }),
 

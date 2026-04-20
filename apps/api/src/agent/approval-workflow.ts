@@ -132,6 +132,40 @@ export class ApprovalWorkflowService {
   private readonly rollbackWindowMs = 60 * 60 * 1000; // 1 hour rollback window
 
   /**
+   * Re-check tool enablement BEFORE execution.
+   * When tenantId + prisma are available on the context we use the gated path;
+   * background jobs that lack tenant context fall back to the plain registry lookup
+   * (TODO: wire tenantId through background job contexts before invoking tools).
+   * Extracted from approveAction() to keep its cognitive complexity under 15.
+   */
+  private async resolveApprovalTool(
+    action: PendingAction,
+    context: AgentAuthContext
+  ): Promise<ReturnType<typeof getAgentTool>> {
+    if (!context.tenantId || !context.prisma) {
+      // Bypass rationale: background-job / cron execution path where no tRPC
+      // request context is present (e.g. scheduled job retries, queue consumers).
+      return getAgentTool(action.toolName);
+    }
+    try {
+      return await getForTenant({
+        name: action.toolName,
+        tenantId: context.tenantId,
+        prisma: context.prisma,
+      });
+    } catch (err) {
+      if (err instanceof ToolDisabledError) {
+        throw new Error(
+          `Cannot execute approved action: tool "${action.toolName}" has been ` +
+            `disabled for tenant ${context.tenantId} since the approval was requested.`,
+          { cause: err }
+        );
+      }
+      throw err;
+    }
+  }
+
+  /**
    * Get all pending actions for a user
    */
   async getPendingActions(userId: string): Promise<PendingAction[]> {
@@ -178,36 +212,7 @@ export class ApprovalWorkflowService {
       throw new Error('Action has expired');
     }
 
-    // Re-check tool enablement BEFORE execution.
-    // A tenant may have disabled the tool between the approval request and now.
-    // When tenantId + prisma are available on the context we use the gated path;
-    // background jobs that lack tenant context fall back to the plain registry lookup
-    // (TODO: wire tenantId through background job contexts before invoking tools).
-    let tool;
-    if (context.tenantId && context.prisma) {
-      try {
-        tool = await getForTenant({
-          name: action.toolName,
-          tenantId: context.tenantId,
-          prisma: context.prisma,
-        });
-      } catch (err) {
-        if (err instanceof ToolDisabledError) {
-          throw new Error(
-            `Cannot execute approved action: tool "${action.toolName}" has been ` +
-              `disabled for tenant ${context.tenantId} since the approval was requested.`
-          );
-        }
-        throw err;
-      }
-    } else {
-      // Bypass rationale: background-job / cron execution path where no tRPC
-      // request context is present (e.g. scheduled job retries, queue consumers).
-      // These callers do not hold a tenantId at invocation time.
-      // TODO: wire tenantId through background-job contexts before this call site
-      // so it can be migrated to getForTenant() for full tenant-gating coverage.
-      tool = getAgentTool(action.toolName);
-    }
+    const tool = await this.resolveApprovalTool(action, context);
 
     // Update action status
     action.status = 'APPROVED';

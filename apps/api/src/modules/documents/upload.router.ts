@@ -1,8 +1,14 @@
 import { z } from 'zod';
-import { createTRPCRouter, protectedProcedure } from '../../trpc';
+import { createTRPCRouter, protectedProcedure, tenantProcedure } from '../../trpc';
 import { TRPCError } from '@trpc/server';
 import { IngestionOrchestrator } from '@intelliflow/application';
 import { loadBullMQ } from '../../lib/load-bullmq';
+import { loadDocumentAutomation, normalizeFilename } from '../legal/document-automation';
+import {
+  assertMimeAllowed,
+  assertSizeAllowed,
+  loadDocumentPolicies,
+} from '../legal/document-policies';
 
 /**
  * File Upload Input Schema
@@ -85,10 +91,11 @@ export const uploadRouter = createTRPCRouter({
   /**
    * Upload a document
    */
-  upload: protectedProcedure.input(uploadInputSchema).mutation(async ({ input, ctx }) => {
+  upload: tenantProcedure.input(uploadInputSchema).mutation(async ({ input, ctx }) => {
     const { filename, mimeType, content, relatedCaseId, relatedContactId } = input;
 
-    // Decode base64 content
+    // Decode base64 content first so we know the real byte length before
+    // enforcing the tenant's size policy.
     let fileBuffer: Buffer;
     try {
       fileBuffer = Buffer.from(content, 'base64');
@@ -99,13 +106,27 @@ export const uploadRouter = createTRPCRouter({
       });
     }
 
+    // PG-186: enforce tenant Document Settings policies (MIME allowlist +
+    // size ceiling) before hitting the ingestion orchestrator. Required
+    // fields are not checked here because the raw upload endpoint doesn't
+    // carry the metadata payload — that's enforced on documents.create.
+    const policies = await loadDocumentPolicies(ctx);
+    assertMimeAllowed(mimeType, policies.general);
+    assertSizeAllowed(fileBuffer.byteLength, policies.general);
+
+    // PG-186: apply filename normalization when enabled. This operates on
+    // the real uploaded filename (not the display title), matching the
+    // semantics advertised by the Automation toggle.
+    const automationFlags = await loadDocumentAutomation(ctx);
+    const normalizedFilename = normalizeFilename(filename, automationFlags);
+
     // Get ingestion orchestrator from container
     const orchestrator = ctx.container!.get<IngestionOrchestrator>('IngestionOrchestrator');
 
     // Ingest file
     const result = await orchestrator.ingestFile(fileBuffer, {
       tenantId: ctx.user.tenantId,
-      filename,
+      filename: normalizedFilename,
       mimeType,
       uploadedBy: ctx.user.userId,
       relatedCaseId,
@@ -126,7 +147,7 @@ export const uploadRouter = createTRPCRouter({
         mimeType,
         tenantId: ctx.user.tenantId,
         userId: ctx.user.userId,
-        filename,
+        filename: normalizedFilename,
       }).catch(() => {});
     }
 

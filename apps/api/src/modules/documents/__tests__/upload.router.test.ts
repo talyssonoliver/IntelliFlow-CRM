@@ -31,8 +31,24 @@ const USER_ID = '00000000-0000-4000-8000-000000000002';
 const DOC_ID = 'doc-123';
 
 function createCtx() {
+  // PG-186: upload is now a tenantProcedure. The tenant middleware derives
+  // `prismaWithTenant` from `ctx.prisma`, so the Document Settings models
+  // that loadDocumentPolicies/loadDocumentAutomation read must be stubbed
+  // here. Empty rows → factory defaults (empty MIME allowlist = pass-through,
+  // generous size cap), which keeps the existing assertions valid.
+  const prisma = {
+    documentGeneralConfig: {
+      findUnique: vi.fn().mockResolvedValue(null),
+    },
+    documentRequiredField: {
+      findMany: vi.fn().mockResolvedValue([]),
+    },
+    documentAutomationSetting: {
+      findUnique: vi.fn().mockResolvedValue(null),
+    },
+  };
   return {
-    prisma: {} as any,
+    prisma: prisma as any,
     user: { userId: USER_ID, tenantId: TENANT_ID, email: 't@t.com', role: 'ADMIN' },
     container: mockContainer,
   } as any;
@@ -103,6 +119,71 @@ describe('uploadRouter', () => {
     it('should throw INTERNAL_SERVER_ERROR on orchestrator failure without error message', async () => {
       mockOrchestrator.ingestFile.mockResolvedValue({ success: false });
       await expect(caller.upload(validInput)).rejects.toThrow('Upload failed');
+    });
+
+    it('rejects MIME types not in tenant allowlist (PG-186 enforcement)', async () => {
+      const prisma = (caller as any)._def ? ({} as any) : undefined; /* keep tsc quiet; unused */
+      void prisma;
+      // Build a caller whose tenant has a restrictive allowlist
+      const restrictiveCtx = {
+        prisma: {
+          documentGeneralConfig: {
+            findUnique: vi.fn().mockResolvedValue({
+              id: 'g',
+              tenantId: TENANT_ID,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              allowedMimeTypes: ['application/pdf'],
+              maxUploadSizeMb: 50,
+              enableAntivirusScan: true,
+              quarantineOnDetect: true,
+              blockOnScanFailure: true,
+              defaultRetentionDays: 365,
+            }),
+          },
+          documentRequiredField: { findMany: vi.fn().mockResolvedValue([]) },
+          documentAutomationSetting: { findUnique: vi.fn().mockResolvedValue(null) },
+        } as any,
+        user: { userId: USER_ID, tenantId: TENANT_ID, email: 't@t.com', role: 'ADMIN' },
+        container: mockContainer,
+      } as any;
+      const restrictiveCaller = uploadRouter.createCaller(restrictiveCtx);
+      await expect(
+        restrictiveCaller.upload({ ...validInput, mimeType: 'application/x-exe' })
+      ).rejects.toThrow(TRPCError);
+      expect(mockOrchestrator.ingestFile).not.toHaveBeenCalled();
+    });
+
+    it('rejects files above tenant size ceiling (PG-186 enforcement)', async () => {
+      const restrictiveCtx = {
+        prisma: {
+          documentGeneralConfig: {
+            findUnique: vi.fn().mockResolvedValue({
+              id: 'g',
+              tenantId: TENANT_ID,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              allowedMimeTypes: [],
+              maxUploadSizeMb: 1,
+              enableAntivirusScan: true,
+              quarantineOnDetect: true,
+              blockOnScanFailure: true,
+              defaultRetentionDays: 365,
+            }),
+          },
+          documentRequiredField: { findMany: vi.fn().mockResolvedValue([]) },
+          documentAutomationSetting: { findUnique: vi.fn().mockResolvedValue(null) },
+        } as any,
+        user: { userId: USER_ID, tenantId: TENANT_ID, email: 't@t.com', role: 'ADMIN' },
+        container: mockContainer,
+      } as any;
+      const restrictiveCaller = uploadRouter.createCaller(restrictiveCtx);
+      // ~2 MB payload, limit is 1 MB
+      const oversized = Buffer.alloc(2 * 1024 * 1024, 0).toString('base64');
+      await expect(restrictiveCaller.upload({ ...validInput, content: oversized })).rejects.toThrow(
+        TRPCError
+      );
+      expect(mockOrchestrator.ingestFile).not.toHaveBeenCalled();
     });
 
     it('should throw BAD_REQUEST on invalid base64 content', async () => {
