@@ -566,22 +566,31 @@ describe('getLeadScope — sidebar view + segment wiring', () => {
     expect(scope.pendingNotice).toMatch(/sign in/i);
   });
 
-  it('view=starred → no filter + pending-backend notice', async () => {
+  it('view=starred → isStarred filter, no pending notice', async () => {
     const { getLeadScope } = await import('../bulk-actions');
     const scope = getLeadScope('starred', null, 'user-1', now);
     expect(scope.view).toBe('starred');
     expect(scope.title).toBe('Starred Leads');
-    expect(scope.params).toEqual({});
-    expect(scope.pendingNotice).toMatch(/isStarred/);
+    expect(scope.params.isStarred).toBe(true);
+    expect(scope.pendingNotice).toBe(null);
   });
 
-  it('view=recent → no filter + pending-backend notice', async () => {
+  it('view=recent with empty recentIds → empty ids filter (no rows), no pending notice', async () => {
     const { getLeadScope } = await import('../bulk-actions');
-    const scope = getLeadScope('recent', null, 'user-1', now);
+    const scope = getLeadScope('recent', null, 'user-1', now, []);
     expect(scope.view).toBe('recent');
     expect(scope.title).toBe('Recently Viewed');
-    expect(scope.params).toEqual({});
-    expect(scope.pendingNotice).toMatch(/recently/i);
+    expect(scope.params.ids).toEqual([]);
+    expect(scope.description).toMatch(/Open any lead/i);
+    expect(scope.pendingNotice).toBe(null);
+  });
+
+  it('view=recent with recentIds → ids filter + descriptive count', async () => {
+    const { getLeadScope } = await import('../bulk-actions');
+    const scope = getLeadScope('recent', null, 'user-1', now, ['a', 'b', 'c']);
+    expect(scope.params.ids).toEqual(['a', 'b', 'c']);
+    expect(scope.description).toMatch(/last 3 leads/i);
+    expect(scope.pendingNotice).toBe(null);
   });
 
   it('segment=new-week → dateFrom 7 days ago, no notice', async () => {
@@ -602,13 +611,14 @@ describe('getLeadScope — sidebar view + segment wiring', () => {
     expect(scope.pendingNotice).toBe(null);
   });
 
-  it('segment=followup → status CONTACTED + pending notice for precise last-touch filter', async () => {
+  it('segment=followup → lastContactedBefore 7 days ago; no pending notice', async () => {
     const { getLeadScope } = await import('../bulk-actions');
     const scope = getLeadScope(null, 'followup', 'user-1', now);
     expect(scope.segment).toBe('followup');
     expect(scope.title).toBe('Needs Follow-up');
-    expect(scope.params.status).toEqual(['CONTACTED']);
-    expect(scope.pendingNotice).toMatch(/last touch/i);
+    expect(scope.params.lastContactedBefore).toEqual(new Date('2026-04-13T12:00:00Z'));
+    expect(scope.params.status).toBeUndefined();
+    expect(scope.pendingNotice).toBe(null);
   });
 
   it('unknown view + unknown segment → default all scope', async () => {

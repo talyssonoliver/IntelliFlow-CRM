@@ -12,6 +12,7 @@ export interface Lead {
   createdAt: Date | string;
   phone?: string | null;
   source?: string;
+  isStarred?: boolean; // PG-059 sidebar "Starred" view
   owner?: {
     id: string;
     email: string;

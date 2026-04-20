@@ -137,6 +137,17 @@ export const leadQuerySchema = paginationSchema.extend({
   ownerId: idSchema.optional(),
   dateFrom: z.coerce.date().optional(),
   dateTo: z.coerce.date().optional(),
+  // PG-059 "Needs Follow-up" sidebar segment: leads whose lastContactedAt
+  // is <= this threshold (stale contacts needing a next touch). Null means
+  // "never contacted" is included in the filter.
+  lastContactedBefore: z.coerce.date().optional(),
+  // PG-059 "Starred" sidebar view: filter to starred leads only.
+  isStarred: z.boolean().optional(),
+  // PG-059 "Recently Viewed": callers pass the client-side list of recently
+  // opened lead ids (capped). Server returns only matching leads, preserving
+  // the shape contract. Max 50 ids enforced to keep the SQL `IN` predicate
+  // reasonable.
+  ids: z.array(idSchema).max(50).optional(),
   sortBy: z.enum(LEAD_SORTABLE_FIELDS).optional(),
 });
 
@@ -157,11 +168,20 @@ export const leadResponseSchema = z.object({
   score: z.number().int().min(0).max(100),
   scoreConfidence: z.number().nullable(),
   scoreTier: z.enum(['HOT', 'WARM', 'COLD']).nullable(),
+  isStarred: z.boolean().optional().default(false), // PG-059 sidebar "Starred" view
   ownerId: idSchema,
   tenantId: idSchema,
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
 });
+
+// PG-059 Lead Set-Starred Schema
+export const setLeadStarredSchema = z.object({
+  id: idSchema,
+  starred: z.boolean(),
+});
+
+export type SetLeadStarredInput = z.infer<typeof setLeadStarredSchema>;
 
 export type LeadResponse = z.infer<typeof leadResponseSchema>;
 

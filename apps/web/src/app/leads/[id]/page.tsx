@@ -2581,6 +2581,17 @@ export default function Lead360Page() {
   // Require authentication - redirects to login if not authenticated
   const { isLoading: authLoading, isAuthenticated, user } = useRequireAuth();
 
+  // PG-059 Recently Viewed: record every successful detail page load.
+  useEffect(() => {
+    if (leadId) {
+      // Inline import keeps the hook isolated and avoids pulling the full
+      // recently-viewed surface into this already-huge file.
+      void import('@/lib/leads/use-lead-recent-views').then(({ pushRecentLeadView }) => {
+        pushRecentLeadView(leadId);
+      });
+    }
+  }, [leadId]);
+
   // Fetch lead data from API
   const {
     data: rawApiLead,

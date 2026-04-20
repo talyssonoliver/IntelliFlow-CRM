@@ -61,20 +61,50 @@ function hasLighthouseWaiver(attestation) {
   return false;
 }
 
+// Tokens that look like an approver but aren't a real human accepting
+// risk. Rejected by Guard 4 and Guard 9.
+const REJECTED_APPROVERS = new Set([
+  'ci',
+  'cicd',
+  'ci-cd',
+  'cd',
+  'agent',
+  'bot',
+  'claude',
+  'automation',
+  'autoapprove',
+  'auto',
+  'self',
+  'none',
+  'na',
+  'n/a',
+  'pending',
+  'tbd',
+  'todo',
+  'later',
+  'deferred',
+  'system',
+  'lhci',
+]);
+
+function isHumanApprover(token) {
+  if (typeof token !== 'string') return false;
+  const s = token.trim();
+  if (s.length < 3) return false;
+  if (REJECTED_APPROVERS.has(s.toLowerCase())) return false;
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)) return true; // email
+  if (/^@[A-Za-z0-9][A-Za-z0-9_.-]{2,}$/.test(s)) return true; // @handle
+  if (/^[A-Za-z][A-Za-z0-9._-]{2,}$/.test(s)) return true; // plain name
+  return false;
+}
+
 function hasHumanApproval(attestation) {
   if (!attestation) return null;
-  // Preferred: explicit top-level field (schema-validated).
   const topLevel = attestation.lighthouse_waiver_approved_by;
-  if (typeof topLevel === 'string' && topLevel.trim() && topLevel.toLowerCase() !== 'none') {
-    return topLevel.trim();
-  }
-  // Fallback: inline token inside notes for older attestations that predate
-  // the top-level field.
+  if (isHumanApprover(topLevel)) return topLevel.trim();
   const notes = String(attestation.notes ?? '');
   const m = notes.match(/lighthouse_waiver_approved_by\s*:\s*([^\s,;]+)/i);
-  if (m && m[1] && m[1].toLowerCase() !== 'none' && m[1].toLowerCase() !== 'n/a') {
-    return m[1];
-  }
+  if (m && isHumanApprover(m[1])) return m[1];
   return null;
 }
 

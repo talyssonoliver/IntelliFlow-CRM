@@ -24,13 +24,29 @@
 
 ## Lighthouse CI
 
-- Config: `lighthouserc.js` at project root — 27 URLs, desktop preset
-- Commands: `pnpm run lighthouse` (autorun), `pnpm run lighthouse:ci`
-  (filesystem to `artifacts/lighthouse/`)
-- Quick:
-  `npx lhci autorun --collect.url=http://localhost:3000/<path> --collect.numberOfRuns=1`
+- **Playbook (READ FIRST)**: `docs/claude-refs/lighthouse-playbook.md` —
+  canonical recipe, decision tree (public/static/auth), waiver rules, and
+  evidence requirements. If you are about to write `met: false` / "deferred to
+  CI" in an attestation, you have skipped this doc.
+- Config (unauthenticated): `lighthouserc.js` at project root — 27 URLs, desktop
+  preset
+- Config (authenticated): `lighthouserc.authenticated.js` + Puppeteer hook at
+  `tools/lighthouse/lhci-auth.js`. Use for `/settings/**`, `/dashboard`, or any
+  route behind auth.
+- Scripts:
+  - `pnpm run lighthouse` — unauth autorun
+  - `pnpm run lighthouse:ci` — unauth, writes to `artifacts/lighthouse/`
+  - `pnpm --filter @intelliflow/web run lighthouse:auth` — auth harness; writes
+    to `artifacts/benchmarks/home-page-lighthouse/`
+- Quick one-off (unauth):
+  `lighthouse http://localhost:3400/<path> --preset=desktop --only-categories=performance --output=json --output-path=artifacts/lighthouse/<TASK>/<slug>.json --ignore-status-code --quiet`
+  (note port 3400, not 3000; see playbook for why)
 - **Dev server scores ~60% performance** (unminified JS, no gzip, HMR) — use
-  production build for real benchmarks
+  production build for real benchmarks.
+- **Decision rule**: public static → base recipe. Public dynamic → base
+  - Path B timeouts. Auth-gated → `lighthouse:auth`. Waiver → last resort only,
+    requires `lighthouse_waiver_approved_by: <human>` and evidence of all three
+    paths attempted.
 
 ## Critical Rules
 

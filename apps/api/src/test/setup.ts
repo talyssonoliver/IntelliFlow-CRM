@@ -411,6 +411,7 @@ export const mockLead = {
   lastContactedAt: null,
   estimatedValue: null,
   tags: [],
+  isStarred: false, // PG-059
 };
 
 export const mockContact = {

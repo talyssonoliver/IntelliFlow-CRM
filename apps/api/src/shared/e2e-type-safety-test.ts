@@ -47,6 +47,7 @@ function demonstratePrismaTypes() {
     lastContactedAt: null,
     estimatedValue: 0,
     tags: [],
+    isStarred: false, // PG-059
   };
 
   // TypeScript enforces all required fields

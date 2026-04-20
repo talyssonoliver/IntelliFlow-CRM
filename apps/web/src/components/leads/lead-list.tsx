@@ -32,6 +32,7 @@ import {
   getSortParams,
   type BulkDialogKind,
 } from '@/lib/leads/bulk-actions';
+import { useLeadRecentViews } from '@/lib/leads/use-lead-recent-views';
 
 /**
  * Lead List — extracted client component (PG-059).
@@ -73,6 +74,7 @@ interface RowActionHandlers {
   onConvert: (lead: Lead) => void;
   onQualify: (lead: Lead) => void;
   onScore: (lead: Lead) => void;
+  onToggleStar: (lead: Lead) => void;
   onDelete: (lead: Lead) => void;
 }
 
@@ -171,6 +173,11 @@ function createColumns(
             ]}
             dropdownActions={[
               {
+                icon: lead.isStarred ? 'star' : 'star_outline',
+                label: lead.isStarred ? 'Unstar' : 'Star',
+                onClick: () => handlers.onToggleStar(lead),
+              },
+              {
                 icon: 'edit',
                 label: 'Edit Lead',
                 onClick: () => handlers.onEdit(lead),
@@ -232,10 +239,19 @@ export default function LeadList({ initialData: serverData }: LeadListProps = {}
 
   const debouncedSearch = useDebounce(searchQuery, 300);
 
+  const { recentIds, push: pushRecentView } = useLeadRecentViews();
+
   // Sidebar-driven scope: /leads?view=my|starred|recent OR /leads?segment=new-week|hot|followup
   const scope = useMemo(
-    () => getLeadScope(searchParams?.get('view'), searchParams?.get('segment'), user?.id ?? null),
-    [searchParams, user?.id]
+    () =>
+      getLeadScope(
+        searchParams?.get('view'),
+        searchParams?.get('segment'),
+        user?.id ?? null,
+        new Date(),
+        recentIds
+      ),
+    [searchParams, user?.id, recentIds]
   );
 
   // Reset to page 1 whenever the scope (view/segment) changes.
@@ -279,6 +295,9 @@ export default function LeadList({ initialData: serverData }: LeadListProps = {}
       ownerId: scope.params.ownerId,
       dateFrom: scope.params.dateFrom,
       dateTo: scope.params.dateTo,
+      lastContactedBefore: scope.params.lastContactedBefore,
+      isStarred: scope.params.isStarred,
+      ids: scope.params.ids ? [...scope.params.ids] : undefined,
       minScore: scoreParams.minScore ?? scope.params.minScore,
       maxScore: scoreParams.maxScore ?? scope.params.maxScore,
       sortBy: sortParams.sortBy,
@@ -398,6 +417,23 @@ export default function LeadList({ initialData: serverData }: LeadListProps = {}
     },
   });
 
+  const setStarredMutation = api.lead.setStarred.useMutation({
+    onSuccess: (result) => {
+      utils.lead.list.invalidate();
+      invalidateLeadsCache();
+      if (user?.id) revalidateLeadCaches(user.id).catch(() => {});
+      toast({
+        title: result.isStarred ? 'Lead Starred' : 'Star Removed',
+        description: result.isStarred
+          ? 'Find it later under Sidebar → Starred.'
+          : 'The lead is no longer starred.',
+      });
+    },
+    onError: (err) => {
+      toast({ title: 'Update Failed', description: err.message, variant: 'destructive' });
+    },
+  });
+
   useEffect(() => {
     setCurrentPage(1);
   }, [debouncedSearch, statusFilter, scoreFilter, sortOrder]);
@@ -416,9 +452,10 @@ export default function LeadList({ initialData: serverData }: LeadListProps = {}
 
   const handleRowClick = useCallback(
     (lead: Lead) => {
+      pushRecentView(lead.id);
       router.push(`/leads/${lead.id}`);
     },
-    [router]
+    [router, pushRecentView]
   );
 
   const openDialog = useCallback((kind: BulkDialogKind) => {
@@ -483,9 +520,11 @@ export default function LeadList({ initialData: serverData }: LeadListProps = {}
       onQualify: (lead) =>
         qualifyMutation.mutate({ leadId: lead.id, reason: 'Manual qualification from list' }),
       onScore: (lead) => scoreMutation.mutate({ leadId: lead.id }),
+      onToggleStar: (lead) =>
+        setStarredMutation.mutate({ id: lead.id, starred: !(lead.isStarred ?? false) }),
       onDelete: (lead) => deleteMutation.mutate({ id: lead.id }),
     }),
-    [router, convertMutation, qualifyMutation, scoreMutation, deleteMutation]
+    [router, convertMutation, qualifyMutation, scoreMutation, setStarredMutation, deleteMutation]
   );
 
   const columns = useMemo(

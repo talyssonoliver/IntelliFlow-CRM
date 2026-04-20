@@ -113,6 +113,9 @@ export interface LeadScopeParams {
   readonly maxScore?: number;
   readonly dateFrom?: Date;
   readonly dateTo?: Date;
+  readonly lastContactedBefore?: Date;
+  readonly isStarred?: boolean;
+  readonly ids?: readonly string[];
   readonly status?: readonly LeadStatus[];
 }
 
@@ -137,11 +140,17 @@ function parseSegment(raw: string | null | undefined): LeadSegment | null {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+/**
+ * Optional injection for recently-viewed IDs. Lives in localStorage on the
+ * client (see `useLeadRecentViews` hook); passed in so this module stays
+ * React-free and deterministic for tests.
+ */
 export function getLeadScope(
   viewParam: string | null | undefined,
   segmentParam: string | null | undefined,
   currentUserId: string | undefined | null,
-  now: Date = new Date()
+  now: Date = new Date(),
+  recentIds: readonly string[] = []
 ): LeadScope {
   const segment = parseSegment(segmentParam);
   if (segment === 'new-week') {
@@ -165,14 +174,16 @@ export function getLeadScope(
     };
   }
   if (segment === 'followup') {
+    // Leads whose last contact is older than 7 days (or never contacted).
+    // Uses the `lastContactedBefore` filter added to leadQuerySchema + the
+    // `lastContactedAt` column on the Lead model (schema.prisma:415).
     return {
       view: 'all',
       segment,
       title: 'Needs Follow-up',
-      description: 'Contacted leads awaiting the next touch.',
-      params: { status: ['CONTACTED'] },
-      pendingNotice:
-        'Showing all Contacted leads. A precise "last touch > 7 days" filter is pending a lead.list API extension.',
+      description: 'Leads with no contact in the last 7 days.',
+      params: { lastContactedBefore: new Date(now.getTime() - 7 * DAY_MS) },
+      pendingNotice: null,
     };
   }
 
@@ -203,20 +214,24 @@ export function getLeadScope(
       segment: null,
       title: 'Starred Leads',
       description: 'Leads you have starred.',
-      params: {},
-      pendingNotice:
-        'Starred leads are pending an isStarred field on the lead model — showing all leads for now.',
+      params: { isStarred: true },
+      pendingNotice: null,
     };
   }
   if (view === 'recent') {
+    // Recently-viewed is tracked client-side (localStorage) and sent as an
+    // `ids` filter. When the user has no recent views yet, we return empty
+    // — the DataTable's empty state handles the UX.
     return {
       view,
       segment: null,
       title: 'Recently Viewed',
-      description: 'Leads you recently opened.',
-      params: {},
-      pendingNotice:
-        'Recently-viewed tracking is pending a dedicated endpoint — showing all leads for now.',
+      description:
+        recentIds.length > 0
+          ? `The last ${recentIds.length} lead${recentIds.length === 1 ? '' : 's'} you opened.`
+          : 'Open any lead to start building your recently-viewed list.',
+      params: { ids: recentIds.length > 0 ? [...recentIds] : [] },
+      pendingNotice: null,
     };
   }
 

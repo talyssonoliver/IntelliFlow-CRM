@@ -35,6 +35,7 @@ const mutationMocks = {
   qualify: { mutate: vi.fn() },
   convert: { mutate: vi.fn() },
   score: { mutate: vi.fn() },
+  setStarred: { mutate: vi.fn() },
   delete: { mutate: vi.fn() },
 };
 
@@ -103,6 +104,7 @@ vi.mock('@/lib/api', () => ({
       qualify: { useMutation: () => mutationMocks.qualify },
       convert: { useMutation: () => mutationMocks.convert },
       scoreWithAI: { useMutation: () => mutationMocks.score },
+      setStarred: { useMutation: () => mutationMocks.setStarred },
       delete: { useMutation: () => mutationMocks.delete },
     },
   },
@@ -422,16 +424,24 @@ describe('LeadList — sidebar view + segment wiring', () => {
     expect(last.ownerId).toBe('u1');
   });
 
-  it('view=starred → renders pending-backend notice; query has no new filter', () => {
+  it('view=starred → query includes isStarred:true, no pending notice', () => {
     currentSearchParams = new URLSearchParams('view=starred');
     render(<LeadList />);
-    expect(screen.getByTestId('lead-scope-pending-notice').textContent).toMatch(/isStarred/);
-    const last = listQueryCalls[listQueryCalls.length - 1]?.input as {
-      ownerId?: string;
-      minScore?: number;
-    };
-    expect(last.ownerId).toBeUndefined();
-    expect(last.minScore).toBeUndefined();
+    expect(screen.queryByTestId('lead-scope-pending-notice')).toBeNull();
+    const last = listQueryCalls[listQueryCalls.length - 1]?.input as { isStarred?: boolean };
+    expect(last.isStarred).toBe(true);
+  });
+
+  it('view=recent → query includes ids from localStorage recent-views', () => {
+    window.localStorage.setItem(
+      'intelliflow:leads:recent-views',
+      JSON.stringify(['lead-1', 'lead-42'])
+    );
+    currentSearchParams = new URLSearchParams('view=recent');
+    render(<LeadList />);
+    const last = listQueryCalls[listQueryCalls.length - 1]?.input as { ids?: string[] };
+    expect(last.ids).toEqual(['lead-1', 'lead-42']);
+    window.localStorage.clear();
   });
 
   it('segment=hot → query includes minScore 80 + title "Hot Leads"', () => {
@@ -453,15 +463,19 @@ describe('LeadList — sidebar view + segment wiring', () => {
     expect(diffDays).toBeLessThanOrEqual(7.1);
   });
 
-  it('segment=followup → query includes status [CONTACTED] + pending notice', () => {
+  it('segment=followup → query includes lastContactedBefore ~7 days ago; no pending notice', () => {
     currentSearchParams = new URLSearchParams('segment=followup');
     render(<LeadList />);
     expect(screen.getByText(/Needs Follow-up/)).toBeTruthy();
-    expect(screen.getByTestId('lead-scope-pending-notice').textContent).toMatch(/last touch/i);
+    expect(screen.queryByTestId('lead-scope-pending-notice')).toBeNull();
     const last = listQueryCalls[listQueryCalls.length - 1]?.input as {
-      status?: string[];
+      lastContactedBefore?: Date;
     };
-    expect(last.status).toEqual(['CONTACTED']);
+    expect(last.lastContactedBefore).toBeInstanceOf(Date);
+    const diffDays =
+      (Date.now() - (last.lastContactedBefore as Date).getTime()) / (24 * 60 * 60 * 1000);
+    expect(diffDays).toBeGreaterThanOrEqual(6.9);
+    expect(diffDays).toBeLessThanOrEqual(7.1);
   });
 });
 

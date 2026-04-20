@@ -30,6 +30,7 @@ import {
   bulkUpdateLeadStatusSchema,
   bulkArchiveLeadsSchema,
   bulkDeleteLeadsSchema,
+  setLeadStarredSchema,
 } from '@intelliflow/validators';
 import { mapLeadToResponse } from '../../shared/mappers';
 import type { Context } from '../../context';
@@ -86,8 +87,23 @@ function buildLeadListWhere(filters: {
   ownerId?: string;
   dateFrom?: Date;
   dateTo?: Date;
+  lastContactedBefore?: Date;
+  isStarred?: boolean;
+  ids?: string[];
 }): Record<string, unknown> {
-  const { status, source, minScore, maxScore, search, ownerId, dateFrom, dateTo } = filters;
+  const {
+    status,
+    source,
+    minScore,
+    maxScore,
+    search,
+    ownerId,
+    dateFrom,
+    dateTo,
+    lastContactedBefore,
+    isStarred,
+    ids,
+  } = filters;
   const baseWhere: Record<string, unknown> = {};
 
   if (status && status.length > 0) baseWhere.status = { in: status };
@@ -109,6 +125,25 @@ function buildLeadListWhere(filters: {
 
   const dateRange = buildDateRange(dateFrom, dateTo);
   if (dateRange) baseWhere.createdAt = dateRange;
+
+  // PG-059 "Needs Follow-up": include leads where lastContactedAt is NULL
+  // (never contacted) OR older than the threshold. Indexed via
+  // @@index([tenantId, lastContactedAt]) in schema.prisma:620.
+  if (lastContactedBefore) {
+    baseWhere.OR = [
+      ...((baseWhere.OR as object[] | undefined) ?? []),
+      { lastContactedAt: null },
+      { lastContactedAt: { lte: lastContactedBefore } },
+    ];
+  }
+
+  // PG-059 "Starred": covered by @@index([tenantId, ownerId, isStarred]).
+  if (typeof isStarred === 'boolean') baseWhere.isStarred = isStarred;
+
+  // PG-059 "Recently Viewed": client passes the capped recent-ids list
+  // (max 50 per validator). When empty, this intentionally yields no rows
+  // (Prisma treats `{ in: [] }` as no-match), which matches user expectation.
+  if (ids) baseWhere.id = { in: ids };
 
   return baseWhere;
 }
@@ -613,6 +648,9 @@ export const leadRouter = createTRPCRouter({
       ownerId,
       dateFrom,
       dateTo,
+      lastContactedBefore,
+      isStarred,
+      ids,
       sortBy = 'createdAt',
       sortOrder = 'desc',
     } = input;
@@ -622,7 +660,19 @@ export const leadRouter = createTRPCRouter({
     // Apply tenant filtering
     const where = createTenantWhereClause(
       typedCtx.tenant,
-      buildLeadListWhere({ status, source, minScore, maxScore, search, ownerId, dateFrom, dateTo })
+      buildLeadListWhere({
+        status,
+        source,
+        minScore,
+        maxScore,
+        search,
+        ownerId,
+        dateFrom,
+        dateTo,
+        lastContactedBefore,
+        isStarred,
+        ids,
+      })
     );
 
     // Execute queries in parallel using tenant-scoped Prisma
@@ -755,6 +805,25 @@ export const leadRouter = createTRPCRouter({
     }
 
     return { success: true, id: input.id };
+  }),
+
+  /**
+   * PG-059: toggle the starred flag on a lead. Uses tenant-scoped Prisma so a
+   * user cannot flip a star on a lead outside their tenant.
+   */
+  setStarred: tenantProcedure.input(setLeadStarredSchema).mutation(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
+    const existing = await typedCtx.prismaWithTenant.lead.findUnique({
+      where: { id: input.id },
+    });
+    if (!existing) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Lead not found' });
+    }
+    const updated = await typedCtx.prismaWithTenant.lead.update({
+      where: { id: input.id },
+      data: { isStarred: input.starred },
+    });
+    return { id: updated.id, isStarred: updated.isStarred };
   }),
 
   /**

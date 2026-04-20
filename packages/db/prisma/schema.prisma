@@ -415,6 +415,7 @@ model Lead {
   lastContactedAt DateTime?
   estimatedValue  Int?        @default(0)
   tags            String[]    @default([])
+  isStarred       Boolean     @default(false)  // PG-059: sidebar "Starred" view
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 
@@ -448,6 +449,7 @@ model Lead {
   @@index([tenantId, status, score(sort: Desc)]) // IFC-030: Lead routing queries
   @@index([tenantId, ownerId, status]) // IFC-030: Assigned lead lookups
   @@index([tenantId, ownerId, createdAt(sort: Desc)]) // HOME-PERF: Welcome summary lead counts
+  @@index([tenantId, ownerId, isStarred]) // PG-059: fast "?view=starred" for current user
   @@map("leads")
 }
 

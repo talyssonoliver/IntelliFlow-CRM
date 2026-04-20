@@ -741,4 +741,76 @@ describe('Lead Router - Additional Coverage', () => {
       expect(result.averageScore).toBe(80);
     });
   });
+
+  describe('PG-059 setStarred + list filter extensions', () => {
+    it('setStarred: flips isStarred=true when lead exists', async () => {
+      const ctx = createTestContext();
+      const caller = leadRouter.createCaller(ctx);
+      prismaMock.lead.findUnique.mockResolvedValue({ ...mockLead, isStarred: false } as any);
+      prismaMock.lead.update.mockResolvedValue({
+        ...mockLead,
+        isStarred: true,
+      } as any);
+
+      const result = await caller.setStarred({ id: TEST_UUIDS.lead1, starred: true });
+
+      expect(result).toEqual({ id: TEST_UUIDS.lead1, isStarred: true });
+      expect(prismaMock.lead.update).toHaveBeenCalledWith({
+        where: { id: TEST_UUIDS.lead1 },
+        data: { isStarred: true },
+      });
+    });
+
+    it('setStarred: throws NOT_FOUND when lead does not exist', async () => {
+      const ctx = createTestContext();
+      const caller = leadRouter.createCaller(ctx);
+      prismaMock.lead.findUnique.mockResolvedValue(null);
+
+      await expect(caller.setStarred({ id: TEST_UUIDS.lead1, starred: true })).rejects.toThrow(
+        TRPCError
+      );
+      expect(prismaMock.lead.update).not.toHaveBeenCalled();
+    });
+
+    it('list: isStarred=true filter flows through to Prisma where clause', async () => {
+      const ctx = createTestContext();
+      const caller = leadRouter.createCaller(ctx);
+      prismaMock.lead.findMany.mockResolvedValue([mockLead] as any);
+      prismaMock.lead.count.mockResolvedValue(1);
+
+      await caller.list({ isStarred: true });
+
+      const findManyCall = prismaMock.lead.findMany.mock.calls[0]?.[0];
+      expect(findManyCall?.where).toMatchObject({ isStarred: true });
+    });
+
+    it('list: ids filter flows through to Prisma where clause', async () => {
+      const ctx = createTestContext();
+      const caller = leadRouter.createCaller(ctx);
+      prismaMock.lead.findMany.mockResolvedValue([mockLead] as any);
+      prismaMock.lead.count.mockResolvedValue(1);
+
+      await caller.list({ ids: [TEST_UUIDS.lead1] });
+
+      const findManyCall = prismaMock.lead.findMany.mock.calls[0]?.[0];
+      expect(findManyCall?.where).toMatchObject({ id: { in: [TEST_UUIDS.lead1] } });
+    });
+
+    it('list: lastContactedBefore adds OR clause covering nulls + older rows', async () => {
+      const ctx = createTestContext();
+      const caller = leadRouter.createCaller(ctx);
+      prismaMock.lead.findMany.mockResolvedValue([] as any);
+      prismaMock.lead.count.mockResolvedValue(0);
+
+      const threshold = new Date('2026-04-13T00:00:00Z');
+      await caller.list({ lastContactedBefore: threshold });
+
+      const where = prismaMock.lead.findMany.mock.calls[0]?.[0]?.where as {
+        OR?: Array<Record<string, unknown>>;
+      };
+      expect(where?.OR).toEqual(
+        expect.arrayContaining([{ lastContactedAt: null }, { lastContactedAt: { lte: threshold } }])
+      );
+    });
+  });
 });
