@@ -11,7 +11,7 @@
   "dependencies": {
     "required": ["DOC-014", "IFC-209", "IFC-210"],
     "all_satisfied": true,
-    "verified_at": "2026-04-19T10:06:56.915Z"
+    "verified_at": "2026-04-19T21:18:02.678Z"
   },
   "dependencies_resolved": ["DOC-014", "IFC-209", "IFC-210"],
   "started_at": null,

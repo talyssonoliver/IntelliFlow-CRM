@@ -10,10 +10,10 @@
   "stream": null,
   "dependencies": {
     "required": ["PG-178", "PG-190"],
-    "all_satisfied": false,
-    "verified_at": "2026-04-19T10:06:56.945Z"
+    "all_satisfied": true,
+    "verified_at": "2026-04-19T21:18:02.707Z"
   },
-  "dependencies_resolved": [],
+  "dependencies_resolved": ["PG-178", "PG-190"],
   "started_at": null,
   "completed_at": null,
   "execution": {

@@ -1,0 +1,167 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "PG-187",
+  "section": "Settings",
+  "description": "Module Settings - Reports (/analytics/report-settings)",
+  "owner": "Frontend Dev (STOA-Foundation)",
+  "status": "DONE",
+  "sprint": "sprint-18",
+  "phase": "",
+  "stream": null,
+  "dependencies": {
+    "required": ["PG-178"],
+    "all_satisfied": true,
+    "verified_at": "2026-04-19T12:00:00.000Z"
+  },
+  "started_at": "2026-04-19T12:00:00.000Z",
+  "completed_at": "2026-04-19T23:45:00.000Z",
+  "execution": {
+    "retry_count": 1,
+    "last_error": null,
+    "executor": "claude-opus-4-7 via /full-pipeline ralph loop"
+  },
+  "artifacts": {
+    "expected": [
+      "apps/web/src/app/analytics/(list)/report-settings/page.tsx",
+      "apps/web/src/app/analytics/(list)/report-settings/loading.tsx",
+      "apps/web/src/app/analytics/(list)/report-settings/ReportSettingsContent.tsx",
+      "apps/web/src/app/analytics/(list)/report-settings/components/DefaultRangeSection.tsx",
+      "apps/web/src/app/analytics/(list)/report-settings/components/CurrencySection.tsx",
+      "apps/web/src/app/analytics/(list)/report-settings/components/ScheduledDeliverySection.tsx",
+      "apps/web/src/app/analytics/(list)/report-settings/components/currencies.ts",
+      "packages/validators/src/__tests__/report-settings.test.ts"
+    ],
+    "created": [
+      {
+        "path": "apps/web/src/app/analytics/(list)/report-settings/page.tsx",
+        "sha256": "21ca1067d957cdf88c13d0ab493f0451cf74df7f6b7f456a89f0292e8a4f7866",
+        "created_at": "2026-04-19T23:30:00.000Z"
+      },
+      {
+        "path": "apps/web/src/app/analytics/(list)/report-settings/loading.tsx",
+        "sha256": "1eacd73cf37ef4043d846e8458503c099c6497857a2ab9a4f033469f1946e3e6",
+        "created_at": "2026-04-19T23:30:00.000Z"
+      },
+      {
+        "path": "apps/web/src/app/analytics/(list)/report-settings/ReportSettingsContent.tsx",
+        "sha256": "6e9d91ae078f98ce4e0dc8555043d01dc80ee5286cfc92ffb8161a79e383f4e4",
+        "created_at": "2026-04-19T23:32:00.000Z"
+      },
+      {
+        "path": "apps/web/src/app/analytics/(list)/report-settings/components/DefaultRangeSection.tsx",
+        "sha256": "0705543b6be8ca5b4581af6f6a435097028a00c961ab75c090025f234297e261",
+        "created_at": "2026-04-19T23:29:00.000Z"
+      },
+      {
+        "path": "apps/web/src/app/analytics/(list)/report-settings/components/CurrencySection.tsx",
+        "sha256": "3b26cd8e956ce0babda2ec3c7976c3ed9bd492ce585883cc5635d815811adc96",
+        "created_at": "2026-04-19T23:29:00.000Z"
+      },
+      {
+        "path": "apps/web/src/app/analytics/(list)/report-settings/components/ScheduledDeliverySection.tsx",
+        "sha256": "732eade2c0465e1323bf22142342750e10eaf0991f164cb752228fb6bb70452d",
+        "created_at": "2026-04-19T23:29:00.000Z"
+      },
+      {
+        "path": "apps/web/src/app/analytics/(list)/report-settings/components/currencies.ts",
+        "sha256": "509cb96b28036ebe3c1761350c0b6269436ac901eeabe5015ec3e87c0cc2c759",
+        "created_at": "2026-04-19T23:28:00.000Z"
+      },
+      {
+        "path": "packages/validators/src/__tests__/report-settings.test.ts",
+        "sha256": "b570629d14fcbc140347c2c124d176d1dc8b81729dcd07f26acd28d38a2b3b78",
+        "created_at": "2026-04-19T23:23:00.000Z"
+      }
+    ],
+    "missing": []
+  },
+  "validations": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/validators exec tsc --noEmit && pnpm --filter @intelliflow/web exec tsc --noEmit && pnpm --filter @intelliflow/api exec tsc --noEmit (PG-187 scope)",
+      "exit_code": 0,
+      "passed": true,
+      "executed_at": "2026-04-19T23:40:00.000Z",
+      "duration_ms": 120000
+    },
+    {
+      "name": "Tests",
+      "command": "pnpm --filter @intelliflow/validators exec vitest run src/__tests__/report-settings.test.ts && pnpm --filter @intelliflow/api exec vitest run src/modules/analytics/__tests__/report-settings.router.test.ts && pnpm --filter @intelliflow/web exec vitest run 'src/app/analytics/(list)/report-settings/__tests__/'",
+      "exit_code": 0,
+      "passed": true,
+      "executed_at": "2026-04-19T23:43:45.000Z",
+      "duration_ms": 4500
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter @intelliflow/web exec eslint 'src/app/analytics/(list)/report-settings/**/*.{ts,tsx}' && pnpm --filter @intelliflow/api exec eslint src/modules/analytics/report-settings.router.ts src/modules/analytics/__tests__/report-settings.router.test.ts src/modules/analytics/analytics.router.ts && pnpm --filter @intelliflow/validators exec eslint src/report-settings.ts src/__tests__/report-settings.test.ts",
+      "exit_code": 0,
+      "passed": true,
+      "executed_at": "2026-04-19T23:40:30.000Z",
+      "duration_ms": 15000
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/web build (clean .next)",
+      "exit_code": 0,
+      "passed": true,
+      "executed_at": "2026-04-19T23:42:00.000Z",
+      "duration_ms": 88000
+    }
+  ],
+  "kpis": [
+    {
+      "kpi": "Acceptance Criteria Coverage",
+      "target": "18",
+      "actual": "18",
+      "met": true,
+      "unit": "criteria"
+    },
+    {
+      "kpi": "PG-187 Test Pass Rate",
+      "target": "100%",
+      "actual": "100% (79/79)",
+      "met": true,
+      "unit": "percent"
+    },
+    {
+      "kpi": "PG-187 Lint Issues",
+      "target": "0",
+      "actual": "0",
+      "met": true,
+      "unit": "issues"
+    },
+    {
+      "kpi": "Lighthouse URL Wired",
+      "target": "yes",
+      "actual": "yes",
+      "met": true,
+      "unit": "url-present"
+    }
+  ],
+  "status_history": [
+    { "status": "Backlog", "at": "2026-04-19T00:00:00.000Z" },
+    {
+      "status": "Specifying",
+      "at": "2026-04-19T11:00:00.000Z",
+      "note": "Re-execution iteration 1: spec-session"
+    },
+    { "status": "Spec Complete", "at": "2026-04-19T11:30:00.000Z" },
+    {
+      "status": "Planning",
+      "at": "2026-04-19T11:45:00.000Z",
+      "note": "Re-execution iteration 2: plan-session"
+    },
+    { "status": "Plan Complete", "at": "2026-04-19T12:00:00.000Z" },
+    {
+      "status": "In Progress",
+      "at": "2026-04-19T12:05:00.000Z",
+      "note": "Re-execution iteration 3: /exec session start"
+    },
+    {
+      "status": "Completed",
+      "at": "2026-04-19T23:45:00.000Z",
+      "note": "All 4 validations passed; attestation written with verdict=COMPLETE"
+    }
+  ]
+}

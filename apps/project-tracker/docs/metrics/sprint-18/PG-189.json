@@ -4,14 +4,14 @@
   "section": "Settings",
   "description": "Module Settings - Appointments (/calendar/calendar-settings)",
   "owner": "Frontend Dev (STOA-Foundation)",
-  "status": "Completed",
+  "status": "IN_PROGRESS",
   "sprint": "sprint-18",
   "phase": "",
   "stream": null,
   "dependencies": {
     "required": ["PG-178"],
     "all_satisfied": true,
-    "verified_at": "2026-04-19T00:00:00Z"
+    "verified_at": "2026-04-19T21:18:02.698Z"
   },
   "started_at": "2026-04-19T00:00:00Z",
   "completed_at": "2026-04-19T02:02:00Z",
@@ -23,48 +23,7 @@
   },
   "artifacts": {
     "expected": ["apps/web/src/app/calendar/calendar-settings/page.tsx"],
-    "created": [
-      {
-        "path": "packages/validators/src/appointment-settings.ts",
-        "sha256": "b2204161447e1aba2019a06ed328d8ca18166e96929e80ee5acfd82470f7539b",
-        "created_at": "2026-04-19T01:00:00Z"
-      },
-      {
-        "path": "apps/api/src/modules/legal/appointment-settings.router.ts",
-        "sha256": "dae84fa4b9768603dec9fb29e5d317ca319de0ff8479f0b8df0bea95aad9fcc8",
-        "created_at": "2026-04-19T01:10:00Z"
-      },
-      {
-        "path": "apps/web/src/app/calendar/calendar-settings/components/DurationDefaultsTab.tsx",
-        "sha256": "2ab8e9d373f3405431535f8613abb1cd0be19ea8dd465f27d81fd98ca298fed7",
-        "created_at": "2026-04-19T01:20:00Z"
-      },
-      {
-        "path": "apps/web/src/app/calendar/calendar-settings/components/BufferRemindersTab.tsx",
-        "sha256": "77536c3cea4f20dbe95ab4e42ded961cfd7e0a17904d4be9f4d703d153c17628",
-        "created_at": "2026-04-19T01:25:00Z"
-      },
-      {
-        "path": "apps/web/src/app/calendar/calendar-settings/components/CalendarIntegrationTab.tsx",
-        "sha256": "b97bdf28189105ccdaeb4dfe442d73c44bd75ff1bce0f2f082fe35add4c3619e",
-        "created_at": "2026-04-19T01:30:00Z"
-      },
-      {
-        "path": "apps/web/src/app/calendar/calendar-settings/CalendarSettingsContent.tsx",
-        "sha256": "af6652f24176405d83cd230987c06749bdf63124e4bc7e330b21990d18259941",
-        "created_at": "2026-04-19T01:35:00Z"
-      },
-      {
-        "path": "apps/web/src/app/calendar/calendar-settings/page.tsx",
-        "sha256": "adc97f2590b815f2da0475464478e47d92bc2902d89eae28f918b442c35722c6",
-        "created_at": "2026-04-19T01:40:00Z"
-      },
-      {
-        "path": ".specify/sprints/sprint-18/attestations/PG-189/attestation.json",
-        "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
-        "created_at": "2026-04-19T02:02:00Z"
-      }
-    ],
+    "created": ["apps/web/src/app/calendar/calendar-settings/page.tsx"],
     "missing": []
   },
   "validations": [

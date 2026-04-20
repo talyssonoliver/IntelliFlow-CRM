@@ -4,14 +4,14 @@
   "section": "Settings",
   "description": "Module Settings - Cases (/cases/case-settings)",
   "owner": "Frontend Dev (STOA-Foundation)",
-  "status": "Completed",
+  "status": "DONE",
   "sprint": "sprint-18",
   "phase": "",
   "stream": null,
   "dependencies": {
     "required": ["PG-178"],
     "all_satisfied": true,
-    "verified_at": "2026-04-19T00:00:00.000Z"
+    "verified_at": "2026-04-19T21:18:02.698Z"
   },
   "started_at": "2026-04-19T00:00:00.000Z",
   "completed_at": "2026-04-19T02:05:00.000Z",
@@ -21,33 +21,7 @@
   },
   "artifacts": {
     "expected": ["apps/web/src/app/cases/case-settings/page.tsx"],
-    "created": [
-      {
-        "path": "apps/web/src/app/cases/case-settings/page.tsx",
-        "sha256": "c296a5dbffd4b137a0adc46e7c079c28aed3d83f52fc8b8829d60b8fa8b208a1",
-        "created_at": "2026-04-19T01:00:00.000Z"
-      },
-      {
-        "path": "apps/web/src/app/cases/case-settings/CaseSettingsContent.tsx",
-        "sha256": "666184e3e8d6cebc3ab2d59364ba7f39b2ebc41d912352fef45ea62893257ae5",
-        "created_at": "2026-04-19T01:00:00.000Z"
-      },
-      {
-        "path": "apps/web/src/app/cases/case-settings/CaseSettingsLoading.tsx",
-        "sha256": "9dd436f406ee27cec06b65e6c9dc8271007dc02da8ff7e6b0111978c9aced98b",
-        "created_at": "2026-04-19T01:00:00.000Z"
-      },
-      {
-        "path": "apps/api/src/modules/legal/case-settings.router.ts",
-        "sha256": "95e5c3a624b1887fc01c27da7d1390699ae7228184acd72c316bd0c5cccabb48",
-        "created_at": "2026-04-19T01:00:00.000Z"
-      },
-      {
-        "path": "packages/validators/src/case-settings.ts",
-        "sha256": "3fdb0243223b2b4ebc59f1c77ae447239f8b47c6613b16d3a023912fa63609d9",
-        "created_at": "2026-04-19T01:00:00.000Z"
-      }
-    ],
+    "created": ["apps/web/src/app/cases/case-settings/page.tsx"],
     "missing": []
   },
   "validations": [

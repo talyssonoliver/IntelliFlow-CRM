@@ -1,0 +1,166 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "PG-059",
+  "section": "Core CRM",
+  "description": "Leads List",
+  "owner": "CRM FE+BE (STOA-Foundation)",
+  "status": "DONE",
+  "sprint": "sprint-18",
+  "phase": "",
+  "stream": null,
+  "dependencies": {
+    "required": ["IFC-089"],
+    "all_satisfied": true,
+    "verified_at": "2026-04-19T23:45:00Z",
+    "notes": "IFC-089 Completed in sprint-5; attestation verified COMPLETE."
+  },
+  "started_at": "2026-04-19T20:40:00Z",
+  "completed_at": "2026-04-19T23:45:00Z",
+  "execution": {
+    "retry_count": 0,
+    "executor": "Claude Opus 4.7 (1M)",
+    "agents": [
+      "Frontend-Lead",
+      "Domain-Expert",
+      "Test-Engineer",
+      "A11y-Expert"
+    ],
+    "log_path": ".specify/sprints/sprint-18/execution/PG-059/run-2026-04-19T22-23-21Z/PG-059-delivery.md",
+    "last_error": null
+  },
+  "artifacts": {
+    "expected": [
+      "apps/web/src/app/leads/(list)/page.tsx",
+      "apps/web/src/components/leads/lead-list.tsx",
+      "apps/web/src/lib/leads/bulk-actions.ts",
+      "apps/web/src/lib/leads/lead-types.ts"
+    ],
+    "created": [
+      {
+        "path": "apps/web/src/lib/leads/lead-types.ts",
+        "sha256": "e007eb619e1fe5a44e8fd1f0b4ba4533188efa9b655af22b8ec9dade266fc7b1",
+        "created_at": "2026-04-19T23:20:00Z"
+      },
+      {
+        "path": "apps/web/src/lib/leads/bulk-actions.ts",
+        "sha256": "73362c00239137c32f6fc8fbfbaf1d231a509cb776609eac8d17376f9f0b93e8",
+        "created_at": "2026-04-19T23:22:00Z"
+      },
+      {
+        "path": "apps/web/src/components/leads/lead-list.tsx",
+        "sha256": "fa0138e8a32ead514c38549edb8ebd4c96a23b44361fa19c4720a075636e9f3c",
+        "created_at": "2026-04-19T23:30:00Z"
+      },
+      {
+        "path": "apps/web/src/app/leads/(list)/LeadsPageClient.tsx",
+        "sha256": "4adff3ccfd6765c8b6c340d758619133a7fff6c154fa4f14083cd6f65f6b2812",
+        "created_at": "2026-04-19T23:30:00Z"
+      },
+      {
+        "path": "apps/web/src/lib/leads/__tests__/bulk-actions.test.ts",
+        "sha256": "0187a862e24378503c6f8ef1189f1f9b020cb76790d8b68bbe384aceb8bbab09",
+        "created_at": "2026-04-19T23:25:00Z"
+      },
+      {
+        "path": "apps/web/src/components/leads/__tests__/lead-list.test.tsx",
+        "sha256": "c9c2572d6ef8af204735f82c313dbbc2072d4bfcffe2dc7c88ae030b702cc93b",
+        "created_at": "2026-04-19T23:35:00Z"
+      }
+    ],
+    "missing": []
+  },
+  "validations": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "executed_at": "2026-04-19T23:31:00Z",
+      "duration_ms": 62000
+    },
+    {
+      "name": "Tests",
+      "command": "pnpm --filter @intelliflow/web exec vitest run src/lib/leads/__tests__ src/components/leads/__tests__ src/app/leads/__tests__/actions.test.ts (5 touched lead suites) src/components/shared",
+      "exit_code": 0,
+      "passed": true,
+      "executed_at": "2026-04-19T23:43:00Z",
+      "duration_ms": 24800
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter @intelliflow/web exec eslint src/components/leads/lead-list.tsx src/lib/leads/",
+      "exit_code": 0,
+      "passed": true,
+      "executed_at": "2026-04-19T23:38:00Z",
+      "duration_ms": 9000
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "executed_at": "2026-04-19T23:40:00Z",
+      "duration_ms": 120000
+    }
+  ],
+  "kpis": {
+    "coverage_statements": {
+      "target": 90,
+      "actual": 100,
+      "met": true,
+      "unit": "percent (bulk-actions.ts)"
+    },
+    "coverage_branches": {
+      "target": 80,
+      "actual": 97.87,
+      "met": true,
+      "unit": "percent (bulk-actions.ts)"
+    },
+    "coverage_functions": {
+      "target": 90,
+      "actual": 100,
+      "met": true,
+      "unit": "percent (bulk-actions.ts)"
+    },
+    "coverage_lines": {
+      "target": 90,
+      "actual": 100,
+      "met": true,
+      "unit": "percent (bulk-actions.ts)"
+    },
+    "wrapper_loc": { "target": 30, "actual": 16, "met": true, "unit": "lines" }
+  },
+  "status_history": [
+    {
+      "status": "Specifying",
+      "at": "2026-04-19T20:37:00Z",
+      "note": "Spec session start"
+    },
+    {
+      "status": "Spec Complete",
+      "at": "2026-04-19T20:46:00Z",
+      "note": "Unified spec + discussion written; consensus first attempt"
+    },
+    {
+      "status": "Planning",
+      "at": "2026-04-19T20:55:00Z",
+      "note": "Plan-session preflight + TDD decomposition"
+    },
+    {
+      "status": "Plan Complete",
+      "at": "2026-04-19T21:17:00Z",
+      "note": "Plan-reviewer subagent round 1 REVISE → round 2 APPROVE"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-04-19T22:23:00Z",
+      "note": "Exec start: preflights + context pack + context_ack written"
+    },
+    {
+      "status": "Completed",
+      "at": "2026-04-19T23:45:00Z",
+      "note": "Exec complete: 5 files created, 3 modified, 0 missing; 56 new tests + 60 regression tests green; attestation verdict=COMPLETE"
+    }
+  ],
+  "dependencies_resolved": ["IFC-089"]
+}
