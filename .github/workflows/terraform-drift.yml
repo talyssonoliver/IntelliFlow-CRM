@@ -24,6 +24,9 @@ jobs:
   detect-drift:
     name: Detect Drift - ${{ matrix.environment }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
     strategy:
       matrix:
         environment: ${{ github.event.inputs.environment == 'all' && fromJSON('["dev", "staging", "production"]') || fromJSON(format('["{0}"]', github.event.inputs.environment || 'dev')) }}
