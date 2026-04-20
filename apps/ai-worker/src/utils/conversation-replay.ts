@@ -9,7 +9,9 @@
  */
 
 import { HumanMessage, AIMessage, SystemMessage, BaseMessage } from '@langchain/core/messages';
-import { prisma } from '@intelliflow/db';
+import { prisma as _prismaRaw } from '@intelliflow/db';
+import type { PrismaClient } from '@intelliflow/db';
+const prisma = _prismaRaw as unknown as PrismaClient;
 import { countMessagesTokens } from './token-counter.js';
 
 export interface ReplayOptions {

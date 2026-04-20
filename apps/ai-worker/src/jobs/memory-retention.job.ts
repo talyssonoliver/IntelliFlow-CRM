@@ -91,6 +91,171 @@ type PerTenantStats = z.infer<typeof PerTenantStatsSchema>;
 // Job Handler
 // ============================================================================
 
+// ── Per-section pruning helpers (reduce cognitive complexity) ──────────────
+
+type PrismaClient = any;
+
+interface RetentionPolicy {
+  tenantId: string;
+  conversationRetentionDays: number | null;
+  chainVersionRetentionDays: number | null;
+  monitoringEventRetentionDays: number | null;
+  scrubRatherThanDelete: boolean;
+}
+
+function getErrorMessage(err: unknown): string {
+  return getErrorMessage(err);
+}
+
+async function scrubConversations(
+  prisma: PrismaClient,
+  tenantId: string,
+  cutoff: Date,
+  dryRun: boolean
+): Promise<{ messagesRemoved: number; conversationsScrubbed: number }> {
+  if (!dryRun) {
+    const msgs = await prisma.messageRecord.updateMany({
+      where: { tenantId, createdAt: { lt: cutoff }, NOT: { content: { startsWith: '[scrubbed' } } },
+      data: { content: '[scrubbed:retention-policy]' },
+    });
+    const convs = await prisma.conversationRecord.updateMany({
+      where: { tenantId, createdAt: { lt: cutoff } },
+      data: { summary: '[scrubbed:retention-policy]' },
+    });
+    return { messagesRemoved: msgs.count, conversationsScrubbed: convs.count };
+  }
+  const msgCount = await prisma.messageRecord.count({
+    where: { tenantId, createdAt: { lt: cutoff } },
+  });
+  const convCount = await prisma.conversationRecord.count({
+    where: { tenantId, createdAt: { lt: cutoff } },
+  });
+  return { messagesRemoved: msgCount, conversationsScrubbed: convCount };
+}
+
+async function deleteConversations(
+  prisma: PrismaClient,
+  tenantId: string,
+  cutoff: Date,
+  dryRun: boolean
+): Promise<{ messagesRemoved: number; conversationsRemoved: number }> {
+  if (!dryRun) {
+    const msgs = await prisma.messageRecord.deleteMany({
+      where: { tenantId, createdAt: { lt: cutoff } },
+    });
+    const convs = await prisma.conversationRecord.deleteMany({
+      where: { tenantId, createdAt: { lt: cutoff } },
+    });
+    return { messagesRemoved: msgs.count, conversationsRemoved: convs.count };
+  }
+  const msgCount = await prisma.messageRecord.count({
+    where: { tenantId, createdAt: { lt: cutoff } },
+  });
+  const convCount = await prisma.conversationRecord.count({
+    where: { tenantId, createdAt: { lt: cutoff } },
+  });
+  return { messagesRemoved: msgCount, conversationsRemoved: convCount };
+}
+
+async function pruneConversations(
+  prisma: PrismaClient,
+  policy: RetentionPolicy,
+  dryRun: boolean
+): Promise<{
+  messagesRemoved: number;
+  conversationsRemoved: number;
+  conversationsScrubbed: number;
+}> {
+  const cutoff = new Date(Date.now() - policy.conversationRetentionDays! * 24 * 60 * 60 * 1000);
+  if (policy.scrubRatherThanDelete) {
+    const r = await scrubConversations(prisma, policy.tenantId, cutoff, dryRun);
+    return { ...r, conversationsRemoved: 0 };
+  }
+  const r = await deleteConversations(prisma, policy.tenantId, cutoff, dryRun);
+  return { ...r, conversationsScrubbed: 0 };
+}
+
+async function pruneChainVersions(
+  prisma: PrismaClient,
+  policy: RetentionPolicy,
+  dryRun: boolean
+): Promise<number> {
+  const cutoff = new Date(Date.now() - policy.chainVersionRetentionDays! * 24 * 60 * 60 * 1000);
+  const where = { tenantId: policy.tenantId, status: 'ARCHIVED', archivedAt: { lt: cutoff } };
+  if (!dryRun) {
+    const del = await prisma.chainVersion.deleteMany({ where });
+    return del.count;
+  }
+  return prisma.chainVersion.count({ where });
+}
+
+async function pruneMonitoringEvents(
+  prisma: PrismaClient,
+  policy: RetentionPolicy,
+  dryRun: boolean
+): Promise<number> {
+  const cutoff = new Date(Date.now() - policy.monitoringEventRetentionDays! * 24 * 60 * 60 * 1000);
+  const where = { tenantId: policy.tenantId, recordedAt: { lt: cutoff } };
+  if (!dryRun) {
+    const del = await prisma.aIMonitoringEvent.deleteMany({ where });
+    return del.count;
+  }
+  return prisma.aIMonitoringEvent.count({ where });
+}
+
+async function processOneTenant(
+  prisma: PrismaClient,
+  policy: RetentionPolicy,
+  dryRun: boolean
+): Promise<PerTenantStats> {
+  const stats: PerTenantStats = {
+    tenantId: policy.tenantId,
+    conversationsRemoved: 0,
+    messagesRemoved: 0,
+    conversationsScrubbed: 0,
+    chainVersionsRemoved: 0,
+    monitoringEventsRemoved: 0,
+    errors: 0,
+  };
+  if (policy.conversationRetentionDays != null) {
+    try {
+      const r = await pruneConversations(prisma, policy, dryRun);
+      stats.messagesRemoved = r.messagesRemoved;
+      stats.conversationsRemoved = r.conversationsRemoved;
+      stats.conversationsScrubbed = r.conversationsScrubbed;
+    } catch (err) {
+      stats.errors++;
+      logger.warn(
+        { tenantId: policy.tenantId, error: getErrorMessage(err) },
+        'Memory retention: conversation prune failed'
+      );
+    }
+  }
+  if (policy.chainVersionRetentionDays != null) {
+    try {
+      stats.chainVersionsRemoved = await pruneChainVersions(prisma, policy, dryRun);
+    } catch (err) {
+      stats.errors++;
+      logger.warn(
+        { tenantId: policy.tenantId, error: getErrorMessage(err) },
+        'Memory retention: chain version prune failed'
+      );
+    }
+  }
+  if (policy.monitoringEventRetentionDays != null) {
+    try {
+      stats.monitoringEventsRemoved = await pruneMonitoringEvents(prisma, policy, dryRun);
+    } catch (err) {
+      stats.errors++;
+      logger.warn(
+        { tenantId: policy.tenantId, error: getErrorMessage(err) },
+        'Memory retention: monitoring event prune failed'
+      );
+    }
+  }
+  return stats;
+}
+
 /**
  * Process the memory-retention sweep.
  *
@@ -111,13 +276,13 @@ export async function processMemoryRetentionJob(
     'Processing memory retention sweep'
   );
 
-  let prisma: any = null;
+  let prisma: PrismaClient;
   try {
     const db = await import('@intelliflow/db');
     prisma = db.prisma;
   } catch (err) {
     logger.error(
-      { error: err instanceof Error ? err.message : String(err) },
+      { error: getErrorMessage(err) },
       'Memory retention: Prisma unavailable — aborting'
     );
     return {
@@ -178,146 +343,10 @@ export async function processMemoryRetentionJob(
       continue;
     }
 
-    const stats: PerTenantStats = {
-      tenantId: policy.tenantId,
-      conversationsRemoved: 0,
-      messagesRemoved: 0,
-      conversationsScrubbed: 0,
-      chainVersionsRemoved: 0,
-      monitoringEventsRemoved: 0,
-      errors: 0,
-    };
-
-    // --- Conversations + Messages ----------------------------------------
-    if (policy.conversationRetentionDays != null) {
-      const cutoff = new Date(Date.now() - policy.conversationRetentionDays * 24 * 60 * 60 * 1000);
-      try {
-        if (policy.scrubRatherThanDelete) {
-          // Scrub: null out content on messages + mark conversation with scrub reason.
-          if (!dryRun) {
-            const scrubbedMsgs = await prisma.messageRecord.updateMany({
-              where: {
-                tenantId: policy.tenantId,
-                createdAt: { lt: cutoff },
-                NOT: { content: { startsWith: '[scrubbed' } },
-              },
-              data: { content: '[scrubbed:retention-policy]' },
-            });
-            stats.messagesRemoved = scrubbedMsgs.count;
-            const scrubbedConvs = await prisma.conversationRecord.updateMany({
-              where: { tenantId: policy.tenantId, createdAt: { lt: cutoff } },
-              data: { summary: '[scrubbed:retention-policy]' },
-            });
-            stats.conversationsScrubbed = scrubbedConvs.count;
-          } else {
-            stats.messagesRemoved = await prisma.messageRecord.count({
-              where: { tenantId: policy.tenantId, createdAt: { lt: cutoff } },
-            });
-            stats.conversationsScrubbed = await prisma.conversationRecord.count({
-              where: { tenantId: policy.tenantId, createdAt: { lt: cutoff } },
-            });
-          }
-        } else {
-          // Delete: messages first (FK), then parent conversations.
-          if (!dryRun) {
-            const delMsgs = await prisma.messageRecord.deleteMany({
-              where: { tenantId: policy.tenantId, createdAt: { lt: cutoff } },
-            });
-            stats.messagesRemoved = delMsgs.count;
-            const delConvs = await prisma.conversationRecord.deleteMany({
-              where: { tenantId: policy.tenantId, createdAt: { lt: cutoff } },
-            });
-            stats.conversationsRemoved = delConvs.count;
-          } else {
-            stats.messagesRemoved = await prisma.messageRecord.count({
-              where: { tenantId: policy.tenantId, createdAt: { lt: cutoff } },
-            });
-            stats.conversationsRemoved = await prisma.conversationRecord.count({
-              where: { tenantId: policy.tenantId, createdAt: { lt: cutoff } },
-            });
-          }
-        }
-      } catch (err) {
-        stats.errors++;
-        logger.warn(
-          {
-            tenantId: policy.tenantId,
-            error: err instanceof Error ? err.message : String(err),
-          },
-          'Memory retention: conversation prune failed'
-        );
-      }
-    }
-
-    // --- Chain versions (archived) ---------------------------------------
-    if (policy.chainVersionRetentionDays != null) {
-      const cutoff = new Date(Date.now() - policy.chainVersionRetentionDays * 24 * 60 * 60 * 1000);
-      try {
-        if (!dryRun) {
-          const del = await prisma.chainVersion.deleteMany({
-            where: {
-              tenantId: policy.tenantId,
-              status: 'ARCHIVED',
-              archivedAt: { lt: cutoff },
-            },
-          });
-          stats.chainVersionsRemoved = del.count;
-        } else {
-          stats.chainVersionsRemoved = await prisma.chainVersion.count({
-            where: {
-              tenantId: policy.tenantId,
-              status: 'ARCHIVED',
-              archivedAt: { lt: cutoff },
-            },
-          });
-        }
-      } catch (err) {
-        stats.errors++;
-        logger.warn(
-          {
-            tenantId: policy.tenantId,
-            error: err instanceof Error ? err.message : String(err),
-          },
-          'Memory retention: chain version prune failed'
-        );
-      }
-    }
-
-    // --- Monitoring events -----------------------------------------------
-    if (policy.monitoringEventRetentionDays != null) {
-      const cutoff = new Date(
-        Date.now() - policy.monitoringEventRetentionDays * 24 * 60 * 60 * 1000
-      );
-      try {
-        if (!dryRun) {
-          const del = await prisma.aIMonitoringEvent.deleteMany({
-            where: { tenantId: policy.tenantId, recordedAt: { lt: cutoff } },
-          });
-          stats.monitoringEventsRemoved = del.count;
-        } else {
-          stats.monitoringEventsRemoved = await prisma.aIMonitoringEvent.count({
-            where: { tenantId: policy.tenantId, recordedAt: { lt: cutoff } },
-          });
-        }
-      } catch (err) {
-        stats.errors++;
-        logger.warn(
-          {
-            tenantId: policy.tenantId,
-            error: err instanceof Error ? err.message : String(err),
-          },
-          'Memory retention: monitoring event prune failed'
-        );
-      }
-    }
-
+    const stats = await processOneTenant(prisma, policy, dryRun);
     perTenant.push(stats);
     tenantsProcessed++;
-
-    logger.info(
-      { tenantId: policy.tenantId, dryRun, ...stats },
-      'Memory retention: tenant processed'
-    );
+    logger.info({ dryRun, ...stats }, 'Memory retention: tenant processed');
   }
 
   const result: MemoryRetentionJobResult = {

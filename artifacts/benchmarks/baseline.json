@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-04-19T18:52:24.075Z",
+  "timestamp": "2026-04-20T18:17:12.055Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1016,9 +1016,9 @@
   },
   "api_inventory": {
     "total_routers": 60,
-    "total_endpoints": 519,
-    "total_queries": 246,
-    "total_mutations": 273,
+    "total_endpoints": 522,
+    "total_queries": 247,
+    "total_mutations": 275,
     "routers": [
       {
         "name": "contact",
@@ -1183,13 +1183,13 @@
         "mutations": 5
       },
       {
-        "name": "documentSettings",
+        "name": "leadSettings",
         "endpoints": 8,
         "queries": 3,
         "mutations": 5
       },
       {
-        "name": "leadSettings",
+        "name": "documentSettings",
         "endpoints": 8,
         "queries": 3,
         "mutations": 5
@@ -1255,6 +1255,12 @@
         "mutations": 2
       },
       {
+        "name": "caseSettings",
+        "endpoints": 6,
+        "queries": 2,
+        "mutations": 4
+      },
+      {
         "name": "system",
         "endpoints": 6,
         "queries": 6,
@@ -1310,12 +1316,6 @@
       },
       {
         "name": "appointmentSettings",
-        "endpoints": 3,
-        "queries": 1,
-        "mutations": 2
-      },
-      {
-        "name": "caseSettings",
         "endpoints": 3,
         "queries": 1,
         "mutations": 2
@@ -1383,25 +1383,25 @@
     ]
   },
   "database_inventory": {
-    "total_tables": 159,
-    "total_fields": 2355,
-    "total_indexes": 763,
-    "total_relations": 224,
+    "total_tables": 166,
+    "total_fields": 2438,
+    "total_indexes": 782,
+    "total_relations": 234,
     "tables_with_embeddings": 4,
     "enums": 71,
     "tables": [
       {
         "name": "Tenant",
-        "fields": 140,
+        "fields": 147,
         "indexes": 4,
         "relations": 1,
         "hasEmbedding": false
       },
       {
         "name": "User",
-        "fields": 40,
+        "fields": 41,
         "indexes": 7,
-        "relations": 5,
+        "relations": 6,
         "hasEmbedding": false
       },
       {
@@ -1615,6 +1615,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "CaseAutomationSetting",
+        "fields": 17,
+        "indexes": 2,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "TicketActivity",
         "fields": 17,
         "indexes": 6,
@@ -1717,6 +1724,13 @@
         "fields": 15,
         "indexes": 8,
         "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "AppointmentSettings",
+        "fields": 15,
+        "indexes": 3,
+        "relations": 2,
         "hasEmbedding": false
       },
       {
@@ -1979,6 +1993,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "Calendar",
+        "fields": 12,
+        "indexes": 3,
+        "relations": 3,
+        "hasEmbedding": false
+      },
+      {
         "name": "LeadCustomField",
         "fields": 12,
         "indexes": 3,
@@ -2084,13 +2105,6 @@
         "hasEmbedding": false
       },
       {
-        "name": "Calendar",
-        "fields": 11,
-        "indexes": 3,
-        "relations": 2,
-        "hasEmbedding": false
-      },
-      {
         "name": "ArticleSection",
         "fields": 11,
         "indexes": 3,
@@ -2141,6 +2155,27 @@
       },
       {
         "name": "DealTag",
+        "fields": 10,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "CaseSettings",
+        "fields": 10,
+        "indexes": 3,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "CaseDuplicateRule",
+        "fields": 10,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "CaseTag",
         "fields": 10,
         "indexes": 3,
         "relations": 1,
@@ -2420,6 +2455,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "CaseRequiredField",
+        "fields": 7,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "TicketRequiredField",
         "fields": 7,
         "indexes": 3,
@@ -2486,6 +2528,13 @@
         "name": "DealScoringRule",
         "fields": 5,
         "indexes": 1,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "ReportSettings",
+        "fields": 5,
+        "indexes": 2,
         "relations": 0,
         "hasEmbedding": false
       },
@@ -2873,11 +2922,11 @@
   },
   "validators_inventory": {
     "total_validators": 46,
-    "total_schemas": 512,
+    "total_schemas": 535,
     "by_complexity": {
-      "complex": 29,
+      "complex": 31,
       "moderate": 11,
-      "simple": 6
+      "simple": 4
     },
     "validators": [
       {
@@ -2965,6 +3014,12 @@
         "complexity": "complex"
       },
       {
+        "name": "document-settings",
+        "file": "document-settings.ts",
+        "schemas": 16,
+        "complexity": "complex"
+      },
+      {
         "name": "case",
         "file": "case.ts",
         "schemas": 15,
@@ -2986,6 +3041,12 @@
         "name": "task",
         "file": "task.ts",
         "schemas": 14,
+        "complexity": "complex"
+      },
+      {
+        "name": "case-settings",
+        "file": "case-settings.ts",
+        "schemas": 13,
         "complexity": "complex"
       },
       {
@@ -3063,12 +3124,6 @@
       {
         "name": "report-settings",
         "file": "report-settings.ts",
-        "schemas": 6,
-        "complexity": "moderate"
-      },
-      {
-        "name": "document-settings",
-        "file": "document-settings.ts",
         "schemas": 5,
         "complexity": "moderate"
       },
@@ -3142,19 +3197,13 @@
         "name": "appointment-settings",
         "file": "appointment-settings.ts",
         "schemas": 1,
-        "complexity": "simple"
+        "complexity": "moderate"
       },
       {
         "name": "base-schemas",
         "file": "base-schemas.ts",
         "schemas": 1,
         "complexity": "moderate"
-      },
-      {
-        "name": "case-settings",
-        "file": "case-settings.ts",
-        "schemas": 0,
-        "complexity": "simple"
       }
     ]
   },
@@ -4188,48 +4237,6 @@
         "description": "List customNodeTypes with pagination"
       }
     ],
-    "documentSettings": [
-      {
-        "name": "documentSettings.get",
-        "method": "GET",
-        "description": "Get"
-      },
-      {
-        "name": "documentSettings.update",
-        "method": "POST",
-        "description": "Update documentSettings"
-      },
-      {
-        "name": "documentSettings.resetToDefaults",
-        "method": "POST",
-        "description": "Reset to defaults"
-      },
-      {
-        "name": "documentSettings.getAll",
-        "method": "GET",
-        "description": "Get all"
-      },
-      {
-        "name": "documentSettings.updateAll",
-        "method": "POST",
-        "description": "Update all"
-      },
-      {
-        "name": "documentSettings.list",
-        "method": "GET",
-        "description": "List documentSettingss with pagination"
-      },
-      {
-        "name": "documentSettings.create",
-        "method": "POST",
-        "description": "Create new documentSettings"
-      },
-      {
-        "name": "documentSettings.delete",
-        "method": "POST",
-        "description": "Delete documentSettings"
-      }
-    ],
     "emailInbound": [
       {
         "name": "emailInbound.processInbound",
@@ -4955,6 +4962,21 @@
         "name": "caseSettings.resetToDefaults",
         "method": "POST",
         "description": "Reset to defaults"
+      },
+      {
+        "name": "caseSettings.list",
+        "method": "GET",
+        "description": "List caseSettingss with pagination"
+      },
+      {
+        "name": "caseSettings.create",
+        "method": "POST",
+        "description": "Create new caseSettings"
+      },
+      {
+        "name": "caseSettings.delete",
+        "method": "POST",
+        "description": "Delete caseSettings"
       }
     ],
     "cases": [
@@ -5017,6 +5039,48 @@
         "name": "cases.assignees",
         "method": "GET",
         "description": "Assignees"
+      }
+    ],
+    "documentSettings": [
+      {
+        "name": "documentSettings.get",
+        "method": "GET",
+        "description": "Get"
+      },
+      {
+        "name": "documentSettings.update",
+        "method": "POST",
+        "description": "Update documentSettings"
+      },
+      {
+        "name": "documentSettings.resetToDefaults",
+        "method": "POST",
+        "description": "Reset to defaults"
+      },
+      {
+        "name": "documentSettings.getAll",
+        "method": "GET",
+        "description": "Get all"
+      },
+      {
+        "name": "documentSettings.updateAll",
+        "method": "POST",
+        "description": "Update all"
+      },
+      {
+        "name": "documentSettings.list",
+        "method": "GET",
+        "description": "List documentSettingss with pagination"
+      },
+      {
+        "name": "documentSettings.create",
+        "method": "POST",
+        "description": "Create new documentSettings"
+      },
+      {
+        "name": "documentSettings.delete",
+        "method": "POST",
+        "description": "Delete documentSettings"
       }
     ],
     "documents": [

@@ -392,7 +392,8 @@ async function persistScoringResult(
   recommendations: string[]
 ): Promise<void> {
   try {
-    const { prisma } = await import('@intelliflow/db');
+    const { prisma: rawPrisma } = await import('@intelliflow/db');
+    const prisma = rawPrisma as unknown as import('@intelliflow/db').PrismaClient;
     const churnRisk = churnRiskFromTier(tier);
 
     await prisma.leadAIInsight.upsert({

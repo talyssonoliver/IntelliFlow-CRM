@@ -90,7 +90,8 @@ export async function shouldSummarizeConversation(
   conversationId: string,
   tenantId: string
 ): Promise<boolean> {
-  const { prisma } = await import('@intelliflow/db');
+  const { prisma: rawPrisma } = await import('@intelliflow/db');
+  const prisma = rawPrisma as unknown as import('@intelliflow/db').PrismaClient;
 
   const conversation = await prisma.conversationRecord.findFirst({
     where: { id: conversationId, tenantId },
@@ -265,7 +266,8 @@ export async function processSummarizeJob(
     'Processing conversation summarization job'
   );
 
-  const { prisma } = await import('@intelliflow/db');
+  const { prisma: rawPrisma } = await import('@intelliflow/db');
+  const prisma = rawPrisma as unknown as import('@intelliflow/db').PrismaClient;
 
   // Verify the conversation belongs to the specified tenant (isolation guard)
   const conversation = await prisma.conversationRecord.findFirst({

@@ -15,7 +15,7 @@
  */
 
 import type { Logger } from 'pino';
-import type { PrismaClient } from '@intelliflow/db';
+import type { PrismaClient, EncryptedPrismaClient } from '@intelliflow/db';
 
 // ============================================================================
 // Configuration
@@ -58,8 +58,8 @@ export class MaintenanceScheduler {
   private readonly logger: Logger;
   private readonly prisma: PrismaClient;
 
-  constructor(prisma: PrismaClient, logger: Logger, config?: Partial<MaintenanceConfig>) {
-    this.prisma = prisma;
+  constructor(prisma: EncryptedPrismaClient, logger: Logger, config?: Partial<MaintenanceConfig>) {
+    this.prisma = prisma as unknown as PrismaClient;
     this.logger = logger.child({ component: 'maintenance-scheduler' });
     this.config = { ...DEFAULT_CONFIG, ...config };
   }

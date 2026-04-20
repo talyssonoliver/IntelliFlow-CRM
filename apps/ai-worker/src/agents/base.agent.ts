@@ -375,6 +375,7 @@ export abstract class BaseAgent<TInput = unknown, TOutput = unknown> {
     // ADR-049: finalize-phase emission must fire whether the agent returns
     // cleanly, retries, rejects, or throws. We collect the outcome inside the
     // try block and let the finally block do the emission + logging.
+    // eslint-disable-next-line no-useless-assignment -- default needed for TS definite-assignment in finally
     let finalizeOutcome: 'success' | 'rejected' | 'error' | 'retry' = 'error';
     let finalizeError: string | undefined;
     let finalizeConfidence: number | undefined;
@@ -397,32 +398,11 @@ export abstract class BaseAgent<TInput = unknown, TOutput = unknown> {
 
       // ── Phase 3: Reflect ──────────────────────────────────────────────────
       if (!this.config.usesReflection) {
-        // Legacy path — no reflection gate; validate output and calculate confidence
-        if (task.expectedOutput) {
-          task.expectedOutput.parse(output);
-        }
-
-        const duration = Date.now() - startTime;
-        const confidence = await this.calculateConfidence(task, output);
-
-        const result: AgentResult<TOutput> = {
-          success: true,
+        const { result, confidence } = await this.finalizeWithoutReflection(
+          task,
           output,
-          confidence,
-          timestamp: new Date(),
-          duration,
-          metadata: {
-            agentName: this.config.name,
-            executionCount: this.executionCount,
-            taskId: task.id,
-          },
-        };
-
-        logger.info(
-          { agentName: this.config.name, taskId: task.id, confidence, duration },
-          'Agent task completed successfully'
+          startTime
         );
-
         finalizeOutcome = 'success';
         finalizeConfidence = confidence;
         return result;
@@ -454,26 +434,7 @@ export abstract class BaseAgent<TInput = unknown, TOutput = unknown> {
       }
 
       // Approved
-      const duration = Date.now() - startTime;
-      const result: AgentResult<TOutput> = {
-        success: true,
-        output,
-        confidence: verdict.confidence,
-        timestamp: new Date(),
-        duration,
-        metadata: {
-          agentName: this.config.name,
-          executionCount: this.executionCount,
-          taskId: task.id,
-          reflectVerdict: verdict.action,
-        },
-      };
-
-      logger.info(
-        { agentName: this.config.name, taskId: task.id, confidence: verdict.confidence, duration },
-        'Agent task completed successfully (reflect approved)'
-      );
-
+      const result = this.buildReflectApprovedResult(task, output, verdict, startTime);
       finalizeOutcome = 'success';
       finalizeConfidence = verdict.confidence;
       return result;
@@ -485,31 +446,10 @@ export abstract class BaseAgent<TInput = unknown, TOutput = unknown> {
         throw error;
       }
 
-      const duration = Date.now() - startTime;
+      const { result, errorMessage } = this.buildExecutionErrorResult(error, task, startTime);
       finalizeOutcome = 'error';
-      finalizeError = error instanceof Error ? error.message : String(error);
-
-      logger.error(
-        {
-          agentName: this.config.name,
-          taskId: task.id,
-          error: finalizeError,
-        },
-        'Agent task failed'
-      );
-
-      return {
-        success: false,
-        confidence: 0,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date(),
-        duration,
-        metadata: {
-          agentName: this.config.name,
-          executionCount: this.executionCount,
-          taskId: task.id,
-        },
-      };
+      finalizeError = errorMessage;
+      return result;
     } finally {
       // ADR-049 Finalize phase — always fires, even on retry/reject/error.
       // Emission is fire-and-forget; emitPhaseTransition swallows its own errors.
@@ -521,6 +461,111 @@ export abstract class BaseAgent<TInput = unknown, TOutput = unknown> {
         ...(finalizeError !== undefined ? { error: finalizeError } : {}),
       });
     }
+  }
+
+  /**
+   * Build the success result for the reflection-approved path. Extracted from
+   * execute() to keep its cognitive complexity under 15.
+   */
+  private buildReflectApprovedResult(
+    task: AgentTask<TInput, TOutput>,
+    output: TOutput,
+    verdict: AgentReflection,
+    startTime: number
+  ): AgentResult<TOutput> {
+    const duration = Date.now() - startTime;
+    const result: AgentResult<TOutput> = {
+      success: true,
+      output,
+      confidence: verdict.confidence,
+      timestamp: new Date(),
+      duration,
+      metadata: {
+        agentName: this.config.name,
+        executionCount: this.executionCount,
+        taskId: task.id,
+        reflectVerdict: verdict.action,
+      },
+    };
+
+    logger.info(
+      { agentName: this.config.name, taskId: task.id, confidence: verdict.confidence, duration },
+      'Agent task completed successfully (reflect approved)'
+    );
+
+    return result;
+  }
+
+  /**
+   * Build the error fallback result and derived error message from a caught
+   * throwable. Extracted from execute() so the two error-coercion ternaries do
+   * not inflate execute()'s cognitive complexity.
+   */
+  private buildExecutionErrorResult(
+    error: unknown,
+    task: AgentTask<TInput, TOutput>,
+    startTime: number
+  ): { result: AgentResult<TOutput>; errorMessage: string } {
+    const duration = Date.now() - startTime;
+    const errorMessage = error instanceof Error ? error.message : String(error);
+
+    logger.error(
+      { agentName: this.config.name, taskId: task.id, error: errorMessage },
+      'Agent task failed'
+    );
+
+    const result: AgentResult<TOutput> = {
+      success: false,
+      confidence: 0,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      timestamp: new Date(),
+      duration,
+      metadata: {
+        agentName: this.config.name,
+        executionCount: this.executionCount,
+        taskId: task.id,
+      },
+    };
+
+    return { result, errorMessage };
+  }
+
+  /**
+   * Legacy (no-reflection) finalization path — validate output against the
+   * task schema, compute confidence, and build the success result envelope.
+   * Extracted from execute() to keep its cognitive complexity under 15.
+   */
+  private async finalizeWithoutReflection(
+    task: AgentTask<TInput, TOutput>,
+    output: TOutput,
+    startTime: number
+  ): Promise<{ result: AgentResult<TOutput>; confidence: number }> {
+    if (task.expectedOutput) {
+      task.expectedOutput.parse(output);
+    }
+
+    const duration = Date.now() - startTime;
+    const confidence = await this.calculateConfidence(task, output);
+
+    const result: AgentResult<TOutput> = {
+      success: true,
+      output,
+      confidence,
+      timestamp: new Date(),
+      duration,
+      metadata: {
+        agentName: this.config.name,
+        executionCount: this.executionCount,
+        taskId: task.id,
+      },
+    };
+
+    logger.info(
+      { agentName: this.config.name, taskId: task.id, confidence, duration },
+      'Agent task completed successfully'
+    );
+
+    return { result, confidence };
   }
 
   /**

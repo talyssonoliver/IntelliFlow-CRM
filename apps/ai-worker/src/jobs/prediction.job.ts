@@ -17,7 +17,7 @@ import { z } from 'zod';
 import pino from 'pino';
 
 // AI Chain imports (IFC-095)
-import { getChurnRiskChain, ChurnRiskChain, type ChurnRiskInput } from '../chains/churn-risk.chain';
+import { ChurnRiskChain, type ChurnRiskInput } from '../chains/churn-risk.chain';
 import { createNBAAgent, type NBAContext } from '../agents/next-best-action.agent';
 // M15: qualification now routes to LeadQualificationAgent instead of LeadScoringChain
 import {
@@ -687,7 +687,8 @@ async function processNextBestAction(
     // Enrich with existing AI insight data if entity is a lead
     if (entityType === 'lead') {
       try {
-        const { prisma } = await import('@intelliflow/db');
+        const { prisma: rawPrisma } = await import('@intelliflow/db');
+        const prisma = rawPrisma as unknown as import('@intelliflow/db').PrismaClient;
         const existingInsight = await prisma.leadAIInsight.findUnique({
           where: { leadId_tenantId: { leadId: entityId, tenantId } },
           select: {

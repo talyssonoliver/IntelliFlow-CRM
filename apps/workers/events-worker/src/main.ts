@@ -280,7 +280,8 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
     eventTenantId: string,
     eventUserId: string
   ): Promise<void> {
-    const { prisma } = await import('@intelliflow/db');
+    const { prisma: rawPrisma } = await import('@intelliflow/db');
+    const prisma = rawPrisma as unknown as import('@intelliflow/db').PrismaClient;
 
     let scoreLabel: string;
     if (score >= 80) scoreLabel = 'Hot';

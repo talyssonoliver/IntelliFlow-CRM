@@ -1,0 +1,161 @@
+{
+  "$schema": "../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "PG-180",
+  "attestor": "claude-opus-4-7[1m] via /exec",
+  "attestation_timestamp": "2026-04-19T22:50:00Z",
+  "run_id": "run-2026-04-19T22-20-00Z",
+  "verdict": "COMPLETE",
+  "context_acknowledgment": ".specify/sprints/sprint-18/attestations/PG-180/context_ack.json",
+  "evidence_summary": "Help Article Admin List Page delivered at /settings/help-center/articles with server shell role gate, client island, SearchFilterBar, DataTable, Pagination, EmptyState, and ConfirmationDialog composition. 38 tests across 3 files; scoped coverage 97.26/95.06/91.66/96.96 (aggregate). TypeScript, Lint, and Build exit 0. Route added to lighthouserc.js. Sitemap, PAGE_MAP_AND_FLOWS, navigation-reachability-audit, and complete-dependency-chains docs updated.",
+  "dependencies_verified": [
+    {
+      "task_id": "IFC-299",
+      "attestation_path": ".specify/sprints/sprint-17/attestations/IFC-299/attestation.json",
+      "verified_at": "2026-04-19T22:20:00Z"
+    }
+  ],
+  "artifact_hashes": {
+    "apps/web/src/app/settings/help-center/articles/page.tsx": "15db9aeac3a96dc4a157e8a9baf7004bae43c0e291b614e39387191be04cbd7e",
+    "apps/web/src/app/settings/help-center/articles/loading.tsx": "be8f7bc2b078ff216d256377bad15aafd4ab371d0f5da7a96daed8c22703f69a",
+    "apps/web/src/app/settings/help-center/articles/layout.tsx": "1b2be93034978099f6d9918e862371fabfa88d2d952eed3bb63f721833d78310",
+    "apps/web/src/components/support/article-admin-list.tsx": "2dce308bc9cbecfbf0a74515f58fea61dd75f0558af6c90c3eaf598aafa89def",
+    "apps/web/src/components/support/article-admin-columns.tsx": "d621724d5ddbff52515d800b8287cdf6c93d5303fe13e654f37c5fe694cece62",
+    "apps/web/src/lib/cached-queries/help-article-queries.ts": "7c01491f1024f43088ba4ecb53bdb5b11dcc48b4829f029077f9b60f6f6edbe6",
+    "apps/web/src/app/settings/help-center/articles/__tests__/page.test.tsx": "412c2365582d5bfa205ece99ab13dffc33df7e29154b73af4befb83b294b7ef2",
+    "apps/web/src/components/support/__tests__/article-admin-list.test.tsx": "6f8903160663ac2f3886edd51e98e618d4a74a39e6e0e4b059efd10e62c7fc8f",
+    "apps/web/src/components/support/__tests__/article-admin-columns.test.tsx": "24586e2954c6a6abd9d44b94fcfbef6dfeff28ac318f060c9c77d5fd58834091"
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-04-19T22:30:00Z"
+    },
+    {
+      "name": "Tests",
+      "command": "pnpm --filter @intelliflow/web exec vitest run src/components/support/__tests__/article-admin-list.test.tsx src/components/support/__tests__/article-admin-columns.test.tsx src/app/settings/help-center/articles/__tests__/page.test.tsx",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-04-19T22:43:00Z"
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter @intelliflow/web lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-04-19T22:32:00Z"
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-04-19T22:40:00Z"
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "preflight-page-doc-cochange",
+      "passed": true,
+      "timestamp": "2026-04-19T22:19:00Z"
+    },
+    {
+      "gate_id": "preflight-plan-reviewer-subagent",
+      "passed": true,
+      "timestamp": "2026-04-19T22:19:00Z"
+    },
+    {
+      "gate_id": "preflight-exec-readiness",
+      "passed": true,
+      "score": 5,
+      "timestamp": "2026-04-19T22:20:00Z"
+    },
+    {
+      "gate_id": "preflight-task-json-schemas",
+      "passed": true,
+      "timestamp": "2026-04-19T22:20:00Z"
+    },
+    {
+      "gate_id": "coverage-gte-90-statements",
+      "passed": true,
+      "score": 97.26,
+      "timestamp": "2026-04-19T22:43:00Z"
+    },
+    {
+      "gate_id": "coverage-gte-80-branches",
+      "passed": true,
+      "score": 95.06,
+      "timestamp": "2026-04-19T22:43:00Z"
+    },
+    {
+      "gate_id": "coverage-gte-90-functions",
+      "passed": true,
+      "score": 91.66,
+      "timestamp": "2026-04-19T22:43:00Z"
+    },
+    {
+      "gate_id": "coverage-gte-90-lines",
+      "passed": true,
+      "score": 96.96,
+      "timestamp": "2026-04-19T22:43:00Z"
+    },
+    {
+      "gate_id": "icon-policy-material-symbols-only",
+      "passed": true,
+      "timestamp": "2026-04-19T22:25:00Z"
+    },
+    {
+      "gate_id": "empty-state-policy-entity-notes",
+      "passed": true,
+      "timestamp": "2026-04-19T22:25:00Z"
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Articles listed",
+      "target": "list+filters+CRUD functional",
+      "actual": "list + debounced search + status/category filters + edit link + publish/unpublish/delete mutations all implemented and tested",
+      "met": true
+    },
+    {
+      "kpi": "Filters working",
+      "target": "status + category + search",
+      "actual": "3 filters wired, URL-synced, page-reset on change",
+      "met": true
+    },
+    {
+      "kpi": "CRUD actions functional",
+      "target": "publish/unpublish/delete",
+      "actual": "3 mutations wired with invalidation + success/error toast paths covered",
+      "met": true
+    },
+    {
+      "kpi": "Lighthouse >=90",
+      "target": ">=0.9 all categories",
+      "actual": "Route added to lighthouserc.js; full run deferred to CI promotion",
+      "met": false
+    },
+    {
+      "kpi": "Coverage Statements/Branches/Functions/Lines",
+      "target": "90/80/90/90",
+      "actual": "97.26/95.06/91.66/96.96 (aggregate, Istanbul)",
+      "met": true
+    }
+  ],
+  "definition_of_done_items": [
+    { "item": "Articles listed", "met": true },
+    { "item": "Filters working", "met": true },
+    { "item": "CRUD actions functional", "met": true }
+  ],
+  "notes": "Compliance-check invoked inline: all 4 mandatory validations PASS (typecheck, tests, lint, build), scoped Istanbul coverage 97.26/95.06/91.66/96.96 (aggregate) exceeds 90/80/90/90 thresholds, icon policy PASS (Material Symbols only, zero foreign-library imports), empty-state policy PASS (<EmptyState entity='notes' /> in all zero states, zero inline SVGs). Lighthouse gate is deferred to CI promotion: the route is enrolled in lighthouserc.js URL set so the CI deploy gate enforces ≥0.9 automatically. Task is runtime-ready — every new code path has a real production caller (Next.js App Router → page.tsx → ArticleAdminList → trpc.helpArticle.{list,publish,unpublish,delete}). CORRECTION 2026-04-20: original attestation noted sidebar wiring was deferred to a future navigation task; this self-granted waiver violated spec-session Phase 0.92 (UI Reachability Verification) — the page would have shipped reachable only by direct URL, which is the exact anti-pattern the reachability audit document exists to prevent. Fixed in this session: added sidebar item `help-center-articles` to apps/web/src/components/sidebar/configs/settings.ts with `roles: ['ADMIN', 'MANAGER']`; typecheck + 146 tests across 8 sidebar+PG-180 test files still green. Defense-in-depth retained: server role gate + sidebar role filter. Navigation-reachability-audit.md and PAGE_MAP_AND_FLOWS.md updated to reflect the wiring.",
+  "environment": {
+    "os": "Windows 11 Pro 10.0.26200",
+    "node": "via pnpm",
+    "package_manager": "pnpm",
+    "branch": "sprint-17",
+    "next_js": "16.2.3 (webpack)"
+  }
+}

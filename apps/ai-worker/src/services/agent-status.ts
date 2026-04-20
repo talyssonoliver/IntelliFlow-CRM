@@ -19,11 +19,13 @@ import {
   INSIGHT_QUEUE,
   SUMMARIZE_QUEUE,
   FEEDBACK_ANALYTICS_QUEUE,
+  MEMORY_RETENTION_QUEUE,
   type ScoringJobData,
   type PredictionJobData,
   type InsightJobData,
   type SummarizeConversationJobData,
   type FeedbackAnalyticsJobData,
+  type MemoryRetentionJobData,
 } from '../jobs';
 
 const logger = pino({ name: 'agent-status', level: process.env.LOG_LEVEL || 'info' });
@@ -44,7 +46,8 @@ type AIJobData =
   | PredictionJobData
   | InsightJobData
   | SummarizeConversationJobData
-  | FeedbackAnalyticsJobData;
+  | FeedbackAnalyticsJobData
+  | MemoryRetentionJobData;
 
 // ============================================================================
 // Helpers
@@ -132,6 +135,16 @@ export function extractJobContext(
       userId = undefined;
       agentType = 'feedback-analytics';
       taskDescription = `Analysing feedback (period: ${d.periodDays}d)`;
+      break;
+    }
+    case MEMORY_RETENTION_QUEUE: {
+      const d = jobData as MemoryRetentionJobData;
+      // Memory retention cron may run without a specific tenant context.
+      tenantId = d.tenantId;
+      userId = undefined;
+      agentType = 'memory-retention';
+      const tenantSuffix = d.tenantId ? ` for tenant ${d.tenantId}` : ' (all tenants)';
+      taskDescription = `Memory retention${tenantSuffix}`;
       break;
     }
     default:
