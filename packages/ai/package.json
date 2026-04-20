@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@intelliflow/db": "workspace:*",
-    "@langchain/core": "^1.1.29",
+    "@langchain/core": "^1.1.40",
     "zod": "^4.3.6"
   },
   "devDependencies": {
