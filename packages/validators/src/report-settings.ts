@@ -18,17 +18,27 @@ export type ScheduledDeliveryFrequency = z.infer<typeof scheduledDeliveryFrequen
 export const scheduledDeliveryFormatSchema = z.enum(['pdf', 'csv', 'excel']);
 export type ScheduledDeliveryFormat = z.infer<typeof scheduledDeliveryFormatSchema>;
 
-export const scheduledDeliverySchema = z.object({
-  enabled: z.boolean().default(false),
-  frequency: scheduledDeliveryFrequencySchema.default('weekly'),
-  dayOfWeek: z.number().int().min(0).max(6).optional(),
-  time: z
-    .string()
-    .regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Must be HH:MM (24-hour) format')
-    .default('09:00'),
-  recipients: z.array(z.string().email()).default([]),
-  format: scheduledDeliveryFormatSchema.default('pdf'),
-});
+export const scheduledDeliverySchema = z
+  .object({
+    enabled: z.boolean().default(false),
+    frequency: scheduledDeliveryFrequencySchema.default('weekly'),
+    dayOfWeek: z.number().int().min(0).max(6).optional(),
+    time: z
+      .string()
+      .regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Must be HH:MM (24-hour) format')
+      .default('09:00'),
+    recipients: z.array(z.string().email()).default([]),
+    format: scheduledDeliveryFormatSchema.default('pdf'),
+  })
+  .superRefine((val, ctx) => {
+    if (val.enabled && val.recipients.length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['recipients'],
+        message: 'At least one recipient is required when scheduled delivery is enabled.',
+      });
+    }
+  });
 export type ScheduledDelivery = z.infer<typeof scheduledDeliverySchema>;
 
 export const reportSettingsSchema = z.object({

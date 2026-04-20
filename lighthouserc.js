@@ -43,6 +43,7 @@ module.exports = {
         'http://localhost:3000/agent-approvals/experiments', // Experiments
         // Analytics & governance
         'http://localhost:3000/analytics', // Analytics dashboard
+        'http://localhost:3000/analytics/report-settings', // PG-187 Report Settings bento
         'http://localhost:3000/governance', // Governance
         'http://localhost:3000/notifications', // Notifications
         // Settings
@@ -53,6 +54,7 @@ module.exports = {
         // Support
         'http://localhost:3000/help-center', // Help Center index
         'http://localhost:3000/help-center/search', // Help Search
+        'http://localhost:3000/settings/help-center/articles', // PG-180 Help Article Admin List
       ],
 
       // Number of runs per URL (for statistical reliability)

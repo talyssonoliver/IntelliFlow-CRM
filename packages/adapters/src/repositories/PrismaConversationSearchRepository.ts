@@ -26,6 +26,26 @@ import type {
 // ---------------------------------------------------------------------------
 
 /**
+ * Coerce an unknown DB/mock value into a Date. Returns a new Date() when the
+ * value is missing — used for required datetime columns (startedAt etc.).
+ */
+function toDate(value: unknown): Date {
+  if (value instanceof Date) return value;
+  if (value == null) return new Date();
+  return new Date(value as string);
+}
+
+/**
+ * Coerce an unknown DB/mock value into a Date or null when absent. Used for
+ * optional datetime columns (endedAt, completedAt, lastMessageAt, escalatedAt).
+ */
+function toOptionalDate(value: unknown): Date | null {
+  if (value == null) return null;
+  if (value instanceof Date) return value;
+  return new Date(value as string);
+}
+
+/**
  * Map a raw Prisma ConversationRecord row (with includes) to
  * ConversationWithDetails.  The `row` parameter is typed as `any` because
  * Prisma's generated `include` types are not stable across client regenerations
@@ -69,18 +89,8 @@ function toConversationWithDetails(row: Record<string, unknown>): ConversationWi
         changeDescription: (tc.changeDescription as string | null) ?? null,
         isReversible: (tc.isReversible as boolean) ?? false,
         wasRolledBack: (tc.wasRolledBack as boolean) ?? false,
-        startedAt:
-          tc.startedAt instanceof Date
-            ? tc.startedAt
-            : tc.startedAt != null
-              ? new Date(tc.startedAt as string)
-              : new Date(),
-        completedAt:
-          tc.completedAt != null
-            ? tc.completedAt instanceof Date
-              ? tc.completedAt
-              : new Date(tc.completedAt as string)
-            : null,
+        startedAt: toDate(tc.startedAt),
+        completedAt: toOptionalDate(tc.completedAt),
       }))
     : [];
 
@@ -109,25 +119,10 @@ function toConversationWithDetails(row: Record<string, unknown>): ConversationWi
     feedbackText: (row.feedbackText as string | null) ?? null,
     wasEscalated: (row.wasEscalated as boolean) ?? false,
     escalatedTo: (row.escalatedTo as string | null) ?? null,
-    escalatedAt:
-      row.escalatedAt != null
-        ? row.escalatedAt instanceof Date
-          ? row.escalatedAt
-          : new Date(row.escalatedAt as string)
-        : null,
-    startedAt: row.startedAt instanceof Date ? row.startedAt : new Date(row.startedAt as string),
-    lastMessageAt:
-      row.lastMessageAt != null
-        ? row.lastMessageAt instanceof Date
-          ? row.lastMessageAt
-          : new Date(row.lastMessageAt as string)
-        : null,
-    endedAt:
-      row.endedAt != null
-        ? row.endedAt instanceof Date
-          ? row.endedAt
-          : new Date(row.endedAt as string)
-        : null,
+    escalatedAt: toOptionalDate(row.escalatedAt),
+    startedAt: toDate(row.startedAt),
+    lastMessageAt: toOptionalDate(row.lastMessageAt),
+    endedAt: toOptionalDate(row.endedAt),
     messages,
     toolCalls,
   };
@@ -148,13 +143,8 @@ function toConversationSearchResult(row: Record<string, unknown>): ConversationS
     contextName: (row.contextName as string | null) ?? null,
     channel: (row.channel as string) ?? 'web',
     status: row.status as string,
-    startedAt: row.startedAt instanceof Date ? row.startedAt : new Date(row.startedAt as string),
-    endedAt:
-      row.endedAt != null
-        ? row.endedAt instanceof Date
-          ? row.endedAt
-          : new Date(row.endedAt as string)
-        : null,
+    startedAt: toDate(row.startedAt),
+    endedAt: toOptionalDate(row.endedAt),
     messageCount: (row.messageCount as number) ?? 0,
     toolCallCount: (row.toolCallCount as number) ?? 0,
     userRating: (row.userRating as number | null) ?? null,
@@ -224,12 +214,13 @@ export class PrismaConversationSearchRepository implements ConversationRepositor
   // search
   // -------------------------------------------------------------------------
 
-  async search(
-    params: ConversationSearchParams
-  ): Promise<{ conversations: ConversationSearchResult[]; total: number }> {
+  /**
+   * Build the base WHERE clause from scalar filter params. Extracted from
+   * search() to keep its cognitive complexity under the sonar threshold.
+   */
+  private buildBaseWhere(params: ConversationSearchParams): Prisma.ConversationRecordWhereInput {
     const {
       tenantId,
-      query,
       userId,
       agentId,
       contextType,
@@ -241,16 +232,10 @@ export class PrismaConversationSearchRepository implements ConversationRepositor
       hasToolCalls,
       wasEscalated,
       minRating,
-      limit = 20,
-      offset = 0,
     } = params;
 
-    // Build the WHERE clause — tenantId is always required
-    const where: Prisma.ConversationRecordWhereInput = {
-      tenantId, // mandatory tenant isolation
-    };
+    const where: Prisma.ConversationRecordWhereInput = { tenantId };
 
-    // Optional filters
     if (userId) where.userId = userId;
     if (agentId) where.agentId = agentId;
     if (contextType) where.contextType = contextType;
@@ -267,6 +252,16 @@ export class PrismaConversationSearchRepository implements ConversationRepositor
     if (hasToolCalls === true) where.toolCallCount = { gt: 0 };
     if (hasToolCalls === false) where.toolCallCount = { equals: 0 };
 
+    return where;
+  }
+
+  async search(
+    params: ConversationSearchParams
+  ): Promise<{ conversations: ConversationSearchResult[]; total: number }> {
+    const { tenantId, query, limit = 20, offset = 0 } = params;
+
+    const where = this.buildBaseWhere(params);
+
     // Full-text / ILIKE search on title + summary + message content.
     //
     // For message content we use a GIN tsvector index (added in migration
@@ -278,7 +273,7 @@ export class PrismaConversationSearchRepository implements ConversationRepositor
     //
     // The raw sub-query embeds a parameterised plainto_tsquery call and also
     // enforces tenantId isolation on the message_records table.
-    let conversationIdsFromContent: string[] | null = null;
+    let conversationIdsFromContent: string[] | null;
 
     if (query && query.trim().length > 0) {
       const trimmed = query.trim();

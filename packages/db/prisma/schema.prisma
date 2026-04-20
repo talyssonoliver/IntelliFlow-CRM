@@ -158,6 +158,13 @@ model Tenant {
   documentTypeDefinitions DocumentTypeDefinition[] @ignore
   documentAutomationSettings DocumentAutomationSetting[] @ignore
   documentRetentionPolicies DocumentRetentionPolicy[] @ignore
+  caseSettings              CaseSettings[]            @ignore
+  caseDuplicateRules        CaseDuplicateRule[]       @ignore
+  caseRequiredFields        CaseRequiredField[]       @ignore
+  caseTags                  CaseTag[]                 @ignore
+  caseAutomationSettings    CaseAutomationSetting[]   @ignore
+  appointmentSettings       AppointmentSettings[]     @ignore
+  reportSettings            ReportSettings[]          @ignore
   toolEnablements           TenantToolEnablement[]    // H6: per-tenant tool on/off
   aiConfigs                 TenantAIConfig[]           // M8/M9: per-tenant LLM tier overrides
   memoryPolicy              TenantMemoryPolicy?        // P2.7: per-tenant memory retention
@@ -322,6 +329,7 @@ model User {
   conversationRecords ConversationRecord[]
   casesAssigned       Case[]              @relation("CaseAssignee")
   caseTasksAssigned   CaseTask[]          @relation("CaseTaskAssignee")
+  caseSettingsAsAutoAssignee CaseSettings[] @relation("CaseSettingsAutoAssignee")
 
   // Custom calendars owned by this user
   calendars           Calendar[]
@@ -1687,6 +1695,141 @@ model Case {
   @@index([status, deadline])
   @@index([tenantId])
   @@map("cases")
+}
+
+/// PG-190 — per-tenant case module settings (case prefix, default priority, auto-assign policy).
+model CaseSettings {
+  id                String   @id @default(cuid())
+  tenantId          String   @unique
+  casePrefix        String   @default("CASE-")
+  defaultPriority   String   @default("MEDIUM")
+  autoAssignEnabled Boolean  @default(false)
+  autoAssignUserId  String?
+  autoAssignUser    User?    @relation("CaseSettingsAutoAssignee", fields: [autoAssignUserId], references: [id], onDelete: SetNull)
+  tenant            Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([autoAssignUserId])
+  @@map("case_settings")
+}
+
+/// PG-190 v2 — per-tenant case duplicate-detection rules.
+model CaseDuplicateRule {
+  id              String   @id @default(cuid())
+  tenantId        String
+  field           String
+  matchStrategy   String
+  collisionAction String   @default("warn")
+  isActive        Boolean  @default(true)
+  sortOrder       Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, field, matchStrategy])
+  @@index([tenantId])
+  @@map("case_duplicate_rules")
+}
+
+/// PG-190 v2 — per-tenant case required-field policy (one row per enforced field).
+model CaseRequiredField {
+  id         String   @id @default(cuid())
+  tenantId   String
+  fieldKey   String
+  isRequired Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, fieldKey])
+  @@index([tenantId])
+  @@map("case_required_fields")
+}
+
+/// PG-190 v2 — per-tenant case tags (name + color token).
+model CaseTag {
+  id          String   @id @default(cuid())
+  tenantId    String
+  name        String
+  colorToken  String   @default("slate")
+  description String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+  @@map("case_tags")
+}
+
+/// PG-190 v2 — per-tenant case automation + AI toggle singleton.
+/// AI toggles default FALSE per the module-settings playbook (explicit opt-in).
+model CaseAutomationSetting {
+  id                          String   @id @default(cuid())
+  tenantId                    String   @unique
+  // Workflow automation
+  autoEscalateOverdue         Boolean  @default(false)
+  notifyOnAssignmentChange    Boolean  @default(true)
+  notifyOnDeadlineApproaching Boolean  @default(true)
+  notifyOnStatusChange        Boolean  @default(false)
+  // Data hygiene
+  notifyOnDuplicate           Boolean  @default(true)
+  restrictTagCreationToAdmins Boolean  @default(false)
+  preventDeleteWithOpenTasks  Boolean  @default(true)
+  // AI & Intelligence — default FALSE per playbook
+  aiCaseSummarization         Boolean  @default(false)
+  aiPriorityPrediction        Boolean  @default(false)
+  aiResolutionSuggestion      Boolean  @default(false)
+  aiTagSuggestions            Boolean  @default(false)
+  aiInsightGeneration         Boolean  @default(false)
+  createdAt                   DateTime @default(now())
+  updatedAt                   DateTime @updatedAt
+  tenant                      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("case_automation_settings")
+}
+
+/// PG-189 — per-tenant appointment / calendar module settings. Landed alongside
+/// PG-190 to unblock AC-007 after the PG-189 Ralph-loop shipped the router
+/// without the backing schema. See PG-190 attestation notes.
+model AppointmentSettings {
+  id                         String    @id @default(cuid())
+  tenantId                   String    @unique
+  defaultDurationMinutes     Int       @default(30)
+  minDurationMinutes         Int       @default(5)
+  maxDurationMinutes         Int       @default(480)
+  defaultBufferBeforeMinutes Int       @default(0)
+  defaultBufferAfterMinutes  Int       @default(0)
+  defaultReminderMinutes     Int?      @default(15)
+  primaryCalendarId          String?
+  primaryCalendar            Calendar? @relation("AppointmentSettingsPrimaryCalendar", fields: [primaryCalendarId], references: [id], onDelete: SetNull)
+  syncExternalCalendars      Boolean   @default(false)
+  defaultTimezone            String    @default("UTC")
+  tenant                     Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt                  DateTime  @default(now())
+  updatedAt                  DateTime  @updatedAt
+
+  @@index([primaryCalendarId])
+  @@map("appointment_settings")
+}
+
+/// PG-187 — per-tenant report defaults. Landed alongside PG-190 to unblock
+/// AC-007 after the PG-187 Ralph-loop shipped the router without the backing
+/// schema. See PG-190 attestation notes.
+model ReportSettings {
+  id                String   @id @default(cuid())
+  tenantId          String   @unique
+  defaultRange      String   @default("30d")
+  currency          String   @default("USD")
+  scheduledDelivery Json     @default("{\"enabled\":false,\"frequency\":\"weekly\",\"dayOfWeek\":1,\"time\":\"09:00\",\"recipients\":[],\"format\":\"pdf\"}")
+  tenant            Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("report_settings")
 }
 
 model CaseTask {
@@ -4868,8 +5011,9 @@ model Calendar {
   owner     User     @relation(fields: [ownerId], references: [id])
 
   // Relations
-  appointments Appointment[]
-  tasks        Task[]
+  appointments        Appointment[]
+  tasks               Task[]
+  appointmentSettings AppointmentSettings[] @relation("AppointmentSettingsPrimaryCalendar")
 
   @@index([tenantId])
   @@index([ownerId])

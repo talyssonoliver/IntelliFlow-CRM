@@ -148,6 +148,48 @@ function decryptData(
   return result;
 }
 
+/**
+ * Apply encryption to a single Prisma write-args payload (`data` / `create` /
+ * `update`). Handles both array (createMany) and object (update/upsert) shapes.
+ * Mutation is returned — callers assign back to `args[field]`.
+ */
+function encryptWritePayload(modelName: string, payload: unknown, key: Buffer): unknown {
+  if (Array.isArray(payload)) {
+    return payload.map((item: Record<string, unknown>) => encryptData(modelName, item, key));
+  }
+  if (payload && typeof payload === 'object') {
+    return encryptData(modelName, payload as Record<string, unknown>, key);
+  }
+  return payload;
+}
+
+/**
+ * Build the mutated args object for a Prisma write operation by applying
+ * field-level encryption to the appropriate payload key(s).
+ */
+function buildEncryptedWriteArgs(
+  op: 'create' | 'createMany' | 'update' | 'updateMany' | 'upsert',
+  args: Record<string, unknown>,
+  modelName: string,
+  key: Buffer
+): Record<string, unknown> {
+  const mutated = { ...args };
+
+  if (op === 'upsert') {
+    if (mutated['create'])
+      mutated['create'] = encryptWritePayload(modelName, mutated['create'], key);
+    if (mutated['update'])
+      mutated['update'] = encryptWritePayload(modelName, mutated['update'], key);
+    return mutated;
+  }
+
+  // create / createMany / update / updateMany — payload lives in args.data
+  if (mutated['data'] !== undefined) {
+    mutated['data'] = encryptWritePayload(modelName, mutated['data'], key);
+  }
+  return mutated;
+}
+
 // ---------------------------------------------------------------------------
 // Prisma 7 $extends extension factory
 // ---------------------------------------------------------------------------
@@ -201,45 +243,7 @@ export function fieldEncryptionExtension(config: FieldEncryptionConfig) {
 
     for (const op of writeOps) {
       writeOverrides[op] = async ({ model: _m, operation: _op, args, query }: QueryArgs) => {
-        let mutatedArgs = { ...args };
-
-        if (op === 'createMany' || op === 'updateMany') {
-          // args.data may be an array (createMany) or a single object (updateMany)
-          const data = mutatedArgs['data'];
-          if (Array.isArray(data)) {
-            mutatedArgs['data'] = data.map((item: Record<string, unknown>) =>
-              encryptData(modelName, item, key)
-            );
-          } else if (data && typeof data === 'object') {
-            mutatedArgs['data'] = encryptData(modelName, data as Record<string, unknown>, key);
-          }
-        } else if (op === 'upsert') {
-          // args.create + args.update
-          if (mutatedArgs['create'] && typeof mutatedArgs['create'] === 'object') {
-            mutatedArgs['create'] = encryptData(
-              modelName,
-              mutatedArgs['create'] as Record<string, unknown>,
-              key
-            );
-          }
-          if (mutatedArgs['update'] && typeof mutatedArgs['update'] === 'object') {
-            mutatedArgs['update'] = encryptData(
-              modelName,
-              mutatedArgs['update'] as Record<string, unknown>,
-              key
-            );
-          }
-        } else {
-          // create / update — args.data is a single object
-          if (mutatedArgs['data'] && typeof mutatedArgs['data'] === 'object') {
-            mutatedArgs['data'] = encryptData(
-              modelName,
-              mutatedArgs['data'] as Record<string, unknown>,
-              key
-            );
-          }
-        }
-
+        const mutatedArgs = buildEncryptedWriteArgs(op, args, modelName, key);
         return query(mutatedArgs);
       };
     }

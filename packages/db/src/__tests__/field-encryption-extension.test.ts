@@ -16,6 +16,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { randomBytes, createHash } from 'node:crypto';
 
+/* eslint-disable @typescript-eslint/no-unsafe-function-type */
 // In Prisma 7, Prisma.defineExtension wraps args in a function. Mock it as an
 // identity function so tests can inspect the extension args directly.
 vi.mock('../../generated/prisma/client', () => ({

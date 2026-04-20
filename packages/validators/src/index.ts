@@ -113,5 +113,14 @@ export * from './ticket-settings';
 // Document Settings Schemas (PG-186)
 export * from './document-settings';
 
+// Report Settings Schemas (PG-187)
+export * from './report-settings';
+
+// Case Settings Schemas (PG-190)
+export * from './case-settings';
+
+// Appointment Settings Schemas (PG-189 — wired alongside PG-190 to unblock typecheck)
+export * from './appointment-settings';
+
 // Help Article Schemas (IFC-299)
 export * from './help-article';

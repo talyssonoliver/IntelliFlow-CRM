@@ -137,10 +137,15 @@ export const dealScoringRuleOperatorSchema = z.enum([
 ]);
 export type DealScoringRuleOperator = z.infer<typeof dealScoringRuleOperatorSchema>;
 
-export const dealScoringRuleValueSchema = z.object({
-  type: z.enum(['number', 'string', 'array']),
-  value: z.unknown(),
-});
+// Discriminated on `type` so callers cannot smuggle arbitrary shapes through
+// the Prisma JSON column. Array values accept string | number scalars — the
+// scoring engine (IFC-312) never reads nested objects, so this narrows the
+// surface without losing any current expressiveness.
+export const dealScoringRuleValueSchema = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('number'), value: z.number() }),
+  z.object({ type: z.literal('string'), value: z.string() }),
+  z.object({ type: z.literal('array'), value: z.array(z.union([z.string(), z.number()])) }),
+]);
 export type DealScoringRuleValue = z.infer<typeof dealScoringRuleValueSchema>;
 
 export const createDealScoringRuleSchema = z.object({

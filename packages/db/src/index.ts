@@ -65,6 +65,7 @@ export type {
   DocumentTag,
   DocumentAutomationSetting,
   DocumentRetentionPolicy,
+  ReportSettings,
 } from '../generated/prisma/client';
 
 // Re-export performance tracking utilities

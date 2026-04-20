@@ -1,233 +1,288 @@
 /**
  * Document Settings Validator Tests - PG-186
+ *
+ * Tests for document-settings.ts Zod schemas:
+ * - documentGeneralConfigSchema
+ * - updateDocumentDuplicateRulesSchema (incl. superRefine dedup)
+ * - updateDocumentRequiredFieldsSchema (incl. title locked)
+ * - createDocumentTagSchema
+ * - documentAutomationSettingsSchema
+ * - updateDocumentRetentionPoliciesSchema
  */
 
 import { describe, it, expect } from 'vitest';
 import {
-  documentFileTypeConfigSchema,
-  documentSizeLimitConfigSchema,
-  documentAntivirusConfigSchema,
-  documentRetentionPolicySchema,
+  documentGeneralConfigSchema,
+  updateDocumentDuplicateRulesSchema,
+  updateDocumentRequiredFieldsSchema,
+  createDocumentTagSchema,
   documentAutomationSettingsSchema,
-  DEFAULT_ALLOWED_EXTENSIONS,
-  DEFAULT_BLOCKED_EXTENSIONS,
-  DOCUMENT_AUTOMATION_CAT1_KEYS,
-  DOCUMENT_AUTOMATION_CAT2_PENDING,
-  DOCUMENT_AUTOMATION_CAT3_AI_KEYS,
+  updateDocumentRetentionPoliciesSchema,
 } from '../document-settings';
 
-describe('documentFileTypeConfigSchema', () => {
-  it('accepts a valid config with at least one allowed extension', () => {
-    const result = documentFileTypeConfigSchema.safeParse({
-      allowedExtensions: ['pdf', 'docx'],
-      blockedExtensions: ['exe'],
+// ─── documentGeneralConfigSchema ────────────────────────────────────────────
+
+describe('documentGeneralConfigSchema', () => {
+  it('valid full config passes', () => {
+    const result = documentGeneralConfigSchema.safeParse({
       allowedMimeTypes: ['application/pdf'],
-    });
-    expect(result.success).toBe(true);
-  });
-
-  it('rejects an empty allowed extensions array', () => {
-    const result = documentFileTypeConfigSchema.safeParse({
-      allowedExtensions: [],
-      blockedExtensions: [],
-      allowedMimeTypes: [],
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it('rejects non-alphanumeric extensions', () => {
-    const result = documentFileTypeConfigSchema.safeParse({
-      allowedExtensions: ['pdf', 'bad-ext.'],
-      blockedExtensions: [],
-      allowedMimeTypes: [],
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it('rejects extension longer than 20 chars', () => {
-    const result = documentFileTypeConfigSchema.safeParse({
-      allowedExtensions: ['a'.repeat(21)],
-      blockedExtensions: [],
-      allowedMimeTypes: [],
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it('exports sensible defaults', () => {
-    expect(DEFAULT_ALLOWED_EXTENSIONS).toContain('pdf');
-    expect(DEFAULT_ALLOWED_EXTENSIONS).toContain('docx');
-    expect(DEFAULT_BLOCKED_EXTENSIONS).toContain('exe');
-    expect(DEFAULT_BLOCKED_EXTENSIONS).toContain('bat');
-  });
-});
-
-describe('documentSizeLimitConfigSchema', () => {
-  it('accepts valid boundaries', () => {
-    const result = documentSizeLimitConfigSchema.safeParse({
-      maxFileSizeMB: 100,
-      maxTotalStorageMB: 10240,
-      maxFilesPerUpload: 20,
-    });
-    expect(result.success).toBe(true);
-  });
-
-  it('rejects maxFileSizeMB = 0', () => {
-    const result = documentSizeLimitConfigSchema.safeParse({
-      maxFileSizeMB: 0,
-      maxTotalStorageMB: 10240,
-      maxFilesPerUpload: 20,
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it('rejects maxFileSizeMB > 10000', () => {
-    const result = documentSizeLimitConfigSchema.safeParse({
-      maxFileSizeMB: 10001,
-      maxTotalStorageMB: 10240,
-      maxFilesPerUpload: 20,
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it('rejects non-integer maxFileSizeMB', () => {
-    const result = documentSizeLimitConfigSchema.safeParse({
-      maxFileSizeMB: 100.5,
-      maxTotalStorageMB: 10240,
-      maxFilesPerUpload: 20,
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it('rejects maxFilesPerUpload > 1000', () => {
-    const result = documentSizeLimitConfigSchema.safeParse({
-      maxFileSizeMB: 100,
-      maxTotalStorageMB: 10240,
-      maxFilesPerUpload: 1001,
-    });
-    expect(result.success).toBe(false);
-  });
-});
-
-describe('documentAntivirusConfigSchema', () => {
-  it('accepts all-true config', () => {
-    const result = documentAntivirusConfigSchema.safeParse({
+      maxUploadSizeMb: 50,
+      defaultRetentionDays: 365,
       enableAntivirusScan: true,
-      quarantineInfected: true,
-      notifyAdminOnThreat: true,
+      quarantineOnDetect: true,
+      blockOnScanFailure: true,
     });
     expect(result.success).toBe(true);
   });
 
-  it('accepts all-false config', () => {
-    const result = documentAntivirusConfigSchema.safeParse({
-      enableAntivirusScan: false,
-      quarantineInfected: false,
-      notifyAdminOnThreat: false,
+  it('maxUploadSizeMb below 1 is rejected', () => {
+    const result = documentGeneralConfigSchema.safeParse({
+      allowedMimeTypes: [],
+      maxUploadSizeMb: 0,
+      defaultRetentionDays: 365,
+      enableAntivirusScan: true,
+      quarantineOnDetect: true,
+      blockOnScanFailure: true,
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.some((i) => i.path.includes('maxUploadSizeMb'))).toBe(true);
+    }
+  });
+
+  it('maxUploadSizeMb above 500 is rejected', () => {
+    const result = documentGeneralConfigSchema.safeParse({
+      allowedMimeTypes: [],
+      maxUploadSizeMb: 501,
+      defaultRetentionDays: 365,
+      enableAntivirusScan: true,
+      quarantineOnDetect: true,
+      blockOnScanFailure: true,
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.some((i) => i.path.includes('maxUploadSizeMb'))).toBe(true);
+    }
+  });
+});
+
+// ─── updateDocumentDuplicateRulesSchema ─────────────────────────────────────
+
+describe('updateDocumentDuplicateRulesSchema', () => {
+  it('valid two distinct rules passes', () => {
+    const result = updateDocumentDuplicateRulesSchema.safeParse({
+      rules: [
+        {
+          field: 'content_hash',
+          matchStrategy: 'exact',
+          collisionAction: 'warn',
+          isActive: true,
+          sortOrder: 0,
+        },
+        {
+          field: 'filename_normalized',
+          matchStrategy: 'normalized',
+          collisionAction: 'warn',
+          isActive: true,
+          sortOrder: 1,
+        },
+      ],
     });
     expect(result.success).toBe(true);
   });
 
-  it('rejects missing fields', () => {
-    const result = documentAntivirusConfigSchema.safeParse({ enableAntivirusScan: true });
+  it('superRefine rejects duplicate (field, matchStrategy) pair', () => {
+    const result = updateDocumentDuplicateRulesSchema.safeParse({
+      rules: [
+        {
+          field: 'content_hash',
+          matchStrategy: 'exact',
+          collisionAction: 'warn',
+          isActive: true,
+          sortOrder: 0,
+        },
+        {
+          field: 'content_hash',
+          matchStrategy: 'exact',
+          collisionAction: 'warn',
+          isActive: true,
+          sortOrder: 1,
+        },
+      ],
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const issue = result.error.issues.find(
+        (i) => i.path[1] === 1 && i.path[2] === 'matchStrategy'
+      );
+      expect(issue).toBeDefined();
+      expect(issue?.message).toMatch(/rows 1 and 2/);
+    }
+  });
+
+  it('empty rules array is rejected (min 1)', () => {
+    const result = updateDocumentDuplicateRulesSchema.safeParse({ rules: [] });
     expect(result.success).toBe(false);
   });
 });
 
-describe('documentRetentionPolicySchema', () => {
-  it('accepts valid config', () => {
-    const result = documentRetentionPolicySchema.safeParse({
-      retentionDays: 365,
-      archiveInsteadOfDelete: true,
-      preserveVersions: 5,
-      isActive: true,
+// ─── updateDocumentRequiredFieldsSchema ─────────────────────────────────────
+
+describe('updateDocumentRequiredFieldsSchema', () => {
+  it('valid with title required passes', () => {
+    const result = updateDocumentRequiredFieldsSchema.safeParse({
+      fields: [
+        { fieldKey: 'title', isRequired: true },
+        { fieldKey: 'description', isRequired: false },
+      ],
     });
     expect(result.success).toBe(true);
   });
 
-  it('rejects retentionDays = 0', () => {
-    const result = documentRetentionPolicySchema.safeParse({
-      retentionDays: 0,
-      archiveInsteadOfDelete: true,
-      preserveVersions: 5,
-      isActive: true,
+  it('title.isRequired=false is rejected', () => {
+    const result = updateDocumentRequiredFieldsSchema.safeParse({
+      fields: [
+        { fieldKey: 'title', isRequired: false },
+        { fieldKey: 'description', isRequired: false },
+      ],
     });
     expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(
+        result.error.issues.some((i) => i.message.includes('title field must remain required'))
+      ).toBe(true);
+    }
   });
 
-  it('rejects retentionDays > 3650', () => {
-    const result = documentRetentionPolicySchema.safeParse({
-      retentionDays: 3651,
-      archiveInsteadOfDelete: true,
-      preserveVersions: 5,
-      isActive: true,
-    });
+  it('empty fields array is rejected', () => {
+    const result = updateDocumentRequiredFieldsSchema.safeParse({ fields: [] });
     expect(result.success).toBe(false);
   });
+});
 
-  it('accepts preserveVersions = 0', () => {
-    const result = documentRetentionPolicySchema.safeParse({
-      retentionDays: 365,
-      archiveInsteadOfDelete: false,
-      preserveVersions: 0,
-      isActive: false,
-    });
+// ─── createDocumentTagSchema ─────────────────────────────────────────────────
+
+describe('createDocumentTagSchema', () => {
+  it('valid tag passes', () => {
+    const result = createDocumentTagSchema.safeParse({ name: 'Contract', colorToken: 'teal' });
     expect(result.success).toBe(true);
   });
 
-  it('rejects preserveVersions > 100', () => {
-    const result = documentRetentionPolicySchema.safeParse({
-      retentionDays: 365,
-      archiveInsteadOfDelete: true,
-      preserveVersions: 101,
-      isActive: true,
+  it('name too long (>50 chars) is rejected', () => {
+    const result = createDocumentTagSchema.safeParse({
+      name: 'A'.repeat(51),
+      colorToken: 'teal',
     });
     expect(result.success).toBe(false);
   });
 });
+
+// ─── documentAutomationSettingsSchema ───────────────────────────────────────
 
 describe('documentAutomationSettingsSchema', () => {
-  it('accepts all 7 bool fields', () => {
+  it('all 12 booleans provided passes', () => {
     const result = documentAutomationSettingsSchema.safeParse({
       normalizeFilename: true,
       preventDeleteIfReferenced: true,
       notifyOnOwnerChange: false,
-      notifyOnUpload: false,
-      aiDocumentClassification: false,
-      aiSensitiveDataDetection: false,
-      aiSummarization: false,
+      restrictTagCreationToAdmins: false,
+      notifyOnDuplicate: true,
+      autoVersionOnCollision: false,
+      autoDetectDuplicates: false,
+      autoExtractText: false,
+      autoClassifyCategory: false,
+      autoDetectPii: false,
+      aiTagSuggestions: false,
+      aiInsightGeneration: false,
     });
     expect(result.success).toBe(true);
   });
 
-  it('rejects payload missing AI fields', () => {
+  it('missing required boolean is rejected', () => {
     const result = documentAutomationSettingsSchema.safeParse({
       normalizeFilename: true,
-      preventDeleteIfReferenced: true,
-      notifyOnOwnerChange: false,
-      notifyOnUpload: false,
+      // missing the rest
     });
     expect(result.success).toBe(false);
   });
 });
 
-describe('automation category metadata', () => {
-  it('Cat-1 keys cover the two wired-now toggles', () => {
-    expect(DOCUMENT_AUTOMATION_CAT1_KEYS).toEqual([
-      'normalizeFilename',
-      'preventDeleteIfReferenced',
-    ]);
+// ─── updateDocumentRetentionPoliciesSchema ───────────────────────────────────
+
+describe('updateDocumentRetentionPoliciesSchema', () => {
+  it('valid retention policy passes', () => {
+    const result = updateDocumentRetentionPoliciesSchema.safeParse({
+      policies: [
+        {
+          categoryKey: 'default',
+          retentionDays: 365,
+          autoArchive: false,
+          legalHoldOverride: false,
+        },
+      ],
+    });
+    expect(result.success).toBe(true);
   });
 
-  it('Cat-2 pending map references the expected IFC tasks', () => {
-    expect(DOCUMENT_AUTOMATION_CAT2_PENDING.notifyOnOwnerChange).toBe('IFC-311');
-    expect(DOCUMENT_AUTOMATION_CAT2_PENDING.notifyOnUpload).toBe('IFC-310');
+  it('rejects an empty policies array (spec §3.4: min 1)', () => {
+    const result = updateDocumentRetentionPoliciesSchema.safeParse({ policies: [] });
+    expect(result.success).toBe(false);
   });
 
-  it('Cat-3 AI keys cover the three opt-in toggles', () => {
-    expect(DOCUMENT_AUTOMATION_CAT3_AI_KEYS).toEqual([
-      'aiDocumentClassification',
-      'aiSensitiveDataDetection',
-      'aiSummarization',
-    ]);
+  it('rejects retentionDays === 0', () => {
+    const result = updateDocumentRetentionPoliciesSchema.safeParse({
+      policies: [
+        { categoryKey: 'default', retentionDays: 0, autoArchive: false, legalHoldOverride: false },
+      ],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects retentionDays > 36500 (100-year cap)', () => {
+    const result = updateDocumentRetentionPoliciesSchema.safeParse({
+      policies: [
+        {
+          categoryKey: 'default',
+          retentionDays: 40000,
+          autoArchive: false,
+          legalHoldOverride: false,
+        },
+      ],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('accepts retentionDays at the 36500 boundary', () => {
+    const result = updateDocumentRetentionPoliciesSchema.safeParse({
+      policies: [
+        {
+          categoryKey: 'default',
+          retentionDays: 36500,
+          autoArchive: false,
+          legalHoldOverride: false,
+        },
+      ],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects duplicate categoryKey entries', () => {
+    const result = updateDocumentRetentionPoliciesSchema.safeParse({
+      policies: [
+        {
+          categoryKey: 'contracts',
+          retentionDays: 365,
+          autoArchive: true,
+          legalHoldOverride: false,
+        },
+        {
+          categoryKey: 'contracts',
+          retentionDays: 730,
+          autoArchive: true,
+          legalHoldOverride: false,
+        },
+      ],
+    });
+    expect(result.success).toBe(false);
   });
 });
