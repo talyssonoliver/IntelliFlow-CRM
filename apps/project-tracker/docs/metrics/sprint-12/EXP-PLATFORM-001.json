@@ -6,7 +6,7 @@
   "owner": "Platform Eng",
   "dependencies": {
     "required": ["ENV-001-AI"],
-    "verified_at": "2026-04-19T10:06:56.998Z",
+    "verified_at": "2026-04-19T21:18:02.753Z",
     "all_satisfied": true
   },
   "status": "DONE",

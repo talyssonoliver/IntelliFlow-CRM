@@ -6,7 +6,7 @@
   "owner": "Frontend Dev",
   "dependencies": {
     "required": ["PG-009", "GTM-002", "BRAND-001"],
-    "verified_at": "2026-04-19T10:06:56.994Z",
+    "verified_at": "2026-04-19T21:18:02.751Z",
     "all_satisfied": true
   },
   "status": "DONE",

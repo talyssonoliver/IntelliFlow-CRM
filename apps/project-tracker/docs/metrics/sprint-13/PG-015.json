@@ -10,7 +10,7 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-04-19T10:06:57.069Z",
+    "verified_at": "2026-04-19T21:18:02.814Z",
     "required": ["IFC-006", "IFC-076", "IFC-098"]
   },
   "started_at": "2026-01-24T01:20:30+00:00",
