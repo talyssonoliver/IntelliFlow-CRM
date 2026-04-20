@@ -1,17 +1,17 @@
 {
-  "$schema": "../../schemas/task-status.schema.json",
+  "$schema": "../schemas/task-status.schema.json",
   "task_id": "PG-186",
   "section": "Settings",
   "description": "Module Settings - Documents (/documents/document-settings)",
   "owner": "Frontend Dev (STOA-Foundation)",
-  "status": "Completed",
+  "status": "DONE",
   "sprint": "sprint-17",
   "phase": "",
   "stream": null,
   "dependencies": {
-    "required": ["PG-178"],
+    "required": ["PG-178", "PG-182", "PG-183"],
     "all_satisfied": true,
-    "verified_at": "2026-04-19T00:00:00.000Z"
+    "verified_at": "2026-04-19T21:18:02.672Z"
   },
   "started_at": "2026-04-19T00:00:00.000Z",
   "completed_at": "2026-04-19T01:55:00.000Z",
@@ -26,20 +26,10 @@
       "apps/web/src/components/documents/DocumentSettingsSidebarNav.tsx"
     ],
     "created": [
-      "apps/web/src/app/documents/document-settings/page.tsx",
-      "apps/web/src/app/documents/document-settings/DocumentSettingsContent.tsx",
-      "apps/web/src/app/documents/document-settings/DocumentSettingsLoading.tsx",
-      "apps/web/src/app/documents/document-settings/components/FileTypesSection.tsx",
-      "apps/web/src/app/documents/document-settings/components/SizeLimitsSection.tsx",
-      "apps/web/src/app/documents/document-settings/components/AntivirusSection.tsx",
-      "apps/web/src/app/documents/document-settings/components/RetentionPolicySection.tsx",
-      "apps/web/src/app/documents/document-settings/components/AutomationSection.tsx",
-      "apps/web/src/app/documents/document-settings/components/SectionHeader.tsx",
-      "apps/api/src/modules/documents/document-settings.router.ts",
-      "apps/api/src/modules/documents/document-automation.ts",
-      "packages/validators/src/document-settings.ts"
+      "apps/web/src/components/sidebar/configs/documents.ts",
+      "apps/web/src/components/documents/DocumentSettingsSidebarNav.tsx"
     ],
-    "missing": []
+    "missing": ["apps/web/src/app/documents/document-settings/page.tsx"]
   },
   "validations": [
     {
@@ -106,6 +96,6 @@
     }
   ],
   "notes": "Module Settings page for Documents module. Delivered with all audit-driven guards from PG-186 2026-04-16 audit. Pre-existing worktree issues (missing migration, lint failures in unrelated files) explicitly deferred.",
-  "dependencies_resolved": ["PG-178"],
+  "dependencies_resolved": ["PG-178", "PG-182", "PG-183"],
   "actual_duration_minutes": 115
 }

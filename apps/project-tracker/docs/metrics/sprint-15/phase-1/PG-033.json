@@ -9,7 +9,7 @@
   "stream": null,
   "dependencies": {
     "required": ["PG-032"],
-    "verified_at": "2026-04-19T10:06:56.854Z",
+    "verified_at": "2026-04-19T21:18:02.622Z",
     "all_satisfied": true,
     "notes": "PG-032 verified complete — docs index page, search, navigation components all exist. Attestation checked."
   },

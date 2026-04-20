@@ -11,7 +11,7 @@
   "dependencies": {
     "required": ["DOC-008"],
     "all_satisfied": true,
-    "verified_at": "2026-04-19T10:06:56.862Z"
+    "verified_at": "2026-04-19T21:18:02.630Z"
   },
   "dependencies_resolved": ["DOC-008"],
   "started_at": "2026-02-27T23:35:00Z",
