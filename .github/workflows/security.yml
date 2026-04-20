@@ -132,7 +132,7 @@ jobs:
       - name: Run pnpm audit
         run: |
           pnpm audit --json > artifacts/reports/pnpm-audit-${{ github.run_number }}.json || true
-          pnpm audit --audit-level=moderate
+          pnpm audit --audit-level=high
 
       - name: Upload audit results
         uses: actions/upload-artifact@v4

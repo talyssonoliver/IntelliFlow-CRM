@@ -128,9 +128,6 @@ cache:
   # Cache directory
   dir: '$HOME/.cache/trivy'
 
-  # Clear cache before scanning
-  clear: false
-
 # Timeout settings
 timeout:
   # Timeout for scanning
