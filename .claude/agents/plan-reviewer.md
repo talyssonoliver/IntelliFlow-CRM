@@ -239,18 +239,37 @@ Before reviewing, you MUST read:
     the shared path
 80. Ambiguous shared/internal status → **WARN** — plan must be explicit
 
-### Y. UI Reachability (UI tasks only — caught in PG-030)
+### Y. UI Reachability (UI tasks only — caught in PG-030, re-caught in PG-180)
+
+**This category is NEVER "N/A" for a PG-\* task that creates a `page.tsx`.** If
+the verdict table does not contain a row labelled exactly `Y` with the category
+name `UI Reachability`, the reviewer output is rejected by the preflight
+`check-plan-reviewer-subagent.mjs`. Do not subsume Y under a catch-all range
+such as `R–GG: PASS`. Do not relabel Y as "Shared component reuse (DRY)" or
+"Internal vs Shared Pattern" — those are category X (items 77–80). Letter drift
+is what allowed PG-185 and PG-189 to ship without a real reachability check.
 
 81. For every page/route being created or modified, verify the plan includes a
-    step to ensure the page is discoverable from the app shell
+    step to ensure the page is discoverable from the app shell.
 82. Check the spec's "Navigation & Reachability" section — if it specifies a
     sidebar entry, the plan MUST have a step to add/update
-    `apps/web/src/components/sidebar/configs/<section>.ts`
-83. If the page is new and no navigation step exists in the plan → **ERROR**
+    `apps/web/src/components/sidebar/configs/<section>.ts`.
+83. If the page is new and no navigation step exists in the plan → **ERROR**.
 84. If the page is an enhancement to an existing reachable page → check the
-    existing sidebar/nav entry is correct (no action needed if already wired)
+    existing sidebar/nav entry is correct (no action needed if already wired,
+    but the Y row MUST still appear and cite the existing config path as
+    evidence, not just "PASS").
 85. A page reachable only by direct URL with no sidebar/breadcrumb/parent-link →
-    **ERROR** — plan must include a navigation wiring step
+    **ERROR** — plan must include a navigation wiring step. 85a. A spec "Out of
+    scope" bullet that defers the sidebar/nav entry to a follow-up ticket is
+    **NOT** a valid answer to items 81–85. Either the sidebar step is in-scope
+    for the plan, or the reviewer files an ERROR with a Round 2 fix demanding
+    its inclusion. The waiver path is closed (PG-180 lesson — the page shipped
+    unreachable because an Out-of-scope bullet pre-authorised the skip). 85b.
+    The Y row MUST cite concrete evidence: either the exact sidebar config
+    path + step number that wires the route, OR the parent-page file + line
+    number that links to it. "Reviewed — PASS" without evidence is insufficient
+    and counts as a missing row.
 
 ### Z. Internal Contradiction Detection (caught in TRACK-001)
 
