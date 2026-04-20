@@ -7,19 +7,19 @@ name: Dependency Security Scan
 on:
   schedule:
     # Run weekly on Monday at 3 AM UTC
-    - cron: '0 3 * * 1'
+    - cron: "0 3 * * 1"
   push:
     branches: [main]
     paths:
-      - 'pnpm-lock.yaml'
-      - 'package.json'
-      - '**/package.json'
+      - "pnpm-lock.yaml"
+      - "package.json"
+      - "**/package.json"
   pull_request:
     branches: [main]
     paths:
-      - 'pnpm-lock.yaml'
-      - 'package.json'
-      - '**/package.json'
+      - "pnpm-lock.yaml"
+      - "package.json"
+      - "**/package.json"
   workflow_dispatch:
 
 permissions:
@@ -37,7 +37,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: "22"
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -66,7 +66,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: "22"
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -96,16 +96,16 @@ jobs:
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-          severity: 'CRITICAL,HIGH'
+          scan-type: "fs"
+          scan-ref: "."
+          format: "sarif"
+          output: "trivy-results.sarif"
+          severity: "CRITICAL,HIGH"
 
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: 'trivy-results.sarif'
+          sarif_file: "trivy-results.sarif"
 
       - name: Upload Trivy results
         uses: actions/upload-artifact@v4
@@ -149,7 +149,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: "22"
 
       - name: Generate consolidated report
         run: |
@@ -235,7 +235,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: "22"
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -248,8 +248,8 @@ jobs:
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.ADMIN_TOKEN }}
-          commit-message: 'chore(deps): automated security updates'
-          title: '[Security] Automated Dependency Updates'
+          commit-message: "chore(deps): automated security updates"
+          title: "[Security] Automated Dependency Updates"
           body: |
             ## Automated Security Updates
 

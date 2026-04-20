@@ -388,60 +388,17 @@ function runEvidenceIntegrityGate(targetSprint: string): GateResult[] {
     }
   }
 
-  // Use tracked task JSON files as source of truth (prevents local-only untracked data from giving green output).
-  const sprintTracked = listGitTrackedFilesInPath(
-    repoRoot,
-    `apps/project-tracker/docs/metrics/sprint-${targetSprint}`
-  );
-  if (sprintTracked.error) {
-    const result: GateResult = {
-      name: 'Evidence: Task JSON Coverage',
-      severity: 'WARN',
-      message: `Could not list tracked task JSON files for sprint-${targetSprint} (git ls-files failed)`,
-      details: [sprintTracked.error],
-    };
-    results.push(result);
-    logGate(result);
-    return results;
-  }
-
-  const trackedTaskJsonFiles = sprintTracked.files
-    .filter((f) => f.endsWith('.json'))
-    .filter((f) => !path.posix.basename(f).startsWith('_'));
+  // .specify/sprints is the canonical evidence location and takes precedence.
+  // Legacy apps/project-tracker/docs/metrics/sprint-N JSON files are only used
+  // as a fallback for tasks that have no .specify attestation yet.
+  const specifyAttestationsPath = `.specify/sprints/sprint-${targetSprint}/attestations`;
+  const specifyTracked = listGitTrackedFilesInPath(repoRoot, specifyAttestationsPath);
 
   const parseErrors: string[] = [];
   const missingTaskId: string[] = [];
   const duplicateTaskId: string[] = [];
   const tasksById = new Map<string, { file: string; data: any }>();
 
-  for (const repoRel of trackedTaskJsonFiles) {
-    const fullPath = path.join(repoRoot, repoRel);
-    try {
-      const raw = fs.readFileSync(fullPath, 'utf-8');
-      const data = JSON.parse(raw);
-      const taskId: unknown = data?.task_id ?? data?.taskId;
-
-      if (typeof taskId !== 'string' || taskId.trim().length === 0) {
-        missingTaskId.push(repoRel);
-        continue;
-      }
-
-      if (tasksById.has(taskId)) {
-        duplicateTaskId.push(taskId);
-        continue;
-      }
-
-      tasksById.set(taskId, { file: repoRel, data });
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : String(error);
-      parseErrors.push(`${repoRel}: ${msg}`);
-    }
-  }
-
-  // Supplement with .specify/sprints/sprint-N/attestations/*/attestation.json for tasks
-  // not covered by the metrics folder. This is the canonical evidence location.
-  const specifyAttestationsPath = `.specify/sprints/sprint-${targetSprint}/attestations`;
-  const specifyTracked = listGitTrackedFilesInPath(repoRoot, specifyAttestationsPath);
   if (!specifyTracked.error) {
     const attestationFiles = specifyTracked.files.filter(
       (f) => path.posix.basename(f) === 'attestation.json'
@@ -456,17 +413,7 @@ function runEvidenceIntegrityGate(targetSprint: string): GateResult[] {
         if (!sprintTaskIds.has(taskId)) continue; // skip attestations from other sprints
 
         if (tasksById.has(taskId)) {
-          // Metrics JSON takes precedence but may lack dependencies.all_satisfied — patch it in
-          const existing = tasksById.get(taskId)!;
-          if (typeof existing.data?.dependencies?.all_satisfied !== 'boolean') {
-            existing.data = {
-              ...existing.data,
-              dependencies: {
-                ...(existing.data?.dependencies ?? {}),
-                all_satisfied: att.verdict === 'COMPLETE',
-              },
-            };
-          }
+          duplicateTaskId.push(taskId);
           continue;
         }
 
@@ -499,6 +446,54 @@ function runEvidenceIntegrityGate(targetSprint: string): GateResult[] {
         tasksById.set(taskId, { file: repoRel, data: normalised });
       } catch {
         // Non-fatal: skip unparseable attestation
+      }
+    }
+  }
+
+  // Fall back to legacy metrics JSON for tasks not yet covered by .specify attestations.
+  const sprintTracked = listGitTrackedFilesInPath(
+    repoRoot,
+    `apps/project-tracker/docs/metrics/sprint-${targetSprint}`
+  );
+  if (!sprintTracked.error) {
+    const trackedTaskJsonFiles = sprintTracked.files
+      .filter((f) => f.endsWith('.json'))
+      .filter((f) => !path.posix.basename(f).startsWith('_'));
+
+    for (const repoRel of trackedTaskJsonFiles) {
+      const fullPath = path.join(repoRoot, repoRel);
+      try {
+        const raw = fs.readFileSync(fullPath, 'utf-8');
+        const data = JSON.parse(raw);
+        const taskId: unknown = data?.task_id ?? data?.taskId;
+
+        if (typeof taskId !== 'string' || taskId.trim().length === 0) {
+          missingTaskId.push(repoRel);
+          continue;
+        }
+
+        if (tasksById.has(taskId)) {
+          // .specify attestation takes precedence; patch in dependencies.all_satisfied if absent
+          const existing = tasksById.get(taskId)!;
+          if (
+            typeof existing.data?.dependencies?.all_satisfied !== 'boolean' &&
+            typeof data?.dependencies?.all_satisfied === 'boolean'
+          ) {
+            existing.data = {
+              ...existing.data,
+              dependencies: {
+                ...(existing.data?.dependencies ?? {}),
+                all_satisfied: data.dependencies.all_satisfied,
+              },
+            };
+          }
+          continue;
+        }
+
+        tasksById.set(taskId, { file: repoRel, data });
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error);
+        parseErrors.push(`${repoRel}: ${msg}`);
       }
     }
   }
