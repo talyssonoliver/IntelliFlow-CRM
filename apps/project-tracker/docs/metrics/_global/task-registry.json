@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-04-19T10:06:56.676Z",
+  "last_updated": "2026-04-19T21:18:02.487Z",
   "tasks_by_status": {
     "DONE": [
       "EXC-INIT-001",
@@ -382,14 +382,15 @@
       "PG-184",
       "PG-185",
       "PG-186",
+      "PG-190",
       "PG-192",
       "PG-193",
       "PG-195"
     ],
-    "IN_PROGRESS": [],
+    "IN_PROGRESS": ["PG-189"],
     "VALIDATING": [],
     "BLOCKED": [],
-    "PLANNED": [],
+    "PLANNED": ["PG-059", "PG-180", "PG-187"],
     "BACKLOG": [
       "IFC-032",
       "IFC-033",
@@ -417,7 +418,6 @@
       "IFC-087",
       "PG-049",
       "PG-058",
-      "PG-059",
       "PG-060",
       "PG-061",
       "PG-062",
@@ -563,15 +563,11 @@
       "IFC-293",
       "IFC-294",
       "IFC-295",
-      "PG-180",
       "IFC-301",
       "PG-181",
       "IFC-302",
       "IFC-304",
-      "PG-187",
       "PG-188",
-      "PG-189",
-      "PG-190",
       "PG-191",
       "IFC-305",
       "IFC-306",
@@ -3596,7 +3592,7 @@
       "section": "Core CRM",
       "description": "Leads List",
       "owner": "CRM FE+BE (STOA-Foundation)",
-      "status": "BACKLOG",
+      "status": "PLANNED",
       "sprint": 18,
       "dependencies": ["IFC-089"],
       "artifacts": [
@@ -9380,11 +9376,11 @@
       "section": "Support Pages",
       "description": "Help Article Admin List Page",
       "owner": "Support Eng (STOA-Domain)",
-      "status": "BACKLOG",
+      "status": "PLANNED",
       "sprint": 18,
       "dependencies": ["IFC-299"],
       "artifacts": [
-        "ARTIFACT:apps/web/src/app/settings/help-center/articles/page.tsx;ARTIFACT:apps/web/src/components/support/article-admin-list.tsx;EVIDENCE:.specify/sprints/sprint-18/attestations/PG-180/context_ack.json"
+        "ARTIFACT:apps/web/src/app/settings/help-center/articles/page.tsx;ARTIFACT:apps/web/src/components/support/article-admin-list.tsx;EVIDENCE:.specify/sprints/sprint-18/attestations/PG-180/context_ack.json;SPEC:.specify/sprints/sprint-18/specifications/PG-180-spec.md;PLAN:.specify/sprints/sprint-18/planning/PG-180-plan.md"
       ],
       "kpis": "Articles listed, filters working, CRUD actions functional",
       "definition_of_done": "Response <200ms, Lighthouse >=90; admin page at /settings/help-center/articles with article list, status badges, category filters, search, CRUD actions; verified by: pnpm test",
@@ -9540,11 +9536,11 @@
       "section": "Settings",
       "description": "Module Settings - Reports (/analytics/report-settings)",
       "owner": "Frontend Dev (STOA-Foundation)",
-      "status": "BACKLOG",
+      "status": "PLANNED",
       "sprint": 18,
       "dependencies": ["PG-178"],
       "artifacts": [
-        "ARTIFACT:apps/web/src/app/analytics/report-settings/page.tsx"
+        "ARTIFACT:apps/web/src/app/analytics/(list)/report-settings/page.tsx"
       ],
       "kpis": "All form fields render and save; sidebar settings nav works; Lighthouse >=90",
       "definition_of_done": "Report settings page at /analytics/report-settings with default range, currency, scheduled delivery config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
@@ -9570,11 +9566,11 @@
       "section": "Settings",
       "description": "Module Settings - Appointments (/calendar/calendar-settings)",
       "owner": "Frontend Dev (STOA-Foundation)",
-      "status": "BACKLOG",
+      "status": "IN_PROGRESS",
       "sprint": 18,
       "dependencies": ["PG-178"],
       "artifacts": [
-        "ARTIFACT:apps/web/src/app/calendar/calendar-settings/page.tsx"
+        "ARTIFACT:apps/web/src/app/calendar/calendar-settings/page.tsx;SPEC:.specify/sprints/sprint-18/specifications/PG-189-spec.md;PLAN:.specify/sprints/sprint-18/planning/PG-189-plan.md;EVIDENCE:.specify/sprints/sprint-18/attestations/PG-189/context_ack.json"
       ],
       "kpis": "All form fields render and save; sidebar settings nav works; Lighthouse >=90",
       "definition_of_done": "Appointment settings page at /calendar/calendar-settings with duration, buffer, calendar integration config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
@@ -9586,7 +9582,7 @@
       "section": "Settings",
       "description": "Module Settings - Cases (/cases/case-settings)",
       "owner": "Frontend Dev (STOA-Foundation)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 18,
       "dependencies": ["PG-178"],
       "artifacts": ["ARTIFACT:apps/web/src/app/cases/case-settings/page.tsx"],

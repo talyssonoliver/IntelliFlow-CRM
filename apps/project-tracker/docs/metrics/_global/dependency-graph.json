@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/dependency-graph.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-04-19T10:06:57.103Z",
+  "last_updated": "2026-04-19T21:18:02.839Z",
   "description": "Cross-sprint dependency tracking for all tasks",
   "nodes": {
     "EXC-INIT-001": {
@@ -1587,7 +1587,7 @@
     "PG-059": {
       "task_id": "PG-059",
       "sprint": 18,
-      "status": "BACKLOG",
+      "status": "PLANNED",
       "dependencies": ["IFC-089"],
       "dependents": ["PG-060", "PG-061", "PG-063"]
     },
@@ -4327,7 +4327,7 @@
     "PG-180": {
       "task_id": "PG-180",
       "sprint": 18,
-      "status": "BACKLOG",
+      "status": "PLANNED",
       "dependencies": ["IFC-299"],
       "dependents": ["IFC-301", "PG-181", "IFC-304"]
     },
@@ -4415,7 +4415,7 @@
     "PG-187": {
       "task_id": "PG-187",
       "sprint": 18,
-      "status": "BACKLOG",
+      "status": "PLANNED",
       "dependencies": ["PG-178"],
       "dependents": ["PG-200", "PG-201"]
     },
@@ -4429,14 +4429,14 @@
     "PG-189": {
       "task_id": "PG-189",
       "sprint": 18,
-      "status": "BACKLOG",
+      "status": "IN_PROGRESS",
       "dependencies": ["PG-178"],
       "dependents": ["PG-202", "PG-203"]
     },
     "PG-190": {
       "task_id": "PG-190",
       "sprint": 18,
-      "status": "BACKLOG",
+      "status": "DONE",
       "dependencies": ["PG-178"],
       "dependents": ["PG-204"]
     },
@@ -9154,7 +9154,6 @@
     "PG-201",
     "PG-202",
     "PG-203",
-    "PG-204",
     "PG-208",
     "PG-209",
     "IFC-033",
@@ -9258,8 +9257,6 @@
     "IFC-302",
     "PG-187",
     "PG-188",
-    "PG-189",
-    "PG-190",
     "PG-191",
     "IFC-309",
     "IFC-310",
@@ -9268,6 +9265,7 @@
     "PG-197",
     "PG-198",
     "PG-199",
+    "PG-204",
     "PG-205",
     "PG-206",
     "PG-207",
@@ -9440,7 +9438,7 @@
         "IFC-287"
       ],
       "group-3": ["PG-180", "IFC-302"],
-      "group-4": ["PG-187", "PG-188", "PG-189", "PG-190", "PG-191"],
+      "group-4": ["PG-187", "PG-188", "PG-189", "PG-191"],
       "group-5": ["IFC-310", "IFC-311"],
       "group-6": ["PG-196", "PG-197"],
       "group-7": ["PG-198", "PG-199"],

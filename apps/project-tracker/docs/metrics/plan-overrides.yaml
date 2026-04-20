@@ -3392,6 +3392,42 @@ PG-183:
     - .specify/sprints/sprint-17/attestations/PG-183/attestation.json
   notes: 'Module Settings - Accounts. 8 bento sections (hierarchy, industry taxonomy, custom fields, duplicate detection, required fields, automation, AI & intelligence, tags). Bento grid layout mirroring contact-settings. Downstream: PG-184.'
 
+# Tier A governance fields added for PG-152 and PG-192 (sprint-17 lint fix)
+
+PG-152:
+  tier: A
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - unit
+    - lighthouse
+  acceptance_owner: 'Frontend Dev'
+  debt_allowed: no
+  evidence_required:
+    - apps/web/src/app/agent-approvals/logs/page.tsx
+    - apps/web/src/components/ai-monitoring/AgentLogsViewer.tsx
+    - apps/web/src/components/ai-monitoring/__tests__/AgentLogsViewer.test.tsx
+    - .specify/sprints/sprint-8/attestations/PG-152/context_ack.json
+  notes: 'Agent Logs Viewer at /agent-approvals/logs. Sprint 8. Completed.'
+
+PG-192:
+  tier: A
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - unit
+    - lighthouse
+  acceptance_owner: 'Frontend Dev'
+  debt_allowed: no
+  evidence_required:
+    - apps/web/src/app/agent-approvals/logs/page.tsx
+    - .specify/sprints/sprint-16/specifications/PG-192-spec.md
+    - .specify/sprints/sprint-16/planning/PG-192-plan.md
+    - .specify/sprints/sprint-16/attestations/PG-192/context_ack.json
+  notes: 'Fix missing /agent-approvals/logs page.tsx (PG-152 regression fix). Sprint 16. Completed.'
+
 # -----------------------------------------------------------------------------
 # METADATA
 # -----------------------------------------------------------------------------
@@ -3399,11 +3435,11 @@ PG-183:
 _meta:
   description: 'Plan overrides for Sprint plan validation and governance'
   created: '2025-12-17'
-  updated: '2026-03-09'
+  updated: '2026-04-19'
   author: 'Plan Linter System'
   version: '2.0.0'
   sprint_scope: 'all'
-  total_overrides: 160
+  total_overrides: 162
   cycles_fixed: 2
   cross_sprint_fixes: 25
-  tier_a_definitions: 132
+  tier_a_definitions: 134
