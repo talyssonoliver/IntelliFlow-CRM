@@ -7,13 +7,32 @@ RUN corepack enable && corepack prepare pnpm@10.33.0 --activate
 
 WORKDIR /app
 
-# Copy package files
+# Copy root manifests
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY apps/*/package.json ./apps/
-COPY packages/*/package.json ./packages/
+# Copy each workspace package.json explicitly (glob flattens to one file — don't use)
+COPY apps/ai-worker/package.json       ./apps/ai-worker/
+COPY apps/api/package.json             ./apps/api/
+COPY apps/project-tracker/package.json ./apps/project-tracker/
+COPY apps/web/package.json             ./apps/web/
+COPY apps/workers/package.json         ./apps/workers/
+COPY packages/adapters/package.json        ./packages/adapters/
+COPY packages/ai/package.json              ./packages/ai/
+COPY packages/api-client/package.json      ./packages/api-client/
+COPY packages/application/package.json    ./packages/application/
+COPY packages/db/package.json              ./packages/db/
+COPY packages/domain/package.json          ./packages/domain/
+COPY packages/observability/package.json   ./packages/observability/
+COPY packages/platform/package.json        ./packages/platform/
+COPY packages/sdk/package.json             ./packages/sdk/
+COPY packages/search/package.json          ./packages/search/
+COPY packages/test-fixtures/package.json   ./packages/test-fixtures/
+COPY packages/typescript-config/package.json ./packages/typescript-config/
+COPY packages/ui/package.json              ./packages/ui/
+COPY packages/validators/package.json      ./packages/validators/
+COPY packages/webhooks/package.json        ./packages/webhooks/
 
-# Install dependencies
-RUN pnpm install --frozen-lockfile --prefer-offline --ignore-scripts
+# Install all dependencies (populates virtual store)
+RUN pnpm install --frozen-lockfile --ignore-scripts
 
 # Stage 2: Builder
 FROM node:20-alpine AS builder
@@ -21,14 +40,14 @@ RUN corepack enable && corepack prepare pnpm@10.33.0 --activate
 
 WORKDIR /app
 
-# Copy virtual store from deps stage (all packages already downloaded)
+# Copy full virtual store from deps (all tarballs cached, no re-download)
 COPY --from=deps /app/node_modules ./node_modules
 
-# Copy source code (node_modules excluded via .dockerignore)
+# Copy full source tree (.dockerignore excludes node_modules, .next, dist, etc.)
 COPY . .
 
-# Re-link workspace packages using cached virtual store (no re-download)
-RUN pnpm install --frozen-lockfile --prefer-offline --ignore-scripts
+# Re-link workspace symlinks against the copied virtual store
+RUN pnpm install --frozen-lockfile --offline --ignore-scripts
 
 # Generate Prisma client
 RUN pnpm --filter db db:generate
