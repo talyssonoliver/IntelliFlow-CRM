@@ -6,7 +6,7 @@
   "owner": "Scrum Master + PM",
   "dependencies": {
     "required": [],
-    "verified_at": "2026-04-19T21:18:02.528Z",
+    "verified_at": "2026-04-20T22:01:19.341Z",
     "all_satisfied": true
   },
   "status": "DONE",
@@ -37,8 +37,11 @@
       "artifacts/misc/templates/*.md",
       "artifacts/reports/retro-action-items.md"
     ],
-    "created": ["docs/planning/ceremony-calendar.ics"],
-    "missing": ["artifacts/reports/retro-action-items.md"]
+    "created": [
+      "docs/planning/ceremony-calendar.ics",
+      "artifacts/reports/retro-action-items.md"
+    ],
+    "missing": []
   },
   "validations": [
     {

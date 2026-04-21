@@ -9,11 +9,17 @@
   "phase": "",
   "stream": null,
   "dependencies": {
-    "required": ["PG-178", "PG-183"],
+    "required": [
+      "PG-178",
+      "PG-183"
+    ],
     "all_satisfied": true,
-    "verified_at": "2026-04-19T21:18:02.701Z"
+    "verified_at": "2026-04-20T22:01:19.520Z"
   },
-  "dependencies_resolved": ["PG-178", "PG-183"],
+  "dependencies_resolved": [
+    "PG-178",
+    "PG-183"
+  ],
   "started_at": null,
   "completed_at": null,
   "execution": {
@@ -28,7 +34,9 @@
       "packages/validators/src/account-tiers.ts",
       ".specify/sprints/sprint-18/attestations/PG-196/context_ack.json"
     ],
-    "created": ["apps/web/src/app/accounts/(list)/account-tiers/page.tsx"],
+    "created": [
+      "apps/web/src/app/accounts/(list)/account-tiers/page.tsx"
+    ],
     "missing": [
       "apps/web/src/app/accounts/(list)/account-tiers/AccountTiersContent.tsx",
       "apps/api/src/modules/account/account-tiers.router.ts",

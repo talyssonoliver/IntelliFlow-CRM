@@ -2,9 +2,12 @@
   "task_id": "PM-OPS-001",
   "status": "DONE",
   "dependencies": {
-    "required": ["AUTOMATION-001", "ENV-005-AI"],
+    "required": [
+      "AUTOMATION-001",
+      "ENV-005-AI"
+    ],
     "all_satisfied": true,
-    "verified_at": "2026-04-19T21:18:02.510Z"
+    "verified_at": "2026-04-20T22:01:19.324Z"
   },
   "validations": [
     {
@@ -25,5 +28,8 @@
   "started_at": "2026-04-13T00:27:36.753Z",
   "actual_duration_minutes": 15,
   "description": "Project Operating Model & Delivery Playbook (cadence, WIP, ticket sizing, ABC)",
-  "dependencies_resolved": ["AUTOMATION-001", "ENV-005-AI"]
+  "dependencies_resolved": [
+    "AUTOMATION-001",
+    "ENV-005-AI"
+  ]
 }

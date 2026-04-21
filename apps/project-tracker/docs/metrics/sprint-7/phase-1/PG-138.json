@@ -32,9 +32,11 @@
   ],
   "started_at": "2026-02-13T00:00:00Z",
   "dependencies": {
-    "required": ["IFC-136"],
+    "required": [
+      "IFC-136"
+    ],
     "all_satisfied": true,
-    "verified_at": "2026-04-19T21:18:02.771Z"
+    "verified_at": "2026-04-20T22:01:19.600Z"
   },
   "artifacts": {
     "created": [
@@ -68,7 +70,9 @@
       "met": false
     }
   },
-  "dependencies_resolved": ["IFC-136"],
+  "dependencies_resolved": [
+    "IFC-136"
+  ],
   "completed_at": "2026-02-13T22:23:59.971Z",
   "actual_duration_minutes": 15,
   "validations": [

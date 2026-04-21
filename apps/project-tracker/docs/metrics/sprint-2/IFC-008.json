@@ -5,8 +5,10 @@
   "description": "PHASE-003: Security Assessment - OWASP + ISO 42001 Prep",
   "owner": "Security Eng + CTO (STOA-Security)",
   "dependencies": {
-    "required": ["IFC-001"],
-    "verified_at": "2026-04-19T21:18:02.533Z",
+    "required": [
+      "IFC-001"
+    ],
+    "verified_at": "2026-04-20T22:01:19.345Z",
     "all_satisfied": true,
     "notes": "IFC-001 Technical Architecture Spike completed"
   },
@@ -83,7 +85,9 @@
   },
   "stoa_verdicts": {
     "lead": "Security",
-    "supporting": ["Foundation"],
+    "supporting": [
+      "Foundation"
+    ],
     "security_verdict": "PASS",
     "foundation_verdict": "PASS",
     "consensus": "PASS"
@@ -100,5 +104,7 @@
   "notes": "Security assessment completed with OWASP checklist review and AI governance considerations documented. Zero critical vulnerabilities found in code review. Compliance report covers OWASP Top 10 mitigation strategies and ISO 42001 AI governance preparation roadmap.",
   "completed_at": "2025-12-21T12:00:00Z",
   "started_at": "2025-12-21T08:00:00Z",
-  "dependencies_resolved": ["IFC-001"]
+  "dependencies_resolved": [
+    "IFC-001"
+  ]
 }

@@ -9,11 +9,15 @@
   "stream": null,
   "status": "DONE",
   "dependencies": {
-    "required": ["PG-007"],
+    "required": [
+      "PG-007"
+    ],
     "all_satisfied": true,
-    "verified_at": "2026-04-19T21:18:02.633Z"
+    "verified_at": "2026-04-20T22:01:19.445Z"
   },
-  "dependencies_resolved": ["PG-007"],
+  "dependencies_resolved": [
+    "PG-007"
+  ],
   "started_at": "2026-03-01T18:56:00Z",
   "completed_at": "2026-03-01T20:52:00Z",
   "target_duration_minutes": 120,

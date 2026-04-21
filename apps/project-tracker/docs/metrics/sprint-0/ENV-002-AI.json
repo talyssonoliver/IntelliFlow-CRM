@@ -2,9 +2,11 @@
   "task_id": "ENV-002-AI",
   "status": "DONE",
   "dependencies": {
-    "required": ["ENV-001-AI"],
+    "required": [
+      "ENV-001-AI"
+    ],
     "all_satisfied": true,
-    "verified_at": "2026-04-19T21:18:02.495Z"
+    "verified_at": "2026-04-20T22:01:19.306Z"
   },
   "validations": [
     {
@@ -25,5 +27,7 @@
   "started_at": "2026-04-13T00:27:36.726Z",
   "actual_duration_minutes": 15,
   "description": "Automated Development Tools Configuration",
-  "dependencies_resolved": ["ENV-001-AI"]
+  "dependencies_resolved": [
+    "ENV-001-AI"
+  ]
 }

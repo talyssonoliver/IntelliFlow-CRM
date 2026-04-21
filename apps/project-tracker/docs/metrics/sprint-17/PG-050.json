@@ -10,8 +10,10 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-04-19T21:18:02.663Z",
-    "required": ["IFC-058"]
+    "verified_at": "2026-04-20T22:01:19.476Z",
+    "required": [
+      "IFC-058"
+    ]
   },
   "started_at": "2026-03-08T17:17:11Z",
   "completed_at": "2026-03-10T20:54:00Z",
@@ -109,6 +111,8 @@
   "current_phase": "DONE",
   "updated_at": "2026-03-10T20:54:00Z",
   "attempt": 1,
-  "dependencies_resolved": ["IFC-058"],
+  "dependencies_resolved": [
+    "IFC-058"
+  ],
   "actual_duration_minutes": 22
 }

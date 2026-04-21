@@ -11,7 +11,7 @@
   "dependencies": {
     "required": [],
     "all_satisfied": true,
-    "verified_at": "2026-04-19T21:18:02.722Z"
+    "verified_at": "2026-04-20T22:01:19.547Z"
   },
   "dependencies_resolved": [],
   "started_at": null,
@@ -35,7 +35,9 @@
       "apps/web/src/app/leads/[id]/page.tsx",
       ".specify/sprints/sprint-20/attestations/IFC-229/context_ack.json"
     ],
-    "created": ["apps/web/src/app/leads/[id]/page.tsx"],
+    "created": [
+      "apps/web/src/app/leads/[id]/page.tsx"
+    ],
     "missing": [
       ".specify/sprints/sprint-20/attestations/IFC-229/context_ack.json"
     ]

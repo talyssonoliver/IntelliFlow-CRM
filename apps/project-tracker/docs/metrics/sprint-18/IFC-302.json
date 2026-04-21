@@ -9,9 +9,11 @@
   "phase": "",
   "stream": null,
   "dependencies": {
-    "required": ["IFC-299"],
+    "required": [
+      "IFC-299"
+    ],
     "all_satisfied": true,
-    "verified_at": "2026-04-19T21:18:02.697Z"
+    "verified_at": "2026-04-20T22:01:19.515Z"
   },
   "started_at": null,
   "completed_at": null,
@@ -20,8 +22,12 @@
     "last_error": null
   },
   "artifacts": {
-    "expected": ["apps/web/src/app/help-center/[article]/page.tsx"],
-    "created": ["apps/web/src/app/help-center/[article]/page.tsx"],
+    "expected": [
+      "apps/web/src/app/help-center/[article]/page.tsx"
+    ],
+    "created": [
+      "apps/web/src/app/help-center/[article]/page.tsx"
+    ],
     "missing": []
   },
   "validations": [],
@@ -35,5 +41,7 @@
     }
   ],
   "notes": "Replace static DEFAULT_HELP_ARTICLES imports in [article]/page.tsx with tRPC queries (helpArticle.getBySlug, helpArticle.getByCategory, helpArticle.getRelated). Same UI, DB data source. Remove static data dependency.",
-  "dependencies_resolved": ["IFC-299"]
+  "dependencies_resolved": [
+    "IFC-299"
+  ]
 }

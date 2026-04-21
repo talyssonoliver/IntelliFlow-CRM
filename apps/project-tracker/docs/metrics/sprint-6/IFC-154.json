@@ -5,8 +5,10 @@
   "description": "OCR + text extraction worker for scanned PDFs/images; normalized text artifacts stored for search and RAG",
   "owner": "AI/ML Eng",
   "dependencies": {
-    "required": ["IFC-153"],
-    "verified_at": "2026-04-19T21:18:02.580Z",
+    "required": [
+      "IFC-153"
+    ],
+    "verified_at": "2026-04-20T22:01:19.394Z",
     "all_satisfied": true
   },
   "status": "DONE",
@@ -18,8 +20,12 @@
     }
   ],
   "artifacts": {
-    "expected": ["apps/ai-worker/src/workers/ocr-worker.ts"],
-    "created": ["apps/ai-worker/src/workers/ocr-worker.ts"],
+    "expected": [
+      "apps/ai-worker/src/workers/ocr-worker.ts"
+    ],
+    "created": [
+      "apps/ai-worker/src/workers/ocr-worker.ts"
+    ],
     "missing": []
   },
   "validations": [
@@ -51,5 +57,7 @@
   "started_at": "2025-12-31T06:00:00Z",
   "completed_at": "2025-12-31T07:00:00Z",
   "actual_duration_minutes": 60,
-  "dependencies_resolved": ["IFC-153"]
+  "dependencies_resolved": [
+    "IFC-153"
+  ]
 }

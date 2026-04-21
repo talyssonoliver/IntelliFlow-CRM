@@ -5,8 +5,12 @@
   "description": "Active Agents Dashboard at /agent-approvals/agents - Agent status monitoring active sessions task assignments health indicators",
   "owner": "Frontend Dev (STOA-Intelligence)",
   "dependencies": {
-    "required": ["IFC-021", "IFC-139", "IFC-197"],
-    "verified_at": "2026-04-19T21:18:02.782Z",
+    "required": [
+      "IFC-021",
+      "IFC-139",
+      "IFC-197"
+    ],
+    "verified_at": "2026-04-20T22:01:19.612Z",
     "all_satisfied": true
   },
   "status": "DONE",
@@ -111,5 +115,9 @@
   },
   "blockers": [],
   "notes": "Active Agents Dashboard implemented with TDD. 6 files: page shell with auth guard, main dashboard with StatCard+AgentCard components, 43 tests passing (statements 98.75%, branches 88.7%, functions/lines 100%), tRPC polling hooks with 30s refetch, utility functions, TypeScript types. Prerequisites IFC-021/IFC-139/IFC-197 all verified.",
-  "dependencies_resolved": ["IFC-021", "IFC-139", "IFC-197"]
+  "dependencies_resolved": [
+    "IFC-021",
+    "IFC-139",
+    "IFC-197"
+  ]
 }

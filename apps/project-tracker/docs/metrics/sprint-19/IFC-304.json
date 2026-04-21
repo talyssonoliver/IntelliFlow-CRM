@@ -9,9 +9,12 @@
   "phase": "",
   "stream": null,
   "dependencies": {
-    "required": ["IFC-303", "PG-180"],
-    "all_satisfied": false,
-    "verified_at": "2026-04-19T21:18:02.715Z"
+    "required": [
+      "IFC-303",
+      "PG-180"
+    ],
+    "all_satisfied": true,
+    "verified_at": "2026-04-20T22:01:19.537Z"
   },
   "started_at": null,
   "completed_at": null,
@@ -24,8 +27,12 @@
       "apps/web/src/components/support/article-analytics.tsx",
       "apps/api/src/modules/help-article/help-article.router.ts"
     ],
-    "created": ["apps/api/src/modules/help-article/help-article.router.ts"],
-    "missing": ["apps/web/src/components/support/article-analytics.tsx"]
+    "created": [
+      "apps/api/src/modules/help-article/help-article.router.ts"
+    ],
+    "missing": [
+      "apps/web/src/components/support/article-analytics.tsx"
+    ]
   },
   "validations": [],
   "kpis": {},
@@ -37,5 +44,9 @@
       "note": "Task created — Article analytics with views, feedback stats, search insights"
     }
   ],
-  "notes": "Analytics section in help article admin showing article views, feedback stats (helpful %, not helpful %), most/least helpful articles, search terms with no results. Uses tRPC helpArticle.getAnalytics."
+  "notes": "Analytics section in help article admin showing article views, feedback stats (helpful %, not helpful %), most/least helpful articles, search terms with no results. Uses tRPC helpArticle.getAnalytics.",
+  "dependencies_resolved": [
+    "IFC-303",
+    "PG-180"
+  ]
 }

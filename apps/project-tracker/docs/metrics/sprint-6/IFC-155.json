@@ -5,8 +5,12 @@
   "description": "Permissioned indexing for case documents and notes: full-text + embeddings with tenant/case ACL filters",
   "owner": "Backend Dev + AI Specialist (STOA-Intelligence)",
   "dependencies": {
-    "required": ["IFC-154", "IFC-127", "ENV-004-AI"],
-    "verified_at": "2026-04-19T21:18:02.581Z",
+    "required": [
+      "IFC-154",
+      "IFC-127",
+      "ENV-004-AI"
+    ],
+    "verified_at": "2026-04-20T22:01:19.395Z",
     "all_satisfied": true
   },
   "status": "DONE",
@@ -151,6 +155,10 @@
   "started_at": "2026-01-31T00:05:00.000Z",
   "completed_at": "2026-02-06T23:35:00.000Z",
   "actual_duration_minutes": 10,
-  "dependencies_resolved": ["IFC-154", "IFC-127", "ENV-004-AI"],
+  "dependencies_resolved": [
+    "IFC-154",
+    "IFC-127",
+    "ENV-004-AI"
+  ],
   "notes": "IFC-155 exec session (2026-02-06): Fixed 3 issues from spec review. (1) Removed SQL injection risk - deleted unused _caseFilter string interpolation in retrieval-service.ts:696-697. (2) Added text truncation to buildDocumentText in document-indexer.ts (8000 char limit). (3) Added 6 new tests for EmbeddingPurgeService covering verifyPurge method and legal hold query failure path, improving coverage from 65% to 95%. Coverage metrics: ai-worker overall 93.40% statements (was 78.40%), 94.14% lines (was 78.59%), 84.01% branches (was 65.41%), 92.52% functions (was 82.47%). All 1349 tests pass, typecheck clean, lint clean."
 }

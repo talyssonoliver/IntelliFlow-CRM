@@ -5,8 +5,12 @@
   "description": "Blog Post",
   "owner": "Frontend Dev",
   "dependencies": {
-    "required": ["PG-009", "GTM-002", "BRAND-001"],
-    "verified_at": "2026-04-19T21:18:02.751Z",
+    "required": [
+      "PG-009",
+      "GTM-002",
+      "BRAND-001"
+    ],
+    "verified_at": "2026-04-20T22:01:19.579Z",
     "all_satisfied": true
   },
   "status": "DONE",
@@ -18,8 +22,12 @@
     }
   ],
   "artifacts": {
-    "expected": ["apps/web/src/app/(public)/blog/[slug]/page.tsx"],
-    "created": ["apps/web/src/app/(public)/blog/[slug]/page.tsx"],
+    "expected": [
+      "apps/web/src/app/(public)/blog/[slug]/page.tsx"
+    ],
+    "created": [
+      "apps/web/src/app/(public)/blog/[slug]/page.tsx"
+    ],
     "missing": []
   },
   "validations": [
@@ -45,5 +53,9 @@
   "started_at": "2025-12-31T07:15:00Z",
   "completed_at": "2025-12-31T08:00:00Z",
   "actual_duration_minutes": 45,
-  "dependencies_resolved": ["PG-009", "GTM-002", "BRAND-001"]
+  "dependencies_resolved": [
+    "PG-009",
+    "GTM-002",
+    "BRAND-001"
+  ]
 }

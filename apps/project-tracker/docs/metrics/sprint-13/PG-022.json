@@ -9,9 +9,12 @@
   "started_at": "2026-03-08T21:44:04.677Z",
   "completed_at": "2026-03-08T21:59:04.677Z",
   "dependencies": {
-    "required": ["PG-021", "PG-015"],
+    "required": [
+      "PG-021",
+      "PG-015"
+    ],
     "all_satisfied": true,
-    "verified_at": "2026-04-19T21:18:02.818Z"
+    "verified_at": "2026-04-20T22:01:19.651Z"
   },
   "artifacts": {
     "expected": [],
@@ -28,5 +31,8 @@
   ],
   "notes": "Evidence stub. Task marked Completed in Sprint_plan.csv. Full evidence may be recorded in sprint attestations or audit reports.",
   "actual_duration_minutes": 15,
-  "dependencies_resolved": ["PG-021", "PG-015"]
+  "dependencies_resolved": [
+    "PG-021",
+    "PG-015"
+  ]
 }

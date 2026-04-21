@@ -8,8 +8,10 @@
   "phase": "",
   "stream": null,
   "dependencies": {
-    "required": ["PG-129"],
-    "verified_at": "2026-04-19T21:18:02.628Z",
+    "required": [
+      "PG-129"
+    ],
+    "verified_at": "2026-04-20T22:01:19.439Z",
     "all_satisfied": true,
     "notes": "PG-129 verified complete — useEntityPin hook, PinnedItemsSheet, AuthenticatedHomePage all exist."
   },
@@ -50,7 +52,9 @@
     "completed_at": "2026-02-28T00:55:00Z",
     "duration_minutes": 22,
     "executor": "Claude Code /exec",
-    "agents": ["stoa-foundation"],
+    "agents": [
+      "stoa-foundation"
+    ],
     "retry_count": 0,
     "last_error": null
   },
@@ -115,5 +119,7 @@
   },
   "blockers": [],
   "notes": "PG-157 completed. PinButton component created and integrated into 5 entity detail pages (deals, contacts, leads, tickets, accounts). Uses existing useEntityPin hook. WCAG AA compliant (aria-pressed, aria-label, aria-hidden, 40px touch target). Filled amber icon when pinned, outline muted when unpinned. Tooltip on hover. TicketDetail and AccountDetail regression tests needed PinButton mock added. 100% scoped coverage.",
-  "dependencies_resolved": ["PG-129"]
+  "dependencies_resolved": [
+    "PG-129"
+  ]
 }

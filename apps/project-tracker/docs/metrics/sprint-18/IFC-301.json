@@ -9,9 +9,11 @@
   "phase": "",
   "stream": null,
   "dependencies": {
-    "required": ["PG-180"],
-    "all_satisfied": false,
-    "verified_at": "2026-04-19T21:18:02.695Z"
+    "required": [
+      "PG-180"
+    ],
+    "all_satisfied": true,
+    "verified_at": "2026-04-20T22:01:19.513Z"
   },
   "started_at": null,
   "completed_at": null,
@@ -40,5 +42,8 @@
       "note": "Task created — Tiptap rich text editor as reusable @intelliflow/ui component"
     }
   ],
-  "notes": "Tiptap editor supporting headings, bold, italic, lists, links, images, code blocks. Exports structured sections (heading + content pairs) for HelpArticle compatibility."
+  "notes": "Tiptap editor supporting headings, bold, italic, lists, links, images, code blocks. Exports structured sections (heading + content pairs) for HelpArticle compatibility.",
+  "dependencies_resolved": [
+    "PG-180"
+  ]
 }

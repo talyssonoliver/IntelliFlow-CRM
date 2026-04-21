@@ -14,14 +14,17 @@
     "failed": 0
   },
   "completed_tasks": [],
-  "notes": "0/22 tasks DONE (0%). Last synced: 2026-04-19T21:18:02.746Z",
+  "notes": "0/22 tasks DONE (0%). Last synced: 2026-04-20T22:01:19.574Z",
   "schedule": {
     "sprint_start_date": null,
     "sprint_end_date": null,
     "working_hours_per_day": 8,
     "working_days_per_week": 5,
     "critical_path": {
-      "task_ids": ["PG-087", "IFC-262"],
+      "task_ids": [
+        "PG-087",
+        "IFC-262"
+      ],
       "total_duration_minutes": 715,
       "completion_percentage": 0,
       "bottleneck_task_id": "PG-087"
@@ -31,6 +34,6 @@
       "spi": 0,
       "status": "critical"
     },
-    "calculated_at": "2026-04-19T21:18:02.860Z"
+    "calculated_at": "2026-04-20T22:01:19.689Z"
   }
 }

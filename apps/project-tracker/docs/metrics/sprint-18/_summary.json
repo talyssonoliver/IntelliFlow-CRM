@@ -7,10 +7,10 @@
   "phases": [],
   "task_summary": {
     "total": 60,
-    "done": 4,
-    "in_progress": 1,
+    "done": 8,
+    "in_progress": 0,
     "blocked": 0,
-    "not_started": 52,
+    "not_started": 50,
     "failed": 0
   },
   "completed_tasks": [
@@ -20,38 +20,61 @@
       "duration_minutes": 15
     },
     {
+      "task_id": "PG-189",
+      "completed_at": "2026-04-19T02:02:00Z",
+      "duration_minutes": 15
+    },
+    {
       "task_id": "PG-190",
       "completed_at": "2026-04-19T02:05:00.000Z",
       "duration_minutes": 15
     },
     {
+      "task_id": "PG-180",
+      "completed_at": "2026-04-19T22:50:00Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "PG-059",
+      "completed_at": "2026-04-19T23:45:00Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "PG-187",
+      "completed_at": "2026-04-19T23:45:00.000Z",
+      "duration_minutes": 15
+    },
+    {
       "task_id": "IFC-078",
-      "completed_at": "2026-04-19T21:18:02.714Z",
+      "completed_at": "2026-04-20T22:01:19.535Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-132",
-      "completed_at": "2026-04-19T21:18:02.714Z",
+      "completed_at": "2026-04-20T22:01:19.535Z",
       "duration_minutes": 15
     }
   ],
-  "notes": "4/60 tasks DONE (7%). Last synced: 2026-04-19T21:18:02.714Z",
+  "notes": "8/60 tasks DONE (13%). Last synced: 2026-04-20T22:01:19.535Z",
   "schedule": {
     "sprint_start_date": null,
     "sprint_end_date": null,
     "working_hours_per_day": 8,
     "working_days_per_week": 5,
     "critical_path": {
-      "task_ids": ["PG-063", "IFC-310"],
+      "task_ids": [
+        "PG-063",
+        "IFC-310"
+      ],
       "total_duration_minutes": 915,
-      "completion_percentage": 0,
+      "completion_percentage": 39,
       "bottleneck_task_id": "PG-063"
     },
     "schedule_variance": {
-      "sv_minutes": -14387,
-      "spi": 0.11,
+      "sv_minutes": -13502,
+      "spi": 0.16,
       "status": "critical"
     },
-    "calculated_at": "2026-04-19T21:18:02.853Z"
+    "calculated_at": "2026-04-20T22:01:19.686Z"
   }
 }

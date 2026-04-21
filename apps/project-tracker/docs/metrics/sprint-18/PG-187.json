@@ -9,9 +9,11 @@
   "phase": "",
   "stream": null,
   "dependencies": {
-    "required": ["PG-178"],
+    "required": [
+      "PG-178"
+    ],
     "all_satisfied": true,
-    "verified_at": "2026-04-19T12:00:00.000Z"
+    "verified_at": "2026-04-20T22:01:19.516Z"
   },
   "started_at": "2026-04-19T12:00:00.000Z",
   "completed_at": "2026-04-19T23:45:00.000Z",
@@ -32,46 +34,14 @@
       "packages/validators/src/__tests__/report-settings.test.ts"
     ],
     "created": [
-      {
-        "path": "apps/web/src/app/analytics/(list)/report-settings/page.tsx",
-        "sha256": "21ca1067d957cdf88c13d0ab493f0451cf74df7f6b7f456a89f0292e8a4f7866",
-        "created_at": "2026-04-19T23:30:00.000Z"
-      },
-      {
-        "path": "apps/web/src/app/analytics/(list)/report-settings/loading.tsx",
-        "sha256": "1eacd73cf37ef4043d846e8458503c099c6497857a2ab9a4f033469f1946e3e6",
-        "created_at": "2026-04-19T23:30:00.000Z"
-      },
-      {
-        "path": "apps/web/src/app/analytics/(list)/report-settings/ReportSettingsContent.tsx",
-        "sha256": "6e9d91ae078f98ce4e0dc8555043d01dc80ee5286cfc92ffb8161a79e383f4e4",
-        "created_at": "2026-04-19T23:32:00.000Z"
-      },
-      {
-        "path": "apps/web/src/app/analytics/(list)/report-settings/components/DefaultRangeSection.tsx",
-        "sha256": "0705543b6be8ca5b4581af6f6a435097028a00c961ab75c090025f234297e261",
-        "created_at": "2026-04-19T23:29:00.000Z"
-      },
-      {
-        "path": "apps/web/src/app/analytics/(list)/report-settings/components/CurrencySection.tsx",
-        "sha256": "3b26cd8e956ce0babda2ec3c7976c3ed9bd492ce585883cc5635d815811adc96",
-        "created_at": "2026-04-19T23:29:00.000Z"
-      },
-      {
-        "path": "apps/web/src/app/analytics/(list)/report-settings/components/ScheduledDeliverySection.tsx",
-        "sha256": "732eade2c0465e1323bf22142342750e10eaf0991f164cb752228fb6bb70452d",
-        "created_at": "2026-04-19T23:29:00.000Z"
-      },
-      {
-        "path": "apps/web/src/app/analytics/(list)/report-settings/components/currencies.ts",
-        "sha256": "509cb96b28036ebe3c1761350c0b6269436ac901eeabe5015ec3e87c0cc2c759",
-        "created_at": "2026-04-19T23:28:00.000Z"
-      },
-      {
-        "path": "packages/validators/src/__tests__/report-settings.test.ts",
-        "sha256": "b570629d14fcbc140347c2c124d176d1dc8b81729dcd07f26acd28d38a2b3b78",
-        "created_at": "2026-04-19T23:23:00.000Z"
-      }
+      "apps/web/src/app/analytics/(list)/report-settings/page.tsx",
+      "apps/web/src/app/analytics/(list)/report-settings/loading.tsx",
+      "apps/web/src/app/analytics/(list)/report-settings/ReportSettingsContent.tsx",
+      "apps/web/src/app/analytics/(list)/report-settings/components/DefaultRangeSection.tsx",
+      "apps/web/src/app/analytics/(list)/report-settings/components/CurrencySection.tsx",
+      "apps/web/src/app/analytics/(list)/report-settings/components/ScheduledDeliverySection.tsx",
+      "apps/web/src/app/analytics/(list)/report-settings/components/currencies.ts",
+      "packages/validators/src/__tests__/report-settings.test.ts"
     ],
     "missing": []
   },
@@ -140,19 +110,28 @@
     }
   ],
   "status_history": [
-    { "status": "Backlog", "at": "2026-04-19T00:00:00.000Z" },
+    {
+      "status": "Backlog",
+      "at": "2026-04-19T00:00:00.000Z"
+    },
     {
       "status": "Specifying",
       "at": "2026-04-19T11:00:00.000Z",
       "note": "Re-execution iteration 1: spec-session"
     },
-    { "status": "Spec Complete", "at": "2026-04-19T11:30:00.000Z" },
+    {
+      "status": "Spec Complete",
+      "at": "2026-04-19T11:30:00.000Z"
+    },
     {
       "status": "Planning",
       "at": "2026-04-19T11:45:00.000Z",
       "note": "Re-execution iteration 2: plan-session"
     },
-    { "status": "Plan Complete", "at": "2026-04-19T12:00:00.000Z" },
+    {
+      "status": "Plan Complete",
+      "at": "2026-04-19T12:00:00.000Z"
+    },
     {
       "status": "In Progress",
       "at": "2026-04-19T12:05:00.000Z",
@@ -163,5 +142,8 @@
       "at": "2026-04-19T23:45:00.000Z",
       "note": "All 4 validations passed; attestation written with verdict=COMPLETE"
     }
+  ],
+  "dependencies_resolved": [
+    "PG-178"
   ]
 }

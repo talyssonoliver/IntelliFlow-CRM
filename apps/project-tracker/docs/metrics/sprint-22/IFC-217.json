@@ -9,11 +9,17 @@
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
-    "required": ["IFC-144", "PG-141"],
+    "required": [
+      "IFC-144",
+      "PG-141"
+    ],
     "all_satisfied": true,
-    "verified_at": "2026-04-19T21:18:02.738Z"
+    "verified_at": "2026-04-20T22:01:19.564Z"
   },
-  "dependencies_resolved": ["IFC-144", "PG-141"],
+  "dependencies_resolved": [
+    "IFC-144",
+    "PG-141"
+  ],
   "started_at": null,
   "completed_at": null,
   "target_duration_minutes": 120,

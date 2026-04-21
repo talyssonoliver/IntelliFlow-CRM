@@ -10,8 +10,10 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-04-19T21:18:02.643Z",
-    "required": ["IFC-182"]
+    "verified_at": "2026-04-20T22:01:19.454Z",
+    "required": [
+      "IFC-182"
+    ]
   },
   "started_at": "2026-02-13T23:40:57+00:00",
   "completed_at": "2026-03-08T17:47:30.911Z",
@@ -50,6 +52,8 @@
   "current_phase": "ARCHITECT_SPEC",
   "updated_at": "2026-02-13T23:40:59+00:00",
   "attempt": 0,
-  "dependencies_resolved": ["IFC-182"],
+  "dependencies_resolved": [
+    "IFC-182"
+  ],
   "actual_duration_minutes": 15
 }

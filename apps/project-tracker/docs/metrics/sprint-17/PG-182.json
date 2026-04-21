@@ -9,9 +9,11 @@
   "phase": "",
   "stream": null,
   "dependencies": {
-    "required": ["PG-178"],
+    "required": [
+      "PG-178"
+    ],
     "all_satisfied": true,
-    "verified_at": "2026-04-19T21:18:02.668Z"
+    "verified_at": "2026-04-20T22:01:19.483Z"
   },
   "started_at": "2026-04-15T08:00:00Z",
   "completed_at": "2026-04-15T09:00:00Z",
@@ -108,5 +110,7 @@
     }
   ],
   "notes": "Contact settings page at /contacts/contact-settings with duplicate detection, required fields, tags config, and automation toggles. Uses in-module settings sidebar pattern (ContactSettingsSidebarNav). 7 files modified including contact-automation.ts, contact-settings.router.ts, validators. Module-settings playbook at docs/planning/module-settings-playbook.md codifies the hardening checklist for PG-184+.",
-  "dependencies_resolved": ["PG-178"]
+  "dependencies_resolved": [
+    "PG-178"
+  ]
 }

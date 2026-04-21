@@ -2,9 +2,11 @@
   "task_id": "BRAND-001",
   "status": "DONE",
   "dependencies": {
-    "required": ["DOC-001"],
+    "required": [
+      "DOC-001"
+    ],
     "all_satisfied": true,
-    "verified_at": "2026-04-19T21:18:02.508Z"
+    "verified_at": "2026-04-20T22:01:19.320Z"
   },
   "validations": [
     {
@@ -25,5 +27,7 @@
   "started_at": "2026-04-13T00:27:36.750Z",
   "actual_duration_minutes": 15,
   "description": "Visual Identity System (palette, typography, spacing, logo usage)",
-  "dependencies_resolved": ["DOC-001"]
+  "dependencies_resolved": [
+    "DOC-001"
+  ]
 }

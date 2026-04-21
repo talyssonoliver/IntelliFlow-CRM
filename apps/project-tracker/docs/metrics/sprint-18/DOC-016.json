@@ -9,9 +9,12 @@
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
-    "required": ["DOC-014", "DOC-015"],
+    "required": [
+      "DOC-014",
+      "DOC-015"
+    ],
     "all_satisfied": false,
-    "verified_at": "2026-04-19T21:18:02.679Z"
+    "verified_at": "2026-04-20T22:01:19.495Z"
   },
   "dependencies_resolved": [],
   "started_at": null,
@@ -48,7 +51,9 @@
       "docs/design/content-audit.md",
       ".specify/sprints/sprint-18/attestations/DOC-016/context_ack.json"
     ],
-    "created": ["docs/design/content-audit.md"],
+    "created": [
+      "docs/design/content-audit.md"
+    ],
     "missing": [
       "tools/scripts/docs-integrity-audit.ts",
       "tools/scripts/__tests__/docs-integrity-audit.test.ts",

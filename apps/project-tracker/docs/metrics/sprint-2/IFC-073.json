@@ -5,8 +5,10 @@
   "description": "PHASE-040: Privacy Impact Assessment",
   "owner": "DPO + Legal",
   "dependencies": {
-    "required": ["IFC-072"],
-    "verified_at": "2026-04-19T21:18:02.534Z",
+    "required": [
+      "IFC-072"
+    ],
+    "verified_at": "2026-04-20T22:01:19.347Z",
     "all_satisfied": true
   },
   "status": "DONE",
@@ -73,5 +75,7 @@
   "completed_at": "2025-12-27T11:33:39.467Z",
   "started_at": "2025-12-27T11:18:39.467Z",
   "actual_duration_minutes": 15,
-  "dependencies_resolved": ["IFC-072"]
+  "dependencies_resolved": [
+    "IFC-072"
+  ]
 }

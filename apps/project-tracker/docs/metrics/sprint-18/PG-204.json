@@ -9,11 +9,17 @@
   "phase": "",
   "stream": null,
   "dependencies": {
-    "required": ["PG-178", "PG-190"],
+    "required": [
+      "PG-178",
+      "PG-190"
+    ],
     "all_satisfied": true,
-    "verified_at": "2026-04-19T21:18:02.707Z"
+    "verified_at": "2026-04-20T22:01:19.526Z"
   },
-  "dependencies_resolved": ["PG-178", "PG-190"],
+  "dependencies_resolved": [
+    "PG-178",
+    "PG-190"
+  ],
   "started_at": null,
   "completed_at": null,
   "execution": {
@@ -28,8 +34,9 @@
       "packages/validators/src/case-types.ts",
       ".specify/sprints/sprint-18/attestations/PG-204/context_ack.json"
     ],
-    "created": ["apps/web/src/app/cases/case-types/page.tsx"],
+    "created": [],
     "missing": [
+      "apps/web/src/app/cases/case-types/page.tsx",
       "apps/web/src/app/cases/case-types/CaseTypesContent.tsx",
       "apps/api/src/modules/case/case-types.router.ts",
       "packages/validators/src/case-types.ts",

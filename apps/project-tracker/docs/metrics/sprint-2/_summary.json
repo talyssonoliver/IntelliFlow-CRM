@@ -109,7 +109,7 @@
       "duration_minutes": 15
     }
   ],
-  "notes": "12/12 tasks DONE (100%). Last synced: 2026-04-19T21:18:02.540Z",
+  "notes": "12/12 tasks DONE (100%). Last synced: 2026-04-20T22:01:19.356Z",
   "section": "Core Domain & Documentation",
   "dependencies": {
     "all_satisfied": true,
@@ -134,7 +134,13 @@
     "working_hours_per_day": 8,
     "working_days_per_week": 5,
     "critical_path": {
-      "task_ids": ["IFC-005", "IFC-008", "IFC-072", "IFC-073", "IFC-085"],
+      "task_ids": [
+        "IFC-005",
+        "IFC-008",
+        "IFC-072",
+        "IFC-073",
+        "IFC-085"
+      ],
       "total_duration_minutes": 1040,
       "completion_percentage": 100,
       "bottleneck_task_id": null
@@ -144,6 +150,6 @@
       "spi": 1,
       "status": "on_track"
     },
-    "calculated_at": "2026-04-19T21:18:02.843Z"
+    "calculated_at": "2026-04-20T22:01:19.678Z"
   }
 }

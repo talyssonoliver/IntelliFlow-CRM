@@ -10,8 +10,10 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-04-19T21:18:02.815Z",
-    "required": ["PG-016"]
+    "verified_at": "2026-04-20T22:01:19.648Z",
+    "required": [
+      "PG-016"
+    ]
   },
   "started_at": "2026-02-13T23:42:48+00:00",
   "completed_at": "2026-02-23T22:15:19.703Z",
@@ -51,5 +53,7 @@
   "updated_at": "2026-02-13T23:42:49+00:00",
   "attempt": 0,
   "actual_duration_minutes": 15,
-  "dependencies_resolved": ["PG-016"]
+  "dependencies_resolved": [
+    "PG-016"
+  ]
 }

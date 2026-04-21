@@ -5,8 +5,10 @@
   "description": "Utility scripts - task data cleanup, schema fixes, dev monitoring",
   "owner": "DevOps",
   "dependencies": {
-    "required": ["EXC-INIT-001"],
-    "verified_at": "2026-04-19T21:18:02.754Z",
+    "required": [
+      "EXC-INIT-001"
+    ],
+    "verified_at": "2026-04-20T22:01:19.582Z",
     "all_satisfied": true
   },
   "status": "DONE",
@@ -18,8 +20,12 @@
     }
   ],
   "artifacts": {
-    "expected": ["tools/scripts/cleanup-task-data.ts"],
-    "created": ["tools/scripts/cleanup-task-data.ts"],
+    "expected": [
+      "tools/scripts/cleanup-task-data.ts"
+    ],
+    "created": [
+      "tools/scripts/cleanup-task-data.ts"
+    ],
     "missing": []
   },
   "validations": [
@@ -50,5 +56,7 @@
   "started_at": "2025-12-31T11:00:00Z",
   "completed_at": "2025-12-31T12:00:00Z",
   "actual_duration_minutes": 60,
-  "dependencies_resolved": ["EXC-INIT-001"]
+  "dependencies_resolved": [
+    "EXC-INIT-001"
+  ]
 }

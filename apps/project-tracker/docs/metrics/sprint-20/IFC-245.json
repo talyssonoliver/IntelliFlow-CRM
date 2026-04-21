@@ -9,9 +9,11 @@
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
-    "required": ["IFC-069:FS"],
+    "required": [
+      "IFC-069:FS"
+    ],
     "all_satisfied": false,
-    "verified_at": "2026-04-19T21:18:02.725Z"
+    "verified_at": "2026-04-20T22:01:19.551Z"
   },
   "dependencies_resolved": [],
   "started_at": null,

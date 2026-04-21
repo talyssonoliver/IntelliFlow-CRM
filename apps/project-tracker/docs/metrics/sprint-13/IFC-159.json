@@ -9,9 +9,15 @@
   "started_at": "2026-03-08T21:44:04.681Z",
   "completed_at": "2026-03-08T21:59:04.681Z",
   "dependencies": {
-    "required": ["IFC-147", "IFC-153", "IFC-144", "IFC-149", "IFC-148"],
+    "required": [
+      "IFC-147",
+      "IFC-153",
+      "IFC-144",
+      "IFC-149",
+      "IFC-148"
+    ],
     "all_satisfied": true,
-    "verified_at": "2026-04-19T21:18:02.820Z"
+    "verified_at": "2026-04-20T22:01:19.654Z"
   },
   "artifacts": {
     "expected": [],

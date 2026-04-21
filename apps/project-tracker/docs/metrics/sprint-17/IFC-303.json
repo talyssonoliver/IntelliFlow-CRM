@@ -9,9 +9,11 @@
   "phase": "",
   "stream": null,
   "dependencies": {
-    "required": ["IFC-298"],
+    "required": [
+      "IFC-298"
+    ],
     "all_satisfied": true,
-    "verified_at": "2026-04-19T21:18:02.668Z"
+    "verified_at": "2026-04-20T22:01:19.482Z"
   },
   "started_at": "2026-03-18T00:00:00Z",
   "completed_at": "2026-03-19T00:28:57.314Z",
@@ -20,8 +22,12 @@
     "last_error": null
   },
   "artifacts": {
-    "expected": ["apps/api/src/modules/help-article/help-article.router.ts"],
-    "created": ["apps/api/src/modules/help-article/help-article.router.ts"],
+    "expected": [
+      "apps/api/src/modules/help-article/help-article.router.ts"
+    ],
+    "created": [
+      "apps/api/src/modules/help-article/help-article.router.ts"
+    ],
     "missing": []
   },
   "validations": [
@@ -104,6 +110,8 @@
     }
   ],
   "notes": "helpArticle.submitFeedback mutation (articleId, value: helpful|not_helpful, optional comment). Stores in ArticleFeedback table. Wires FeedbackWidget onFeedback callback to tRPC.",
-  "dependencies_resolved": ["IFC-298"],
+  "dependencies_resolved": [
+    "IFC-298"
+  ],
   "actual_duration_minutes": 15
 }

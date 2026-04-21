@@ -4,14 +4,16 @@
   "section": "Settings",
   "description": "Module Settings - Appointments (/calendar/calendar-settings)",
   "owner": "Frontend Dev (STOA-Foundation)",
-  "status": "IN_PROGRESS",
+  "status": "DONE",
   "sprint": "sprint-18",
   "phase": "",
   "stream": null,
   "dependencies": {
-    "required": ["PG-178"],
+    "required": [
+      "PG-178"
+    ],
     "all_satisfied": true,
-    "verified_at": "2026-04-19T21:18:02.698Z"
+    "verified_at": "2026-04-20T22:01:19.517Z"
   },
   "started_at": "2026-04-19T00:00:00Z",
   "completed_at": "2026-04-19T02:02:00Z",
@@ -22,8 +24,12 @@
     "execution_log": ".specify/sprints/sprint-18/execution/exec-20260419-012040/PG-189-delivery.md"
   },
   "artifacts": {
-    "expected": ["apps/web/src/app/calendar/calendar-settings/page.tsx"],
-    "created": ["apps/web/src/app/calendar/calendar-settings/page.tsx"],
+    "expected": [
+      "apps/web/src/app/calendar/calendar-settings/page.tsx"
+    ],
+    "created": [
+      "apps/web/src/app/calendar/calendar-settings/page.tsx"
+    ],
     "missing": []
   },
   "validations": [
@@ -131,5 +137,7 @@
     }
   ],
   "notes": "Appointment settings page at /calendar/calendar-settings. Replaced placeholder stub. 3 tabs: Duration Defaults, Buffer & Reminders, Calendar Integration. New AppointmentSettings Prisma model + tRPC appointmentSettings router. Branch coverage 70% in CalendarSettingsContent (null-guard React conditionals). Build failure pre-existing.",
-  "dependencies_resolved": ["PG-178"]
+  "dependencies_resolved": [
+    "PG-178"
+  ]
 }

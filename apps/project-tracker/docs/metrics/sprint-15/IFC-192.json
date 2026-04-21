@@ -10,8 +10,11 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-04-19T21:18:02.625Z",
-    "required": ["IFC-182", "IFC-184"]
+    "verified_at": "2026-04-20T22:01:19.437Z",
+    "required": [
+      "IFC-182",
+      "IFC-184"
+    ]
   },
   "started_at": "2026-02-13T23:25:43+00:00",
   "completed_at": "2026-02-28T00:14:42.992Z",
@@ -80,6 +83,9 @@
   "current_phase": "PLAN_COMPLETE",
   "updated_at": "2026-02-27T23:30:00Z",
   "attempt": 0,
-  "dependencies_resolved": ["IFC-182", "IFC-184"],
+  "dependencies_resolved": [
+    "IFC-182",
+    "IFC-184"
+  ],
   "actual_duration_minutes": 15
 }

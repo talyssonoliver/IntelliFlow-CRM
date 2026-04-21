@@ -30,7 +30,9 @@
       "name": "MVP Week 1 (Sequential)",
       "tasks": 1,
       "completed": 1,
-      "task_ids": ["IFC-016"],
+      "task_ids": [
+        "IFC-016"
+      ],
       "id": "phase-1-mvp-week-1-sequential",
       "status": "NOT_STARTED"
     },
@@ -39,7 +41,9 @@
       "name": "MVP Week 1 (Sequential)",
       "tasks": 1,
       "completed": 1,
-      "task_ids": ["IFC-018"],
+      "task_ids": [
+        "IFC-018"
+      ],
       "id": "phase-2-mvp-week-1-sequential",
       "status": "NOT_STARTED"
     }
@@ -52,7 +56,7 @@
     "not_started": 0,
     "failed": 0
   },
-  "notes": "21/21 tasks DONE (100%). Last synced: 2026-04-19T21:18:02.778Z",
+  "notes": "21/21 tasks DONE (100%). Last synced: 2026-04-20T22:01:19.608Z",
   "completed_tasks": [
     {
       "task_id": "IFC-126",
@@ -166,7 +170,13 @@
     "working_hours_per_day": 8,
     "working_days_per_week": 5,
     "critical_path": {
-      "task_ids": ["IFC-079", "IFC-080", "IFC-082", "IFC-126", "IFC-148"],
+      "task_ids": [
+        "IFC-079",
+        "IFC-080",
+        "IFC-082",
+        "IFC-126",
+        "IFC-148"
+      ],
       "total_duration_minutes": 813,
       "completion_percentage": 100,
       "bottleneck_task_id": null
@@ -176,6 +186,6 @@
       "spi": 1,
       "status": "on_track"
     },
-    "calculated_at": "2026-04-19T21:18:02.865Z"
+    "calculated_at": "2026-04-20T22:01:19.693Z"
   }
 }

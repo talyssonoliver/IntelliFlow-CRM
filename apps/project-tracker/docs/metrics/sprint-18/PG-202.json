@@ -9,11 +9,17 @@
   "phase": "",
   "stream": null,
   "dependencies": {
-    "required": ["PG-178", "PG-189"],
-    "all_satisfied": false,
-    "verified_at": "2026-04-19T21:18:02.705Z"
+    "required": [
+      "PG-178",
+      "PG-189"
+    ],
+    "all_satisfied": true,
+    "verified_at": "2026-04-20T22:01:19.524Z"
   },
-  "dependencies_resolved": [],
+  "dependencies_resolved": [
+    "PG-178",
+    "PG-189"
+  ],
   "started_at": null,
   "completed_at": null,
   "execution": {
@@ -28,7 +34,9 @@
       "packages/validators/src/availability.ts",
       ".specify/sprints/sprint-18/attestations/PG-202/context_ack.json"
     ],
-    "created": ["apps/web/src/app/calendar/availability/page.tsx"],
+    "created": [
+      "apps/web/src/app/calendar/availability/page.tsx"
+    ],
     "missing": [
       "apps/web/src/app/calendar/availability/AvailabilityContent.tsx",
       "apps/api/src/modules/calendar/availability.router.ts",

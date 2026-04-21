@@ -8,8 +8,10 @@
   "phase": "phase-1",
   "stream": null,
   "dependencies": {
-    "required": ["IFC-026"],
-    "verified_at": "2026-04-19T21:18:02.620Z",
+    "required": [
+      "IFC-026"
+    ],
+    "verified_at": "2026-04-20T22:01:19.431Z",
     "all_satisfied": true,
     "notes": "IFC-026 completed with status 'Completed'"
   },
@@ -335,7 +337,9 @@
     }
   ],
   "notes": "Task completed with CONDITIONAL GO. Investment decision: £2000 in tranches (£500/£750/£750). T1 conditions met - remediation plan accepted, NPV documented, data discrepancy corrected. T2/T3 conditions pending quality remediation.",
-  "dependencies_resolved": ["IFC-026"],
+  "dependencies_resolved": [
+    "IFC-026"
+  ],
   "spec_session_results": {
     "decision": "CONDITIONAL_GO",
     "consensus": "4/4 agents (100%)",

@@ -8,8 +8,10 @@
   "phase": "phase-1",
   "stream": null,
   "dependencies": {
-    "required": ["PG-032"],
-    "verified_at": "2026-04-19T21:18:02.623Z",
+    "required": [
+      "PG-032"
+    ],
+    "verified_at": "2026-04-20T22:01:19.435Z",
     "all_satisfied": true,
     "notes": "PG-032 verified complete — docs index page, search, navigation components all exist. Attestation checked."
   },
@@ -60,7 +62,9 @@
     "completed_at": "2026-02-25T21:31:45Z",
     "duration_minutes": 45,
     "executor": "Claude Code /exec",
-    "agents": ["stoa-foundation"],
+    "agents": [
+      "stoa-foundation"
+    ],
     "retry_count": 0,
     "last_error": null
   },
@@ -143,5 +147,7 @@
   },
   "blockers": [],
   "notes": "PG-035 completed. 8 files created, 10 modified (18 total). Changelog page at /docs/changelog with 7 version entries (v0.1.0-v0.7.0), 6 badge types (feature/fix/breaking/deprecation/security/performance), RSS 2.0 feed at /api/developer/changelog-rss with XML escaping and RFC 822 dates, breaking change callout, sidebar navigation entry. 100% scoped coverage. All 4 validations pass.",
-  "dependencies_resolved": ["PG-032"]
+  "dependencies_resolved": [
+    "PG-032"
+  ]
 }

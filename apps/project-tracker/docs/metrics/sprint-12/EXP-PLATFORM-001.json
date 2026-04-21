@@ -5,8 +5,10 @@
   "description": "Platform utilities package - feature flags, resilience patterns, job queues, workflow orchestration",
   "owner": "Platform Eng",
   "dependencies": {
-    "required": ["ENV-001-AI"],
-    "verified_at": "2026-04-19T21:18:02.753Z",
+    "required": [
+      "ENV-001-AI"
+    ],
+    "verified_at": "2026-04-20T22:01:19.582Z",
     "all_satisfied": true
   },
   "status": "DONE",
@@ -18,8 +20,12 @@
     }
   ],
   "artifacts": {
-    "expected": ["packages/platform/src/feature-flags/index.ts"],
-    "created": ["packages/platform/src/feature-flags/index.ts"],
+    "expected": [
+      "packages/platform/src/feature-flags/index.ts"
+    ],
+    "created": [
+      "packages/platform/src/feature-flags/index.ts"
+    ],
     "missing": []
   },
   "validations": [
@@ -52,5 +58,7 @@
   "started_at": "2025-12-31T10:00:00Z",
   "completed_at": "2025-12-31T12:00:00Z",
   "actual_duration_minutes": 120,
-  "dependencies_resolved": ["ENV-001-AI"]
+  "dependencies_resolved": [
+    "ENV-001-AI"
+  ]
 }
