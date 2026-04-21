@@ -159,6 +159,11 @@ export const mockServices = {
   aiMonitoringService: mockDeep<any>(),
   // IFC-196: homeCache undefined so router tests fall back to direct compute.
   homeCache: undefined as any,
+  // IFC-310: Duplicate-detection runtime services — leave undefined so router
+  // tests skip the detection branch; tests that exercise it should override via
+  // createTestContext({ services: { contactDuplicateDetection: ... } }).
+  contactDuplicateDetection: undefined as any,
+  accountDuplicateDetection: undefined as any,
 };
 
 /**
@@ -453,6 +458,13 @@ export const mockAccount = {
   employees: 50,
   ownerId: TEST_UUIDS.user1,
   parentAccountId: null,
+  // IFC-312: AI provenance scalars (nullable on legacy rows)
+  score: null,
+  scoreProvenance: null,
+  scoredAt: null,
+  scoreModelVersion: null,
+  industryInferredAt: null,
+  industryModelVersion: null,
   createdAt: new Date('2024-01-01'),
   updatedAt: new Date('2024-01-01'),
 };

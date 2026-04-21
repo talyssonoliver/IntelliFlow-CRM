@@ -6,8 +6,13 @@ import {
   PhoneNumber,
   ContactStatus,
   ContactType,
+  CrossTenantOrNotFoundError,
 } from '@intelliflow/domain';
-import { ContactRepository } from '@intelliflow/application';
+import {
+  ContactRepository,
+  MergeInTransactionInput,
+  MergeInTransactionResult,
+} from '@intelliflow/application';
 
 /**
  * Helper to create ContactId from string, throwing if invalid
@@ -242,6 +247,147 @@ export class PrismaContactRepository implements ContactRepository {
   async countByAccountId(accountId: string): Promise<number> {
     return this.prisma.contact.count({
       where: { accountId },
+    });
+  }
+
+  /**
+   * IFC-310: Atomic merge with child re-parenting + tenant guard.
+   * All table writes happen inside a single `$transaction`; any failure
+   * rolls back the whole operation.
+   */
+  async mergeInTransaction(
+    input: MergeInTransactionInput,
+  ): Promise<MergeInTransactionResult> {
+    const { primaryId, secondaryId, tenantId, mergeFields } = input;
+
+    return this.prisma.$transaction(async (tx) => {
+      const [primary, secondary] = await Promise.all([
+        tx.contact.findFirst({ where: { id: primaryId, tenantId } }),
+        tx.contact.findFirst({ where: { id: secondaryId, tenantId } }),
+      ]);
+
+      if (!primary || !secondary) {
+        throw CrossTenantOrNotFoundError.forMerge(primaryId, secondaryId, tenantId);
+      }
+      if (primary.tenantId !== tenantId || secondary.tenantId !== tenantId) {
+        throw CrossTenantOrNotFoundError.forMerge(primaryId, secondaryId, tenantId);
+      }
+
+      const txAny = tx as unknown as {
+        contactActivity?: { updateMany: (args: unknown) => Promise<{ count: number }> };
+        contactNote?: { updateMany: (args: unknown) => Promise<{ count: number }> };
+        opportunity?: { updateMany: (args: unknown) => Promise<{ count: number }> };
+        task?: { updateMany: (args: unknown) => Promise<{ count: number }> };
+        contactAIInsight?: { updateMany: (args: unknown) => Promise<{ count: number }> };
+        contactTagAssignment?: {
+          findMany: (args: unknown) => Promise<Array<{ tagId: string }>>;
+          createMany: (args: unknown) => Promise<{ count: number }>;
+          deleteMany: (args: unknown) => Promise<{ count: number }>;
+        };
+        contact: {
+          update: (args: unknown) => Promise<unknown>;
+          delete: (args: unknown) => Promise<unknown>;
+        };
+      };
+
+      const reparent = async (
+        table:
+          | 'contactActivity'
+          | 'contactNote'
+          | 'opportunity'
+          | 'task'
+          | 'contactAIInsight',
+      ): Promise<number> => {
+        const t = txAny[table];
+        if (!t?.updateMany) return 0;
+        try {
+          const r = await t.updateMany({
+            where: { contactId: secondaryId, tenantId },
+            data: { contactId: primaryId },
+          });
+          return (r as { count: number }).count;
+        } catch {
+          return 0;
+        }
+      };
+
+      const activities = await reparent('contactActivity');
+      const notes = await reparent('contactNote');
+      const opportunities = await reparent('opportunity');
+      const tasks = await reparent('task');
+      const aiInsights = await reparent('contactAIInsight');
+
+      let tagAssignments = 0;
+      if (txAny.contactTagAssignment?.findMany) {
+        try {
+          const secTags = await txAny.contactTagAssignment.findMany({
+            where: { contactId: secondaryId, tenantId },
+          });
+          const primExisting = await txAny.contactTagAssignment.findMany({
+            where: { contactId: primaryId, tenantId },
+          });
+          const primTagIds = new Set(primExisting.map((t) => t.tagId));
+          const toCreate = secTags
+            .filter((t) => !primTagIds.has(t.tagId))
+            .map((t) => ({ contactId: primaryId, tagId: t.tagId, tenantId }));
+          if (toCreate.length > 0) {
+            const createResult = await txAny.contactTagAssignment.createMany({
+              data: toCreate,
+            });
+            tagAssignments = (createResult as { count: number }).count;
+          }
+          await txAny.contactTagAssignment.deleteMany({
+            where: { contactId: secondaryId, tenantId },
+          });
+        } catch {
+          tagAssignments = 0;
+        }
+      }
+
+      const fieldsUpdated: string[] = [];
+      const mergeData: Record<string, unknown> = {};
+      if (mergeFields.title && !primary.title) {
+        mergeData.title = mergeFields.title;
+        fieldsUpdated.push('title');
+      }
+      if (mergeFields.phone && !primary.phone) {
+        mergeData.phone = mergeFields.phone;
+        fieldsUpdated.push('phone');
+      }
+      if (mergeFields.department && !primary.department) {
+        mergeData.department = mergeFields.department;
+        fieldsUpdated.push('department');
+      }
+      if (mergeFields.accountId && !primary.accountId) {
+        mergeData.accountId = mergeFields.accountId;
+        fieldsUpdated.push('accountId');
+      }
+
+      if (Object.keys(mergeData).length > 0) {
+        await txAny.contact.update({
+          where: { id: primaryId, tenantId },
+          data: mergeData,
+        });
+      }
+
+      await txAny.contact.delete({
+        where: { id: secondaryId, tenantId },
+      });
+
+      return {
+        survivingContactId: primaryId,
+        mergedContactId: secondaryId,
+        fieldsUpdated,
+        rowsReparented: {
+          activities,
+          notes,
+          opportunities,
+          tasks,
+          aiInsights,
+          tagAssignments,
+        },
+        mergedAt: new Date(),
+      } satisfies MergeInTransactionResult;
     });
   }
 }

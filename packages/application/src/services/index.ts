@@ -54,3 +54,6 @@ export * from './ConversationSearchService';
 
 // Feedback Service
 export * from './FeedbackService';
+
+// Domain events (IFC-310 duplicate-detection runtime)
+export * from './events';

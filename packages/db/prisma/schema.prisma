@@ -108,6 +108,8 @@ model Tenant {
   userPermissions      UserPermission[]           @ignore
   leadAIInsights       LeadAIInsight[]            @ignore
   contactAIInsights    ContactAIInsight[]         @ignore
+  accountAIInsights    AccountAIInsight[]         @ignore
+  contactReplyDrafts   ContactReplyDraft[]        @ignore
   autoResponseDrafts   AutoResponseDraft[]        @ignore
   emailRecords         EmailRecord[]              @ignore
   chatMessages         ChatMessage[]              @ignore
@@ -602,6 +604,7 @@ model Contact {
   activities    ContactActivity[]
   notes         ContactNote[]
   aiInsight     ContactAIInsight?
+  replyDrafts   ContactReplyDraft[]
   calendarEvents CalendarEvent[]
 
   // AI Embedding
@@ -636,6 +639,15 @@ model Account {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
+  // IFC-312: AI account scoring provenance
+  score                Int?
+  scoreProvenance      Json?
+  scoredAt             DateTime?
+  scoreModelVersion    String?
+  // IFC-312: AI industry inference provenance
+  industryInferredAt   DateTime?
+  industryModelVersion String?
+
   // Multi-tenancy
   tenantId      String
   tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -646,6 +658,7 @@ model Account {
   contacts      Contact[]
   opportunities Opportunity[]
   cases         Case[]
+  aiInsight     AccountAIInsight?
 
   // Hierarchy: parent/child account relationships
   parentAccountId  String?
@@ -658,6 +671,7 @@ model Account {
   @@index([ownerId])
   @@index([tenantId])
   @@index([parentAccountId])
+  @@index([score])
   @@map("accounts")
 }
 
@@ -2678,6 +2692,10 @@ model ContactAIInsight {
   recommendations       Json?    // Array of recommendation strings
   sentimentTrend        String?  // 'improving', 'stable', 'declining'
   lastEngagementDays    Int      @default(0)
+  // IFC-312: AI provenance
+  modelVersion          String?
+  generatedAt           DateTime?
+  source                String?  @default("llm") // 'llm' | 'fallback'
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 
@@ -2685,6 +2703,55 @@ model ContactAIInsight {
   @@index([conversionProbability])
   @@index([tenantId])
   @@map("contact_ai_insights")
+}
+
+/// IFC-312: AI insights for accounts (health summary, engagement, recommendations).
+model AccountAIInsight {
+  id              String    @id @default(cuid())
+  accountId       String    @unique
+  account         Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  tenantId        String
+  tenant          Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  healthSummary   String?   @db.Text
+  nextBestAction  String?
+  keySignals      Json?     // Array<{ label, impact: 'positive'|'negative', weight }>
+  churnRisk       ChurnRisk @default(LOW)
+  engagementScore Int       // 0-100
+  sentimentTrend  String?   // 'improving', 'stable', 'declining'
+  recommendations Json?
+  // Provenance
+  modelVersion    String
+  generatedAt     DateTime  @default(now())
+  source          String    @default("llm") // 'llm' | 'fallback'
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([tenantId])
+  @@index([churnRisk])
+  @@map("account_ai_insights")
+}
+
+/// IFC-312: AI-generated reply drafts for contact inbox. NEVER auto-sent (ADR-037).
+model ContactReplyDraft {
+  id            String   @id @default(cuid())
+  contactId     String
+  contact       Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  tenantId      String
+  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  emailThreadId String?
+  draftSubject  String
+  draftBody     String   @db.Text
+  tone          String?  // 'formal' | 'friendly' | 'direct'
+  status        String   @default("DRAFT") // DRAFT | DISMISSED | SENT (app-layer enum)
+  confidence    Float
+  modelVersion  String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  createdBy     String?
+
+  @@index([contactId, status])
+  @@index([tenantId, status])
+  @@map("contact_reply_drafts")
 }
 
 enum ChurnRisk {

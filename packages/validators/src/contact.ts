@@ -212,3 +212,16 @@ export const contactTimelineResponseSchema = z.object({
   durationMs: z.number().optional(),
   meetsKpi: z.boolean().optional(),
 });
+
+// IFC-311: Reassign endpoints
+export const reassignContactSchema = z.object({
+  id: idSchema,
+  ownerId: idSchema,
+});
+export type ReassignContactInput = z.infer<typeof reassignContactSchema>;
+
+export const bulkReassignContactsSchema = z.object({
+  ids: z.array(idSchema).min(1).max(100),
+  ownerId: idSchema,
+});
+export type BulkReassignContactsInput = z.infer<typeof bulkReassignContactsSchema>;

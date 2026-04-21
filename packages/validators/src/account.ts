@@ -249,3 +249,16 @@ export const assignOwnerSchema = z.object({
 });
 
 export type AssignOwnerInput = z.infer<typeof assignOwnerSchema>;
+
+// IFC-311: Reassign endpoints
+export const reassignAccountSchema = z.object({
+  id: idSchema,
+  ownerId: idSchema,
+});
+export type ReassignAccountInput = z.infer<typeof reassignAccountSchema>;
+
+export const bulkReassignAccountsSchema = z.object({
+  ids: z.array(idSchema).min(1).max(100),
+  ownerId: idSchema,
+});
+export type BulkReassignAccountsInput = z.infer<typeof bulkReassignAccountsSchema>;

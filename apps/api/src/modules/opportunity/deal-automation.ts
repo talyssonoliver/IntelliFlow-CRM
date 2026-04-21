@@ -21,11 +21,12 @@
  *   - highValueThreshold          → consumed by notifyHighValueStageMove
  *
  * Category-2 toggles (follow-ups):
- *   - notifyOnOwnerChange → IFC-311 reassign endpoint. `notifyDealReassignment`
- *     below is the helper that endpoint will call; it is not invoked from
- *     opportunity.router.ts because updateOpportunitySchema cannot carry an
- *     ownerId diff, and wiring an unreachable branch violates the playbook's
- *     no-fake-wiring rule (PG-186 memory).
+ *   - notifyOnOwnerChange → SEPARATE deal-reassign follow-up (NOT in IFC-311
+ *     scope; IFC-311 covers contacts + accounts only — see Sprint_plan.csv
+ *     row 574). `notifyDealReassignment` below is shipped + unit-tested but
+ *     its production wiring will land in a future task (e.g. IFC-313 if
+ *     filed). Wiring an unreachable branch violates the playbook's no-fake-
+ *     wiring rule (PG-186 memory).
  *   - aiDuplicateDetection / aiDealScoring / aiNextStepRecommendation /
  *     aiTagSuggestions / aiInsightGeneration / aiWinLossPrediction → IFC-312.
  */

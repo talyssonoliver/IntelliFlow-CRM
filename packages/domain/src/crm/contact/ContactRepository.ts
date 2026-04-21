@@ -55,6 +55,53 @@ export interface ContactRepository {
    * Count contacts by account
    */
   countByAccountId(accountId: string): Promise<number>;
+
+  /**
+   * IFC-310: Transactional merge.
+   * Atomically re-parents all child rows (activities, notes, opportunities,
+   * tasks, AI insights, tag assignments) from secondary → primary, merges
+   * scalar fields onto primary, then deletes secondary. Rolls back the whole
+   * transaction on any failure.
+   *
+   * Tenant guard: both primary and secondary MUST belong to `tenantId`;
+   * mismatch throws `CrossTenantOrNotFoundError`.
+   */
+  mergeInTransaction(input: MergeInTransactionInput): Promise<MergeInTransactionResult>;
+}
+
+/**
+ * @knipignore Intentional public DTO for the transactional merge contract.
+ */
+export interface MergeInTransactionInput {
+  primaryId: string;
+  secondaryId: string;
+  tenantId: string;
+  mergedBy: string;
+  /** Scalar fields to adopt from secondary when primary has them null/empty. */
+  mergeFields: Partial<{
+    title: string;
+    phone: string;
+    department: string;
+    accountId: string;
+  }>;
+}
+
+/**
+ * @knipignore Intentional public DTO for the transactional merge contract.
+ */
+export interface MergeInTransactionResult {
+  survivingContactId: string;
+  mergedContactId: string;
+  fieldsUpdated: string[];
+  rowsReparented: {
+    activities: number;
+    notes: number;
+    opportunities: number;
+    tasks: number;
+    aiInsights: number;
+    tagAssignments: number;
+  };
+  mergedAt: Date;
 }
 
 /**

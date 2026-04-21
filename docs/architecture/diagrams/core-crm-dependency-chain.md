@@ -266,3 +266,42 @@ pinItem, unpinItem)
 
 - 5 Backend (IFC-184 to IFC-188, IFC-189 ✅)
 - 5 Frontend (PG-133 to PG-137)
+
+---
+
+## IFC-310: Duplicate-Detection Runtime (2026-04-20)
+
+Wires the PG-182 / PG-183 duplicate-detection configuration surface to a
+real runtime path.
+
+```
+contact.router.ts create/update
+  ↓
+ctx.services.contactDuplicateDetection  ── ContactDuplicateDetectionService
+  ↓                        │
+  evaluateDuplicateRules() │  ├─→ ContactService.mergeContacts (hardened)
+  (pure evaluator)         │  ├─→ ContactMergedEvent (outbox)
+                           │  └─→ ContactEmbedWorker (intelliflow-contact-embed)
+                           │
+account.router.ts create/update
+  ↓
+ctx.services.accountDuplicateDetection  ── AccountDuplicateDetectionService
+  ↓                        │
+  evaluateDuplicateRules() │  └─→ AccountService.linkContactsByEmailDomain (new)
+  (pure evaluator)
+```
+
+New notification types surfaced at the chain leaf:
+- `contact_duplicate_suspected` — emitted by ContactDuplicateDetectionService
+  on flag + auto-merge paths.
+- `account_duplicate_suspected` — emitted by AccountDuplicateDetectionService
+  on flag path.
+
+Container wiring:
+- `apps/api/src/container.ts` registers `contactDuplicateDetectionService`
+  and `accountDuplicateDetectionService` as singletons.
+- `apps/api/src/context.ts` exposes both via `ctx.services.*`.
+- `apps/ai-worker/src/index.ts` exports `ContactEmbedWorker` +
+  `createContactEmbedWorker` factory.
+
+See ADR-050 for motivation and alternatives considered.

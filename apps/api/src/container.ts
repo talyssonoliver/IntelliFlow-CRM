@@ -87,6 +87,15 @@ import { CalendarWebhookService } from './modules/calendar/calendar-webhook.serv
 import { AIMonitoringService } from './services/AIMonitoringService';
 import { HomeCacheService } from './modules/home/home.cache';
 import type { CachePort } from '@intelliflow/application';
+// IFC-310: Duplicate-detection runtime services
+import {
+  createContactDuplicateDetectionService,
+  type ContactDuplicateDetectionService,
+} from './modules/contact/contact-duplicate-detection.service';
+import {
+  createAccountDuplicateDetectionService,
+  type AccountDuplicateDetectionService,
+} from './modules/account/account-duplicate-detection.service';
 
 /**
  * Get the API Prisma client.
@@ -482,6 +491,27 @@ const createServices = (prismaClient: PrismaClient) => {
     console.warn('[home.cache] failed to register invalidation handlers', err);
   });
 
+  // IFC-310: Duplicate-detection runtime services
+  // These are stateless singletons that accept per-request HasTenantContext.
+  // The contactDuplicateDetectionService wires a mergeContacts dep that
+  // delegates to ContactService.mergeContacts (hardened in the same task).
+  const contactDuplicateDetectionService: ContactDuplicateDetectionService =
+    createContactDuplicateDetectionService({
+      mergeContacts: async (_ctx, primaryId, secondaryId, mergedBy) => {
+        const result = await contactService.mergeContacts(
+          primaryId,
+          secondaryId,
+          mergedBy,
+        );
+        if (result.isFailure) {
+          throw result.error;
+        }
+        return result.value;
+      },
+    });
+  const accountDuplicateDetectionService: AccountDuplicateDetectionService =
+    createAccountDuplicateDetectionService();
+
   return {
     leadService,
     contactService,
@@ -532,6 +562,9 @@ const createServices = (prismaClient: PrismaClient) => {
     conversationSearchService,
     // IFC-196: Home Page Response Caching
     homeCacheService,
+    // IFC-310: Duplicate-detection runtime services
+    contactDuplicateDetectionService,
+    accountDuplicateDetectionService,
   };
 };
 

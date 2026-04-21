@@ -63,6 +63,19 @@ export {
   type OCREngine,
 } from './workers/ocr-worker';
 
+// IFC-310: Contact embedding worker for duplicate-detection runtime
+export {
+  ContactEmbedWorker,
+  createContactEmbedWorker,
+  CONTACT_EMBED_QUEUE_NAME,
+  ContactEmbedJobDataSchema,
+  contactToEmbeddableText,
+  type ContactEmbedJobData,
+  type ContactEmbedJobResult,
+  type EmbeddingChainLike,
+  type UpdateContactEmbeddingFn,
+} from './workers/contact-embed-worker';
+
 // IFC-155: Export services for search index management
 export {
   DocumentIndexer,

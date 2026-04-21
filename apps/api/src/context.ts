@@ -57,6 +57,9 @@ export type Services = {
   aiMonitoringService: Container['aiMonitoringService'];
   // IFC-196: Home Page Response Caching (Redis read-through + event-driven invalidation)
   homeCache: Container['homeCacheService'];
+  // IFC-310: Duplicate-detection runtime (contact + account)
+  contactDuplicateDetection: Container['contactDuplicateDetectionService'];
+  accountDuplicateDetection: Container['accountDuplicateDetectionService'];
   // Optional future services
   feedback?: unknown;
 };
@@ -183,6 +186,9 @@ function buildServicesFromContainer(): Services {
     notificationOrchestrator: container.notificationOrchestrator,
     aiMonitoringService: container.aiMonitoringService,
     homeCache: container.homeCacheService,
+    // IFC-310: Duplicate-detection runtime services
+    contactDuplicateDetection: container.contactDuplicateDetectionService,
+    accountDuplicateDetection: container.accountDuplicateDetectionService,
   };
 }
 

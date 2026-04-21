@@ -2361,3 +2361,21 @@ ticket-automation.ts before emitting SLANotification rows.
    Hours) in progress. PG-116 (Prefs) still pending.
 2. ~~**IFC-190 (Analytics Router)** - Blocking Analytics Dashboard~~ ✅ RESOLVED
    — Router complete, IFC-037 (Design) → IFC-038 (UI) next
+
+---
+
+## IFC-310: Duplicate-Detection Runtime (2026-04-20)
+
+New service nodes:
+- `ContactDuplicateDetectionService` (`apps/api/src/modules/contact/contact-duplicate-detection.service.ts`)
+- `AccountDuplicateDetectionService` (`apps/api/src/modules/account/account-duplicate-detection.service.ts`)
+- `duplicate-rule-evaluator` (`apps/api/src/shared/duplicate-rule-evaluator.ts`) — pure function
+- `ContactEmbedWorker` (`apps/ai-worker/src/workers/contact-embed-worker.ts`)
+- `ContactMergedEvent` (`packages/application/src/services/events/ContactMergedEvent.ts`)
+
+New edges:
+- `contact.router → ContactDuplicateDetectionService → duplicate-rule-evaluator + ContactService.mergeContacts (hardened) + ContactEmbedWorker`
+- `account.router → AccountDuplicateDetectionService → duplicate-rule-evaluator + AccountService.linkContactsByEmailDomain`
+- `ContactService.mergeContacts → EventBus.publish(ContactMergedEvent)` (transactional outbox via ADR-011)
+
+See ADR-050 for the full decision record.

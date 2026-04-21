@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-04-19T21:18:03.697Z",
+  "generated_at": "2026-04-20T22:01:20.664Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
-    "total_specs_analyzed": 388,
-    "completed": 384,
-    "partially_done": 1,
-    "spec_only": 1,
-    "uncertain": 2
+    "total_specs_analyzed": 391,
+    "completed": 388,
+    "partially_done": 0,
+    "spec_only": 3,
+    "uncertain": 0
   },
   "status_legend": {
     "COMPLETED": "All evidence confirms task is done: attestation present, CSV=Completed, plan checkboxes done",
@@ -4251,6 +4251,58 @@
       "real_status": "COMPLETED"
     },
     {
+      "task_id": "IFC-310",
+      "title": "Duplicate-detection runtime for contacts + accounts (PG-182/PG-183 follow-up) — new DuplicateDetectionService (or per-entity services sharing a rule-evaluator) that reads {Contact,Account}DuplicateRule rows at create/update time and either flags or auto-merges/auto-links records; consumes autoMergeOnExactEmail + autoLinkContactsByDomain + notifyOnDuplicate + aiDuplicateDetection + aiIndustryInference + aiEnrichment toggles from the respective AutomationSetting table; transactional merge combines rows (activities, notes, opportunities, tags, aiInsight) with conflict resolution.",
+      "sprint": 18,
+      "spec_path": ".specify/sprints/sprint-18/specifications/IFC-310-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": false,
+      "csv_status": "Plan Complete",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-182",
+        "PG-183"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "IFC-311",
+      "title": "Reassign endpoints + notifyOnOwnerChange wiring for contacts + accounts (PG-182/PG-183 follow-up) — add contact.reassign/contact.bulkReassign and account.reassign/account.bulkReassign tRPC procedures; on owner change, invoke the notifyContactReassignment or notifyAccountReassignment helper (both already shipped — PG-182 in contact-automation.ts, PG-183 in account-automation.ts) with the bound createNotification from notifications.router.ts; contact_reassigned is already in NOTIFICATION_TYPES — add account_reassigned alongside it.",
+      "sprint": 18,
+      "spec_path": ".specify/sprints/sprint-18/specifications/IFC-311-spec.md",
+      "has_spec": true,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Spec Complete",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-182",
+        "PG-183"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "IFC-312",
+      "title": "AI chains for contacts + accounts (PG-182/PG-183 follow-up) — wire the remaining AI toggles on both entities to real LLM/embedding consumers: aiEnrichment (external enrichment API + provider adapter, shared across entities), aiTagSuggestions (LLM prompt + surface on detail pages), aiInsightGeneration (LLM chain writing to {Contact,Account}AIInsight + surface), aiAutoReplyDrafting (contact inbox), aiIndustryInference (account-only LLM classifier that picks the best AccountIndustryOption), aiAccountScoring (account-only LLM scorer that writes to the Account score field).",
+      "sprint": 19,
+      "spec_path": ".specify/sprints/sprint-19/specifications/IFC-312-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": false,
+      "csv_status": "Plan Complete",
+      "metric_status": "PLANNED",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-182",
+        "PG-183",
+        "IFC-310"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
       "task_id": "PG-001",
       "title": "Home Page (Public)",
       "sprint": 11,
@@ -5199,14 +5251,14 @@
       "spec_path": ".specify/sprints/sprint-18/specifications/PG-059-spec.md",
       "has_spec": true,
       "has_plan": true,
-      "has_attestation": false,
-      "csv_status": "Plan Complete",
-      "metric_status": "PLANNED",
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-089"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-104",
@@ -6077,13 +6129,13 @@
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
-      "csv_status": "Plan Complete",
-      "metric_status": "PLANNED",
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-299"
       ],
-      "real_status": "PARTIALLY_DONE"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-182",
@@ -6179,13 +6231,13 @@
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
-      "csv_status": "Plan Complete",
-      "metric_status": "NOT_FOUND",
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-178"
       ],
-      "real_status": "UNCERTAIN"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-189",
@@ -6195,13 +6247,13 @@
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
-      "csv_status": "In Progress",
-      "metric_status": "IN_PROGRESS",
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-178"
       ],
-      "real_status": "UNCERTAIN"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-190",

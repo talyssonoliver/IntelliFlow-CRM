@@ -163,6 +163,12 @@ export const QUEUE_NAMES = {
   AI_SCORING: 'ai-scoring',
   AI_PREDICTION: 'ai-prediction',
   AI_INSIGHTS: 'ai-insights',
+  // IFC-312 — contact/account AI chains (distinct from lead-only AI_INSIGHTS = 'ai-insights').
+  AI_ENRICHMENT: 'ai-enrichment',
+  AI_ENTITY_INSIGHT: 'ai-entity-insight',
+  AI_REPLY_DRAFT: 'ai-reply-draft',
+  AI_ACCOUNT_SCORING: 'ai-account-scoring',
+  AI_TAG_SUGGESTION: 'ai-tag-suggestion',
   EMAIL_NOTIFICATIONS: 'intelliflow-notifications-email',
   WEBHOOK_DELIVERY: 'intelliflow:webhook-delivery',
   DATA_SYNC: 'intelliflow:data-sync',
@@ -252,6 +258,58 @@ export const DEFAULT_QUEUE_CONFIGS: Record<string, QueueConfig> = {
       },
       removeOnComplete: 86400000, // 24 hours
       removeOnFail: 604800000, // 7 days
+    },
+    concurrency: 10,
+  },
+  // IFC-312 — contact/account AI chain queues
+  [QUEUE_NAMES.AI_ENRICHMENT]: {
+    name: QUEUE_NAMES.AI_ENRICHMENT,
+    defaultJobOptions: {
+      attempts: 3,
+      backoff: { type: 'exponential', delay: 1000, maxDelay: 60000 },
+      removeOnComplete: 86400000,
+      removeOnFail: 604800000,
+    },
+    concurrency: 5,
+  },
+  [QUEUE_NAMES.AI_ENTITY_INSIGHT]: {
+    name: QUEUE_NAMES.AI_ENTITY_INSIGHT,
+    defaultJobOptions: {
+      attempts: 3,
+      backoff: { type: 'exponential', delay: 5000, maxDelay: 60000 },
+      removeOnComplete: 86400000,
+      removeOnFail: 604800000,
+    },
+    concurrency: 5,
+  },
+  [QUEUE_NAMES.AI_REPLY_DRAFT]: {
+    name: QUEUE_NAMES.AI_REPLY_DRAFT,
+    defaultJobOptions: {
+      attempts: 2,
+      backoff: { type: 'exponential', delay: 2000, maxDelay: 30000 },
+      removeOnComplete: 86400000,
+      removeOnFail: 604800000,
+    },
+    concurrency: 3,
+  },
+  [QUEUE_NAMES.AI_ACCOUNT_SCORING]: {
+    name: QUEUE_NAMES.AI_ACCOUNT_SCORING,
+    defaultJobOptions: {
+      attempts: 3,
+      backoff: { type: 'exponential', delay: 1000, maxDelay: 60000, jitter: 0.1 },
+      removeOnComplete: 86400000,
+      removeOnFail: 604800000,
+    },
+    rateLimiter: { max: 100, duration: 60000 },
+    concurrency: 5,
+  },
+  [QUEUE_NAMES.AI_TAG_SUGGESTION]: {
+    name: QUEUE_NAMES.AI_TAG_SUGGESTION,
+    defaultJobOptions: {
+      attempts: 1, // synchronous via waitUntilFinished — fail fast
+      backoff: { type: 'exponential', delay: 500, maxDelay: 2000 },
+      removeOnComplete: 3600000, // 1 hour
+      removeOnFail: 86400000,
     },
     concurrency: 10,
   },

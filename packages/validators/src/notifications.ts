@@ -90,6 +90,11 @@ export const NOTIFICATION_TYPES = [
   // Contact notifications
   'contact_stale',
   'contact_reassigned',
+  // IFC-310 duplicate-detection runtime notifications
+  'contact_duplicate_suspected',
+  'account_duplicate_suspected',
+  // Account notifications (IFC-311)
+  'account_reassigned',
   // Document notifications (PG-186)
   'document_reassigned',
   // Email notifications

@@ -35,12 +35,19 @@ import {
   contactTimelineResponseSchema,
   logActivitySchema,
   addContactNoteSchema,
+  reassignContactSchema,
+  bulkReassignContactsSchema,
 } from '@intelliflow/validators/contact';
 import {
   bulkEmailContactsSchema,
   bulkExportContactsSchema,
   bulkDeleteContactsSchema,
 } from '@intelliflow/validators';
+import {
+  performContactReassign,
+  emitContactReassignSideEffects,
+  logContactReassignPermissionDenied,
+} from './contact-reassign';
 import { mapContactToResponse } from '../../shared/mappers';
 import type { Context } from '../../context';
 import { loadBullMQ } from '../../lib/load-bullmq';
@@ -365,6 +372,8 @@ function buildHygienedContactData(
   };
 }
 
+// IFC-311: Reassign helpers extracted to ./contact-reassign for clean coverage scoping.
+
 export const contactRouter = createTRPCRouter({
   /**
    * Create a new contact using ContactService
@@ -409,6 +418,35 @@ export const contactRouter = createTRPCRouter({
       phone: normalizedPhone ?? undefined,
     };
 
+    // IFC-310: Duplicate-detection runtime — reads ContactDuplicateRule rows,
+    // consults autoMergeOnExactEmail/notifyOnDuplicate/aiDuplicateDetection.
+    const duplicateService = ctx.services?.contactDuplicateDetection;
+    type DupeCheck =
+      | { action: 'proceed'; matches: unknown[] }
+      | { action: 'flag'; matches: unknown[] }
+      | { action: 'auto-merge'; matches: unknown[]; primaryId: string };
+    let dupeCheck: DupeCheck = {
+      action: 'proceed',
+      matches: [],
+    };
+    if (duplicateService) {
+      try {
+        dupeCheck = (await duplicateService.checkForCreate(
+          typedCtx as any,
+          {
+            email: hygieneInput.email,
+            phone: normalizedPhone,
+            firstName: hygieneInput.firstName,
+            lastName: hygieneInput.lastName,
+            company: (hygieneInput as { company?: string | null }).company ?? null,
+          },
+          flags,
+        )) as DupeCheck;
+      } catch (error) {
+        console.warn('[contact.router] duplicate-detection failed, proceeding:', error);
+      }
+    }
+
     const result = await contactService.createContact({
       ...hygieneInput,
       ownerId: typedCtx.tenant.userId,
@@ -417,6 +455,20 @@ export const contactRouter = createTRPCRouter({
 
     if (result.isFailure) {
       throwContactCreateError(result.error.message);
+    }
+
+    // IFC-310: When autoMergeOnExactEmail triggered, apply the merge post-create.
+    if (dupeCheck.action === 'auto-merge' && duplicateService) {
+      try {
+        await duplicateService.applyAutoMerge(
+          typedCtx as any,
+          dupeCheck.primaryId,
+          result.value.id.value,
+          typedCtx.tenant.userId,
+        );
+      } catch (error) {
+        console.warn('[contact.router] auto-merge post-commit failed:', error);
+      }
     }
 
     return mapContactToResponse(result.value);
@@ -684,6 +736,26 @@ export const contactRouter = createTRPCRouter({
     );
 
     const hygienedData = buildHygienedContactData(data as UpdateContactData, rawPhone, flags);
+
+    // IFC-310: Duplicate-detection runtime — re-evaluate rules on update.
+    const duplicateService = ctx.services?.contactDuplicateDetection;
+    if (duplicateService) {
+      try {
+        await duplicateService.checkForUpdate(
+          typedCtx as any,
+          id,
+          {
+            phone: rawPhone,
+            firstName: (hygienedData as { firstName?: string | null }).firstName ?? null,
+            lastName: (hygienedData as { lastName?: string | null }).lastName ?? null,
+            company: (hygienedData as { company?: string | null }).company ?? null,
+          },
+          flags,
+        );
+      } catch (error) {
+        console.warn('[contact.router] duplicate-detection on update failed, proceeding:', error);
+      }
+    }
 
     // Build info update payload (all non-account, non-email fields)
     const infoUpdates = buildContactInfoUpdates(hygienedData as UpdateContactData);
@@ -1558,5 +1630,137 @@ export const contactRouter = createTRPCRouter({
       }
 
       return insight;
+    }),
+
+  /**
+   * IFC-311: Reassign a single contact's owner with notification wiring.
+   * Honours the tenant `notifyOnOwnerChange` flag and emits
+   * `contact_reassigned` notifications to both old and new owner when on.
+   * Idempotent: returns success without write or notification when the new
+   * owner equals the current owner.
+   */
+  reassign: tenantProcedure.input(reassignContactSchema).mutation(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
+
+    const flags = await loadContactAutomation(typedCtx);
+    const verdict = await performContactReassign(ctx, input);
+
+    if (verdict.kind === 'NOT_FOUND' || verdict.kind === 'TARGET_USER_NOT_FOUND') {
+      logContactReassignPermissionDenied(ctx, input.id, 'contact:reassign');
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message:
+          verdict.kind === 'TARGET_USER_NOT_FOUND' ? 'Target user not found' : 'Contact not found',
+      });
+    }
+
+    if (verdict.kind === 'FORBIDDEN') {
+      throw new TRPCError({
+        code: 'FORBIDDEN',
+        message: 'Caller does not have permission to reassign this contact.',
+      });
+    }
+
+    if (verdict.kind === 'SKIPPED') {
+      return {
+        id: input.id,
+        previousOwnerId: verdict.currentOwnerId,
+        newOwnerId: verdict.currentOwnerId,
+        notified: false,
+        skipped: true as const,
+      };
+    }
+
+    const sideEffects = await emitContactReassignSideEffects(ctx, {
+      id: input.id,
+      contactName: verdict.contactName,
+      previousOwnerId: verdict.previousOwnerId,
+      newOwnerId: verdict.newOwnerId,
+      flags,
+    });
+
+    return {
+      id: input.id,
+      previousOwnerId: verdict.previousOwnerId,
+      newOwnerId: verdict.newOwnerId,
+      notified: sideEffects.notified,
+    };
+  }),
+
+  /**
+   * IFC-311: Reassign multiple contacts to a single new owner.
+   * Pre-validates the target user once (fail-fast), then iterates per row.
+   * Per-row failures (NOT_FOUND, FORBIDDEN) are collected without
+   * short-circuiting the batch. Notification + audit log run per-row, post-tx.
+   */
+  bulkReassign: tenantProcedure
+    .input(bulkReassignContactsSchema)
+    .mutation(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
+      const tenantId = typedCtx.tenant.tenantId;
+
+      // Pre-validate target user once (one query, not N)
+      const targetUser = await typedCtx.prismaWithTenant.user.findFirst({
+        where: { id: input.ownerId, tenantId },
+        select: { id: true },
+      });
+      if (!targetUser) {
+        logContactReassignPermissionDenied(ctx, input.ownerId, 'contact:bulkReassign');
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Target user not found' });
+      }
+
+      const flags = await loadContactAutomation(typedCtx);
+
+      const successful: Array<{
+        id: string;
+        previousOwnerId: string;
+        newOwnerId: string;
+        notified: boolean;
+        skipped?: true;
+      }> = [];
+      const failed: Array<{ id: string; error: string; errorCode: 'NOT_FOUND' | 'FORBIDDEN' }> = [];
+
+      for (const id of input.ids) {
+        const verdict = await performContactReassign(ctx, { id, ownerId: input.ownerId });
+
+        if (verdict.kind === 'NOT_FOUND' || verdict.kind === 'TARGET_USER_NOT_FOUND') {
+          failed.push({ id, error: 'Contact not found', errorCode: 'NOT_FOUND' });
+          continue;
+        }
+        if (verdict.kind === 'FORBIDDEN') {
+          failed.push({
+            id,
+            error: 'Caller does not have permission to reassign this contact.',
+            errorCode: 'FORBIDDEN',
+          });
+          continue;
+        }
+        if (verdict.kind === 'SKIPPED') {
+          successful.push({
+            id,
+            previousOwnerId: verdict.currentOwnerId,
+            newOwnerId: verdict.currentOwnerId,
+            notified: false,
+            skipped: true,
+          });
+          continue;
+        }
+
+        const sideEffects = await emitContactReassignSideEffects(ctx, {
+          id,
+          contactName: verdict.contactName,
+          previousOwnerId: verdict.previousOwnerId,
+          newOwnerId: verdict.newOwnerId,
+          flags,
+        });
+        successful.push({
+          id,
+          previousOwnerId: verdict.previousOwnerId,
+          newOwnerId: verdict.newOwnerId,
+          notified: sideEffects.notified,
+        });
+      }
+
+      return { successful, failed, totalProcessed: input.ids.length };
     }),
 });

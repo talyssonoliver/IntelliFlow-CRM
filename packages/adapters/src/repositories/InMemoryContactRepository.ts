@@ -1,4 +1,12 @@
-import { Contact, ContactId, Email, ContactRepository } from '@intelliflow/domain';
+import {
+  Contact,
+  ContactId,
+  Email,
+  ContactRepository,
+  CrossTenantOrNotFoundError,
+  type MergeInTransactionInput,
+  type MergeInTransactionResult,
+} from '@intelliflow/domain';
 
 /**
  * In-Memory Contact Repository
@@ -66,6 +74,66 @@ export class InMemoryContactRepository implements ContactRepository {
       }
     }
     return count;
+  }
+
+  /**
+   * IFC-310: In-memory merge — no child tables to re-parent, so this is
+   * essentially a field-merge + delete. Matches the transactional contract.
+   */
+  async mergeInTransaction(
+    input: MergeInTransactionInput
+  ): Promise<MergeInTransactionResult> {
+    const { primaryId, secondaryId, tenantId, mergeFields } = input;
+
+    const primary = this.contacts.get(primaryId);
+    const secondary = this.contacts.get(secondaryId);
+
+    if (!primary || !secondary) {
+      throw CrossTenantOrNotFoundError.forMerge(primaryId, secondaryId, tenantId);
+    }
+    if (primary.tenantId !== tenantId || secondary.tenantId !== tenantId) {
+      throw CrossTenantOrNotFoundError.forMerge(primaryId, secondaryId, tenantId);
+    }
+
+    const fieldsUpdated: string[] = [];
+    const updates: Record<string, unknown> = {};
+    if (mergeFields.title && !primary.title) {
+      updates.title = mergeFields.title;
+      fieldsUpdated.push('title');
+    }
+    if (mergeFields.phone && !primary.phone) {
+      updates.phone = mergeFields.phone;
+      fieldsUpdated.push('phone');
+    }
+    if (mergeFields.department && !primary.department) {
+      updates.department = mergeFields.department;
+      fieldsUpdated.push('department');
+    }
+    if (mergeFields.accountId && !primary.accountId) {
+      updates.accountId = mergeFields.accountId;
+      fieldsUpdated.push('accountId');
+    }
+
+    if (Object.keys(updates).length > 0) {
+      primary.updateContactInfo(updates as Parameters<typeof primary.updateContactInfo>[0], input.mergedBy);
+    }
+
+    this.contacts.delete(secondaryId);
+
+    return {
+      survivingContactId: primaryId,
+      mergedContactId: secondaryId,
+      fieldsUpdated,
+      rowsReparented: {
+        activities: 0,
+        notes: 0,
+        opportunities: 0,
+        tasks: 0,
+        aiInsights: 0,
+        tagAssignments: 0,
+      },
+      mergedAt: new Date(),
+    };
   }
 
   // Test helper methods

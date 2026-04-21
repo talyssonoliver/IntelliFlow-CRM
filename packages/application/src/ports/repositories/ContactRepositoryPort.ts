@@ -16,4 +16,6 @@ export type {
   ContactSearchParams,
   ContactSearchResult,
   ContactStatistics,
+  MergeInTransactionInput,
+  MergeInTransactionResult,
 } from '@intelliflow/domain';

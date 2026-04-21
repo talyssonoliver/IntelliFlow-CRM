@@ -23,6 +23,8 @@ import {
   getHierarchyInputSchema,
   setParentSchema,
   assignOwnerSchema,
+  reassignAccountSchema,
+  bulkReassignAccountsSchema,
 } from '@intelliflow/validators/account';
 import { mapAccountToResponse } from '../../shared/mappers';
 import { type Context } from '../../context';
@@ -36,6 +38,11 @@ import {
   loadRequiredAccountFields,
   normalizeWebsite,
 } from './account-automation';
+import {
+  performAccountReassign,
+  emitAccountReassignSideEffects,
+  logAccountReassignPermissionDenied,
+} from './account-reassign';
 
 /**
  * Helper to get account service from context
@@ -49,6 +56,8 @@ function getAccountService(ctx: Context) {
   }
   return ctx.services.account;
 }
+
+// IFC-311: Reassign helpers extracted to ./account-reassign for clean coverage scoping.
 
 export const accountRouter = createTRPCRouter({
   /**
@@ -94,6 +103,25 @@ export const accountRouter = createTRPCRouter({
         : {}),
     };
 
+    // IFC-310: Duplicate-detection runtime — reads AccountDuplicateRule rows,
+    // consults notifyOnDuplicate/autoLinkContactsByDomain flags.
+    const duplicateService = ctx.services?.accountDuplicateDetection;
+    if (duplicateService) {
+      try {
+        await duplicateService.checkForCreate(
+          typedCtx as any,
+          {
+            name: hygieneInput.name,
+            website: (hygieneInput as { website?: string | null }).website ?? null,
+            phone: (hygieneInput as { phone?: string | null }).phone ?? null,
+          },
+          flags,
+        );
+      } catch (error) {
+        console.warn('[account.router] duplicate-detection on create failed, proceeding:', error);
+      }
+    }
+
     const result = await accountService.createAccount({
       ...hygieneInput,
       ownerId: typedCtx.tenant.userId,
@@ -112,6 +140,32 @@ export const accountRouter = createTRPCRouter({
         code: 'BAD_REQUEST',
         message: result.error.message,
       });
+    }
+
+    // IFC-310: auto-link contacts by domain when flag is enabled and website is present.
+    if (
+      duplicateService &&
+      flags.autoLinkContactsByDomain &&
+      (hygieneInput as { website?: string | null }).website
+    ) {
+      try {
+        const website = (hygieneInput as { website: string }).website;
+        const domain = website
+          .trim()
+          .toLowerCase()
+          .replace(/^https?:\/\//, '')
+          .replace(/^www\./, '')
+          .split(/[/?#]/)[0];
+        if (domain && domain.includes('.')) {
+          await duplicateService.linkContactsByDomain(
+            typedCtx as any,
+            result.value.id.value,
+            domain,
+          );
+        }
+      } catch (error) {
+        console.warn('[account.router] auto-link-by-domain failed (non-fatal):', error);
+      }
     }
 
     // IFC-269 B-07: Audit logging
@@ -322,6 +376,24 @@ export const accountRouter = createTRPCRouter({
         ? { website: normalizeWebsite(websiteString, flags) ?? websiteString }
         : {}),
     } as Record<string, unknown>;
+
+    // IFC-310: Duplicate-detection runtime — re-evaluate rules on update.
+    const duplicateService = ctx.services?.accountDuplicateDetection;
+    if (duplicateService) {
+      try {
+        await duplicateService.checkForUpdate(
+          typedCtx as any,
+          id,
+          {
+            name: (updateData as { name?: string | null }).name ?? null,
+            website: (updateData as { website?: string | null }).website ?? null,
+          },
+          flags,
+        );
+      } catch (error) {
+        console.warn('[account.router] duplicate-detection on update failed, proceeding:', error);
+      }
+    }
 
     // IFC-269 B-05: Wrap in transaction to prevent TOCTOU
     const result = await accountService.updateAccountInfo(
@@ -747,108 +819,206 @@ export const accountRouter = createTRPCRouter({
   }),
 
   /**
-   * Assign or reassign account owner (IFC-268)
+   * Assign or reassign account owner (IFC-268).
+   *
+   * IFC-311: refactored to delegate to `performAccountReassign`. Legacy
+   * response shape `{ success, id, ownerId, owner: { id, name, email } }` is
+   * preserved for AccountDetail.tsx:142. The refactor also gives this
+   * endpoint the previously-missing `notifyOnOwnerChange` wiring (it now
+   * fires `notifyAccountReassignment` when the tenant flag is on).
    */
   assignOwner: tenantProcedure.input(assignOwnerSchema).mutation(async ({ ctx, input }) => {
     const typedCtx = getTenantContext(ctx);
-    const accountService = getAccountService(ctx);
     const tenantId = typedCtx.tenant.tenantId;
 
-    // IFC-269 B-05: Wrap in transaction to prevent TOCTOU between verify+assign+persist
-    const txResult = await typedCtx.prismaWithTenant.$transaction(async (tx) => {
-      // Verify account exists and belongs to tenant
-      const existingAccount = await tx.account.findFirst({
-        where: { id: input.id, tenantId },
-      });
+    const flags = await loadAccountAutomation(typedCtx);
+    const verdict = await performAccountReassign(ctx, input);
 
-      if (!existingAccount) {
-        return { error: 'ACCOUNT_NOT_FOUND' as const };
-      }
-
-      // Verify target user exists and belongs to same tenant
-      const targetUser = await tx.user.findFirst({
-        where: { id: input.ownerId, tenantId },
-        select: { id: true, name: true, email: true },
-      });
-
-      if (!targetUser) {
-        return { error: 'USER_NOT_FOUND' as const };
-      }
-
-      // Load domain entity and assign owner
-      const accountResult = await accountService.getAccountById(input.id, tenantId);
-      if (accountResult.isFailure) {
-        return { error: 'ACCOUNT_LOAD_FAILED' as const, message: accountResult.error.message };
-      }
-
-      const account = accountResult.value;
-      const assignResult = account.assignOwner(input.ownerId, typedCtx.user!.userId);
-
-      if (assignResult.isFailure) {
-        return { error: 'ASSIGN_FAILED' as const, message: assignResult.error.message };
-      }
-
-      // Persist with tenant-scoped WHERE (F4 fix: defense-in-depth)
-      const { count } = await tx.account.updateMany({
-        where: { id: input.id, tenantId },
-        data: { ownerId: input.ownerId },
-      });
-
-      if (count === 0) {
-        // Account was deleted between the read above and this write (TOCTOU).
-        return {
-          error: 'ACCOUNT_NOT_FOUND' as const,
-          message: 'Account not found or was concurrently deleted',
-        };
-      }
-
-      return { success: true as const, targetUser };
-    });
-
-    if ('error' in txResult) {
-      if (
-        txResult.error === 'ACCOUNT_NOT_FOUND' ||
-        txResult.error === 'USER_NOT_FOUND' ||
-        txResult.error === 'ACCOUNT_LOAD_FAILED'
-      ) {
-        // F5: Log permission denied for cross-tenant attempts
-        getAuditLogger(ctx.prisma)
-          .logPermissionDenied('account', input.id, 'account:assignOwner', tenantId, {
-            actorId: typedCtx.tenant.userId,
-          })
-          .catch((err) => console.error('[account.router] Audit log failed:', err));
-
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message:
-            txResult.error === 'USER_NOT_FOUND' ? 'Target user not found' : 'Account not found',
-        });
-      }
+    if (verdict.kind === 'NOT_FOUND' || verdict.kind === 'TARGET_USER_NOT_FOUND') {
+      logAccountReassignPermissionDenied(ctx, input.id, 'account:assignOwner');
       throw new TRPCError({
-        code: 'BAD_REQUEST',
-        message: txResult.message ?? 'Assignment failed',
+        code: 'NOT_FOUND',
+        message:
+          verdict.kind === 'TARGET_USER_NOT_FOUND' ? 'Target user not found' : 'Account not found',
       });
     }
 
-    // IFC-269 B-07: Audit logging
-    getAuditLogger(ctx.prisma)
-      .logAction('UPDATE', 'account', input.id, tenantId, {
-        actorId: typedCtx.tenant.userId,
-        afterState: { ownerId: input.ownerId },
-      })
-      .catch((err) => console.error('[account.router] Audit log failed:', err));
+    if (verdict.kind === 'FORBIDDEN') {
+      throw new TRPCError({
+        code: 'FORBIDDEN',
+        message: 'Caller does not have permission to reassign this account.',
+      });
+    }
+
+    // OK or SKIPPED — fetch target user once for the legacy response
+    const targetUser = await typedCtx.prismaWithTenant.user.findFirst({
+      where: { id: input.ownerId, tenantId },
+      select: { id: true, name: true, email: true },
+    });
+
+    if (!targetUser) {
+      // Defensive: should not happen since performAccountReassign already
+      // verified, but the legacy response requires the user record.
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Target user not found' });
+    }
+
+    if (verdict.kind === 'OK') {
+      await emitAccountReassignSideEffects(ctx, {
+        id: input.id,
+        accountName: verdict.accountName,
+        previousOwnerId: verdict.previousOwnerId,
+        newOwnerId: verdict.newOwnerId,
+        flags,
+      });
+    }
 
     return {
       success: true as const,
       id: input.id,
       ownerId: input.ownerId,
       owner: {
-        id: txResult.targetUser.id,
-        name: txResult.targetUser.name,
-        email: txResult.targetUser.email,
+        id: targetUser.id,
+        name: targetUser.name,
+        email: targetUser.email,
       },
     };
   }),
+
+  /**
+   * IFC-311: Reassign a single account's owner with notification wiring.
+   * Honours the tenant `notifyOnOwnerChange` flag and emits
+   * `account_reassigned` notifications to both old and new owner when on.
+   * Idempotent: returns success without write or notification when the new
+   * owner equals the current owner.
+   */
+  reassign: tenantProcedure.input(reassignAccountSchema).mutation(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
+
+    const flags = await loadAccountAutomation(typedCtx);
+    const verdict = await performAccountReassign(ctx, input);
+
+    if (verdict.kind === 'NOT_FOUND' || verdict.kind === 'TARGET_USER_NOT_FOUND') {
+      logAccountReassignPermissionDenied(ctx, input.id, 'account:reassign');
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message:
+          verdict.kind === 'TARGET_USER_NOT_FOUND' ? 'Target user not found' : 'Account not found',
+      });
+    }
+
+    if (verdict.kind === 'FORBIDDEN') {
+      throw new TRPCError({
+        code: 'FORBIDDEN',
+        message: 'Caller does not have permission to reassign this account.',
+      });
+    }
+
+    if (verdict.kind === 'SKIPPED') {
+      return {
+        id: input.id,
+        previousOwnerId: verdict.currentOwnerId,
+        newOwnerId: verdict.currentOwnerId,
+        notified: false,
+        skipped: true as const,
+      };
+    }
+
+    const sideEffects = await emitAccountReassignSideEffects(ctx, {
+      id: input.id,
+      accountName: verdict.accountName,
+      previousOwnerId: verdict.previousOwnerId,
+      newOwnerId: verdict.newOwnerId,
+      flags,
+    });
+
+    return {
+      id: input.id,
+      previousOwnerId: verdict.previousOwnerId,
+      newOwnerId: verdict.newOwnerId,
+      notified: sideEffects.notified,
+    };
+  }),
+
+  /**
+   * IFC-311: Reassign multiple accounts to a single new owner.
+   * Pre-validates the target user once (fail-fast), then iterates per row.
+   * Per-row failures (NOT_FOUND, FORBIDDEN) are collected without
+   * short-circuiting the batch, so callers cannot use the response to probe
+   * authorisation row-by-row. Notification + audit log run per-row, post-tx.
+   */
+  bulkReassign: tenantProcedure
+    .input(bulkReassignAccountsSchema)
+    .mutation(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
+      const tenantId = typedCtx.tenant.tenantId;
+
+      // Pre-validate target user once (one query, not N)
+      const targetUser = await typedCtx.prismaWithTenant.user.findFirst({
+        where: { id: input.ownerId, tenantId },
+        select: { id: true },
+      });
+      if (!targetUser) {
+        logAccountReassignPermissionDenied(ctx, input.ownerId, 'account:bulkReassign');
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Target user not found' });
+      }
+
+      const flags = await loadAccountAutomation(typedCtx);
+
+      const successful: Array<{
+        id: string;
+        previousOwnerId: string;
+        newOwnerId: string;
+        notified: boolean;
+        skipped?: true;
+      }> = [];
+      const failed: Array<{ id: string; error: string; errorCode: 'NOT_FOUND' | 'FORBIDDEN' }> = [];
+
+      for (const id of input.ids) {
+        const verdict = await performAccountReassign(ctx, { id, ownerId: input.ownerId });
+
+        if (verdict.kind === 'NOT_FOUND' || verdict.kind === 'TARGET_USER_NOT_FOUND') {
+          // TARGET_USER_NOT_FOUND should not occur here (pre-validated above),
+          // but if a TOCTOU race deletes the target mid-batch, surface it as
+          // a row-level NOT_FOUND.
+          failed.push({ id, error: 'Account not found', errorCode: 'NOT_FOUND' });
+          continue;
+        }
+        if (verdict.kind === 'FORBIDDEN') {
+          failed.push({
+            id,
+            error: 'Caller does not have permission to reassign this account.',
+            errorCode: 'FORBIDDEN',
+          });
+          continue;
+        }
+        if (verdict.kind === 'SKIPPED') {
+          successful.push({
+            id,
+            previousOwnerId: verdict.currentOwnerId,
+            newOwnerId: verdict.currentOwnerId,
+            notified: false,
+            skipped: true,
+          });
+          continue;
+        }
+
+        const sideEffects = await emitAccountReassignSideEffects(ctx, {
+          id,
+          accountName: verdict.accountName,
+          previousOwnerId: verdict.previousOwnerId,
+          newOwnerId: verdict.newOwnerId,
+          flags,
+        });
+        successful.push({
+          id,
+          previousOwnerId: verdict.previousOwnerId,
+          newOwnerId: verdict.newOwnerId,
+          notified: sideEffects.notified,
+        });
+      }
+
+      return { successful, failed, totalProcessed: input.ids.length };
+    }),
 });
 
 function getAccountOwnerTitle(role: string): string {

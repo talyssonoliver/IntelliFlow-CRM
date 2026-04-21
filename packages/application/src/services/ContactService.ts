@@ -18,6 +18,7 @@ import {
 } from '@intelliflow/domain';
 import { EventBusPort } from '../ports/external';
 import { PersistenceError, ValidationError, NotFoundError } from '../errors';
+import { ContactMergedEvent } from './events/ContactMergedEvent';
 
 /**
  * Contact relationship types
@@ -447,7 +448,13 @@ export class ContactService {
   }
 
   /**
-   * Merge two contacts (keeping the primary one)
+   * Merge two contacts (keeping the primary one).
+   *
+   * IFC-310: Atomic transactional merge with child re-parenting.
+   * Delegates to `contactRepository.mergeInTransaction` so the whole operation
+   * (field merge + child re-parenting + secondary delete) runs inside a single
+   * Prisma transaction. On success emits a `ContactMergedEvent` via the event
+   * bus (transactional outbox pattern — ADR-011).
    */
   async mergeContacts(
     primaryContactId: string,
@@ -464,69 +471,87 @@ export class ContactService {
       return Result.fail(secondaryIdResult.error);
     }
 
+    if (primaryContactId === secondaryContactId) {
+      return Result.fail(new ValidationError('Cannot merge a contact with itself'));
+    }
+
     const [primary, secondary] = await Promise.all([
       this.contactRepository.findById(primaryIdResult.value),
       this.contactRepository.findById(secondaryIdResult.value),
     ]);
 
     if (!primary) {
-      return Result.fail(new ValidationError(`Primary contact not found: ${primaryContactId}`));
+      return Result.fail(new NotFoundError(`Primary contact not found: ${primaryContactId}`));
     }
     if (!secondary) {
-      return Result.fail(new ValidationError(`Secondary contact not found: ${secondaryContactId}`));
+      return Result.fail(new NotFoundError(`Secondary contact not found: ${secondaryContactId}`));
     }
 
-    // Business rule: Cannot merge contact with itself
-    if (primaryContactId === secondaryContactId) {
-      return Result.fail(new ValidationError('Cannot merge a contact with itself'));
-    }
-
-    // Merge fields from secondary to primary (only if primary is missing them)
-    const fieldsUpdated: string[] = [];
-
-    if (!primary.title && secondary.title) {
-      primary.updateContactInfo({ title: secondary.title }, mergedBy);
-      fieldsUpdated.push('title');
-    }
-
-    if (!primary.phone && secondary.phone) {
-      primary.updateContactInfo({ phone: secondary.phone }, mergedBy);
-      fieldsUpdated.push('phone');
-    }
-
-    if (!primary.department && secondary.department) {
-      primary.updateContactInfo({ department: secondary.department }, mergedBy);
-      fieldsUpdated.push('department');
-    }
-
-    // If secondary has account but primary doesn't, associate primary with that account
-    if (!primary.hasAccount && secondary.hasAccount) {
-      await this.associateWithAccount(
-        primaryContactId,
-        secondary.accountId!,
-        mergedBy,
-        primary.tenantId
+    // Cross-tenant guard (defence-in-depth; repository enforces again inside tx).
+    if (primary.tenantId !== secondary.tenantId) {
+      return Result.fail(
+        new ValidationError(
+          `Cannot merge contacts from different tenants: ${primary.tenantId} vs ${secondary.tenantId}`
+        )
       );
-      fieldsUpdated.push('accountId');
     }
 
+    // Prepare scalar merge fields (primary-wins policy: secondary fills
+    // null/empty only).
+    const mergeFields: {
+      title?: string;
+      phone?: string;
+      department?: string;
+      accountId?: string;
+    } = {};
+    if (!primary.title && secondary.title) mergeFields.title = secondary.title;
+    if (!primary.phone && secondary.phone) mergeFields.phone = secondary.phone.toValue();
+    if (!primary.department && secondary.department) mergeFields.department = secondary.department;
+    if (!primary.hasAccount && secondary.hasAccount && secondary.accountId) {
+      mergeFields.accountId = secondary.accountId;
+    }
+
+    // Delegate the atomic merge to the repository port. The Prisma adapter
+    // wraps everything (child re-parenting + field merge + secondary delete)
+    // in a single `$transaction`.
+    let mergeResult;
     try {
-      // Save primary with merged data
-      await this.contactRepository.save(primary);
-
-      // Delete secondary contact
-      await this.contactRepository.delete(secondaryIdResult.value);
-    } catch {
-      return Result.fail(new PersistenceError('Failed to complete contact merge'));
+      mergeResult = await this.contactRepository.mergeInTransaction({
+        primaryId: primaryContactId,
+        secondaryId: secondaryContactId,
+        tenantId: primary.tenantId,
+        mergedBy,
+        mergeFields,
+      });
+    } catch (error) {
+      const domainError =
+        error instanceof DomainError
+          ? error
+          : new PersistenceError('Failed to complete contact merge');
+      return Result.fail(domainError);
     }
 
-    await this.publishEvents(primary);
+    // Post-commit: emit ContactMergedEvent via event bus. Failure here MUST
+    // NOT roll back the merge (transaction already committed) — NF-005.
+    try {
+      const event = new ContactMergedEvent({
+        primaryId: mergeResult.survivingContactId,
+        mergedContactId: mergeResult.mergedContactId,
+        tenantId: primary.tenantId,
+        mergedBy,
+        mergedAt: mergeResult.mergedAt,
+        fieldsUpdated: mergeResult.fieldsUpdated,
+      });
+      await this.eventBus.publish(event);
+    } catch (error) {
+      console.warn('[ContactService.mergeContacts] event publish failed (fire-and-forget):', error);
+    }
 
     return Result.ok({
-      survivingContactId: primaryContactId,
-      mergedContactId: secondaryContactId,
-      fieldsUpdated,
-      mergedAt: new Date(),
+      survivingContactId: mergeResult.survivingContactId,
+      mergedContactId: mergeResult.mergedContactId,
+      fieldsUpdated: mergeResult.fieldsUpdated,
+      mergedAt: mergeResult.mergedAt,
     });
   }
 

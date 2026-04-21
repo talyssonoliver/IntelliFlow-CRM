@@ -649,7 +649,9 @@ describe('ContactService (additional coverage)', () => {
       await contactRepository.save(primary);
       await contactRepository.save(secondary);
 
-      contactRepository.save = vi.fn().mockRejectedValue(new Error('DB down'));
+      // IFC-310: merge now delegates to repository.mergeInTransaction; mock
+      // that to simulate the atomic tx failing mid-flight.
+      contactRepository.mergeInTransaction = vi.fn().mockRejectedValue(new Error('DB down'));
 
       const result = await service.mergeContacts(primary.id.value, secondary.id.value, 'merger');
 

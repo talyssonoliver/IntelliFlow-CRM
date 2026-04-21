@@ -73,8 +73,12 @@ describe('Notifications Validators', () => {
   // Enum Arrays
   // =========================================================================
   describe('Enum arrays', () => {
-    it('should have 51 notification types', () => {
-      expect(NOTIFICATION_TYPES).toHaveLength(51);
+    it('should have 54 notification types', () => {
+      expect(NOTIFICATION_TYPES).toHaveLength(54);
+    });
+
+    it('NOTIFICATION_TYPES contains account_reassigned (IFC-311)', () => {
+      expect(NOTIFICATION_TYPES).toContain('account_reassigned');
     });
 
     it('should include PG-184 deal automation notification types', () => {
@@ -88,6 +92,16 @@ describe('Notifications Validators', () => {
       expect(NOTIFICATION_TYPES).toContain('ticket_resolved');
       expect(NOTIFICATION_TYPES).toContain('ticket_duplicate_suspected');
       expect(NOTIFICATION_TYPES).toContain('ticket_auto_closed');
+    });
+
+    it('AC-012: should include IFC-310 duplicate-detection runtime notification types', () => {
+      expect(NOTIFICATION_TYPES).toContain('contact_duplicate_suspected');
+      expect(NOTIFICATION_TYPES).toContain('account_duplicate_suspected');
+    });
+
+    it('AC-012: notificationTypeSchema accepts IFC-310 duplicate-suspected literals', () => {
+      expect(notificationTypeSchema.safeParse('contact_duplicate_suspected').success).toBe(true);
+      expect(notificationTypeSchema.safeParse('account_duplicate_suspected').success).toBe(true);
     });
 
     it('should have 3 notification priorities', () => {

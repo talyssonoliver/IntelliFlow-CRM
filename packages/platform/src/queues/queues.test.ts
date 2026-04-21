@@ -183,6 +183,15 @@ describe('Queue Configuration', () => {
       expect(QUEUE_NAMES.EMAIL_NOTIFICATIONS).toBe('intelliflow-notifications-email');
       expect(QUEUE_NAMES.WEBHOOK_DELIVERY).toBe('intelliflow:webhook-delivery');
     });
+
+    it('defines IFC-312 contact/account AI chain queue names distinct from lead-only AI_INSIGHTS', () => {
+      expect(QUEUE_NAMES.AI_ENRICHMENT).toBe('ai-enrichment');
+      expect(QUEUE_NAMES.AI_ENTITY_INSIGHT).toBe('ai-entity-insight');
+      expect(QUEUE_NAMES.AI_REPLY_DRAFT).toBe('ai-reply-draft');
+      expect(QUEUE_NAMES.AI_ACCOUNT_SCORING).toBe('ai-account-scoring');
+      expect(QUEUE_NAMES.AI_TAG_SUGGESTION).toBe('ai-tag-suggestion');
+      expect(QUEUE_NAMES.AI_ENTITY_INSIGHT).not.toBe(QUEUE_NAMES.AI_INSIGHTS);
+    });
   });
 
   describe('DEFAULT_QUEUE_CONFIGS', () => {
