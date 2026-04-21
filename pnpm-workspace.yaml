@@ -11,6 +11,3 @@ packages:
 
   # Infrastructure tooling
   - 'tools/*'
-
-  # Testing utilities
-  - 'tests/*'

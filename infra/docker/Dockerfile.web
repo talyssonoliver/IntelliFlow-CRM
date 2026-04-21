@@ -8,15 +8,12 @@ RUN corepack enable && corepack prepare pnpm@10.33.0 --activate
 
 WORKDIR /app
 
-# --parents preserves directory structure from globs (BuildKit 1.7+, no flattening)
-COPY --parents \
-  package.json pnpm-lock.yaml pnpm-workspace.yaml \
-  apps/*/package.json \
-  apps/workers/*/package.json \
-  packages/*/package.json \
-  tools/*/package.json \
-  tests/*/package.json \
-  ./
+# One COPY --parents per glob: empty glob fails with a clear error, not a hash miss
+COPY --parents package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY --parents apps/*/package.json           ./
+COPY --parents apps/workers/*/package.json   ./
+COPY --parents packages/*/package.json       ./
+COPY --parents tools/*/package.json          ./
 
 # Install all dependencies (populates virtual store)
 RUN pnpm install --frozen-lockfile --ignore-scripts
