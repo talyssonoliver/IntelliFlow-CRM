@@ -27,8 +27,9 @@ WORKDIR /app
 # Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/ai-worker/node_modules ./apps/ai-worker/node_modules
+COPY --from=deps /app/packages ./packages
 
-# Copy source code
+# Copy source code (node_modules excluded via .dockerignore)
 COPY . .
 
 # Generate Prisma client
