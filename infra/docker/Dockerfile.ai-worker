@@ -9,7 +9,7 @@ WORKDIR /app
 
 # Copy package files
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY apps/ai-worker/package.json ./apps/ai-worker/
+COPY apps/*/package.json ./apps/
 COPY packages/*/package.json ./packages/
 
 # Install dependencies
@@ -24,13 +24,14 @@ RUN apk add --no-cache python3 py3-pip build-base
 
 WORKDIR /app
 
-# Copy dependencies from deps stage
+# Copy virtual store from deps stage (all packages already downloaded)
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/apps/ai-worker/node_modules ./apps/ai-worker/node_modules
-COPY --from=deps /app/packages ./packages
 
 # Copy source code (node_modules excluded via .dockerignore)
 COPY . .
+
+# Re-link workspace packages using cached virtual store (no re-download)
+RUN pnpm install --frozen-lockfile --prefer-offline --ignore-scripts
 
 # Generate Prisma client
 RUN pnpm --filter db db:generate

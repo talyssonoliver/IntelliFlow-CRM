@@ -9,7 +9,7 @@ WORKDIR /app
 
 # Copy package files
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY apps/web/package.json ./apps/web/
+COPY apps/*/package.json ./apps/
 COPY packages/*/package.json ./packages/
 
 # Install dependencies
@@ -21,13 +21,14 @@ RUN corepack enable && corepack prepare pnpm@10.33.0 --activate
 
 WORKDIR /app
 
-# Copy dependencies from deps stage
+# Copy virtual store from deps stage (all packages already downloaded)
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
-COPY --from=deps /app/packages ./packages
 
 # Copy source code (node_modules excluded via .dockerignore)
 COPY . .
+
+# Re-link workspace packages using cached virtual store (no re-download)
+RUN pnpm install --frozen-lockfile --prefer-offline --ignore-scripts
 
 # Set build-time environment variables
 ARG NEXT_PUBLIC_API_URL
