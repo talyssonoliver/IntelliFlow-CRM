@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.7-labs
 # IntelliFlow CRM - API Server Dockerfile
 # Multi-stage build for optimal image size and security
 
@@ -7,29 +8,15 @@ RUN corepack enable && corepack prepare pnpm@10.33.0 --activate
 
 WORKDIR /app
 
-# Copy root manifests
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-# Copy each workspace package.json explicitly (glob flattens to one file — don't use)
-COPY apps/ai-worker/package.json       ./apps/ai-worker/
-COPY apps/api/package.json             ./apps/api/
-COPY apps/project-tracker/package.json ./apps/project-tracker/
-COPY apps/web/package.json             ./apps/web/
-COPY apps/workers/package.json         ./apps/workers/
-COPY packages/adapters/package.json        ./packages/adapters/
-COPY packages/ai/package.json              ./packages/ai/
-COPY packages/api-client/package.json      ./packages/api-client/
-COPY packages/application/package.json    ./packages/application/
-COPY packages/db/package.json              ./packages/db/
-COPY packages/domain/package.json          ./packages/domain/
-COPY packages/observability/package.json   ./packages/observability/
-COPY packages/platform/package.json        ./packages/platform/
-COPY packages/sdk/package.json             ./packages/sdk/
-COPY packages/search/package.json          ./packages/search/
-COPY packages/test-fixtures/package.json   ./packages/test-fixtures/
-COPY packages/typescript-config/package.json ./packages/typescript-config/
-COPY packages/ui/package.json              ./packages/ui/
-COPY packages/validators/package.json      ./packages/validators/
-COPY packages/webhooks/package.json        ./packages/webhooks/
+# --parents preserves directory structure from globs (BuildKit 1.7+, no flattening)
+COPY --parents \
+  package.json pnpm-lock.yaml pnpm-workspace.yaml \
+  apps/*/package.json \
+  apps/workers/*/package.json \
+  packages/*/package.json \
+  tools/*/package.json \
+  tests/*/package.json \
+  ./
 
 # Install all dependencies (populates virtual store)
 RUN pnpm install --frozen-lockfile --ignore-scripts
