@@ -39,7 +39,7 @@ jobs:
           trivy-config: infra/security/trivy.yaml
           format: "sarif"
           output: "trivy-results.sarif"
-          exit-code: '0'
+          exit-code: "0"
 
       - name: Upload Trivy results to GitHub Security
         uses: github/codeql-action/upload-sarif@v4
@@ -55,7 +55,7 @@ jobs:
           trivy-config: infra/security/trivy.yaml
           format: "table"
           output: "artifacts/reports/trivy-scan-${{ github.run_number }}.txt"
-          exit-code: '0'
+          exit-code: "0"
 
       - name: Upload Trivy scan artifacts
         uses: actions/upload-artifact@v4
