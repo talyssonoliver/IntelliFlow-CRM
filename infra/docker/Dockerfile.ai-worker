@@ -46,8 +46,8 @@ RUN pnpm --filter validators build
 # Build the AI worker
 RUN pnpm --filter ai-worker build
 
-# Prune dev dependencies
-RUN pnpm prune --prod
+# Prune dev dependencies (--config.confirmModulesPurge=false required in pnpm v10 non-TTY)
+RUN pnpm prune --prod --config.confirmModulesPurge=false --ignore-scripts
 
 # Stage 3: Runner
 FROM node:20-alpine AS runner
