@@ -1,0 +1,31 @@
+{
+  "task_id": "IFC-310",
+  "captured_at": "2026-04-20T00:00:00Z",
+  "description": "Pre-implementation coverage baseline for IFC-310 duplicate-detection runtime surface area. The six NEW service/evaluator/worker files and the two new domain events do not yet exist on disk, so their baseline is empty by construction. The modified files (contact.router.ts, account.router.ts, ContactService.ts, AccountService.ts, packages/validators/src/notifications.ts, container.ts, context.ts, ai-worker/src/main.ts) carry their current HEAD coverage into this task; scoped after-capture will measure the delta.",
+  "measurement_scope": [
+    "apps/api/src/shared/duplicate-rule-evaluator.ts",
+    "apps/api/src/modules/contact/contact-duplicate-detection.service.ts",
+    "apps/api/src/modules/account/account-duplicate-detection.service.ts",
+    "apps/ai-worker/src/workers/contact-embed-worker.ts",
+    "packages/application/src/services/events/ContactMergedEvent.ts",
+    "packages/domain/src/crm/contact/CrossTenantOrNotFoundError.ts",
+    "apps/api/src/modules/contact/contact.router.ts",
+    "apps/api/src/modules/account/account.router.ts",
+    "packages/application/src/services/ContactService.ts",
+    "packages/application/src/services/AccountService.ts",
+    "packages/validators/src/notifications.ts"
+  ],
+  "command": "pnpm --filter @intelliflow/api --filter @intelliflow/ai-worker --filter @intelliflow/application --filter @intelliflow/validators test --run --coverage --coverage.provider=istanbul --coverage.include='apps/api/src/shared/duplicate-rule-evaluator.ts' --coverage.include='apps/api/src/modules/contact/contact-duplicate-detection.service.ts' --coverage.include='apps/api/src/modules/account/account-duplicate-detection.service.ts' --coverage.include='apps/ai-worker/src/workers/contact-embed-worker.ts' --coverage.include='packages/application/src/services/events/ContactMergedEvent.ts'",
+  "baseline_totals": {
+    "lines": { "total": 0, "covered": 0, "skipped": 0, "pct": 0 },
+    "statements": { "total": 0, "covered": 0, "skipped": 0, "pct": 0 },
+    "functions": { "total": 0, "covered": 0, "skipped": 0, "pct": 0 },
+    "branches": { "total": 0, "covered": 0, "skipped": 0, "pct": 0 }
+  },
+  "baseline_files": {},
+  "notes": [
+    "The six net-new artifacts for IFC-310 (duplicate-rule-evaluator, contact/account duplicate-detection services, contact-embed-worker, ContactMergedEvent, CrossTenantOrNotFoundError) do not exist yet; baseline is empty by construction.",
+    "Existing modified files (contact.router.ts, account.router.ts, ContactService.ts, AccountService.ts, notifications.ts) retain their current HEAD coverage — changes are additive (branch into new service) plus one hardened merge transaction.",
+    "After-implementation coverage will be recorded in artifacts/coverage/IFC-310-after.json and coverage-summary.json, with scoped thresholds enforced at exec Phase 4.5 Gate 9 (Coverage Measurement)."
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "task_id": "IFC-312",
+  "captured_at": "2026-04-20T22:32:00Z",
+  "description": "Pre-implementation coverage baseline for IFC-312 AI chains surface area. All 10 target chain files, shared enrichment adapter, 5 BullMQ job processors, new Prisma models (AccountAIInsight, ContactReplyDraft), new Account scalars (score/scoreProvenance/etc.), and new tRPC procedures (contact.{suggestTags,generateInsight,draftReply,listReplyDrafts} + account.{suggestTags,generateInsight,scoreAccount,getAiInsight}) do not yet exist on disk. Baseline is empty by construction.",
+  "measurement_scope": [
+    "apps/ai-worker/src/contact-enrichment.chain.ts",
+    "apps/ai-worker/src/account-enrichment.chain.ts",
+    "apps/ai-worker/src/shared/enrichment-adapter.ts",
+    "apps/ai-worker/src/contact-tag-suggestion.chain.ts",
+    "apps/ai-worker/src/account-tag-suggestion.chain.ts",
+    "apps/ai-worker/src/contact-insight.chain.ts",
+    "apps/ai-worker/src/account-insight.chain.ts",
+    "apps/ai-worker/src/contact-reply-draft.chain.ts",
+    "apps/ai-worker/src/account-industry-inference.chain.ts",
+    "apps/ai-worker/src/account-scoring.chain.ts",
+    "apps/ai-worker/src/jobs/enrichment.job.ts",
+    "apps/ai-worker/src/jobs/entity-insight.job.ts",
+    "apps/ai-worker/src/jobs/reply-draft.job.ts",
+    "apps/ai-worker/src/jobs/account-scoring.job.ts",
+    "apps/ai-worker/src/jobs/tag-suggestion.job.ts",
+    "apps/api/src/modules/contact/contact.router.ts",
+    "apps/api/src/modules/account/account.router.ts"
+  ],
+  "command": "npx vitest run apps/ai-worker/src apps/api/src/modules/contact apps/api/src/modules/account --coverage --coverage.provider=istanbul --coverage.include='apps/ai-worker/src/contact-*.chain.ts' --coverage.include='apps/ai-worker/src/account-*.chain.ts' --coverage.include='apps/ai-worker/src/shared/enrichment-adapter.ts' --coverage.include='apps/ai-worker/src/jobs/**' --coverage.include='apps/api/src/modules/contact/contact.router.ts' --coverage.include='apps/api/src/modules/account/account.router.ts'",
+  "baseline_totals": {
+    "lines": { "total": 0, "covered": 0, "skipped": 0, "pct": 0 },
+    "statements": { "total": 0, "covered": 0, "skipped": 0, "pct": 0 },
+    "functions": { "total": 0, "covered": 0, "skipped": 0, "pct": 0 },
+    "branches": { "total": 0, "covered": 0, "skipped": 0, "pct": 0 }
+  },
+  "baseline_files": {},
+  "notes": [
+    "All IFC-312 AI chain target files, shared enrichment adapter, new BullMQ job processors, and new Prisma models/scalars are newly created during exec; baseline is empty by construction.",
+    "Existing contact.router.ts + account.router.ts will be MODIFIED (new procedures added); per-file baselines are captured from current HEAD implicitly (coverage will drop momentarily during RED phase then rise above baseline in GREEN).",
+    "After-implementation coverage will be recorded in artifacts/coverage/coverage-summary.json (executive dashboard) and cited in IFC-312-delivery.md under Phase 4.1 scoped coverage results."
+  ]
+}
