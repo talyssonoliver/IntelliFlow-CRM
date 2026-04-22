@@ -108,7 +108,7 @@
       "duration_minutes": 15
     }
   ],
-  "notes": "13/13 tasks DONE (100%). Last synced: 2026-04-22T21:20:05.885Z",
+  "notes": "13/13 tasks DONE (100%). Last synced: 2026-04-22T22:22:39.193Z",
   "section": "Public Pages",
   "dependencies": {
     "all_satisfied": true,
@@ -165,6 +165,6 @@
       "spi": 1,
       "status": "on_track"
     },
-    "calculated_at": "2026-04-22T21:20:06.073Z"
+    "calculated_at": "2026-04-22T22:22:39.436Z"
   }
 }
