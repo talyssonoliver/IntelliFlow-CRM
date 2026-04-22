@@ -36,6 +36,18 @@ RUN pnpm install --frozen-lockfile --offline --ignore-scripts
 # Generate Prisma client
 RUN pnpm --filter db db:generate
 
+# Build workspace packages in dependency order (all use dist/ exports; CI has no pre-built dist/)
+RUN pnpm --filter domain build
+RUN pnpm --filter validators build
+RUN pnpm --filter webhooks build
+RUN pnpm --filter platform build
+RUN pnpm --filter db build
+RUN pnpm --filter worker-shared build
+RUN pnpm --filter observability build
+RUN pnpm --filter application build
+RUN pnpm --filter adapters build
+RUN pnpm --filter ai-worker build
+
 # Build the API
 RUN pnpm --filter api build
 

@@ -7,16 +7,31 @@
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 
+const IDENTIFIER_RE = /^[A-Za-z_$][\w$]*$/;
+
 const [, , file, argName, ...methods] = process.argv;
 if (!file || !argName || !methods.length) {
   console.error('usage: <file> <arg-name> <method>...');
   process.exit(1);
 }
 
+if (!IDENTIFIER_RE.test(argName)) {
+  console.error(`invalid arg-name: ${argName} (must be a JS identifier)`);
+  process.exit(1);
+}
+
+for (const method of methods) {
+  if (!IDENTIFIER_RE.test(method)) {
+    console.error(`invalid method: ${method} (must be a JS identifier)`);
+    process.exit(1);
+  }
+}
+
 let src = readFileSync(file, 'utf8');
 
 for (const method of methods) {
   // Balanced-paren match: allow up to one level of nested parens inside args.
+  // `method` is validated above as a plain JS identifier — no regex metacharacters.
   const re = new RegExp(
     `repository\\.${method}\\(((?:[^()]|\\([^()]*\\))*)\\)`,
     'g'

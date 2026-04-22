@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-04-20T22:01:20.664Z",
+  "generated_at": "2026-04-22T21:20:07.179Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
     "total_specs_analyzed": 391,
-    "completed": 388,
+    "completed": 391,
     "partially_done": 0,
-    "spec_only": 3,
+    "spec_only": 0,
     "uncertain": 0
   },
   "status_legend": {
@@ -4257,15 +4257,15 @@
       "spec_path": ".specify/sprints/sprint-18/specifications/IFC-310-spec.md",
       "has_spec": true,
       "has_plan": true,
-      "has_attestation": false,
-      "csv_status": "Plan Complete",
-      "metric_status": "NOT_FOUND",
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-182",
         "PG-183"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-311",
@@ -4273,16 +4273,16 @@
       "sprint": 18,
       "spec_path": ".specify/sprints/sprint-18/specifications/IFC-311-spec.md",
       "has_spec": true,
-      "has_plan": false,
-      "has_attestation": false,
-      "csv_status": "Spec Complete",
-      "metric_status": "NOT_FOUND",
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-182",
         "PG-183"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-312",
@@ -4291,16 +4291,16 @@
       "spec_path": ".specify/sprints/sprint-19/specifications/IFC-312-spec.md",
       "has_spec": true,
       "has_plan": true,
-      "has_attestation": false,
-      "csv_status": "Plan Complete",
-      "metric_status": "PLANNED",
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-182",
         "PG-183",
         "IFC-310"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-001",

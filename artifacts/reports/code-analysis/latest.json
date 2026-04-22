@@ -1,11 +1,21 @@
 {
-  "timestamp": "2026-03-18T01:30:09.451Z",
+  "timestamp": "2026-04-22T21:01:39.947Z",
   "knip": {
     "success": true,
     "data": {
-      "files": [],
+      "files": [
+        ".claude/skills/usability-walkthrough/scripts/gif-to-mp4.ts",
+        "apps/web/src/components/home/index.ts",
+        "apps/web/src/lib/auth/auth-status-cache.ts",
+        "apps/web/src/components/workflows/admin/FieldDescriptorBuilder.tsx",
+        "apps/api/src/security/audit-coverage-test.ts",
+        "apps/api/src/modules/home/home.cache.bench.ts",
+        "apps/ai-worker/src/utils/openai-client.ts"
+      ],
       "duplicates": [],
       "dependencies": [
+        "jose",
+        "@opentelemetry/winston-transport",
         "@langchain/core",
         "zod"
       ],
@@ -16,41 +26,257 @@
       "unlisted": [],
       "exports": [
         {
-          "file": "packages/application/src/usecases/scheduling/ScheduleAppointment.ts",
+          "file": "apps/ai-worker/src/versioning/chain-version-loader.ts",
           "exports": [
-            "ScheduleAppointmentUseCase"
+            "configureVersionLoader"
           ]
         },
         {
-          "file": "packages/application/src/usecases/scheduling/RescheduleAppointment.ts",
+          "file": "apps/ai-worker/src/lib/llm-factory.ts",
           "exports": [
-            "RescheduleAppointmentUseCase"
+            "__resetFactoryCache",
+            "__resetBreakers"
           ]
         },
         {
-          "file": "packages/application/src/usecases/scheduling/CancelAppointment.ts",
+          "file": "apps/ai-worker/src/metrics/prometheus-exporter.ts",
           "exports": [
-            "CancelAppointmentUseCase"
+            "_resetRetrainingTriggerCounters"
           ]
         },
         {
-          "file": "packages/application/src/usecases/scheduling/CompleteAppointment.ts",
+          "file": "apps/ai-worker/src/jobs/summarize-conversation.job.ts",
           "exports": [
-            "CompleteAppointmentUseCase"
+            "DEFAULT_SUMMARIZE_JOB_OPTIONS"
           ]
         },
         {
-          "file": "packages/application/src/usecases/scheduling/CheckConflicts.ts",
+          "file": "apps/ai-worker/src/shared/enrichment-adapter.ts",
           "exports": [
-            "CheckConflictsUseCase"
+            "__resetEnrichmentAdapterCache"
+          ]
+        },
+        {
+          "file": "tools/scripts/commitlint.config.js",
+          "exports": [
+            "default"
+          ]
+        },
+        {
+          "file": "tools/scripts/conversion-tracking.js",
+          "exports": [
+            "trackPageView",
+            "trackFeatureView",
+            "trackFeatureLearnMore",
+            "trackCTAClick",
+            "initScrollTracking",
+            "trackTimeOnPage"
+          ]
+        },
+        {
+          "file": "tools/scripts/docusaurus.config.js",
+          "exports": [
+            "default"
+          ]
+        },
+        {
+          "file": "tools/scripts/k6/authenticated-load-test.js",
+          "exports": [
+            "options",
+            "setup",
+            "teardown",
+            "handleSummary"
+          ]
+        },
+        {
+          "file": "tools/scripts/k6/comprehensive-load-test.js",
+          "exports": [
+            "options",
+            "setup",
+            "teardown",
+            "handleSummary"
+          ]
+        },
+        {
+          "file": "tools/scripts/k6/gate2-benchmark.js",
+          "exports": [
+            "options",
+            "setup",
+            "teardown"
+          ]
+        },
+        {
+          "file": "tools/scripts/k6/load-test.js",
+          "exports": [
+            "options",
+            "setup",
+            "teardown",
+            "handleSummary"
+          ]
+        },
+        {
+          "file": "tools/scripts/k6/quick-test.js",
+          "exports": [
+            "options",
+            "setup",
+            "teardown",
+            "handleSummary"
+          ]
+        },
+        {
+          "file": "tools/scripts/k6/__tests__/auth-smoke.js",
+          "exports": [
+            "options",
+            "handleSummary"
+          ]
+        },
+        {
+          "file": "packages/test-fixtures/src/ids.ts",
+          "exports": [
+            "TEST_TENANT_ID_ALT",
+            "TEST_TENANT_ID_ALT2",
+            "TEST_OWNER_ID",
+            "TEST_OWNER_ID_ALT",
+            "TEST_OWNER_ID_ALT2",
+            "TEST_USER_ID",
+            "TEST_USER_ID_ALT"
+          ]
+        },
+        {
+          "file": "packages/domain/src/workflow/node-catalog.ts",
+          "exports": [
+            "WorkflowFlagSchema"
+          ]
+        },
+        {
+          "file": "apps/web/src/tracing/otel.ts",
+          "exports": [
+            "shutdownOpenTelemetry",
+            "getSDKInstance"
+          ]
+        },
+        {
+          "file": "apps/web/src/lib/workflow-types.ts",
+          "exports": [
+            "PALETTE_ITEMS"
+          ]
+        },
+        {
+          "file": "apps/web/src/components/dashboard/WidgetSkeleton.tsx",
+          "exports": [
+            "WidgetSkeleton"
+          ]
+        },
+        {
+          "file": "apps/web/src/components/workflows/node-registry.tsx",
+          "exports": [
+            "workflowNodeTypes",
+            "getPaletteEntries",
+            "registerConfigForm",
+            "getConfigForm",
+            "unregisterCustomNodeType",
+            "getCustomNodeTypeDescriptor",
+            "isCanonicalNodeType"
+          ]
+        },
+        {
+          "file": "apps/web/src/components/workflows/config-forms/types.ts",
+          "exports": [
+            "resetConfigFormRegistry"
+          ]
+        },
+        {
+          "file": "apps/api/src/modules/auth/auth.router.ts",
+          "exports": [
+            "evictStatusCache"
+          ]
+        },
+        {
+          "file": "apps/api/src/modules/legal/document-automation.ts",
+          "exports": [
+            "notifyDocumentReassignment"
+          ]
+        },
+        {
+          "file": "apps/api/src/modules/ticket/ticket-automation.ts",
+          "exports": [
+            "loadRequiredTicketFields",
+            "assertRequiredTicketFields"
           ]
         }
       ],
       "types": [
         {
+          "file": "apps/ai-worker/src/versioning/chain-version-loader.ts",
+          "types": [
+            "WorkerChainKey"
+          ]
+        },
+        {
+          "file": "packages/domain/src/workflow/node-catalog.ts",
+          "types": [
+            "WorkflowEntityKind",
+            "EntityRef",
+            "ActionType",
+            "DecisionOperator",
+            "FieldDescriptorType"
+          ]
+        },
+        {
+          "file": "apps/web/src/lib/workflow-types.ts",
+          "types": [
+            "WorkflowNode",
+            "WorkflowEdge",
+            "WorkflowDefinition"
+          ]
+        },
+        {
+          "file": "apps/web/src/lib/legal/violation-tracker.ts",
+          "types": [
+            "AupMetadata",
+            "AupSection"
+          ]
+        },
+        {
+          "file": "apps/web/src/lib/legal/cookie-policy-tracker.ts",
+          "types": [
+            "CookiePolicyMetadata",
+            "CookiePolicySection"
+          ]
+        },
+        {
+          "file": "apps/web/src/lib/legal/signature-handler.ts",
+          "types": [
+            "DpaMetadata",
+            "DpaSection",
+            "DpaSignatureRecord"
+          ]
+        },
+        {
+          "file": "apps/web/src/lib/legal/consent-tracker.ts",
+          "types": [
+            "PrivacyPolicyMetadata",
+            "PrivacyPolicySection"
+          ]
+        },
+        {
+          "file": "apps/web/src/lib/legal/acceptance-tracker.ts",
+          "types": [
+            "TermsMetadata",
+            "TermsSection"
+          ]
+        },
+        {
           "file": "apps/web/src/hooks/useCalendarVisibility.ts",
           "types": [
             "CustomCalendarEntry"
+          ]
+        },
+        {
+          "file": "apps/web/src/lib/ai-monitoring/workflow-types.ts",
+          "types": [
+            "WorkflowStepDef",
+            "WorkflowStepResult"
           ]
         },
         {
@@ -64,20 +290,28 @@
           "types": [
             "CalendarWebhooksRouter"
           ]
+        },
+        {
+          "file": "apps/api/src/modules/contact/contact-duplicate-detection.service.ts",
+          "types": [
+            "ContactDuplicateAction"
+          ]
         }
       ]
     },
     "summary": {
-      "unusedFiles": 0,
-      "unusedDeps": 4,
-      "unusedExports": 5,
-      "unusedTypes": 3
+      "unusedFiles": 7,
+      "unusedDeps": 6,
+      "unusedExports": 59,
+      "unusedTypes": 26
     }
   },
   "depcheck": {
     "success": true,
     "data": {
-      "dependencies": [],
+      "dependencies": [
+        "jose"
+      ],
       "devDependencies": [
         "@typescript-eslint/eslint-plugin",
         "@typescript-eslint/parser",
@@ -89,13 +323,14 @@
         "dotenv-cli",
         "license-checker",
         "madge",
-        "markdownlint-cli"
+        "markdownlint-cli",
+        "puppeteer"
       ],
       "missing": {}
     },
     "summary": {
-      "unusedDeps": 0,
-      "unusedDevDeps": 11,
+      "unusedDeps": 1,
+      "unusedDevDeps": 12,
       "missingDeps": 0
     }
   }

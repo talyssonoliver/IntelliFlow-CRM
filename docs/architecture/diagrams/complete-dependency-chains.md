@@ -2379,3 +2379,59 @@ New edges:
 - `ContactService.mergeContacts → EventBus.publish(ContactMergedEvent)` (transactional outbox via ADR-011)
 
 See ADR-050 for the full decision record.
+
+## IFC-312: AI Chains for Contacts + Accounts (2026-04-21)
+
+New shared adapter:
+- `EnrichmentProvider` port (`apps/ai-worker/src/shared/enrichment-adapter.ts`) with `LiteLLMEnrichmentAdapter` + `MockEnrichmentAdapter` implementations.
+
+New chain modules (10):
+- `contact-enrichment.chain.ts` — consumes `EnrichmentProvider.enrichContact`; fills only empty Contact fields.
+- `account-enrichment.chain.ts` — consumes `EnrichmentProvider.enrichAccount`; validates industry against tenant vocabulary.
+- `contact-tag-suggestion.chain.ts` — sync suggest via `withTimeout(5s)`; caps at 5, filters confidence < 0.3.
+- `account-tag-suggestion.chain.ts` — same shape for accounts.
+- `contact-insight.chain.ts` — upserts `ContactAIInsight` with provenance fields.
+- `account-insight.chain.ts` — upserts `AccountAIInsight` (new model).
+- `contact-reply-draft.chain.ts` — returns payload only; job handler writes `ContactReplyDraft` with hard-coded `status='DRAFT'` (ADR-037 compliance).
+- `account-industry-inference.chain.ts` — `z.enum(vocabulary.keys)` restriction at invoke time prevents off-taxonomy values.
+- `account-scoring.chain.ts` — writes `Account.score`/`scoreProvenance`/`scoredAt`/`scoreModelVersion`.
+
+New BullMQ queues + job handlers (5):
+- `AI_ENRICHMENT` → `enrichment.job.ts` (discriminates contact|account).
+- `AI_ENTITY_INSIGHT` → `entity-insight.job.ts` (distinct from lead-only `AI_INSIGHTS`).
+- `AI_REPLY_DRAFT` → `reply-draft.job.ts` (writes ContactReplyDraft with DRAFT status only).
+- `AI_ACCOUNT_SCORING` → `account-scoring.job.ts`.
+- `AI_TAG_SUGGESTION` → `tag-suggestion.job.ts` (synchronous via `waitUntilFinished(5s)`).
+
+All 5 job handlers re-check the relevant `aiXxx` toggle at job start (race safety against flag flips between enqueue and execute).
+
+New Prisma models + scalars:
+- `AccountAIInsight` (new model) — one-per-account insight row with provenance.
+- `ContactReplyDraft` (new model) — drafts always inserted with `status='DRAFT'`.
+- `Account.score/scoreProvenance/scoredAt/scoreModelVersion` (4 nullable scalars) + `@@index([score])`.
+- `Account.industryInferredAt/industryModelVersion` (2 nullable scalars).
+- `ContactAIInsight.modelVersion/generatedAt/source` (3 nullable provenance scalars).
+
+New tRPC procedures (8):
+- Contact: `suggestTags`, `generateInsight`, `draftReply`, `listReplyDrafts`.
+- Account: `suggestTags`, `generateInsight`, `scoreAccount`, `getAiInsight`.
+
+New UI components (4):
+- `InferredFieldBadge` (shared) — AI-inferred field indicator.
+- `SuggestedTagsRow` (contacts) — synchronous tag suggestions row.
+- `ReplyDraftsPanel` (contacts) — lists latest drafts with provenance.
+- `AccountScoreBadge` (accounts) — score badge with tier coloring + factors tooltip.
+
+New edges:
+- `contact.router → Queue(AI_ENRICHMENT|AI_ENTITY_INSIGHT|AI_REPLY_DRAFT|AI_TAG_SUGGESTION) → enrichment.job|entity-insight.job|reply-draft.job|tag-suggestion.job → contact-*.chain → EnrichmentProvider (when needed) / Prisma (Contact/ContactAIInsight/ContactReplyDraft).`
+- `account.router → Queue(AI_ENRICHMENT|AI_ENTITY_INSIGHT|AI_ACCOUNT_SCORING|AI_TAG_SUGGESTION) → enrichment.job|entity-insight.job|account-scoring.job|tag-suggestion.job → account-*.chain → EnrichmentProvider (when needed) / Prisma (Account/AccountAIInsight).`
+- `AccountDetail.tsx (ai-insights tab) → trpc.account.getAiInsight → Prisma(AccountAIInsight).`
+- `ReplyDraftsPanel → trpc.contact.listReplyDrafts → Prisma(ContactReplyDraft).`
+- `SuggestedTagsRow → trpc.contact|account.suggestTags → BullMQ waitUntilFinished → tag-suggestion.job.`
+
+Cross-cutting:
+- All chains wrap LLM invocation via `createLLMForTenant` (per-tenant tier resolution) and `withMonitoring` (chain-monitor observability).
+- All string inputs pass through `sanitizeStringField` (prompt-injection guard) before LLM call.
+- `IFC-310` (duplicate-detection) consumes `EnrichmentProvider` when `aiEnrichment` toggle is on — IFC-312 is producer, IFC-310 is consumer.
+
+See ADR-037 (AI output review), ADR-047 (hexagonal adapter), ADR-048 (hybrid AI inference), ADR-050 (duplicate-detection parallel).

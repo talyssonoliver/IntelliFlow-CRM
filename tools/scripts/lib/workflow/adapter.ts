@@ -10,6 +10,15 @@ import { existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import Papa from 'papaparse';
 
+/**
+ * Strip control bytes (CR/LF, NUL, ANSI escapes) from a value before it gets
+ * embedded in a log line, so adversarial input cannot forge log entries.
+ */
+function safeForLog(value: unknown): string {
+  // eslint-disable-next-line no-control-regex
+  return String(value).replaceAll(/[\x00-\x1f\x7f]/g, '?');
+}
+
 // =============================================================================
 // FILE LOCKING UTILITIES (for concurrent CSV access safety)
 // =============================================================================
@@ -237,7 +246,9 @@ export async function updateTaskStatus(
   const currentStatus = tasks[taskIndex].Status as WorkflowStatus;
   const validation = validateTransition(currentStatus, status);
   if (!validation.valid) {
-    console.warn(`Invalid status transition for ${taskId}: ${validation.reason}`);
+    console.warn(
+      `Invalid status transition for ${safeForLog(taskId)}: ${safeForLog(validation.reason)}`
+    );
     // Still allow the transition but log warning
   }
 

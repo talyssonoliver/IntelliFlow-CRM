@@ -211,7 +211,12 @@ async function runRealDatabaseBenchmarks(): Promise<BenchmarkResult[]> {
     const msg = String(args[0] || '');
     // Suppress Prisma slow query warnings and Health latency warnings during benchmark
     if (msg.includes('[Prisma Slow Query]') || msg.includes('[Health]')) return;
-    originalWarn.apply(console, args);
+    // Strip control bytes so any tainted upstream values cannot break the log line.
+    const sanitized = args.map((a) =>
+      // eslint-disable-next-line no-control-regex
+      typeof a === 'string' ? a.replaceAll(/[\x00-\x1f\x7f]/g, '?') : a
+    );
+    originalWarn.apply(console, sanitized);
   };
 
   try {
@@ -365,7 +370,11 @@ async function runRealTrpcBenchmarks(): Promise<BenchmarkResult[]> {
   console.warn = (...args: unknown[]) => {
     const msg = String(args[0] || '');
     if (msg.includes('[Health]') || msg.includes('[Prisma Slow Query]')) return;
-    originalWarn.apply(console, args);
+    const sanitized = args.map((a) =>
+      // eslint-disable-next-line no-control-regex
+      typeof a === 'string' ? a.replaceAll(/[\x00-\x1f\x7f]/g, '?') : a
+    );
+    originalWarn.apply(console, sanitized);
   };
 
   try {

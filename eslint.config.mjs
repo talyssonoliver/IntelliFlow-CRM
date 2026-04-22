@@ -106,6 +106,47 @@ export default [
   // Hexagonal Architecture Import Restrictions
   // ==========================================
 
+  // IFC-310 AC-003: The duplicate-rule-evaluator must stay pure.
+  // No Prisma, no @intelliflow/db, no node:fs / node:net, no domain/application
+  // cross-imports. This override complements the test-level module-boundary
+  // assertion in apps/api/src/shared/__tests__/duplicate-rule-evaluator.test.ts
+  // (static + runtime enforcement, as specified by the plan).
+  {
+    files: ['apps/api/src/shared/duplicate-rule-evaluator.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@prisma/client', '@prisma/*'],
+              message:
+                'AC-003: duplicate-rule-evaluator must remain pure — no Prisma imports allowed.',
+            },
+            {
+              group: ['@intelliflow/db', '@intelliflow/db/*'],
+              message:
+                'AC-003: duplicate-rule-evaluator must remain pure — no database package imports allowed.',
+            },
+            {
+              group: ['node:fs', 'node:fs/*', 'fs', 'fs/*'],
+              message: 'AC-003: duplicate-rule-evaluator must remain pure — no filesystem access.',
+            },
+            {
+              group: ['node:net', 'net', 'node:http', 'http', 'node:https', 'https'],
+              message: 'AC-003: duplicate-rule-evaluator must remain pure — no network I/O.',
+            },
+            {
+              group: ['@intelliflow/application', '@intelliflow/application/*'],
+              message:
+                'AC-003: duplicate-rule-evaluator is a shared pure helper; must not depend on application layer.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+
   // Domain Layer: MUST NOT depend on application, adapters, or infrastructure
   {
     files: ['packages/domain/src/**/*.ts', 'packages/domain/src/**/*.tsx'],

@@ -107,7 +107,6 @@ const KEYWORD_TO_FILES: Record<string, string[]> = {
   ci: ['.github/workflows/ci.yml'],
   cd: ['.github/workflows/cd.yml'],
   pipeline: ['.github/workflows/*'],
-  workflow: ['.github/workflows/*'],
 
   // Infrastructure
   docker: ['docker-compose.yml', 'infra/docker/*'],
@@ -164,7 +163,7 @@ const KEYWORD_TO_FILES: Record<string, string[]> = {
   calendar: ['apps/web/src/app/calendar/*'],
   meeting: ['apps/web/src/app/meetings/*'],
   activity: ['apps/web/src/app/activities/*'],
-  workflow: ['apps/api/src/workflows/*'],
+  workflow: ['.github/workflows/*', 'apps/api/src/workflows/*'],
   automation: ['apps/api/src/automations/*'],
   billing: ['apps/web/src/app/billing/*'],
   subscription: ['apps/web/src/app/subscriptions/*'],
