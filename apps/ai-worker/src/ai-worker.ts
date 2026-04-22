@@ -35,6 +35,17 @@ import {
   processSummarizeJob,
   processFeedbackAnalyticsJob,
   processMemoryRetentionJob,
+  // IFC-312
+  processEnrichmentJob,
+  processEntityInsightJob,
+  processReplyDraftJob,
+  processAccountScoringJob,
+  processTagSuggestionJob,
+  type EnrichmentJobData,
+  type EntityInsightJobData,
+  type ReplyDraftJobData,
+  type AccountScoringJobData,
+  type TagSuggestionJobData,
   DEFAULT_INSIGHT_JOB_OPTIONS,
   DEFAULT_SCORING_JOB_OPTIONS,
   DEFAULT_FEEDBACK_ANALYTICS_JOB_OPTIONS,
@@ -115,6 +126,8 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
   private dashboardServer: Server | null = null;
   private monitoringFlushService?: MonitoringFlushService;
   private prisma?: import('@intelliflow/db').PrismaClient;
+  // IFC-310: contact embedding worker for duplicate-detection runtime.
+  private contactEmbedWorker?: import('./workers/contact-embed-worker.js').ContactEmbedWorker;
   /** Passive dead-letter queue — no worker, just for inspection and replay. */
   private dlqQueue: Queue | null = null;
   /** QueueEvents instances for each AI queue (used for lifecycle listeners). */
@@ -238,6 +251,41 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
       this.logger.warn(
         'Prisma unavailable — skipping RetrievalService wiring; ragContextChain will throw on invocation'
       );
+    }
+
+    // IFC-310: boot the ContactEmbedWorker. Consumes intelliflow-contact-embed
+    // jobs dispatched by ContactDuplicateDetectionService post-commit.
+    if (this.prisma) {
+      try {
+        const { ContactEmbedWorker } = await import('./workers/contact-embed-worker.js');
+        const { embeddingChain } = await import('./chains/embedding.chain.js');
+        const { updateContactEmbedding } = await import('@intelliflow/db');
+        const redisConnection = {
+          host: process.env.REDIS_HOST || 'localhost',
+          port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
+          ...(process.env.REDIS_PASSWORD ? { password: process.env.REDIS_PASSWORD } : {}),
+        };
+        this.contactEmbedWorker = new ContactEmbedWorker(
+          this.prisma,
+          redisConnection,
+          {
+            generateEmbedding: async (text: string) => {
+              const result = await embeddingChain.generateEmbedding({ text });
+              return result?.vector ?? null;
+            },
+          },
+          async (_prisma, contactId, _tenantId, embedding) => {
+            await updateContactEmbedding(contactId, embedding);
+          },
+        );
+        await this.contactEmbedWorker.start();
+        this.logger.info('ContactEmbedWorker started — intelliflow-contact-embed queue consumed');
+      } catch (error) {
+        this.logger.warn(
+          { error: error instanceof Error ? error.message : String(error) },
+          'Failed to boot ContactEmbedWorker — contact embeddings will not be populated'
+        );
+      }
     }
   }
 
@@ -526,6 +574,19 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
       await this.monitoringFlushService.stop();
     }
 
+    // IFC-310: Stop the contact embedding worker cleanly.
+    if (this.contactEmbedWorker) {
+      try {
+        await this.contactEmbedWorker.stop();
+        this.logger.info('ContactEmbedWorker stopped');
+      } catch (err) {
+        this.logger.warn(
+          { err: err instanceof Error ? err.message : String(err) },
+          'Error stopping ContactEmbedWorker'
+        );
+      }
+    }
+
     // H8: Close DLQ queue and lifecycle event listeners
     for (const queueEvents of this.queueEventListeners) {
       await queueEvents.close().catch((err: unknown) => {
@@ -634,6 +695,33 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
           break;
         case MEMORY_RETENTION_QUEUE:
           result = await processMemoryRetentionJob(job as Job<MemoryRetentionJobData>); // NOSONAR
+          break;
+        // IFC-312 — contact/account AI chain queues. Cast through `unknown`
+        // because these payloads are outside the legacy `AIJobData` union.
+        case 'ai-enrichment':
+          result = (await processEnrichmentJob(
+            job as unknown as Job<EnrichmentJobData>
+          )) as unknown as AIJobResult;
+          break;
+        case 'ai-entity-insight':
+          result = (await processEntityInsightJob(
+            job as unknown as Job<EntityInsightJobData>
+          )) as unknown as AIJobResult;
+          break;
+        case 'ai-reply-draft':
+          result = (await processReplyDraftJob(
+            job as unknown as Job<ReplyDraftJobData>
+          )) as unknown as AIJobResult;
+          break;
+        case 'ai-account-scoring':
+          result = (await processAccountScoringJob(
+            job as unknown as Job<AccountScoringJobData>
+          )) as unknown as AIJobResult;
+          break;
+        case 'ai-tag-suggestion':
+          result = (await processTagSuggestionJob(
+            job as unknown as Job<TagSuggestionJobData>
+          )) as unknown as AIJobResult;
           break;
         default:
           throw new Error(`Unknown queue: ${job.queueName}`);

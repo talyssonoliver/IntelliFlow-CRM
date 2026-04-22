@@ -75,6 +75,37 @@ export {
   type MemoryRetentionJobResult,
 } from './memory-retention.job';
 
+// IFC-312 — Contact + Account AI chain job handlers
+export {
+  processEnrichmentJob,
+  EnrichmentJobDataSchema,
+  type EnrichmentJobData,
+} from './enrichment.job';
+
+export {
+  processEntityInsightJob,
+  EntityInsightJobDataSchema,
+  type EntityInsightJobData,
+} from './entity-insight.job';
+
+export {
+  processReplyDraftJob,
+  ReplyDraftJobDataSchema,
+  type ReplyDraftJobData,
+} from './reply-draft.job';
+
+export {
+  processAccountScoringJob,
+  AccountScoringJobDataSchema,
+  type AccountScoringJobData,
+} from './account-scoring.job';
+
+export {
+  processTagSuggestionJob,
+  TagSuggestionJobDataSchema,
+  type TagSuggestionJobData,
+} from './tag-suggestion.job';
+
 /** All queue names this worker processes */
 export const AI_WORKER_QUEUES = [
   'ai-scoring',
@@ -83,4 +114,29 @@ export const AI_WORKER_QUEUES = [
   'ai-summarize-conversation',
   'ai-feedback-analytics',
   'ai-memory-retention',
+  // IFC-312 — contact/account AI chain queues
+  'ai-enrichment',
+  'ai-entity-insight',
+  'ai-reply-draft',
+  'ai-account-scoring',
+  'ai-tag-suggestion',
 ] as const;
+
+// PG-184 / PG-185 Cat-2 follow-through: AI automation consumers
+export {
+  DEAL_AI_AUTOMATION_QUEUE,
+  DealAiAutomationJobDataSchema,
+  processDealAiAutomationJob,
+  type DealAiAutomationJobData,
+  type DealAiAutomationJobResult,
+  type DealAiChainBundle,
+} from './deal-ai-automation.job';
+
+export {
+  TICKET_AI_AUTOMATION_QUEUE,
+  TicketAiAutomationJobDataSchema,
+  processTicketAiAutomationJob,
+  type TicketAiAutomationJobData,
+  type TicketAiAutomationJobResult,
+  type TicketAiChainBundle,
+} from './ticket-ai-automation.job';

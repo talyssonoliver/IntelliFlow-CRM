@@ -76,6 +76,28 @@ export {
   type UpdateContactEmbeddingFn,
 } from './workers/contact-embed-worker';
 
+// PG-185 Cat-2 follow-through: ticket SLA monitor + auto-close sweepers
+export {
+  TicketSlaMonitorWorker,
+  createTicketSlaMonitorWorker,
+  TICKET_SLA_MONITOR_QUEUE_NAME,
+  TicketSlaMonitorJobDataSchema,
+  type TicketSlaMonitorJobData,
+  type TicketSlaMonitorJobResult,
+  type SlaMonitorDeps,
+  type SlaAutomationFlagsShape,
+} from './workers/ticket-sla-monitor.job';
+
+export {
+  TicketAutoCloseWorker,
+  createTicketAutoCloseWorker,
+  TICKET_AUTO_CLOSE_QUEUE_NAME,
+  TicketAutoCloseJobDataSchema,
+  type TicketAutoCloseJobData,
+  type TicketAutoCloseJobResult,
+  type AutoCloseDeps,
+} from './workers/ticket-auto-close.job';
+
 // IFC-155: Export services for search index management
 export {
   DocumentIndexer,
@@ -228,6 +250,94 @@ export * from './monitoring';
 
 // Chain versioning (IFC-086)
 export * from './versioning';
+
+// ═════════════════════════════════════════════════════════════════════════
+// IFC-312 — Contact + Account AI chains, shared adapter, job handlers
+// ═════════════════════════════════════════════════════════════════════════
+
+export {
+  ContactEnrichmentSchema,
+  AccountEnrichmentSchema,
+  LiteLLMEnrichmentAdapter,
+  MockEnrichmentAdapter,
+  getEnrichmentAdapter,
+  __resetEnrichmentAdapterCache,
+} from './shared/enrichment-adapter.js';
+export type {
+  EnrichmentProvider,
+  ContactEnrichment,
+  AccountEnrichment,
+  ContactSeed,
+  AccountSeed,
+} from './shared/enrichment-adapter.js';
+
+export { enrichContact } from './contact-enrichment.chain.js';
+export type { EnrichContactInput, EnrichContactResult } from './contact-enrichment.chain.js';
+
+export { enrichAccount } from './account-enrichment.chain.js';
+export type { EnrichAccountInput, EnrichAccountResult } from './account-enrichment.chain.js';
+
+export { suggestContactTags } from './contact-tag-suggestion.chain.js';
+export type {
+  SuggestContactTagsInput,
+  SuggestContactTagsResult,
+  ContactProfileSnapshot,
+} from './contact-tag-suggestion.chain.js';
+
+export { suggestAccountTags } from './account-tag-suggestion.chain.js';
+export type {
+  SuggestAccountTagsInput,
+  SuggestAccountTagsResult,
+  AccountProfileSnapshot,
+} from './account-tag-suggestion.chain.js';
+
+export { generateContactInsight } from './contact-insight.chain.js';
+export type {
+  GenerateContactInsightInput,
+  GenerateContactInsightResult,
+  ContactInsightContext,
+} from './contact-insight.chain.js';
+
+export { generateAccountInsight } from './account-insight.chain.js';
+export type {
+  GenerateAccountInsightInput,
+  GenerateAccountInsightResult,
+  AccountInsightContext,
+} from './account-insight.chain.js';
+
+export { draftContactReply } from './contact-reply-draft.chain.js';
+export type {
+  DraftContactReplyInput,
+  DraftContactReplyResult,
+  ReplyDraftPayload,
+  EmailThreadEntry,
+} from './contact-reply-draft.chain.js';
+
+export { inferAccountIndustry } from './account-industry-inference.chain.js';
+export type {
+  InferAccountIndustryInput,
+  InferAccountIndustryResult,
+  IndustryVocabularyEntry,
+} from './account-industry-inference.chain.js';
+
+export { scoreAccount } from './account-scoring.chain.js';
+export type {
+  ScoreAccountInput,
+  ScoreAccountResult,
+  AccountScoringSignals,
+} from './account-scoring.chain.js';
+
+// Job processors (BullMQ)
+export { processEnrichmentJob, EnrichmentJobDataSchema } from './jobs/enrichment.job.js';
+export type { EnrichmentJobData } from './jobs/enrichment.job.js';
+export { processEntityInsightJob, EntityInsightJobDataSchema } from './jobs/entity-insight.job.js';
+export type { EntityInsightJobData } from './jobs/entity-insight.job.js';
+export { processReplyDraftJob, ReplyDraftJobDataSchema } from './jobs/reply-draft.job.js';
+export type { ReplyDraftJobData } from './jobs/reply-draft.job.js';
+export { processAccountScoringJob, AccountScoringJobDataSchema } from './jobs/account-scoring.job.js';
+export type { AccountScoringJobData } from './jobs/account-scoring.job.js';
+export { processTagSuggestionJob, TagSuggestionJobDataSchema } from './jobs/tag-suggestion.job.js';
+export type { TagSuggestionJobData } from './jobs/tag-suggestion.job.js';
 
 /**
  * Initialize the AI Worker (legacy mode - library only)
