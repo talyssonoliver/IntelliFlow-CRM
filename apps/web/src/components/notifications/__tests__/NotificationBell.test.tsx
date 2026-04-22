@@ -379,8 +379,12 @@ describe('NotificationBell', () => {
   // 2.6 — markAsRead.onSuccess invalidates getUnreadCount and list
   it('markAsRead.onSuccess invalidates getUnreadCount and list caches', () => {
     render(<NotificationBell />);
-    expect(markAsReadMutationOnSuccess).toBeDefined();
-    markAsReadMutationOnSuccess!();
+    const onSuccess = markAsReadMutationOnSuccess;
+    expect(onSuccess).toBeDefined();
+    if (typeof onSuccess !== 'function') {
+      throw new Error('markAsRead.useMutation was never invoked with an onSuccess callback');
+    }
+    onSuccess();
     expect(mockInvalidate).toHaveBeenCalled();
   });
 

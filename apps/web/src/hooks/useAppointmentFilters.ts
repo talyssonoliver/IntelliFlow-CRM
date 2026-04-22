@@ -37,11 +37,25 @@ export const defaultAppointmentFilters: AppointmentFilters = {
   calendarView: 'month',
 };
 
-function loadFromStorage<T>(key: string, fallback: T): T {
+type CalendarView = 'month' | 'week' | 'day';
+const CALENDAR_VIEWS: ReadonlySet<CalendarView> = new Set<CalendarView>(['month', 'week', 'day']);
+
+function isCalendarView(value: unknown): value is CalendarView {
+  return typeof value === 'string' && CALENDAR_VIEWS.has(value as CalendarView);
+}
+
+/**
+ * Narrow-typed loader that only returns known-safe calendar-view scalars.
+ * Any other persisted value is discarded. Keeping this tightly scoped prevents
+ * arbitrary persisted data from flowing back into component state.
+ */
+function loadCalendarView(fallback: CalendarView): CalendarView {
   if (typeof globalThis.window === 'undefined') return fallback;
   try {
-    const stored = localStorage.getItem(key);
-    return stored ? (JSON.parse(stored) as T) : fallback;
+    const stored = localStorage.getItem('appointment-calendarView');
+    if (!stored) return fallback;
+    const parsed: unknown = JSON.parse(stored);
+    return isCalendarView(parsed) ? parsed : fallback;
   } catch {
     return fallback;
   }
@@ -56,14 +70,16 @@ export function useAppointmentFilters() {
       ...defaultAppointmentFilters,
       startTimeFrom: range.from,
       startTimeTo: range.to,
-      calendarView: loadFromStorage('appointment-calendarView', 'month' as const),
+      calendarView: loadCalendarView('month'),
     };
   });
 
-  // Persist view preferences to localStorage
+  // Persist the calendar view as a plain scalar — only after validating it's
+  // one of the three known views, so unrelated filter state never hits storage.
   useEffect(() => {
     if (typeof globalThis.window === 'undefined') return;
-    localStorage.setItem('appointment-calendarView', JSON.stringify(filters.calendarView));
+    const view: CalendarView = isCalendarView(filters.calendarView) ? filters.calendarView : 'month';
+    localStorage.setItem('appointment-calendarView', JSON.stringify(view));
   }, [filters.calendarView]);
 
   const setSearch = useCallback((search: string) => {

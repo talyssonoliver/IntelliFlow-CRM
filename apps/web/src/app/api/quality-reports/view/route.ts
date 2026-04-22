@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'node:fs';
 import path from 'node:path';
 
-const REPORT_PATHS: Record<string, string[]> = {
+const REPORT_PATHS = {
   lighthouse: [
     'artifacts/lighthouse/lighthouse-report.html',
     'artifacts/lighthouse/lighthouse-360-report.html',
@@ -10,11 +10,16 @@ const REPORT_PATHS: Record<string, string[]> = {
   coverage: ['artifacts/reports/ui-coverage.html', 'artifacts/coverage/lcov-report/index.html'],
   performance: ['artifacts/benchmarks/performance-report.html'],
   'trpc-benchmark': ['artifacts/benchmarks/trpc-benchmark-report.html'],
-};
+} as const satisfies Record<string, readonly string[]>;
 
-function findReportPath(reportType: string): string | null {
+type ReportType = keyof typeof REPORT_PATHS;
+
+function isReportType(value: string): value is ReportType {
+  return Object.hasOwn(REPORT_PATHS, value);
+}
+
+function findReportPath(reportType: ReportType): string | null {
   const paths = REPORT_PATHS[reportType];
-  if (!paths) return null;
 
   // Check multiple base paths for monorepo structure
   const basePaths = [
@@ -37,12 +42,26 @@ function findReportPath(reportType: string): string | null {
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const reportType = searchParams.get('report');
+  const rawReportType = searchParams.get('report');
 
-  if (!reportType) {
+  if (!rawReportType) {
     return NextResponse.json({ success: false, error: 'Report type is required' }, { status: 400 });
   }
 
+  if (!isReportType(rawReportType)) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Unknown report type',
+        allowed: Object.keys(REPORT_PATHS),
+      },
+      { status: 400 }
+    );
+  }
+
+  // After the allowlist check, reportType is one of the static literals declared
+  // in REPORT_PATHS — safe to embed in HTML without further escaping.
+  const reportType: ReportType = rawReportType;
   const reportPath = findReportPath(reportType);
 
   if (!reportPath) {

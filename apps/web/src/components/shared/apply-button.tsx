@@ -96,33 +96,55 @@ interface SaveJobButtonProps {
   className?: string;
 }
 
+const JOB_ID_RE = /^[a-zA-Z0-9_-]{1,64}$/;
+
+/**
+ * Accept only slug-shaped job identifiers. Anything else is dropped before it
+ * can reach `localStorage`, which keeps any non-ID payload (titles, URLs, PII)
+ * from being persisted on the client.
+ */
+function sanitizeJobId(raw: unknown): string | null {
+  if (typeof raw !== 'string') return null;
+  return JOB_ID_RE.test(raw) ? raw : null;
+}
+
+function readSavedJobIds(): string[] {
+  try {
+    const parsed: unknown = JSON.parse(localStorage.getItem('savedJobs') || '[]');
+    if (!Array.isArray(parsed)) return [];
+    const ids: string[] = [];
+    for (const entry of parsed) {
+      const safe = sanitizeJobId(entry);
+      if (safe) ids.push(safe);
+    }
+    return ids;
+  } catch {
+    return [];
+  }
+}
+
 export function SaveJobButton({ jobId, jobTitle, className }: Readonly<SaveJobButtonProps>) {
   const [isSaved, setIsSaved] = React.useState(false);
+  const safeJobId = sanitizeJobId(jobId);
 
   const handleSave = () => {
     setIsSaved(!isSaved);
 
-    // In production, persist to user's saved jobs list
-    if (typeof globalThis.window !== 'undefined') {
-      const savedJobs = JSON.parse(localStorage.getItem('savedJobs') || '[]');
-      if (isSaved) {
-        localStorage.setItem(
-          'savedJobs',
-          JSON.stringify(savedJobs.filter((id: string) => id !== jobId))
-        );
-      } else {
-        localStorage.setItem('savedJobs', JSON.stringify([...savedJobs, jobId]));
-      }
-    }
+    // Persist only sanitized job IDs (slug-shaped scalars), never the full job object.
+    if (typeof globalThis.window === 'undefined' || !safeJobId) return;
+
+    const savedJobs = readSavedJobIds();
+    const next = isSaved
+      ? savedJobs.filter((id) => id !== safeJobId)
+      : [...savedJobs.filter((id) => id !== safeJobId), safeJobId];
+    localStorage.setItem('savedJobs', JSON.stringify(next));
   };
 
   React.useEffect(() => {
     // Check if job is already saved on mount
-    if (typeof globalThis.window !== 'undefined') {
-      const savedJobs = JSON.parse(localStorage.getItem('savedJobs') || '[]');
-      setIsSaved(savedJobs.includes(jobId));
-    }
-  }, [jobId]);
+    if (typeof globalThis.window === 'undefined' || !safeJobId) return;
+    setIsSaved(readSavedJobIds().includes(safeJobId));
+  }, [safeJobId]);
 
   return (
     <button

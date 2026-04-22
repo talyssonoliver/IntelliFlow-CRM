@@ -34,9 +34,18 @@ export async function GET(request: NextRequest) {
     return new Response('Host is not allowed.', { status: 403 });
   }
 
+  // Rebuild the URL from the allow-listed hostname plus a scrubbed path so the
+  // value passed to `fetch` cannot carry embedded credentials, alternate hosts,
+  // or other untrusted components picked up from the user-supplied URL.
+  const safeUrl = new URL('https://placeholder.invalid/');
+  safeUrl.protocol = 'https:';
+  safeUrl.hostname = parsed.hostname;
+  safeUrl.pathname = parsed.pathname;
+  safeUrl.search = parsed.search;
+
   let upstream: Response;
   try {
-    upstream = await fetch(parsed.toString());
+    upstream = await fetch(safeUrl.toString(), { redirect: 'error' });
   } catch {
     return new Response('Failed to fetch PDF from provider.', { status: 502 });
   }

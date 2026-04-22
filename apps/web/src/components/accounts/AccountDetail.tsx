@@ -34,13 +34,23 @@ import { ContactAddSheet } from './ContactAddSheet';
 import { AssignSheet } from '@/components/shared/assign-sheet';
 import { AppAvatar } from '@/components/shared/app-avatar';
 import { useAuth } from '@/lib/auth';
+// IFC-312 — AI chain UI surfaces
+import { AccountScoreBadge } from '@/components/accounts/AccountScoreBadge';
+import { InferredFieldBadge } from '@/components/shared/InferredFieldBadge';
 
 interface AccountDetailProps {
   accountId: string;
   isAuthenticated: boolean;
 }
 
-type TabId = 'overview' | 'contacts' | 'opportunities' | 'activity' | 'pipeline' | 'hierarchy';
+type TabId =
+  | 'overview'
+  | 'contacts'
+  | 'opportunities'
+  | 'activity'
+  | 'pipeline'
+  | 'hierarchy'
+  | 'ai-insights';
 
 interface Tab {
   id: TabId;
@@ -168,6 +178,8 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
       { id: 'activity', label: 'Activity' },
       { id: 'pipeline', label: 'Pipeline' },
       { id: 'hierarchy', label: 'Hierarchy' },
+      // IFC-312 — AI insights tab (hidden when no insight row exists downstream).
+      { id: 'ai-insights', label: 'AI Insights' },
     ],
     [contactCount, opportunityCount]
   );
@@ -581,8 +593,14 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
                 </div>
                 <div>
                   <p className="text-xs text-slate-400 uppercase font-semibold mb-1">Industry</p>
-                  <p className="text-sm text-slate-900 dark:text-white">
+                  <p className="text-sm text-slate-900 dark:text-white flex items-center gap-2">
                     {account.industry ?? '—'}
+                    {/* IFC-312 — show AI-inferred badge when industry came from LLM classifier. */}
+                    <InferredFieldBadge
+                      inferredAt={(account as any).industryInferredAt}
+                      modelVersion={(account as any).industryModelVersion}
+                      label="AI"
+                    />
                   </p>
                 </div>
                 <div>
@@ -680,6 +698,33 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
 
           {/* Hierarchy Tab */}
           {activeTab === 'hierarchy' && <AccountHierarchy accountId={accountId} />}
+
+          {/* IFC-312 — AI Insights Tab */}
+          {activeTab === 'ai-insights' && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <h3 className="text-lg font-semibold">Account AI Insights</h3>
+                <AccountScoreBadge
+                  score={(account as any).score ?? null}
+                  modelVersion={(account as any).scoreModelVersion}
+                  scoredAt={(account as any).scoredAt}
+                  factors={
+                    Array.isArray((account as any).scoreProvenance)
+                      ? ((account as any).scoreProvenance as Array<{
+                          name: string;
+                          impact: number;
+                        }>)
+                      : null
+                  }
+                />
+              </div>
+              <p className="text-sm text-slate-600 dark:text-slate-300">
+                Enable <strong>AI insight generation</strong> and <strong>AI account scoring</strong>{' '}
+                in account settings to populate this surface. Data is written by the ai-worker
+                pipeline and reflected here via the <code>account.getAiInsight</code> query.
+              </p>
+            </div>
+          )}
         </section>
 
         {/* ─── Right Sidebar ─── */}

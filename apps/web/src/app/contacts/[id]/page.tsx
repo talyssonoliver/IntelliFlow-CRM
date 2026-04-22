@@ -39,6 +39,9 @@ import { useActivityDeepLink, isDeepLinkedActivity } from '@/hooks/useActivityDe
 import { useActivityReactions } from '@/hooks/useActivityReactions';
 import { useActivityComments } from '@/hooks/useActivityComments';
 import { QuickLogComposer } from '@/components/shared/quick-log-composer';
+// IFC-312 — AI chain UI surfaces
+import { SuggestedTagsRow } from '@/components/contacts/SuggestedTagsRow';
+import { ReplyDraftsPanel } from '@/components/contacts/ReplyDraftsPanel';
 
 // Common nullable date type
 type DateStringNull = string | Date | null;
@@ -1789,6 +1792,10 @@ export default function Contact360Page() {
                   </span>
                 ))}
               </div>
+              {/* IFC-312 — AI tag suggestions (hidden when flag off or empty). */}
+              <div className="mt-2">
+                <SuggestedTagsRow contactId={contact.id} enabled={true} />
+              </div>
               <div className="space-y-4">
                 <div className="flex items-start gap-3">
                   <svg
@@ -2607,13 +2614,20 @@ export default function Contact360Page() {
 
           {/* AI Insights Tab (IFC-095) */}
           {activeTab === 'ai-insights' && (
-            <ContactAiInsightsTab
-              aiInsights={aiInsights}
-              churnRiskData={churnRiskData}
-              nextBestActionData={nextBestActionData}
-              onPendingAction={() => scoreWithAIMutation.mutate({ contactId })}
-              isPending={scoreWithAIMutation.isPending}
-            />
+            <>
+              <ContactAiInsightsTab
+                aiInsights={aiInsights}
+                churnRiskData={churnRiskData}
+                nextBestActionData={nextBestActionData}
+                onPendingAction={() => scoreWithAIMutation.mutate({ contactId })}
+                isPending={scoreWithAIMutation.isPending}
+              />
+              {/* IFC-312 — AI reply drafts panel (hidden when flag off or empty). */}
+              <div className="mt-6">
+                <h3 className="text-sm font-semibold mb-2">AI-drafted replies</h3>
+                <ReplyDraftsPanel contactId={contactId} enabled={true} />
+              </div>
+            </>
           )}
         </section>
 
