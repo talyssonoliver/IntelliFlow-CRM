@@ -42,8 +42,8 @@ RUN pnpm --filter validators build
 RUN pnpm --filter webhooks build
 RUN pnpm --filter platform build
 RUN pnpm --filter db build
-RUN pnpm --filter worker-shared build
 RUN pnpm --filter observability build
+RUN pnpm --filter worker-shared build
 RUN pnpm --filter application build
 RUN pnpm --filter adapters build
 RUN pnpm --filter ai-worker build
