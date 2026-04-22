@@ -3,6 +3,7 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import Papa from 'papaparse';
+import { isValidTaskId, resolveSprintPath, sanitizeSprintNumber } from '@/lib/paths';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,12 +31,17 @@ export async function POST(request: Request) {
     const body: PlanTaskRequest = await request.json();
     const { taskId } = body;
 
-    if (!taskId) {
-      return NextResponse.json({ error: 'Task ID is required' }, { status: 400 });
+    if (!taskId || !isValidTaskId(taskId)) {
+      return NextResponse.json(
+        { error: 'Task ID is required and must match the canonical task-id pattern' },
+        { status: 400 }
+      );
     }
+    const safeTaskId: string = taskId;
 
     const projectRoot = join(process.cwd(), '..', '..');
     const specifyDir = join(projectRoot, '.specify');
+    const sprintsRoot = join(specifyDir, 'sprints');
     const csvPath = join(process.cwd(), 'docs', 'metrics', '_global', 'Sprint_plan.csv');
 
     // Read CSV to get task details first (need sprint number)
@@ -46,19 +52,24 @@ export async function POST(request: Request) {
     });
 
     const tasks = data as TaskRecord[];
-    const taskIndex = tasks.findIndex((t) => t['Task ID'] === taskId);
+    const taskIndex = tasks.findIndex((t) => t['Task ID'] === safeTaskId);
 
     if (taskIndex === -1) {
-      return NextResponse.json({ error: `Task ${taskId} not found` }, { status: 404 });
+      return NextResponse.json({ error: `Task ${safeTaskId} not found` }, { status: 404 });
     }
 
     const task = tasks[taskIndex];
-    const sprintNumber = Number.parseInt(task['Target Sprint'] || '0', 10);
-    const sprintDir = join(specifyDir, 'sprints', `sprint-${sprintNumber}`);
+    const sprintNumber = sanitizeSprintNumber(task['Target Sprint']) ?? 0;
 
     // Sprint-based paths (new structure)
-    const specFile = join(sprintDir, 'specifications', `${taskId}-spec.md`);
-    const planFile = join(sprintDir, 'planning', `${taskId}-plan.md`);
+    const specFile = resolveSprintPath(sprintsRoot, sprintNumber, 'specifications', `${safeTaskId}-spec.md`);
+    const planFile = resolveSprintPath(sprintsRoot, sprintNumber, 'planning', `${safeTaskId}-plan.md`);
+    if (!specFile || !planFile) {
+      return NextResponse.json(
+        { success: false, error: 'Refusing to construct path outside of sprints root' },
+        { status: 400 }
+      );
+    }
 
     // Check if spec/plan already exists
     const specExists = existsSync(specFile);
@@ -69,9 +80,9 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           success: false,
-          taskId,
+          taskId: safeTaskId,
           error: 'spec_required',
-          message: `Spec must be completed first. Run SESSION 1: Spec for ${taskId}.`,
+          message: `Spec must be completed first. Run SESSION 1: Spec for ${safeTaskId}.`,
         },
         { status: 400 }
       );
@@ -81,20 +92,27 @@ export async function POST(request: Request) {
     if (planExists) {
       return NextResponse.json({
         success: true,
-        taskId,
+        taskId: safeTaskId,
         status: 'already_planned',
-        specPath: `.specify/sprints/sprint-${sprintNumber}/specifications/${taskId}-spec.md`,
-        planPath: `.specify/sprints/sprint-${sprintNumber}/planning/${taskId}-plan.md`,
-        message: `Task ${taskId} already has a plan.`,
+        specPath: `.specify/sprints/sprint-${sprintNumber}/specifications/${safeTaskId}-spec.md`,
+        planPath: `.specify/sprints/sprint-${sprintNumber}/planning/${safeTaskId}-plan.md`,
+        message: `Task ${safeTaskId} already has a plan.`,
       });
     }
 
     // Ensure planning directory exists
-    await mkdir(join(sprintDir, 'planning'), { recursive: true });
+    const planningDir = resolveSprintPath(sprintsRoot, sprintNumber, 'planning');
+    if (!planningDir) {
+      return NextResponse.json(
+        { success: false, error: 'Refusing to create directory outside of sprints root' },
+        { status: 400 }
+      );
+    }
+    await mkdir(planningDir, { recursive: true });
 
     // Add PLAN to artifacts if not present (SPEC should already be there from SESSION 1)
     const currentArtifacts = task['Artifacts To Track'] || '';
-    const newArtifacts = addPlanToArtifacts(currentArtifacts, taskId, sprintNumber);
+    const newArtifacts = addPlanToArtifacts(currentArtifacts, safeTaskId, sprintNumber);
 
     const enrichedTask: TaskRecord = {
       ...task,
@@ -129,13 +147,13 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      taskId,
+      taskId: safeTaskId,
       status: 'planned',
       previousStatus: task.Status,
       newStatus: task.Status === 'Spec Complete' ? 'Planned' : task.Status,
-      specPath: `.specify/sprints/sprint-${sprintNumber}/specifications/${taskId}-spec.md`,
-      planPath: `.specify/sprints/sprint-${sprintNumber}/planning/${taskId}-plan.md`,
-      message: `SESSION 2 complete: Plan created for ${taskId}. Ready for SESSION 3: Exec.`,
+      specPath: `.specify/sprints/sprint-${sprintNumber}/specifications/${safeTaskId}-spec.md`,
+      planPath: `.specify/sprints/sprint-${sprintNumber}/planning/${safeTaskId}-plan.md`,
+      message: `SESSION 2 complete: Plan created for ${safeTaskId}. Ready for SESSION 3: Exec.`,
     });
   } catch (error) {
     console.error('Error planning task:', error);

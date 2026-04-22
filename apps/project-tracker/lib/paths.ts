@@ -10,7 +10,7 @@
  * - Ephemeral artifacts (artifacts/) -> GITIGNORED, never committed
  */
 
-import { join } from 'node:path';
+import { join, resolve, sep } from 'node:path';
 import { mkdir } from 'node:fs/promises';
 
 // Monorepo root (2 levels up from apps/project-tracker/)
@@ -251,4 +251,53 @@ export function sanitizeTaskId(taskId: string): string | null {
   // Additional sanitization - remove any characters that could be shell injection
   // Since we've already validated the pattern, this is just an extra safety layer
   return taskId.replaceAll(/[^A-Z0-9-]/g, '');
+}
+
+/**
+ * Coerce an arbitrary sprint value (from CSV or JSON body) to a safe integer.
+ * Rejects anything that isn't a finite non-negative integer <= 999.
+ */
+export function sanitizeSprintNumber(value: unknown): number | null {
+  const n = typeof value === 'number' ? value : Number.parseInt(String(value ?? ''), 10);
+  if (!Number.isInteger(n)) return null;
+  if (n < 0 || n > 999) return null;
+  return n;
+}
+
+/**
+ * Containment check — resolves `candidate` and ensures it stays under `root`.
+ * Returns the resolved path on success, or null if traversal would escape.
+ * Pair with `sanitizeTaskId` + `sanitizeSprintNumber` to neutralise taint from
+ * user input before passing to `fs` operations.
+ */
+export function resolveWithin(root: string, ...segments: string[]): string | null {
+  const base = resolve(root);
+  const candidate = resolve(base, ...segments);
+  // Enforce the separator so /app/foobar cannot masquerade as /app/foo.
+  if (candidate !== base && !candidate.startsWith(base + sep)) {
+    return null;
+  }
+  return candidate;
+}
+
+/**
+ * Resolve a path under `.specify/sprints/sprint-{N}/...` safely, validating
+ * both the sprint number and each trailing segment, and ensuring the result
+ * stays within the sprints tree.
+ */
+export function resolveSprintPath(
+  sprintsRoot: string,
+  sprint: number,
+  ...segments: string[]
+): string | null {
+  const sprintSafe = sanitizeSprintNumber(sprint);
+  if (sprintSafe === null) return null;
+  // Reject absolute segments and explicit traversal components up-front —
+  // resolveWithin does a final containment check as a defence-in-depth.
+  for (const s of segments) {
+    if (typeof s !== 'string' || s.length === 0) return null;
+    if (s.includes('\0')) return null;
+    if (s === '..' || s.startsWith('../') || s.startsWith('..\\')) return null;
+  }
+  return resolveWithin(sprintsRoot, `sprint-${sprintSafe}`, ...segments);
 }

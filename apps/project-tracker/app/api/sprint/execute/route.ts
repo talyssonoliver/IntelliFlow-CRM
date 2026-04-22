@@ -23,6 +23,7 @@ import {
   loadTasks,
   type TaskRecord,
 } from '../../../../lib/csv-status';
+import { sanitizeSprintNumber } from '../../../../lib/paths';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // 5 minutes max for API response
@@ -130,6 +131,17 @@ export async function POST(request: Request) {
 
     if (sprintNumber === undefined || sprintNumber === null) {
       return NextResponse.json({ error: 'sprintNumber is required' }, { status: 400 });
+    }
+
+    // Sanitize numeric sprint number to prevent path injection via generateRunId.
+    if (sprintNumber !== 'all') {
+      const safeSprint = sanitizeSprintNumber(sprintNumber);
+      if (safeSprint === null) {
+        return NextResponse.json(
+          { error: 'sprintNumber must be a non-negative integer <= 999' },
+          { status: 400 }
+        );
+      }
     }
 
     const _includeAll = sprintNumber === 'all';

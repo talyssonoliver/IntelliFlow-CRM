@@ -4,53 +4,61 @@
  */
 
 import { NextResponse } from 'next/server';
-import { exec } from 'node:child_process';
+import { execFile, spawnSync } from 'node:child_process';
 import { promisify } from 'node:util';
 import path from 'node:path';
 import fs from 'node:fs';
 
-const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
 export const dynamic = 'force-dynamic';
 
-// Detect Python command
-async function getPythonCommand(rootDir: string): Promise<string> {
-  try {
-    await execAsync('python --version', { cwd: rootDir });
-    return 'python';
-  } catch {
+// Coerce arbitrary input to a safe sprint integer for use in CLI args + logs.
+function parseSprintArg(raw: string | null): number {
+  if (raw === null) return 0;
+  const n = Number.parseInt(raw, 10);
+  if (!Number.isInteger(n) || n < 0 || n > 999) return 0;
+  return n;
+}
+
+// Detect Python command using a static argv — no user-controlled input.
+function getPythonCommand(rootDir: string): string {
+  for (const cmd of ['python', 'python3']) {
     try {
-      await execAsync('python3 --version', { cwd: rootDir });
-      return 'python3';
+      const res = spawnSync(cmd, ['--version'], { cwd: rootDir, encoding: 'utf-8' });
+      if (res.status === 0) return cmd;
     } catch {
-      throw new Error('Python not found. Please install Python 3.11+');
+      // ignore and try next
     }
   }
+  throw new Error('Python not found. Please install Python 3.11+');
 }
 
 export async function POST(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const sprint = searchParams.get('sprint') || '0';
+    const sprint = parseSprintArg(searchParams.get('sprint'));
 
     const rootDir = path.join(process.cwd(), '..', '..');
-    const pythonCmd = await getPythonCommand(rootDir);
+    const planDir = path.join(rootDir, 'tools', 'plan');
+    const pythonCmd = getPythonCommand(rootDir);
 
-    // Build command for Python digest
-    const args = ['-m', 'src.adapters.cli', 'digest', `--sprint=${sprint}`];
-    const command = `cd tools/plan && ${pythonCmd} ${args.join(' ')}`;
+    // Build argv for Python digest. `sprint` is a validated integer, so the
+    // resulting argv is provably free of shell metacharacters.
+    const argv = ['-m', 'src.adapters.cli', 'digest', `--sprint=${sprint}`];
+    const displayCommand = `${pythonCmd} ${argv.join(' ')}`;
 
-    console.log(`Generating daily digest: ${command}`);
+    console.log(`Generating daily digest for sprint ${sprint}`);
 
     let stdout = '';
     let stderr = '';
     let exitCode = 0;
 
     try {
-      const result = await execAsync(command, {
-        cwd: rootDir,
+      const result = await execFileAsync(pythonCmd, argv, {
+        cwd: planDir,
         timeout: 60000,
-        shell: process.platform === 'win32' ? 'cmd.exe' : '/bin/bash',
+        shell: false,
       });
       stdout = result.stdout;
       stderr = result.stderr;
@@ -75,8 +83,8 @@ export async function POST(request: Request) {
       {
         success: exitCode === 0,
         exitCode,
-        sprint: Number.parseInt(sprint),
-        command,
+        sprint,
+        command: displayCommand,
         stdout,
         stderr,
         digest,

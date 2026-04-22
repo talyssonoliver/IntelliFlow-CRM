@@ -8,6 +8,7 @@ import {
   updateTaskArtifacts,
   type TaskRecord,
 } from '@/lib/csv-status';
+import { isValidTaskId, resolveSprintPath, sanitizeSprintNumber } from '@/lib/paths';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -48,36 +49,46 @@ export async function POST(request: Request) {
     taskId = body.taskId;
     const forceRegenerate = body.forceRegenerate || false;
 
-    if (!taskId) {
-      return NextResponse.json({ error: 'Task ID is required' }, { status: 400 });
+    if (!taskId || !isValidTaskId(taskId)) {
+      return NextResponse.json(
+        { error: 'Task ID is required and must match the canonical task-id pattern' },
+        { status: 400 }
+      );
     }
+    const safeTaskId: string = taskId;
 
     // Resolve paths - go up from apps/project-tracker to project root
     const projectRoot = join(process.cwd(), '..', '..');
     const specifyDir = join(projectRoot, '.specify');
+    const sprintsRoot = join(specifyDir, 'sprints');
 
     // Load task from CSV
     const tasks = await loadTasks();
-    const task = tasks.find((t: TaskRecord) => t['Task ID'] === taskId);
+    const task = tasks.find((t: TaskRecord) => t['Task ID'] === safeTaskId);
 
     if (!task) {
       return NextResponse.json(
-        { success: false, error: `Task ${taskId} not found in Sprint_plan.csv` },
+        { success: false, error: `Task ${safeTaskId} not found in Sprint_plan.csv` },
         { status: 404 }
       );
     }
 
-    // Get sprint number from task
-    const sprintNumber = Number.parseInt(task['Target Sprint'] || '0', 10);
-    const sprintDir = join(specifyDir, 'sprints', `sprint-${sprintNumber}`);
+    // Get sprint number from task — validated to a safe integer.
+    const sprintNumber = sanitizeSprintNumber(task['Target Sprint']) ?? 0;
 
     // Sprint-based paths
-    const specPath = join(sprintDir, 'specifications', `${taskId}-spec.md`);
-    const contextPath = join(sprintDir, 'context', taskId, 'hydrated-context.md');
+    const specPath = resolveSprintPath(sprintsRoot, sprintNumber, 'specifications', `${safeTaskId}-spec.md`);
+    const contextPath = resolveSprintPath(sprintsRoot, sprintNumber, 'context', safeTaskId, 'hydrated-context.md');
+    if (!specPath || !contextPath) {
+      return NextResponse.json(
+        { success: false, error: 'Refusing to construct path outside of sprints root' },
+        { status: 400 }
+      );
+    }
 
     // Check if already has spec (unless force regenerate) - check both new and legacy locations
-    const legacySpecPath = join(specifyDir, 'specifications', `${taskId}-spec.md`);
-    const legacyContextPath = join(specifyDir, 'context', taskId, 'hydrated-context.md');
+    const legacySpecPath = join(specifyDir, 'specifications', `${safeTaskId}-spec.md`);
+    const legacyContextPath = join(specifyDir, 'context', safeTaskId, 'hydrated-context.md');
     const specExists = existsSync(specPath) || existsSync(legacySpecPath);
     const contextExists = existsSync(contextPath) || existsSync(legacyContextPath);
 
@@ -90,16 +101,24 @@ export async function POST(request: Request) {
           contextHydration: { status: 'exists', path: contextPath },
           specification: { status: 'exists', path: specPath },
         },
-        message: `${taskId} already has spec. Use forceRegenerate: true to regenerate.`,
+        message: `${safeTaskId} already has spec. Use forceRegenerate: true to regenerate.`,
       });
     }
 
     // Update status to "Specifying" at the start
-    await updateTaskStatus(taskId, 'Specifying');
+    await updateTaskStatus(safeTaskId, 'Specifying');
 
     // Ensure sprint directories exist
-    await mkdir(join(sprintDir, 'specifications'), { recursive: true });
-    await mkdir(join(sprintDir, 'context', taskId), { recursive: true });
+    const specificationsDir = resolveSprintPath(sprintsRoot, sprintNumber, 'specifications');
+    const contextDir = resolveSprintPath(sprintsRoot, sprintNumber, 'context', safeTaskId);
+    if (!specificationsDir || !contextDir) {
+      return NextResponse.json(
+        { success: false, error: 'Refusing to create directory outside of sprints root' },
+        { status: 400 }
+      );
+    }
+    await mkdir(specificationsDir, { recursive: true });
+    await mkdir(contextDir, { recursive: true });
 
     // Phase 0: Context Hydration
     const contextResult = await generateContext(task, tasks, projectRoot);
@@ -113,13 +132,13 @@ export async function POST(request: Request) {
     await writeFile(specPath, specContent, 'utf-8');
 
     // Update task artifacts in CSV
-    await updateTaskArtifacts(taskId, {
-      spec: `.specify/sprints/sprint-${sprintNumber}/specifications/${taskId}-spec.md`,
-      context: `.specify/sprints/sprint-${sprintNumber}/context/${taskId}/hydrated-context.md`,
+    await updateTaskArtifacts(safeTaskId, {
+      spec: `.specify/sprints/sprint-${sprintNumber}/specifications/${safeTaskId}-spec.md`,
+      context: `.specify/sprints/sprint-${sprintNumber}/context/${safeTaskId}/hydrated-context.md`,
     });
 
     // Update status to "Spec Complete"
-    await updateTaskStatus(taskId, 'Spec Complete');
+    await updateTaskStatus(safeTaskId, 'Spec Complete');
 
     // Build response
     const phases: Record<string, PhaseResult> = {
@@ -144,11 +163,11 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      taskId,
+      taskId: safeTaskId,
       status: 'spec_complete',
       csvStatus: 'Spec Complete',
       phases,
-      message: `SESSION 1 complete: ${taskId} spec generated. Context: ${contextResult.sources} sources, ${contextResult.dependencies} deps. Ready for SESSION 2: Plan.`,
+      message: `SESSION 1 complete: ${safeTaskId} spec generated. Context: ${contextResult.sources} sources, ${contextResult.dependencies} deps. Ready for SESSION 2: Plan.`,
       nextSession: 'plan',
     });
   } catch (error) {

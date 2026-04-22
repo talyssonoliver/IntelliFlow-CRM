@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { join, dirname, resolve, sep } from 'node:path';
 import Papa from 'papaparse';
+import { isValidTaskId } from '@/lib/paths';
 
 export const dynamic = 'force-dynamic';
 
@@ -44,6 +45,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'taskId or taskIds is required' }, { status: 400 });
     }
 
+    // Validate all task IDs against the canonical pattern before using them in paths.
+    const invalidIds = taskIds.filter((id) => !isValidTaskId(id));
+    if (invalidIds.length > 0) {
+      return NextResponse.json(
+        { error: `Invalid task ID(s): ${invalidIds.join(', ')}. Must match canonical task-id pattern.` },
+        { status: 400 }
+      );
+    }
+    const safeTaskIds: string[] = taskIds;
+
     const projectRoot = join(process.cwd(), '..', '..');
     const csvPath = join(
       projectRoot,
@@ -75,11 +86,11 @@ export async function POST(request: Request) {
     });
     const tasks = data as CsvTask[];
 
-    const selected = tasks.filter((t) => taskIds.includes(t['Task ID']));
+    const selected = tasks.filter((t) => safeTaskIds.includes(t['Task ID']));
 
     if (selected.length === 0) {
       return NextResponse.json(
-        { error: `Tasks not found: ${taskIds.join(', ')}` },
+        { error: `Tasks not found: ${safeTaskIds.join(', ')}` },
         { status: 404 }
       );
     }
@@ -96,11 +107,23 @@ export async function POST(request: Request) {
 
     const timestamp = new Date().toISOString().replaceAll(/[:.]/g, '-');
     const defaultPath =
-      taskIds.length === 1
-        ? `artifacts/prompts/task-${taskIds[0]}.md`
+      safeTaskIds.length === 1
+        ? `artifacts/prompts/task-${safeTaskIds[0]}.md`
         : `artifacts/prompts/tasks-${timestamp}.md`;
     const finalPath = body.outputPath || defaultPath;
     const fullPath = join(projectRoot, finalPath);
+
+    const artifactsRoot = resolve(projectRoot, 'artifacts');
+    const resolvedFull = resolve(fullPath);
+    if (
+      resolvedFull !== artifactsRoot &&
+      !resolvedFull.startsWith(artifactsRoot + sep)
+    ) {
+      return NextResponse.json(
+        { success: false, error: 'Refusing to write outside artifacts root' },
+        { status: 400 }
+      );
+    }
 
     await mkdir(dirname(fullPath), { recursive: true });
 
@@ -110,7 +133,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       savedTo: fullPath,
-      taskIds,
+      taskIds: safeTaskIds,
       markdown: prompt,
     });
   } catch (error) {

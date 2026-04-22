@@ -83,14 +83,38 @@ function getIntParam(searchParams: URLSearchParams, key: string, fallback: numbe
 
 type CommandResult = { displayName: string; runId?: string; argv: string[]; useShell?: boolean };
 
+// Strict allowlists / regexes for query-string values that flow into argv.
+const AUDIT_MODE_ALLOWED = new Set(['pr', 'main', 'release', 'nightly', 'manual']);
+const AUDIT_TIER_ALLOWED = new Set(['1', '2', '3', '4', '5', 'all']);
+const SCOPE_RE = /^[A-Za-z0-9._\-/, ]{1,200}$/;
+// Git refs allow most ASCII but we reject characters that have meaning to
+// argument parsers / shells (`;`, `|`, `$`, backtick, `>`, `<`, `&`, etc.).
+const BASE_REF_RE = /^[A-Za-z0-9._\-/]{1,120}$/;
+// Run IDs follow the `prefix-YYYYMMDDTHHMMSS-XXXXXXXX` shape produced by
+// `generateRunId`. Accept the same shape from the client.
+const RUN_ID_RE = /^[A-Za-z0-9._-]{1,80}$/;
+
+function pickEnumParam(value: string | undefined, allowed: Set<string>): string | undefined {
+  return value && allowed.has(value) ? value : undefined;
+}
+
+function pickRegexParam(value: string | undefined, re: RegExp): string | undefined {
+  return value && re.test(value) ? value : undefined;
+}
+
 function buildRunAuditCommand(python: string, searchParams: URLSearchParams): CommandResult {
-  const mode = getStringParam(searchParams, 'mode');
-  const tier = getStringParam(searchParams, 'tier');
-  const scope = getStringParam(searchParams, 'scope');
-  const baseRef = getStringParam(searchParams, 'baseRef') ?? 'origin/main';
+  const mode = pickEnumParam(getStringParam(searchParams, 'mode'), AUDIT_MODE_ALLOWED);
+  const tier = pickEnumParam(getStringParam(searchParams, 'tier'), AUDIT_TIER_ALLOWED);
+  const scope = pickRegexParam(getStringParam(searchParams, 'scope'), SCOPE_RE);
+  const baseRef =
+    pickRegexParam(getStringParam(searchParams, 'baseRef'), BASE_REF_RE) ?? 'origin/main';
   const resume = getBoolParam(searchParams, 'resume');
   const concurrency = getIntParam(searchParams, 'concurrency', 1);
-  const runId = getStringParam(searchParams, 'runId') ?? generateRunId('ui-audit');
+  const safeConcurrency = Number.isInteger(concurrency) && concurrency > 0 && concurrency <= 32
+    ? concurrency
+    : 1;
+  const runIdParam = pickRegexParam(getStringParam(searchParams, 'runId'), RUN_ID_RE);
+  const runId = runIdParam ?? generateRunId('ui-audit');
 
   const args: string[] = [python, path.join('tools', 'audit', 'run_audit.py')];
   if (mode) args.push('--mode', mode);
@@ -100,20 +124,24 @@ function buildRunAuditCommand(python: string, searchParams: URLSearchParams): Co
   if (scope) args.push('--scope', scope);
   if (baseRef) args.push('--base-ref', baseRef);
   if (resume) args.push('--resume');
-  if (concurrency > 1) args.push('--concurrency', String(concurrency));
+  if (safeConcurrency > 1) args.push('--concurrency', String(safeConcurrency));
   args.push('--run-id', runId);
 
   return { displayName: 'System Audit', runId, argv: args };
 }
 
 function buildSprintCompletionCommand(searchParams: URLSearchParams): CommandResult {
-  const sprint = getIntParam(searchParams, 'sprint', 0);
+  const sprintRaw = getIntParam(searchParams, 'sprint', 0);
+  const sprint = Number.isInteger(sprintRaw) && sprintRaw >= 0 && sprintRaw <= 999 ? sprintRaw : 0;
   const strict = getBoolParam(searchParams, 'strict');
   const skipValidations = getBoolParam(searchParams, 'skipValidations');
   const runId = generateRunId(`sprint${sprint}-audit`);
 
+  // Spawn `npx` directly — `useShell: false` plus number-derived `sprint`
+  // means there is no opportunity for shell metacharacter injection.
+  const npxBin = process.platform === 'win32' ? 'npx.cmd' : 'npx';
   const args: string[] = [
-    'pnpm',
+    npxBin,
     'tsx',
     path.join('tools', 'scripts', 'audit-sprint-completion.ts'),
     '--sprint',
@@ -124,7 +152,7 @@ function buildSprintCompletionCommand(searchParams: URLSearchParams): CommandRes
   if (strict) args.push('--strict');
   if (skipValidations) args.push('--skip-validations');
 
-  return { displayName: `Sprint ${sprint} Completion Audit`, runId, argv: args, useShell: true };
+  return { displayName: `Sprint ${sprint} Completion Audit`, runId, argv: args, useShell: false };
 }
 
 function buildCommand(cmd: AuditStreamCommand, searchParams: URLSearchParams): CommandResult {
@@ -140,8 +168,10 @@ function buildCommand(cmd: AuditStreamCommand, searchParams: URLSearchParams): C
   }
 
   if (cmd === 'sprint0-audit') {
-    const runId = getStringParam(searchParams, 'runId');
-    if (!runId) throw new Error('Missing required query param: runId');
+    const runId = pickRegexParam(getStringParam(searchParams, 'runId'), RUN_ID_RE);
+    if (!runId) {
+      throw new Error('Missing or invalid required query param: runId');
+    }
     return {
       displayName: 'Sprint 0 Audit Reports',
       runId,
@@ -152,7 +182,8 @@ function buildCommand(cmd: AuditStreamCommand, searchParams: URLSearchParams): C
   if (cmd === 'sprint-completion') return buildSprintCompletionCommand(searchParams);
 
   // cmd === 'affected'
-  const baseRef = getStringParam(searchParams, 'baseRef') ?? 'origin/main';
+  const baseRef =
+    pickRegexParam(getStringParam(searchParams, 'baseRef'), BASE_REF_RE) ?? 'origin/main';
   const includeDependents = getBoolParam(searchParams, 'includeDependents');
   const args: string[] = [
     python,

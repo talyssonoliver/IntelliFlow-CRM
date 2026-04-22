@@ -92,6 +92,15 @@ function generateSessionId(): string {
 }
 
 /**
+ * Validate a session ID against the format produced by generateSessionId:
+ * 14 decimal digits, dash, 8 lowercase hex digits.
+ */
+const SESSION_ID_RE = /^\d{14}-[0-9a-f]{8}$/;
+function isValidSessionId(sessionId: string): boolean {
+  return typeof sessionId === 'string' && SESSION_ID_RE.test(sessionId);
+}
+
+/**
  * Spawn a Claude Code CLI session
  *
  * @param config Session configuration
@@ -307,6 +316,10 @@ export function killSession(sessionId: string): boolean {
  * Get session status from file (for completed sessions)
  */
 export async function getSessionStatus(sessionId: string): Promise<ClaudeSessionResult | null> {
+  if (!isValidSessionId(sessionId)) {
+    return null;
+  }
+
   // First check active sessions
   const active = getActiveSession(sessionId);
   if (active) {
@@ -334,6 +347,10 @@ export async function getSessionOutput(
   sessionId: string,
   lines: number = 100
 ): Promise<string | null> {
+  if (!isValidSessionId(sessionId)) {
+    return null;
+  }
+
   const outputFile = join(getLogsDir(), `${sessionId}.log`);
   if (!existsSync(outputFile)) {
     return null;

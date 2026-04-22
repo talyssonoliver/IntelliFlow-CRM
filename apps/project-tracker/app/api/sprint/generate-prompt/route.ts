@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { join, dirname, resolve, sep } from 'node:path';
 import Papa from 'papaparse';
 import { calculatePhases } from '../../../../lib/phase-calculator';
 import { generateSprintPrompt, generateSprintPromptData } from '../../../../lib/prompt-generator';
@@ -98,6 +98,18 @@ export async function POST(request: Request) {
           ? join(projectRoot, outputPath)
           : join(projectRoot, 'artifacts', outputPath);
 
+        const artifactsRoot = resolve(projectRoot, 'artifacts');
+        const resolvedFull = resolve(fullPath);
+        if (
+          resolvedFull !== artifactsRoot &&
+          !resolvedFull.startsWith(artifactsRoot + sep)
+        ) {
+          return NextResponse.json(
+            { success: false, error: 'Refusing to write outside artifacts root' },
+            { status: 400 }
+          );
+        }
+
         await mkdir(dirname(fullPath), { recursive: true });
         await writeFile(fullPath, output, 'utf-8');
         savedTo = fullPath;
@@ -127,6 +139,18 @@ export async function POST(request: Request) {
       const fullPath = finalPath.startsWith('/')
         ? join(projectRoot, finalPath)
         : join(projectRoot, 'artifacts', finalPath);
+
+      const artifactsRoot = resolve(projectRoot, 'artifacts');
+      const resolvedFull = resolve(fullPath);
+      if (
+        resolvedFull !== artifactsRoot &&
+        !resolvedFull.startsWith(artifactsRoot + sep)
+      ) {
+        return NextResponse.json(
+          { success: false, error: 'Refusing to write outside artifacts root' },
+          { status: 400 }
+        );
+      }
 
       await mkdir(dirname(fullPath), { recursive: true });
       await writeFile(fullPath, output, 'utf-8');

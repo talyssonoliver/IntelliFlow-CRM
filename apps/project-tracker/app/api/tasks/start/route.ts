@@ -3,6 +3,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import Papa from 'papaparse';
+import { isValidTaskId, resolveSprintPath, sanitizeSprintNumber } from '@/lib/paths';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,12 +18,17 @@ export async function POST(request: Request) {
     const body: StartTaskRequest = await request.json();
     const { taskId, runMatop, skipPlanCheck } = body;
 
-    if (!taskId) {
-      return NextResponse.json({ error: 'Task ID is required' }, { status: 400 });
+    if (!taskId || !isValidTaskId(taskId)) {
+      return NextResponse.json(
+        { error: 'Task ID is required and must match the canonical task-id pattern' },
+        { status: 400 }
+      );
     }
+    const safeTaskId: string = taskId;
 
     const projectRoot = join(process.cwd(), '..', '..');
     const specifyDir = join(projectRoot, '.specify');
+    const sprintsRoot = join(specifyDir, 'sprints');
     const csvPath = join(process.cwd(), 'docs', 'metrics', '_global', 'Sprint_plan.csv');
 
     // Read CSV first to get sprint number
@@ -35,31 +41,36 @@ export async function POST(request: Request) {
     const tasks = data as Record<string, string>[];
 
     // Find the task
-    const taskIndex = tasks.findIndex((t) => t['Task ID'] === taskId);
+    const taskIndex = tasks.findIndex((t) => t['Task ID'] === safeTaskId);
 
     if (taskIndex === -1) {
-      return NextResponse.json({ error: `Task ${taskId} not found` }, { status: 404 });
+      return NextResponse.json({ error: `Task ${safeTaskId} not found` }, { status: 404 });
     }
 
     const task = tasks[taskIndex];
     const currentStatus = task.Status;
-    const sprintNumber = Number.parseInt(task['Target Sprint'] || '0', 10);
-    const sprintDir = join(specifyDir, 'sprints', `sprint-${sprintNumber}`);
+    const sprintNumber = sanitizeSprintNumber(task['Target Sprint']) ?? 0;
 
     // Sprint-based paths
-    const specFile = join(sprintDir, 'specifications', `${taskId}-spec.md`);
-    const planFile = join(sprintDir, 'planning', `${taskId}-plan.md`);
-    const contextAckFile = join(sprintDir, 'attestations', taskId, 'attestation.json');
+    const specFile = resolveSprintPath(sprintsRoot, sprintNumber, 'specifications', `${safeTaskId}-spec.md`);
+    const planFile = resolveSprintPath(sprintsRoot, sprintNumber, 'planning', `${safeTaskId}-plan.md`);
+    const contextAckFile = resolveSprintPath(sprintsRoot, sprintNumber, 'attestations', safeTaskId, 'attestation.json');
+    if (!specFile || !planFile || !contextAckFile) {
+      return NextResponse.json(
+        { success: false, error: 'Refusing to construct path outside of sprints root' },
+        { status: 400 }
+      );
+    }
 
     const hasSpec = existsSync(specFile);
     const hasPlan = existsSync(planFile);
     const hasContextAck = existsSync(contextAckFile);
 
     const specPath = hasSpec
-      ? `.specify/sprints/sprint-${sprintNumber}/specifications/${taskId}-spec.md`
+      ? `.specify/sprints/sprint-${sprintNumber}/specifications/${safeTaskId}-spec.md`
       : null;
     const planPath = hasPlan
-      ? `.specify/sprints/sprint-${sprintNumber}/planning/${taskId}-plan.md`
+      ? `.specify/sprints/sprint-${sprintNumber}/planning/${safeTaskId}-plan.md`
       : null;
 
     // Check if task has spec/plan (unless skipped)
@@ -70,7 +81,7 @@ export async function POST(request: Request) {
           needsPlanning: true,
           hasSpec,
           hasPlan,
-          suggestion: `Run planning first: POST /api/tasks/plan with {"taskId": "${taskId}"}`,
+          suggestion: `Run planning first: POST /api/tasks/plan with {"taskId": "${safeTaskId}"}`,
         },
         { status: 400 }
       );
@@ -96,7 +107,7 @@ export async function POST(request: Request) {
         {
           error: 'Context Ack is required before starting this task.',
           needsContextAck: true,
-          contextAckPath: `.specify/sprints/sprint-${sprintNumber}/attestations/${taskId}/attestation.json`,
+          contextAckPath: `.specify/sprints/sprint-${sprintNumber}/attestations/${safeTaskId}/attestation.json`,
           suggestion:
             'Build a context pack and create an attestation.json acknowledging files and invariants before starting.',
         },
@@ -130,14 +141,14 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      taskId,
+      taskId: safeTaskId,
       previousStatus: currentStatus,
       newStatus: 'In Progress',
       specPath,
       planPath,
       runMatop: runMatop ?? false,
-      matopCommand: runMatop ? `/matop-execute ${taskId}` : null,
-      message: `Task ${taskId} started. Status changed from '${currentStatus}' to 'In Progress'.`,
+      matopCommand: runMatop ? `/matop-execute ${safeTaskId}` : null,
+      message: `Task ${safeTaskId} started. Status changed from '${currentStatus}' to 'In Progress'.`,
     });
   } catch (error) {
     console.error('Error starting task:', error);

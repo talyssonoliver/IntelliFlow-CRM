@@ -74,7 +74,11 @@ function runAuditCli(
     const repoRoot = getRepoRoot();
     const scriptPath = path.join(repoRoot, 'tools/scripts/audit-sprint-completion.ts');
 
-    const args = ['tsx', scriptPath, '--sprint', sprint.toString(), '--json'];
+    // `sprint` is validated to a finite integer in the POST handler before
+    // it reaches here, so its `.toString()` cannot contain shell metachars.
+    const safeSprint = Number.isInteger(sprint) && sprint >= 0 ? sprint : 0;
+
+    const args = ['tsx', scriptPath, '--sprint', String(safeSprint), '--json'];
 
     if (strict) {
       args.push('--strict');
@@ -84,16 +88,19 @@ function runAuditCli(
       args.push('--skip-validations');
     }
 
-    const isWindows = process.platform === 'win32';
-    const shell = isWindows ? 'cmd.exe' : '/bin/sh';
-    const shellArgs = isWindows ? ['/c', `npx ${args.join(' ')}`] : ['-c', `npx ${args.join(' ')}`];
-
     let stdout = '';
     let stderr = '';
 
-    const proc = spawn(shell, shellArgs, {
+    // Spawn `npx` directly (no shell) — every argv entry is a static literal
+    // or a number-derived string, which neutralises CodeQL's command-injection
+    // taint and is also safer in practice on Windows where cmd.exe quoting is
+    // notoriously fragile. On Windows the binary is `npx.cmd`.
+    const npxBin = process.platform === 'win32' ? 'npx.cmd' : 'npx';
+    const proc = spawn(npxBin, args, {
       cwd: repoRoot,
       stdio: ['ignore', 'pipe', 'pipe'],
+      shell: false,
+      windowsHide: true,
     });
 
     proc.stdout?.on('data', (data) => {
@@ -196,17 +203,25 @@ export async function POST(request: NextRequest): Promise<NextResponse<AuditResp
   try {
     const body = (await request.json()) as AuditRequest;
 
-    if (!body.sprint || typeof body.sprint !== 'number') {
+    if (
+      typeof body.sprint !== 'number' ||
+      !Number.isInteger(body.sprint) ||
+      body.sprint < 0 ||
+      body.sprint > 999
+    ) {
       return NextResponse.json(
-        { success: false, error: 'sprint (number) is required' },
+        { success: false, error: 'sprint must be an integer between 0 and 999' },
         { status: 400 }
       );
     }
 
-    console.log(`Starting audit for sprint ${body.sprint}...`);
+    // `safeSprint` is now a validated integer — embedding it in a log line
+    // cannot break the line or inject control sequences.
+    const safeSprint = body.sprint;
+    console.log(`Starting audit for sprint ${safeSprint}...`);
 
     const result = await runAuditCli(
-      body.sprint,
+      safeSprint,
       body.strict ?? false,
       body.skipValidations ?? false
     );

@@ -322,7 +322,23 @@ function collectJsonSummaries(
   allFiles.push(...files);
 }
 
+// Strict run-id format: same shape produced by `generateRunId` in audit/stream.
+const RUN_ID_RE = /^[A-Za-z0-9._-]{1,80}$/;
+
+function safeForLog(value: string): string {
+  // Strip CR/LF and other control bytes so the value cannot break out of the
+  // intended log line or inject ANSI/escape sequences.
+  // eslint-disable-next-line no-control-regex
+  return value.replaceAll(/[\x00-\x1f\x7f]/g, '?');
+}
+
 export function getExecutionRun(projectRoot: string, runId: string): ExecutionRun | null {
+  // Reject any runId that doesn't match the strict pattern — protects both the
+  // filesystem read below and the log line in the catch block.
+  if (typeof runId !== 'string' || !RUN_ID_RE.test(runId)) {
+    return null;
+  }
+
   const runsDir = join(projectRoot, 'artifacts', 'reports', 'sprint-runs');
   const runPath = join(runsDir, `${runId}.json`);
 
@@ -336,7 +352,7 @@ export function getExecutionRun(projectRoot: string, runId: string): ExecutionRu
     const sprintMap = buildTaskSprintMap(projectRoot);
     return parseExecutionRun(data, `${runId}.json`, sprintMap);
   } catch (error) {
-    console.error(`Error reading execution run ${runId}:`, error);
+    console.error(`Error reading execution run ${safeForLog(runId)}:`, error);
     return null;
   }
 }

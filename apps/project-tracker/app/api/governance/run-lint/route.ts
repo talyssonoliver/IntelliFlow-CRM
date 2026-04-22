@@ -4,43 +4,49 @@
  */
 
 import { NextResponse } from 'next/server';
-import { exec } from 'node:child_process';
+import { execFile, spawnSync } from 'node:child_process';
 import { promisify } from 'node:util';
 import path from 'node:path';
 import { loadLintReport, loadReviewQueue, loadPhantomCompletionAudit } from '@/lib/governance';
 
-const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
 export const dynamic = 'force-dynamic';
 
-// Detect Python command (python or python3)
-async function getPythonCommand(rootDir: string): Promise<string> {
-  try {
-    await execAsync('python --version', { cwd: rootDir });
-    return 'python';
-  } catch {
+function parseSprintArg(raw: string | null): number {
+  if (raw === null) return 0;
+  const n = Number.parseInt(raw, 10);
+  if (!Number.isInteger(n) || n < 0 || n > 999) return 0;
+  return n;
+}
+
+// Detect Python command using a static argv — no user-controlled input.
+function getPythonCommand(rootDir: string): string {
+  for (const cmd of ['python', 'python3']) {
     try {
-      await execAsync('python3 --version', { cwd: rootDir });
-      return 'python3';
+      const res = spawnSync(cmd, ['--version'], { cwd: rootDir, encoding: 'utf-8' });
+      if (res.status === 0) return cmd;
     } catch {
-      throw new Error('Python not found. Please install Python 3.11+');
+      // ignore and try next
     }
   }
+  throw new Error('Python not found. Please install Python 3.11+');
 }
 
 export async function POST(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const sprint = searchParams.get('sprint') || '0';
+    const sprint = parseSprintArg(searchParams.get('sprint'));
     const verbose = searchParams.get('verbose') === 'true';
     const allSprints = searchParams.get('all') === 'true';
 
     // Run Python plan-linter from root directory
     const rootDir = path.join(process.cwd(), '..', '..');
-    const pythonCmd = await getPythonCommand(rootDir);
+    const planDir = path.join(rootDir, 'tools', 'plan');
+    const pythonCmd = getPythonCommand(rootDir);
 
-    // Build command for Python linter
-    const args = [
+    // Build argv with validated scalars only — no shell, no string concat.
+    const argv = [
       '-m',
       'src.adapters.cli',
       'lint',
@@ -48,26 +54,25 @@ export async function POST(request: Request) {
       ...(verbose ? ['--verbose'] : []),
       ...(allSprints ? ['--all-sprints'] : []),
     ];
-    const command = `cd tools/plan && ${pythonCmd} ${args.join(' ')}`;
+    const displayCommand = `${pythonCmd} ${argv.join(' ')}`;
 
-    console.log(`Running Python plan-linter: ${command}`);
-    console.log(`Working directory: ${rootDir}`);
+    console.log(`Running Python plan-linter for sprint ${sprint} (verbose=${verbose}, all=${allSprints})`);
 
     let stdout = '';
     let stderr = '';
     let exitCode = 0;
 
     try {
-      const result = await execAsync(command, {
-        cwd: rootDir,
+      const result = await execFileAsync(pythonCmd, argv, {
+        cwd: planDir,
         timeout: 120000, // 2 minute timeout
         env: { ...process.env, PYTHONPATH: path.join(rootDir, 'tools', 'plan', 'src') },
-        shell: process.platform === 'win32' ? 'cmd.exe' : '/bin/bash',
+        shell: false,
       });
       stdout = result.stdout;
       stderr = result.stderr;
     } catch (execError: any) {
-      // exec throws on non-zero exit code
+      // execFile throws on non-zero exit code
       stdout = execError.stdout || '';
       stderr = execError.stderr || '';
       exitCode = execError.code || 1;
@@ -86,7 +91,7 @@ export async function POST(request: Request) {
       {
         success: exitCode === 0,
         exitCode,
-        command,
+        command: displayCommand,
         linter: 'python', // Indicate which linter was used
         stdout: stdout.slice(-5000), // Last 5000 chars
         stderr: stderr.slice(-2000), // Last 2000 chars

@@ -9,6 +9,7 @@ import {
   canProceedToSession,
   type TaskRecord,
 } from '@/lib/csv-status';
+import { isValidTaskId, resolveSprintPath, sanitizeSprintNumber } from '@/lib/paths';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -52,36 +53,59 @@ export async function POST(request: Request) {
     taskId = body.taskId;
     const forceRegenerate = body.forceRegenerate || false;
 
-    if (!taskId) {
-      return NextResponse.json({ error: 'Task ID is required' }, { status: 400 });
+    if (!taskId || !isValidTaskId(taskId)) {
+      return NextResponse.json(
+        { error: 'Task ID is required and must match the canonical task-id pattern' },
+        { status: 400 }
+      );
     }
+    // After isValidTaskId, taskId is a string matching /^[A-Z][A-Z0-9]*(-[A-Z0-9]+)*-\d{3}(-[A-Z]+)?$/
+    // — no path separators, no traversal, safe for use in filenames.
+    const safeTaskId: string = taskId;
 
     // Resolve paths - go up from apps/project-tracker to project root
     const projectRoot = join(process.cwd(), '..', '..');
     const specifyDir = join(projectRoot, '.specify');
+    const sprintsRoot = join(specifyDir, 'sprints');
 
     // Load task from CSV
     const tasks = await loadTasks();
-    const task = tasks.find((t) => t['Task ID'] === taskId);
+    const task = tasks.find((t) => t['Task ID'] === safeTaskId);
 
     if (!task) {
       return NextResponse.json(
-        { success: false, error: `Task ${taskId} not found in Sprint_plan.csv` },
+        { success: false, error: `Task ${safeTaskId} not found in Sprint_plan.csv` },
         { status: 404 }
       );
     }
 
-    // Get sprint number from task
-    const sprintNumber = Number.parseInt(task['Target Sprint'] || '0', 10);
-    const sprintDir = join(specifyDir, 'sprints', `sprint-${sprintNumber}`);
+    // Get sprint number from task — validated to a safe integer.
+    const sprintNumber = sanitizeSprintNumber(task['Target Sprint']) ?? 0;
 
-    // Sprint-based paths
-    const specPath = join(sprintDir, 'specifications', `${taskId}-spec.md`);
-    const planPath = join(sprintDir, 'planning', `${taskId}-plan.md`);
-    const _contextPath = join(sprintDir, 'context', taskId, 'hydrated-context.md');
+    // All sprint-scoped paths are resolved via `resolveSprintPath`, which
+    // performs a containment check against `sprintsRoot` — the taskId and
+    // sprint number are validated above, but this is defence-in-depth.
+    const specPath = resolveSprintPath(
+      sprintsRoot,
+      sprintNumber,
+      'specifications',
+      `${safeTaskId}-spec.md`
+    );
+    const planPath = resolveSprintPath(
+      sprintsRoot,
+      sprintNumber,
+      'planning',
+      `${safeTaskId}-plan.md`
+    );
+    if (!specPath || !planPath) {
+      return NextResponse.json(
+        { success: false, error: 'Refusing to construct path outside of sprints root' },
+        { status: 400 }
+      );
+    }
 
     // Check prerequisites - must have spec (check both new and legacy locations)
-    const legacySpecPath = join(specifyDir, 'specifications', `${taskId}-spec.md`);
+    const legacySpecPath = join(specifyDir, 'specifications', `${safeTaskId}-spec.md`);
     const specExists = existsSync(specPath) || existsSync(legacySpecPath);
     if (!specExists) {
       return NextResponse.json(
@@ -123,10 +147,17 @@ export async function POST(request: Request) {
     }
 
     // Update status to "Planning" at the start
-    await updateTaskStatus(taskId, 'Planning');
+    await updateTaskStatus(safeTaskId, 'Planning');
 
-    // Ensure sprint directories exist
-    await mkdir(join(sprintDir, 'planning'), { recursive: true });
+    // Ensure sprint directories exist — reuse the validated planning dir.
+    const planningDir = resolveSprintPath(sprintsRoot, sprintNumber, 'planning');
+    if (!planningDir) {
+      return NextResponse.json(
+        { success: false, error: 'Refusing to create directory outside of sprints root' },
+        { status: 400 }
+      );
+    }
+    await mkdir(planningDir, { recursive: true });
 
     // Read spec to get domain info (try new path first, then legacy)
     const actualSpecPath = existsSync(specPath) ? specPath : legacySpecPath;
@@ -138,12 +169,12 @@ export async function POST(request: Request) {
     await writeFile(planPath, planContent, 'utf-8');
 
     // Update task artifacts in CSV
-    await updateTaskArtifacts(taskId, {
-      plan: `.specify/sprints/sprint-${sprintNumber}/planning/${taskId}-plan.md`,
+    await updateTaskArtifacts(safeTaskId, {
+      plan: `.specify/sprints/sprint-${sprintNumber}/planning/${safeTaskId}-plan.md`,
     });
 
     // Update status to "Plan Complete"
-    await updateTaskStatus(taskId, 'Plan Complete');
+    await updateTaskStatus(safeTaskId, 'Plan Complete');
 
     // Build response
     const phases: Record<string, PhaseResult> = {
