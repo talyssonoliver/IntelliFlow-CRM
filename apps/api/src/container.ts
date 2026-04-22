@@ -98,6 +98,59 @@ import {
 } from './modules/account/account-duplicate-detection.service';
 
 /**
+ * IFC-310: Generate an embedding for the check-time query contact.
+ *
+ * Calls LiteLLM proxy (preferred) or OpenAI directly via plain fetch so the
+ * apps/api process can synthesize the query-side embedding without importing
+ * the ai-worker package (cross-app dep) or LangChain (heavy bundle bloat).
+ *
+ * Returns null when no provider is configured OR when the HTTP call fails —
+ * the detection service gracefully degrades to deterministic-only per AC-008.
+ */
+async function generateContactQueryEmbedding(text: string): Promise<number[] | null> {
+  if (!text || text.length === 0) return null;
+
+  const litellmBase = process.env.LITELLM_BASE_URL;
+  const litellmKey = process.env.LITELLM_MASTER_KEY;
+  const openAIKey = process.env.OPENAI_API_KEY;
+  const model = process.env.EMBEDDING_MODEL_API || 'text-embedding-ada-002';
+
+  let endpoint: string;
+  let authHeader: string;
+
+  if (litellmBase && litellmKey) {
+    endpoint = `${litellmBase.replace(/\/$/, '')}/embeddings`;
+    authHeader = `Bearer ${litellmKey}`;
+  } else if (openAIKey) {
+    endpoint = 'https://api.openai.com/v1/embeddings';
+    authHeader = `Bearer ${openAIKey}`;
+  } else {
+    return null;
+  }
+
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: authHeader,
+      },
+      body: JSON.stringify({ model, input: text }),
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+    if (!res.ok) return null;
+    const body = (await res.json()) as { data?: Array<{ embedding?: number[] }> };
+    const vec = body.data?.[0]?.embedding;
+    return Array.isArray(vec) && vec.length > 0 ? vec : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Get the API Prisma client.
  *
  * Uses the shared singleton from @intelliflow/db so all API modules reuse a single
@@ -492,9 +545,21 @@ const createServices = (prismaClient: PrismaClient) => {
   });
 
   // IFC-310: Duplicate-detection runtime services
-  // These are stateless singletons that accept per-request HasTenantContext.
-  // The contactDuplicateDetectionService wires a mergeContacts dep that
-  // delegates to ContactService.mergeContacts (hardened in the same task).
+  // Stateless singletons — accept per-request HasTenantContext.
+  //
+  // Wiring:
+  //  - mergeContacts:        delegates to the hardened ContactService.mergeContacts
+  //                          (atomic $transaction + child re-parenting + event publish).
+  //  - findSimilarContacts:  bridges packages/db/src/pgvector#findSimilarContacts
+  //                          with a tenant-scope filter applied in the caller after
+  //                          the vector search returns candidates (candidate rows are
+  //                          re-fetched tenant-scoped inside runAiBranch).
+  //  - enqueueEmbeddingJob:  fire-and-forget BullMQ producer for intelliflow-contact-embed.
+  //                          Consumed by ContactEmbedWorker (apps/ai-worker).
+  //  - generateEmbedding:    HTTP-based LiteLLM/OpenAI call so AC-007 fires at
+  //                          check-time. Returns null when no provider is
+  //                          configured — detection service degrades to
+  //                          deterministic-only per AC-008.
   const contactDuplicateDetectionService: ContactDuplicateDetectionService =
     createContactDuplicateDetectionService({
       mergeContacts: async (_ctx, primaryId, secondaryId, mergedBy) => {
@@ -508,9 +573,56 @@ const createServices = (prismaClient: PrismaClient) => {
         }
         return result.value;
       },
+      findSimilarContacts: async (_prismaIgnored, _tenantId, embedding, opts) => {
+        const { findSimilarContacts } = await import('@intelliflow/db');
+        const results = await findSimilarContacts(embedding, {
+          limit: opts?.limit ?? 5,
+          threshold: 1 - (opts?.threshold ?? 0.3),
+        });
+        return results.map((r) => ({ id: r.item.id, similarity: r.similarity }));
+      },
+      generateEmbedding: generateContactQueryEmbedding,
+      enqueueEmbeddingJob: async (payload) => {
+        try {
+          const { Queue } = await import(
+            /* webpackIgnore: true */ 'bullmq'
+          );
+          const { getBullMQConnectionOptions } = await import(
+            '@intelliflow/platform/queues/connection'
+          );
+          const queue = new Queue('intelliflow-contact-embed', {
+            connection: getBullMQConnectionOptions(),
+          });
+          await queue.add('embed', payload, {
+            attempts: 3,
+            backoff: { type: 'exponential', delay: 5000 },
+            removeOnComplete: { age: 86400, count: 200 },
+            removeOnFail: { age: 604800, count: 1000 },
+          });
+          await queue.close();
+        } catch (error) {
+          console.warn(
+            '[container] intelliflow-contact-embed enqueue failed (fire-and-forget):',
+            error,
+          );
+        }
+      },
     });
   const accountDuplicateDetectionService: AccountDuplicateDetectionService =
-    createAccountDuplicateDetectionService();
+    createAccountDuplicateDetectionService({
+      linkContactsByEmailDomain: async (accountId, domain, tenantId, maxBatch) => {
+        const result = await accountService.linkContactsByEmailDomain(
+          accountId,
+          domain,
+          tenantId,
+          maxBatch,
+        );
+        if (result.isFailure) {
+          throw result.error;
+        }
+        return result.value;
+      },
+    });
 
   return {
     leadService,

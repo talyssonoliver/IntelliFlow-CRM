@@ -72,4 +72,27 @@ describe('ContactMergedEvent', () => {
     // serialisation safety — JSON.stringify must not throw
     expect(() => JSON.stringify(json)).not.toThrow();
   });
+
+  it('null-safe default: fieldsUpdated omitted entirely defaults to []', () => {
+    const evt = new ContactMergedEvent({
+      primaryId: 'contact-1',
+      mergedContactId: 'contact-2',
+      tenantId: 'tenant-A',
+      mergedBy: 'user-42',
+      mergedAt: new Date('2026-04-21T00:00:00Z'),
+    } as unknown as Parameters<typeof ContactMergedEvent.prototype.constructor>[0]);
+    expect(evt.payload.fieldsUpdated).toEqual([]);
+    expect(evt.payload.truncated).toBeUndefined();
+  });
+
+  it('toPayload(): includes truncated:true only when fieldsUpdated > cap', () => {
+    const big = Array.from({ length: 60 }, (_, i) => `f${i}`);
+    const bigEvt = new ContactMergedEvent({ ...basePayload, fieldsUpdated: big });
+    const bigPayload = bigEvt.toPayload();
+    expect(bigPayload.truncated).toBe(true);
+
+    const smallEvt = new ContactMergedEvent(basePayload);
+    const smallPayload = smallEvt.toPayload();
+    expect(smallPayload.truncated).toBeUndefined();
+  });
 });

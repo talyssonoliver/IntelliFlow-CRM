@@ -19,12 +19,31 @@ import {
 } from '../../shared/duplicate-rule-evaluator';
 import { createNotification } from '../notifications/notifications.router';
 
+/**
+ * Structural subtype of `TenantAwareContext` (see
+ * apps/api/src/security/tenant-context.ts). Kept as a local shape so the
+ * detection service does not pull a hard dependency on the security module,
+ * but fields are a prefix of `TenantAwareContext` so routers can pass their
+ * typed ctx directly without `as any`.
+ */
 export interface HasTenantContext {
-  tenant: { tenantId: string; userId: string };
+  tenant: {
+    tenantId: string;
+    userId: string;
+    // Optional fields present on real TenantAwareContext — accepted but not
+    // consumed by the detection service. Declaring them keeps the structural
+    // match with TenantAwareContext strict.
+    tenantType?: 'user' | 'organization';
+    role?: string;
+    organizationId?: string;
+    canAccessAllTenantData?: boolean;
+    teamMemberIds?: string[];
+  };
   prismaWithTenant: PrismaClient;
   prisma?: PrismaClient;
   services?: {
     notificationOrchestrator?: unknown;
+    [key: string]: unknown;
   };
 }
 
@@ -410,7 +429,16 @@ export function createContactDuplicateDetectionService(
       flags,
     );
 
-    return decide(fullMatches, payload, flags);
+    const decision = decide(fullMatches, payload, flags);
+
+    // AC-004: emit notification on flag branch. Mirror of the account service.
+    // Auto-merge emits its notification separately inside applyAutoMerge after
+    // the merge commits — do NOT double-emit here.
+    if (decision.action === 'flag') {
+      await emitFlagNotification(ctx, decision.matches, 'flagged');
+    }
+
+    return decision;
   }
 
   return {

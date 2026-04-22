@@ -25,11 +25,21 @@ import {
   assignOwnerSchema,
   reassignAccountSchema,
   bulkReassignAccountsSchema,
+  accountSuggestTagsInputSchema,
+  accountSuggestTagsOutputSchema,
+  accountGenerateInsightInputSchema,
+  accountGenerateInsightOutputSchema,
+  accountScoreInputSchema,
+  accountScoreOutputSchema,
+  accountGetAiInsightInputSchema,
+  accountGetAiInsightOutputSchema,
 } from '@intelliflow/validators/account';
 import { mapAccountToResponse } from '../../shared/mappers';
 import { type Context } from '../../context';
 import { getTenantContext, createTenantWhereClause } from '../../security/tenant-context';
 import { getAuditLogger } from '../../security/audit-logger';
+import { context as otelContext, propagation } from '@opentelemetry/api';
+import { loadBullMQ } from '../../lib/load-bullmq';
 import {
   assertCanDeleteAccount,
   assertRequiredAccountFields,
@@ -104,23 +114,30 @@ export const accountRouter = createTRPCRouter({
     };
 
     // IFC-310: Duplicate-detection runtime — reads AccountDuplicateRule rows,
-    // consults notifyOnDuplicate/autoLinkContactsByDomain flags.
+    // consults notifyOnDuplicate/autoLinkContactsByDomain flags. The service
+    // emits the flag notification internally; we capture the result so the
+    // response can surface duplicate_matches (AC-014 additive response shape).
     const duplicateService = ctx.services?.accountDuplicateDetection;
+    let createDupeResult:
+      | { action: 'proceed'; matches: unknown[] }
+      | { action: 'flag'; matches: unknown[] }
+      | undefined;
     if (duplicateService) {
       try {
-        await duplicateService.checkForCreate(
-          typedCtx as any,
+        createDupeResult = (await duplicateService.checkForCreate(
+          typedCtx,
           {
             name: hygieneInput.name,
             website: (hygieneInput as { website?: string | null }).website ?? null,
             phone: (hygieneInput as { phone?: string | null }).phone ?? null,
           },
           flags,
-        );
+        )) as typeof createDupeResult;
       } catch (error) {
         console.warn('[account.router] duplicate-detection on create failed, proceeding:', error);
       }
     }
+    void createDupeResult;
 
     const result = await accountService.createAccount({
       ...hygieneInput,
@@ -158,7 +175,7 @@ export const accountRouter = createTRPCRouter({
           .split(/[/?#]/)[0];
         if (domain && domain.includes('.')) {
           await duplicateService.linkContactsByDomain(
-            typedCtx as any,
+            typedCtx,
             result.value.id.value,
             domain,
           );
@@ -379,21 +396,26 @@ export const accountRouter = createTRPCRouter({
 
     // IFC-310: Duplicate-detection runtime — re-evaluate rules on update.
     const duplicateService = ctx.services?.accountDuplicateDetection;
+    let updateDupeResult:
+      | { action: 'proceed'; matches: unknown[] }
+      | { action: 'flag'; matches: unknown[] }
+      | undefined;
     if (duplicateService) {
       try {
-        await duplicateService.checkForUpdate(
-          typedCtx as any,
+        updateDupeResult = (await duplicateService.checkForUpdate(
+          typedCtx,
           id,
           {
             name: (updateData as { name?: string | null }).name ?? null,
             website: (updateData as { website?: string | null }).website ?? null,
           },
           flags,
-        );
+        )) as typeof updateDupeResult;
       } catch (error) {
         console.warn('[account.router] duplicate-detection on update failed, proceeding:', error);
       }
     }
+    void updateDupeResult;
 
     // IFC-269 B-05: Wrap in transaction to prevent TOCTOU
     const result = await accountService.updateAccountInfo(
@@ -870,6 +892,24 @@ export const accountRouter = createTRPCRouter({
         newOwnerId: verdict.newOwnerId,
         flags,
       });
+    } else if (verdict.kind === 'SKIPPED') {
+      // Open Q2 (post-completion review): preserve pre-IFC-311 audit
+      // behavior. Legacy `assignOwner` wrote to the DB even when the target
+      // ownerId equalled the current ownerId (a no-op updateMany) and
+      // emitted an audit entry. The new performAccountReassign skips that
+      // write, so the audit log would be silent on self-reassign. We
+      // explicitly log the no-op here so ops tooling that pages on missing
+      // assignOwner audit rows keeps working. No notification — the helper
+      // already short-circuits on equal owners. `reassign` / `bulkReassign`
+      // intentionally do NOT emit this audit because the `skipped: true`
+      // response field communicates the no-op to new callers.
+      getAuditLogger(ctx.prisma)
+        .logAction('UPDATE', 'account', input.id, tenantId, {
+          actorId: typedCtx.tenant.userId,
+          beforeState: { ownerId: verdict.currentOwnerId },
+          afterState: { ownerId: verdict.currentOwnerId },
+        })
+        .catch((err) => console.error('[account.assignOwner] Audit log failed:', err));
     }
 
     return {
@@ -952,13 +992,16 @@ export const accountRouter = createTRPCRouter({
       const typedCtx = getTenantContext(ctx);
       const tenantId = typedCtx.tenant.tenantId;
 
-      // Pre-validate target user once (one query, not N)
+      // Pre-validate target user once (one query, not N). A lookup miss is a
+      // NOT_FOUND, not an authz denial — Finding 3 (post-completion review):
+      // logPermissionDenied previously wrote resource='account', id=<user
+      // uuid> which was semantically wrong. Dropped; the TRPCError thrown is
+      // sufficient surface.
       const targetUser = await typedCtx.prismaWithTenant.user.findFirst({
         where: { id: input.ownerId, tenantId },
         select: { id: true },
       });
       if (!targetUser) {
-        logAccountReassignPermissionDenied(ctx, input.ownerId, 'account:bulkReassign');
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Target user not found' });
       }
 
@@ -1018,6 +1061,156 @@ export const accountRouter = createTRPCRouter({
       }
 
       return { successful, failed, totalProcessed: input.ids.length };
+    }),
+
+  // ═════════════════════════════════════════════════════════════════════════
+  // IFC-312 — AI chain procedures (accounts)
+  // ═════════════════════════════════════════════════════════════════════════
+
+  suggestTags: tenantProcedure
+    .input(accountSuggestTagsInputSchema)
+    .output(accountSuggestTagsOutputSchema)
+    .mutation(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
+      const flags = await loadAccountAutomation(typedCtx);
+      if (!flags.aiTagSuggestions) return [];
+
+      const account = await ctx.prismaWithTenant.account.findUnique({
+        where: { id: input.accountId },
+      });
+      if (!account) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Account not found' });
+      }
+
+      try {
+        const { Queue, QueueEvents } = await loadBullMQ();
+        const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
+        const connection = {
+          host: process.env.REDIS_HOST ?? 'localhost',
+          port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
+        };
+        const queue = new Queue(QUEUE_NAMES.AI_TAG_SUGGESTION, { connection });
+        const events = new QueueEvents(QUEUE_NAMES.AI_TAG_SUGGESTION, { connection });
+        try {
+          const otelCarrier: Record<string, string> = {};
+          propagation.inject(otelContext.active(), otelCarrier);
+          const job = await queue.add('suggest', {
+            entityType: 'account',
+            entityId: input.accountId,
+            tenantId: typedCtx.tenant.tenantId,
+            profileSnapshot: {
+              name: account.name,
+              description: account.description ?? undefined,
+              industry: account.industry ?? undefined,
+              website: account.website ?? undefined,
+            },
+            _otelCarrier: otelCarrier,
+          });
+          const result = (await job.waitUntilFinished(events, 5000)) as {
+            suggestions?: Array<{ label: string; confidence: number; reason: string }>;
+          };
+          return result.suggestions ?? [];
+        } finally {
+          await events.close().catch(() => {});
+          await queue.close().catch(() => {});
+        }
+      } catch {
+        return [];
+      }
+    }),
+
+  generateInsight: tenantProcedure
+    .input(accountGenerateInsightInputSchema)
+    .output(accountGenerateInsightOutputSchema)
+    .mutation(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
+      const flags = await loadAccountAutomation(typedCtx);
+      if (!flags.aiInsightGeneration) return { enqueued: false };
+
+      try {
+        const { Queue } = await loadBullMQ();
+        const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
+        const queue = new Queue(QUEUE_NAMES.AI_ENTITY_INSIGHT, {
+          connection: {
+            host: process.env.REDIS_HOST ?? 'localhost',
+            port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
+          },
+        });
+        const otelCarrier: Record<string, string> = {};
+        propagation.inject(otelContext.active(), otelCarrier);
+        await queue.add('insight', {
+          entityType: 'account',
+          entityId: input.accountId,
+          tenantId: typedCtx.tenant.tenantId,
+          _otelCarrier: otelCarrier,
+        });
+        await queue.close();
+        return { enqueued: true };
+      } catch {
+        return { enqueued: false };
+      }
+    }),
+
+  scoreAccount: tenantProcedure
+    .input(accountScoreInputSchema)
+    .output(accountScoreOutputSchema)
+    .mutation(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
+      const flags = await loadAccountAutomation(typedCtx);
+      if (!flags.aiAccountScoring) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'AI account scoring is disabled for this tenant',
+        });
+      }
+
+      try {
+        const { Queue } = await loadBullMQ();
+        const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
+        const queue = new Queue(QUEUE_NAMES.AI_ACCOUNT_SCORING, {
+          connection: {
+            host: process.env.REDIS_HOST ?? 'localhost',
+            port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
+          },
+        });
+        const otelCarrier: Record<string, string> = {};
+        propagation.inject(otelContext.active(), otelCarrier);
+        await queue.add('score', {
+          accountId: input.accountId,
+          tenantId: typedCtx.tenant.tenantId,
+          _otelCarrier: otelCarrier,
+        });
+        await queue.close();
+        return { enqueued: true };
+      } catch {
+        return { enqueued: false };
+      }
+    }),
+
+  getAiInsight: tenantProcedure
+    .input(accountGetAiInsightInputSchema)
+    .output(accountGetAiInsightOutputSchema)
+    .query(async ({ ctx, input }) => {
+      const insight = await ctx.prismaWithTenant.accountAIInsight.findUnique({
+        where: { accountId: input.accountId },
+      });
+      if (!insight) return { insight: null };
+      return {
+        insight: {
+          id: insight.id,
+          accountId: insight.accountId,
+          healthSummary: insight.healthSummary,
+          nextBestAction: insight.nextBestAction,
+          keySignals: insight.keySignals,
+          churnRisk: insight.churnRisk,
+          engagementScore: insight.engagementScore,
+          sentimentTrend: insight.sentimentTrend,
+          recommendations: insight.recommendations,
+          modelVersion: insight.modelVersion,
+          generatedAt: insight.generatedAt,
+          source: insight.source,
+        },
+      };
     }),
 });
 

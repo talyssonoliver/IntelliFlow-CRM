@@ -6,6 +6,8 @@ import {
   CrossTenantOrNotFoundError,
   type MergeInTransactionInput,
   type MergeInTransactionResult,
+  type LinkContactsByDomainInput,
+  type LinkContactsByDomainResult,
 } from '@intelliflow/domain';
 
 /**
@@ -134,6 +136,44 @@ export class InMemoryContactRepository implements ContactRepository {
       },
       mergedAt: new Date(),
     };
+  }
+
+  async linkContactsToAccountByEmailDomain(
+    input: LinkContactsByDomainInput
+  ): Promise<LinkContactsByDomainResult> {
+    const { accountId, domain, tenantId, maxBatch } = input;
+    const normalizedDomain = domain.trim().toLowerCase().replace(/^www\./, '');
+    if (!normalizedDomain || !normalizedDomain.includes('.')) {
+      return { overflow: false, linkedIds: [] };
+    }
+
+    const suffix = `@${normalizedDomain}`;
+    const candidates = Array.from(this.contacts.values()).filter(
+      (c) =>
+        c.tenantId === tenantId &&
+        c.accountId == null &&
+        c.email.value.toLowerCase().endsWith(suffix)
+    );
+
+    if (candidates.length > maxBatch) {
+      return {
+        overflow: true,
+        overflowSampleIds: candidates.slice(0, 5).map((c) => c.id.value),
+      };
+    }
+
+    if (candidates.length === 0) {
+      return { overflow: false, linkedIds: [] };
+    }
+
+    const ids: string[] = [];
+    for (const contact of candidates) {
+      const result = contact.associateWithAccount(accountId, 'system');
+      if (result.isSuccess) {
+        ids.push(contact.id.value);
+      }
+    }
+    return { overflow: false, linkedIds: ids };
   }
 
   // Test helper methods

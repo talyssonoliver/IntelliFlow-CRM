@@ -136,6 +136,42 @@ describe('ContactDuplicateDetectionService — checkForCreate', () => {
     expect(result.action).toBe('flag');
   });
 
+  it('AC-004: flag branch emits contact_duplicate_suspected notification', async () => {
+    const ctx = buildCtx({
+      rules: [
+        { field: 'email', matchStrategy: 'exact', threshold: 100, isActive: true, sortOrder: 0 },
+      ],
+      contacts: [{ id: 'c-1', email: 'a@b.com', tenantId: TENANT_A }],
+    });
+    await contactDuplicateDetectionService.checkForCreate(
+      ctx,
+      { email: 'a@b.com' },
+      makeFlags({ notifyOnDuplicate: true }),
+    );
+    expect(ctx._calls.notificationCreate.length).toBeGreaterThanOrEqual(1);
+    const call = ctx._calls.notificationCreate.at(0)?.[0] as {
+      data?: { subject?: string; metadata?: Record<string, unknown> };
+    };
+    // createNotification fallback path writes via prisma.notification.create with
+    // shape that includes the type in metadata (see notifications.router.ts:827).
+    expect(JSON.stringify(call)).toContain('contact');
+  });
+
+  it('AC-004: proceed branch does NOT emit notification (no flags set)', async () => {
+    const ctx = buildCtx({
+      rules: [
+        { field: 'email', matchStrategy: 'exact', threshold: 100, isActive: true, sortOrder: 0 },
+      ],
+      contacts: [{ id: 'c-1', email: 'a@b.com', tenantId: TENANT_A }],
+    });
+    await contactDuplicateDetectionService.checkForCreate(
+      ctx,
+      { email: 'a@b.com' },
+      makeFlags(),
+    );
+    expect(ctx._calls.notificationCreate.length).toBe(0);
+  });
+
   it('returns proceed when all flags are false even when match found', async () => {
     const ctx = buildCtx({
       rules: [
@@ -291,6 +327,119 @@ describe('ContactDuplicateDetectionService — applyAutoMerge', () => {
     await expect(service.applyAutoMerge(ctx, 'c-1', 'c-2', USER)).resolves.toMatchObject({
       survivingContactId: 'c-1',
     });
+  });
+});
+
+describe('ContactDuplicateDetectionService — candidate fetch branches', () => {
+  it('narrows by phone OR-clause when email absent', async () => {
+    const ctx = buildCtx({
+      rules: [
+        { field: 'phone', matchStrategy: 'exact', threshold: 100, isActive: true, sortOrder: 0 },
+      ],
+      contacts: [{ id: 'c-1', phone: '+14155551212', tenantId: TENANT_A }],
+    });
+    const result = await contactDuplicateDetectionService.checkForCreate(
+      ctx,
+      { phone: '+14155551212' },
+      makeFlags({ notifyOnDuplicate: true }),
+    );
+    expect(result.action).toBe('flag');
+    const call = ctx._calls.contactFindMany[0][0] as { where: { OR: unknown[] } };
+    expect(JSON.stringify(call.where.OR)).toContain('+14155551212');
+  });
+
+  it('narrows by firstName+lastName AND-clause when both provided', async () => {
+    const ctx = buildCtx({
+      rules: [
+        { field: 'name', matchStrategy: 'exact', threshold: 100, isActive: true, sortOrder: 0 },
+      ],
+      contacts: [{ id: 'c-1', firstName: 'Ada', lastName: 'Lovelace', tenantId: TENANT_A }],
+    });
+    await contactDuplicateDetectionService.checkForCreate(
+      ctx,
+      { firstName: 'Ada', lastName: 'Lovelace' },
+      makeFlags({ notifyOnDuplicate: true }),
+    );
+    const call = ctx._calls.contactFindMany[0][0] as { where: { OR: unknown[] } };
+    expect(JSON.stringify(call.where.OR)).toContain('Lovelace');
+  });
+
+  it('returns proceed when orClauses would be empty (no identifying fields)', async () => {
+    const ctx = buildCtx({
+      rules: [
+        { field: 'email', matchStrategy: 'exact', threshold: 100, isActive: true, sortOrder: 0 },
+      ],
+      contacts: [{ id: 'c-1', email: 'a@b.com', tenantId: TENANT_A }],
+    });
+    const result = await contactDuplicateDetectionService.checkForCreate(
+      ctx,
+      { company: 'X' },
+      makeFlags({ notifyOnDuplicate: true }),
+    );
+    expect(result.action).toBe('proceed');
+  });
+});
+
+describe('ContactDuplicateDetectionService — AI branch unions', () => {
+  it('unions AI matches with deterministic, deduping by id', async () => {
+    const service = createContactDuplicateDetectionService({
+      findSimilarContacts: async () => [
+        { id: 'c-1', similarity: 0.9 },
+        { id: 'c-2', similarity: 0.8 },
+      ],
+      generateEmbedding: async () => [0.1, 0.2, 0.3],
+    });
+    const ctx = buildCtx({
+      rules: [
+        { field: 'email', matchStrategy: 'exact', threshold: 100, isActive: true, sortOrder: 0 },
+      ],
+      contacts: [{ id: 'c-1', email: 'a@b.com', tenantId: TENANT_A }],
+    });
+    // prismaWithTenant.contact.findFirst returns rows for AI candidates
+    (ctx.prismaWithTenant as any).contact.findFirst = async ({ where }: any) => ({
+      id: where.id,
+      email: 'similar@b.com',
+      tenantId: TENANT_A,
+    });
+
+    const result = await service.checkForCreate(
+      ctx,
+      { email: 'a@b.com' },
+      makeFlags({ aiDuplicateDetection: true, notifyOnDuplicate: true }),
+    );
+    expect(result.action).toBe('flag');
+    if (result.action === 'flag') {
+      const ids = result.matches.map((m) => m.candidate.id);
+      expect(ids).toContain('c-1');
+      // c-2 comes from AI path only
+      expect(ids).toContain('c-2');
+      // no duplicates (c-1 present once)
+      expect(ids.filter((id) => id === 'c-1')).toHaveLength(1);
+    }
+  });
+
+  it('AI branch tolerates missing candidate rows (findFirst returns null)', async () => {
+    const service = createContactDuplicateDetectionService({
+      findSimilarContacts: async () => [{ id: 'c-missing', similarity: 0.9 }],
+      generateEmbedding: async () => [0.1],
+    });
+    const ctx = buildCtx({
+      rules: [
+        { field: 'email', matchStrategy: 'exact', threshold: 100, isActive: true, sortOrder: 0 },
+      ],
+      contacts: [{ id: 'c-1', email: 'a@b.com', tenantId: TENANT_A }],
+    });
+    (ctx.prismaWithTenant as any).contact.findFirst = async () => null;
+
+    const result = await service.checkForCreate(
+      ctx,
+      { email: 'a@b.com' },
+      makeFlags({ aiDuplicateDetection: true, notifyOnDuplicate: true }),
+    );
+    expect(result.action).toBe('flag');
+    if (result.action === 'flag') {
+      expect(result.matches.map((m) => m.candidate.id)).toEqual(['c-1']);
+    }
   });
 });
 

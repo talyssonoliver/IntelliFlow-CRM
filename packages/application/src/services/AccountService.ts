@@ -903,4 +903,50 @@ export class AccountService {
     }
     account.clearDomainEvents();
   }
+
+  /**
+   * IFC-310 AC-010: Link orphan contacts to an account by email domain.
+   *
+   * Delegates to `ContactRepository.linkContactsToAccountByEmailDomain`, which
+   * performs the findMany + updateMany inside a single atomic $transaction so
+   * concurrent writers cannot steal candidates mid-operation.
+   *
+   * Returns a tagged result:
+   *   - `{ kind: 'linked', ids: string[] }` on success (may be empty).
+   *   - `{ kind: 'overflow', sampleIds: string[] }` when the match set exceeds
+   *     the configured batch cap — no writes performed (R9 — flag for human
+   *     review instead of blowing the latency budget).
+   */
+  async linkContactsByEmailDomain(
+    accountId: string,
+    domain: string,
+    tenantId: string,
+    maxBatch: number = 500
+  ): Promise<
+    Result<
+      { kind: 'linked'; ids: string[] } | { kind: 'overflow'; sampleIds: string[] },
+      DomainError
+    >
+  > {
+    if (!accountId || !tenantId) {
+      return Result.fail(new ValidationError('accountId and tenantId are required'));
+    }
+
+    try {
+      const result = await this.contactRepository.linkContactsToAccountByEmailDomain({
+        accountId,
+        domain,
+        tenantId,
+        maxBatch,
+      });
+      if (result.overflow) {
+        return Result.ok({ kind: 'overflow', sampleIds: result.overflowSampleIds });
+      }
+      return Result.ok({ kind: 'linked', ids: result.linkedIds });
+    } catch {
+      return Result.fail(
+        new PersistenceError('Failed to link contacts to account by domain')
+      );
+    }
+  }
 }

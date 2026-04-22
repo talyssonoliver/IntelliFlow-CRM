@@ -31,31 +31,32 @@ export async function performContactReassign(
   const typedCtx = getTenantContext(ctx);
   const tenantId = typedCtx.tenant.tenantId;
 
+  // Read-only early exits run OUTSIDE $transaction (Finding 2).
+  const existing = await typedCtx.prismaWithTenant.contact.findFirst({
+    where: { id: input.id, tenantId },
+    select: { id: true, ownerId: true, firstName: true, lastName: true },
+  });
+
+  if (!existing) return { kind: 'NOT_FOUND' as const };
+
+  const callerRole = ctx.user?.role ?? '';
+  const isAdmin = REASSIGN_ADMIN_ROLES.has(callerRole);
+  const isCurrentOwner = existing.ownerId === typedCtx.tenant.userId;
+  if (!isAdmin && !isCurrentOwner) {
+    return { kind: 'FORBIDDEN' as const };
+  }
+
+  const contactName = `${existing.firstName} ${existing.lastName}`.trim();
+
+  if (existing.ownerId === input.ownerId) {
+    return {
+      kind: 'SKIPPED' as const,
+      currentOwnerId: existing.ownerId,
+      contactName,
+    };
+  }
+
   return typedCtx.prismaWithTenant.$transaction(async (tx) => {
-    const existing = await tx.contact.findFirst({
-      where: { id: input.id, tenantId },
-      select: { id: true, ownerId: true, firstName: true, lastName: true },
-    });
-
-    if (!existing) return { kind: 'NOT_FOUND' as const };
-
-    const callerRole = ctx.user?.role ?? '';
-    const isAdmin = REASSIGN_ADMIN_ROLES.has(callerRole);
-    const isCurrentOwner = existing.ownerId === typedCtx.tenant.userId;
-    if (!isAdmin && !isCurrentOwner) {
-      return { kind: 'FORBIDDEN' as const };
-    }
-
-    const contactName = `${existing.firstName} ${existing.lastName}`.trim();
-
-    if (existing.ownerId === input.ownerId) {
-      return {
-        kind: 'SKIPPED' as const,
-        currentOwnerId: existing.ownerId,
-        contactName,
-      };
-    }
-
     const targetUser = await tx.user.findFirst({
       where: { id: input.ownerId, tenantId },
       select: { id: true },

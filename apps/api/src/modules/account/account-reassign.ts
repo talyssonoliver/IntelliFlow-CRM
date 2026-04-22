@@ -42,29 +42,35 @@ export async function performAccountReassign(
   const typedCtx = getTenantContext(ctx);
   const tenantId = typedCtx.tenant.tenantId;
 
+  // Read-only early exits run OUTSIDE $transaction — no write → no tx needed.
+  // Avoids N wasted BEGIN;SELECT;COMMIT round-trips for skip/deny rows in
+  // bulkReassign (Finding 2 post-completion review).
+  const existing = await typedCtx.prismaWithTenant.account.findFirst({
+    where: { id: input.id, tenantId },
+    select: { id: true, ownerId: true, name: true },
+  });
+
+  if (!existing) return { kind: 'NOT_FOUND' as const };
+
+  const callerRole = ctx.user?.role ?? '';
+  const isAdmin = REASSIGN_ADMIN_ROLES.has(callerRole);
+  const isCurrentOwner = existing.ownerId === typedCtx.tenant.userId;
+  if (!isAdmin && !isCurrentOwner) {
+    return { kind: 'FORBIDDEN' as const };
+  }
+
+  if (existing.ownerId === input.ownerId) {
+    return {
+      kind: 'SKIPPED' as const,
+      currentOwnerId: existing.ownerId,
+      accountName: existing.name,
+    };
+  }
+
+  // Open $transaction ONLY for the write path: target-user verification +
+  // tenant-scoped updateMany are grouped so a racing user-delete cannot
+  // reassign to a deleted user.
   return typedCtx.prismaWithTenant.$transaction(async (tx) => {
-    const existing = await tx.account.findFirst({
-      where: { id: input.id, tenantId },
-      select: { id: true, ownerId: true, name: true },
-    });
-
-    if (!existing) return { kind: 'NOT_FOUND' as const };
-
-    const callerRole = ctx.user?.role ?? '';
-    const isAdmin = REASSIGN_ADMIN_ROLES.has(callerRole);
-    const isCurrentOwner = existing.ownerId === typedCtx.tenant.userId;
-    if (!isAdmin && !isCurrentOwner) {
-      return { kind: 'FORBIDDEN' as const };
-    }
-
-    if (existing.ownerId === input.ownerId) {
-      return {
-        kind: 'SKIPPED' as const,
-        currentOwnerId: existing.ownerId,
-        accountName: existing.name,
-      };
-    }
-
     const targetUser = await tx.user.findFirst({
       where: { id: input.ownerId, tenantId },
       select: { id: true },

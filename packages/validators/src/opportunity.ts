@@ -240,3 +240,17 @@ export const updatePipelineConfigSchema = z.object({
 });
 
 export type UpdatePipelineConfigInput = z.infer<typeof updatePipelineConfigSchema>;
+
+// PG-184 Cat-2 follow-through: Deal reassign endpoints (mirrors
+// reassignAccountSchema / bulkReassignAccountsSchema from account.ts).
+export const reassignDealSchema = z.object({
+  id: idSchema,
+  ownerId: idSchema,
+});
+export type ReassignDealInput = z.infer<typeof reassignDealSchema>;
+
+export const bulkReassignDealsSchema = z.object({
+  ids: z.array(idSchema).min(1).max(100),
+  ownerId: idSchema,
+});
+export type BulkReassignDealsInput = z.infer<typeof bulkReassignDealsSchema>;

@@ -67,7 +67,35 @@ export interface ContactRepository {
    * mismatch throws `CrossTenantOrNotFoundError`.
    */
   mergeInTransaction(input: MergeInTransactionInput): Promise<MergeInTransactionResult>;
+
+  /**
+   * IFC-310 AC-010: Link orphan contacts to an account by email domain,
+   * atomically inside a single transaction. Returns the list of linked
+   * contact ids. If the match set exceeds `maxBatch`, returns `{ overflow:
+   * true, overflowSampleIds }` without performing any update so the caller
+   * can flag for human review (R9).
+   */
+  linkContactsToAccountByEmailDomain(
+    input: LinkContactsByDomainInput
+  ): Promise<LinkContactsByDomainResult>;
 }
+
+/**
+ * @knipignore Intentional public DTO for the domain-link contract.
+ */
+export interface LinkContactsByDomainInput {
+  accountId: string;
+  domain: string;
+  tenantId: string;
+  maxBatch: number;
+}
+
+/**
+ * @knipignore Intentional public DTO for the domain-link contract.
+ */
+export type LinkContactsByDomainResult =
+  | { overflow: false; linkedIds: string[] }
+  | { overflow: true; overflowSampleIds: string[] };
 
 /**
  * @knipignore Intentional public DTO for the transactional merge contract.

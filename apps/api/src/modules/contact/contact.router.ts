@@ -27,6 +27,7 @@ import {
 import {
   createContactSchema,
   updateContactSchema,
+  updateContactEmailSchema,
   contactQuerySchema,
   idSchema,
   linkToLeadSchema,
@@ -37,6 +38,14 @@ import {
   addContactNoteSchema,
   reassignContactSchema,
   bulkReassignContactsSchema,
+  contactSuggestTagsInputSchema,
+  contactSuggestTagsOutputSchema,
+  contactGenerateInsightInputSchema,
+  contactGenerateInsightOutputSchema,
+  contactDraftReplyInputSchema,
+  contactDraftReplyOutputSchema,
+  contactListReplyDraftsInputSchema,
+  contactListReplyDraftsOutputSchema,
 } from '@intelliflow/validators/contact';
 import {
   bulkEmailContactsSchema,
@@ -432,7 +441,7 @@ export const contactRouter = createTRPCRouter({
     if (duplicateService) {
       try {
         dupeCheck = (await duplicateService.checkForCreate(
-          typedCtx as any,
+          typedCtx,
           {
             email: hygieneInput.email,
             phone: normalizedPhone,
@@ -461,7 +470,7 @@ export const contactRouter = createTRPCRouter({
     if (dupeCheck.action === 'auto-merge' && duplicateService) {
       try {
         await duplicateService.applyAutoMerge(
-          typedCtx as any,
+          typedCtx,
           dupeCheck.primaryId,
           result.value.id.value,
           typedCtx.tenant.userId,
@@ -738,24 +747,36 @@ export const contactRouter = createTRPCRouter({
     const hygienedData = buildHygienedContactData(data as UpdateContactData, rawPhone, flags);
 
     // IFC-310: Duplicate-detection runtime — re-evaluate rules on update.
+    // Note: updateContactSchema does not carry `email` (email updates go
+    // through the separate updateContactEmail service method), so only
+    // non-email fields are forwarded. The service emits the notification
+    // internally on action === 'flag'; we capture the result so a future
+    // API revision can thread `duplicate_matches` back to the client.
     const duplicateService = ctx.services?.contactDuplicateDetection;
+    let updateDupeResult:
+      | { action: 'proceed'; matches: unknown[] }
+      | { action: 'flag'; matches: unknown[] }
+      | { action: 'auto-merge'; matches: unknown[]; primaryId: string }
+      | undefined;
     if (duplicateService) {
       try {
-        await duplicateService.checkForUpdate(
-          typedCtx as any,
+        updateDupeResult = (await duplicateService.checkForUpdate(
+          typedCtx,
           id,
           {
+            email: (hygienedData as { email?: string | null }).email ?? null,
             phone: rawPhone,
             firstName: (hygienedData as { firstName?: string | null }).firstName ?? null,
             lastName: (hygienedData as { lastName?: string | null }).lastName ?? null,
             company: (hygienedData as { company?: string | null }).company ?? null,
           },
           flags,
-        );
+        )) as typeof updateDupeResult;
       } catch (error) {
         console.warn('[contact.router] duplicate-detection on update failed, proceeding:', error);
       }
     }
+    void updateDupeResult;
 
     // Build info update payload (all non-account, non-email fields)
     const infoUpdates = buildContactInfoUpdates(hygienedData as UpdateContactData);
@@ -801,6 +822,86 @@ export const contactRouter = createTRPCRouter({
 
     return mapContactToResponse(updatedResult.value);
   }),
+
+  /**
+   * IFC-310 EC-004: Dedicated email-change mutation with duplicate detection.
+   *
+   * Email changes are isolated from `update` so the duplicate-detection
+   * runtime can branch at exactly one call-site. When
+   * `flags.autoMergeOnExactEmail=true` and the new email collides with an
+   * existing contact, the two are merged automatically; when only
+   * `notifyOnDuplicate=true`, a notification is emitted and the email update
+   * proceeds. When no flag is set, the email is updated silently.
+   */
+  updateEmail: tenantProcedure
+    .input(updateContactEmailSchema)
+    .mutation(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
+      const contactService = getContactService(ctx);
+      const flags = await loadContactAutomation(typedCtx);
+
+      const duplicateService = ctx.services?.contactDuplicateDetection;
+      let emailDupeResult:
+        | { action: 'proceed'; matches: unknown[] }
+        | { action: 'flag'; matches: unknown[] }
+        | { action: 'auto-merge'; matches: unknown[]; primaryId: string }
+        | undefined;
+
+      if (duplicateService) {
+        try {
+          emailDupeResult = (await duplicateService.checkForUpdate(
+            typedCtx,
+            input.id,
+            { email: input.email },
+            flags,
+          )) as typeof emailDupeResult;
+        } catch (error) {
+          console.warn('[contact.router] email duplicate-detection failed, proceeding:', error);
+        }
+      }
+
+      // Auto-merge: when an existing contact already has this email and the
+      // tenant opted in, fold the current contact into the primary instead of
+      // writing a duplicate email (which would fail the Contact.email unique
+      // constraint anyway).
+      if (emailDupeResult?.action === 'auto-merge' && duplicateService) {
+        try {
+          await duplicateService.applyAutoMerge(
+            typedCtx,
+            emailDupeResult.primaryId,
+            input.id,
+            typedCtx.tenant.userId,
+          );
+          // After auto-merge the current contact is gone; return the surviving
+          // primary to the caller.
+          const primaryResult = await contactService.getContactById(
+            emailDupeResult.primaryId,
+          );
+          if (primaryResult.isFailure) {
+            throw new TRPCError({
+              code: 'NOT_FOUND',
+              message: primaryResult.error.message,
+            });
+          }
+          return mapContactToResponse(primaryResult.value);
+        } catch (error) {
+          console.warn('[contact.router] auto-merge on email change failed:', error);
+        }
+      }
+
+      const result = await contactService.updateContactEmail(
+        input.id,
+        input.email,
+        typedCtx.tenant.userId,
+      );
+      if (result.isFailure) {
+        throw new TRPCError({
+          code: result.error.message.includes('not found') ? 'NOT_FOUND' : 'BAD_REQUEST',
+          message: result.error.message,
+        });
+      }
+      return mapContactToResponse(result.value);
+    }),
 
   /**
    * Delete a contact using ContactService
@@ -1699,13 +1800,13 @@ export const contactRouter = createTRPCRouter({
       const typedCtx = getTenantContext(ctx);
       const tenantId = typedCtx.tenant.tenantId;
 
-      // Pre-validate target user once (one query, not N)
+      // Pre-validate target user once (one query, not N). Finding 3 — lookup
+      // miss is NOT_FOUND, not authz denial. Dropped misleading audit call.
       const targetUser = await typedCtx.prismaWithTenant.user.findFirst({
         where: { id: input.ownerId, tenantId },
         select: { id: true },
       });
       if (!targetUser) {
-        logContactReassignPermissionDenied(ctx, input.ownerId, 'contact:bulkReassign');
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Target user not found' });
       }
 
@@ -1762,5 +1863,209 @@ export const contactRouter = createTRPCRouter({
       }
 
       return { successful, failed, totalProcessed: input.ids.length };
+    }),
+
+  // ═════════════════════════════════════════════════════════════════════════
+  // IFC-312 — AI chain procedures (contacts)
+  // ═════════════════════════════════════════════════════════════════════════
+
+  /**
+   * IFC-312: Synchronous tag suggestions.
+   * Uses BullMQ `waitUntilFinished(5000)` to preserve API→ai-worker boundary
+   * while delivering sync UX. Returns `[]` on toggle-off, timeout, or error.
+   */
+  suggestTags: tenantProcedure
+    .input(contactSuggestTagsInputSchema)
+    .output(contactSuggestTagsOutputSchema)
+    .mutation(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
+      const flags = await loadContactAutomation(typedCtx);
+      if (!flags.aiTagSuggestions) return [];
+
+      const contact = await ctx.prismaWithTenant.contact.findUnique({
+        where: { id: input.contactId },
+      });
+      if (!contact) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Contact not found' });
+      }
+
+      try {
+        const { Queue, QueueEvents } = await loadBullMQ();
+        const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
+        const connection = {
+          host: process.env.REDIS_HOST ?? 'localhost',
+          port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
+        };
+        const queue = new Queue(QUEUE_NAMES.AI_TAG_SUGGESTION, { connection });
+        const events = new QueueEvents(QUEUE_NAMES.AI_TAG_SUGGESTION, { connection });
+        try {
+          const otelCarrier: Record<string, string> = {};
+          propagation.inject(otelContext.active(), otelCarrier);
+          const job = await queue.add('suggest', {
+            entityType: 'contact',
+            entityId: input.contactId,
+            tenantId: typedCtx.tenant.tenantId,
+            profileSnapshot: {
+              firstName: contact.firstName,
+              lastName: contact.lastName,
+              title: contact.title ?? undefined,
+              company: contact.company ?? undefined,
+              bio: contact.contactNotes ?? undefined,
+            },
+            _otelCarrier: otelCarrier,
+          });
+          const result = (await job.waitUntilFinished(events, 5000)) as {
+            suggestions?: Array<{ label: string; confidence: number; reason: string }>;
+          };
+          return result.suggestions ?? [];
+        } finally {
+          await events.close().catch(() => {});
+          await queue.close().catch(() => {});
+        }
+      } catch {
+        return [];
+      }
+    }),
+
+  /**
+   * IFC-312: Enqueue on-demand insight generation.
+   * Returns `{enqueued: false}` if toggle off.
+   */
+  generateInsight: tenantProcedure
+    .input(contactGenerateInsightInputSchema)
+    .output(contactGenerateInsightOutputSchema)
+    .mutation(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
+      const flags = await loadContactAutomation(typedCtx);
+      if (!flags.aiInsightGeneration) return { enqueued: false };
+
+      try {
+        const { Queue } = await loadBullMQ();
+        const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
+        const queue = new Queue(QUEUE_NAMES.AI_ENTITY_INSIGHT, {
+          connection: {
+            host: process.env.REDIS_HOST ?? 'localhost',
+            port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
+          },
+        });
+        const otelCarrier: Record<string, string> = {};
+        propagation.inject(otelContext.active(), otelCarrier);
+        await queue.add('insight', {
+          entityType: 'contact',
+          entityId: input.contactId,
+          tenantId: typedCtx.tenant.tenantId,
+          _otelCarrier: otelCarrier,
+        });
+        await queue.close();
+        return { enqueued: true };
+      } catch {
+        return { enqueued: false };
+      }
+    }),
+
+  /**
+   * IFC-312: Enqueue reply-draft generation. Status on the resulting
+   * ContactReplyDraft is ALWAYS `DRAFT` — enforced in the job handler
+   * (ADR-037 compliance).
+   */
+  draftReply: tenantProcedure
+    .input(contactDraftReplyInputSchema)
+    .output(contactDraftReplyOutputSchema)
+    .mutation(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
+      const flags = await loadContactAutomation(typedCtx);
+      if (!flags.aiAutoReplyDrafting) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'AI reply drafting is disabled for this tenant',
+        });
+      }
+
+      const contact = await ctx.prismaWithTenant.contact.findUnique({
+        where: { id: input.contactId },
+      });
+      if (!contact) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Contact not found' });
+      }
+
+      try {
+        const { Queue, QueueEvents } = await loadBullMQ();
+        const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
+        const connection = {
+          host: process.env.REDIS_HOST ?? 'localhost',
+          port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
+        };
+        const queue = new Queue(QUEUE_NAMES.AI_REPLY_DRAFT, { connection });
+        const events = new QueueEvents(QUEUE_NAMES.AI_REPLY_DRAFT, { connection });
+        try {
+          const otelCarrier: Record<string, string> = {};
+          propagation.inject(otelContext.active(), otelCarrier);
+          // Minimal thread stub (no real inbox infra yet — out of scope).
+          const emailThread = [
+            {
+              from: contact.email,
+              subject: 'Follow up',
+              body: 'Draft placeholder — real thread integration pending.',
+              at: new Date().toISOString(),
+            },
+          ];
+          const job = await queue.add('draft', {
+            contactId: input.contactId,
+            tenantId: typedCtx.tenant.tenantId,
+            emailThread,
+            ...(input.emailThreadId ? { emailThreadId: input.emailThreadId } : {}),
+            ...(input.userInstructions ? { userInstructions: input.userInstructions } : {}),
+            createdBy: typedCtx.tenant.userId ?? undefined,
+            _otelCarrier: otelCarrier,
+          });
+          const result = (await job.waitUntilFinished(events, 10000)) as {
+            draftId?: string;
+            skipped?: boolean;
+          };
+          if (!result.draftId) {
+            throw new TRPCError({
+              code: 'INTERNAL_SERVER_ERROR',
+              message: 'Draft generation failed',
+            });
+          }
+          return { draftId: result.draftId, requiresReview: true };
+        } finally {
+          await events.close().catch(() => {});
+          await queue.close().catch(() => {});
+        }
+      } catch (err) {
+        if (err instanceof TRPCError) throw err;
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Draft generation infrastructure unavailable',
+        });
+      }
+    }),
+
+  /**
+   * IFC-312: Read query for the ReplyDraftsPanel UI component.
+   */
+  listReplyDrafts: tenantProcedure
+    .input(contactListReplyDraftsInputSchema)
+    .output(contactListReplyDraftsOutputSchema)
+    .query(async ({ ctx, input }) => {
+      const drafts = await ctx.prismaWithTenant.contactReplyDraft.findMany({
+        where: { contactId: input.contactId },
+        orderBy: { createdAt: 'desc' },
+        take: input.limit,
+      });
+      return {
+        drafts: drafts.map((d: any) => ({
+          id: d.id,
+          contactId: d.contactId,
+          draftSubject: d.draftSubject,
+          draftBody: d.draftBody,
+          tone: d.tone,
+          status: d.status as 'DRAFT' | 'DISMISSED' | 'SENT',
+          confidence: d.confidence,
+          modelVersion: d.modelVersion,
+          createdAt: d.createdAt,
+        })),
+      };
     }),
 });

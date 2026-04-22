@@ -262,3 +262,56 @@ export const bulkReassignAccountsSchema = z.object({
   ownerId: idSchema,
 });
 export type BulkReassignAccountsInput = z.infer<typeof bulkReassignAccountsSchema>;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// IFC-312 — AI chain tRPC procedure schemas
+// ═══════════════════════════════════════════════════════════════════════════
+
+export const accountSuggestTagsInputSchema = z.object({ accountId: idSchema });
+export type AccountSuggestTagsInput = z.infer<typeof accountSuggestTagsInputSchema>;
+
+export const accountTagSuggestionSchema = z.object({
+  label: z.string().min(1).max(40),
+  confidence: z.number().min(0).max(1),
+  reason: z.string().min(1).max(200),
+});
+export type AccountTagSuggestion = z.infer<typeof accountTagSuggestionSchema>;
+
+export const accountSuggestTagsOutputSchema = z.array(accountTagSuggestionSchema);
+export type AccountSuggestTagsOutput = z.infer<typeof accountSuggestTagsOutputSchema>;
+
+export const accountGenerateInsightInputSchema = z.object({ accountId: idSchema });
+export type AccountGenerateInsightInput = z.infer<typeof accountGenerateInsightInputSchema>;
+
+export const accountGenerateInsightOutputSchema = z.object({ enqueued: z.boolean() });
+export type AccountGenerateInsightOutput = z.infer<typeof accountGenerateInsightOutputSchema>;
+
+export const accountScoreInputSchema = z.object({ accountId: idSchema });
+export type AccountScoreInput = z.infer<typeof accountScoreInputSchema>;
+
+export const accountScoreOutputSchema = z.object({ enqueued: z.boolean() });
+export type AccountScoreOutput = z.infer<typeof accountScoreOutputSchema>;
+
+export const accountGetAiInsightInputSchema = z.object({ accountId: idSchema });
+export type AccountGetAiInsightInput = z.infer<typeof accountGetAiInsightInputSchema>;
+
+export const accountAiInsightSchema = z.object({
+  id: z.string(),
+  accountId: z.string(),
+  healthSummary: z.string().nullable(),
+  nextBestAction: z.string().nullable(),
+  keySignals: z.unknown().nullable(),
+  churnRisk: z.string(),
+  engagementScore: z.number(),
+  sentimentTrend: z.string().nullable(),
+  recommendations: z.unknown().nullable(),
+  modelVersion: z.string(),
+  generatedAt: z.date(),
+  source: z.string(),
+});
+export type AccountAiInsightOutput = z.infer<typeof accountAiInsightSchema>;
+
+export const accountGetAiInsightOutputSchema = z.object({
+  insight: accountAiInsightSchema.nullable(),
+});
+export type AccountGetAiInsightOutput = z.infer<typeof accountGetAiInsightOutputSchema>;

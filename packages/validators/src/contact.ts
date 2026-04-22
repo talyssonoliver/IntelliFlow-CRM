@@ -60,6 +60,15 @@ export const updateContactSchema = baseContactFieldsSchema.omit({ email: true })
 
 export type UpdateContactInput = z.infer<typeof updateContactSchema>;
 
+// IFC-310 EC-004: Dedicated email-change mutation with duplicate detection.
+// Email updates go through this path so the duplicate-detection runtime can
+// branch on exact-email collision (auto-merge) or flag them (notification).
+export const updateContactEmailSchema = z.object({
+  id: idSchema,
+  email: emailSchema,
+});
+export type UpdateContactEmailInput = z.infer<typeof updateContactEmailSchema>;
+
 // IFC-254 R-10: Whitelist of safe sortable Contact columns
 export const CONTACT_SORT_FIELDS = [
   'createdAt',
@@ -225,3 +234,63 @@ export const bulkReassignContactsSchema = z.object({
   ownerId: idSchema,
 });
 export type BulkReassignContactsInput = z.infer<typeof bulkReassignContactsSchema>;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// IFC-312 — AI chain tRPC procedure schemas
+// ═══════════════════════════════════════════════════════════════════════════
+
+export const contactSuggestTagsInputSchema = z.object({ contactId: idSchema });
+export type ContactSuggestTagsInput = z.infer<typeof contactSuggestTagsInputSchema>;
+
+export const contactTagSuggestionSchema = z.object({
+  label: z.string().min(1).max(40),
+  confidence: z.number().min(0).max(1),
+  reason: z.string().min(1).max(200),
+});
+export type ContactTagSuggestion = z.infer<typeof contactTagSuggestionSchema>;
+
+export const contactSuggestTagsOutputSchema = z.array(contactTagSuggestionSchema);
+export type ContactSuggestTagsOutput = z.infer<typeof contactSuggestTagsOutputSchema>;
+
+export const contactGenerateInsightInputSchema = z.object({ contactId: idSchema });
+export type ContactGenerateInsightInput = z.infer<typeof contactGenerateInsightInputSchema>;
+
+export const contactGenerateInsightOutputSchema = z.object({ enqueued: z.boolean() });
+export type ContactGenerateInsightOutput = z.infer<typeof contactGenerateInsightOutputSchema>;
+
+export const contactDraftReplyInputSchema = z.object({
+  contactId: idSchema,
+  emailThreadId: z.string().max(200).optional(),
+  userInstructions: z.string().max(2000).optional(),
+});
+export type ContactDraftReplyInput = z.infer<typeof contactDraftReplyInputSchema>;
+
+export const contactDraftReplyOutputSchema = z.object({
+  draftId: z.string(),
+  requiresReview: z.boolean(),
+});
+export type ContactDraftReplyOutput = z.infer<typeof contactDraftReplyOutputSchema>;
+
+export const contactListReplyDraftsInputSchema = z.object({
+  contactId: idSchema,
+  limit: z.number().int().min(1).max(50).default(5),
+});
+export type ContactListReplyDraftsInput = z.infer<typeof contactListReplyDraftsInputSchema>;
+
+export const contactReplyDraftSchema = z.object({
+  id: z.string(),
+  contactId: z.string(),
+  draftSubject: z.string(),
+  draftBody: z.string(),
+  tone: z.string().nullable(),
+  status: z.enum(['DRAFT', 'DISMISSED', 'SENT']),
+  confidence: z.number(),
+  modelVersion: z.string(),
+  createdAt: z.date(),
+});
+export type ContactReplyDraft = z.infer<typeof contactReplyDraftSchema>;
+
+export const contactListReplyDraftsOutputSchema = z.object({
+  drafts: z.array(contactReplyDraftSchema),
+});
+export type ContactListReplyDraftsOutput = z.infer<typeof contactListReplyDraftsOutputSchema>;

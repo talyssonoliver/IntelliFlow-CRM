@@ -21,12 +21,26 @@ import {
 } from '../../shared/duplicate-rule-evaluator';
 import { createNotification } from '../notifications/notifications.router';
 
+/**
+ * Structural subtype of `TenantAwareContext` (see
+ * apps/api/src/security/tenant-context.ts) — fields are a prefix so routers
+ * pass their typed ctx directly without `as any`.
+ */
 export interface HasTenantContext {
-  tenant: { tenantId: string; userId: string };
+  tenant: {
+    tenantId: string;
+    userId: string;
+    tenantType?: 'user' | 'organization';
+    role?: string;
+    organizationId?: string;
+    canAccessAllTenantData?: boolean;
+    teamMemberIds?: string[];
+  };
   prismaWithTenant: PrismaClient;
   prisma?: PrismaClient;
   services?: {
     notificationOrchestrator?: unknown;
+    [key: string]: unknown;
   };
 }
 
@@ -67,6 +81,21 @@ export interface AccountDuplicateDetectionService {
 export interface AccountDuplicateDetectionDeps {
   maxAutoLinkBatch?: number;
   now?: () => Date;
+  /**
+   * IFC-310 AC-010: when supplied, `linkContactsByDomain` delegates to the
+   * application-layer AccountService so the transactional domain-link logic
+   * lives at the correct architectural layer instead of in this apps/api
+   * module. When absent (tests), falls back to calling prismaWithTenant
+   * inside its own $transaction.
+   */
+  linkContactsByEmailDomain?: (
+    accountId: string,
+    domain: string,
+    tenantId: string,
+    maxBatch: number
+  ) => Promise<
+    { kind: 'linked'; ids: string[] } | { kind: 'overflow'; sampleIds: string[] }
+  >;
 }
 
 const MAX_CANDIDATES = 200;
@@ -270,35 +299,89 @@ export function createAccountDuplicateDetectionService(
       const normalizedDomain = domain.trim().toLowerCase().replace(/^www\./, '');
       if (!normalizedDomain || !normalizedDomain.includes('.')) return [];
 
+      // IFC-310 AC-010: prefer the application-layer AccountService when
+      // wired (production path via container). The service delegates to
+      // ContactRepository.linkContactsToAccountByEmailDomain which performs
+      // the atomic $transaction at the adapter layer.
+      if (deps.linkContactsByEmailDomain) {
+        const result = await deps.linkContactsByEmailDomain(
+          accountId,
+          normalizedDomain,
+          ctx.tenant.tenantId,
+          maxBatch
+        );
+        if (result.kind === 'overflow') {
+          await emitFlagNotification(
+            ctx,
+            result.sampleIds.map((id) => ({
+              candidate: { id } as unknown as Account,
+              ruleField: 'website',
+              matchStrategy: 'normalized',
+              score: 100,
+            }))
+          );
+          return [];
+        }
+        return result.ids;
+      }
+
+      // Test-only fallback: inline $transaction using prismaWithTenant.
       const prismaWithTenant = ctx.prismaWithTenant as unknown as {
-        contact: {
-          findMany: (args: {
-            where: Record<string, unknown>;
-            select: { id: true };
-            take: number;
-          }) => Promise<Array<{ id: string }>>;
-          updateMany: (args: {
-            where: Record<string, unknown>;
-            data: { accountId: string };
-          }) => Promise<{ count: number }>;
-        };
+        $transaction: <T>(fn: (tx: unknown) => Promise<T>) => Promise<T>;
       };
 
-      const candidates = await prismaWithTenant.contact.findMany({
-        where: {
-          tenantId: ctx.tenant.tenantId,
-          accountId: null,
-          email: { endsWith: `@${normalizedDomain}`, mode: 'insensitive' },
-        },
-        select: { id: true },
-        take: maxBatch + 1,
+      // AC-010: findMany + updateMany must run inside a single $transaction so
+      // a concurrent writer cannot interleave a contact claim between the read
+      // and the write. The tenant guard is re-applied on both statements.
+      const result = await prismaWithTenant.$transaction(async (tx) => {
+        const txAny = tx as unknown as {
+          contact: {
+            findMany: (args: {
+              where: Record<string, unknown>;
+              select: { id: true };
+              take: number;
+            }) => Promise<Array<{ id: string }>>;
+            updateMany: (args: {
+              where: Record<string, unknown>;
+              data: { accountId: string };
+            }) => Promise<{ count: number }>;
+          };
+        };
+
+        const candidates = await txAny.contact.findMany({
+          where: {
+            tenantId: ctx.tenant.tenantId,
+            accountId: null,
+            email: { endsWith: `@${normalizedDomain}`, mode: 'insensitive' },
+          },
+          select: { id: true },
+          take: maxBatch + 1,
+        });
+
+        if (candidates.length > maxBatch) {
+          return { overflow: true, ids: [] as string[], overflowIds: candidates.slice(0, 5).map((c) => c.id) };
+        }
+
+        if (candidates.length === 0) {
+          return { overflow: false, ids: [] as string[] };
+        }
+
+        const ids = candidates.map((c) => c.id);
+        await txAny.contact.updateMany({
+          where: { id: { in: ids }, tenantId: ctx.tenant.tenantId },
+          data: { accountId },
+        });
+        return { overflow: false, ids };
       });
 
-      if (candidates.length > maxBatch) {
+      if (result.overflow) {
+        // R9: too many matches — flag for human review (outside the tx to
+        // keep the tx short and to keep fire-and-forget semantics on the
+        // notification emit).
         await emitFlagNotification(
           ctx,
-          candidates.slice(0, 5).map((c) => ({
-            candidate: { id: c.id } as unknown as Account,
+          (result as { overflowIds: string[] }).overflowIds.map((id) => ({
+            candidate: { id } as unknown as Account,
             ruleField: 'website',
             matchStrategy: 'normalized',
             score: 100,
@@ -307,14 +390,7 @@ export function createAccountDuplicateDetectionService(
         return [];
       }
 
-      if (candidates.length === 0) return [];
-
-      const ids = candidates.map((c) => c.id);
-      await prismaWithTenant.contact.updateMany({
-        where: { id: { in: ids }, tenantId: ctx.tenant.tenantId },
-        data: { accountId },
-      });
-      return ids;
+      return result.ids;
     },
   };
 }

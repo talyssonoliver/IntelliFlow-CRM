@@ -24,6 +24,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TRPCError } from '@trpc/server';
 import { accountRouter } from '../account.router';
 import { prismaMock, createTestContext, createAdminContext, mockAccount } from '../../../test/setup';
+import * as auditLoggerModule from '../../../security/audit-logger';
 
 const newOwnerUuid = TEST_UUIDS.user2;
 const otherTenantId = '99999999-0000-4000-8000-999999999999';
@@ -511,6 +512,80 @@ describe('account.assignOwner regression + IFC-311 wiring', () => {
     await expect(
       adminCaller.assignOwner({ id: TEST_UUIDS.nonExistent, ownerId: newOwnerUuid })
     ).rejects.toThrow(expect.objectContaining({ code: 'NOT_FOUND' }));
+  });
+
+  // Open Q2 (post-completion review): self-reassign audit preservation.
+  //
+  // Positive-assertion version. The audit writer short-circuits for synthetic
+  // test-tenant UUIDs (see `[AUDIT] Skipping DB write - invalid tenantId`
+  // stderr in other tests), so we can't observe the call by mocking
+  // `prismaMock.auditLog.create`. Instead, spy on `getAuditLogger` at module
+  // level so we capture the call BEFORE the writer's internal validation.
+  // This is a real regression guard — removing the SKIPPED audit branch
+  // breaks this test.
+  it('AC-AO4: self-reassign on assignOwner emits audit log with beforeState=afterState (positive assertion)', async () => {
+    const logActionSpy = vi.fn().mockResolvedValue(undefined);
+    const logPermissionDeniedSpy = vi.fn().mockResolvedValue(undefined);
+    const auditSpy = vi.spyOn(auditLoggerModule, 'getAuditLogger').mockReturnValue({
+      logAction: logActionSpy,
+      logPermissionDenied: logPermissionDeniedSpy,
+    } as any);
+
+    try {
+      const result = await adminCaller.assignOwner({
+        id: TEST_UUIDS.account1,
+        ownerId: TEST_UUIDS.user1, // same as mockAccount.ownerId → SKIPPED
+      });
+
+      // Legacy response shape preserved
+      expect(result.success).toBe(true);
+      expect(result.ownerId).toBe(TEST_UUIDS.user1);
+      // No DB write on skip
+      expect(prismaMock.account.updateMany).not.toHaveBeenCalled();
+      // No notification on self-reassign (helper short-circuits)
+      expect((prismaMock.notification as any).create).not.toHaveBeenCalled();
+
+      // Positive assertion — SKIPPED branch MUST invoke logAction with
+      // beforeState === afterState === currentOwnerId. Removing the branch
+      // in account.router.ts will FAIL this test.
+      expect(logActionSpy).toHaveBeenCalledWith(
+        'UPDATE',
+        'account',
+        TEST_UUIDS.account1,
+        TEST_UUIDS.tenant,
+        expect.objectContaining({
+          actorId: expect.any(String),
+          beforeState: { ownerId: TEST_UUIDS.user1 },
+          afterState: { ownerId: TEST_UUIDS.user1 },
+        })
+      );
+    } finally {
+      auditSpy.mockRestore();
+    }
+  });
+
+  it('AC-AO4b: reassign on self-reassign does NOT emit audit log (new behavior, by design)', async () => {
+    const logActionSpy = vi.fn().mockResolvedValue(undefined);
+    const auditSpy = vi.spyOn(auditLoggerModule, 'getAuditLogger').mockReturnValue({
+      logAction: logActionSpy,
+      logPermissionDenied: vi.fn().mockResolvedValue(undefined),
+    } as any);
+
+    try {
+      const result = await adminCaller.reassign({
+        id: TEST_UUIDS.account1,
+        ownerId: TEST_UUIDS.user1,
+      });
+
+      expect((result as any).skipped).toBe(true);
+      // Positive assertion — the new reassign endpoint communicates the
+      // no-op via `skipped: true`; NO audit log write for SKIPPED. If the
+      // behavior drifts (e.g. someone copies the assignOwner SKIPPED branch
+      // here), this test FAILS.
+      expect(logActionSpy).not.toHaveBeenCalled();
+    } finally {
+      auditSpy.mockRestore();
+    }
   });
 });
 

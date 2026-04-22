@@ -12,6 +12,8 @@ import {
   ContactRepository,
   MergeInTransactionInput,
   MergeInTransactionResult,
+  LinkContactsByDomainInput,
+  LinkContactsByDomainResult,
 } from '@intelliflow/application';
 
 /**
@@ -290,6 +292,10 @@ export class PrismaContactRepository implements ContactRepository {
         };
       };
 
+      // AC-006 / TC-NEG-002: NEVER swallow errors inside the $transaction —
+      // Prisma needs the rejection to propagate so it can roll back. The only
+      // permitted "skip" is when the delegate is absent from the tx proxy
+      // (e.g., mocked test harnesses that don't stub every relation table).
       const reparent = async (
         table:
           | 'contactActivity'
@@ -300,15 +306,11 @@ export class PrismaContactRepository implements ContactRepository {
       ): Promise<number> => {
         const t = txAny[table];
         if (!t?.updateMany) return 0;
-        try {
-          const r = await t.updateMany({
-            where: { contactId: secondaryId, tenantId },
-            data: { contactId: primaryId },
-          });
-          return (r as { count: number }).count;
-        } catch {
-          return 0;
-        }
+        const r = await t.updateMany({
+          where: { contactId: secondaryId, tenantId },
+          data: { contactId: primaryId },
+        });
+        return (r as { count: number }).count;
       };
 
       const activities = await reparent('contactActivity');
@@ -319,29 +321,25 @@ export class PrismaContactRepository implements ContactRepository {
 
       let tagAssignments = 0;
       if (txAny.contactTagAssignment?.findMany) {
-        try {
-          const secTags = await txAny.contactTagAssignment.findMany({
-            where: { contactId: secondaryId, tenantId },
+        const secTags = await txAny.contactTagAssignment.findMany({
+          where: { contactId: secondaryId, tenantId },
+        });
+        const primExisting = await txAny.contactTagAssignment.findMany({
+          where: { contactId: primaryId, tenantId },
+        });
+        const primTagIds = new Set(primExisting.map((t) => t.tagId));
+        const toCreate = secTags
+          .filter((t) => !primTagIds.has(t.tagId))
+          .map((t) => ({ contactId: primaryId, tagId: t.tagId, tenantId }));
+        if (toCreate.length > 0) {
+          const createResult = await txAny.contactTagAssignment.createMany({
+            data: toCreate,
           });
-          const primExisting = await txAny.contactTagAssignment.findMany({
-            where: { contactId: primaryId, tenantId },
-          });
-          const primTagIds = new Set(primExisting.map((t) => t.tagId));
-          const toCreate = secTags
-            .filter((t) => !primTagIds.has(t.tagId))
-            .map((t) => ({ contactId: primaryId, tagId: t.tagId, tenantId }));
-          if (toCreate.length > 0) {
-            const createResult = await txAny.contactTagAssignment.createMany({
-              data: toCreate,
-            });
-            tagAssignments = (createResult as { count: number }).count;
-          }
-          await txAny.contactTagAssignment.deleteMany({
-            where: { contactId: secondaryId, tenantId },
-          });
-        } catch {
-          tagAssignments = 0;
+          tagAssignments = (createResult as { count: number }).count;
         }
+        await txAny.contactTagAssignment.deleteMany({
+          where: { contactId: secondaryId, tenantId },
+        });
       }
 
       const fieldsUpdated: string[] = [];
@@ -388,6 +386,53 @@ export class PrismaContactRepository implements ContactRepository {
         },
         mergedAt: new Date(),
       } satisfies MergeInTransactionResult;
+    });
+  }
+
+  /**
+   * IFC-310 AC-010 / R9: Atomic auto-link-by-domain.
+   * findMany + updateMany execute inside one $transaction so a concurrent
+   * writer cannot interleave a contact claim between read and write. If the
+   * match set exceeds `maxBatch`, returns `{ overflow: true }` without
+   * performing any update.
+   */
+  async linkContactsToAccountByEmailDomain(
+    input: LinkContactsByDomainInput
+  ): Promise<LinkContactsByDomainResult> {
+    const { accountId, domain, tenantId, maxBatch } = input;
+    const normalizedDomain = domain.trim().toLowerCase().replace(/^www\./, '');
+    if (!normalizedDomain || !normalizedDomain.includes('.')) {
+      return { overflow: false, linkedIds: [] };
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      const candidates = await tx.contact.findMany({
+        where: {
+          tenantId,
+          accountId: null,
+          email: { endsWith: `@${normalizedDomain}`, mode: 'insensitive' },
+        },
+        select: { id: true },
+        take: maxBatch + 1,
+      });
+
+      if (candidates.length > maxBatch) {
+        return {
+          overflow: true,
+          overflowSampleIds: candidates.slice(0, 5).map((c) => c.id),
+        };
+      }
+
+      if (candidates.length === 0) {
+        return { overflow: false, linkedIds: [] };
+      }
+
+      const ids = candidates.map((c) => c.id);
+      await tx.contact.updateMany({
+        where: { id: { in: ids }, tenantId },
+        data: { accountId },
+      });
+      return { overflow: false, linkedIds: ids };
     });
   }
 }

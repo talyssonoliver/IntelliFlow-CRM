@@ -18,4 +18,6 @@ export type {
   ContactStatistics,
   MergeInTransactionInput,
   MergeInTransactionResult,
+  LinkContactsByDomainInput,
+  LinkContactsByDomainResult,
 } from '@intelliflow/domain';

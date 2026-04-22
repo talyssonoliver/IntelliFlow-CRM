@@ -1,0 +1,80 @@
+{
+  "task_id": "IFC-310",
+  "captured_at": "2026-04-21T21:55:00Z",
+  "description": "Post-implementation scoped coverage for IFC-310 duplicate-detection runtime. Istanbul provider with --coverage.include pointing at each new production file. All five measured files meet the per-file AC-019 thresholds (stmts ≥90 / branches ≥80 / funcs ≥90 / lines ≥90).",
+  "measurement_commands": {
+    "api_scope": "COVERAGE_RUN=1 pnpm --filter @intelliflow/api test --run duplicate-rule-evaluator contact-duplicate-detection.service account-duplicate-detection.service --coverage --coverage.provider=istanbul --coverage.include='src/shared/duplicate-rule-evaluator.ts' --coverage.include='src/modules/contact/contact-duplicate-detection.service.ts' --coverage.include='src/modules/account/account-duplicate-detection.service.ts'",
+    "worker_scope": "COVERAGE_RUN=1 pnpm --filter @intelliflow/ai-worker test --run contact-embed-worker --coverage --coverage.provider=istanbul --coverage.include='src/workers/contact-embed-worker.ts'",
+    "event_scope": "COVERAGE_RUN=1 pnpm --filter @intelliflow/application test --run ContactMergedEvent --coverage --coverage.provider=istanbul --coverage.include='src/services/events/ContactMergedEvent.ts'"
+  },
+  "thresholds": {
+    "statements": 90,
+    "branches": 80,
+    "functions": 90,
+    "lines": 90
+  },
+  "overall_api_scope": {
+    "statements": { "pct": 92.88 },
+    "branches": { "pct": 83.03 },
+    "functions": { "pct": 98.27 },
+    "lines": { "pct": 98.78 },
+    "met_thresholds": true
+  },
+  "per_file": {
+    "apps/api/src/shared/duplicate-rule-evaluator.ts": {
+      "statements": { "pct": 91.66 },
+      "branches": { "pct": 80.0 },
+      "functions": { "pct": 100.0 },
+      "lines": { "pct": 96.55 },
+      "uncovered_lines": [120, 167, 246],
+      "met_thresholds": true
+    },
+    "apps/api/src/modules/contact/contact-duplicate-detection.service.ts": {
+      "statements": { "pct": 94.05 },
+      "branches": { "pct": 86.84 },
+      "functions": { "pct": 96.15 },
+      "lines": { "pct": 100.0 },
+      "uncovered_lines": [],
+      "met_thresholds": true
+    },
+    "apps/api/src/modules/account/account-duplicate-detection.service.ts": {
+      "statements": { "pct": 93.02 },
+      "branches": { "pct": 83.01 },
+      "functions": { "pct": 100.0 },
+      "lines": { "pct": 100.0 },
+      "uncovered_lines": [],
+      "met_thresholds": true
+    },
+    "apps/ai-worker/src/workers/contact-embed-worker.ts": {
+      "statements": { "pct": 100.0 },
+      "branches": { "pct": 100.0 },
+      "functions": { "pct": 100.0 },
+      "lines": { "pct": 100.0 },
+      "uncovered_lines": [],
+      "met_thresholds": true
+    },
+    "packages/application/src/services/events/ContactMergedEvent.ts": {
+      "statements": { "pct": 100.0 },
+      "branches": { "pct": 100.0 },
+      "functions": { "pct": 100.0 },
+      "lines": { "pct": 100.0 },
+      "uncovered_lines": [],
+      "met_thresholds": true
+    }
+  },
+  "summary_vs_thresholds": {
+    "overall_statements_pct": 92.88,
+    "overall_branches_pct": 83.03,
+    "overall_functions_pct": 98.27,
+    "overall_lines_pct": 98.78,
+    "overall_meets_threshold": true,
+    "per_file_below_threshold_count": 0,
+    "notes": "Every IFC-310 production file (3 services + evaluator + worker + event) meets all 4 AC-019 per-file thresholds."
+  },
+  "notes": [
+    "Overall weighted coverage across IFC-310 files meets all 4 thresholds (stmts >=90, branches >=80, funcs >=90, lines >=90).",
+    "Per-file AC-019 satisfied for every file: evaluator 91.66/80/100/96.55; contact-service 94.05/86.84/96.15/100; account-service 93.02/83.01/100/100; worker 100/100/100/100; event 100/100/100/100.",
+    "IFC-310-before.json captured empty baseline by construction (new files did not exist).",
+    "Benchmark results in artifacts/benchmarks/IFC-310-merge.json (mocked) and IFC-310-merge-real-db.json (opt-in real Prisma)."
+  ]
+}
