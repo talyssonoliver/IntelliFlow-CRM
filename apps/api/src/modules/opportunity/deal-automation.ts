@@ -81,7 +81,9 @@ export const AUTOMATION_FACTORY_DEFAULTS: DealAutomationFlags = {
 // interface is an ergonomic bound, not a shape guarantee.
 export interface HasTenantContext {
   tenant: { tenantId: string };
-  user?: { role?: string | null | undefined };
+  // Accept the full UserSession shape from ctx.user (null | undefined | object)
+  // so TenantAwareContext is a structural match without coercion.
+  user?: { role?: string | null | undefined } | null;
   prismaWithTenant: any;
 }
 

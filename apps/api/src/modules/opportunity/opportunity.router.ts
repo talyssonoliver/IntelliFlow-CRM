@@ -25,7 +25,14 @@ import {
   DEFAULT_STAGE_NAMES,
   DEFAULT_STAGE_COLORS,
   DEFAULT_STAGE_PROBABILITIES,
+  reassignDealSchema,
+  bulkReassignDealsSchema,
 } from '@intelliflow/validators/opportunity';
+import {
+  performDealReassign,
+  emitDealReassignSideEffects,
+  logDealReassignPermissionDenied,
+} from './deal-reassign';
 import { OPPORTUNITY_STAGES } from '@intelliflow/domain';
 import { mapOpportunityToResponse } from '../../shared/mappers';
 import { calculateForecastAccuracy } from '../../shared/forecast-algorithm';
@@ -1482,4 +1489,75 @@ export const opportunityRouter = createTRPCRouter({
       stageDefault,
     };
   }),
+
+  /**
+   * PG-184 Cat-2 follow-through: Deal reassign — wires
+   * `notifyOnOwnerChange` via `notifyDealReassignment` helper.
+   */
+  reassign: tenantProcedure
+    .input(reassignDealSchema)
+    .mutation(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
+      const flags = await loadDealAutomation(typedCtx);
+      const verdict = await performDealReassign(ctx, input);
+
+      if (verdict.kind === 'FORBIDDEN') {
+        logDealReassignPermissionDenied(ctx, input.id, 'deal:reassign');
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'Cannot reassign this deal' });
+      }
+      if (verdict.kind === 'NOT_FOUND') {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Deal not found' });
+      }
+      if (verdict.kind === 'TARGET_USER_NOT_FOUND') {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Target user not found' });
+      }
+      if (verdict.kind === 'SKIPPED') {
+        return { id: input.id, skipped: true, reason: 'already-owned' as const };
+      }
+
+      await emitDealReassignSideEffects(ctx, {
+        id: input.id,
+        dealName: verdict.dealName,
+        previousOwnerId: verdict.previousOwnerId,
+        newOwnerId: verdict.newOwnerId,
+        flags,
+      });
+
+      return { id: input.id, skipped: false, newOwnerId: verdict.newOwnerId };
+    }),
+
+  /**
+   * PG-184 Cat-2 follow-through: Bulk deal reassign.
+   */
+  bulkReassign: tenantProcedure
+    .input(bulkReassignDealsSchema)
+    .mutation(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
+      const flags = await loadDealAutomation(typedCtx);
+      const results: Array<{ id: string; ok: boolean; reason?: string }> = [];
+
+      for (const id of input.ids) {
+        const verdict = await performDealReassign(ctx, { id, ownerId: input.ownerId });
+        if (verdict.kind === 'OK') {
+          await emitDealReassignSideEffects(ctx, {
+            id,
+            dealName: verdict.dealName,
+            previousOwnerId: verdict.previousOwnerId,
+            newOwnerId: verdict.newOwnerId,
+            flags,
+          });
+          results.push({ id, ok: true });
+        } else if (verdict.kind === 'SKIPPED') {
+          results.push({ id, ok: true, reason: 'already-owned' });
+        } else {
+          results.push({ id, ok: false, reason: verdict.kind.toLowerCase() });
+        }
+      }
+
+      return {
+        total: input.ids.length,
+        succeeded: results.filter((r) => r.ok).length,
+        results,
+      };
+    }),
 });

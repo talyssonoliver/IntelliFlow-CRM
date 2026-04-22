@@ -97,3 +97,15 @@ ALTER TABLE "contact_reply_drafts"
   ADD CONSTRAINT "contact_reply_drafts_tenantId_fkey"
   FOREIGN KEY ("tenantId") REFERENCES "tenants"("id")
   ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- ─────────────────────────────────────────────────────────────────────────
+-- 5. Row-Level Security — tenant isolation for the two new tables
+-- ─────────────────────────────────────────────────────────────────────────
+
+ALTER TABLE "account_ai_insights" ENABLE ROW LEVEL SECURITY;
+CREATE POLICY tenant_isolation_account_ai_insights ON "account_ai_insights"
+  FOR ALL USING ("tenantId" = get_current_tenant_id());
+
+ALTER TABLE "contact_reply_drafts" ENABLE ROW LEVEL SECURITY;
+CREATE POLICY tenant_isolation_contact_reply_drafts ON "contact_reply_drafts"
+  FOR ALL USING ("tenantId" = get_current_tenant_id());

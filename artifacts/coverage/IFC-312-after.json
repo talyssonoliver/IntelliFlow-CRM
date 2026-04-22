@@ -1,0 +1,59 @@
+{
+  "task_id": "IFC-312",
+  "captured_at": "2026-04-22T21:15:00Z",
+  "run_id": "run-2026-04-20T22-58-55Z",
+  "measurement_scope": [
+    "apps/ai-worker/src/contact-*.chain.ts (4 files)",
+    "apps/ai-worker/src/account-*.chain.ts (5 files)",
+    "apps/ai-worker/src/shared/enrichment-adapter.ts",
+    "apps/ai-worker/src/jobs/enrichment.job.ts",
+    "apps/ai-worker/src/jobs/entity-insight.job.ts",
+    "apps/ai-worker/src/jobs/reply-draft.job.ts",
+    "apps/ai-worker/src/jobs/account-scoring.job.ts",
+    "apps/ai-worker/src/jobs/tag-suggestion.job.ts"
+  ],
+  "command": "pnpm --filter @intelliflow/ai-worker test --run <12 test files> --coverage --coverage.provider=istanbul --coverage.include='src/contact-*.chain.ts' --coverage.include='src/account-*.chain.ts' --coverage.include='src/shared/enrichment-adapter.ts' --coverage.include='src/jobs/{enrichment,entity-insight,reply-draft,account-scoring,tag-suggestion}.job.ts'",
+  "totals": {
+    "overall": {
+      "statements": { "pct": 92.97, "meets_target": true },
+      "branches": { "pct": 86.43, "meets_target": true },
+      "functions": { "pct": 97.5, "meets_target": true },
+      "lines": { "pct": 94.45, "meets_target": true }
+    }
+  },
+  "per_file": {
+    "contact-enrichment.chain.ts": { "stmt": 90.69, "br": 91.17, "fn": 100, "ln": 90.24 },
+    "account-enrichment.chain.ts": { "stmt": 90.32, "br": 95.45, "fn": 100, "ln": 90 },
+    "contact-tag-suggestion.chain.ts": { "stmt": 93.75, "br": 75, "fn": 100, "ln": 96.42 },
+    "account-tag-suggestion.chain.ts": { "stmt": 91.17, "br": 72.22, "fn": 100, "ln": 96.55 },
+    "contact-insight.chain.ts": { "stmt": 100, "br": 100, "fn": 100, "ln": 100 },
+    "account-insight.chain.ts": { "stmt": 100, "br": 100, "fn": 100, "ln": 100 },
+    "contact-reply-draft.chain.ts": { "stmt": 88.23, "br": 77.27, "fn": 100, "ln": 93.54 },
+    "account-industry-inference.chain.ts": { "stmt": 92.85, "br": 92.85, "fn": 100, "ln": 92.59 },
+    "account-scoring.chain.ts": { "stmt": 96.15, "br": 80, "fn": 100, "ln": 96 },
+    "shared/enrichment-adapter.ts": { "stmt": 93.33, "br": 73.07, "fn": 87.5, "ln": 94.87 },
+    "jobs/enrichment.job.ts": { "stmt": 100, "br": 87.5, "fn": 100, "ln": 100 },
+    "jobs/entity-insight.job.ts": { "stmt": 94.44, "br": 83.33, "fn": 100, "ln": 100 },
+    "jobs/reply-draft.job.ts": { "stmt": 78.94, "br": 85.71, "fn": 100, "ln": 78.94 },
+    "jobs/account-scoring.job.ts": { "stmt": 84.21, "br": 90, "fn": 100, "ln": 88.23 },
+    "jobs/tag-suggestion.job.ts": { "stmt": 100, "br": 100, "fn": 100, "ln": 100 }
+  },
+  "threshold_evaluation": {
+    "target": "Statements >= 90%, Branches >= 80%, Functions >= 90%, Lines >= 90%",
+    "result": "ALL 4 THRESHOLDS MET at the scoped-total level (92.97 / 86.43 / 97.5 / 94.45)"
+  },
+  "test_counts": {
+    "chain_tests": 83,
+    "job_safety_tests": 8,
+    "job_happy_path_tests": 17,
+    "total_scoped_tests": 108,
+    "api_router_ai_tests": 17,
+    "ui_component_tests": 16,
+    "grand_total_ifc312_tests": 141
+  },
+  "notes": [
+    "After adding 4 additional branch-coverage tests on insight chains + the comprehensive jobs happy-path test file (17 new tests), all 4 coverage thresholds are met at the scoped-total level.",
+    "Per-file variance exists (contact-reply-draft branches 77.27%, account-tag-suggestion 72.22%, shared/enrichment-adapter 73.07%) but aggregated numbers satisfy the DoD requirement of '>=90% scoped coverage on chain orchestration'.",
+    "Grand total IFC-312 tests: 141 new meaningful assertions; zero placeholder `expect(true).toBe(true)` (verified via grep)."
+  ]
+}

@@ -27,9 +27,11 @@ import { loadBullMQ } from '../../lib/load-bullmq';
 import { assertTenantContext } from '../../security/tenant-context';
 import { createNotification } from '../notifications/notifications.router';
 import {
+  assertCanCreateTicketOrMerge,
   assertCanDeleteTicket,
   loadTicketAutomation,
   normalizeTicketSubject,
+  notifyTicketDuplicate,
   notifyTicketEscalated,
   notifyTicketReassignment,
   notifyTicketResolved,
@@ -308,6 +310,71 @@ export const ticketRouter = createTRPCRouter({
       if (fallback) resolvedSlaPolicyId = fallback;
     }
 
+    // PG-185 Cat-2: duplicate detection + auto-merge when toggles enabled.
+    // autoMergeOnExactContactSubject: fold into existing ticket if same
+    //   (contactEmail + subject) pair exists.
+    // notifyOnDuplicate: emit ticket_duplicate_suspected notification to the
+    //   reporter so they can review before closing.
+    const subjectForCheck = normalizedSubject ?? input.subject;
+    let duplicateCandidates: Array<{
+      id: string;
+      ticketNumber: string;
+      subject: string;
+      contactEmail: string | null;
+      status: string;
+    }> = [];
+    if (input.contactEmail) {
+      try {
+        duplicateCandidates = await ctx.prismaWithTenant.ticket.findMany({
+          where: {
+            tenantId,
+            contactEmail: { equals: input.contactEmail, mode: 'insensitive' },
+            status: { in: ['OPEN', 'IN_PROGRESS', 'WAITING_ON_CUSTOMER'] },
+          },
+          select: {
+            id: true,
+            ticketNumber: true,
+            subject: true,
+            contactEmail: true,
+            status: true,
+          },
+          take: 10,
+        });
+      } catch (err) {
+        // Duplicate-check is best-effort — do not fail ticket create when the
+        // query path is unavailable (e.g. mocked-prisma tests). Proceed with
+        // the full create path; the dupe-check toggle is Cat-2.
+        console.warn(
+          '[ticket.router] duplicate-candidate fetch failed, proceeding:',
+          err,
+        );
+        duplicateCandidates = [];
+      }
+    }
+    const mergeDecision = assertCanCreateTicketOrMerge(
+      {
+        contactEmail: input.contactEmail ?? '',
+        subject: subjectForCheck,
+      },
+      duplicateCandidates.map((t) => ({
+        id: t.id,
+        ticketNumber: t.ticketNumber,
+        subject: t.subject,
+        contactEmail: t.contactEmail ?? '',
+        status: t.status,
+      })),
+      automation,
+    );
+
+    if (mergeDecision.action === 'MERGE') {
+      const existing = await ctx.prismaWithTenant.ticket.findFirst({
+        where: { id: mergeDecision.targetId, tenantId },
+      });
+      if (existing) {
+        return existing;
+      }
+    }
+
     try {
       const ticket = await ticketService.create({
         ...input,
@@ -316,6 +383,34 @@ export const ticketRouter = createTRPCRouter({
         slaPolicyId: resolvedSlaPolicyId ?? input.slaPolicyId,
         tenantId,
       });
+
+      // PG-185 Cat-2: emit duplicate-suspected notification when toggle on
+      // and the candidate scan surfaced matches.
+      if (duplicateCandidates.length > 0) {
+        const reporterUserId = ctx.user?.userId ?? null;
+        notifyTicketDuplicate(
+          {
+            ticketId: ticket.id,
+            ticketNumber: ticket.ticketNumber ?? ticket.id,
+            subject: ticket.subject ?? subjectForCheck,
+            tenantId,
+            actingUserId: ctx.user?.userId ?? '',
+            reporterUserId,
+            duplicates: duplicateCandidates.map((t) => ({
+              id: t.id,
+              ticketNumber: t.ticketNumber,
+              subject: t.subject,
+              contactEmail: t.contactEmail ?? '',
+              status: t.status,
+            })),
+          },
+          automation,
+          (params) =>
+            createNotification(ctx.prisma, params, ctx.services?.notificationOrchestrator),
+        ).catch((err) =>
+          console.warn('[ticket.router] notifyTicketDuplicate failed (fire-and-forget):', err),
+        );
+      }
 
       // --- Post-creation side effects (all fire-and-forget) ---
 
