@@ -36,9 +36,32 @@ RUN pnpm install --frozen-lockfile --offline --ignore-scripts
 # Set build-time environment variables
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+ARG NEXT_OUTPUT=standalone
+ENV NEXT_OUTPUT=${NEXT_OUTPUT}
 
-# Build shared packages first
-RUN pnpm --filter ui build
+# Increase Node.js heap for Next.js webpack build (default ~1.7 GB OOMs on large apps)
+ENV NODE_OPTIONS=--max-old-space-size=4096
+# Dummy build-time keys — satisfy production guards that fire during `next build`'s
+# page-data collection phase (NODE_ENV=production). Real secrets are injected at runtime.
+ARG PRISMA_FIELD_ENCRYPTION_KEY=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+ENV PRISMA_FIELD_ENCRYPTION_KEY=${PRISMA_FIELD_ENCRYPTION_KEY}
+ARG AI_AUDIT_SIGNING_KEY=build-time-placeholder-not-for-production
+ENV AI_AUDIT_SIGNING_KEY=${AI_AUDIT_SIGNING_KEY}
+# Supabase — getSupabaseConfig() in apps/api/src/lib/supabase.ts runs at module init
+ARG SUPABASE_URL=https://supabase.example.com
+ENV SUPABASE_URL=${SUPABASE_URL}
+ARG SUPABASE_ANON_KEY=build-time-placeholder-not-for-production
+ENV SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+ARG SUPABASE_SERVICE_ROLE_KEY=build-time-placeholder-not-for-production
+ENV SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+
+# Build workspace packages in dependency order (all use dist/ exports; CI has no pre-built dist/)
+# Note: @intelliflow/ui exports from src/ directly — no build step needed
+RUN pnpm --filter db db:generate
+RUN pnpm --filter domain build
+RUN pnpm --filter validators build
+RUN pnpm --filter db build
+RUN pnpm --filter application build
 RUN pnpm --filter api-client build
 
 # Build Next.js application

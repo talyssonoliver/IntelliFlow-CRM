@@ -6,9 +6,9 @@ on:
   workflow_dispatch:
     inputs:
       environment:
-        description: 'Deployment environment'
+        description: "Deployment environment"
         required: true
-        default: 'staging'
+        default: "staging"
         type: choice
         options:
           - staging
@@ -19,8 +19,9 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  NODE_VERSION: '22'
-  PNPM_VERSION: '10.33.0'
+  NODE_VERSION: "22"
+  PNPM_VERSION: "10.33.0"
+  NODE_OPTIONS: --max-old-space-size=4096
 
 jobs:
   prepare:
@@ -54,7 +55,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -94,7 +95,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -111,7 +112,7 @@ jobs:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          vercel-args: '--prod'
+          vercel-args: "--prod"
           scope: ${{ secrets.VERCEL_ORG_ID }}
 
       - name: Run smoke tests

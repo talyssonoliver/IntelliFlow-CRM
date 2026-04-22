@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-04-20T21:20:42.763Z",
+  "timestamp": "2026-04-22T18:48:29.868Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1016,10 +1016,16 @@
   },
   "api_inventory": {
     "total_routers": 60,
-    "total_endpoints": 523,
-    "total_queries": 247,
-    "total_mutations": 276,
+    "total_endpoints": 536,
+    "total_queries": 249,
+    "total_mutations": 287,
     "routers": [
+      {
+        "name": "contact",
+        "endpoints": 27,
+        "queries": 8,
+        "mutations": 19
+      },
       {
         "name": "lead",
         "endpoints": 21,
@@ -1027,10 +1033,10 @@
         "mutations": 15
       },
       {
-        "name": "contact",
+        "name": "account",
         "endpoints": 20,
-        "queries": 7,
-        "mutations": 13
+        "queries": 10,
+        "mutations": 10
       },
       {
         "name": "appointments",
@@ -1085,12 +1091,6 @@
         "endpoints": 15,
         "queries": 9,
         "mutations": 6
-      },
-      {
-        "name": "account",
-        "endpoints": 14,
-        "queries": 9,
-        "mutations": 5
       },
       {
         "name": "analytics",
@@ -1383,16 +1383,16 @@
     ]
   },
   "database_inventory": {
-    "total_tables": 166,
-    "total_fields": 2439,
-    "total_indexes": 783,
-    "total_relations": 234,
+    "total_tables": 168,
+    "total_fields": 2475,
+    "total_indexes": 789,
+    "total_relations": 238,
     "tables_with_embeddings": 4,
     "enums": 71,
     "tables": [
       {
         "name": "Tenant",
-        "fields": 147,
+        "fields": 149,
         "indexes": 4,
         "relations": 1,
         "hasEmbedding": false
@@ -1405,18 +1405,18 @@
         "hasEmbedding": false
       },
       {
+        "name": "Contact",
+        "fields": 36,
+        "indexes": 14,
+        "relations": 4,
+        "hasEmbedding": true
+      },
+      {
         "name": "ConversationRecord",
         "fields": 36,
         "indexes": 7,
         "relations": 2,
         "hasEmbedding": false
-      },
-      {
-        "name": "Contact",
-        "fields": 35,
-        "indexes": 14,
-        "relations": 4,
-        "hasEmbedding": true
       },
       {
         "name": "CaseDocument",
@@ -1479,6 +1479,13 @@
         "fields": 28,
         "indexes": 10,
         "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "Account",
+        "fields": 26,
+        "indexes": 7,
+        "relations": 4,
         "hasEmbedding": false
       },
       {
@@ -1566,16 +1573,16 @@
         "hasEmbedding": false
       },
       {
-        "name": "Account",
-        "fields": 19,
-        "indexes": 6,
-        "relations": 4,
-        "hasEmbedding": false
-      },
-      {
         "name": "ActivityEvent",
         "fields": 19,
         "indexes": 6,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "ContactAIInsight",
+        "fields": 19,
+        "indexes": 5,
         "relations": 2,
         "hasEmbedding": false
       },
@@ -1692,13 +1699,6 @@
         "hasEmbedding": false
       },
       {
-        "name": "ContactAIInsight",
-        "fields": 16,
-        "indexes": 5,
-        "relations": 2,
-        "hasEmbedding": false
-      },
-      {
         "name": "WorkflowDefinition",
         "fields": 16,
         "indexes": 6,
@@ -1728,6 +1728,13 @@
       },
       {
         "name": "AppointmentSettings",
+        "fields": 15,
+        "indexes": 3,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "ContactReplyDraft",
         "fields": 15,
         "indexes": 3,
         "relations": 2,
@@ -2378,6 +2385,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "AccountAIInsight",
+        "fields": 8,
+        "indexes": 2,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
         "name": "AIOutputReviewAudit",
         "fields": 8,
         "indexes": 4,
@@ -2922,7 +2936,7 @@
   },
   "validators_inventory": {
     "total_validators": 46,
-    "total_schemas": 535,
+    "total_schemas": 560,
     "by_complexity": {
       "complex": 31,
       "moderate": 11,
@@ -2933,6 +2947,18 @@
         "name": "ai",
         "file": "ai.ts",
         "schemas": 31,
+        "complexity": "complex"
+      },
+      {
+        "name": "account",
+        "file": "account.ts",
+        "schemas": 29,
+        "complexity": "complex"
+      },
+      {
+        "name": "contact",
+        "file": "contact.ts",
+        "schemas": 28,
         "complexity": "complex"
       },
       {
@@ -2996,12 +3022,6 @@
         "complexity": "complex"
       },
       {
-        "name": "account",
-        "file": "account.ts",
-        "schemas": 17,
-        "complexity": "complex"
-      },
-      {
         "name": "experiment",
         "file": "experiment.ts",
         "schemas": 17,
@@ -3022,12 +3042,6 @@
       {
         "name": "case",
         "file": "case.ts",
-        "schemas": 15,
-        "complexity": "complex"
-      },
-      {
-        "name": "contact",
-        "file": "contact.ts",
         "schemas": 15,
         "complexity": "complex"
       },
@@ -3368,6 +3382,36 @@
         "name": "account.assignOwner",
         "method": "POST",
         "description": "Assign owner"
+      },
+      {
+        "name": "account.reassign",
+        "method": "POST",
+        "description": "Reassign"
+      },
+      {
+        "name": "account.bulkReassign",
+        "method": "POST",
+        "description": "Bulk reassign"
+      },
+      {
+        "name": "account.suggestTags",
+        "method": "POST",
+        "description": "Suggest tags"
+      },
+      {
+        "name": "account.generateInsight",
+        "method": "POST",
+        "description": "Generate insight"
+      },
+      {
+        "name": "account.scoreAccount",
+        "method": "POST",
+        "description": "Score account"
+      },
+      {
+        "name": "account.getAiInsight",
+        "method": "GET",
+        "description": "Get ai insight"
       }
     ],
     "queues": [
@@ -4148,6 +4192,11 @@
         "critical": true
       },
       {
+        "name": "contact.updateEmail",
+        "method": "POST",
+        "description": "Update email"
+      },
+      {
         "name": "contact.delete",
         "method": "POST",
         "description": "Delete contact"
@@ -4221,6 +4270,36 @@
         "name": "contact.scoreWithAI",
         "method": "POST",
         "description": "Score with a i"
+      },
+      {
+        "name": "contact.reassign",
+        "method": "POST",
+        "description": "Reassign"
+      },
+      {
+        "name": "contact.bulkReassign",
+        "method": "POST",
+        "description": "Bulk reassign"
+      },
+      {
+        "name": "contact.suggestTags",
+        "method": "POST",
+        "description": "Suggest tags"
+      },
+      {
+        "name": "contact.generateInsight",
+        "method": "POST",
+        "description": "Generate insight"
+      },
+      {
+        "name": "contact.draftReply",
+        "method": "POST",
+        "description": "Draft reply"
+      },
+      {
+        "name": "contact.listReplyDrafts",
+        "method": "GET",
+        "description": "List reply drafts"
       }
     ],
     "customActionHandler": [
