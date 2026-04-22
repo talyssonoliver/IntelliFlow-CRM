@@ -31,10 +31,14 @@ FROM node:20-slim AS production
 
 WORKDIR /app
 
+# Create non-root user
+RUN groupadd --system --gid 1001 nodejs \
+  && useradd --system --uid 1001 --gid nodejs --shell /usr/sbin/nologin worker
+
 # Copy built artifacts
-COPY --from=builder /app/apps/workers/notifications-worker/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/apps/workers/notifications-worker/package.json ./
+COPY --from=builder --chown=worker:nodejs /app/apps/workers/notifications-worker/dist ./dist
+COPY --from=builder --chown=worker:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=worker:nodejs /app/apps/workers/notifications-worker/package.json ./
 
 # Set environment
 ENV NODE_ENV=production
@@ -46,6 +50,9 @@ ENV ENABLE_PUSH=false
 
 # Health check port
 EXPOSE 3102
+
+# Drop privileges before running the worker
+USER worker
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \

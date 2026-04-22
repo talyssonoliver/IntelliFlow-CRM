@@ -37,10 +37,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     tesseract-ocr-eng \
     && rm -rf /var/lib/apt/lists/*
 
+# Create non-root user
+RUN groupadd --system --gid 1001 nodejs \
+  && useradd --system --uid 1001 --gid nodejs --shell /usr/sbin/nologin worker
+
 # Copy built artifacts
-COPY --from=builder /app/apps/workers/ingestion-worker/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/apps/workers/ingestion-worker/package.json ./
+COPY --from=builder --chown=worker:nodejs /app/apps/workers/ingestion-worker/dist ./dist
+COPY --from=builder --chown=worker:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=worker:nodejs /app/apps/workers/ingestion-worker/package.json ./
 
 # Set environment
 ENV NODE_ENV=production
@@ -51,6 +55,9 @@ ENV ENABLE_EMBEDDINGS=false
 
 # Health check port
 EXPOSE 3101
+
+# Drop privileges before running the worker
+USER worker
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
