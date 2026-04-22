@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-04-20T22:01:19.295Z",
+  "last_updated": "2026-04-22T21:20:05.415Z",
   "tasks_by_status": {
     "DONE": [
       "EXC-INIT-001",
@@ -389,16 +389,15 @@
       "PG-190",
       "PG-192",
       "PG-193",
-      "PG-195"
-    ],
-    "IN_PROGRESS": [],
-    "VALIDATING": [],
-    "BLOCKED": [],
-    "PLANNED": [
+      "PG-195",
       "IFC-310",
       "IFC-311",
       "IFC-312"
     ],
+    "IN_PROGRESS": [],
+    "VALIDATING": [],
+    "BLOCKED": [],
+    "PLANNED": [],
     "BACKLOG": [
       "IFC-032",
       "IFC-033",
@@ -596,7 +595,8 @@
       "PG-206",
       "PG-207",
       "PG-208",
-      "PG-209"
+      "PG-209",
+      "PG-210"
     ],
     "FAILED": [],
     "NEEDS_HUMAN": [],
@@ -11076,14 +11076,14 @@
       "section": "Core CRM",
       "description": "Duplicate-detection runtime for contacts + accounts (PG-182/PG-183 follow-up) — new DuplicateDetectionService (or per-entity services sharing a rule-evaluator) that reads {Contact,Account}DuplicateRule rows at create/update time and either flags or auto-merges/auto-links records; consumes autoMergeOnExactEmail + autoLinkContactsByDomain + notifyOnDuplicate + aiDuplicateDetection + aiIndustryInference + aiEnrichment toggles from the respective AutomationSetting table; transactional merge combines rows (activities, notes, opportunities, tags, aiInsight) with conflict resolution.",
       "owner": "Backend Eng (STOA-Domain)",
-      "status": "PLANNED",
+      "status": "DONE",
       "sprint": 18,
       "dependencies": [
         "PG-182",
         "PG-183"
       ],
       "artifacts": [
-        "ARTIFACT:apps/api/src/modules/contact/contact-duplicate-detection.service.ts;ARTIFACT:apps/api/src/modules/account/account-duplicate-detection.service.ts;ARTIFACT:apps/api/src/shared/duplicate-rule-evaluator.ts;ARTIFACT:apps/api/src/modules/contact/__tests__/contact-duplicate-detection.service.test.ts;ARTIFACT:apps/api/src/modules/account/__tests__/account-duplicate-detection.service.test.ts;ARTIFACT:packages/validators/src/notifications.ts;ARTIFACT:apps/api/src/modules/opportunity/deal-required-field-enforcer.ts;ARTIFACT:apps/api/src/modules/opportunity/deal-win-loss-enforcer.ts;ARTIFACT:apps/api/src/modules/ticket/ticket-auto-close.job.ts;ARTIFACT:apps/api/src/modules/ticket/ticket-required-field-enforcer.ts;SPEC:.specify/sprints/sprint-18/specifications/IFC-310-spec.md;PLAN:.specify/sprints/sprint-18/planning/IFC-310-plan.md"
+        "ARTIFACT:apps/api/src/shared/duplicate-rule-evaluator.ts;ARTIFACT:apps/api/src/modules/contact/contact-duplicate-detection.service.ts;ARTIFACT:apps/api/src/modules/account/account-duplicate-detection.service.ts;ARTIFACT:apps/api/src/shared/__tests__/duplicate-rule-evaluator.test.ts;ARTIFACT:apps/api/src/modules/contact/__tests__/contact-duplicate-detection.service.test.ts;ARTIFACT:apps/api/src/modules/account/__tests__/account-duplicate-detection.service.test.ts;ARTIFACT:apps/api/src/modules/contact/__tests__/contact-merge.bench.test.ts;ARTIFACT:apps/api/src/modules/contact/__tests__/contact-merge.real-db.bench.test.ts;ARTIFACT:apps/api/src/modules/contact/__tests__/contact-duplicate-detection.integration.test.ts;ARTIFACT:apps/ai-worker/src/workers/contact-embed-worker.ts;ARTIFACT:apps/ai-worker/src/workers/__tests__/contact-embed-worker.test.ts;ARTIFACT:packages/application/src/services/events/ContactMergedEvent.ts;ARTIFACT:packages/application/src/services/events/__tests__/ContactMergedEvent.test.ts;ARTIFACT:packages/application/src/services/AccountService.ts;ARTIFACT:packages/application/src/services/ContactService.ts;ARTIFACT:packages/application/src/ports/repositories/ContactRepositoryPort.ts;ARTIFACT:packages/domain/src/crm/contact/CrossTenantOrNotFoundError.ts;ARTIFACT:packages/domain/src/crm/contact/ContactRepository.ts;ARTIFACT:packages/adapters/src/repositories/PrismaContactRepository.ts;ARTIFACT:packages/adapters/src/repositories/InMemoryContactRepository.ts;ARTIFACT:packages/validators/src/notifications.ts;ARTIFACT:packages/validators/src/contact.ts;ARTIFACT:apps/api/src/container.ts;ARTIFACT:apps/api/src/context.ts;ARTIFACT:apps/api/src/modules/contact/contact.router.ts;ARTIFACT:apps/api/src/modules/account/account.router.ts;ARTIFACT:apps/ai-worker/src/ai-worker.ts;ARTIFACT:apps/ai-worker/src/index.ts;ARTIFACT:eslint.config.mjs;ARTIFACT:docs/architecture/adr/ADR-050-duplicate-detection-runtime.md;ARTIFACT:artifacts/coverage/IFC-310-before.json;ARTIFACT:artifacts/coverage/IFC-310-after.json;ARTIFACT:artifacts/benchmarks/IFC-310-merge.json;SPEC:.specify/sprints/sprint-18/specifications/IFC-310-spec.md;PLAN:.specify/sprints/sprint-18/planning/IFC-310-plan.md;EVIDENCE:.specify/sprints/sprint-18/attestations/IFC-310/attestation.json"
       ],
       "kpis": "Duplicate-flag rate per entity; auto-merge/auto-link success rate; merge p95 <500ms; zero cross-tenant merges in integration test; Coverage >=90%",
       "definition_of_done": "Rule evaluator runs {Contact,Account}DuplicateRule checks at create+update time; contacts respect autoMergeOnExactEmail/notifyOnDuplicate/aiDuplicateDetection; accounts respect autoLinkContactsByDomain/notifyOnDuplicate; auto-merge/auto-link operations are transactional and preserve the oldest record's id while folding in newer relations; new contact_duplicate and account_duplicate notification types added to NOTIFICATION_TYPES; aiDuplicateDetection uses pgvector similarity on the entity's embeddings; >=90% scoped coverage; all 4 validations pass",
@@ -11095,14 +11095,14 @@
       "section": "Core CRM",
       "description": "Reassign endpoints + notifyOnOwnerChange wiring for contacts + accounts (PG-182/PG-183 follow-up) — add contact.reassign/contact.bulkReassign and account.reassign/account.bulkReassign tRPC procedures; on owner change, invoke the notifyContactReassignment or notifyAccountReassignment helper (both already shipped — PG-182 in contact-automation.ts, PG-183 in account-automation.ts) with the bound createNotification from notifications.router.ts; contact_reassigned is already in NOTIFICATION_TYPES — add account_reassigned alongside it.",
       "owner": "Backend Eng (STOA-Domain)",
-      "status": "PLANNED",
+      "status": "DONE",
       "sprint": 18,
       "dependencies": [
         "PG-182",
         "PG-183"
       ],
       "artifacts": [
-        "ARTIFACT:apps/api/src/modules/contact/contact.router.ts;ARTIFACT:apps/api/src/modules/account/account.router.ts;ARTIFACT:apps/api/src/modules/contact/__tests__/contact.reassign.test.ts;ARTIFACT:apps/api/src/modules/account/__tests__/account.reassign.test.ts;ARTIFACT:packages/validators/src/notifications.ts;SPEC:.specify/sprints/sprint-18/specifications/IFC-311-spec.md"
+        "ARTIFACT:apps/api/src/modules/contact/contact.router.ts;ARTIFACT:apps/api/src/modules/account/account.router.ts;ARTIFACT:apps/api/src/modules/contact/__tests__/contact.reassign.test.ts;ARTIFACT:apps/api/src/modules/account/__tests__/account.reassign.test.ts;ARTIFACT:packages/validators/src/notifications.ts;ARTIFACT:packages/validators/src/contact.ts;ARTIFACT:packages/validators/src/account.ts;ARTIFACT:apps/api/src/modules/account/account-reassign.ts;ARTIFACT:apps/api/src/modules/contact/contact-reassign.ts;SPEC:.specify/sprints/sprint-18/specifications/IFC-311-spec.md;PLAN:.specify/sprints/sprint-18/planning/IFC-311-plan.md;EVIDENCE:.specify/sprints/sprint-18/attestations/IFC-311/attestation.json"
       ],
       "kpis": "Reassign p95 <200ms per entity; Bulk reassign handles 100 rows <2s; Both parties receive notification in integration test; Coverage >=90%",
       "definition_of_done": "contact.reassign + contact.bulkReassign and account.reassign + account.bulkReassign mutations; all validate caller permission; each reads the matching AutomationSetting.notifyOnOwnerChange flag and invokes the notify*Reassignment helper when true; emit contact_reassigned + account_reassigned notifications to both old and new owner; idempotent when new owner == current owner; >=90% scoped coverage",
@@ -11114,7 +11114,7 @@
       "section": "AI/Intelligence",
       "description": "AI chains for contacts + accounts (PG-182/PG-183 follow-up) — wire the remaining AI toggles on both entities to real LLM/embedding consumers: aiEnrichment (external enrichment API + provider adapter, shared across entities), aiTagSuggestions (LLM prompt + surface on detail pages), aiInsightGeneration (LLM chain writing to {Contact,Account}AIInsight + surface), aiAutoReplyDrafting (contact inbox), aiIndustryInference (account-only LLM classifier that picks the best AccountIndustryOption), aiAccountScoring (account-only LLM scorer that writes to the Account score field).",
       "owner": "AI Eng (STOA-Intelligence)",
-      "status": "PLANNED",
+      "status": "DONE",
       "sprint": 19,
       "dependencies": [
         "PG-182",
@@ -11396,6 +11396,24 @@
       "definition_of_done": "Task types at /tasks/(list)/task-types (taxonomy: category, default duration, default priority, reminder defaults). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate type names; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in task automation OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
       "validation": "VALIDATE:pnpm typecheck;VALIDATE:pnpm test --run;VALIDATE:pnpm lint;VALIDATE:pnpm build;GATE:lighthouse-gte-90",
       "prerequisites": "FILE:apps/web/src/components/sidebar/configs/tasks.ts;FILE:apps/web/src/app/tasks/(list)/task-settings/page.tsx;FILE:docs/planning/module-settings-playbook.md;FILE:docs/planning/prd-module-settings.md",
+      "cadence": ""
+    },
+    "PG-210": {
+      "section": "Core CRM",
+      "description": "IFC-311 reassign UI wiring follow-up (contacts + accounts) — wire the four new tRPC procedures shipped by IFC-311 (api.contact.reassign, api.contact.bulkReassign, api.account.reassign, api.account.bulkReassign) into real UI so the notifyOnOwnerChange Cat-1 toggle is reachable for end users on both entities. Source: IFC-311 post-completion code review Finding 1 — all four procedures are dead-on-arrival at runtime (zero direct UI callers). The account SINGLE-reassign path is transitively reachable via AccountDetail.tsx:152 → api.account.assignOwner (refactored in IFC-311 to delegate to performAccountReassign, so the notification fires), but api.account.bulkReassign is fully orphaned and the account detail page still calls the legacy name. Scope: (a) contacts-list bulk-actions bar exposes a Reassign action that calls contact.bulkReassign; (b) contact detail page actions expose a Reassign option that calls contact.reassign; (c) accounts-list bulk-actions bar exposes a Reassign action that calls account.bulkReassign (brand-new UI surface — no legacy shim covers this); (d) migrate AccountDetail.tsx:152 from api.account.assignOwner.useMutation to api.account.reassign.useMutation so the canonical IFC-311 name is the production caller (assignOwner stays as a deprecated legacy alias); (e) one integration test per entity that exercises the toggle flipping the notification path end-to-end. Backend API surface is already shipped by IFC-311 — this task is UI + wiring + one cosmetic endpoint migration only.",
+      "owner": "Frontend Dev (STOA-Foundation)",
+      "status": "BACKLOG",
+      "sprint": 19,
+      "dependencies": [
+        "IFC-311"
+      ],
+      "artifacts": [
+        "ARTIFACT:apps/web/src/components/contacts/bulk-actions-bar.tsx;ARTIFACT:apps/web/src/components/contacts/reassign-sheet.tsx;ARTIFACT:apps/web/src/components/accounts/bulk-actions-bar.tsx;ARTIFACT:apps/web/src/components/accounts/reassign-sheet.tsx;ARTIFACT:apps/web/src/app/contacts/(list)/__tests__/bulk-reassign.integration.test.ts;ARTIFACT:apps/web/src/app/accounts/(list)/__tests__/bulk-reassign.integration.test.ts"
+      ],
+      "kpis": "All 4 new procedures reachable from >=1 UI surface; 2 integration tests pass; Cat-1 wiring proof: rg api.(contact|account).(reassign|bulkReassign) apps/web/src returns >=4 distinct hits; Coverage >=90%",
+      "definition_of_done": "api.contact.reassign + api.contact.bulkReassign + api.account.reassign + api.account.bulkReassign each have >=1 production UI caller in apps/web/src; contacts-list bulk-actions Reassign calls contact.bulkReassign with selected ids + target owner; contact detail Reassign calls contact.reassign; accounts-list bulk-actions Reassign calls account.bulkReassign; AccountDetail.tsx migrated from account.assignOwner to account.reassign (canonical); two integration tests (one per entity) verify both parties receive the matching *_reassigned notification when notifyOnOwnerChange=true; Lighthouse >=90 on contacts-list and accounts-list",
+      "validation": "VALIDATE:pnpm typecheck;VALIDATE:pnpm test --run;VALIDATE:pnpm lint;VALIDATE:pnpm build;GATE:lighthouse-gte-90",
+      "prerequisites": "FILE:apps/api/src/modules/contact/contact.router.ts;FILE:apps/api/src/modules/contact/contact-reassign.ts;FILE:apps/api/src/modules/account/account.router.ts;FILE:apps/api/src/modules/account/account-reassign.ts;FILE:apps/web/src/app/contacts/[id]/page.tsx;FILE:apps/web/src/components/contacts/bulk-actions-bar.tsx;FILE:apps/web/src/components/accounts/AccountDetail.tsx;FILE:docs/planning/prd-core-crm.md",
       "cadence": ""
     }
   },
