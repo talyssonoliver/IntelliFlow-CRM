@@ -9,9 +9,12 @@
   "phase": "",
   "stream": null,
   "dependencies": {
-    "required": ["PG-182", "PG-183"],
+    "required": [
+      "PG-182",
+      "PG-183"
+    ],
     "all_satisfied": true,
-    "verified_at": "2026-04-20T00:00:00.000Z"
+    "verified_at": "2026-04-22T21:20:05.764Z"
   },
   "started_at": "2026-04-20T00:00:00.000Z",
   "completed_at": "2026-04-20T22:50:00.000Z",
@@ -39,9 +42,6 @@
       ".specify/sprints/sprint-18/attestations/IFC-310/attestation.json"
     ],
     "created": [
-      "packages/validators/src/notifications.ts"
-    ],
-    "missing": [
       "apps/api/src/shared/duplicate-rule-evaluator.ts",
       "apps/api/src/modules/contact/contact-duplicate-detection.service.ts",
       "apps/api/src/modules/account/account-duplicate-detection.service.ts",
@@ -51,9 +51,11 @@
       "apps/ai-worker/src/workers/contact-embed-worker.ts",
       "apps/ai-worker/src/workers/__tests__/contact-embed-worker.test.ts",
       "packages/application/src/services/events/ContactMergedEvent.ts",
+      "packages/validators/src/notifications.ts",
       ".specify/sprints/sprint-18/attestations/IFC-310/context_ack.json",
       ".specify/sprints/sprint-18/attestations/IFC-310/attestation.json"
-    ]
+    ],
+    "missing": []
   },
   "validations": [
     {
@@ -141,5 +143,8 @@
   "current_phase": "DONE",
   "updated_at": "2026-04-20T22:50:00Z",
   "attempt": 2,
-  "dependencies_resolved": ["PG-182", "PG-183"]
+  "dependencies_resolved": [
+    "PG-182",
+    "PG-183"
+  ]
 }

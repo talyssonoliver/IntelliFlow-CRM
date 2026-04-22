@@ -91,36 +91,36 @@
     },
     {
       "task_id": "PG-052",
-      "completed_at": "2026-04-20T22:01:19.491Z",
+      "completed_at": "2026-04-22T21:20:05.718Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-053",
-      "completed_at": "2026-04-20T22:01:19.491Z",
+      "completed_at": "2026-04-22T21:20:05.718Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-054",
-      "completed_at": "2026-04-20T22:01:19.491Z",
+      "completed_at": "2026-04-22T21:20:05.718Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-055",
-      "completed_at": "2026-04-20T22:01:19.491Z",
+      "completed_at": "2026-04-22T21:20:05.718Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-056",
-      "completed_at": "2026-04-20T22:01:19.491Z",
+      "completed_at": "2026-04-22T21:20:05.718Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-185",
-      "completed_at": "2026-04-20T22:01:19.491Z",
+      "completed_at": "2026-04-22T21:20:05.718Z",
       "duration_minutes": 15
     }
   ],
-  "notes": "21/22 tasks DONE (95%). Last synced: 2026-04-20T22:01:19.491Z",
+  "notes": "21/22 tasks DONE (95%). Last synced: 2026-04-22T21:20:05.718Z",
   "schedule": {
     "sprint_start_date": null,
     "sprint_end_date": null,
@@ -142,6 +142,6 @@
       "spi": 0.95,
       "status": "on_track"
     },
-    "calculated_at": "2026-04-20T22:01:19.684Z"
+    "calculated_at": "2026-04-22T21:20:06.064Z"
   }
 }

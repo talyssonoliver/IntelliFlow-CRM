@@ -13,7 +13,7 @@
     "not_started": 1,
     "failed": 0
   },
-  "notes": "0/1 tasks DONE (0%). Last synced: 2026-04-20T22:01:19.670Z",
+  "notes": "0/1 tasks DONE (0%). Last synced: 2026-04-22T21:20:06.030Z",
   "completed_tasks": [
     {
       "task_id": "IFC-198",
@@ -39,6 +39,6 @@
       "spi": 0,
       "status": "critical"
     },
-    "calculated_at": "2026-04-20T22:01:19.699Z"
+    "calculated_at": "2026-04-22T21:20:06.082Z"
   }
 }
