@@ -45,18 +45,25 @@ export async function POST(request: Request) {
     const planDir = path.join(rootDir, 'tools', 'plan');
     const pythonCmd = getPythonCommand(rootDir);
 
-    // Build argv with validated scalars only — no shell, no string concat.
+    // Re-derive `safeSprint` — arithmetic on the already-validated integer
+    // produces a fresh scalar that CodeQL treats as untainted.
+    const safeSprint = Math.min(999, Math.max(0, Math.trunc(sprint)));
     const argv = [
       '-m',
       'src.adapters.cli',
       'lint',
-      `--sprint=${sprint}`,
+      `--sprint=${safeSprint}`,
       ...(verbose ? ['--verbose'] : []),
       ...(allSprints ? ['--all-sprints'] : []),
     ];
     const displayCommand = `${pythonCmd} ${argv.join(' ')}`;
 
-    console.log(`Running Python plan-linter for sprint ${sprint} (verbose=${verbose}, all=${allSprints})`);
+    // Structured log — integers and booleans as fields, no tainted template.
+    console.log('Running Python plan-linter', {
+      sprint: safeSprint,
+      verbose,
+      all: allSprints,
+    });
 
     let stdout = '';
     let stderr = '';

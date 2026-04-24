@@ -211,11 +211,11 @@ async function runRealDatabaseBenchmarks(): Promise<BenchmarkResult[]> {
     const msg = String(args[0] || '');
     // Suppress Prisma slow query warnings and Health latency warnings during benchmark
     if (msg.includes('[Prisma Slow Query]') || msg.includes('[Health]')) return;
-    // Strip control bytes so any tainted upstream values cannot break the log line.
-    const sanitized = args.map((a) =>
-      // eslint-disable-next-line no-control-regex
-      typeof a === 'string' ? a.replaceAll(/[\x00-\x1f\x7f]/g, '?') : a
-    );
+    // CodeQL log-injection sinks require a structural sanitizer. `JSON.stringify`
+    // produces an escaped string where every control byte is encoded as `\uXXXX`,
+    // so the output cannot inject CR/LF/ANSI escapes into downstream log lines.
+    // eslint-disable-next-line unicorn/no-array-callback-reference
+    const sanitized = args.map((a) => (typeof a === 'string' ? JSON.stringify(a) : a));
     originalWarn.apply(console, sanitized);
   };
 

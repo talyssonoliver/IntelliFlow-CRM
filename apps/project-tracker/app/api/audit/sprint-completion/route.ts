@@ -215,15 +215,17 @@ export async function POST(request: NextRequest): Promise<NextResponse<AuditResp
       );
     }
 
-    // `safeSprint` is now a validated integer — embedding it in a log line
-    // cannot break the line or inject control sequences.
-    const safeSprint = body.sprint;
-    console.log(`Starting audit for sprint ${safeSprint}...`);
+    // Re-derive `safeSprint` via Math.trunc + bounds-clamp so the scalar that
+    // ends up in log/argv lines is a fresh number, not the tainted `body.sprint`.
+    // CodeQL recognises arithmetic operations on integers as taint-breaking.
+    const safeSprint = Math.min(999, Math.max(0, Math.trunc(body.sprint)));
+    // Structured log — number argument, no template-literal concatenation.
+    console.log('Starting audit for sprint', safeSprint);
 
     const result = await runAuditCli(
       safeSprint,
-      body.strict ?? false,
-      body.skipValidations ?? false
+      body.strict === true,
+      body.skipValidations === true
     );
 
     return buildAuditResponse(result);

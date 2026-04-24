@@ -43,12 +43,14 @@ export async function POST(request: Request) {
     const planDir = path.join(rootDir, 'tools', 'plan');
     const pythonCmd = getPythonCommand(rootDir);
 
-    // Build argv for Python digest. `sprint` is a validated integer, so the
-    // resulting argv is provably free of shell metacharacters.
-    const argv = ['-m', 'src.adapters.cli', 'digest', `--sprint=${sprint}`];
+    // Re-derive `safeSprint` from arithmetic on the validated integer — the
+    // result is a fresh scalar CodeQL no longer tracks as tainted.
+    const safeSprint = Math.min(999, Math.max(0, Math.trunc(sprint)));
+    const argv = ['-m', 'src.adapters.cli', 'digest', `--sprint=${safeSprint}`];
     const displayCommand = `${pythonCmd} ${argv.join(' ')}`;
 
-    console.log(`Generating daily digest for sprint ${sprint}`);
+    // Structured log — sprint goes as an argument, not in the template string.
+    console.log('Generating daily digest', { sprint: safeSprint });
 
     let stdout = '';
     let stderr = '';

@@ -10,15 +10,6 @@ import { existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import Papa from 'papaparse';
 
-/**
- * Strip control bytes (CR/LF, NUL, ANSI escapes) from a value before it gets
- * embedded in a log line, so adversarial input cannot forge log entries.
- */
-function safeForLog(value: unknown): string {
-  // eslint-disable-next-line no-control-regex
-  return String(value).replaceAll(/[\x00-\x1f\x7f]/g, '?');
-}
-
 // =============================================================================
 // FILE LOCKING UTILITIES (for concurrent CSV access safety)
 // =============================================================================
@@ -53,6 +44,50 @@ async function isLockStale(lockPath: string): Promise<boolean> {
   }
 }
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Remove a lock file, ignoring races where another process already unlinked it.
+ */
+async function removeStaleLock(lockPath: string): Promise<void> {
+  try {
+    await unlink(lockPath);
+  } catch {
+    // Race condition - another process may have removed it
+  }
+}
+
+/**
+ * Exclusive-create the lock file. Returns 'acquired' on success, 'contended'
+ * if another process already holds it (EEXIST), or throws any other error.
+ */
+async function tryCreateLock(lockPath: string): Promise<'acquired' | 'contended'> {
+  const lockInfo: LockInfo = {
+    pid: process.pid,
+    timestamp: new Date().toISOString(),
+  };
+  try {
+    await writeFile(lockPath, JSON.stringify(lockInfo), { flag: 'wx' }); // wx = exclusive create
+    return 'acquired';
+  } catch (err: unknown) {
+    if ((err as NodeJS.ErrnoException).code === 'EEXIST') return 'contended';
+    throw err;
+  }
+}
+
+/**
+ * Wait out an existing lock. Removes it if stale, otherwise sleeps briefly
+ * before the caller retries. Returns true if the caller should retry.
+ */
+async function waitForExistingLock(lockPath: string): Promise<void> {
+  if (await isLockStale(lockPath)) {
+    console.warn(`[CSV Lock] Removing stale lock file`);
+    await removeStaleLock(lockPath);
+    return;
+  }
+  await sleep(100);
+}
+
 /**
  * Acquire a file lock with timeout
  */
@@ -61,48 +96,17 @@ async function acquireLock(
   timeoutMs: number = LOCK_TIMEOUT_MS
 ): Promise<boolean> {
   const lockPath = getLockFilePath(filePath);
-  const lockDir = dirname(lockPath);
-
-  // Ensure lock directory exists
-  await mkdir(lockDir, { recursive: true });
+  await mkdir(dirname(lockPath), { recursive: true });
 
   const startTime = Date.now();
-
   while (Date.now() - startTime < timeoutMs) {
-    // Check if lock exists
     if (existsSync(lockPath)) {
-      // Check if stale
-      if (await isLockStale(lockPath)) {
-        console.warn(`[CSV Lock] Removing stale lock file`);
-        try {
-          await unlink(lockPath);
-        } catch {
-          // Race condition - another process may have removed it
-        }
-      } else {
-        // Wait and retry
-        await new Promise((resolve) => setTimeout(resolve, 100));
-        continue;
-      }
+      await waitForExistingLock(lockPath);
+      continue;
     }
-
-    // Try to create lock
-    const lockInfo: LockInfo = {
-      pid: process.pid,
-      timestamp: new Date().toISOString(),
-    };
-
-    try {
-      await writeFile(lockPath, JSON.stringify(lockInfo), { flag: 'wx' }); // wx = exclusive create
-      return true;
-    } catch (err: unknown) {
-      // EEXIST means another process created the lock first
-      if ((err as NodeJS.ErrnoException).code === 'EEXIST') {
-        await new Promise((resolve) => setTimeout(resolve, 100));
-        continue;
-      }
-      throw err;
-    }
+    const result = await tryCreateLock(lockPath);
+    if (result === 'acquired') return true;
+    await sleep(100);
   }
 
   console.error(`[CSV Lock] Timeout acquiring lock after ${timeoutMs}ms`);
@@ -246,9 +250,13 @@ export async function updateTaskStatus(
   const currentStatus = tasks[taskIndex].Status as WorkflowStatus;
   const validation = validateTransition(currentStatus, status);
   if (!validation.valid) {
-    console.warn(
-      `Invalid status transition for ${safeForLog(taskId)}: ${safeForLog(validation.reason)}`
-    );
+    // Structured log — pass tainted values as typed fields, not concatenated
+    // into the template. `JSON.stringify` is a CodeQL-recognised sanitizer
+    // for `js/log-injection` because the output is always a valid JSON scalar.
+    console.warn('Invalid status transition', {
+      taskId: JSON.stringify(taskId),
+      reason: JSON.stringify(validation.reason ?? ''),
+    });
     // Still allow the transition but log warning
   }
 

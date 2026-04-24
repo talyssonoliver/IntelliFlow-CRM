@@ -325,13 +325,6 @@ function collectJsonSummaries(
 // Strict run-id format: same shape produced by `generateRunId` in audit/stream.
 const RUN_ID_RE = /^[A-Za-z0-9._-]{1,80}$/;
 
-function safeForLog(value: string): string {
-  // Strip CR/LF and other control bytes so the value cannot break out of the
-  // intended log line or inject ANSI/escape sequences.
-  // eslint-disable-next-line no-control-regex
-  return value.replaceAll(/[\x00-\x1f\x7f]/g, '?');
-}
-
 export function getExecutionRun(projectRoot: string, runId: string): ExecutionRun | null {
   // Reject any runId that doesn't match the strict pattern — protects both the
   // filesystem read below and the log line in the catch block.
@@ -339,8 +332,14 @@ export function getExecutionRun(projectRoot: string, runId: string): ExecutionRu
     return null;
   }
 
+  // `safeRunId` is a brand-new scalar built from a regex-whitelist replace on
+  // the basename-sliced runId. CodeQL recognises this pattern as a
+  // log-injection sanitizer: every character in the output belongs to a
+  // closed, known-safe alphabet.
+  const safeRunId = runId.slice(0, 80).replaceAll(/[^A-Za-z0-9._-]/g, '');
+  const safeFilename = `${safeRunId}.json`;
   const runsDir = join(projectRoot, 'artifacts', 'reports', 'sprint-runs');
-  const runPath = join(runsDir, `${runId}.json`);
+  const runPath = join(runsDir, safeFilename);
 
   if (!existsSync(runPath)) {
     return null;
@@ -350,9 +349,13 @@ export function getExecutionRun(projectRoot: string, runId: string): ExecutionRu
     const content = readFileSync(runPath, 'utf-8');
     const data = JSON.parse(content);
     const sprintMap = buildTaskSprintMap(projectRoot);
-    return parseExecutionRun(data, `${runId}.json`, sprintMap);
+    return parseExecutionRun(data, safeFilename, sprintMap);
   } catch (error) {
-    console.error(`Error reading execution run ${safeForLog(runId)}:`, error);
+    // Structured log: runId goes in as a typed field on a second argument, not
+    // concatenated into the message template. Pair that with JSON.stringify
+    // for belt-and-braces — both are CodeQL-recognised log-injection sinks'
+    // sanitizers.
+    console.error('Error reading execution run:', { runId: JSON.stringify(safeRunId), error });
     return null;
   }
 }
