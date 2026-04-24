@@ -41,6 +41,9 @@ jobs:
         with:
           terraform_version: ${{ env.TF_VERSION }}
 
+      - name: Diagnose AWS secret availability
+        run: echo "has-key=${{ secrets.AWS_ACCESS_KEY_ID != '' }} has-secret=${{ secrets.AWS_SECRET_ACCESS_KEY != '' }}"
+
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:

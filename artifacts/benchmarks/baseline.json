@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-04-22T18:48:29.868Z",
+  "timestamp": "2026-04-24T18:10:36.727Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1016,9 +1016,9 @@
   },
   "api_inventory": {
     "total_routers": 60,
-    "total_endpoints": 536,
+    "total_endpoints": 538,
     "total_queries": 249,
-    "total_mutations": 287,
+    "total_mutations": 289,
     "routers": [
       {
         "name": "contact",
@@ -1069,6 +1069,12 @@
         "mutations": 7
       },
       {
+        "name": "opportunity",
+        "endpoints": 17,
+        "queries": 9,
+        "mutations": 8
+      },
+      {
         "name": "ticket",
         "endpoints": 16,
         "queries": 5,
@@ -1085,12 +1091,6 @@
         "endpoints": 15,
         "queries": 5,
         "mutations": 10
-      },
-      {
-        "name": "opportunity",
-        "endpoints": 15,
-        "queries": 9,
-        "mutations": 6
       },
       {
         "name": "analytics",
@@ -2936,7 +2936,7 @@
   },
   "validators_inventory": {
     "total_validators": 46,
-    "total_schemas": 560,
+    "total_schemas": 562,
     "by_complexity": {
       "complex": 31,
       "moderate": 11,
@@ -3070,6 +3070,12 @@
         "complexity": "complex"
       },
       {
+        "name": "opportunity",
+        "file": "opportunity.ts",
+        "schemas": 12,
+        "complexity": "complex"
+      },
+      {
         "name": "ticket",
         "file": "ticket.ts",
         "schemas": 11,
@@ -3090,12 +3096,6 @@
       {
         "name": "contact-settings",
         "file": "contact-settings.ts",
-        "schemas": 10,
-        "complexity": "complex"
-      },
-      {
-        "name": "opportunity",
-        "file": "opportunity.ts",
         "schemas": 10,
         "complexity": "complex"
       },
@@ -5584,6 +5584,16 @@
         "name": "opportunity.dealForecast",
         "method": "GET",
         "description": "Deal forecast"
+      },
+      {
+        "name": "opportunity.reassign",
+        "method": "POST",
+        "description": "Reassign"
+      },
+      {
+        "name": "opportunity.bulkReassign",
+        "method": "POST",
+        "description": "Bulk reassign"
       }
     ],
     "pipelineConfig": [

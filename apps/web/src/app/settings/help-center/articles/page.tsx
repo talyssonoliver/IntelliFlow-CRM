@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { getAccessToken, createCallerFromToken } from '@/lib/trpc-server';
+import { decodeJwtPayload } from '@/lib/auth/jwt';
 import { serializeForClient } from '@/lib/shared/serialize-for-client';
 import { fetchHelpArticlesFirstPage } from '@/lib/cached-queries/help-article-queries';
 import { ArticleAdminList, ForbiddenSurface } from '@/components/support/article-admin-list';
@@ -19,10 +20,12 @@ export default async function HelpArticleAdminListPage() {
   }
 
   let role: string | undefined;
+  let userId: string | undefined;
   try {
     const caller = await createCallerFromToken(token);
     const profile = await caller.user.getProfile();
     role = profile.role;
+    userId = decodeJwtPayload(token)?.sub ?? undefined;
   } catch {
     return <ForbiddenSurface />;
   }
@@ -33,7 +36,7 @@ export default async function HelpArticleAdminListPage() {
 
   let initialData: unknown = null;
   try {
-    initialData = serializeForClient(await fetchHelpArticlesFirstPage(token));
+    initialData = serializeForClient(await fetchHelpArticlesFirstPage(token, userId));
   } catch {
     // Non-fatal — client island re-queries on mount.
   }
