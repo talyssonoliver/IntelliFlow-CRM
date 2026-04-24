@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/dependency-graph.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-04-22T22:22:39.413Z",
+  "last_updated": "2026-04-24T20:51:59.211Z",
   "description": "Cross-sprint dependency tracking for all tasks",
   "nodes": {
     "EXC-INIT-001": {
@@ -6495,7 +6495,9 @@
         "PG-183",
         "IFC-310"
       ],
-      "dependents": []
+      "dependents": [
+        "IFC-313"
+      ]
     },
     "PG-196": {
       "task_id": "PG-196",
@@ -6645,6 +6647,15 @@
       "status": "BACKLOG",
       "dependencies": [
         "IFC-311"
+      ],
+      "dependents": []
+    },
+    "IFC-313": {
+      "task_id": "IFC-313",
+      "sprint": 19,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-312"
       ],
       "dependents": []
     }
@@ -11295,6 +11306,7 @@
     "IFC-305",
     "IFC-306",
     "PG-210",
+    "IFC-313",
     "IFC-087",
     "PG-073",
     "PG-127",

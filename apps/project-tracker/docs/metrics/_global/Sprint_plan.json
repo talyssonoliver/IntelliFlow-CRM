@@ -8978,6 +8978,21 @@
       "Artifacts To Track": "ARTIFACT:apps/ai-worker/src/contact-enrichment.chain.ts;ARTIFACT:apps/ai-worker/src/account-enrichment.chain.ts;ARTIFACT:apps/ai-worker/src/shared/enrichment-adapter.ts;ARTIFACT:apps/ai-worker/src/contact-tag-suggestion.chain.ts;ARTIFACT:apps/ai-worker/src/account-tag-suggestion.chain.ts;ARTIFACT:apps/ai-worker/src/contact-insight.chain.ts;ARTIFACT:apps/ai-worker/src/account-insight.chain.ts;ARTIFACT:apps/ai-worker/src/contact-reply-draft.chain.ts;ARTIFACT:apps/ai-worker/src/account-industry-inference.chain.ts;ARTIFACT:apps/ai-worker/src/account-scoring.chain.ts;ARTIFACT:apps/ai-worker/src/chains/deal-duplicate.chain.ts;ARTIFACT:apps/ai-worker/src/chains/deal-scoring.chain.ts;ARTIFACT:apps/ai-worker/src/chains/deal-next-step.chain.ts;ARTIFACT:apps/ai-worker/src/chains/deal-tag-suggestion.chain.ts;ARTIFACT:apps/ai-worker/src/chains/deal-insight.chain.ts;ARTIFACT:apps/ai-worker/src/chains/deal-win-loss-prediction.chain.ts;ARTIFACT:apps/ai-worker/src/chains/ticket-duplicate.chain.ts;ARTIFACT:apps/ai-worker/src/chains/ticket-categorization.chain.ts;ARTIFACT:apps/ai-worker/src/chains/ticket-sentiment.chain.ts;ARTIFACT:apps/ai-worker/src/chains/ticket-next-step.chain.ts;ARTIFACT:apps/ai-worker/src/chains/ticket-tag-suggestion.chain.ts;ARTIFACT:apps/ai-worker/src/chains/ticket-insight.chain.ts",
       "Validation Method": "VALIDATE:pnpm typecheck;VALIDATE:pnpm test --run;VALIDATE:pnpm lint;VALIDATE:pnpm build;GATE:coverage-gte-90",
       "Cadence": ""
+    },
+    {
+      "Task ID": "IFC-313",
+      "Section": "AI/Intelligence",
+      "Description": "Real inbox integration - contact.draftReply real-thread resolver. IFC-312 audit fix F5 follow-up: the draftReply procedure currently requires the client to supply a full emailThread array (server returns PRECONDITION_FAILED otherwise). IFC-313 replaces this with a server-side resolver that takes input.emailThreadId and fetches the actual ContactEmailThread history (pending real inbox ingestion infra - to be scoped separately). Keep the client-supplied emailThread path as a fallback for power users / integrations.",
+      "Owner": "AI Eng (STOA-Intelligence)",
+      "Dependencies": "IFC-312",
+      "Pre-requisites": "FILE:packages/db/prisma/schema.prisma;FILE:apps/api/src/modules/contact/contact.router.ts;FILE:apps/ai-worker/src/contact-reply-draft.chain.ts;FILE:apps/ai-worker/src/jobs/reply-draft.job.ts",
+      "Definition of Done": "contact.draftReply resolves emailThreadId to real thread messages when supplied; client-supplied emailThread remains as fallback; zero placeholder drafts persisted in production; regression on IFC-312 assertions; scoped coverage >=90%",
+      "Status": "Backlog",
+      "KPIs": "Draft generation uses real thread context when emailThreadId resolvable; Coverage >=90%",
+      "Target Sprint": "19",
+      "Artifacts To Track": "ARTIFACT:apps/api/src/modules/contact/contact.router.ts;ARTIFACT:apps/ai-worker/src/contact-reply-draft.chain.ts",
+      "Validation Method": "VALIDATE:pnpm typecheck;VALIDATE:pnpm test --run;VALIDATE:pnpm lint;VALIDATE:pnpm build;GATE:coverage-gte-90",
+      "Cadence": "\n"
     }
   ]
 }

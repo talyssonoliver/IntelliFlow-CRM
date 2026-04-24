@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-04-22T22:22:38.654Z",
+  "last_updated": "2026-04-24T20:51:58.802Z",
   "tasks_by_status": {
     "DONE": [
       "EXC-INIT-001",
@@ -596,7 +596,8 @@
       "PG-207",
       "PG-208",
       "PG-209",
-      "PG-210"
+      "PG-210",
+      "IFC-313"
     ],
     "FAILED": [],
     "NEEDS_HUMAN": [],
@@ -11415,6 +11416,24 @@
       "validation": "VALIDATE:pnpm typecheck;VALIDATE:pnpm test --run;VALIDATE:pnpm lint;VALIDATE:pnpm build;GATE:lighthouse-gte-90",
       "prerequisites": "FILE:apps/api/src/modules/contact/contact.router.ts;FILE:apps/api/src/modules/contact/contact-reassign.ts;FILE:apps/api/src/modules/account/account.router.ts;FILE:apps/api/src/modules/account/account-reassign.ts;FILE:apps/web/src/app/contacts/[id]/page.tsx;FILE:apps/web/src/components/contacts/bulk-actions-bar.tsx;FILE:apps/web/src/components/accounts/AccountDetail.tsx;FILE:docs/planning/prd-core-crm.md",
       "cadence": ""
+    },
+    "IFC-313": {
+      "section": "AI/Intelligence",
+      "description": "Real inbox integration - contact.draftReply real-thread resolver. IFC-312 audit fix F5 follow-up: the draftReply procedure currently requires the client to supply a full emailThread array (server returns PRECONDITION_FAILED otherwise). IFC-313 replaces this with a server-side resolver that takes input.emailThreadId and fetches the actual ContactEmailThread history (pending real inbox ingestion infra - to be scoped separately). Keep the client-supplied emailThread path as a fallback for power users / integrations.",
+      "owner": "AI Eng (STOA-Intelligence)",
+      "status": "BACKLOG",
+      "sprint": 19,
+      "dependencies": [
+        "IFC-312"
+      ],
+      "artifacts": [
+        "ARTIFACT:apps/api/src/modules/contact/contact.router.ts;ARTIFACT:apps/ai-worker/src/contact-reply-draft.chain.ts"
+      ],
+      "kpis": "Draft generation uses real thread context when emailThreadId resolvable; Coverage >=90%",
+      "definition_of_done": "contact.draftReply resolves emailThreadId to real thread messages when supplied; client-supplied emailThread remains as fallback; zero placeholder drafts persisted in production; regression on IFC-312 assertions; scoped coverage >=90%",
+      "validation": "VALIDATE:pnpm typecheck;VALIDATE:pnpm test --run;VALIDATE:pnpm lint;VALIDATE:pnpm build;GATE:coverage-gte-90",
+      "prerequisites": "FILE:packages/db/prisma/schema.prisma;FILE:apps/api/src/modules/contact/contact.router.ts;FILE:apps/ai-worker/src/contact-reply-draft.chain.ts;FILE:apps/ai-worker/src/jobs/reply-draft.job.ts",
+      "cadence": "\n"
     }
   },
   "sprints": {

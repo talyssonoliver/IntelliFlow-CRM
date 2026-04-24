@@ -15,7 +15,7 @@
       "IFC-310"
     ],
     "all_satisfied": true,
-    "verified_at": "2026-04-22T22:22:39.050Z",
+    "verified_at": "2026-04-24T20:51:59.057Z",
     "notes": "PG-182 + PG-183 Completed (attestations present). IFC-310 is a parallel coordination task (Specifying); IFC-312 is the producer of the shared EnrichmentProvider port/adapter — IFC-310 will consume post-landing. See spec §3.3 and plan §9."
   },
   "started_at": "2026-04-20T22:30:00Z",
@@ -188,9 +188,14 @@
       "status": "Completed",
       "at": "2026-04-22T21:20:00Z",
       "note": "/full-pipeline IFC-312 — closing gap: added ifc312-jobs-happy-path.test.ts (17 tests) + 4 insight-chain branch tests. Scoped coverage now 92.97% stmts / 86.43% branches / 97.5% funcs / 94.45% lines — ALL 4 THRESHOLDS MET. 141 new IFC-312 tests total. Attestation verdict upgraded to COMPLETE. All 9 DoD items met."
+    },
+    {
+      "status": "Completed",
+      "at": "2026-04-24T20:48:00Z",
+      "note": "/task-code-audit IFC-312 gap-close: all 7 findings from 2026-04-24 audit remediated. F1 AI_ENRICHMENT producer wired on contact+account create/update. F2 aiIndustryInference dispatched via enrichment.job.ts when industry is empty. F3 contact.addTags + account.addTags shipped; SuggestedTagsRow generalized + wired into AccountDetail; Account.tags String[] added via migration 20260424200000_account_tags_ifc312_audit. F4 nightly cron registered for entity-insight (02:00 UTC) + account-scoring (03:00 UTC) with sentinel fan-out. F5 draftReply requires real emailThread from client (PRECONDITION_FAILED otherwise); IFC-313 opened for real-inbox resolver. F6 sync-breach observability on suggestTags + draftReply catches. F7 mapAccountToResponse aiMeta arg, account.getById selects 6 new scalars + tags, (account as any) casts removed, ContactReplyDraft re-exported. 26/26 router AI tests pass, 11/11 ai-worker job tests pass, 122/122 regression tests pass. Attestation re-stamped with honest DoD detail + artifact hashes."
     }
   ],
-  "notes": "Very large task (50 files, 21-32 hours PERT expected). Completed across two Ralph loops (10-iter initial + 70-iter extended; total ~8 Claude iterations). Spec at .specify/sprints/sprint-19/specifications/IFC-312-spec.md; plan at .specify/sprints/sprint-19/planning/IFC-312-plan.md; attestation at .specify/sprints/sprint-19/attestations/IFC-312/attestation.json; delivery at .specify/sprints/sprint-19/execution/IFC-312/run-2026-04-20T22-58-55Z/IFC-312-delivery.md.",
+  "notes": "Very large task (50 files, 21-32 hours PERT expected). Completed across two Ralph loops (10-iter initial + 70-iter extended). Re-attested 2026-04-24 after /task-code-audit identified 7 findings (2 High, 4 Medium, 1 Low) — see attestation `notes` for the gap-close ledger. Spec at .specify/sprints/sprint-19/specifications/IFC-312-spec.md; plan at .specify/sprints/sprint-19/planning/IFC-312-plan.md; attestation at .specify/sprints/sprint-19/attestations/IFC-312/attestation.json; delivery at .specify/sprints/sprint-19/execution/IFC-312/run-2026-04-20T22-58-55Z/IFC-312-delivery.md.",
   "dependencies_resolved": [
     "PG-182",
     "PG-183",
