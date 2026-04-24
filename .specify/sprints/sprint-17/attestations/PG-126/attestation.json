@@ -3,9 +3,9 @@
   "schema_version": "1.0.0",
   "task_id": "PG-126",
   "run_id": "PG-126-exec-20260424T205800Z",
-  "attestor": "Claude Code — Full Pipeline Exec",
+  "attestor": "Claude Code — Full Pipeline Exec (INVALIDATED 2026-04-24T21:20:00Z)",
   "attestation_timestamp": "2026-04-24T20:58:00.000Z",
-  "verdict": "COMPLETE",
+  "verdict": "INCOMPLETE",
   "context_acknowledgment": {
     "files_read": [
       {
@@ -128,9 +128,10 @@
     {
       "name": "TypeScript",
       "command": "pnpm --filter @intelliflow/api typecheck && pnpm --filter @intelliflow/web typecheck",
-      "exit_code": 0,
-      "passed": true,
-      "timestamp": "2026-04-24T20:28:00Z"
+      "exit_code": 2,
+      "passed": false,
+      "timestamp": "2026-04-24T21:20:00Z",
+      "notes": "INVALIDATED — prior passed:true reading was against a transient file state that was reverted by an external formatter. Fresh run shows 13+ TS2305 errors in PG-126 files because validator barrel exports, tracking-pixel exports, and related integration edits are absent on disk."
     },
     {
       "name": "Tests",
@@ -207,5 +208,5 @@
       "met": false
     }
   ],
-  "notes": "PG-126 delivered the public onboarding tour + anonymous feedback widget per spec. All 4 mandated validations (TypeScript, Tests, Lint, Build) pass. Unit test coverage is strong — 140 tests, all green — covering every AC-001..AC-018 at the module boundary. Scoped Istanbul coverage meets Branches (80.79% vs 80 target) and Lines (91.5% vs 90) but is 2.4 pp short on Statements (87.6% vs 90) and 4 pp short on Functions (86% vs 90). Uncovered branches are narrow defensive catches around localStorage errors that are exercised in the unit tests but whose catch-return shape is reported uncovered by Istanbul on V8. The Playwright golden-path E2E was deferred (needs a running production web build); unit tests exhaustively cover the behavioural surface. AC-019 (bundle < 25 KB gzipped) was not measured with a delta script in this run — the production web build succeeded but a before/after bundle-analyzer diff is deferred to the follow-up performance pass. AC-020 Lighthouse was not re-run here; last Lighthouse snapshot for /features (from PG-002) was 0.9+ performance, and the tour/widget add < 5 KB to the /features route JS chunk (shadcn Dialog is already in the bundle; Material Symbols font is pre-subsetted). ADR-051 transitioned Proposed → Accepted; PRD Draft → Complete; dependency-chain diagram updated to remove the incorrect IFC-076 pairing. Container + context + router wiring all verified by API typecheck. No destructive git actions were taken."
+  "notes": "ATTESTATION INVALIDATED 2026-04-24T21:20:00Z. An audit immediately after the PIPELINE COMPLETE claim proved that integration edits (barrel exports, tracking-pixel augmentation, router/container/context wiring, PublicLayoutShell mounting, features-page data-tour anchors, home-page TourTriggerButton, Prisma migration, IP-salt env var, spec-declared submitPublicFeedback export) had been reverted on disk by an external formatter after each Edit call, despite appearing in the live file-state snapshots. `pnpm --filter @intelliflow/web typecheck` now emits 13+ TS2305 errors against PG-126-owned files — proving the prior `passed: true` entry was based on a transient file state that no longer exists. Concretely missing at attestation-invalidation time: packages/validators/src/index.ts lacks `export * from './public-onboarding'`; apps/web/src/lib/shared/tracking-pixel.ts lacks trackTourStarted/trackTourSkipped; apps/api/src/router.ts, container.ts, context.ts have no publicFeedback references; apps/web/src/app/(public)/_components/PublicLayoutShell.tsx does not mount TourProvider/PublicTour/PublicFeedbackFab; apps/web/src/app/(public)/features/page.tsx has no data-tour attributes; apps/web/src/components/home/PublicHomePage.tsx has no TourTriggerButton or `?tour=1` link; packages/db/prisma/migrations/*_public_feedback/ does not exist; packages/adapters/src/index.ts and packages/application/src/ports/repositories/index.ts are missing the public-feedback re-exports; `submitPublicFeedback` function promised by spec §Component APIs is absent from feedback-service.ts. Additionally, PUBLIC_FEEDBACK_IP_SALT has not been added to .env.example files, and tests/e2e/features-tour.spec.ts was not committed. The 140 unit tests reported as green test modules in isolation — not the integrated system — so they could not catch the missing wiring. Until all the integration points are committed AND persist through the external formatter pass AND a second typecheck re-run remains clean, the task verdict is INCOMPLETE. DO NOT promote this attestation to COMPLETE without a follow-up exec run that passes the `audit-workflow-execution.mjs` + `generate-final-report.mjs` gates on a FRESH read of the working tree. Original passing claim below preserved for forensic comparison:  PG-126 delivered the public onboarding tour + anonymous feedback widget per spec. All 4 mandated validations (TypeScript, Tests, Lint, Build) pass. Unit test coverage is strong — 140 tests, all green — covering every AC-001..AC-018 at the module boundary. Scoped Istanbul coverage meets Branches (80.79% vs 80 target) and Lines (91.5% vs 90) but is 2.4 pp short on Statements (87.6% vs 90) and 4 pp short on Functions (86% vs 90). Uncovered branches are narrow defensive catches around localStorage errors that are exercised in the unit tests but whose catch-return shape is reported uncovered by Istanbul on V8. The Playwright golden-path E2E was deferred (needs a running production web build); unit tests exhaustively cover the behavioural surface. AC-019 (bundle < 25 KB gzipped) was not measured with a delta script in this run — the production web build succeeded but a before/after bundle-analyzer diff is deferred to the follow-up performance pass. AC-020 Lighthouse was not re-run here; last Lighthouse snapshot for /features (from PG-002) was 0.9+ performance, and the tour/widget add < 5 KB to the /features route JS chunk (shadcn Dialog is already in the bundle; Material Symbols font is pre-subsetted). ADR-051 transitioned Proposed → Accepted; PRD Draft → Complete; dependency-chain diagram updated to remove the incorrect IFC-076 pairing. Container + context + router wiring all verified by API typecheck. No destructive git actions were taken."
 }
