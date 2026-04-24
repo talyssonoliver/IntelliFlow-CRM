@@ -10,7 +10,7 @@
  * - Ephemeral artifacts (artifacts/) -> GITIGNORED, never committed
  */
 
-import { join, resolve, sep } from 'node:path';
+import { basename, join, resolve, sep } from 'node:path';
 import { mkdir } from 'node:fs/promises';
 
 // Monorepo root (2 levels up from apps/project-tracker/)
@@ -300,4 +300,37 @@ export function resolveSprintPath(
     if (s === '..' || s.startsWith('../') || s.startsWith('..\\')) return null;
   }
   return resolveWithin(sprintsRoot, `sprint-${sprintSafe}`, ...segments);
+}
+
+/**
+ * Taint-breaking task-id → filename builder.
+ *
+ * CodeQL (js/path-injection) recognises `path.basename(x)` as a sanitiser
+ * because it collapses any path-traversal away. Combining that with a
+ * whitelist-regex `.replace` yields a fresh scalar whose provenance chain no
+ * longer includes raw user input.
+ *
+ * Returns null if the input doesn't match the canonical task-id shape.
+ */
+export function buildSafeTaskFilename(taskId: unknown, suffix: string): string | null {
+  if (typeof taskId !== 'string' || !isValidTaskId(taskId)) return null;
+  // `basename` strips any directory component, then the regex drops anything
+  // outside our canonical task-id alphabet. The output is, by construction,
+  // a brand-new string whose characters are a closed subset of [A-Z0-9-].
+  const safe = basename(taskId).replaceAll(/[^A-Z0-9-]/g, '');
+  if (safe.length === 0) return null;
+  return `${safe}${suffix}`;
+}
+
+/**
+ * Taint-breaking session-id → filename builder. Same rationale as
+ * `buildSafeTaskFilename` — `basename` + regex replace breaks the CodeQL
+ * path-injection taint chain.
+ */
+const SESSION_ID_PATTERN = /^\d{14}-[0-9a-f]{8}$/;
+export function buildSafeSessionFilename(sessionId: unknown, suffix: string): string | null {
+  if (typeof sessionId !== 'string' || !SESSION_ID_PATTERN.test(sessionId)) return null;
+  const safe = basename(sessionId).replaceAll(/[^0-9a-f-]/gi, '');
+  if (safe.length === 0) return null;
+  return `${safe}${suffix}`;
 }

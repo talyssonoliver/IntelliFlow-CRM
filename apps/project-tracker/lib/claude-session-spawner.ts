@@ -16,6 +16,7 @@ import { mkdir, writeFile, appendFile, readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { randomBytes } from 'node:crypto';
+import { buildSafeSessionFilename } from './paths';
 
 // Session types that this spawner handles
 export type SessionType = 'spec' | 'plan' | 'hydrate' | 'exec';
@@ -326,8 +327,12 @@ export async function getSessionStatus(sessionId: string): Promise<ClaudeSession
     return active;
   }
 
-  // Check status file
-  const statusFile = join(getStatusDir(), `${sessionId}.json`);
+  // Check status file — taint-break sessionId via buildSafeSessionFilename.
+  const statusFilename = buildSafeSessionFilename(sessionId, '.json');
+  if (!statusFilename) {
+    return null;
+  }
+  const statusFile = join(getStatusDir(), statusFilename);
   if (!existsSync(statusFile)) {
     return null;
   }
@@ -351,7 +356,12 @@ export async function getSessionOutput(
     return null;
   }
 
-  const outputFile = join(getLogsDir(), `${sessionId}.log`);
+  // Taint-break sessionId via buildSafeSessionFilename.
+  const outputFilename = buildSafeSessionFilename(sessionId, '.log');
+  if (!outputFilename) {
+    return null;
+  }
+  const outputFile = join(getLogsDir(), outputFilename);
   if (!existsSync(outputFile)) {
     return null;
   }

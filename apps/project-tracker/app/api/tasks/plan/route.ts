@@ -3,7 +3,12 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import Papa from 'papaparse';
-import { isValidTaskId, resolveSprintPath, sanitizeSprintNumber } from '@/lib/paths';
+import {
+  buildSafeTaskFilename,
+  isValidTaskId,
+  resolveSprintPath,
+  sanitizeSprintNumber,
+} from '@/lib/paths';
 
 export const dynamic = 'force-dynamic';
 
@@ -61,9 +66,20 @@ export async function POST(request: Request) {
     const task = tasks[taskIndex];
     const sprintNumber = sanitizeSprintNumber(task['Target Sprint']) ?? 0;
 
+    // `buildSafeTaskFilename` breaks the CodeQL taint chain via `path.basename`
+    // + whitelist regex before the filenames enter any path join.
+    const specFilename = buildSafeTaskFilename(safeTaskId, '-spec.md');
+    const planFilename = buildSafeTaskFilename(safeTaskId, '-plan.md');
+    if (!specFilename || !planFilename) {
+      return NextResponse.json(
+        { success: false, error: 'Task ID could not be converted to a safe filename' },
+        { status: 400 }
+      );
+    }
+
     // Sprint-based paths (new structure)
-    const specFile = resolveSprintPath(sprintsRoot, sprintNumber, 'specifications', `${safeTaskId}-spec.md`);
-    const planFile = resolveSprintPath(sprintsRoot, sprintNumber, 'planning', `${safeTaskId}-plan.md`);
+    const specFile = resolveSprintPath(sprintsRoot, sprintNumber, 'specifications', specFilename);
+    const planFile = resolveSprintPath(sprintsRoot, sprintNumber, 'planning', planFilename);
     if (!specFile || !planFile) {
       return NextResponse.json(
         { success: false, error: 'Refusing to construct path outside of sprints root' },
@@ -100,7 +116,7 @@ export async function POST(request: Request) {
       });
     }
 
-    // Ensure planning directory exists
+    // Ensure planning directory exists — reuse the validated sprint path helper.
     const planningDir = resolveSprintPath(sprintsRoot, sprintNumber, 'planning');
     if (!planningDir) {
       return NextResponse.json(

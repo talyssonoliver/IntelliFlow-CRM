@@ -9,7 +9,12 @@ import {
   canProceedToSession,
   type TaskRecord,
 } from '@/lib/csv-status';
-import { isValidTaskId, resolveSprintPath, sanitizeSprintNumber } from '@/lib/paths';
+import {
+  buildSafeTaskFilename,
+  isValidTaskId,
+  resolveSprintPath,
+  sanitizeSprintNumber,
+} from '@/lib/paths';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -43,6 +48,36 @@ async function rollbackToPlanningStatus(taskId: string): Promise<void> {
   } catch {
     // Ignore rollback errors
   }
+}
+
+interface ResolvedPlanPaths {
+  specFilename: string;
+  planFilename: string;
+  specPath: string;
+  planPath: string;
+  planningDir: string;
+  legacySpecPath: string;
+}
+
+function resolvePlanPaths(
+  safeTaskId: string,
+  sprintNumber: number,
+  sprintsRoot: string,
+  specifyDir: string
+): ResolvedPlanPaths | { error: string; status: number } {
+  const specFilename = buildSafeTaskFilename(safeTaskId, '-spec.md');
+  const planFilename = buildSafeTaskFilename(safeTaskId, '-plan.md');
+  if (!specFilename || !planFilename) {
+    return { error: 'Task ID could not be converted to a safe filename', status: 400 };
+  }
+  const specPath = resolveSprintPath(sprintsRoot, sprintNumber, 'specifications', specFilename);
+  const planPath = resolveSprintPath(sprintsRoot, sprintNumber, 'planning', planFilename);
+  const planningDir = resolveSprintPath(sprintsRoot, sprintNumber, 'planning');
+  if (!specPath || !planPath || !planningDir) {
+    return { error: 'Refusing to construct path outside of sprints root', status: 400 };
+  }
+  const legacySpecPath = join(specifyDir, 'specifications', specFilename);
+  return { specFilename, planFilename, specPath, planPath, planningDir, legacySpecPath };
 }
 
 export async function POST(request: Request) {
@@ -82,30 +117,16 @@ export async function POST(request: Request) {
     // Get sprint number from task — validated to a safe integer.
     const sprintNumber = sanitizeSprintNumber(task['Target Sprint']) ?? 0;
 
-    // All sprint-scoped paths are resolved via `resolveSprintPath`, which
-    // performs a containment check against `sprintsRoot` — the taskId and
-    // sprint number are validated above, but this is defence-in-depth.
-    const specPath = resolveSprintPath(
-      sprintsRoot,
-      sprintNumber,
-      'specifications',
-      `${safeTaskId}-spec.md`
-    );
-    const planPath = resolveSprintPath(
-      sprintsRoot,
-      sprintNumber,
-      'planning',
-      `${safeTaskId}-plan.md`
-    );
-    if (!specPath || !planPath) {
+    const resolved = resolvePlanPaths(safeTaskId, sprintNumber, sprintsRoot, specifyDir);
+    if ('error' in resolved) {
       return NextResponse.json(
-        { success: false, error: 'Refusing to construct path outside of sprints root' },
-        { status: 400 }
+        { success: false, error: resolved.error },
+        { status: resolved.status }
       );
     }
+    const { specPath, planPath, planningDir, legacySpecPath } = resolved;
 
     // Check prerequisites - must have spec (check both new and legacy locations)
-    const legacySpecPath = join(specifyDir, 'specifications', `${safeTaskId}-spec.md`);
     const specExists = existsSync(specPath) || existsSync(legacySpecPath);
     if (!specExists) {
       return NextResponse.json(
@@ -149,14 +170,7 @@ export async function POST(request: Request) {
     // Update status to "Planning" at the start
     await updateTaskStatus(safeTaskId, 'Planning');
 
-    // Ensure sprint directories exist — reuse the validated planning dir.
-    const planningDir = resolveSprintPath(sprintsRoot, sprintNumber, 'planning');
-    if (!planningDir) {
-      return NextResponse.json(
-        { success: false, error: 'Refusing to create directory outside of sprints root' },
-        { status: 400 }
-      );
-    }
+    // Ensure sprint directories exist — `planningDir` was validated above.
     await mkdir(planningDir, { recursive: true });
 
     // Read spec to get domain info (try new path first, then legacy)

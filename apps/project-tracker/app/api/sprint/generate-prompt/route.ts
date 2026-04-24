@@ -1,11 +1,60 @@
 import { NextResponse } from 'next/server';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
-import { join, dirname, resolve, sep } from 'node:path';
+import { join, dirname, resolve, sep, basename } from 'node:path';
 import Papa from 'papaparse';
 import { calculatePhases } from '../../../../lib/phase-calculator';
 import { generateSprintPrompt, generateSprintPromptData } from '../../../../lib/prompt-generator';
 import type { CSVTask } from '../../../../../../tools/scripts/lib/sprint/types';
+
+/**
+ * Taint-breaking output-path sanitizer.
+ * Applies `path.basename` to strip any traversal, then restricts to a
+ * safe filename alphabet so CodeQL's taint chain ends at this scalar.
+ * Returns null if the result would be empty.
+ */
+function buildSafeOutputFilename(rawPath: string): string | null {
+  const safe = basename(rawPath).replaceAll(/[^A-Za-z0-9._\- ]/g, '');
+  return safe.length === 0 ? null : safe;
+}
+
+/**
+ * Resolve a write target under `<projectRoot>/artifacts/`. Containment-checks
+ * the result against `artifactsRoot` so caller can't escape via a crafted
+ * outputPath. Returns an error response or the safe absolute path.
+ */
+function resolveArtifactPath(
+  projectRoot: string,
+  outputPath: string | undefined,
+  defaultFilename: string | null
+): { fullPath: string } | { errorResponse: Response } {
+  const safeFilename = outputPath ? buildSafeOutputFilename(outputPath) : defaultFilename;
+  if (!safeFilename) {
+    return {
+      errorResponse: NextResponse.json(
+        { success: false, error: 'Invalid output filename' },
+        { status: 400 }
+      ),
+    };
+  }
+  const fullPath = join(projectRoot, 'artifacts', safeFilename);
+  const artifactsRoot = resolve(projectRoot, 'artifacts');
+  const resolvedFull = resolve(fullPath);
+  if (resolvedFull !== artifactsRoot && !resolvedFull.startsWith(artifactsRoot + sep)) {
+    return {
+      errorResponse: NextResponse.json(
+        { success: false, error: 'Refusing to write outside artifacts root' },
+        { status: 400 }
+      ),
+    };
+  }
+  return { fullPath };
+}
+
+async function writeArtifact(fullPath: string, content: string): Promise<void> {
+  await mkdir(dirname(fullPath), { recursive: true });
+  await writeFile(fullPath, content, 'utf-8');
+}
 
 export const dynamic = 'force-dynamic';
 
@@ -31,6 +80,76 @@ interface DependencyGraph {
   blocked_tasks: string[];
 }
 
+interface PromptContext {
+  sprintNumber: number;
+  tasks: CSVTask[];
+  phases: ReturnType<typeof calculatePhases>['phases'];
+  parallelStreams: ReturnType<typeof calculatePhases>['parallelStreams'];
+  outputPath: string | undefined;
+  theme: string | undefined;
+  projectRoot: string;
+}
+
+async function handleJsonFormat(ctx: PromptContext): Promise<Response> {
+  const promptData = generateSprintPromptData({
+    sprintNumber: ctx.sprintNumber,
+    tasks: ctx.tasks,
+    phases: ctx.phases,
+    parallelStreams: ctx.parallelStreams,
+    projectName: 'IntelliFlow CRM',
+    theme: ctx.theme,
+  });
+  const output = JSON.stringify(promptData, null, 2);
+
+  let savedTo: string | undefined;
+  if (ctx.outputPath) {
+    const resolved = resolveArtifactPath(ctx.projectRoot, ctx.outputPath, null);
+    if ('errorResponse' in resolved) return resolved.errorResponse;
+    await writeArtifact(resolved.fullPath, output);
+    savedTo = resolved.fullPath;
+  }
+
+  return NextResponse.json({
+    success: true,
+    format: 'json',
+    sprintNumber: ctx.sprintNumber,
+    data: promptData,
+    savedTo,
+  });
+}
+
+async function handleMarkdownFormat(ctx: PromptContext): Promise<Response> {
+  const output = generateSprintPrompt({
+    sprintNumber: ctx.sprintNumber,
+    tasks: ctx.tasks,
+    phases: ctx.phases,
+    parallelStreams: ctx.parallelStreams,
+    projectName: 'IntelliFlow CRM',
+    theme: ctx.theme,
+  });
+
+  const defaultFilename = `Sprint${ctx.sprintNumber}_prompt.md`;
+  const resolved = resolveArtifactPath(ctx.projectRoot, ctx.outputPath, defaultFilename);
+  if ('errorResponse' in resolved) return resolved.errorResponse;
+
+  await writeArtifact(resolved.fullPath, output);
+
+  return NextResponse.json({
+    success: true,
+    format: 'markdown',
+    sprintNumber: ctx.sprintNumber,
+    markdown: output,
+    savedTo: resolved.fullPath,
+    summary: {
+      totalPhases: ctx.phases.length,
+      totalTasks: ctx.phases.reduce((sum, p) => sum + p.tasks.length, 0),
+      parallelStreams: ctx.parallelStreams.length,
+      sequentialPhases: ctx.phases.filter((p) => p.executionType === 'sequential').length,
+      parallelPhases: ctx.phases.filter((p) => p.executionType === 'parallel').length,
+    },
+  });
+}
+
 /**
  * POST /api/sprint/generate-prompt
  * Generate sprint prompt markdown from dependency graph
@@ -49,11 +168,9 @@ export async function POST(request: Request) {
     const csvPath = join(metricsDir, '_global', 'Sprint_plan.csv');
     const graphPath = join(metricsDir, '_global', 'dependency-graph.json');
 
-    // Check required files exist
     if (!existsSync(csvPath)) {
       return NextResponse.json({ error: 'Sprint_plan.csv not found' }, { status: 404 });
     }
-
     if (!existsSync(graphPath)) {
       return NextResponse.json(
         { error: 'dependency-graph.json not found. Run sync first.' },
@@ -61,116 +178,26 @@ export async function POST(request: Request) {
       );
     }
 
-    // Load CSV
     const csvContent = await readFile(csvPath, 'utf-8');
-    const { data } = Papa.parse(csvContent, {
-      header: true,
-      skipEmptyLines: true,
-    });
+    const { data } = Papa.parse(csvContent, { header: true, skipEmptyLines: true });
     const tasks = data as CSVTask[];
 
-    // Load dependency graph
     const graphContent = await readFile(graphPath, 'utf-8');
     const dependencyGraph: DependencyGraph = JSON.parse(graphContent);
 
-    // Calculate phases
     const { phases, parallelStreams } = calculatePhases(dependencyGraph, tasks, sprintNumber);
 
-    // Generate output based on format
-    let output: string;
-    let savedTo: string | undefined;
+    const ctx: PromptContext = {
+      sprintNumber,
+      tasks,
+      phases,
+      parallelStreams,
+      outputPath,
+      theme,
+      projectRoot,
+    };
 
-    if (format === 'json') {
-      const promptData = generateSprintPromptData({
-        sprintNumber,
-        tasks,
-        phases,
-        parallelStreams,
-        projectName: 'IntelliFlow CRM',
-        theme,
-      });
-
-      output = JSON.stringify(promptData, null, 2);
-
-      // Save to file if outputPath specified
-      if (outputPath) {
-        const fullPath = outputPath.startsWith('/')
-          ? join(projectRoot, outputPath)
-          : join(projectRoot, 'artifacts', outputPath);
-
-        const artifactsRoot = resolve(projectRoot, 'artifacts');
-        const resolvedFull = resolve(fullPath);
-        if (
-          resolvedFull !== artifactsRoot &&
-          !resolvedFull.startsWith(artifactsRoot + sep)
-        ) {
-          return NextResponse.json(
-            { success: false, error: 'Refusing to write outside artifacts root' },
-            { status: 400 }
-          );
-        }
-
-        await mkdir(dirname(fullPath), { recursive: true });
-        await writeFile(fullPath, output, 'utf-8');
-        savedTo = fullPath;
-      }
-
-      return NextResponse.json({
-        success: true,
-        format: 'json',
-        sprintNumber,
-        data: promptData,
-        savedTo,
-      });
-    } else {
-      // Markdown format
-      output = generateSprintPrompt({
-        sprintNumber,
-        tasks,
-        phases,
-        parallelStreams,
-        projectName: 'IntelliFlow CRM',
-        theme,
-      });
-
-      // Determine output path
-      const defaultPath = `Sprint${sprintNumber}_prompt.md`;
-      const finalPath = outputPath || defaultPath;
-      const fullPath = finalPath.startsWith('/')
-        ? join(projectRoot, finalPath)
-        : join(projectRoot, 'artifacts', finalPath);
-
-      const artifactsRoot = resolve(projectRoot, 'artifacts');
-      const resolvedFull = resolve(fullPath);
-      if (
-        resolvedFull !== artifactsRoot &&
-        !resolvedFull.startsWith(artifactsRoot + sep)
-      ) {
-        return NextResponse.json(
-          { success: false, error: 'Refusing to write outside artifacts root' },
-          { status: 400 }
-        );
-      }
-
-      await mkdir(dirname(fullPath), { recursive: true });
-      await writeFile(fullPath, output, 'utf-8');
-      savedTo = fullPath;
-
-      return NextResponse.json({
-        success: true,
-        format: 'markdown',
-        sprintNumber,
-        markdown: output,
-        savedTo,
-        summary: {
-          totalPhases: phases.length,
-          totalTasks: phases.reduce((sum, p) => sum + p.tasks.length, 0),
-          parallelStreams: parallelStreams.length,
-          sequentialPhases: phases.filter((p) => p.executionType === 'sequential').length,
-          parallelPhases: phases.filter((p) => p.executionType === 'parallel').length,
-        },
-      });
-    }
+    return format === 'json' ? handleJsonFormat(ctx) : handleMarkdownFormat(ctx);
   } catch (error) {
     console.error('Error generating sprint prompt:', error);
     return NextResponse.json(

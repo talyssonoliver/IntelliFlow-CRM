@@ -1,9 +1,19 @@
 import { NextResponse } from 'next/server';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
-import { join, dirname, resolve, sep } from 'node:path';
+import { join, dirname, resolve, sep, basename } from 'node:path';
 import Papa from 'papaparse';
 import { isValidTaskId } from '@/lib/paths';
+
+/**
+ * Taint-breaking output-path sanitizer.
+ * `path.basename` strips any directory traversal; the regex then whitelists
+ * a safe filename alphabet so CodeQL's taint chain ends at this scalar.
+ */
+function buildSafeOutputFilename(rawPath: string): string | null {
+  const safe = basename(rawPath).replaceAll(/[^A-Za-z0-9._\- ]/g, '');
+  return safe.length === 0 ? null : safe;
+}
 
 export const dynamic = 'force-dynamic';
 
@@ -29,17 +39,54 @@ interface CsvTask {
   'Validation Method'?: string;
 }
 
+function normalizeTaskIds(body: GenerateTaskPromptRequest): string[] {
+  if (body.taskIds && body.taskIds.length > 0) return body.taskIds;
+  if (body.taskId) return [body.taskId];
+  return [];
+}
+
+function resolvePromptArtifactPath(
+  projectRoot: string,
+  outputPath: string | undefined,
+  defaultFilename: string
+): { fullPath: string } | { errorResponse: Response } {
+  const safeFilename = outputPath ? buildSafeOutputFilename(outputPath) : defaultFilename;
+  if (!safeFilename) {
+    return {
+      errorResponse: NextResponse.json(
+        { success: false, error: 'Invalid output filename' },
+        { status: 400 }
+      ),
+    };
+  }
+  const fullPath = join(projectRoot, 'artifacts', 'prompts', safeFilename);
+  const artifactsRoot = resolve(projectRoot, 'artifacts');
+  const resolvedFull = resolve(fullPath);
+  if (resolvedFull !== artifactsRoot && !resolvedFull.startsWith(artifactsRoot + sep)) {
+    return {
+      errorResponse: NextResponse.json(
+        { success: false, error: 'Refusing to write outside artifacts root' },
+        { status: 400 }
+      ),
+    };
+  }
+  return { fullPath };
+}
+
+async function loadDependencyGraphSafe(graphPath: string): Promise<any | null> {
+  if (!existsSync(graphPath)) return null;
+  try {
+    const content = await readFile(graphPath, 'utf-8');
+    return JSON.parse(content);
+  } catch {
+    return null;
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const body: GenerateTaskPromptRequest = await request.json();
-    let taskIds: string[];
-    if (body.taskIds && body.taskIds.length > 0) {
-      taskIds = body.taskIds;
-    } else if (body.taskId) {
-      taskIds = [body.taskId];
-    } else {
-      taskIds = [];
-    }
+    const taskIds = normalizeTaskIds(body);
 
     if (taskIds.length === 0) {
       return NextResponse.json({ error: 'taskId or taskIds is required' }, { status: 400 });
@@ -49,7 +96,9 @@ export async function POST(request: Request) {
     const invalidIds = taskIds.filter((id) => !isValidTaskId(id));
     if (invalidIds.length > 0) {
       return NextResponse.json(
-        { error: `Invalid task ID(s): ${invalidIds.join(', ')}. Must match canonical task-id pattern.` },
+        {
+          error: `Invalid task ID(s): ${invalidIds.join(', ')}. Must match canonical task-id pattern.`,
+        },
         { status: 400 }
       );
     }
@@ -95,35 +144,15 @@ export async function POST(request: Request) {
       );
     }
 
-    let dependencyGraph: any = null;
-    if (existsSync(graphPath)) {
-      try {
-        const graphContent = await readFile(graphPath, 'utf-8');
-        dependencyGraph = JSON.parse(graphContent);
-      } catch {
-        dependencyGraph = null;
-      }
-    }
+    const dependencyGraph = await loadDependencyGraphSafe(graphPath);
 
     const timestamp = new Date().toISOString().replaceAll(/[:.]/g, '-');
-    const defaultPath =
-      safeTaskIds.length === 1
-        ? `artifacts/prompts/task-${safeTaskIds[0]}.md`
-        : `artifacts/prompts/tasks-${timestamp}.md`;
-    const finalPath = body.outputPath || defaultPath;
-    const fullPath = join(projectRoot, finalPath);
+    const defaultFilename =
+      safeTaskIds.length === 1 ? `task-${safeTaskIds[0]}.md` : `tasks-${timestamp}.md`;
 
-    const artifactsRoot = resolve(projectRoot, 'artifacts');
-    const resolvedFull = resolve(fullPath);
-    if (
-      resolvedFull !== artifactsRoot &&
-      !resolvedFull.startsWith(artifactsRoot + sep)
-    ) {
-      return NextResponse.json(
-        { success: false, error: 'Refusing to write outside artifacts root' },
-        { status: 400 }
-      );
-    }
+    const resolved = resolvePromptArtifactPath(projectRoot, body.outputPath, defaultFilename);
+    if ('errorResponse' in resolved) return resolved.errorResponse;
+    const { fullPath } = resolved;
 
     await mkdir(dirname(fullPath), { recursive: true });
 

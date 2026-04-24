@@ -24,6 +24,18 @@ import {
   type TaskRecord,
 } from '../../../../lib/csv-status';
 import { sanitizeSprintNumber } from '../../../../lib/paths';
+import { basename } from 'node:path';
+
+/**
+ * Taint-breaking run-id → filename builder.
+ * `path.basename` collapses any directory traversal; the regex then whitelists
+ * only the characters present in a valid run-id so CodeQL's taint chain ends here.
+ */
+function buildSafeRunFilename(runId: string, suffix: string): string | null {
+  if (!/^[A-Za-z0-9._-]{1,80}$/.test(runId)) return null;
+  const safe = basename(runId).replaceAll(/[^A-Za-z0-9._-]/g, '');
+  return safe.length === 0 ? null : `${safe}${suffix}`;
+}
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // 5 minutes max for API response
@@ -114,10 +126,172 @@ async function collectPrerequisites(
   return { prerequisiteErrors, tasksToExecute };
 }
 
+function buildDryRunResponse(opts: {
+  runId: string;
+  executionPlan: unknown;
+  phases: ExecutionPhase[];
+  totalTasks: number;
+  estimatedDurationMinutes: number;
+  parallelStreamCount: number;
+}): NextResponse {
+  const {
+    runId,
+    executionPlan,
+    phases,
+    totalTasks,
+    estimatedDurationMinutes,
+    parallelStreamCount,
+  } = opts;
+  const allTasks = phases.flatMap((p) => p.tasks);
+  return NextResponse.json({
+    success: true,
+    dryRun: true,
+    runId,
+    message: 'Dry run completed. No tasks were executed.',
+    executionPlan,
+    summary: {
+      totalPhases: phases.length,
+      totalTasks,
+      estimatedDurationMinutes,
+      parallelStreamCount,
+      sequentialPhases: phases.filter((p) => p.executionType === 'sequential').length,
+      parallelPhases: phases.filter((p) => p.executionType === 'parallel').length,
+      tasksByMode: {
+        swarm: allTasks.filter((t) => t.executionMode === 'swarm').length,
+        matop: allTasks.filter((t) => t.executionMode === 'matop').length,
+        manual: allTasks.filter((t) => t.executionMode === 'manual').length,
+      },
+    },
+  });
+}
+
 /**
  * POST /api/sprint/execute
  * Execute a sprint with computed phases
  */
+async function loadSprintExecutionPlan(
+  sprintNumber: number | 'all',
+  taskFilter: string[] | undefined
+): Promise<
+  | { error: string; status: number }
+  | {
+      phases: ExecutionPhase[];
+      parallelStreams: Awaited<ReturnType<typeof calculatePhases>>['parallelStreams'];
+      projectRoot: string;
+    }
+> {
+  const metricsDir = join(process.cwd(), 'docs', 'metrics');
+  const projectRoot = join(process.cwd(), '..', '..');
+  const csvPath = join(metricsDir, '_global', 'Sprint_plan.csv');
+  const graphPath = join(metricsDir, '_global', 'dependency-graph.json');
+
+  if (!existsSync(csvPath)) return { error: 'Sprint_plan.csv not found', status: 404 };
+  if (!existsSync(graphPath)) {
+    return { error: 'dependency-graph.json not found. Run sync first.', status: 404 };
+  }
+
+  const csvContent = await readFile(csvPath, 'utf-8');
+  const { data } = Papa.parse(csvContent, { header: true, skipEmptyLines: true });
+  const tasks = data as CSVTask[];
+
+  const graphContent = await readFile(graphPath, 'utf-8');
+  const dependencyGraph: DependencyGraph = JSON.parse(graphContent);
+
+  const { phases: initialPhases, parallelStreams } = calculatePhases(
+    dependencyGraph,
+    tasks,
+    sprintNumber
+  );
+  const phases =
+    taskFilter && taskFilter.length > 0
+      ? applyTaskFilter(initialPhases, taskFilter)
+      : initialPhases;
+  return { phases, parallelStreams, projectRoot };
+}
+
+/**
+ * Build the executionPlan object. Extracts the nested map/ternary tree that
+ * would otherwise inflate POST's cognitive complexity.
+ */
+function buildExecutionPlan(args: {
+  runId: string;
+  sprintNumber: number | 'all';
+  dryRun: boolean;
+  phases: ExecutionPhase[];
+  parallelStreams: Awaited<ReturnType<typeof calculatePhases>>['parallelStreams'];
+  totalTasks: number;
+  estimatedDurationMinutes: number;
+}) {
+  const {
+    runId,
+    sprintNumber,
+    dryRun,
+    phases,
+    parallelStreams,
+    totalTasks,
+    estimatedDurationMinutes,
+  } = args;
+  return {
+    runId,
+    sprintNumber,
+    dryRun,
+    startedAt: new Date().toISOString(),
+    phases: phases.map((phase) => ({
+      phaseNumber: phase.phaseNumber,
+      name: phase.name,
+      executionType: phase.executionType,
+      taskCount: phase.tasks.length,
+      tasks: phase.tasks.map((t) => ({
+        taskId: t.taskId,
+        description: t.description,
+        executionMode: t.executionMode,
+        parallelStreamId: t.parallelStreamId,
+        dependencies: t.dependencies,
+      })),
+      parallelStreams:
+        phase.executionType === 'parallel'
+          ? [...new Set(phase.tasks.map((t) => t.parallelStreamId).filter(Boolean))]
+          : [],
+    })),
+    parallelStreams: parallelStreams.filter((s) =>
+      phases.some((p) => p.tasks.some((t) => t.parallelStreamId === s.streamId.split('-').pop()))
+    ),
+    totalTasks,
+    estimatedDurationMinutes,
+  };
+}
+
+function buildInitialExecutionState(args: {
+  sprintNumber: number | 'all';
+  runId: string;
+  startFromPhase: number;
+  phases: ExecutionPhase[];
+}): SprintExecutionState {
+  const { sprintNumber, runId, startFromPhase, phases } = args;
+  return {
+    sprintNumber: typeof sprintNumber === 'number' ? sprintNumber : 0,
+    runId,
+    startedAt: new Date().toISOString(),
+    status: 'running',
+    currentPhase: startFromPhase,
+    totalPhases: phases.length,
+    phaseProgress: phases.map((p) => ({
+      phaseNumber: p.phaseNumber,
+      name: p.name,
+      status: 'pending',
+      totalTasks: p.tasks.length,
+      completedTasks: 0,
+      failedTasks: 0,
+      inProgressTasks: 0,
+    })),
+    activeSubAgents: [],
+    completedTasks: [],
+    failedTasks: [],
+    needsHumanTasks: [],
+    blockers: [],
+  };
+}
+
 export async function POST(request: Request) {
   try {
     const body: ExecuteRequest = await request.json();
@@ -132,74 +306,29 @@ export async function POST(request: Request) {
     if (sprintNumber === undefined || sprintNumber === null) {
       return NextResponse.json({ error: 'sprintNumber is required' }, { status: 400 });
     }
-
-    // Sanitize numeric sprint number to prevent path injection via generateRunId.
-    if (sprintNumber !== 'all') {
-      const safeSprint = sanitizeSprintNumber(sprintNumber);
-      if (safeSprint === null) {
-        return NextResponse.json(
-          { error: 'sprintNumber must be a non-negative integer <= 999' },
-          { status: 400 }
-        );
-      }
-    }
-
-    const _includeAll = sprintNumber === 'all';
-
-    const metricsDir = join(process.cwd(), 'docs', 'metrics');
-    const projectRoot = join(process.cwd(), '..', '..');
-    const csvPath = join(metricsDir, '_global', 'Sprint_plan.csv');
-    const graphPath = join(metricsDir, '_global', 'dependency-graph.json');
-
-    // Check required files exist
-    if (!existsSync(csvPath)) {
-      return NextResponse.json({ error: 'Sprint_plan.csv not found' }, { status: 404 });
-    }
-
-    if (!existsSync(graphPath)) {
+    if (sprintNumber !== 'all' && sanitizeSprintNumber(sprintNumber) === null) {
       return NextResponse.json(
-        { error: 'dependency-graph.json not found. Run sync first.' },
-        { status: 404 }
+        { error: 'sprintNumber must be a non-negative integer <= 999' },
+        { status: 400 }
       );
     }
 
-    // Load CSV
-    const csvContent = await readFile(csvPath, 'utf-8');
-    const { data } = Papa.parse(csvContent, {
-      header: true,
-      skipEmptyLines: true,
-    });
-    const tasks = data as CSVTask[];
-
-    // Load dependency graph
-    const graphContent = await readFile(graphPath, 'utf-8');
-    const dependencyGraph: DependencyGraph = JSON.parse(graphContent);
-
-    // Calculate phases
-    const { phases: initialPhases, parallelStreams } = calculatePhases(
-      dependencyGraph,
-      tasks,
-      sprintNumber
-    );
-    let phases = initialPhases;
-
-    // Apply task filter if provided
-    if (taskFilter && taskFilter.length > 0) {
-      phases = applyTaskFilter(phases, taskFilter);
+    const loaded = await loadSprintExecutionPlan(sprintNumber, taskFilter);
+    if ('error' in loaded) {
+      return NextResponse.json({ error: loaded.error }, { status: loaded.status });
     }
+    let { phases } = loaded;
+    const { parallelStreams, projectRoot } = loaded;
 
     // SESSION 3: Exec - Validate prerequisites for each task
-    // Tasks must have both spec and plan completed before execution
     const specifyDir = join(projectRoot, '.specify');
     const csvTasks = await loadTasks();
-
     const { prerequisiteErrors, tasksToExecute } = await collectPrerequisites(
       phases,
       csvTasks,
       specifyDir
     );
 
-    // If there are prerequisite errors, return them (unless it's a dry run)
     if (prerequisiteErrors.length > 0 && !dryRun) {
       return NextResponse.json(
         {
@@ -229,57 +358,24 @@ export async function POST(request: Request) {
     const estimatedDurationMinutes = phases.reduce((sum, p) => sum + p.estimatedDurationMinutes, 0);
 
     // Create execution plan
-    const executionPlan = {
+    const executionPlan = buildExecutionPlan({
       runId,
       sprintNumber,
       dryRun,
-      startedAt: new Date().toISOString(),
-      phases: phases.map((phase) => ({
-        phaseNumber: phase.phaseNumber,
-        name: phase.name,
-        executionType: phase.executionType,
-        taskCount: phase.tasks.length,
-        tasks: phase.tasks.map((t) => ({
-          taskId: t.taskId,
-          description: t.description,
-          executionMode: t.executionMode,
-          parallelStreamId: t.parallelStreamId,
-          dependencies: t.dependencies,
-        })),
-        parallelStreams:
-          phase.executionType === 'parallel'
-            ? [...new Set(phase.tasks.map((t) => t.parallelStreamId).filter(Boolean))]
-            : [],
-      })),
-      parallelStreams: parallelStreams.filter((s) =>
-        phases.some((p) => p.tasks.some((t) => t.parallelStreamId === s.streamId.split('-').pop()))
-      ),
+      phases,
+      parallelStreams,
       totalTasks,
       estimatedDurationMinutes,
-    };
+    });
 
     if (dryRun) {
-      // Just return the execution plan without actually executing
-      return NextResponse.json({
-        success: true,
-        dryRun: true,
+      return buildDryRunResponse({
         runId,
-        message: 'Dry run completed. No tasks were executed.',
         executionPlan,
-        summary: {
-          totalPhases: phases.length,
-          totalTasks,
-          estimatedDurationMinutes,
-          parallelStreamCount: parallelStreams.length,
-          sequentialPhases: phases.filter((p) => p.executionType === 'sequential').length,
-          parallelPhases: phases.filter((p) => p.executionType === 'parallel').length,
-          tasksByMode: {
-            swarm: phases.flatMap((p) => p.tasks).filter((t) => t.executionMode === 'swarm').length,
-            matop: phases.flatMap((p) => p.tasks).filter((t) => t.executionMode === 'matop').length,
-            manual: phases.flatMap((p) => p.tasks).filter((t) => t.executionMode === 'manual')
-              .length,
-          },
-        },
+        phases,
+        totalTasks,
+        estimatedDurationMinutes,
+        parallelStreamCount: parallelStreams.length,
       });
     }
 
@@ -310,7 +406,15 @@ export async function POST(request: Request) {
     // Save execution state
     const runsDir = join(projectRoot, 'artifacts', 'sprint-runs');
     await mkdir(runsDir, { recursive: true });
-    await writeFile(join(runsDir, `${runId}.json`), JSON.stringify(initialState, null, 2), 'utf-8');
+    const runStateFilename = buildSafeRunFilename(runId, '.json');
+    if (!runStateFilename) {
+      return NextResponse.json({ success: false, error: 'Invalid run ID format' }, { status: 400 });
+    }
+    await writeFile(
+      join(runsDir, runStateFilename),
+      JSON.stringify(initialState, null, 2),
+      'utf-8'
+    );
 
     // Initialize run in status store via API call
     const baseUrl = getBaseUrl(request);
@@ -548,11 +652,14 @@ async function executeSprintAsync(
       },
     };
 
-    await writeFile(
-      join(runsDir, `${runId}-results.json`),
-      JSON.stringify(finalResults, null, 2),
-      'utf-8'
-    );
+    const runResultsFilename = buildSafeRunFilename(runId, '-results.json');
+    if (runResultsFilename) {
+      await writeFile(
+        join(runsDir, runResultsFilename),
+        JSON.stringify(finalResults, null, 2),
+        'utf-8'
+      );
+    }
   } catch (error) {
     console.error('Sprint execution error:', error);
     await updateStatus({

@@ -3,7 +3,12 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import Papa from 'papaparse';
-import { isValidTaskId, resolveSprintPath, sanitizeSprintNumber } from '@/lib/paths';
+import {
+  buildSafeTaskFilename,
+  isValidTaskId,
+  resolveSprintPath,
+  sanitizeSprintNumber,
+} from '@/lib/paths';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,6 +16,38 @@ interface StartTaskRequest {
   taskId: string;
   runMatop?: boolean;
   skipPlanCheck?: boolean; // For tasks that don't need specs
+}
+
+interface ResolvedStartPaths {
+  specFile: string;
+  planFile: string;
+  contextAckFile: string;
+}
+
+function resolveStartPaths(
+  safeTaskId: string,
+  sprintNumber: number,
+  sprintsRoot: string
+): ResolvedStartPaths | { error: string } {
+  const specFilename = buildSafeTaskFilename(safeTaskId, '-spec.md');
+  const planFilename = buildSafeTaskFilename(safeTaskId, '-plan.md');
+  const attestationDirName = buildSafeTaskFilename(safeTaskId, '');
+  if (!specFilename || !planFilename || !attestationDirName) {
+    return { error: 'Task ID could not be converted to a safe filename' };
+  }
+  const specFile = resolveSprintPath(sprintsRoot, sprintNumber, 'specifications', specFilename);
+  const planFile = resolveSprintPath(sprintsRoot, sprintNumber, 'planning', planFilename);
+  const contextAckFile = resolveSprintPath(
+    sprintsRoot,
+    sprintNumber,
+    'attestations',
+    attestationDirName,
+    'attestation.json'
+  );
+  if (!specFile || !planFile || !contextAckFile) {
+    return { error: 'Refusing to construct path outside of sprints root' };
+  }
+  return { specFile, planFile, contextAckFile };
 }
 
 export async function POST(request: Request) {
@@ -51,16 +88,11 @@ export async function POST(request: Request) {
     const currentStatus = task.Status;
     const sprintNumber = sanitizeSprintNumber(task['Target Sprint']) ?? 0;
 
-    // Sprint-based paths
-    const specFile = resolveSprintPath(sprintsRoot, sprintNumber, 'specifications', `${safeTaskId}-spec.md`);
-    const planFile = resolveSprintPath(sprintsRoot, sprintNumber, 'planning', `${safeTaskId}-plan.md`);
-    const contextAckFile = resolveSprintPath(sprintsRoot, sprintNumber, 'attestations', safeTaskId, 'attestation.json');
-    if (!specFile || !planFile || !contextAckFile) {
-      return NextResponse.json(
-        { success: false, error: 'Refusing to construct path outside of sprints root' },
-        { status: 400 }
-      );
+    const resolved = resolveStartPaths(safeTaskId, sprintNumber, sprintsRoot);
+    if ('error' in resolved) {
+      return NextResponse.json({ success: false, error: resolved.error }, { status: 400 });
     }
+    const { specFile, planFile, contextAckFile } = resolved;
 
     const hasSpec = existsSync(specFile);
     const hasPlan = existsSync(planFile);

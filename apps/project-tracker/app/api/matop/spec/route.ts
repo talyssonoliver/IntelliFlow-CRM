@@ -8,7 +8,12 @@ import {
   updateTaskArtifacts,
   type TaskRecord,
 } from '@/lib/csv-status';
-import { isValidTaskId, resolveSprintPath, sanitizeSprintNumber } from '@/lib/paths';
+import {
+  buildSafeTaskFilename,
+  isValidTaskId,
+  resolveSprintPath,
+  sanitizeSprintNumber,
+} from '@/lib/paths';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -76,9 +81,28 @@ export async function POST(request: Request) {
     // Get sprint number from task — validated to a safe integer.
     const sprintNumber = sanitizeSprintNumber(task['Target Sprint']) ?? 0;
 
+    // `buildSafeTaskFilename` runs user input through `path.basename` + a
+    // whitelist regex, producing a scalar CodeQL treats as untainted.
+    const specFilename = buildSafeTaskFilename(safeTaskId, '-spec.md');
+    // For the context subdirectory we only need the bare sanitised id.
+    const contextDirName = buildSafeTaskFilename(safeTaskId, '');
+    const contextFilename = 'hydrated-context.md'; // literal — no taint
+    if (!specFilename || !contextDirName) {
+      return NextResponse.json(
+        { success: false, error: 'Task ID could not be converted to a safe filename' },
+        { status: 400 }
+      );
+    }
+
     // Sprint-based paths
-    const specPath = resolveSprintPath(sprintsRoot, sprintNumber, 'specifications', `${safeTaskId}-spec.md`);
-    const contextPath = resolveSprintPath(sprintsRoot, sprintNumber, 'context', safeTaskId, 'hydrated-context.md');
+    const specPath = resolveSprintPath(sprintsRoot, sprintNumber, 'specifications', specFilename);
+    const contextPath = resolveSprintPath(
+      sprintsRoot,
+      sprintNumber,
+      'context',
+      contextDirName,
+      contextFilename
+    );
     if (!specPath || !contextPath) {
       return NextResponse.json(
         { success: false, error: 'Refusing to construct path outside of sprints root' },
@@ -87,8 +111,8 @@ export async function POST(request: Request) {
     }
 
     // Check if already has spec (unless force regenerate) - check both new and legacy locations
-    const legacySpecPath = join(specifyDir, 'specifications', `${safeTaskId}-spec.md`);
-    const legacyContextPath = join(specifyDir, 'context', safeTaskId, 'hydrated-context.md');
+    const legacySpecPath = join(specifyDir, 'specifications', specFilename);
+    const legacyContextPath = join(specifyDir, 'context', contextDirName, contextFilename);
     const specExists = existsSync(specPath) || existsSync(legacySpecPath);
     const contextExists = existsSync(contextPath) || existsSync(legacyContextPath);
 
@@ -110,7 +134,7 @@ export async function POST(request: Request) {
 
     // Ensure sprint directories exist
     const specificationsDir = resolveSprintPath(sprintsRoot, sprintNumber, 'specifications');
-    const contextDir = resolveSprintPath(sprintsRoot, sprintNumber, 'context', safeTaskId);
+    const contextDir = resolveSprintPath(sprintsRoot, sprintNumber, 'context', contextDirName);
     if (!specificationsDir || !contextDir) {
       return NextResponse.json(
         { success: false, error: 'Refusing to create directory outside of sprints root' },
