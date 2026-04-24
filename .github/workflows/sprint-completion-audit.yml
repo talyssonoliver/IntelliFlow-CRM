@@ -55,6 +55,9 @@ on:
         description: 'Path to audit report'
         value: ${{ jobs.audit.outputs.report-path }}
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   audit:
     name: Audit Sprint ${{ inputs.sprint }}

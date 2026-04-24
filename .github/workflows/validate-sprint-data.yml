@@ -13,6 +13,9 @@ on:
     paths:
       - 'apps/project-tracker/docs/metrics/**'
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   validate-sprint-data:
     name: Validate Sprint Metrics Consistency

@@ -21,6 +21,9 @@ permissions:
   security-events: write
   pull-requests: write
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   trivy-scan:
     name: Trivy Container & Filesystem Scan
@@ -130,7 +133,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: "pnpm"
+          # No cache: "pnpm" here — pnpm audit doesn't run pnpm install, so the
+          # store is never populated and setup-node post-action would error with
+          # "Path(s) specified in the action for caching do not exist".
 
       - name: Run pnpm audit
         run: |
