@@ -1,0 +1,43 @@
+{
+  "$comment": "PG-126 public product tour configuration. Validated by onboardingConfigSchema in packages/validators/src/public-onboarding.ts.",
+  "tours": [
+    {
+      "id": "features-v1",
+      "route": "/features",
+      "steps": [
+        {
+          "id": "hero",
+          "targetSelector": "[data-tour=\"hero\"]",
+          "title": "Welcome to IntelliFlow",
+          "description": "Let's walk through the four capabilities that set IntelliFlow apart. Use Next or Enter to continue; Esc closes the tour.",
+          "placement": "bottom"
+        },
+        {
+          "id": "ai-scoring",
+          "targetSelector": "[data-tour=\"ai-lead-scoring\"]",
+          "title": "AI Lead Scoring",
+          "description": "Scores every inbound lead in real time using an ensemble of explainable models, so your team focuses on the highest-intent contacts first.",
+          "placement": "right"
+        },
+        {
+          "id": "automation",
+          "targetSelector": "[data-tour=\"workflow-automation\"]",
+          "title": "Workflow Automation",
+          "description": "Build multi-step automations visually. Triggers, conditions, and AI agents run on the same durable workflow engine.",
+          "placement": "left"
+        },
+        {
+          "id": "analytics",
+          "targetSelector": "[data-tour=\"pipeline-analytics\"]",
+          "title": "Revenue Analytics",
+          "description": "Pipeline velocity, conversion cohorts, and NPS trends in one dashboard — ready to share with the rest of the team.",
+          "placement": "top",
+          "cta": {
+            "label": "Start free trial",
+            "href": "/signup"
+          }
+        }
+      ]
+    }
+  ]
+}

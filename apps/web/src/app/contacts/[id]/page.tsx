@@ -40,7 +40,7 @@ import { useActivityReactions } from '@/hooks/useActivityReactions';
 import { useActivityComments } from '@/hooks/useActivityComments';
 import { QuickLogComposer } from '@/components/shared/quick-log-composer';
 // IFC-312 — AI chain UI surfaces
-import { SuggestedTagsRow } from '@/components/contacts/SuggestedTagsRow';
+import { SuggestedTagsRow } from '@/components/shared/SuggestedTagsRow';
 import { ReplyDraftsPanel } from '@/components/contacts/ReplyDraftsPanel';
 
 // Common nullable date type
@@ -1794,7 +1794,7 @@ export default function Contact360Page() {
               </div>
               {/* IFC-312 — AI tag suggestions (hidden when flag off or empty). */}
               <div className="mt-2">
-                <SuggestedTagsRow contactId={contact.id} enabled={true} />
+                <SuggestedTagsRow entity="contact" entityId={contact.id} enabled={true} />
               </div>
               <div className="space-y-4">
                 <div className="flex items-start gap-3">

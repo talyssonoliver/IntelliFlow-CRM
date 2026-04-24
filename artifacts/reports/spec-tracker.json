@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-04-22T22:22:41.190Z",
+  "generated_at": "2026-04-24T20:52:00.081Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
-    "total_specs_analyzed": 391,
+    "total_specs_analyzed": 392,
     "completed": 391,
     "partially_done": 0,
     "spec_only": 0,
-    "uncertain": 0
+    "uncertain": 1
   },
   "status_legend": {
     "COMPLETED": "All evidence confirms task is done: attestation present, CSV=Completed, plan checkboxes done",
@@ -14,7 +14,14 @@
     "SPEC_ONLY": "Spec exists but no execution evidence (no attestation, no plan completion, CSV=Backlog)",
     "UNCERTAIN": "Conflicting signals between evidence sources"
   },
-  "issues": [],
+  "issues": [
+    {
+      "task_id": "PG-126",
+      "severity": "MEDIUM",
+      "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
+      "recommendation": "Run /exec PG-126 when ready for implementation."
+    }
+  ],
   "tasks": [
     {
       "task_id": "AI-SETUP-001",
@@ -5311,6 +5318,23 @@
         "IFC-006"
       ],
       "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-126",
+      "title": "Add in‑app onboarding, guided product tours and feedback collection",
+      "sprint": 17,
+      "spec_path": ".specify/sprints/sprint-17/specifications/PG-126-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-001",
+        "PG-002"
+      ],
+      "real_status": "UNCERTAIN"
     },
     {
       "task_id": "PG-128",

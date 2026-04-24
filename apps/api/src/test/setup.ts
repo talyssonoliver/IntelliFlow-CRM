@@ -465,6 +465,8 @@ export const mockAccount = {
   scoreModelVersion: null,
   industryInferredAt: null,
   industryModelVersion: null,
+  // IFC-312 audit fix F3: per-account tags array (mirrors Contact.tags)
+  tags: [] as string[],
   createdAt: new Date('2024-01-01'),
   updatedAt: new Date('2024-01-01'),
 };

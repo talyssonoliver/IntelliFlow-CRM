@@ -1,0 +1,11 @@
+[
+  {
+    "url": "http://localhost:3000/cases/case-settings",
+    "isRepresentativeRun": true,
+    "htmlPath": "C:\\Users\\talys\\projects\\intelliFlow-CRM\\artifacts\\lighthouse\\PG-190\\localhost-cases_case_settings-2026_04_24_20_05_49.report.html",
+    "jsonPath": "C:\\Users\\talys\\projects\\intelliFlow-CRM\\artifacts\\lighthouse\\PG-190\\localhost-cases_case_settings-2026_04_24_20_05_49.report.json",
+    "summary": {
+      "performance": 0.89
+    }
+  }
+]

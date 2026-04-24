@@ -72,13 +72,85 @@ describe('IFC-312 job handlers — safety gates', () => {
       expect(out.skipped).toBe(true);
     });
 
-    it('SKIPS when account aiEnrichment flag is off', async () => {
-      prismaAccountSettingMock.findUnique.mockResolvedValue({ aiEnrichment: false });
+    it('SKIPS when both account aiEnrichment and aiIndustryInference are off', async () => {
+      prismaAccountSettingMock.findUnique.mockResolvedValue({
+        aiEnrichment: false,
+        aiIndustryInference: false,
+      });
       const { processEnrichmentJob } = await import('../enrichment.job.js');
       const out = await processEnrichmentJob({
         data: { entityType: 'account', entityId: 'a-1', tenantId: 't-1' },
       } as any);
       expect(out.skipped).toBe(true);
+    });
+
+    // IFC-312 audit fix F2: industry-inference dispatch through enrichment.job
+    it('dispatches inferAccountIndustry when aiIndustryInference=true and industry is empty', async () => {
+      prismaAccountSettingMock.findUnique.mockResolvedValue({
+        aiEnrichment: false,
+        aiIndustryInference: true,
+      });
+      prismaAccountMock.findUnique.mockResolvedValue({
+        id: 'a-1',
+        name: 'Acme',
+        website: 'https://acme.io',
+        description: 'Cloud',
+        industry: null,
+      });
+      const actualMock = await import('@intelliflow/db');
+      (actualMock.prisma as any).accountIndustryOption.findMany.mockResolvedValueOnce([
+        { key: 'saas', label: 'SaaS' },
+        { key: 'retail', label: 'Retail' },
+      ]);
+
+      const { processEnrichmentJob } = await import('../enrichment.job.js');
+      const out = await processEnrichmentJob({
+        data: { entityType: 'account', entityId: 'a-1', tenantId: 't-1' },
+      } as any);
+      expect(out.skipped).toBeUndefined();
+      expect(out.enrichment).toBeUndefined();
+      expect(out.industry).toBeDefined();
+    });
+
+    it('skips industry-inference when account.industry is already set', async () => {
+      prismaAccountSettingMock.findUnique.mockResolvedValue({
+        aiEnrichment: false,
+        aiIndustryInference: true,
+      });
+      prismaAccountMock.findUnique.mockResolvedValue({
+        id: 'a-1',
+        name: 'Acme',
+        industry: 'Technology',
+        website: null,
+        description: null,
+      });
+      const { processEnrichmentJob } = await import('../enrichment.job.js');
+      const out = await processEnrichmentJob({
+        data: { entityType: 'account', entityId: 'a-1', tenantId: 't-1' },
+      } as any);
+      expect(out.industry).toBeUndefined();
+    });
+
+    it('skips industry-inference when vocabulary is empty', async () => {
+      prismaAccountSettingMock.findUnique.mockResolvedValue({
+        aiEnrichment: false,
+        aiIndustryInference: true,
+      });
+      prismaAccountMock.findUnique.mockResolvedValue({
+        id: 'a-1',
+        name: 'Acme',
+        industry: '',
+        website: null,
+        description: null,
+      });
+      const actualMock = await import('@intelliflow/db');
+      (actualMock.prisma as any).accountIndustryOption.findMany.mockResolvedValueOnce([]);
+
+      const { processEnrichmentJob } = await import('../enrichment.job.js');
+      const out = await processEnrichmentJob({
+        data: { entityType: 'account', entityId: 'a-1', tenantId: 't-1' },
+      } as any);
+      expect(out.industry).toBeUndefined();
     });
   });
 

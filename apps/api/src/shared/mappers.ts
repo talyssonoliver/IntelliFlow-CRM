@@ -64,9 +64,24 @@ export function mapContactToResponse(contact: Contact) {
 }
 
 /**
+ * IFC-312 audit fix F7: AI-generated metadata surfaced from Prisma scalars
+ * (domain Account does not carry these — spec §4.5.2 adds them to Account
+ * but keeps the DDD boundary clean, so the mapper accepts them separately).
+ */
+export interface AccountAiMeta {
+  score?: number | null;
+  scoreProvenance?: unknown;
+  scoredAt?: Date | null;
+  scoreModelVersion?: string | null;
+  industryInferredAt?: Date | null;
+  industryModelVersion?: string | null;
+  tags?: string[] | null;
+}
+
+/**
  * Map Account domain entity to API response
  */
-export function mapAccountToResponse(account: Account) {
+export function mapAccountToResponse(account: Account, aiMeta?: AccountAiMeta) {
   return {
     id: account.id.value,
     name: account.name,
@@ -79,6 +94,14 @@ export function mapAccountToResponse(account: Account) {
     tenantId: account.tenantId,
     createdAt: account.createdAt,
     updatedAt: account.updatedAt,
+    // IFC-312 scalars (null when not loaded)
+    score: aiMeta?.score ?? null,
+    scoreProvenance: aiMeta?.scoreProvenance ?? null,
+    scoredAt: aiMeta?.scoredAt ?? null,
+    scoreModelVersion: aiMeta?.scoreModelVersion ?? null,
+    industryInferredAt: aiMeta?.industryInferredAt ?? null,
+    industryModelVersion: aiMeta?.industryModelVersion ?? null,
+    tags: aiMeta?.tags ?? [],
   };
 }
 

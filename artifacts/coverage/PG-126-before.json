@@ -1,0 +1,30 @@
+{
+  "task_id": "PG-126",
+  "captured_at": "2026-04-24T19:50:00Z",
+  "description": "Pre-implementation coverage baseline for PG-126 public onboarding tour + feedback widget. All 13 net-new artefacts (tour-components.tsx, feedback-widget-public.tsx, feedback-service.ts, tour-storage.ts, public-onboarding.ts, public-feedback router/service, public-rate-limiter.ts, PublicFeedbackRepositoryPort.ts, prisma-public-feedback-repository.ts, onboarding-config.json, Prisma PublicFeedback model, PublicFeedback migration) do not yet exist on disk, so their baseline is empty by construction. The three modified files (tracking-pixel.ts, public layout.tsx, features page.tsx, home page.tsx) carry their current HEAD coverage into this task; scoped after-capture will measure the delta.",
+  "measurement_scope": [
+    "apps/web/src/components/public/tour-components.tsx",
+    "apps/web/src/components/public/feedback-widget-public.tsx",
+    "apps/web/src/lib/public/feedback-service.ts",
+    "apps/web/src/lib/public/tour-storage.ts",
+    "apps/api/src/modules/public-feedback/public-feedback.router.ts",
+    "apps/api/src/modules/public-feedback/public-feedback.service.ts",
+    "apps/api/src/security/public-rate-limiter.ts",
+    "packages/adapters/src/public-feedback/prisma-public-feedback-repository.ts",
+    "packages/validators/src/public-onboarding.ts",
+    "apps/web/src/lib/shared/tracking-pixel.ts"
+  ],
+  "command": "pnpm vitest run --coverage --coverage.provider=istanbul --coverage.include='apps/web/src/components/public/**' --coverage.include='apps/web/src/lib/public/**' --coverage.include='apps/api/src/modules/public-feedback/**' --coverage.include='apps/api/src/security/public-rate-limiter.ts' --coverage.include='packages/adapters/src/public-feedback/**' --coverage.include='packages/validators/src/public-onboarding.ts'",
+  "baseline_totals": {
+    "lines": { "total": 0, "covered": 0, "skipped": 0, "pct": 0 },
+    "statements": { "total": 0, "covered": 0, "skipped": 0, "pct": 0 },
+    "functions": { "total": 0, "covered": 0, "skipped": 0, "pct": 0 },
+    "branches": { "total": 0, "covered": 0, "skipped": 0, "pct": 0 }
+  },
+  "baseline_files": {},
+  "notes": [
+    "All 10 primary scope files are net-new; baseline is empty by construction.",
+    "tracking-pixel.ts receives two additive exports (trackTourStarted, trackTourSkipped); current coverage is retained from its existing test file and will only increase post-implementation.",
+    "After-implementation coverage will be recorded in artifacts/coverage/PG-126-after.json, with scoped thresholds (Statements >= 90%, Branches >= 80%, Functions >= 90%, Lines >= 90%) enforced at exec Phase 4.5 Gate 9."
+  ]
+}

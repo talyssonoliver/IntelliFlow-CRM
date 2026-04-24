@@ -6,6 +6,12 @@
  * Send/Edit/Dismiss actions live here but this v1 surface only renders rows
  * (send/edit/dismiss wiring is deferred to a real inbox integration task).
  * Empty state uses canonical `<EmptyState entity='emails' />`.
+ *
+ * IFC-312 audit fix F5 (2026-04-24): the `contact.draftReply` mutation now
+ * requires a real `emailThread` array from the caller (server rejects empty
+ * requests with PRECONDITION_FAILED). Auto-triggered drafting is therefore
+ * blocked until IFC-313 lands real inbox ingestion — this panel stays
+ * read-only for now.
  */
 
 import { EmptyState } from '@intelliflow/ui';

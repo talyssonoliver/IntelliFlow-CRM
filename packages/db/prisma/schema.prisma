@@ -647,6 +647,10 @@ model Account {
   // IFC-312: AI industry inference provenance
   industryInferredAt   DateTime?
   industryModelVersion String?
+  // IFC-312 audit fix F3: per-account tags (mirrors Contact.tags). Consumed by
+  // account.addTags + SuggestedTagsRow Accept flow. AccountTag model is the
+  // tenant vocabulary, NOT a per-account join.
+  tags                 String[]  @default([])
 
   // Multi-tenancy
   tenantId      String

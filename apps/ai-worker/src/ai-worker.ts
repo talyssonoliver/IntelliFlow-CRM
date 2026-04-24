@@ -512,6 +512,52 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
         }
       );
       this.logger.info({ cron: memoryRetentionCron }, 'Scheduled memory retention job registered');
+
+      // IFC-312 audit fix F4: nightly cron for contact/account entity-insight
+      // refresh. The job handler's sentinel branch fans out real per-tenant
+      // per-entity jobs. Distinct from the lead-only scheduled-insight-refresh
+      // — that writes to INSIGHT_QUEUE, this writes to ai-entity-insight.
+      const entityInsightCron = process.env.AI_ENTITY_INSIGHT_CRON || '0 2 * * *';
+      const entityInsightQueue = this.getQueue('ai-entity-insight');
+      await entityInsightQueue.upsertJobScheduler(
+        'scheduled-entity-insight-refresh',
+        { pattern: entityInsightCron },
+        {
+          name: 'scheduled-entity-insight-refresh',
+          data: {
+            entityType: 'contact',
+            entityId: '__scheduled__',
+            tenantId: '__scheduled__',
+            _otelCarrier: {},
+          },
+          opts: { removeOnComplete: 100, removeOnFail: 500 },
+        }
+      );
+      this.logger.info(
+        { cron: entityInsightCron },
+        'Scheduled entity-insight refresh job registered'
+      );
+
+      // IFC-312 audit fix F4: nightly account scoring fan-out.
+      const accountScoringCron = process.env.AI_ACCOUNT_SCORING_CRON || '0 3 * * *';
+      const accountScoringQueue = this.getQueue('ai-account-scoring');
+      await accountScoringQueue.upsertJobScheduler(
+        'scheduled-account-scoring',
+        { pattern: accountScoringCron },
+        {
+          name: 'scheduled-account-scoring',
+          data: {
+            accountId: '__scheduled__',
+            tenantId: '__scheduled__',
+            _otelCarrier: {},
+          },
+          opts: { removeOnComplete: 100, removeOnFail: 500 },
+        }
+      );
+      this.logger.info(
+        { cron: accountScoringCron },
+        'Scheduled account-scoring job registered'
+      );
     } catch (error) {
       this.logger.warn(
         { error: error instanceof Error ? error.message : String(error) },

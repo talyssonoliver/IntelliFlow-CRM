@@ -129,16 +129,26 @@ describe('Contact Router AI Procedures (IFC-312)', () => {
   // draftReply (ADR-037 compliance)
   // ─────────────────────────────────────────────────────────────────────
   describe('draftReply', () => {
+    const fakeThread = [
+      {
+        from: 'sender@example.com',
+        to: 'recipient@example.com',
+        subject: 'Re: Quick question',
+        body: 'Hi, I wanted to follow up on the proposal we discussed last week.',
+        at: '2026-04-24T10:00:00.000Z',
+      },
+    ];
+
     it('throws FORBIDDEN when aiAutoReplyDrafting is off', async () => {
       prismaMock.contactAutomationSetting.findUnique.mockResolvedValue({
         aiAutoReplyDrafting: false,
       } as any);
-      await expect(caller.draftReply({ contactId: TEST_UUIDS.contact1 })).rejects.toThrow(
-        TRPCError
-      );
+      await expect(
+        caller.draftReply({ contactId: TEST_UUIDS.contact1, emailThread: fakeThread })
+      ).rejects.toThrow(TRPCError);
     });
 
-    it('enqueues reply-draft job when toggle is on (AI_REPLY_DRAFT queue)', async () => {
+    it('throws PRECONDITION_FAILED when emailThread missing (IFC-312 audit F5)', async () => {
       prismaMock.contactAutomationSetting.findUnique.mockResolvedValue({
         aiAutoReplyDrafting: true,
       } as any);
@@ -148,20 +158,36 @@ describe('Contact Router AI Procedures (IFC-312)', () => {
         firstName: 'A',
         lastName: 'B',
       } as any);
-      // Let queueAdd return a job with a waitUntilFinished that yields draftId.
+      await expect(caller.draftReply({ contactId: TEST_UUIDS.contact1 })).rejects.toThrow(
+        TRPCError
+      );
+      const enqCalls = queueAddMock.mock.calls.filter(([name]) => name === 'draft');
+      expect(enqCalls).toHaveLength(0);
+    });
+
+    it('enqueues reply-draft job when toggle is on + real thread supplied', async () => {
+      prismaMock.contactAutomationSetting.findUnique.mockResolvedValue({
+        aiAutoReplyDrafting: true,
+      } as any);
+      prismaMock.contact.findUnique.mockResolvedValue({
+        id: TEST_UUIDS.contact1,
+        email: 'x@y.com',
+        firstName: 'A',
+        lastName: 'B',
+      } as any);
       queueAddMock.mockResolvedValueOnce({
         id: 'job-1',
         waitUntilFinished: vi.fn().mockResolvedValue({ draftId: 'draft-123' }),
       });
-      // Accept either the success path or the fallback `INTERNAL_SERVER_ERROR` since BullMQ close
-      // semantics in the test env can emit edge-case rejections; the invariant under test is that
-      // `queue.add` was called with the reply-draft payload.
-      await caller.draftReply({ contactId: TEST_UUIDS.contact1 }).catch(() => undefined);
+      await caller
+        .draftReply({ contactId: TEST_UUIDS.contact1, emailThread: fakeThread })
+        .catch(() => undefined);
       expect(queueAddMock).toHaveBeenCalled();
       const [, jobData] = queueAddMock.mock.calls[queueAddMock.mock.calls.length - 1]!;
       expect(jobData.contactId).toBe(TEST_UUIDS.contact1);
       expect(jobData.tenantId).toBe(TEST_UUIDS.tenant);
       expect(Array.isArray(jobData.emailThread)).toBe(true);
+      expect(jobData.emailThread[0].body).not.toMatch(/placeholder/i);
     });
 
     it('throws NOT_FOUND when contact absent (cross-tenant safety)', async () => {
@@ -169,9 +195,9 @@ describe('Contact Router AI Procedures (IFC-312)', () => {
         aiAutoReplyDrafting: true,
       } as any);
       prismaMock.contact.findUnique.mockResolvedValue(null);
-      await expect(caller.draftReply({ contactId: TEST_UUIDS.contact1 })).rejects.toThrow(
-        TRPCError
-      );
+      await expect(
+        caller.draftReply({ contactId: TEST_UUIDS.contact1, emailThread: fakeThread })
+      ).rejects.toThrow(TRPCError);
     });
   });
 
@@ -196,6 +222,144 @@ describe('Contact Router AI Procedures (IFC-312)', () => {
       const out = await caller.listReplyDrafts({ contactId: TEST_UUIDS.contact1, limit: 5 });
       expect(out.drafts).toHaveLength(1);
       expect(out.drafts[0]!.status).toBe('DRAFT');
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────────────
+  // IFC-312 audit fix — create/update enqueue AI_ENRICHMENT (F1)
+  // ─────────────────────────────────────────────────────────────────────
+  describe('create — AI_ENRICHMENT enqueue (IFC-312 audit F1)', () => {
+    function makeAuthedCallerWithFlag(aiEnrichment: boolean) {
+      const ctx = createTestContext();
+      prismaMock.contactAutomationSetting.findUnique.mockResolvedValue({
+        autoMergeOnExactEmail: false,
+        notifyOnDuplicate: false,
+        restrictTagCreationToAdmins: false,
+        normalizePhoneNumbers: false,
+        autoCapitalizeNames: false,
+        preventDeleteWithOpenDeals: false,
+        notifyOnOwnerChange: false,
+        aiDuplicateDetection: false,
+        aiEnrichment,
+        aiTagSuggestions: false,
+        aiInsightGeneration: false,
+        aiAutoReplyDrafting: false,
+      } as any);
+      prismaMock.contactRequiredField.findMany.mockResolvedValue([] as any);
+      ctx.services!.contact!.createContact = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: {
+          id: { value: TEST_UUIDS.contact1 },
+          email: { value: 'a@b.com' },
+          firstName: 'A',
+          lastName: 'B',
+          title: null,
+          phone: null,
+          department: null,
+          status: 'ACTIVE',
+          accountId: null,
+          leadId: null,
+          ownerId: TEST_UUIDS.user1,
+          tenantId: TEST_UUIDS.tenant,
+          hasAccount: false,
+          isConvertedFromLead: false,
+          lastContactedAt: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          getDomainEvents: () => [],
+          clearDomainEvents: () => {},
+        },
+      });
+      return contactRouter.createCaller(ctx as any);
+    }
+
+    it('enqueues AI_ENRICHMENT with entityType=contact when aiEnrichment=true', async () => {
+      const localCaller = makeAuthedCallerWithFlag(true);
+      await localCaller.create({ email: 'a@b.com', firstName: 'A', lastName: 'B' });
+      const enrichCalls = queueAddMock.mock.calls.filter(([name]) => name === 'enrich');
+      expect(enrichCalls).toHaveLength(1);
+      const [, jobData] = enrichCalls[0]!;
+      expect(jobData.entityType).toBe('contact');
+      expect(jobData.entityId).toBe(TEST_UUIDS.contact1);
+      expect(jobData.tenantId).toBe(TEST_UUIDS.tenant);
+    });
+
+    it('does NOT enqueue AI_ENRICHMENT when aiEnrichment=false', async () => {
+      const localCaller = makeAuthedCallerWithFlag(false);
+      await localCaller.create({ email: 'a@b.com', firstName: 'A', lastName: 'B' });
+      const enrichCalls = queueAddMock.mock.calls.filter(([name]) => name === 'enrich');
+      expect(enrichCalls).toHaveLength(0);
+    });
+  });
+
+  describe('update — AI_ENRICHMENT enqueue (IFC-312 audit F1)', () => {
+    function makeAuthedCallerWithFlag(aiEnrichment: boolean) {
+      const ctx = createTestContext();
+      prismaMock.contactAutomationSetting.findUnique.mockResolvedValue({
+        autoMergeOnExactEmail: false,
+        notifyOnDuplicate: false,
+        restrictTagCreationToAdmins: false,
+        normalizePhoneNumbers: false,
+        autoCapitalizeNames: false,
+        preventDeleteWithOpenDeals: false,
+        notifyOnOwnerChange: false,
+        aiDuplicateDetection: false,
+        aiEnrichment,
+        aiTagSuggestions: false,
+        aiInsightGeneration: false,
+        aiAutoReplyDrafting: false,
+      } as any);
+      prismaMock.contactRequiredField.findMany.mockResolvedValue([] as any);
+      const fakeDomainContact = {
+        id: { value: TEST_UUIDS.contact1 },
+        email: { value: 'a@b.com' },
+        firstName: 'A',
+        lastName: 'B',
+        title: null,
+        phone: null,
+        department: null,
+        status: 'ACTIVE',
+        accountId: null,
+        leadId: null,
+        ownerId: TEST_UUIDS.user1,
+        tenantId: TEST_UUIDS.tenant,
+        hasAccount: false,
+        isConvertedFromLead: false,
+        lastContactedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        getDomainEvents: () => [],
+        clearDomainEvents: () => {},
+      };
+      ctx.services!.contact!.updateContactInfo = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: fakeDomainContact,
+      });
+      ctx.services!.contact!.getContactById = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: fakeDomainContact,
+      });
+      return contactRouter.createCaller(ctx as any);
+    }
+
+    it('enqueues AI_ENRICHMENT on update when aiEnrichment=true', async () => {
+      const localCaller = makeAuthedCallerWithFlag(true);
+      await localCaller.update({ id: TEST_UUIDS.contact1, firstName: 'Alice' });
+      const enrichCalls = queueAddMock.mock.calls.filter(([name]) => name === 'enrich');
+      expect(enrichCalls).toHaveLength(1);
+      const [, jobData] = enrichCalls[0]!;
+      expect(jobData.entityType).toBe('contact');
+      expect(jobData.entityId).toBe(TEST_UUIDS.contact1);
+    });
+
+    it('does NOT enqueue AI_ENRICHMENT on update when flag=false', async () => {
+      const localCaller = makeAuthedCallerWithFlag(false);
+      await localCaller.update({ id: TEST_UUIDS.contact1, firstName: 'Alice' });
+      const enrichCalls = queueAddMock.mock.calls.filter(([name]) => name === 'enrich');
+      expect(enrichCalls).toHaveLength(0);
     });
   });
 });

@@ -42,6 +42,8 @@ export type {
   ContactRequiredField,
   ContactTag,
   ContactAutomationSetting,
+  ContactReplyDraft,
+  AccountAIInsight,
   AccountHierarchyConfig,
   AccountIndustryOption,
   AccountCustomField,

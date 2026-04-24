@@ -252,15 +252,41 @@ export type ContactTagSuggestion = z.infer<typeof contactTagSuggestionSchema>;
 export const contactSuggestTagsOutputSchema = z.array(contactTagSuggestionSchema);
 export type ContactSuggestTagsOutput = z.infer<typeof contactSuggestTagsOutputSchema>;
 
+// IFC-312 audit fix F3: addTags procedure. Spec §4.3.4 assumed contact.addTags
+// existed but it was never implemented. tags: String[] array on Contact.
+export const contactAddTagsInputSchema = z.object({
+  contactId: idSchema,
+  tags: z.array(z.string().min(1).max(40)).min(1).max(10),
+});
+export type ContactAddTagsInput = z.infer<typeof contactAddTagsInputSchema>;
+
+export const contactAddTagsOutputSchema = z.object({
+  tags: z.array(z.string()),
+});
+export type ContactAddTagsOutput = z.infer<typeof contactAddTagsOutputSchema>;
+
 export const contactGenerateInsightInputSchema = z.object({ contactId: idSchema });
 export type ContactGenerateInsightInput = z.infer<typeof contactGenerateInsightInputSchema>;
 
 export const contactGenerateInsightOutputSchema = z.object({ enqueued: z.boolean() });
 export type ContactGenerateInsightOutput = z.infer<typeof contactGenerateInsightOutputSchema>;
 
+// IFC-312 audit fix F5: accept a real emailThread from the client. Previous
+// version hardcoded a placeholder body into the chain, producing vacuous
+// drafts. Real inbox integration tracked in IFC-313.
+export const contactDraftReplyEmailEntrySchema = z.object({
+  from: z.string().min(1).max(320),
+  to: z.string().max(320).optional(),
+  subject: z.string().max(500).optional(),
+  body: z.string().min(1).max(20000),
+  at: z.string().datetime(),
+});
+export type ContactDraftReplyEmailEntry = z.infer<typeof contactDraftReplyEmailEntrySchema>;
+
 export const contactDraftReplyInputSchema = z.object({
   contactId: idSchema,
   emailThreadId: z.string().max(200).optional(),
+  emailThread: z.array(contactDraftReplyEmailEntrySchema).min(1).max(20).optional(),
   userInstructions: z.string().max(2000).optional(),
 });
 export type ContactDraftReplyInput = z.infer<typeof contactDraftReplyInputSchema>;

@@ -37,6 +37,7 @@ import { useAuth } from '@/lib/auth';
 // IFC-312 — AI chain UI surfaces
 import { AccountScoreBadge } from '@/components/accounts/AccountScoreBadge';
 import { InferredFieldBadge } from '@/components/shared/InferredFieldBadge';
+import { SuggestedTagsRow } from '@/components/shared/SuggestedTagsRow';
 
 interface AccountDetailProps {
   accountId: string;
@@ -597,8 +598,8 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
                     {account.industry ?? '—'}
                     {/* IFC-312 — show AI-inferred badge when industry came from LLM classifier. */}
                     <InferredFieldBadge
-                      inferredAt={(account as any).industryInferredAt}
-                      modelVersion={(account as any).industryModelVersion}
+                      inferredAt={account.industryInferredAt}
+                      modelVersion={account.industryModelVersion}
                       label="AI"
                     />
                   </p>
@@ -643,6 +644,25 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
                     {formatDate(account.updatedAt)}
                   </p>
                 </div>
+              </div>
+              {/* IFC-312 audit fix F3: AI-suggested tags panel (generalized). */}
+              <div className="mt-6 border-t border-slate-200 dark:border-slate-800 pt-4">
+                <p className="text-xs text-slate-400 uppercase font-semibold mb-2">Tags</p>
+                {Array.isArray(account.tags) && account.tags.length > 0 ? (
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {account.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="px-2 py-1 rounded bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 text-xs font-medium"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-500 mb-2">No tags yet</p>
+                )}
+                <SuggestedTagsRow entity="account" entityId={accountId} enabled={true} />
               </div>
             </Card>
           )}
@@ -705,12 +725,12 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
               <div className="flex items-center gap-3">
                 <h3 className="text-lg font-semibold">Account AI Insights</h3>
                 <AccountScoreBadge
-                  score={(account as any).score ?? null}
-                  modelVersion={(account as any).scoreModelVersion}
-                  scoredAt={(account as any).scoredAt}
+                  score={account.score ?? null}
+                  modelVersion={account.scoreModelVersion}
+                  scoredAt={account.scoredAt}
                   factors={
-                    Array.isArray((account as any).scoreProvenance)
-                      ? ((account as any).scoreProvenance as Array<{
+                    Array.isArray(account.scoreProvenance)
+                      ? (account.scoreProvenance as Array<{
                           name: string;
                           impact: number;
                         }>)

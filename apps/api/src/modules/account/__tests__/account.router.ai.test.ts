@@ -134,4 +134,106 @@ describe('Account Router AI Procedures (IFC-312)', () => {
       expect(out.insight!.churnRisk).toBe('LOW');
     });
   });
+
+  // ─────────────────────────────────────────────────────────────────────
+  // IFC-312 audit fix — create/update enqueue AI_ENRICHMENT (F1)
+  //                     dispatches industry-inference via same queue (F2)
+  // ─────────────────────────────────────────────────────────────────────
+  describe('create — AI_ENRICHMENT enqueue (IFC-312 audit F1/F2)', () => {
+    function makeCallerWithFlags(flags: {
+      aiEnrichment: boolean;
+      aiIndustryInference: boolean;
+    }) {
+      const ctx = createTestContext();
+      prismaMock.accountAutomationSetting.findUnique.mockResolvedValue({
+        autoMergeOnExactEmail: false,
+        notifyOnDuplicate: false,
+        autoLinkContactsByDomain: false,
+        normalizeWebsites: false,
+        autoCapitalizeAccountNames: false,
+        preventDeleteWithOpenDeals: false,
+        notifyOnOwnerChange: false,
+        aiDuplicateDetection: false,
+        aiEnrichment: flags.aiEnrichment,
+        aiTagSuggestions: false,
+        aiInsightGeneration: false,
+        aiIndustryInference: flags.aiIndustryInference,
+        aiAccountScoring: false,
+      } as any);
+      prismaMock.accountRequiredField.findMany.mockResolvedValue([] as any);
+      const fakeDomainAccount = {
+        id: { value: TEST_UUIDS.account1 },
+        name: 'Acme',
+        website: null,
+        industry: null,
+        employees: null,
+        revenue: null,
+        description: null,
+        ownerId: TEST_UUIDS.user1,
+        tenantId: TEST_UUIDS.tenant,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        getDomainEvents: () => [],
+        clearDomainEvents: () => {},
+      };
+      ctx.services!.account!.createAccount = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: fakeDomainAccount,
+      });
+      ctx.services!.account!.updateAccountInfo = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: fakeDomainAccount,
+      });
+      return accountRouter.createCaller(ctx as any);
+    }
+
+    it('enqueues AI_ENRICHMENT on create when aiEnrichment=true', async () => {
+      const localCaller = makeCallerWithFlags({
+        aiEnrichment: true,
+        aiIndustryInference: false,
+      });
+      await localCaller.create({ name: 'Acme' });
+      const enrichCalls = queueAddMock.mock.calls.filter(([name]) => name === 'enrich');
+      expect(enrichCalls).toHaveLength(1);
+      const [, jobData] = enrichCalls[0]!;
+      expect(jobData.entityType).toBe('account');
+      expect(jobData.entityId).toBe(TEST_UUIDS.account1);
+      expect(jobData.tenantId).toBe(TEST_UUIDS.tenant);
+    });
+
+    it('enqueues AI_ENRICHMENT on create when aiIndustryInference=true (industry-only path)', async () => {
+      const localCaller = makeCallerWithFlags({
+        aiEnrichment: false,
+        aiIndustryInference: true,
+      });
+      await localCaller.create({ name: 'Acme' });
+      const enrichCalls = queueAddMock.mock.calls.filter(([name]) => name === 'enrich');
+      expect(enrichCalls).toHaveLength(1);
+    });
+
+    it('does NOT enqueue when both aiEnrichment and aiIndustryInference are off', async () => {
+      const localCaller = makeCallerWithFlags({
+        aiEnrichment: false,
+        aiIndustryInference: false,
+      });
+      await localCaller.create({ name: 'Acme' });
+      const enrichCalls = queueAddMock.mock.calls.filter(([name]) => name === 'enrich');
+      expect(enrichCalls).toHaveLength(0);
+    });
+
+    it('enqueues AI_ENRICHMENT on update when either flag is on', async () => {
+      const localCaller = makeCallerWithFlags({
+        aiEnrichment: true,
+        aiIndustryInference: false,
+      });
+      await localCaller.update({ id: TEST_UUIDS.account1, name: 'Acme v2' });
+      const enrichCalls = queueAddMock.mock.calls.filter(([name]) => name === 'enrich');
+      expect(enrichCalls).toHaveLength(1);
+      const [, jobData] = enrichCalls[0]!;
+      expect(jobData.entityType).toBe('account');
+      expect(jobData.entityId).toBe(TEST_UUIDS.account1);
+    });
+  });
 });

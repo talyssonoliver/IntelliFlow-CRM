@@ -33,6 +33,8 @@ import {
   accountScoreOutputSchema,
   accountGetAiInsightInputSchema,
   accountGetAiInsightOutputSchema,
+  accountAddTagsInputSchema,
+  accountAddTagsOutputSchema,
 } from '@intelliflow/validators/account';
 import { mapAccountToResponse } from '../../shared/mappers';
 import { type Context } from '../../context';
@@ -193,6 +195,33 @@ export const accountRouter = createTRPCRouter({
       })
       .catch((err) => console.error('[account.router] Audit log failed:', err));
 
+    // IFC-312 audit fix F1/F2: wire AI_ENRICHMENT producer on account create.
+    // Same queue dispatches both aiEnrichment and aiIndustryInference — the
+    // job handler (enrichment.job.ts) reads both flags independently.
+    if (flags.aiEnrichment || flags.aiIndustryInference) {
+      try {
+        const { Queue } = await loadBullMQ();
+        const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
+        const queue = new Queue(QUEUE_NAMES.AI_ENRICHMENT, {
+          connection: {
+            host: process.env.REDIS_HOST ?? 'localhost',
+            port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
+          },
+        });
+        const otelCarrier: Record<string, string> = {};
+        propagation.inject(otelContext.active(), otelCarrier);
+        await queue.add('enrich', {
+          entityType: 'account',
+          entityId: result.value.id.value,
+          tenantId: typedCtx.tenant.tenantId,
+          _otelCarrier: otelCarrier,
+        });
+        await queue.close();
+      } catch {
+        // Redis/BullMQ unavailable — silently skip background enrichment
+      }
+    }
+
     return mapAccountToResponse(result.value);
   }),
 
@@ -223,7 +252,8 @@ export const accountRouter = createTRPCRouter({
 
     const account = result.value;
 
-    // Fetch counts and owner relation — defense-in-depth: include tenantId (F3 fix)
+    // Fetch counts + owner relation + IFC-312 AI-generated scalars.
+    // Defense-in-depth: include tenantId (F3 fix).
     const enriched = await typedCtx.prismaWithTenant.account.findFirst({
       where: { id: input.id, tenantId: typedCtx.tenant.tenantId },
       select: {
@@ -233,11 +263,20 @@ export const accountRouter = createTRPCRouter({
         owner: {
           select: { id: true, name: true, email: true },
         },
+        // IFC-312 audit fix F7: surface AI-generated provenance scalars so
+        // AccountDetail.tsx can drop its (account as any) casts.
+        score: true,
+        scoreProvenance: true,
+        scoredAt: true,
+        scoreModelVersion: true,
+        industryInferredAt: true,
+        industryModelVersion: true,
+        tags: true,
       },
     });
 
     return {
-      ...mapAccountToResponse(result.value),
+      ...mapAccountToResponse(result.value, enriched ?? undefined),
       _count: enriched?._count ?? { contacts: 0, opportunities: 0 },
       owner: enriched?.owner ?? null,
     };
@@ -463,6 +502,32 @@ export const accountRouter = createTRPCRouter({
         actorId: typedCtx.tenant.userId,
       })
       .catch((err) => console.error('[account.router] Audit log failed:', err));
+
+    // IFC-312 audit fix F1/F2: wire AI_ENRICHMENT producer on account update.
+    // Same queue handles both aiEnrichment and aiIndustryInference dispatch.
+    if (flags.aiEnrichment || flags.aiIndustryInference) {
+      try {
+        const { Queue } = await loadBullMQ();
+        const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
+        const queue = new Queue(QUEUE_NAMES.AI_ENRICHMENT, {
+          connection: {
+            host: process.env.REDIS_HOST ?? 'localhost',
+            port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
+          },
+        });
+        const otelCarrier: Record<string, string> = {};
+        propagation.inject(otelContext.active(), otelCarrier);
+        await queue.add('enrich', {
+          entityType: 'account',
+          entityId: id,
+          tenantId: typedCtx.tenant.tenantId,
+          _otelCarrier: otelCarrier,
+        });
+        await queue.close();
+      } catch {
+        // Redis/BullMQ unavailable — silently skip background enrichment
+      }
+    }
 
     return mapAccountToResponse(result.value);
   }),
@@ -1082,6 +1147,7 @@ export const accountRouter = createTRPCRouter({
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Account not found' });
       }
 
+      const syncStart = Date.now(); // IFC-312 audit fix F6: sync-breach visibility
       try {
         const { Queue, QueueEvents } = await loadBullMQ();
         const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
@@ -1114,7 +1180,19 @@ export const accountRouter = createTRPCRouter({
           await events.close().catch(() => {});
           await queue.close().catch(() => {});
         }
-      } catch {
+      } catch (err) {
+        // IFC-312 audit fix F6: sync-chain breach visibility.
+        const durationMs = Date.now() - syncStart;
+        const reason =
+          err instanceof Error && /timed out|timeout/i.test(err.message)
+            ? 'timeout'
+            : 'error';
+        console.warn(
+          `[account.router.suggestTags] sync-chain breach (${reason}) ` +
+            `accountId=${input.accountId} tenantId=${typedCtx.tenant.tenantId} ` +
+            `durationMs=${durationMs}:`,
+          err
+        );
         return [];
       }
     }),
@@ -1185,6 +1263,31 @@ export const accountRouter = createTRPCRouter({
       } catch {
         return { enqueued: false };
       }
+    }),
+
+  /**
+   * IFC-312 audit fix F3: addTags — merges new tags into Account.tags array
+   * (dedup). Spec §4.3.4 assumed this existed; the first-ship missed it.
+   */
+  addTags: tenantProcedure
+    .input(accountAddTagsInputSchema)
+    .output(accountAddTagsOutputSchema)
+    .mutation(async ({ ctx, input }) => {
+      const current = await ctx.prismaWithTenant.account.findUnique({
+        where: { id: input.accountId },
+        select: { tags: true },
+      });
+      if (!current) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Account not found' });
+      }
+      const merged = Array.from(
+        new Set<string>([...(current.tags ?? []), ...input.tags])
+      );
+      await ctx.prismaWithTenant.account.update({
+        where: { id: input.accountId },
+        data: { tags: merged },
+      });
+      return { tags: merged };
     }),
 
   getAiInsight: tenantProcedure

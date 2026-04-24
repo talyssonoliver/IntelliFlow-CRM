@@ -15,6 +15,8 @@
 import { context as otelContext, propagation } from '@opentelemetry/api';
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
+// IFC-312 audit fix F7: type the listReplyDrafts .map() result instead of `any`.
+import type { ContactReplyDraft } from '@intelliflow/db';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import {
   assertCanDeleteContact,
@@ -46,6 +48,8 @@ import {
   contactDraftReplyOutputSchema,
   contactListReplyDraftsInputSchema,
   contactListReplyDraftsOutputSchema,
+  contactAddTagsInputSchema,
+  contactAddTagsOutputSchema,
 } from '@intelliflow/validators/contact';
 import {
   bulkEmailContactsSchema,
@@ -480,6 +484,34 @@ export const contactRouter = createTRPCRouter({
       }
     }
 
+    // IFC-312 audit fix F1: wire AI_ENRICHMENT producer. The spec §4.4 required
+    // create to enqueue enrichment post-write; the first ship missed it,
+    // leaving aiEnrichment as a Cat-1 dead toggle. Fire-and-forget matches
+    // the `scoreWithAI` precedent.
+    if (flags.aiEnrichment) {
+      try {
+        const { Queue } = await loadBullMQ();
+        const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
+        const queue = new Queue(QUEUE_NAMES.AI_ENRICHMENT, {
+          connection: {
+            host: process.env.REDIS_HOST ?? 'localhost',
+            port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
+          },
+        });
+        const otelCarrier: Record<string, string> = {};
+        propagation.inject(otelContext.active(), otelCarrier);
+        await queue.add('enrich', {
+          entityType: 'contact',
+          entityId: result.value.id.value,
+          tenantId: typedCtx.tenant.tenantId,
+          _otelCarrier: otelCarrier,
+        });
+        await queue.close();
+      } catch {
+        // Redis/BullMQ unavailable — silently skip background enrichment
+      }
+    }
+
     return mapContactToResponse(result.value);
   }),
 
@@ -818,6 +850,33 @@ export const contactRouter = createTRPCRouter({
         code: 'NOT_FOUND',
         message: updatedResult.error.message,
       });
+    }
+
+    // IFC-312 audit fix F1: wire AI_ENRICHMENT producer on update. The chain
+    // fill-only-empty guard at contact-enrichment.chain.ts:81-87 skips rows
+    // that already have all fields populated.
+    if (flags.aiEnrichment) {
+      try {
+        const { Queue } = await loadBullMQ();
+        const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
+        const queue = new Queue(QUEUE_NAMES.AI_ENRICHMENT, {
+          connection: {
+            host: process.env.REDIS_HOST ?? 'localhost',
+            port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
+          },
+        });
+        const otelCarrier: Record<string, string> = {};
+        propagation.inject(otelContext.active(), otelCarrier);
+        await queue.add('enrich', {
+          entityType: 'contact',
+          entityId: id,
+          tenantId: typedCtx.tenant.tenantId,
+          _otelCarrier: otelCarrier,
+        });
+        await queue.close();
+      } catch {
+        // Redis/BullMQ unavailable — silently skip background enrichment
+      }
     }
 
     return mapContactToResponse(updatedResult.value);
@@ -1889,6 +1948,7 @@ export const contactRouter = createTRPCRouter({
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Contact not found' });
       }
 
+      const syncStart = Date.now(); // IFC-312 audit fix F6: sync-breach visibility
       try {
         const { Queue, QueueEvents } = await loadBullMQ();
         const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
@@ -1922,7 +1982,21 @@ export const contactRouter = createTRPCRouter({
           await events.close().catch(() => {});
           await queue.close().catch(() => {});
         }
-      } catch {
+      } catch (err) {
+        // IFC-312 audit fix F6: surface sync-chain breach so timeouts /
+        // Redis-down states are visible in logs instead of silently
+        // degrading to an empty list.
+        const durationMs = Date.now() - syncStart;
+        const reason =
+          err instanceof Error && /timed out|timeout/i.test(err.message)
+            ? 'timeout'
+            : 'error';
+        console.warn(
+          `[contact.router.suggestTags] sync-chain breach (${reason}) ` +
+            `contactId=${input.contactId} tenantId=${typedCtx.tenant.tenantId} ` +
+            `durationMs=${durationMs}:`,
+          err
+        );
         return [];
       }
     }),
@@ -1988,6 +2062,20 @@ export const contactRouter = createTRPCRouter({
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Contact not found' });
       }
 
+      // IFC-312 audit fix F5: no more placeholder thread. Caller must supply
+      // a real emailThread array or the call is rejected. Real-inbox
+      // integration (resolver from emailThreadId → thread history) tracked
+      // in IFC-313.
+      if (!input.emailThread || input.emailThread.length === 0) {
+        throw new TRPCError({
+          code: 'PRECONDITION_FAILED',
+          message:
+            'No email thread provided. Real-inbox integration pending (tracked in IFC-313). ' +
+            'Supply `emailThread` on the request in the meantime.',
+        });
+      }
+      const emailThread = input.emailThread;
+
       try {
         const { Queue, QueueEvents } = await loadBullMQ();
         const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
@@ -2000,15 +2088,6 @@ export const contactRouter = createTRPCRouter({
         try {
           const otelCarrier: Record<string, string> = {};
           propagation.inject(otelContext.active(), otelCarrier);
-          // Minimal thread stub (no real inbox infra yet — out of scope).
-          const emailThread = [
-            {
-              from: contact.email,
-              subject: 'Follow up',
-              body: 'Draft placeholder — real thread integration pending.',
-              at: new Date().toISOString(),
-            },
-          ];
           const job = await queue.add('draft', {
             contactId: input.contactId,
             tenantId: typedCtx.tenant.tenantId,
@@ -2035,11 +2114,44 @@ export const contactRouter = createTRPCRouter({
         }
       } catch (err) {
         if (err instanceof TRPCError) throw err;
+        // IFC-312 audit fix F6: log draftReply infra failures (Redis down,
+        // timeouts, etc.) before masking them behind the generic 500.
+        console.warn(
+          `[contact.router.draftReply] sync-chain breach ` +
+            `contactId=${input.contactId} tenantId=${typedCtx.tenant.tenantId}:`,
+          err
+        );
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Draft generation infrastructure unavailable',
         });
       }
+    }),
+
+  /**
+   * IFC-312 audit fix F3: addTags — merges new tags into Contact.tags array
+   * (dedup). Spec §4.3.4 assumed this existed; the first-ship missed it, so
+   * SuggestedTagsRow's Accept path was non-functional.
+   */
+  addTags: tenantProcedure
+    .input(contactAddTagsInputSchema)
+    .output(contactAddTagsOutputSchema)
+    .mutation(async ({ ctx, input }) => {
+      const current = await ctx.prismaWithTenant.contact.findUnique({
+        where: { id: input.contactId },
+        select: { tags: true },
+      });
+      if (!current) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Contact not found' });
+      }
+      const merged = Array.from(
+        new Set<string>([...(current.tags ?? []), ...input.tags])
+      );
+      await ctx.prismaWithTenant.contact.update({
+        where: { id: input.contactId },
+        data: { tags: merged },
+      });
+      return { tags: merged };
     }),
 
   /**
@@ -2055,7 +2167,7 @@ export const contactRouter = createTRPCRouter({
         take: input.limit,
       });
       return {
-        drafts: drafts.map((d: any) => ({
+        drafts: drafts.map((d: ContactReplyDraft) => ({
           id: d.id,
           contactId: d.contactId,
           draftSubject: d.draftSubject,

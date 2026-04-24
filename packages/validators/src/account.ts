@@ -280,6 +280,19 @@ export type AccountTagSuggestion = z.infer<typeof accountTagSuggestionSchema>;
 export const accountSuggestTagsOutputSchema = z.array(accountTagSuggestionSchema);
 export type AccountSuggestTagsOutput = z.infer<typeof accountSuggestTagsOutputSchema>;
 
+// IFC-312 audit fix F3: addTags procedure. Spec §4.3.4 assumed account.addTags
+// existed but it was never implemented. tags: String[] array on Account.
+export const accountAddTagsInputSchema = z.object({
+  accountId: idSchema,
+  tags: z.array(z.string().min(1).max(40)).min(1).max(10),
+});
+export type AccountAddTagsInput = z.infer<typeof accountAddTagsInputSchema>;
+
+export const accountAddTagsOutputSchema = z.object({
+  tags: z.array(z.string()),
+});
+export type AccountAddTagsOutput = z.infer<typeof accountAddTagsOutputSchema>;
+
 export const accountGenerateInsightInputSchema = z.object({ accountId: idSchema });
 export type AccountGenerateInsightInput = z.infer<typeof accountGenerateInsightInputSchema>;
 
