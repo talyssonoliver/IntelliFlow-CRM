@@ -222,7 +222,8 @@
       "effect": ">=3.20.0 <4",
       "@xmldom/xmldom": ">=0.9.10",
       "defu": ">=6.1.5 <7",
-      "protobufjs": ">=8.0.1"
+      "protobufjs": ">=8.0.1",
+      "uuid@<14.0.0": ">=14.0.0"
     }
   },
   "dependencies": {
