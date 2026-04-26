@@ -35,7 +35,7 @@ structure, and user flows in the IntelliFlow CRM web application.
 
 | Category        | Count |
 | --------------- | ----- |
-| Total Pages     | 207   |
+| Total Pages     | 208   |
 | Public Pages    | 32    |
 | Developer Pages | 14    |
 | Protected Pages | 148   |

@@ -29,11 +29,13 @@ beforeAll(async () => {
 
 describe('Sitemap Reconciliation', () => {
   // TC-25
-  it('total page.tsx count equals 207 (regression guard)', () => {
+  it('total page.tsx count equals 208 (regression guard)', () => {
     // Updated by PG-186: document-settings, document-types, storage-policies moved to (list)/.
     // Net count increased by 2 from PG-182/PG-183/PG-186 work (was 205 before sprint-17).
+    // Sprint-18 added one more page (report-settings / help-center / sprint-18 batch),
+    // bringing the count to 208.
     const pageFiles = findPageFiles(APP_DIR);
-    expect(pageFiles.length).toBe(207);
+    expect(pageFiles.length).toBe(208);
   });
 
   // TC-26
