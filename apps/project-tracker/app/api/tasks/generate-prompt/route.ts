@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
-import { join, dirname, resolve, sep, basename } from 'node:path';
+import { join, dirname, basename } from 'node:path';
 import Papa from 'papaparse';
 import { isValidTaskId } from '@/lib/paths';
 
@@ -39,12 +39,10 @@ function normalizeTaskIds(body: GenerateTaskPromptRequest): string[] {
   return [];
 }
 
-function resolvePromptArtifactPath(
-  projectRoot: string,
+function resolvePromptArtifactFilename(
   outputPath: string | undefined,
   defaultFilename: string
-): { fullPath: string } | { errorResponse: Response } {
-  // Inline basename + regex so CodeQL sees the sanitiser directly at the sink call site.
+): { safeFilename: string } | { errorResponse: Response } {
   const safeFilename = outputPath
     ? basename(outputPath).replace(/[^A-Za-z0-9._\- ]/g, '')
     : defaultFilename;
@@ -56,18 +54,7 @@ function resolvePromptArtifactPath(
       ),
     };
   }
-  const fullPath = join(projectRoot, 'artifacts', 'prompts', safeFilename);
-  const artifactsRoot = resolve(projectRoot, 'artifacts');
-  const resolvedFull = resolve(fullPath);
-  if (resolvedFull !== artifactsRoot && !resolvedFull.startsWith(artifactsRoot + sep)) {
-    return {
-      errorResponse: NextResponse.json(
-        { success: false, error: 'Refusing to write outside artifacts root' },
-        { status: 400 }
-      ),
-    };
-  }
-  return { fullPath };
+  return { safeFilename };
 }
 
 async function loadDependencyGraphSafe(graphPath: string): Promise<any | null> {
@@ -147,18 +134,26 @@ export async function POST(request: Request) {
     const defaultFilename =
       safeTaskIds.length === 1 ? `task-${safeTaskIds[0]}.md` : `tasks-${timestamp}.md`;
 
-    const resolved = resolvePromptArtifactPath(projectRoot, body.outputPath, defaultFilename);
+    const resolved = resolvePromptArtifactFilename(body.outputPath, defaultFilename);
     if ('errorResponse' in resolved) return resolved.errorResponse;
-    const { fullPath } = resolved;
 
-    await mkdir(dirname(fullPath), { recursive: true });
+    // Inline basename + whitelist-regex AT the fs sink. CodeQL recognises this
+    // pattern as a path-injection sanitiser; helpers across function
+    // boundaries are not propagated.
+    const safeFullPath = join(
+      projectRoot,
+      'artifacts',
+      'prompts',
+      basename(resolved.safeFilename).replace(/[^A-Za-z0-9._\- ]/g, '')
+    );
+    await mkdir(dirname(safeFullPath), { recursive: true });
 
     const prompt = buildTaskPrompt(selected, dependencyGraph);
-    await writeFile(fullPath, prompt, 'utf-8');
+    await writeFile(safeFullPath, prompt, 'utf-8');
 
     return NextResponse.json({
       success: true,
-      savedTo: fullPath,
+      savedTo: safeFullPath,
       taskIds: safeTaskIds,
       markdown: prompt,
     });
