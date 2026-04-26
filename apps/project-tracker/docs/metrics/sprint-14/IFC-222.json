@@ -9,7 +9,7 @@
       "IFC-170"
     ],
     "all_satisfied": true,
-    "verified_at": "2026-04-26T09:27:21.021Z"
+    "verified_at": "2026-04-26T10:04:32.694Z"
   },
   "prerequisites": [
     "FILE:apps/workers/notifications-worker/src/channels/sms.ts"

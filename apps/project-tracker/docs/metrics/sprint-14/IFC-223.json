@@ -9,7 +9,7 @@
       "IFC-157"
     ],
     "all_satisfied": true,
-    "verified_at": "2026-04-26T09:27:21.022Z"
+    "verified_at": "2026-04-26T10:04:32.694Z"
   },
   "prerequisites": [
     "FILE:packages/adapters/src/messaging/email/outbound.ts"
