@@ -84,7 +84,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Find Dockerfiles and images
         id: find-images
@@ -150,7 +150,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install Trivy
         run: |
@@ -232,7 +232,7 @@ jobs:
           done
 
       - name: Upload scan results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: image-scan-results-${{ github.run_number }}
           path: artifacts/security/image-scans/
@@ -248,7 +248,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install Trivy
         run: |
@@ -291,7 +291,7 @@ jobs:
           echo "No critical Dockerfile misconfigurations found"
 
       - name: Upload config scan results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: dockerfile-config-scan-${{ github.run_number }}
@@ -309,7 +309,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install Trivy
         run: |
@@ -359,7 +359,7 @@ jobs:
           fi
 
       - name: Upload registry scan results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: registry-scan-${{ github.run_number }}
           path: artifacts/security/registry-scans/
@@ -377,7 +377,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install Trivy
         run: |
@@ -414,7 +414,7 @@ jobs:
 
     steps:
       - name: Download scan artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: "*-scan-*"
           path: scan-results/
@@ -495,7 +495,7 @@ jobs:
 
     steps:
       - name: Download all scan results
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: "*-scan-*"
           path: all-scans/
@@ -544,7 +544,7 @@ jobs:
           cat nightly-report.md >> $GITHUB_STEP_SUMMARY
 
       - name: Upload nightly report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: nightly-security-report-${{ github.run_number }}
           path: nightly-report.md

@@ -72,15 +72,15 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "pnpm"
@@ -136,7 +136,7 @@ jobs:
           echo "SHA256: ${ARCHIVE_SHA256}"
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: release-artifacts-${{ steps.version.outputs.version }}
           path: release-artifacts/
@@ -155,10 +155,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Download release artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: release-artifacts-${{ needs.build-artifacts.outputs.version }}
           path: release-artifacts
@@ -208,7 +208,7 @@ jobs:
           echo "Signature verification passed"
 
       - name: Upload signed artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: signed-artifacts-${{ needs.build-artifacts.outputs.version }}
           path: |
@@ -242,10 +242,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Download release artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: release-artifacts-${{ needs.build-artifacts.outputs.version }}
           path: release-artifacts
@@ -336,7 +336,7 @@ jobs:
           echo "Provenance attestation signed"
 
       - name: Upload provenance artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: provenance-${{ needs.build-artifacts.outputs.version }}
           path: |
@@ -366,7 +366,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install cosign
         uses: sigstore/cosign-installer@v3
@@ -464,14 +464,14 @@ jobs:
           cosign-release: ${{ env.COSIGN_VERSION }}
 
       - name: Download signed artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: signed-artifacts-${{ needs.build-artifacts.outputs.version }}
           path: signed-artifacts
         continue-on-error: true
 
       - name: Download release artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: release-artifacts-${{ needs.build-artifacts.outputs.version }}
           path: release-artifacts

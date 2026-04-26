@@ -67,7 +67,7 @@ jobs:
       green_url: ${{ steps.state.outputs.green_url }}
       production_url: ${{ steps.state.outputs.production_url }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Determine current state
         id: state
@@ -143,11 +143,11 @@ jobs:
       deployment_id: ${{ steps.deploy.outputs.deployment_id }}
       deployment_url: ${{ steps.deploy.outputs.url }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "pnpm"
@@ -188,7 +188,7 @@ jobs:
     outputs:
       health_status: ${{ steps.health.outputs.status }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Wait for deployment propagation
         run: sleep 30
@@ -282,7 +282,7 @@ jobs:
     outputs:
       switch_time_ms: ${{ steps.switch.outputs.switch_time_ms }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Record switch start time
         id: start
@@ -364,7 +364,7 @@ jobs:
     environment:
       name: production-rollback
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Record rollback start time
         id: start
@@ -517,7 +517,7 @@ jobs:
     if: always() && (inputs.action == 'deploy' || inputs.action == 'switch')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Record metrics to CSV
         run: |

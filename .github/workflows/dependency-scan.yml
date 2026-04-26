@@ -35,15 +35,15 @@ jobs:
     name: NPM Audit
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: "22"
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v5
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -52,10 +52,15 @@ jobs:
         continue-on-error: true
         run: |
           pnpm audit --json > audit-result.json 2>&1 || true
-          echo "vulnerabilities=$(jq '.metadata.vulnerabilities' audit-result.json)" >> $GITHUB_OUTPUT
+          # `.metadata.vulnerabilities` is a multi-key JSON object. Without -c
+          # jq emits it pretty-printed across multiple lines, which violates
+          # $GITHUB_OUTPUT's KEY=VALUE-on-one-line format and produces the
+          # "Invalid format '  \"info\": 0,'" annotation. // {} guards against
+          # an audit run that produced no output at all.
+          echo "vulnerabilities=$(jq -c '.metadata.vulnerabilities // {}' audit-result.json 2>/dev/null || echo '{}')" >> $GITHUB_OUTPUT
 
       - name: Upload audit results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: npm-audit-results
           path: audit-result.json
@@ -64,15 +69,15 @@ jobs:
     name: Snyk Security Scan
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: "22"
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v5
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -85,7 +90,7 @@ jobs:
           args: --all-projects --severity-threshold=high --json-file-output=snyk-results.json
 
       - name: Upload Snyk results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: snyk-results
           path: snyk-results.json
@@ -94,7 +99,7 @@ jobs:
     name: Trivy Filesystem Scan
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
@@ -106,12 +111,12 @@ jobs:
           severity: "CRITICAL,HIGH"
 
       - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: "trivy-results.sarif"
 
       - name: Upload Trivy results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: trivy-results
           path: trivy-results.sarif
@@ -120,7 +125,7 @@ jobs:
     name: OSV Scanner
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Run OSV Scanner
         uses: google/osv-scanner-action/osv-scanner-action@v2.3.5
@@ -132,7 +137,7 @@ jobs:
         continue-on-error: true
 
       - name: Upload OSV results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: osv-results
           path: osv-results.json
@@ -142,15 +147,15 @@ jobs:
     needs: [npm-audit, snyk-scan, trivy-scan, osv-scan]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: scan-results
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: "22"
 
@@ -231,17 +236,17 @@ jobs:
     if: github.event_name == 'schedule'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           token: ${{ secrets.ADMIN_TOKEN }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: "22"
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v5
       - name: Update dependencies
         run: |
           pnpm update --latest
