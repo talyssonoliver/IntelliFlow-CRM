@@ -60,8 +60,14 @@ ENV SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
 RUN pnpm --filter db db:generate
 RUN pnpm --filter domain build
 RUN pnpm --filter validators build
+# webhooks has no workspace deps that need building; platform depends on domain
+RUN pnpm --filter webhooks build
+RUN pnpm --filter platform build
 RUN pnpm --filter db build
 RUN pnpm --filter application build
+# adapters depends on application, db, domain, platform, webhooks — must follow all of the above
+# Required because apps/api/src/container.ts (transitively imported by web) resolves @intelliflow/adapters
+RUN pnpm --filter adapters build
 RUN pnpm --filter api-client build
 
 # Build Next.js application
