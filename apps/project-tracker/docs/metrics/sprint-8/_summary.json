@@ -13,7 +13,7 @@
     "not_started": 0,
     "failed": 0
   },
-  "notes": "9/9 tasks DONE (100%). Last synced: 2026-04-26T10:04:33.044Z",
+  "notes": "9/9 tasks DONE (100%). Last synced: 2026-04-26T11:17:07.701Z",
   "completed_tasks": [
     {
       "task_id": "IFC-077",
@@ -80,6 +80,6 @@
       "spi": 1,
       "status": "on_track"
     },
-    "calculated_at": "2026-04-26T10:04:33.172Z"
+    "calculated_at": "2026-04-26T11:17:07.832Z"
   }
 }
