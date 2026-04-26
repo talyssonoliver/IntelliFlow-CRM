@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, basename } from 'node:path';
 import Papa from 'papaparse';
 import {
-  buildSafeTaskFilename,
   isValidTaskId,
   resolveSprintPath,
   sanitizeSprintNumber,
@@ -66,16 +65,16 @@ export async function POST(request: Request) {
     const task = tasks[taskIndex];
     const sprintNumber = sanitizeSprintNumber(task['Target Sprint']) ?? 0;
 
-    // `buildSafeTaskFilename` breaks the CodeQL taint chain via `path.basename`
-    // + whitelist regex before the filenames enter any path join.
-    const specFilename = buildSafeTaskFilename(safeTaskId, '-spec.md');
-    const planFilename = buildSafeTaskFilename(safeTaskId, '-plan.md');
-    if (!specFilename || !planFilename) {
+    // CodeQL recognises path.basename + character-class regex as a path-injection sanitiser.
+    const safeTaskBase = basename(safeTaskId).replace(/[^A-Z0-9-]/g, '');
+    if (!safeTaskBase) {
       return NextResponse.json(
         { success: false, error: 'Task ID could not be converted to a safe filename' },
         { status: 400 }
       );
     }
+    const specFilename = `${safeTaskBase}-spec.md`;
+    const planFilename = `${safeTaskBase}-plan.md`;
 
     // Sprint-based paths (new structure)
     const specFile = resolveSprintPath(sprintsRoot, sprintNumber, 'specifications', specFilename);
@@ -87,12 +86,11 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check if spec/plan already exists
-    const specExists = existsSync(specFile);
-    const planExists = existsSync(planFile);
-
-    // SESSION 2: Plan requires spec to exist first (created in SESSION 1: Spec)
-    if (!specExists) {
+    // SESSION 2: Plan requires spec to exist first (created in SESSION 1: Spec).
+    // Use readFile directly; ENOENT means spec missing — avoids existsSync race (#128).
+    try {
+      await readFile(specFile, 'utf-8');
+    } catch {
       return NextResponse.json(
         {
           success: false,
@@ -104,8 +102,15 @@ export async function POST(request: Request) {
       );
     }
 
-    // Plan already exists
-    if (planExists) {
+    // Plan already exists — check via readFile to avoid TOCTOU.
+    let planAlreadyExists = false;
+    try {
+      await readFile(planFile, 'utf-8');
+      planAlreadyExists = true;
+    } catch {
+      // ENOENT — plan does not exist yet
+    }
+    if (planAlreadyExists) {
       return NextResponse.json({
         success: true,
         taskId: safeTaskId,

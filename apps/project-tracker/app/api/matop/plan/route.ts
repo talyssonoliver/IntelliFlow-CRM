@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { join } from 'node:path';
-import { existsSync } from 'node:fs';
+import { join, basename } from 'node:path';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import {
   loadTasks,
@@ -10,7 +9,6 @@ import {
   type TaskRecord,
 } from '@/lib/csv-status';
 import {
-  buildSafeTaskFilename,
   isValidTaskId,
   resolveSprintPath,
   sanitizeSprintNumber,
@@ -65,11 +63,13 @@ function resolvePlanPaths(
   sprintsRoot: string,
   specifyDir: string
 ): ResolvedPlanPaths | { error: string; status: number } {
-  const specFilename = buildSafeTaskFilename(safeTaskId, '-spec.md');
-  const planFilename = buildSafeTaskFilename(safeTaskId, '-plan.md');
-  if (!specFilename || !planFilename) {
+  // CodeQL recognises path.basename + character-class regex as a path-injection sanitiser.
+  const safeTaskBase = basename(safeTaskId).replace(/[^A-Z0-9-]/g, '');
+  if (!safeTaskBase) {
     return { error: 'Task ID could not be converted to a safe filename', status: 400 };
   }
+  const specFilename = `${safeTaskBase}-spec.md`;
+  const planFilename = `${safeTaskBase}-plan.md`;
   const specPath = resolveSprintPath(sprintsRoot, sprintNumber, 'specifications', specFilename);
   const planPath = resolveSprintPath(sprintsRoot, sprintNumber, 'planning', planFilename);
   const planningDir = resolveSprintPath(sprintsRoot, sprintNumber, 'planning');
@@ -78,6 +78,29 @@ function resolvePlanPaths(
   }
   const legacySpecPath = join(specifyDir, 'specifications', specFilename);
   return { specFilename, planFilename, specPath, planPath, planningDir, legacySpecPath };
+}
+
+/**
+ * Read the spec file from the canonical sprint path; fall back to the legacy
+ * `.specify/specifications/` path on ENOENT. Returns null only if both paths
+ * are absent (caller turns this into a 400 with `Spec required for X`).
+ *
+ * Extracted from POST() so the request handler stays under the sonarjs
+ * cognitive-complexity ceiling.
+ */
+async function readSpecWithLegacyFallback(
+  specPath: string,
+  legacySpecPath: string
+): Promise<string | null> {
+  try {
+    return await readFile(specPath, 'utf-8');
+  } catch {
+    try {
+      return await readFile(legacySpecPath, 'utf-8');
+    } catch {
+      return null;
+    }
+  }
 }
 
 export async function POST(request: Request) {
@@ -126,20 +149,6 @@ export async function POST(request: Request) {
     }
     const { specPath, planPath, planningDir, legacySpecPath } = resolved;
 
-    // Check prerequisites - must have spec (check both new and legacy locations)
-    const specExists = existsSync(specPath) || existsSync(legacySpecPath);
-    if (!specExists) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: `Spec required for ${taskId}. Run SESSION 1: Spec first.`,
-          requiredSession: 'spec',
-          currentStatus: task.Status,
-        },
-        { status: 400 }
-      );
-    }
-
     // Validate session progression
     const canProceed = canProceedToSession(task, 'plan');
     if (!canProceed.canProceed && !forceRegenerate) {
@@ -153,9 +162,22 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check if already has plan (unless force regenerate)
-    const planExists = existsSync(planPath);
-    if (planExists && !forceRegenerate) {
+    // Update status to "Planning" at the start
+    await updateTaskStatus(safeTaskId, 'Planning');
+
+    // Ensure sprint directories exist — `planningDir` was validated above.
+    await mkdir(planningDir, { recursive: true });
+
+    // Check if already has plan (unless force regenerate) — avoid existsSync race
+    // by attempting readFile; ENOENT means it doesn't exist yet.
+    let planAlreadyExists = false;
+    try {
+      await readFile(planPath, 'utf-8');
+      planAlreadyExists = true;
+    } catch {
+      // ENOENT — plan does not exist yet, proceed
+    }
+    if (planAlreadyExists && !forceRegenerate) {
       return NextResponse.json({
         success: true,
         taskId,
@@ -167,15 +189,19 @@ export async function POST(request: Request) {
       });
     }
 
-    // Update status to "Planning" at the start
-    await updateTaskStatus(safeTaskId, 'Planning');
-
-    // Ensure sprint directories exist — `planningDir` was validated above.
-    await mkdir(planningDir, { recursive: true });
-
-    // Read spec to get domain info (try new path first, then legacy)
-    const actualSpecPath = existsSync(specPath) ? specPath : legacySpecPath;
-    const specContent = await readFile(actualSpecPath, 'utf-8');
+    // Read spec to get domain info — try new sprint path first, fall back to legacy.
+    const specContent = await readSpecWithLegacyFallback(specPath, legacySpecPath);
+    if (specContent === null) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Spec required for ${taskId}. Run SESSION 1: Spec first.`,
+          requiredSession: 'spec',
+          currentStatus: task.Status,
+        },
+        { status: 400 }
+      );
+    }
     const domain = extractDomainFromSpec(specContent);
 
     // Phase 2: Plan Generation

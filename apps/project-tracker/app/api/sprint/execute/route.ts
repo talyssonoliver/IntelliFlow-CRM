@@ -27,14 +27,12 @@ import { sanitizeSprintNumber } from '../../../../lib/paths';
 import { basename } from 'node:path';
 
 /**
- * Taint-breaking run-id → filename builder.
- * `path.basename` collapses any directory traversal; the regex then whitelists
- * only the characters present in a valid run-id so CodeQL's taint chain ends here.
+ * Validate a run-id shape. The caller inlines `basename+regex` at each fs
+ * sink so CodeQL sees the sanitiser at the call site rather than across a
+ * function boundary.
  */
-function buildSafeRunFilename(runId: string, suffix: string): string | null {
-  if (!/^[A-Za-z0-9._-]{1,80}$/.test(runId)) return null;
-  const safe = basename(runId).replaceAll(/[^A-Za-z0-9._-]/g, '');
-  return safe.length === 0 ? null : `${safe}${suffix}`;
+function isValidRunId(runId: string): boolean {
+  return /^[A-Za-z0-9._-]{1,80}$/.test(runId);
 }
 
 export const dynamic = 'force-dynamic';
@@ -261,7 +259,7 @@ function buildExecutionPlan(args: {
   };
 }
 
-function buildInitialExecutionState(args: {
+function _buildInitialExecutionState(args: {
   sprintNumber: number | 'all';
   runId: string;
   startFromPhase: number;
@@ -406,12 +404,13 @@ export async function POST(request: Request) {
     // Save execution state
     const runsDir = join(projectRoot, 'artifacts', 'sprint-runs');
     await mkdir(runsDir, { recursive: true });
-    const runStateFilename = buildSafeRunFilename(runId, '.json');
-    if (!runStateFilename) {
+    if (!isValidRunId(runId)) {
       return NextResponse.json({ success: false, error: 'Invalid run ID format' }, { status: 400 });
     }
+    // CodeQL recognises path.basename + character-class regex as a path-injection sanitiser.
+    const safeRunBase = basename(runId).replace(/[^A-Za-z0-9._-]/g, '');
     await writeFile(
-      join(runsDir, runStateFilename),
+      join(runsDir, `${safeRunBase}.json`),
       JSON.stringify(initialState, null, 2),
       'utf-8'
     );
@@ -652,10 +651,11 @@ async function executeSprintAsync(
       },
     };
 
-    const runResultsFilename = buildSafeRunFilename(runId, '-results.json');
-    if (runResultsFilename) {
+    if (isValidRunId(runId)) {
+      // CodeQL recognises path.basename + character-class regex as a path-injection sanitiser.
+      const safeRunBase = basename(runId).replace(/[^A-Za-z0-9._-]/g, '');
       await writeFile(
-        join(runsDir, runResultsFilename),
+        join(runsDir, `${safeRunBase}-results.json`),
         JSON.stringify(finalResults, null, 2),
         'utf-8'
       );

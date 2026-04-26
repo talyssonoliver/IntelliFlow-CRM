@@ -14,9 +14,8 @@
 import { spawn, ChildProcess } from 'node:child_process';
 import { mkdir, writeFile, appendFile, readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, basename } from 'node:path';
 import { randomBytes } from 'node:crypto';
-import { buildSafeSessionFilename } from './paths';
 
 // Session types that this spawner handles
 export type SessionType = 'spec' | 'plan' | 'hydrate' | 'exec';
@@ -327,12 +326,13 @@ export async function getSessionStatus(sessionId: string): Promise<ClaudeSession
     return active;
   }
 
-  // Check status file — taint-break sessionId via buildSafeSessionFilename.
-  const statusFilename = buildSafeSessionFilename(sessionId, '.json');
-  if (!statusFilename) {
+  // Check status file. CodeQL recognises path.basename + character-class regex as a
+  // path-injection sanitiser — inline here so the taint chain ends at this scalar.
+  const safeSessionBase = basename(sessionId).replace(/[^0-9a-f-]/gi, '');
+  if (!safeSessionBase) {
     return null;
   }
-  const statusFile = join(getStatusDir(), statusFilename);
+  const statusFile = join(getStatusDir(), `${safeSessionBase}.json`);
   if (!existsSync(statusFile)) {
     return null;
   }
@@ -356,12 +356,12 @@ export async function getSessionOutput(
     return null;
   }
 
-  // Taint-break sessionId via buildSafeSessionFilename.
-  const outputFilename = buildSafeSessionFilename(sessionId, '.log');
-  if (!outputFilename) {
+  // CodeQL recognises path.basename + character-class regex as a path-injection sanitiser.
+  const safeSessionBase = basename(sessionId).replace(/[^0-9a-f-]/gi, '');
+  if (!safeSessionBase) {
     return null;
   }
-  const outputFile = join(getLogsDir(), outputFilename);
+  const outputFile = join(getLogsDir(), `${safeSessionBase}.log`);
   if (!existsSync(outputFile)) {
     return null;
   }

@@ -5,15 +5,9 @@ import { join, dirname, resolve, sep, basename } from 'node:path';
 import Papa from 'papaparse';
 import { isValidTaskId } from '@/lib/paths';
 
-/**
- * Taint-breaking output-path sanitizer.
- * `path.basename` strips any directory traversal; the regex then whitelists
- * a safe filename alphabet so CodeQL's taint chain ends at this scalar.
- */
-function buildSafeOutputFilename(rawPath: string): string | null {
-  const safe = basename(rawPath).replaceAll(/[^A-Za-z0-9._\- ]/g, '');
-  return safe.length === 0 ? null : safe;
-}
+// Note: output filename sanitisation is inlined at the sink in
+// resolvePromptArtifactPath so CodeQL sees the basename+regex pattern
+// directly at the fs call site rather than across a function boundary.
 
 export const dynamic = 'force-dynamic';
 
@@ -50,8 +44,11 @@ function resolvePromptArtifactPath(
   outputPath: string | undefined,
   defaultFilename: string
 ): { fullPath: string } | { errorResponse: Response } {
-  const safeFilename = outputPath ? buildSafeOutputFilename(outputPath) : defaultFilename;
-  if (!safeFilename) {
+  // Inline basename + regex so CodeQL sees the sanitiser directly at the sink call site.
+  const safeFilename = outputPath
+    ? basename(outputPath).replace(/[^A-Za-z0-9._\- ]/g, '')
+    : defaultFilename;
+  if (!safeFilename || safeFilename.length === 0) {
     return {
       errorResponse: NextResponse.json(
         { success: false, error: 'Invalid output filename' },

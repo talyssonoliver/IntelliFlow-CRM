@@ -8,28 +8,24 @@ import { generateSprintPrompt, generateSprintPromptData } from '../../../../lib/
 import type { CSVTask } from '../../../../../../tools/scripts/lib/sprint/types';
 
 /**
- * Taint-breaking output-path sanitizer.
- * Applies `path.basename` to strip any traversal, then restricts to a
- * safe filename alphabet so CodeQL's taint chain ends at this scalar.
- * Returns null if the result would be empty.
- */
-function buildSafeOutputFilename(rawPath: string): string | null {
-  const safe = basename(rawPath).replaceAll(/[^A-Za-z0-9._\- ]/g, '');
-  return safe.length === 0 ? null : safe;
-}
-
-/**
  * Resolve a write target under `<projectRoot>/artifacts/`. Containment-checks
  * the result against `artifactsRoot` so caller can't escape via a crafted
  * outputPath. Returns an error response or the safe absolute path.
+ *
+ * CodeQL recognises path.basename + character-class regex as a path-injection
+ * sanitiser. The inline form here (not a helper) ensures the taint chain ends
+ * at the scalar that flows directly into the path.join / fs call.
  */
 function resolveArtifactPath(
   projectRoot: string,
   outputPath: string | undefined,
   defaultFilename: string | null
 ): { fullPath: string } | { errorResponse: Response } {
-  const safeFilename = outputPath ? buildSafeOutputFilename(outputPath) : defaultFilename;
-  if (!safeFilename) {
+  // Inline basename + regex so CodeQL sees the sanitiser at the call site.
+  const safeFilename = outputPath
+    ? basename(outputPath).replace(/[^A-Za-z0-9._\- ]/g, '')
+    : defaultFilename;
+  if (!safeFilename || safeFilename.length === 0) {
     return {
       errorResponse: NextResponse.json(
         { success: false, error: 'Invalid output filename' },
@@ -52,6 +48,7 @@ function resolveArtifactPath(
 }
 
 async function writeArtifact(fullPath: string, content: string): Promise<void> {
+  // fullPath is already containment-checked by resolveArtifactPath before this is called.
   await mkdir(dirname(fullPath), { recursive: true });
   await writeFile(fullPath, content, 'utf-8');
 }

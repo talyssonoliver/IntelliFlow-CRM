@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server';
 import { readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, basename } from 'node:path';
 import Papa from 'papaparse';
 import {
-  buildSafeTaskFilename,
   isValidTaskId,
   resolveSprintPath,
   sanitizeSprintNumber,
@@ -29,19 +28,20 @@ function resolveStartPaths(
   sprintNumber: number,
   sprintsRoot: string
 ): ResolvedStartPaths | { error: string } {
-  const specFilename = buildSafeTaskFilename(safeTaskId, '-spec.md');
-  const planFilename = buildSafeTaskFilename(safeTaskId, '-plan.md');
-  const attestationDirName = buildSafeTaskFilename(safeTaskId, '');
-  if (!specFilename || !planFilename || !attestationDirName) {
+  // CodeQL recognises path.basename + character-class regex as a path-injection sanitiser.
+  const safeTaskBase = basename(safeTaskId).replace(/[^A-Z0-9-]/g, '');
+  if (!safeTaskBase) {
     return { error: 'Task ID could not be converted to a safe filename' };
   }
+  const specFilename = `${safeTaskBase}-spec.md`;
+  const planFilename = `${safeTaskBase}-plan.md`;
   const specFile = resolveSprintPath(sprintsRoot, sprintNumber, 'specifications', specFilename);
   const planFile = resolveSprintPath(sprintsRoot, sprintNumber, 'planning', planFilename);
   const contextAckFile = resolveSprintPath(
     sprintsRoot,
     sprintNumber,
     'attestations',
-    attestationDirName,
+    safeTaskBase,
     'attestation.json'
   );
   if (!specFile || !planFile || !contextAckFile) {

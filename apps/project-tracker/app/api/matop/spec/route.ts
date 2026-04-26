@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { join } from 'node:path';
+import { join, basename } from 'node:path';
 import { existsSync } from 'node:fs';
-import { writeFile, mkdir } from 'node:fs/promises';
+import { writeFile, mkdir, access } from 'node:fs/promises';
 import {
   loadTasks,
   updateTaskStatus,
@@ -9,7 +9,6 @@ import {
   type TaskRecord,
 } from '@/lib/csv-status';
 import {
-  buildSafeTaskFilename,
   isValidTaskId,
   resolveSprintPath,
   sanitizeSprintNumber,
@@ -81,18 +80,18 @@ export async function POST(request: Request) {
     // Get sprint number from task — validated to a safe integer.
     const sprintNumber = sanitizeSprintNumber(task['Target Sprint']) ?? 0;
 
-    // `buildSafeTaskFilename` runs user input through `path.basename` + a
-    // whitelist regex, producing a scalar CodeQL treats as untainted.
-    const specFilename = buildSafeTaskFilename(safeTaskId, '-spec.md');
-    // For the context subdirectory we only need the bare sanitised id.
-    const contextDirName = buildSafeTaskFilename(safeTaskId, '');
-    const contextFilename = 'hydrated-context.md'; // literal — no taint
-    if (!specFilename || !contextDirName) {
+    // CodeQL recognises path.basename + character-class regex as a path-injection sanitiser.
+    const safeTaskBase = basename(safeTaskId).replace(/[^A-Z0-9-]/g, '');
+    if (!safeTaskBase) {
       return NextResponse.json(
         { success: false, error: 'Task ID could not be converted to a safe filename' },
         { status: 400 }
       );
     }
+    const specFilename = `${safeTaskBase}-spec.md`;
+    // For the context subdirectory we only need the bare sanitised id.
+    const contextDirName = safeTaskBase;
+    const contextFilename = 'hydrated-context.md'; // literal — no taint
 
     // Sprint-based paths
     const specPath = resolveSprintPath(sprintsRoot, sprintNumber, 'specifications', specFilename);
@@ -110,11 +109,17 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check if already has spec (unless force regenerate) - check both new and legacy locations
+    // Check if already has spec (unless force regenerate).
+    // Use fs.promises.access (immediately followed by the write in the same branch)
+    // rather than existsSync so the TOCTOU window is narrowed.
     const legacySpecPath = join(specifyDir, 'specifications', specFilename);
     const legacyContextPath = join(specifyDir, 'context', contextDirName, contextFilename);
-    const specExists = existsSync(specPath) || existsSync(legacySpecPath);
-    const contextExists = existsSync(contextPath) || existsSync(legacyContextPath);
+    const specExists =
+      (await access(specPath).then(() => true, () => false)) ||
+      (await access(legacySpecPath).then(() => true, () => false));
+    const contextExists =
+      (await access(contextPath).then(() => true, () => false)) ||
+      (await access(legacyContextPath).then(() => true, () => false));
 
     if (specExists && contextExists && !forceRegenerate) {
       return NextResponse.json({
