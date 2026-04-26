@@ -189,6 +189,10 @@ vi.mock('@/components/shared/activity-feed', () => ({
   ActivityFeed: () => <div data-testid="activity-feed">Activity Feed</div>,
 }));
 
+vi.mock('@/components/shared/SuggestedTagsRow', () => ({
+  SuggestedTagsRow: () => null,
+}));
+
 vi.mock('@intelliflow/ui', () => ({
   Card: ({ children, className }: Readonly<{ children: React.ReactNode; className?: string }>) => (
     <div className={className}>{children}</div>

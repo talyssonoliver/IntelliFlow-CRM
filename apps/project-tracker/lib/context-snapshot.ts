@@ -495,6 +495,23 @@ export function generateContextSnapshot(metricsDir: string, repoDir: string): Sn
     throw new Error(`task-registry.json not found at ${metricsDir}/_global`);
   }
 
+  // Fallback: derive active_sprint from task_details when the generator hasn't
+  // written the field yet (schema gap — the generator now writes it, but this
+  // guard keeps the tool runnable against older registry snapshots).
+  if (!registry.active_sprint) {
+    const taskDetails = (registry as unknown as Record<string, Record<string, { status: string; sprint: number }>>).task_details ?? {};
+    const nonDoneSprints: number[] = [];
+    let highest = 0;
+    for (const detail of Object.values(taskDetails)) {
+      if (typeof detail.sprint === 'number' && detail.sprint >= 0) {
+        if (detail.sprint > highest) highest = detail.sprint;
+        if (detail.status !== 'DONE') nonDoneSprints.push(detail.sprint);
+      }
+    }
+    const n = nonDoneSprints.length > 0 ? Math.min(...nonDoneSprints) : highest;
+    registry.active_sprint = `sprint-${n}`;
+  }
+
   const summary = loadSprintSummary(metricsDir, registry.active_sprint, sourceFiles);
   const csvRows = loadCsvRows(metricsDir, sourceFiles);
 

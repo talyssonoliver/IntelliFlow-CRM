@@ -131,7 +131,22 @@ export function updateTaskRegistry(tasks: TaskRecord[], metricsDir: string): voi
     in_review: sprint0Tasks.filter((t) => t.Status === 'In Review').length,
   };
 
+  // Derive active_sprint: lowest sprint number with at least one non-DONE task.
+  // Falls back to the highest known sprint when everything is DONE.
+  const nonDoneSprints = new Set<number>();
+  let highestSprint = 0;
+  for (const detail of Object.values(taskDetails) as Array<{ status: string; sprint: number }>) {
+    if (typeof detail.sprint === 'number' && detail.sprint >= 0) {
+      if (detail.sprint > highestSprint) highestSprint = detail.sprint;
+      if (detail.status !== 'DONE') nonDoneSprints.add(detail.sprint);
+    }
+  }
+  const activeSprint = nonDoneSprints.size > 0 ? Math.min(...nonDoneSprints) : highestSprint;
+
   registry.last_updated = new Date().toISOString();
+  registry.total_tasks = tasks.length;
+  registry.active_sprint = `sprint-${activeSprint}`;
+  registry.current_sprint = activeSprint;
   registry.tasks_by_status = tasksByStatus;
   registry.task_details = taskDetails;
 

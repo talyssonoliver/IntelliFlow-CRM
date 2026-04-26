@@ -199,6 +199,14 @@ vi.mock('@/components/shared/activity-feed', () => ({
   ActivityFeedItemActions: () => <div>Activity Feed Item Actions</div>,
 }));
 
+vi.mock('@/components/shared/SuggestedTagsRow', () => ({
+  SuggestedTagsRow: () => null,
+}));
+
+vi.mock('@/components/contacts/ReplyDraftsPanel', () => ({
+  ReplyDraftsPanel: () => null,
+}));
+
 vi.mock('@/hooks/useActivityFeed', () => ({
   useActivityFeed: () => mockUseActivityFeed(),
 }));
