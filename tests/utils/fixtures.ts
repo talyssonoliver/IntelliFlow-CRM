@@ -370,13 +370,23 @@ export interface LeadScoreFixture {
 }
 
 /**
+ * Map a numeric lead score to a tier band. Extracted from the fixture
+ * factory so the conditional stays linear (no nested ternary).
+ */
+function scoreTier(score: number): 'HOT' | 'WARM' | 'COLD' {
+  if (score >= 80) return 'HOT';
+  if (score >= 50) return 'WARM';
+  return 'COLD';
+}
+
+/**
  * Create a test lead score with realistic defaults
  */
 export function createLeadScoreFixture(
   overrides: Partial<LeadScoreFixture> = {}
 ): LeadScoreFixture {
   const score = overrides.score ?? 75;
-  const tier = score >= 80 ? 'HOT' : score >= 50 ? 'WARM' : 'COLD';
+  const tier = scoreTier(score);
 
   return {
     leadId: generateTestId('lead'),
