@@ -63,6 +63,9 @@ RUN pnpm --filter validators build
 # webhooks has no workspace deps that need building; platform depends on domain
 RUN pnpm --filter webhooks build
 RUN pnpm --filter platform build
+# observability has no workspace deps; required because apps/api (transitively imported
+# by web via tRPC types + container.ts) resolves @intelliflow/observability for tracing
+RUN pnpm --filter observability build
 RUN pnpm --filter db build
 RUN pnpm --filter application build
 # adapters depends on application, db, domain, platform, webhooks — must follow all of the above
