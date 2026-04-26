@@ -132,6 +132,18 @@ export function PublicHomePage() {
                   </span>{' '}
                   Talk to sales
                 </Link>
+                {/* PG-126: Replay entry for the public product tour. */}
+                <Link
+                  href="/features?tour=1"
+                  data-testid="tour-trigger-link"
+                  data-tour-id="features-v1"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg border border-white/30 text-white font-semibold hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-[#7cc4ff] focus:ring-offset-2 focus:ring-offset-[#0f172a]"
+                >
+                  <span className="material-symbols-outlined text-lg" aria-hidden="true">
+                    play_circle
+                  </span>{' '}
+                  Take the tour
+                </Link>
               </div>
 
               <div className="flex flex-wrap gap-3 text-sm text-slate-200">

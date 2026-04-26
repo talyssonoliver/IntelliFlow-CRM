@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-04-24T20:51:58.802Z",
+  "last_updated": "2026-04-26T09:27:20.798Z",
   "tasks_by_status": {
     "DONE": [
       "EXC-INIT-001",
@@ -197,6 +197,7 @@
       "IFC-121",
       "IFC-122",
       "IFC-124",
+      "PG-126",
       "IFC-125",
       "IFC-126",
       "IFC-127",
@@ -490,7 +491,6 @@
       "PG-123",
       "IFC-115",
       "IFC-123",
-      "PG-126",
       "PG-127",
       "IFC-164",
       "IFC-165",
@@ -5921,18 +5921,18 @@
       "section": "Public Pages",
       "description": "Add in‑app onboarding, guided product tours and feedback collection",
       "owner": "UX Designer + Frontend Dev (STOA-Domain)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 17,
       "dependencies": [
         "PG-001",
         "PG-002"
       ],
       "artifacts": [
-        "ARTIFACT:artifacts/misc/onboarding-config.json;ARTIFACT:apps/web/src/components/public/tour-components.tsx;ARTIFACT:apps/web/src/lib/public/feedback-service.ts;EVIDENCE:.specify/sprints/sprint-17/attestations/PG-126/context_ack.json"
+        "ARTIFACT:artifacts/misc/onboarding-config.json;ARTIFACT:apps/web/src/components/public/tour-components.tsx;ARTIFACT:apps/web/src/components/public/feedback-widget-public.tsx;ARTIFACT:apps/web/src/lib/public/feedback-service.ts;ARTIFACT:apps/web/src/lib/public/tour-storage.ts;ARTIFACT:apps/web/src/lib/public/tour-config.ts;ARTIFACT:apps/api/src/modules/public-feedback/public-feedback.router.ts;ARTIFACT:apps/api/src/modules/public-feedback/public-feedback.service.ts;ARTIFACT:apps/api/src/security/public-rate-limiter.ts;ARTIFACT:packages/validators/src/public-onboarding.ts;ARTIFACT:packages/application/src/ports/repositories/PublicFeedbackRepositoryPort.ts;ARTIFACT:packages/adapters/src/public-feedback/PrismaPublicFeedbackRepository.ts;ARTIFACT:packages/db/prisma/migrations/20260424210000_public_feedback_pg126/migration.sql;ARTIFACT:tests/e2e/features-tour.spec.ts;SPEC:.specify/sprints/sprint-17/specifications/PG-126-spec.md;PLAN:.specify/sprints/sprint-17/planning/PG-126-plan.md;EVIDENCE:.specify/sprints/sprint-17/attestations/PG-126/context_pack.md;EVIDENCE:.specify/sprints/sprint-17/attestations/PG-126/context_ack.json;EVIDENCE:.specify/sprints/sprint-17/attestations/PG-126/attestation.json"
       ],
       "kpis": "Onboarding completion >70%; NPS score improvement",
       "definition_of_done": "Users see guided tours on first login; ability to replay; feedback widget integrated; targets: >=70%; verified by: pnpm test",
-      "validation": "VALIDATE:pnpm test",
+      "validation": "VALIDATE:pnpm test;GATE:coverage-gte-90;GATE:lighthouse-gte-90",
       "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Design ready;FILE:docs/shared/review-checklist.md;FILE:docs/operations/pr-checklist.md;FILE:docs/company/brand/visual-identity.md;FILE:apps/web/src/app/(public)/page.tsx;FILE:apps/web/src/app/(public)/features/page.tsx",
       "cadence": ""
     },
@@ -11433,7 +11433,7 @@
       "definition_of_done": "contact.draftReply resolves emailThreadId to real thread messages when supplied; client-supplied emailThread remains as fallback; zero placeholder drafts persisted in production; regression on IFC-312 assertions; scoped coverage >=90%",
       "validation": "VALIDATE:pnpm typecheck;VALIDATE:pnpm test --run;VALIDATE:pnpm lint;VALIDATE:pnpm build;GATE:coverage-gte-90",
       "prerequisites": "FILE:packages/db/prisma/schema.prisma;FILE:apps/api/src/modules/contact/contact.router.ts;FILE:apps/ai-worker/src/contact-reply-draft.chain.ts;FILE:apps/ai-worker/src/jobs/reply-draft.job.ts",
-      "cadence": "\n"
+      "cadence": ""
     }
   },
   "sprints": {

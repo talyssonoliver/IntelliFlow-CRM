@@ -7,7 +7,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { OpportunityId, InvalidOpportunityIdError } from '../OpportunityId';
-import { validate as uuidValidate } from 'uuid';
+import { isValidUuid as uuidValidate } from '../../../shared/uuid';
 
 describe('OpportunityId', () => {
   describe('create()', () => {

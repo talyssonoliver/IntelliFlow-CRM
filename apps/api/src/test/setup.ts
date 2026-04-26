@@ -151,6 +151,7 @@ export const mockServices = {
   closeDealWon: mockDeep<any>(),
   closeDealLost: mockDeep<any>(),
   feedbackSurvey: mockDeep<any>(),
+  publicFeedback: mockDeep<any>(),
   experiment: mockDeep<any>(),
   // IFC-157: Notification Orchestrator — set to undefined so router tests
   // fall back to direct Prisma mocks. Tests that need orchestrator behavior
@@ -202,6 +203,7 @@ export const mockAdapters = {
   notificationService: mockDeep<any>(),
   icsGenerationService: mockDeep<any>(),
   feedbackSurveyRepository: mockDeep<any>(),
+  publicFeedbackRepository: mockDeep<any>(),
   tenantModuleRepository: mockDeep<any>(),
   notificationRepository: mockDeep<any>(),
   notificationPreferenceRepository: mockDeep<any>(),

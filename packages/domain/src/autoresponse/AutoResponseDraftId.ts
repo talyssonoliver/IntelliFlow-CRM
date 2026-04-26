@@ -1,4 +1,4 @@
-import { v4 as uuidv4, validate as uuidValidate } from 'uuid';
+import { generateUuid as uuidv4, isValidUuid as uuidValidate } from '../shared/uuid';
 
 /**
  * AutoResponseDraftId - Value object for auto-response draft identification

@@ -19,3 +19,6 @@ export * from './ModuleAccessPort';
 
 // Feedback Survey Repository Port (IFC-068)
 export * from './FeedbackSurveyRepositoryPort';
+
+// Public Feedback Repository Port (PG-126)
+export * from './PublicFeedbackRepositoryPort';

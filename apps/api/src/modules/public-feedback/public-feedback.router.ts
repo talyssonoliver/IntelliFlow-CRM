@@ -68,10 +68,23 @@ export const publicFeedbackRouter = createTRPCRouter({
         });
       }
 
-      const salt = process.env.PUBLIC_FEEDBACK_IP_SALT ?? 'pg-126-default-salt';
+      // PG-126: IP hashing salt.
+      // PROD → must be set, or the endpoint refuses to persist submissions so
+      // hashed IPs can't be rainbow-tabled back to raw IPs via a
+      // public-in-repo salt.
+      // TEST/DEV → fall back to a local development salt so the widget is
+      // runnable out of the box.
+      const salt = process.env.PUBLIC_FEEDBACK_IP_SALT;
+      if (!salt && process.env.NODE_ENV === 'production') {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message:
+            'Public feedback is disabled: PUBLIC_FEEDBACK_IP_SALT is not configured.',
+        });
+      }
       const ipHash = PublicRateLimiter.hashIp(
         extractClientIp(ctx.req),
-        salt
+        salt ?? 'pg-126-dev-salt-NEVER-USE-IN-PROD'
       );
 
       publicFeedbackLimiter.check(ipHash);

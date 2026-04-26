@@ -220,7 +220,8 @@ describe('publicFeedbackRouter.submit', () => {
     expect(ipHash).toMatch(/^[a-f0-9]{64}$/);
     expect(ipHash).not.toContain('10.20.30.40');
     // Hash is deterministic with the configured salt
-    const salt = process.env.PUBLIC_FEEDBACK_IP_SALT ?? 'pg-126-default-salt';
+    const salt =
+      process.env.PUBLIC_FEEDBACK_IP_SALT ?? 'pg-126-dev-salt-NEVER-USE-IN-PROD';
     expect(ipHash).toBe(PublicRateLimiter.hashIp('10.20.30.40', salt));
   });
 });

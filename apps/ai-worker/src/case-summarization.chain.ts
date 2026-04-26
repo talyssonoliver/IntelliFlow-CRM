@@ -89,13 +89,13 @@ export async function generateCaseSummary(
         modelVersion,
         source,
         generatedAt: now,
-      } as never,
+      },
       update: {
         summary,
         modelVersion,
         source,
         generatedAt: now,
-      } as never,
+      },
     });
   } catch (err) {
     logger.warn({ err, caseId, tenantId }, 'case summarization upsert failed');

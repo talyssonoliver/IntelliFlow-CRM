@@ -68,12 +68,15 @@ export type {
   DocumentAutomationSetting,
   DocumentRetentionPolicy,
   ReportSettings,
+  Case,
+  CaseTask,
   CaseSettings,
   CaseDuplicateRule,
   CaseRequiredField,
   CaseTag,
   CaseAutomationSetting,
   AppointmentSettings,
+  PublicFeedback,
 } from '../generated/prisma/client';
 
 // Re-export performance tracking utilities

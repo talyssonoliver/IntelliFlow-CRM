@@ -70,5 +70,38 @@ export function preparePublicFeedbackPayload(
   return publicFeedbackInputSchema.parse(input);
 }
 
+/**
+ * Matches the spec §Component APIs contract. The widget uses the React
+ * Query `useMutation` hook directly, but non-React callers (e.g. a future
+ * Playwright setup, a bulk backfill script, or a Puppeteer lighthouse
+ * auth preflight) can reach the endpoint through this function.
+ *
+ * Uses a vanilla fetch call to the tRPC HTTP endpoint so this module
+ * stays usable outside a React tree. Returns the same shape the server
+ * mutation does.
+ */
+export async function submitPublicFeedback(
+  input: PublicFeedbackInput,
+  baseUrl: string = typeof window !== 'undefined' ? window.location.origin : ''
+): Promise<{ success: true; id: string }> {
+  const payload = preparePublicFeedbackPayload(input);
+  const url = `${baseUrl.replace(/\/$/, '')}/api/trpc/publicFeedback.submit`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ json: payload }),
+  });
+  if (!res.ok) {
+    const code = res.status === 429 ? 'TOO_MANY_REQUESTS' : 'INTERNAL_SERVER_ERROR';
+    throw new Error(`publicFeedback.submit ${code} (HTTP ${res.status})`);
+  }
+  const body = (await res.json()) as {
+    result?: { data?: { json?: { success: true; id: string } } };
+  };
+  const result = body.result?.data?.json;
+  if (!result) throw new Error('publicFeedback.submit: malformed response');
+  return result;
+}
+
 export { publicFeedbackInputSchema };
 export type { PublicFeedbackInput };

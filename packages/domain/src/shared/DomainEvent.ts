@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from 'uuid';
+import { generateUuid as uuidv4 } from './uuid';
 
 /**
  * Base Domain Event class

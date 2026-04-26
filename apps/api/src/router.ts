@@ -57,6 +57,7 @@ import { moduleAccessRouter } from './modules/subscription/subscription.router';
 import { experimentRouter } from './modules/experiment';
 import { routingRouter } from './modules/routing';
 import { feedbackSurveyRouter } from './modules/feedback/feedbackSurvey.router';
+import { publicFeedbackRouter } from './modules/public-feedback/public-feedback.router';
 import { userRouter } from './modules/user/user.router';
 import { teamRouter } from './modules/team/team.router';
 import { calendarRouter } from './modules/calendar/calendar.router';
@@ -205,6 +206,9 @@ export const appRouter = createTRPCRouter({
 
   // Feedback Survey Analytics (IFC-068)
   feedbackSurvey: feedbackSurveyRouter,
+
+  // Anonymous Public Feedback Widget (PG-126)
+  publicFeedback: publicFeedbackRouter,
 
   // User Profile & Timezone (IFC-191)
   user: userRouter,

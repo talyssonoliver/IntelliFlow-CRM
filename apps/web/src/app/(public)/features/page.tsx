@@ -31,7 +31,10 @@ export default function FeaturesPage() {
   return (
     <>
       {/* Hero Section */}
-      <section className="bg-gradient-to-b from-white to-[#f6f7f8] dark:from-[#1e2936] dark:to-[#101922] py-16 lg:py-24">
+      <section
+        data-tour="hero"
+        className="bg-gradient-to-b from-white to-[#f6f7f8] dark:from-[#1e2936] dark:to-[#101922] py-16 lg:py-24"
+      >
         <div className="container px-4 lg:px-6 mx-auto max-w-6xl">
           <div className="text-center max-w-3xl mx-auto">
             <h1 className="text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white mb-6">
@@ -81,6 +84,7 @@ export default function FeaturesPage() {
                   <Card
                     key={feature.id}
                     data-testid="feature-card"
+                    data-tour={feature.id}
                     className="p-6 hover:border-[#137fec] hover:shadow-lg transition-all bg-white dark:bg-[#1e2936]"
                   >
                     {/* Feature Icon */}

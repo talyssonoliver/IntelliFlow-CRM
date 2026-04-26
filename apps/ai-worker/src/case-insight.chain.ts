@@ -113,12 +113,12 @@ export async function generateCaseInsight(
         tenantId,
         caseId,
         generatedAt: now,
-      } as never,
+      },
       update: {
         ...payload,
         tenantId,
         generatedAt: now,
-      } as never,
+      },
     });
   } catch (err) {
     logger.warn({ err, caseId, tenantId }, 'caseAIInsight Prisma upsert failed');

@@ -6271,11 +6271,11 @@
       "Dependencies": "PG-001,PG-002",
       "Pre-requisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Design ready;FILE:docs/shared/review-checklist.md;FILE:docs/operations/pr-checklist.md;FILE:docs/company/brand/visual-identity.md;FILE:apps/web/src/app/(public)/page.tsx;FILE:apps/web/src/app/(public)/features/page.tsx",
       "Definition of Done": "Users see guided tours on first login; ability to replay; feedback widget integrated; targets: >=70%; verified by: pnpm test",
-      "Status": "Backlog",
+      "Status": "Completed",
       "KPIs": "Onboarding completion >70%; NPS score improvement",
       "Target Sprint": "17",
-      "Artifacts To Track": "ARTIFACT:artifacts/misc/onboarding-config.json;ARTIFACT:apps/web/src/components/public/tour-components.tsx;ARTIFACT:apps/web/src/lib/public/feedback-service.ts;EVIDENCE:.specify/sprints/sprint-17/attestations/PG-126/context_ack.json",
-      "Validation Method": "VALIDATE:pnpm test",
+      "Artifacts To Track": "ARTIFACT:artifacts/misc/onboarding-config.json;ARTIFACT:apps/web/src/components/public/tour-components.tsx;ARTIFACT:apps/web/src/components/public/feedback-widget-public.tsx;ARTIFACT:apps/web/src/lib/public/feedback-service.ts;ARTIFACT:apps/web/src/lib/public/tour-storage.ts;ARTIFACT:apps/web/src/lib/public/tour-config.ts;ARTIFACT:apps/api/src/modules/public-feedback/public-feedback.router.ts;ARTIFACT:apps/api/src/modules/public-feedback/public-feedback.service.ts;ARTIFACT:apps/api/src/security/public-rate-limiter.ts;ARTIFACT:packages/validators/src/public-onboarding.ts;ARTIFACT:packages/application/src/ports/repositories/PublicFeedbackRepositoryPort.ts;ARTIFACT:packages/adapters/src/public-feedback/PrismaPublicFeedbackRepository.ts;ARTIFACT:packages/db/prisma/migrations/20260424210000_public_feedback_pg126/migration.sql;ARTIFACT:tests/e2e/features-tour.spec.ts;SPEC:.specify/sprints/sprint-17/specifications/PG-126-spec.md;PLAN:.specify/sprints/sprint-17/planning/PG-126-plan.md;EVIDENCE:.specify/sprints/sprint-17/attestations/PG-126/context_pack.md;EVIDENCE:.specify/sprints/sprint-17/attestations/PG-126/context_ack.json;EVIDENCE:.specify/sprints/sprint-17/attestations/PG-126/attestation.json",
+      "Validation Method": "VALIDATE:pnpm test;GATE:coverage-gte-90;GATE:lighthouse-gte-90",
       "Cadence": ""
     },
     {
@@ -8992,7 +8992,7 @@
       "Target Sprint": "19",
       "Artifacts To Track": "ARTIFACT:apps/api/src/modules/contact/contact.router.ts;ARTIFACT:apps/ai-worker/src/contact-reply-draft.chain.ts",
       "Validation Method": "VALIDATE:pnpm typecheck;VALIDATE:pnpm test --run;VALIDATE:pnpm lint;VALIDATE:pnpm build;GATE:coverage-gte-90",
-      "Cadence": "\n"
+      "Cadence": ""
     }
   ]
 }

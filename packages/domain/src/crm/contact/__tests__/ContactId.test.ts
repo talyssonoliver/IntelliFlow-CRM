@@ -7,7 +7,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { ContactId, InvalidContactIdError } from '../ContactId';
-import { validate as uuidValidate } from 'uuid';
+import { isValidUuid as uuidValidate } from '../../../shared/uuid';
 
 describe('ContactId', () => {
   describe('create()', () => {

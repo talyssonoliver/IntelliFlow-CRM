@@ -19,6 +19,7 @@ import {
   PrismaTenantModuleRepository,
   PrismaAnalyticsRepository,
   PrismaFeedbackSurveyRepository,
+  PrismaPublicFeedbackRepository,
   PrismaCaseDocumentRepository,
   PrismaNotificationRepository,
   PrismaNotificationPreferenceRepository,
@@ -86,6 +87,7 @@ import { loadFeatureFlagsConfig } from './config/feature-flags.config';
 import { CalendarWebhookService } from './modules/calendar/calendar-webhook.service';
 import { AIMonitoringService } from './services/AIMonitoringService';
 import { HomeCacheService } from './modules/home/home.cache';
+import { PublicFeedbackService } from './modules/public-feedback/public-feedback.service';
 import type { CachePort } from '@intelliflow/application';
 // IFC-310: Duplicate-detection runtime services
 import {
@@ -227,6 +229,7 @@ const createAdapters = (prismaClient: PrismaClient) => {
   const activityFeedRepository = new PrismaActivityFeedRepository(prismaClient);
   const analyticsRepository = new PrismaAnalyticsRepository(prismaClient);
   const feedbackSurveyRepository = new PrismaFeedbackSurveyRepository(prismaClient);
+  const publicFeedbackRepository = new PrismaPublicFeedbackRepository(prismaClient);
   const caseDocumentRepository = new PrismaCaseDocumentRepository(prismaClient);
   const tenantModuleRepository = new PrismaTenantModuleRepository(prismaClient);
   const notificationRepository = new PrismaNotificationRepository(prismaClient);
@@ -339,6 +342,7 @@ const createAdapters = (prismaClient: PrismaClient) => {
     activityFeedRepository,
     analyticsRepository,
     feedbackSurveyRepository,
+    publicFeedbackRepository,
     caseDocumentRepository,
     tenantModuleRepository,
     notificationRepository,
@@ -444,6 +448,11 @@ const createServices = (prismaClient: PrismaClient) => {
   // IFC-068: Feedback Survey Analytics
   const feedbackSurveyService = new FeedbackSurveyAnalyticsService(
     adapters.feedbackSurveyRepository
+  );
+
+  // PG-126: Anonymous Public Feedback Widget
+  const publicFeedbackService = new PublicFeedbackService(
+    adapters.publicFeedbackRepository
   );
 
   const chainVersionService = new ChainVersionService(
@@ -635,6 +644,7 @@ const createServices = (prismaClient: PrismaClient) => {
     leadRoutingService,
     analyticsService,
     feedbackSurveyService,
+    publicFeedbackService,
     chainVersionService,
     activityFeedService,
     // IFC-158: Appointment scheduling services

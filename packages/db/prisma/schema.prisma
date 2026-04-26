@@ -109,6 +109,7 @@ model Tenant {
   leadAIInsights       LeadAIInsight[]            @ignore
   contactAIInsights    ContactAIInsight[]         @ignore
   accountAIInsights    AccountAIInsight[]         @ignore
+  caseAIInsights       CaseAIInsight[]            @ignore
   contactReplyDrafts   ContactReplyDraft[]        @ignore
   autoResponseDrafts   AutoResponseDraft[]        @ignore
   emailRecords         EmailRecord[]              @ignore
@@ -1706,6 +1707,7 @@ model Case {
   assignee     User             @relation("CaseAssignee", fields: [assignedTo], references: [id])
   tasks        CaseTask[]
   appointments AppointmentCase[] @relation("CaseAppointments")
+  aiInsight    CaseAIInsight?
 
   @@index([status])
   @@index([priority])
@@ -2733,6 +2735,35 @@ model AccountAIInsight {
   @@index([tenantId])
   @@index([churnRisk])
   @@map("account_ai_insights")
+}
+
+/// PG-190 — AI insight per case. Written by case-insight, case-summarization,
+/// case-priority-prediction, and case-resolution-suggestion chains. Mirrors
+/// the AccountAIInsight provenance shape but uses the existing CasePriority
+/// enum for predictedPriority and keeps provenance fields nullable so partial
+/// upserts (e.g. priority-only) don't require placeholder modelVersion.
+/// Restored 2026-04-26 to fix master-blocking typecheck failure (commit
+/// f3fbdd1e shipped chains referencing prisma.caseAIInsight without the model).
+model CaseAIInsight {
+  id                  String        @id @default(cuid())
+  caseId              String        @unique
+  case                Case          @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  tenantId            String
+  tenant              Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  // AI-generated content (each chain populates a subset; partial upserts are normal)
+  summary             String?       @db.Text
+  predictedPriority   CasePriority?
+  suggestedResolution String?       @db.Text
+  recommendations     Json?         // Array<string>
+  // Provenance (nullable — partial upserts may omit, last-writer-wins)
+  modelVersion        String?
+  generatedAt         DateTime?     @default(now())
+  source              String?       @default("llm") // 'llm' | 'fallback'
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  @@index([tenantId])
+  @@map("case_ai_insights")
 }
 
 /// IFC-312: AI-generated reply drafts for contact inbox. NEVER auto-sent (ADR-037).
@@ -5544,4 +5575,20 @@ model DocumentRetentionPolicy {
   @@unique([tenantId, categoryKey])
   @@index([tenantId])
   @@map("document_retention_policies")
+}
+
+/// PG-126 — anonymous public-site feedback, captured BEFORE signup.
+model PublicFeedback {
+  id        String   @id @default(cuid())
+  rating    Int
+  comment   String?
+  email     String?
+  source    String
+  userAgent String?
+  ipHash    String
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([rating])
+  @@map("public_feedback")
 }

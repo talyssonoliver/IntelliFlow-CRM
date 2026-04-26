@@ -386,3 +386,44 @@ export function trackPageView(options: { path: string; title?: string; referrer?
     },
   });
 }
+
+/**
+ * Track public product tour start (PG-126)
+ */
+export function trackTourStarted(options: {
+  tourId: string;
+  totalSteps: number;
+}): void {
+  trackEvent({
+    name: 'tour_started',
+    category: 'onboarding',
+    action: 'start',
+    label: options.tourId,
+    properties: {
+      tour_id: options.tourId,
+      total_steps: options.totalSteps,
+    },
+  });
+}
+
+/**
+ * Track public product tour skipped (PG-126)
+ */
+export function trackTourSkipped(options: {
+  tourId: string;
+  stepIndex: number;
+  totalSteps?: number;
+}): void {
+  trackEvent({
+    name: 'tour_skipped',
+    category: 'onboarding',
+    action: 'skip',
+    label: options.tourId,
+    value: options.stepIndex,
+    properties: {
+      tour_id: options.tourId,
+      step_index: options.stepIndex,
+      total_steps: options.totalSteps,
+    },
+  });
+}

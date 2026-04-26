@@ -3,7 +3,7 @@
  * Unique identifier for notifications
  * @see IFC-157: Notification service MVP
  */
-import { v4 as uuidv4 } from 'uuid';
+import { generateUuid as uuidv4 } from '../shared/uuid';
 import { ValueObject } from '../shared/ValueObject';
 
 interface NotificationIdProps {

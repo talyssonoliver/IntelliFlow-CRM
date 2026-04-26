@@ -138,3 +138,6 @@ export type { BiasMetric, BiasViolation, LeadScoringBiasCheck } from './shared/b
 
 // Cache Adapters (IFC-196)
 export * from './cache';
+
+// Public Feedback Adapters (PG-126)
+export * from './public-feedback';

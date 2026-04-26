@@ -49,6 +49,8 @@ export type Services = {
   closeDealWon: Container['closeDealWonUseCase'];
   closeDealLost: Container['closeDealLostUseCase'];
   feedbackSurvey: Container['feedbackSurveyService'];
+  // PG-126: Anonymous Public Feedback Widget
+  publicFeedback: Container['publicFeedbackService'];
   // IFC-025: Experiment Service
   experiment: Container['experimentService'];
   // IFC-157: Notification Orchestrator (unified service with preferences + audit)
@@ -182,6 +184,7 @@ function buildServicesFromContainer(): Services {
     closeDealWon: container.closeDealWonUseCase,
     closeDealLost: container.closeDealLostUseCase,
     feedbackSurvey: container.feedbackSurveyService,
+    publicFeedback: container.publicFeedbackService,
     experiment: container.experimentService,
     notificationOrchestrator: container.notificationOrchestrator,
     aiMonitoringService: container.aiMonitoringService,

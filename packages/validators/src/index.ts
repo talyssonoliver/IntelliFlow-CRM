@@ -124,3 +124,6 @@ export * from './appointment-settings';
 
 // Help Article Schemas (IFC-299)
 export * from './help-article';
+
+// Public Onboarding / Tour / Feedback Schemas (PG-126)
+export * from './public-onboarding';

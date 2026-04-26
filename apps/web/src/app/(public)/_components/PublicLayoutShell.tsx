@@ -4,6 +4,12 @@ import * as React from 'react';
 import { usePathname } from 'next/navigation';
 import { PublicHeader } from '@/components/public/PublicHeader';
 import { useAuth } from '@/lib/auth/AuthContext';
+import {
+  TourProvider,
+  PublicTour,
+} from '@/components/public/tour-components';
+import { PublicFeedbackFab } from '@/components/public/feedback-widget-public';
+import { FEATURES_TOUR_CONFIG } from '@/lib/public/tour-config';
 
 /**
  * Thin client shell for the public route group.
@@ -15,6 +21,10 @@ import { useAuth } from '@/lib/auth/AuthContext';
  * ALSO re-evaluated client-side via `useAuth()` so that a race between
  * cookie write and post-login redirect cannot leave the public header
  * visible after hydration.
+ *
+ * PG-126: Mounts the public product tour (only on /features, where the
+ * data-tour anchors live) and the PublicFeedbackFab on every
+ * non-auth public route for unauthenticated visitors.
  */
 
 const AUTH_PAGES_NO_CHROME = [
@@ -40,22 +50,29 @@ export function PublicLayoutShell({
   const { isAuthenticated: clientIsAuthenticated, isLoading: authLoading } = useAuth();
   const isAuthPage = AUTH_PAGES_NO_CHROME.some((page) => pathname?.startsWith(page));
 
-  // Merge server + client auth: if the server saw a token, trust it. Otherwise,
-  // trust the client once it has resolved (i.e. no longer loading). This
-  // corrects the post-login race where the cookie was written just before the
-  // redirect and the server's `cookies()` read missed it.
   const effectiveAuthenticated = serverIsAuthenticated || (!authLoading && clientIsAuthenticated);
-
   const showPublicHeader = !isAuthPage && !effectiveAuthenticated;
 
   if (isAuthPage) {
     return <>{children}</>;
   }
 
-  return (
+  // PG-126: mount tour + feedback FAB only for unauthenticated visitors.
+  const shouldMountPublicOverlays = !effectiveAuthenticated;
+  const tourIsActiveRoute = pathname === '/features';
+
+  const content = (
     <>
       {showPublicHeader && <PublicHeader />}
       <main className="min-h-screen bg-[#f6f7f8] dark:bg-[#101922]">{children}</main>
+      {shouldMountPublicOverlays && <PublicFeedbackFab />}
+      {shouldMountPublicOverlays && tourIsActiveRoute && <PublicTour />}
     </>
   );
+
+  if (shouldMountPublicOverlays && tourIsActiveRoute) {
+    return <TourProvider config={FEATURES_TOUR_CONFIG}>{content}</TourProvider>;
+  }
+
+  return content;
 }

@@ -95,13 +95,13 @@ export async function suggestCaseResolution(
         modelVersion,
         source,
         generatedAt: now,
-      } as never,
+      },
       update: {
         suggestedResolution,
         modelVersion,
         source,
         generatedAt: now,
-      } as never,
+      },
     });
   } catch (err) {
     logger.warn({ err, caseId, tenantId }, 'case resolution suggestion upsert failed');

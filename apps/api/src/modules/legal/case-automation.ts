@@ -125,3 +125,20 @@ export function assertCanCreateTag(
       'Tag creation is restricted to workspace admins. Ask an admin to create the tag or disable "Restrict tag creation to admins" in Case Settings.',
   });
 }
+
+/**
+ * Enforce `preventDeleteWithOpenTasks` on caseRouter.delete.
+ * When the toggle is on, a case with 1+ open tasks cannot be deleted.
+ */
+export function assertCanDeleteCase(
+  input: { openTaskCount: number },
+  flags: Pick<CaseAutomationFlags, 'preventDeleteWithOpenTasks'>
+): void {
+  if (!flags.preventDeleteWithOpenTasks) return;
+  if (input.openTaskCount <= 0) return;
+  const noun = input.openTaskCount === 1 ? 'task' : 'tasks';
+  throw new TRPCError({
+    code: 'PRECONDITION_FAILED',
+    message: `Cannot delete case: ${input.openTaskCount} open ${noun} remain. Close or reassign them, or disable "Prevent delete with open tasks" in Case Settings.`,
+  });
+}

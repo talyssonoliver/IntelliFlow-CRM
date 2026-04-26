@@ -97,13 +97,13 @@ export async function predictCasePriority(
         modelVersion,
         source,
         generatedAt: now,
-      } as never,
+      },
       update: {
         predictedPriority,
         modelVersion,
         source,
         generatedAt: now,
-      } as never,
+      },
     });
   } catch (err) {
     logger.warn({ err, caseId, tenantId }, 'case priority prediction upsert failed');

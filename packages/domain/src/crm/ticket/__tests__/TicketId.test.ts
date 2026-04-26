@@ -9,7 +9,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { TicketId, InvalidTicketIdError } from '../TicketId';
-import { validate as uuidValidate } from 'uuid';
+import { isValidUuid as uuidValidate } from '../../../shared/uuid';
 
 describe('TicketId', () => {
   describe('create()', () => {
