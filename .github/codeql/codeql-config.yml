@@ -1,0 +1,15 @@
+name: "IntelliFlow CodeQL config"
+
+queries:
+  - uses: security-extended
+  - uses: security-and-quality
+
+paths-ignore:
+  - artifacts/**
+  - '**/dist/**'
+  - '**/.next/**'
+  - '**/.turbo/**'
+  - '**/node_modules/**'
+  - '**/coverage/**'
+  - '**/playwright-report/**'
+  - '**/.specify/sprints/**/execution/**'
