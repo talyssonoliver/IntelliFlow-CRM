@@ -75,6 +75,17 @@ export {
 // Export request-scoped log context (AsyncLocalStorage-backed)
 export { runWithLogContext, getCurrentLogContext, type LogRequestContext } from './log-context';
 
+// Re-export OTel SDK trace primitives needed for in-process span capture (IFC-032).
+// Used by:
+//   - Section F LeadRoutingService tests (workflow.lead.route span assertions)
+//   - apps/api/src/modules/routing/__tests__/routing-otel-integration.test.ts (tRPC end-to-end)
+//   - tools/scripts/observability/capture-trace-examples.ts (real-trace-data gate)
+export {
+  InMemorySpanExporter,
+  BasicTracerProvider,
+  SimpleSpanProcessor,
+} from '@opentelemetry/sdk-trace-base';
+
 /**
  * Initialize all observability systems
  *
