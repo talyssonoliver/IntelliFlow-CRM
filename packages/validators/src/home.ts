@@ -218,6 +218,18 @@ export const updateDailyGoalInputSchema = z.object({
 });
 export type UpdateDailyGoalInput = z.infer<typeof updateDailyGoalInputSchema>;
 
+// IFC-211: Manager team-goal override schema. Extends updateDailyGoal with
+// the targetUserId of the team member whose goal is being set.
+export const setTeamMemberGoalInputSchema = updateDailyGoalInputSchema.extend({
+  targetUserId: z.string().uuid(),
+});
+export type SetTeamMemberGoalInput = z.infer<typeof setTeamMemberGoalInputSchema>;
+
+// IFC-211: Org default schema (identical shape to updateDailyGoal; type alias
+// kept distinct for callsite clarity and possible future divergence).
+export const setOrgGoalDefaultInputSchema = updateDailyGoalInputSchema;
+export type SetOrgGoalDefaultInput = z.infer<typeof setOrgGoalDefaultInputSchema>;
+
 export const dailyGoalSchema = z.object({
   id: z.string(),
   type: z.enum(['revenue', 'calls', 'meetings', 'tasks', 'custom']),

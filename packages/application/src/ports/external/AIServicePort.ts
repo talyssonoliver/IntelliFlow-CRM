@@ -29,16 +29,38 @@ export interface LeadScoringResult {
   };
 }
 
+/**
+ * IFC-212 follow-up: optional context propagated from the application caller to
+ * the underlying AI strategy. Carries the lead's real `tenantId` and `leadId` so
+ * queue-backed adapters can tag payloads with the correct keys instead of falling
+ * back to a literal default. Backwards-compatible — implementations may ignore.
+ */
+export interface AIServiceCallOptions {
+  /** Real tenant id of the calling lead (NOT the worker's literal default). */
+  tenantId?: string;
+  /** Real lead id (so worker `LeadAIInsight.upsert` resolves the FK correctly). */
+  leadId?: string;
+}
+
 export interface AIServicePort {
   /**
-   * Score a lead using AI
+   * Score a lead using AI.
+   *
+   * @param input lead scoring input
+   * @param opts optional caller context — see {@link AIServiceCallOptions}.
    */
-  scoreLead(input: LeadScoringInput): Promise<Result<LeadScoringResult, DomainError>>;
+  scoreLead(
+    input: LeadScoringInput,
+    opts?: AIServiceCallOptions,
+  ): Promise<Result<LeadScoringResult, DomainError>>;
 
   /**
    * Qualify a lead using AI
    */
-  qualifyLead(input: LeadScoringInput): Promise<Result<boolean, DomainError>>;
+  qualifyLead(
+    input: LeadScoringInput,
+    opts?: AIServiceCallOptions,
+  ): Promise<Result<boolean, DomainError>>;
 
   /**
    * Generate email content for lead outreach

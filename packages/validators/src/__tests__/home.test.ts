@@ -28,6 +28,8 @@ import {
   unpinItemInputSchema,
   reorderPinnedItemsInputSchema,
   updateDailyGoalInputSchema,
+  setTeamMemberGoalInputSchema,
+  setOrgGoalDefaultInputSchema,
   GOAL_TYPES,
   GOAL_DEFAULTS,
   AI_INSIGHT_TYPES,
@@ -968,6 +970,39 @@ describe('Home Page Validators', () => {
 
     it('GOAL_DEFAULTS revenue has $5000 target', () => {
       expect(GOAL_DEFAULTS.revenue).toEqual({ targetValue: 5000, label: 'Sales', unit: '$' });
+    });
+  });
+
+  // =============================================================================
+  // IFC-211: Goal Settings RBAC schemas
+  // =============================================================================
+  describe('IFC-211 — setTeamMemberGoalInputSchema', () => {
+    const valid = {
+      type: 'revenue' as const,
+      targetValue: 5000,
+      label: 'Q3',
+      targetUserId: '00000000-0000-4000-8000-000000000001',
+    };
+
+    it('rejects invalid (non-uuid) targetUserId', () => {
+      const result = setTeamMemberGoalInputSchema.safeParse({ ...valid, targetUserId: 'not-a-uuid' });
+      expect(result.success).toBe(false);
+    });
+
+    it('accepts a valid uuid targetUserId', () => {
+      const result = setTeamMemberGoalInputSchema.safeParse(valid);
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe('IFC-211 — setOrgGoalDefaultInputSchema', () => {
+    it('has the same shape as updateDailyGoalInputSchema (no targetUserId required)', () => {
+      const result = setOrgGoalDefaultInputSchema.safeParse({
+        type: 'tasks',
+        targetValue: 7,
+        label: 'Org default',
+      });
+      expect(result.success).toBe(true);
     });
   });
 

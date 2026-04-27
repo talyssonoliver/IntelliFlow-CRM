@@ -191,16 +191,22 @@ export class LeadService {
 
     const previousScore = lead.score.value;
 
-    // Call AI service
-    const scoringResult = await this.aiService.scoreLead({
-      email: lead.email.value,
-      firstName: lead.firstName,
-      lastName: lead.lastName,
-      company: lead.company,
-      title: lead.title,
-      phone: lead.phone?.value,
-      source: lead.source,
-    });
+    // Call AI service. IFC-212: thread lead.tenantId + lead.id.value through the
+    // optional opts so queue-backed adapters tag the worker payload with the real
+    // tenant + lead keys (NOT the literal 'default' fallback). Synchronous adapters
+    // are free to ignore the opts.
+    const scoringResult = await this.aiService.scoreLead(
+      {
+        email: lead.email.value,
+        firstName: lead.firstName,
+        lastName: lead.lastName,
+        company: lead.company,
+        title: lead.title,
+        phone: lead.phone?.value,
+        source: lead.source,
+      },
+      { tenantId: lead.tenantId, leadId: lead.id.value },
+    );
 
     if (scoringResult.isFailure) {
       return Result.fail(scoringResult.error);

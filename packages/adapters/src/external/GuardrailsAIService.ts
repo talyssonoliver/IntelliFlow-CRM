@@ -1,5 +1,10 @@
 import { Result, DomainError } from '@intelliflow/domain';
-import { AIServicePort, LeadScoringInput, LeadScoringResult } from '@intelliflow/application';
+import {
+  AIServicePort,
+  LeadScoringInput,
+  LeadScoringResult,
+  type AIServiceCallOptions,
+} from '@intelliflow/application';
 import type {
   AuditLogPort,
   AISecurityEventInput,
@@ -187,15 +192,21 @@ export class GuardrailsAIService implements AIServicePort {
   }
 
   /**
-   * Score a lead with guardrails
+   * Score a lead with guardrails. IFC-212 follow-up: forwards opts (tenantId,
+   * leadId) to the underlying AIServicePort so queue-backed adapters tag the
+   * worker payload with the real keys instead of the literal default fallback.
    */
-  async scoreLead(input: LeadScoringInput): Promise<Result<LeadScoringResult, DomainError>> {
+  async scoreLead(
+    input: LeadScoringInput,
+    opts?: AIServiceCallOptions,
+  ): Promise<Result<LeadScoringResult, DomainError>> {
     try {
       // Step 1: Sanitize input
       const sanitizedInput = await this.sanitizeInput(input);
 
-      // Step 2: Call underlying AI service
-      const result = await this.innerService.scoreLead(sanitizedInput);
+      // Step 2: Call underlying AI service (forward opts so queue adapters
+      //         receive the real tenantId / leadId).
+      const result = await this.innerService.scoreLead(sanitizedInput, opts);
 
       if (result.isFailure) {
         return result;
@@ -226,15 +237,19 @@ export class GuardrailsAIService implements AIServicePort {
   }
 
   /**
-   * Qualify a lead with guardrails
+   * Qualify a lead with guardrails. IFC-212 follow-up: forwards opts to the
+   * underlying AIServicePort.
    */
-  async qualifyLead(input: LeadScoringInput): Promise<Result<boolean, DomainError>> {
+  async qualifyLead(
+    input: LeadScoringInput,
+    opts?: AIServiceCallOptions,
+  ): Promise<Result<boolean, DomainError>> {
     try {
       // Step 1: Sanitize input
       const sanitizedInput = await this.sanitizeInput(input);
 
-      // Step 2: Call underlying AI service
-      const result = await this.innerService.qualifyLead(sanitizedInput);
+      // Step 2: Call underlying AI service (forward opts).
+      const result = await this.innerService.qualifyLead(sanitizedInput, opts);
 
       return result;
     } catch (error) {

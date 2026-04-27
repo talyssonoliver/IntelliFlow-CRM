@@ -57,6 +57,8 @@ export type Services = {
   notificationOrchestrator: Container['notificationOrchestrator'];
   // IFC-297: AI Monitoring persistence service
   aiMonitoringService: Container['aiMonitoringService'];
+  // IFC-214: Redis-backed live snapshot store (DB-tier fall-through built in)
+  aiMonitoringStore: Container['aiMonitoringStore'];
   // IFC-196: Home Page Response Caching (Redis read-through + event-driven invalidation)
   homeCache: Container['homeCacheService'];
   // IFC-310: Duplicate-detection runtime (contact + account)
@@ -188,6 +190,7 @@ function buildServicesFromContainer(): Services {
     experiment: container.experimentService,
     notificationOrchestrator: container.notificationOrchestrator,
     aiMonitoringService: container.aiMonitoringService,
+    aiMonitoringStore: container.aiMonitoringStore,
     homeCache: container.homeCacheService,
     // IFC-310: Duplicate-detection runtime services
     contactDuplicateDetection: container.contactDuplicateDetectionService,
