@@ -1,0 +1,66 @@
+name: Orphan Task Audit
+
+on:
+  schedule:
+    # Every 15 minutes, 24/7 — detection never sleeps
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+jobs:
+  audit:
+    name: Audit orphaned task branches
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout (full history for rev-list)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: false
+
+      - name: Fetch all remote branches (agent/*)
+        run: git fetch origin '+refs/heads/agent/*:refs/remotes/origin/agent/*' 2>/dev/null || true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run orphan audit
+        id: audit
+        run: |
+          node tools/scripts/audit-task-branch-correspondence.mjs --all
+          echo "orphan_count=$(grep -c '' artifacts/reports/orphans.jsonl 2>/dev/null || echo 0)" >> "$GITHUB_OUTPUT"
+        # Never exit non-zero from the audit step — we always upload the artifact
+
+      - name: Upload orphans.jsonl artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: orphan-audit-${{ github.run_id }}
+          path: artifacts/reports/orphans.jsonl
+          retention-days: 90
+          if-no-files-found: warn
+
+      - name: Get current hour (UTC)
+        id: time
+        if: ${{ steps.audit.outputs.orphan_count != '0' }}
+        run: |
+          echo "hour=$(date -u +%H | sed 's/^0//')" >> "$GITHUB_OUTPUT"
+
+      - name: Notify Slack (business hours only — 8–19 UTC)
+        if: >
+          steps.audit.outputs.orphan_count != '0' &&
+          steps.time.outputs.hour != '' &&
+          fromJSON(steps.time.outputs.hour) >= 8 &&
+          fromJSON(steps.time.outputs.hour) < 19
+        uses: slackapi/slack-github-action@v1.25.0
+        with:
+          payload: |
+            {
+              "text": ":warning: *Orphan Task Audit* — ${{ steps.audit.outputs.orphan_count }} orphaned task(s) detected.\nRun: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\nDownload `orphans.jsonl` from the run artifact for details."
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
