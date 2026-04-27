@@ -1,8 +1,15 @@
 # Content Audit Framework
 
-> **Last verified**: 2026-04-16 **Generator**:
+> **Last verified**: 2026-04-26 **Generator**:
 > `npx tsx tools/scripts/content-audit.ts` **Machine output**:
 > `artifacts/reports/content-audit-results.json` **Tool version**: `1.2.0`
+
+> **Canonical counts**: This document is the originating source of the
+> `tools/scripts/content-audit.ts` counting rule (see "Canonical counting rule"
+> section below). The "Current baseline" numbers immediately below are
+> regenerated from a live `runAudit()` run at the verified date — they are the
+> filesystem total of `page.tsx` files under `apps/web/src/app/**` (route groups
+> stripped, `[id]` collapsed, `app/api/` excluded). Verified: 2026-04-26.
 
 ## 1. Purpose and Scope
 
@@ -17,9 +24,10 @@ tracks navigation ghost-link status. It does not implement fixes by itself.
 
 ### Current baseline
 
-- **205 `page.tsx` entries** scanned from `apps/web/src/app`
+- **Total Pages (filesystem total): 208** — `page.tsx` entries scanned from
+  `apps/web/src/app`
 - **32 public entries** under `(public)/`
-- **159 auth-gated entries** outside `(public)/` and `(developer)/`
+- **162 auth-gated entries** outside `(public)/` and `(developer)/`
 - **14 developer entries** under `(developer)/`
 - **0 unresolved ghost links** after route-group-aware reconciliation
 - **80 average SEO score** across public routes
@@ -33,8 +41,8 @@ URL patterns if duplicate collapsed routes are introduced in future.
 
 Current verified state:
 
-- **205 page entries**
-- **205 distinct collapsed route patterns**
+- **208 page entries**
+- **208 distinct collapsed route patterns**
 
 ## 2. Methodology
 
@@ -273,12 +281,12 @@ current verified baseline is **0 unresolved ghost links**.
 
 ```json
 {
-  "total_routes": 205,
+  "total_routes": 208,
   "public_routes": 32,
-  "auth_gated_routes": 159,
+  "auth_gated_routes": 162,
   "developer_routes": 14,
   "routes_with_seo_score": 32,
-  "routes_pending_runtime_measurement": 205,
+  "routes_pending_runtime_measurement": 208,
   "average_seo_score_public": 80,
   "legal_pages_missing": [],
   "ghost_link_count": 0

@@ -4,7 +4,10 @@
 > `AIMonitoringEvent.payload` should include `provider` and `tier` fields
 > populated by the factory. No Prisma migration required.
 
-**Status:** Proposed
+**Status:** Accepted
+
+**Implementation accepted via IFC-297 (DONE). Extended by ADR-052 (IFC-214) to
+add a Redis live-snapshot tier in front of the DB.**
 
 **Date:** 2026-03-15
 

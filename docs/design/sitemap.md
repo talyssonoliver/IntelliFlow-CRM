@@ -1,8 +1,16 @@
 # IntelliFlow CRM - Sitemap
 
-> **Location**: `docs/design/sitemap.md` **Last Updated**: 2026-05-02 **Total
+> **Location**: `docs/design/sitemap.md` **Last Updated**: 2026-04-26 **Total
 > Pages**: 208 **Total Flows**: 42 (linked) **Layouts**: 37 **API Routers**: 60
 > (232 procedures)
+
+> **Canonical counts**: "Total Pages" reflects the filesystem total emitted by
+> `tools/scripts/content-audit.ts` — each `page.tsx` under `apps/web/src/app/**`
+> counts once; route groups (`(public)`, `(developer)`, `(list)`, …) are
+> stripped from the URL; dynamic segments (`[id]`) collapse to one route;
+> `app/api/` is excluded. The category-bucket sum further down (257) uses a
+> different denominator and is NOT the filesystem total. See
+> `docs/design/content-audit.md` for the full rule. Verified: 2026-04-26.
 
 ---
 
@@ -332,33 +340,33 @@ intelliflow.com
 
 ## Page Count by Section
 
-| Section               | Pages   | Status                                                                                |
-| --------------------- | ------- | ------------------------------------------------------------------------------------- |
-| Public Pages          | 32      | Marketing, auth, blog, careers, callbacks, SSO, legal, system, AUP                    |
-| Developer Portal      | 14      | Docs (10), apps (3), apps/new (1)                                                     |
-| Dashboard             | 3       | Main, new, customize                                                                  |
-| CRM Core: Leads       | 7       | List, new, detail, edit, pipeline, routing, lead-settings                             |
-| CRM Core: Contacts    | 7       | List, new, detail, edit, types, settings, import-export                               |
-| CRM Core: Accounts    | 5       | List, detail, settings, tiers, territory-mapping                                      |
-| CRM Core: Deals       | 10      | List, trash, detail, forecast (2), stages, settings, automation, new, all/forecast    |
-| CRM Core: Tickets     | 6       | List, new, detail, sla-policies, types, automations                                   |
-| CRM Core: Documents   | 6       | List, new, detail, types, storage-policies, settings                                  |
-| CRM Core: Cases       | 9       | List, new, detail, timeline, workflows (3), types, settings                           |
-| Tasks                 | 5       | List, detail, types, settings, automation                                             |
-| Calendar              | 4       | View, availability, event-types, settings                                             |
-| Appointments          | 3       | List, new, detail                                                                     |
-| Email                 | 6       | Inbox, detail, compose, templates, signatures, settings                               |
-| AI & Automation       | 20      | Queue + 19 sub-pages                                                                  |
-| AI Insights           | 1       | All insights (paginated, filtered)                                                    |
-| Analytics             | 8       | Dashboard, feedback, weekly, monthly, quarterly, templates, scheduled, settings       |
-| Settings              | 23      | Core (12) + module settings (11)                                                      |
-| Billing               | 13      | Overview, checkout, subscriptions, usage, plans, upgrade, cancel, settings, etc.      |
-| Governance            | 10      | ADR, compliance, policies, reports, lighthouse, coverage, performance, trpc-benchmark |
-| Notifications         | 4       | List, settings, channels, quiet-hours                                                 |
-| Profile               | 1       | User profile                                                                          |
-| Support Portal        | 3       | SLA queue, new, detail                                                                |
-| Support / Help Center | 3       | Index, search, article                                                                |
-| **Total**             | **257** |                                                                                       |
+| Section                       | Pages   | Status                                                                                                                        |
+| ----------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Public Pages                  | 32      | Marketing, auth, blog, careers, callbacks, SSO, legal, system, AUP                                                            |
+| Developer Portal              | 14      | Docs (10), apps (3), apps/new (1)                                                                                             |
+| Dashboard                     | 3       | Main, new, customize                                                                                                          |
+| CRM Core: Leads               | 7       | List, new, detail, edit, pipeline, routing, lead-settings                                                                     |
+| CRM Core: Contacts            | 7       | List, new, detail, edit, types, settings, import-export                                                                       |
+| CRM Core: Accounts            | 5       | List, detail, settings, tiers, territory-mapping                                                                              |
+| CRM Core: Deals               | 10      | List, trash, detail, forecast (2), stages, settings, automation, new, all/forecast                                            |
+| CRM Core: Tickets             | 6       | List, new, detail, sla-policies, types, automations                                                                           |
+| CRM Core: Documents           | 6       | List, new, detail, types, storage-policies, settings                                                                          |
+| CRM Core: Cases               | 9       | List, new, detail, timeline, workflows (3), types, settings                                                                   |
+| Tasks                         | 5       | List, detail, types, settings, automation                                                                                     |
+| Calendar                      | 4       | View, availability, event-types, settings                                                                                     |
+| Appointments                  | 3       | List, new, detail                                                                                                             |
+| Email                         | 6       | Inbox, detail, compose, templates, signatures, settings                                                                       |
+| AI & Automation               | 20      | Queue + 19 sub-pages                                                                                                          |
+| AI Insights                   | 1       | All insights (paginated, filtered)                                                                                            |
+| Analytics                     | 8       | Dashboard, feedback, weekly, monthly, quarterly, templates, scheduled, settings                                               |
+| Settings                      | 23      | Core (12) + module settings (11)                                                                                              |
+| Billing                       | 13      | Overview, checkout, subscriptions, usage, plans, upgrade, cancel, settings, etc.                                              |
+| Governance                    | 10      | ADR, compliance, policies, reports, lighthouse, coverage, performance, trpc-benchmark                                         |
+| Notifications                 | 4       | List, settings, channels, quiet-hours                                                                                         |
+| Profile                       | 1       | User profile                                                                                                                  |
+| Support Portal                | 3       | SLA queue, new, detail                                                                                                        |
+| Support / Help Center         | 3       | Index, search, article                                                                                                        |
+| **Sum of category subtotals** | **257** | Bucketing-based sum (Settings 23 = Core 12 + Module Settings 11; not filesystem-equivalent — see Canonical counts admonition) |
 
 ---
 
@@ -418,7 +426,7 @@ in the sitemap.
 
 ## Implementation Status
 
-### Implemented Pages (257 total)
+### Implemented Pages (208 unique routes; 257 across category buckets)
 
 | Category      | Route                                                                                                                                                                                                                                                            | Status      | Flow               |
 | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- | ------------------ |

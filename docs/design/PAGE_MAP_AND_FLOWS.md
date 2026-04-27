@@ -33,24 +33,29 @@ structure, and user flows in the IntelliFlow CRM web application.
 
 ### Summary Statistics
 
-| Category        | Count |
-| --------------- | ----- |
-| Total Pages     | 208   |
-| Public Pages    | 32    |
-| Developer Pages | 14    |
-| Protected Pages | 148   |
-| API Routes      | 19    |
-| Layouts         | 36    |
+| Category                                        | Count |
+| ----------------------------------------------- | ----- |
+| Total Pages                                     | 208   |
+| Public Pages                                    | 32    |
+| Developer Pages                                 | 14    |
+| Protected Pages                                 | 162   |
+| Next.js API handlers (excluded from page total) | 19    |
+| Layouts                                         | 36    |
 
-> Total Pages counts distinct `page.tsx` files. Query-parameter variants (e.g.,
-> `/leads?view=my`) are views within the same page and are excluded from the
-> total.
+> **Canonical counts**: "Total Pages" reflects the filesystem total emitted by
+> `tools/scripts/content-audit.ts` — each `page.tsx` under `apps/web/src/app/**`
+> counts once; route groups stripped; `[id]` collapses to one route; `app/api/`
+> is excluded (its handlers are counted on the row above with their own
+> denominator). Query-parameter variants (e.g. `/leads?view=my`) are views
+> within the same page and are excluded from the page total. See
+> `docs/design/content-audit.md` for the full counting rule. Verified:
+> 2026-04-26.
 
 ---
 
 ## Page Map by Category
 
-### 1. Public Pages (30 — No Authentication Required)
+### 1. Public Pages (32 — No Authentication Required)
 
 Located in `(public)` route group. Accessible without login.
 

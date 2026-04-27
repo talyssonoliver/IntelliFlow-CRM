@@ -1,6 +1,6 @@
 # Current State Report
 
-_Generated: 2026-04-13T20:21:03.392Z_
+_Generated: 2026-04-26T21:29:48.865Z_
 
 > Built dynamically from `.specify/sprints/**/attestations/*/attestation.json`
 > for task evidence, the canonical `Sprint_plan.csv` for task ownership and
@@ -10,21 +10,19 @@ _Generated: 2026-04-13T20:21:03.392Z_
 ## Current State
 
 - Numbered sprint scope: 30 sprints (0-29) plus 5 continuous tasks.
-- Overall progress: 373/571 tasks completed (65.32%), 196 backlog, 0 blocked, 1
+- Overall progress: 393/591 tasks completed (66.5%), 198 backlog, 0 blocked, 0
   in progress.
-- Numbered sprint progress alone: 369/566 tasks completed or attested inside
+- Numbered sprint progress alone: 388/586 tasks completed or attested inside
   numbered sprints.
 - Blocking issue: none currently marked `Blocked` in the sprint plan.
-- Ready-to-start work: IFC-300 (Sprint 17), PG-057 (Sprint 17), PG-126 (Sprint
-  17), PG-182 (Sprint 17), PG-183 (Sprint 17).
-- Active focus band: Sprints 17, 18, 19, 20 carry the earliest remaining
+- Ready-to-start work: DOC-015 (Sprint 18), IFC-032 (Sprint 18), IFC-211 (Sprint
+  18), IFC-212 (Sprint 18), IFC-214 (Sprint 18).
+- Active focus band: Sprints 18, 19, 20, 21 carry the earliest remaining
   backlog.
 
 ## Source Health
 
 - `.specify` sprint summary coverage is complete for the numbered sprint set.
-- Attested but not completed in CSV: IFC-031 (Needs Human), PG-054 (In
-  Progress).
 
 ## Continuous Work
 
@@ -601,9 +599,9 @@ _Generated: 2026-04-13T20:21:03.392Z_
 
 ## Sprint 17 - Sprint 17
 
-- Status: 11/22 completed, 9 backlog, 0 blocked, 1 in progress.
+- Status: 22/22 completed, 0 backlog, 0 blocked.
 - Primary focus areas: Legal Pages (5), Settings (5), Support (4).
-- Evidence coverage: 11/11 completed tasks have canonical `attestation.json`
+- Evidence coverage: 22/22 completed tasks have canonical `attestation.json`
   evidence.
 
 **Accomplished**
@@ -612,44 +610,30 @@ _Generated: 2026-04-13T20:21:03.392Z_
   /404 route, updated counts 131→132/14→15). Fixed 26%→82.6% by adding
   consent-tracker unit tests. Fixed 5 pre-existing lint errors (unused imports
   in billing components and privacy test).......
+- **PG-056** — 500 Error. Implementation was completed in a prior session. This
+  session: verified all artifacts, updated sitemap-fixes.test.ts count (28→29,
+  pre-existing drift from /status static route addition), ran all validations,
+  checked plan checkboxes (14/14),......
+- **PG-126** — Add in‑app onboarding, guided product tours and feedback
+  collection. ADR-051 forbids tour libraries; custom implementation built on
+  shadcn/ui Dialog + Material Symbols; ADR-046 icon policy: Material Symbols
+  Outlined only;... Users see guided tours on first login (interpreted as first
+  visit to /features); Ability to replay;...
+- **PG-183** — Module Settings - Accounts (/accounts/account-settings). PG-183 —
+  Account Settings page at /accounts/account-settings. 8 bento sections
+  (Hierarchy, Industry, Custom Fields, Duplicate Detection, Required Fields,
+  Automation, AI & Intelligence, Tags) + Configuration Summary, mirroring
+  /contacts/cont......
 - **IFC-196** — Home Page Response Caching - Redis caching for getWelcomeSummary
   with event-driven invalidation. Cache key simplified from {tenantId}:{userId}
   to {userId} because domain events do not carry tenantId.... getWelcomeSummary
   cached in Redis with 5-minute TTL; cache key: tenant:userId:home:summary;...
-- **IFC-299** — Help Article CRUD tRPC Router. Help Article CRUD tRPC router
-  with 9 tenant-scoped procedures (list, getBySlug, getByCategory, getRelated,
-  create, update, delete, publish, unpublish). 49 tests pass, coverage meets all
-  thresholds.......
-- **IFC-030** — PHASE-005: Smart Lead Routing. LeadRoutingService implements
-  3-strategy cascade (rule→skill→load_balance). CRITICAL: writes only
-  schema-valid fields to RoutingAudit (no phantom-field bug). 62 service tests +
-  33 router tests + 15 container tests = 110 total. Coverage:......
-- **IFC-298** — HelpArticle Prisma Model + Migration. Schema-only task — 3
-  models (HelpArticle, ArticleSection, ArticleFeedback) + 1 enum
-  (ArticleStatus) + migration. No runtime behavior changes. IFC-299/300/303
-  consume these models downstream.... HelpArticle, ArticleSection,
-  ArticleFeedback Prisma models;...
-
-**Open Work**
-
-- **PG-054** — Acceptable Use Policy. response under 200ms, Lighthouse 90, AUP
-  displayed
-- **PG-057** — Maintenance. response under 200ms, Lighthouse 90, status shown
-- **PG-126** — Add in‑app onboarding, guided product tours and feedback
-  collection. Users see guided tours on first login; ability to replay; feedback
-  widget integrated
-- **IFC-300** — Help Article Seed Script — Static to DB Migration. Seed script
-  migrates DEFAULT_HELP_ARTICLES into DB; idempotent (skip existing slugs);
-  validates data integrity post-seed
-- **PG-182** — Module Settings - Contacts (/contacts/contact-settings). Contact
-  settings page at /contacts/contact-settings with duplicate detection, required
-  fields, tags config; uses in-module settings sidebar pattern; Lighthouse >=90
 
 ## Sprint 18 - Sprint 18
 
-- Status: 3/44 completed, 41 backlog, 0 blocked.
-- Primary focus areas: Core CRM (25), Settings (5), AI/ML (3).
-- Evidence coverage: 3/3 completed tasks have canonical `attestation.json`
+- Status: 10/60 completed, 50 backlog, 0 blocked.
+- Primary focus areas: Core CRM (27), Settings (19), AI/ML (3).
+- Evidence coverage: 10/10 completed tasks have canonical `attestation.json`
   evidence.
 
 **Accomplished**
@@ -658,12 +642,40 @@ _Generated: 2026-04-13T20:21:03.392Z_
   completed via TDD. 13 steps across 4 phases (RED/GREEN/REFACTOR/VALIDATION).
   66 tests, 98.88% statement coverage. All 6 completion gates PASS. Compliance
   check PASS. 100% data migrated, validation passed;...
-- **PG-132** — Smart Lead Routing UI - Rules configuration assignment dashboard
-  SLA monitoring. PG-132 Smart Lead Routing UI — full implementation with 5 UI
-  components, tRPC router (11 endpoints), validators, useRouting hook, and 64
-  passing tests. Key fix:... Routing rules CRUD with drag-to-reorder;...
-- **IFC-078** — Platform Engineering Foundation. Task completed and verified
-  Internal Developer Platform basics, golden paths
+- **IFC-310** — Duplicate-detection runtime for contacts + accounts
+  (PG-182/PG-183 follow-up) — new DuplicateDetectionService (or per-entity
+  services sharing a rule-evaluator) that reads {Contact,Account}DuplicateRule
+  rows at create/update time and either flags or auto-merges/auto-links records;
+  consumes autoMergeOnExactEmail + autoLinkContactsByDomain +
+  notifyOnDuplicate + aiDuplicateDetection + aiIndustryInference + aiEnrichment
+  toggles from the respective AutomationSetting table; transactional merge
+  combines rows (activities, notes, opportunities, tags, aiInsight) with
+  conflict resolution.. IFC-310 iteration-4 — residual concerns from the second
+  audit round fully resolved. No items deferred. R1 (AC-007 AI branch
+  unreachable at runtime): RESOLVED.... Rule evaluator runs
+  {Contact,Account}DuplicateRule checks at create+update time;...
+- **PG-180** — Help Article Admin List Page. Compliance-check invoked inline:
+  all 4 mandatory validations PASS (typecheck, tests, lint, build), scoped
+  Istanbul coverage 97.26/95.06/91.66/96.96 (aggregate) exceeds 90/80/90/90
+  thresholds, icon policy PASS (Material Symbols only, zero fo... Articles
+  listed;...
+- **PG-187** — Module Settings - Reports (/analytics/report-settings). Honest
+  record of deviations from plan: (a) Frontend test count 44 vs. plan target
+  54... Report settings page at /analytics/report-settings with default range,
+  currency, scheduled delivery config; uses in-module settings sidebar pattern;
+  Lighthouse >=90
+- **IFC-311** — Reassign endpoints + notifyOnOwnerChange wiring for contacts +
+  accounts (PG-182/PG-183 follow-up) — add contact.reassign/contact.bulkReassign
+  and account.reassign/account.bulkReassign tRPC procedures; on owner change,
+  invoke the notifyContactReassignment or notifyAccountReassignment helper (both
+  already shipped — PG-182 in contact-automation.ts, PG-183 in
+  account-automation.ts) with the bound createNotification from
+  notifications.router.ts; contact_reassigned is already in NOTIFICATION_TYPES —
+  add account_reassigned alongside it.. IFC-311 wires the two
+  notifyOnOwnerChange Cat-1 toggles that PG-182 + PG-183 shipped but left
+  dormant.... contact.reassign + contact.bulkReassign mutations;
+  account.reassign + account.bulkReassign mutations; All validate caller
+  permission
 
 **Open Work**
 
@@ -671,26 +683,50 @@ _Generated: 2026-04-13T20:21:03.392Z_
   metrics, logs unified; trace-examples.json must contain real trace IDs from
   actual service calls, not fabricated examples
 - **PG-058** — Dashboard. response under 200ms, Lighthouse 90, real-time data
-- **PG-059** — Leads List. response under 200ms, Lighthouse 90, pagination
-  working
 - **PG-060** — New Lead. response under 200ms, Lighthouse 90, leads created
 - **PG-061** — Lead Detail. response under 200ms, Lighthouse 90, details
   complete
+- **PG-062** — Edit Lead. response under 200ms, Lighthouse 90, updates saved
 
 ## Sprint 19 - Sprint 19
 
-- Status: 1/12 completed, 11 backlog, 0 blocked.
-- Primary focus areas: Core CRM (8), Automation (1), Compliance (1).
-- Evidence coverage: 1/1 completed tasks have canonical `attestation.json`
+- Status: 3/16 completed, 13 backlog, 0 blocked.
+- Primary focus areas: Core CRM (9), AI/Intelligence (3), Automation (1).
+- Evidence coverage: 3/3 completed tasks have canonical `attestation.json`
   evidence.
 
 **Accomplished**
 
+- **IFC-314** — Case AI chains backfill + master-unblocking hotfix -
+  retrospective tracking for commit f3fbdd1e's case-\* AI chains (case-insight,
+  case-priority-prediction, case-resolution-suggestion, case-summarization). The
+  original commit conflated three labels in its message (IFC-312 case AI
+  automation + PG-126 public feedback + PG-190 lighthouse) but the case-AI
+  chains had no tracking row. 2026-04-26 hotfix: added CaseAIInsight Prisma
+  model + migration 20260426000000_add_case_ai_insight; dropped `as never` casts
+  that were masking TS2551 missing-model errors and blocking master (every
+  contributor's pre-commit pnpm run typecheck failing). Schema mirrors
+  AccountAIInsight; predictedPriority reuses the existing CasePriority enum..
+  Retrospective backfill task. Commit f3fbdd1e (feat: IFC-312 case AI
+  automation, PG-126 public feedback widget, PG-190 lighthouse) conflated three
+  labels but PG-190 is actually 'Module Settings - Cases
+  (/cases/case-settings)'......
 - **PG-166** — Lighthouse audit on authenticated home page - verify NFR targets
   TTI <1s Performance >=90 Accessibility >=90. All implementation code, tests,
   configs, and documentation are complete. 3 test regressions fixed this session
   (SVG role='img', heading text, EmptyState refactor). Pre-existing build
   blocker fixed (unused @ts-expect-error).... Lighthouse CI audit on / route;...
+- **IFC-312** — AI chains for contacts + accounts (PG-182/PG-183 follow-up) —
+  wire the remaining AI toggles on both entities to real LLM/embedding
+  consumers: aiEnrichment (external enrichment API + provider adapter, shared
+  across entities), aiTagSuggestions (LLM prompt + surface on detail pages),
+  aiInsightGeneration (LLM chain writing to {Contact,Account}AIInsight +
+  surface), aiAutoReplyDrafting (contact inbox), aiIndustryInference
+  (account-only LLM classifier that picks the best AccountIndustryOption),
+  aiAccountScoring (account-only LLM scorer that writes to the Account score
+  field).. Originally attested 2026-04-22 with verdict COMPLETE, but a
+  2026-04-24 code audit (/task-code-audit) identified 7 findings (2 High, 4
+  Medium, 1 Low) that contradicted the attestation......
 
 **Open Work**
 

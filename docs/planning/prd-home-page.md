@@ -354,6 +354,44 @@ export const homeRouter = createTRPCRouter({
 - **Input Validation**: Zod schemas for all inputs
 - **Rate Limiting**: Standard tRPC rate limits apply
 
+### Goal Management RBAC (IFC-211)
+
+Adds role-based access control to the daily goal endpoints introduced by IFC-195
+so that managers can set goals for direct reports and admins can define org-wide
+defaults without breaking self-service.
+
+- **Resource Type**: `goal` is added to the `ResourceType` union in
+  `apps/api/src/security/types.ts` and to the `DEFAULT_PERMISSIONS` matrix in
+  `apps/api/src/security/rbac.ts`. Default actions per role: VIEWER (own read);
+  USER (own read, own write); SALES_REP (own read, own write); MANAGER (own +
+  team read/write/manage); ADMIN (org read/write/manage).
+- **Scope rules**:
+  - **Self scope**: Any authenticated user can read/write their own goal.
+  - **Team scope**: A MANAGER can set a goal for a direct report only when the
+    target user is a `TeamMember` of a `Team` whose `leaderId` is the manager
+    (same `tenantId`). Cross-team writes are denied.
+  - **Org scope**: An ADMIN can set tenant-wide default goals that apply to all
+    users without an explicit override.
+- **Resolution order on read** (`getDailyGoal`): user override
+  (`User.preferences.dailyGoal`) → team override (manager-set, persisted on the
+  target user) → org default (`TenantGoalDefault`) → hardcoded `GOAL_DEFAULTS`.
+- **Audit trail**: Every successful goal write logs an `UPDATE` audit entry via
+  `AuditLogger.logAction('UPDATE', 'goal', <targetUserId|tenantId>, tenantId, { actorId, beforeState, afterState })`.
+  Permission denials log
+  `logPermissionDenied('goal', ..., 'goal:<action>', ...)`.
+- **Audit fields captured**: `actorId`, `actorRole`, `resourceType: 'goal'`,
+  `resourceId` (target user ID or tenant ID for org defaults), `beforeState` /
+  `afterState` (goal type + targetValue + label), and
+  `metadata.scope: 'self' | 'team' | 'org'`.
+- **API surface (additive, non-breaking)**: `home.updateDailyGoal` accepts an
+  optional `targetUserId`. `home.getDailyGoal` accepts an optional
+  `targetUserId` for managers/admins reading on behalf. New
+  `home.setOrgGoalDefault` (admin-only) and `home.getOrgGoalDefault`
+  (tenant-scoped read) procedures cover the org-default path.
+- **Failure modes**: Forbidden actions return tRPC `FORBIDDEN` with the RBAC
+  reason and an audit `PERMISSION_DENIED` entry. Tenant mismatches and
+  cross-team writes always deny.
+
 ## Success Metrics
 
 ### Performance Targets
@@ -486,8 +524,9 @@ From `Sprint_plan.csv` Dependencies column:
 
 ## Revision History
 
-| Version | Date       | Author | Changes                                                                                                                     |
-| ------- | ---------- | ------ | --------------------------------------------------------------------------------------------------------------------------- |
-| 1.0     | 2026-02-03 | Claude | Initial draft                                                                                                               |
-| 2.0     | 2026-02-23 | Claude | PG-165: Checkbox audit — 38/51 marked complete, 13 deferred with task references                                            |
-| 2.1     | 2026-03-02 | Claude | PG-166: Lighthouse audit — TTI target tightened to <1s, auth Lighthouse score raised to >=90, added PG-166 to Related Tasks |
+| Version | Date       | Author | Changes                                                                                                                                                                                                           |
+| ------- | ---------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1.0     | 2026-02-03 | Claude | Initial draft                                                                                                                                                                                                     |
+| 2.0     | 2026-02-23 | Claude | PG-165: Checkbox audit — 38/51 marked complete, 13 deferred with task references                                                                                                                                  |
+| 2.1     | 2026-03-02 | Claude | PG-166: Lighthouse audit — TTI target tightened to <1s, auth Lighthouse score raised to >=90, added PG-166 to Related Tasks                                                                                       |
+| 2.2     | 2026-04-26 | Claude | IFC-211: Added "Goal Management RBAC" subsection to Security Considerations covering goal resource type, self/team/org scopes, resolution order, audit fields, and API surface (targetUserId + setOrgGoalDefault) |

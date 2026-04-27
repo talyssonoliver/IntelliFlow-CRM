@@ -12,17 +12,17 @@ Risk, RAG/Search, Auto-Response, AI Output Review, and AI Monitoring features.
 All chains now have UI tasks assigned via the unified **AI & Agents** sidebar at
 `/agent-approvals/*`.
 
-| Feature            | AI Chain | Router     | Frontend UI                | Route                                        | Status                           |
-| ------------------ | -------- | ---------- | -------------------------- | -------------------------------------------- | -------------------------------- |
-| Lead Scoring       | IFC-005  | IFC-013    | IFC-023 + PG-148 ✅        | `/agent-approvals/lead-scoring`              | ✅ COMPLETE                      |
-| Sentiment Analysis | IFC-039  | Partial    | PG-142 ✅                  | `/agent-approvals/sentiment`                 | ✅ COMPLETE                      |
-| Churn Risk         | IFC-095  | Partial    | PG-143 ✅                  | `/agent-approvals/churn-risk`                | ✅ COMPLETE                      |
-| RAG/Search         | IFC-039  | IFC-156    | PG-144 ✅                  | `/agent-approvals/ai-search`                 | ✅ COMPLETE                      |
-| Auto-Response      | IFC-029  | IFC-029    | IFC-149 ✅                 | `/agent-approvals`                           | ✅ COMPLETE                      |
-| AI Output Review   | IFC-128  | IFC-180 ✅ | IFC-181 ✅ + PG-150 ✅     | `/agent-approvals/ai-review`                 | ✅ COMPLETE                      |
-| AI Monitoring      | IFC-117  | IFC-197 ✅ | PG-146 ✅/152 ✅/153 ✅    | `/agent-approvals/drift,agents,logs,latency` | 3/4 UI COMPLETE (PG-151 backlog) |
-| Ticket Routing     | IFC-067  | IFC-067    | (admin dashboard TBD)      | N/A (backend API only)                       | ✅ COMPLETE                      |
-| Experiments        | IFC-025  | IFC-025    | PG-149 (Plan Complete 50%) | `/agent-approvals/experiments`               | PLAN COMPLETE (50%)              |
+| Feature            | AI Chain | Router     | Frontend UI                                     | Route                                        | Status                           |
+| ------------------ | -------- | ---------- | ----------------------------------------------- | -------------------------------------------- | -------------------------------- |
+| Lead Scoring       | IFC-005  | IFC-013    | IFC-023 + PG-148 ✅ + IFC-212 (queue wiring) ✅ | `/agent-approvals/lead-scoring`              | ✅ COMPLETE                      |
+| Sentiment Analysis | IFC-039  | Partial    | PG-142 ✅                                       | `/agent-approvals/sentiment`                 | ✅ COMPLETE                      |
+| Churn Risk         | IFC-095  | Partial    | PG-143 ✅                                       | `/agent-approvals/churn-risk`                | ✅ COMPLETE                      |
+| RAG/Search         | IFC-039  | IFC-156    | PG-144 ✅                                       | `/agent-approvals/ai-search`                 | ✅ COMPLETE                      |
+| Auto-Response      | IFC-029  | IFC-029    | IFC-149 ✅                                      | `/agent-approvals`                           | ✅ COMPLETE                      |
+| AI Output Review   | IFC-128  | IFC-180 ✅ | IFC-181 ✅ + PG-150 ✅                          | `/agent-approvals/ai-review`                 | ✅ COMPLETE                      |
+| AI Monitoring      | IFC-117  | IFC-197 ✅ | PG-146 ✅/152 ✅/153 ✅                         | `/agent-approvals/drift,agents,logs,latency` | 3/4 UI COMPLETE (PG-151 backlog) |
+| Ticket Routing     | IFC-067  | IFC-067    | (admin dashboard TBD)                           | N/A (backend API only)                       | ✅ COMPLETE                      |
+| Experiments        | IFC-025  | IFC-025    | PG-149 (Plan Complete 50%)                      | `/agent-approvals/experiments`               | PLAN COMPLETE (50%)              |
 
 ---
 
@@ -154,6 +154,21 @@ All chains now have UI tasks assigned via the unified **AI & Agents** sidebar at
     - Feedback: IFC-024 ✅
     - A/B Testing: IFC-025 ✅
     - Real Benchmark: IFC-174 (validates IFC-085 accuracy claims) ✅
+    - **Queue wiring: IFC-212** (QueueAIService — replaces in-process LLM call with
+      BullMQ enqueue+wait; preserves GuardrailsAIService decorator) ✅
+
+    Runtime path (post-IFC-212):
+      lead.router.scoreWithAI (apps/api/src/modules/lead/lead.router.ts:1027)
+        → LeadService.scoreLead (packages/application/src/services/LeadService.ts:181)
+          → GuardrailsAIService.scoreLead (decorator — sanitize/redact/audit)
+            → QueueAIService.scoreLead (apps/api/src/services/queue/QueueAIService.ts)
+              → BullMQ Queue.add('score-lead', payload, ...)  [queue: 'ai-scoring']
+                → Worker QueueEvents → Job.waitUntilFinished(60s ceiling)
+                  ← apps/ai-worker AIWorker.processJob → processScoringJob
+                       (apps/ai-worker/src/jobs/scoring.job.ts:450)
+
+    Default-path env: AI_PROVIDER unset (non-test) → QueueAIService.
+    Opt-out paths: AI_PROVIDER=mock|ollama|litellm preserved.
 ```
 
 ---

@@ -5,6 +5,14 @@
 > Guide Components **Total Pages**: 208 implemented **Total Flows**: 42 **API
 > Routers**: 60 (366 procedures)
 
+> **Canonical counts**: "Total Pages" reflects the filesystem total emitted by
+> `tools/scripts/content-audit.ts` (each `page.tsx` under `apps/web/src/app/**`
+> counts once; route groups stripped; `[id]` collapses; `app/api/` excluded).
+> Inline references throughout this document use the same canonical number;
+> changelog entries below preserve historical state at the time they were
+> recorded and MUST NOT be rewritten. See `docs/design/content-audit.md` for the
+> full counting rule. Verified: 2026-04-26.
+
 This document provides a comprehensive mapping between user flows, UI routes,
 and design system components to ensure consistent implementation across the
 application.
@@ -21,7 +29,7 @@ application.
 │   ┌──────────────────────┐     ┌──────────────────────┐                     │
 │   │  FLOWS (42 total)    │────▶│   SITEMAP            │                     │
 │   │  flows/FLOW-*.md     │     │   sitemap.md         │                     │
-│   │  FLOW-001 to 045     │     │   103 routes         │                     │
+│   │  FLOW-001 to 045     │     │   208 routes         │                     │
 │   └──────────┬───────────┘     └──────────┬───────────┘                     │
 │              │                            │                                  │
 │              │         ┌──────────────────┘                                  │
@@ -63,7 +71,7 @@ application.
 | ----------------------- | --------------------------------------------------------------- | -------------------------------------------- |
 | Flow Index              | `apps/project-tracker/docs/metrics/_global/flows/flow-index.md` | Master flow catalog (42 flows)               |
 | Individual Flows        | `apps/project-tracker/docs/metrics/_global/flows/FLOW-*.md`     | Detailed flow specs                          |
-| Sitemap                 | `docs/design/sitemap.md`                                        | Route structure (103 pages)                  |
+| Sitemap                 | `docs/design/sitemap.md`                                        | Route structure (208 pages)                  |
 | Page Map & Flows        | `docs/design/PAGE_MAP_AND_FLOWS.md`                             | Visual flow diagrams                         |
 | **Integration Backlog** | `docs/design/integration-backlog.md`                            | **Page specs + API requirements (23 tasks)** |
 | tRPC API Routes         | `docs/api/trpc-routes.md`                                       | API inventory (366 procedures)               |
