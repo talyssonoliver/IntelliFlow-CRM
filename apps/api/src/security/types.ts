@@ -99,7 +99,8 @@ export type ResourceType =
   | 'appointment'
   | 'session'
   | 'system'
-  | 'pipeline_config';
+  | 'pipeline_config'
+  | 'goal';
 
 /**
  * Permission actions

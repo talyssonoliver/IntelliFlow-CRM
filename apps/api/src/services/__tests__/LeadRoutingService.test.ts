@@ -1,11 +1,16 @@
 /**
  * LeadRoutingService Tests (IFC-030)
  *
- * 42 tests in 4 sections:
+ * 62 tests in 5 sections:
  * A: Unit Tests (20)
  * B: Accuracy/NF Tests (8)
  * C: Performance Tests (4)
  * D: Wiring Tests (10)
+ * E: Coverage Gap Tests (20)
+ *
+ * IFC-032 tracing tests (Section F) live in
+ * `LeadRoutingService.tracing.test.ts` — they require unmocking
+ * @opentelemetry/api and so cannot share this file's setup.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mockDeep, type DeepMockProxy } from 'vitest-mock-extended';

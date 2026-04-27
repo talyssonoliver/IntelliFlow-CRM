@@ -16,8 +16,33 @@
  * Schema fields: ticketId, ruleId, ruleName, toUserId, toUserName, reason, details
  */
 
+import { randomUUID } from 'node:crypto';
+import { trace, SpanStatusCode, type Tracer } from '@opentelemetry/api';
 import type { PrismaClient } from '@intelliflow/db';
 import { LeadRoutedEvent, type LeadId } from '@intelliflow/domain';
+
+// IFC-032 — workflow tracer for ADR-017 §3 ("All workflow steps emit OTel
+// traces with route_id/workflow_id"). Lazy-resolved via the module-level
+// `_workflowTracerOverride` injection seam so tests (Section F) can substitute
+// a real BasicTracerProvider tracer; production callers fall through to
+// trace.getTracer() unchanged.
+let _workflowTracerOverride: Tracer | null = null;
+
+/**
+ * Test/integration seam: substitute the workflow tracer used by routeLead.
+ * Pass `null` to restore the default (trace.getTracer('intelliflow-workflow')).
+ *
+ * IFC-032 — only used by the InMemorySpanExporter-based capture script and the
+ * Section F unit tests + the routing-otel-integration test. Production code
+ * never calls this.
+ */
+export function setWorkflowTracer(tracer: Tracer | null): void {
+  _workflowTracerOverride = tracer;
+}
+
+function getWorkflowTracer(): Tracer {
+  return _workflowTracerOverride ?? trace.getTracer('intelliflow-workflow', '1.0.0');
+}
 
 // ── Interfaces ──────────────────────────────────────────────
 
@@ -66,6 +91,8 @@ export interface LeadRoutingResult {
   score: number;
   executionTimeMs: number;
   events?: LeadRoutedEvent[];
+  /** IFC-032 — workflow correlation ID emitted as workflow.id span attribute */
+  workflowId?: string;
 }
 
 interface RoutingCondition {
@@ -196,166 +223,292 @@ export class LeadRoutingService {
    */
   async routeLead(params: LeadRouteParams): Promise<LeadRoutingResult> {
     const startTime = performance.now();
+    const workflowId = randomUUID();
+    const tracer = getWorkflowTracer();
 
-    const result = await this.prisma.$transaction(async (tx: any) => {
-      // Step 1: Guard — find lead
-      const lead = await tx.lead.findFirst({
-        where: { id: params.leadId, tenantId: params.tenantId },
-      });
-
-      if (!lead) {
-        throw new Error(`Lead ${params.leadId} not found`);
-      }
-
-      if (lead.status === 'CONVERTED' || lead.status === 'LOST') {
-        throw new Error(`Cannot route a ${lead.status.toLowerCase()} lead`);
-      }
-
-      // Idempotency guard (AC-006)
-      if (lead.ownerId && !params.forceReroute) {
-        throw new Error(`Lead ${params.leadId} is already assigned. Use forceReroute to reassign.`);
-      }
-
-      // Build lead context for routing
-      const leadContext: LeadContext = {
-        score: lead.score ?? 0,
-        source: lead.source ?? '',
-        status: lead.status ?? 'NEW',
-        estimatedValue: lead.estimatedValue ?? null,
-        location: lead.location ?? null,
-        tags: lead.tags ?? [],
-      };
-
-      // Strategy 1: Try rule match
-      const matchedRule = await this.findMatchingRuleInTx(tx, params.tenantId, leadContext);
-
-      let assigneeId: string;
-      let assigneeName: string;
-      let reason: string;
-      let routingMethod: string;
-      let matchedSkill: string | null = null;
-      let ruleId: string | null = null;
-      let ruleName: string | null = null;
-      let routingScore = 0;
-
-      if (matchedRule) {
-        // Rule match
-        assigneeId = matchedRule.assigneeId;
-        reason = 'rule_match';
-        routingMethod = 'rule_match';
-        ruleId = matchedRule.ruleId;
-        ruleName = matchedRule.ruleName;
-
-        // Pre-transaction lookup for toUserName (D8 — never write '')
-        const availability = await tx.agentAvailability.findMany({
-          where: { userId: assigneeId, tenantId: params.tenantId },
-        });
-        assigneeName = availability[0]?.userName || 'Unknown';
-      } else {
-        // Strategy 2/3: Skill match or load balance
-        const eligibleAgents = await this.getEligibleAgentsInTx(tx, params.tenantId);
-
-        if (eligibleAgents.length === 0) {
-          throw new Error('No eligible agents available for routing');
-        }
-
-        // HOT leads (score >= 80) → try skill match first
-        if (leadContext.score >= 80) {
-          // Try to find agents with sales skills, sorted by proficiency
-          const skillAgents = await this.getEligibleAgentsInTx(tx, params.tenantId, 'sales');
-
-          if (skillAgents.length > 0) {
-            const bestAgent = skillAgents[0];
-            assigneeId = bestAgent.agentId;
-            assigneeName = bestAgent.name;
-            reason = 'skill_match';
-            routingMethod = 'skill_match';
-            matchedSkill = 'sales';
-            routingScore = this.computeRoutingScore(bestAgent, leadContext);
-          } else {
-            // Fallback to load balance for HOT leads
-            const sorted = [...eligibleAgents].sort((a, b) => a.currentLoad - b.currentLoad);
-            assigneeId = sorted[0].agentId;
-            assigneeName = sorted[0].name;
-            reason = 'load_balance';
-            routingMethod = 'load_balance';
-            routingScore = this.computeRoutingScore(sorted[0], leadContext);
-          }
-        } else {
-          // Load balance for non-HOT leads
-          const sorted = [...eligibleAgents].sort((a, b) => a.currentLoad - b.currentLoad);
-          assigneeId = sorted[0].agentId;
-          assigneeName = sorted[0].name;
-          reason = 'load_balance';
-          routingMethod = 'load_balance';
-          routingScore = this.computeRoutingScore(sorted[0], leadContext);
-        }
-      }
-
-      // Step 2: Update lead — ownerId + status → CONTACTED (AC-005)
-      await tx.lead.update({
-        where: { id: params.leadId },
-        data: {
-          ownerId: assigneeId,
-          status: 'CONTACTED',
+    return tracer.startActiveSpan(
+      'workflow.lead.route',
+      {
+        attributes: {
+          'workflow.id': workflowId,
+          'lead.id': params.leadId,
+          'tenant.id': params.tenantId,
         },
-      });
+      },
+      async (parentSpan) => {
+        try {
+          const result = await this.prisma.$transaction(async (tx: any) => {
+            // Step 1: Guard — find lead
+            const lead = await tx.lead.findFirst({
+              where: { id: params.leadId, tenantId: params.tenantId },
+            });
 
-      // Step 3: Increment agent load
-      await tx.agentAvailability.updateMany({
-        where: { userId: assigneeId, tenantId: params.tenantId },
-        data: { currentCapacity: { increment: 1 } },
-      });
+            if (!lead) {
+              throw new Error(`Lead ${params.leadId} not found`);
+            }
 
-      const executionTimeMs = Math.round(performance.now() - startTime);
+            if (lead.status === 'CONVERTED' || lead.status === 'LOST') {
+              throw new Error(`Cannot route a ${lead.status.toLowerCase()} lead`);
+            }
 
-      // Step 4: Create routing audit — ONLY schema-valid fields (D2 — no phantom fields)
-      const audit = await tx.routingAudit.create({
-        data: {
-          tenantId: params.tenantId,
-          ticketId: params.leadId, // RoutingAudit.ticketId stores leadId
-          ruleId: ruleId,
-          ruleName: ruleName,
-          toUserId: assigneeId,
-          toUserName: assigneeName,
-          reason,
-          details: {
-            entityType: 'lead',
-            routingMethod,
-            matchedSkill,
-            executionTimeMs,
-            score: routingScore,
-          },
-        },
-      });
+            // Idempotency guard (AC-006)
+            if (lead.ownerId && !params.forceReroute) {
+              throw new Error(
+                `Lead ${params.leadId} is already assigned. Use forceReroute to reassign.`
+              );
+            }
 
-      return {
-        leadId: params.leadId,
-        assigneeId,
-        assigneeName,
-        auditId: audit.id,
-        reason,
-        routingMethod,
-        matchedSkill,
-        ruleId,
-        score: routingScore,
-        executionTimeMs,
-      };
-    });
+            // Build lead context for routing
+            const leadContext: LeadContext = {
+              score: lead.score ?? 0,
+              source: lead.source ?? '',
+              status: lead.status ?? 'NEW',
+              estimatedValue: lead.estimatedValue ?? null,
+              location: lead.location ?? null,
+              tags: lead.tags ?? [],
+            };
 
-    // Step 5: Post-transaction — emit LeadRoutedEvent (AC-007)
-    const event = new LeadRoutedEvent(
-      { value: result.leadId } as LeadId,
-      result.assigneeId,
-      result.routingMethod,
-      result.ruleId,
-      result.reason
+            // Strategy 1: Try rule match — child span workflow.lead.route.evaluate_rules
+            const matchedRule = await tracer.startActiveSpan(
+              'workflow.lead.route.evaluate_rules',
+              {
+                attributes: {
+                  'workflow.id': workflowId,
+                  'tenant.id': params.tenantId,
+                },
+              },
+              async (childSpan) => {
+                try {
+                  const r = await this.findMatchingRuleInTx(tx, params.tenantId, leadContext);
+                  childSpan.setAttribute('rule.matched', r !== null);
+                  childSpan.setStatus({ code: SpanStatusCode.OK });
+                  return r;
+                } finally {
+                  childSpan.end();
+                }
+              }
+            );
+
+            // Strategy 2/3 + scoring — child span workflow.lead.route.score_agents
+            const scored = await tracer.startActiveSpan(
+              'workflow.lead.route.score_agents',
+              {
+                attributes: {
+                  'workflow.id': workflowId,
+                  'tenant.id': params.tenantId,
+                },
+              },
+              async (childSpan) => {
+                try {
+                  let scoredAssigneeId: string;
+                  let scoredAssigneeName: string;
+                  let scoredReason: string;
+                  let scoredRoutingMethod: string;
+                  let scoredMatchedSkill: string | null = null;
+                  let scoredRuleId: string | null = null;
+                  let scoredRuleName: string | null = null;
+                  let scoredRoutingScore = 0;
+                  let eligibleCount = 0;
+
+                  if (matchedRule) {
+                    // Rule match
+                    scoredAssigneeId = matchedRule.assigneeId;
+                    scoredReason = 'rule_match';
+                    scoredRoutingMethod = 'rule_match';
+                    scoredRuleId = matchedRule.ruleId;
+                    scoredRuleName = matchedRule.ruleName;
+
+                    // Pre-transaction lookup for toUserName (D8 — never write '')
+                    const availability = await tx.agentAvailability.findMany({
+                      where: { userId: scoredAssigneeId, tenantId: params.tenantId },
+                    });
+                    scoredAssigneeName = availability[0]?.userName || 'Unknown';
+                    eligibleCount = availability.length;
+                  } else {
+                    // Strategy 2/3: Skill match or load balance
+                    const eligibleAgents = await this.getEligibleAgentsInTx(tx, params.tenantId);
+                    eligibleCount = eligibleAgents.length;
+
+                    if (eligibleAgents.length === 0) {
+                      throw new Error('No eligible agents available for routing');
+                    }
+
+                    // HOT leads (score >= 80) → try skill match first
+                    if (leadContext.score >= 80) {
+                      // Try to find agents with sales skills, sorted by proficiency
+                      const skillAgents = await this.getEligibleAgentsInTx(
+                        tx,
+                        params.tenantId,
+                        'sales'
+                      );
+
+                      if (skillAgents.length > 0) {
+                        const bestAgent = skillAgents[0];
+                        scoredAssigneeId = bestAgent.agentId;
+                        scoredAssigneeName = bestAgent.name;
+                        scoredReason = 'skill_match';
+                        scoredRoutingMethod = 'skill_match';
+                        scoredMatchedSkill = 'sales';
+                        scoredRoutingScore = this.computeRoutingScore(bestAgent, leadContext);
+                      } else {
+                        // Fallback to load balance for HOT leads
+                        const sorted = [...eligibleAgents].sort(
+                          (a, b) => a.currentLoad - b.currentLoad
+                        );
+                        scoredAssigneeId = sorted[0].agentId;
+                        scoredAssigneeName = sorted[0].name;
+                        scoredReason = 'load_balance';
+                        scoredRoutingMethod = 'load_balance';
+                        scoredRoutingScore = this.computeRoutingScore(sorted[0], leadContext);
+                      }
+                    } else {
+                      // Load balance for non-HOT leads
+                      const sorted = [...eligibleAgents].sort(
+                        (a, b) => a.currentLoad - b.currentLoad
+                      );
+                      scoredAssigneeId = sorted[0].agentId;
+                      scoredAssigneeName = sorted[0].name;
+                      scoredReason = 'load_balance';
+                      scoredRoutingMethod = 'load_balance';
+                      scoredRoutingScore = this.computeRoutingScore(sorted[0], leadContext);
+                    }
+                  }
+
+                  childSpan.setAttribute('agents.eligible_count', eligibleCount);
+                  childSpan.setAttribute('routing.method', scoredRoutingMethod);
+                  childSpan.setAttribute('routing.score', scoredRoutingScore);
+                  childSpan.setStatus({ code: SpanStatusCode.OK });
+                  return {
+                    assigneeId: scoredAssigneeId,
+                    assigneeName: scoredAssigneeName,
+                    reason: scoredReason,
+                    routingMethod: scoredRoutingMethod,
+                    matchedSkill: scoredMatchedSkill,
+                    ruleId: scoredRuleId,
+                    ruleName: scoredRuleName,
+                    routingScore: scoredRoutingScore,
+                  };
+                } finally {
+                  childSpan.end();
+                }
+              }
+            );
+
+            const {
+              assigneeId,
+              assigneeName,
+              reason,
+              routingMethod,
+              matchedSkill,
+              ruleId,
+              ruleName,
+              routingScore,
+            } = scored;
+
+            // Step 2: Update lead — ownerId + status → CONTACTED (AC-005)
+            await tx.lead.update({
+              where: { id: params.leadId },
+              data: {
+                ownerId: assigneeId,
+                status: 'CONTACTED',
+              },
+            });
+
+            // Step 3: Increment agent load
+            await tx.agentAvailability.updateMany({
+              where: { userId: assigneeId, tenantId: params.tenantId },
+              data: { currentCapacity: { increment: 1 } },
+            });
+
+            const executionTimeMs = Math.round(performance.now() - startTime);
+
+            // Step 4: Create routing audit — ONLY schema-valid fields (D2 — no phantom fields)
+            // Wrapped in child span workflow.lead.route.persist_audit (IFC-032).
+            const audit = await tracer.startActiveSpan(
+              'workflow.lead.route.persist_audit',
+              {
+                attributes: {
+                  'workflow.id': workflowId,
+                  'lead.id': params.leadId,
+                  'tenant.id': params.tenantId,
+                },
+              },
+              async (childSpan) => {
+                try {
+                  const created = await tx.routingAudit.create({
+                    data: {
+                      tenantId: params.tenantId,
+                      ticketId: params.leadId, // RoutingAudit.ticketId stores leadId
+                      ruleId: ruleId,
+                      ruleName: ruleName,
+                      toUserId: assigneeId,
+                      toUserName: assigneeName,
+                      reason,
+                      details: {
+                        entityType: 'lead',
+                        routingMethod,
+                        matchedSkill,
+                        executionTimeMs,
+                        score: routingScore,
+                      },
+                      workflowId, // IFC-032 — ADR-017 §3 trace correlation
+                    },
+                  });
+                  childSpan.setAttribute('audit.id', created.id);
+                  childSpan.setStatus({ code: SpanStatusCode.OK });
+                  return created;
+                } finally {
+                  childSpan.end();
+                }
+              }
+            );
+
+            return {
+              leadId: params.leadId,
+              assigneeId,
+              assigneeName,
+              auditId: audit.id,
+              reason,
+              routingMethod,
+              matchedSkill,
+              ruleId,
+              score: routingScore,
+              executionTimeMs,
+            };
+          });
+
+          // Set parent-span outcome attributes once the strategy is decided.
+          parentSpan.setAttribute('route.id', result.ruleId ?? 'rule:none');
+          parentSpan.setAttribute('routing.method', result.routingMethod);
+          parentSpan.setAttribute('routing.score', result.score);
+          parentSpan.setStatus({ code: SpanStatusCode.OK });
+
+          // Step 5: Post-transaction — emit LeadRoutedEvent (AC-007)
+          const event = new LeadRoutedEvent(
+            { value: result.leadId } as LeadId,
+            result.assigneeId,
+            result.routingMethod,
+            result.ruleId,
+            result.reason
+          );
+
+          return {
+            ...result,
+            workflowId,
+            events: [event],
+          };
+        } catch (err) {
+          parentSpan.setStatus({
+            code: SpanStatusCode.ERROR,
+            message: err instanceof Error ? err.message : String(err),
+          });
+          parentSpan.recordException(err as Error);
+          throw err;
+        } finally {
+          parentSpan.end();
+        }
+      }
     );
-
-    return {
-      ...result,
-      events: [event],
-    };
   }
 
   // ── Private helpers ────────────────────────────────────────
