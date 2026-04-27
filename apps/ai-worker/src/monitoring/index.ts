@@ -91,6 +91,17 @@ export type { ChainMonitorConfig, MonitoredResult } from './chain-monitor';
 
 export { MonitoringFlushService } from './monitoring-flush.service';
 
+// IFC-214: Redis-backed live snapshot publisher (paired with API-side store).
+export {
+  RedisMonitoringPublisher,
+  redisKey as redisMonitoringKey,
+} from './redis-monitoring-publisher';
+export type {
+  RedisLike as MonitoringRedisLike,
+  SnapshotKind as MonitoringSnapshotKind,
+  RedisMonitoringPublisherOptions,
+} from './redis-monitoring-publisher';
+
 /**
  * Get all Prometheus metrics from monitoring modules
  */

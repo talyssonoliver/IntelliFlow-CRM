@@ -1,0 +1,40 @@
+{
+  "task_id": "IFC-212",
+  "captured_at": "2026-04-27T18:21:34Z",
+  "description": "Pre-implementation coverage baseline for IFC-212 (Wire API container to QueueAIService for BullMQ-backed lead scoring). Backend-only task — creates apps/api/src/services/queue/{QueueAIService.ts,index.ts,__tests__/QueueAIService.test.ts}, creates apps/api/src/modules/lead/__tests__/LeadService.queue-ai.test.ts, creates apps/ai-worker/src/jobs/__tests__/scoring.job.contract.test.ts, modifies apps/api/src/container.ts AI-provider branching block (lines 266-290), modifies docs/architecture/diagrams/ai-intelligence-dependency-chain.md. Target: 21 new tests with statements>=90%, branches>=80%, functions>=90%, lines>=90% on src/services/queue/** (apps/api scope).",
+  "measurement_scope": [
+    "apps/api/src/services/queue/QueueAIService.ts (NEW — adapter implementing AIServicePort over BullMQ)",
+    "apps/api/src/services/queue/index.ts (NEW — barrel)",
+    "apps/api/src/container.ts (MODIFIED — default base AI service flips from LiteLLMAIService to QueueAIService)"
+  ],
+  "command": "Pre-impl baseline derived from current master HEAD. New files (QueueAIService.ts, index.ts) do not exist yet — coverage of NEW code is 0% by construction at baseline. The single MODIFIED file (container.ts) is covered by existing apps/api/src/__tests__/container.test.ts which already exercises the createServices() / getApiPrisma() paths. AFTER snapshot IFC-212-after.json will be a fresh scoped vitest --coverage run on src/services/queue/** at exec Phase 4.2.",
+  "baseline_totals": {
+    "lines": { "total": 0, "covered": 0, "skipped": 0, "pct": 0, "note": "no lines exist yet for src/services/queue/** — measured post-impl" },
+    "statements": { "total": 0, "covered": 0, "skipped": 0, "pct": 0 },
+    "functions": { "total": 0, "covered": 0, "skipped": 0, "pct": 0 },
+    "branches": { "total": 0, "covered": 0, "skipped": 0, "pct": 0 }
+  },
+  "baseline_files": {
+    "apps/api/src/services/queue/QueueAIService.ts": {
+      "source": "does not exist at baseline",
+      "approx_pct_lines": 0,
+      "note": "Created in Step 2.4 of plan."
+    },
+    "apps/api/src/services/queue/index.ts": {
+      "source": "does not exist at baseline",
+      "approx_pct_lines": 0,
+      "note": "Created in Step 2.5 of plan."
+    },
+    "apps/api/src/container.ts": {
+      "source": "existing — covered by apps/api/src/__tests__/container.test.ts",
+      "approx_pct_lines": 80,
+      "note": "container.ts:266-290 AI-provider branch modified to add QueueAIService default. Existing test suite exercises createServices() instantiation."
+    }
+  },
+  "notes": [
+    "Baseline file pcts are indicative; the AFTER snapshot is the binding reference for the coverage-gte-90 gate.",
+    "IFC-212 introduces 21 NEW tests (12 QueueAIService unit + 6 LeadService.queue-ai integration + 3 scoring.job.contract DTO).",
+    "Per plan §Step 4.2, the after-snapshot will be captured with `--coverage.include='src/services/queue/**'` for the apps/api scope.",
+    "Cross-package contract test in apps/ai-worker exercises ScoringJobDataSchema parsing — adds nothing to apps/api coverage but anchors worker DTO drift detection."
+  ]
+}
