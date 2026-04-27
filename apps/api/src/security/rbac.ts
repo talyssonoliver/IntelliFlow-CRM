@@ -52,6 +52,7 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     session: ['read', 'write', 'delete', 'manage', 'admin'],
     system: ['read', 'write', 'admin'],
     pipeline_config: ['read', 'write', 'delete', 'manage', 'admin'],
+    goal: ['read', 'write', 'delete', 'export', 'manage', 'admin'],
   },
   MANAGER: {
     lead: ['read', 'write', 'delete', 'export', 'manage'],
@@ -65,6 +66,7 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     session: ['read', 'write', 'delete', 'manage'],
     system: ['read'],
     pipeline_config: ['read', 'write', 'manage'],
+    goal: ['read', 'write', 'manage'],
   },
   SALES_REP: {
     lead: ['read', 'write', 'delete', 'export'],
@@ -78,6 +80,7 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     session: ['read', 'write', 'delete'],
     system: [],
     pipeline_config: ['read'],
+    goal: ['read', 'write'],
   },
   USER: {
     lead: ['read', 'write'],
@@ -91,6 +94,7 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     session: ['read', 'write', 'delete'],
     system: [],
     pipeline_config: ['read'],
+    goal: ['read', 'write'],
   },
   VIEWER: {
     lead: ['read'],
@@ -104,6 +108,7 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     session: ['read'],
     system: [],
     pipeline_config: ['read'],
+    goal: ['read'],
   },
 };
 
@@ -348,6 +353,50 @@ export class RBACService {
     const [resourceType, action] = permissionId.split(':') as [ResourceType, PermissionAction];
     const result = await this.can({ userId, userRole, resourceType, action });
     return result.granted;
+  }
+
+  /**
+   * IFC-211: returns true when targetUserId is a member of any team led by managerId
+   * within the given tenant. Returns false on missing relation, cross-tenant lookup,
+   * P2021 (table missing), or any database error — defence-in-depth, never throws.
+   *
+   * Both Team.tenantId AND TeamMember.tenantId are filtered so a manager in tenant A
+   * cannot satisfy the check via a TeamMember row that belongs to tenant B (NF-003).
+   */
+  async isUserOnManagerTeam(
+    managerId: string,
+    targetUserId: string,
+    tenantId: string,
+  ): Promise<boolean> {
+    if (managerId === targetUserId) return false;
+    try {
+      const team = await this.prisma.team.findFirst({
+        where: {
+          tenantId,
+          leaderId: managerId,
+          members: {
+            some: {
+              userId: targetUserId,
+              tenantId,
+            },
+          },
+        },
+        select: { id: true },
+      });
+      return !!team;
+    } catch (err: unknown) {
+      const isP2021 =
+        typeof err === 'object' &&
+        err !== null &&
+        'code' in err &&
+        (err as { code?: string }).code === 'P2021';
+      if (isP2021) {
+        console.debug('[RBACService.isUserOnManagerTeam] team table missing (P2021) — denying');
+      } else {
+        console.warn('[RBACService.isUserOnManagerTeam] DB error — denying:', err);
+      }
+      return false;
+    }
   }
 
   /**
@@ -781,4 +830,9 @@ export const Permissions = {
   SYSTEM_READ: 'system:read' as const,
   SYSTEM_WRITE: 'system:write' as const,
   SYSTEM_ADMIN: 'system:admin' as const,
+
+  // Goal permissions (IFC-211)
+  GOAL_READ: 'goal:read' as const,
+  GOAL_WRITE: 'goal:write' as const,
+  GOAL_MANAGE: 'goal:manage' as const,
 } as const;

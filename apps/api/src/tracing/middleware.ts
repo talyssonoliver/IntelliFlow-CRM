@@ -23,9 +23,25 @@ import type { Context } from '../context';
 const t = initTRPC.context<Context>().create();
 
 /**
- * Tracer for creating spans
+ * IFC-032 — tracer resolution with optional override seam.
+ *
+ * Production calls fall through to `trace.getTracer(...)` (unchanged).
+ * Tests (apps/api/src/modules/routing/__tests__/routing-otel-integration.test.ts)
+ * inject a tracer from a BasicTracerProvider via `setApiTracerForTesting()`
+ * so the integration test can assert on real spans without fighting Vitest's
+ * cross-file `vi.mock('@opentelemetry/api')` semantics. The seam is no-op in
+ * production because nothing calls the setter outside tests.
  */
-const tracer = trace.getTracer('intelliflow-api', '0.1.0');
+import type { Tracer } from '@opentelemetry/api';
+let _apiTracerOverride: Tracer | null = null;
+
+export function setApiTracerForTesting(tracer: Tracer | null): void {
+  _apiTracerOverride = tracer;
+}
+
+function getApiTracer(): Tracer {
+  return _apiTracerOverride ?? trace.getTracer('intelliflow-api', '0.1.0');
+}
 
 /**
  * Tracing middleware for tRPC procedures
@@ -49,7 +65,7 @@ export const tracingMiddleware = t.middleware(async ({ path, type, next, ctx }) 
     const safeCorrelationId = correlationId ?? 'unknown';
 
     // Create OpenTelemetry span
-    return tracer.startActiveSpan(
+    return getApiTracer().startActiveSpan(
       `trpc.${type}.${path}`,
       {
         attributes: {
