@@ -1,0 +1,142 @@
+# IFC-032 — Grafana provisioned alert rules for the workflow.lead.route
+# instrumentation introduced by ADR-017 §3. Mounted into the Grafana
+# container at /etc/grafana/provisioning/alerting (see
+# infra/monitoring/docker-compose.monitoring.yml line 122).
+#
+# Threshold semantics
+# -------------------
+# Each rule's threshold is embedded directly in the Prometheus expression
+# (`expr > N`). Grafana's alerting engine treats a non-empty/non-zero query
+# result for the `condition` ref as firing — so wrapping the metric query in
+# the comparison keeps the documented thresholds (>1%, >500ms, >5/5m) exactly
+# in the rule's evaluation logic, rather than relying on a separate
+# top-level field that some Grafana provisioning surfaces ignore.
+#
+# Linted by `tools/scripts/observability/lint-alerts.ts` — gate
+# `lint-alerts` requires the four named rules below with their thresholds
+# present in the expr text.
+
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: intelliflow-workflows
+    folder: IntelliFlow
+    interval: 1m
+    rules:
+      # 1. Workflow error rate > 1% over a 5m window
+      - uid: ifc032-workflow-error-rate
+        title: WorkflowErrorRateHigh
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: |
+                (
+                  sum(rate(otelcol_processor_errors_total{processor="batch"}[5m])) /
+                  clamp_min(sum(rate(otelcol_processor_accepted_spans{processor="batch"}[5m])), 1)
+                ) > 0.01
+              format: time_series
+              intervalMs: 60000
+        for: 5m
+        labels:
+          severity: warning
+          service: intelliflow-workflow
+        annotations:
+          summary: Workflow error rate > 1% over 5 minutes
+          description: |
+            Error rate of workflow.lead.route spans exceeded 1% over a 5-minute
+            window. Investigate failing routing scenarios via Tempo.
+          runbook_url: docs/observability/README.md#alerts
+
+      # 2. Workflow p95 latency > 500ms over a 5m window
+      - uid: ifc032-workflow-p95-latency
+        title: WorkflowP95LatencyHigh
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: |
+                histogram_quantile(0.95,
+                  sum(rate(traces_spanmetrics_duration_milliseconds_bucket{
+                    span_name="workflow.lead.route"
+                  }[5m])) by (le)
+                ) > 500
+              format: time_series
+              intervalMs: 60000
+        for: 5m
+        labels:
+          severity: warning
+          service: intelliflow-workflow
+        annotations:
+          summary: Workflow p95 latency > 500ms over 5 minutes
+          description: |
+            p95 latency of workflow.lead.route exceeded 500ms over a 5-minute
+            window. Check whether the routing transaction is contention-bound.
+          runbook_url: docs/observability/README.md#alerts
+
+      # 3. OTel collector silent — no span ingestion for 5m
+      - uid: ifc032-otel-collector-down
+        title: OtelCollectorDown
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: |
+                absent_over_time(otelcol_receiver_accepted_spans{receiver="otlp"}[5m])
+              format: time_series
+              intervalMs: 60000
+        for: 5m
+        labels:
+          severity: critical
+          service: intelliflow-workflow
+        annotations:
+          summary: OTel collector has not received spans for 5 minutes
+          description: |
+            otelcol_receiver_accepted_spans has been absent for 5 minutes —
+            the collector may be down, or the apps are not exporting.
+          runbook_url: docs/observability/README.md#alerts
+
+      # 4. Lead routing failures — > 5 ERROR-status workflow spans over 5m
+      - uid: ifc032-lead-routing-failures
+        title: LeadRoutingFailures
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: |
+                increase(traces_spanmetrics_calls_total{
+                  span_name="workflow.lead.route", status_code="STATUS_CODE_ERROR"
+                }[5m]) > 5
+              format: time_series
+              intervalMs: 60000
+        for: 5m
+        labels:
+          severity: warning
+          service: intelliflow-workflow
+        annotations:
+          summary: Lead routing failures > 5 in 5 minutes
+          description: |
+            More than 5 lead routing operations ended with span status ERROR
+            in the past 5 minutes. Investigate the offending workflow IDs.
+          runbook_url: docs/observability/README.md#alerts
