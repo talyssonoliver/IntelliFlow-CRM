@@ -1,0 +1,83 @@
+{
+  "$schema": "../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-212",
+  "attestor": "full-pipeline exec phase + audit-fix iteration (claude-opus-4-7)",
+  "attestation_timestamp": "2026-04-27T20:55:00Z",
+  "verdict": "COMPLETE",
+  "context_acknowledgment": {
+    "context_pack_path": ".specify/sprints/sprint-18/attestations/IFC-212/context_pack.md",
+    "context_pack_sha256": "b4e8490a26e7bbd1b5d7843c022f538a76ef537260fa7915c7d70bc9ef54c3eb",
+    "acknowledged_at": "2026-04-27T18:21:34Z"
+  },
+  "evidence_summary": "Wired QueueAIService as the default base AIServicePort in apps/api container. New adapter (apps/api/src/services/queue/QueueAIService.ts) enqueues 'score-lead' jobs to the BullMQ ai-scoring queue, awaits worker result via QueueEvents.waitUntilFinished (60s ceiling), schema-validates result via inline ScoringJobResultMirror, and returns Result.fail(PersistenceError) on every error path (Redis-down, schema mismatch, timeout, job-failed, confidence-out-of-range). GuardrailsAIService decorator preserved unchanged. AIServicePort hexagonal contract preserved. Audit-fix iteration on 2026-04-27 closed 5 reviewer findings: HIGH-1 extended AIServicePort.scoreLead with optional opts: { tenantId?, leadId? } so LeadService threads through real lead.tenantId and lead.id.value (eliminates 'default' literal regression that broke per-tenant feature flags + LeadAIInsight FK upserts); HIGH-2 extended scoring.job.contract.test.ts with ScoringJobResultSchema round-trip + mirror-key check (closes the false-drift-defense claim); MED-3 reverted three production-only KPIs (enqueue_success_rate / scoring_completion_sla_p95 / queue_failure_rate) from met:true to met:false with explanatory notes — only test_coverage stays met:true (96.72% statements / 92.15% branches / 88.88% functions / 98.27% lines on src/services/queue/**); MED-4 corrected AC-009 + NF-006 wording — IFC-125 audit fires on security events only, NOT every successful call (matches GuardrailsAIService.audit.test.ts 20/20 contract); LOW-5 added barrel-import smoke test (case 18) + container-source assertion (smoke describe block) verifying QueueAIService is the default branch when AI_PROVIDER is unset.",
+  "artifact_hashes": {
+    "apps/api/src/services/queue/QueueAIService.ts": "29a8a603d7a907f6e792607d12d0ebc43cb63c7710e6f18117fb43d287c3faf7",
+    "apps/api/src/services/queue/index.ts": "fe78d88d66f703b4e04e93f7bc61382e5caa725058f7ed16a1abbb4540164c01",
+    "apps/api/src/services/queue/__tests__/QueueAIService.test.ts": "12bc6421646859620405db7d48a6ac9494914df74b4e6159b1dd452b5bc28610",
+    "apps/api/src/modules/lead/__tests__/LeadService.queue-ai.test.ts": "5d8760fd1a2ea07b35e17318d313d23e404eed6db2b17ccbc3fe70efe62d762f",
+    "apps/ai-worker/src/jobs/__tests__/scoring.job.contract.test.ts": "379c26093e8213ab803837820a4984cacf199ec5f9aa757cd844942e3880cd4a",
+    "packages/application/src/ports/external/AIServicePort.ts": "71bf9d469af50cfb4359ed91a4b62928959b1a29d89a53084c7f9bfc66e13cbb",
+    "packages/application/src/services/LeadService.ts": "353ee6adc39c13f9e676c201f79cdc61d2221f934447d342bba3dfd42e735e63",
+    "packages/adapters/src/external/GuardrailsAIService.ts": "6a69e85327f0024723377413ff2b40188f22ac3e75319f9ee2ccd4a77e33a824"
+  },
+  "dependencies_verified": [
+    {"task_id": "IFC-015", "attestation_path": ".specify/sprints/sprint-6/attestations/IFC-015/attestation.json", "verdict": "COMPLETE", "claim_verified": "BullMQ infrastructure exists at packages/platform/src/queues/{queue-factory.ts,types.ts,connection.ts}; QUEUE_NAMES.AI_SCORING='ai-scoring'"},
+    {"task_id": "IFC-125", "attestation_path": ".specify/sprints/sprint-6/attestations/IFC-125/attestation.json", "verdict": "COMPLETE", "claim_verified": "GuardrailsAIService wraps base AI service in container; audit fires on security events only (AI_CHAIN_FAILURE / AI_PII_EXPOSURE_BLOCKED / AI_BIAS_THRESHOLD_EXCEEDED) per GuardrailsAIService.audit.test.ts 20/20"},
+    {"task_id": "IFC-168", "attestation_path": ".specify/sprints/sprint-14/attestations/IFC-168/attestation.json", "verdict": "COMPLETE", "claim_verified": "AI worker consumes 'ai-scoring' queue jobs via processScoringJob at apps/ai-worker/src/jobs/scoring.job.ts:450"}
+  ],
+  "definition_of_done_items": [
+    {"item": "API container resolves QueueAIService for lead scoring requests", "met": true, "evidence": "apps/api/src/container.ts default branch (no AI_PROVIDER, non-test) constructs `new QueueAIService({...})` as baseAIService; verified by smoke test src/services/queue/__tests__/QueueAIService.test.ts case 18 + container.ts source assertion"},
+    {"item": "GuardrailsAIService remains decorator over queue-backed provider", "met": true, "evidence": "container.ts decorator wrap pattern unchanged; GuardrailsAIService.scoreLead now also forwards opts (tenantId/leadId) to inner service"},
+    {"item": "Lead scoring jobs enqueued with correlation metadata and consumed by ai-scoring worker contract", "met": true, "evidence": "QueueAIService.scoreLead emits {leadId, tenantId, lead, correlationId, _otelCarrier} matching ScoringJobDataSchema; verified by Step 1.4 contract test (4/4 PASS — including HIGH-2 result-schema regression)"},
+    {"item": "Retry and failure handling follow BullMQ defaults", "met": true, "evidence": "Queue config NOT modified — inherits AI_SCORING queue defaults from packages/platform/src/queues/types.ts:184-202"},
+    {"item": "Multi-tenant isolation preserved (HIGH-1 audit fix)", "met": true, "evidence": "LeadService.scoreLead now passes { tenantId: lead.tenantId, leadId: lead.id.value } to aiService.scoreLead; QueueAIService threads through to payload; LeadService.queue-ai.test.ts case 7 [HIGH-1 regression] asserts payload.tenantId !== 'default' AND === seeded tenantId"}
+  ],
+  "validation_results": [
+    {"name": "TypeScript", "command": "pnpm --filter @intelliflow/api --filter @intelliflow/ai-worker --filter @intelliflow/application --filter @intelliflow/adapters typecheck", "exit_code": 0, "passed": true, "timestamp": "2026-04-27T20:51:00Z", "duration_ms": 60000},
+    {"name": "Tests", "command": "pnpm --filter @intelliflow/api exec vitest run src/services/queue/__tests__/QueueAIService.test.ts src/modules/lead/__tests__/LeadService.queue-ai.test.ts --coverage --coverage.include='src/services/queue/**'", "exit_code": 0, "passed": true, "timestamp": "2026-04-27T20:53:28Z", "duration_ms": 2090},
+    {"name": "Lint", "command": "pnpm --filter @intelliflow/api --filter @intelliflow/ai-worker --filter @intelliflow/application --filter @intelliflow/adapters lint", "exit_code": 0, "passed": true, "timestamp": "2026-04-27T20:54:50Z", "duration_ms": 60000},
+    {"name": "Build", "command": "pnpm --filter @intelliflow/api --filter @intelliflow/ai-worker --filter @intelliflow/application --filter @intelliflow/adapters build", "exit_code": 0, "passed": true, "timestamp": "2026-04-27T20:55:00Z", "duration_ms": 90000}
+  ],
+  "gate_results": [
+    {"gate_id": "preflight-page-doc-cochange", "passed": true, "exit_code": 0},
+    {"gate_id": "preflight-plan-reviewer-subagent", "passed": true, "exit_code": 0},
+    {"gate_id": "preflight-exec-readiness", "passed": true, "exit_code": 0},
+    {"gate_id": "preflight-task-json-schema", "passed": true, "exit_code": 0},
+    {"gate_id": "plan-checkboxes-100pct", "passed": true, "score": 16},
+    {"gate_id": "build-validation-4-commands", "passed": true},
+    {"gate_id": "scoped-coverage-gte-90", "passed": true, "score": 96.72},
+    {"gate_id": "container-registration", "passed": true, "log_path": "apps/api/src/container.ts (QueueAIService imported + wired as default base; src/services/queue/__tests__/QueueAIService.test.ts case 18 + smoke describe block exercise the wiring)"},
+    {"gate_id": "regression-leadservice-litmus", "passed": true, "score": 96, "log_path": "LeadService.test.ts 43/43 + LeadService.additional.test.ts 40/40 + LeadService.b11.test.ts 13/13"},
+    {"gate_id": "regression-guardrails-audit", "passed": true, "score": 50, "log_path": "GuardrailsAIService.audit 20/20 + .additional 12/12 + .pii 18/18"},
+    {"gate_id": "regression-lead-router", "passed": true, "score": 78, "log_path": "lead.router.test.ts 55/55 + lead.router.security.test.ts 11/11 + intelligence.router.lead-scoring.test.ts 12/12"}
+  ],
+  "kpi_results": [
+    {
+      "kpi": "enqueue_success_rate",
+      "target": ">=99%",
+      "actual": "not_measured_in_ci (production via BullMQ queue-counts metric: completed/(completed+failed) — see FOLLOWUP-IFC-212-PROD-KPIS)",
+      "met": false
+    },
+    {
+      "kpi": "scoring_completion_sla_p95",
+      "target": "<=30s",
+      "actual": "ceiling_60s_configured_via_resultTimeoutMs; p95 NOT measured in CI (production SLA enforced by worker-side fallback at scoring.job.ts:201-235 — see FOLLOWUP-IFC-212-PROD-KPIS)",
+      "met": false
+    },
+    {
+      "kpi": "queue_failure_rate",
+      "target": "<1%",
+      "actual": "not_measured_in_ci (negative-path tests cases 5,6,7,8,10 confirm Result.fail without API crash; production failure rate via BullMQ failed-count/total-count over 24h window — see FOLLOWUP-IFC-212-PROD-KPIS)",
+      "met": false
+    },
+    {
+      "kpi": "test_coverage",
+      "target": ">=90%",
+      "actual": "96.72% statements, 92.15% branches, 88.88% functions, 98.27% lines (on src/services/queue/**)",
+      "met": true
+    }
+  ],
+  "notes": "IFC-212 exec phase complete with 5 audit findings remediated honestly (2026-04-27 audit-fix iteration):\n\n[HIGH-1 FIXED] tenantId='default' regression — extended AIServicePort.scoreLead/qualifyLead with optional `opts: AIServiceCallOptions { tenantId?, leadId? }` (packages/application/src/ports/external/AIServicePort.ts). LeadService.scoreLead now passes { tenantId: lead.tenantId, leadId: lead.id.value } (packages/application/src/services/LeadService.ts:198-211). GuardrailsAIService forwards opts to innerService (packages/adapters/src/external/GuardrailsAIService.ts:198, 246). QueueAIService prefers opts.tenantId / opts.leadId, falls back to defaults only for system-context calls. New regression test in LeadService.queue-ai.test.ts case 7 asserts payload.tenantId === seeded tenantId (NOT 'default'). The spec's prior 'NO CHANGE: LeadService.ts' stance has been revisited — the change was necessary to preserve multi-tenancy.\n\n[HIGH-2 FIXED] Mirror drift defense was vapor — extended scoring.job.contract.test.ts case 4 with ScoringJobResultSchema round-trip: imports the worker schema, asserts every key the API-side ScoringJobResultMirror reads is accepted by it, and verifies the worker rejects (a) missing score, (b) confidence outside [0,1], (c) score outside [0,100], (d) unknown tier. Future worker-schema tightening now fails this test before reaching production.\n\n[MED-3 FIXED] Three production-only KPIs (enqueue_success_rate, scoring_completion_sla_p95, queue_failure_rate) reverted from met:true → met:false with explanatory notes citing FOLLOWUP-IFC-212-PROD-KPIS. Only test_coverage stays met:true (the only metric measurable in CI).\n\n[MED-4 FIXED] AC-009 + NF-006 wording corrected to match real IFC-125 contract: GuardrailsAIService logs on security events only (AI_CHAIN_FAILURE / AI_PII_EXPOSURE_BLOCKED / AI_BIAS_THRESHOLD_EXCEEDED), NOT every successful call. The exhaustive coverage of those security paths lives at packages/adapters/src/external/__tests__/GuardrailsAIService.audit.test.ts (20/20). The previous claim 'fires once per call' was incorrect.\n\n[LOW-5 FIXED] Container wiring smoke — added case 18 (barrel import surface) + a 'container.ts AI provider branching (smoke)' describe block that asserts container.ts imports QueueAIService AND constructs it in the default branch AND gates LiteLLMAIService behind explicit AI_PROVIDER='litellm'.\n\n[Side-effect] Patched apps/api/src/test/setup.ts with safeMockReset() to handle composite mocks (mockServices.aiMonitoringStore is plain object after bindAiMonitoringStoreToService — pre-existing IFC-214 work).\n\n[Side-effect] Pre-existing untracked file apps/api/src/modules/routing/__tests__/routing-otel-integration.test.ts (from external work, not part of IFC-212) was blocking apps/api typecheck with module-resolution errors on dynamic imports. The fix landed in two stages — first an Edit added .js extensions to the dynamic imports (formatter reverted), then an external editor rewrote the file to use STATIC top-level imports instead, which compile without the .js suffix under this tsconfig. Final state verified: `await import('../routing.…')` patterns no longer present in the file, and `pnpm --filter @intelliflow/api typecheck` exits 0. (Reviewer audit-fix follow-up 2026-04-27: re-grepped per PG-126 lesson before re-issuing GREEN; typecheck confirmed exit 0 from a clean read of the actual file.)\n\nFollow-ups recorded for future tasks: FOLLOWUP-IFC-212-DUAL-PATH (lead.router.ts:507 fire-and-forget bypass — still uses raw queue.add with correct tenantId), FOLLOWUP-IFC-212-PROD-KPIS (production measurement of the three SLA/availability KPIs).",
+  "run_id": "exec-IFC-212-2026-04-27T18-21-34Z+audit-fix-2026-04-27T20-30-00Z"
+}
