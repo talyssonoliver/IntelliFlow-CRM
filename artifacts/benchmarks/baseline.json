@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-04-24T18:10:36.727Z",
+  "timestamp": "2026-04-27T17:30:29.904Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1015,28 +1015,28 @@
     ]
   },
   "api_inventory": {
-    "total_routers": 60,
-    "total_endpoints": 538,
-    "total_queries": 249,
-    "total_mutations": 289,
+    "total_routers": 61,
+    "total_endpoints": 543,
+    "total_queries": 250,
+    "total_mutations": 293,
     "routers": [
       {
         "name": "contact",
-        "endpoints": 27,
+        "endpoints": 28,
         "queries": 8,
-        "mutations": 19
+        "mutations": 20
+      },
+      {
+        "name": "account",
+        "endpoints": 21,
+        "queries": 10,
+        "mutations": 11
       },
       {
         "name": "lead",
         "endpoints": 21,
         "queries": 6,
         "mutations": 15
-      },
-      {
-        "name": "account",
-        "endpoints": 20,
-        "queries": 10,
-        "mutations": 10
       },
       {
         "name": "appointments",
@@ -1105,6 +1105,12 @@
         "mutations": 10
       },
       {
+        "name": "home",
+        "endpoints": 14,
+        "queries": 7,
+        "mutations": 7
+      },
+      {
         "name": "task",
         "endpoints": 14,
         "queries": 5,
@@ -1121,12 +1127,6 @@
         "endpoints": 13,
         "queries": 6,
         "mutations": 7
-      },
-      {
-        "name": "home",
-        "endpoints": 12,
-        "queries": 6,
-        "mutations": 6
       },
       {
         "name": "cases",
@@ -1373,6 +1373,12 @@
         "endpoints": 1,
         "queries": 1,
         "mutations": 0
+      },
+      {
+        "name": "publicFeedback",
+        "endpoints": 1,
+        "queries": 0,
+        "mutations": 1
       },
       {
         "name": "team",
@@ -3409,6 +3415,11 @@
         "description": "Score account"
       },
       {
+        "name": "account.addTags",
+        "method": "POST",
+        "description": "Add tags"
+      },
+      {
         "name": "account.getAiInsight",
         "method": "GET",
         "description": "Get ai insight"
@@ -4297,6 +4308,11 @@
         "description": "Draft reply"
       },
       {
+        "name": "contact.addTags",
+        "method": "POST",
+        "description": "Add tags"
+      },
+      {
         "name": "contact.listReplyDrafts",
         "method": "GET",
         "description": "List reply drafts"
@@ -4632,6 +4648,16 @@
         "name": "home.updateDailyGoal",
         "method": "POST",
         "description": "Update daily goal"
+      },
+      {
+        "name": "home.setTeamMemberGoal",
+        "method": "POST",
+        "description": "Set team member goal"
+      },
+      {
+        "name": "home.getOrgGoalDefault",
+        "method": "GET",
+        "description": "Get org goal default"
       },
       {
         "name": "home.getPinnedItems",
@@ -5634,6 +5660,13 @@
         "name": "dsar.getDSARStatus",
         "method": "GET",
         "description": "Get d s a r status"
+      }
+    ],
+    "publicFeedback": [
+      {
+        "name": "publicFeedback.submit",
+        "method": "POST",
+        "description": "Submit"
       }
     ],
     "routing": [
