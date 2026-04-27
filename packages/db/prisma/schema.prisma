@@ -171,6 +171,7 @@ model Tenant {
   toolEnablements           TenantToolEnablement[]    // H6: per-tenant tool on/off
   aiConfigs                 TenantAIConfig[]           // M8/M9: per-tenant LLM tier overrides
   memoryPolicy              TenantMemoryPolicy?        // P2.7: per-tenant memory retention
+  goalDefault               TenantGoalDefault?         // IFC-211: org-wide default daily goal
 
   @@index([slug])
   @@index([status])
@@ -239,6 +240,28 @@ model TenantMemoryPolicy {
 
   @@index([tenantId])
   @@map("tenant_memory_policy")
+}
+
+/// IFC-211: Tenant-wide default daily goal. Applied by home.getDailyGoal when
+/// User.preferences.dailyGoal is unset. Single row per tenant (enforced via
+/// @unique on tenantId). Written by home.setOrgGoalDefault (admin-only).
+model TenantGoalDefault {
+  id          String   @id @default(cuid())
+  tenantId    String   @unique
+  /// One of: 'revenue' | 'calls' | 'meetings' | 'tasks' | 'custom' (validated by Zod at the router boundary).
+  goalType    String
+  targetValue Int
+  label       String?
+  customUnit  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  /// actorId of the admin who last upserted this default — surfaced in audit log payloads.
+  updatedBy   String?
+
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@map("tenant_goal_default")
 }
 
 enum TenantStatus {
@@ -3788,12 +3811,14 @@ model RoutingAudit {
   toUserName  String
   reason      String   // 'rule_match', 'skill_match', 'load_balance', 'manual', 'escalation'
   details     Json?    // Additional routing context
+  workflowId  String?  // IFC-032 — workflow correlation ID for ADR-017 trace correlation (UUID)
   createdAt   DateTime @default(now())
 
   @@index([ticketId])
   @@index([toUserId])
   @@index([createdAt])
   @@index([tenantId])
+  @@index([workflowId])
   @@map("routing_audits")
 }
 

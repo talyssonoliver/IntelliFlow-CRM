@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-05-09T22:24:40.970Z",
+  "timestamp": "2026-05-09T22:37:02.859Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1389,16 +1389,16 @@
     ]
   },
   "database_inventory": {
-    "total_tables": 170,
-    "total_fields": 2503,
-    "total_indexes": 796,
-    "total_relations": 242,
+    "total_tables": 171,
+    "total_fields": 2515,
+    "total_indexes": 800,
+    "total_relations": 243,
     "tables_with_embeddings": 4,
     "enums": 71,
     "tables": [
       {
         "name": "Tenant",
-        "fields": 150,
+        "fields": 151,
         "indexes": 4,
         "relations": 1,
         "hasEmbedding": false
@@ -1845,6 +1845,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "RoutingAudit",
+        "fields": 14,
+        "indexes": 6,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "EscalationHistory",
         "fields": 14,
         "indexes": 6,
@@ -1888,13 +1895,6 @@
       },
       {
         "name": "AgentAvailability",
-        "fields": 13,
-        "indexes": 5,
-        "relations": 1,
-        "hasEmbedding": false
-      },
-      {
-        "name": "RoutingAudit",
         "fields": 13,
         "indexes": 5,
         "relations": 1,
@@ -2154,6 +2154,13 @@
       },
       {
         "name": "TenantMemoryPolicy",
+        "fields": 10,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "TenantGoalDefault",
         "fields": 10,
         "indexes": 3,
         "relations": 1,
