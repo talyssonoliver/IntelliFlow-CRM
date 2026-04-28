@@ -69,6 +69,62 @@ function getProjectRoot(): string {
 }
 
 /**
+ * Wave 2b — opt-in worktree-pool integration.
+ *
+ * When USE_WORKTREE_POOL=1, every spawned session runs inside a pool slot
+ * acquired via `tools/scripts/worktree-pool/acquire.mjs <taskId>`. The
+ * acquire script returns the absolute slot path on stdout; we hand that
+ * back as cwd to spawn(). On session close (or error / timeout), we run
+ * `release.mjs <taskId> --force` to free the slot for reuse.
+ *
+ * Without the env var the spawner falls back to the legacy
+ * `getProjectRoot()` cwd — no behavior change for existing callers.
+ */
+function poolEnabled(): boolean {
+  return process.env.USE_WORKTREE_POOL === '1';
+}
+
+async function acquirePoolSlot(taskId: string): Promise<string | null> {
+  if (!poolEnabled()) return null;
+  return new Promise((resolve) => {
+    const proc = spawn(
+      'node',
+      ['tools/scripts/worktree-pool/acquire.mjs', taskId],
+      {
+        cwd: getProjectRoot(),
+        stdio: ['ignore', 'pipe', 'pipe'],
+      }
+    );
+    let out = '';
+    proc.stdout?.on('data', (d) => {
+      out += d.toString();
+    });
+    proc.on('error', () => resolve(null));
+    proc.on('close', (code) => {
+      if (code !== 0) return resolve(null);
+      const path = out.trim().split(/\r?\n/).pop() ?? '';
+      resolve(path || null);
+    });
+  });
+}
+
+async function releasePoolSlot(taskId: string): Promise<void> {
+  if (!poolEnabled()) return;
+  await new Promise<void>((resolve) => {
+    const proc = spawn(
+      'node',
+      ['tools/scripts/worktree-pool/release.mjs', taskId, '--force'],
+      {
+        cwd: getProjectRoot(),
+        stdio: ['ignore', 'ignore', 'ignore'],
+      }
+    );
+    proc.on('close', () => resolve());
+    proc.on('error', () => resolve());
+  });
+}
+
+/**
  * Get the logs directory for Claude sessions
  */
 function getLogsDir(): string {
@@ -149,17 +205,23 @@ export async function spawnClaudeSession(
       `${'='.repeat(50)}\n\n`
   );
 
+  // Wave 2b — try to acquire a pool slot; fall back to project root.
+  const slotPath = await acquirePoolSlot(taskId);
+  const sessionCwd = slotPath ?? getProjectRoot();
+
   // Spawn Claude Code CLI
   // Use --print to run non-interactively
   const child = spawn('claude', ['--print', prompt], {
     // NOSONAR — PATH inherited from dev environment, internal tooling only
-    cwd: getProjectRoot(),
+    cwd: sessionCwd,
     stdio: ['pipe', 'pipe', 'pipe'],
     shell: true,
     env: {
       ...process.env,
       // Ensure Claude uses the correct working directory
-      CLAUDE_CODE_CWD: getProjectRoot(),
+      CLAUDE_CODE_CWD: sessionCwd,
+      // Surface the task id to in-session hooks (lock-claim enforcement etc.)
+      CLAUDE_TASK_ID: taskId,
     },
   });
 
@@ -214,6 +276,9 @@ export async function spawnClaudeSession(
       // Ignore write errors
     }
 
+    // Wave 2b — release the pool slot if one was acquired.
+    await releasePoolSlot(taskId);
+
     // Remove from active sessions
     activeSessions.delete(sessionId);
 
@@ -233,6 +298,9 @@ export async function spawnClaudeSession(
     } catch {
       // Ignore write errors
     }
+
+    // Wave 2b — release pool slot on spawn error too
+    await releasePoolSlot(taskId);
 
     activeSessions.delete(sessionId);
     config.onComplete?.(result);

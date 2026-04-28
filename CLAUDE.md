@@ -26,25 +26,31 @@ Go/No-Go passed 2025-12-27. 316 tasks across 34 sprints tracked in
 
 ## Sprint Plan
 
-**DO NOT read `Sprint_plan.csv` directly** — exceeds token limit. Use split
-files:
+**DO NOT read `Sprint_plan.csv` directly** — exceeds token limit. Use the
+range-split files. As of Wave 4 they are **gitignored derived files**, not
+committed:
 
 ```
 apps/project-tracker/docs/metrics/_global/
-├── Sprint_plan.csv      # Source of truth (edit here only)
-├── Sprint_plan_A.csv    # 67 rows (EXC-INIT-001 → IFC-042)
-├── Sprint_plan_B.csv    # 72 rows (IFC-043 → PG-015)
-├── Sprint_plan_C.csv    # 73 rows (PG-016 → SALES-002)
-├── Sprint_plan_D.csv    # 69 rows (PM-OPS-001 → IFC-123)
-├── Sprint_plan_E.csv    # 63 rows (IFC-124 → IFC-170)
-├── Sprint_plan_F.csv    # 64 rows (IFC-171 → PG-156)
-├── Sprint_plan_G.csv    # 64 rows (PG-157 → IFC-233)
-├── Sprint_plan_H.csv    # 62 rows (IFC-234 → IFC-296)
-└── Sprint_plan_I.csv    # 26 rows (IFC-297 → IFC-308)
+└── Sprint_plan.csv      # Source of truth — only this file is committed
 ```
 
-Regenerate splits: `npx tsx tools/scripts/split-sprint-plan.ts` Full guide:
-`docs/claude-refs/sprint-plan-guide.md`
+To read a range, do one of:
+
+1. `pnpm regenerate:derived` — content-hash cached; produces
+   `Sprint_plan_A.csv` … `Sprint_plan_J.csv` locally (gitignored). Cache hits
+   on warm runs are <100 ms.
+2. `GET http://localhost:3002/api/sprint-plan?range=A` (project-tracker
+   running) — serves the regenerated split lazily and caches per request.
+
+The range letters cover roughly 60–70 rows each across sprints 0–29; A is the
+earliest, J is the most recent. `task-registry.json` and
+`dependency-graph.json` are also derived now — produce them with
+`node tools/scripts/build-task-registry.mjs` and
+`node tools/scripts/build-dependency-graph.mjs` respectively, or all three at
+once with `pnpm regenerate:derived`.
+
+Full guide: `docs/claude-refs/sprint-plan-guide.md`
 
 ## Project Structure (Top Level)
 

@@ -75,6 +75,16 @@ Verify new services are registered in `container.ts` + `context.ts`.
 Execute the plan's validation matrix, then select STOAs, execute baseline + STOA-specific gates, and aggregate verdicts.
 **See `references/phase3-matop-validation.md`**
 
+**Wave 2c — CI-mode toggle (10–15 agent scale)**: when
+`AGENT_CONCURRENT_COUNT > 3`, dispatch the 4 baseline gates
+(typecheck/test/lint/build) to GitHub Actions via
+`agent-validation.yml` instead of running them locally.
+Source `references/lib/poll-remote.sh` and call
+`poll_remote_validation "$TASK_ID" --gates typecheck,test,lint,build
+--interval 30 --max-interval 60 --timeout 1800`. On 30-minute timeout the
+helper returns 2 — fall back to local validation and log a WARN.
+This keeps the 64GB host from running 10+ simultaneous heavy validations.
+
 ### Phase 4: Generate Delivery Report
 Create `{{task_id}}-delivery.md` with implementation summary, TDD log, AC validation, and only the validation commands that actually ran.
 **See `references/phase5-attestation-format.md`**

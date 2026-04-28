@@ -188,7 +188,8 @@ The `sync-metrics.ts` script automatically validates data after syncing:
 
 - Manually edit JSON files in `sprint-0/`
 - Edit `_summary.json` manually
-- Edit `task-registry.json` manually
+- Edit `task-registry.json` manually (it is derived + gitignored;
+  regenerate with `pnpm regenerate:derived`)
 - Use custom status values
 - Commit without validation
 
@@ -201,7 +202,8 @@ The `sync-metrics.ts` script automatically validates data after syncing:
 1. Syncs all JSON files from CSV (Single Source of Truth)
 2. Automatically validates data consistency
 3. Detects orphaned files (warns but doesn't fail)
-4. Updates task-registry.json, \_summary.json, phase summaries
+4. Updates task-registry.json, \_summary.json, phase summaries (these are
+   all derived files; the canonical regenerator is `pnpm regenerate:derived`)
 
 **Exit Codes:**
 

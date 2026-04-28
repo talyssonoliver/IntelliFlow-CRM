@@ -5,25 +5,35 @@
 `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv` — **single source of
 truth**.
 
-**DO NOT read Sprint_plan.csv directly** — exceeds 25K token limit. Use split
-files:
+**DO NOT read Sprint_plan.csv directly** — exceeds 25K token limit. Use the
+range-split files. As of Wave 4 they are **gitignored derived files** — only
+`Sprint_plan.csv` itself is committed:
 
-| File                | Content                    | ~Tokens |
-| ------------------- | -------------------------- | ------- |
-| `Sprint_plan_A.csv` | Rows 1-79 (Sprint 0 early) | ~18k    |
-| `Sprint_plan_B.csv` | Rows 80-165 (Sprint 0-1)   | ~18k    |
-| `Sprint_plan_C.csv` | Rows 166-249 (Sprint 1-3)  | ~18k    |
-| `Sprint_plan_D.csv` | Rows 250-316 (Sprint 3-12) | ~18k    |
-| `Sprint_plan_E.csv` | Rows 317-353 (Sprint 12+)  | ~8k     |
+| Range  | Approximate content        | ~Tokens |
+| ------ | -------------------------- | ------- |
+| `A`    | Earliest sprints (0-1)     | ~18k    |
+| `B-D`  | Sprints 1-12               | ~18k each |
+| `E-G`  | Sprints 12-22              | ~12-18k each |
+| `H-J`  | Sprints 22-29 (most recent) | ~8-15k each |
 
-Location: `apps/project-tracker/docs/metrics/_global/` (gitignored, local only).
+Read a range via either:
+
+1. **Local**: `pnpm regenerate:derived` — content-hash cached, idempotent.
+   Output lands in `apps/project-tracker/docs/metrics/_global/Sprint_plan_<range>.csv`
+   (gitignored). Cache hits on warm runs are <100 ms.
+2. **API**: `GET http://localhost:3002/api/sprint-plan?range=<A..J>` —
+   project-tracker regenerates lazily and caches per request.
 
 **Auto-regeneration triggers**:
 
-- On git commit (pre-commit hook detects CSV changes)
+- On git commit (pre-commit hook detects CSV changes; runs `regenerate:derived`)
 - On data-sync (UI sync button or API call)
-- Manually: `npx tsx tools/scripts/split-sprint-plan.ts`
-- On fresh clone: Run the script once to generate local splits
+- Manually: `pnpm regenerate:derived` (or `npx tsx tools/scripts/regenerate-derived.ts`)
+- On fresh clone: same — regenerator is required before any agent reads splits
+
+`task-registry.json` and `dependency-graph.json` are also derived files; the
+same `pnpm regenerate:derived` orchestrator produces them via
+`build-task-registry.mjs` / `build-dependency-graph.mjs`.
 
 ## Key CSV Columns
 
@@ -126,10 +136,12 @@ swarm execution, located in `artifacts/` (NOT under `docs/`).
 **Architecture**:
 
 ```
-Sprint_plan.csv (SOURCE OF TRUTH)
-       ↓ [Auto-Sync Process]
+Sprint_plan.csv (SOURCE OF TRUTH — committed)
+       ↓ [pnpm regenerate:derived — content-hash cached]
    ├── Sprint_plan.json
-   ├── task-registry.json
+   ├── Sprint_plan_[A-J].csv      (derived, gitignored)
+   ├── task-registry.json         (derived, gitignored)
+   ├── dependency-graph.json      (derived, gitignored)
    ├── Individual task files (*.json)
    └── Phase summaries (_phase-summary.json)
 ```
