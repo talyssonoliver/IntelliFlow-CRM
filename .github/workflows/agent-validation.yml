@@ -1,0 +1,86 @@
+name: Agent Validation
+
+on:
+  workflow_dispatch:
+    inputs:
+      task_id:
+        description: 'Task ID'
+        required: true
+        type: string
+      branch:
+        description: 'Branch ref'
+        required: true
+        type: string
+      gates:
+        description: 'Comma-separated gates'
+        required: false
+        default: 'typecheck,test,lint,build'
+        type: string
+
+jobs:
+  typecheck:
+    if: ${{ contains(inputs.gates, 'typecheck') }}
+    uses: ./.github/workflows/_typecheck.yml
+    with:
+      ref: ${{ inputs.branch }}
+    secrets: inherit
+
+  test:
+    if: ${{ contains(inputs.gates, 'test') }}
+    uses: ./.github/workflows/_test.yml
+    with:
+      ref: ${{ inputs.branch }}
+    secrets: inherit
+
+  lint:
+    if: ${{ contains(inputs.gates, 'lint') }}
+    uses: ./.github/workflows/_lint.yml
+    with:
+      ref: ${{ inputs.branch }}
+    secrets: inherit
+
+  build:
+    if: ${{ contains(inputs.gates, 'build') }}
+    uses: ./.github/workflows/_build.yml
+    with:
+      ref: ${{ inputs.branch }}
+    secrets: inherit
+
+  report:
+    needs: [typecheck, test, lint, build]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post results
+        run: |
+          # POST to /api/agent-validation/<task_id> — endpoint will be added by the parent
+          # Emit job names + conclusions; allow failure (route may not exist yet)
+          echo "Posting result for ${{ inputs.task_id }} on branch ${{ inputs.branch }}"
+          echo "typecheck: ${{ needs.typecheck.result }}"
+          echo "test:      ${{ needs.test.result }}"
+          echo "lint:      ${{ needs.lint.result }}"
+          echo "build:     ${{ needs.build.result }}"
+
+          PAYLOAD=$(cat <<JSONEOF
+          {
+            "task_id": "${{ inputs.task_id }}",
+            "branch": "${{ inputs.branch }}",
+            "run_id": "${{ github.run_id }}",
+            "gates": [
+              {"name": "typecheck", "result": "${{ needs.typecheck.result }}"},
+              {"name": "test",      "result": "${{ needs.test.result }}"},
+              {"name": "lint",      "result": "${{ needs.lint.result }}"},
+              {"name": "build",     "result": "${{ needs.build.result }}"}
+            ]
+          }
+          JSONEOF
+          )
+
+          # Attempt to post; tolerate 404 (route not yet deployed)
+          curl --silent --max-time 10 --fail-with-body \
+            -X POST \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ secrets.AGENT_VALIDATION_TOKEN }}" \
+            -d "$PAYLOAD" \
+            "http://localhost:3002/api/agent-validation/${{ inputs.task_id }}" \
+          || echo "Warning: POST to agent-validation endpoint failed (route may not exist yet)"
