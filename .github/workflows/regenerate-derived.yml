@@ -1,0 +1,55 @@
+name: Regenerate Derived Metrics Files
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'apps/project-tracker/docs/metrics/_global/Sprint_plan.csv'
+      - '.specify/sprints/**/_summary.json'
+  workflow_dispatch:
+
+jobs:
+  regenerate:
+    name: Regenerate derived metric files
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+          run_install: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Regenerate derived files
+        run: pnpm run regenerate:derived
+
+      - name: Verify output files exist
+        run: |
+          echo "Checking generated files..."
+          test -f apps/project-tracker/docs/metrics/_global/Sprint_plan_A.csv && echo "  Sprint_plan_A.csv OK" || echo "  Sprint_plan_A.csv MISSING"
+          test -f apps/project-tracker/docs/metrics/_global/task-registry.json && echo "  task-registry.json OK" || echo "  task-registry.json MISSING"
+          test -f apps/project-tracker/docs/metrics/_global/dependency-graph.json && echo "  dependency-graph.json OK" || echo "  dependency-graph.json MISSING"
+
+      - name: Upload derived files as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: derived-metrics-${{ github.sha }}
+          path: |
+            apps/project-tracker/docs/metrics/_global/Sprint_plan_*.csv
+            apps/project-tracker/docs/metrics/_global/task-registry.json
+            apps/project-tracker/docs/metrics/_global/dependency-graph.json
+          retention-days: 30
+          if-no-files-found: warn

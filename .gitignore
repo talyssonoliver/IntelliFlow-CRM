@@ -162,8 +162,22 @@ apps/project-tracker/docs/metrics/backups/
 apps/project-tracker/docs/metrics/artifacts/
 apps/project-tracker/docs/metrics/_global/*.tmp
 
-# Sprint plan split files — tracked (agents use these for context; CI Metrics Tracked State gate requires no untracked files)
-# apps/project-tracker/docs/metrics/_global/Sprint_plan_[A-Z].csv  # un-ignored: required by CI gate
+# Sprint plan split files — gitignored (Wave 4: derived files moved out of git)
+# Regenerate with: pnpm run regenerate:derived
+# Source of truth: Sprint_plan.csv (tracked above)
+apps/project-tracker/docs/metrics/_global/Sprint_plan_[A-Z].csv
+# task-registry.json and dependency-graph.json — derived, gitignored (Wave 4)
+apps/project-tracker/docs/metrics/_global/task-registry.json
+apps/project-tracker/docs/metrics/_global/dependency-graph.json
+
+# ============================================
+# Wave 4 — Shared caches (never commit these)
+# ============================================
+.turbo-shared/
+.next-cache-shared/
+.claude/worktree-pool/
+.claude/locks/
+.cache/regenerate-derived-state.json
 
 # ============================================
 # Project tracker runtime metric cache - Added 2026-04-10
