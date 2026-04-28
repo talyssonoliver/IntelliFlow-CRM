@@ -27,6 +27,12 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {
+  pathIsContended,
+  findClaim,
+  toRepoRelative,
+  repoRootFromHook,
+} from './lib/agent-context.mjs';
 
 async function readStdin() {
   let data = '';
@@ -34,19 +40,8 @@ async function readStdin() {
   return data;
 }
 
-function findRepoRoot(start) {
-  let cur = resolve(start);
-  for (let i = 0; i < 10; i++) {
-    if (existsSync(join(cur, '.claude', 'agents', 'manifest.json'))) return cur;
-    const parent = dirname(cur);
-    if (parent === cur) break;
-    cur = parent;
-  }
-  return start;
-}
-
 const here = dirname(fileURLToPath(import.meta.url));
-const repoRoot = findRepoRoot(resolve(here, '..', '..'));
+const repoRoot = repoRootFromHook(import.meta.url);
 
 (async () => {
   const agent = process.env.CLAUDE_AGENT_NAME;
@@ -101,6 +96,28 @@ const repoRoot = findRepoRoot(resolve(here, '..', '..'));
       if (heavy && !scoped) {
         process.stderr.write(
           `BLOCK [agent-tier-guard]: tier-A agent "${agent}" cannot run unscoped pnpm test/build/dev or vitest. Add --coverage.include=<glob> to scope.\n`
+        );
+        process.exit(2);
+      }
+    }
+  }
+
+  // Lock-registry enforcement (Wave 3.1) — opt-in via CLAUDE_TASK_ID env var.
+  // Applies to all tiers (A/B/C). Edit or Write to a contended-files-listed
+  // path requires a current claim held by this task. Without CLAUDE_TASK_ID
+  // set we skip enforcement (legacy invocations + main-agent passthrough).
+  const taskId = process.env.CLAUDE_TASK_ID;
+  if (taskId && (toolName === 'Edit' || toolName === 'Write')) {
+    const fp = String(input.file_path || '');
+    if (fp && pathIsContended(fp, repoRoot)) {
+      const rel = toRepoRelative(fp, repoRoot);
+      const claim = findClaim(rel, repoRoot);
+      if (!claim || claim.task_id !== taskId) {
+        const holder = claim?.task_id ?? '<unclaimed>';
+        process.stderr.write(
+          `BLOCK [agent-tier-guard]: ${toolName} on contended path "${rel}" requires a lock claim held by "${taskId}". ` +
+          `Currently held by: ${holder}. ` +
+          `Acquire first: node tools/scripts/locks/claim.mjs ${taskId} ${rel}\n`
         );
         process.exit(2);
       }
