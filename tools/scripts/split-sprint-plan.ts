@@ -5,6 +5,18 @@
  * Generated Files: Sprint_plan_A.csv, Sprint_plan_B.csv, Sprint_plan_C.csv, Sprint_plan_D.csv
  *
  * This script is called automatically by data-sync when the source CSV changes.
+ *
+ * Column layout (20 columns as of Wave 3.2):
+ *   1  Task ID             2  Section             3  Description
+ *   4  Owner               5  Dependencies        6  Pre-requisites
+ *   7  Definition of Done  8  Status              9  KPIs
+ *   10 Target Sprint       11 Artifacts To Track  12 Validation Method
+ *   13 Estimate (O/M/P)    14 Planned Start       15 Planned Finish
+ *   16 Percent Complete    17 Dependency Types    18 Cadence
+ *   19 Branch              20 Integration Status   ← added Wave 3.2 (integrator)
+ *
+ * The splitter is column-agnostic: it splits on token count, not column count.
+ * New columns automatically flow through to all split files unchanged.
  */
 
 import { readFileSync, writeFileSync, existsSync, unlinkSync } from 'node:fs';
