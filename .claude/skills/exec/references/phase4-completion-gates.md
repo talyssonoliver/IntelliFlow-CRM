@@ -490,7 +490,7 @@ Status: PASS/BLOCK
 Read verdicts from `matop/stoa-verdicts/*.json`. No FAIL verdicts allowed.
 
  | Does not match → "Branch `<name>` does not match `agent/<TASK_ID>` pattern" |
-| Commits beyond origin/master | `git rev-list --count origin/master..HEAD` > 0 | 0 → "Branch has zero commits beyond origin/master. See docs/runbooks/gate-4b-recovery.md" |
+| Commits beyond origin/main | `git rev-list --count origin/main..HEAD` > 0 | 0 → "Branch has zero commits beyond origin/main. See docs/runbooks/gate-4b-recovery.md" |
 | Branch pushed to remote | `git rev-list --count HEAD..origin/<branch>` is 0 | Local ahead → "Branch not yet pushed. Run: `git push -u origin <branch> --force-with-lease`" |
 
 **No waiver accepted.** If the gate BLOCKs, fix the root cause (commit,
@@ -504,7 +504,7 @@ Display:
 [gate-4b] Checking worktree-landed state for <TASK_ID> (sprint <N>)
 PASS: [gate-4b] Working tree is clean.
 PASS: [gate-4b] Branch name "agent/IFC-042" matches agent/<TASK_ID> pattern.
-PASS: [gate-4b] Branch is 3 commit(s) ahead of origin/master.
+PASS: [gate-4b] Branch is 3 commit(s) ahead of origin/main.
 PASS: [gate-4b] Branch is pushed to origin/agent/IFC-042.
 
 [gate-4b] PASS — worktree work is committed and pushed. Safe to proceed.

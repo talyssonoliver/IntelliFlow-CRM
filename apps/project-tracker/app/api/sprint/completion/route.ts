@@ -48,7 +48,7 @@ function getProjectRoot(): string {
 }
 
 /**
- * Determine whether a task's agent branch has landed on master.
+ * Determine whether a task's agent branch has landed on main.
  * Uses git ls-remote (no local ref pollution) inside a try/catch so
  * a missing remote or network error never crashes the endpoint.
  */
@@ -69,7 +69,7 @@ function computeBranchStatus(taskId: string): BranchStatus {
 
     // Step 2: does it have commits past master?
     const branchSha = lsResult.stdout.trim().split('\t')[0];
-    const masterResult = spawnSync('git', ['-C', projectRoot, 'rev-parse', 'origin/master'], {
+    const masterResult = spawnSync('git', ['-C', projectRoot, 'rev-parse', 'origin/main'], {
       encoding: 'utf8',
       timeout: 5_000,
     });

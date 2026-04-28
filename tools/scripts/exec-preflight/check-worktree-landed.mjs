@@ -5,11 +5,11 @@
  * Verifies that the current worktree branch has:
  *   1. No uncommitted edits (clean working tree)
  *   2. A branch name matching the `agent/<TASK_ID>` pattern
- *   3. At least one commit beyond origin/master
+ *   3. At least one commit beyond origin/main
  *   4. Been pushed to the remote (branch exists on origin and is up-to-date)
  *
  * Without this gate, `/exec` can stamp `verdict: COMPLETE` against work that
- * only exists in the worktree and never lands on master. This caused IFC-227,
+ * only exists in the worktree and never lands on main. This caused IFC-227,
  * IFC-031, PG-053, and PG-054 to be stamped COMPLETE and then silently lost.
  *
  * Exit codes:
@@ -81,23 +81,23 @@ function main() {
     info(`PASS: [gate-4b] Branch name "${branchName}" matches agent/<TASK_ID> pattern.`);
   }
 
-  // ── Check 3: Commits beyond origin/master ────────────────────────────────
-  const aheadOfMaster = run('git rev-list --count origin/master..HEAD');
+  // ── Check 3: Commits beyond origin/main ────────────────────────────────
+  const aheadOfMaster = run('git rev-list --count origin/main..HEAD');
   if (typeof aheadOfMaster === 'object' && aheadOfMaster.error) {
-    // origin/master may not be fetched yet — treat as 0
+    // origin/main may not be fetched yet — treat as 0
     info(
-      `BLOCK: [gate-4b] Branch has zero commits beyond origin/master. See ${RUNBOOK}`
+      `BLOCK: [gate-4b] Branch has zero commits beyond origin/main. See ${RUNBOOK}`
     );
     blocked = true;
   } else {
     const count = parseInt(aheadOfMaster, 10);
     if (Number.isNaN(count) || count === 0) {
       info(
-        `BLOCK: [gate-4b] Branch has zero commits beyond origin/master. See ${RUNBOOK}`
+        `BLOCK: [gate-4b] Branch has zero commits beyond origin/main. See ${RUNBOOK}`
       );
       blocked = true;
     } else {
-      info(`PASS: [gate-4b] Branch is ${count} commit(s) ahead of origin/master.`);
+      info(`PASS: [gate-4b] Branch is ${count} commit(s) ahead of origin/main.`);
     }
   }
 

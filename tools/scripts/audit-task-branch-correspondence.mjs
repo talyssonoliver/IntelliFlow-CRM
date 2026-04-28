@@ -4,7 +4,7 @@
  *
  * Detects orphaned tasks: Status=Completed in Sprint_plan.csv but
  * no corresponding remote branch agent/<TASK_ID> (or branch exists but
- * has no commits past origin/master).
+ * has no commits past origin/main).
  *
  * Usage:
  *   node audit-task-branch-correspondence.mjs [--task <ID>] [--sprint <N>] [--all] [--strict]
@@ -52,9 +52,9 @@ function gitExec(cmd) {
   return { stdout: (result.stdout || '').trim(), stderr: (result.stderr || '').trim(), status: result.status };
 }
 
-/** Returns the SHA of a path on origin/master, or null if not found */
+/** Returns the SHA of a path on origin/main, or null if not found */
 function masterFileSha(filePath) {
-  const result = spawnSync('git', ['-C', REPO_ROOT, 'cat-file', '-p', `origin/master:${filePath}`], {
+  const result = spawnSync('git', ['-C', REPO_ROOT, 'cat-file', '-p', `origin/main:${filePath}`], {
     encoding: 'utf8',
     timeout: 15_000,
   });
@@ -145,7 +145,7 @@ function checkBranch(branchName) {
   // Step 2: check if branch has commits past master
   // Need to fetch the branch ref first (ls-remote already gives us the SHA)
   const branchSha = lsResult.stdout.split('\t')[0];
-  const masterResult = gitExec('rev-parse origin/master');
+  const masterResult = gitExec('rev-parse origin/main');
   const masterSha = masterResult.stdout;
 
   if (!masterSha) {

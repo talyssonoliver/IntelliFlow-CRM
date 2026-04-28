@@ -43,7 +43,7 @@ description: Creates the attestation.json evidence file after all completion gat
 - Validation matrix commands and build commands must have been run with actual results
 
 
-- The branch has zero commits beyond origin/master
+- The branch has zero commits beyond origin/main
 - The branch has not been pushed to the remote
 
 If Gate 4b BLOCKs, **do not write attestation.json**. Commit and push the work

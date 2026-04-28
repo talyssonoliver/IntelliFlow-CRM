@@ -6,7 +6,7 @@ Gate 4b ("Worktree Landed") verifies that an agent's work has actually been
 persisted to the shared remote before the task is stamped `COMPLETE`. It
 requires three things to be true simultaneously: the worktree's working tree
 must be clean (no uncommitted edits), the current branch must have at least one
-commit beyond `origin/master`, and that branch must have been pushed to the
+commit beyond `origin/main`, and that branch must have been pushed to the
 remote so that `origin/agent/<TASK_ID>` resolves. This gate exists to prevent
 the IFC-227 / PG-053 / PG-054 class of orphan bug, where a task was marked
 `verdict: COMPLETE` against worktree-only state and the implementation was never
@@ -21,7 +21,7 @@ failed:
 ```text
 [Gate 4b] BLOCK: Worktree has uncommitted edits.
 
-[Gate 4b] BLOCK: Worktree branch has no commits beyond origin/master.
+[Gate 4b] BLOCK: Worktree branch has no commits beyond origin/main.
 Commit your work and push to `agent/<TASK_ID>` before stamping COMPLETE.
 
 [Gate 4b] BLOCK: Branch has not been pushed. Remote ref
@@ -79,7 +79,7 @@ revert pattern documented in PG-126 (see
 `Sprint_plan.csv`, `container.ts`, `context.ts`, router files) are
 asynchronously overwritten by an external formatter or pre-commit hook after an
 `Edit` call succeeds, leaving the working tree with zero net changes and any
-previously committed content identical to master.
+previously committed content identical to main.
 
 **Recovery — implementation was never written.** Re-do the implementation
 according to the task plan, then commit:
@@ -163,7 +163,7 @@ Replace `IFC-NNN` with the actual task ID and `6` with the target sprint number
 file). A passing run prints:
 
 ```text
-[Gate 4b] PASS: Branch agent/IFC-NNN has N commit(s) beyond origin/master
+[Gate 4b] PASS: Branch agent/IFC-NNN has N commit(s) beyond origin/main
 and is pushed.
 ```
 
@@ -176,14 +176,14 @@ If the gate appears to be emitting a false BLOCK (you believe the branch is
 committed and pushed but the gate still blocks), work through this checklist
 before filing a bug:
 
-**a) Verify `origin/master` is up to date.**
+**a) Verify `origin/main` is up to date.**
 
 ```bash
 git fetch origin master
-git log --oneline -3 origin/master
+git log --oneline -3 origin/main
 ```
 
-If `origin/master` is behind the canonical remote (e.g., another agent merged
+If `origin/main` is behind the canonical remote (e.g., another agent merged
 work since your last fetch), the `rev-list` counts will be inflated. Fetch
 always resolves this.
 
