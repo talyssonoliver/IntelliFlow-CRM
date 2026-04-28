@@ -39,6 +39,18 @@ const DESTRUCTIVE_PATTERNS = [
     reason: 'git push --force is blocked. Use --force-with-lease for safer force pushes, or ask the user to run it manually.',
   },
   {
+    pattern: /\bgit\s+push\s+(?:\S+\s+)?(?:origin\s+)?main\b(?!\s*:)/,
+    reason: 'Direct push to main is blocked. Push to agent/<TASK_ID> and open a PR. See docs/runbooks/gate-4b-recovery.md.',
+  },
+  {
+    pattern: /\bgit\s+push\s+\S+\s+HEAD:main\b/,
+    reason: 'Direct push to main via HEAD: ref is blocked. Push to agent/<TASK_ID> and open a PR. See docs/runbooks/gate-4b-recovery.md.',
+  },
+  {
+    pattern: /\bgit\s+push\s+\S+\s+:main\b/,
+    reason: 'Deletion of remote main via empty source ref is blocked.',
+  },
+  {
     pattern: /\bgit\s+reset\s+--hard\b/,
     reason: 'git reset --hard is blocked — it permanently discards uncommitted changes. Use git reset --soft instead.',
   },

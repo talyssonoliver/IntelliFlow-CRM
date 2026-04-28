@@ -1,0 +1,17 @@
+#!/usr/bin/env sh
+# Pre-push protocol: stdin is one line per ref being pushed:
+#   <local_ref> <local_sha> <remote_ref> <remote_sha>
+# Block any push targeting refs/heads/main. Push to agent/<TASK_ID> + PR.
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  case "$remote_ref" in
+    refs/heads/main)
+      echo "BLOCK [pre-push]: Direct push to main is blocked." >&2
+      echo "Push to agent/<TASK_ID> and open a PR." >&2
+      echo "See docs/runbooks/gate-4b-recovery.md." >&2
+      exit 1
+      ;;
+  esac
+done
+
+exit 0
