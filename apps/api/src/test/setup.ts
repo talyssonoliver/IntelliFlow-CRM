@@ -105,14 +105,35 @@ export const prismaMock = mockDeep<PrismaClient>();
  * Reset all mocks before each test
  * CRITICAL: Reset ALL mock singletons to prevent memory leaks
  */
+/**
+ * IFC-212 hardening: tolerate composite mocks (plain objects with vi.fn() members,
+ * such as `mockServices.aiMonitoringStore` after `bindAiMonitoringStoreToService`)
+ * which don't expose a top-level `.mockReset` themselves. Falls back to per-method
+ * reset on those, and is a no-op on `undefined`/`null`.
+ */
+function safeMockReset(mock: unknown): void {
+  if (!mock) return;
+  if (typeof (mock as { mockReset?: unknown }).mockReset === 'function') {
+    mockReset(mock as Parameters<typeof mockReset>[0]);
+    return;
+  }
+  if (typeof mock === 'object') {
+    for (const m of Object.values(mock as Record<string, unknown>)) {
+      if (m && typeof (m as { mockReset?: unknown }).mockReset === 'function') {
+        (m as { mockReset: () => void }).mockReset();
+      }
+    }
+  }
+}
+
 beforeEach(() => {
   mockReset(prismaMock);
   // Reset mockServices - prevents call history accumulation
-  Object.values(mockServices).forEach((mock) => mock && mockReset(mock));
+  Object.values(mockServices).forEach(safeMockReset);
   // Reset mockSecurityServices
-  Object.values(mockSecurityServices).forEach((mock) => mockReset(mock));
+  Object.values(mockSecurityServices).forEach(safeMockReset);
   // Reset mockAdapters
-  Object.values(mockAdapters).forEach((mock) => mockReset(mock));
+  Object.values(mockAdapters).forEach(safeMockReset);
 });
 
 /**
@@ -158,6 +179,12 @@ export const mockServices = {
   // should override via createTestContext({ services: { notificationOrchestrator: ... } }).
   notificationOrchestrator: undefined as any,
   aiMonitoringService: mockDeep<any>(),
+  // IFC-214: aiMonitoringStore wraps aiMonitoringService with a Redis cache layer.
+  // The router unwraps `.value` on the response, so the mock returns
+  // `{ source: 'db', value }`. Each method delegates to mockServices.aiMonitoringService.*
+  // at call time so existing tests can keep overriding aiMonitoringService.getX
+  // without also overriding the store. (See `bindAiMonitoringStoreToService` below.)
+  aiMonitoringStore: {} as any,
   // IFC-196: homeCache undefined so router tests fall back to direct compute.
   homeCache: undefined as any,
   // IFC-310: Duplicate-detection runtime services — leave undefined so router
@@ -166,6 +193,21 @@ export const mockServices = {
   contactDuplicateDetection: undefined as any,
   accountDuplicateDetection: undefined as any,
 };
+
+// IFC-214: Bind the lazy aiMonitoringStore methods now that mockServices exists.
+// Each method delegates to mockServices.aiMonitoringService.* AT CALL TIME so
+// per-test overrides on the underlying service mock automatically flow through.
+function bindAiMonitoringStoreToService(): void {
+  const svc = mockServices.aiMonitoringService as any;
+  mockServices.aiMonitoringStore = {
+    getStatus: vi.fn(async (opts: any) => ({ source: 'db' as const, value: await svc.getStatus(opts) })),
+    getDriftMetrics: vi.fn(async (opts: any) => ({ source: 'db' as const, value: await svc.getDriftMetrics(opts) })),
+    getLatencyMetrics: vi.fn(async (opts: any) => ({ source: 'db' as const, value: await svc.getLatencyMetrics(opts) })),
+    getHallucinationReport: vi.fn(async (opts: any) => ({ source: 'db' as const, value: await svc.getHallucinationReport(opts) })),
+    getROIMetrics: vi.fn(async (opts: any) => ({ source: 'db' as const, value: await svc.getROIMetrics(opts) })),
+  };
+}
+bindAiMonitoringStoreToService();
 
 /**
  * Mock security services for testing
@@ -351,6 +393,31 @@ export function createPublicContext(overrides?: Partial<BaseContext>): BaseConte
 }
 
 /**
+ * IFC-211: MANAGER-role test context helper. Mirrors createAdminContext.
+ * Use for RBAC tests that need the team-write code path.
+ */
+export function createManagerContext(overrides?: Partial<BaseContext>): BaseContext {
+  const managerId = TEST_UUIDS.manager1;
+  const tenantId = TEST_UUIDS.tenant;
+  return createTestContext({
+    user: {
+      userId: managerId,
+      email: 'manager@example.com',
+      role: 'MANAGER',
+      tenantId,
+    },
+    tenant: {
+      tenantId,
+      tenantType: 'user' as const,
+      userId: managerId,
+      role: 'MANAGER',
+      canAccessAllTenantData: true,
+    },
+    ...overrides,
+  });
+}
+
+/**
  * UUID generator for tests
  * Generates valid UUIDs for test data
  */
@@ -382,6 +449,14 @@ export const TEST_UUIDS = {
   user1: generateTestUUID('test-user'),
   user2: generateTestUUID('test-user-2'),
   admin1: generateTestUUID('admin-user'),
+  manager1: generateTestUUID('manager-user'),
+  manager2: generateTestUUID('manager-user-2'),
+  teamMember1: generateTestUUID('team-member-1'),
+  teamMember2: generateTestUUID('team-member-2'),
+  otherTenantUser: generateTestUUID('other-tenant-user'),
+  team1: generateTestUUID('team-1'),
+  team2: generateTestUUID('team-2'),
+  otherTenant: generateTestUUID('other-tenant'),
   nonExistent: generateTestUUID('non-existent'),
   score1: generateTestUUID('score-1'),
 };
@@ -419,6 +494,7 @@ export const mockLead = {
   estimatedValue: null,
   tags: [],
   isStarred: false, // PG-059
+  accountId: null, // IFC-227
 };
 
 export const mockContact = {

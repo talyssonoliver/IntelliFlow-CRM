@@ -1005,8 +1005,8 @@ Runtime Wiring (IFC-222):
            ▼                           ▼                           ▼
   ┌──────────────────┐       ┌──────────────────┐       ┌──────────────────┐
   │    IFC-003       │       │    IFC-096       │       │    IFC-032       │
-  │   tRPC Base      │       │  Custom Reports  │       │   (prereq)      │
-  │      ✅          │       │      ✅          │       │      ✅          │
+  │   tRPC Base      │       │  Custom Reports  │       │  OTel Monitoring │
+  │      ✅          │       │      ✅          │       │      ✅ S18      │
   └────────┬─────────┘       └────────┬─────────┘       └────────┬─────────┘
            │                          │                          │
            │                          ▼                          ▼
@@ -1070,10 +1070,14 @@ Frontend (next): IFC-037 ⬜ ──► IFC-038 ⬜ (wires IFC-190 to UI)
 
 Dependency Chain:
   IFC-182 (Router) ✅ ──► IFC-195 (Daily Goals) ✅ ──► PG-156 (Goal Settings) ✅
+                                            ──► IFC-211 (Goal RBAC) ✅
                     ──► PG-129 (UI) ✅ ──► PG-157 (PinButton) ✅
                                          ──► PG-158 (DnD Reorder) ⏳
                                          ──► PG-166 (Lighthouse Audit) ✅
   PG-158 uses: @dnd-kit/sortable, DraggablePinnedItem.tsx → home.reorderPinnedItems
+  IFC-211 adds: TenantGoalDefault → Tenant (cascade); RBACService → Team/TeamMember (lookup);
+                home.{updateDailyGoal,setTeamMemberGoal,setOrgGoalDefault,getOrgGoalDefault}
+                gated by RBACService.can('goal', …) + AuditLogger.logAction('UPDATE','goal',…)
 ```
 
 ---
@@ -1302,7 +1306,7 @@ Dependency Chain:
                             ├──► TRACK-004 (Metrics) ⬜ ────────────────────────────────────────────────┘
                             └──► ai-metrics.ts (Val) ⬜ ────────────────────────────────────────────────┘
 
-  IFC-015 (Platform) ✅ ──► IFC-197 (AI Monitoring API) ✅ ──► PG-151 (Dashboard UI) ⏳ ──► IFC-296 (Queue Admin API + UI) ⏳
+  IFC-015 (Platform) ✅ + IFC-297 (DB Persistence) ✅ ──► IFC-197 (AI Monitoring API) ✅ ──► IFC-214 (Redis Live Snapshot Bridge) ⏳ ──► PG-151 (Dashboard UI) ⏳ ──► IFC-296 (Queue Admin API + UI) ⏳
                                                                     └──► PG-192 (Agent Logs Fix) ✅ ──┬──► PG-193 (Workflow Progress Panel) ✅
                                                                                                      │
   workflow.router.ts ✅ ──► workflow.getExecution/getExecutionsByEntity (tenantProcedure) ✅ ────────┘
@@ -2435,3 +2439,23 @@ Cross-cutting:
 - `IFC-310` (duplicate-detection) consumes `EnrichmentProvider` when `aiEnrichment` toggle is on — IFC-312 is producer, IFC-310 is consumer.
 
 See ADR-037 (AI output review), ADR-047 (hexagonal adapter), ADR-048 (hybrid AI inference), ADR-050 (duplicate-detection parallel).
+
+---
+
+## IFC-227: Lead → Account Navigation Link (sprint-18)
+
+**Added**: 2026-04-27
+
+### New FK Relationship
+
+`leads.account_id → accounts.id` (nullable, `ON DELETE SET NULL`)
+
+- `Lead` model gains `accountId String?` + `account Account? @relation("LeadAccount")`.
+- `Account` model gains `leads Lead[] @relation("LeadAccount")`.
+- Migration: `packages/db/prisma/migrations/20260427_add_account_to_lead/migration.sql`
+
+### Updated Chains
+
+- `lead.getById → Prisma(Lead { include: account { select: { id, name } } }) → leads/[id]/page.tsx → Link /accounts/[accountId]`
+- `contacts/[id]/page.tsx → Link /accounts/[contact.account.id]` (null-safe — conditional render only when `contact.account` non-null; `company || account.name` prevents empty link text)
+- `deals/[id]/page.tsx` — reference implementation, unchanged.
