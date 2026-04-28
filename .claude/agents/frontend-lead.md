@@ -1,3 +1,9 @@
+---
+name: frontend-lead
+tier: A
+description: Next.js 16, shadcn, Tailwind, tRPC client reviewer
+---
+
 # Frontend Lead Agent
 
 You are the **Frontend Lead** for IntelliFlow CRM spec sessions.

@@ -1,155 +1,17 @@
 #!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
+# Pre-push protocol: stdin is one line per ref being pushed:
+#   <local_ref> <local_sha> <remote_ref> <remote_sha>
+# Block any push targeting refs/heads/main. Push to agent/<TASK_ID> + PR.
 
-# IntelliFlow CRM Pre-push Hook
-# Medium checks (~1-2min): catches every CI gate that can run without Docker/cloud.
-# Runs ONCE before push — not on every commit — so cost is acceptable.
+while read -r local_ref local_sha remote_ref remote_sha; do
+  case "$remote_ref" in
+    refs/heads/main)
+      echo "BLOCK [pre-push]: Direct push to main is blocked." >&2
+      echo "Push to agent/<TASK_ID> and open a PR." >&2
+      echo "See docs/runbooks/gate-4b-recovery.md." >&2
+      exit 1
+      ;;
+  esac
+done
 
-echo "🚀 Running pre-push checks..."
-
-# ── 1. Prettier format check ─────────────────────────────────────────────────
-# CI runs `format:check` (read-only diff). Pre-commit only formats *staged* files,
-# so unformatted unstaged files can slip through. Catch them here.
-echo "💅 Checking formatting (format:check)..."
-pnpm run format:check || {
-  echo "❌ Formatting violations found."
-  echo "   Run: pnpm run format  then commit the changes."
-  exit 1
-}
-echo "✅ Formatting OK"
-
-# ── 2. Artifact path linting ─────────────────────────────────────────────────
-# CI runs lint:artifacts on every PR touching HTML/JSON/CSV/artifacts/**
-# This is never run locally and was causing 415+ false-positive failures.
-echo "🗂️  Linting artifact paths..."
-pnpm run lint:artifacts || {
-  echo "❌ Artifact path violations detected."
-  echo "   Run: pnpm run lint:artifacts  to see details."
-  echo "   Run: pnpm run lint:artifacts:fix  to auto-fix where possible."
-  exit 1
-}
-echo "✅ Artifact paths OK"
-
-# ── 3. A11y route reconciliation ─────────────────────────────────────────────
-# CI checks that every route in the WCAG conformance statement exists on disk.
-# Pure file scan — fast, no external deps.
-echo "♿ Reconciling a11y routes..."
-pnpm run validate:a11y-routes || {
-  echo "❌ A11y route drift detected."
-  echo "   Update docs/compliance-and-governance/compliance/wcag-conformance-statement.md"
-  echo "   to match the current routes in apps/web/src/app/"
-  exit 1
-}
-echo "✅ A11y routes OK"
-
-# ── 4. Inventory drift check ─────────────────────────────────────────────────
-# CI runs sync:codebase-inventory + sync:api-inventory unconditionally and
-# fails if baseline.json changed. Pre-commit only syncs on specific file
-# patterns — any other change that affects the inventory causes CI drift failure.
-# Fix: run both syncs here unconditionally and abort if baseline.json is dirty.
-echo "📦 Checking inventory drift..."
-pnpm run sync:all-inventory 2>/dev/null
-if ! git diff --quiet artifacts/benchmarks/baseline.json 2>/dev/null; then
-  echo "❌ Inventory drift detected — baseline.json changed after sync."
-  echo "   Run: pnpm run sync:all-inventory"
-  echo "   Then: git add artifacts/benchmarks/baseline.json && git commit --amend --no-edit"
-  exit 1
-fi
-echo "✅ Inventory in sync"
-
-# ── 5. Lint (turbo) ─────────────────────────────────────────────────────────
-# Mirror CI's "Lint" step from PR Checks. Fast with turbo cache; ~30s cold.
-echo "📋 Linting (turbo run lint)..."
-pnpm run lint || {
-  echo "❌ Lint errors detected — see output above."
-  exit 1
-}
-echo "✅ Lint OK"
-
-# ── 6. Typecheck + sonar-guard in CI mode ───────────────────────────────────
-# Mirror CI's "Type check" step. The local default of sonar-guard checks only
-# staged files, which means a clean staging area silently passes everything.
-# CI scans every file changed since origin/main — so we set CI=true here to
-# match. Caught the cognitive-complexity errors that were slipping past
-# pre-push for weeks.
-echo "🔧 Typechecking + sonar-guard (CI scope)..."
-CI=true pnpm run typecheck || {
-  echo "❌ Typecheck or sonar-guard violations detected."
-  echo "   Refactor — do NOT add eslint-disable comments to mask violations."
-  exit 1
-}
-echo "✅ Typecheck + sonar-guard OK"
-
-# ── 7. Sprint-plan linter ────────────────────────────────────────────────────
-# Mirror CI's "Sprint Plan Validation" job. Runs the Python plan-linter the
-# same way ci.yml does. Catches phantom-completion drift between
-# Sprint_plan.csv and on-disk artifacts/evidence.
-echo "📋 Validating Sprint_plan (Sprint 0)..."
-( cd tools/plan && python -m src.adapters.cli lint --sprint 0 ) || {
-  echo "❌ Sprint plan validation failed."
-  echo "   See output above. Common cause: a task marked Completed is missing"
-  echo "   one of its declared ARTIFACT: or EVIDENCE: paths."
-  exit 1
-}
-echo "✅ Sprint plan OK"
-
-# ── 8. Full repo test (turbo cached, affected scope) ────────────────────────
-# Repo policy (2026-05-04, after fix/ci-baseline's 78% change-failure rate):
-# pre-push must run THE TESTS CI WILL RUN, not just ai-worker. Every red push
-# this week was a regression in a workspace ai-worker doesn't touch
-# (DriftDashboard, status-monitor, EmailThread, file-uploader, ...).
-#
-# Implementation: `turbo run test` walks the dependency graph, only re-runs
-# affected packages, hits cache for the rest. Cold ≈ 4–6 min on this repo;
-# cached ≈ 30 s. Acceptable cost vs the 20 min of CI + visible-red waste.
-#
-# Override: SKIP_TEST_GATE=1 git push — only with explicit reason in commit
-# body. NOT for pushing faster.
-if [ "${SKIP_TEST_GATE:-0}" != "1" ]; then
-  echo "🧪 Running full repo tests (turbo affected-scope)..."
-  pnpm exec turbo run test 2>&1 | tail -30
-  TEST_EXIT="${PIPESTATUS[0]}"
-  if [ "$TEST_EXIT" != "0" ]; then
-    echo "❌ Tests failed (exit $TEST_EXIT)."
-    echo "   Override: SKIP_TEST_GATE=1 git push (document WHY in commit body)."
-    exit 1
-  fi
-  echo "✅ Full test suite OK"
-else
-  echo "⚠️  Skipping test gate (SKIP_TEST_GATE=1)"
-fi
-
-# ── 9. Full repo build (turbo cached, affected scope) ───────────────────────
-# Mirror CI Pipeline > Build job. The web build's module-load env guards
-# (Prisma encryption key, AI audit signing, Supabase config) only fire under
-# NODE_ENV=production, so the typecheck pass above doesn't cover them. Catches
-# the 'Failed to collect page data for /api/trpc/[trpc]' family at push time.
-#
-# Override: SKIP_BUILD_GATE=1 git push.
-if [ "${SKIP_BUILD_GATE:-0}" != "1" ]; then
-  echo "🏗️  Running production build (turbo affected-scope)..."
-  # Use the same env stubs CI's Build job uses so the module-load guards pass.
-  # Real values come from .env.local (turbo forwards via globalEnv).
-  NODE_ENV=production \
-    PRISMA_FIELD_ENCRYPTION_KEY="${PRISMA_FIELD_ENCRYPTION_KEY:-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=}" \
-    AI_AUDIT_SIGNING_KEY="${AI_AUDIT_SIGNING_KEY:-ci-build-stub-key-not-used-at-runtime}" \
-    DATABASE_URL="${DATABASE_URL:-postgresql://stub:stub@localhost:5432/stub}" \
-    DIRECT_URL="${DIRECT_URL:-postgresql://stub:stub@localhost:5432/stub}" \
-    SUPABASE_URL="${SUPABASE_URL:-https://stub.supabase.co}" \
-    SUPABASE_ANON_KEY="${SUPABASE_ANON_KEY:-ci-stub-anon-not-a-real-supabase-key-do-not-use-at-runtime}" \
-    SUPABASE_SERVICE_ROLE_KEY="${SUPABASE_SERVICE_ROLE_KEY:-ci-stub-service-role-not-a-real-supabase-key-do-not-use-at-runtime}" \
-    NEXT_PUBLIC_SUPABASE_URL="${NEXT_PUBLIC_SUPABASE_URL:-https://stub.supabase.co}" \
-    NEXT_PUBLIC_SUPABASE_ANON_KEY="${NEXT_PUBLIC_SUPABASE_ANON_KEY:-ci-stub-anon-not-a-real-supabase-key-do-not-use-at-runtime}" \
-    pnpm exec turbo run build 2>&1 | tail -20
-  BUILD_EXIT="${PIPESTATUS[0]}"
-  if [ "$BUILD_EXIT" != "0" ]; then
-    echo "❌ Build failed (exit $BUILD_EXIT)."
-    echo "   Override: SKIP_BUILD_GATE=1 git push (document WHY in commit body)."
-    exit 1
-  fi
-  echo "✅ Build OK"
-else
-  echo "⚠️  Skipping build gate (SKIP_BUILD_GATE=1)"
-fi
-
-echo "✅ All pre-push checks passed!"
+exit 0

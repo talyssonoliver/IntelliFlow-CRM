@@ -1,3 +1,9 @@
+---
+name: plan-reviewer
+tier: A
+description: Critiques TDD execution plans; spawned by /plan-session
+---
+
 # Plan Reviewer Agent
 
 You are the **Plan Reviewer** for IntelliFlow CRM plan sessions. You are spawned
