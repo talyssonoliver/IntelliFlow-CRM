@@ -39,7 +39,7 @@ import { useActivityDeepLink, isDeepLinkedActivity } from '@/hooks/useActivityDe
 import { useActivityReactions } from '@/hooks/useActivityReactions';
 import { useActivityComments } from '@/hooks/useActivityComments';
 import { QuickLogComposer } from '@/components/shared/quick-log-composer';
-// IFC-312 — AI chain UI surfaces
+// IFC-312 ÔÇö AI chain UI surfaces
 import { SuggestedTagsRow } from '@/components/shared/SuggestedTagsRow';
 import { ReplyDraftsPanel } from '@/components/contacts/ReplyDraftsPanel';
 
@@ -217,15 +217,15 @@ interface ContactWithRelations {
 
 // Activity type filter options
 const activityTypeFilters: { value: ActivityType | 'all'; label: string; icon: string }[] = [
-  { value: 'all', label: 'All', icon: '📋' },
-  { value: 'email', label: 'Emails', icon: '📧' },
-  { value: 'call', label: 'Calls', icon: '📞' },
-  { value: 'meeting', label: 'Meetings', icon: '📅' },
-  { value: 'chat', label: 'Chats', icon: '💬' },
-  { value: 'document', label: 'Documents', icon: '📄' },
-  { value: 'deal', label: 'Deals', icon: '🎯' },
-  { value: 'ticket', label: 'Tickets', icon: '🎫' },
-  { value: 'note', label: 'Notes', icon: '📝' },
+  { value: 'all', label: 'All', icon: '­ƒôï' },
+  { value: 'email', label: 'Emails', icon: '­ƒôº' },
+  { value: 'call', label: 'Calls', icon: '­ƒô×' },
+  { value: 'meeting', label: 'Meetings', icon: '­ƒôà' },
+  { value: 'chat', label: 'Chats', icon: '­ƒÆ¼' },
+  { value: 'document', label: 'Documents', icon: '­ƒôä' },
+  { value: 'deal', label: 'Deals', icon: '­ƒÄ»' },
+  { value: 'ticket', label: 'Tickets', icon: '­ƒÄ½' },
+  { value: 'note', label: 'Notes', icon: '­ƒôØ' },
 ];
 
 // Contact Status Badge Component
@@ -663,7 +663,7 @@ function ContactAiSummaryCard({
   );
 }
 
-// ─── Module-level pure helpers (extracted to reduce cognitive complexity of Contact360Page) ───
+// ÔöÇÔöÇÔöÇ Module-level pure helpers (extracted to reduce cognitive complexity of Contact360Page) ÔöÇÔöÇÔöÇ
 
 function formatContactDate(dateString: string, timezone: string): string {
   return new Date(dateString).toLocaleDateString('en-GB', {
@@ -774,13 +774,13 @@ function getSentimentColor(sentiment?: string): string {
 function getChannelIcon(channel?: string): string {
   switch (channel) {
     case 'whatsapp':
-      return '💬';
+      return '­ƒÆ¼';
     case 'teams':
-      return '👥';
+      return '­ƒæÑ';
     case 'slack':
-      return '💼';
+      return '­ƒÆ╝';
     default:
-      return '💬';
+      return '­ƒÆ¼';
   }
 }
 
@@ -798,11 +798,11 @@ function getCallOutcomeStyle(outcome?: string): string {
 function getCallOutcomeLabel(outcome?: string): string {
   switch (outcome) {
     case 'connected':
-      return '✓ Connected';
+      return 'Ô£ô Connected';
     case 'voicemail':
-      return '📞 Voicemail';
+      return '­ƒô× Voicemail';
     default:
-      return '✗ No Answer';
+      return 'Ô£ù No Answer';
   }
 }
 
@@ -842,11 +842,11 @@ function getSentimentTrendStyle(trend?: string): string {
 function getSentimentEmoji(sentiment?: string): string {
   switch (sentiment) {
     case 'positive':
-      return '😊';
+      return '­ƒÿè';
     case 'negative':
-      return '😟';
+      return '­ƒÿƒ';
     default:
-      return '😐';
+      return '­ƒÿÉ';
   }
 }
 
@@ -912,7 +912,7 @@ function renderRichPreview(activity: Activity): React.ReactNode {
                 <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z" />
               </svg>
               {meta.location}
-              {meta.duration && <span className="text-slate-400">• {meta.duration}</span>}
+              {meta.duration && <span className="text-slate-400">ÔÇó {meta.duration}</span>}
             </div>
           )}
           {meta.attendees && meta.attendees.length > 0 && (
@@ -941,7 +941,7 @@ function renderRichPreview(activity: Activity): React.ReactNode {
               {meta.channel}
             </span>
             {meta.messageCount && (
-              <span className="text-xs text-slate-500">• {meta.messageCount} messages</span>
+              <span className="text-xs text-slate-500">ÔÇó {meta.messageCount} messages</span>
             )}
           </div>
           {meta.preview && (
@@ -996,7 +996,7 @@ function renderRichPreview(activity: Activity): React.ReactNode {
   }
 }
 
-// ─── Sub-components extracted to reduce cognitive complexity ─────────────────
+// ÔöÇÔöÇÔöÇ Sub-components extracted to reduce cognitive complexity ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
 
 function ContactLoadingSkeleton() {
   return (
@@ -1066,7 +1066,7 @@ function ContactNotFoundError({ fromInsight }: { fromInsight: boolean }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
 
 /** Returns true when a stale linked insight should be auto-dismissed. */
 const CONTACT_VALID_TABS: TabId[] = [
@@ -1283,6 +1283,24 @@ function shouldDismissStaleInsight(
   return errorCode === 'NOT_FOUND' || (!isLoading && !contact);
 }
 
+/**
+ * Pick the loading / auth-error / not-found screen to show before the main
+ * detail render. Pulled out of Contact360Page to keep its cognitive complexity
+ * under sonar-guard's threshold; render order and copy are unchanged.
+ */
+function pickContactLoadingScreen(args: {
+  isLoading: boolean;
+  error: unknown;
+  isAuthError: boolean;
+  hasContact: boolean;
+  fromInsight: boolean;
+}): React.ReactElement | null {
+  if (args.isLoading) return <ContactLoadingSkeleton />;
+  if (args.error && args.isAuthError) return <ContactAuthRedirect />;
+  const isHardError = (args.error && !args.isAuthError) || !args.hasContact;
+  return isHardError ? <ContactNotFoundError fromInsight={args.fromInsight} /> : null;
+}
+
 export default function Contact360Page() {
   // Get contact ID from URL params
   const params = useParams();
@@ -1395,7 +1413,7 @@ export default function Contact360Page() {
       return next;
     });
     deepLinkScrolledRef.current = true;
-    // Scroll after render — try prefixed first, then raw
+    // Scroll after render ÔÇö try prefixed first, then raw
     requestAnimationFrame(() => {
       const el =
         document.querySelector(`[data-activity-id="${CSS.escape(selectedActivityId.prefixed)}"]`) ||
@@ -1597,20 +1615,16 @@ export default function Contact360Page() {
     }
   }, [fromInsight, insightIdParam, error, isLoading, contact, dismissInsightMutation]);
 
-  // Loading state
-  if (isLoading) {
-    return <ContactLoadingSkeleton />;
-  }
-
-  // Auth error - show redirecting state
-  if (error && isAuthError) {
-    return <ContactAuthRedirect />;
-  }
-
-  // Error state or no contact data (non-auth errors)
-  if ((error && !isAuthError) || !contact) {
-    return <ContactNotFoundError fromInsight={fromInsight} />;
-  }
+  // Loading / auth-error / not-found short-circuits ÔÇö see helper above.
+  const loadingScreen = pickContactLoadingScreen({
+    isLoading,
+    error,
+    isAuthError,
+    hasContact: Boolean(contact),
+    fromInsight,
+  });
+  if (loadingScreen) return loadingScreen;
+  if (!contact) return <ContactNotFoundError fromInsight={fromInsight} />;
 
   // Toggle activity expansion
   const toggleExpand = (id: string) => {
@@ -1761,15 +1775,21 @@ export default function Contact360Page() {
                 <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">
                   {contact.title}
                 </p>
-                <Link
-                  href={`/accounts/${contact.account?.id || ''}`}
-                  className="flex items-center gap-1 text-[#137fec] text-sm font-medium mt-1 hover:underline"
-                >
-                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M1 20V10h6V8l5-5 5 5v6h6v10H1ZM3 18h4v-2H3Zm0-4h4v-2H3Zm6 4h4v-6h4v6h-4v-4H9Zm0-8h4V8l-2-2-2 2Z" />
-                  </svg>
-                  <span>{contact.company}</span>
-                </Link>
+                {contact.account && (
+                  <Link
+                    href={`/accounts/${contact.account.id}`}
+                    className="flex items-center gap-1 text-[#137fec] text-sm font-medium mt-1 hover:underline"
+                  >
+                    <span className="material-symbols-outlined !text-sm">domain</span>
+                    <span>{contact.company || contact.account.name}</span>
+                  </Link>
+                )}
+                {!contact.account && contact.company && (
+                  <div className="flex items-center gap-1 text-slate-500 text-sm font-medium mt-1">
+                    <span className="material-symbols-outlined !text-sm">domain</span>
+                    <span>{contact.company}</span>
+                  </div>
+                )}
               </div>
               <div className="flex flex-wrap gap-2 mb-6">
                 <ContactStatusBadge status={contact.status} />
@@ -1792,7 +1812,7 @@ export default function Contact360Page() {
                   </span>
                 ))}
               </div>
-              {/* IFC-312 — AI tag suggestions (hidden when flag off or empty). */}
+              {/* IFC-312 ÔÇö AI tag suggestions (hidden when flag off or empty). */}
               <div className="mt-2">
                 <SuggestedTagsRow entity="contact" entityId={contact.id} enabled={true} />
               </div>
@@ -1871,7 +1891,7 @@ export default function Contact360Page() {
                   <p className="text-lg font-bold text-slate-900 dark:text-white">
                     {contact.metrics.emailsSent > 0
                       ? `${Math.round((contact.metrics.emailsOpened / contact.metrics.emailsSent) * 100)}%`
-                      : '—'}
+                      : 'ÔÇö'}
                   </p>
                   <p className="text-xs text-slate-500">Open Rate</p>
                 </div>
@@ -2090,7 +2110,7 @@ export default function Contact360Page() {
                         </div>
                         {aiInsights.quietPeriodAlert && (
                           <span className="px-2 py-1 rounded bg-yellow-100 text-yellow-700 text-xs font-medium">
-                            ⚠️ Quiet Period
+                            ÔÜá´©Å Quiet Period
                           </span>
                         )}
                       </div>
@@ -2153,7 +2173,7 @@ export default function Contact360Page() {
                                   {activity.description}
                                 </p>
                                 <p className="text-xs text-slate-500 mt-1">
-                                  {activity.user} •{' '}
+                                  {activity.user} ÔÇó{' '}
                                   {formatContactRelativeTime(activity.timestamp, timezone)}
                                 </p>
                               </div>
@@ -2206,7 +2226,7 @@ export default function Contact360Page() {
                                           {comment.text}
                                         </p>
                                         <p className="text-xs text-slate-500 mt-1">
-                                          {comment.user} •{' '}
+                                          {comment.user} ÔÇó{' '}
                                           {formatContactRelativeTime(comment.timestamp, timezone)}
                                         </p>
                                       </div>
@@ -2485,7 +2505,7 @@ export default function Contact360Page() {
                         Integration API question
                       </p>
                       <p className="text-xs text-slate-500">
-                        TKT-1234 • Resolved • Medium Priority
+                        TKT-1234 ÔÇó Resolved ÔÇó Medium Priority
                       </p>
                     </div>
                   </div>
@@ -2518,7 +2538,7 @@ export default function Contact360Page() {
                     <p className="font-medium text-slate-900 dark:text-white">
                       Enterprise License Proposal.pdf
                     </p>
-                    <p className="text-sm text-slate-500">Sent Dec 15, 2024 • 2.4 MB</p>
+                    <p className="text-sm text-slate-500">Sent Dec 15, 2024 ÔÇó 2.4 MB</p>
                   </div>
                   <button className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">
                     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
@@ -2534,7 +2554,7 @@ export default function Contact360Page() {
                     <p className="font-medium text-slate-900 dark:text-white">
                       SOC2 Compliance Report.pdf
                     </p>
-                    <p className="text-sm text-slate-500">Sent Dec 10, 2024 • 1.8 MB</p>
+                    <p className="text-sm text-slate-500">Sent Dec 10, 2024 ÔÇó 1.8 MB</p>
                   </div>
                   <button className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">
                     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
@@ -2603,7 +2623,7 @@ export default function Contact360Page() {
                     <p className="text-sm text-slate-600 dark:text-slate-400">{note.content}</p>
                     <div className="flex items-center gap-2 mt-2 text-xs text-slate-500">
                       <span>{note.author}</span>
-                      <span>•</span>
+                      <span>ÔÇó</span>
                       <span>{formatContactRelativeTime(note.createdAt, timezone)}</span>
                     </div>
                   </div>
@@ -2622,7 +2642,7 @@ export default function Contact360Page() {
                 onPendingAction={() => scoreWithAIMutation.mutate({ contactId })}
                 isPending={scoreWithAIMutation.isPending}
               />
-              {/* IFC-312 — AI reply drafts panel (hidden when flag off or empty). */}
+              {/* IFC-312 ÔÇö AI reply drafts panel (hidden when flag off or empty). */}
               <div className="mt-6">
                 <h3 className="text-sm font-semibold mb-2">AI-drafted replies</h3>
                 <ReplyDraftsPanel contactId={contactId} enabled={true} />
@@ -2672,7 +2692,7 @@ export default function Contact360Page() {
                   </p>
                   <div className="flex items-center gap-2 mt-2 text-xs text-slate-500">
                     <span>{note.author}</span>
-                    <span>•</span>
+                    <span>ÔÇó</span>
                     <span>{formatContactRelativeTime(note.createdAt, timezone)}</span>
                   </div>
                 </div>

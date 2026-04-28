@@ -47,7 +47,8 @@ const mockLeadQueryState = {
     tasks: [],
     calendarEvents: [],
     opportunities: [],
-    account: null,
+    accountId: null as string | null,
+    account: null as { id: string; name: string } | null,
     aiInsight: null,
   },
   isLoading: false,
@@ -434,7 +435,7 @@ describe('LeadDetailPage - Empty State CTA', () => {
   // EmptyState migration: packages/ui/src/components/empty-state.tsx gates the
   // CTA behind `phase === 'soft-cta'` (empty-state.tsx:387), so a passive
   // EmptyState never renders the button. Its AC-001/AC-002 coverage moved
-  // into AC-003's "activity-visible" path — see below — which is sufficient.
+  // into AC-003's "activity-visible" path ÔÇö see below ÔÇö which is sufficient.
 
   it('CTA button is NOT rendered when activities array has items (AC-003)', () => {
     mockLeadQueryState.data.activities = [
@@ -462,5 +463,49 @@ describe('LeadDetailPage - Empty State CTA', () => {
     expect(negotiatingElements.length).toBeGreaterThan(0);
     // Reset for other tests
     mockLeadQueryState.data.status = 'NEW';
+  });
+});
+
+describe('LeadDetailPage - Company-to-Account Link (IFC-227)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockLeadQueryState.error = null;
+    mockLeadQueryState.isLoading = false;
+    mockLeadQueryState.data.activities = [];
+    mockLeadQueryState.data.aiInsight = null;
+  });
+
+  afterEach(() => {
+    mockLeadQueryState.data.accountId = null;
+    mockLeadQueryState.data.account = null;
+  });
+
+  it('AC-001: lead with accountId renders profile card company as clickable Link to /accounts/acc-1', () => {
+    mockLeadQueryState.data.accountId = 'acc-1';
+    mockLeadQueryState.data.account = { id: 'acc-1', name: 'Acme Corp' };
+    render(<Lead360Page />);
+    const links = screen.getAllByRole('link', { name: /Acme Corp/i });
+    const accountLink = links.find((l) => l.getAttribute('href') === '/accounts/acc-1');
+    expect(accountLink).toBeDefined();
+  });
+
+  it('AC-002: lead with accountId renders info panel company as clickable Link to /accounts/acc-1', () => {
+    mockLeadQueryState.data.accountId = 'acc-1';
+    mockLeadQueryState.data.account = { id: 'acc-1', name: 'Acme Corp' };
+    render(<Lead360Page />);
+    const links = screen.getAllByRole('link', { name: /Acme Corp/i });
+    expect(links.length).toBeGreaterThanOrEqual(2);
+    const accountLinks = links.filter((l) => l.getAttribute('href') === '/accounts/acc-1');
+    expect(accountLinks.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('AC-003: lead with no accountId renders profile card company as plain span (no link)', () => {
+    mockLeadQueryState.data.accountId = null;
+    mockLeadQueryState.data.account = null;
+    render(<Lead360Page />);
+    const companyLinks = screen.queryAllByRole('link', { name: /Acme Corp/i }).filter(
+      (l) => l.getAttribute('href')?.startsWith('/accounts/')
+    );
+    expect(companyLinks).toHaveLength(0);
   });
 });

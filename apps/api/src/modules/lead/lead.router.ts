@@ -574,6 +574,7 @@ export const leadRouter = createTRPCRouter({
           orderBy: { dueDate: 'asc' },
           take: 10,
         },
+        account: { select: { id: true, name: true } },
       },
     });
 

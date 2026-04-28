@@ -48,7 +48,7 @@ function demonstratePrismaTypes() {
     estimatedValue: 0,
     tags: [],
     isStarred: false, // PG-059
-    accountId: null,
+    accountId: null, // IFC-227
   };
 
   // TypeScript enforces all required fields
