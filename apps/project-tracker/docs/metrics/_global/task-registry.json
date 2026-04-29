@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-04-26T11:17:07.186Z",
+  "last_updated": "2026-04-29T21:54:51.665Z",
   "tasks_by_status": {
     "DONE": [
       "EXC-INIT-001",
@@ -11462,5 +11462,7 @@
       "in_review": 0
     }
   },
-  "total_tasks": 571
+  "total_tasks": 590,
+  "active_sprint": "sprint-18",
+  "current_sprint": 18
 }

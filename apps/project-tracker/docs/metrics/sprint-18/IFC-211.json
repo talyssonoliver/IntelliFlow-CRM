@@ -14,7 +14,7 @@
       "IFC-098"
     ],
     "all_satisfied": true,
-    "verified_at": "2026-04-26T11:17:07.508Z"
+    "verified_at": "2026-04-29T21:54:51.855Z"
   },
   "dependencies_resolved": [
     "IFC-195",
@@ -50,11 +50,11 @@
     ],
     "created": [
       "apps/api/src/modules/home/home.router.ts",
-      "apps/api/src/security/types.ts"
+      "apps/api/src/security/types.ts",
+      ".specify/sprints/sprint-18/attestations/IFC-211/context_ack.json"
     ],
     "missing": [
-      "apps/api/src/modules/home/__tests__/home-rbac.test.ts",
-      ".specify/sprints/sprint-18/attestations/IFC-211/context_ack.json"
+      "apps/api/src/modules/home/__tests__/home-rbac.test.ts"
     ]
   },
   "validations": [],

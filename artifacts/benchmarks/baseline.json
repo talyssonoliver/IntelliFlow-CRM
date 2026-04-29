@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-04-24T18:10:36.727Z",
+  "timestamp": "2026-04-29T21:57:39.693Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1383,16 +1383,16 @@
     ]
   },
   "database_inventory": {
-    "total_tables": 168,
-    "total_fields": 2475,
-    "total_indexes": 789,
-    "total_relations": 238,
+    "total_tables": 170,
+    "total_fields": 2500,
+    "total_indexes": 795,
+    "total_relations": 240,
     "tables_with_embeddings": 4,
     "enums": 71,
     "tables": [
       {
         "name": "Tenant",
-        "fields": 149,
+        "fields": 150,
         "indexes": 4,
         "relations": 1,
         "hasEmbedding": false
@@ -1483,7 +1483,7 @@
       },
       {
         "name": "Account",
-        "fields": 26,
+        "fields": 27,
         "indexes": 7,
         "relations": 4,
         "hasEmbedding": false
@@ -1538,6 +1538,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "Case",
+        "fields": 22,
+        "indexes": 8,
+        "relations": 4,
+        "hasEmbedding": false
+      },
+      {
         "name": "FeedbackSurvey",
         "fields": 22,
         "indexes": 6,
@@ -1549,13 +1556,6 @@
         "fields": 21,
         "indexes": 2,
         "relations": 1,
-        "hasEmbedding": false
-      },
-      {
-        "name": "Case",
-        "fields": 21,
-        "indexes": 8,
-        "relations": 4,
         "hasEmbedding": false
       },
       {
@@ -1815,6 +1815,13 @@
         "fields": 14,
         "indexes": 7,
         "relations": 3,
+        "hasEmbedding": false
+      },
+      {
+        "name": "CaseAIInsight",
+        "fields": 14,
+        "indexes": 3,
+        "relations": 2,
         "hasEmbedding": false
       },
       {
@@ -2441,6 +2448,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "PublicFeedback",
+        "fields": 8,
+        "indexes": 3,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
         "name": "TenantModule",
         "fields": 7,
         "indexes": 3,
@@ -2935,14 +2949,20 @@
     ]
   },
   "validators_inventory": {
-    "total_validators": 46,
-    "total_schemas": 562,
+    "total_validators": 47,
+    "total_schemas": 571,
     "by_complexity": {
       "complex": 31,
-      "moderate": 11,
+      "moderate": 12,
       "simple": 4
     },
     "validators": [
+      {
+        "name": "account",
+        "file": "account.ts",
+        "schemas": 31,
+        "complexity": "complex"
+      },
       {
         "name": "ai",
         "file": "ai.ts",
@@ -2950,15 +2970,9 @@
         "complexity": "complex"
       },
       {
-        "name": "account",
-        "file": "account.ts",
-        "schemas": 29,
-        "complexity": "complex"
-      },
-      {
         "name": "contact",
         "file": "contact.ts",
-        "schemas": 28,
+        "schemas": 31,
         "complexity": "complex"
       },
       {
@@ -3151,6 +3165,12 @@
         "name": "ticket-routing",
         "file": "ticket-routing.ts",
         "schemas": 5,
+        "complexity": "moderate"
+      },
+      {
+        "name": "public-onboarding",
+        "file": "public-onboarding.ts",
+        "schemas": 4,
         "complexity": "moderate"
       },
       {
