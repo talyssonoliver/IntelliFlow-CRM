@@ -7,22 +7,19 @@ export class CrossTenantOrNotFoundError extends DomainError {
     super(message);
   }
 
-  static forContact(
-    contactId: string,
-    tenantId: string,
-  ): CrossTenantOrNotFoundError {
+  static forContact(contactId: string, tenantId: string): CrossTenantOrNotFoundError {
     return new CrossTenantOrNotFoundError(
-      `Contact ${contactId} not found in tenant ${tenantId} (either deleted or belongs to another tenant).`,
+      `Contact ${contactId} not found in tenant ${tenantId} (either deleted or belongs to another tenant).`
     );
   }
 
   static forMerge(
     primaryId: string,
     secondaryId: string,
-    tenantId: string,
+    tenantId: string
   ): CrossTenantOrNotFoundError {
     return new CrossTenantOrNotFoundError(
-      `Cannot merge contacts ${primaryId} and ${secondaryId} in tenant ${tenantId}: one or both are missing or belong to another tenant.`,
+      `Cannot merge contacts ${primaryId} and ${secondaryId} in tenant ${tenantId}: one or both are missing or belong to another tenant.`
     );
   }
 }
