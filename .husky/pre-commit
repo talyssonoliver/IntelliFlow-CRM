@@ -17,28 +17,20 @@ if git diff --cached --name-only | grep -q "Sprint_plan\.csv$"; then
   echo "✅ Local split files regenerated"
 fi
 
-# Auto-sync API inventory if router files changed
-if git diff --cached --name-only | grep -q "\.router\.ts$"; then
-  echo "🔄 Router files changed - syncing API inventory..."
-  npx tsx tools/scripts/sync-api-inventory.ts || {
-    echo "❌ Failed to sync API inventory"
-    exit 1
-  }
-  git add artifacts/benchmarks/baseline.json
-  echo "✅ API inventory synced and staged"
-fi
-
-# Auto-sync codebase inventory if relevant source files changed
-CODEBASE_PATTERNS="schema\.prisma|middleware/|workers/|adapters/src/|domain/src/events|validators/src/"
-if git diff --cached --name-only | grep -qE "$CODEBASE_PATTERNS"; then
-  echo "🔄 Codebase files changed - syncing full inventory..."
-  npx tsx tools/scripts/sync-codebase-inventory.ts || {
-    echo "❌ Failed to sync codebase inventory"
-    exit 1
-  }
-  git add artifacts/benchmarks/baseline.json
-  echo "✅ Codebase inventory synced and staged"
-fi
+# Always sync both inventories — CI detects drift unconditionally so must we.
+# These are idempotent and fast (~5s). Pattern-gating caused false negatives
+# (any file change outside the patterns left baseline.json stale → CI fail).
+echo "📦 Syncing inventories..."
+npx tsx tools/scripts/sync-api-inventory.ts || {
+  echo "❌ Failed to sync API inventory"
+  exit 1
+}
+npx tsx tools/scripts/sync-codebase-inventory.ts || {
+  echo "❌ Failed to sync codebase inventory"
+  exit 1
+}
+git add artifacts/benchmarks/baseline.json
+echo "✅ Inventories synced and staged"
 
 # PG-195 / ADR-046: auto-regenerate Material Symbols subset + audit when any
 # scanned source file changes. Mirrors the auto-regenerate precedent above —

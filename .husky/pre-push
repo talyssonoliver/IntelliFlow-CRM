@@ -1,0 +1,60 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# IntelliFlow CRM Pre-push Hook
+# Medium checks (~1-2min): catches every CI gate that can run without Docker/cloud.
+# Runs ONCE before push — not on every commit — so cost is acceptable.
+
+echo "🚀 Running pre-push checks..."
+
+# ── 1. Prettier format check ─────────────────────────────────────────────────
+# CI runs `format:check` (read-only diff). Pre-commit only formats *staged* files,
+# so unformatted unstaged files can slip through. Catch them here.
+echo "💅 Checking formatting (format:check)..."
+pnpm run format:check || {
+  echo "❌ Formatting violations found."
+  echo "   Run: pnpm run format  then commit the changes."
+  exit 1
+}
+echo "✅ Formatting OK"
+
+# ── 2. Artifact path linting ─────────────────────────────────────────────────
+# CI runs lint:artifacts on every PR touching HTML/JSON/CSV/artifacts/**
+# This is never run locally and was causing 415+ false-positive failures.
+echo "🗂️  Linting artifact paths..."
+pnpm run lint:artifacts || {
+  echo "❌ Artifact path violations detected."
+  echo "   Run: pnpm run lint:artifacts  to see details."
+  echo "   Run: pnpm run lint:artifacts:fix  to auto-fix where possible."
+  exit 1
+}
+echo "✅ Artifact paths OK"
+
+# ── 3. A11y route reconciliation ─────────────────────────────────────────────
+# CI checks that every route in the WCAG conformance statement exists on disk.
+# Pure file scan — fast, no external deps.
+echo "♿ Reconciling a11y routes..."
+pnpm run validate:a11y-routes || {
+  echo "❌ A11y route drift detected."
+  echo "   Update docs/compliance-and-governance/compliance/wcag-conformance-statement.md"
+  echo "   to match the current routes in apps/web/src/app/"
+  exit 1
+}
+echo "✅ A11y routes OK"
+
+# ── 4. Inventory drift check ─────────────────────────────────────────────────
+# CI runs sync:codebase-inventory + sync:api-inventory unconditionally and
+# fails if baseline.json changed. Pre-commit only syncs on specific file
+# patterns — any other change that affects the inventory causes CI drift failure.
+# Fix: run both syncs here unconditionally and abort if baseline.json is dirty.
+echo "📦 Checking inventory drift..."
+pnpm run sync:all-inventory 2>/dev/null
+if ! git diff --quiet artifacts/benchmarks/baseline.json 2>/dev/null; then
+  echo "❌ Inventory drift detected — baseline.json changed after sync."
+  echo "   Run: pnpm run sync:all-inventory"
+  echo "   Then: git add artifacts/benchmarks/baseline.json && git commit --amend --no-edit"
+  exit 1
+fi
+echo "✅ Inventory in sync"
+
+echo "✅ All pre-push checks passed!"
