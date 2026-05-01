@@ -81,9 +81,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build packages
-        run: pnpm turbo run build --filter=!@intelliflow/web --filter=!@intelliflow/api --filter=!@intelliflow/project-tracker --filter=!@intelliflow/workers
-
       - name: Run tests
         run: pnpm run test -- --coverage
 
@@ -236,6 +233,8 @@ jobs:
 
       - name: Build
         run: pnpm run build
+        env:
+          PRISMA_FIELD_ENCRYPTION_KEY: ${{ secrets.PRISMA_FIELD_ENCRYPTION_KEY }}
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v7

@@ -164,7 +164,7 @@ jobs:
         run: pnpm run build
         env:
           NODE_ENV: production
-          PRISMA_FIELD_ENCRYPTION_KEY: ${{ secrets.PRISMA_FIELD_ENCRYPTION_KEY || 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=' }}
+          PRISMA_FIELD_ENCRYPTION_KEY: ${{ secrets.PRISMA_FIELD_ENCRYPTION_KEY }}
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v7
