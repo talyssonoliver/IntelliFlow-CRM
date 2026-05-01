@@ -12,14 +12,20 @@ type Priority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
 
 function makeDeps() {
   const notifications: Array<{ type: string; entityId: string }> = [];
-  const createNotification = vi.fn(async (params: Parameters<CaseMonitorDeps['createNotification']>[0]) => {
-    notifications.push({ type: params.type, entityId: params.entityId });
-  });
+  const createNotification = vi.fn(
+    async (params: Parameters<CaseMonitorDeps['createNotification']>[0]) => {
+      notifications.push({ type: params.type, entityId: params.entityId });
+    }
+  );
   return { deps: { createNotification } as CaseMonitorDeps, notifications };
 }
 
 function makePrisma(rows: {
-  settings?: Array<{ tenantId: string; notifyOnDeadlineApproaching: boolean; autoEscalateOverdue: boolean }>;
+  settings?: Array<{
+    tenantId: string;
+    notifyOnDeadlineApproaching: boolean;
+    autoEscalateOverdue: boolean;
+  }>;
   cases?: Array<{
     id: string;
     tenantId: string;
@@ -54,11 +60,7 @@ describe('CaseDeadlineMonitorWorker.process', () => {
       cases: [],
     });
     const { deps, notifications } = makeDeps();
-    const worker = new CaseDeadlineMonitorWorker(
-      prisma,
-      { host: 'localhost', port: 6379 },
-      deps,
-    );
+    const worker = new CaseDeadlineMonitorWorker(prisma, { host: 'localhost', port: 6379 }, deps);
     const result = await worker.process({
       id: '1',
       data: { sweepAll: true, approachingThresholdMs: 24 * 60 * 60 * 1000 },
@@ -71,9 +73,7 @@ describe('CaseDeadlineMonitorWorker.process', () => {
   it('emits case_deadline_approaching for cases due within 24h when flag on', async () => {
     const approaching = new Date(Date.now() + 6 * 60 * 60 * 1000); // 6h from now
     const { prisma } = makePrisma({
-      settings: [
-        { tenantId: 't1', notifyOnDeadlineApproaching: true, autoEscalateOverdue: false },
-      ],
+      settings: [{ tenantId: 't1', notifyOnDeadlineApproaching: true, autoEscalateOverdue: false }],
       cases: [
         {
           id: 'case-1',
@@ -87,11 +87,7 @@ describe('CaseDeadlineMonitorWorker.process', () => {
       ],
     });
     const { deps, notifications } = makeDeps();
-    const worker = new CaseDeadlineMonitorWorker(
-      prisma,
-      { host: 'localhost', port: 6379 },
-      deps,
-    );
+    const worker = new CaseDeadlineMonitorWorker(prisma, { host: 'localhost', port: 6379 }, deps);
     const result = await worker.process({
       id: '1',
       data: { sweepAll: true, approachingThresholdMs: 24 * 60 * 60 * 1000 },
@@ -104,9 +100,7 @@ describe('CaseDeadlineMonitorWorker.process', () => {
   it('bumps priority + emits case_escalated when overdue and autoEscalateOverdue on', async () => {
     const overdue = new Date(Date.now() - 60 * 60 * 1000); // 1h ago
     const { prisma, updateSpy } = makePrisma({
-      settings: [
-        { tenantId: 't1', notifyOnDeadlineApproaching: false, autoEscalateOverdue: true },
-      ],
+      settings: [{ tenantId: 't1', notifyOnDeadlineApproaching: false, autoEscalateOverdue: true }],
       cases: [
         {
           id: 'case-2',
@@ -120,11 +114,7 @@ describe('CaseDeadlineMonitorWorker.process', () => {
       ],
     });
     const { deps, notifications } = makeDeps();
-    const worker = new CaseDeadlineMonitorWorker(
-      prisma,
-      { host: 'localhost', port: 6379 },
-      deps,
-    );
+    const worker = new CaseDeadlineMonitorWorker(prisma, { host: 'localhost', port: 6379 }, deps);
     const result = await worker.process({
       id: '1',
       data: { sweepAll: true, approachingThresholdMs: 24 * 60 * 60 * 1000 },
@@ -140,9 +130,7 @@ describe('CaseDeadlineMonitorWorker.process', () => {
   it('does NOT bump priority past URGENT', async () => {
     const overdue = new Date(Date.now() - 60 * 60 * 1000);
     const { prisma, updateSpy } = makePrisma({
-      settings: [
-        { tenantId: 't1', notifyOnDeadlineApproaching: false, autoEscalateOverdue: true },
-      ],
+      settings: [{ tenantId: 't1', notifyOnDeadlineApproaching: false, autoEscalateOverdue: true }],
       cases: [
         {
           id: 'case-3',
@@ -156,11 +144,7 @@ describe('CaseDeadlineMonitorWorker.process', () => {
       ],
     });
     const { deps } = makeDeps();
-    const worker = new CaseDeadlineMonitorWorker(
-      prisma,
-      { host: 'localhost', port: 6379 },
-      deps,
-    );
+    const worker = new CaseDeadlineMonitorWorker(prisma, { host: 'localhost', port: 6379 }, deps);
     await worker.process({
       id: '1',
       data: { sweepAll: true, approachingThresholdMs: 24 * 60 * 60 * 1000 },
@@ -178,20 +162,18 @@ describe('CaseDeadlineMonitorWorker.process', () => {
       cases: [],
     });
     const { deps } = makeDeps();
-    const worker = new CaseDeadlineMonitorWorker(
-      prisma,
-      { host: 'localhost', port: 6379 },
-      deps,
-    );
+    const worker = new CaseDeadlineMonitorWorker(prisma, { host: 'localhost', port: 6379 }, deps);
     const result = await worker.process({
       id: '1',
       data: { sweepAll: true, approachingThresholdMs: 24 * 60 * 60 * 1000 },
     } as unknown as Job);
     // Both scanned, but only 't-scan' triggered findMany on case table
     expect(result.tenantsScanned).toBe(2);
-    const findManyCalls = (prisma as unknown as {
-      case: { findMany: { mock: { calls: unknown[] } } };
-    }).case.findMany.mock.calls.length;
+    const findManyCalls = (
+      prisma as unknown as {
+        case: { findMany: { mock: { calls: unknown[] } } };
+      }
+    ).case.findMany.mock.calls.length;
     expect(findManyCalls).toBe(1);
   });
 });

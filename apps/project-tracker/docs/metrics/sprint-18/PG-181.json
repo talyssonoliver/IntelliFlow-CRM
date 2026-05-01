@@ -9,10 +9,7 @@
   "phase": "",
   "stream": null,
   "dependencies": {
-    "required": [
-      "PG-180",
-      "IFC-301"
-    ],
+    "required": ["PG-180", "IFC-301"],
     "all_satisfied": false,
     "verified_at": "2026-04-29T21:54:51.872Z"
   },

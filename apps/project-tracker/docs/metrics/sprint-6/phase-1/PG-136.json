@@ -12,9 +12,7 @@
   "completed_at": "2026-02-10T23:35:00.000Z",
   "actual_duration_minutes": 95,
   "dependencies": {
-    "required": [
-      "IFC-187"
-    ],
+    "required": ["IFC-187"],
     "all_satisfied": true,
     "verified_at": "2026-04-29T21:54:51.762Z",
     "notes": "IFC-187 (Task tRPC Router) marked Completed. All 10 endpoints available in router (create, getById, list, update, delete, complete, assign, reschedule, getReminders, getByEntity)."
@@ -61,11 +59,7 @@
     "completed_at": "2026-02-10T23:35:00.000Z",
     "duration_minutes": 35,
     "executor": "Claude Code /exec",
-    "agents": [
-      "Foundation",
-      "Quality",
-      "Domain"
-    ],
+    "agents": ["Foundation", "Quality", "Domain"],
     "retry_count": 0,
     "last_error": null
   },
@@ -152,7 +146,5 @@
   ],
   "blockers": [],
   "notes": "Task Management Page fully implemented. 13 artifacts created (9 components + 3 pages/layouts + 1 sidebar config), 9 test files with 148 tests. Scoped coverage: Stmts 91.21%, Branches 82.11%, Functions 90.14%, Lines 95.08%. All 4 validations passed (TypeScript, Tests, Lint, Build). Custom month-view calendar (no external library). All tRPC endpoints wired. Views: list (DataTable) + calendar toggle. Features: search, status/priority filters, sort, overdue/due-today reminders, entity linking, CRUD forms, bulk actions, task creation sheet, related tasks card.",
-  "dependencies_resolved": [
-    "IFC-187"
-  ]
+  "dependencies_resolved": ["IFC-187"]
 }

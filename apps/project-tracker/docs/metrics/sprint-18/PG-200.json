@@ -9,17 +9,11 @@
   "phase": "",
   "stream": null,
   "dependencies": {
-    "required": [
-      "PG-178",
-      "PG-187"
-    ],
+    "required": ["PG-178", "PG-187"],
     "all_satisfied": true,
     "verified_at": "2026-04-29T21:54:51.882Z"
   },
-  "dependencies_resolved": [
-    "PG-178",
-    "PG-187"
-  ],
+  "dependencies_resolved": ["PG-178", "PG-187"],
   "started_at": null,
   "completed_at": null,
   "execution": {
@@ -34,9 +28,7 @@
       "packages/validators/src/report-templates.ts",
       ".specify/sprints/sprint-18/attestations/PG-200/context_ack.json"
     ],
-    "created": [
-      "apps/web/src/app/analytics/report-templates/page.tsx"
-    ],
+    "created": ["apps/web/src/app/analytics/report-templates/page.tsx"],
     "missing": [
       "apps/web/src/app/analytics/report-templates/ReportTemplatesContent.tsx",
       "apps/api/src/modules/analytics/report-templates.router.ts",

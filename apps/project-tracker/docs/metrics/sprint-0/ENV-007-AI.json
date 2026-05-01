@@ -2,9 +2,7 @@
   "task_id": "ENV-007-AI",
   "status": "DONE",
   "dependencies": {
-    "required": [
-      "ENV-006-AI"
-    ],
+    "required": ["ENV-006-AI"],
     "all_satisfied": true,
     "verified_at": "2026-04-29T21:54:51.679Z"
   },
@@ -27,7 +25,5 @@
   "started_at": "2026-04-13T00:27:36.731Z",
   "actual_duration_minutes": 15,
   "description": "tRPC Setup with Automated Type Generation",
-  "dependencies_resolved": [
-    "ENV-006-AI"
-  ]
+  "dependencies_resolved": ["ENV-006-AI"]
 }

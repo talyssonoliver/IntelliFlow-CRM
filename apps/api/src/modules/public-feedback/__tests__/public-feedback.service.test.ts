@@ -34,7 +34,7 @@ describe('PublicFeedbackService', () => {
         rating: 4,
         source: '/features',
       },
-      'hashed-ip',
+      'hashed-ip'
     );
     expect(result).toEqual({ success: true, id: 'feedback-1' });
     expect(repo.create).toHaveBeenCalledWith({
@@ -59,7 +59,7 @@ describe('PublicFeedbackService', () => {
         email: 'user@example.com',
         userAgent: 'Mozilla/5.0',
       },
-      'h',
+      'h'
     );
     const call = repo.create.mock.calls[0][0] as CreatePublicFeedbackInput;
     expect(call.comment).toBe('Great');
@@ -77,7 +77,7 @@ describe('PublicFeedbackService', () => {
         source: '/features',
         __honeypot: '',
       } as never,
-      'h',
+      'h'
     );
     const call = repo.create.mock.calls[0][0] as Record<string, unknown>;
     expect(call.__honeypot).toBeUndefined();
@@ -98,9 +98,7 @@ describe('PublicFeedbackService', () => {
 
   it('re-throws TRPCError unchanged', async () => {
     const repo = makeRepo();
-    repo.create.mockRejectedValue(
-      new TRPCError({ code: 'BAD_REQUEST', message: 'nope' })
-    );
+    repo.create.mockRejectedValue(new TRPCError({ code: 'BAD_REQUEST', message: 'nope' }));
     const svc = new PublicFeedbackService(repo);
     try {
       await svc.submit({ rating: 3, source: '/x' }, 'h');

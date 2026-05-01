@@ -51,7 +51,9 @@ interface BuildState {
   lint?: BuildMetrics['lint'];
 }
 
-async function readJsonFile<T>(filePath: string): Promise<{ data: T | null; lastUpdated: string | null }> {
+async function readJsonFile<T>(
+  filePath: string
+): Promise<{ data: T | null; lastUpdated: string | null }> {
   try {
     const content = await fs.readFile(filePath, 'utf-8');
     const stats = await fs.stat(filePath);
@@ -73,10 +75,12 @@ async function saveBuildState(state: BuildState): Promise<void> {
 export async function GET() {
   try {
     // Read saved build state
-    const { data: buildState, lastUpdated: stateUpdated } = await readJsonFile<BuildState>(BUILD_STATE_PATH);
+    const { data: buildState, lastUpdated: stateUpdated } =
+      await readJsonFile<BuildState>(BUILD_STATE_PATH);
 
     // Read coverage summary for test data
-    const { data: coverageData, lastUpdated: coverageUpdated } = await readJsonFile<any>(COVERAGE_PATH);
+    const { data: coverageData, lastUpdated: coverageUpdated } =
+      await readJsonFile<any>(COVERAGE_PATH);
 
     const coverage = coverageData?.total?.lines?.pct ?? 0;
 
@@ -123,10 +127,7 @@ export async function GET() {
     });
   } catch (error) {
     console.error('Error reading build metrics:', error);
-    return NextResponse.json(
-      { status: 'error', message: String(error) },
-      { status: 500 }
-    );
+    return NextResponse.json({ status: 'error', message: String(error) }, { status: 500 });
   }
 }
 
@@ -142,11 +143,14 @@ export async function POST(request: NextRequest) {
     if (type === 'all' || type === 'typecheck') {
       const startTime = Date.now();
       try {
-        const { stdout, stderr } = await execAsync('npx turbo typecheck --output-logs=errors-only 2>&1', {
-          cwd: ROOT_DIR,
-          timeout: 300000,
-          env: { ...process.env, FORCE_COLOR: '0' },
-        });
+        const { stdout, stderr } = await execAsync(
+          'npx turbo typecheck --output-logs=errors-only 2>&1',
+          {
+            cwd: ROOT_DIR,
+            timeout: 300000,
+            env: { ...process.env, FORCE_COLOR: '0' },
+          }
+        );
         const duration = Date.now() - startTime;
         const output = stdout + stderr;
 
@@ -191,11 +195,14 @@ export async function POST(request: NextRequest) {
 
     if (type === 'all' || type === 'lint') {
       try {
-        const { stdout, stderr } = await execAsync('npx turbo lint --output-logs=errors-only 2>&1', {
-          cwd: ROOT_DIR,
-          timeout: 300000,
-          env: { ...process.env, FORCE_COLOR: '0' },
-        });
+        const { stdout, stderr } = await execAsync(
+          'npx turbo lint --output-logs=errors-only 2>&1',
+          {
+            cwd: ROOT_DIR,
+            timeout: 300000,
+            env: { ...process.env, FORCE_COLOR: '0' },
+          }
+        );
         const output = stdout + stderr;
 
         const errorMatch = output.match(/(\d+)\s+error/);
@@ -237,9 +244,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error running build validation:', error);
-    return NextResponse.json(
-      { status: 'error', message: String(error) },
-      { status: 500 }
-    );
+    return NextResponse.json({ status: 'error', message: String(error) }, { status: 500 });
   }
 }

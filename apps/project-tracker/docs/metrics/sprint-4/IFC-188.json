@@ -8,18 +8,12 @@
   "phase": "phase-1-core-crm",
   "stream": null,
   "dependencies": {
-    "required": [
-      "IFC-002",
-      "IFC-003"
-    ],
+    "required": ["IFC-002", "IFC-003"],
     "verified_at": "2026-04-29T21:54:51.738Z",
     "all_satisfied": true,
     "notes": "IFC-002 (DDD domain models) and IFC-003 (tRPC foundation) are prerequisites"
   },
-  "dependencies_resolved": [
-    "IFC-002",
-    "IFC-003"
-  ],
+  "dependencies_resolved": ["IFC-002", "IFC-003"],
   "status": "DONE",
   "started_at": "2026-02-04T15:00:00.000Z",
   "completed_at": "2026-02-05T18:25:00.000Z",
@@ -77,12 +71,7 @@
     "completed_at": "2026-02-05T18:25:00.000Z",
     "duration_minutes": 75,
     "executor": "Claude Code /exec",
-    "agents": [
-      "Foundation",
-      "Security",
-      "Quality",
-      "Domain"
-    ],
+    "agents": ["Foundation", "Security", "Quality", "Domain"],
     "execution_log": "TDD phases completed: Phase 0 (PRE-IMPL) - TicketConstants updated with state machine; Phase 1 (RED) - 119 failing tests written; Phase 2 (GREEN) - All implementation files created; Phase 3 (REFACTOR) - Coverage 95.21%, typecheck pass, lint pass",
     "log_path": ".specify/sprints/sprint-4/execution/IFC-188/20260205-212900-revalidation/summary.json",
     "retry_count": 0,

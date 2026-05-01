@@ -2,9 +2,7 @@
   "task_id": "IFC-044",
   "status": "DONE",
   "dependencies": {
-    "required": [
-      "ENV-010-AI"
-    ],
+    "required": ["ENV-010-AI"],
     "all_satisfied": true,
     "verified_at": "2026-04-29T21:54:51.688Z"
   },
@@ -27,7 +25,5 @@
   "started_at": "2026-04-13T00:27:36.747Z",
   "actual_duration_minutes": 15,
   "description": "Unit Tests (Vitest + TDD)",
-  "dependencies_resolved": [
-    "ENV-010-AI"
-  ]
+  "dependencies_resolved": ["ENV-010-AI"]
 }

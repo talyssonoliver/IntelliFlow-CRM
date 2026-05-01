@@ -36,12 +36,8 @@
     }
   },
   "artifacts": {
-    "expected": [
-      "apps/api/src/modules/lead/lead.router.ts"
-    ],
-    "created": [
-      "apps/api/src/modules/lead/lead.router.ts"
-    ],
+    "expected": ["apps/api/src/modules/lead/lead.router.ts"],
+    "created": ["apps/api/src/modules/lead/lead.router.ts"],
     "missing": []
   },
   "validations": [

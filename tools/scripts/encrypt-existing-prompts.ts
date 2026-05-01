@@ -113,6 +113,7 @@ async function main(): Promise<void> {
     process.stdout.write(
       `\r[encrypt-existing-prompts] ChainVersion: ${totalVersions} rows processed (${versionSkipped} already encrypted)...`
     );
+    // eslint-disable-next-line no-constant-condition
   } while (true);
 
   console.log(
@@ -174,6 +175,7 @@ async function main(): Promise<void> {
     process.stdout.write(
       `\r[encrypt-existing-prompts] WebhookEndpoint: ${totalWebhooks} rows processed (${webhookSkipped} already encrypted)...`
     );
+    // eslint-disable-next-line no-constant-condition
   } while (true);
 
   console.log(

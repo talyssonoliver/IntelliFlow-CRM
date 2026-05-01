@@ -11,10 +11,7 @@
   "dependencies": {
     "all_satisfied": true,
     "verified_at": "2026-04-29T21:54:52.015Z",
-    "required": [
-      "IFC-003",
-      "IFC-157"
-    ]
+    "required": ["IFC-003", "IFC-157"]
   },
   "started_at": "2026-02-13T23:23:53+00:00",
   "completed_at": "2026-02-23T22:15:19.714Z",
@@ -194,8 +191,5 @@
   "updated_at": "2026-02-13T23:40:26+00:00",
   "attempt": 0,
   "actual_duration_minutes": 15,
-  "dependencies_resolved": [
-    "IFC-003",
-    "IFC-157"
-  ]
+  "dependencies_resolved": ["IFC-003", "IFC-157"]
 }

@@ -134,13 +134,7 @@
     "working_hours_per_day": 8,
     "working_days_per_week": 5,
     "critical_path": {
-      "task_ids": [
-        "IFC-005",
-        "IFC-008",
-        "IFC-072",
-        "IFC-073",
-        "IFC-085"
-      ],
+      "task_ids": ["IFC-005", "IFC-008", "IFC-072", "IFC-073", "IFC-085"],
       "total_duration_minutes": 1040,
       "completion_percentage": 100,
       "bottleneck_task_id": null

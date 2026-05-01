@@ -453,7 +453,7 @@ export const contactRouter = createTRPCRouter({
             lastName: hygieneInput.lastName,
             company: (hygieneInput as { company?: string | null }).company ?? null,
           },
-          flags,
+          flags
         )) as DupeCheck;
       } catch (error) {
         console.warn('[contact.router] duplicate-detection failed, proceeding:', error);
@@ -477,7 +477,7 @@ export const contactRouter = createTRPCRouter({
           typedCtx,
           dupeCheck.primaryId,
           result.value.id.value,
-          typedCtx.tenant.userId,
+          typedCtx.tenant.userId
         );
       } catch (error) {
         console.warn('[contact.router] auto-merge post-commit failed:', error);
@@ -802,7 +802,7 @@ export const contactRouter = createTRPCRouter({
             lastName: (hygienedData as { lastName?: string | null }).lastName ?? null,
             company: (hygienedData as { company?: string | null }).company ?? null,
           },
-          flags,
+          flags
         )) as typeof updateDupeResult;
       } catch (error) {
         console.warn('[contact.router] duplicate-detection on update failed, proceeding:', error);
@@ -892,75 +892,71 @@ export const contactRouter = createTRPCRouter({
    * `notifyOnDuplicate=true`, a notification is emitted and the email update
    * proceeds. When no flag is set, the email is updated silently.
    */
-  updateEmail: tenantProcedure
-    .input(updateContactEmailSchema)
-    .mutation(async ({ ctx, input }) => {
-      const typedCtx = getTenantContext(ctx);
-      const contactService = getContactService(ctx);
-      const flags = await loadContactAutomation(typedCtx);
+  updateEmail: tenantProcedure.input(updateContactEmailSchema).mutation(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
+    const contactService = getContactService(ctx);
+    const flags = await loadContactAutomation(typedCtx);
 
-      const duplicateService = ctx.services?.contactDuplicateDetection;
-      let emailDupeResult:
-        | { action: 'proceed'; matches: unknown[] }
-        | { action: 'flag'; matches: unknown[] }
-        | { action: 'auto-merge'; matches: unknown[]; primaryId: string }
-        | undefined;
+    const duplicateService = ctx.services?.contactDuplicateDetection;
+    let emailDupeResult:
+      | { action: 'proceed'; matches: unknown[] }
+      | { action: 'flag'; matches: unknown[] }
+      | { action: 'auto-merge'; matches: unknown[]; primaryId: string }
+      | undefined;
 
-      if (duplicateService) {
-        try {
-          emailDupeResult = (await duplicateService.checkForUpdate(
-            typedCtx,
-            input.id,
-            { email: input.email },
-            flags,
-          )) as typeof emailDupeResult;
-        } catch (error) {
-          console.warn('[contact.router] email duplicate-detection failed, proceeding:', error);
+    if (duplicateService) {
+      try {
+        emailDupeResult = (await duplicateService.checkForUpdate(
+          typedCtx,
+          input.id,
+          { email: input.email },
+          flags
+        )) as typeof emailDupeResult;
+      } catch (error) {
+        console.warn('[contact.router] email duplicate-detection failed, proceeding:', error);
+      }
+    }
+
+    // Auto-merge: when an existing contact already has this email and the
+    // tenant opted in, fold the current contact into the primary instead of
+    // writing a duplicate email (which would fail the Contact.email unique
+    // constraint anyway).
+    if (emailDupeResult?.action === 'auto-merge' && duplicateService) {
+      try {
+        await duplicateService.applyAutoMerge(
+          typedCtx,
+          emailDupeResult.primaryId,
+          input.id,
+          typedCtx.tenant.userId
+        );
+        // After auto-merge the current contact is gone; return the surviving
+        // primary to the caller.
+        const primaryResult = await contactService.getContactById(emailDupeResult.primaryId);
+        if (primaryResult.isFailure) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: primaryResult.error.message,
+          });
         }
+        return mapContactToResponse(primaryResult.value);
+      } catch (error) {
+        console.warn('[contact.router] auto-merge on email change failed:', error);
       }
+    }
 
-      // Auto-merge: when an existing contact already has this email and the
-      // tenant opted in, fold the current contact into the primary instead of
-      // writing a duplicate email (which would fail the Contact.email unique
-      // constraint anyway).
-      if (emailDupeResult?.action === 'auto-merge' && duplicateService) {
-        try {
-          await duplicateService.applyAutoMerge(
-            typedCtx,
-            emailDupeResult.primaryId,
-            input.id,
-            typedCtx.tenant.userId,
-          );
-          // After auto-merge the current contact is gone; return the surviving
-          // primary to the caller.
-          const primaryResult = await contactService.getContactById(
-            emailDupeResult.primaryId,
-          );
-          if (primaryResult.isFailure) {
-            throw new TRPCError({
-              code: 'NOT_FOUND',
-              message: primaryResult.error.message,
-            });
-          }
-          return mapContactToResponse(primaryResult.value);
-        } catch (error) {
-          console.warn('[contact.router] auto-merge on email change failed:', error);
-        }
-      }
-
-      const result = await contactService.updateContactEmail(
-        input.id,
-        input.email,
-        typedCtx.tenant.userId,
-      );
-      if (result.isFailure) {
-        throw new TRPCError({
-          code: result.error.message.includes('not found') ? 'NOT_FOUND' : 'BAD_REQUEST',
-          message: result.error.message,
-        });
-      }
-      return mapContactToResponse(result.value);
-    }),
+    const result = await contactService.updateContactEmail(
+      input.id,
+      input.email,
+      typedCtx.tenant.userId
+    );
+    if (result.isFailure) {
+      throw new TRPCError({
+        code: result.error.message.includes('not found') ? 'NOT_FOUND' : 'BAD_REQUEST',
+        message: result.error.message,
+      });
+    }
+    return mapContactToResponse(result.value);
+  }),
 
   /**
    * Delete a contact using ContactService
@@ -1988,9 +1984,7 @@ export const contactRouter = createTRPCRouter({
         // degrading to an empty list.
         const durationMs = Date.now() - syncStart;
         const reason =
-          err instanceof Error && /timed out|timeout/i.test(err.message)
-            ? 'timeout'
-            : 'error';
+          err instanceof Error && /timed out|timeout/i.test(err.message) ? 'timeout' : 'error';
         console.warn(
           `[contact.router.suggestTags] sync-chain breach (${reason}) ` +
             `contactId=${input.contactId} tenantId=${typedCtx.tenant.tenantId} ` +
@@ -2144,9 +2138,7 @@ export const contactRouter = createTRPCRouter({
       if (!current) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Contact not found' });
       }
-      const merged = Array.from(
-        new Set<string>([...(current.tags ?? []), ...input.tags])
-      );
+      const merged = Array.from(new Set<string>([...(current.tags ?? []), ...input.tags]));
       await ctx.prismaWithTenant.contact.update({
         where: { id: input.contactId },
         data: { tags: merged },

@@ -45,9 +45,7 @@
     }
   ],
   "dependencies": {
-    "required": [
-      "IFC-086"
-    ],
+    "required": ["IFC-086"],
     "verified_at": "2026-04-29T21:54:51.781Z",
     "status": {
       "IFC-086": "Completed"
@@ -163,7 +161,5 @@
       "notes": "Commit 579e385: feat(web): add AI Chain Versioning Admin UI (PG-128)"
     }
   ],
-  "dependencies_resolved": [
-    "IFC-086"
-  ]
+  "dependencies_resolved": ["IFC-086"]
 }

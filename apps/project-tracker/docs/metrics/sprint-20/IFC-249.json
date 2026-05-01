@@ -40,12 +40,8 @@
       "apps/web/src/app/leads/[id]/edit/__tests__/page.test.tsx",
       "tests/e2e/lead-crud.spec.ts"
     ],
-    "created": [
-      "apps/web/src/app/leads/[id]/edit/__tests__/page.test.tsx"
-    ],
-    "missing": [
-      "tests/e2e/lead-crud.spec.ts"
-    ]
+    "created": ["apps/web/src/app/leads/[id]/edit/__tests__/page.test.tsx"],
+    "missing": ["tests/e2e/lead-crud.spec.ts"]
   },
   "validations": [],
   "blockers": [],

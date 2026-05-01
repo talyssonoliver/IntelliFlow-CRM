@@ -2,7 +2,7 @@ name: System Audit (Tier 3 Nightly)
 
 on:
   schedule:
-    - cron: "0 3 * * *"
+    - cron: '0 3 * * *'
   workflow_dispatch: {}
 
 concurrency:
@@ -11,8 +11,8 @@ concurrency:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-  NODE_VERSION: "22"
-  PNPM_VERSION: "10.33.0"
+  NODE_VERSION: '22'
+  PNPM_VERSION: '10.33.0'
   TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
   TURBO_TEAM: ${{ vars.TURBO_TEAM }}
   TURBO_CACHE_DIR: .turbo
@@ -33,7 +33,7 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
+          cache: 'pnpm'
 
       - name: Cache Turbo
         uses: actions/cache@v4
@@ -57,7 +57,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: '3.11'
 
       - name: Install Python deps
         run: pip install pyyaml pytest

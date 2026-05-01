@@ -9,17 +9,11 @@
   "phase": "",
   "stream": null,
   "dependencies": {
-    "required": [
-      "PG-178",
-      "PG-183"
-    ],
+    "required": ["PG-178", "PG-183"],
     "all_satisfied": true,
     "verified_at": "2026-04-29T21:54:51.880Z"
   },
-  "dependencies_resolved": [
-    "PG-178",
-    "PG-183"
-  ],
+  "dependencies_resolved": ["PG-178", "PG-183"],
   "started_at": null,
   "completed_at": null,
   "execution": {
@@ -34,9 +28,7 @@
       "packages/validators/src/account-territories.ts",
       ".specify/sprints/sprint-18/attestations/PG-197/context_ack.json"
     ],
-    "created": [
-      "apps/web/src/app/accounts/(list)/territory-mapping/page.tsx"
-    ],
+    "created": ["apps/web/src/app/accounts/(list)/territory-mapping/page.tsx"],
     "missing": [
       "apps/web/src/app/accounts/(list)/territory-mapping/TerritoryMappingContent.tsx",
       "apps/api/src/modules/account/account-territories.router.ts",

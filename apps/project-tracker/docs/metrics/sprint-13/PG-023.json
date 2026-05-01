@@ -11,10 +11,7 @@
   "dependencies": {
     "all_satisfied": true,
     "verified_at": "2026-04-29T21:54:52.010Z",
-    "required": [
-      "PG-016",
-      "IFC-006"
-    ]
+    "required": ["PG-016", "IFC-006"]
   },
   "started_at": "2026-02-19T22:00:00.000Z",
   "completed_at": "2026-02-19T23:15:00.000Z",
@@ -115,8 +112,5 @@
       "note": "All 4 gates passed. TypeScript clean, 82 tests pass, lint 0 errors, build exit 0, coverage >=90% all metrics."
     }
   ],
-  "dependencies_resolved": [
-    "PG-016",
-    "IFC-006"
-  ]
+  "dependencies_resolved": ["PG-016", "IFC-006"]
 }

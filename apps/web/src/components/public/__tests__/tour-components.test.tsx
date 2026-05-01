@@ -28,12 +28,7 @@ vi.mock('@/lib/shared/tracking-pixel', () => ({
   trackTourSkipped: (...args: unknown[]) => trackTourSkipped(...args),
 }));
 
-import {
-  TourProvider,
-  PublicTour,
-  TourTriggerButton,
-  useTourState,
-} from '../tour-components';
+import { TourProvider, PublicTour, TourTriggerButton, useTourState } from '../tour-components';
 import { getTourSeenAt, markTourSeen } from '@/lib/public/tour-storage';
 
 const TEST_CONFIG: TourConfig = {
@@ -65,9 +60,15 @@ function TargetFixture() {
   // Rendered inside the React tree so RTL cleanup owns its lifecycle.
   return (
     <div data-testid="target-fixture">
-      <div data-test-target="a" style={{ width: 100, height: 50 }}>A</div>
-      <div data-test-target="b" style={{ width: 100, height: 50 }}>B</div>
-      <div data-test-target="c" style={{ width: 100, height: 50 }}>C</div>
+      <div data-test-target="a" style={{ width: 100, height: 50 }}>
+        A
+      </div>
+      <div data-test-target="b" style={{ width: 100, height: 50 }}>
+        B
+      </div>
+      <div data-test-target="c" style={{ width: 100, height: 50 }}>
+        C
+      </div>
     </div>
   );
 }
@@ -97,7 +98,6 @@ beforeEach(() => {
   trackTourSkipped.mockClear();
 });
 
-
 describe('TourProvider auto-start', () => {
   it('auto-starts for first-visit visitor with no seen flag and no reduced motion', async () => {
     render(<Harness />);
@@ -114,7 +114,7 @@ describe('TourProvider auto-start', () => {
   });
 
   it('does NOT auto-start when seen flag is present', async () => {
-markTourSeen('test-tour');
+    markTourSeen('test-tour');
     render(<Harness />);
     await act(async () => {
       await new Promise((r) => setTimeout(r, 10));
@@ -123,7 +123,7 @@ markTourSeen('test-tour');
   });
 
   it('?tour=1 overrides the seen flag', async () => {
-markTourSeen('test-tour');
+    markTourSeen('test-tour');
     currentSearchParams = new URLSearchParams('tour=1');
     render(<Harness />);
     await act(async () => {
@@ -136,7 +136,7 @@ markTourSeen('test-tour');
   });
 
   it('respects prefers-reduced-motion (no auto-start)', async () => {
-const origMatchMedia = window.matchMedia;
+    const origMatchMedia = window.matchMedia;
     window.matchMedia = ((query: string) => ({
       matches: query.includes('prefers-reduced-motion'),
       media: query,
@@ -234,9 +234,7 @@ describe('Tour step transitions', () => {
       fireEvent.click(screen.getByTestId('tour-next-button'));
     });
     // On step-2: previous is enabled
-    expect(
-      (screen.getByTestId('tour-previous-button') as HTMLButtonElement).disabled
-    ).toBe(false);
+    expect((screen.getByTestId('tour-previous-button') as HTMLButtonElement).disabled).toBe(false);
     // Go back
     await act(async () => {
       fireEvent.click(screen.getByTestId('tour-previous-button'));
@@ -291,9 +289,7 @@ describe('a11y + dialog shape', () => {
     await act(async () => {
       await new Promise((r) => setTimeout(r, 10));
     });
-    expect(
-      document.querySelector('[data-testid="tour-spotlight-fallback"]')
-    ).not.toBeNull();
+    expect(document.querySelector('[data-testid="tour-spotlight-fallback"]')).not.toBeNull();
   });
 });
 
@@ -306,9 +302,7 @@ describe('TourTriggerButton', () => {
   });
 
   it('appends & when href already has query', () => {
-    render(
-      <TourTriggerButton tourId="features-v1" href="/features?utm=x" />
-    );
+    render(<TourTriggerButton tourId="features-v1" href="/features?utm=x" />);
     const link = screen.getByTestId('tour-trigger-link') as HTMLAnchorElement;
     expect(link.getAttribute('href')).toBe('/features?utm=x&tour=1');
   });

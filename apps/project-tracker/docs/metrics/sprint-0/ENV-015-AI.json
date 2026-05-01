@@ -2,9 +2,7 @@
   "task_id": "ENV-015-AI",
   "status": "DONE",
   "dependencies": {
-    "required": [
-      "ENV-007-AI"
-    ],
+    "required": ["ENV-007-AI"],
     "all_satisfied": true,
     "verified_at": "2026-04-29T21:54:51.684Z"
   },
@@ -27,7 +25,5 @@
   "started_at": "2026-04-13T00:27:36.738Z",
   "actual_duration_minutes": 15,
   "description": "AI-Managed Feature Flags with Predictive Rollout",
-  "dependencies_resolved": [
-    "ENV-007-AI"
-  ]
+  "dependencies_resolved": ["ENV-007-AI"]
 }

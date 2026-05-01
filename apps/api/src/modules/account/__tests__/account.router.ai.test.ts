@@ -140,10 +140,7 @@ describe('Account Router AI Procedures (IFC-312)', () => {
   //                     dispatches industry-inference via same queue (F2)
   // ─────────────────────────────────────────────────────────────────────
   describe('create — AI_ENRICHMENT enqueue (IFC-312 audit F1/F2)', () => {
-    function makeCallerWithFlags(flags: {
-      aiEnrichment: boolean;
-      aiIndustryInference: boolean;
-    }) {
+    function makeCallerWithFlags(flags: { aiEnrichment: boolean; aiIndustryInference: boolean }) {
       const ctx = createTestContext();
       prismaMock.accountAutomationSetting.findUnique.mockResolvedValue({
         autoMergeOnExactEmail: false,

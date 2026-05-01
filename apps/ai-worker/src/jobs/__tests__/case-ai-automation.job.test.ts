@@ -24,7 +24,9 @@ vi.mock('@intelliflow/db', () => ({
 vi.mock('../../case-insight.chain.js', () => ({ generateCaseInsight: H.insightMock }));
 vi.mock('../../case-summarization.chain.js', () => ({ generateCaseSummary: H.summarizeMock }));
 vi.mock('../../case-priority-prediction.chain.js', () => ({ predictCasePriority: H.priorityMock }));
-vi.mock('../../case-resolution-suggestion.chain.js', () => ({ suggestCaseResolution: H.resolutionMock }));
+vi.mock('../../case-resolution-suggestion.chain.js', () => ({
+  suggestCaseResolution: H.resolutionMock,
+}));
 
 import { processCaseAiAutomationJob } from '../case-ai-automation.job';
 

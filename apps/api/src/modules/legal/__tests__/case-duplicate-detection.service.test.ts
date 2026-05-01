@@ -55,7 +55,7 @@ describe('evaluateCaseDuplicateRules', () => {
           deadline: null,
         },
       ],
-      rules,
+      rules
     );
     expect(matches).toHaveLength(1);
     expect(matches[0].score).toBe(100);
@@ -77,7 +77,7 @@ describe('evaluateCaseDuplicateRules', () => {
           deadline: null,
         },
       ],
-      [fuzzyRule],
+      [fuzzyRule]
     );
     expect(matches).toHaveLength(1);
     expect(matches[0].score).toBeGreaterThanOrEqual(70);
@@ -98,7 +98,7 @@ describe('evaluateCaseDuplicateRules', () => {
           deadline: null,
         },
       ],
-      [fuzzyRule],
+      [fuzzyRule]
     );
     expect(matches).toHaveLength(0);
   });
@@ -107,7 +107,7 @@ describe('evaluateCaseDuplicateRules', () => {
     const matches = evaluateCaseDuplicateRules(
       { title: 'Smith' },
       [{ id: 'c1', title: 'Smith', clientId: null as never, deadline: null }],
-      [{ ...rules[0], isActive: false }],
+      [{ ...rules[0], isActive: false }]
     );
     expect(matches).toHaveLength(0);
   });
@@ -116,7 +116,7 @@ describe('evaluateCaseDuplicateRules', () => {
     const matches = evaluateCaseDuplicateRules(
       { id: 'case-1', title: 'Smith' },
       [{ id: 'case-1', title: 'Smith', clientId: null as never, deadline: null }],
-      rules,
+      rules
     );
     expect(matches).toHaveLength(0);
   });
@@ -139,7 +139,7 @@ describe('evaluateCaseDuplicateRules', () => {
           deadline: null,
         },
       ],
-      [clientRule],
+      [clientRule]
     );
     expect(matches[0].score).toBe(100);
   });
@@ -162,7 +162,7 @@ describe('evaluateCaseDuplicateRules', () => {
           deadline: new Date(Date.UTC(2026, 5, 15, 8, 0)),
         },
       ],
-      [dlRule],
+      [dlRule]
     );
     expect(matches[0].score).toBe(100);
   });
@@ -178,7 +178,7 @@ describe('evaluateCaseDuplicateRules', () => {
     const matches = evaluateCaseDuplicateRules(
       { title: 'irrelevant' },
       [{ id: 'c1', title: 't', clientId: null as never, deadline: null }],
-      [extRule],
+      [extRule]
     );
     expect(matches).toHaveLength(0);
   });
@@ -210,7 +210,7 @@ describe('evaluateCaseDuplicateRules', () => {
           deadline: null,
         },
       ],
-      rulesSorted,
+      rulesSorted
     );
     // Both rules match; highest score wins (100 vs 100 — tie, first-seen wins).
     expect(matches).toHaveLength(1);
@@ -284,11 +284,7 @@ describe('CaseDuplicateDetectionService', () => {
 
   it('returns proceed when no rules are active', async () => {
     const ctx = makeCtx({ rules: [] });
-    const result = await service.checkForCreate(
-      ctx,
-      { title: 'Anything' },
-      FLAGS_ON,
-    );
+    const result = await service.checkForCreate(ctx, { title: 'Anything' }, FLAGS_ON);
     expect(result.action).toBe('proceed');
     expect(result.matches).toEqual([]);
   });
@@ -304,15 +300,9 @@ describe('CaseDuplicateDetectionService', () => {
           sortOrder: 0,
         },
       ],
-      existingCases: [
-        { id: 'c1', title: 'Smith vs. Jones', clientId: null, deadline: null },
-      ],
+      existingCases: [{ id: 'c1', title: 'Smith vs. Jones', clientId: null, deadline: null }],
     });
-    const result = await service.checkForCreate(
-      ctx,
-      { title: 'Smith vs. Jones' },
-      FLAGS_ON,
-    );
+    const result = await service.checkForCreate(ctx, { title: 'Smith vs. Jones' }, FLAGS_ON);
     expect(result.action).toBe('flag');
     expect(result.matches).toHaveLength(1);
     // Notification was emitted (type is nested under metadata.notificationType per notifications.router).
@@ -332,15 +322,9 @@ describe('CaseDuplicateDetectionService', () => {
           sortOrder: 0,
         },
       ],
-      existingCases: [
-        { id: 'c1', title: 'Smith vs. Jones', clientId: null, deadline: null },
-      ],
+      existingCases: [{ id: 'c1', title: 'Smith vs. Jones', clientId: null, deadline: null }],
     });
-    const result = await service.checkForCreate(
-      ctx,
-      { title: 'Smith vs. Jones' },
-      FLAGS_OFF,
-    );
+    const result = await service.checkForCreate(ctx, { title: 'Smith vs. Jones' }, FLAGS_OFF);
     expect(result.action).toBe('proceed');
     expect(ctx.__notifications).toHaveLength(0);
   });
@@ -356,15 +340,9 @@ describe('CaseDuplicateDetectionService', () => {
           sortOrder: 0,
         },
       ],
-      existingCases: [
-        { id: 'c1', title: 'Smith vs. Jones', clientId: null, deadline: null },
-      ],
+      existingCases: [{ id: 'c1', title: 'Smith vs. Jones', clientId: null, deadline: null }],
     });
-    const result = await service.checkForCreate(
-      ctx,
-      { title: 'Smith vs. Jones' },
-      FLAGS_ON,
-    );
+    const result = await service.checkForCreate(ctx, { title: 'Smith vs. Jones' }, FLAGS_ON);
     expect(result.action).toBe('block');
     expect(result.matches).toHaveLength(1);
   });
@@ -386,13 +364,15 @@ describe('CaseDuplicateDetectionService', () => {
       ctx,
       'case-being-updated',
       { title: 'Smith' },
-      FLAGS_ON,
+      FLAGS_ON
     );
     expect(result.action).toBe('proceed');
     // The findMany call should have included a NOT { id: '...' } clause:
-    const findManyArgs = (ctx.prismaWithTenant as unknown as {
-      case: { findMany: { mock: { calls: unknown[][] } } };
-    }).case.findMany.mock.calls[0][0] as { where: { NOT?: { id: string } } };
+    const findManyArgs = (
+      ctx.prismaWithTenant as unknown as {
+        case: { findMany: { mock: { calls: unknown[][] } } };
+      }
+    ).case.findMany.mock.calls[0][0] as { where: { NOT?: { id: string } } };
     expect(findManyArgs.where.NOT).toEqual({ id: 'case-being-updated' });
   });
 
@@ -415,15 +395,17 @@ describe('CaseDuplicateDetectionService', () => {
       deadline: new Date(Date.UTC(2026, 5, 15, 12, 0)),
     };
     await service.checkForCreate(ctx, payload, FLAGS_ON);
-    const call = (ctx.prismaWithTenant as unknown as {
-      case: { findMany: { mock: { calls: unknown[][] } } };
-    }).case.findMany.mock.calls[0][0] as { where: { OR: Array<Record<string, unknown>> } };
+    const call = (
+      ctx.prismaWithTenant as unknown as {
+        case: { findMany: { mock: { calls: unknown[][] } } };
+      }
+    ).case.findMany.mock.calls[0][0] as { where: { OR: Array<Record<string, unknown>> } };
     // Three OR clauses built: title, clientId, deadline range
     expect(call.where.OR.length).toBe(3);
     const clientClause = call.where.OR.find((c) => 'clientId' in c);
     expect(clientClause).toEqual({ clientId: 'client-abc' });
     const deadlineClause = call.where.OR.find(
-      (c) => 'deadline' in c && typeof c.deadline === 'object',
+      (c) => 'deadline' in c && typeof c.deadline === 'object'
     ) as { deadline: { gte: Date; lt: Date } };
     expect(deadlineClause.deadline.gte).toBeInstanceOf(Date);
     expect(deadlineClause.deadline.lt).toBeInstanceOf(Date);
@@ -465,9 +447,11 @@ describe('CaseDuplicateDetectionService', () => {
       deadline: new Date('invalid'),
     };
     await service.checkForCreate(ctx, payload, FLAGS_ON);
-    const call = (ctx.prismaWithTenant as unknown as {
-      case: { findMany: { mock: { calls: unknown[][] } } };
-    }).case.findMany.mock.calls[0][0] as { where: { OR: Array<Record<string, unknown>> } };
+    const call = (
+      ctx.prismaWithTenant as unknown as {
+        case: { findMany: { mock: { calls: unknown[][] } } };
+      }
+    ).case.findMany.mock.calls[0][0] as { where: { OR: Array<Record<string, unknown>> } };
     // Only title clause — deadline was NaN so skipped.
     expect(call.where.OR.length).toBe(1);
   });

@@ -276,7 +276,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
           },
           async (_prisma, contactId, _tenantId, embedding) => {
             await updateContactEmbedding(contactId, embedding);
-          },
+          }
         );
         await this.contactEmbedWorker.start();
         this.logger.info('ContactEmbedWorker started — intelliflow-contact-embed queue consumed');
@@ -554,10 +554,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
           opts: { removeOnComplete: 100, removeOnFail: 500 },
         }
       );
-      this.logger.info(
-        { cron: accountScoringCron },
-        'Scheduled account-scoring job registered'
-      );
+      this.logger.info({ cron: accountScoringCron }, 'Scheduled account-scoring job registered');
     } catch (error) {
       this.logger.warn(
         { error: error instanceof Error ? error.message : String(error) },

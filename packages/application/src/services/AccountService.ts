@@ -944,9 +944,7 @@ export class AccountService {
       }
       return Result.ok({ kind: 'linked', ids: result.linkedIds });
     } catch {
-      return Result.fail(
-        new PersistenceError('Failed to link contacts to account by domain')
-      );
+      return Result.fail(new PersistenceError('Failed to link contacts to account by domain'));
     }
   }
 }

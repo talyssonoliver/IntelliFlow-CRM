@@ -8,9 +8,7 @@
   "phase": "phase-1",
   "stream": null,
   "dependencies": {
-    "required": [
-      "PG-032"
-    ],
+    "required": ["PG-032"],
     "verified_at": "2026-04-29T21:54:51.796Z",
     "all_satisfied": true,
     "notes": "PG-032 verified complete — docs index page, search, navigation components all exist. Attestation checked."
@@ -62,10 +60,7 @@
     "completed_at": "2026-02-12T23:00:00.000Z",
     "duration_minutes": 30,
     "executor": "Claude Code /exec",
-    "agents": [
-      "stoa-foundation",
-      "stoa-quality"
-    ],
+    "agents": ["stoa-foundation", "stoa-quality"],
     "retry_count": 0,
     "last_error": null
   },
@@ -155,7 +150,5 @@
   },
   "blockers": [],
   "notes": "PG-033 completed. 9 files created, 6 modified. Scalar v0.9.18 interactive API explorer at /docs/api with dark/light theme sync, loading/error/success ARIA states, ErrorBoundary. OpenAPI 3.0.3 spec auto-generated from Zod validators (61 paths, 10 domain tags, 20-term glossary). Foundation STOA initially FAIL (TS import type mismatch + unused import) — both remediated. Quality STOA PASS (48 tests, 92%+ coverage). All 6 completion gates PASS.",
-  "dependencies_resolved": [
-    "PG-032"
-  ]
+  "dependencies_resolved": ["PG-032"]
 }

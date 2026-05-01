@@ -5,9 +5,7 @@
   "description": "PHASE-001: Technical Architecture Spike - Modern Stack",
   "owner": "Tech Lead",
   "dependencies": {
-    "required": [
-      "IFC-000"
-    ],
+    "required": ["IFC-000"],
     "verified_at": "2026-04-29T21:54:51.702Z",
     "all_satisfied": true
   },
@@ -44,9 +42,7 @@
     "execution_log": "logs/sprint-1/IFC-001.log"
   },
   "artifacts": {
-    "expected": [
-      "docs/architecture/adr/*"
-    ],
+    "expected": ["docs/architecture/adr/*"],
     "created": [],
     "missing": []
   },
@@ -87,7 +83,5 @@
   "completed_at": "2025-12-27T11:33:38.964Z",
   "started_at": "2025-12-27T11:18:38.964Z",
   "actual_duration_minutes": 15,
-  "dependencies_resolved": [
-    "IFC-000"
-  ]
+  "dependencies_resolved": ["IFC-000"]
 }

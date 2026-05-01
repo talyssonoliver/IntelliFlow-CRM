@@ -9,10 +9,7 @@
   "phase": "",
   "stream": null,
   "dependencies": {
-    "required": [
-      "PG-178",
-      "PG-191"
-    ],
+    "required": ["PG-178", "PG-191"],
     "all_satisfied": false,
     "verified_at": "2026-04-29T21:54:51.888Z"
   },
@@ -31,9 +28,7 @@
       "packages/validators/src/task-automation.ts",
       ".specify/sprints/sprint-18/attestations/PG-208/context_ack.json"
     ],
-    "created": [
-      "apps/web/src/app/tasks/(list)/automation/page.tsx"
-    ],
+    "created": ["apps/web/src/app/tasks/(list)/automation/page.tsx"],
     "missing": [
       "apps/web/src/app/tasks/(list)/automation/TaskAutomationContent.tsx",
       "apps/api/src/modules/task/task-automation.router.ts",

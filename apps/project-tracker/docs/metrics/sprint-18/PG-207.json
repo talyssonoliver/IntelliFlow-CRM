@@ -9,17 +9,11 @@
   "phase": "",
   "stream": null,
   "dependencies": {
-    "required": [
-      "PG-178",
-      "PG-182"
-    ],
+    "required": ["PG-178", "PG-182"],
     "all_satisfied": true,
     "verified_at": "2026-04-29T21:54:51.888Z"
   },
-  "dependencies_resolved": [
-    "PG-178",
-    "PG-182"
-  ],
+  "dependencies_resolved": ["PG-178", "PG-182"],
   "started_at": null,
   "completed_at": null,
   "execution": {
@@ -34,9 +28,7 @@
       "packages/validators/src/email-settings.ts",
       ".specify/sprints/sprint-18/attestations/PG-207/context_ack.json"
     ],
-    "created": [
-      "apps/web/src/app/email/email-settings/page.tsx"
-    ],
+    "created": ["apps/web/src/app/email/email-settings/page.tsx"],
     "missing": [
       "apps/web/src/app/email/email-settings/EmailSettingsContent.tsx",
       "apps/api/src/modules/email/email-settings.router.ts",

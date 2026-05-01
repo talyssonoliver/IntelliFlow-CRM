@@ -9,9 +9,7 @@
   "phase": "",
   "stream": null,
   "dependencies": {
-    "required": [
-      "PG-045"
-    ],
+    "required": ["PG-045"],
     "all_satisfied": true,
     "verified_at": "2026-04-29T21:54:51.839Z"
   },
@@ -54,8 +52,6 @@
     }
   ],
   "notes": "Creates HelpArticle, ArticleSection, ArticleFeedback Prisma models with draft/published status enum. Fields match existing HelpArticle TypeScript interface from help-articles.ts.",
-  "dependencies_resolved": [
-    "PG-045"
-  ],
+  "dependencies_resolved": ["PG-045"],
   "actual_duration_minutes": 15
 }

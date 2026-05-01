@@ -114,9 +114,12 @@ describe('ContactInsightChain (IFC-312)', () => {
 
   it('engagementScore is clamped to 0-100', async () => {
     createLLMForTenant.mockResolvedValueOnce({
-      withStructuredOutput: vi.fn(() => ({ invoke: vi.fn().mockResolvedValue({
-        ...INSIGHT_PAYLOAD, engagementScore: 150, // out of range
-      }) })),
+      withStructuredOutput: vi.fn(() => ({
+        invoke: vi.fn().mockResolvedValue({
+          ...INSIGHT_PAYLOAD,
+          engagementScore: 150, // out of range
+        }),
+      })),
     });
     const mod = await import('../contact-insight.chain.js');
     await mod.generateContactInsight({

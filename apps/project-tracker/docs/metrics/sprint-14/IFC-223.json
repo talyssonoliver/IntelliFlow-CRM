@@ -5,15 +5,11 @@
   "description": "Wire actual Email Outbound Adapter (Resolves R-018)",
   "owner": "Backend Dev (STOA-Domain)",
   "dependencies": {
-    "required": [
-      "IFC-157"
-    ],
+    "required": ["IFC-157"],
     "all_satisfied": true,
     "verified_at": "2026-04-29T21:54:51.789Z"
   },
-  "prerequisites": [
-    "FILE:packages/adapters/src/messaging/email/outbound.ts"
-  ],
+  "prerequisites": ["FILE:packages/adapters/src/messaging/email/outbound.ts"],
   "definition_of_done": "Email outbound connects to real SMTP/API provider; verified by: pnpm test",
   "kpis": {},
   "status": "DONE",
@@ -25,16 +21,12 @@
     "PLAN:.specify/sprints/sprint-14/planning/IFC-223-plan.md",
     "ATTESTATION:.specify/sprints/sprint-14/attestations/IFC-223/attestation.json"
   ],
-  "validation_method": [
-    "VALIDATE:pnpm test"
-  ],
+  "validation_method": ["VALIDATE:pnpm test"],
   "estimate": "60/120/240",
   "percent_complete": 100,
   "created_at": "2026-03-04T23:51:20.000Z",
   "updated_at": "2026-03-04T23:51:20.000Z",
-  "dependencies_resolved": [
-    "IFC-157"
-  ],
+  "dependencies_resolved": ["IFC-157"],
   "completed_at": "2026-03-07T00:33:31.202Z",
   "started_at": "2026-03-07T00:18:31.202Z",
   "actual_duration_minutes": 15,

@@ -24,35 +24,35 @@ on:
       - master
       - develop
     paths:
-      - "apps/*/Dockerfile"
-      - "apps/**/Dockerfile"
-      - "infra/docker/**"
-      - "docker-compose*.yml"
-      - ".github/workflows/image-scan.yml"
+      - 'apps/*/Dockerfile'
+      - 'apps/**/Dockerfile'
+      - 'infra/docker/**'
+      - 'docker-compose*.yml'
+      - '.github/workflows/image-scan.yml'
   pull_request:
     branches:
       - main
       - master
       - develop
     paths:
-      - "apps/*/Dockerfile"
-      - "apps/**/Dockerfile"
-      - "infra/docker/**"
-      - "docker-compose*.yml"
+      - 'apps/*/Dockerfile'
+      - 'apps/**/Dockerfile'
+      - 'infra/docker/**'
+      - 'docker-compose*.yml'
   schedule:
     # Run nightly at 02:00 UTC for continuous monitoring
-    - cron: "0 2 * * *"
+    - cron: '0 2 * * *'
   workflow_dispatch:
     inputs:
       scan_all_images:
-        description: "Scan all images including base images"
+        description: 'Scan all images including base images'
         required: false
         default: false
         type: boolean
       severity_override:
-        description: "Override severity threshold (CRITICAL,HIGH,MEDIUM,LOW)"
+        description: 'Override severity threshold (CRITICAL,HIGH,MEDIUM,LOW)'
         required: false
-        default: "CRITICAL"
+        default: 'CRITICAL'
         type: string
 
 permissions:
@@ -63,12 +63,12 @@ permissions:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   # Trivy configuration
-  TRIVY_VERSION: "latest"
-  TRIVY_SEVERITY: "CRITICAL,HIGH,MEDIUM,LOW"
-  TRIVY_FAIL_ON: "CRITICAL"
+  TRIVY_VERSION: 'latest'
+  TRIVY_SEVERITY: 'CRITICAL,HIGH,MEDIUM,LOW'
+  TRIVY_FAIL_ON: 'CRITICAL'
   # Registry (placeholder - configure based on your registry)
-  REGISTRY: "ghcr.io"
-  IMAGE_PREFIX: "${{ github.repository }}"
+  REGISTRY: 'ghcr.io'
+  IMAGE_PREFIX: '${{ github.repository }}'
 
 jobs:
   # ===========================================
@@ -399,7 +399,7 @@ jobs:
         if: always()
         with:
           sarif_file: trivy-config-results.sarif
-          category: "container-security"
+          category: 'container-security'
         continue-on-error: true
 
   # ===========================================
@@ -416,7 +416,7 @@ jobs:
       - name: Download scan artifacts
         uses: actions/download-artifact@v8
         with:
-          pattern: "*-scan-*"
+          pattern: '*-scan-*'
           path: scan-results/
           merge-multiple: true
         continue-on-error: true
@@ -497,7 +497,7 @@ jobs:
       - name: Download all scan results
         uses: actions/download-artifact@v8
         with:
-          pattern: "*-scan-*"
+          pattern: '*-scan-*'
           path: all-scans/
           merge-multiple: true
         continue-on-error: true

@@ -32,9 +32,7 @@
   ],
   "started_at": "2026-02-13T00:00:00Z",
   "dependencies": {
-    "required": [
-      "IFC-136"
-    ],
+    "required": ["IFC-136"],
     "all_satisfied": true,
     "verified_at": "2026-04-29T21:54:51.955Z"
   },
@@ -70,9 +68,7 @@
       "met": false
     }
   },
-  "dependencies_resolved": [
-    "IFC-136"
-  ],
+  "dependencies_resolved": ["IFC-136"],
   "completed_at": "2026-02-13T22:23:59.971Z",
   "actual_duration_minutes": 15,
   "validations": [

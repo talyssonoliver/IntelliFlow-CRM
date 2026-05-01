@@ -9,9 +9,7 @@
   "phase": "",
   "stream": null,
   "dependencies": {
-    "required": [
-      "PG-178"
-    ],
+    "required": ["PG-178"],
     "all_satisfied": true,
     "verified_at": "2026-04-29T21:54:51.873Z"
   },
@@ -143,7 +141,5 @@
       "note": "All 4 validations passed; attestation written with verdict=COMPLETE"
     }
   ],
-  "dependencies_resolved": [
-    "PG-178"
-  ]
+  "dependencies_resolved": ["PG-178"]
 }

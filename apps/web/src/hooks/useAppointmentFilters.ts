@@ -78,7 +78,9 @@ export function useAppointmentFilters() {
   // one of the three known views, so unrelated filter state never hits storage.
   useEffect(() => {
     if (typeof globalThis.window === 'undefined') return;
-    const view: CalendarView = isCalendarView(filters.calendarView) ? filters.calendarView : 'month';
+    const view: CalendarView = isCalendarView(filters.calendarView)
+      ? filters.calendarView
+      : 'month';
     localStorage.setItem('appointment-calendarView', JSON.stringify(view));
   }, [filters.calendarView]);
 

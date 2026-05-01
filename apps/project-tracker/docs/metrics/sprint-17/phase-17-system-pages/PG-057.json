@@ -12,9 +12,7 @@
   "estimate_h": "60/120/240",
   "owner": "SRE (STOA-Foundation)",
   "dependencies": {
-    "required": [
-      "PG-055"
-    ],
+    "required": ["PG-055"],
     "all_satisfied": true,
     "verified_at": "2026-04-29T21:54:51.837Z"
   },
@@ -128,7 +126,5 @@
   "started_at": "2026-04-14T17:55:58.495Z",
   "actual_duration_minutes": 15,
   "description": "Maintenance",
-  "dependencies_resolved": [
-    "PG-055"
-  ]
+  "dependencies_resolved": ["PG-055"]
 }

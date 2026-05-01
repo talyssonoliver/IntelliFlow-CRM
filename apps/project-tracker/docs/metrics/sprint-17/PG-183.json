@@ -9,9 +9,7 @@
   "phase": "",
   "stream": null,
   "dependencies": {
-    "required": [
-      "PG-178"
-    ],
+    "required": ["PG-178"],
     "all_satisfied": true,
     "verified_at": "2026-04-29T21:54:51.843Z"
   },
@@ -116,7 +114,5 @@
     }
   ],
   "notes": "Account settings page at /accounts/account-settings with 8 bento sections: Hierarchy, Industry Taxonomy, Custom Fields, Duplicate Detection, Required Fields, Automation, AI & Intelligence, Tags. Mirrors /contacts/contact-settings layout. 7 new Prisma models, 7 tRPC sub-routers wired in account.router.ts. Scoped router coverage: 100% stmts / 91.66% branches / 100% fns / 100% lines.",
-  "dependencies_resolved": [
-    "PG-178"
-  ]
+  "dependencies_resolved": ["PG-178"]
 }

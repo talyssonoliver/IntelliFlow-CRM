@@ -55,7 +55,7 @@ export interface DealAiChainBundle {
 export async function processDealAiAutomationJob(
   job: Job<DealAiAutomationJobData>,
   prisma: PrismaClient,
-  chains: DealAiChainBundle,
+  chains: DealAiChainBundle
 ): Promise<DealAiAutomationJobResult> {
   const start = Date.now();
   const data = DealAiAutomationJobDataSchema.parse(job.data);

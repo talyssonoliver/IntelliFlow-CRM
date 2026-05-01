@@ -4,10 +4,7 @@ import * as React from 'react';
 import { usePathname } from 'next/navigation';
 import { PublicHeader } from '@/components/public/PublicHeader';
 import { useAuth } from '@/lib/auth/AuthContext';
-import {
-  TourProvider,
-  PublicTour,
-} from '@/components/public/tour-components';
+import { TourProvider, PublicTour } from '@/components/public/tour-components';
 import { PublicFeedbackFab } from '@/components/public/feedback-widget-public';
 import { FEATURES_TOUR_CONFIG } from '@/lib/public/tour-config';
 

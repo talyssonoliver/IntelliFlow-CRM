@@ -30,9 +30,7 @@
       "name": "MVP Week 1 (Sequential)",
       "tasks": 1,
       "completed": 1,
-      "task_ids": [
-        "IFC-016"
-      ],
+      "task_ids": ["IFC-016"],
       "id": "phase-1-mvp-week-1-sequential",
       "status": "NOT_STARTED"
     },
@@ -41,9 +39,7 @@
       "name": "MVP Week 1 (Sequential)",
       "tasks": 1,
       "completed": 1,
-      "task_ids": [
-        "IFC-018"
-      ],
+      "task_ids": ["IFC-018"],
       "id": "phase-2-mvp-week-1-sequential",
       "status": "NOT_STARTED"
     }
@@ -170,13 +166,7 @@
     "working_hours_per_day": 8,
     "working_days_per_week": 5,
     "critical_path": {
-      "task_ids": [
-        "IFC-079",
-        "IFC-080",
-        "IFC-082",
-        "IFC-126",
-        "IFC-148"
-      ],
+      "task_ids": ["IFC-079", "IFC-080", "IFC-082", "IFC-126", "IFC-148"],
       "total_duration_minutes": 813,
       "completion_percentage": 100,
       "bottleneck_task_id": null

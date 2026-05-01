@@ -52,29 +52,25 @@ export interface SuggestCaseTagsResult {
   modelVersion: string;
 }
 
-export async function suggestCaseTags(
-  input: SuggestCaseTagsInput
-): Promise<SuggestCaseTagsResult> {
+export async function suggestCaseTags(input: SuggestCaseTagsInput): Promise<SuggestCaseTagsResult> {
   const { caseId, tenantId, profileSnapshot } = input;
 
   try {
     const model = await createLLMForTenant('qualification', 'standard', { tenantId });
     const structured = model.withStructuredOutput(TagSuggestionLLMSchema);
-    const raw = await structured.invoke(
-      [
-        {
-          role: 'system',
-          content:
-            'Suggest 3-7 short tags (one-two words each) that organize a legal case. ' +
-            'Each tag must include a 0-1 confidence and a one-sentence reason. ' +
-            'Prefer practice-area terms, jurisdiction, and case-type over people names.',
-        },
-        {
-          role: 'user',
-          content: `Case profile: ${JSON.stringify(profileSnapshot)}.`,
-        },
-      ] as unknown as Parameters<typeof structured.invoke>[0]
-    );
+    const raw = await structured.invoke([
+      {
+        role: 'system',
+        content:
+          'Suggest 3-7 short tags (one-two words each) that organize a legal case. ' +
+          'Each tag must include a 0-1 confidence and a one-sentence reason. ' +
+          'Prefer practice-area terms, jurisdiction, and case-type over people names.',
+      },
+      {
+        role: 'user',
+        content: `Case profile: ${JSON.stringify(profileSnapshot)}.`,
+      },
+    ] as unknown as Parameters<typeof structured.invoke>[0]);
     const safe = TagSuggestionLLMSchema.safeParse(raw);
     if (safe.success) {
       return {

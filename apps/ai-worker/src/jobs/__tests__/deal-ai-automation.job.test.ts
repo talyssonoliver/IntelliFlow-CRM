@@ -40,7 +40,7 @@ describe('DealAiAutomationJobDataSchema', () => {
         tenantId: TENANT,
         dealId: DEAL_ID,
         operation: 'nope',
-      }),
+      })
     ).toThrow();
   });
 });
@@ -55,7 +55,7 @@ describe('processDealAiAutomationJob — flag gating', () => {
         aiNextStepRecommendation: false,
         aiWinLossPrediction: false,
       }),
-      {},
+      {}
     );
     expect(result.skipped).toBe(true);
     expect(result.reason).toBe('aiDuplicateDetection=false');
@@ -71,7 +71,7 @@ describe('processDealAiAutomationJob — flag gating', () => {
         aiNextStepRecommendation: false,
         aiWinLossPrediction: false,
       }),
-      { scoreDeal },
+      { scoreDeal }
     );
     expect(result.skipped).toBe(false);
     expect(scoreDeal).toHaveBeenCalled();
@@ -87,7 +87,7 @@ describe('processDealAiAutomationJob — flag gating', () => {
         aiNextStepRecommendation: false,
         aiWinLossPrediction: true,
       }),
-      {},
+      {}
     );
     expect(result.skipped).toBe(true);
     expect(result.reason).toBe('chain-not-wired');
@@ -104,7 +104,7 @@ describe('processDealAiAutomationJob — flag gating', () => {
     const result = await processDealAiAutomationJob(
       job({ tenantId: TENANT, dealId: 'missing', operation: 'duplicate-detection' }),
       prisma,
-      { detectDuplicates: vi.fn() },
+      { detectDuplicates: vi.fn() }
     );
     expect(result.skipped).toBe(true);
     expect(result.reason).toBe('deal-not-found');
@@ -118,7 +118,7 @@ describe('processDealAiAutomationJob — flag gating', () => {
     const result = await processDealAiAutomationJob(
       job({ tenantId: TENANT, dealId: DEAL_ID, operation: 'next-step-recommendation' }),
       prisma,
-      { recommendNextStep: vi.fn() },
+      { recommendNextStep: vi.fn() }
     );
     expect(result.skipped).toBe(true);
     expect(result.reason).toBe('aiNextStepRecommendation=false');

@@ -8,9 +8,7 @@
   "phase": "",
   "stream": null,
   "dependencies": {
-    "required": [
-      "PG-129"
-    ],
+    "required": ["PG-129"],
     "verified_at": "2026-04-29T21:54:51.802Z",
     "all_satisfied": true
   },
@@ -41,9 +39,7 @@
     "completed_at": "2026-03-01T18:08:00Z",
     "duration_minutes": 180,
     "executor": "Claude Code /exec",
-    "agents": [
-      "stoa-foundation"
-    ],
+    "agents": ["stoa-foundation"],
     "retry_count": 0,
     "last_error": null
   },
@@ -108,7 +104,5 @@
   },
   "blockers": [],
   "notes": "PG-160 completed. /insights route with getAllInsights tRPC endpoint supporting cursor pagination and type filtering (warning, opportunity, reminder, achievement). InsightsListPage, InsightCard, InsightTypeBadge components created. Sidebar config registered. Loading skeletons and empty states implemented.",
-  "dependencies_resolved": [
-    "PG-129"
-  ]
+  "dependencies_resolved": ["PG-129"]
 }

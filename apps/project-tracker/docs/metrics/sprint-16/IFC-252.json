@@ -31,12 +31,8 @@
     }
   },
   "artifacts": {
-    "expected": [
-      "apps/api/src/modules/contact/contact.router.ts"
-    ],
-    "created": [
-      "apps/api/src/modules/contact/contact.router.ts"
-    ],
+    "expected": ["apps/api/src/modules/contact/contact.router.ts"],
+    "created": ["apps/api/src/modules/contact/contact.router.ts"],
     "missing": []
   },
   "validations": [

@@ -133,7 +133,7 @@ export const accountRouter = createTRPCRouter({
             website: (hygieneInput as { website?: string | null }).website ?? null,
             phone: (hygieneInput as { phone?: string | null }).phone ?? null,
           },
-          flags,
+          flags
         )) as typeof createDupeResult;
       } catch (error) {
         console.warn('[account.router] duplicate-detection on create failed, proceeding:', error);
@@ -176,11 +176,7 @@ export const accountRouter = createTRPCRouter({
           .replace(/^www\./, '')
           .split(/[/?#]/)[0];
         if (domain && domain.includes('.')) {
-          await duplicateService.linkContactsByDomain(
-            typedCtx,
-            result.value.id.value,
-            domain,
-          );
+          await duplicateService.linkContactsByDomain(typedCtx, result.value.id.value, domain);
         }
       } catch (error) {
         console.warn('[account.router] auto-link-by-domain failed (non-fatal):', error);
@@ -448,7 +444,7 @@ export const accountRouter = createTRPCRouter({
             name: (updateData as { name?: string | null }).name ?? null,
             website: (updateData as { website?: string | null }).website ?? null,
           },
-          flags,
+          flags
         )) as typeof updateDupeResult;
       } catch (error) {
         console.warn('[account.router] duplicate-detection on update failed, proceeding:', error);
@@ -1184,9 +1180,7 @@ export const accountRouter = createTRPCRouter({
         // IFC-312 audit fix F6: sync-chain breach visibility.
         const durationMs = Date.now() - syncStart;
         const reason =
-          err instanceof Error && /timed out|timeout/i.test(err.message)
-            ? 'timeout'
-            : 'error';
+          err instanceof Error && /timed out|timeout/i.test(err.message) ? 'timeout' : 'error';
         console.warn(
           `[account.router.suggestTags] sync-chain breach (${reason}) ` +
             `accountId=${input.accountId} tenantId=${typedCtx.tenant.tenantId} ` +
@@ -1280,9 +1274,7 @@ export const accountRouter = createTRPCRouter({
       if (!current) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Account not found' });
       }
-      const merged = Array.from(
-        new Set<string>([...(current.tags ?? []), ...input.tags])
-      );
+      const merged = Array.from(new Set<string>([...(current.tags ?? []), ...input.tags]));
       await ctx.prismaWithTenant.account.update({
         where: { id: input.accountId },
         data: { tags: merged },

@@ -8,10 +8,7 @@
   "phase": "phase-1",
   "stream": null,
   "dependencies": {
-    "required": [
-      "IFC-099",
-      "IFC-198"
-    ],
+    "required": ["IFC-099", "IFC-198"],
     "all_satisfied": true,
     "verified_at": "2026-04-29T21:54:51.776Z"
   },
@@ -57,10 +54,7 @@
     "completed_at": "2026-02-17T23:55:00Z",
     "duration_minutes": 40,
     "executor": "Claude Code /exec",
-    "agents": [
-      "Foundation",
-      "Quality"
-    ],
+    "agents": ["Foundation", "Quality"],
     "retry_count": 0,
     "last_error": null
   },
@@ -137,8 +131,5 @@
   },
   "blockers": [],
   "notes": "PG-025 Billing Portal re-validated 2026-02-17. 3-column grid layout with subscription overview, payment methods, billing information, and billing history. Coverage: 100% stmts, 86.74% branches, 100% functions, 100% lines. 63 component tests passing. All 8 completion gates PASS.",
-  "dependencies_resolved": [
-    "IFC-099",
-    "IFC-198"
-  ]
+  "dependencies_resolved": ["IFC-099", "IFC-198"]
 }

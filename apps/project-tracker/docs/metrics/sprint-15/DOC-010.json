@@ -9,15 +9,11 @@
   "stream": null,
   "status": "DONE",
   "dependencies": {
-    "required": [
-      "DOC-008"
-    ],
+    "required": ["DOC-008"],
     "all_satisfied": true,
     "verified_at": "2026-04-29T21:54:51.803Z"
   },
-  "dependencies_resolved": [
-    "DOC-008"
-  ],
+  "dependencies_resolved": ["DOC-008"],
   "started_at": "2026-02-27T23:35:00Z",
   "completed_at": "2026-02-28T01:01:04Z",
   "target_duration_minutes": null,
@@ -27,9 +23,7 @@
     "completed_at": "2026-02-28T01:01:04Z",
     "duration_minutes": 16,
     "executor": "Claude Code",
-    "agents": [
-      "Foundation STOA"
-    ],
+    "agents": ["Foundation STOA"],
     "execution_log": ".specify/sprints/sprint-15/execution/DOC-010/20260228004513-7a2b1591/DOC-010-delivery.md",
     "retry_count": 0,
     "last_error": null

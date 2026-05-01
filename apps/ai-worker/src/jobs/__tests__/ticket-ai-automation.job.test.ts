@@ -52,7 +52,7 @@ describe('processTicketAiAutomationJob — flag gating', () => {
         aiSentimentAnalysis: false,
         aiNextStepRecommendation: false,
       }),
-      {},
+      {}
     );
     expect(result.skipped).toBe(true);
     expect(result.reason).toBe('aiSentimentAnalysis=false');
@@ -68,7 +68,7 @@ describe('processTicketAiAutomationJob — flag gating', () => {
         aiSentimentAnalysis: false,
         aiNextStepRecommendation: false,
       }),
-      { categorize },
+      { categorize }
     );
     expect(result.skipped).toBe(false);
     expect(categorize).toHaveBeenCalled();
@@ -86,7 +86,7 @@ describe('processTicketAiAutomationJob — flag gating', () => {
     const result = await processTicketAiAutomationJob(
       job({ tenantId: TENANT, ticketId: 'missing', operation: 'duplicate-detection' }),
       prisma,
-      { detectDuplicates: vi.fn() },
+      { detectDuplicates: vi.fn() }
     );
     expect(result.skipped).toBe(true);
     expect(result.reason).toBe('ticket-not-found');
@@ -101,7 +101,7 @@ describe('processTicketAiAutomationJob — flag gating', () => {
         aiSentimentAnalysis: false,
         aiNextStepRecommendation: true,
       }),
-      {},
+      {}
     );
     expect(result.skipped).toBe(true);
     expect(result.reason).toBe('chain-not-wired');

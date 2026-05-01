@@ -9,17 +9,11 @@
   "phase": "",
   "stream": null,
   "dependencies": {
-    "required": [
-      "PG-178",
-      "PG-186"
-    ],
+    "required": ["PG-178", "PG-186"],
     "all_satisfied": true,
     "verified_at": "2026-04-29T21:54:51.887Z"
   },
-  "dependencies_resolved": [
-    "PG-178",
-    "PG-186"
-  ],
+  "dependencies_resolved": ["PG-178", "PG-186"],
   "started_at": null,
   "completed_at": null,
   "execution": {
@@ -34,9 +28,7 @@
       "packages/validators/src/storage-policies.ts",
       ".specify/sprints/sprint-18/attestations/PG-206/context_ack.json"
     ],
-    "created": [
-      "apps/web/src/app/documents/(list)/storage-policies/page.tsx"
-    ],
+    "created": ["apps/web/src/app/documents/(list)/storage-policies/page.tsx"],
     "missing": [
       "apps/web/src/app/documents/(list)/storage-policies/StoragePoliciesContent.tsx",
       "apps/api/src/modules/legal/storage-policies.router.ts",

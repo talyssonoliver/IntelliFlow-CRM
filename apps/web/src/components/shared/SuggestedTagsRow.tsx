@@ -27,11 +27,7 @@ interface Suggestion {
   reason: string;
 }
 
-export function SuggestedTagsRow({
-  entity,
-  entityId,
-  enabled,
-}: Readonly<SuggestedTagsRowProps>) {
+export function SuggestedTagsRow({ entity, entityId, enabled }: Readonly<SuggestedTagsRowProps>) {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   const [accepting, setAccepting] = useState<Set<string>>(new Set());
@@ -50,8 +46,7 @@ export function SuggestedTagsRow({
     if (!enabled) return;
     let cancelled = false;
     setLoading(true);
-    const payload =
-      entity === 'contact' ? { contactId: entityId } : { accountId: entityId };
+    const payload = entity === 'contact' ? { contactId: entityId } : { accountId: entityId };
     suggestMutation
       // `mutateAsync` is typed differently across the two — cast narrowly.
       .mutateAsync(payload as never)
@@ -71,9 +66,7 @@ export function SuggestedTagsRow({
     };
   }, [entity, entityId, enabled, suggestMutation]);
 
-  const visible = suggestions.filter(
-    (s) => !dismissed.has(s.label) && !accepting.has(s.label)
-  );
+  const visible = suggestions.filter((s) => !dismissed.has(s.label) && !accepting.has(s.label));
 
   if (!enabled) return null;
   if (loading && visible.length === 0) {

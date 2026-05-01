@@ -2,9 +2,7 @@
   "task_id": "AI-SETUP-001",
   "status": "DONE",
   "dependencies": {
-    "required": [
-      "EXC-INIT-001"
-    ],
+    "required": ["EXC-INIT-001"],
     "all_satisfied": true,
     "verified_at": "2026-04-29T21:54:51.672Z"
   },
@@ -27,7 +25,5 @@
   "started_at": "2026-04-13T00:27:36.721Z",
   "actual_duration_minutes": 15,
   "description": "Configure Claude Code with Custom Commands and Hooks",
-  "dependencies_resolved": [
-    "EXC-INIT-001"
-  ]
+  "dependencies_resolved": ["EXC-INIT-001"]
 }

@@ -9,27 +9,19 @@
   "stream": null,
   "status": "DONE",
   "dependencies": {
-    "required": [
-      "DOC-002"
-    ],
+    "required": ["DOC-002"],
     "all_satisfied": true,
     "verified_at": "2026-04-29T21:54:51.784Z"
   },
-  "dependencies_resolved": [
-    "DOC-002"
-  ],
+  "dependencies_resolved": ["DOC-002"],
   "started_at": "2026-02-24T00:06:44.688Z",
   "completed_at": "2026-02-24T00:21:44.688Z",
   "target_duration_minutes": null,
   "actual_duration_minutes": 15,
   "kpis": {},
   "artifacts": {
-    "expected": [
-      "docs/design/PAGE_MAP_AND_FLOWS.md"
-    ],
-    "created": [
-      "docs/design/PAGE_MAP_AND_FLOWS.md"
-    ],
+    "expected": ["docs/design/PAGE_MAP_AND_FLOWS.md"],
+    "created": ["docs/design/PAGE_MAP_AND_FLOWS.md"],
     "missing": []
   },
   "validations": [

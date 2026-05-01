@@ -8,11 +8,7 @@
   "phase": "phase-1",
   "stream": null,
   "dependencies": {
-    "required": [
-      "IFC-182",
-      "IFC-069",
-      "IFC-095"
-    ],
+    "required": ["IFC-182", "IFC-069", "IFC-095"],
     "all_satisfied": true,
     "verified_at": "2026-04-29T21:54:51.781Z"
   },
@@ -43,11 +39,7 @@
     "completed_at": "2026-02-09T23:02:00.000Z",
     "duration_minutes": 360,
     "executor": "Claude Code /exec",
-    "agents": [
-      "Foundation",
-      "Quality",
-      "Domain"
-    ],
+    "agents": ["Foundation", "Quality", "Domain"],
     "retry_count": 0,
     "last_error": null
   },
@@ -67,9 +59,7 @@
       "docs/planning/prd-home-page.md",
       "docs/specs/HOME-PAGE-SPEC.md"
     ],
-    "missing": [
-      "apps/web/src/app/(public)/page.tsx"
-    ]
+    "missing": ["apps/web/src/app/(public)/page.tsx"]
   },
   "validations": [
     {
@@ -133,9 +123,5 @@
   },
   "blockers": [],
   "notes": "PG-129 Authenticated Home Page completed and re-validated 2026-02-10. Implementation: welcome banner (dynamic greeting + stats), AI insights (4 types), real-time activity feed via useActivityFeed() hook (IFC-069 unified feed, 3 tRPC WS subscriptions, cursor pagination, 8 type filters), daily goal SVG progress ring, quick actions (8 configurable with edit sheet), pinned navigation with group filtering and edit sheet. 115 home tests pass across 4 files. All completion gates passed. All 4 KPIs met. TypeScript, lint, tests, build all exit 0.",
-  "dependencies_resolved": [
-    "IFC-182",
-    "IFC-069",
-    "IFC-095"
-  ]
+  "dependencies_resolved": ["IFC-182", "IFC-069", "IFC-095"]
 }

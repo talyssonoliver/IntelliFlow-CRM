@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-04-29T21:57:39.693Z",
+  "timestamp": "2026-05-01T21:13:50.684Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1015,28 +1015,28 @@
     ]
   },
   "api_inventory": {
-    "total_routers": 60,
-    "total_endpoints": 538,
+    "total_routers": 61,
+    "total_endpoints": 541,
     "total_queries": 249,
-    "total_mutations": 289,
+    "total_mutations": 292,
     "routers": [
       {
         "name": "contact",
-        "endpoints": 27,
+        "endpoints": 28,
         "queries": 8,
-        "mutations": 19
+        "mutations": 20
+      },
+      {
+        "name": "account",
+        "endpoints": 21,
+        "queries": 10,
+        "mutations": 11
       },
       {
         "name": "lead",
         "endpoints": 21,
         "queries": 6,
         "mutations": 15
-      },
-      {
-        "name": "account",
-        "endpoints": 20,
-        "queries": 10,
-        "mutations": 10
       },
       {
         "name": "appointments",
@@ -1373,6 +1373,12 @@
         "endpoints": 1,
         "queries": 1,
         "mutations": 0
+      },
+      {
+        "name": "publicFeedback",
+        "endpoints": 1,
+        "queries": 0,
+        "mutations": 1
       },
       {
         "name": "team",
@@ -3429,6 +3435,11 @@
         "description": "Score account"
       },
       {
+        "name": "account.addTags",
+        "method": "POST",
+        "description": "Add tags"
+      },
+      {
         "name": "account.getAiInsight",
         "method": "GET",
         "description": "Get ai insight"
@@ -4315,6 +4326,11 @@
         "name": "contact.draftReply",
         "method": "POST",
         "description": "Draft reply"
+      },
+      {
+        "name": "contact.addTags",
+        "method": "POST",
+        "description": "Add tags"
       },
       {
         "name": "contact.listReplyDrafts",
@@ -5654,6 +5670,13 @@
         "name": "dsar.getDSARStatus",
         "method": "GET",
         "description": "Get d s a r status"
+      }
+    ],
+    "publicFeedback": [
+      {
+        "name": "publicFeedback.submit",
+        "method": "POST",
+        "description": "Submit"
       }
     ],
     "routing": [

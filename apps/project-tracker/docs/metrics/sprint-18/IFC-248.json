@@ -40,12 +40,8 @@
       "apps/web/src/app/leads/(list)/__tests__/page.test.tsx",
       "apps/web/src/app/leads/(list)/new/__tests__/page.test.tsx"
     ],
-    "created": [
-      "apps/web/src/app/leads/(list)/new/__tests__/page.test.tsx"
-    ],
-    "missing": [
-      "apps/web/src/app/leads/(list)/__tests__/page.test.tsx"
-    ]
+    "created": ["apps/web/src/app/leads/(list)/new/__tests__/page.test.tsx"],
+    "missing": ["apps/web/src/app/leads/(list)/__tests__/page.test.tsx"]
   },
   "validations": [],
   "blockers": [],

@@ -61,21 +61,17 @@ export interface AccountDuplicateDetectionService {
   checkForCreate(
     ctx: HasTenantContext,
     payload: AccountCheckInput,
-    flags: AccountAutomationFlags,
+    flags: AccountAutomationFlags
   ): Promise<AccountDuplicateCheckResult>;
 
   checkForUpdate(
     ctx: HasTenantContext,
     accountId: string,
     payload: AccountCheckInput,
-    flags: AccountAutomationFlags,
+    flags: AccountAutomationFlags
   ): Promise<AccountDuplicateCheckResult>;
 
-  linkContactsByDomain(
-    ctx: HasTenantContext,
-    accountId: string,
-    domain: string,
-  ): Promise<string[]>;
+  linkContactsByDomain(ctx: HasTenantContext, accountId: string, domain: string): Promise<string[]>;
 }
 
 export interface AccountDuplicateDetectionDeps {
@@ -93,9 +89,7 @@ export interface AccountDuplicateDetectionDeps {
     domain: string,
     tenantId: string,
     maxBatch: number
-  ) => Promise<
-    { kind: 'linked'; ids: string[] } | { kind: 'overflow'; sampleIds: string[] }
-  >;
+  ) => Promise<{ kind: 'linked'; ids: string[] } | { kind: 'overflow'; sampleIds: string[] }>;
 }
 
 const MAX_CANDIDATES = 200;
@@ -107,7 +101,7 @@ function rulesFromRows(
     threshold: number;
     isActive: boolean;
     sortOrder: number;
-  }>,
+  }>
 ): EvaluableRule[] {
   const validFields: EvaluableRule['field'][] = [
     'email',
@@ -117,18 +111,12 @@ function rulesFromRows(
     'website',
     'name_address',
   ];
-  const validStrategies: EvaluableRule['matchStrategy'][] = [
-    'exact',
-    'normalized',
-    'fuzzy',
-  ];
+  const validStrategies: EvaluableRule['matchStrategy'][] = ['exact', 'normalized', 'fuzzy'];
   return rows
     .filter(
       (r) =>
         validFields.includes(r.field as EvaluableRule['field']) &&
-        validStrategies.includes(
-          r.matchStrategy as EvaluableRule['matchStrategy'],
-        ),
+        validStrategies.includes(r.matchStrategy as EvaluableRule['matchStrategy'])
     )
     .map((r) => ({
       field: r.field as EvaluableRule['field'],
@@ -139,9 +127,7 @@ function rulesFromRows(
     }));
 }
 
-export function extractDomainFromWebsite(
-  website: string | null | undefined,
-): string | null {
+export function extractDomainFromWebsite(website: string | null | undefined): string | null {
   if (!website) return null;
   const normalized = website
     .trim()
@@ -155,10 +141,7 @@ export function extractDomainFromWebsite(
   return host;
 }
 
-async function fireAndForget<T>(
-  promise: Promise<T> | T,
-  label: string,
-): Promise<void> {
+async function fireAndForget<T>(promise: Promise<T> | T, label: string): Promise<void> {
   try {
     await Promise.resolve(promise);
   } catch (error) {
@@ -167,29 +150,29 @@ async function fireAndForget<T>(
 }
 
 export function createAccountDuplicateDetectionService(
-  deps: AccountDuplicateDetectionDeps = {},
+  deps: AccountDuplicateDetectionDeps = {}
 ): AccountDuplicateDetectionService {
   const maxBatch = deps.maxAutoLinkBatch ?? 500;
 
-  async function loadActiveRules(
-    ctx: HasTenantContext,
-  ): Promise<EvaluableRule[]> {
-    const rows = await (ctx.prismaWithTenant as unknown as {
-      accountDuplicateRule: {
-        findMany: (args: {
-          where: { tenantId: string; isActive: boolean };
-          orderBy: { sortOrder: 'asc' };
-        }) => Promise<
-          Array<{
-            field: string;
-            matchStrategy: string;
-            threshold: number;
-            isActive: boolean;
-            sortOrder: number;
-          }>
-        >;
-      };
-    }).accountDuplicateRule.findMany({
+  async function loadActiveRules(ctx: HasTenantContext): Promise<EvaluableRule[]> {
+    const rows = await (
+      ctx.prismaWithTenant as unknown as {
+        accountDuplicateRule: {
+          findMany: (args: {
+            where: { tenantId: string; isActive: boolean };
+            orderBy: { sortOrder: 'asc' };
+          }) => Promise<
+            Array<{
+              field: string;
+              matchStrategy: string;
+              threshold: number;
+              isActive: boolean;
+              sortOrder: number;
+            }>
+          >;
+        };
+      }
+    ).accountDuplicateRule.findMany({
       where: { tenantId: ctx.tenant.tenantId, isActive: true },
       orderBy: { sortOrder: 'asc' },
     });
@@ -199,7 +182,7 @@ export function createAccountDuplicateDetectionService(
   async function fetchCandidates(
     ctx: HasTenantContext,
     payload: AccountCheckInput,
-    excludeId?: string,
+    excludeId?: string
   ): Promise<Account[]> {
     const orClauses: Record<string, unknown>[] = [];
     if (payload.name) {
@@ -219,19 +202,18 @@ export function createAccountDuplicateDetectionService(
     };
     if (excludeId) where.NOT = { id: excludeId };
 
-    return (ctx.prismaWithTenant as unknown as {
-      account: {
-        findMany: (args: {
-          where: Record<string, unknown>;
-          take: number;
-        }) => Promise<Account[]>;
-      };
-    }).account.findMany({ where, take: MAX_CANDIDATES });
+    return (
+      ctx.prismaWithTenant as unknown as {
+        account: {
+          findMany: (args: { where: Record<string, unknown>; take: number }) => Promise<Account[]>;
+        };
+      }
+    ).account.findMany({ where, take: MAX_CANDIDATES });
   }
 
   async function emitFlagNotification(
     ctx: HasTenantContext,
-    matches: DuplicateMatch<Account>[],
+    matches: DuplicateMatch<Account>[]
   ): Promise<void> {
     if (!ctx.prisma && !ctx.prismaWithTenant) return;
     const prisma = ctx.prisma ?? ctx.prismaWithTenant;
@@ -252,9 +234,9 @@ export function createAccountDuplicateDetectionService(
             candidateIds: matches.map((m) => m.candidate.id),
           },
         } as any,
-        ctx.services?.notificationOrchestrator,
+        ctx.services?.notificationOrchestrator
       ),
-      'flag notification',
+      'flag notification'
     );
   }
 
@@ -262,7 +244,7 @@ export function createAccountDuplicateDetectionService(
     ctx: HasTenantContext,
     payload: AccountCheckInput,
     flags: AccountAutomationFlags,
-    excludeId?: string,
+    excludeId?: string
   ): Promise<AccountDuplicateCheckResult> {
     const rules = await loadActiveRules(ctx);
     if (rules.length === 0) return { action: 'proceed', matches: [] };
@@ -273,7 +255,7 @@ export function createAccountDuplicateDetectionService(
     const matches = evaluateDuplicateRules<Account & { id: string }>(
       payload as Partial<Account>,
       existing as unknown as Array<Account & { id: string }>,
-      rules,
+      rules
     ) as DuplicateMatch<Account>[];
 
     if (matches.length === 0) return { action: 'proceed', matches: [] };
@@ -296,7 +278,10 @@ export function createAccountDuplicateDetectionService(
     },
 
     async linkContactsByDomain(ctx, accountId, domain) {
-      const normalizedDomain = domain.trim().toLowerCase().replace(/^www\./, '');
+      const normalizedDomain = domain
+        .trim()
+        .toLowerCase()
+        .replace(/^www\./, '');
       if (!normalizedDomain || !normalizedDomain.includes('.')) return [];
 
       // IFC-310 AC-010: prefer the application-layer AccountService when
@@ -359,7 +344,11 @@ export function createAccountDuplicateDetectionService(
         });
 
         if (candidates.length > maxBatch) {
-          return { overflow: true, ids: [] as string[], overflowIds: candidates.slice(0, 5).map((c) => c.id) };
+          return {
+            overflow: true,
+            ids: [] as string[],
+            overflowIds: candidates.slice(0, 5).map((c) => c.id),
+          };
         }
 
         if (candidates.length === 0) {
@@ -385,7 +374,7 @@ export function createAccountDuplicateDetectionService(
             ruleField: 'website',
             matchStrategy: 'normalized',
             score: 100,
-          })),
+          }))
         );
         return [];
       }
@@ -395,5 +384,4 @@ export function createAccountDuplicateDetectionService(
   };
 }
 
-export const accountDuplicateDetectionService =
-  createAccountDuplicateDetectionService();
+export const accountDuplicateDetectionService = createAccountDuplicateDetectionService();

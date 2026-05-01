@@ -40,9 +40,7 @@
       "apps/web/src/app/contacts/[id]/page.tsx",
       "apps/web/src/components/contacts/ContactCard.tsx"
     ],
-    "missing": [
-      "apps/web/src/components/contacts/ContactDetail.tsx"
-    ]
+    "missing": ["apps/web/src/components/contacts/ContactDetail.tsx"]
   },
   "validations": [],
   "blockers": [],

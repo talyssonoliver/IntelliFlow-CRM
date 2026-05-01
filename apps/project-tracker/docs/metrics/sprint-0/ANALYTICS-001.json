@@ -2,10 +2,7 @@
   "task_id": "ANALYTICS-001",
   "status": "DONE",
   "dependencies": {
-    "required": [
-      "DOC-001",
-      "GTM-001"
-    ],
+    "required": ["DOC-001", "GTM-001"],
     "all_satisfied": true,
     "verified_at": "2026-04-29T21:54:51.693Z"
   },
@@ -28,8 +25,5 @@
   "started_at": "2026-04-13T00:27:36.755Z",
   "actual_duration_minutes": 15,
   "description": "Customer Segmentation Spec (RFM + ABC) + Event Taxonomy",
-  "dependencies_resolved": [
-    "DOC-001",
-    "GTM-001"
-  ]
+  "dependencies_resolved": ["DOC-001", "GTM-001"]
 }

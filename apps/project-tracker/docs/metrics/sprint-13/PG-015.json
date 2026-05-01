@@ -11,11 +11,7 @@
   "dependencies": {
     "all_satisfied": true,
     "verified_at": "2026-04-29T21:54:52.006Z",
-    "required": [
-      "IFC-006",
-      "IFC-076",
-      "IFC-098"
-    ]
+    "required": ["IFC-006", "IFC-076", "IFC-098"]
   },
   "started_at": "2026-01-24T01:20:30+00:00",
   "completed_at": "2026-01-25T18:00:00+00:00",
@@ -79,9 +75,5 @@
   "current_phase": "COMPLETED",
   "updated_at": "2026-01-25T18:00:00+00:00",
   "attempt": 3,
-  "dependencies_resolved": [
-    "IFC-006",
-    "IFC-076",
-    "IFC-098"
-  ]
+  "dependencies_resolved": ["IFC-006", "IFC-076", "IFC-098"]
 }

@@ -35,9 +35,7 @@
       "apps/web/src/app/leads/[id]/page.tsx",
       ".specify/sprints/sprint-20/attestations/IFC-229/context_ack.json"
     ],
-    "created": [
-      "apps/web/src/app/leads/[id]/page.tsx"
-    ],
+    "created": ["apps/web/src/app/leads/[id]/page.tsx"],
     "missing": [
       ".specify/sprints/sprint-20/attestations/IFC-229/context_ack.json"
     ]

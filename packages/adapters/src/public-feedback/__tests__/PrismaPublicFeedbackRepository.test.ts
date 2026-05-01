@@ -35,9 +35,11 @@ describe('PrismaPublicFeedbackRepository', () => {
     });
 
     expect(result).toEqual(stub);
-    const create = (prisma as unknown as {
-      publicFeedback: { create: ReturnType<typeof vi.fn> };
-    }).publicFeedback.create;
+    const create = (
+      prisma as unknown as {
+        publicFeedback: { create: ReturnType<typeof vi.fn> };
+      }
+    ).publicFeedback.create;
     expect(create).toHaveBeenCalledWith({
       data: {
         rating: 4,
@@ -70,9 +72,11 @@ describe('PrismaPublicFeedbackRepository', () => {
       ipHash: 'h',
     });
 
-    const create = (prisma as unknown as {
-      publicFeedback: { create: ReturnType<typeof vi.fn> };
-    }).publicFeedback.create;
+    const create = (
+      prisma as unknown as {
+        publicFeedback: { create: ReturnType<typeof vi.fn> };
+      }
+    ).publicFeedback.create;
     expect(create).toHaveBeenCalledWith({
       data: {
         rating: 3,
@@ -93,8 +97,8 @@ describe('PrismaPublicFeedbackRepository', () => {
       },
     } as unknown as PrismaClient;
     const repo = new PrismaPublicFeedbackRepository(prisma);
-    await expect(
-      repo.create({ rating: 3, source: '/', ipHash: 'h' }),
-    ).rejects.toThrow('unique constraint');
+    await expect(repo.create({ rating: 3, source: '/', ipHash: 'h' })).rejects.toThrow(
+      'unique constraint'
+    );
   });
 });

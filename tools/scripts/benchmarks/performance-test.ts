@@ -214,7 +214,6 @@ async function runRealDatabaseBenchmarks(): Promise<BenchmarkResult[]> {
     // CodeQL log-injection sinks require a structural sanitizer. `JSON.stringify`
     // produces an escaped string where every control byte is encoded as `\uXXXX`,
     // so the output cannot inject CR/LF/ANSI escapes into downstream log lines.
-    // eslint-disable-next-line unicorn/no-array-callback-reference
     const sanitized = args.map((a) => (typeof a === 'string' ? JSON.stringify(a) : a));
     originalWarn.apply(console, sanitized);
   };

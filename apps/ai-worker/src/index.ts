@@ -334,7 +334,10 @@ export { processEntityInsightJob, EntityInsightJobDataSchema } from './jobs/enti
 export type { EntityInsightJobData } from './jobs/entity-insight.job.js';
 export { processReplyDraftJob, ReplyDraftJobDataSchema } from './jobs/reply-draft.job.js';
 export type { ReplyDraftJobData } from './jobs/reply-draft.job.js';
-export { processAccountScoringJob, AccountScoringJobDataSchema } from './jobs/account-scoring.job.js';
+export {
+  processAccountScoringJob,
+  AccountScoringJobDataSchema,
+} from './jobs/account-scoring.job.js';
 export type { AccountScoringJobData } from './jobs/account-scoring.job.js';
 export { processTagSuggestionJob, TagSuggestionJobDataSchema } from './jobs/tag-suggestion.job.js';
 export type { TagSuggestionJobData } from './jobs/tag-suggestion.job.js';

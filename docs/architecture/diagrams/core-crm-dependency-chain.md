@@ -271,8 +271,8 @@ pinItem, unpinItem)
 
 ## IFC-310: Duplicate-Detection Runtime (2026-04-20)
 
-Wires the PG-182 / PG-183 duplicate-detection configuration surface to a
-real runtime path.
+Wires the PG-182 / PG-183 duplicate-detection configuration surface to a real
+runtime path.
 
 ```
 contact.router.ts create/update
@@ -292,14 +292,16 @@ ctx.services.accountDuplicateDetection  ── AccountDuplicateDetectionService
 ```
 
 New notification types surfaced at the chain leaf:
-- `contact_duplicate_suspected` — emitted by ContactDuplicateDetectionService
-  on flag + auto-merge paths.
-- `account_duplicate_suspected` — emitted by AccountDuplicateDetectionService
-  on flag path.
+
+- `contact_duplicate_suspected` — emitted by ContactDuplicateDetectionService on
+  flag + auto-merge paths.
+- `account_duplicate_suspected` — emitted by AccountDuplicateDetectionService on
+  flag path.
 
 Container wiring:
-- `apps/api/src/container.ts` registers `contactDuplicateDetectionService`
-  and `accountDuplicateDetectionService` as singletons.
+
+- `apps/api/src/container.ts` registers `contactDuplicateDetectionService` and
+  `accountDuplicateDetectionService` as singletons.
 - `apps/api/src/context.ts` exposes both via `ctx.services.*`.
 - `apps/ai-worker/src/index.ts` exports `ContactEmbedWorker` +
   `createContactEmbedWorker` factory.

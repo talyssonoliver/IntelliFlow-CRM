@@ -9,17 +9,11 @@
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
-    "required": [
-      "IFC-195",
-      "IFC-098"
-    ],
+    "required": ["IFC-195", "IFC-098"],
     "all_satisfied": true,
     "verified_at": "2026-04-29T21:54:51.855Z"
   },
-  "dependencies_resolved": [
-    "IFC-195",
-    "IFC-098"
-  ],
+  "dependencies_resolved": ["IFC-195", "IFC-098"],
   "started_at": null,
   "completed_at": null,
   "target_duration_minutes": 240,
@@ -53,9 +47,7 @@
       "apps/api/src/security/types.ts",
       ".specify/sprints/sprint-18/attestations/IFC-211/context_ack.json"
     ],
-    "missing": [
-      "apps/api/src/modules/home/__tests__/home-rbac.test.ts"
-    ]
+    "missing": ["apps/api/src/modules/home/__tests__/home-rbac.test.ts"]
   },
   "validations": [],
   "blockers": [],

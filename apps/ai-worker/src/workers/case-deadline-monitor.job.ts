@@ -22,7 +22,11 @@ export const CASE_DEADLINE_MONITOR_QUEUE_NAME = 'intelliflow-case-deadline-monit
 export const CaseDeadlineMonitorJobDataSchema = z.object({
   tenantId: z.string().min(1).optional(),
   sweepAll: z.boolean().default(true),
-  approachingThresholdMs: z.number().int().min(60_000).default(24 * 60 * 60 * 1000),
+  approachingThresholdMs: z
+    .number()
+    .int()
+    .min(60_000)
+    .default(24 * 60 * 60 * 1000),
 });
 
 export type CaseDeadlineMonitorJobData = z.infer<typeof CaseDeadlineMonitorJobDataSchema>;
@@ -75,13 +79,13 @@ export class CaseDeadlineMonitorWorker {
   constructor(
     private readonly prisma: PrismaClient,
     private readonly redisConnection: { host: string; port: number; password?: string },
-    private readonly deps: CaseMonitorDeps,
+    private readonly deps: CaseMonitorDeps
   ) {}
 
   async start(): Promise<void> {
     this.queue = new Queue<CaseDeadlineMonitorJobData, CaseDeadlineMonitorJobResult>(
       CASE_DEADLINE_MONITOR_QUEUE_NAME,
-      { connection: this.redisConnection },
+      { connection: this.redisConnection }
     );
     this.queueEvents = new QueueEvents(CASE_DEADLINE_MONITOR_QUEUE_NAME, {
       connection: this.redisConnection,
@@ -89,10 +93,10 @@ export class CaseDeadlineMonitorWorker {
     this.worker = new Worker<CaseDeadlineMonitorJobData, CaseDeadlineMonitorJobResult>(
       CASE_DEADLINE_MONITOR_QUEUE_NAME,
       async (job) => this.process(job),
-      { connection: this.redisConnection, concurrency: 1 },
+      { connection: this.redisConnection, concurrency: 1 }
     );
     this.worker.on('failed', (job, error) =>
-      console.warn(`[case-deadline-monitor] job ${job?.id} failed:`, error?.message),
+      console.warn(`[case-deadline-monitor] job ${job?.id} failed:`, error?.message)
     );
   }
 
@@ -118,7 +122,11 @@ export class CaseDeadlineMonitorWorker {
           where?: Record<string, unknown>;
           select?: Record<string, boolean>;
         }) => Promise<
-          Array<{ tenantId: string; notifyOnDeadlineApproaching: boolean; autoEscalateOverdue: boolean }>
+          Array<{
+            tenantId: string;
+            notifyOnDeadlineApproaching: boolean;
+            autoEscalateOverdue: boolean;
+          }>
         >;
       };
       case: {
@@ -230,7 +238,7 @@ export class CaseDeadlineMonitorWorker {
 export function createCaseDeadlineMonitorWorker(
   prisma: PrismaClient,
   redisConnection: { host: string; port: number; password?: string },
-  deps: CaseMonitorDeps,
+  deps: CaseMonitorDeps
 ): CaseDeadlineMonitorWorker {
   return new CaseDeadlineMonitorWorker(prisma, redisConnection, deps);
 }

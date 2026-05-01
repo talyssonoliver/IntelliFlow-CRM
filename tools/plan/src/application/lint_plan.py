@@ -449,7 +449,7 @@ class LintPlanUseCase:
         from datetime import datetime
 
         try:
-            expiry = datetime.fromisoformat(waiver_expiry.replace("Z", "+00:00"))
+            expiry = datetime.fromisoformat(waiver_expiry.replaceAll("Z", "+00:00"))
         except ValueError:
             return None
 

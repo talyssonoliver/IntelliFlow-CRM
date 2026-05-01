@@ -21,12 +21,7 @@
     "working_hours_per_day": 8,
     "working_days_per_week": 5,
     "critical_path": {
-      "task_ids": [
-        "PG-076",
-        "PG-077",
-        "PG-078",
-        "PG-081"
-      ],
+      "task_ids": ["PG-076", "PG-077", "PG-078", "PG-081"],
       "total_duration_minutes": 650,
       "completion_percentage": 0,
       "bottleneck_task_id": "PG-076"

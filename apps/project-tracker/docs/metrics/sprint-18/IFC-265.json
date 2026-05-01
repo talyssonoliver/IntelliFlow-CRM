@@ -35,9 +35,7 @@
       "apps/web/src/app/contacts/[id]/__tests__/page.test.tsx",
       "apps/api/src/modules/contact/__tests__/contact.router.tenant.test.ts"
     ],
-    "created": [
-      "apps/web/src/app/contacts/[id]/__tests__/page.test.tsx"
-    ],
+    "created": ["apps/web/src/app/contacts/[id]/__tests__/page.test.tsx"],
     "missing": [
       "apps/api/src/modules/contact/__tests__/contact.router.tenant.test.ts"
     ]

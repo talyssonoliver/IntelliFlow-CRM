@@ -28,10 +28,12 @@ function makeFlags(overrides: Partial<ContactAutomationFlags> = {}): ContactAuto
   };
 }
 
-function buildCtx(overrides?: Partial<{
-  rules: unknown[];
-  contacts: unknown[];
-}>): HasTenantContext & {
+function buildCtx(
+  overrides?: Partial<{
+    rules: unknown[];
+    contacts: unknown[];
+  }>
+): HasTenantContext & {
   _calls: Record<string, unknown[][]>;
 } {
   const calls: Record<string, unknown[][]> = {
@@ -82,7 +84,7 @@ describe('ContactDuplicateDetectionService — checkForCreate', () => {
     const result = await contactDuplicateDetectionService.checkForCreate(
       ctx,
       { email: 'a@b.com' },
-      makeFlags(),
+      makeFlags()
     );
     expect(result).toEqual({ action: 'proceed', matches: [] });
   });
@@ -97,7 +99,7 @@ describe('ContactDuplicateDetectionService — checkForCreate', () => {
     const result = await contactDuplicateDetectionService.checkForCreate(
       ctx,
       { email: 'a@b.com' },
-      makeFlags(),
+      makeFlags()
     );
     expect(result).toEqual({ action: 'proceed', matches: [] });
   });
@@ -112,7 +114,7 @@ describe('ContactDuplicateDetectionService — checkForCreate', () => {
     const result = await contactDuplicateDetectionService.checkForCreate(
       ctx,
       { email: 'a@b.com' },
-      makeFlags({ autoMergeOnExactEmail: true }),
+      makeFlags({ autoMergeOnExactEmail: true })
     );
     expect(result.action).toBe('auto-merge');
     if (result.action === 'auto-merge') {
@@ -131,7 +133,7 @@ describe('ContactDuplicateDetectionService — checkForCreate', () => {
     const result = await contactDuplicateDetectionService.checkForCreate(
       ctx,
       { email: 'a@b.com' },
-      makeFlags({ notifyOnDuplicate: true }),
+      makeFlags({ notifyOnDuplicate: true })
     );
     expect(result.action).toBe('flag');
   });
@@ -146,7 +148,7 @@ describe('ContactDuplicateDetectionService — checkForCreate', () => {
     await contactDuplicateDetectionService.checkForCreate(
       ctx,
       { email: 'a@b.com' },
-      makeFlags({ notifyOnDuplicate: true }),
+      makeFlags({ notifyOnDuplicate: true })
     );
     expect(ctx._calls.notificationCreate.length).toBeGreaterThanOrEqual(1);
     const call = ctx._calls.notificationCreate.at(0)?.[0] as {
@@ -164,11 +166,7 @@ describe('ContactDuplicateDetectionService — checkForCreate', () => {
       ],
       contacts: [{ id: 'c-1', email: 'a@b.com', tenantId: TENANT_A }],
     });
-    await contactDuplicateDetectionService.checkForCreate(
-      ctx,
-      { email: 'a@b.com' },
-      makeFlags(),
-    );
+    await contactDuplicateDetectionService.checkForCreate(ctx, { email: 'a@b.com' }, makeFlags());
     expect(ctx._calls.notificationCreate.length).toBe(0);
   });
 
@@ -182,7 +180,7 @@ describe('ContactDuplicateDetectionService — checkForCreate', () => {
     const result = await contactDuplicateDetectionService.checkForCreate(
       ctx,
       { email: 'a@b.com' },
-      makeFlags(),
+      makeFlags()
     );
     expect(result.action).toBe('proceed');
     expect(result.matches).toEqual([]);
@@ -202,7 +200,7 @@ describe('ContactDuplicateDetectionService — checkForCreate', () => {
     const result = await service.checkForCreate(
       ctx,
       { email: 'a@b.com' },
-      makeFlags({ aiDuplicateDetection: true, notifyOnDuplicate: true }),
+      makeFlags({ aiDuplicateDetection: true, notifyOnDuplicate: true })
     );
     expect(result.action).toBe('flag');
   });
@@ -223,7 +221,7 @@ describe('ContactDuplicateDetectionService — checkForCreate', () => {
     const result = await service.checkForCreate(
       ctx,
       { email: 'a@b.com' },
-      makeFlags({ aiDuplicateDetection: true, notifyOnDuplicate: true }),
+      makeFlags({ aiDuplicateDetection: true, notifyOnDuplicate: true })
     );
     expect(result.action).toBe('flag');
   });
@@ -243,7 +241,7 @@ describe('ContactDuplicateDetectionService — checkForCreate', () => {
     await service.checkForCreate(
       ctx,
       { email: 'a@b.com' },
-      makeFlags({ notifyOnDuplicate: true, aiDuplicateDetection: false }),
+      makeFlags({ notifyOnDuplicate: true, aiDuplicateDetection: false })
     );
     expect(findSimilar).not.toHaveBeenCalled();
   });
@@ -261,7 +259,7 @@ describe('ContactDuplicateDetectionService — checkForUpdate', () => {
       ctx,
       'c-1',
       { email: 'a@b.com' },
-      makeFlags({ notifyOnDuplicate: true }),
+      makeFlags({ notifyOnDuplicate: true })
     );
     expect(result.action).toBe('flag');
     if (result.action === 'flag') {
@@ -296,14 +294,14 @@ describe('ContactDuplicateDetectionService — applyAutoMerge', () => {
     expect(result.survivingContactId).toBe('c-1');
     expect(result.mergedContactId).toBe('c-2');
     expect(enqueueEmbed).toHaveBeenCalledWith(
-      expect.objectContaining({ contactId: 'c-1', tenantId: TENANT_A, reason: 'merge' }),
+      expect.objectContaining({ contactId: 'c-1', tenantId: TENANT_A, reason: 'merge' })
     );
   });
 
   it('throws when no merger dep is provided (singleton fallback)', async () => {
     const ctx = buildCtx();
     await expect(
-      contactDuplicateDetectionService.applyAutoMerge(ctx, 'c-1', 'c-2', USER),
+      contactDuplicateDetectionService.applyAutoMerge(ctx, 'c-1', 'c-2', USER)
     ).rejects.toThrow(/requires a mergeContacts dep/);
   });
 
@@ -341,7 +339,7 @@ describe('ContactDuplicateDetectionService — candidate fetch branches', () => 
     const result = await contactDuplicateDetectionService.checkForCreate(
       ctx,
       { phone: '+14155551212' },
-      makeFlags({ notifyOnDuplicate: true }),
+      makeFlags({ notifyOnDuplicate: true })
     );
     expect(result.action).toBe('flag');
     const call = ctx._calls.contactFindMany[0][0] as { where: { OR: unknown[] } };
@@ -358,7 +356,7 @@ describe('ContactDuplicateDetectionService — candidate fetch branches', () => 
     await contactDuplicateDetectionService.checkForCreate(
       ctx,
       { firstName: 'Ada', lastName: 'Lovelace' },
-      makeFlags({ notifyOnDuplicate: true }),
+      makeFlags({ notifyOnDuplicate: true })
     );
     const call = ctx._calls.contactFindMany[0][0] as { where: { OR: unknown[] } };
     expect(JSON.stringify(call.where.OR)).toContain('Lovelace');
@@ -374,7 +372,7 @@ describe('ContactDuplicateDetectionService — candidate fetch branches', () => 
     const result = await contactDuplicateDetectionService.checkForCreate(
       ctx,
       { company: 'X' },
-      makeFlags({ notifyOnDuplicate: true }),
+      makeFlags({ notifyOnDuplicate: true })
     );
     expect(result.action).toBe('proceed');
   });
@@ -405,7 +403,7 @@ describe('ContactDuplicateDetectionService — AI branch unions', () => {
     const result = await service.checkForCreate(
       ctx,
       { email: 'a@b.com' },
-      makeFlags({ aiDuplicateDetection: true, notifyOnDuplicate: true }),
+      makeFlags({ aiDuplicateDetection: true, notifyOnDuplicate: true })
     );
     expect(result.action).toBe('flag');
     if (result.action === 'flag') {
@@ -434,7 +432,7 @@ describe('ContactDuplicateDetectionService — AI branch unions', () => {
     const result = await service.checkForCreate(
       ctx,
       { email: 'a@b.com' },
-      makeFlags({ aiDuplicateDetection: true, notifyOnDuplicate: true }),
+      makeFlags({ aiDuplicateDetection: true, notifyOnDuplicate: true })
     );
     expect(result.action).toBe('flag');
     if (result.action === 'flag') {
@@ -454,7 +452,7 @@ describe('ContactDuplicateDetectionService — tenant isolation', () => {
     await contactDuplicateDetectionService.checkForCreate(
       ctx,
       { email: 'a@b.com' },
-      makeFlags({ notifyOnDuplicate: true }),
+      makeFlags({ notifyOnDuplicate: true })
     );
     const ruleCall = ctx._calls.rulesFindMany[0][0] as {
       where: { tenantId: string; isActive: boolean };

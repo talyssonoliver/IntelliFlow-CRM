@@ -9,11 +9,7 @@
   "phase": "",
   "stream": null,
   "dependencies": {
-    "required": [
-      "PG-051",
-      "IFC-058",
-      "IFC-124"
-    ],
+    "required": ["PG-051", "IFC-058", "IFC-124"],
     "all_satisfied": true,
     "verified_at": "2026-04-29T21:54:51.876Z"
   },
@@ -32,9 +28,7 @@
       ".specify/sprints/sprint-18/attestations/IFC-309/context_ack.json",
       ".specify/sprints/sprint-18/attestations/IFC-309/attestation.json"
     ],
-    "created": [
-      "packages/db/prisma/schema.prisma"
-    ],
+    "created": ["packages/db/prisma/schema.prisma"],
     "missing": [
       "packages/domain/src/legal/TermsAcceptance.ts",
       "apps/api/src/modules/legal/legal.router.ts",
@@ -75,9 +69,5 @@
   "current_phase": "BACKLOG",
   "updated_at": "2026-04-13T00:30:00Z",
   "attempt": 0,
-  "dependencies_resolved": [
-    "PG-051",
-    "IFC-058",
-    "IFC-124"
-  ]
+  "dependencies_resolved": ["PG-051", "IFC-058", "IFC-124"]
 }

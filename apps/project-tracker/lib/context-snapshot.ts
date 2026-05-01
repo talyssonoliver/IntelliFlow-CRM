@@ -499,7 +499,9 @@ export function generateContextSnapshot(metricsDir: string, repoDir: string): Sn
   // written the field yet (schema gap — the generator now writes it, but this
   // guard keeps the tool runnable against older registry snapshots).
   if (!registry.active_sprint) {
-    const taskDetails = (registry as unknown as Record<string, Record<string, { status: string; sprint: number }>>).task_details ?? {};
+    const taskDetails =
+      (registry as unknown as Record<string, Record<string, { status: string; sprint: number }>>)
+        .task_details ?? {};
     const nonDoneSprints: number[] = [];
     let highest = 0;
     for (const detail of Object.values(taskDetails)) {

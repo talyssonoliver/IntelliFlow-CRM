@@ -58,20 +58,18 @@ export async function suggestCaseResolution(
   try {
     const model = await createLLMForTenant('qualification', 'standard', { tenantId });
     const structured = model.withStructuredOutput(ResolutionLLMSchema);
-    const raw = await structured.invoke(
-      [
-        {
-          role: 'system',
-          content:
-            'You advise an attorney on the best next action to move a case toward resolution. ' +
-            'Return a single concrete recommended action with a rationale.',
-        },
-        {
-          role: 'user',
-          content: `Case context: ${JSON.stringify(context)}. Suggest the single most impactful next action.`,
-        },
-      ] as unknown as Parameters<typeof structured.invoke>[0]
-    );
+    const raw = await structured.invoke([
+      {
+        role: 'system',
+        content:
+          'You advise an attorney on the best next action to move a case toward resolution. ' +
+          'Return a single concrete recommended action with a rationale.',
+      },
+      {
+        role: 'user',
+        content: `Case context: ${JSON.stringify(context)}. Suggest the single most impactful next action.`,
+      },
+    ] as unknown as Parameters<typeof structured.invoke>[0]);
     const safe = ResolutionLLMSchema.safeParse(raw);
     if (safe.success) parsed = safe.data;
     else source = 'fallback';
@@ -81,7 +79,8 @@ export async function suggestCaseResolution(
   }
 
   const suggestedResolution =
-    parsed?.suggestedResolution ?? 'Review case materials and identify open blockers before next status meeting.';
+    parsed?.suggestedResolution ??
+    'Review case materials and identify open blockers before next status meeting.';
   const modelVersion = parsed?.modelVersion ?? DEFAULT_MODEL_VERSION;
   const now = new Date();
 

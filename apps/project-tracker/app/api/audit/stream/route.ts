@@ -110,9 +110,8 @@ function buildRunAuditCommand(python: string, searchParams: URLSearchParams): Co
     pickRegexParam(getStringParam(searchParams, 'baseRef'), BASE_REF_RE) ?? 'origin/main';
   const resume = getBoolParam(searchParams, 'resume');
   const concurrency = getIntParam(searchParams, 'concurrency', 1);
-  const safeConcurrency = Number.isInteger(concurrency) && concurrency > 0 && concurrency <= 32
-    ? concurrency
-    : 1;
+  const safeConcurrency =
+    Number.isInteger(concurrency) && concurrency > 0 && concurrency <= 32 ? concurrency : 1;
   const runIdParam = pickRegexParam(getStringParam(searchParams, 'runId'), RUN_ID_RE);
   const runId = runIdParam ?? generateRunId('ui-audit');
 

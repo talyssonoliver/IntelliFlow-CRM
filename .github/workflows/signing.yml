@@ -20,23 +20,23 @@ on:
     branches:
       - main
     tags:
-      - "v*"
+      - 'v*'
   release:
     types: [created, published]
   workflow_dispatch:
     inputs:
       sign_containers:
-        description: "Sign container images"
+        description: 'Sign container images'
         required: false
         default: true
         type: boolean
       sign_archives:
-        description: "Sign release archives"
+        description: 'Sign release archives'
         required: false
         default: true
         type: boolean
       generate_provenance:
-        description: "Generate SLSA provenance"
+        description: 'Generate SLSA provenance'
         required: false
         default: true
         type: boolean
@@ -50,12 +50,12 @@ permissions:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-  NODE_VERSION: "22"
-  PNPM_VERSION: "10.33.0"
+  NODE_VERSION: '22'
+  PNPM_VERSION: '10.33.0'
   NODE_OPTIONS: --max-old-space-size=4096
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
-  COSIGN_VERSION: "v2.2.2"
+  COSIGN_VERSION: 'v2.2.2'
 
 jobs:
   # ===========================================
@@ -83,7 +83,7 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -534,14 +534,7 @@ jobs:
   # ===========================================
   summary:
     name: Signing Summary
-    needs:
-      [
-        build-artifacts,
-        sign-archives,
-        generate-provenance,
-        sign-containers,
-        verification-gate,
-      ]
+    needs: [build-artifacts, sign-archives, generate-provenance, sign-containers, verification-gate]
     runs-on: ubuntu-latest
     if: always()
     timeout-minutes: 5

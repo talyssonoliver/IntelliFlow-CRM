@@ -84,22 +84,20 @@ export async function generateContactInsight(
   try {
     const model = await createLLMForTenant('qualification', 'standard', { tenantId });
     const structured = model.withStructuredOutput(InsightLLMSchema);
-    const raw = await structured.invoke(
-      [
-        {
-          role: 'system',
-          content:
-            'You analyze a CRM contact and produce a 360 insight summary. ' +
-            'Return: conversionProbability (0-100), lifetimeValue (USD cents, integer), ' +
-            'churnRisk (MINIMAL|LOW|MEDIUM|HIGH|CRITICAL), nextBestAction, sentiment, ' +
-            'engagementScore (0-100), recommendations[].',
-        },
-        {
-          role: 'user',
-          content: `Contact context: ${JSON.stringify(context)}. Generate insight.`,
-        },
-      ] as unknown as Parameters<typeof structured.invoke>[0]
-    );
+    const raw = await structured.invoke([
+      {
+        role: 'system',
+        content:
+          'You analyze a CRM contact and produce a 360 insight summary. ' +
+          'Return: conversionProbability (0-100), lifetimeValue (USD cents, integer), ' +
+          'churnRisk (MINIMAL|LOW|MEDIUM|HIGH|CRITICAL), nextBestAction, sentiment, ' +
+          'engagementScore (0-100), recommendations[].',
+      },
+      {
+        role: 'user',
+        content: `Contact context: ${JSON.stringify(context)}. Generate insight.`,
+      },
+    ] as unknown as Parameters<typeof structured.invoke>[0]);
     const safe = InsightLLMSchema.safeParse(raw);
     if (safe.success) {
       parsed = safe.data;

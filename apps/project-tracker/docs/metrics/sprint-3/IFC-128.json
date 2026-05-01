@@ -5,9 +5,7 @@
   "description": "Establish AI output review and manual fallback processes",
   "owner": "QA Lead + Tech Lead (STOA-Quality)",
   "dependencies": {
-    "required": [
-      "ENV-017-AI"
-    ],
+    "required": ["ENV-017-AI"],
     "verified_at": "2026-04-29T21:54:51.728Z",
     "all_satisfied": true,
     "notes": "ENV-017-AI (Automated Integration Testing) completed"
@@ -59,11 +57,7 @@
     "started_at": "2025-12-26T14:00:00.000Z",
     "completed_at": "2026-01-31T22:32:00.000Z",
     "executor": "Claude Code",
-    "agents": [
-      "QA Lead",
-      "Tech Lead",
-      "Backend-Architect"
-    ],
+    "agents": ["QA Lead", "Tech Lead", "Backend-Architect"],
     "retry_count": 0
   },
   "artifacts": {
@@ -176,12 +170,7 @@
         "Domain-Expert",
         "Test-Engineer"
       ],
-      "rounds": [
-        "ANALYSIS",
-        "PROPOSAL",
-        "CHALLENGE",
-        "CONSENSUS"
-      ],
+      "rounds": ["ANALYSIS", "PROPOSAL", "CHALLENGE", "CONSENSUS"],
       "consensus": {
         "achieved": true,
         "approval_rate": "100%",
@@ -213,9 +202,7 @@
   "planned_start": "2025-12-26",
   "planned_finish": "2026-02-03",
   "actual_finish": "2026-01-31",
-  "dependencies_resolved": [
-    "ENV-017-AI"
-  ],
+  "dependencies_resolved": ["ENV-017-AI"],
   "completed_at": "2026-01-31T22:35:33.372Z",
   "started_at": "2026-01-31T22:20:33.372Z",
   "actual_duration_minutes": 15

@@ -2,9 +2,7 @@
   "task_id": "EXC-SEC-001",
   "status": "DONE",
   "dependencies": {
-    "required": [
-      "ENV-013-AI"
-    ],
+    "required": ["ENV-013-AI"],
     "all_satisfied": true,
     "verified_at": "2026-04-29T21:54:51.694Z"
   },
@@ -27,7 +25,5 @@
   "started_at": "2026-04-13T00:27:36.755Z",
   "actual_duration_minutes": 15,
   "description": "Implement Secrets Management (e.g., HashiCorp Vault) for API Keys (OpenAI, etc.).",
-  "dependencies_resolved": [
-    "ENV-013-AI"
-  ]
+  "dependencies_resolved": ["ENV-013-AI"]
 }

@@ -499,7 +499,7 @@ function textSummary(data) {
     var totalFails = 0;
     var checks = data.root_group.checks;
     for (var name in checks) {
-      if (checks.hasOwnProperty(name)) {
+      if (Object.prototype.hasOwnProperty.call(checks, name)) {
         totalPasses += checks[name].passes;
         totalFails += checks[name].fails;
       }

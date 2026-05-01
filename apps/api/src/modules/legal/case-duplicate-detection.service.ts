@@ -73,14 +73,14 @@ export interface CaseDuplicateDetectionService {
   checkForCreate(
     ctx: HasTenantContext,
     payload: CaseCheckInput,
-    flags: CaseAutomationFlags,
+    flags: CaseAutomationFlags
   ): Promise<CaseDuplicateCheckResult>;
 
   checkForUpdate(
     ctx: HasTenantContext,
     caseId: string,
     payload: CaseCheckInput,
-    flags: CaseAutomationFlags,
+    flags: CaseAutomationFlags
   ): Promise<CaseDuplicateCheckResult>;
 }
 
@@ -148,7 +148,7 @@ function scoreField(
   field: CaseDuplicateField,
   strategy: CaseDuplicateStrategy,
   input: CaseCheckInput,
-  candidate: Pick<Case, 'title' | 'clientId' | 'deadline'>,
+  candidate: Pick<Case, 'title' | 'clientId' | 'deadline'>
 ): number {
   switch (field) {
     case 'title': {
@@ -185,7 +185,7 @@ function rulesFromRows(
     collisionAction: string;
     isActive: boolean;
     sortOrder: number;
-  }>,
+  }>
 ): CaseEvaluableRule[] {
   const validFields: CaseDuplicateField[] = ['title', 'client', 'deadline', 'externalId'];
   const validStrategies: CaseDuplicateStrategy[] = ['exact', 'normalized', 'fuzzy'];
@@ -193,7 +193,7 @@ function rulesFromRows(
     .filter(
       (r) =>
         validFields.includes(r.field as CaseDuplicateField) &&
-        validStrategies.includes(r.matchStrategy as CaseDuplicateStrategy),
+        validStrategies.includes(r.matchStrategy as CaseDuplicateStrategy)
     )
     .map((r) => ({
       field: r.field as CaseDuplicateField,
@@ -207,7 +207,7 @@ function rulesFromRows(
 export function evaluateCaseDuplicateRules(
   input: CaseCheckInput,
   existing: readonly Pick<Case, 'id' | 'title' | 'clientId' | 'deadline'>[],
-  rules: readonly CaseEvaluableRule[],
+  rules: readonly CaseEvaluableRule[]
 ): CaseDuplicateMatch[] {
   if (!Array.isArray(rules) || rules.length === 0) return [];
   if (!Array.isArray(existing) || existing.length === 0) return [];
@@ -261,7 +261,7 @@ async function fireAndForget<T>(promise: Promise<T> | T, label: string): Promise
 }
 
 export function createCaseDuplicateDetectionService(
-  _deps: CaseDuplicateDetectionDeps = {},
+  _deps: CaseDuplicateDetectionDeps = {}
 ): CaseDuplicateDetectionService {
   async function loadActiveRules(ctx: HasTenantContext): Promise<CaseEvaluableRule[]> {
     const prismaWithTenant = ctx.prismaWithTenant as unknown as {
@@ -290,7 +290,7 @@ export function createCaseDuplicateDetectionService(
   async function fetchCandidates(
     ctx: HasTenantContext,
     payload: CaseCheckInput,
-    excludeId?: string,
+    excludeId?: string
   ): Promise<Array<Pick<Case, 'id' | 'title' | 'clientId' | 'deadline'>>> {
     const prismaWithTenant = ctx.prismaWithTenant as unknown as {
       case: {
@@ -316,8 +316,8 @@ export function createCaseDuplicateDetectionService(
           payload.deadline.getUTCDate(),
           0,
           0,
-          0,
-        ),
+          0
+        )
       );
       const end = new Date(start);
       end.setUTCDate(end.getUTCDate() + 1);
@@ -340,7 +340,7 @@ export function createCaseDuplicateDetectionService(
 
   function decide(
     matches: CaseDuplicateMatch[],
-    flags: CaseAutomationFlags,
+    flags: CaseAutomationFlags
   ): CaseDuplicateCheckResult {
     if (matches.length === 0) return { action: 'proceed', matches: [] };
 
@@ -358,7 +358,7 @@ export function createCaseDuplicateDetectionService(
 
   async function emitFlagNotification(
     ctx: HasTenantContext,
-    matches: CaseDuplicateMatch[],
+    matches: CaseDuplicateMatch[]
   ): Promise<void> {
     if (!ctx.prisma && !ctx.prismaWithTenant) return;
     const prisma = ctx.prisma ?? ctx.prismaWithTenant;
@@ -379,9 +379,9 @@ export function createCaseDuplicateDetectionService(
             ruleFields: matches.map((m) => m.ruleField),
           },
         } as never,
-        ctx.services?.notificationOrchestrator,
+        ctx.services?.notificationOrchestrator
       ),
-      'flag notification',
+      'flag notification'
     );
   }
 
@@ -389,7 +389,7 @@ export function createCaseDuplicateDetectionService(
     ctx: HasTenantContext,
     payload: CaseCheckInput,
     flags: CaseAutomationFlags,
-    excludeId?: string,
+    excludeId?: string
   ): Promise<CaseDuplicateCheckResult> {
     const rules = await loadActiveRules(ctx);
     if (rules.length === 0) return { action: 'proceed', matches: [] };
@@ -400,7 +400,7 @@ export function createCaseDuplicateDetectionService(
     const matches = evaluateCaseDuplicateRules(
       payload,
       existing as Array<Pick<Case, 'id' | 'title' | 'clientId' | 'deadline'>>,
-      rules,
+      rules
     );
 
     const decision = decide(matches, flags);

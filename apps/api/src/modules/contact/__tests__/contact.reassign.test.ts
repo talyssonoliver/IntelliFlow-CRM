@@ -12,7 +12,12 @@ import { TEST_UUIDS } from '../../../test/setup';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TRPCError } from '@trpc/server';
 import { contactRouter } from '../contact.router';
-import { prismaMock, createTestContext, createAdminContext, mockContact } from '../../../test/setup';
+import {
+  prismaMock,
+  createTestContext,
+  createAdminContext,
+  mockContact,
+} from '../../../test/setup';
 
 const newOwnerUuid = TEST_UUIDS.user2;
 
@@ -292,8 +297,9 @@ describe('contact.bulkReassign (IFC-311)', () => {
   });
 
   it('AC-CB4: 101 ids is rejected by Zod', async () => {
-    const ids = Array.from({ length: 101 }, (_, i) =>
-      `${i.toString(16).padStart(8, '0')}-0000-4000-8000-000000000000`
+    const ids = Array.from(
+      { length: 101 },
+      (_, i) => `${i.toString(16).padStart(8, '0')}-0000-4000-8000-000000000000`
     );
     await expect(adminCaller.bulkReassign({ ids, ownerId: newOwnerUuid })).rejects.toThrow();
   });
@@ -319,8 +325,9 @@ describe('contact.bulkReassign (IFC-311)', () => {
   });
 
   it('AC-CB6: 100 rows complete under 2000ms', async () => {
-    const ids = Array.from({ length: 100 }, (_, i) =>
-      `${i.toString(16).padStart(8, '0')}-0000-4000-8000-000000000000`
+    const ids = Array.from(
+      { length: 100 },
+      (_, i) => `${i.toString(16).padStart(8, '0')}-0000-4000-8000-000000000000`
     );
     prismaMock.contact.findFirst.mockImplementation((async ({ where }: any) => ({
       ...mockContact,
@@ -412,10 +419,7 @@ describe('logAuditFailure direct coverage', () => {
     const mod = (await import('../contact-reassign.js' as string)) as any;
     const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     expect(() => mod.logAuditFailure(new Error('db down'))).not.toThrow();
-    expect(errSpy).toHaveBeenCalledWith(
-      '[contact.reassign] Audit log failed:',
-      expect.any(Error)
-    );
+    expect(errSpy).toHaveBeenCalledWith('[contact.reassign] Audit log failed:', expect.any(Error));
     errSpy.mockRestore();
   });
 });

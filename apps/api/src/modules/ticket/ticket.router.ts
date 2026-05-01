@@ -344,10 +344,7 @@ export const ticketRouter = createTRPCRouter({
         // Duplicate-check is best-effort — do not fail ticket create when the
         // query path is unavailable (e.g. mocked-prisma tests). Proceed with
         // the full create path; the dupe-check toggle is Cat-2.
-        console.warn(
-          '[ticket.router] duplicate-candidate fetch failed, proceeding:',
-          err,
-        );
+        console.warn('[ticket.router] duplicate-candidate fetch failed, proceeding:', err);
         duplicateCandidates = [];
       }
     }
@@ -363,7 +360,7 @@ export const ticketRouter = createTRPCRouter({
         contactEmail: t.contactEmail ?? '',
         status: t.status,
       })),
-      automation,
+      automation
     );
 
     if (mergeDecision.action === 'MERGE') {
@@ -405,10 +402,9 @@ export const ticketRouter = createTRPCRouter({
             })),
           },
           automation,
-          (params) =>
-            createNotification(ctx.prisma, params, ctx.services?.notificationOrchestrator),
+          (params) => createNotification(ctx.prisma, params, ctx.services?.notificationOrchestrator)
         ).catch((err) =>
-          console.warn('[ticket.router] notifyTicketDuplicate failed (fire-and-forget):', err),
+          console.warn('[ticket.router] notifyTicketDuplicate failed (fire-and-forget):', err)
         );
       }
 

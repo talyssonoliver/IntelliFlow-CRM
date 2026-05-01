@@ -31,12 +31,8 @@
     }
   },
   "artifacts": {
-    "expected": [
-      "apps/web/src/app/contacts/[id]/page.tsx"
-    ],
-    "created": [
-      "apps/web/src/app/contacts/[id]/page.tsx"
-    ],
+    "expected": ["apps/web/src/app/contacts/[id]/page.tsx"],
+    "created": ["apps/web/src/app/contacts/[id]/page.tsx"],
     "missing": []
   },
   "validations": [],

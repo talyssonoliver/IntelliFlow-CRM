@@ -123,21 +123,19 @@ export class LiteLLMEnrichmentAdapter implements EnrichmentProvider {
     try {
       const model = await createLLMForTenant('structured', 'standard', { tenantId });
       const structured = model.withStructuredOutput(ContactEnrichmentLLMSchema);
-      const raw = await structured.invoke(
-        [
-          {
-            role: 'system',
-            content:
-              'You enrich a CRM contact with publicly-knowable professional attributes. ' +
-              'Return ONLY fields you are confident in. Use null (omit) rather than guessing. ' +
-              'Cite confidence as a number between 0 and 1.',
-          },
-          {
-            role: 'user',
-            content: `Contact seed: ${JSON.stringify(sanitized)}. Return enrichment JSON.`,
-          },
-        ] as unknown as Parameters<typeof structured.invoke>[0]
-      );
+      const raw = await structured.invoke([
+        {
+          role: 'system',
+          content:
+            'You enrich a CRM contact with publicly-knowable professional attributes. ' +
+            'Return ONLY fields you are confident in. Use null (omit) rather than guessing. ' +
+            'Cite confidence as a number between 0 and 1.',
+        },
+        {
+          role: 'user',
+          content: `Contact seed: ${JSON.stringify(sanitized)}. Return enrichment JSON.`,
+        },
+      ] as unknown as Parameters<typeof structured.invoke>[0]);
 
       const parsed = ContactEnrichmentSchema.safeParse({
         ...raw,
@@ -155,21 +153,19 @@ export class LiteLLMEnrichmentAdapter implements EnrichmentProvider {
     try {
       const model = await createLLMForTenant('structured', 'standard', { tenantId });
       const structured = model.withStructuredOutput(AccountEnrichmentLLMSchema);
-      const raw = await structured.invoke(
-        [
-          {
-            role: 'system',
-            content:
-              'You enrich a CRM account with firmographic data (industry key, employees, ' +
-              'revenue USD, description). Only emit fields you are confident in. ' +
-              'Confidence is 0-1.',
-          },
-          {
-            role: 'user',
-            content: `Account seed: ${JSON.stringify(sanitized)}. Return enrichment JSON.`,
-          },
-        ] as unknown as Parameters<typeof structured.invoke>[0]
-      );
+      const raw = await structured.invoke([
+        {
+          role: 'system',
+          content:
+            'You enrich a CRM account with firmographic data (industry key, employees, ' +
+            'revenue USD, description). Only emit fields you are confident in. ' +
+            'Confidence is 0-1.',
+        },
+        {
+          role: 'user',
+          content: `Account seed: ${JSON.stringify(sanitized)}. Return enrichment JSON.`,
+        },
+      ] as unknown as Parameters<typeof structured.invoke>[0]);
 
       const parsed = AccountEnrichmentSchema.safeParse({
         ...raw,
@@ -225,9 +221,8 @@ let _cached: EnrichmentProvider | null = null;
 
 export function getEnrichmentAdapter(): EnrichmentProvider {
   if (_cached) return _cached;
-  _cached = aiConfig.provider === 'mock'
-    ? new MockEnrichmentAdapter()
-    : new LiteLLMEnrichmentAdapter();
+  _cached =
+    aiConfig.provider === 'mock' ? new MockEnrichmentAdapter() : new LiteLLMEnrichmentAdapter();
   return _cached;
 }
 

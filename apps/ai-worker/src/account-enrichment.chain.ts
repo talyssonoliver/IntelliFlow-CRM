@@ -11,7 +11,10 @@ import pino from 'pino';
 import { prisma } from '@intelliflow/db';
 import { getEnrichmentAdapter, type AccountSeed } from './shared/enrichment-adapter.js';
 
-const logger = pino({ name: 'account-enrichment.chain', level: process.env['LOG_LEVEL'] ?? 'info' });
+const logger = pino({
+  name: 'account-enrichment.chain',
+  level: process.env['LOG_LEVEL'] ?? 'info',
+});
 
 export interface EnrichAccountInput {
   accountId: string;

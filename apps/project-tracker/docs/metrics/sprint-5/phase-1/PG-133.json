@@ -12,9 +12,7 @@
   "target_duration_minutes": 360,
   "actual_duration_minutes": 180,
   "dependencies": {
-    "required": [
-      "IFC-184"
-    ],
+    "required": ["IFC-184"],
     "all_satisfied": true,
     "verified_at": "2026-04-29T21:54:52.002Z"
   },
@@ -40,11 +38,7 @@
     "completed_at": "2026-02-07T15:00:00Z",
     "duration_minutes": 180,
     "executor": "Claude Code /exec",
-    "agents": [
-      "Foundation",
-      "Domain",
-      "Quality"
-    ],
+    "agents": ["Foundation", "Domain", "Quality"],
     "retry_count": 0,
     "last_error": null
   },
@@ -127,7 +121,5 @@
   },
   "blockers": [],
   "notes": "PG-133 Contact components: 6 components (ContactCard, ContactList, ContactDetail, ContactForm, ActivityTimeline, RelationshipGraph) with 103 tests at 93% coverage. ContactDetail uses Radix UI Tabs (WCAG 4.1.2 BLOCKER fix). Page refactoring deferred to avoid breaking existing page functionality.",
-  "dependencies_resolved": [
-    "IFC-184"
-  ]
+  "dependencies_resolved": ["IFC-184"]
 }

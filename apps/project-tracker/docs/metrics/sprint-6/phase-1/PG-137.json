@@ -12,9 +12,7 @@
   "completed_at": "2026-02-10T22:22:00.000Z",
   "actual_duration_minutes": 1462,
   "dependencies": {
-    "required": [
-      "IFC-189"
-    ],
+    "required": ["IFC-189"],
     "all_satisfied": true,
     "verified_at": "2026-04-29T21:54:51.763Z",
     "notes": "IFC-189 (Ticket tRPC Router) verified: router exists, registered in appRouter, container wired, 131 tests pass."
@@ -46,10 +44,7 @@
     "completed_at": "2026-02-10T22:22:00.000Z",
     "duration_minutes": 142,
     "executor": "Claude Code /exec",
-    "agents": [
-      "Domain",
-      "Quality"
-    ],
+    "agents": ["Domain", "Quality"],
     "retry_count": 0,
     "last_error": null
   },
@@ -149,11 +144,6 @@
   "blockers": [],
   "notes": "Ticket Management Page completed. Extract+Integrate pattern: 7 components extracted from monolithic pages (917-line list, 1067-line detail) into reusable components. 3 thin tRPC page wrappers created. All 79 tests passing, TypeScript clean, lint clean. Coverage: TicketCard 100%, EscalationAlert 100%, CustomerPortalView 95%, SLAIndicator 82%. Uses api.ticket.update (generic) for status/priority/assign changes, api.ticket.addResponse for replies.",
   "executor": "claude-opus-4-6",
-  "agents": [
-    "Domain",
-    "Quality"
-  ],
-  "dependencies_resolved": [
-    "IFC-189"
-  ]
+  "agents": ["Domain", "Quality"],
+  "dependencies_resolved": ["IFC-189"]
 }

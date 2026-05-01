@@ -4,7 +4,8 @@
 
 **Date:** 2026-04-24
 
-**Deciders:** Growth FE Lead, UX Designer, Tech Lead; ratified at exec-time by Claude Code per the PG-126 attestation on 2026-04-24.
+**Deciders:** Growth FE Lead, UX Designer, Tech Lead; ratified at exec-time by
+Claude Code per the PG-126 attestation on 2026-04-24.
 
 **Technical Story:** PG-126
 
@@ -17,16 +18,16 @@ analytics events. Two implementation paths are possible: adopt an existing tour
 library (react-joyride, driver.js, shepherd.js, intro.js), or build a minimal
 custom component using existing shadcn/ui primitives (`Dialog`, `Popover`).
 
-Which path respects the project's bundle budget (JS < 300 KB total, CSS < 50
-KB per `apps/web/CLAUDE.md`), icon policy (Material Symbols only per ADR-046),
-and avoids introducing a dependency that will be used by a single surface?
+Which path respects the project's bundle budget (JS < 300 KB total, CSS < 50 KB
+per `apps/web/CLAUDE.md`), icon policy (Material Symbols only per ADR-046), and
+avoids introducing a dependency that will be used by a single surface?
 
 ## Decision Drivers
 
-- **Bundle budget** — Adding a library that ships its own DOM utility layer
-  and CSS conflicts with the < 300 KB JS budget and Lighthouse >= 0.90 target
-- **Icon policy** — Third-party tour libraries often ship their own icons
-  (SVGs or icon fonts) that violate ADR-046 (Material Symbols Outlined only)
+- **Bundle budget** — Adding a library that ships its own DOM utility layer and
+  CSS conflicts with the < 300 KB JS budget and Lighthouse >= 0.90 target
+- **Icon policy** — Third-party tour libraries often ship their own icons (SVGs
+  or icon fonts) that violate ADR-046 (Material Symbols Outlined only)
 - **A11y ownership** — We need WCAG 2.1 AA on every public surface; a library
   that quietly drops focus trap or ARIA wiring is harder to audit than custom
   code
@@ -44,15 +45,15 @@ and avoids introducing a dependency that will be used by a single surface?
 1. **react-joyride** — mature React tour library, ~50 KB gzipped
 2. **driver.js** — vanilla JS, ~8 KB gzipped, React wrapper available
 3. **shepherd.js** — Tippy-based, ~20 KB gzipped
-4. **Custom lightweight tour** — built on shadcn `Dialog` + custom
-   positioning, ~3–5 KB gzipped additional
+4. **Custom lightweight tour** — built on shadcn `Dialog` + custom positioning,
+   ~3–5 KB gzipped additional
 
 ## Decision Outcome
 
 Chosen option: **Custom lightweight tour**, because:
 
-- It respects the < 300 KB JS budget and the < 25 KB gzipped budget declared
-  in PRD NFR-1
+- It respects the < 300 KB JS budget and the < 25 KB gzipped budget declared in
+  PRD NFR-1
 - It reuses shadcn/ui `Dialog` (already in the bundle), Material Symbols for
   navigation icons, and the existing `tracking-pixel` utility — no new
   dependencies
@@ -65,8 +66,7 @@ Chosen option: **Custom lightweight tour**, because:
 ### Positive Consequences
 
 - No new dependencies in `apps/web/package.json`
-- Full control over focus management, reduced-motion handling, and event
-  schema
+- Full control over focus management, reduced-motion handling, and event schema
 - Tour config JSON is version-controlled and testable
 - Bundle stays under budget; Lighthouse >= 0.90 stays green
 
@@ -117,28 +117,27 @@ Chosen option: **Custom lightweight tour**, because:
   (canonical per PG-126 CSV artifact path)
 - Tour engine exports: `PublicTour`, `TourStep`, `useTourState`,
   `TourTriggerButton`
-- Feedback service location:
-  `apps/web/src/lib/public/feedback-service.ts`
+- Feedback service location: `apps/web/src/lib/public/feedback-service.ts`
 - Feedback service exports: `submitPublicFeedback`, `publicFeedbackSchema`
 - Tour config location: `artifacts/misc/onboarding-config.json`
 - Tour config schema: co-located zod schema in
   `packages/validators/src/public-onboarding.ts`
-- Public feedback endpoint: tRPC `publicFeedback.submit` with a public
-  procedure (no tenant context), rate-limited by IP at the router level,
-  persisted through a new `PublicFeedback` Prisma model
+- Public feedback endpoint: tRPC `publicFeedback.submit` with a public procedure
+  (no tenant context), rate-limited by IP at the router level, persisted through
+  a new `PublicFeedback` Prisma model
 
 ## Positioning Strategy
 
-- Absolute-positioned portal anchor using
-  `getBoundingClientRect()` on the target element
+- Absolute-positioned portal anchor using `getBoundingClientRect()` on the
+  target element
 - Recompute on window `resize` and `scroll` within a throttled callback
 - Fallback to centred modal when target is null or off-screen
 - Respect `prefers-reduced-motion` by disabling transitions
 
 ## References
 
-- ADR-045: Entity Detail Componentization — established preference for
-  composing shadcn primitives over introducing new libraries
+- ADR-045: Entity Detail Componentization — established preference for composing
+  shadcn primitives over introducing new libraries
 - ADR-046: Material Symbols Font Subsetting — icon policy
 - `apps/web/CLAUDE.md` — bundle budget, Lighthouse targets
 - `docs/design/EMPTY_STATES.md` — shared-component reuse discipline

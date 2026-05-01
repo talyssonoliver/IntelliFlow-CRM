@@ -98,11 +98,7 @@ interface PublicFeedbackDialogProps {
 
 type DialogState = 'idle' | 'submitting' | 'success' | 'already-submitted';
 
-export function PublicFeedbackDialog({
-  open,
-  onOpenChange,
-  source,
-}: PublicFeedbackDialogProps) {
+export function PublicFeedbackDialog({ open, onOpenChange, source }: PublicFeedbackDialogProps) {
   const [rating, setRating] = React.useState<number>(0);
   const [comment, setComment] = React.useState('');
   const [email, setEmail] = React.useState('');
@@ -165,8 +161,7 @@ export function PublicFeedbackDialog({
       comment: comment.trim() || undefined,
       email: email.trim() || undefined,
       source,
-      userAgent:
-        typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
       __honeypot: honeypot || '',
     });
 
@@ -202,8 +197,7 @@ export function PublicFeedbackDialog({
         <DialogHeader>
           <DialogTitle id="public-feedback-title">Share your feedback</DialogTitle>
           <DialogDescription id="public-feedback-desc">
-            Help us improve IntelliFlow. Your feedback is anonymous unless you
-            leave an email.
+            Help us improve IntelliFlow. Your feedback is anonymous unless you leave an email.
           </DialogDescription>
         </DialogHeader>
 
@@ -213,10 +207,7 @@ export function PublicFeedbackDialog({
             data-testid="public-feedback-success"
             className="flex items-center gap-2 py-4 text-sm"
           >
-            <span
-              className="material-symbols-outlined text-success"
-              aria-hidden="true"
-            >
+            <span className="material-symbols-outlined text-success" aria-hidden="true">
               check_circle
             </span>
             Feedback submitted — thank you!
@@ -231,11 +222,7 @@ export function PublicFeedbackDialog({
           </div>
         ) : (
           <form onSubmit={handleSubmit} noValidate>
-            <FeedbackRatingRadioGroup
-              value={rating}
-              onChange={setRating}
-              error={ratingError}
-            />
+            <FeedbackRatingRadioGroup value={rating} onChange={setRating} error={ratingError} />
 
             <div className="mt-4">
               <Label htmlFor="public-feedback-comment">Comment (optional)</Label>
@@ -247,10 +234,7 @@ export function PublicFeedbackDialog({
                 rows={4}
                 placeholder="What's on your mind?"
               />
-              <div
-                className="text-xs text-muted-foreground text-right mt-1"
-                aria-live="polite"
-              >
+              <div className="text-xs text-muted-foreground text-right mt-1" aria-live="polite">
                 {comment.length}/1000
               </div>
             </div>
@@ -264,15 +248,10 @@ export function PublicFeedbackDialog({
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
                 aria-invalid={emailError ? 'true' : undefined}
-                aria-describedby={
-                  emailError ? 'public-feedback-email-error' : undefined
-                }
+                aria-describedby={emailError ? 'public-feedback-email-error' : undefined}
               />
               {emailError && (
-                <p
-                  id="public-feedback-email-error"
-                  className="text-xs text-destructive mt-1"
-                >
+                <p id="public-feedback-email-error" className="text-xs text-destructive mt-1">
                   {emailError}
                 </p>
               )}
@@ -307,18 +286,10 @@ export function PublicFeedbackDialog({
             )}
 
             <DialogFooter className="mt-4">
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => onOpenChange(false)}
-              >
+              <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button
-                type="submit"
-                disabled={!canSubmit}
-                data-testid="public-feedback-submit"
-              >
+              <Button type="submit" disabled={!canSubmit} data-testid="public-feedback-submit">
                 {submitMutation.isPending ? 'Sending...' : 'Send feedback'}
               </Button>
             </DialogFooter>
@@ -373,9 +344,7 @@ export function FeedbackRatingRadioGroup({
         tabIndex={-1}
         aria-labelledby="public-feedback-rating-label"
         aria-invalid={error ? 'true' : undefined}
-        aria-describedby={
-          error ? 'public-feedback-rating-error' : undefined
-        }
+        aria-describedby={error ? 'public-feedback-rating-error' : undefined}
         onKeyDown={handleKeyDown}
         className="flex items-center gap-2 mt-2"
         data-testid="public-feedback-rating"
@@ -402,9 +371,7 @@ export function FeedbackRatingRadioGroup({
                 className="material-symbols-outlined"
                 aria-hidden="true"
                 style={{
-                  fontVariationSettings: filled
-                    ? '"FILL" 1'
-                    : '"FILL" 0',
+                  fontVariationSettings: filled ? '"FILL" 1' : '"FILL" 0',
                 }}
               >
                 star

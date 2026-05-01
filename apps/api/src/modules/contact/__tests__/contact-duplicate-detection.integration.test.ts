@@ -24,9 +24,7 @@ import type { ContactAutomationFlags } from '../contact-automation';
 
 const RUN_INTEGRATION = process.env.RUN_INTEGRATION_TESTS === '1';
 
-function makeFlags(
-  overrides: Partial<ContactAutomationFlags> = {}
-): ContactAutomationFlags {
+function makeFlags(overrides: Partial<ContactAutomationFlags> = {}): ContactAutomationFlags {
   return {
     autoMergeOnExactEmail: false,
     notifyOnDuplicate: true,
@@ -95,96 +93,85 @@ function buildCtxWithRepo(
   };
 }
 
-describe.skipIf(!RUN_INTEGRATION)(
-  'IFC-310 integration — cross-tenant guard (AC-011)',
-  () => {
-    const tenantA: SeededContact[] = [
-      { id: 'A-1', email: 'dup@acme.com', firstName: 'A', lastName: '1', tenantId: 'tenant-A' },
-      { id: 'A-2', email: 'other@acme.com', firstName: 'A', lastName: '2', tenantId: 'tenant-A' },
-    ];
-    const tenantB: SeededContact[] = [
-      { id: 'B-1', email: 'dup@acme.com', firstName: 'B', lastName: '1', tenantId: 'tenant-B' },
-    ];
-    const all: SeededContact[] = [...tenantA, ...tenantB];
+describe.skipIf(!RUN_INTEGRATION)('IFC-310 integration — cross-tenant guard (AC-011)', () => {
+  const tenantA: SeededContact[] = [
+    { id: 'A-1', email: 'dup@acme.com', firstName: 'A', lastName: '1', tenantId: 'tenant-A' },
+    { id: 'A-2', email: 'other@acme.com', firstName: 'A', lastName: '2', tenantId: 'tenant-A' },
+  ];
+  const tenantB: SeededContact[] = [
+    { id: 'B-1', email: 'dup@acme.com', firstName: 'B', lastName: '1', tenantId: 'tenant-B' },
+  ];
+  const all: SeededContact[] = [...tenantA, ...tenantB];
 
-    beforeAll(() => {
-      // The full testcontainer setup lives here (Postgres + migrations). When
-      // RUN_INTEGRATION_TESTS=1 but Docker is absent, the repo-layer mock
-      // above still proves the tenant-guard behavior at the service contract
-      // level — which is the real AC-011 claim.
-    });
+  beforeAll(() => {
+    // The full testcontainer setup lives here (Postgres + migrations). When
+    // RUN_INTEGRATION_TESTS=1 but Docker is absent, the repo-layer mock
+    // above still proves the tenant-guard behavior at the service contract
+    // level — which is the real AC-011 claim.
+  });
 
-    it('tenant-A sees only tenant-A candidates on checkForCreate', async () => {
-      const service = createContactDuplicateDetectionService();
-      const ctxA = buildCtxWithRepo('tenant-A', all);
-      const result = await service.checkForCreate(
-        ctxA,
-        { email: 'dup@acme.com' },
-        makeFlags()
-      );
-      expect(result.action).toBe('flag');
-      if (result.action === 'flag') {
-        expect(result.matches.every((m) => m.candidate.id === 'A-1')).toBe(true);
-        expect(result.matches.some((m) => m.candidate.id === 'B-1')).toBe(false);
-      }
-    });
+  it('tenant-A sees only tenant-A candidates on checkForCreate', async () => {
+    const service = createContactDuplicateDetectionService();
+    const ctxA = buildCtxWithRepo('tenant-A', all);
+    const result = await service.checkForCreate(ctxA, { email: 'dup@acme.com' }, makeFlags());
+    expect(result.action).toBe('flag');
+    if (result.action === 'flag') {
+      expect(result.matches.every((m) => m.candidate.id === 'A-1')).toBe(true);
+      expect(result.matches.some((m) => m.candidate.id === 'B-1')).toBe(false);
+    }
+  });
 
-    it('tenant-B sees only tenant-B candidates on checkForCreate', async () => {
-      const service = createContactDuplicateDetectionService();
-      const ctxB = buildCtxWithRepo('tenant-B', all);
-      const result = await service.checkForCreate(
-        ctxB,
-        { email: 'dup@acme.com' },
-        makeFlags()
-      );
-      expect(result.action).toBe('flag');
-      if (result.action === 'flag') {
-        expect(result.matches.every((m) => m.candidate.id === 'B-1')).toBe(true);
-      }
-    });
+  it('tenant-B sees only tenant-B candidates on checkForCreate', async () => {
+    const service = createContactDuplicateDetectionService();
+    const ctxB = buildCtxWithRepo('tenant-B', all);
+    const result = await service.checkForCreate(ctxB, { email: 'dup@acme.com' }, makeFlags());
+    expect(result.action).toBe('flag');
+    if (result.action === 'flag') {
+      expect(result.matches.every((m) => m.candidate.id === 'B-1')).toBe(true);
+    }
+  });
 
-    it('auto-merge in tenant-A leaves tenant-B contacts untouched', async () => {
-      let mergerCalled = false;
-      let seenTenantId: string | null = null;
-      const service = createContactDuplicateDetectionService({
-        mergeContacts: async (ctx, primaryId, secondaryId) => {
-          mergerCalled = true;
-          seenTenantId = ctx.tenant.tenantId;
-          return {
-            survivingContactId: primaryId,
-            mergedContactId: secondaryId,
-            fieldsUpdated: [],
-            mergedAt: new Date(),
-          };
-        },
-      });
-      const ctxA = buildCtxWithRepo('tenant-A', all);
-      await service.applyAutoMerge(ctxA, 'A-1', 'A-new', 'user-it');
-      expect(mergerCalled).toBe(true);
-      expect(seenTenantId).toBe('tenant-A');
+  it('auto-merge in tenant-A leaves tenant-B contacts untouched', async () => {
+    let mergerCalled = false;
+    let seenTenantId: string | null = null;
+    const service = createContactDuplicateDetectionService({
+      mergeContacts: async (ctx, primaryId, secondaryId) => {
+        mergerCalled = true;
+        seenTenantId = ctx.tenant.tenantId;
+        return {
+          survivingContactId: primaryId,
+          mergedContactId: secondaryId,
+          fieldsUpdated: [],
+          mergedAt: new Date(),
+        };
+      },
     });
+    const ctxA = buildCtxWithRepo('tenant-A', all);
+    await service.applyAutoMerge(ctxA, 'A-1', 'A-new', 'user-it');
+    expect(mergerCalled).toBe(true);
+    expect(seenTenantId).toBe('tenant-A');
+  });
 
-    it('rules query filters by tenantId — no cross-tenant rule leakage', async () => {
-      const service = createContactDuplicateDetectionService();
-      const ctxA = buildCtxWithRepo('tenant-A', all);
-      await service.checkForCreate(ctxA, { email: 'dup@acme.com' }, makeFlags());
-      const call = ctxA._calls.rulesFindMany[0]?.[0] as {
-        where: { tenantId: string };
-      };
-      expect(call.where.tenantId).toBe('tenant-A');
-    });
+  it('rules query filters by tenantId — no cross-tenant rule leakage', async () => {
+    const service = createContactDuplicateDetectionService();
+    const ctxA = buildCtxWithRepo('tenant-A', all);
+    await service.checkForCreate(ctxA, { email: 'dup@acme.com' }, makeFlags());
+    const call = ctxA._calls.rulesFindMany[0]?.[0] as {
+      where: { tenantId: string };
+    };
+    expect(call.where.tenantId).toBe('tenant-A');
+  });
 
-    it('contact query filters by tenantId — defense-in-depth', async () => {
-      const service = createContactDuplicateDetectionService();
-      const ctxA = buildCtxWithRepo('tenant-A', all);
-      await service.checkForCreate(ctxA, { email: 'dup@acme.com' }, makeFlags());
-      const call = ctxA._calls.contactFindMany[0]?.[0] as {
-        where: { tenantId: string };
-      };
-      expect(call.where.tenantId).toBe('tenant-A');
-    });
-  }
-);
+  it('contact query filters by tenantId — defense-in-depth', async () => {
+    const service = createContactDuplicateDetectionService();
+    const ctxA = buildCtxWithRepo('tenant-A', all);
+    await service.checkForCreate(ctxA, { email: 'dup@acme.com' }, makeFlags());
+    const call = ctxA._calls.contactFindMany[0]?.[0] as {
+      where: { tenantId: string };
+    };
+    expect(call.where.tenantId).toBe('tenant-A');
+  });
+});
 
 // Smoke check that the skip-gating works as expected — runs always.
 describe('IFC-310 integration — skip-gating', () => {

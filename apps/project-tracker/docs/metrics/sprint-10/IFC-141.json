@@ -9,13 +9,7 @@
   "started_at": "2026-03-08T21:44:04.644Z",
   "completed_at": "2026-03-08T21:59:04.644Z",
   "dependencies": {
-    "required": [
-      "IFC-136",
-      "IFC-137",
-      "IFC-135",
-      "IFC-150",
-      "IFC-151"
-    ],
+    "required": ["IFC-136", "IFC-137", "IFC-135", "IFC-150", "IFC-151"],
     "all_satisfied": true,
     "verified_at": "2026-04-29T21:54:51.991Z"
   },

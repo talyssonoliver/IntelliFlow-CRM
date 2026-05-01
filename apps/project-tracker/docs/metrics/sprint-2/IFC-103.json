@@ -5,17 +5,13 @@
   "description": "PHASE-039: Account Aggregate and Value Objects",
   "owner": "Backend Dev + Tech Lead (STOA-Domain)",
   "dependencies": {
-    "required": [
-      "IFC-002"
-    ],
+    "required": ["IFC-002"],
     "verified_at": "2026-04-29T21:54:51.720Z",
     "all_satisfied": true,
     "notes": "IFC-002 Domain Model Design completed - bounded contexts defined"
   },
   "implements": {
-    "flows": [
-      "FLOW-039"
-    ],
+    "flows": ["FLOW-039"],
     "description": "Implements Domain Architecture Foundation - Account aggregate",
     "verified_at": "2025-12-22T18:30:00Z"
   },
@@ -103,9 +99,7 @@
   },
   "stoa_verdicts": {
     "lead": "Domain",
-    "supporting": [
-      "Quality"
-    ],
+    "supporting": ["Quality"],
     "domain_verdict": "PASS",
     "quality_verdict": "PASS",
     "consensus": "PASS"
@@ -115,7 +109,5 @@
   "notes": "Account aggregate implemented with value objects (AccountId, CompanyName, Industry, Address). PrismaAccountRepository provides CRUD operations with contact relationship handling. Repository pattern follows hexagonal architecture - domain has no infrastructure dependencies.",
   "completed_at": "2025-12-22T18:30:00Z",
   "started_at": "2025-12-22T17:30:00Z",
-  "dependencies_resolved": [
-    "IFC-002"
-  ]
+  "dependencies_resolved": ["IFC-002"]
 }

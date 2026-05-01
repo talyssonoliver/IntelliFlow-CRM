@@ -54,7 +54,7 @@ export interface TicketAiChainBundle {
 export async function processTicketAiAutomationJob(
   job: Job<TicketAiAutomationJobData>,
   prisma: PrismaClient,
-  chains: TicketAiChainBundle,
+  chains: TicketAiChainBundle
 ): Promise<TicketAiAutomationJobResult> {
   const start = Date.now();
   const data = TicketAiAutomationJobDataSchema.parse(job.data);

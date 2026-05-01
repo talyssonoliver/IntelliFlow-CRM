@@ -11,14 +11,8 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { TRPCError } from '@trpc/server';
-import {
-  publicFeedbackRouter,
-  extractClientIp,
-} from '../public-feedback.router';
-import {
-  publicFeedbackLimiter,
-  PublicRateLimiter,
-} from '../../../security/public-rate-limiter';
+import { publicFeedbackRouter, extractClientIp } from '../public-feedback.router';
+import { publicFeedbackLimiter, PublicRateLimiter } from '../../../security/public-rate-limiter';
 import type { BaseContext } from '../../../context';
 
 interface MockPublicFeedbackService {
@@ -29,10 +23,7 @@ function makeMockService(): MockPublicFeedbackService {
   return { submit: vi.fn().mockResolvedValue({ success: true, id: 'feedback-1' }) };
 }
 
-function makeCtx(
-  service: MockPublicFeedbackService,
-  req?: Request
-): BaseContext {
+function makeCtx(service: MockPublicFeedbackService, req?: Request): BaseContext {
   return {
     prisma: {} as never,
     container: {} as never,
@@ -187,9 +178,7 @@ describe('publicFeedbackRouter.submit', () => {
     const callerA = publicFeedbackRouter.createCaller(makeCtx(service, reqA));
     const callerB = publicFeedbackRouter.createCaller(makeCtx(service, reqB));
     await callerA.submit({ rating: 3, source: '/x' });
-    await expect(
-      callerB.submit({ rating: 4, source: '/x' })
-    ).resolves.toBeDefined();
+    await expect(callerB.submit({ rating: 4, source: '/x' })).resolves.toBeDefined();
   });
 
   it('throws INTERNAL_SERVER_ERROR when service is missing', async () => {
@@ -220,8 +209,7 @@ describe('publicFeedbackRouter.submit', () => {
     expect(ipHash).toMatch(/^[a-f0-9]{64}$/);
     expect(ipHash).not.toContain('10.20.30.40');
     // Hash is deterministic with the configured salt
-    const salt =
-      process.env.PUBLIC_FEEDBACK_IP_SALT ?? 'pg-126-dev-salt-NEVER-USE-IN-PROD';
+    const salt = process.env.PUBLIC_FEEDBACK_IP_SALT ?? 'pg-126-dev-salt-NEVER-USE-IN-PROD';
     expect(ipHash).toBe(PublicRateLimiter.hashIp('10.20.30.40', salt));
   });
 });

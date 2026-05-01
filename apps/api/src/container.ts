@@ -451,9 +451,7 @@ const createServices = (prismaClient: PrismaClient) => {
   );
 
   // PG-126: Anonymous Public Feedback Widget
-  const publicFeedbackService = new PublicFeedbackService(
-    adapters.publicFeedbackRepository
-  );
+  const publicFeedbackService = new PublicFeedbackService(adapters.publicFeedbackRepository);
 
   const chainVersionService = new ChainVersionService(
     adapters.chainVersionRepository,
@@ -572,11 +570,7 @@ const createServices = (prismaClient: PrismaClient) => {
   const contactDuplicateDetectionService: ContactDuplicateDetectionService =
     createContactDuplicateDetectionService({
       mergeContacts: async (_ctx, primaryId, secondaryId, mergedBy) => {
-        const result = await contactService.mergeContacts(
-          primaryId,
-          secondaryId,
-          mergedBy,
-        );
+        const result = await contactService.mergeContacts(primaryId, secondaryId, mergedBy);
         if (result.isFailure) {
           throw result.error;
         }
@@ -593,12 +587,9 @@ const createServices = (prismaClient: PrismaClient) => {
       generateEmbedding: generateContactQueryEmbedding,
       enqueueEmbeddingJob: async (payload) => {
         try {
-          const { Queue } = await import(
-            /* webpackIgnore: true */ 'bullmq'
-          );
-          const { getBullMQConnectionOptions } = await import(
-            '@intelliflow/platform/queues/connection'
-          );
+          const { Queue } = await import(/* webpackIgnore: true */ 'bullmq');
+          const { getBullMQConnectionOptions } =
+            await import('@intelliflow/platform/queues/connection');
           const queue = new Queue('intelliflow-contact-embed', {
             connection: getBullMQConnectionOptions(),
           });
@@ -612,7 +603,7 @@ const createServices = (prismaClient: PrismaClient) => {
         } catch (error) {
           console.warn(
             '[container] intelliflow-contact-embed enqueue failed (fire-and-forget):',
-            error,
+            error
           );
         }
       },
@@ -624,7 +615,7 @@ const createServices = (prismaClient: PrismaClient) => {
           accountId,
           domain,
           tenantId,
-          maxBatch,
+          maxBatch
         );
         if (result.isFailure) {
           throw result.error;

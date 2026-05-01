@@ -11,10 +11,7 @@
   "dependencies": {
     "all_satisfied": true,
     "verified_at": "2026-04-29T21:54:51.837Z",
-    "required": [
-      "PG-001",
-      "PG-002"
-    ]
+    "required": ["PG-001", "PG-002"]
   },
   "started_at": "2026-04-24T19:50:00Z",
   "completed_at": "2026-04-24T20:00:52.505Z",
@@ -146,9 +143,6 @@
       "note": "Exec session complete; attestation verdict COMPLETE"
     }
   ],
-  "dependencies_resolved": [
-    "PG-001",
-    "PG-002"
-  ],
+  "dependencies_resolved": ["PG-001", "PG-002"],
   "actual_duration_minutes": 15
 }

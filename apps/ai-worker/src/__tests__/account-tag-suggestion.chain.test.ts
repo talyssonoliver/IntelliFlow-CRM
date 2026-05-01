@@ -20,7 +20,8 @@ describe('AccountTagSuggestionChain (IFC-312)', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     createLLMForTenant = ((await import('../lib/llm-factory.js')) as any).createLLMForTenant;
-    sanitizeStringField = ((await import('../utils/input-sanitizer.js')) as any).sanitizeStringField;
+    sanitizeStringField = ((await import('../utils/input-sanitizer.js')) as any)
+      .sanitizeStringField;
   });
 
   it('returns [] when LLM emits no suggestions', async () => {

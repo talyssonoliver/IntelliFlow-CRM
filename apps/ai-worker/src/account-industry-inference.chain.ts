@@ -76,21 +76,19 @@ export async function inferAccountIndustry(
   try {
     const model = await createLLMForTenant('structured', 'standard', { tenantId });
     const structured = model.withStructuredOutput(OutputSchema);
-    const raw = await structured.invoke(
-      [
-        {
-          role: 'system',
-          content:
-            'You classify a CRM account into one of the tenant\'s industry keys. ' +
-            `Allowed keys: ${JSON.stringify(keys)}. ` +
-            'Return industryKey (must be one of the allowed keys), confidence (0-1), reasoning.',
-        },
-        {
-          role: 'user',
-          content: `Account seed: ${JSON.stringify(sanitizedSeed)}. Classify it.`,
-        },
-      ] as unknown as Parameters<typeof structured.invoke>[0]
-    );
+    const raw = await structured.invoke([
+      {
+        role: 'system',
+        content:
+          "You classify a CRM account into one of the tenant's industry keys. " +
+          `Allowed keys: ${JSON.stringify(keys)}. ` +
+          'Return industryKey (must be one of the allowed keys), confidence (0-1), reasoning.',
+      },
+      {
+        role: 'user',
+        content: `Account seed: ${JSON.stringify(sanitizedSeed)}. Classify it.`,
+      },
+    ] as unknown as Parameters<typeof structured.invoke>[0]);
 
     const parsed = OutputSchema.safeParse(raw);
     if (!parsed.success) {

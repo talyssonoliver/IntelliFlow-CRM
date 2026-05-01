@@ -17,10 +17,7 @@ export interface SubmitPublicFeedbackResult {
 export class PublicFeedbackService {
   constructor(private readonly repository: PublicFeedbackRepositoryPort) {}
 
-  async submit(
-    input: PublicFeedbackInput,
-    ipHash: string
-  ): Promise<SubmitPublicFeedbackResult> {
+  async submit(input: PublicFeedbackInput, ipHash: string): Promise<SubmitPublicFeedbackResult> {
     try {
       const record = await this.repository.create({
         rating: input.rating,

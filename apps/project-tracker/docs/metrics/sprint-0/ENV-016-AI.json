@@ -2,10 +2,7 @@
   "task_id": "ENV-016-AI",
   "status": "DONE",
   "dependencies": {
-    "required": [
-      "ENV-009-AI",
-      "ANALYTICS-001"
-    ],
+    "required": ["ENV-009-AI", "ANALYTICS-001"],
     "all_satisfied": true,
     "verified_at": "2026-04-29T21:54:51.685Z"
   },
@@ -28,8 +25,5 @@
   "started_at": "2026-04-13T00:27:36.739Z",
   "actual_duration_minutes": 15,
   "description": "Privacy-First Analytics with AI Insights",
-  "dependencies_resolved": [
-    "ENV-009-AI",
-    "ANALYTICS-001"
-  ]
+  "dependencies_resolved": ["ENV-009-AI", "ANALYTICS-001"]
 }

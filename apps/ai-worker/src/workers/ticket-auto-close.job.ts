@@ -62,13 +62,13 @@ export class TicketAutoCloseWorker {
   constructor(
     private readonly prisma: PrismaClient,
     private readonly redisConnection: { host: string; port: number; password?: string },
-    private readonly deps: AutoCloseDeps,
+    private readonly deps: AutoCloseDeps
   ) {}
 
   async start(): Promise<void> {
     this.queue = new Queue<TicketAutoCloseJobData, TicketAutoCloseJobResult>(
       TICKET_AUTO_CLOSE_QUEUE_NAME,
-      { connection: this.redisConnection },
+      { connection: this.redisConnection }
     );
     this.queueEvents = new QueueEvents(TICKET_AUTO_CLOSE_QUEUE_NAME, {
       connection: this.redisConnection,
@@ -76,10 +76,10 @@ export class TicketAutoCloseWorker {
     this.worker = new Worker<TicketAutoCloseJobData, TicketAutoCloseJobResult>(
       TICKET_AUTO_CLOSE_QUEUE_NAME,
       async (job) => this.process(job),
-      { connection: this.redisConnection, concurrency: 1 },
+      { connection: this.redisConnection, concurrency: 1 }
     );
     this.worker.on('failed', (job, error) =>
-      console.warn(`[ticket-auto-close] job ${job?.id} failed:`, error?.message),
+      console.warn(`[ticket-auto-close] job ${job?.id} failed:`, error?.message)
     );
   }
 
@@ -96,9 +96,7 @@ export class TicketAutoCloseWorker {
 
     const prisma = this.prisma as unknown as {
       ticketAutomationSetting: {
-        findMany: (args: {
-          where?: Record<string, unknown>;
-        }) => Promise<
+        findMany: (args: { where?: Record<string, unknown> }) => Promise<
           Array<{
             tenantId: string;
             autoCloseIdleDays: number;
@@ -196,10 +194,7 @@ export class TicketAutoCloseWorker {
             });
             notificationsWritten++;
           } catch (err) {
-            console.warn(
-              '[ticket-auto-close] notification failed (fire-and-forget):',
-              err,
-            );
+            console.warn('[ticket-auto-close] notification failed (fire-and-forget):', err);
           }
         }
       }
@@ -220,7 +215,7 @@ export class TicketAutoCloseWorker {
 export function createTicketAutoCloseWorker(
   prisma: PrismaClient,
   redisConnection: { host: string; port: number; password?: string },
-  deps: AutoCloseDeps,
+  deps: AutoCloseDeps
 ): TicketAutoCloseWorker {
   return new TicketAutoCloseWorker(prisma, redisConnection, deps);
 }

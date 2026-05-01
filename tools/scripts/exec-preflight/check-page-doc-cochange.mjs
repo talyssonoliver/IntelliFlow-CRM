@@ -163,7 +163,7 @@ function listFilePaths(sectionText) {
   //   4. .specify/... .claude/... etc.
   const found = new Set();
   const re =
-    /(?:(?:apps|packages|docs|tools|\.specify|\.claude|\.github|\.agents)\/[^\s'"`\]\)]+)/g;
+    /(?:(?:apps|packages|docs|tools|\.specify|\.claude|\.github|\.agents)\/[^\s'"`[\]()]+)/g;
   let match;
   while ((match = re.exec(sectionText)) !== null) {
     // Strip trailing punctuation that isn't part of a path.

@@ -29,13 +29,13 @@ const FLAGS_ON: CaseAutomationFlags = {
 describe('assertCanDeleteCase', () => {
   it('no-ops when preventDeleteWithOpenTasks is false', () => {
     expect(() =>
-      assertCanDeleteCase({ openTaskCount: 5 }, { preventDeleteWithOpenTasks: false }),
+      assertCanDeleteCase({ openTaskCount: 5 }, { preventDeleteWithOpenTasks: false })
     ).not.toThrow();
   });
 
   it('no-ops when openTaskCount is zero', () => {
     expect(() =>
-      assertCanDeleteCase({ openTaskCount: 0 }, { preventDeleteWithOpenTasks: true }),
+      assertCanDeleteCase({ openTaskCount: 0 }, { preventDeleteWithOpenTasks: true })
     ).not.toThrow();
   });
 
@@ -65,22 +65,19 @@ describe('assertCanDeleteCase', () => {
 describe('assertCanCreateTag', () => {
   it('no-ops when restrictTagCreationToAdmins is false', () => {
     expect(() =>
-      assertCanCreateTag(
-        { user: { role: 'USER' } },
-        { restrictTagCreationToAdmins: false },
-      ),
+      assertCanCreateTag({ user: { role: 'USER' } }, { restrictTagCreationToAdmins: false })
     ).not.toThrow();
   });
 
   it('allows ADMIN role when flag is on', () => {
     expect(() =>
-      assertCanCreateTag({ user: { role: 'ADMIN' } }, { restrictTagCreationToAdmins: true }),
+      assertCanCreateTag({ user: { role: 'ADMIN' } }, { restrictTagCreationToAdmins: true })
     ).not.toThrow();
   });
 
   it('allows OWNER role when flag is on', () => {
     expect(() =>
-      assertCanCreateTag({ user: { role: 'OWNER' } }, { restrictTagCreationToAdmins: true }),
+      assertCanCreateTag({ user: { role: 'OWNER' } }, { restrictTagCreationToAdmins: true })
     ).not.toThrow();
   });
 

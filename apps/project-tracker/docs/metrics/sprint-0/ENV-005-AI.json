@@ -2,9 +2,7 @@
   "task_id": "ENV-005-AI",
   "status": "DONE",
   "dependencies": {
-    "required": [
-      "ENV-002-AI"
-    ],
+    "required": ["ENV-002-AI"],
     "all_satisfied": true,
     "verified_at": "2026-04-29T21:54:51.678Z"
   },
@@ -27,7 +25,5 @@
   "started_at": "2026-04-13T00:27:36.729Z",
   "actual_duration_minutes": 15,
   "description": "CI/CD Pipeline with Predictive Optimization",
-  "dependencies_resolved": [
-    "ENV-002-AI"
-  ]
+  "dependencies_resolved": ["ENV-002-AI"]
 }

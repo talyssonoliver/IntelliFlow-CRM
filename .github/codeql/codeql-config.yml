@@ -1,4 +1,4 @@
-name: "IntelliFlow CodeQL config"
+name: 'IntelliFlow CodeQL config'
 
 queries:
   - uses: security-extended

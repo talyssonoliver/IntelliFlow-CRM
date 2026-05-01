@@ -28,10 +28,7 @@ import { Button } from '@intelliflow/ui';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import type { TourConfig, TourStep } from '@intelliflow/validators';
-import {
-  getTourSeenAt,
-  markTourSeen,
-} from '@/lib/public/tour-storage';
+import { getTourSeenAt, markTourSeen } from '@/lib/public/tour-storage';
 import {
   trackOnboardingStep,
   trackOnboardingComplete,
@@ -54,9 +51,7 @@ interface TourContextValue {
   close: () => void;
 }
 
-const TourContext = React.createContext<TourContextValue | undefined>(
-  undefined
-);
+const TourContext = React.createContext<TourContextValue | undefined>(undefined);
 
 export function useTourState(): TourContextValue {
   const ctx = React.useContext(TourContext);
@@ -86,11 +81,7 @@ function prefersReducedMotion(): boolean {
   }
 }
 
-export function TourProvider({
-  config,
-  children,
-  disableAutoStart,
-}: TourProviderProps) {
+export function TourProvider({ config, children, disableAutoStart }: TourProviderProps) {
   const [isActive, setIsActive] = React.useState(false);
   const [currentStepIndex, setCurrentStepIndex] = React.useState(0);
   const [mounted, setMounted] = React.useState(false);
@@ -220,9 +211,7 @@ export function TourSpotlight({ rect, reducedMotion }: TourSpotlightProps) {
   }
 
   const pad = 8;
-  const transitionClass = reducedMotion
-    ? ''
-    : 'transition-all duration-200 ease-out';
+  const transitionClass = reducedMotion ? '' : 'transition-all duration-200 ease-out';
 
   return (
     <div
@@ -250,8 +239,7 @@ export function TourSpotlight({ rect, reducedMotion }: TourSpotlightProps) {
 // -----------------------------
 
 export function PublicTour() {
-  const { config, isActive, currentStepIndex, next, previous, skip, close } =
-    useTourState();
+  const { config, isActive, currentStepIndex, next, previous, skip, close } = useTourState();
   const [mounted, setMounted] = React.useState(false);
   const [reducedMotion, setReducedMotion] = React.useState(false);
 
@@ -267,8 +255,7 @@ export function PublicTour() {
 
   const rect =
     typeof document !== 'undefined'
-      ? document.querySelector(step.targetSelector)?.getBoundingClientRect() ??
-        null
+      ? (document.querySelector(step.targetSelector)?.getBoundingClientRect() ?? null)
       : null;
 
   return (
@@ -341,10 +328,7 @@ function TourStepDialog({
           <DialogTitle id={titleId}>{step.title}</DialogTitle>
           <DialogDescription id={descId}>{step.description}</DialogDescription>
         </DialogHeader>
-        <div
-          className="text-xs text-muted-foreground"
-          aria-live="polite"
-        >
+        <div className="text-xs text-muted-foreground" aria-live="polite">
           Step {currentIndex + 1} of {totalSteps}
         </div>
         <DialogFooter className="flex-row gap-2">
@@ -364,25 +348,14 @@ function TourStepDialog({
             disabled={currentIndex === 0}
             data-testid="tour-previous-button"
           >
-            <span
-              className="material-symbols-outlined text-base"
-              aria-hidden="true"
-            >
+            <span className="material-symbols-outlined text-base" aria-hidden="true">
               arrow_back
             </span>
             Previous
           </Button>
-          <Button
-            type="button"
-            onClick={onNext}
-            data-testid="tour-next-button"
-            autoFocus
-          >
+          <Button type="button" onClick={onNext} data-testid="tour-next-button" autoFocus>
             {isLast ? 'Done' : 'Next'}
-            <span
-              className="material-symbols-outlined text-base"
-              aria-hidden="true"
-            >
+            <span className="material-symbols-outlined text-base" aria-hidden="true">
               {isLast ? 'check' : 'arrow_forward'}
             </span>
           </Button>
@@ -420,10 +393,7 @@ export function TourTriggerButton({
         data-testid="tour-trigger-link"
         data-tour-id={tourId}
       >
-        <span
-          className="material-symbols-outlined text-base mr-1"
-          aria-hidden="true"
-        >
+        <span className="material-symbols-outlined text-base mr-1" aria-hidden="true">
           play_circle
         </span>
         {label}
@@ -434,13 +404,7 @@ export function TourTriggerButton({
   return <TourTriggerInlineButton label={label} className={className} />;
 }
 
-function TourTriggerInlineButton({
-  label,
-  className,
-}: {
-  label: string;
-  className?: string;
-}) {
+function TourTriggerInlineButton({ label, className }: { label: string; className?: string }) {
   const { start } = useTourState();
   return (
     <Button
@@ -450,10 +414,7 @@ function TourTriggerInlineButton({
       onClick={start}
       data-testid="tour-trigger-button"
     >
-      <span
-        className="material-symbols-outlined text-base mr-1"
-        aria-hidden="true"
-      >
+      <span className="material-symbols-outlined text-base mr-1" aria-hidden="true">
         play_circle
       </span>
       {label}

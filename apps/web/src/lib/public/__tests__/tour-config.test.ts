@@ -9,10 +9,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { onboardingConfigSchema } from '@intelliflow/validators';
-import {
-  FEATURES_TOUR_CONFIG,
-  ONBOARDING_CONFIG,
-} from '../tour-config';
+import { FEATURES_TOUR_CONFIG, ONBOARDING_CONFIG } from '../tour-config';
 
 describe('FEATURES_TOUR_CONFIG', () => {
   it('is id=features-v1 and route=/features', () => {
@@ -36,11 +33,7 @@ describe('FEATURES_TOUR_CONFIG', () => {
 
 describe('artifacts/misc/onboarding-config.json', () => {
   it('parses and matches the inlined TS config', () => {
-    const artifactPath = resolve(
-      process.cwd(),
-      '../..',
-      'artifacts/misc/onboarding-config.json'
-    );
+    const artifactPath = resolve(process.cwd(), '../..', 'artifacts/misc/onboarding-config.json');
     const raw = readFileSync(artifactPath, 'utf8');
     const parsed = onboardingConfigSchema.parse(JSON.parse(raw));
     expect(parsed.tours[0].id).toBe('features-v1');

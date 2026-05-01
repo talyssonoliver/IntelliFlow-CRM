@@ -63,8 +63,7 @@ const RAW_CONFIG: OnboardingConfig = {
 };
 
 // Validate at module load — throws if the embedded config drifts out of shape.
-export const ONBOARDING_CONFIG: OnboardingConfig =
-  onboardingConfigSchema.parse(RAW_CONFIG);
+export const ONBOARDING_CONFIG: OnboardingConfig = onboardingConfigSchema.parse(RAW_CONFIG);
 
 export const FEATURES_TOUR_CONFIG: TourConfig = ONBOARDING_CONFIG.tours.find(
   (t) => t.id === 'features-v1'

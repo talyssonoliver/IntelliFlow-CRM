@@ -8,11 +8,7 @@ import {
   updateTaskArtifacts,
   type TaskRecord,
 } from '@/lib/csv-status';
-import {
-  isValidTaskId,
-  resolveSprintPath,
-  sanitizeSprintNumber,
-} from '@/lib/paths';
+import { isValidTaskId, resolveSprintPath, sanitizeSprintNumber } from '@/lib/paths';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -115,11 +111,23 @@ export async function POST(request: Request) {
     const legacySpecPath = join(specifyDir, 'specifications', specFilename);
     const legacyContextPath = join(specifyDir, 'context', contextDirName, contextFilename);
     const specExists =
-      (await access(specPath).then(() => true, () => false)) ||
-      (await access(legacySpecPath).then(() => true, () => false));
+      (await access(specPath).then(
+        () => true,
+        () => false
+      )) ||
+      (await access(legacySpecPath).then(
+        () => true,
+        () => false
+      ));
     const contextExists =
-      (await access(contextPath).then(() => true, () => false)) ||
-      (await access(legacyContextPath).then(() => true, () => false));
+      (await access(contextPath).then(
+        () => true,
+        () => false
+      )) ||
+      (await access(legacyContextPath).then(
+        () => true,
+        () => false
+      ));
 
     if (specExists && contextExists && !forceRegenerate) {
       return NextResponse.json({

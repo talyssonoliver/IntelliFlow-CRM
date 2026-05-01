@@ -62,12 +62,7 @@
     "completed_at": "2026-02-05T21:00:00.000Z",
     "duration_minutes": 120,
     "executor": "Claude Code /exec",
-    "agents": [
-      "Foundation",
-      "Security",
-      "Quality",
-      "Domain"
-    ],
+    "agents": ["Foundation", "Security", "Quality", "Domain"],
     "execution_log": ".specify/sprints/sprint-4/execution/IFC-177/20260205-205700-revalidation/summary.json",
     "retry_count": 0,
     "last_error": null
@@ -90,10 +85,7 @@
     "pending": [],
     "all_satisfied": true,
     "verified_at": "2026-04-29T21:54:51.735Z",
-    "required": [
-      "IFC-176",
-      "IFC-128"
-    ]
+    "required": ["IFC-176", "IFC-128"]
   },
   "artifacts": {
     "expected": [
@@ -222,8 +214,5 @@
   ],
   "blockers": [],
   "notes": "Complete TDD implementation of AI Output Review Application Layer. 6 use cases created following hexagonal architecture with proper port/adapter separation. Lock token utilities extracted during REFACTOR phase for DRY compliance. Re-validated 2026-02-05 with full exec protocol compliance.",
-  "dependencies_resolved": [
-    "IFC-176",
-    "IFC-128"
-  ]
+  "dependencies_resolved": ["IFC-176", "IFC-128"]
 }

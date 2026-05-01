@@ -36,12 +36,8 @@
     }
   },
   "artifacts": {
-    "expected": [
-      "apps/web/src/app/leads/[id]/__tests__/page.test.tsx"
-    ],
-    "created": [
-      "apps/web/src/app/leads/[id]/__tests__/page.test.tsx"
-    ],
+    "expected": ["apps/web/src/app/leads/[id]/__tests__/page.test.tsx"],
+    "created": ["apps/web/src/app/leads/[id]/__tests__/page.test.tsx"],
     "missing": []
   },
   "validations": [],

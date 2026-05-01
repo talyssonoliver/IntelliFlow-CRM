@@ -7,15 +7,11 @@
   "sprint": "sprint-11",
   "phase": "phase-1-communications",
   "dependencies": {
-    "required": [
-      "IFC-144"
-    ],
+    "required": ["IFC-144"],
     "verified_at": "2026-04-29T21:54:51.984Z",
     "all_satisfied": true
   },
-  "dependencies_resolved": [
-    "IFC-144"
-  ],
+  "dependencies_resolved": ["IFC-144"],
   "status": "DONE",
   "started_at": "2026-02-16T22:34:39Z",
   "completed_at": "2026-02-19T22:50:00Z",
