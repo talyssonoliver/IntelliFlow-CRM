@@ -419,6 +419,7 @@ export const mockLead = {
   estimatedValue: null,
   tags: [],
   isStarred: false, // PG-059
+  accountId: null,
 };
 
 export const mockContact = {

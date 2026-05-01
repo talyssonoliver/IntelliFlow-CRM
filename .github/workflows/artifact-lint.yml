@@ -6,13 +6,13 @@ on:
       - main
       - develop
     paths:
-      - '**/*.log'
-      - '**/*.html'
-      - '**/*.json'
-      - '**/*.csv'
-      - 'artifacts/**'
-      - 'tools/lint/artifact-paths.ts'
-      - '.github/workflows/artifact-lint.yml'
+      - "**/*.log"
+      - "**/*.html"
+      - "**/*.json"
+      - "**/*.csv"
+      - "artifacts/**"
+      - "tools/lint/artifact-paths.ts"
+      - ".github/workflows/artifact-lint.yml"
   push:
     branches:
       - main
@@ -27,6 +27,9 @@ jobs:
     name: Lint Artifact Paths
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      pull-requests: write
+      contents: read
 
     steps:
       - name: Checkout code
@@ -39,8 +42,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '22'
-          cache: 'pnpm'
+          node-version: "22"
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -157,7 +160,15 @@ jobs:
 
       - name: Scan for .env files (except .env.example)
         run: |
-          ENV_FILES=$(find . -name ".env*" -not -name ".env.example" -not -path "*/node_modules/*" -not -path "*/.git/*")
+          # Exclude template/example env files (.env.example, .env.development, .env.test)
+          # These are intentional dev-template files with placeholder values, not real secrets.
+          ENV_FILES=$(find . -name ".env*" \
+            -not -name ".env.example" \
+            -not -name ".env.development" \
+            -not -name ".env.test" \
+            -not -name "*.env.example" \
+            -not -path "*/node_modules/*" \
+            -not -path "*/.git/*")
           if [ -n "$ENV_FILES" ]; then
             echo "::error::Found .env files that should not be committed:"
             echo "$ENV_FILES"
@@ -238,7 +249,13 @@ jobs:
   summary:
     name: Summary
     runs-on: ubuntu-latest
-    needs: [lint-artifact-paths, security-scan, artifact-size-check, validate-gitignore]
+    needs:
+      [
+        lint-artifact-paths,
+        security-scan,
+        artifact-size-check,
+        validate-gitignore,
+      ]
     if: always()
 
     steps:
