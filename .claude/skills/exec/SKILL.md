@@ -67,6 +67,34 @@ Read spec, plan, and hydrated context. Includes Context Acknowledgement Gate if 
 Generate run ID, create execution directory, implement via RED/GREEN/REFACTOR cycle, and ensure the real runtime path uses the new behavior before moving on.
 **See `references/phase2-tdd-workflow.md`**
 
+**Wave 3.1 — Lock-claim auto-step (run BEFORE the first Edit/Write)**:
+Compute the intersection of the plan's `Files to Modify` list with
+`.claude/locks/contended-files.json`. If non-empty, claim every match in
+one alphabetical batch BEFORE touching any file (the lock script enforces
+alphabetical acquisition to prevent deadlock):
+
+```bash
+INTERSECT=$(node -e "
+const fs=require('fs');
+const contended=JSON.parse(fs.readFileSync('.claude/locks/contended-files.json','utf8')).contended_paths;
+const plan=fs.readFileSync(process.argv[1],'utf8');
+const filesToModify=[...plan.matchAll(/^[\s-]*(?:\[[ x]\]\s*)?([a-zA-Z0-9_./\-]+\.(?:ts|tsx|js|mjs|json|md|yml|yaml|prisma|csv|sql))/gm)].map(m=>m[1]);
+console.log(contended.filter(p=>filesToModify.includes(p)).sort().join(' '));
+" \"$PLAN_FILE\")
+
+if [ -n \"$INTERSECT\" ]; then
+  CLAUDE_TASK_ID=$TASK_ID node tools/scripts/locks/claim.mjs $TASK_ID $INTERSECT
+fi
+```
+
+Set `CLAUDE_TASK_ID=$TASK_ID` in the session env so `agent-tier-guard.mjs`
+enforces the claim on every subsequent Edit/Write to a contended path
+(without it, the hook is a no-op). Locks auto-release at session end via
+`stop-guard.mjs`, or explicitly via
+`node tools/scripts/locks/release.mjs $TASK_ID --all` if /exec exits
+abnormally. If the claim itself fails (another task holds the lock), abort
+Phase 2 and surface the holder task ID — do NOT proceed without the lock.
+
 ### Phase 2.5: Container Registration Check (backend/API tasks)
 Verify new services are registered in `container.ts` + `context.ts`.
 **See `references/phase2.5-container-check.md`**

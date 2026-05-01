@@ -233,6 +233,25 @@ function getCompletedAt(taskId, sprint) {
   return null;
 }
 
+/**
+ * Cutoff date for the agent/<TASK_ID> branch-naming convention. Tasks
+ * completed before this date predate the convention; their work landed on
+ * main through whatever process existed at the time, NOT via a dedicated
+ * agent/<TASK_ID> branch. Flagging them as orphans is a false positive
+ * that drowns out the real signal.
+ *
+ * Filter rule: if a Completed task has NO branch_url in its task-status
+ * JSON AND its completed_at predates this cutoff, skip the audit entirely
+ * (return null, don't write to orphans.jsonl). Tasks completed on/after
+ * this date without a branch_url are real orphans — that's the bug class
+ * the audit was built to detect.
+ *
+ * Override via env: AUDIT_CONVENTION_CUTOFF=YYYY-MM-DD
+ */
+const CONVENTION_CUTOFF = new Date(
+  process.env.AUDIT_CONVENTION_CUTOFF || '2026-04-28T00:00:00Z'
+).getTime();
+
 /** Audit a single task. Returns an orphan record or null if healthy. */
 function auditTask(row) {
   const taskId = (row['Task ID'] || '').trim();
@@ -240,6 +259,19 @@ function auditTask(row) {
   const sprint = parseInt(row['Target Sprint'] || '0', 10);
 
   if (!taskId || (status !== 'completed' && status !== 'done')) return null;
+
+  // Pre-naming-convention filter — drop the false-positive class that
+  // dominated the first --all run (~395 of 399 hits). A task with no
+  // branch_url AND completed_at before the convention adoption date never
+  // had an agent/<TASK_ID> branch by design; flagging it is noise.
+  const branchUrl = getBranchUrl(taskId, isNaN(sprint) ? 0 : sprint);
+  const completedAtIso = getCompletedAt(taskId, isNaN(sprint) ? 0 : sprint);
+  if (!branchUrl && completedAtIso) {
+    const completedTs = Date.parse(completedAtIso);
+    if (!Number.isNaN(completedTs) && completedTs < CONVENTION_CUTOFF) {
+      return null; // pre-convention; not an orphan
+    }
+  }
 
   const branchName = getBranchName(taskId, isNaN(sprint) ? 0 : sprint);
   const branchCheck = checkBranch(branchName);
