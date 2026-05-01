@@ -6,9 +6,9 @@ Gate 4b ("Worktree Landed") verifies that an agent's work has actually been
 persisted to the shared remote before the task is stamped `COMPLETE`. It
 requires three things to be true simultaneously: the worktree's working tree
 must be clean (no uncommitted edits), the current branch must have at least one
-commit beyond `origin/main`, and that branch must have been pushed to the
-remote so that `origin/agent/<TASK_ID>` resolves. This gate exists to prevent
-the IFC-227 / PG-053 / PG-054 class of orphan bug, where a task was marked
+commit beyond `origin/main`, and that branch must have been pushed to the remote
+so that `origin/agent/<TASK_ID>` resolves. This gate exists to prevent the
+IFC-227 / PG-053 / PG-054 class of orphan bug, where a task was marked
 `verdict: COMPLETE` against worktree-only state and the implementation was never
 visible outside the agent's private working directory. Without this gate, a
 session crash, worktree removal, or pool slot reclaim silently erases all work.
@@ -183,9 +183,9 @@ git fetch origin master
 git log --oneline -3 origin/main
 ```
 
-If `origin/main` is behind the canonical remote (e.g., another agent merged
-work since your last fetch), the `rev-list` counts will be inflated. Fetch
-always resolves this.
+If `origin/main` is behind the canonical remote (e.g., another agent merged work
+since your last fetch), the `rev-list` counts will be inflated. Fetch always
+resolves this.
 
 **b) Check whether `git-destructive-guard.mjs` silently blocked the push.**
 
