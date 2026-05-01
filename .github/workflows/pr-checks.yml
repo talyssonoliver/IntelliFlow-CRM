@@ -11,8 +11,8 @@ concurrency:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-  NODE_VERSION: "22"
-  PNPM_VERSION: "10.33.0"
+  NODE_VERSION: '22'
+  PNPM_VERSION: '10.33.0'
   TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
   TURBO_TEAM: ${{ vars.TURBO_TEAM }}
   NODE_OPTIONS: --max-old-space-size=4096
@@ -74,7 +74,7 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -94,7 +94,7 @@ jobs:
       - name: A11y route reconciliation
         run: pnpm run validate:a11y-routes
         env:
-          VALIDATION_STRICT: "1"
+          VALIDATION_STRICT: '1'
 
       - name: Artifact path linting
         run: pnpm run lint:artifacts
@@ -119,7 +119,7 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -155,7 +155,7 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -191,7 +191,7 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -242,7 +242,7 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -270,7 +270,7 @@ jobs:
       - name: Run Lighthouse CI
         uses: treosh/lighthouse-ci-action@v11
         with:
-          configPath: "./lighthouserc.js"
+          configPath: './lighthouserc.js'
           urls: |
             https://intelliflow-pr-${{ github.event.pull_request.number }}.vercel.app
             https://intelliflow-pr-${{ github.event.pull_request.number }}.vercel.app/login
@@ -306,8 +306,7 @@ jobs:
   pr-summary:
     name: PR Summary
     runs-on: ubuntu-latest
-    needs:
-      [pr-validation, quality-checks, test-coverage, build-preview, lighthouse]
+    needs: [pr-validation, quality-checks, test-coverage, build-preview, lighthouse]
     if: always() && github.event.pull_request.draft == false
     steps:
       - name: Generate summary
