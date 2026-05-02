@@ -34,10 +34,10 @@
     "db:migrate:create": "prisma migrate dev --create-only",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
-    "db:seed": "tsx --env-file=.env prisma/seed.ts",
-    "db:cleanup-legacy": "tsx --env-file=.env prisma/cleanup-legacy-seed-ids.ts",
-    "db:cleanup-legacy:dry-run": "tsx --env-file=.env prisma/cleanup-legacy-seed-ids.ts --dry-run",
-    "db:seed:help-articles": "pnpm run db:snapshot:help-articles:check && tsx --env-file=.env prisma/seed-help-articles.cli.ts",
+    "db:seed": "tsx --env-file-if-exists=.env prisma/seed.ts",
+    "db:cleanup-legacy": "tsx --env-file-if-exists=.env prisma/cleanup-legacy-seed-ids.ts",
+    "db:cleanup-legacy:dry-run": "tsx --env-file-if-exists=.env prisma/cleanup-legacy-seed-ids.ts --dry-run",
+    "db:seed:help-articles": "pnpm run db:snapshot:help-articles:check && tsx --env-file-if-exists=.env prisma/seed-help-articles.cli.ts",
     "db:snapshot:help-articles": "tsx prisma/scripts/generate-help-articles-snapshot.ts",
     "db:snapshot:help-articles:check": "tsx prisma/scripts/generate-help-articles-snapshot.ts --check",
     "typecheck:seed-help-articles": "tsc --noEmit --project prisma/tsconfig.seed.json",
@@ -50,7 +50,7 @@
     "test:watch": "vitest"
   },
   "prisma": {
-    "seed": "tsx --env-file=.env prisma/seed.ts"
+    "seed": "tsx --env-file-if-exists=.env prisma/seed.ts"
   },
   "dependencies": {
     "@intelliflow/domain": "workspace:*",

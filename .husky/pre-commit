@@ -86,4 +86,44 @@ pnpm run typecheck || {
   exit 1
 }
 
+# Repo policy (2026-05-02): no new lint silencers in source code. Refactor
+# properly instead. Catches `eslint-disable*` (line + block forms, JS and JSX
+# comment styles) and `@ts-ignore` / `@ts-expect-error` / `@ts-nocheck` added
+# in this commit's STAGED-line set. Pre-existing lines are not flagged.
+#
+# Override: ESCAPE_LINT_SILENCER=1 git commit ... (only with explicit user
+# approval — record the reason in the commit body).
+if [ "${ESCAPE_LINT_SILENCER:-0}" != "1" ]; then
+  STAGED_TS=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(ts|tsx|js|jsx|mjs|cjs)$' || true)
+  if [ -n "$STAGED_TS" ]; then
+    SILENCER_HITS=""
+    for f in $STAGED_TS; do
+      # Only inspect lines being ADDED (start with + but not +++); skip removed lines.
+      ADDED=$(git diff --cached -- "$f" | grep -E '^\+[^+]' | grep -E 'eslint-disable|@ts-ignore|@ts-expect-error|@ts-nocheck' || true)
+      if [ -n "$ADDED" ]; then
+        SILENCER_HITS="${SILENCER_HITS}
+${f}:
+${ADDED}
+"
+      fi
+    done
+    if [ -n "$SILENCER_HITS" ]; then
+      echo ""
+      echo "❌ New lint silencer(s) staged. Repo policy: refactor, never suppress."
+      echo "$SILENCER_HITS"
+      echo ""
+      echo "Forbidden directives in NEW code:"
+      echo "  • // eslint-disable / // eslint-disable-next-line / /* eslint-disable */"
+      echo "  • {/* eslint-disable */}"
+      echo "  • // @ts-ignore / // @ts-expect-error / // @ts-nocheck"
+      echo ""
+      echo "Fix the underlying issue (extract helper, use semantic HTML, narrow"
+      echo "the type, drop the unused import). If you genuinely cannot, override"
+      echo "with ESCAPE_LINT_SILENCER=1 git commit ... and document WHY in the"
+      echo "commit body."
+      exit 1
+    fi
+  fi
+fi
+
 echo "✅ All pre-commit checks passed! (Full tests run in CI)"
