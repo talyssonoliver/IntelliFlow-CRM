@@ -155,8 +155,8 @@ export class CaseDeadlineMonitorWorker {
     let approachingCount = 0;
     let escalationCount = 0;
 
-    const now = Date.now();
-    const approachingCutoff = now + data.approachingThresholdMs;
+    const nowMs = Date.now();
+    const approachingCutoff = nowMs + data.approachingThresholdMs;
 
     for (const s of settings) {
       if (!s.notifyOnDeadlineApproaching && !s.autoEscalateOverdue) continue;
@@ -171,57 +171,15 @@ export class CaseDeadlineMonitorWorker {
       });
       casesScanned += cases.length;
 
-      for (const c of cases) {
-        if (!c.deadline) continue;
-        const deadlineMs = c.deadline.getTime();
-
-        const overdue = now > deadlineMs;
-        const approaching = !overdue && deadlineMs <= approachingCutoff;
-
-        if (overdue && s.autoEscalateOverdue) {
-          const next = bumpPriority(c.priority);
-          if (next !== c.priority) {
-            await prismaShim.case.update({ where: { id: c.id }, data: { priority: next } });
-          }
-          await this.deps.createNotification({
-            tenantId: c.tenantId,
-            userId: c.assignedTo,
-            type: 'case_escalated',
-            title: `Case overdue: ${c.title}`,
-            body: `Case "${c.title}" is past its deadline. Priority bumped to ${next}.`,
-            priority: 'high',
-            entityType: 'case',
-            entityId: c.id,
-            entityName: c.title,
-            actionUrl: `/cases/${c.id}`,
-            metadata: {
-              reason: 'auto_escalate_overdue',
-              deadline: c.deadline.toISOString(),
-              previousPriority: c.priority,
-              newPriority: next,
-            },
-          });
-          escalationCount++;
-        } else if (approaching && s.notifyOnDeadlineApproaching) {
-          await this.deps.createNotification({
-            tenantId: c.tenantId,
-            userId: c.assignedTo,
-            type: 'case_deadline_approaching',
-            title: `Case deadline approaching: ${c.title}`,
-            body: `Case "${c.title}" is due within 24 hours.`,
-            priority: 'normal',
-            entityType: 'case',
-            entityId: c.id,
-            entityName: c.title,
-            actionUrl: `/cases/${c.id}`,
-            metadata: {
-              reason: 'deadline_approaching',
-              deadline: c.deadline.toISOString(),
-            },
-          });
-          approachingCount++;
-        }
-      }
+      const { approaching, escalations } = await this.processCasesForTenant(
+        cases,
+        s,
+        prismaShim,
+        nowMs,
+        approachingCutoff
+      );
+      approachingCount += approaching;
+      escalationCount += escalations;
     }
 
     return {
@@ -232,6 +190,112 @@ export class CaseDeadlineMonitorWorker {
       elapsedMs: Date.now() - start,
       completedAt: new Date().toISOString(),
     };
+  }
+
+  private async processCasesForTenant(
+    cases: Array<{
+      id: string;
+      tenantId: string;
+      title: string;
+      status: string;
+      priority: Priority;
+      deadline: Date | null;
+      assignedTo: string;
+    }>,
+    flags: CaseMonitorFlags & { tenantId: string },
+    prismaShim: {
+      case: {
+        update: (args: { where: { id: string }; data: { priority: Priority } }) => Promise<unknown>;
+      };
+    },
+    nowMs: number,
+    approachingCutoff: number
+  ): Promise<{ approaching: number; escalations: number }> {
+    let approaching = 0;
+    let escalations = 0;
+
+    for (const c of cases) {
+      if (!c.deadline) continue;
+      const deadlineMs = c.deadline.getTime();
+      const overdue = nowMs > deadlineMs;
+      const isApproaching = !overdue && deadlineMs <= approachingCutoff;
+
+      // deadline is non-null here — the `!c.deadline` guard continues above.
+      const cWithDeadline = c as typeof c & { deadline: Date };
+      if (overdue && flags.autoEscalateOverdue) {
+        await this.handleOverdueCase(cWithDeadline, prismaShim);
+        escalations++;
+      } else if (isApproaching && flags.notifyOnDeadlineApproaching) {
+        await this.handleApproachingCase(cWithDeadline);
+        approaching++;
+      }
+    }
+
+    return { approaching, escalations };
+  }
+
+  private async handleOverdueCase(
+    c: {
+      id: string;
+      tenantId: string;
+      title: string;
+      priority: Priority;
+      deadline: Date;
+      assignedTo: string;
+    },
+    prismaShim: {
+      case: {
+        update: (args: { where: { id: string }; data: { priority: Priority } }) => Promise<unknown>;
+      };
+    }
+  ): Promise<void> {
+    const next = bumpPriority(c.priority);
+    if (next !== c.priority) {
+      await prismaShim.case.update({ where: { id: c.id }, data: { priority: next } });
+    }
+    await this.deps.createNotification({
+      tenantId: c.tenantId,
+      userId: c.assignedTo,
+      type: 'case_escalated',
+      title: `Case overdue: ${c.title}`,
+      body: `Case "${c.title}" is past its deadline. Priority bumped to ${next}.`,
+      priority: 'high',
+      entityType: 'case',
+      entityId: c.id,
+      entityName: c.title,
+      actionUrl: `/cases/${c.id}`,
+      metadata: {
+        reason: 'auto_escalate_overdue',
+        deadline: c.deadline.toISOString(),
+        previousPriority: c.priority,
+        newPriority: next,
+      },
+    });
+  }
+
+  private async handleApproachingCase(c: {
+    id: string;
+    tenantId: string;
+    title: string;
+    deadline: Date;
+    assignedTo: string;
+  }): Promise<void> {
+    await this.deps.createNotification({
+      tenantId: c.tenantId,
+      userId: c.assignedTo,
+      type: 'case_deadline_approaching',
+      title: `Case deadline approaching: ${c.title}`,
+      body: `Case "${c.title}" is due within 24 hours.`,
+      priority: 'normal',
+      entityType: 'case',
+      entityId: c.id,
+      entityName: c.title,
+      actionUrl: `/cases/${c.id}`,
+      metadata: {
+        reason: 'deadline_approaching',
+        deadline: c.deadline.toISOString(),
+      },
+    });
   }
 }
 

@@ -76,7 +76,7 @@ describe('OpportunityService (additional coverage)', () => {
     });
 
     it('should fail when opportunity not found', async () => {
-      const fakeId = '00000000-0000-0000-0000-000000000000';
+      const fakeId = '00000000-0000-4000-8000-000000000000';
       const result = await service.getOpportunityById(fakeId);
 
       expect(result.isFailure).toBe(true);
@@ -409,7 +409,7 @@ describe('OpportunityService (additional coverage)', () => {
       } as any).value;
       await opportunityRepository.save(opp);
 
-      const fakeAccountId = '00000000-0000-0000-0000-000000000000';
+      const fakeAccountId = '00000000-0000-4000-8000-000000000000';
       const result = await service.updateOpportunity(
         opp.id.value,
         { accountId: fakeAccountId },
@@ -430,7 +430,7 @@ describe('OpportunityService (additional coverage)', () => {
       }).value;
       await opportunityRepository.save(opp);
 
-      const fakeContactId = '00000000-0000-0000-0000-000000000000';
+      const fakeContactId = '00000000-0000-4000-8000-000000000000';
       const result = await service.updateOpportunity(
         opp.id.value,
         { contactId: fakeContactId },
@@ -442,7 +442,7 @@ describe('OpportunityService (additional coverage)', () => {
     });
 
     it('should fail when opportunity not found', async () => {
-      const fakeId = '00000000-0000-0000-0000-000000000000';
+      const fakeId = '00000000-0000-4000-8000-000000000000';
       const result = await service.updateOpportunity(fakeId, { value: 100 }, 'updater');
 
       expect(result.isFailure).toBe(true);
@@ -850,7 +850,7 @@ describe('OpportunityService (additional coverage)', () => {
     });
 
     it('should fail if opportunity not found', async () => {
-      const fakeId = '00000000-0000-0000-0000-000000000000';
+      const fakeId = '00000000-0000-4000-8000-000000000000';
       const result = await service.changeStage(fakeId, 'QUALIFICATION', 'user', '');
 
       expect(result.isFailure).toBe(true);

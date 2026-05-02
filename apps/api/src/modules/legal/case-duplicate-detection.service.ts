@@ -144,38 +144,35 @@ function sameCalendarDay(a: Date | null | undefined, b: Date | null | undefined)
   );
 }
 
+function scoreTitleField(
+  strategy: CaseDuplicateStrategy,
+  input: CaseCheckInput,
+  candidate: Pick<Case, 'title'>
+): number {
+  const ip = input.title ?? '';
+  const cp = candidate.title ?? '';
+  if (!ip || !cp) return 0;
+  if (strategy === 'exact') return trimLower(ip) === trimLower(cp) ? 100 : 0;
+  if (strategy === 'normalized') return normalize(ip) === normalize(cp) ? 100 : 0;
+  return similarityPercent(normalize(ip), normalize(cp));
+}
+
 function scoreField(
   field: CaseDuplicateField,
   strategy: CaseDuplicateStrategy,
   input: CaseCheckInput,
   candidate: Pick<Case, 'title' | 'clientId' | 'deadline'>
 ): number {
-  switch (field) {
-    case 'title': {
-      const ip = input.title ?? '';
-      const cp = candidate.title ?? '';
-      if (!ip || !cp) return 0;
-      if (strategy === 'exact') return trimLower(ip) === trimLower(cp) ? 100 : 0;
-      if (strategy === 'normalized') return normalize(ip) === normalize(cp) ? 100 : 0;
-      return similarityPercent(normalize(ip), normalize(cp));
-    }
-    case 'client': {
-      if (!input.clientId || !candidate.clientId) return 0;
-      return input.clientId === candidate.clientId ? 100 : 0;
-    }
-    case 'deadline': {
-      return sameCalendarDay(input.deadline ?? null, candidate.deadline ?? null) ? 100 : 0;
-    }
-    case 'externalId': {
-      // The Case model has no externalId column today; rules targeting this
-      // field are accepted at the settings layer (validator enum) but cannot
-      // match real rows. Score 0 so the rule is a no-op until a follow-up
-      // task adds the column.
-      return 0;
-    }
-    default:
-      return 0;
+  if (field === 'title') return scoreTitleField(strategy, input, candidate);
+  if (field === 'client') {
+    if (!input.clientId || !candidate.clientId) return 0;
+    return input.clientId === candidate.clientId ? 100 : 0;
   }
+  if (field === 'deadline') {
+    return sameCalendarDay(input.deadline ?? null, candidate.deadline ?? null) ? 100 : 0;
+  }
+  // 'externalId': Case model has no externalId column today; score 0 (no-op).
+  return 0;
 }
 
 function rulesFromRows(
@@ -204,6 +201,32 @@ function rulesFromRows(
     }));
 }
 
+function applyRuleToCandidate(
+  rule: CaseEvaluableRule,
+  floor: number,
+  input: CaseCheckInput,
+  candidate: Pick<Case, 'id' | 'title' | 'clientId' | 'deadline'>,
+  seen: Map<string, CaseDuplicateMatch>
+): void {
+  if (!candidate || !candidate.id) return;
+  if (input.id && input.id === candidate.id) return;
+
+  const score = scoreField(rule.field, rule.matchStrategy, input, candidate);
+  if (score < floor) return;
+
+  const match: CaseDuplicateMatch = {
+    candidate: { id: candidate.id, title: candidate.title },
+    ruleField: rule.field,
+    matchStrategy: rule.matchStrategy,
+    score,
+    collisionAction: rule.collisionAction,
+  };
+  const existingMatch = seen.get(candidate.id);
+  if (!existingMatch || existingMatch.score < score) {
+    seen.set(candidate.id, match);
+  }
+}
+
 export function evaluateCaseDuplicateRules(
   input: CaseCheckInput,
   existing: readonly Pick<Case, 'id' | 'title' | 'clientId' | 'deadline'>[],
@@ -216,29 +239,12 @@ export function evaluateCaseDuplicateRules(
   if (active.length === 0) return [];
 
   const sorted = [...active].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
-
   const seen = new Map<string, CaseDuplicateMatch>();
 
   for (const rule of sorted) {
     const floor = rule.matchStrategy === 'fuzzy' ? FUZZY_FLOOR : 100;
     for (const candidate of existing) {
-      if (!candidate || !candidate.id) continue;
-      if (input.id && input.id === candidate.id) continue;
-
-      const score = scoreField(rule.field, rule.matchStrategy, input, candidate);
-      if (score < floor) continue;
-
-      const match: CaseDuplicateMatch = {
-        candidate: { id: candidate.id, title: candidate.title },
-        ruleField: rule.field,
-        matchStrategy: rule.matchStrategy,
-        score,
-        collisionAction: rule.collisionAction,
-      };
-      const existingMatch = seen.get(candidate.id);
-      if (!existingMatch || existingMatch.score < score) {
-        seen.set(candidate.id, match);
-      }
+      applyRuleToCandidate(rule, floor, input, candidate, seen);
     }
   }
 

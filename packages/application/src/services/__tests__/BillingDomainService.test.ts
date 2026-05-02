@@ -171,7 +171,7 @@ describe('BillingDomainService', () => {
     });
 
     it('should return Result.fail if not found', async () => {
-      const result = await service.issueInvoice('00000000-0000-0000-0000-000000000000');
+      const result = await service.issueInvoice('00000000-0000-4000-8000-000000000000');
       expect(result.isFailure).toBe(true);
     });
 
@@ -221,7 +221,7 @@ describe('BillingDomainService', () => {
     it('should return Result.fail if invoice not found', async () => {
       const amount = Money.fromCents(1000, 'GBP').value;
       const result = await service.recordPayment(
-        '00000000-0000-0000-0000-000000000000',
+        '00000000-0000-4000-8000-000000000000',
         amount,
         'CARD'
       );
@@ -296,7 +296,7 @@ describe('BillingDomainService', () => {
     it('should return Result.fail if not found', async () => {
       const refund = Money.fromCents(1000, 'GBP').value;
       const result = await service.processRefund(
-        '00000000-0000-0000-0000-000000000000',
+        '00000000-0000-4000-8000-000000000000',
         refund,
         'CUSTOMER_REQUEST'
       );
@@ -343,7 +343,7 @@ describe('BillingDomainService', () => {
     });
 
     it('should return Result.fail if not found', async () => {
-      const result = await service.voidInvoice('00000000-0000-0000-0000-000000000000');
+      const result = await service.voidInvoice('00000000-0000-4000-8000-000000000000');
       expect(result.isFailure).toBe(true);
     });
 
@@ -383,7 +383,7 @@ describe('BillingDomainService', () => {
     });
 
     it('should return Result.fail if not found', async () => {
-      const result = await service.getInvoice('00000000-0000-0000-0000-000000000000', 'tenant-001');
+      const result = await service.getInvoice('00000000-0000-4000-8000-000000000000', 'tenant-001');
       expect(result.isFailure).toBe(true);
     });
   });

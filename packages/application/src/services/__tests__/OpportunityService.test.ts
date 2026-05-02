@@ -85,7 +85,7 @@ describe('OpportunityService', () => {
     });
 
     it('should fail if account not found', async () => {
-      const fakeAccountId = '00000000-0000-0000-0000-000000000000';
+      const fakeAccountId = '00000000-0000-4000-8000-000000000000';
 
       const result = await service.createOpportunity({
         name: 'Test Opportunity',
@@ -121,7 +121,7 @@ describe('OpportunityService', () => {
     });
 
     it('should fail if contact not found', async () => {
-      const fakeContactId = '00000000-0000-0000-0000-000000000000';
+      const fakeContactId = '00000000-0000-4000-8000-000000000000';
 
       const result = await service.createOpportunity({
         name: 'Test Opportunity',
@@ -216,7 +216,7 @@ describe('OpportunityService', () => {
     });
 
     it('should fail if opportunity not found', async () => {
-      const fakeId = '00000000-0000-0000-0000-000000000000';
+      const fakeId = '00000000-0000-4000-8000-000000000000';
 
       const result = await service.advanceStage(fakeId, 'user', '');
 
@@ -305,7 +305,7 @@ describe('OpportunityService', () => {
     });
 
     it('should fail if opportunity not found', async () => {
-      const fakeId = '00000000-0000-0000-0000-000000000000';
+      const fakeId = '00000000-0000-4000-8000-000000000000';
 
       const result = await service.updateValue(fakeId, 100000, 'user', '');
 
@@ -347,7 +347,7 @@ describe('OpportunityService', () => {
     });
 
     it('should fail if opportunity not found', async () => {
-      const fakeId = '00000000-0000-0000-0000-000000000000';
+      const fakeId = '00000000-0000-4000-8000-000000000000';
 
       const result = await service.updateProbability(fakeId, 50, 'user', '');
 
@@ -392,7 +392,7 @@ describe('OpportunityService', () => {
     });
 
     it('should fail if opportunity not found', async () => {
-      const fakeId = '00000000-0000-0000-0000-000000000000';
+      const fakeId = '00000000-0000-4000-8000-000000000000';
 
       const result = await service.updateExpectedCloseDate(fakeId, new Date(), 'user', '');
 
@@ -438,7 +438,7 @@ describe('OpportunityService', () => {
     });
 
     it('should fail if opportunity not found', async () => {
-      const fakeId = '00000000-0000-0000-0000-000000000000';
+      const fakeId = '00000000-0000-4000-8000-000000000000';
 
       const result = await service.markAsWon(fakeId, 'user', '');
 
@@ -485,7 +485,7 @@ describe('OpportunityService', () => {
     });
 
     it('should fail if opportunity not found', async () => {
-      const fakeId = '00000000-0000-0000-0000-000000000000';
+      const fakeId = '00000000-0000-4000-8000-000000000000';
 
       const result = await service.markAsLost(fakeId, 'Reason for losing', 'user', '');
 
@@ -527,7 +527,7 @@ describe('OpportunityService', () => {
     });
 
     it('should fail if opportunity not found', async () => {
-      const fakeId = '00000000-0000-0000-0000-000000000000';
+      const fakeId = '00000000-0000-4000-8000-000000000000';
 
       const result = await service.reopenOpportunity(fakeId, 'user', '');
 
@@ -711,7 +711,7 @@ describe('OpportunityService', () => {
     });
 
     it('should fail if opportunity not found', async () => {
-      const fakeId = '00000000-0000-0000-0000-000000000000';
+      const fakeId = '00000000-0000-4000-8000-000000000000';
 
       const result = await service.deleteOpportunity(fakeId, '');
 

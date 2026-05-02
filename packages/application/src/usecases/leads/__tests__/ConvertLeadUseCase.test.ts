@@ -84,7 +84,7 @@ describe('ConvertLeadUseCase', () => {
 
     it('should fail when lead is not found', async () => {
       const input: ConvertLeadInput = {
-        leadId: '00000000-0000-0000-0000-000000000000',
+        leadId: '00000000-0000-4000-8000-000000000000',
         contactId: 'contact-123',
         accountId: null,
         convertedBy: 'sales-rep-1',

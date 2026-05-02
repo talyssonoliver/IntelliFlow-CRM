@@ -106,7 +106,7 @@ describe('TaskService - Additional Coverage', () => {
     });
 
     it('should fail when task not found', async () => {
-      const fakeId = '00000000-0000-0000-0000-000000000000';
+      const fakeId = '00000000-0000-4000-8000-000000000000';
 
       const result = await service.getTaskById(fakeId);
 
@@ -171,8 +171,8 @@ describe('TaskService - Additional Coverage', () => {
   describe('getTasksDueSoon()', () => {
     it('should return tasks due soon', async () => {
       const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      tomorrow.setHours(12, 0, 0, 0);
+      tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+      tomorrow.setUTCHours(12, 0, 0, 0);
 
       const task = Task.create({
         title: 'Due Soon Task',
@@ -221,7 +221,7 @@ describe('TaskService - Additional Coverage', () => {
 
     it('should categorize task due this month correctly', async () => {
       const nextMonth = new Date();
-      nextMonth.setDate(nextMonth.getDate() + 20);
+      nextMonth.setUTCDate(nextMonth.getUTCDate() + 20);
 
       const task = Task.create({
         title: 'Monthly Task',
@@ -237,7 +237,7 @@ describe('TaskService - Additional Coverage', () => {
 
     it('should not count completed tasks in metrics', async () => {
       const pastDate = new Date();
-      pastDate.setDate(pastDate.getDate() - 5);
+      pastDate.setUTCDate(pastDate.getUTCDate() - 5);
 
       const task = Task.create({
         title: 'Completed Overdue',
@@ -254,7 +254,7 @@ describe('TaskService - Additional Coverage', () => {
 
     it('should not count cancelled tasks in metrics', async () => {
       const pastDate = new Date();
-      pastDate.setDate(pastDate.getDate() - 5);
+      pastDate.setUTCDate(pastDate.getUTCDate() - 5);
 
       const task = Task.create({
         title: 'Cancelled Overdue',
@@ -294,7 +294,7 @@ describe('TaskService - Additional Coverage', () => {
 
   describe('assignToOpportunity() - additional paths', () => {
     it('should fail when task is not found', async () => {
-      const fakeId = '00000000-0000-0000-0000-000000000000';
+      const fakeId = '00000000-0000-4000-8000-000000000000';
 
       const result = await service.assignToOpportunity(fakeId, testOpportunity.id.value, 'user');
 
@@ -308,7 +308,7 @@ describe('TaskService - Additional Coverage', () => {
       }).value;
       await taskRepository.save(task);
 
-      const fakeOppId = '00000000-0000-0000-0000-000000000000';
+      const fakeOppId = '00000000-0000-4000-8000-000000000000';
 
       const result = await service.assignToOpportunity(task.id.value, fakeOppId, 'user');
 
@@ -341,7 +341,7 @@ describe('TaskService - Additional Coverage', () => {
       }).value;
       await taskRepository.save(task);
 
-      const fakeLeadId = '00000000-0000-0000-0000-000000000000';
+      const fakeLeadId = '00000000-0000-4000-8000-000000000000';
 
       const result = await service.assignToLead(task.id.value, fakeLeadId, 'user');
 
@@ -355,7 +355,7 @@ describe('TaskService - Additional Coverage', () => {
     });
 
     it('should fail when task not found', async () => {
-      const fakeTaskId = '00000000-0000-0000-0000-000000000000';
+      const fakeTaskId = '00000000-0000-4000-8000-000000000000';
 
       const result = await service.assignToLead(fakeTaskId, testLead.id.value, 'user');
 
@@ -439,7 +439,7 @@ describe('TaskService - Additional Coverage', () => {
 
   describe('createTask() - contact not found', () => {
     it('should fail when contact not found', async () => {
-      const fakeContactId = '00000000-0000-0000-0000-000000000000';
+      const fakeContactId = '00000000-0000-4000-8000-000000000000';
 
       const result = await service.createTask({
         title: 'Invalid Contact Task',
@@ -454,7 +454,7 @@ describe('TaskService - Additional Coverage', () => {
 
   describe('createTask() - opportunity not found', () => {
     it('should fail when opportunity not found', async () => {
-      const fakeOppId = '00000000-0000-0000-0000-000000000000';
+      const fakeOppId = '00000000-0000-4000-8000-000000000000';
 
       const result = await service.createTask({
         title: 'Invalid Opp Task',
@@ -470,7 +470,7 @@ describe('TaskService - Additional Coverage', () => {
   describe('createTask() - with due date', () => {
     it('should succeed with future due date', async () => {
       const futureDate = new Date();
-      futureDate.setDate(futureDate.getDate() + 7);
+      futureDate.setUTCDate(futureDate.getUTCDate() + 7);
 
       const result = await service.createTask({
         title: 'Future Due Task',
@@ -574,7 +574,7 @@ describe('TaskService - Additional Coverage', () => {
       await taskRepository.save(task);
 
       const futureDate = new Date();
-      futureDate.setDate(futureDate.getDate() + 14);
+      futureDate.setUTCDate(futureDate.getUTCDate() + 14);
 
       const saveSpy = vi.spyOn(taskRepository, 'save').mockRejectedValueOnce(new Error('DB error'));
 

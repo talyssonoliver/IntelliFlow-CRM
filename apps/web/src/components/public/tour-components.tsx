@@ -308,6 +308,11 @@ function TourStepDialog({
   const titleId = React.useId();
   const descId = React.useId();
   const isLast = currentIndex === totalSteps - 1;
+  const nextButtonRef = React.useRef<HTMLButtonElement>(null);
+
+  React.useEffect(() => {
+    nextButtonRef.current?.focus();
+  }, []);
 
   return (
     <Dialog
@@ -317,7 +322,6 @@ function TourStepDialog({
       }}
     >
       <DialogContent
-        role="dialog"
         aria-labelledby={titleId}
         aria-describedby={descId}
         data-testid="tour-step-dialog"
@@ -350,10 +354,10 @@ function TourStepDialog({
           >
             <span className="material-symbols-outlined text-base" aria-hidden="true">
               arrow_back
-            </span>
+            </span>{' '}
             Previous
           </Button>
-          <Button type="button" onClick={onNext} data-testid="tour-next-button" autoFocus>
+          <Button ref={nextButtonRef} type="button" onClick={onNext} data-testid="tour-next-button">
             {isLast ? 'Done' : 'Next'}
             <span className="material-symbols-outlined text-base" aria-hidden="true">
               {isLast ? 'check' : 'arrow_forward'}

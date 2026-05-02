@@ -1,11 +1,52 @@
 """CSV repository adapter for reading/writing sprint plan."""
 
 import csv
+import re
 from pathlib import Path
 from typing import Optional
 from dataclasses import dataclass
 
 from ..domain.task import Task, Tier, GateProfile, TaskStatus
+
+# CSV cells like "Artifacts To Track" / "Evidence Required" use `;` as the
+# canonical entry separator and a `TYPE:` prefix on each entry. Path-bearing
+# types (FILE, ARTIFACT, EVIDENCE) get unwrapped to a bare path; non-path
+# tags (POLICY, ENV) are dropped because they don't represent files we can
+# check for existence. Legacy rows that used `,` as separator with no prefix
+# still parse correctly via the fallback split.
+_PATH_TYPES = ("ARTIFACT", "EVIDENCE", "FILE")
+_TAG_TYPES = ("POLICY", "ENV")
+_PREFIX_RE = re.compile(r"^([A-Z][A-Z_]{1,15}):(.*)$")
+
+
+def _parse_artifact_field(text: str) -> tuple[str, ...]:
+    """Split a CSV artifact/evidence cell into a tuple of bare paths.
+
+    Splits on `;` (canonical) and `,` (legacy). Strips known type prefixes
+    and drops POLICY/ENV tags entirely.
+    """
+    if not text:
+        return ()
+    out: list[str] = []
+    for part in re.split(r"[;,]", text):
+        value = part.strip()
+        if not value:
+            continue
+        m = _PREFIX_RE.match(value)
+        if m:
+            type_, rest = m.group(1), m.group(2).strip()
+            if type_ in _TAG_TYPES:
+                continue  # tag, not a file path
+            if type_ in _PATH_TYPES:
+                if rest:
+                    out.append(rest)
+                continue
+            # Unknown prefix — keep the whole entry, the linter will flag
+            # it via is_valid_artifact_path.
+            out.append(value)
+        else:
+            out.append(value)
+    return tuple(out)
 
 
 @dataclass
@@ -124,10 +165,16 @@ class CsvPlanRepository:
 
     def _row_to_task(self, row: dict[str, str]) -> Task:
         """Convert CSV row to Task entity."""
-        # Parse dependencies (prefer CleanDependencies if available)
+        # Parse dependencies (prefer CleanDependencies if available).
+        # Dependency cells may carry a `:TYPE` suffix (FS/SF/FF/SS — the
+        # CleanDependencies column strips them, but raw "Dependencies" may
+        # not). Split on `;` (canonical) and `,` (legacy), then strip the
+        # suffix so the linker can resolve `IFC-069:FS` → `IFC-069`.
         deps_str = row.get("CleanDependencies") or row.get("Dependencies") or ""
         dependencies = tuple(
-            d.strip() for d in deps_str.split(",") if d.strip()
+            d.split(":", 1)[0].strip()
+            for d in re.split(r"[;,]", deps_str)
+            if d.strip()
         )
 
         # Parse sprint
@@ -141,15 +188,11 @@ class CsvPlanRepository:
 
         # Parse evidence required
         evidence_str = row.get("Evidence Required", "")
-        evidence = tuple(
-            e.strip() for e in evidence_str.split(",") if e.strip()
-        )
+        evidence = _parse_artifact_field(evidence_str)
 
         # Parse artifacts expected
         artifacts_str = row.get("Artifacts Expected") or row.get("Artifacts To Track") or ""
-        artifacts = tuple(
-            a.strip() for a in artifacts_str.split(",") if a.strip()
-        )
+        artifacts = _parse_artifact_field(artifacts_str)
 
         return Task(
             task_id=row.get("Task ID", "").strip(),

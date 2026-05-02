@@ -57,4 +57,60 @@ if ! git diff --quiet artifacts/benchmarks/baseline.json 2>/dev/null; then
 fi
 echo "✅ Inventory in sync"
 
+# ── 5. Lint (turbo) ─────────────────────────────────────────────────────────
+# Mirror CI's "Lint" step from PR Checks. Fast with turbo cache; ~30s cold.
+echo "📋 Linting (turbo run lint)..."
+pnpm run lint || {
+  echo "❌ Lint errors detected — see output above."
+  exit 1
+}
+echo "✅ Lint OK"
+
+# ── 6. Typecheck + sonar-guard in CI mode ───────────────────────────────────
+# Mirror CI's "Type check" step. The local default of sonar-guard checks only
+# staged files, which means a clean staging area silently passes everything.
+# CI scans every file changed since origin/main — so we set CI=true here to
+# match. Caught the cognitive-complexity errors that were slipping past
+# pre-push for weeks.
+echo "🔧 Typechecking + sonar-guard (CI scope)..."
+CI=true pnpm run typecheck || {
+  echo "❌ Typecheck or sonar-guard violations detected."
+  echo "   Refactor — do NOT add eslint-disable comments to mask violations."
+  exit 1
+}
+echo "✅ Typecheck + sonar-guard OK"
+
+# ── 7. Sprint-plan linter ────────────────────────────────────────────────────
+# Mirror CI's "Sprint Plan Validation" job. Runs the Python plan-linter the
+# same way ci.yml does. Catches phantom-completion drift between
+# Sprint_plan.csv and on-disk artifacts/evidence.
+echo "📋 Validating Sprint_plan (Sprint 0)..."
+( cd tools/plan && python -m src.adapters.cli lint --sprint 0 ) || {
+  echo "❌ Sprint plan validation failed."
+  echo "   See output above. Common cause: a task marked Completed is missing"
+  echo "   one of its declared ARTIFACT: or EVIDENCE: paths."
+  exit 1
+}
+echo "✅ Sprint plan OK"
+
+# ── 8. ai-worker unit tests ─────────────────────────────────────────────────
+# Mirror CI's "Unit Tests" step focused on the ai-worker workspace. This is
+# the workspace that has historically had the most flaky test breakage —
+# infinite recursion in getErrorMessage and missing prisma mock both shipped
+# to CI before pre-push caught them. ~25s.
+if [ "${SKIP_TEST_GATE:-0}" != "1" ]; then
+  echo "🧪 Running ai-worker tests..."
+  pnpm --filter @intelliflow/ai-worker test 2>&1 | tail -20
+  AIW_EXIT="${PIPESTATUS[0]}"
+  if [ "$AIW_EXIT" != "0" ]; then
+    echo "❌ ai-worker tests failed (exit $AIW_EXIT)."
+    echo "   Override with SKIP_TEST_GATE=1 git push only after diagnosing the"
+    echo "   failure — never just to push faster."
+    exit 1
+  fi
+  echo "✅ ai-worker tests OK"
+else
+  echo "⚠️  Skipping ai-worker tests (SKIP_TEST_GATE=1)"
+fi
+
 echo "✅ All pre-push checks passed!"

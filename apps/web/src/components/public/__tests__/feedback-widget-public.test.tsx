@@ -313,20 +313,16 @@ describe('FeedbackRatingRadioGroup', () => {
     render(<Harness />);
     const group = screen.getByTestId('public-feedback-rating');
     fireEvent.keyDown(group, { key: 'ArrowRight' });
-    const star1 = screen.getByTestId('public-feedback-rating-1');
-    expect(star1.getAttribute('aria-checked')).toBe('true');
+    const star1 = screen.getByTestId('public-feedback-rating-1') as HTMLInputElement;
+    expect(star1.checked).toBe(true);
   });
 
   it('Home key sets rating to 1, End sets to 5', () => {
     render(<Harness />);
     const group = screen.getByTestId('public-feedback-rating');
     fireEvent.keyDown(group, { key: 'End' });
-    expect(screen.getByTestId('public-feedback-rating-5').getAttribute('aria-checked')).toBe(
-      'true'
-    );
+    expect((screen.getByTestId('public-feedback-rating-5') as HTMLInputElement).checked).toBe(true);
     fireEvent.keyDown(group, { key: 'Home' });
-    expect(screen.getByTestId('public-feedback-rating-1').getAttribute('aria-checked')).toBe(
-      'true'
-    );
+    expect((screen.getByTestId('public-feedback-rating-1') as HTMLInputElement).checked).toBe(true);
   });
 });

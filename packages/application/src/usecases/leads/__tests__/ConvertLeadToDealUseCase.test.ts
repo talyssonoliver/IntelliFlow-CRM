@@ -607,7 +607,7 @@ describe('ConvertLeadToDealUseCase', () => {
 
     it('should fail when lead is not found', async () => {
       const input: ConvertLeadToDealInput = {
-        leadId: '00000000-0000-0000-0000-000000000000',
+        leadId: '00000000-0000-4000-8000-000000000000',
         dealValue: 10000,
         accountName: 'Test Corp',
         convertedBy: 'sales-rep',

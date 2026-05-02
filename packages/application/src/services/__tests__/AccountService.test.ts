@@ -158,7 +158,7 @@ describe('AccountService', () => {
     });
 
     it('should fail if account not found', async () => {
-      const fakeId = '00000000-0000-0000-0000-000000000000';
+      const fakeId = '00000000-0000-4000-8000-000000000000';
 
       const result = await service.updateAccountInfo(fakeId, { name: 'New Name' }, 'updater');
 
@@ -194,7 +194,7 @@ describe('AccountService', () => {
     });
 
     it('should fail if account not found', async () => {
-      const fakeId = '00000000-0000-0000-0000-000000000000';
+      const fakeId = '00000000-0000-4000-8000-000000000000';
 
       const result = await service.updateRevenue(fakeId, 1000, 'updater');
 
@@ -229,7 +229,7 @@ describe('AccountService', () => {
     });
 
     it('should fail if account not found', async () => {
-      const fakeId = '00000000-0000-0000-0000-000000000000';
+      const fakeId = '00000000-0000-4000-8000-000000000000';
 
       const result = await service.updateEmployeeCount(fakeId, 100, 'updater');
 
@@ -256,7 +256,7 @@ describe('AccountService', () => {
     });
 
     it('should fail if account not found', async () => {
-      const fakeId = '00000000-0000-0000-0000-000000000000';
+      const fakeId = '00000000-0000-4000-8000-000000000000';
 
       const result = await service.categorizeIndustry(fakeId, 'Technology', 'categorizer');
 
@@ -332,7 +332,7 @@ describe('AccountService', () => {
     });
 
     it('should fail if account not found', async () => {
-      const fakeId = '00000000-0000-0000-0000-000000000000';
+      const fakeId = '00000000-0000-4000-8000-000000000000';
 
       const result = await service.calculateAccountHealth(fakeId);
 
@@ -392,7 +392,7 @@ describe('AccountService', () => {
     });
 
     it('should fail if account not found', async () => {
-      const fakeId = '00000000-0000-0000-0000-000000000000';
+      const fakeId = '00000000-0000-4000-8000-000000000000';
 
       const result = await service.getAccountWithContext(fakeId);
 
@@ -541,7 +541,7 @@ describe('AccountService', () => {
     });
 
     it('should fail if account not found', async () => {
-      const fakeId = '00000000-0000-0000-0000-000000000000';
+      const fakeId = '00000000-0000-4000-8000-000000000000';
 
       const result = await service.deleteAccount(fakeId);
 

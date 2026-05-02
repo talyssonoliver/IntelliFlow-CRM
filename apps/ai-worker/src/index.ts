@@ -342,6 +342,25 @@ export type { AccountScoringJobData } from './jobs/account-scoring.job.js';
 export { processTagSuggestionJob, TagSuggestionJobDataSchema } from './jobs/tag-suggestion.job.js';
 export type { TagSuggestionJobData } from './jobs/tag-suggestion.job.js';
 
+// ---------------------------------------------------------------------------
+// Provider display-name helpers (used by initializeWorker)
+// ---------------------------------------------------------------------------
+
+function resolveProviderModelName(config: { provider: string; ollama: { model: string } }): string {
+  if (config.provider === 'ollama') return config.ollama.model;
+  if (config.provider === 'mock') return 'mock';
+  return `litellm/${config.provider}`;
+}
+
+function resolveProviderEndpointUrl(config: {
+  provider: string;
+  ollama: { baseUrl: string };
+}): string {
+  if (config.provider === 'ollama') return config.ollama.baseUrl;
+  if (config.provider === 'mock') return 'mock';
+  return process.env['LITELLM_BASE_URL'] || 'http://localhost:4000/v1';
+}
+
 /**
  * Initialize the AI Worker (legacy mode - library only)
  * @deprecated Use createAIWorker() for queue-based processing
@@ -354,18 +373,8 @@ async function initializeWorker() {
     const { aiConfig } = await import('./config/ai.config.js');
 
     // Derive display model/endpoint from provider config — factory owns actual routing
-    const modelName =
-      aiConfig.provider === 'ollama'
-        ? aiConfig.ollama.model
-        : aiConfig.provider === 'mock'
-          ? 'mock'
-          : `litellm/${aiConfig.provider}`;
-    const endpointUrl =
-      aiConfig.provider === 'ollama'
-        ? aiConfig.ollama.baseUrl
-        : aiConfig.provider === 'mock'
-          ? 'mock'
-          : process.env['LITELLM_BASE_URL'] || 'http://localhost:4000/v1';
+    const modelName = resolveProviderModelName(aiConfig);
+    const endpointUrl = resolveProviderEndpointUrl(aiConfig);
     logger.info(
       {
         provider: aiConfig.provider,

@@ -104,7 +104,7 @@ describe('AccountService — Hierarchy (PG-134)', () => {
     });
 
     it('should fail for non-existent account', async () => {
-      const result = await service.getHierarchy('00000000-0000-0000-0000-000000000000', TENANT);
+      const result = await service.getHierarchy('00000000-0000-4000-8000-000000000000', TENANT);
 
       expect(result.isFailure).toBe(true);
       expect(result.error.message).toContain('not found');
@@ -233,7 +233,7 @@ describe('AccountService — Hierarchy (PG-134)', () => {
 
     it('should fail if account not found', async () => {
       const result = await service.setParent(
-        '00000000-0000-0000-0000-000000000000',
+        '00000000-0000-4000-8000-000000000000',
         '00000000-0000-0000-0000-000000000001',
         TENANT,
         OWNER
@@ -248,7 +248,7 @@ describe('AccountService — Hierarchy (PG-134)', () => {
 
       const result = await service.setParent(
         child.id.value,
-        '00000000-0000-0000-0000-000000000000',
+        '00000000-0000-4000-8000-000000000000',
         TENANT,
         OWNER
       );
@@ -324,7 +324,7 @@ describe('AccountService — Hierarchy (PG-134)', () => {
 
     it('should fail if account not found', async () => {
       const result = await service.getAccountContacts(
-        '00000000-0000-0000-0000-000000000000',
+        '00000000-0000-4000-8000-000000000000',
         TENANT,
         { limit: 20 }
       );
@@ -479,7 +479,7 @@ describe('AccountService — Hierarchy (PG-134)', () => {
 
     it('should fail for non-existent account', async () => {
       const result = await service.getAccountActivity(
-        '00000000-0000-0000-0000-000000000000',
+        '00000000-0000-4000-8000-000000000000',
         TENANT,
         { limit: 20 }
       );

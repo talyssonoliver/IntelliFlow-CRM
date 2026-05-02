@@ -278,7 +278,7 @@ describe('RejectReviewUseCase', () => {
 
     it('should fail when review not found', async () => {
       const input: RejectReviewInput = {
-        reviewId: '00000000-0000-0000-0000-000000000000',
+        reviewId: '00000000-0000-4000-8000-000000000000',
         tenantId: 'tenant-123',
         userId: 'user-456',
         lockToken: generateLockToken(),
