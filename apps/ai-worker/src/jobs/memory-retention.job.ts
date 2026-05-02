@@ -104,7 +104,9 @@ interface RetentionPolicy {
 }
 
 function getErrorMessage(err: unknown): string {
-  return getErrorMessage(err);
+  if (err instanceof Error) return err.message;
+  if (typeof err === 'string') return err;
+  return String(err);
 }
 
 async function scrubConversations(

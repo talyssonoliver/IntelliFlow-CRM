@@ -160,15 +160,22 @@ jobs:
 
       - name: Scan for .env files (except .env.example)
         run: |
-          # Exclude template/example env files (.env.example, .env.development, .env.test)
-          # These are intentional dev-template files with placeholder values, not real secrets.
+          # Exclude template/example env files: anything ending in .example
+          # (covers .env.example, .env.local.example, *.env.example,
+          # *.env.local.example) plus the dev-template files .env.development
+          # and .env.test. All are committed by design as placeholders;
+          # secret-bearing files are gitignored.
+          # Also exclude local agent worktree dirs which never reach CI but
+          # are present during pre-push runs locally — keeps the gate
+          # honest in both environments.
           ENV_FILES=$(find . -name ".env*" \
-            -not -name ".env.example" \
+            -not -name "*.example" \
             -not -name ".env.development" \
             -not -name ".env.test" \
-            -not -name "*.env.example" \
             -not -path "*/node_modules/*" \
-            -not -path "*/.git/*")
+            -not -path "*/.git/*" \
+            -not -path "*/.claude/worktrees/*" \
+            -not -path "*/.claude/worktree-pool/*")
           if [ -n "$ENV_FILES" ]; then
             echo "::error::Found .env files that should not be committed:"
             echo "$ENV_FILES"

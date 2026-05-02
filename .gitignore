@@ -9,6 +9,7 @@ node_modules/
 # testing
 /coverage
 coverage/
+!apps/web/src/app/governance/quality-reports/coverage/
 artifacts/coverage-vitest/
 artifacts/coverage-parts/
 test-results/
@@ -130,6 +131,7 @@ tmp/
 
 # logs
 logs/
+!apps/web/src/app/agent-approvals/logs/
 *.log
 
 # Keep artifacts/logs/ directory (but do not commit *.log files)

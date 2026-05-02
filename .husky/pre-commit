@@ -45,7 +45,7 @@ if git diff --cached --name-only | grep -qE "$ICON_SCAN_PATTERNS"; then
       echo "   (See docs/design/ICON_USAGE.md for troubleshooting.)"
       exit 1
     }
-    git add apps/web/public/fonts/MaterialSymbolsOutlined.woff2 artifacts/perf/material-symbols-glyph-audit.json
+    git add apps/web/public/fonts/MaterialSymbolsOutlined.woff2 artifacts/reports/material-symbols-glyph-audit.json
     echo "✅ Material Symbols font + audit regenerated and staged"
   fi
 fi
