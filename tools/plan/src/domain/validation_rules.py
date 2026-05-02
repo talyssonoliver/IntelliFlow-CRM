@@ -366,7 +366,7 @@ def find_similar_paths(
         filename = missing_path.split("/")[-1]
         # Handle glob patterns
         if "*" in filename:
-            filename = filename.replaceAll("*", "")
+            filename = filename.replace("*", "")
     else:
         filename = missing_path
 
@@ -395,7 +395,7 @@ def find_similar_paths(
     # Try path variations (fast - just checks if alternative exists)
     for old_prefix, new_prefix in path_variations:
         if old_prefix in missing_path:
-            alternative = missing_path.replaceAll(old_prefix, new_prefix)
+            alternative = missing_path.replace(old_prefix, new_prefix)
             if not alternative:
                 alternative = filename
 
