@@ -1,7 +1,7 @@
 # IntelliFlow CRM - Information Architecture
 
 > **Location**: `docs/design/information-architecture.md` **Last Updated**:
-> 2026-04-16 **Total Pages**: 207 | **Total Flows**: 48 | **API Routers**: 56
+> 2026-05-02 **Total Pages**: 208 | **Total Flows**: 48 | **API Routers**: 60
 > (366 procedures) | **Ghost Links**: 0
 
 ---

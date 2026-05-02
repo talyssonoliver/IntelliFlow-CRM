@@ -3,7 +3,7 @@
 > **Location**: `docs/design/page-registry.md` **Purpose**: Central registry of
 > all UI pages with task IDs, KPIs, file paths, components, API routers, test
 > paths, and RACI assignments **Last Updated**: 2026-04-16 (as of Sprint 17)
-> **Total Pages**: 207
+> **Total Pages**: 208
 
 ---
 
@@ -1346,6 +1346,21 @@ Each route entry uses this standard table format:
 | **RACI**       | R: AI Team / A: Product / C: Frontend / I: QA                                      |
 | **Components** | "use client", AgentLogsViewer, Skeleton, Suspense, useRequireAuth, useSearchParams |
 
+### Agent Log Detail (`/agent-approvals/logs/[id]`)
+
+| Field          | Value                                                        |
+| -------------- | ------------------------------------------------------------ |
+| **Task ID**    | PG-152, IFC-197                                              |
+| **File Path**  | `apps/web/src/app/agent-approvals/logs/[id]/page.tsx`        |
+| **Layout**     | `apps/web/src/app/agent-approvals/layout.tsx`                |
+| **API Router** | `apps/api/src/modules/ai-monitoring/ai-monitoring.router.ts` |
+| **E2E Test**   | None                                                         |
+| **Unit Tests** | None                                                         |
+| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms              |
+| **Status**     | Implemented                                                  |
+| **RACI**       | R: AI Team / A: Product / C: Frontend / I: QA                |
+| **Components** | AgentLogDetail, Skeleton, Suspense, useRequireAuth           |
+
 ### AI Preview (`/agent-approvals/preview`)
 
 | Field          | Value                                                                                  |
@@ -1675,7 +1690,7 @@ Each route entry uses this standard table format:
 
 ---
 
-## Section 18: Governance (6 routes)
+## Section 18: Governance (7 routes)
 
 ### Governance Dashboard (`/governance`)
 
@@ -1766,6 +1781,21 @@ Each route entry uses this standard table format:
 | **Status**     | Implemented                                                       |
 | **RACI**       | R: DevRel / A: Engineering / C: Product / I: QA                   |
 | **Components** | Server shell, QualityReportDetailClient (client island), Suspense |
+
+### Coverage Report (`/governance/quality-reports/coverage`)
+
+| Field          | Value                                                           |
+| -------------- | --------------------------------------------------------------- |
+| **Task ID**    | IFC-045, IFC-129                                                |
+| **File Path**  | `apps/web/src/app/governance/quality-reports/coverage/page.tsx` |
+| **Layout**     | `apps/web/src/app/governance/layout.tsx`                        |
+| **API Router** | N/A (uses REST: `/api/quality-reports`)                         |
+| **E2E Test**   | None                                                            |
+| **Unit Tests** | None                                                            |
+| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms                 |
+| **Status**     | Implemented                                                     |
+| **RACI**       | R: DevRel / A: Engineering / C: Product / I: QA                 |
+| **Components** | Server shell, CoverageReportClient (client island), Suspense    |
 
 ---
 

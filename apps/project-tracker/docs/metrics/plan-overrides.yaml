@@ -1435,7 +1435,7 @@ AI-SETUP-001:
   acceptance_owner: 'AI Specialist'
   debt_allowed: no
   evidence_required:
-    - .claude/commands/*
+    - .claude/agents/*
     - .claude/hooks/*
     - artifacts/reports/command-test-results.csv
   acceptance_criteria:
@@ -1694,7 +1694,7 @@ ENV-010-AI:
   evidence_required:
     - tests/*
     - tests/e2e/*
-    - artifacts/coverage/index.html
+    - artifacts/coverage/coverage-summary.json
   notes: 'Test automation. Waiver extended 2026-03-09: Coverage at 89.6% lines / 80.2% branches vs >95% target. Infrastructure solid (741 test files, 18 e2e specs) but gap remains.'
 
 ENV-011-AI:
