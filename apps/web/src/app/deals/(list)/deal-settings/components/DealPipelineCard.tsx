@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { trpc } from '@/lib/trpc';
+import type { OpportunityStage } from '@intelliflow/validators';
 import { Button, EmptyState, Input, Switch, toast } from '@intelliflow/ui';
 
 interface PipelineStageRow {
@@ -83,7 +84,7 @@ export function DealPipelineCard() {
 
   const saveEdit = async (stageKey: string) => {
     await updateStageMutation.mutateAsync({
-      stage: stageKey as any,
+      stage: stageKey as OpportunityStage,
       displayName: editName,
       color: editColor,
       probability: editProbability,
@@ -93,7 +94,7 @@ export function DealPipelineCard() {
 
   const toggleActive = (stage: PipelineStageRow) => {
     updateStageMutation.mutate({
-      stage: stage.stageKey as any,
+      stage: stage.stageKey as OpportunityStage,
       isActive: !stage.isActive,
     });
   };

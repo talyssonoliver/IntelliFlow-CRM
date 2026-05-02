@@ -14,15 +14,9 @@ vi.mock('@intelliflow/ui', () => ({
   Sheet: ({ children, open }: any) =>
     open ? <div data-testid="sheet-root">{children}</div> : null,
   SheetContent: ({ children, ...props }: any) => (
-    // eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- test renders custom modal/dropdown
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label={props['aria-label']}
-      data-testid="sheet-content"
-    >
+    <dialog open aria-modal="true" aria-label={props['aria-label']} data-testid="sheet-content">
       {children}
-    </div>
+    </dialog>
   ),
   SheetTitle: ({ children }: any) => <h2>{children}</h2>,
   SheetDescription: ({ children }: any) => <p>{children}</p>,

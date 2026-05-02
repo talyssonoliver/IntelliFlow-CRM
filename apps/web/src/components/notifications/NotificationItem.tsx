@@ -61,10 +61,10 @@ export const NotificationItem = React.memo(function NotificationItem({
     }
   }, [isUnread, actionLink, notification.id, onMarkAsRead, router]);
 
-  const handleItemClick = useCallback(
-    (e: React.MouseEvent) => {
-      // Don't navigate if clicking on action buttons
-      if ((e.target as HTMLElement).closest('button')) return;
+  const handleButtonClick = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      // Don't navigate if clicking on action buttons inside the card
+      if ((e.target as HTMLElement).closest('[data-action-button]')) return;
       activateItem();
     },
     [activateItem]
@@ -80,19 +80,8 @@ export const NotificationItem = React.memo(function NotificationItem({
     [activateItem]
   );
 
-  let divRole: 'link' | 'button' | undefined;
-  if (actionLink) divRole = 'link';
-  else if (isClickable) divRole = 'button';
-
-  return (
-    // eslint-disable-next-line jsx-a11y/no-static-element-interactions -- notification item handles keyboard dismiss
-    <div
-      onClick={handleItemClick}
-      onKeyDown={handleKeyDown}
-      role={divRole}
-      tabIndex={isClickable ? 0 : undefined}
-      className={`group relative flex w-full items-start gap-4 rounded-xl p-4 shadow-sm border transition-all hover:shadow-md ${isClickable ? 'cursor-pointer' : ''} ${containerClass}`}
-    >
+  const innerContent = (
+    <>
       {/* Priority Indicator */}
       {priorityConfig && (
         <div
@@ -165,7 +154,10 @@ export const NotificationItem = React.memo(function NotificationItem({
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
-                  onClick={() => {
+                  data-action-button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
                     setOptimisticRead(true);
                     onMarkAsRead(notification.id);
                   }}
@@ -181,7 +173,12 @@ export const NotificationItem = React.memo(function NotificationItem({
           <Tooltip>
             <TooltipTrigger asChild>
               <button
-                onClick={() => onDismiss(notification.id)}
+                data-action-button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDismiss(notification.id);
+                }}
                 aria-label="Dismiss"
                 className="flex h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-red-500"
               >
@@ -192,6 +189,23 @@ export const NotificationItem = React.memo(function NotificationItem({
           </Tooltip>
         </TooltipProvider>
       </div>
-    </div>
+    </>
+  );
+
+  const sharedClassName = `group relative flex w-full items-start gap-4 rounded-xl p-4 shadow-sm border transition-all hover:shadow-md ${isClickable ? 'cursor-pointer' : ''} ${containerClass}`;
+
+  if (!isClickable) {
+    return <article className={sharedClassName}>{innerContent}</article>;
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleButtonClick}
+      onKeyDown={handleKeyDown}
+      className={`text-left ${sharedClassName}`}
+    >
+      {innerContent}
+    </button>
   );
 });

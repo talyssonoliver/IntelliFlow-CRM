@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState, type KeyboardEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   ConfirmationDialog,
@@ -194,10 +194,17 @@ export function ArticleAdminList({ initialData, role }: Readonly<ArticleAdminLis
     setCurrentPage(1);
   }, []);
 
-  const handleSearchKeyDown = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
-    if (event.key === 'Escape') {
-      setSearch('');
-    }
+  const searchRegionRef = useRef<HTMLDivElement>(null);
+
+  // Clear search on Escape when focus is within the search region.
+  useEffect(() => {
+    const handleKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key === 'Escape' && searchRegionRef.current?.contains(document.activeElement)) {
+        setSearch('');
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   const confirmDelete = useCallback(async () => {
@@ -232,8 +239,8 @@ export function ArticleAdminList({ initialData, role }: Readonly<ArticleAdminLis
         actions={pageActions}
       />
 
-      {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- event delegation: keyboard shortcut bubbles from search input inside SearchFilterBar */}
-      <div onKeyDown={handleSearchKeyDown}>
+      {}
+      <div role="search" ref={searchRegionRef}>
         <SearchFilterBar
           searchValue={search}
           onSearchChange={setSearch}

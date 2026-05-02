@@ -41,8 +41,7 @@ vi.mock('@intelliflow/ui', async (importOriginal) => ({
   ),
   ConfirmationDialog: ({ open, title, description, onConfirm, onOpenChange }: any) =>
     open ? (
-      // eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- test renders custom modal/dropdown
-      <div data-testid="confirmation-dialog" role="dialog">
+      <dialog data-testid="confirmation-dialog" open>
         <h2>{title}</h2>
         <p>{description}</p>
         <button onClick={onConfirm} data-testid="confirm-button">
@@ -51,7 +50,7 @@ vi.mock('@intelliflow/ui', async (importOriginal) => ({
         <button onClick={() => onOpenChange?.(false)} data-testid="cancel-button">
           Cancel
         </button>
-      </div>
+      </dialog>
     ) : null,
   Button: ({ children, onClick, disabled, ...props }: any) => (
     <button onClick={onClick} disabled={disabled} {...props}>

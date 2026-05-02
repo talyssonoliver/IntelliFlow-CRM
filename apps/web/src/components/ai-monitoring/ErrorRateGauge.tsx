@@ -56,15 +56,14 @@ export function ErrorRateGauge({ driftResult, isLoading }: Readonly<ErrorRateGau
           <Skeleton className="h-24 w-40" />
         ) : (
           <>
-            {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role */}
-            <span
-              role="meter"
-              aria-valuenow={clampedScore}
-              aria-valuemin={0}
-              aria-valuemax={1}
+            <meter
+              min={0}
+              max={1}
+              value={clampedScore}
               aria-label={`Error rate drift gauge: ${formatDriftScore(clampedScore)}`}
-              className="relative block"
-            >
+              className="sr-only"
+            />
+            <span className="relative block">
               <svg width="160" height="90" viewBox="0 0 160 90" aria-hidden="true">
                 <path
                   d={bgPath}

@@ -7,7 +7,7 @@ import {
   CaseInvalidStatusTransitionError,
   DocumentAlreadyAttachedError,
   DocumentNotAttachedError,
-} from '../case';
+} from '../Case';
 import { CaseId } from '../CaseId';
 import { CaseStatusChangedEvent } from '../CaseEvents';
 

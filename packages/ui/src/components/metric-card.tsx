@@ -70,7 +70,9 @@ function formatValue(
       return new Intl.NumberFormat('en-GB', {
         notation: 'compact',
         maximumFractionDigits: 1,
-      }).format(value);
+      })
+        .format(value)
+        .toUpperCase();
 
     case 'number':
     default:

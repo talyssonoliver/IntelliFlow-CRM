@@ -22,7 +22,6 @@ if (process.env['NODE_ENV'] === 'production' && !process.env['PRISMA_FIELD_ENCRY
 
 // Global instance for development hot-reload
 declare global {
-  // eslint-disable-next-line no-var
   var __prisma: unknown;
 }
 
@@ -171,7 +170,7 @@ export async function withTransaction<T>(fn: (tx: TransactionClient) => Promise<
   // Cast via `as any` because the $extends() wrapper changes the transaction
   // callback parameter type; at runtime the extended and base clients expose
   // the same model APIs inside a transaction.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   return (prisma as any).$transaction(fn);
 }
 
@@ -186,7 +185,6 @@ export async function withTransactionOptions<T>(
     isolationLevel?: Prisma.TransactionIsolationLevel;
   }
 ): Promise<T> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (prisma as any).$transaction(fn, options);
 }
 

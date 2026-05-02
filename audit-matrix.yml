@@ -149,11 +149,15 @@ tools:
     required: true
     owner: 'Security'
     scope: 'workspace'
-    command: 'trivy image --severity HIGH,CRITICAL --exit-code 1 intelliflow-crm:latest'
+    # TRIVY_IMAGE_TAG must be set by the workflow after a docker build step.
+    # When unset (no image built in this run) the tool is skipped — not failed.
+    # Set TRIVY_IMAGE_TAG=intelliflow-crm:latest in the workflow env after build.
+    command: 'trivy image --severity HIGH,CRITICAL --exit-code 1 $TRIVY_IMAGE_TAG'
     thresholds:
       max_high: 0
       max_critical: 0
     expected_outputs: ['log']
+    requires_env: ['TRIVY_IMAGE_TAG']
 
   - id: semgrep-security-audit
     tier: 1

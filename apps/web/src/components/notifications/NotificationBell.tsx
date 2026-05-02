@@ -173,11 +173,11 @@ export function NotificationBell() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p
-                          className={`text-sm ${n.isRead ? 'font-medium' : 'font-semibold'} text-slate-900 dark:text-white truncate`}
+                          className={`text-sm ${n.isRead ? 'font-medium' : 'font-semibold'} text-slate-900 dark:text-white line-clamp-2 break-words`}
                         >
                           {n.title}
                         </p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                        <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
                           {formatRelativeTime(n.createdAt)}
                         </p>
                       </div>

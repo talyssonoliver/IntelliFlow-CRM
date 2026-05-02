@@ -1,4 +1,4 @@
-import { generateUuid as uuidv4, isValidUuid as uuidValidate } from '../../shared/uuid';
+import { generateUuid as uuidv4, isValidEntityId } from '../../shared/uuid';
 import { ValueObject } from '../../shared/ValueObject';
 import { Result, DomainError } from '../../shared/Result';
 
@@ -28,7 +28,7 @@ export class AppointmentId extends ValueObject<AppointmentIdProps> {
   }
 
   static create(value: string): Result<AppointmentId, InvalidAppointmentIdError> {
-    if (!value || !uuidValidate(value)) {
+    if (!value || !isValidEntityId(value)) {
       return Result.fail(new InvalidAppointmentIdError(value));
     }
     return Result.ok(new AppointmentId({ value }));

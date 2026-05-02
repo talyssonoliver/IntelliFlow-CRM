@@ -96,10 +96,9 @@ export function MfaQrGenerator({
       {/* QR Code Section */}
       <div className="flex flex-col items-center">
         {}
-        {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- QR is an SVG, figure + role="img" groups it for AT */}
+        {}
         <figure
           className="bg-white p-4 rounded-lg"
-          role="img"
           aria-label={`QR code for setting up two-factor authentication for ${accountName}`}
         >
           <QRCodeSVG value={otpauthUrl} size={200} level="M" marginSize={0} />

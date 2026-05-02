@@ -131,25 +131,17 @@ vi.mock('@/components/shared', () => ({
 // Mock SupportTicketList
 vi.mock('@/components/tickets/ticket-list', () => ({
   SupportTicketList: (props: Record<string, unknown>) => (
-    // eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- test helper renders custom interactive element
-    <div
+    <button
       data-testid="support-ticket-list"
       data-is-loading={String(props.isLoading)}
-      role="button"
-      tabIndex={0}
+      type="button"
       onClick={() => {
         const onRowClick = props.onRowClick as ((t: { id: string }) => void) | undefined;
         if (onRowClick) onRowClick({ id: 'test-123' });
       }}
-      onKeyDown={(e: React.KeyboardEvent) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          const onRowClick = props.onRowClick as ((t: { id: string }) => void) | undefined;
-          if (onRowClick) onRowClick({ id: 'test-123' });
-        }
-      }}
     >
       SupportTicketList
-    </div>
+    </button>
   ),
 }));
 

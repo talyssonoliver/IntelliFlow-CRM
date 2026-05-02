@@ -152,17 +152,14 @@ function PasswordStrengthIndicator({
         </span>
       </div>
       <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
-        {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role */}
-        <span
+        <progress
           className={cn(
-            'h-full rounded-full transition-all duration-300 block',
+            'h-full rounded-full transition-all duration-300 block appearance-none border-none bg-transparent',
             strengthColors[strength],
             strengthWidths[strength]
           )}
-          role="progressbar"
-          aria-valuenow={Math.round((calculatePasswordStrength(password).score / 6) * 100)}
-          aria-valuemin={0}
-          aria-valuemax={100}
+          value={Math.round((calculatePasswordStrength(password).score / 6) * 100)}
+          max={100}
           aria-label={`Password strength: ${strengthLabels[strength]}`}
         />
       </div>

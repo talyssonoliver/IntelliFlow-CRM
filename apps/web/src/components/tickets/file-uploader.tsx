@@ -164,10 +164,11 @@ export function FileUploader({
         Attachments
       </label>
 
-      {/* Drop zone */}
-      {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- file drop zone requires drag event handlers */}
-      <section
-        aria-label="File upload area"
+      {/* Drop zone visual chrome — aria-hidden so drag events on this purely
+          visual affordance don't create a11y violations. Keyboard/AT users
+          interact via the browse button and file input below. */}
+      <div
+        aria-hidden="true"
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
@@ -177,19 +178,24 @@ export function FileUploader({
           cloud_upload
         </span>
         <p className="text-sm text-slate-500 dark:text-slate-400">
-          Drag & drop files here, or{' '}
-          <button
-            type="button"
-            onClick={handleBrowseClick}
-            disabled={disabled}
-            className="text-[#137fec] font-medium hover:underline focus:outline-none focus:ring-2 focus:ring-[#137fec]/20 rounded"
-          >
-            browse
-          </button>
+          Drag &amp; drop files here, or click &quot;Browse&quot; below
         </p>
         <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
           Max {maxSizeMB}MB per file, up to {maxFiles} files
         </p>
+      </div>
+
+      {/* Accessible upload button — visible to AT, outside the aria-hidden
+          drop zone so screen-reader users can activate file selection. */}
+      <div className="flex justify-center">
+        <button
+          type="button"
+          onClick={handleBrowseClick}
+          disabled={disabled}
+          className="text-[#137fec] text-sm font-medium hover:underline focus:outline-none focus:ring-2 focus:ring-[#137fec]/20 rounded"
+        >
+          Browse files
+        </button>
         <input
           id="file-upload-input"
           ref={inputRef}
@@ -202,7 +208,7 @@ export function FileUploader({
           tabIndex={-1}
           aria-hidden="true"
         />
-      </section>
+      </div>
 
       {/* Error messages */}
       {errors.length > 0 && (

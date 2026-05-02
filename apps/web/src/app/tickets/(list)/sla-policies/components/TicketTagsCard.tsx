@@ -192,7 +192,6 @@ export const TicketTagsCard = forwardRef<TicketTagsCardHandle, Props>(function T
                 value={draftName}
                 onChange={(e) => setDraftName(e.target.value)}
                 maxLength={60}
-                autoFocus
               />
             </div>
             <div>

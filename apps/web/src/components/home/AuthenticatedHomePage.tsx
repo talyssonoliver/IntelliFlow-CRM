@@ -272,14 +272,13 @@ function GoalSection({ isLoading, goal }: Readonly<GoalSectionProps>) {
     <>
       <div className="relative w-32 h-32 mx-auto mb-4">
         {}
-        {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- complex SVG/chart visualization requires div wrapper */}
+        {}
         <svg
           className="size-full -rotate-90"
           viewBox="0 0 36 36"
-          role="img"
-          aria-labelledby="goal-progress-title"
+          aria-label={`${progress}% of ${goal?.label || 'goal'} target reached`}
         >
-          <title id="goal-progress-title">{`${progress}% of ${goal?.label || 'goal'} target reached`}</title>
+          <title>{`${progress}% of ${goal?.label || 'goal'} target reached`}</title>
           <path
             className="text-slate-100 dark:text-slate-800"
             d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"

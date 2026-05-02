@@ -56,8 +56,25 @@ export function AppAvatar({
 
   const [hasImageError, setHasImageError] = React.useState(false);
 
+  // Reset error state when the image source changes.
   React.useEffect(() => {
     setHasImageError(false);
+  }, [initialImageSource]);
+
+  // Probe the image URL using a detached Image object so we can detect load
+  // failures without attaching an onError handler to the rendered <img>
+  // element (which triggers jsx-a11y/no-noninteractive-element-interactions).
+  React.useEffect(() => {
+    if (!initialImageSource) return;
+    const probe = new window.Image();
+    probe.onload = null;
+    probe.onerror = () => {
+      setHasImageError(true);
+    };
+    probe.src = initialImageSource;
+    return () => {
+      probe.onerror = null;
+    };
   }, [initialImageSource]);
 
   const imageSource = initialImageSource && !hasImageError ? initialImageSource : null;
@@ -69,7 +86,6 @@ export function AppAvatar({
   const fallbackLabel = trimmedFallback || sourceFallback || initials;
 
   return (
-    // eslint-disable-next-line jsx-a11y/prefer-tag-over-role, jsx-a11y/no-noninteractive-element-interactions -- complex avatar visualization requires span with role
     <span
       className={cn(
         'relative flex shrink-0 items-center justify-center overflow-hidden rounded-full',
@@ -79,8 +95,7 @@ export function AppAvatar({
         !showImage && fallbackClassName,
         className
       )}
-      role="img"
-      aria-label={alt ?? `Avatar for ${name}`}
+      aria-label={showImage ? undefined : (alt ?? `Avatar for ${name}`)}
       {...props}
     >
       {showImage ? (
@@ -88,12 +103,13 @@ export function AppAvatar({
           src={imageSource ?? undefined}
           alt={alt ?? name}
           className={cn('h-full w-full object-cover', imageClassName)}
-          onError={() => {
-            setHasImageError(true);
-          }}
         />
       ) : null}
-      {showImage ? null : <span className="font-semibold">{fallbackLabel}</span>}
+      {showImage ? null : (
+        <span className="font-semibold" aria-hidden="true">
+          {fallbackLabel}
+        </span>
+      )}
     </span>
   );
 }

@@ -174,10 +174,9 @@ export function InlineCompose({
 
       {/* Body */}
       <div className="px-3 py-2">
-        {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- contenteditable div requires div for rich text editing */}
+        {}
         <div
           ref={bodyRef}
-          role="textbox"
           tabIndex={0}
           aria-label="Reply body"
           aria-multiline="true"

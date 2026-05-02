@@ -9,18 +9,10 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { TaskCard } from '../TaskCard';
 
 vi.mock('@intelliflow/ui', () => ({
-  Card: ({ children, className, onClick, role, ...props }: any) => (
-    // eslint-disable-next-line jsx-a11y/no-static-element-interactions -- test renders component with event handlers
-    <div
-      className={className}
-      onClick={onClick}
-      role={role ?? 'button'}
-      tabIndex={0}
-      onKeyDown={vi.fn()}
-      {...props}
-    >
+  Card: ({ children, className, onClick, ...props }: any) => (
+    <button type="button" className={className} onClick={onClick} {...props}>
       {children}
-    </div>
+    </button>
   ),
 }));
 

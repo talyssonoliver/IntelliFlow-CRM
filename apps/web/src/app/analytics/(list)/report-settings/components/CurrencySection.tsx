@@ -65,11 +65,10 @@ export function CurrencySection({ value, onChange }: Readonly<CurrencySectionPro
         </label>
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
-            {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- WAI-ARIA APG combobox pattern: native <select>/<datalist> do not support the filter-search UX (PopoverContent + Input) required here. */}
+            {}
             <Button
               id="currency-trigger"
               variant="outline"
-              role="combobox"
               aria-expanded={open}
               aria-haspopup="listbox"
               aria-label={`Select display currency, current value ${currentLabel?.code ?? value}`}
@@ -96,20 +95,15 @@ export function CurrencySection({ value, onChange }: Readonly<CurrencySectionPro
                 className="h-9"
               />
             </div>
-            {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- WAI-ARIA APG combobox pattern: options render as <li>/<button> to support the filter-search UX; native <select>/<datalist> cannot host the Input+filter children. */}
-            <ul
-              role="listbox"
-              aria-label="Available currencies"
-              className="max-h-64 overflow-y-auto p-1"
-            >
+            {}
+            <ul aria-label="Available currencies" className="max-h-64 overflow-y-auto p-1">
               {filtered.length === 0 && (
                 <li className="px-3 py-2 text-sm text-muted-foreground">
                   No currencies match &quot;{query}&quot;
                 </li>
               )}
               {filtered.map((c) => (
-                // eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- WAI-ARIA APG combobox pattern: paired with role="listbox" above; <option> is invalid inside <ul>.
-                <li key={c.code} role="option" aria-selected={c.code === value}>
+                <li key={c.code} aria-current={c.code === value ? 'true' : undefined}>
                   <button
                     type="button"
                     onClick={() => handleSelect(c.code)}
