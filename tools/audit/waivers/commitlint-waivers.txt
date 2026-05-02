@@ -17,3 +17,12 @@ ed91a32bbc0c fix(ci): subject + header too long — cannot rewrite (pushed)
 ef6f4ef8898f fix(ci): subject + header too long — cannot rewrite (pushed)
 3ea3862b06b2 fix(ci): header too long — cannot rewrite (pushed)
 ce3d07987305 fix(ci): header 122 chars — cannot rewrite (pushed)
+
+# Grandfathered: commits authored before the AI-coauthor trailer ban
+# (commit-msg hook + commit_msg_lint.py policy added 2026-05-02). All
+# subsequent commits are gated; these legacy ones are pinned in waivers.
+9340188d909c fix(ci): historical AI-coauthor trailer — pre-policy, pushed
+c9125ce75192 fix(ci): historical AI-coauthor trailer — pre-policy, pushed
+bf166c82a704 fix(ci): historical AI-coauthor trailer — pre-policy, pushed
+086effdf9ff7 fix(ci): historical AI-coauthor trailer — pre-policy, pushed
+975a1adf88fd fix(ci): historical AI-coauthor trailer — pre-policy, pushed

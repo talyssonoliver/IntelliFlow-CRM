@@ -164,13 +164,14 @@ jobs:
         run: pnpm run build
         env:
           NODE_ENV: production
-          # Real key when the secret is set (release branches, trusted PRs).
-          # 32-byte zero-key fallback when missing (forks, PRs without secret
-          # access) — satisfies the AES-256 key-length guard in
-          # packages/db/src/field-encryption.ts so the build module-load
-          # checks pass. The build never executes the encryption code paths
-          # that would actually use the key, so a known-zero stub is safe
-          # for CI build-only contexts. NEVER use at runtime.
+          # Real key from repo's GitHub Actions secret. Configure at
+          # Settings → Secrets and variables → Actions → New repository secret
+          # named PRISMA_FIELD_ENCRYPTION_KEY (the same key that lives in
+          # .env.local locally). The `||` fallback is a 32-byte zero-key
+          # safety net for forked PRs where secrets are not exposed; the
+          # build only needs the value to satisfy the AES-256 key-length
+          # guard in `packages/db/src/field-encryption.ts` at module load.
+          # NEVER use the fallback at runtime.
           PRISMA_FIELD_ENCRYPTION_KEY: ${{ secrets.PRISMA_FIELD_ENCRYPTION_KEY || 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=' }}
           # Stub connection strings prevent Prisma / pg-adapter from throwing at
           # module-load time when the route.ts dynamic export is not sufficient to

@@ -36,7 +36,9 @@ jobs:
 
     services:
       postgres:
-        image: postgres:15
+        # pgvector image so the baseline migration's `CREATE EXTENSION vector`
+        # works. Vanilla postgres:15 doesn't ship the pgvector binaries.
+        image: pgvector/pgvector:pg15
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -78,9 +80,15 @@ jobs:
       - name: Generate Prisma client
         run: pnpm run db:generate
 
-      - name: Create Supabase roles
+      - name: Bootstrap Supabase schemas + roles
         run: |
           PGPASSWORD=postgres psql -h localhost -U postgres -d intelliflow_test -v ON_ERROR_STOP=1 <<'SQL'
+            -- Schemas: baseline migration uses `CREATE EXTENSION ... WITH SCHEMA "extensions"`
+            -- which Supabase auto-creates but vanilla postgres does not.
+            CREATE SCHEMA IF NOT EXISTS extensions;
+            -- Roles: Supabase's standard triplet, referenced by GRANT statements
+            -- in the baseline migration. CREATE ROLE IF NOT EXISTS isn't valid
+            -- Postgres syntax — guard with pg_roles lookup.
             DO $$
             BEGIN
               IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
@@ -94,6 +102,7 @@ jobs:
               END IF;
             END
             $$;
+            GRANT USAGE ON SCHEMA extensions TO postgres, anon, authenticated, service_role;
           SQL
 
       - name: Run database migrations

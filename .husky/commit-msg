@@ -41,4 +41,28 @@ if [ "$MSG_LENGTH" -gt 100 ]; then
   echo "⚠️  Warning: Commit message subject is too long (${MSG_LENGTH} chars, max 100)"
 fi
 
+# Reject AI-coauthor trailers. The repo's authorship policy is that human
+# committers own the work; AI assistance is a tool, not a co-author. Catches
+# the canonical patterns emitted by various AI coding tools (Claude, Copilot,
+# Cursor, etc.) so any of them gets rejected at commit time, not in review.
+#
+# Override (rare, for genuine third-party-tool collaboration logging) by
+# setting ALLOW_AI_COAUTHOR=1 in the environment. Default is BLOCK.
+if [ "${ALLOW_AI_COAUTHOR:-0}" != "1" ]; then
+  AI_COAUTHOR_PATTERNS='Co-Authored-By: Claude|Co-Authored-By: GitHub Copilot|Co-authored-by: Claude|Co-authored-by: GitHub Copilot|noreply@anthropic\.com|🤖 Generated with .*Claude'
+  if echo "$COMMIT_MSG" | grep -qiE "$AI_COAUTHOR_PATTERNS"; then
+    echo "❌ Commit message contains an AI-coauthor trailer."
+    echo ""
+    echo "Repo policy: AI assistance is a tool, not a co-author."
+    echo "Remove any of these lines from your commit message:"
+    echo "  • Co-Authored-By: Claude ..."
+    echo "  • Co-Authored-By: GitHub Copilot ..."
+    echo "  • <noreply@anthropic.com>"
+    echo "  • 🤖 Generated with [Claude Code]"
+    echo ""
+    echo "(Override only if you really need it: ALLOW_AI_COAUTHOR=1 git commit ...)"
+    exit 1
+  fi
+fi
+
 echo "✅ Commit message validated!"

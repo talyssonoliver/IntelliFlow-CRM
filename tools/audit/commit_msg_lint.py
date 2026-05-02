@@ -63,6 +63,15 @@ _HEADER_RE = re.compile(
 # Upper-case first char, PascalCase, ALL-CAPS (START-CASE covers multi-word Caps)
 _BAD_SUBJECT_CASE_RE = re.compile(r"^[A-Z]")
 
+# AI-coauthor trailers: repo policy is that AI assistance is a tool, not a
+# co-author. Catches the canonical patterns emitted by Claude, Copilot, etc.
+_AI_COAUTHOR_RE = re.compile(
+    r"(?:Co-Authored-By|Co-authored-by):\s*(?:Claude|GitHub Copilot|Cursor)"
+    r"|noreply@anthropic\.com"
+    r"|🤖\s*Generated with .*Claude",
+    re.IGNORECASE,
+)
+
 
 # ---------------------------------------------------------------------------
 # Waiver loading
@@ -214,6 +223,17 @@ def _lint_message(sha: str, raw_msg: str) -> list[str]:
         if len(line) > 100:
             violations.append(
                 f"{sha[:12]}: line {i} too long ({len(line)} chars, max 100): {line[:60]!r}…"
+            )
+
+    # ---- AI-coauthor trailer policy ----
+    # Repo policy: AI assistance is a tool, not a co-author. Reject any commit
+    # whose message body carries a Claude / Copilot / Cursor coauthor trailer
+    # or the "Generated with Claude" robot-emoji line.
+    for i, line in enumerate(body_lines, start=2):
+        if _AI_COAUTHOR_RE.search(line):
+            violations.append(
+                f"{sha[:12]}: line {i} contains an AI-coauthor trailer (repo policy "
+                f"forbids these): {line.strip()!r}"
             )
 
     return violations

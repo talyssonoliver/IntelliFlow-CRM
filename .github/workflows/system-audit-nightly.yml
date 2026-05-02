@@ -66,6 +66,14 @@ jobs:
         run: python -m pytest tools/audit/tests -q
 
       - name: Run nightly audit (Tier 1 + Tier 2 + Tier 3, full scope)
+        env:
+          # Use the repo's real secrets when available; fall back to stubs
+          # only for forked PRs where secrets aren't exposed. See
+          # system-audit.yml for rationale.
+          PRISMA_FIELD_ENCRYPTION_KEY: ${{ secrets.PRISMA_FIELD_ENCRYPTION_KEY || 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=' }}
+          AI_AUDIT_SIGNING_KEY: ${{ secrets.AI_AUDIT_SIGNING_KEY || 'ci-audit-stub-key-not-used-at-runtime' }}
+          DATABASE_URL: postgresql://stub:stub@localhost:5432/stub
+          DIRECT_URL: postgresql://stub:stub@localhost:5432/stub
         run: |
           RUN_ID="nightly-${{ github.run_id }}-${{ github.run_attempt }}"
           python tools/audit/run_audit.py --mode nightly --run-id "$RUN_ID" --concurrency 2
