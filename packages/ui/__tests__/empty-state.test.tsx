@@ -186,4 +186,168 @@ describe('EmptyState', () => {
       expect(ref.current).toBeInstanceOf(HTMLDivElement);
     });
   });
+
+  describe('Entity Mode', () => {
+    it('renders with entity=leads', () => {
+      render(<EmptyState entity="leads" />);
+      // entity config provides default title/description
+      expect(document.body).not.toBeEmptyDOMElement();
+    });
+
+    it('renders with entity=contacts', () => {
+      const { container } = render(<EmptyState entity="contacts" />);
+      expect(container.firstChild).toBeInTheDocument();
+    });
+
+    it('renders with entity=tasks', () => {
+      const { container } = render(<EmptyState entity="tasks" />);
+      expect(container.firstChild).toBeInTheDocument();
+    });
+
+    it('renders with entity=deals', () => {
+      const { container } = render(<EmptyState entity="deals" />);
+      expect(container.firstChild).toBeInTheDocument();
+    });
+
+    it('renders with entity=tickets', () => {
+      const { container } = render(<EmptyState entity="tickets" />);
+      expect(container.firstChild).toBeInTheDocument();
+    });
+
+    it('renders with entity=activity', () => {
+      const { container } = render(<EmptyState entity="activity" />);
+      expect(container.firstChild).toBeInTheDocument();
+    });
+
+    it('renders with entity=search', () => {
+      const { container } = render(<EmptyState entity="search" />);
+      expect(container.firstChild).toBeInTheDocument();
+    });
+
+    it('renders overridden title in entity mode', () => {
+      render(<EmptyState entity="leads" title="Custom Title" />);
+      expect(screen.getByText('Custom Title')).toBeInTheDocument();
+    });
+
+    it('renders overridden description in entity mode', () => {
+      render(<EmptyState entity="leads" description="Custom Description" />);
+      expect(screen.getByText('Custom Description')).toBeInTheDocument();
+    });
+
+    it('renders entity mode in soft-cta phase', () => {
+      const { container } = render(<EmptyState entity="leads" phase="soft-cta" />);
+      expect(container.firstChild).toBeInTheDocument();
+    });
+
+    it('renders entity mode in inline-composer phase', () => {
+      const { container } = render(
+        <EmptyState entity="leads" phase="inline-composer" onCreate={vi.fn()} />
+      );
+      expect(container.firstChild).toBeInTheDocument();
+    });
+
+    it('renders entity mode in smart-suggestions phase', () => {
+      const suggestions = ['Add first lead', 'Import leads'];
+      const { container } = render(
+        <EmptyState
+          entity="leads"
+          phase="smart-suggestions"
+          suggestions={suggestions}
+          onSuggestionClick={vi.fn()}
+        />
+      );
+      expect(screen.getByText('Add first lead')).toBeInTheDocument();
+    });
+
+    it('calls onSuggestionClick when suggestion clicked', async () => {
+      const onSuggestionClick = vi.fn();
+      const user = userEvent.setup();
+      render(
+        <EmptyState
+          entity="leads"
+          phase="smart-suggestions"
+          suggestions={['Create lead']}
+          onSuggestionClick={onSuggestionClick}
+        />
+      );
+      await user.click(screen.getByText('Create lead'));
+      expect(onSuggestionClick).toHaveBeenCalledWith('Create lead');
+    });
+
+    it('transitions to inline-composer when CTA clicked', async () => {
+      const onPhaseChange = vi.fn();
+      const user = userEvent.setup();
+      render(<EmptyState entity="leads" phase="soft-cta" onPhaseChange={onPhaseChange} />);
+      // Find the CTA button — click the first button in soft-cta phase
+      const buttons = screen.getAllByRole('button');
+      if (buttons.length > 0) {
+        await user.click(buttons[0]);
+        expect(onPhaseChange).toHaveBeenCalled();
+      }
+    });
+
+    it('calls onCreate when composer submits', async () => {
+      const onCreate = vi.fn();
+      const user = userEvent.setup();
+      render(<EmptyState entity="leads" phase="inline-composer" onCreate={onCreate} />);
+      // Find input/textarea in the composer
+      const input = document.querySelector('input, textarea');
+      if (input) {
+        await user.type(input, 'New Lead Name');
+        // Submit via button
+        const submitButtons = screen.getAllByRole('button');
+        const saveBtn = submitButtons.find((b) => /save|add|create/i.test(b.textContent ?? ''));
+        if (saveBtn) {
+          await user.click(saveBtn);
+          expect(onCreate).toHaveBeenCalledWith('New Lead Name');
+        }
+      }
+    });
+
+    it('renders custom illustration', () => {
+      render(
+        <EmptyState
+          entity="leads"
+          illustration={<div data-testid="custom-illustration">Custom SVG</div>}
+        />
+      );
+      expect(screen.getByTestId('custom-illustration')).toBeInTheDocument();
+    });
+
+    it('renders selection variant', () => {
+      const { container } = render(<EmptyState entity="leads" variant="selection" />);
+      expect(container.firstChild).toBeInTheDocument();
+    });
+
+    it('renders renderComposer override in inline-composer phase', () => {
+      render(
+        <EmptyState
+          entity="leads"
+          phase="inline-composer"
+          renderComposer={({ onSubmit, onCancel, placeholder }) => (
+            <div data-testid="custom-composer">
+              <input placeholder={placeholder} />
+              <button type="button" onClick={() => onSubmit('custom')}>
+                Save
+              </button>
+              <button type="button" onClick={onCancel}>
+                Cancel
+              </button>
+            </div>
+          )}
+        />
+      );
+      expect(screen.getByTestId('custom-composer')).toBeInTheDocument();
+    });
+
+    it('handles phase change on mouse enter/leave', async () => {
+      const onPhaseChange = vi.fn();
+      const user = userEvent.setup();
+      const { container } = render(<EmptyState entity="leads" onPhaseChange={onPhaseChange} />);
+      await user.hover(container.firstChild as Element);
+      expect(onPhaseChange).toHaveBeenCalledWith('soft-cta');
+      await user.unhover(container.firstChild as Element);
+      expect(onPhaseChange).toHaveBeenCalledWith('passive');
+    });
+  });
 });

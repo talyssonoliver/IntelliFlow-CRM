@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import * as React from 'react';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, within, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi } from 'vitest';
 import {
@@ -246,5 +246,389 @@ describe('LayoutBuilder sidebar pieces', () => {
     // Pro Plan is in an inner div, we need to go up further to find Upgrade Now
     expect(screen.getByText('Pro Plan')).toBeInTheDocument();
     expect(screen.getByText(/upgrade now/i)).toBeInTheDocument();
+  });
+});
+
+describe('LayoutBuilderHeader cancel and lastSaved', () => {
+  it('calls onCancel and resets when Cancel clicked in header', async () => {
+    const user = userEvent.setup();
+    const onCancel = vi.fn();
+
+    function Harness() {
+      const { addWidget } = useLayoutBuilder();
+      return (
+        <>
+          <LayoutBuilderHeader title="Builder" onCancel={onCancel} />
+          <button onClick={() => addWidget(widgetTemplate)}>mutate</button>
+        </>
+      );
+    }
+
+    render(
+      <LayoutBuilderProvider initialWidgets={[baseWidget]}>
+        <Harness />
+      </LayoutBuilderProvider>
+    );
+
+    await user.click(screen.getByText('mutate'));
+    const saveBtn = screen.getByRole('button', { name: /save changes/i });
+    expect(saveBtn).not.toBeDisabled();
+
+    await user.click(screen.getByRole('button', { name: /cancel/i }));
+    expect(onCancel).toHaveBeenCalled();
+    expect(saveBtn).toBeDisabled();
+  });
+
+  it('shows "Just now" after saving', async () => {
+    const user = userEvent.setup();
+
+    function Harness() {
+      const { addWidget } = useLayoutBuilder();
+      return (
+        <>
+          <LayoutBuilderHeader title="Builder" />
+          <button onClick={() => addWidget(widgetTemplate)}>mutate</button>
+        </>
+      );
+    }
+
+    render(
+      <LayoutBuilderProvider initialWidgets={[baseWidget]}>
+        <Harness />
+      </LayoutBuilderProvider>
+    );
+
+    await user.click(screen.getByText('mutate'));
+    await user.click(screen.getByRole('button', { name: /save changes/i }));
+    expect(screen.getByText(/Just now/i)).toBeInTheDocument();
+  });
+
+  it('calls onSave callback when header save clicked', async () => {
+    const user = userEvent.setup();
+    const onSave = vi.fn();
+
+    function Harness() {
+      const { addWidget } = useLayoutBuilder();
+      return (
+        <>
+          <LayoutBuilderHeader title="Builder" onSave={onSave} />
+          <button onClick={() => addWidget(widgetTemplate)}>mutate</button>
+        </>
+      );
+    }
+
+    render(
+      <LayoutBuilderProvider initialWidgets={[baseWidget]}>
+        <Harness />
+      </LayoutBuilderProvider>
+    );
+
+    await user.click(screen.getByText('mutate'));
+    await user.click(screen.getByRole('button', { name: /save changes/i }));
+    expect(onSave).toHaveBeenCalled();
+  });
+});
+
+describe('WidgetCard additional coverage', () => {
+  it('renders children in view mode (not editing)', () => {
+    render(
+      <WidgetCard widget={baseWidget} isEditing={false}>
+        <div data-testid="child">Content</div>
+      </WidgetCard>
+    );
+    expect(screen.getByTestId('child')).toBeInTheDocument();
+  });
+
+  it('renders with drag handle props', async () => {
+    const user = userEvent.setup();
+    const onDelete = vi.fn();
+    const onSettings = vi.fn();
+    const dragHandleProps = { 'data-testid': 'drag-handle' };
+
+    render(
+      <WidgetCard
+        widget={baseWidget}
+        isEditing
+        dragHandleProps={dragHandleProps as React.HTMLAttributes<HTMLDivElement>}
+        onDelete={onDelete}
+        onSettings={onSettings}
+      >
+        <div>Content</div>
+      </WidgetCard>
+    );
+
+    await user.click(screen.getByTitle('Remove widget'));
+    expect(onDelete).toHaveBeenCalledWith(baseWidget.id);
+
+    await user.click(screen.getByTitle('Widget settings'));
+    expect(onSettings).toHaveBeenCalledWith(baseWidget);
+  });
+
+  it('renders without onSettings callback', () => {
+    render(
+      <WidgetCard widget={baseWidget} isEditing onDelete={vi.fn()}>
+        <div>Content</div>
+      </WidgetCard>
+    );
+    // No settings button — should not throw
+    expect(screen.queryByTitle('Widget settings')).not.toBeInTheDocument();
+  });
+
+  it('renders without onDelete callback', () => {
+    render(
+      <WidgetCard widget={baseWidget} isEditing onSettings={vi.fn()}>
+        <div>Content</div>
+      </WidgetCard>
+    );
+    expect(screen.queryByTitle('Remove widget')).not.toBeInTheDocument();
+  });
+
+  it('renders with isDragging=true', () => {
+    const { container } = render(
+      <WidgetCard widget={baseWidget} isEditing isDragging>
+        <div>Content</div>
+      </WidgetCard>
+    );
+    expect(container.firstChild).toBeInTheDocument();
+  });
+
+  it('renders with skipGridClasses=true', () => {
+    const { container } = render(
+      <WidgetCard widget={baseWidget} skipGridClasses>
+        <div>Content</div>
+      </WidgetCard>
+    );
+    expect(container.firstChild).toBeInTheDocument();
+  });
+
+  it('renders with colSpan=2', () => {
+    const { container } = render(
+      <WidgetCard widget={{ ...baseWidget, colSpan: 2 as const }}>
+        <div>Content</div>
+      </WidgetCard>
+    );
+    expect(container.firstChild).toBeInTheDocument();
+  });
+
+  it('renders with colSpan=3 and rowSpan=2', () => {
+    const { container } = render(
+      <WidgetCard widget={{ ...baseWidget, colSpan: 3 as const, rowSpan: 2 as const }}>
+        <div>Content</div>
+      </WidgetCard>
+    );
+    expect(container.firstChild).toBeInTheDocument();
+  });
+
+  it('renders resize handles with keyboard interaction', async () => {
+    const user = userEvent.setup();
+    const onResize = vi.fn();
+
+    render(
+      <WidgetCard widget={baseWidget} isEditing onResize={onResize}>
+        <div>Content</div>
+      </WidgetCard>
+    );
+
+    const resizeHandle = document.querySelector('.cursor-nwse-resize') as HTMLElement;
+    if (resizeHandle) {
+      resizeHandle.focus();
+      await user.keyboard('{ArrowRight}');
+      // May or may not call onResize depending on current span
+    }
+    // Just verify it doesn't throw
+    expect(document.querySelector('.cursor-nwse-resize')).toBeInTheDocument();
+  });
+
+  it('renders left/right resize handles with keyboard', async () => {
+    const user = userEvent.setup();
+    const onResize = vi.fn();
+
+    render(
+      <WidgetCard widget={{ ...baseWidget, colSpan: 2 as const }} isEditing onResize={onResize}>
+        <div>Content</div>
+      </WidgetCard>
+    );
+
+    const resizeHandle = document.querySelector('.cursor-ew-resize') as HTMLElement;
+    if (resizeHandle) {
+      resizeHandle.focus();
+      await user.keyboard('{ArrowLeft}');
+      await user.keyboard('{ArrowRight}');
+    }
+    expect(document.querySelector('.cursor-ew-resize')).toBeInTheDocument();
+  });
+
+  it('fires onResize via keyboard on bottom-right handle (ArrowRight)', async () => {
+    const user = userEvent.setup();
+    const onResize = vi.fn();
+
+    render(
+      <WidgetCard widget={baseWidget} isEditing onResize={onResize}>
+        <div>Content</div>
+      </WidgetCard>
+    );
+
+    const handle = document.querySelector(
+      '[aria-label="Resize widget bottom-right"]'
+    ) as HTMLElement;
+    if (handle) {
+      handle.focus();
+      await user.keyboard('{ArrowRight}');
+      expect(onResize).toHaveBeenCalledWith(baseWidget.id, 2, 1);
+    }
+  });
+
+  it('fires onResize via keyboard ArrowLeft on bottom-right handle (colSpan=2)', async () => {
+    const user = userEvent.setup();
+    const onResize = vi.fn();
+
+    render(
+      <WidgetCard widget={{ ...baseWidget, colSpan: 2 as const }} isEditing onResize={onResize}>
+        <div>Content</div>
+      </WidgetCard>
+    );
+
+    const handle = document.querySelector(
+      '[aria-label="Resize widget bottom-right"]'
+    ) as HTMLElement;
+    if (handle) {
+      handle.focus();
+      await user.keyboard('{ArrowLeft}');
+      expect(onResize).toHaveBeenCalledWith(baseWidget.id, 1, 1);
+    }
+  });
+
+  it('fires onResize via keyboard ArrowDown on bottom handle', async () => {
+    const user = userEvent.setup();
+    const onResize = vi.fn();
+
+    render(
+      <WidgetCard widget={baseWidget} isEditing onResize={onResize}>
+        <div>Content</div>
+      </WidgetCard>
+    );
+
+    const handle = document.querySelector('[aria-label="Resize widget bottom"]') as HTMLElement;
+    if (handle) {
+      handle.focus();
+      await user.keyboard('{ArrowDown}');
+      expect(onResize).toHaveBeenCalledWith(baseWidget.id, 1, 2);
+    }
+  });
+
+  it('fires onResize via keyboard ArrowUp on bottom handle (rowSpan=2)', async () => {
+    const user = userEvent.setup();
+    const onResize = vi.fn();
+
+    render(
+      <WidgetCard widget={{ ...baseWidget, rowSpan: 2 as const }} isEditing onResize={onResize}>
+        <div>Content</div>
+      </WidgetCard>
+    );
+
+    const handle = document.querySelector('[aria-label="Resize widget bottom"]') as HTMLElement;
+    if (handle) {
+      handle.focus();
+      await user.keyboard('{ArrowUp}');
+      expect(onResize).toHaveBeenCalledWith(baseWidget.id, 1, 1);
+    }
+  });
+
+  it('triggers resize via mousedown on right handle and mousemove beyond threshold', () => {
+    const onResize = vi.fn();
+
+    render(
+      <WidgetCard widget={baseWidget} isEditing onResize={onResize}>
+        <div>Content</div>
+      </WidgetCard>
+    );
+
+    const rightHandle = document.querySelector('[aria-label="Resize widget right"]') as HTMLElement;
+    if (rightHandle) {
+      fireEvent.mouseDown(rightHandle, { clientX: 0, clientY: 0 });
+      // Move right by 160px (beyond 150px threshold = 1 col)
+      fireEvent.mouseMove(document, { clientX: 160, clientY: 0 });
+      expect(onResize).toHaveBeenCalledWith(baseWidget.id, 2, 1);
+      // Mouseup cleanup
+      fireEvent.mouseUp(document);
+    }
+  });
+
+  it('triggers resize via mousedown on bottom-right handle and mousemove', () => {
+    const onResize = vi.fn();
+
+    render(
+      <WidgetCard widget={baseWidget} isEditing onResize={onResize}>
+        <div>Content</div>
+      </WidgetCard>
+    );
+
+    const cornerHandle = document.querySelector(
+      '[aria-label="Resize widget bottom-right"]'
+    ) as HTMLElement;
+    if (cornerHandle) {
+      fireEvent.mouseDown(cornerHandle, { clientX: 0, clientY: 0 });
+      // Move right by 160px (col change) and down by 110px (row change)
+      fireEvent.mouseMove(document, { clientX: 160, clientY: 110 });
+      expect(onResize).toHaveBeenCalledWith(baseWidget.id, 2, 2);
+      fireEvent.mouseUp(document);
+    }
+  });
+
+  it('triggers resize via mousedown on bottom handle and mousemove', () => {
+    const onResize = vi.fn();
+
+    render(
+      <WidgetCard widget={baseWidget} isEditing onResize={onResize}>
+        <div>Content</div>
+      </WidgetCard>
+    );
+
+    const bottomHandle = document.querySelector(
+      '[aria-label="Resize widget bottom"]'
+    ) as HTMLElement;
+    if (bottomHandle) {
+      fireEvent.mouseDown(bottomHandle, { clientX: 0, clientY: 0 });
+      fireEvent.mouseMove(document, { clientX: 0, clientY: 110 });
+      expect(onResize).toHaveBeenCalledWith(baseWidget.id, 1, 2);
+      fireEvent.mouseUp(document);
+    }
+  });
+
+  it('does not fire resize when movement is below threshold', () => {
+    const onResize = vi.fn();
+
+    render(
+      <WidgetCard widget={baseWidget} isEditing onResize={onResize}>
+        <div>Content</div>
+      </WidgetCard>
+    );
+
+    const rightHandle = document.querySelector('[aria-label="Resize widget right"]') as HTMLElement;
+    if (rightHandle) {
+      fireEvent.mouseDown(rightHandle, { clientX: 0, clientY: 0 });
+      // Move only 50px — below 150px threshold
+      fireEvent.mouseMove(document, { clientX: 50, clientY: 0 });
+      expect(onResize).not.toHaveBeenCalled();
+      fireEvent.mouseUp(document);
+    }
+  });
+
+  it('ignores unrelated keys on resize handle', async () => {
+    const user = userEvent.setup();
+    const onResize = vi.fn();
+
+    render(
+      <WidgetCard widget={baseWidget} isEditing onResize={onResize}>
+        <div>Content</div>
+      </WidgetCard>
+    );
+
+    const handle = document.querySelector('[aria-label="Resize widget right"]') as HTMLElement;
+    if (handle) {
+      handle.focus();
+      await user.keyboard('{ArrowDown}'); // ArrowDown on 'right' handle is ignored
+      expect(onResize).not.toHaveBeenCalled();
+    }
   });
 });

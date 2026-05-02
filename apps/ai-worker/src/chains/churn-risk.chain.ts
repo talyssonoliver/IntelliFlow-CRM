@@ -529,7 +529,7 @@ Respond with a structured JSON object containing riskScore, confidence, topRiskF
     const parts: string[] = [];
 
     if (input.totalRevenue !== undefined) {
-      parts.push(`Total revenue: $${input.totalRevenue.toLocaleString()}`);
+      parts.push(`Total revenue: $${input.totalRevenue.toLocaleString('en-US')}`);
     }
     if (input.paymentConsistency !== undefined) {
       parts.push(`Payment consistency: ${(input.paymentConsistency * 100).toFixed(0)}%`);

@@ -16,3 +16,4 @@ caaaf8798126 fix(scripts): body lines exceed 100 chars — cannot rewrite (pushe
 ed91a32bbc0c fix(ci): subject + header too long — cannot rewrite (pushed)
 ef6f4ef8898f fix(ci): subject + header too long — cannot rewrite (pushed)
 3ea3862b06b2 fix(ci): header too long — cannot rewrite (pushed)
+ce3d07987305 fix(ci): header 122 chars — cannot rewrite (pushed)

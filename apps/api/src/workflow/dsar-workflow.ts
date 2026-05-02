@@ -111,7 +111,7 @@ export class DSARWorkflow {
 
     // Calculate SLA deadline (30 days from now)
     const slaDeadline = new Date();
-    slaDeadline.setDate(slaDeadline.getDate() + 30);
+    slaDeadline.setUTCDate(slaDeadline.getUTCDate() + 30);
 
     // Create DSAR request in database
     const dsarRecord = await this.db.data_subject_requests.create({

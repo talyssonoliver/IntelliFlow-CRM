@@ -2,7 +2,7 @@
 import * as React from 'react';
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
-import { Skeleton } from '../src/components/skeleton';
+import { Skeleton, SkeletonList } from '../src/components/skeleton';
 
 describe('Skeleton', () => {
   describe('Rendering', () => {
@@ -69,5 +69,35 @@ describe('Skeleton', () => {
       expect(screen.getByTestId('skeleton-title')).toBeInTheDocument();
       expect(screen.getByTestId('skeleton-text')).toBeInTheDocument();
     });
+  });
+});
+
+describe('SkeletonList', () => {
+  it('renders the correct number of skeletons', () => {
+    const { container } = render(<SkeletonList count={3} data-testid="skeleton-list" />);
+    const skeletons = container.querySelectorAll('.animate-pulse');
+    expect(skeletons).toHaveLength(3);
+  });
+
+  it('applies itemClassName to each skeleton', () => {
+    const { container } = render(<SkeletonList count={2} itemClassName="h-4" />);
+    const skeletons = container.querySelectorAll('.h-4');
+    expect(skeletons).toHaveLength(2);
+  });
+
+  it('applies container className', () => {
+    render(<SkeletonList count={1} className="my-container" data-testid="list" />);
+    expect(screen.getByTestId('list')).toHaveClass('my-container');
+  });
+
+  it('uses custom keyPrefix', () => {
+    // Should render without errors using custom keyPrefix
+    const { container } = render(<SkeletonList count={2} keyPrefix="test" />);
+    expect(container.querySelectorAll('.animate-pulse')).toHaveLength(2);
+  });
+
+  it('renders 0 skeletons when count is 0', () => {
+    const { container } = render(<SkeletonList count={0} />);
+    expect(container.querySelectorAll('.animate-pulse')).toHaveLength(0);
   });
 });

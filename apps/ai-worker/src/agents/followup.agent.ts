@@ -243,7 +243,8 @@ the specific context of each lead. You excel at balancing persistence with profe
       `Days Since Last Contact: ${input.daysSinceLastContact}`,
     ];
     if (input.assignedSalesRep) currentStatus.push(`Assigned To: ${input.assignedSalesRep}`);
-    if (input.dealValue) currentStatus.push(`Deal Value: $${input.dealValue.toLocaleString()}`);
+    if (input.dealValue)
+      currentStatus.push(`Deal Value: $${input.dealValue.toLocaleString('en-US')}`);
     if (input.targetCloseDate) currentStatus.push(`Target Close: ${input.targetCloseDate}`);
     sections.push(...currentStatus);
 

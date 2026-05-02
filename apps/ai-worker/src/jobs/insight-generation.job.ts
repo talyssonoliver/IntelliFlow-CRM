@@ -502,7 +502,6 @@ async function dispatchScheduledInsights(
     // M4 encryption wraps prisma in $extends — the extended client's .groupBy
     // signature doesn't narrow cleanly for this call pattern. Cast matches the
     // pattern used in packages/db/src/client.ts withTransaction helpers.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const activeTenants = await (prisma.lead as any).groupBy({
       by: ['tenantId'],
       where: { updatedAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } },

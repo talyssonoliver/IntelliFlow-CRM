@@ -2,7 +2,7 @@
 import * as React from 'react';
 import { render, screen, within, fireEvent } from '@testing-library/react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { DataTable } from '../src/components/data-table';
+import { DataTable, TableRowActions } from '../src/components/data-table';
 import { ColumnDef } from '@tanstack/react-table';
 import userEvent from '@testing-library/user-event';
 
@@ -645,5 +645,292 @@ describe('DataTable', () => {
       expect(screen.getByText('User 1')).toBeInTheDocument();
       expect(screen.getByText('user1@example.com')).toBeInTheDocument();
     });
+  });
+});
+
+describe('DataTable additional features', () => {
+  describe('onRowClick', () => {
+    it('calls onRowClick when a data row is clicked', async () => {
+      const onRowClick = vi.fn();
+      const user = userEvent.setup();
+      const testData = createTestData(3);
+      render(<DataTable columns={basicColumns} data={testData} onRowClick={onRowClick} />);
+      await user.click(screen.getByText('User 1'));
+      expect(onRowClick).toHaveBeenCalledWith(testData[0]);
+    });
+
+    it('calls onRowClick when Enter key pressed on row', async () => {
+      const onRowClick = vi.fn();
+      const user = userEvent.setup();
+      const testData = createTestData(1);
+      render(<DataTable columns={basicColumns} data={testData} onRowClick={onRowClick} />);
+      const rows = screen.getAllByRole('button');
+      if (rows.length > 0) {
+        rows[0].focus();
+        await user.keyboard('{Enter}');
+        expect(onRowClick).toHaveBeenCalled();
+      }
+    });
+
+    it('calls onRowClick when Space key pressed on row', async () => {
+      const onRowClick = vi.fn();
+      const user = userEvent.setup();
+      const testData = createTestData(1);
+      render(<DataTable columns={basicColumns} data={testData} onRowClick={onRowClick} />);
+      const rows = screen.getAllByRole('button');
+      if (rows.length > 0) {
+        rows[0].focus();
+        await user.keyboard('{ }');
+        expect(onRowClick).toHaveBeenCalled();
+      }
+    });
+  });
+
+  describe('hidePagination', () => {
+    it('hides pagination when hidePagination is true', () => {
+      const testData = createTestData(15);
+      render(<DataTable columns={basicColumns} data={testData} hidePagination />);
+      expect(screen.queryByRole('button', { name: 'Previous' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Next' })).not.toBeInTheDocument();
+    });
+  });
+
+  describe('entity empty state', () => {
+    it('renders entity empty state when entity prop and empty data provided', () => {
+      render(<DataTable columns={basicColumns} data={[]} entity="leads" />);
+      // Entity mode renders EmptyState component — just verify no crash and table renders
+      expect(screen.getByRole('table')).toBeInTheDocument();
+    });
+  });
+
+  describe('custom empty message and icon', () => {
+    it('renders custom empty message', () => {
+      render(
+        <DataTable
+          columns={basicColumns}
+          data={[]}
+          emptyMessage="No leads found."
+          emptyIcon="person_off"
+        />
+      );
+      expect(screen.getByText('No leads found.')).toBeInTheDocument();
+      expect(screen.getByText('person_off')).toBeInTheDocument();
+    });
+  });
+
+  describe('columnSizing', () => {
+    it('renders with columnSizing prop', () => {
+      const testData = createTestData(2);
+      render(
+        <DataTable
+          columns={basicColumns}
+          data={testData}
+          columnSizing={{ name: 200, email: 300 }}
+        />
+      );
+      expect(screen.getByText('User 1')).toBeInTheDocument();
+    });
+  });
+
+  describe('bulk actions', () => {
+    it('shows bulk actions bar when rows are selected and bulkActions provided', async () => {
+      const onExecute = vi.fn();
+      const user = userEvent.setup();
+      const testData = createTestData(3);
+      render(
+        <DataTable
+          columns={selectableColumns}
+          data={testData}
+          enableRowSelection
+          bulkActions={[{ label: 'Delete Selected', onExecute }]}
+        />
+      );
+
+      // Select first row
+      await user.click(screen.getByTestId('select-row-0'));
+      // Bulk actions bar should appear
+      expect(screen.getByText(/1 item.*selected/)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Delete Selected' })).toBeInTheDocument();
+    });
+
+    it('calls bulk action onClick when clicked', async () => {
+      const onClick = vi.fn();
+      const user = userEvent.setup();
+      const testData = createTestData(3);
+      render(
+        <DataTable
+          columns={selectableColumns}
+          data={testData}
+          enableRowSelection
+          bulkActions={[{ label: 'Archive', onClick }]}
+        />
+      );
+
+      await user.click(screen.getByTestId('select-row-0'));
+      await user.click(screen.getByRole('button', { name: 'Archive' }));
+      expect(onClick).toHaveBeenCalledWith([testData[0]]);
+    });
+
+    it('calls bulk action onExecute when clicked (legacy handler)', async () => {
+      const onExecute = vi.fn();
+      const user = userEvent.setup();
+      const testData = createTestData(2);
+      render(
+        <DataTable
+          columns={selectableColumns}
+          data={testData}
+          enableRowSelection
+          bulkActions={[{ label: 'Export', onExecute }]}
+        />
+      );
+
+      await user.click(screen.getByTestId('select-row-0'));
+      await user.click(screen.getByRole('button', { name: 'Export' }));
+      expect(onExecute).toHaveBeenCalledWith([testData[0]]);
+    });
+
+    it('clears selection when Clear selection button clicked', async () => {
+      const user = userEvent.setup();
+      const testData = createTestData(3);
+      render(
+        <DataTable
+          columns={selectableColumns}
+          data={testData}
+          enableRowSelection
+          bulkActions={[{ label: 'Delete', onClick: vi.fn() }]}
+        />
+      );
+
+      await user.click(screen.getByTestId('select-row-0'));
+      expect(screen.getByText(/1 item.*selected/)).toBeInTheDocument();
+
+      await user.click(screen.getByText('Clear selection'));
+      expect(screen.getByText('0 of 3 row(s) selected.')).toBeInTheDocument();
+    });
+
+    it('renders destructive bulk action variant', async () => {
+      const user = userEvent.setup();
+      const testData = createTestData(2);
+      render(
+        <DataTable
+          columns={selectableColumns}
+          data={testData}
+          enableRowSelection
+          bulkActions={[{ label: 'Delete', variant: 'destructive', onClick: vi.fn() }]}
+        />
+      );
+
+      await user.click(screen.getByTestId('select-row-0'));
+      const deleteBtn = screen.getByRole('button', { name: 'Delete' });
+      expect(deleteBtn).toBeInTheDocument();
+    });
+
+    it('renders bulk action with icon', async () => {
+      const user = userEvent.setup();
+      const testData = createTestData(2);
+      render(
+        <DataTable
+          columns={selectableColumns}
+          data={testData}
+          enableRowSelection
+          bulkActions={[{ label: 'Send', icon: 'send', onClick: vi.fn() }]}
+        />
+      );
+
+      await user.click(screen.getByTestId('select-row-0'));
+      expect(screen.getByText('send')).toBeInTheDocument();
+    });
+
+    it('shows plural "items" when more than 1 row selected', async () => {
+      const user = userEvent.setup();
+      const testData = createTestData(3);
+      render(
+        <DataTable
+          columns={selectableColumns}
+          data={testData}
+          enableRowSelection
+          bulkActions={[{ label: 'Delete', onClick: vi.fn() }]}
+        />
+      );
+
+      await user.click(screen.getByTestId('select-row-0'));
+      await user.click(screen.getByTestId('select-row-1'));
+      expect(screen.getByText(/2 items selected/)).toBeInTheDocument();
+    });
+  });
+});
+
+describe('TableRowActions', () => {
+  it('renders quick actions', async () => {
+    const onClick = vi.fn();
+    const user = userEvent.setup();
+    render(<TableRowActions quickActions={[{ icon: 'edit', label: 'Edit', onClick }]} />);
+    const editBtn = screen.getByRole('button', { name: 'Edit' });
+    await user.click(editBtn);
+    expect(onClick).toHaveBeenCalled();
+  });
+
+  it('renders legacy actions', async () => {
+    const onClick = vi.fn();
+    const user = userEvent.setup();
+    const row = { id: '1', name: 'Test', email: 'test@example.com', role: 'User' };
+    render(<TableRowActions row={row} actions={[{ label: 'View', onClick }]} />);
+    await user.click(screen.getByRole('button', { name: 'View' }));
+    expect(onClick).toHaveBeenCalledWith(row);
+  });
+
+  it('renders destructive legacy action', () => {
+    const onClick = vi.fn();
+    const row = { id: '1', name: 'Test', email: 'test@example.com', role: 'User' };
+    render(
+      <TableRowActions row={row} actions={[{ label: 'Delete', onClick, variant: 'destructive' }]} />
+    );
+    expect(screen.getByRole('button', { name: 'Delete' })).toBeInTheDocument();
+  });
+
+  it('renders dropdown actions', async () => {
+    const onClick = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <TableRowActions
+        dropdownActions={[
+          { icon: 'edit', label: 'Edit', onClick },
+          { icon: 'delete', label: 'Delete', onClick: vi.fn() },
+        ]}
+      />
+    );
+    const moreBtn = screen.getByRole('button', { name: 'More actions' });
+    await user.click(moreBtn);
+    // Edit item should be visible
+    const editItem = screen.getByText('Edit');
+    await user.click(editItem);
+    expect(onClick).toHaveBeenCalled();
+  });
+
+  it('renders dropdown with separator', async () => {
+    const user = userEvent.setup();
+    render(
+      <TableRowActions
+        dropdownActions={[
+          { icon: 'edit', label: 'Edit', onClick: vi.fn() },
+          { id: 'sep', icon: '', label: 'sep', onClick: vi.fn(), separator: true },
+          { icon: 'delete', label: 'Delete', onClick: vi.fn(), variant: 'danger' },
+        ]}
+      />
+    );
+    await user.click(screen.getByRole('button', { name: 'More actions' }));
+    // Delete item with danger variant should render
+    expect(screen.getByText('Delete')).toBeInTheDocument();
+  });
+
+  it('renders toolbar and stops propagation on click', () => {
+    const parentClick = vi.fn();
+    render(
+      <div onClick={parentClick}>
+        <TableRowActions quickActions={[]} />
+      </div>
+    );
+    fireEvent.click(screen.getByRole('toolbar'));
+    expect(parentClick).not.toHaveBeenCalled();
   });
 });

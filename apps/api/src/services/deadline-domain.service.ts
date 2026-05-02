@@ -337,7 +337,7 @@ export class DeadlineDomainService {
     const config = this.engine.getConfig();
     const now = new Date();
     const weekAgo = new Date(now);
-    weekAgo.setDate(weekAgo.getDate() - 7);
+    weekAgo.setUTCDate(weekAgo.getUTCDate() - 7);
 
     const activeDeadlines = deadlines.filter((d) => d.isActive);
     const overdue = activeDeadlines.filter((d) => d.isOverdue);
@@ -441,7 +441,7 @@ export class DeadlineDomainService {
 
     // Filter to upcoming
     const futureDate = new Date();
-    futureDate.setDate(futureDate.getDate() + daysAhead);
+    futureDate.setUTCDate(futureDate.getUTCDate() + daysAhead);
 
     const upcoming = caseDeadlines.filter((d) => d.dueDate <= futureDate || d.isOverdue);
 

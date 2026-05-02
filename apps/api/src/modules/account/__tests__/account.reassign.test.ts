@@ -225,10 +225,7 @@ describe('account.reassign (IFC-311)', () => {
   it("AC-A7: source code uses entity-string 'account' (not 'contact') in audit call", async () => {
     const fs = await import('node:fs/promises');
     const { resolve } = await import('node:path');
-    const src = await fs.readFile(
-      resolve(process.cwd(), 'src/modules/account/account-reassign.ts'),
-      'utf8'
-    );
+    const src = await fs.readFile(resolve(__dirname, '../account-reassign.ts'), 'utf8');
     // Two audit-log call sites: emitAccountReassignSideEffects + logAccountReassignPermissionDenied
     expect(src).toMatch(/\.logAction\('UPDATE',\s*'account'/);
     expect(src).toMatch(/\.logPermissionDenied\('account'/);

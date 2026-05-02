@@ -232,7 +232,7 @@ export class PrismaTaskRepository implements TaskRepository {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
 
     const records = await this.prisma.task.findMany({
       where: {
@@ -315,7 +315,7 @@ export class PrismaTaskRepository implements TaskRepository {
   async findDueSoon(ownerId?: string): Promise<Task[]> {
     const now = new Date();
     const tomorrow = new Date(now);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
 
     const records = await this.prisma.task.findMany({
       where: {

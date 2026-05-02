@@ -334,6 +334,11 @@ export default [
       '@typescript-eslint/no-explicit-any': 'off',
       // Allow importing from any layer in tests for mocking
       'no-restricted-imports': 'off',
+      // Timezone-safety rules fire in test files where local-time Date methods
+      // are common and intentional (e.g. constructing test fixtures relative to
+      // the runner's local clock, asserting boundaries). Production code is still
+      // covered by the timezone rules in the general config above.
+      'no-restricted-syntax': 'off',
     },
   },
 

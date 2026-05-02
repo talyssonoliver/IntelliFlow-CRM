@@ -71,6 +71,16 @@ jobs:
         run: echo "TURBO_REMOTE_CACHE_READ_ONLY=true" >> $GITHUB_ENV
 
       - name: Run PR audit (Tier 1 + Tier 2, affected scope)
+        env:
+          # The audit invokes `turbo run build` / `test:coverage`, which
+          # compile @intelliflow/web. That build needs PRISMA_FIELD_ENCRYPTION_KEY
+          # set or `packages/db/src/client.ts` throws at module-load. Use the
+          # repo secret when available; fall back to a 32-byte zero-key only
+          # for forked PRs where secrets aren't exposed.
+          PRISMA_FIELD_ENCRYPTION_KEY: ${{ secrets.PRISMA_FIELD_ENCRYPTION_KEY || 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=' }}
+          AI_AUDIT_SIGNING_KEY: ${{ secrets.AI_AUDIT_SIGNING_KEY || 'ci-audit-stub-key-not-used-at-runtime' }}
+          DATABASE_URL: postgresql://stub:stub@localhost:5432/stub
+          DIRECT_URL: postgresql://stub:stub@localhost:5432/stub
         run: |
           RUN_ID="gha-${{ github.run_id }}-${{ github.run_attempt }}"
           echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV

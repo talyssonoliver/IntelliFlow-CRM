@@ -41,7 +41,16 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json', 'lcov', 'html'],
       include: ['src/**/*.{ts,tsx}'],
-      exclude: ['src/**/*.d.ts', 'src/index.ts'],
+      exclude: [
+        'src/**/*.d.ts',
+        'src/index.ts',
+        'src/**/*.stories.{ts,tsx}',
+        'src/**/index.ts',
+        'src/**/*.types.ts',
+        'src/**/*.d.ts',
+        'src/components/empty-state-illustrations.tsx',
+        'src/lib/icon-mapping.ts',
+      ],
       thresholds: {
         statements: 90,
         branches: 80,

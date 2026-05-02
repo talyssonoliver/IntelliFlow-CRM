@@ -371,10 +371,7 @@ describe('AC-003: evaluator is pure — zero Prisma / fs / net imports', () => {
   it('module source does not import @prisma/client, @intelliflow/db, fs, or net', async () => {
     const { readFileSync } = await import('node:fs');
     const { resolve } = await import('node:path');
-    const source = readFileSync(
-      resolve(process.cwd(), 'src/shared/duplicate-rule-evaluator.ts'),
-      'utf8'
-    );
+    const source = readFileSync(resolve(__dirname, '../duplicate-rule-evaluator.ts'), 'utf8');
     expect(source).not.toMatch(/from ['"]@prisma\/client['"]/);
     expect(source).not.toMatch(/from ['"]@intelliflow\/db['"]/);
     expect(source).not.toMatch(/from ['"]node:fs['"]/);

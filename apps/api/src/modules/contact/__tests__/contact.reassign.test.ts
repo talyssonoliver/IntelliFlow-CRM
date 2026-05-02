@@ -439,10 +439,7 @@ describe('IFC-311 contact module wiring sanity', () => {
   it("source uses entity-string 'contact' (not 'account') in audit calls", async () => {
     const fs = await import('node:fs/promises');
     const { resolve } = await import('node:path');
-    const src = await fs.readFile(
-      resolve(process.cwd(), 'src/modules/contact/contact-reassign.ts'),
-      'utf8'
-    );
+    const src = await fs.readFile(resolve(__dirname, '../contact-reassign.ts'), 'utf8');
     expect(src).toMatch(/\.logAction\('UPDATE',\s*'contact'/);
     expect(src).toMatch(/\.logPermissionDenied\('contact'/);
     expect(src).not.toMatch(/'account'/);
