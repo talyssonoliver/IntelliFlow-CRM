@@ -65,6 +65,22 @@ jobs:
       - name: Run audit tool tests
         run: python -m pytest tools/audit/tests -q
 
+      - name: Build library packages
+        # Build all library packages before the audit so workspace packages
+        # that depend on them can resolve dist/ type declarations without a
+        # stale-cache miss on CI. Mirrors the ci.yml typecheck/test job pattern.
+        run: pnpm exec turbo run build --filter=!@intelliflow/web --filter=!@intelliflow/api --filter=!@intelliflow/project-tracker --filter=!@intelliflow/workers
+        env:
+          PRISMA_FIELD_ENCRYPTION_KEY: ${{ secrets.PRISMA_FIELD_ENCRYPTION_KEY || 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=' }}
+          AI_AUDIT_SIGNING_KEY: ${{ secrets.AI_AUDIT_SIGNING_KEY || 'ci-audit-stub-key-not-used-at-runtime' }}
+          DATABASE_URL: postgresql://stub:stub@localhost:5432/stub
+          DIRECT_URL: postgresql://stub:stub@localhost:5432/stub
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL || 'https://stub.supabase.co' }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdHViIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.stub' }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdHViIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.stub' }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://stub.supabase.co' }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdHViIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.stub' }}
+
       - name: Run nightly audit (Tier 1 + Tier 2 + Tier 3, full scope)
         env:
           # Use the repo's real secrets when available; fall back to stubs
@@ -74,6 +90,11 @@ jobs:
           AI_AUDIT_SIGNING_KEY: ${{ secrets.AI_AUDIT_SIGNING_KEY || 'ci-audit-stub-key-not-used-at-runtime' }}
           DATABASE_URL: postgresql://stub:stub@localhost:5432/stub
           DIRECT_URL: postgresql://stub:stub@localhost:5432/stub
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL || 'https://stub.supabase.co' }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdHViIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.stub' }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdHViIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.stub' }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://stub.supabase.co' }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdHViIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.stub' }}
         run: |
           RUN_ID="nightly-${{ github.run_id }}-${{ github.run_attempt }}"
           python tools/audit/run_audit.py --mode nightly --run-id "$RUN_ID" --concurrency 2

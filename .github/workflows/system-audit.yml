@@ -70,17 +70,42 @@ jobs:
         if: github.event.pull_request.head.repo.full_name != github.repository
         run: echo "TURBO_REMOTE_CACHE_READ_ONLY=true" >> $GITHUB_ENV
 
-      - name: Run PR audit (Tier 1 + Tier 2, affected scope)
+      - name: Build library packages
+        # Mirror ci.yml typecheck/test job pattern: build all library packages
+        # (domain, db, adapters, …) before running the audit so that workspace
+        # packages that depend on them can resolve their dist/ type declarations.
+        # Without this step turbo's `dependsOn: ["^build"]` still runs the full
+        # build graph — but only within the affected-scope filter, which may
+        # exclude un-changed library packages even though their dist/ is stale.
+        run: pnpm exec turbo run build --filter=!@intelliflow/web --filter=!@intelliflow/api --filter=!@intelliflow/project-tracker --filter=!@intelliflow/workers
         env:
-          # The audit invokes `turbo run build` / `test:coverage`, which
-          # compile @intelliflow/web. That build needs PRISMA_FIELD_ENCRYPTION_KEY
-          # set or `packages/db/src/client.ts` throws at module-load. Use the
-          # repo secret when available; fall back to a 32-byte zero-key only
-          # for forked PRs where secrets aren't exposed.
           PRISMA_FIELD_ENCRYPTION_KEY: ${{ secrets.PRISMA_FIELD_ENCRYPTION_KEY || 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=' }}
           AI_AUDIT_SIGNING_KEY: ${{ secrets.AI_AUDIT_SIGNING_KEY || 'ci-audit-stub-key-not-used-at-runtime' }}
           DATABASE_URL: postgresql://stub:stub@localhost:5432/stub
           DIRECT_URL: postgresql://stub:stub@localhost:5432/stub
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL || 'https://stub.supabase.co' }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdHViIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.stub' }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdHViIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.stub' }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://stub.supabase.co' }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdHViIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.stub' }}
+
+      - name: Run PR audit (Tier 1 + Tier 2, affected scope)
+        env:
+          # The audit invokes `turbo run build` / `test:coverage`, which
+          # compile @intelliflow/web. That build needs every module-load env
+          # guard satisfied (Prisma encryption key, AI audit signing, Supabase
+          # config). Use repo secrets when available; fall back to RFC-shaped
+          # stubs only for forked PRs without secret access. NEVER use the
+          # stubs at runtime.
+          PRISMA_FIELD_ENCRYPTION_KEY: ${{ secrets.PRISMA_FIELD_ENCRYPTION_KEY || 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=' }}
+          AI_AUDIT_SIGNING_KEY: ${{ secrets.AI_AUDIT_SIGNING_KEY || 'ci-audit-stub-key-not-used-at-runtime' }}
+          DATABASE_URL: postgresql://stub:stub@localhost:5432/stub
+          DIRECT_URL: postgresql://stub:stub@localhost:5432/stub
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL || 'https://stub.supabase.co' }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdHViIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.stub' }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdHViIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.stub' }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://stub.supabase.co' }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdHViIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.stub' }}
         run: |
           RUN_ID="gha-${{ github.run_id }}-${{ github.run_attempt }}"
           echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV

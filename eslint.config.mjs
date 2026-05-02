@@ -37,6 +37,8 @@ export default [
       '**/artifacts/**',
       '**/.scannerwork/**',
       '**/sonar-reports/**',
+      // Claude Code tooling — hooks, skills, worktrees; not production code
+      '.claude/**',
     ],
   },
 

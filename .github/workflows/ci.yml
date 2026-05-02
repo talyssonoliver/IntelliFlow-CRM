@@ -317,7 +317,7 @@ jobs:
       - name: Install plan-lint dependencies
         run: |
           cd tools/plan
-          pip install -e .
+          pip install -e ".[dev]"
 
       - name: Run plan linter (Sprint 0)
         run: |

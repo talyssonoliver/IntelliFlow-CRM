@@ -180,7 +180,18 @@ jobs:
           DIRECT_URL: postgresql://stub:stub@localhost:5432/stub
           # Prevents the AI_AUDIT_SIGNING_KEY production guard in container.ts
           # from throwing before the request handler is ever invoked.
-          AI_AUDIT_SIGNING_KEY: ci-build-stub-key-not-used-at-runtime
+          AI_AUDIT_SIGNING_KEY: ${{ secrets.AI_AUDIT_SIGNING_KEY || 'ci-build-stub-key-not-used-at-runtime' }}
+          # Supabase config — apps/api/src/lib/supabase.ts throws at module
+          # load when NODE_ENV=production and any of these are missing. The
+          # web build imports the api package via the tRPC chain, so the
+          # module-load guard fires during `next build` page-data collection.
+          # Real values come from repo secrets; stubs are RFC-shaped placeholders
+          # for forked PRs that don't have secret access. NEVER use stubs at runtime.
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL || 'https://stub.supabase.co' }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdHViIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.stub' }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdHViIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.stub' }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://stub.supabase.co' }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdHViIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.stub' }}
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v7
