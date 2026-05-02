@@ -7,3 +7,12 @@
 # Status: Permanent waiver for historical commit; cannot be fixed without rewriting history.
 # Multi-line subject in historical commit (cannot rebase due to remote push)
 e21e13409194 chore(hygiene): prevent runtime artifact drift - multi-line subject
+
+# fix/ci-baseline historical commits — header/body lines exceed 100 chars;
+# already pushed, cannot be rewritten without force-push.
+# Reviewed: 2026-05-02
+cf427cc4c3b3 fix(schema): header 111 chars — cannot rewrite (pushed)
+caaaf8798126 fix(scripts): body lines exceed 100 chars — cannot rewrite (pushed)
+ed91a32bbc0c fix(ci): subject + header too long — cannot rewrite (pushed)
+ef6f4ef8898f fix(ci): subject + header too long — cannot rewrite (pushed)
+3ea3862b06b2 fix(ci): header too long — cannot rewrite (pushed)

@@ -140,6 +140,14 @@ jobs:
       - name: Generate Prisma client
         run: pnpm --filter @intelliflow/db prisma generate
 
+      - name: Create Supabase roles
+        run: |
+          PGPASSWORD=test psql -h localhost -U test -d intelliflow_test -c "
+            CREATE ROLE IF NOT EXISTS anon NOLOGIN;
+            CREATE ROLE IF NOT EXISTS authenticated NOLOGIN;
+            CREATE ROLE IF NOT EXISTS service_role NOLOGIN BYPASSRLS;
+          "
+
       - name: Setup test database
         env:
           DATABASE_URL: postgresql://test:test@localhost:5432/intelliflow_test
@@ -203,6 +211,14 @@ jobs:
 
       - name: Generate Prisma client
         run: pnpm --filter @intelliflow/db prisma generate
+
+      - name: Create Supabase roles
+        run: |
+          PGPASSWORD=test psql -h localhost -U test -d intelliflow_test -c "
+            CREATE ROLE IF NOT EXISTS anon NOLOGIN;
+            CREATE ROLE IF NOT EXISTS authenticated NOLOGIN;
+            CREATE ROLE IF NOT EXISTS service_role NOLOGIN BYPASSRLS;
+          "
 
       - name: Setup test database
         env:
@@ -278,6 +294,14 @@ jobs:
 
       - name: Generate Prisma client
         run: pnpm --filter @intelliflow/db prisma generate
+
+      - name: Create Supabase roles
+        run: |
+          PGPASSWORD=test psql -h localhost -U test -d intelliflow_test -c "
+            CREATE ROLE IF NOT EXISTS anon NOLOGIN;
+            CREATE ROLE IF NOT EXISTS authenticated NOLOGIN;
+            CREATE ROLE IF NOT EXISTS service_role NOLOGIN BYPASSRLS;
+          "
 
       - name: Setup test database
         env:

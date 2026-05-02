@@ -165,6 +165,14 @@ jobs:
         env:
           NODE_ENV: production
           PRISMA_FIELD_ENCRYPTION_KEY: ${{ secrets.PRISMA_FIELD_ENCRYPTION_KEY }}
+          # Stub connection strings prevent Prisma / pg-adapter from throwing at
+          # module-load time when the route.ts dynamic export is not sufficient to
+          # prevent eager evaluation (belt-and-suspenders for CI build isolation).
+          DATABASE_URL: postgresql://stub:stub@localhost:5432/stub
+          DIRECT_URL: postgresql://stub:stub@localhost:5432/stub
+          # Prevents the AI_AUDIT_SIGNING_KEY production guard in container.ts
+          # from throwing before the request handler is ever invoked.
+          AI_AUDIT_SIGNING_KEY: ci-build-stub-key-not-used-at-runtime
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v7

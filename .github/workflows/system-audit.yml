@@ -58,7 +58,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install Python deps
-        run: pip install pyyaml pytest
+        run: pip install pyyaml pytest semgrep
 
       - name: Run audit tool tests
         run: python -m pytest tools/audit/tests -q

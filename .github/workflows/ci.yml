@@ -81,6 +81,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build packages
+        run: pnpm turbo run build --filter=!@intelliflow/web --filter=!@intelliflow/api --filter=!@intelliflow/project-tracker --filter=!@intelliflow/workers
+
       - name: Run tests
         run: pnpm run test -- --coverage
 
@@ -185,6 +188,17 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: pnpm turbo run build --filter=!@intelliflow/web --filter=!@intelliflow/api --filter=!@intelliflow/project-tracker --filter=!@intelliflow/workers
+
+      - name: Create Supabase roles
+        run: |
+          PGPASSWORD=postgres psql -h localhost -U postgres -d intelliflow_test -c "
+            CREATE ROLE IF NOT EXISTS anon NOLOGIN;
+            CREATE ROLE IF NOT EXISTS authenticated NOLOGIN;
+            CREATE ROLE IF NOT EXISTS service_role NOLOGIN BYPASSRLS;
+          "
 
       - name: Setup database
         run: |

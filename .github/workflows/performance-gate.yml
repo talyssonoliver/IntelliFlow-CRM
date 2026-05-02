@@ -78,6 +78,14 @@ jobs:
       - name: Generate Prisma client
         run: pnpm run db:generate
 
+      - name: Create Supabase roles
+        run: |
+          PGPASSWORD=postgres psql -h localhost -U postgres -d intelliflow_test -c "
+            CREATE ROLE IF NOT EXISTS anon NOLOGIN;
+            CREATE ROLE IF NOT EXISTS authenticated NOLOGIN;
+            CREATE ROLE IF NOT EXISTS service_role NOLOGIN BYPASSRLS;
+          "
+
       - name: Run database migrations
         run: pnpm run db:migrate
         env:
