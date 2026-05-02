@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-05-01T22:48:55.330Z",
+  "timestamp": "2026-05-02T00:00:28.486Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1390,9 +1390,9 @@
   },
   "database_inventory": {
     "total_tables": 170,
-    "total_fields": 2500,
-    "total_indexes": 795,
-    "total_relations": 240,
+    "total_fields": 2503,
+    "total_indexes": 796,
+    "total_relations": 242,
     "tables_with_embeddings": 4,
     "enums": 71,
     "tables": [
@@ -1425,18 +1425,18 @@
         "hasEmbedding": false
       },
       {
+        "name": "Lead",
+        "fields": 35,
+        "indexes": 13,
+        "relations": 3,
+        "hasEmbedding": true
+      },
+      {
         "name": "CaseDocument",
         "fields": 34,
         "indexes": 11,
         "relations": 1,
         "hasEmbedding": false
-      },
-      {
-        "name": "Lead",
-        "fields": 33,
-        "indexes": 12,
-        "relations": 2,
-        "hasEmbedding": true
       },
       {
         "name": "ToolCallRecord",
@@ -1474,6 +1474,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "Account",
+        "fields": 28,
+        "indexes": 7,
+        "relations": 5,
+        "hasEmbedding": false
+      },
+      {
         "name": "TicketAutomationSetting",
         "fields": 28,
         "indexes": 3,
@@ -1485,13 +1492,6 @@
         "fields": 28,
         "indexes": 10,
         "relations": 1,
-        "hasEmbedding": false
-      },
-      {
-        "name": "Account",
-        "fields": 27,
-        "indexes": 7,
-        "relations": 4,
         "hasEmbedding": false
       },
       {
