@@ -206,7 +206,12 @@ jobs:
     name: Deploy Preview
     runs-on: ubuntu-latest
     needs: [build-preview]
-    if: github.event.pull_request.draft == false && github.event.pull_request.head.repo.full_name == github.repository
+    # Pre-MVP: skip the Vercel deploy entirely until production infra is wired up.
+    # Re-enable by setting the VERCEL_PROJECT_ID repo variable AND configuring the
+    # VERCEL_TOKEN / VERCEL_ORG_ID / VERCEL_PROJECT_ID secrets. The `vars.` check
+    # is the cleanest way to gate on infra existence — variables are visible in
+    # logs (so the gate is auditable) while the actual token stays a secret.
+    if: github.event.pull_request.draft == false && github.event.pull_request.head.repo.full_name == github.repository && vars.VERCEL_PROJECT_ID != ''
     environment:
       name: preview-pr-${{ github.event.pull_request.number }}
       url: https://intelliflow-pr-${{ github.event.pull_request.number }}.vercel.app

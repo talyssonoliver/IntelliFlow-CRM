@@ -13,8 +13,8 @@
 -- NOTE (2026-05-02 fix): Migration 20260424100000_case_ai_insight already
 -- created this table, so all CREATE/ALTER statements use IF NOT EXISTS guards.
 -- The only net-new change is ensuring generatedAt has a DEFAULT CURRENT_TIMESTAMP
--- (the Apr-24 migration omitted it). The idempotent CREATE TABLE IF NOT EXISTS
--- is a no-op when the table already exists; the ALTER COLUMN is also guarded.
+-- (the Apr-24 migration omitted it). The guarded CREATE statement is a no-op
+-- when the table already exists; the ALTER COLUMN is also guarded.
 
 CREATE TABLE IF NOT EXISTS "case_ai_insights" (
     "id"                  TEXT NOT NULL,
@@ -57,3 +57,7 @@ END $$;
 -- column is a no-op in PostgreSQL.
 ALTER TABLE "case_ai_insights"
   ALTER COLUMN "generatedAt" SET DEFAULT CURRENT_TIMESTAMP;
+
+-- Re-assert RLS so this migration is self-contained regardless of run order.
+-- ENABLE ROW LEVEL SECURITY is idempotent in PostgreSQL.
+ALTER TABLE "case_ai_insights" ENABLE ROW LEVEL SECURITY;

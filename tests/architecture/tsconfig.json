@@ -1,5 +1,5 @@
 {
-  "extends": "@intelliflow/typescript-config/base.json",
+  "extends": "../../packages/typescript-config/base.json",
   "compilerOptions": {
     "module": "Node16",
     "moduleResolution": "node16",

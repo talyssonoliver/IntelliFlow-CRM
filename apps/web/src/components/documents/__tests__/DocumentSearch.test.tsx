@@ -147,7 +147,7 @@ describe('DocumentSearch', () => {
   it('opens status dropdown on click', () => {
     render(<DocumentSearch {...defaultProps} />);
     fireEvent.click(screen.getByRole('button', { name: /status/i }));
-    expect(screen.getByRole('listbox', { name: /status filter/i })).toBeInTheDocument();
+    expect(document.querySelector('[data-filter-dropdown="status"]')).toBeInTheDocument();
   });
 
   it('shows all 6 status options', () => {
@@ -184,8 +184,8 @@ describe('DocumentSearch', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /status/i }));
     // Multiple "Draft" elements may exist (chip + dropdown option). Click the checkbox label in dropdown.
-    const listbox = screen.getByRole('listbox');
-    const draftCheckbox = within(listbox).getByText('Draft');
+    const dropdown = document.querySelector('[data-filter-dropdown="status"]') as HTMLElement;
+    const draftCheckbox = within(dropdown).getByText('Draft');
     fireEvent.click(draftCheckbox);
 
     expect(onFilterChange).toHaveBeenCalledWith(expect.objectContaining({ status: undefined }));
@@ -196,7 +196,7 @@ describe('DocumentSearch', () => {
   it('opens classification dropdown', () => {
     render(<DocumentSearch {...defaultProps} />);
     fireEvent.click(screen.getByRole('button', { name: /classification/i }));
-    expect(screen.getByRole('listbox', { name: /classification filter/i })).toBeInTheDocument();
+    expect(document.querySelector('[data-filter-dropdown="classification"]')).toBeInTheDocument();
   });
 
   it('shows all 4 classification options', () => {
@@ -232,9 +232,11 @@ describe('DocumentSearch', () => {
     );
 
     fireEvent.click(screen.getByRole('button', { name: /classification/i }));
-    const listbox = screen.getByRole('listbox');
+    const dropdown = document.querySelector(
+      '[data-filter-dropdown="classification"]'
+    ) as HTMLElement;
     // Click the label text to toggle off the already-selected option
-    fireEvent.click(within(listbox).getByText('Confidential'));
+    fireEvent.click(within(dropdown).getByText('Confidential'));
 
     expect(onFilterChange).toHaveBeenCalledWith(
       expect.objectContaining({ classification: undefined })
@@ -257,9 +259,9 @@ describe('DocumentSearch', () => {
     render(<DocumentSearch {...defaultProps} onFilterChange={onFilterChange} />);
 
     fireEvent.click(screen.getByRole('button', { name: /status/i }));
-    const listbox = screen.getByRole('listbox');
+    const dropdown = document.querySelector('[data-filter-dropdown="status"]') as HTMLElement;
     // Click the checkbox input directly — jsdom does not bubble label clicks, so use the input
-    const checkboxes = within(listbox).getAllByRole('checkbox');
+    const checkboxes = within(dropdown).getAllByRole('checkbox');
     // First checkbox corresponds to DRAFT; click it directly
     fireEvent.click(checkboxes[0]);
 
@@ -271,7 +273,7 @@ describe('DocumentSearch', () => {
   it('opens file type dropdown', () => {
     render(<DocumentSearch {...defaultProps} />);
     fireEvent.click(screen.getByRole('button', { name: /file type/i }));
-    expect(screen.getByRole('listbox', { name: /file type filter/i })).toBeInTheDocument();
+    expect(document.querySelector('[data-filter-dropdown="fileType"]')).toBeInTheDocument();
   });
 
   it('calls onFilterChange when file type selected', () => {
@@ -295,9 +297,9 @@ describe('DocumentSearch', () => {
     );
 
     fireEvent.click(screen.getByRole('button', { name: /file type/i }));
-    const listbox = screen.getByRole('listbox');
+    const dropdown = document.querySelector('[data-filter-dropdown="fileType"]') as HTMLElement;
     // Click the label text for the already-selected PDF option to deselect it
-    fireEvent.click(within(listbox).getByText('PDF'));
+    fireEvent.click(within(dropdown).getByText('PDF'));
 
     expect(onFilterChange).toHaveBeenCalledWith(expect.objectContaining({ fileType: undefined }));
   });
@@ -499,10 +501,10 @@ describe('DocumentSearch', () => {
   it('closes dropdown on Escape key', () => {
     render(<DocumentSearch {...defaultProps} />);
     fireEvent.click(screen.getByRole('button', { name: /status/i }));
-    expect(screen.getByRole('listbox')).toBeInTheDocument();
+    expect(document.querySelector('[data-filter-dropdown]')).toBeInTheDocument();
 
     fireEvent.keyDown(document, { key: 'Escape' });
-    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+    expect(document.querySelector('[data-filter-dropdown]')).not.toBeInTheDocument();
   });
 
   it('closes open dropdown when clicking outside the filter area', () => {
@@ -514,22 +516,22 @@ describe('DocumentSearch', () => {
     );
 
     fireEvent.click(screen.getByRole('button', { name: /status/i }));
-    expect(screen.getByRole('listbox')).toBeInTheDocument();
+    expect(document.querySelector('[data-filter-dropdown]')).toBeInTheDocument();
 
     fireEvent.mouseDown(screen.getByTestId('outside'));
-    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+    expect(document.querySelector('[data-filter-dropdown]')).not.toBeInTheDocument();
   });
 
   it('toggles between dropdowns — opening a second closes the first', () => {
     render(<DocumentSearch {...defaultProps} />);
 
     fireEvent.click(screen.getByRole('button', { name: /status/i }));
-    expect(screen.getByRole('listbox', { name: /status filter/i })).toBeInTheDocument();
+    expect(document.querySelector('[data-filter-dropdown="status"]')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /classification/i }));
-    // Classification listbox should now be open; status listbox should be gone
-    expect(screen.getByRole('listbox', { name: /classification filter/i })).toBeInTheDocument();
-    expect(screen.queryByRole('listbox', { name: /status filter/i })).not.toBeInTheDocument();
+    // Classification dropdown should now be open; status dropdown should be gone
+    expect(document.querySelector('[data-filter-dropdown="classification"]')).toBeInTheDocument();
+    expect(document.querySelector('[data-filter-dropdown="status"]')).not.toBeInTheDocument();
   });
 
   it('filter buttons have aria-expanded state', () => {

@@ -727,7 +727,9 @@ describe('EmailPage navigation handlers', () => {
     render(<EmailPage />);
 
     // Select first email to load the thread
-    const emailItems = screen.getAllByRole('option');
+    const emailItems = Array.from(
+      document.querySelectorAll('[data-email-item] button[type="button"]')
+    ) as HTMLElement[];
     await user.click(emailItems[0]);
 
     // Wait for Reply buttons to appear (EmailMessage actions)
@@ -739,8 +741,10 @@ describe('EmailPage navigation handlers', () => {
     await user.click(replyBtns[replyBtns.length - 1]);
 
     // Inline compose should appear with body editor instead of navigating
+    // Note: happy-dom does not infer implicit textbox role from contentEditable;
+    // query by aria-label instead (the element has aria-label="Reply body").
     await waitFor(() => {
-      expect(screen.getByRole('textbox', { name: /reply body/i })).toBeInTheDocument();
+      expect(screen.getByLabelText(/reply body/i)).toBeInTheDocument();
     });
     // Send button from inline compose should be present
     expect(screen.getByLabelText(/send reply/i)).toBeInTheDocument();
@@ -759,7 +763,9 @@ describe('EmailPage navigation handlers', () => {
     const user = userEvent.setup();
     render(<EmailPage />);
 
-    const emailItems = screen.getAllByRole('option');
+    const emailItems = Array.from(
+      document.querySelectorAll('[data-email-item] button[type="button"]')
+    ) as HTMLElement[];
     await user.click(emailItems[0]);
 
     await waitFor(() => {
@@ -770,8 +776,10 @@ describe('EmailPage navigation handlers', () => {
     await user.click(replyAllBtns[replyAllBtns.length - 1]);
 
     // Inline compose should appear with body editor
+    // Note: happy-dom does not infer implicit textbox role from contentEditable;
+    // query by aria-label instead (the element has aria-label="Reply body").
     await waitFor(() => {
-      expect(screen.getByRole('textbox', { name: /reply body/i })).toBeInTheDocument();
+      expect(screen.getByLabelText(/reply body/i)).toBeInTheDocument();
     });
     expect(screen.getByLabelText(/send reply all/i)).toBeInTheDocument();
   });
@@ -789,7 +797,9 @@ describe('EmailPage navigation handlers', () => {
     const user = userEvent.setup();
     render(<EmailPage />);
 
-    const emailItems = screen.getAllByRole('option');
+    const emailItems = Array.from(
+      document.querySelectorAll('[data-email-item] button[type="button"]')
+    ) as HTMLElement[];
     await user.click(emailItems[0]);
 
     await waitFor(() => {

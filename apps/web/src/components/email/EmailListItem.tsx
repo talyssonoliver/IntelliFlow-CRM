@@ -61,15 +61,16 @@ export function EmailListItem({ email, isSelected, onSelect }: Readonly<EmailLis
       align="start"
     >
       {}
-      <li className="list-none">
+      <li data-email-item className={cn('list-none', isSelected && 'bg-primary/5')}>
         <button
           type="button"
           aria-pressed={isSelected}
+          tabIndex={-1}
           className={cn(
             'flex w-full cursor-pointer gap-3 rounded-lg px-3 py-2.5 transition-colors text-left',
             'hover:bg-accent/50',
             'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1',
-            isSelected && 'bg-primary/5 border-l-2 border-l-primary'
+            isSelected && 'border-l-2 border-l-primary'
           )}
           onClick={() => onSelect(email.id)}
         >

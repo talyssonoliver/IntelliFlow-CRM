@@ -60,6 +60,9 @@ export function ErrorRateGauge({ driftResult, isLoading }: Readonly<ErrorRateGau
               min={0}
               max={1}
               value={clampedScore}
+              aria-valuemin={0}
+              aria-valuemax={1}
+              aria-valuenow={clampedScore}
               aria-label={`Error rate drift gauge: ${formatDriftScore(clampedScore)}`}
               className="sr-only"
             />

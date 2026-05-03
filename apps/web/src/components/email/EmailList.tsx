@@ -94,7 +94,7 @@ export function EmailList({
   const handleListKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       e.preventDefault();
-      const items = listRef.current?.querySelectorAll('[role="option"]');
+      const items = listRef.current?.querySelectorAll('[data-email-item] button[type="button"]');
       if (!items?.length) return;
 
       const current = Array.from(items).indexOf(document.activeElement as Element);

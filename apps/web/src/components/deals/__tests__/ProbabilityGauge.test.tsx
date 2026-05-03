@@ -10,26 +10,29 @@ import { ProbabilityGauge } from '../forecast/ProbabilityGauge';
 
 describe('ProbabilityGauge', () => {
   it('renders 0% value correctly', () => {
-    render(<ProbabilityGauge value={0} label="Win Probability" />);
+    const { container } = render(<ProbabilityGauge value={0} label="Win Probability" />);
 
-    const gauge = screen.getByTestId('probability-gauge');
-    expect(gauge).toHaveAttribute('aria-valuenow', '0');
+    const meter = container.querySelector('meter');
+    expect(meter).not.toBeNull();
+    expect(meter).toHaveAttribute('value', '0');
     expect(screen.getByText('0%')).toBeInTheDocument();
   });
 
   it('renders 50% value correctly', () => {
-    render(<ProbabilityGauge value={50} label="Win Probability" />);
+    const { container } = render(<ProbabilityGauge value={50} label="Win Probability" />);
 
-    const gauge = screen.getByTestId('probability-gauge');
-    expect(gauge).toHaveAttribute('aria-valuenow', '50');
+    const meter = container.querySelector('meter');
+    expect(meter).not.toBeNull();
+    expect(meter).toHaveAttribute('value', '50');
     expect(screen.getByText('50%')).toBeInTheDocument();
   });
 
   it('renders 100% value correctly', () => {
-    render(<ProbabilityGauge value={100} label="Win Probability" />);
+    const { container } = render(<ProbabilityGauge value={100} label="Win Probability" />);
 
-    const gauge = screen.getByTestId('probability-gauge');
-    expect(gauge).toHaveAttribute('aria-valuenow', '100');
+    const meter = container.querySelector('meter');
+    expect(meter).not.toBeNull();
+    expect(meter).toHaveAttribute('value', '100');
     expect(screen.getByText('100%')).toBeInTheDocument();
   });
 
@@ -93,14 +96,18 @@ describe('ProbabilityGauge', () => {
   });
 
   it('clamps values above 100 to 100', () => {
-    render(<ProbabilityGauge value={150} label="Test" />);
+    const { container } = render(<ProbabilityGauge value={150} label="Test" />);
 
-    expect(screen.getByTestId('probability-gauge')).toHaveAttribute('aria-valuenow', '100');
+    const meter = container.querySelector('meter');
+    expect(meter).not.toBeNull();
+    expect(meter).toHaveAttribute('value', '100');
   });
 
   it('clamps negative values to 0', () => {
-    render(<ProbabilityGauge value={-10} label="Test" />);
+    const { container } = render(<ProbabilityGauge value={-10} label="Test" />);
 
-    expect(screen.getByTestId('probability-gauge')).toHaveAttribute('aria-valuenow', '0');
+    const meter = container.querySelector('meter');
+    expect(meter).not.toBeNull();
+    expect(meter).toHaveAttribute('value', '0');
   });
 });

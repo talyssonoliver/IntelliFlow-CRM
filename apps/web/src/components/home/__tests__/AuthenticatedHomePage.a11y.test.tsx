@@ -5,7 +5,7 @@
  * - Heading hierarchy (h1 → h2, no h3 skip)
  * - Decorative icons have aria-hidden="true"
  * - Icon-only buttons have aria-label
- * - SVG progress ring has role="img" and <title>
+ * - SVG progress ring has aria-label and <title>
  * - Activity feed has role="feed" and aria-busy
  *
  * Task: PG-166 — Lighthouse audit on authenticated home page
@@ -417,11 +417,11 @@ describe('AuthenticatedHomePage a11y', () => {
 
   // AC-012: SVG progress ring
   describe('SVG progress ring (AC-012)', () => {
-    it('SVG progress ring has role="img"', async () => {
+    it('SVG progress ring has an aria-label', async () => {
       const { AuthenticatedHomePage } = await import('../AuthenticatedHomePage');
       const { container } = render(<AuthenticatedHomePage />);
 
-      const svg = container.querySelector('svg[role="img"]');
+      const svg = container.querySelector('svg[aria-label]');
       expect(svg).toBeInTheDocument();
     });
 
@@ -429,7 +429,7 @@ describe('AuthenticatedHomePage a11y', () => {
       const { AuthenticatedHomePage } = await import('../AuthenticatedHomePage');
       const { container } = render(<AuthenticatedHomePage />);
 
-      const svg = container.querySelector('svg[role="img"]');
+      const svg = container.querySelector('svg[aria-label]');
       expect(svg).toBeInTheDocument();
 
       const title = svg!.querySelector('title');

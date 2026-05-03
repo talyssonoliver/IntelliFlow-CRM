@@ -4,13 +4,13 @@
 
 name: Performance Gate
 
+# Pre-MVP: PR trigger disabled. The gate spins up Postgres + Redis, runs
+# Prisma migrations + seed, then k6-loads the API — only meaningful once
+# we have a stable seed dataset and tuned thresholds. Until then it's noise
+# on every PR. Triggered manually via `gh workflow run performance-gate.yml`
+# (or pushed nightly via cron — add a `schedule:` block when the seed flow
+# is stable). To re-enable PR mode, restore the `pull_request:` block below.
 on:
-  pull_request:
-    branches: [main, develop]
-    paths:
-      - 'apps/api/**'
-      - 'packages/**'
-      - 'artifacts/misc/k6/**'
   workflow_dispatch:
     inputs:
       run_full_test:
@@ -18,6 +18,12 @@ on:
         required: false
         default: 'false'
         type: boolean
+  # pull_request:
+  #   branches: [main, develop]
+  #   paths:
+  #     - 'apps/api/**'
+  #     - 'packages/**'
+  #     - 'artifacts/misc/k6/**'
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true

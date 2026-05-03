@@ -182,6 +182,7 @@ export function DocumentSearch({
           <ul
             className="absolute top-full left-0 mt-1 w-56 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg z-20 py-2 list-none m-0 p-0"
             aria-label={`${label} filter options`}
+            data-filter-dropdown={id}
           >
             {options.map((opt) => {
               const isActive = activeValues?.includes(opt.value) ?? false;
