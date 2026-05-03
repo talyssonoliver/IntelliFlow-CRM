@@ -263,7 +263,19 @@ jobs:
       - name: Build
         run: pnpm run build
         env:
-          PRISMA_FIELD_ENCRYPTION_KEY: ${{ secrets.PRISMA_FIELD_ENCRYPTION_KEY }}
+          NODE_ENV: production
+          # All module-load guards must be satisfied or `next build` fails
+          # at page-data collection. See pr-checks.yml > Build Preview for
+          # the full rationale; mirror that env block here.
+          PRISMA_FIELD_ENCRYPTION_KEY: ${{ secrets.PRISMA_FIELD_ENCRYPTION_KEY || 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=' }}
+          AI_AUDIT_SIGNING_KEY: ${{ secrets.AI_AUDIT_SIGNING_KEY || 'ci-build-stub-key-not-used-at-runtime' }}
+          DATABASE_URL: postgresql://stub:stub@localhost:5432/stub
+          DIRECT_URL: postgresql://stub:stub@localhost:5432/stub
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL || 'https://stub.supabase.co' }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdHViIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.stub' }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdHViIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.stub' }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://stub.supabase.co' }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdHViIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.stub' }}
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v7

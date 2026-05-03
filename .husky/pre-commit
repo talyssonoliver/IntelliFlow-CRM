@@ -126,4 +126,61 @@ ${ADDED}
   fi
 fi
 
+# Repo policy (2026-05-03): no real-looking secrets in committed files.
+# Catches the patterns most likely to BE a real key sneaking in via
+# copy-paste from .env.local or a test fixture. Whitelist exemptions are
+# explicit:
+#   - "stub", "stub-key", "ci-build-stub-..." literal placeholders
+#   - "AAAA...A=" — base64 of 32 zero bytes (intentional CI build stub)
+#   - JWTs ending in `.stub` (the project's stub JWT convention)
+#   - Lines that reference "${{ secrets.X }}" — that's a GH Actions secret ref, value lives server-side
+#   - 64-hex inside SHA256 hash fields (artifacts/coverage outputs)
+#
+# What we DO catch:
+#   - `eyJ...` JWTs that end in a real-looking signature (3rd segment >= 24 chars and not ".stub")
+#   - `sk-`, `ghp_`, `xoxb-`, `xoxp-` prefixes (OpenAI / GitHub / Slack)
+#   - `AKIA[A-Z0-9]{16}` (AWS access keys)
+#   - 32+ char base64 OR 40+ char hex strings on a literal-assignment line
+#     (key/secret/token/password/api on the same line)
+#
+# Override: ALLOW_SECRET_LIKE=1 (only with explicit user approval).
+if [ "${ALLOW_SECRET_LIKE:-0}" != "1" ]; then
+  STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACMR | grep -vE '\.(lock|map|woff2?|png|jpe?g|gif|ico|svg|pdf)$' || true)
+  if [ -n "$STAGED_FILES" ]; then
+    SECRET_HITS=""
+    for f in $STAGED_FILES; do
+      # Only NEW lines (+ prefix, not +++)
+      DIFF_ADDED=$(git diff --cached -- "$f" | grep -E '^\+[^+]')
+      [ -z "$DIFF_ADDED" ] && continue
+
+      # 1) Real-looking JWT (eyJ... base64 with 3 segments, last segment NOT .stub)
+      JWT_HIT=$(echo "$DIFF_ADDED" | grep -E 'eyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{20,}' | grep -v '\.stub' | grep -vE '\$\{\{\s*secrets\.' || true)
+
+      # 2) Provider-prefixed tokens (OpenAI / GitHub / Slack / AWS)
+      PROVIDER_HIT=$(echo "$DIFF_ADDED" | grep -E '(sk-[A-Za-z0-9]{32,}|ghp_[A-Za-z0-9]{36,}|xox[bpas]-[A-Za-z0-9-]{20,}|AKIA[A-Z0-9]{16})' | grep -vE '\$\{\{\s*secrets\.' || true)
+
+      # 3) Long opaque assignment (key/secret/token/password/api in the var name)
+      OPAQUE_HIT=$(echo "$DIFF_ADDED" | grep -iE '(key|secret|token|password|api[_-]?key)\s*[:=]\s*["'\'']([A-Za-z0-9+/=_-]{32,}|[a-f0-9]{40,})["'\'']' | grep -vE '\$\{\{\s*secrets\.|stub|ci-build|ci-audit|AAAAAAA|placeholder|example|test[_-]?key|0{32,}' || true)
+
+      if [ -n "$JWT_HIT$PROVIDER_HIT$OPAQUE_HIT" ]; then
+        SECRET_HITS="${SECRET_HITS}
+${f}:
+${JWT_HIT}${PROVIDER_HIT}${OPAQUE_HIT}
+"
+      fi
+    done
+    if [ -n "$SECRET_HITS" ]; then
+      echo ""
+      echo "❌ Possible real secret(s) staged."
+      echo "$SECRET_HITS"
+      echo ""
+      echo "Repo policy: real keys never enter git. Move the value to a"
+      echo "GitHub Actions secret and reference it via \${{ secrets.X }}."
+      echo "If this is a known stub/example, override with ALLOW_SECRET_LIKE=1"
+      echo "and document why in the commit body."
+      exit 1
+    fi
+  fi
+fi
+
 echo "✅ All pre-commit checks passed! (Full tests run in CI)"
