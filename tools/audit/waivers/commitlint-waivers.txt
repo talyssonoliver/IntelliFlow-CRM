@@ -19,8 +19,9 @@ ef6f4ef8898f fix(ci): subject + header too long — cannot rewrite (pushed)
 ce3d07987305 fix(ci): header 122 chars — cannot rewrite (pushed)
 034b69d337d1 fix(ci): body lines exceed 100 chars — cannot rewrite (pushed)
 e257f18d8b8c fix(ci): body lines exceed 100 chars — cannot rewrite (pushed)
-0eb68ff37a3d fix(ci): body lines exceed 100 chars — cannot rewrite (pushed)
-896cf09a fix(web,domain,ui): subject + body lines exceed limits — cannot rewrite (pushed)
+0eb68ff38425 fix(ci): body lines exceed 100 chars — cannot rewrite (pushed)
+896cf09a18b2 fix(web,domain,ui): subject + body lines exceed limits — cannot rewrite (pushed)
+214d0abd7fab fix(ci): subject starts with proper noun "Linux" — cannot rewrite (pushed)
 
 # Grandfathered: commits authored before the AI-coauthor trailer ban
 # (commit-msg hook + commit_msg_lint.py policy added 2026-05-02). All

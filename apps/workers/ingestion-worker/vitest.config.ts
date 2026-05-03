@@ -1,6 +1,43 @@
 import { defineConfig } from 'vitest/config';
+import path from 'node:path';
+
+// Resolve workspace packages from source so tests are not coupled to a
+// pre-built dist/. Without these aliases, a clean CI checkout has no dist/
+// for @intelliflow/* packages, causing "Cannot find module" before any test
+// runs.
+const monorepoRoot = path.resolve(__dirname, '../../..');
 
 export default defineConfig({
+  resolve: {
+    alias: [
+      // Sub-path exports must come BEFORE the bare specifier alias or Vite
+      // will match the shorter pattern first and resolve the wrong file.
+      {
+        find: /^@intelliflow\/platform\/resilience$/,
+        replacement: path.resolve(monorepoRoot, 'packages/platform/src/resilience/index.ts'),
+      },
+      {
+        find: /^@intelliflow\/platform\/queues\/types$/,
+        replacement: path.resolve(monorepoRoot, 'packages/platform/src/queues/types.ts'),
+      },
+      {
+        find: /^@intelliflow\/platform\/queues\/connection$/,
+        replacement: path.resolve(monorepoRoot, 'packages/platform/src/queues/connection.ts'),
+      },
+      {
+        find: /^@intelliflow\/platform\/queues$/,
+        replacement: path.resolve(monorepoRoot, 'packages/platform/src/queues/index.ts'),
+      },
+      {
+        find: '@intelliflow/platform',
+        replacement: path.resolve(monorepoRoot, 'packages/platform/src/index.ts'),
+      },
+      {
+        find: '@intelliflow/worker-shared',
+        replacement: path.resolve(monorepoRoot, 'apps/workers/shared/src/index.ts'),
+      },
+    ],
+  },
   test: {
     name: 'ingestion-worker',
     globals: true,

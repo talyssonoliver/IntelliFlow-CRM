@@ -14,9 +14,11 @@ describe('FileUploader', () => {
     onChange: vi.fn(),
   };
 
-  it('renders drop zone with role="region" and aria-label', () => {
-    render(<FileUploader {...defaultProps} />);
-    const dropZone = screen.getByRole('region', { name: 'File upload area' });
+  it('renders drop zone as visually hidden aria element with drag-and-drop chrome', () => {
+    const { container } = render(<FileUploader {...defaultProps} />);
+    // The drop zone is aria-hidden (visual chrome only); query it via the
+    // aria-hidden attribute so AT users are not polluted by the decoration.
+    const dropZone = container.querySelector('[aria-hidden="true"]');
     expect(dropZone).toBeInTheDocument();
   });
 
@@ -41,8 +43,9 @@ describe('FileUploader', () => {
 
   it('drag-and-drop adds files to the list', () => {
     const onChange = vi.fn();
-    render(<FileUploader {...defaultProps} onChange={onChange} />);
-    const dropZone = screen.getByRole('region', { name: 'File upload area' });
+    const { container } = render(<FileUploader {...defaultProps} onChange={onChange} />);
+    // Drop zone is aria-hidden visual chrome; locate via the aria-hidden attribute.
+    const dropZone = container.querySelector('[aria-hidden="true"]') as HTMLElement;
 
     const file = createMockFile('test.pdf', 1024, 'application/pdf');
     const dataTransfer = { files: [file] };
@@ -75,8 +78,10 @@ describe('FileUploader', () => {
 
   it('rejects files exceeding max size with error message', () => {
     const onChange = vi.fn();
-    render(<FileUploader {...defaultProps} onChange={onChange} maxSizeMB={10} />);
-    const dropZone = screen.getByRole('region', { name: 'File upload area' });
+    const { container } = render(
+      <FileUploader {...defaultProps} onChange={onChange} maxSizeMB={10} />
+    );
+    const dropZone = container.querySelector('[aria-hidden="true"]') as HTMLElement;
 
     const largeFile = createMockFile('huge.pdf', 11 * 1024 * 1024, 'application/pdf');
     fireEvent.drop(dropZone, { dataTransfer: { files: [largeFile] } });
@@ -92,10 +97,10 @@ describe('FileUploader', () => {
       createMockFile(`file${i}.txt`, 100, 'text/plain')
     );
     const onChange = vi.fn();
-    render(
+    const { container } = render(
       <FileUploader {...defaultProps} files={existingFiles} onChange={onChange} maxFiles={5} />
     );
-    const dropZone = screen.getByRole('region', { name: 'File upload area' });
+    const dropZone = container.querySelector('[aria-hidden="true"]') as HTMLElement;
 
     const newFile = createMockFile('extra.txt', 100, 'text/plain');
     fireEvent.drop(dropZone, { dataTransfer: { files: [newFile] } });
@@ -106,8 +111,8 @@ describe('FileUploader', () => {
 
   it('rejects invalid file types', () => {
     const onChange = vi.fn();
-    render(<FileUploader {...defaultProps} onChange={onChange} />);
-    const dropZone = screen.getByRole('region', { name: 'File upload area' });
+    const { container } = render(<FileUploader {...defaultProps} onChange={onChange} />);
+    const dropZone = container.querySelector('[aria-hidden="true"]') as HTMLElement;
 
     const exeFile = createMockFile('virus.exe', 100, 'application/x-msdownload');
     fireEvent.drop(dropZone, { dataTransfer: { files: [exeFile] } });
@@ -118,8 +123,8 @@ describe('FileUploader', () => {
 
   it('accepts valid file types', () => {
     const onChange = vi.fn();
-    render(<FileUploader {...defaultProps} onChange={onChange} />);
-    const dropZone = screen.getByRole('region', { name: 'File upload area' });
+    const { container } = render(<FileUploader {...defaultProps} onChange={onChange} />);
+    const dropZone = container.querySelector('[aria-hidden="true"]') as HTMLElement;
 
     const pdfFile = createMockFile('doc.pdf', 1024, 'application/pdf');
     fireEvent.drop(dropZone, { dataTransfer: { files: [pdfFile] } });
@@ -129,8 +134,8 @@ describe('FileUploader', () => {
 
   it('disabled state prevents file selection', () => {
     const onChange = vi.fn();
-    render(<FileUploader {...defaultProps} onChange={onChange} disabled />);
-    const dropZone = screen.getByRole('region', { name: 'File upload area' });
+    const { container } = render(<FileUploader {...defaultProps} onChange={onChange} disabled />);
+    const dropZone = container.querySelector('[aria-hidden="true"]') as HTMLElement;
 
     const file = createMockFile('test.pdf', 1024, 'application/pdf');
     fireEvent.drop(dropZone, { dataTransfer: { files: [file] } });
