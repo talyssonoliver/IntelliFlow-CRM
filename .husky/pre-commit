@@ -149,8 +149,9 @@ if [ "${ALLOW_SECRET_LIKE:-0}" != "1" ]; then
   if [ -n "$STAGED_FILES" ]; then
     SECRET_HITS=""
     for f in $STAGED_FILES; do
-      # Only NEW lines (+ prefix, not +++)
-      DIFF_ADDED=$(git diff --cached -- "$f" | grep -E '^\+[^+]')
+      # Only NEW lines (+ prefix, not +++). `|| true` because grep returns 1
+      # when there are no matches and `sh -e` would abort the hook on that.
+      DIFF_ADDED=$(git diff --cached -- "$f" | grep -E '^\+[^+]' || true)
       [ -z "$DIFF_ADDED" ] && continue
 
       # 1) Real-looking JWT (eyJ... base64 with 3 segments, last segment NOT .stub)
