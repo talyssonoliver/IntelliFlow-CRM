@@ -101,7 +101,7 @@ describe('EmailThread', () => {
     const replyBtns = screen.getAllByRole('button', { name: /^reply$/i });
     await user.click(replyBtns[replyBtns.length - 1]);
     await waitFor(() => {
-      expect(screen.getByRole('textbox', { name: /reply body/i })).toBeInTheDocument();
+      expect(screen.getByLabelText(/reply body/i)).toBeInTheDocument();
     });
     expect(screen.getByLabelText(/send reply/i)).toBeInTheDocument();
   });
@@ -123,7 +123,7 @@ describe('EmailThread', () => {
     const replyAllBtns = screen.getAllByRole('button', { name: /reply all/i });
     await user.click(replyAllBtns[replyAllBtns.length - 1]);
     await waitFor(() => {
-      expect(screen.getByRole('textbox', { name: /reply body/i })).toBeInTheDocument();
+      expect(screen.getByLabelText(/reply body/i)).toBeInTheDocument();
     });
     expect(screen.getByLabelText(/send reply all/i)).toBeInTheDocument();
   });

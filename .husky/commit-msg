@@ -35,10 +35,27 @@ if ! echo "$COMMIT_MSG" | grep -qE "$PATTERN"; then
   exit 1
 fi
 
-# Check message length
-MSG_LENGTH=$(echo "$COMMIT_MSG" | head -n1 | wc -c)
-if [ "$MSG_LENGTH" -gt 100 ]; then
-  echo "⚠️  Warning: Commit message subject is too long (${MSG_LENGTH} chars, max 100)"
+# Subject length — hard cap at 100 to match the audit's commit_msg_lint.py rule.
+# Previously a soft warning; that let multiple commits ship with 100+ char headers
+# and accumulate in the waivers file. Now a real block — override with
+# ALLOW_LONG_HEADER=1 if you genuinely need it (rare).
+SUBJECT_LEN=$(echo "$COMMIT_MSG" | head -n1 | tr -d '\n' | wc -c)
+if [ "$SUBJECT_LEN" -gt 100 ] && [ "${ALLOW_LONG_HEADER:-0}" != "1" ]; then
+  echo "❌ Commit subject is too long (${SUBJECT_LEN} chars, max 100)."
+  echo "   Trim the subject or use ALLOW_LONG_HEADER=1 git commit ..."
+  exit 1
+fi
+
+# Body line length — same 100-char rule the audit enforces. Catches the
+# pattern that just shipped two waivers (e257f18d / 0eb68ff3): long prose
+# paragraphs in -m bodies. Soft-wrap at 100 in your editor or break the
+# message into multiple shorter -m blocks.
+LONG_BODY_LINES=$(echo "$COMMIT_MSG" | tail -n +2 | awk 'length($0) > 100 { print NR+1 ": " length($0) " chars" }')
+if [ -n "$LONG_BODY_LINES" ] && [ "${ALLOW_LONG_BODY:-0}" != "1" ]; then
+  echo "❌ Commit body has lines >100 chars (audit will fail):"
+  echo "$LONG_BODY_LINES"
+  echo "   Wrap them, or use ALLOW_LONG_BODY=1 git commit ..."
+  exit 1
 fi
 
 # Reject AI-coauthor trailers. The repo's authorship policy is that human

@@ -164,7 +164,7 @@ describe('StatusMonitor', () => {
         vi.advanceTimersByTime(10);
       });
 
-      const uptimeChart = screen.getByRole('img', { name: /API uptime chart/i });
+      const uptimeChart = document.querySelector('figure[aria-label*="API uptime chart"]')!;
       expect(uptimeChart).toBeInTheDocument();
 
       // Each bar is a div inside the chart
@@ -180,10 +180,10 @@ describe('StatusMonitor', () => {
       });
 
       expect(
-        screen.getByRole('img', { name: /API uptime chart: 99.95% over 90 days/i })
+        document.querySelector('figure[aria-label*="API uptime chart: 99.95% over 90 days"]')
       ).toBeInTheDocument();
       expect(
-        screen.getByRole('img', { name: /Web App uptime chart: 99.9% over 90 days/i })
+        document.querySelector('figure[aria-label*="Web App uptime chart: 99.9% over 90 days"]')
       ).toBeInTheDocument();
     });
 
@@ -194,8 +194,8 @@ describe('StatusMonitor', () => {
         vi.advanceTimersByTime(10);
       });
 
-      const firstRenderBars = screen
-        .getByRole('img', { name: /API uptime chart/i })
+      const firstRenderBars = document
+        .querySelector('figure[aria-label*="API uptime chart"]')!
         .querySelectorAll('div');
       const firstBarClasses = Array.from(firstRenderBars).map((b) => b.className);
 
@@ -205,8 +205,8 @@ describe('StatusMonitor', () => {
         vi.advanceTimersByTime(10);
       });
 
-      const secondRenderBars = screen
-        .getByRole('img', { name: /API uptime chart/i })
+      const secondRenderBars = document
+        .querySelector('figure[aria-label*="API uptime chart"]')!
         .querySelectorAll('div');
       const secondBarClasses = Array.from(secondRenderBars).map((b) => b.className);
 
@@ -344,8 +344,8 @@ describe('StatusMonitor', () => {
         vi.advanceTimersByTime(10);
       });
 
-      const images = screen.getAllByRole('img');
-      expect(images.length).toBe(4); // One per service
+      const charts = document.querySelectorAll('figure[aria-label]');
+      expect(charts.length).toBe(4); // One per service
     });
   });
 });

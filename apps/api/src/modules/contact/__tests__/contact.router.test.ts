@@ -12,6 +12,22 @@ import { TEST_UUIDS } from '../../../test/setup';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TRPCError } from '@trpc/server';
 import { contactRouter } from '../contact.router';
+
+// Stub BullMQ to prevent real Redis connections in unit tests.
+// Without this, the scoreWithAI fire-and-forget block attempts an IORedis
+// connection on Linux CI (no Redis available), emitting async errors that
+// Vitest catches as unhandled rejections and attributes to the running test.
+vi.mock('../../../lib/load-bullmq', () => ({
+  loadBullMQ: vi.fn(async () => ({
+    Queue: class MockQueue {
+      add = vi.fn().mockResolvedValue({ id: 'job-stub' });
+      close = vi.fn().mockResolvedValue(undefined);
+    },
+    QueueEvents: class MockQueueEvents {
+      close = vi.fn().mockResolvedValue(undefined);
+    },
+  })),
+}));
 import {
   prismaMock,
   createTestContext,
