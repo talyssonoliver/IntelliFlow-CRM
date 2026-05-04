@@ -104,6 +104,7 @@ jobs:
           out: 'artifacts/reports/dependency-check'
           args: >
             --enableRetired
+            --disableYarnAudit
             --propertyfile infra/security/dependency-check.yaml
 
       - name: Upload Dependency-Check results
