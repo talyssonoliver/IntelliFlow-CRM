@@ -126,18 +126,20 @@ ${ADDED}
   fi
 fi
 
-# Repo policy (2026-05-03): no real-looking secrets in committed files.
-# Catches the patterns most likely to BE a real key sneaking in via
-# copy-paste from .env.local or a test fixture. Whitelist exemptions are
-# explicit:
-#   - "stub", "stub-key", "ci-build-stub-..." literal placeholders
+# Repo policy (2026-05-03, hardened after GitHub secret-scanning alert #2
+# pattern-matched a fake `.stub` JWT as a real Supabase service key — its
+# detector only checks shape, not the signature suffix). No JWT-shaped
+# stubs are allowed in source files at all, real or fake. Use non-JWT
+# placeholders instead.
+#
+# Whitelist exemptions:
+#   - "stub", "ci-build-stub-...", "ci-stub-..." literal placeholders (no `eyJ` prefix)
 #   - "AAAA...A=" — base64 of 32 zero bytes (intentional CI build stub)
-#   - JWTs ending in `.stub` (the project's stub JWT convention)
-#   - Lines that reference "${{ secrets.X }}" — that's a GH Actions secret ref, value lives server-side
+#   - Lines that reference "${{ secrets.X }}" — GH Actions secret ref, value lives server-side
 #   - 64-hex inside SHA256 hash fields (artifacts/coverage outputs)
 #
-# What we DO catch:
-#   - `eyJ...` JWTs that end in a real-looking signature (3rd segment >= 24 chars and not ".stub")
+# What we catch:
+#   - ANY `eyJ...` JWT (no `.stub` exception — GH's scanner doesn't honor it)
 #   - `sk-`, `ghp_`, `xoxb-`, `xoxp-` prefixes (OpenAI / GitHub / Slack)
 #   - `AKIA[A-Z0-9]{16}` (AWS access keys)
 #   - 32+ char base64 OR 40+ char hex strings on a literal-assignment line
@@ -154,8 +156,11 @@ if [ "${ALLOW_SECRET_LIKE:-0}" != "1" ]; then
       DIFF_ADDED=$(git diff --cached -- "$f" | grep -E '^\+[^+]' || true)
       [ -z "$DIFF_ADDED" ] && continue
 
-      # 1) Real-looking JWT (eyJ... base64 with 3 segments, last segment NOT .stub)
-      JWT_HIT=$(echo "$DIFF_ADDED" | grep -E 'eyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{20,}' | grep -v '\.stub' | grep -vE '\$\{\{\s*secrets\.' || true)
+      # 1) ANY eyJ... JWT shape — no .stub exception. GitHub's secret
+      # scanner pattern-matches every JWT-shaped value as a real provider
+      # key regardless of signature, so our own gate must too. The fake
+      # signature (".stub") doesn't fool it. Use non-JWT placeholders.
+      JWT_HIT=$(echo "$DIFF_ADDED" | grep -E 'eyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{4,}' | grep -vE '\$\{\{\s*secrets\.' || true)
 
       # 2) Provider-prefixed tokens (OpenAI / GitHub / Slack / AWS)
       PROVIDER_HIT=$(echo "$DIFF_ADDED" | grep -E '(sk-[A-Za-z0-9]{32,}|ghp_[A-Za-z0-9]{36,}|xox[bpas]-[A-Za-z0-9-]{20,}|AKIA[A-Z0-9]{16})' | grep -vE '\$\{\{\s*secrets\.' || true)
