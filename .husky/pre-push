@@ -93,24 +93,63 @@ echo "📋 Validating Sprint_plan (Sprint 0)..."
 }
 echo "✅ Sprint plan OK"
 
-# ── 8. ai-worker unit tests ─────────────────────────────────────────────────
-# Mirror CI's "Unit Tests" step focused on the ai-worker workspace. This is
-# the workspace that has historically had the most flaky test breakage —
-# infinite recursion in getErrorMessage and missing prisma mock both shipped
-# to CI before pre-push caught them. ~25s.
+# ── 8. Full repo test (turbo cached, affected scope) ────────────────────────
+# Repo policy (2026-05-04, after fix/ci-baseline's 78% change-failure rate):
+# pre-push must run THE TESTS CI WILL RUN, not just ai-worker. Every red push
+# this week was a regression in a workspace ai-worker doesn't touch
+# (DriftDashboard, status-monitor, EmailThread, file-uploader, ...).
+#
+# Implementation: `turbo run test` walks the dependency graph, only re-runs
+# affected packages, hits cache for the rest. Cold ≈ 4–6 min on this repo;
+# cached ≈ 30 s. Acceptable cost vs the 20 min of CI + visible-red waste.
+#
+# Override: SKIP_TEST_GATE=1 git push — only with explicit reason in commit
+# body. NOT for pushing faster.
 if [ "${SKIP_TEST_GATE:-0}" != "1" ]; then
-  echo "🧪 Running ai-worker tests..."
-  pnpm --filter @intelliflow/ai-worker test 2>&1 | tail -20
-  AIW_EXIT="${PIPESTATUS[0]}"
-  if [ "$AIW_EXIT" != "0" ]; then
-    echo "❌ ai-worker tests failed (exit $AIW_EXIT)."
-    echo "   Override with SKIP_TEST_GATE=1 git push only after diagnosing the"
-    echo "   failure — never just to push faster."
+  echo "🧪 Running full repo tests (turbo affected-scope)..."
+  pnpm exec turbo run test 2>&1 | tail -30
+  TEST_EXIT="${PIPESTATUS[0]}"
+  if [ "$TEST_EXIT" != "0" ]; then
+    echo "❌ Tests failed (exit $TEST_EXIT)."
+    echo "   Override: SKIP_TEST_GATE=1 git push (document WHY in commit body)."
     exit 1
   fi
-  echo "✅ ai-worker tests OK"
+  echo "✅ Full test suite OK"
 else
-  echo "⚠️  Skipping ai-worker tests (SKIP_TEST_GATE=1)"
+  echo "⚠️  Skipping test gate (SKIP_TEST_GATE=1)"
+fi
+
+# ── 9. Full repo build (turbo cached, affected scope) ───────────────────────
+# Mirror CI Pipeline > Build job. The web build's module-load env guards
+# (Prisma encryption key, AI audit signing, Supabase config) only fire under
+# NODE_ENV=production, so the typecheck pass above doesn't cover them. Catches
+# the 'Failed to collect page data for /api/trpc/[trpc]' family at push time.
+#
+# Override: SKIP_BUILD_GATE=1 git push.
+if [ "${SKIP_BUILD_GATE:-0}" != "1" ]; then
+  echo "🏗️  Running production build (turbo affected-scope)..."
+  # Use the same env stubs CI's Build job uses so the module-load guards pass.
+  # Real values come from .env.local (turbo forwards via globalEnv).
+  NODE_ENV=production \
+    PRISMA_FIELD_ENCRYPTION_KEY="${PRISMA_FIELD_ENCRYPTION_KEY:-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=}" \
+    AI_AUDIT_SIGNING_KEY="${AI_AUDIT_SIGNING_KEY:-ci-build-stub-key-not-used-at-runtime}" \
+    DATABASE_URL="${DATABASE_URL:-postgresql://stub:stub@localhost:5432/stub}" \
+    DIRECT_URL="${DIRECT_URL:-postgresql://stub:stub@localhost:5432/stub}" \
+    SUPABASE_URL="${SUPABASE_URL:-https://stub.supabase.co}" \
+    SUPABASE_ANON_KEY="${SUPABASE_ANON_KEY:-ci-stub-anon-not-a-real-supabase-key-do-not-use-at-runtime}" \
+    SUPABASE_SERVICE_ROLE_KEY="${SUPABASE_SERVICE_ROLE_KEY:-ci-stub-service-role-not-a-real-supabase-key-do-not-use-at-runtime}" \
+    NEXT_PUBLIC_SUPABASE_URL="${NEXT_PUBLIC_SUPABASE_URL:-https://stub.supabase.co}" \
+    NEXT_PUBLIC_SUPABASE_ANON_KEY="${NEXT_PUBLIC_SUPABASE_ANON_KEY:-ci-stub-anon-not-a-real-supabase-key-do-not-use-at-runtime}" \
+    pnpm exec turbo run build 2>&1 | tail -20
+  BUILD_EXIT="${PIPESTATUS[0]}"
+  if [ "$BUILD_EXIT" != "0" ]; then
+    echo "❌ Build failed (exit $BUILD_EXIT)."
+    echo "   Override: SKIP_BUILD_GATE=1 git push (document WHY in commit body)."
+    exit 1
+  fi
+  echo "✅ Build OK"
+else
+  echo "⚠️  Skipping build gate (SKIP_BUILD_GATE=1)"
 fi
 
 echo "✅ All pre-push checks passed!"
