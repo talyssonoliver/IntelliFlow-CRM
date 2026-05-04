@@ -1432,8 +1432,8 @@ importers:
         specifier: ^8.6.15
         version: 8.6.15(storybook@10.2.13(@testing-library/dom@10.4.0)(prettier@3.8.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))
       '@storybook/addon-links':
-        specifier: ^8.6.15
-        version: 8.6.15(react@19.2.4)(storybook@10.2.13(@testing-library/dom@10.4.0)(prettier@3.8.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))
+        specifier: ^10.3.6
+        version: 10.3.6(react@19.2.4)(storybook@10.2.13(@testing-library/dom@10.4.0)(prettier@3.8.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))
       '@storybook/addon-onboarding':
         specifier: ^8.6.15
         version: 8.6.15(storybook@10.2.13(@testing-library/dom@10.4.0)(prettier@3.8.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))
@@ -4923,11 +4923,11 @@ packages:
     peerDependencies:
       storybook: ^8.6.15
 
-  '@storybook/addon-links@8.6.15':
-    resolution: {integrity: sha512-abRWnDPBTwnj6sQYfAjUnYCNuUQbrVLLOyuormbDUqOcvZ+OqehNYo4BKXx0/lz61h0A2dOD1IuDo40uWyYVFQ==}
+  '@storybook/addon-links@10.3.6':
+    resolution: {integrity: sha512-tv9Xd68qRGBAvEubaxNo3FuFq4GwuMiBriD+gLGuFK0+/u3cnkuA264aoR1v6YCH3sT3er3+MBimuyKM3jLDxg==}
     peerDependencies:
-      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0-beta
-      storybook: ^8.6.15
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+      storybook: ^10.3.6
     peerDependenciesMeta:
       react:
         optional: true
@@ -15762,11 +15762,10 @@ snapshots:
       storybook: 10.2.13(@testing-library/dom@10.4.0)(prettier@3.8.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       ts-dedent: 2.2.0
 
-  '@storybook/addon-links@8.6.15(react@19.2.4)(storybook@10.2.13(@testing-library/dom@10.4.0)(prettier@3.8.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))':
+  '@storybook/addon-links@10.3.6(react@19.2.4)(storybook@10.2.13(@testing-library/dom@10.4.0)(prettier@3.8.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))':
     dependencies:
       '@storybook/global': 5.0.0
       storybook: 10.2.13(@testing-library/dom@10.4.0)(prettier@3.8.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      ts-dedent: 2.2.0
     optionalDependencies:
       react: 19.2.4
 
