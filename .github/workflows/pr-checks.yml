@@ -309,6 +309,13 @@ jobs:
     # Gate matches deploy-preview so this job doesn't try to run if the
     # preview URL was never produced (Vercel infra not wired).
     if: github.event.pull_request.draft == false && github.event.pull_request.head.repo.full_name == github.repository && needs.deploy-preview.outputs.preview-url != ''
+    permissions:
+      # Comment Lighthouse scores step uses github.rest.issues.createComment;
+      # default GITHUB_TOKEN doesn't grant PR write on default jobs, so the
+      # POST returns 403 "Resource not accessible by integration" and fails
+      # the whole job. Grant at job level (kept minimal — not workflow-wide).
+      pull-requests: write
+      issues: write
     steps:
       - uses: actions/checkout@v6
 
