@@ -95,6 +95,31 @@ interface AlertFile {
   groups?: AlertGroup[];
 }
 
+/** Validate a single alert rule against an expected rule spec; pushes errors into the array. */
+function validateAlertRule(expected: RuleExpectation, actual: AlertRule, errors: string[]): void {
+  const exprs = (actual.data ?? []).map((d) => d.model?.expr ?? '').join(' ');
+  if (!exprs.includes(expected.exprFragment)) {
+    errors.push(
+      `Rule "${expected.title}" expr does not contain expected fragment "${expected.exprFragment}"`
+    );
+  }
+  if (!expected.exprThresholdRegex.test(exprs)) {
+    errors.push(
+      `Rule "${expected.title}" expr does not match expected threshold regex ${expected.exprThresholdRegex} — threshold must be embedded in the Prometheus expression so Grafana's evaluator fires correctly`
+    );
+  }
+  if (actual.labels?.severity !== expected.severity) {
+    errors.push(
+      `Rule "${expected.title}" severity mismatch: expected ${expected.severity}, got ${actual.labels?.severity}`
+    );
+  }
+  if (actual.labels?.service !== 'intelliflow-workflow') {
+    errors.push(
+      `Rule "${expected.title}" labels.service must be "intelliflow-workflow" (got "${actual.labels?.service}")`
+    );
+  }
+}
+
 export function lintAlertsContent(rawYaml: string): { ok: boolean; errors: string[] } {
   const errors: string[] = [];
   let parsed: AlertFile;
@@ -127,27 +152,7 @@ export function lintAlertsContent(rawYaml: string): { ok: boolean; errors: strin
       errors.push(`Missing required rule "${expected.title}"`);
       continue;
     }
-    const exprs = (actual.data ?? []).map((d) => d.model?.expr ?? '').join(' ');
-    if (!exprs.includes(expected.exprFragment)) {
-      errors.push(
-        `Rule "${expected.title}" expr does not contain expected fragment "${expected.exprFragment}"`
-      );
-    }
-    if (!expected.exprThresholdRegex.test(exprs)) {
-      errors.push(
-        `Rule "${expected.title}" expr does not match expected threshold regex ${expected.exprThresholdRegex} — threshold must be embedded in the Prometheus expression so Grafana's evaluator fires correctly`
-      );
-    }
-    if (actual.labels?.severity !== expected.severity) {
-      errors.push(
-        `Rule "${expected.title}" severity mismatch: expected ${expected.severity}, got ${actual.labels?.severity}`
-      );
-    }
-    if (actual.labels?.service !== 'intelliflow-workflow') {
-      errors.push(
-        `Rule "${expected.title}" labels.service must be "intelliflow-workflow" (got "${actual.labels?.service}")`
-      );
-    }
+    validateAlertRule(expected, actual, errors);
   }
 
   // Surface unexpected rules so we don't silently grow the alert set
