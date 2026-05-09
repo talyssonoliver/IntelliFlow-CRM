@@ -114,6 +114,7 @@ __pycache__/
 .claude/skills/
 .claude/hooks/state/
 .claude/ralph-loops/
+.claude/worktrees/
 tmpclaude-*-cwd
 tmpclaude-*-cwd/
 
