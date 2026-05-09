@@ -89,58 +89,66 @@ const driftSnapshotSchema = z.object({
 
 const latencySnapshotSchema = z.object({
   available: z.boolean(),
-  stats: z.object({
-    sampleCount: z.number(),
-    successRate: z.number(),
-    percentiles: z.object({
-      p50: z.number(),
-      p75: z.number(),
-      p90: z.number(),
-      p95: z.number(),
-      p99: z.number(),
-      max: z.number(),
-      min: z.number(),
-      mean: z.number(),
-      stdDev: z.number(),
-    }),
-    sloCompliance: z.object({
-      p95Target: z.number(),
-      p99Target: z.number(),
-      p95Actual: z.number(),
-      p99Actual: z.number(),
-      p95Compliant: z.boolean(),
-      p99Compliant: z.boolean(),
-      overallCompliant: z.boolean(),
-      complianceRate: z.number(),
-    }),
-  }).passthrough(),
+  stats: z
+    .object({
+      sampleCount: z.number(),
+      successRate: z.number(),
+      percentiles: z.object({
+        p50: z.number(),
+        p75: z.number(),
+        p90: z.number(),
+        p95: z.number(),
+        p99: z.number(),
+        max: z.number(),
+        min: z.number(),
+        mean: z.number(),
+        stdDev: z.number(),
+      }),
+      sloCompliance: z.object({
+        p95Target: z.number(),
+        p99Target: z.number(),
+        p95Actual: z.number(),
+        p99Actual: z.number(),
+        p95Compliant: z.boolean(),
+        p99Compliant: z.boolean(),
+        overallCompliant: z.boolean(),
+        complianceRate: z.number(),
+      }),
+    })
+    .passthrough(),
   alerts: z.array(z.unknown()),
 });
 
 const hallucinationSnapshotSchema = z.object({
   available: z.boolean(),
-  stats: z.object({
-    totalChecks: z.number(),
-    hallucinationsDetected: z.number(),
-    hallucinationRate: z.number(),
-    kpiCompliant: z.boolean(),
-  }).passthrough(),
+  stats: z
+    .object({
+      totalChecks: z.number(),
+      hallucinationsDetected: z.number(),
+      hallucinationRate: z.number(),
+      kpiCompliant: z.boolean(),
+    })
+    .passthrough(),
   recentResults: z.array(z.unknown()),
 });
 
 const roiSnapshotSchema = z.object({
   available: z.boolean(),
-  roi: z.object({
-    totalCost: z.number(),
-    totalValue: z.number(),
-    netValue: z.number(),
-    roi: z.number(),
-  }).passthrough(),
-  stats: z.object({
-    totalCostsTracked: z.number(),
-    totalValuesTracked: z.number(),
-    currentROI: z.number(),
-  }).passthrough(),
+  roi: z
+    .object({
+      totalCost: z.number(),
+      totalValue: z.number(),
+      netValue: z.number(),
+      roi: z.number(),
+    })
+    .passthrough(),
+  stats: z
+    .object({
+      totalCostsTracked: z.number(),
+      totalValuesTracked: z.number(),
+      currentROI: z.number(),
+    })
+    .passthrough(),
 });
 
 // ============================================================================
@@ -160,7 +168,9 @@ interface DriftMetricsOpts extends DateRangeOpts {
   metric?: string;
 }
 type LatencyMetricsOpts = DateRangeOpts & { model?: string };
-interface HallucinationReportOpts extends DateRangeOpts { limit?: number }
+interface HallucinationReportOpts extends DateRangeOpts {
+  limit?: number;
+}
 type ROIMetricsOpts = DateRangeOpts;
 
 /**
@@ -178,7 +188,7 @@ function hasFilters(
     limit?: number;
     model?: string;
     metric?: string;
-  },
+  }
 ): boolean {
   return (
     opts.startTime !== undefined ||
@@ -241,13 +251,11 @@ export class RedisAIMonitoringStore {
   async getStatus(opts: TenantOpts): Promise<StoreResult<StatusValue>> {
     // getStatus has no user filters — always cache-eligible.
     return this.readOrFallback<StatusValue>('status', opts.tenantId, statusSnapshotSchema, () =>
-      this.service.getStatus(opts),
+      this.service.getStatus(opts)
     );
   }
 
-  async getDriftMetrics(
-    opts: DriftMetricsOpts & TenantOpts,
-  ): Promise<StoreResult<DriftValue>> {
+  async getDriftMetrics(opts: DriftMetricsOpts & TenantOpts): Promise<StoreResult<DriftValue>> {
     if (this.disabled || !this.redis || hasFilters(opts)) {
       // Filtered request → bypass cache, go to DB. The publisher precomputes
       // an unfiltered 24h aggregate; serving it for a "limit: 20" or
@@ -256,10 +264,7 @@ export class RedisAIMonitoringStore {
     }
     // Drift merge: tenant + global
     const tenantSnap = await this.tryGet(redisKey(opts.tenantId, 'drift'), driftSnapshotSchema);
-    const globalSnap = await this.tryGet(
-      redisKey(GLOBAL_NAMESPACE, 'drift'),
-      driftSnapshotSchema,
-    );
+    const globalSnap = await this.tryGet(redisKey(GLOBAL_NAMESPACE, 'drift'), driftSnapshotSchema);
     if (!tenantSnap && !globalSnap) {
       return { source: 'db', value: await this.service.getDriftMetrics(opts) };
     }
@@ -270,21 +275,18 @@ export class RedisAIMonitoringStore {
   }
 
   async getLatencyMetrics(
-    opts: LatencyMetricsOpts & TenantOpts,
+    opts: LatencyMetricsOpts & TenantOpts
   ): Promise<StoreResult<LatencyValue>> {
     if (hasFilters(opts)) {
       return { source: 'db', value: await this.service.getLatencyMetrics(opts) };
     }
-    return this.readOrFallback<LatencyValue>(
-      'latency',
-      opts.tenantId,
-      latencySnapshotSchema,
-      () => this.service.getLatencyMetrics(opts),
+    return this.readOrFallback<LatencyValue>('latency', opts.tenantId, latencySnapshotSchema, () =>
+      this.service.getLatencyMetrics(opts)
     );
   }
 
   async getHallucinationReport(
-    opts: HallucinationReportOpts & TenantOpts,
+    opts: HallucinationReportOpts & TenantOpts
   ): Promise<StoreResult<HallucinationValue>> {
     if (hasFilters(opts)) {
       return { source: 'db', value: await this.service.getHallucinationReport(opts) };
@@ -293,18 +295,16 @@ export class RedisAIMonitoringStore {
       'hallucination',
       opts.tenantId,
       hallucinationSnapshotSchema,
-      () => this.service.getHallucinationReport(opts),
+      () => this.service.getHallucinationReport(opts)
     );
   }
 
-  async getROIMetrics(
-    opts: ROIMetricsOpts & TenantOpts,
-  ): Promise<StoreResult<ROIValue>> {
+  async getROIMetrics(opts: ROIMetricsOpts & TenantOpts): Promise<StoreResult<ROIValue>> {
     if (hasFilters(opts)) {
       return { source: 'db', value: await this.service.getROIMetrics(opts) };
     }
     return this.readOrFallback<ROIValue>('roi', opts.tenantId, roiSnapshotSchema, () =>
-      this.service.getROIMetrics(opts),
+      this.service.getROIMetrics(opts)
     );
   }
 
@@ -325,7 +325,7 @@ export class RedisAIMonitoringStore {
     kind: SnapshotKind,
     tenantId: string,
     schema: z.ZodTypeAny,
-    dbFn: () => Promise<T>,
+    dbFn: () => Promise<T>
   ): Promise<StoreResult<T>> {
     if (this.disabled || !this.redis) {
       return { source: 'db', value: await dbFn() };
@@ -378,8 +378,14 @@ export class RedisAIMonitoringStore {
  * stays in exactly one place.
  */
 function mergeDriftSnapshots(tenant: unknown, global: unknown): unknown {
-  const t = tenant as { status?: { highSeverityCount?: number; trackedMetrics?: number }; history?: { timestamp?: string | Date }[] } | null;
-  const g = global as { status?: { highSeverityCount?: number; trackedMetrics?: number }; history?: { timestamp?: string | Date }[] } | null;
+  const t = tenant as {
+    status?: { highSeverityCount?: number; trackedMetrics?: number };
+    history?: { timestamp?: string | Date }[];
+  } | null;
+  const g = global as {
+    status?: { highSeverityCount?: number; trackedMetrics?: number };
+    history?: { timestamp?: string | Date }[];
+  } | null;
   const tHist = t?.history ?? [];
   const gHist = g?.history ?? [];
   const history = [...tHist, ...gHist].sort((a, b) => {

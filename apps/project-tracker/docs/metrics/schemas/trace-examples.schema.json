@@ -43,7 +43,14 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["scenario", "trace_id", "span_id", "workflow_id", "duration_ms", "status"],
+        "required": [
+          "scenario",
+          "trace_id",
+          "span_id",
+          "workflow_id",
+          "duration_ms",
+          "status"
+        ],
         "properties": {
           "scenario": {
             "description": "Human-readable label identifying the routing scenario",
@@ -83,7 +90,12 @@
           "routing_method": {
             "description": "Routing strategy that produced the assignment (matches IFC-030 ROUTING_REASONS values: rule_match | skill_match | load_balance | no_eligible_agent)",
             "type": "string",
-            "enum": ["rule_match", "skill_match", "load_balance", "no_eligible_agent"]
+            "enum": [
+              "rule_match",
+              "skill_match",
+              "load_balance",
+              "no_eligible_agent"
+            ]
           },
           "routing_score": {
             "description": "Numeric score of the winning agent (or 0 when no eligible agent)",

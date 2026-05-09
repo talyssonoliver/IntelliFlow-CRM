@@ -44,13 +44,11 @@ describe('DOC-015 — design-doc canonical totals are in sync with filesystem', 
       expect(existsSync(path), `missing doc: ${rel}`).toBe(true);
       const text = readFileSync(path, 'utf-8');
       const phrases = ['Total Pages', 'Total Routes', 'page\\.tsx entries', 'filesystem total'];
-      const pattern = new RegExp(
-        `(${phrases.join('|')})[^\\n]{0,160}\\b${canonical}\\b`,
-      );
+      const pattern = new RegExp(`(${phrases.join('|')})[^\\n]{0,160}\\b${canonical}\\b`);
       const hasCanonical = pattern.test(text);
       expect(
         hasCanonical,
-        `${rel} does not cite canonical ${canonical} on any "Total Pages|Total Routes|page.tsx entries|filesystem total" line`,
+        `${rel} does not cite canonical ${canonical} on any "Total Pages|Total Routes|page.tsx entries|filesystem total" line`
       ).toBe(true);
     });
 
@@ -58,7 +56,7 @@ describe('DOC-015 — design-doc canonical totals are in sync with filesystem', 
       const path = resolve(REPO_ROOT, rel);
       const text = readFileSync(path, 'utf-8');
       expect(/Canonical counts/.test(text), `${rel} missing canonical-counts admonition`).toBe(
-        true,
+        true
       );
     });
   }

@@ -252,6 +252,27 @@ function createMonitoringRedisClient(): MonitoringRedisLike | null {
 }
 
 /**
+ * IFC-158/IFC-223: Create the notification service adapter based on EMAIL_PROVIDER env var.
+ */
+function createNotificationServiceAdapter():
+  | MockNotificationServiceAdapter
+  | RealNotificationServiceAdapter {
+  const emailProvider = process.env.EMAIL_PROVIDER || 'mock';
+  if (emailProvider === 'sendgrid') {
+    const sendgridApiKey = process.env.SENDGRID_API_KEY;
+    if (!sendgridApiKey) {
+      throw new Error('SENDGRID_API_KEY required when EMAIL_PROVIDER=sendgrid');
+    }
+    const emailAdapter = createEmailServiceAdapter({ sendgridApiKey });
+    return new RealNotificationServiceAdapter(emailAdapter, {
+      fromAddress: process.env.EMAIL_FROM_ADDRESS || 'noreply@intelliflow.com',
+      fromName: process.env.EMAIL_FROM_NAME,
+    });
+  }
+  return new MockNotificationServiceAdapter();
+}
+
+/**
  * Create singleton instances of adapters
  * @param prismaClient - Prisma client instance to use for repositories
  */

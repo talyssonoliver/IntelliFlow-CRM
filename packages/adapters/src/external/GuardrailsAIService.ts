@@ -198,7 +198,7 @@ export class GuardrailsAIService implements AIServicePort {
    */
   async scoreLead(
     input: LeadScoringInput,
-    opts?: AIServiceCallOptions,
+    opts?: AIServiceCallOptions
   ): Promise<Result<LeadScoringResult, DomainError>> {
     try {
       // Step 1: Sanitize input
@@ -242,7 +242,7 @@ export class GuardrailsAIService implements AIServicePort {
    */
   async qualifyLead(
     input: LeadScoringInput,
-    opts?: AIServiceCallOptions,
+    opts?: AIServiceCallOptions
   ): Promise<Result<boolean, DomainError>> {
     try {
       // Step 1: Sanitize input

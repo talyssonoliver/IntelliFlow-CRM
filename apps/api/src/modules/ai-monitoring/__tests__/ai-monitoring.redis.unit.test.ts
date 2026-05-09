@@ -13,11 +13,7 @@
  *   T-A12 drift merge (tenant + global)
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import {
-  RedisAIMonitoringStore,
-  type RedisLike,
-  __test,
-} from '../ai-monitoring.redis-store';
+import { RedisAIMonitoringStore, type RedisLike, __test } from '../ai-monitoring.redis-store';
 
 const TENANT_A = '01H8AAAAAAAAAAAAAAAAAAAAAA';
 const TENANT_B = '01H8BBBBBBBBBBBBBBBBBBBBBB';
@@ -60,7 +56,13 @@ const validDriftSnapshot = {
     lastCheck: '2026-04-27T00:00:00Z',
   },
   history: [
-    { detected: true, severity: 'high', metric: 'tenant-a-metric', driftScore: 0.4, timestamp: '2026-04-27T00:00:00Z' },
+    {
+      detected: true,
+      severity: 'high',
+      metric: 'tenant-a-metric',
+      driftScore: 0.4,
+      timestamp: '2026-04-27T00:00:00Z',
+    },
   ],
 };
 
@@ -74,7 +76,13 @@ const validGlobalDriftSnapshot = {
     lastCheck: '2026-04-26T23:00:00Z',
   },
   history: [
-    { detected: false, severity: 'none', metric: 'global-pca', driftScore: 0.05, timestamp: '2026-04-26T23:00:00Z' },
+    {
+      detected: false,
+      severity: 'none',
+      metric: 'global-pca',
+      driftScore: 0.05,
+      timestamp: '2026-04-26T23:00:00Z',
+    },
   ],
 };
 
@@ -83,10 +91,26 @@ const validLatencySnapshot = {
   stats: {
     sampleCount: 100,
     successRate: 0.99,
-    percentiles: { p50: 100, p75: 200, p90: 400, p95: 600, p99: 1200, max: 2000, min: 50, mean: 250, stdDev: 0 },
+    percentiles: {
+      p50: 100,
+      p75: 200,
+      p90: 400,
+      p95: 600,
+      p99: 1200,
+      max: 2000,
+      min: 50,
+      mean: 250,
+      stdDev: 0,
+    },
     sloCompliance: {
-      p95Target: 2000, p99Target: 5000, p95Actual: 600, p99Actual: 1200,
-      p95Compliant: true, p99Compliant: true, overallCompliant: true, complianceRate: 0.99,
+      p95Target: 2000,
+      p99Target: 5000,
+      p95Actual: 600,
+      p99Actual: 1200,
+      p95Compliant: true,
+      p99Compliant: true,
+      overallCompliant: true,
+      complianceRate: 0.99,
     },
   },
   alerts: [],
@@ -121,7 +145,7 @@ describe('RedisAIMonitoringStore (IFC-214)', () => {
     const redis = makeRedis();
     const service = makeServiceMock();
     redis.get.mockImplementation(async (key: string) =>
-      key === `ai-mon:v1:${TENANT_A}:status` ? JSON.stringify(validStatusSnapshot) : null,
+      key === `ai-mon:v1:${TENANT_A}:status` ? JSON.stringify(validStatusSnapshot) : null
     );
     const store = new RedisAIMonitoringStore({ redis, service });
     const r = await store.getStatus({ tenantId: TENANT_A });
@@ -151,7 +175,7 @@ describe('RedisAIMonitoringStore (IFC-214)', () => {
     const redis = makeRedis();
     const service = makeServiceMock();
     redis.get.mockImplementation(async (key: string) =>
-      key === `ai-mon:v1:${TENANT_A}:latency` ? JSON.stringify(validLatencySnapshot) : null,
+      key === `ai-mon:v1:${TENANT_A}:latency` ? JSON.stringify(validLatencySnapshot) : null
     );
     const store = new RedisAIMonitoringStore({ redis, service });
     const r = await store.getLatencyMetrics({ tenantId: TENANT_A });
@@ -165,7 +189,7 @@ describe('RedisAIMonitoringStore (IFC-214)', () => {
     redis.get.mockImplementation(async (key: string) =>
       key === `ai-mon:v1:${TENANT_A}:hallucination`
         ? JSON.stringify(validHallucinationSnapshot)
-        : null,
+        : null
     );
     const store = new RedisAIMonitoringStore({ redis, service });
     const r = await store.getHallucinationReport({ tenantId: TENANT_A });
@@ -177,7 +201,7 @@ describe('RedisAIMonitoringStore (IFC-214)', () => {
     const redis = makeRedis();
     const service = makeServiceMock();
     redis.get.mockImplementation(async (key: string) =>
-      key === `ai-mon:v1:${TENANT_A}:roi` ? JSON.stringify(validROISnapshot) : null,
+      key === `ai-mon:v1:${TENANT_A}:roi` ? JSON.stringify(validROISnapshot) : null
     );
     const store = new RedisAIMonitoringStore({ redis, service });
     const r = await store.getROIMetrics({ tenantId: TENANT_A });
@@ -191,7 +215,7 @@ describe('RedisAIMonitoringStore (IFC-214)', () => {
     const redis = makeRedis();
     const service = makeServiceMock();
     redis.get.mockImplementation(async (key: string) =>
-      key === `ai-mon:v1:${TENANT_A}:status` ? JSON.stringify(validStatusSnapshot) : null,
+      key === `ai-mon:v1:${TENANT_A}:status` ? JSON.stringify(validStatusSnapshot) : null
     );
     const store = new RedisAIMonitoringStore({ redis, service });
     const r = await store.getStatus({ tenantId: TENANT_B });
@@ -204,7 +228,7 @@ describe('RedisAIMonitoringStore (IFC-214)', () => {
     const redis = makeRedis();
     const service = makeServiceMock();
     redis.get.mockImplementation(async (key: string) =>
-      key === `ai-mon:v1:${TENANT_A}:status` ? JSON.stringify({ evil: true }) : null,
+      key === `ai-mon:v1:${TENANT_A}:status` ? JSON.stringify({ evil: true }) : null
     );
     const store = new RedisAIMonitoringStore({ redis, service });
     const r = await store.getStatus({ tenantId: TENANT_A });
@@ -282,7 +306,7 @@ describe('RedisAIMonitoringStore (IFC-214)', () => {
     const redis = makeRedis();
     const service = makeServiceMock();
     redis.get.mockImplementation(async (key: string) =>
-      key === `ai-mon:v1:${TENANT_A}:drift` ? JSON.stringify(validDriftSnapshot) : null,
+      key === `ai-mon:v1:${TENANT_A}:drift` ? JSON.stringify(validDriftSnapshot) : null
     );
     const store = new RedisAIMonitoringStore({ redis, service });
     const r = await store.getDriftMetrics({ tenantId: TENANT_A });
@@ -296,7 +320,7 @@ describe('RedisAIMonitoringStore (IFC-214)', () => {
     const redis = makeRedis();
     const service = makeServiceMock();
     redis.get.mockImplementation(async (key: string) =>
-      key === `ai-mon:v1:global:drift` ? JSON.stringify(validGlobalDriftSnapshot) : null,
+      key === `ai-mon:v1:global:drift` ? JSON.stringify(validGlobalDriftSnapshot) : null
     );
     const store = new RedisAIMonitoringStore({ redis, service });
     const r = await store.getDriftMetrics({ tenantId: TENANT_A });
@@ -494,7 +518,7 @@ describe('RedisAIMonitoringStore (IFC-214)', () => {
     const redis = makeRedis();
     const service = makeServiceMock();
     redis.get.mockImplementation(async (key: string) =>
-      key === `ai-mon:v1:${TENANT_A}:drift` ? JSON.stringify(validDriftSnapshot) : null,
+      key === `ai-mon:v1:${TENANT_A}:drift` ? JSON.stringify(validDriftSnapshot) : null
     );
     const store = new RedisAIMonitoringStore({ redis, service });
     const r = await store.getDriftMetrics({ tenantId: TENANT_A });

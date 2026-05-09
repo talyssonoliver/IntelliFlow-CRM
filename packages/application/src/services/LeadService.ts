@@ -205,7 +205,7 @@ export class LeadService {
         phone: lead.phone?.value,
         source: lead.source,
       },
-      { tenantId: lead.tenantId, leadId: lead.id.value },
+      { tenantId: lead.tenantId, leadId: lead.id.value }
     );
 
     if (scoringResult.isFailure) {

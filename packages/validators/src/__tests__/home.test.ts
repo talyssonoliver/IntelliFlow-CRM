@@ -985,7 +985,10 @@ describe('Home Page Validators', () => {
     };
 
     it('rejects invalid (non-uuid) targetUserId', () => {
-      const result = setTeamMemberGoalInputSchema.safeParse({ ...valid, targetUserId: 'not-a-uuid' });
+      const result = setTeamMemberGoalInputSchema.safeParse({
+        ...valid,
+        targetUserId: 'not-a-uuid',
+      });
       expect(result.success).toBe(false);
     });
 

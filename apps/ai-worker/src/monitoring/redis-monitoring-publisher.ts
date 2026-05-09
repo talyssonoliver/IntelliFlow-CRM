@@ -195,7 +195,7 @@ export class RedisMonitoringPublisher {
           skipped += 1;
           logger.warn(
             { key, err: err instanceof Error ? err.message : err },
-            'redis.set failed — snapshot skipped',
+            'redis.set failed — snapshot skipped'
           );
         }
       }
@@ -229,7 +229,7 @@ export class RedisMonitoringPublisher {
    */
   private async fetchEventsForTenant(
     since: Date,
-    tenantId: string | null,
+    tenantId: string | null
   ): Promise<AIMonitoringEventRow[]> {
     const db = this.prisma as unknown as {
       aIMonitoringEvent: {
@@ -274,11 +274,14 @@ export class RedisMonitoringPublisher {
 
     const driftFlagged = drift.filter((e) => e.flagged).length;
     const hallucinationFlagged = hallucination.filter((e) => e.flagged).length;
-    const hallucinationRate = hallucination.length > 0 ? hallucinationFlagged / hallucination.length : 0;
+    const hallucinationRate =
+      hallucination.length > 0 ? hallucinationFlagged / hallucination.length : 0;
     const issues: string[] = [];
     if (driftFlagged > 0) issues.push(`${driftFlagged} drift detection(s) in window`);
     if (hallucinationRate > 0.05)
-      issues.push(`Hallucination rate ${(hallucinationRate * 100).toFixed(1)}% exceeds 5% threshold`);
+      issues.push(
+        `Hallucination rate ${(hallucinationRate * 100).toFixed(1)}% exceeds 5% threshold`
+      );
 
     const latencyValues = latency.map((e) => e.value ?? 0).sort((a, b) => a - b);
     const pct = (arr: number[], p: number): number =>
@@ -316,9 +319,7 @@ export class RedisMonitoringPublisher {
   private buildDriftSnapshot(events: AIMonitoringEventRow[]): unknown {
     const drift = events.filter((e) => e.eventType === 'drift');
     const driftFlagged = drift.filter((e) => e.flagged);
-    const highSeverity = drift.filter(
-      (e) => e.severity === 'high' || e.severity === 'critical',
-    );
+    const highSeverity = drift.filter((e) => e.severity === 'high' || e.severity === 'critical');
     return {
       available: true,
       status: {

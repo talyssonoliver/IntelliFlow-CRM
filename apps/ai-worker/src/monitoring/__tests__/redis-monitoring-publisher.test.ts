@@ -123,9 +123,7 @@ describe('RedisMonitoringPublisher (IFC-214)', () => {
       expect(call[3]).toBe(30);
     }
     // Snapshot payload shape — status snapshot is JSON-parseable
-    const statusCall = redis.set.mock.calls.find((c) =>
-      (c[0] as string).endsWith(':status'),
-    );
+    const statusCall = redis.set.mock.calls.find((c) => (c[0] as string).endsWith(':status'));
     const statusPayload = JSON.parse(statusCall![1] as string);
     expect(statusPayload).toMatchObject({
       available: true,
@@ -138,9 +136,7 @@ describe('RedisMonitoringPublisher (IFC-214)', () => {
 
   it('T-W2 disabled flag: never calls redis.set, returns zeros', async () => {
     const redis = makeRedis();
-    const prisma = makePrismaWithEvents([
-      baseEvent({ eventType: 'latency', value: 100 }),
-    ]);
+    const prisma = makePrismaWithEvents([baseEvent({ eventType: 'latency', value: 100 })]);
     const pub = new RedisMonitoringPublisher(redis, prisma, { disabled: true });
     const result = await pub.tick();
     expect(result).toEqual({ written: 0, skipped: 0 });
@@ -285,9 +281,7 @@ describe('RedisMonitoringPublisher (IFC-214)', () => {
     const pub = new RedisMonitoringPublisher(redis, prisma);
     const result = await pub.tick();
     expect(result.written).toBe(5);
-    const driftCall = redis.set.mock.calls.find((c) =>
-      (c[0] as string).endsWith(':drift'),
-    );
+    const driftCall = redis.set.mock.calls.find((c) => (c[0] as string).endsWith(':drift'));
     const driftPayload = JSON.parse(driftCall![1] as string);
     expect(driftPayload.history[0]).toMatchObject({
       severity: 'critical',
@@ -304,9 +298,7 @@ describe('RedisMonitoringPublisher (IFC-214)', () => {
     const pub = new RedisMonitoringPublisher(redis, prisma);
     const result = await pub.tick();
     expect(result.written).toBe(5);
-    const latencyCall = redis.set.mock.calls.find((c) =>
-      (c[0] as string).endsWith(':latency'),
-    );
+    const latencyCall = redis.set.mock.calls.find((c) => (c[0] as string).endsWith(':latency'));
     const latencyPayload = JSON.parse(latencyCall![1] as string);
     expect(latencyPayload.stats.sampleCount).toBe(0);
     expect(latencyPayload.stats.sloCompliance.overallCompliant).toBe(true);
@@ -323,9 +315,7 @@ describe('RedisMonitoringPublisher (IFC-214)', () => {
     const prisma = makePrismaWithEvents(events);
     const pub = new RedisMonitoringPublisher(redis, prisma);
     await pub.tick();
-    const statusCall = redis.set.mock.calls.find((c) =>
-      (c[0] as string).endsWith(':status'),
-    );
+    const statusCall = redis.set.mock.calls.find((c) => (c[0] as string).endsWith(':status'));
     const statusPayload = JSON.parse(statusCall![1] as string);
     expect(statusPayload.healthy).toBe(false);
     expect(statusPayload.issues.length).toBeGreaterThan(0);
@@ -383,9 +373,7 @@ describe('RedisMonitoringPublisher (IFC-214)', () => {
     const prisma = makePrismaWithEvents(events);
     const pub = new RedisMonitoringPublisher(redis, prisma);
     await pub.tick();
-    const roiCall = redis.set.mock.calls.find((c) =>
-      (c[0] as string).endsWith(':roi'),
-    );
+    const roiCall = redis.set.mock.calls.find((c) => (c[0] as string).endsWith(':roi'));
     const roi = JSON.parse(roiCall![1] as string);
     expect(roi.roi.totalCost).toBe(150);
     expect(roi.roi.totalValue).toBe(300);

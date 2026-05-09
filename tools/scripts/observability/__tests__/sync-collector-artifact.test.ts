@@ -8,13 +8,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import {
-  writeFileSync,
-  readFileSync,
-  mkdtempSync,
-  rmSync,
-  existsSync,
-} from 'node:fs';
+import { writeFileSync, readFileSync, mkdtempSync, rmSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
@@ -38,7 +32,8 @@ describe('sync-collector-artifact (IFC-032)', () => {
     const tmp = mkdtempSync(join(tmpdir(), 'ifc-032-sync-'));
     const src = join(tmp, 'src.yaml');
     const tgt = join(tmp, 'out', 'tgt.yaml');
-    const sourceBody = 'receivers:\n  otlp:\n    protocols:\n      grpc:\nexporters:\n  logging:\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [logging]\n';
+    const sourceBody =
+      'receivers:\n  otlp:\n    protocols:\n      grpc:\nexporters:\n  logging:\nservice:\n  pipelines:\n    traces:\n      receivers: [otlp]\n      exporters: [logging]\n';
     writeFileSync(src, sourceBody, 'utf8');
 
     const result = syncCollectorArtifact({ sourcePath: src, targetPath: tgt });

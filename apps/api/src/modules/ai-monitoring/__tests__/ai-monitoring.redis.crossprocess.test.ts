@@ -70,7 +70,7 @@ describe.skipIf(!REDIS_URL)('IFC-214 cross-process integration (REDIS_URL set)',
     const ioredis = await import('ioredis');
     const RedisCtor = (ioredis.default ?? ioredis) as unknown as new (
       url: string,
-      opts?: Record<string, unknown>,
+      opts?: Record<string, unknown>
     ) => IORedisClient;
     redis = new RedisCtor(REDIS_URL!, { lazyConnect: true, maxRetriesPerRequest: 1 });
   });

@@ -73,11 +73,13 @@ function stripHeader(content: string): string {
   return afterSentinel.startsWith('\n') ? afterSentinel.slice(1) : afterSentinel;
 }
 
-export function syncCollectorArtifact(opts: {
-  check?: boolean;
-  sourcePath?: string;
-  targetPath?: string;
-} = {}): { ok: boolean; reason?: string; sourceSha: string; targetSha?: string } {
+export function syncCollectorArtifact(
+  opts: {
+    check?: boolean;
+    sourcePath?: string;
+    targetPath?: string;
+  } = {}
+): { ok: boolean; reason?: string; sourceSha: string; targetSha?: string } {
   const sourcePath = opts.sourcePath ?? SOURCE_PATH;
   const targetPath = opts.targetPath ?? TARGET_PATH;
   const source = (() => {
@@ -122,7 +124,9 @@ async function main() {
   const result = syncCollectorArtifact({ check });
   if (!result.ok) {
     // eslint-disable-next-line no-console
-    console.error(`[sync-collector-artifact] ${check ? 'CHECK FAILED' : 'WRITE FAILED'}: ${result.reason}`);
+    console.error(
+      `[sync-collector-artifact] ${check ? 'CHECK FAILED' : 'WRITE FAILED'}: ${result.reason}`
+    );
     process.exit(1);
   }
   // eslint-disable-next-line no-console

@@ -51,7 +51,7 @@ export interface AIServicePort {
    */
   scoreLead(
     input: LeadScoringInput,
-    opts?: AIServiceCallOptions,
+    opts?: AIServiceCallOptions
   ): Promise<Result<LeadScoringResult, DomainError>>;
 
   /**
@@ -59,7 +59,7 @@ export interface AIServicePort {
    */
   qualifyLead(
     input: LeadScoringInput,
-    opts?: AIServiceCallOptions,
+    opts?: AIServiceCallOptions
   ): Promise<Result<boolean, DomainError>>;
 
   /**

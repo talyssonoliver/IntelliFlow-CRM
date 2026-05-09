@@ -54,9 +54,9 @@ groups:
     expect(
       result.errors.some((e) => e.includes('Missing required rule "WorkflowP95LatencyHigh"'))
     ).toBe(true);
-    expect(
-      result.errors.some((e) => e.includes('Missing required rule "OtelCollectorDown"'))
-    ).toBe(true);
+    expect(result.errors.some((e) => e.includes('Missing required rule "OtelCollectorDown"'))).toBe(
+      true
+    );
     expect(
       result.errors.some((e) => e.includes('Missing required rule "LeadRoutingFailures"'))
     ).toBe(true);
@@ -68,11 +68,9 @@ groups:
     const tampered = raw.replace('> 0.01', '> 0.5');
     const result = lintAlertsContent(tampered);
     expect(result.ok).toBe(false);
-    expect(
-      result.errors.some((e) =>
-        e.includes('does not match expected threshold regex')
-      )
-    ).toBe(true);
+    expect(result.errors.some((e) => e.includes('does not match expected threshold regex'))).toBe(
+      true
+    );
   });
 
   it('rejects when apiVersion is not 1', () => {

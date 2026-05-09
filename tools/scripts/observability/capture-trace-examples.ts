@@ -81,7 +81,10 @@ function makeAgent(id: string, name: string, capacity = 2) {
   };
 }
 
-function makeRule(targetUserId: string, ruleId = 'rule-' + Math.random().toString(36).slice(2, 10)) {
+function makeRule(
+  targetUserId: string,
+  ruleId = 'rule-' + Math.random().toString(36).slice(2, 10)
+) {
   return {
     id: ruleId,
     tenantId: TENANT_ID,
@@ -238,7 +241,11 @@ async function captureScenario(scenario: Scenario): Promise<CapturedExample> {
           ? (parent.attributes['routing.score'] as number)
           : Number(parent.attributes['routing.score'] ?? 0),
       duration_ms: durationMs,
-      status: parent.status.code === 1 ? 'OK' : parent.status.code === 2 ? 'ERROR' : 'UNSET',
+      status: (() => {
+        if (parent.status.code === 1) return 'OK';
+        if (parent.status.code === 2) return 'ERROR';
+        return 'UNSET';
+      })(),
       child_span_names: childSpanNames,
     };
   } finally {
@@ -259,7 +266,9 @@ function parseArgs(argv: string[]): { out: string } {
   return { out };
 }
 
-export async function captureAndWrite(outPath: string): Promise<{ outPath: string; count: number }> {
+export async function captureAndWrite(
+  outPath: string
+): Promise<{ outPath: string; count: number }> {
   const examples: CapturedExample[] = [];
   for (const scenario of SCENARIOS) {
     examples.push(await captureScenario(scenario));
