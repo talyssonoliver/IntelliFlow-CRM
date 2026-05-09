@@ -76,13 +76,7 @@ describe('PublicFeedbackFab', () => {
 describe('PublicFeedbackDialog', () => {
   function Harness() {
     const [open, setOpen] = React.useState(true);
-    return (
-      <PublicFeedbackDialog
-        open={open}
-        onOpenChange={setOpen}
-        source="/features"
-      />
-    );
+    return <PublicFeedbackDialog open={open} onOpenChange={setOpen} source="/features" />;
   }
 
   it('dialog has role=dialog, aria-labelledby, aria-describedby, z-index 60', async () => {
@@ -114,9 +108,7 @@ describe('PublicFeedbackDialog', () => {
     await act(async () => {
       await new Promise((r) => setTimeout(r, 10));
     });
-    const hp = screen.getByTestId(
-      'public-feedback-honeypot'
-    ) as HTMLInputElement;
+    const hp = screen.getByTestId('public-feedback-honeypot') as HTMLInputElement;
     expect(hp.getAttribute('aria-hidden')).toBe('true');
     expect(hp.tabIndex).toBe(-1);
     expect(hp.style.position).toBe('absolute');
@@ -191,11 +183,7 @@ describe('PublicFeedbackDialog', () => {
     });
     expect(screen.getByTestId('public-feedback-success')).toBeDefined();
     // localStorage limiter stamped
-    expect(
-      window.localStorage.getItem(
-        'intelliflow.public.feedback.submitted_at'
-      )
-    ).not.toBeNull();
+    expect(window.localStorage.getItem('intelliflow.public.feedback.submitted_at')).not.toBeNull();
   });
 
   it('shows "try again" on TOO_MANY_REQUESTS', async () => {
@@ -225,9 +213,7 @@ describe('PublicFeedbackDialog', () => {
     await act(async () => {
       await new Promise((r) => setTimeout(r, 10));
     });
-    expect(
-      screen.getByTestId('public-feedback-already-submitted')
-    ).toBeDefined();
+    expect(screen.getByTestId('public-feedback-already-submitted')).toBeDefined();
   });
 
   it('generic onError → "Something went wrong" message', async () => {
@@ -275,9 +261,7 @@ describe('PublicFeedbackDialog', () => {
       fireEvent.click(screen.getByTestId('public-feedback-rating-3'));
     });
     // Type an invalid email
-    const emailInput = screen.getByLabelText(
-      /Email/i
-    ) as HTMLInputElement;
+    const emailInput = screen.getByLabelText(/Email/i) as HTMLInputElement;
     fireEvent.change(emailInput, {
       target: { value: 'not-an-email' },
     });
@@ -291,13 +275,7 @@ describe('PublicFeedbackDialog', () => {
 
   it('cancel button closes the dialog', async () => {
     const onOpen = vi.fn();
-    render(
-      <PublicFeedbackDialog
-        open={true}
-        onOpenChange={onOpen}
-        source="/features"
-      />
-    );
+    render(<PublicFeedbackDialog open={true} onOpenChange={onOpen} source="/features" />);
     await act(async () => {
       await new Promise((r) => setTimeout(r, 10));
     });
@@ -312,9 +290,7 @@ describe('PublicFeedbackDialog', () => {
     await act(async () => {
       await new Promise((r) => setTimeout(r, 10));
     });
-    const textarea = screen.getByLabelText(
-      /Comment/i
-    ) as HTMLTextAreaElement;
+    const textarea = screen.getByLabelText(/Comment/i) as HTMLTextAreaElement;
     fireEvent.change(textarea, { target: { value: 'Hello world' } });
     expect(screen.getByText(/11\/1000/)).toBeDefined();
   });
@@ -323,42 +299,30 @@ describe('PublicFeedbackDialog', () => {
 describe('FeedbackRatingRadioGroup', () => {
   function Harness() {
     const [value, setValue] = React.useState(0);
-    return (
-      <FeedbackRatingRadioGroup
-        value={value}
-        onChange={setValue}
-        error={null}
-      />
-    );
+    return <FeedbackRatingRadioGroup value={value} onChange={setValue} error={null} />;
   }
 
   it('exposes radiogroup role with aria label', () => {
     render(<Harness />);
     const group = screen.getByTestId('public-feedback-rating');
     expect(group.getAttribute('role')).toBe('radiogroup');
-    expect(group.getAttribute('aria-labelledby')).toBe(
-      'public-feedback-rating-label'
-    );
+    expect(group.getAttribute('aria-labelledby')).toBe('public-feedback-rating-label');
   });
 
   it('advances rating on ArrowRight key', () => {
     render(<Harness />);
     const group = screen.getByTestId('public-feedback-rating');
     fireEvent.keyDown(group, { key: 'ArrowRight' });
-    const star1 = screen.getByTestId('public-feedback-rating-1');
-    expect(star1.getAttribute('aria-checked')).toBe('true');
+    const star1 = screen.getByTestId('public-feedback-rating-1') as HTMLInputElement;
+    expect(star1.checked).toBe(true);
   });
 
   it('Home key sets rating to 1, End sets to 5', () => {
     render(<Harness />);
     const group = screen.getByTestId('public-feedback-rating');
     fireEvent.keyDown(group, { key: 'End' });
-    expect(
-      screen.getByTestId('public-feedback-rating-5').getAttribute('aria-checked')
-    ).toBe('true');
+    expect((screen.getByTestId('public-feedback-rating-5') as HTMLInputElement).checked).toBe(true);
     fireEvent.keyDown(group, { key: 'Home' });
-    expect(
-      screen.getByTestId('public-feedback-rating-1').getAttribute('aria-checked')
-    ).toBe('true');
+    expect((screen.getByTestId('public-feedback-rating-1') as HTMLInputElement).checked).toBe(true);
   });
 });

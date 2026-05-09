@@ -7,3 +7,27 @@
 # Status: Permanent waiver for historical commit; cannot be fixed without rewriting history.
 # Multi-line subject in historical commit (cannot rebase due to remote push)
 e21e13409194 chore(hygiene): prevent runtime artifact drift - multi-line subject
+
+# fix/ci-baseline historical commits — header/body lines exceed 100 chars;
+# already pushed, cannot be rewritten without force-push.
+# Reviewed: 2026-05-02
+cf427cc4c3b3 fix(schema): header 111 chars — cannot rewrite (pushed)
+caaaf8798126 fix(scripts): body lines exceed 100 chars — cannot rewrite (pushed)
+ed91a32bbc0c fix(ci): subject + header too long — cannot rewrite (pushed)
+ef6f4ef8898f fix(ci): subject + header too long — cannot rewrite (pushed)
+3ea3862b06b2 fix(ci): header too long — cannot rewrite (pushed)
+ce3d07987305 fix(ci): header 122 chars — cannot rewrite (pushed)
+034b69d337d1 fix(ci): body lines exceed 100 chars — cannot rewrite (pushed)
+e257f18d8b8c fix(ci): body lines exceed 100 chars — cannot rewrite (pushed)
+0eb68ff38425 fix(ci): body lines exceed 100 chars — cannot rewrite (pushed)
+896cf09a18b2 fix(web,domain,ui): subject + body lines exceed limits — cannot rewrite (pushed)
+214d0abd7fab fix(ci): subject starts with proper noun "Linux" — cannot rewrite (pushed)
+
+# Grandfathered: commits authored before the AI-coauthor trailer ban
+# (commit-msg hook + commit_msg_lint.py policy added 2026-05-02). All
+# subsequent commits are gated; these legacy ones are pinned in waivers.
+9340188d909c fix(ci): historical AI-coauthor trailer — pre-policy, pushed
+c9125ce75192 fix(ci): historical AI-coauthor trailer — pre-policy, pushed
+bf166c82a704 fix(ci): historical AI-coauthor trailer — pre-policy, pushed
+086effdf9ff7 fix(ci): historical AI-coauthor trailer — pre-policy, pushed
+975a1adf88fd fix(ci): historical AI-coauthor trailer — pre-policy, pushed

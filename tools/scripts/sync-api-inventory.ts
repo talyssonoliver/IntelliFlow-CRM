@@ -384,13 +384,24 @@ function updateBaselineJson(
 
   const content = readFileSync(baselinePath, 'utf-8');
   const baseline = JSON.parse(content);
+  const previousTimestamp = baseline.timestamp;
+
+  // Snapshot previous state (without timestamp) for change detection
+  const previousState = JSON.parse(content);
+  delete previousState.timestamp;
 
   // Update the inventory and catalog
   baseline.api_inventory = inventory;
   baseline.endpoint_catalog = catalog;
 
-  // Update timestamp
-  baseline.timestamp = new Date().toISOString();
+  // Determine if real content changed (excluding timestamp). Without this,
+  // every sync run would refresh the timestamp and the pre-push drift gate
+  // would mark baseline.json dirty even when no API actually changed.
+  const nextState = { ...baseline };
+  delete nextState.timestamp;
+  const contentChanged = JSON.stringify(nextState) !== JSON.stringify(previousState);
+
+  baseline.timestamp = contentChanged ? new Date().toISOString() : previousTimestamp;
 
   // Write back
   writeFileSync(baselinePath, JSON.stringify(baseline, null, 2) + '\n', 'utf-8');

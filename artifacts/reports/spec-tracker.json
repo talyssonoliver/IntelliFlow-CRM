@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-04-26T11:17:09.164Z",
+  "generated_at": "2026-04-29T21:54:52.924Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
-    "total_specs_analyzed": 392,
+    "total_specs_analyzed": 398,
     "completed": 392,
-    "partially_done": 0,
-    "spec_only": 0,
+    "partially_done": 5,
+    "spec_only": 1,
     "uncertain": 0
   },
   "status_legend": {
@@ -14,7 +14,38 @@
     "SPEC_ONLY": "Spec exists but no execution evidence (no attestation, no plan completion, CSV=Backlog)",
     "UNCERTAIN": "Conflicting signals between evidence sources"
   },
-  "issues": [],
+  "issues": [
+    {
+      "task_id": "DOC-015",
+      "severity": "MEDIUM",
+      "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
+      "recommendation": "Run /exec DOC-015 when ready for implementation."
+    },
+    {
+      "task_id": "IFC-032",
+      "severity": "MEDIUM",
+      "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
+      "recommendation": "Run /exec IFC-032 when ready for implementation."
+    },
+    {
+      "task_id": "IFC-211",
+      "severity": "MEDIUM",
+      "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
+      "recommendation": "Run /exec IFC-211 when ready for implementation."
+    },
+    {
+      "task_id": "IFC-212",
+      "severity": "MEDIUM",
+      "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
+      "recommendation": "Run /exec IFC-212 when ready for implementation."
+    },
+    {
+      "task_id": "IFC-214",
+      "severity": "MEDIUM",
+      "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
+      "recommendation": "Run /exec IFC-214 when ready for implementation."
+    }
+  ],
   "tasks": [
     {
       "task_id": "AI-SETUP-001",
@@ -371,6 +402,24 @@
         "DOC-009"
       ],
       "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "DOC-015",
+      "title": "Docs Integrity Reconciliation - Regenerate and sync conflicting design-document route totals from filesystem source of truth",
+      "sprint": 18,
+      "spec_path": ".specify/sprints/sprint-18/specifications/DOC-015-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "DOC-014",
+        "IFC-209",
+        "IFC-210"
+      ],
+      "real_status": "PARTIALLY_DONE"
     },
     {
       "task_id": "ENG-OPS-001",
@@ -1438,6 +1487,22 @@
         "IFC-028"
       ],
       "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-032",
+      "title": "OpenTelemetry Monitoring",
+      "sprint": 18,
+      "spec_path": ".specify/sprints/sprint-18/specifications/IFC-032-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Backlog",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-030"
+      ],
+      "real_status": "PARTIALLY_DONE"
     },
     {
       "task_id": "IFC-039",
@@ -3848,6 +3913,41 @@
       "real_status": "COMPLETED"
     },
     {
+      "task_id": "IFC-211",
+      "title": "Goal Settings RBAC - Role-based permissions for daily goal management (manager team goals and admin org defaults)",
+      "sprint": 18,
+      "spec_path": ".specify/sprints/sprint-18/specifications/IFC-211-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-195",
+        "IFC-098"
+      ],
+      "real_status": "PARTIALLY_DONE"
+    },
+    {
+      "task_id": "IFC-212",
+      "title": "Wire API container to QueueAIService for BullMQ-backed lead scoring",
+      "sprint": 18,
+      "spec_path": ".specify/sprints/sprint-18/specifications/IFC-212-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-015",
+        "IFC-125",
+        "IFC-168"
+      ],
+      "real_status": "PARTIALLY_DONE"
+    },
+    {
       "task_id": "IFC-213",
       "title": "Replace Math.random connector health checks with adapter-backed health checks in integrations router",
       "sprint": 14,
@@ -3862,6 +3962,24 @@
         "IFC-099"
       ],
       "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-214",
+      "title": "Redis-backed AI Monitoring State Bridge - Replace process-local singleton reads with shared Redis telemetry store",
+      "sprint": 18,
+      "spec_path": ".specify/sprints/sprint-18/specifications/IFC-214-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-015",
+        "IFC-168",
+        "IFC-197"
+      ],
+      "real_status": "PARTIALLY_DONE"
     },
     {
       "task_id": "IFC-220",
@@ -3954,6 +4072,20 @@
       "acceptance_criteria_count": 0,
       "dependencies": [],
       "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-227",
+      "title": "Company-to-Account Navigation Link - Lead detail page shows company name as plain <span> in profile card (line 1352) and info panel (line 1656). Replace with Next.js Link component navigating to /accounts/[accountId]. Requires accountId in lead transform/query. Apply same pattern to Contact and Deal detail pages.",
+      "sprint": 18,
+      "spec_path": ".specify/sprints/sprint-18/specifications/IFC-227-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "SPEC_ONLY"
     },
     {
       "task_id": "IFC-232",

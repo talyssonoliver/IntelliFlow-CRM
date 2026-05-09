@@ -214,6 +214,60 @@ function createCacheAdapter(): CachePort {
 }
 
 /**
+ * Select and instantiate the base AI service based on AI_PROVIDER env var.
+ *   AI_PROVIDER=litellm (default) or openai → LiteLLMAIService (routes through LiteLLM proxy)
+ *   AI_PROVIDER=ollama                       → OllamaAIService (offline / local dev escape hatch)
+ *   AI_PROVIDER=mock (or unset in test env)  → MockAIService (deterministic, no network)
+ */
+function createBaseAIService(): MockAIService | OllamaAIService | LiteLLMAIService {
+  const aiProvider = process.env.AI_PROVIDER;
+  if (aiProvider === 'ollama') {
+    return new OllamaAIService({
+      baseUrl: process.env.OLLAMA_BASE_URL || 'http://localhost:11434',
+      model: process.env.OLLAMA_MODEL || 'mistral',
+      temperature: process.env.OLLAMA_TEMPERATURE
+        ? Number.parseFloat(process.env.OLLAMA_TEMPERATURE)
+        : 0.1,
+      timeout: process.env.OLLAMA_TIMEOUT
+        ? Number.parseInt(process.env.OLLAMA_TIMEOUT, 10)
+        : 60_000,
+    });
+  }
+  if (aiProvider === 'mock' || (!aiProvider && process.env.NODE_ENV === 'test')) {
+    return new MockAIService();
+  }
+  // Default: litellm or openai — LiteLLMAIService routes through the LiteLLM proxy
+  return new LiteLLMAIService({
+    baseUrl: process.env.LITELLM_BASE_URL || 'http://localhost:4000/v1',
+    masterKey: process.env.LITELLM_MASTER_KEY || 'dev-master-key',
+    timeout: process.env.LITELLM_TIMEOUT
+      ? Number.parseInt(process.env.LITELLM_TIMEOUT, 10)
+      : 120_000,
+  });
+}
+
+/**
+ * IFC-158/IFC-223: Create the notification service adapter based on EMAIL_PROVIDER env var.
+ */
+function createNotificationServiceAdapter():
+  | MockNotificationServiceAdapter
+  | RealNotificationServiceAdapter {
+  const emailProvider = process.env.EMAIL_PROVIDER || 'mock';
+  if (emailProvider === 'sendgrid') {
+    const sendgridApiKey = process.env.SENDGRID_API_KEY;
+    if (!sendgridApiKey) {
+      throw new Error('SENDGRID_API_KEY required when EMAIL_PROVIDER=sendgrid');
+    }
+    const emailAdapter = createEmailServiceAdapter({ sendgridApiKey });
+    return new RealNotificationServiceAdapter(emailAdapter, {
+      fromAddress: process.env.EMAIL_FROM_ADDRESS || 'noreply@intelliflow.com',
+      fromName: process.env.EMAIL_FROM_NAME,
+    });
+  }
+  return new MockNotificationServiceAdapter();
+}
+
+/**
  * Create singleton instances of adapters
  * @param prismaClient - Prisma client instance to use for repositories
  */
@@ -259,54 +313,12 @@ const createAdapters = (prismaClient: PrismaClient) => {
   // External services
   const eventBus = new InMemoryEventBus();
 
-  // AI provider selection:
-  //   AI_PROVIDER=litellm (default) or openai → LiteLLMAIService (routes through LiteLLM proxy)
-  //   AI_PROVIDER=ollama                       → OllamaAIService (offline / local dev escape hatch)
-  //   AI_PROVIDER=mock (or unset in test env)  → MockAIService (deterministic, no network)
-  const aiProvider = process.env.AI_PROVIDER;
-  let baseAIService: MockAIService | OllamaAIService | LiteLLMAIService;
-  if (aiProvider === 'ollama') {
-    baseAIService = new OllamaAIService({
-      baseUrl: process.env.OLLAMA_BASE_URL || 'http://localhost:11434',
-      model: process.env.OLLAMA_MODEL || 'mistral',
-      temperature: process.env.OLLAMA_TEMPERATURE
-        ? Number.parseFloat(process.env.OLLAMA_TEMPERATURE)
-        : 0.1,
-      timeout: process.env.OLLAMA_TIMEOUT
-        ? Number.parseInt(process.env.OLLAMA_TIMEOUT, 10)
-        : 60_000,
-    });
-  } else if (aiProvider === 'mock' || (!aiProvider && process.env.NODE_ENV === 'test')) {
-    baseAIService = new MockAIService();
-  } else {
-    // Default: litellm or openai — LiteLLMAIService routes through the LiteLLM proxy
-    baseAIService = new LiteLLMAIService({
-      baseUrl: process.env.LITELLM_BASE_URL || 'http://localhost:4000/v1',
-      masterKey: process.env.LITELLM_MASTER_KEY || 'dev-master-key',
-      timeout: process.env.LITELLM_TIMEOUT
-        ? Number.parseInt(process.env.LITELLM_TIMEOUT, 10)
-        : 120_000,
-    });
-  }
+  const baseAIService = createBaseAIService();
+
   // IFC-196: Prefer Redis-backed cache, fall back to InMemoryCache.
   const cache: CachePort = createCacheAdapter();
 
-  // IFC-158/IFC-223: Notification service + ICS generation
-  const emailProvider = process.env.EMAIL_PROVIDER || 'mock';
-  let notificationService: MockNotificationServiceAdapter | RealNotificationServiceAdapter;
-  if (emailProvider === 'sendgrid') {
-    const sendgridApiKey = process.env.SENDGRID_API_KEY;
-    if (!sendgridApiKey) {
-      throw new Error('SENDGRID_API_KEY required when EMAIL_PROVIDER=sendgrid');
-    }
-    const emailAdapter = createEmailServiceAdapter({ sendgridApiKey });
-    notificationService = new RealNotificationServiceAdapter(emailAdapter, {
-      fromAddress: process.env.EMAIL_FROM_ADDRESS || 'noreply@intelliflow.com',
-      fromName: process.env.EMAIL_FROM_NAME,
-    });
-  } else {
-    notificationService = new MockNotificationServiceAdapter();
-  }
+  const notificationService = createNotificationServiceAdapter();
   const icsGenerationService = new IcsGenerationService();
 
   // IFC-125: Wrap AI service with guardrails + audit logging
@@ -451,9 +463,7 @@ const createServices = (prismaClient: PrismaClient) => {
   );
 
   // PG-126: Anonymous Public Feedback Widget
-  const publicFeedbackService = new PublicFeedbackService(
-    adapters.publicFeedbackRepository
-  );
+  const publicFeedbackService = new PublicFeedbackService(adapters.publicFeedbackRepository);
 
   const chainVersionService = new ChainVersionService(
     adapters.chainVersionRepository,
@@ -572,11 +582,7 @@ const createServices = (prismaClient: PrismaClient) => {
   const contactDuplicateDetectionService: ContactDuplicateDetectionService =
     createContactDuplicateDetectionService({
       mergeContacts: async (_ctx, primaryId, secondaryId, mergedBy) => {
-        const result = await contactService.mergeContacts(
-          primaryId,
-          secondaryId,
-          mergedBy,
-        );
+        const result = await contactService.mergeContacts(primaryId, secondaryId, mergedBy);
         if (result.isFailure) {
           throw result.error;
         }
@@ -593,12 +599,9 @@ const createServices = (prismaClient: PrismaClient) => {
       generateEmbedding: generateContactQueryEmbedding,
       enqueueEmbeddingJob: async (payload) => {
         try {
-          const { Queue } = await import(
-            /* webpackIgnore: true */ 'bullmq'
-          );
-          const { getBullMQConnectionOptions } = await import(
-            '@intelliflow/platform/queues/connection'
-          );
+          const { Queue } = await import(/* webpackIgnore: true */ 'bullmq');
+          const { getBullMQConnectionOptions } =
+            await import('@intelliflow/platform/queues/connection');
           const queue = new Queue('intelliflow-contact-embed', {
             connection: getBullMQConnectionOptions(),
           });
@@ -612,7 +615,7 @@ const createServices = (prismaClient: PrismaClient) => {
         } catch (error) {
           console.warn(
             '[container] intelliflow-contact-embed enqueue failed (fire-and-forget):',
-            error,
+            error
           );
         }
       },
@@ -624,7 +627,7 @@ const createServices = (prismaClient: PrismaClient) => {
           accountId,
           domain,
           tenantId,
-          maxBatch,
+          maxBatch
         );
         if (result.isFailure) {
           throw result.error;

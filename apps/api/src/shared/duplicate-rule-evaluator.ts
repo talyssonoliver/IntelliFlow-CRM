@@ -5,13 +5,7 @@
  * ContactDuplicateDetectionService and AccountDuplicateDetectionService.
  */
 
-export type RuleField =
-  | 'email'
-  | 'phone'
-  | 'name_company'
-  | 'name'
-  | 'website'
-  | 'name_address';
+export type RuleField = 'email' | 'phone' | 'name_company' | 'name' | 'website' | 'name_address';
 
 export type MatchStrategy = 'exact' | 'normalized' | 'fuzzy';
 
@@ -41,10 +35,7 @@ type FieldKey =
   | 'addressLine1'
   | 'city';
 
-function readString(
-  row: Record<string, unknown> | undefined | null,
-  key: FieldKey,
-): string {
+function readString(row: Record<string, unknown> | undefined | null, key: FieldKey): string {
   if (!row) return '';
   const value = row[key];
   return typeof value === 'string' ? value : '';
@@ -79,7 +70,7 @@ function normalizeWebsite(value: string): string {
 export function extractFieldValue(
   row: Record<string, unknown> | undefined | null,
   field: RuleField,
-  strategy: MatchStrategy,
+  strategy: MatchStrategy
 ): string {
   switch (field) {
     case 'email': {
@@ -99,8 +90,7 @@ export function extractFieldValue(
     case 'name_company': {
       const first = readString(row, 'firstName');
       const last = readString(row, 'lastName');
-      const personName =
-        `${first} ${last}`.trim() || readString(row, 'name');
+      const personName = `${first} ${last}`.trim() || readString(row, 'name');
       const company = readString(row, 'company');
       const combined = `${personName}|${company}`;
       return strategy === 'exact' ? trimLower(combined) : normalizeString(combined);
@@ -150,11 +140,7 @@ function similarityPercent(a: string, b: string): number {
   return Math.max(0, Math.min(100, pct));
 }
 
-function scoreForStrategy(
-  strategy: MatchStrategy,
-  input: string,
-  candidate: string,
-): number {
+function scoreForStrategy(strategy: MatchStrategy, input: string, candidate: string): number {
   if (!input || !candidate) return 0;
   switch (strategy) {
     case 'exact':
@@ -170,12 +156,47 @@ function scoreForStrategy(
 
 const DEFAULT_FUZZY_FLOOR = 60;
 
-export function evaluateDuplicateRules<
-  T extends { id: string } & Record<string, unknown>,
->(
+function resolveFloor(rule: EvaluableRule): number {
+  const threshold = Math.max(
+    0,
+    Math.min(100, Number.isFinite(rule.threshold) ? rule.threshold : 100)
+  );
+  return rule.matchStrategy === 'fuzzy'
+    ? Math.max(DEFAULT_FUZZY_FLOOR, threshold)
+    : threshold || 100;
+}
+
+function applyRuleToCandidate<T extends { id: string } & Record<string, unknown>>(
+  rule: EvaluableRule,
+  floor: number,
+  inputValue: string,
+  inputId: string | undefined,
+  candidate: T,
+  seen: Map<string, DuplicateMatch<T>>
+): void {
+  if (!candidate || !candidate.id) return;
+  if (inputId && inputId === candidate.id) return;
+
+  const candidateValue = extractFieldValue(candidate, rule.field, rule.matchStrategy);
+  const score = scoreForStrategy(rule.matchStrategy, inputValue, candidateValue);
+  if (score < floor) return;
+
+  const existingMatch = seen.get(candidate.id);
+  const match: DuplicateMatch<T> = {
+    candidate,
+    ruleField: rule.field,
+    matchStrategy: rule.matchStrategy,
+    score,
+  };
+  if (!existingMatch || existingMatch.score < score) {
+    seen.set(candidate.id, match);
+  }
+}
+
+export function evaluateDuplicateRules<T extends { id: string } & Record<string, unknown>>(
   input: Partial<T>,
   existing: readonly T[],
-  rules: readonly EvaluableRule[],
+  rules: readonly EvaluableRule[]
 ): DuplicateMatch<T>[] {
   if (!Array.isArray(rules) || rules.length === 0) return [];
   if (!Array.isArray(existing) || existing.length === 0) return [];
@@ -183,63 +204,25 @@ export function evaluateDuplicateRules<
   const active = rules.filter((r) => r && r.isActive);
   if (active.length === 0) return [];
 
-  const sorted = [...active].sort(
-    (a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0),
-  );
-
-  const matches: DuplicateMatch<T>[] = [];
+  const sorted = [...active].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
   const seen = new Map<string, DuplicateMatch<T>>();
+  const inputId = (input as Partial<{ id: string }>).id;
 
   for (const rule of sorted) {
-    const threshold = Math.max(
-      0,
-      Math.min(100, Number.isFinite(rule.threshold) ? rule.threshold : 100),
-    );
     const inputValue = extractFieldValue(
       input as Record<string, unknown>,
       rule.field,
-      rule.matchStrategy,
+      rule.matchStrategy
     );
     if (!inputValue) continue;
 
-    const floor =
-      rule.matchStrategy === 'fuzzy'
-        ? Math.max(DEFAULT_FUZZY_FLOOR, threshold)
-        : threshold || 100;
-
+    const floor = resolveFloor(rule);
     for (const candidate of existing) {
-      if (!candidate || !candidate.id) continue;
-      if (
-        (input as Partial<{ id: string }>).id &&
-        (input as { id: string }).id === candidate.id
-      ) {
-        continue;
-      }
-      const candidateValue = extractFieldValue(
-        candidate,
-        rule.field,
-        rule.matchStrategy,
-      );
-      const score = scoreForStrategy(
-        rule.matchStrategy,
-        inputValue,
-        candidateValue,
-      );
-      if (score < floor) continue;
-
-      const existingMatch = seen.get(candidate.id);
-      const match: DuplicateMatch<T> = {
-        candidate,
-        ruleField: rule.field,
-        matchStrategy: rule.matchStrategy,
-        score,
-      };
-      if (!existingMatch || existingMatch.score < score) {
-        seen.set(candidate.id, match);
-      }
+      applyRuleToCandidate(rule, floor, inputValue, inputId, candidate, seen);
     }
   }
 
+  const matches: DuplicateMatch<T>[] = [];
   for (const match of seen.values()) matches.push(match);
   matches.sort((a, b) => {
     if (b.score !== a.score) return b.score - a.score;

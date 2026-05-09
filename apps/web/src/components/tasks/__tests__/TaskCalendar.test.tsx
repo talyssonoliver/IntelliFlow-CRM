@@ -29,20 +29,27 @@ vi.mock('next/dynamic', () => ({
               {task.title}
             </button>
           ))}
-          {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- test renders custom modal/dropdown */}
-          <div
-            data-testid="mock-cell"
-            role="gridcell"
-            aria-label="test cell"
-            tabIndex={0}
-            onClick={() => (props.onCreateWithDate as (d: Date) => void)?.(new Date('2026-02-15'))}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                (props.onCreateWithDate as (d: Date) => void)?.(new Date('2026-02-15'));
-              }
-            }}
-          />
+          {}
+          <table>
+            <tbody>
+              <tr>
+                <td
+                  data-testid="mock-cell"
+                  aria-label="test cell"
+                  tabIndex={0}
+                  onClick={() =>
+                    (props.onCreateWithDate as (d: Date) => void)?.(new Date('2026-02-15'))
+                  }
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      (props.onCreateWithDate as (d: Date) => void)?.(new Date('2026-02-15'));
+                    }
+                  }}
+                />
+              </tr>
+            </tbody>
+          </table>
         </div>
       );
     };

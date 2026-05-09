@@ -12,12 +12,9 @@
   "completed_at": "2026-02-07T20:00:00.000Z",
   "actual_duration_minutes": 480,
   "dependencies": {
-    "required": [
-      "IFC-180",
-      "IFC-149"
-    ],
+    "required": ["IFC-180", "IFC-149"],
     "all_satisfied": true,
-    "verified_at": "2026-04-26T11:17:07.347Z",
+    "verified_at": "2026-04-29T21:54:51.761Z",
     "notes": "IFC-180 (tRPC Router) completed 2026-02-05. IFC-149 (Agent Approvals) completed."
   },
   "status_history": [
@@ -52,11 +49,7 @@
     "completed_at": "2026-02-07T20:00:00.000Z",
     "duration_minutes": 120,
     "executor": "Claude Code /exec",
-    "agents": [
-      "Foundation",
-      "Quality",
-      "Domain"
-    ],
+    "agents": ["Foundation", "Quality", "Domain"],
     "retry_count": 0,
     "last_error": null
   },
@@ -140,8 +133,5 @@
   ],
   "blockers": [],
   "notes": "AI Output Review Frontend UI completed. Route moved to /agent-approvals/ai-review with full sidebar integration. Agent Approvals layout wired with SidebarProvider + AppSidebar pattern. Sidebar expanded to 6 sections covering all AI features (Approval Queue, AI Review, Intelligence, AI Tools, History, Monitoring). Nav label unified to 'AI & Agents' across navigation.tsx, AppHeader.tsx, layout, and breadcrumbs. DRY compliance: reuses ConfidenceIndicator, StatusBadge, SearchFilterBar, EmptyState. 68 IFC-181 tests PASS (5 files: hooks 20, ReviewCard 16, ReviewQueue 7, date-utils 16, status-badge-review 9) + 18 AppHeader tests PASS.",
-  "dependencies_resolved": [
-    "IFC-180",
-    "IFC-149"
-  ]
+  "dependencies_resolved": ["IFC-180", "IFC-149"]
 }

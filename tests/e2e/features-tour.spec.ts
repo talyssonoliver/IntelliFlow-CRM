@@ -25,20 +25,14 @@ test.describe('Public Product Tour + Feedback Widget (PG-126)', () => {
     });
   });
 
-  test('features page auto-starts the tour for a first-visit visitor', async ({
-    page,
-  }) => {
+  test('features page auto-starts the tour for a first-visit visitor', async ({ page }) => {
     await page.goto('/features');
-    await expect(
-      page.getByTestId('tour-step-dialog'),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByTestId('tour-step-dialog')).toBeVisible({ timeout: 10_000 });
     // Step 1 title should be visible.
     await expect(page.getByText(/Welcome to IntelliFlow/i)).toBeVisible();
   });
 
-  test('keyboard walk advances through all 4 steps and sets seen flag', async ({
-    page,
-  }) => {
+  test('keyboard walk advances through all 4 steps and sets seen flag', async ({ page }) => {
     await page.goto('/features');
     await expect(page.getByTestId('tour-step-dialog')).toBeVisible({
       timeout: 10_000,
@@ -53,9 +47,7 @@ test.describe('Public Product Tour + Feedback Widget (PG-126)', () => {
 
     // Seen flag set in localStorage.
     const seen = await page.evaluate(() =>
-      window.localStorage.getItem(
-        'intelliflow.public.tour.features-v1.seen',
-      ),
+      window.localStorage.getItem('intelliflow.public.tour.features-v1.seen')
     );
     expect(seen).not.toBeNull();
 
@@ -64,15 +56,13 @@ test.describe('Public Product Tour + Feedback Widget (PG-126)', () => {
     await expect(page.getByTestId('tour-step-dialog')).toBeHidden();
   });
 
-  test('?tour=1 replays the tour even after seen flag is set', async ({
-    page,
-  }) => {
+  test('?tour=1 replays the tour even after seen flag is set', async ({ page }) => {
     // Pre-seed the seen flag.
     await page.addInitScript(() => {
       try {
         window.localStorage.setItem(
           'intelliflow.public.tour.features-v1.seen',
-          new Date().toISOString(),
+          new Date().toISOString()
         );
       } catch {
         /* no-op */
@@ -84,9 +74,7 @@ test.describe('Public Product Tour + Feedback Widget (PG-126)', () => {
     });
   });
 
-  test('home page exposes a TourTriggerButton link to /features?tour=1', async ({
-    page,
-  }) => {
+  test('home page exposes a TourTriggerButton link to /features?tour=1', async ({ page }) => {
     await page.goto('/');
     const link = page.getByTestId('tour-trigger-link');
     await expect(link).toBeVisible();
@@ -94,9 +82,7 @@ test.describe('Public Product Tour + Feedback Widget (PG-126)', () => {
     expect(href).toContain('/features?tour=1');
   });
 
-  test('PublicFeedbackFab opens the dialog and submits anonymous feedback', async ({
-    page,
-  }) => {
+  test('PublicFeedbackFab opens the dialog and submits anonymous feedback', async ({ page }) => {
     await page.goto('/pricing'); // any public route with PublicHeader + no tour
     const fab = page.getByTestId('public-feedback-fab');
     await expect(fab).toBeVisible({ timeout: 10_000 });

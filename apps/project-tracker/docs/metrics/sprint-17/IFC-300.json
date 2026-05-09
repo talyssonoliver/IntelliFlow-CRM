@@ -9,11 +9,9 @@
   "phase": "",
   "stream": null,
   "dependencies": {
-    "required": [
-      "IFC-298"
-    ],
+    "required": ["IFC-298"],
     "all_satisfied": true,
-    "verified_at": "2026-04-26T11:17:07.485Z"
+    "verified_at": "2026-04-29T21:54:51.840Z"
   },
   "started_at": "2026-04-14T17:55:58.501Z",
   "completed_at": "2026-04-14T18:10:58.501Z",
@@ -22,12 +20,8 @@
     "last_error": null
   },
   "artifacts": {
-    "expected": [
-      "packages/db/prisma/seed-help-articles.ts"
-    ],
-    "created": [
-      "packages/db/prisma/seed-help-articles.ts"
-    ],
+    "expected": ["packages/db/prisma/seed-help-articles.ts"],
+    "created": ["packages/db/prisma/seed-help-articles.ts"],
     "missing": []
   },
   "validations": [
@@ -52,8 +46,6 @@
     }
   ],
   "notes": "Seed script reads DEFAULT_HELP_ARTICLES from help-articles.ts and inserts into HelpArticle table. Idempotent: skips existing slugs. Validates count post-seed.",
-  "dependencies_resolved": [
-    "IFC-298"
-  ],
+  "dependencies_resolved": ["IFC-298"],
   "actual_duration_minutes": 15
 }

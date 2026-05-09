@@ -9,15 +9,11 @@
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
-    "required": [
-      "IFC-095"
-    ],
+    "required": ["IFC-095"],
     "all_satisfied": true,
-    "verified_at": "2026-04-26T11:17:07.584Z"
+    "verified_at": "2026-04-29T21:54:51.903Z"
   },
-  "dependencies_resolved": [
-    "IFC-095"
-  ],
+  "dependencies_resolved": ["IFC-095"],
   "started_at": null,
   "completed_at": null,
   "target_duration_minutes": 120,
@@ -44,9 +40,7 @@
       "apps/web/src/app/leads/[id]/page.tsx",
       ".specify/sprints/sprint-20/attestations/IFC-228/context_ack.json"
     ],
-    "created": [
-      "apps/web/src/app/leads/[id]/page.tsx"
-    ],
+    "created": ["apps/web/src/app/leads/[id]/page.tsx"],
     "missing": [
       ".specify/sprints/sprint-20/attestations/IFC-228/context_ack.json"
     ]

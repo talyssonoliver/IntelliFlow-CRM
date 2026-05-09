@@ -124,7 +124,9 @@ describe('EmailPage', () => {
     });
 
     render(<EmailPage />);
-    const emailItems = screen.getAllByRole('option');
+    const emailItems = Array.from(
+      document.querySelectorAll('[data-email-item] button[type="button"]')
+    ) as HTMLElement[];
     expect(emailItems.length).toBeGreaterThanOrEqual(1);
     await user.click(emailItems[0]);
 

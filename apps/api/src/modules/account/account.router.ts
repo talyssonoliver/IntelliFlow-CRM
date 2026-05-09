@@ -35,6 +35,8 @@ import {
   accountGetAiInsightOutputSchema,
   accountAddTagsInputSchema,
   accountAddTagsOutputSchema,
+  type CreateAccountInput,
+  type UpdateAccountInput,
 } from '@intelliflow/validators/account';
 import { mapAccountToResponse } from '../../shared/mappers';
 import { type Context } from '../../context';
@@ -71,159 +73,279 @@ function getAccountService(ctx: Context) {
 
 // IFC-311: Reassign helpers extracted to ./account-reassign for clean coverage scoping.
 
+// ─── Account helper functions ───────────────────────────────────────────────
+
+/** Resolve website input (possibly a Value Object) to a plain string or null. */
+function resolveWebsiteString(
+  website: { toValue?: () => string } | string | null | undefined
+): string | null {
+  if (website === null || website === undefined) return null;
+  if (typeof website === 'object' && 'toValue' in website) return website.toValue?.() ?? null;
+  return website as string | null;
+}
+
+/** IFC-310: Best-effort auto-link contacts to a new account by email domain. */
+async function autoLinkContactsByDomain(
+  duplicateService: NonNullable<Context['services']>['accountDuplicateDetection'],
+  typedCtx: ReturnType<typeof getTenantContext>,
+  accountId: string,
+  website: string
+): Promise<void> {
+  try {
+    const domain = website
+      .trim()
+      .toLowerCase()
+      .replace(/^https?:\/\//, '')
+      .replace(/^www\./, '')
+      .split(/[/?#]/)[0];
+    if (domain && domain.includes('.')) {
+      await duplicateService!.linkContactsByDomain(typedCtx, accountId, domain);
+    }
+  } catch (error) {
+    console.warn('[account.router] auto-link-by-domain failed (non-fatal):', error);
+  }
+}
+
+/** IFC-312: Fire-and-forget AI enrichment queue job for an account entity. */
+async function enqueueAccountAIEnrichment(entityId: string, tenantId: string): Promise<void> {
+  try {
+    const { Queue } = await loadBullMQ();
+    const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
+    const queue = new Queue(QUEUE_NAMES.AI_ENRICHMENT, {
+      connection: {
+        host: process.env.REDIS_HOST ?? 'localhost',
+        port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
+      },
+    });
+    const otelCarrier: Record<string, string> = {};
+    propagation.inject(otelContext.active(), otelCarrier);
+    await queue.add('enrich', {
+      entityType: 'account',
+      entityId,
+      tenantId,
+      _otelCarrier: otelCarrier,
+    });
+    await queue.close();
+  } catch {
+    // Redis/BullMQ unavailable — silently skip background enrichment
+  }
+}
+
+// ─── Extracted procedure handlers ───────────────────────────────────────────
+
+async function handleAccountCreate(ctx: Context, input: CreateAccountInput) {
+  const typedCtx = getTenantContext(ctx);
+  const accountService = getAccountService(ctx);
+
+  // PG-183: apply tenant automation + required-field policy before the
+  // domain service takes over.
+  const [flags, requiredFields] = await Promise.all([
+    loadAccountAutomation(typedCtx),
+    loadRequiredAccountFields(typedCtx),
+  ]);
+
+  const websiteString = resolveWebsiteString(
+    (input as { website?: { toValue?: () => string } | string | null | undefined }).website
+  );
+
+  assertRequiredAccountFields(
+    {
+      name: input.name,
+      industry: (input as { industry?: string | null }).industry,
+      website: websiteString,
+      ownerId: typedCtx.tenant.userId, // always satisfied for create
+      employees: (input as { employees?: number | null }).employees,
+      revenue: (input as { revenue?: number | string | null }).revenue,
+    },
+    requiredFields,
+    'create'
+  );
+
+  const hygieneInput = {
+    ...input,
+    name: capitalizeAccountName(input.name, flags) ?? input.name,
+    ...(websiteString !== null
+      ? { website: normalizeWebsite(websiteString, flags) ?? websiteString }
+      : {}),
+  };
+
+  // IFC-310: Duplicate-detection — best-effort, non-blocking.
+  const duplicateService = ctx.services?.accountDuplicateDetection;
+  if (duplicateService) {
+    try {
+      await duplicateService.checkForCreate(
+        typedCtx,
+        {
+          name: hygieneInput.name,
+          website: (hygieneInput as { website?: string | null }).website ?? null,
+          phone: (hygieneInput as { phone?: string | null }).phone ?? null,
+        },
+        flags
+      );
+    } catch (error) {
+      console.warn('[account.router] duplicate-detection on create failed, proceeding:', error);
+    }
+  }
+
+  const result = await accountService.createAccount({
+    ...hygieneInput,
+    ownerId: typedCtx.tenant.userId,
+    tenantId: typedCtx.tenant.tenantId,
+  });
+
+  if (result.isFailure) {
+    const errorCode = result.error.code;
+    if (errorCode === 'VALIDATION_ERROR') {
+      throw new TRPCError({ code: 'CONFLICT', message: result.error.message });
+    }
+    throw new TRPCError({ code: 'BAD_REQUEST', message: result.error.message });
+  }
+
+  const createdWebsite = (hygieneInput as { website?: string | null }).website;
+  if (duplicateService && flags.autoLinkContactsByDomain && createdWebsite) {
+    await autoLinkContactsByDomain(
+      duplicateService,
+      typedCtx,
+      result.value.id.value,
+      createdWebsite
+    );
+  }
+
+  // IFC-269 B-07: Audit logging
+  getAuditLogger(ctx.prisma)
+    .logAction('CREATE', 'account', result.value.id.value, typedCtx.tenant.tenantId, {
+      actorId: typedCtx.tenant.userId,
+      resourceName: result.value.name,
+    })
+    .catch((err) => console.error('[account.router] Audit log failed:', err));
+
+  // IFC-312 audit fix F1/F2: wire AI_ENRICHMENT producer on account create.
+  if (flags.aiEnrichment || flags.aiIndustryInference) {
+    await enqueueAccountAIEnrichment(result.value.id.value, typedCtx.tenant.tenantId);
+  }
+
+  return mapAccountToResponse(result.value);
+}
+
+/** Throw the appropriate TRPCError for a failed account update result. */
+function throwAccountUpdateError(
+  errorCode: string,
+  message: string,
+  id: string,
+  ctx: Context,
+  typedCtx: ReturnType<typeof getTenantContext>
+): never {
+  if (errorCode === 'NOT_FOUND_ERROR') {
+    getAuditLogger(ctx.prisma)
+      .logPermissionDenied('account', id, 'account:update', typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+      })
+      .catch((err) => console.error('[account.router] Audit log failed:', err));
+    throw new TRPCError({ code: 'NOT_FOUND', message });
+  }
+  if (errorCode === 'VALIDATION_ERROR') throw new TRPCError({ code: 'CONFLICT', message });
+  if (errorCode === 'UNAUTHORIZED_ERROR') throw new TRPCError({ code: 'UNAUTHORIZED', message });
+  throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message });
+}
+
+/** Build the required-fields check payload for partial account updates. */
+function buildUpdateRequiredFieldsPayload(
+  data: Record<string, unknown>,
+  websiteString: string | undefined
+): Record<string, unknown> {
+  const has = (key: string) => Object.prototype.hasOwnProperty.call(data, key);
+  return {
+    ...(has('name') ? { name: data.name as string | undefined } : {}),
+    ...(has('industry') ? { industry: data.industry as string | null | undefined } : {}),
+    ...(has('website') ? { website: websiteString ?? null } : {}),
+    ...(has('employees') ? { employees: data.employees as number | null | undefined } : {}),
+    ...(has('revenue') ? { revenue: data.revenue as number | string | null | undefined } : {}),
+  };
+}
+
+async function handleAccountUpdate(ctx: Context, input: UpdateAccountInput) {
+  const typedCtx = getTenantContext(ctx);
+  const accountService = getAccountService(ctx);
+  const { id, ...data } = input;
+
+  // PG-183: apply tenant automation + required-field policy before
+  // handing off to the service.
+  const [flags, requiredFields] = await Promise.all([
+    loadAccountAutomation(typedCtx),
+    loadRequiredAccountFields(typedCtx),
+  ]);
+
+  // Convert WebsiteUrl Value Object to string for service
+  const websiteString = data.website?.toValue?.() ?? (data.website as string | undefined);
+
+  assertRequiredAccountFields(
+    buildUpdateRequiredFieldsPayload(data as Record<string, unknown>, websiteString),
+    requiredFields,
+    'update'
+  );
+
+  const updateData = {
+    ...data,
+    ...(data.name !== undefined
+      ? { name: capitalizeAccountName(data.name, flags) ?? data.name }
+      : {}),
+    ...(websiteString !== undefined
+      ? { website: normalizeWebsite(websiteString, flags) ?? websiteString }
+      : {}),
+  } as Record<string, unknown>;
+
+  // IFC-310: Duplicate-detection runtime — re-evaluate rules on update.
+  const duplicateService = ctx.services?.accountDuplicateDetection;
+  if (duplicateService) {
+    try {
+      await duplicateService.checkForUpdate(
+        typedCtx,
+        id,
+        {
+          name: (updateData as { name?: string | null }).name ?? null,
+          website: (updateData as { website?: string | null }).website ?? null,
+        },
+        flags
+      );
+    } catch (error) {
+      console.warn('[account.router] duplicate-detection on update failed, proceeding:', error);
+    }
+  }
+
+  // IFC-269 B-05: Wrap in transaction to prevent TOCTOU
+  const result = await accountService.updateAccountInfo(
+    id,
+    updateData,
+    typedCtx.tenant.userId,
+    typedCtx.tenant.tenantId
+  );
+
+  if (result.isFailure) {
+    throwAccountUpdateError(result.error.code, result.error.message, id, ctx, typedCtx);
+  }
+
+  // IFC-269 B-07: Audit logging
+  getAuditLogger(ctx.prisma)
+    .logAction('UPDATE', 'account', id, typedCtx.tenant.tenantId, {
+      actorId: typedCtx.tenant.userId,
+    })
+    .catch((err) => console.error('[account.router] Audit log failed:', err));
+
+  // IFC-312: wire AI_ENRICHMENT producer on account update.
+  if (flags.aiEnrichment || flags.aiIndustryInference) {
+    await enqueueAccountAIEnrichment(id, typedCtx.tenant.tenantId);
+  }
+
+  return mapAccountToResponse(result.value);
+}
+
 export const accountRouter = createTRPCRouter({
   /**
    * Create a new account
    */
-  create: tenantProcedure.input(createAccountSchema).mutation(async ({ ctx, input }) => {
-    const typedCtx = getTenantContext(ctx);
-    const accountService = getAccountService(ctx);
-
-    // PG-183: apply tenant automation + required-field policy before the
-    // domain service takes over.
-    const [flags, requiredFields] = await Promise.all([
-      loadAccountAutomation(typedCtx),
-      loadRequiredAccountFields(typedCtx),
-    ]);
-
-    const rawWebsite =
-      (input as { website?: { toValue?: () => string } | string | null | undefined }).website ??
-      null;
-    const websiteString =
-      typeof rawWebsite === 'object' && rawWebsite !== null && 'toValue' in rawWebsite
-        ? (rawWebsite.toValue?.() ?? null)
-        : (rawWebsite as string | null);
-
-    assertRequiredAccountFields(
-      {
-        name: input.name,
-        industry: (input as { industry?: string | null }).industry,
-        website: websiteString,
-        ownerId: typedCtx.tenant.userId, // always satisfied for create
-        employees: (input as { employees?: number | null }).employees,
-        revenue: (input as { revenue?: number | string | null }).revenue,
-      },
-      requiredFields,
-      'create'
-    );
-
-    const hygieneInput = {
-      ...input,
-      name: capitalizeAccountName(input.name, flags) ?? input.name,
-      ...(websiteString !== null
-        ? { website: normalizeWebsite(websiteString, flags) ?? websiteString }
-        : {}),
-    };
-
-    // IFC-310: Duplicate-detection runtime — reads AccountDuplicateRule rows,
-    // consults notifyOnDuplicate/autoLinkContactsByDomain flags. The service
-    // emits the flag notification internally; we capture the result so the
-    // response can surface duplicate_matches (AC-014 additive response shape).
-    const duplicateService = ctx.services?.accountDuplicateDetection;
-    let createDupeResult:
-      | { action: 'proceed'; matches: unknown[] }
-      | { action: 'flag'; matches: unknown[] }
-      | undefined;
-    if (duplicateService) {
-      try {
-        createDupeResult = (await duplicateService.checkForCreate(
-          typedCtx,
-          {
-            name: hygieneInput.name,
-            website: (hygieneInput as { website?: string | null }).website ?? null,
-            phone: (hygieneInput as { phone?: string | null }).phone ?? null,
-          },
-          flags,
-        )) as typeof createDupeResult;
-      } catch (error) {
-        console.warn('[account.router] duplicate-detection on create failed, proceeding:', error);
-      }
-    }
-    void createDupeResult;
-
-    const result = await accountService.createAccount({
-      ...hygieneInput,
-      ownerId: typedCtx.tenant.userId,
-      tenantId: typedCtx.tenant.tenantId,
-    });
-
-    if (result.isFailure) {
-      const errorCode = result.error.code;
-      if (errorCode === 'VALIDATION_ERROR') {
-        throw new TRPCError({
-          code: 'CONFLICT',
-          message: result.error.message,
-        });
-      }
-      throw new TRPCError({
-        code: 'BAD_REQUEST',
-        message: result.error.message,
-      });
-    }
-
-    // IFC-310: auto-link contacts by domain when flag is enabled and website is present.
-    if (
-      duplicateService &&
-      flags.autoLinkContactsByDomain &&
-      (hygieneInput as { website?: string | null }).website
-    ) {
-      try {
-        const website = (hygieneInput as { website: string }).website;
-        const domain = website
-          .trim()
-          .toLowerCase()
-          .replace(/^https?:\/\//, '')
-          .replace(/^www\./, '')
-          .split(/[/?#]/)[0];
-        if (domain && domain.includes('.')) {
-          await duplicateService.linkContactsByDomain(
-            typedCtx,
-            result.value.id.value,
-            domain,
-          );
-        }
-      } catch (error) {
-        console.warn('[account.router] auto-link-by-domain failed (non-fatal):', error);
-      }
-    }
-
-    // IFC-269 B-07: Audit logging
-    getAuditLogger(ctx.prisma)
-      .logAction('CREATE', 'account', result.value.id.value, typedCtx.tenant.tenantId, {
-        actorId: typedCtx.tenant.userId,
-        resourceName: result.value.name,
-      })
-      .catch((err) => console.error('[account.router] Audit log failed:', err));
-
-    // IFC-312 audit fix F1/F2: wire AI_ENRICHMENT producer on account create.
-    // Same queue dispatches both aiEnrichment and aiIndustryInference — the
-    // job handler (enrichment.job.ts) reads both flags independently.
-    if (flags.aiEnrichment || flags.aiIndustryInference) {
-      try {
-        const { Queue } = await loadBullMQ();
-        const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
-        const queue = new Queue(QUEUE_NAMES.AI_ENRICHMENT, {
-          connection: {
-            host: process.env.REDIS_HOST ?? 'localhost',
-            port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
-          },
-        });
-        const otelCarrier: Record<string, string> = {};
-        propagation.inject(otelContext.active(), otelCarrier);
-        await queue.add('enrich', {
-          entityType: 'account',
-          entityId: result.value.id.value,
-          tenantId: typedCtx.tenant.tenantId,
-          _otelCarrier: otelCarrier,
-        });
-        await queue.close();
-      } catch {
-        // Redis/BullMQ unavailable — silently skip background enrichment
-      }
-    }
-
-    return mapAccountToResponse(result.value);
-  }),
+  create: tenantProcedure
+    .input(createAccountSchema)
+    .mutation(({ ctx, input }) => handleAccountCreate(ctx, input)),
 
   /**
    * Get a single account by ID
@@ -386,151 +508,9 @@ export const accountRouter = createTRPCRouter({
    * Update an account
    * Includes tenant isolation check before modification
    */
-  update: tenantProcedure.input(updateAccountSchema).mutation(async ({ ctx, input }) => {
-    const typedCtx = getTenantContext(ctx);
-    const accountService = getAccountService(ctx);
-    const { id, ...data } = input;
-
-    // PG-183: apply tenant automation + required-field policy before
-    // handing off to the service.
-    const [flags, requiredFields] = await Promise.all([
-      loadAccountAutomation(typedCtx),
-      loadRequiredAccountFields(typedCtx),
-    ]);
-
-    // Convert WebsiteUrl Value Object to string for service
-    const websiteString = data.website?.toValue?.() ?? (data.website as string | undefined);
-
-    assertRequiredAccountFields(
-      {
-        ...(Object.prototype.hasOwnProperty.call(data, 'name')
-          ? { name: (data as { name?: string }).name }
-          : {}),
-        ...(Object.prototype.hasOwnProperty.call(data, 'industry')
-          ? { industry: (data as { industry?: string | null }).industry }
-          : {}),
-        ...(Object.prototype.hasOwnProperty.call(data, 'website')
-          ? { website: websiteString ?? null }
-          : {}),
-        ...(Object.prototype.hasOwnProperty.call(data, 'employees')
-          ? { employees: (data as { employees?: number | null }).employees }
-          : {}),
-        ...(Object.prototype.hasOwnProperty.call(data, 'revenue')
-          ? { revenue: (data as { revenue?: number | string | null }).revenue }
-          : {}),
-      },
-      requiredFields,
-      'update'
-    );
-
-    const updateData = {
-      ...data,
-      ...(data.name !== undefined
-        ? { name: capitalizeAccountName(data.name, flags) ?? data.name }
-        : {}),
-      ...(websiteString !== undefined
-        ? { website: normalizeWebsite(websiteString, flags) ?? websiteString }
-        : {}),
-    } as Record<string, unknown>;
-
-    // IFC-310: Duplicate-detection runtime — re-evaluate rules on update.
-    const duplicateService = ctx.services?.accountDuplicateDetection;
-    let updateDupeResult:
-      | { action: 'proceed'; matches: unknown[] }
-      | { action: 'flag'; matches: unknown[] }
-      | undefined;
-    if (duplicateService) {
-      try {
-        updateDupeResult = (await duplicateService.checkForUpdate(
-          typedCtx,
-          id,
-          {
-            name: (updateData as { name?: string | null }).name ?? null,
-            website: (updateData as { website?: string | null }).website ?? null,
-          },
-          flags,
-        )) as typeof updateDupeResult;
-      } catch (error) {
-        console.warn('[account.router] duplicate-detection on update failed, proceeding:', error);
-      }
-    }
-    void updateDupeResult;
-
-    // IFC-269 B-05: Wrap in transaction to prevent TOCTOU
-    const result = await accountService.updateAccountInfo(
-      id,
-      updateData,
-      typedCtx.tenant.userId,
-      typedCtx.tenant.tenantId
-    );
-
-    if (result.isFailure) {
-      const errorCode = result.error.code;
-      if (errorCode === 'NOT_FOUND_ERROR') {
-        // F5: Log potential cross-tenant access attempt
-        getAuditLogger(ctx.prisma)
-          .logPermissionDenied('account', id, 'account:update', typedCtx.tenant.tenantId, {
-            actorId: typedCtx.tenant.userId,
-          })
-          .catch((err) => console.error('[account.router] Audit log failed:', err));
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: result.error.message,
-        });
-      }
-      if (errorCode === 'VALIDATION_ERROR') {
-        throw new TRPCError({
-          code: 'CONFLICT',
-          message: result.error.message,
-        });
-      }
-      if (errorCode === 'UNAUTHORIZED_ERROR') {
-        throw new TRPCError({
-          code: 'UNAUTHORIZED',
-          message: result.error.message,
-        });
-      }
-      throw new TRPCError({
-        code: 'INTERNAL_SERVER_ERROR',
-        message: result.error.message,
-      });
-    }
-
-    // IFC-269 B-07: Audit logging
-    getAuditLogger(ctx.prisma)
-      .logAction('UPDATE', 'account', id, typedCtx.tenant.tenantId, {
-        actorId: typedCtx.tenant.userId,
-      })
-      .catch((err) => console.error('[account.router] Audit log failed:', err));
-
-    // IFC-312 audit fix F1/F2: wire AI_ENRICHMENT producer on account update.
-    // Same queue handles both aiEnrichment and aiIndustryInference dispatch.
-    if (flags.aiEnrichment || flags.aiIndustryInference) {
-      try {
-        const { Queue } = await loadBullMQ();
-        const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
-        const queue = new Queue(QUEUE_NAMES.AI_ENRICHMENT, {
-          connection: {
-            host: process.env.REDIS_HOST ?? 'localhost',
-            port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
-          },
-        });
-        const otelCarrier: Record<string, string> = {};
-        propagation.inject(otelContext.active(), otelCarrier);
-        await queue.add('enrich', {
-          entityType: 'account',
-          entityId: id,
-          tenantId: typedCtx.tenant.tenantId,
-          _otelCarrier: otelCarrier,
-        });
-        await queue.close();
-      } catch {
-        // Redis/BullMQ unavailable — silently skip background enrichment
-      }
-    }
-
-    return mapAccountToResponse(result.value);
-  }),
+  update: tenantProcedure
+    .input(updateAccountSchema)
+    .mutation(({ ctx, input }) => handleAccountUpdate(ctx, input)),
 
   /**
    * Delete an account
@@ -1184,9 +1164,7 @@ export const accountRouter = createTRPCRouter({
         // IFC-312 audit fix F6: sync-chain breach visibility.
         const durationMs = Date.now() - syncStart;
         const reason =
-          err instanceof Error && /timed out|timeout/i.test(err.message)
-            ? 'timeout'
-            : 'error';
+          err instanceof Error && /timed out|timeout/i.test(err.message) ? 'timeout' : 'error';
         console.warn(
           `[account.router.suggestTags] sync-chain breach (${reason}) ` +
             `accountId=${input.accountId} tenantId=${typedCtx.tenant.tenantId} ` +
@@ -1280,9 +1258,7 @@ export const accountRouter = createTRPCRouter({
       if (!current) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Account not found' });
       }
-      const merged = Array.from(
-        new Set<string>([...(current.tags ?? []), ...input.tags])
-      );
+      const merged = Array.from(new Set<string>([...(current.tags ?? []), ...input.tags]));
       await ctx.prismaWithTenant.account.update({
         where: { id: input.accountId },
         data: { tags: merged },

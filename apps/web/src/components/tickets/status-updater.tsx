@@ -84,9 +84,8 @@ export function StatusUpdater({
 
       {}
       {isOpen && !isDisabled && (
-        // eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- custom dropdown requires div for positioning
         <div
-          role="listbox"
+          role="menu"
           aria-label="Status options"
           className="absolute z-50 mt-1 min-w-[200px] rounded-lg border bg-popover p-1 shadow-md"
         >
@@ -96,8 +95,7 @@ export function StatusUpdater({
               <button
                 key={targetStatus}
                 type="button"
-                role="option"
-                aria-selected={false}
+                role="menuitem"
                 aria-label={targetStatus}
                 onClick={() => handleSelect(targetStatus)}
                 className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted/50 transition-colors"

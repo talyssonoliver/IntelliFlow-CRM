@@ -81,23 +81,21 @@ export async function generateAccountInsight(
   try {
     const model = await createLLMForTenant('qualification', 'standard', { tenantId });
     const structured = model.withStructuredOutput(InsightLLMSchema);
-    const raw = await structured.invoke(
-      [
-        {
-          role: 'system',
-          content:
-            'You analyze a CRM account and produce a health summary. ' +
-            'Return: healthSummary (free text), nextBestAction, keySignals[] ' +
-            '(with label + impact: positive|negative|neutral + weight 0-1), ' +
-            'churnRisk (MINIMAL|LOW|MEDIUM|HIGH|CRITICAL), engagementScore (0-100), ' +
-            'sentimentTrend, recommendations[].',
-        },
-        {
-          role: 'user',
-          content: `Account context: ${JSON.stringify(context)}. Produce insight JSON.`,
-        },
-      ] as unknown as Parameters<typeof structured.invoke>[0]
-    );
+    const raw = await structured.invoke([
+      {
+        role: 'system',
+        content:
+          'You analyze a CRM account and produce a health summary. ' +
+          'Return: healthSummary (free text), nextBestAction, keySignals[] ' +
+          '(with label + impact: positive|negative|neutral + weight 0-1), ' +
+          'churnRisk (MINIMAL|LOW|MEDIUM|HIGH|CRITICAL), engagementScore (0-100), ' +
+          'sentimentTrend, recommendations[].',
+      },
+      {
+        role: 'user',
+        content: `Account context: ${JSON.stringify(context)}. Produce insight JSON.`,
+      },
+    ] as unknown as Parameters<typeof structured.invoke>[0]);
     const safe = InsightLLMSchema.safeParse(raw);
     if (safe.success) parsed = safe.data;
     else source = 'fallback';

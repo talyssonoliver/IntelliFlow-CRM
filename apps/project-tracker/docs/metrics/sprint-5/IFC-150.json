@@ -5,12 +5,8 @@
   "description": "Domain events infrastructure: event contracts + versioning + outbox pattern + idempotent publishing",
   "owner": "Backend Dev + Architect (STOA-Domain)",
   "dependencies": {
-    "required": [
-      "IFC-002",
-      "IFC-106",
-      "IFC-098"
-    ],
-    "verified_at": "2026-04-26T11:17:07.741Z",
+    "required": ["IFC-002", "IFC-106", "IFC-098"],
+    "verified_at": "2026-04-29T21:54:51.997Z",
     "all_satisfied": true
   },
   "status": "DONE",
@@ -178,9 +174,5 @@
     }
   ],
   "notes": "TDD implementation completed successfully. Phase 1 RED: 4 test files created. Phase 2 GREEN: 3 implementation files created, Prisma schema extended. Phase 3 REFACTOR: 2 helper files created (event-metadata, Zod schemas). Phase 4 VALIDATION: All 33 tests pass (24 unit + 9 integration), lint clean, build successful. Database migration applied to cloud (Supabase) and test (Docker) databases. Attestation created.",
-  "dependencies_resolved": [
-    "IFC-002",
-    "IFC-106",
-    "IFC-098"
-  ]
+  "dependencies_resolved": ["IFC-002", "IFC-106", "IFC-098"]
 }

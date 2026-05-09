@@ -38,12 +38,7 @@ export interface EmbeddingChainLike {
 }
 
 export interface UpdateContactEmbeddingFn {
-  (
-    prisma: PrismaClient,
-    contactId: string,
-    tenantId: string,
-    embedding: number[],
-  ): Promise<void>;
+  (prisma: PrismaClient, contactId: string, tenantId: string, embedding: number[]): Promise<void>;
 }
 
 export function contactToEmbeddableText(c: {
@@ -59,32 +54,27 @@ export function contactToEmbeddableText(c: {
 }
 
 export class ContactEmbedWorker {
-  private worker: Worker<ContactEmbedJobData, ContactEmbedJobResult> | null =
-    null;
-  private queue: Queue<ContactEmbedJobData, ContactEmbedJobResult> | null =
-    null;
+  private worker: Worker<ContactEmbedJobData, ContactEmbedJobResult> | null = null;
+  private queue: Queue<ContactEmbedJobData, ContactEmbedJobResult> | null = null;
   private queueEvents: QueueEvents | null = null;
 
   constructor(
     private readonly prisma: PrismaClient,
     private readonly redisConnection: { host: string; port: number; password?: string },
     private readonly embeddingChain: EmbeddingChainLike,
-    private readonly updateContactEmbedding: UpdateContactEmbeddingFn,
+    private readonly updateContactEmbedding: UpdateContactEmbeddingFn
   ) {}
 
   async start(): Promise<void> {
-    this.queue = new Queue<ContactEmbedJobData, ContactEmbedJobResult>(
-      CONTACT_EMBED_QUEUE_NAME,
-      {
-        connection: this.redisConnection,
-        defaultJobOptions: {
-          attempts: 3,
-          backoff: { type: 'exponential', delay: 5000 },
-          removeOnComplete: { age: 86400, count: 200 },
-          removeOnFail: { age: 604800, count: 1000 },
-        },
+    this.queue = new Queue<ContactEmbedJobData, ContactEmbedJobResult>(CONTACT_EMBED_QUEUE_NAME, {
+      connection: this.redisConnection,
+      defaultJobOptions: {
+        attempts: 3,
+        backoff: { type: 'exponential', delay: 5000 },
+        removeOnComplete: { age: 86400, count: 200 },
+        removeOnFail: { age: 604800, count: 1000 },
       },
-    );
+    });
 
     this.queueEvents = new QueueEvents(CONTACT_EMBED_QUEUE_NAME, {
       connection: this.redisConnection,
@@ -96,14 +86,11 @@ export class ContactEmbedWorker {
       {
         connection: this.redisConnection,
         concurrency: 5,
-      },
+      }
     );
 
     this.worker.on('failed', (job, error) => {
-      console.warn(
-        `[contact-embed-worker] job ${job?.id} failed:`,
-        error?.message,
-      );
+      console.warn(`[contact-embed-worker] job ${job?.id} failed:`, error?.message);
     });
   }
 
@@ -113,9 +100,7 @@ export class ContactEmbedWorker {
     await this.queue?.close();
   }
 
-  async process(
-    job: Job<ContactEmbedJobData>,
-  ): Promise<ContactEmbedJobResult> {
+  async process(job: Job<ContactEmbedJobData>): Promise<ContactEmbedJobResult> {
     const start = Date.now();
     const data = ContactEmbedJobDataSchema.parse(job.data);
 
@@ -125,16 +110,13 @@ export class ContactEmbedWorker {
           findFirst: (args: {
             where: { id: string; tenantId: string };
             select: Record<string, true>;
-          }) => Promise<
-            | {
-                id: string;
-                firstName: string | null;
-                lastName: string | null;
-                email: string | null;
-                company: string | null;
-              }
-            | null
-          >;
+          }) => Promise<{
+            id: string;
+            firstName: string | null;
+            lastName: string | null;
+            email: string | null;
+            company: string | null;
+          } | null>;
         };
       }
     ).contact.findFirst({
@@ -180,12 +162,7 @@ export class ContactEmbedWorker {
       };
     }
 
-    await this.updateContactEmbedding(
-      this.prisma,
-      data.contactId,
-      data.tenantId,
-      embedding,
-    );
+    await this.updateContactEmbedding(this.prisma, data.contactId, data.tenantId, embedding);
 
     return {
       contactId: data.contactId,
@@ -205,12 +182,7 @@ export function createContactEmbedWorker(
   prisma: PrismaClient,
   redisConnection: { host: string; port: number; password?: string },
   embeddingChain: EmbeddingChainLike,
-  updateContactEmbedding: UpdateContactEmbeddingFn,
+  updateContactEmbedding: UpdateContactEmbeddingFn
 ): ContactEmbedWorker {
-  return new ContactEmbedWorker(
-    prisma,
-    redisConnection,
-    embeddingChain,
-    updateContactEmbedding,
-  );
+  return new ContactEmbedWorker(prisma, redisConnection, embeddingChain, updateContactEmbedding);
 }

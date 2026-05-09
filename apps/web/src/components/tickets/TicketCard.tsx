@@ -26,9 +26,9 @@ export function TicketCard({
   const priorityConfig = getPriorityConfig(ticket.priority);
 
   return (
-    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/click-events-have-key-events -- ticket card handles click for navigation
-    <article
-      className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 hover:shadow-md transition-shadow cursor-pointer group border-border"
+    <button
+      type="button"
+      className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 hover:shadow-md transition-shadow cursor-pointer group border-border w-full text-left"
       onClick={onClick}
       aria-label={`Ticket ${ticket.ticketNumber}: ${ticket.subject}`}
     >
@@ -110,6 +110,6 @@ export function TicketCard({
           </button>
         </div>
       )}
-    </article>
+    </button>
   );
 }

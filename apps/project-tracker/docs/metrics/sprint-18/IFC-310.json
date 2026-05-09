@@ -9,12 +9,9 @@
   "phase": "",
   "stream": null,
   "dependencies": {
-    "required": [
-      "PG-182",
-      "PG-183"
-    ],
+    "required": ["PG-182", "PG-183"],
     "all_satisfied": true,
-    "verified_at": "2026-04-26T11:17:07.543Z"
+    "verified_at": "2026-04-29T21:54:51.877Z"
   },
   "started_at": "2026-04-20T00:00:00.000Z",
   "completed_at": "2026-04-20T22:50:00.000Z",
@@ -143,8 +140,5 @@
   "current_phase": "DONE",
   "updated_at": "2026-04-20T22:50:00Z",
   "attempt": 2,
-  "dependencies_resolved": [
-    "PG-182",
-    "PG-183"
-  ]
+  "dependencies_resolved": ["PG-182", "PG-183"]
 }

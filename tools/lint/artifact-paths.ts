@@ -53,6 +53,32 @@ const CONFIG = {
     // Sprint plan backups contain task descriptions with words like "password" (not actual secrets)
     'artifacts/backups/**/*.csv',
     '**/sprint-plan-*.csv',
+    // Generated HTML reports contain variable names / labels that match secret patterns
+    // (e.g. Istanbul coverage HTML has JS vars named "password", Playwright reports render
+    // test titles, Lighthouse reports contain security-audit labels).
+    '**/playwright-report/**', // any depth: apps/web/playwright-report, root playwright-report, etc.
+    'playwright-report/**', // explicit root-level playwright-report/
+    'artifacts/test-results/**', // artifacts/test-results/playwright-report.html etc.
+    'artifacts/lighthouse/**',
+    'artifacts/benchmarks/**', // lighthouse HTML reports stored under artifacts/benchmarks/
+    'artifacts/coverage/**',
+    'artifacts/coverage-vitest/**',
+    'artifacts/coverage-parts/**',
+    'artifacts/reports/**', // generated summary/report JSON (mentions field names like "password")
+    'artifacts/test-failures/**', // test output JSON contains test titles mentioning password fields
+    '**/coverage/**/*.html', // Istanbul HTML under apps/workers/shared/coverage/, apps/**/coverage/
+    'apps/**/coverage/**', // coverage HTML files under any app
+    // Infrastructure config/schemas contain field names in JSON structure (not actual secrets)
+    'infra/monitoring/**',
+    'sonar-reports/**', // sonar analysis JSON output
+    'apps/**/eslint-sonar-output.json', // ESLint output for SonarQube (references rule names like "no-password")
+    // Test fixtures contain intentional test data (postman collections with placeholder auth etc.)
+    'packages/test-fixtures/**',
+    'packages/db/prisma/data/**', // seed/snapshot data (help articles that document password fields)
+    // Design mockups and company assets contain mailto: links and sample emails
+    'docs/design/**',
+    'docs/company/**',
+    'coverage/**',
   ],
 };
 
@@ -446,13 +472,9 @@ class ArtifactPathLinter {
   private async scanForPII(file: string): Promise<Violation[]> {
     const violations: Violation[] = [];
 
-    // Only scan text files
-    if (!this.isTextFile(file)) {
-      return violations;
-    }
-
-    // Don't scan log files for PII (too many false positives)
-    if (file.endsWith('.log')) {
+    // Skip non-text files, log files, and files excluded from secret scan
+    // (generated HTML reports / design mockups cause false positives)
+    if (!this.isTextFile(file) || file.endsWith('.log') || this.isExcludedFromSecretScan(file)) {
       return violations;
     }
 
@@ -517,6 +539,23 @@ class ArtifactPathLinter {
   /**
    * Print linting results
    */
+  private printFileViolations(result: LintResult): void {
+    const errorCount = result.violations.filter((v) => v.severity === 'error').length;
+    const fileColor = errorCount > 0 ? colors.red : colors.yellow;
+    console.log(`${fileColor}${result.file}${colors.reset}`);
+
+    for (const violation of result.violations) {
+      const icon = violation.severity === 'error' ? '✗' : '⚠';
+      const color = violation.severity === 'error' ? colors.red : colors.yellow;
+      const location = violation.line ? `:${violation.line}` : '';
+      console.log(
+        `  ${color}${icon} [${violation.rule}]${location} ${violation.message}${colors.reset}`
+      );
+    }
+
+    console.log('');
+  }
+
   private printResults(): void {
     console.log('\n' + '='.repeat(80));
     console.log('LINTING RESULTS');
@@ -529,23 +568,7 @@ class ArtifactPathLinter {
     }
 
     for (const result of this.results) {
-      const errorCount = result.violations.filter((v) => v.severity === 'error').length;
-      const warningCount = result.violations.filter((v) => v.severity === 'warning').length;
-
-      const fileColor = errorCount > 0 ? colors.red : colors.yellow;
-      console.log(`${fileColor}${result.file}${colors.reset}`);
-
-      for (const violation of result.violations) {
-        const icon = violation.severity === 'error' ? '✗' : '⚠';
-        const color = violation.severity === 'error' ? colors.red : colors.yellow;
-        const location = violation.line ? `:${violation.line}` : '';
-
-        console.log(
-          `  ${color}${icon} [${violation.rule}]${location} ${violation.message}${colors.reset}`
-        );
-      }
-
-      console.log('');
+      this.printFileViolations(result);
     }
 
     this.printStats();

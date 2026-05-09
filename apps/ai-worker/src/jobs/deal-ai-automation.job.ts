@@ -55,7 +55,7 @@ export interface DealAiChainBundle {
 export async function processDealAiAutomationJob(
   job: Job<DealAiAutomationJobData>,
   prisma: PrismaClient,
-  chains: DealAiChainBundle,
+  chains: DealAiChainBundle
 ): Promise<DealAiAutomationJobResult> {
   const start = Date.now();
   const data = DealAiAutomationJobDataSchema.parse(job.data);
@@ -108,24 +108,59 @@ export async function processDealAiAutomationJob(
 
   if (!deal) return makeSkip('deal-not-found');
 
-  switch (data.operation) {
-    case 'duplicate-detection':
-      if (!flags.aiDuplicateDetection) return makeSkip('aiDuplicateDetection=false');
-      if (!chains.detectDuplicates) return makeSkip('chain-not-wired');
-      return makeOk(await chains.detectDuplicates(deal));
-    case 'scoring':
-      if (!flags.aiDealScoring) return makeSkip('aiDealScoring=false');
-      if (!chains.scoreDeal) return makeSkip('chain-not-wired');
-      return makeOk(await chains.scoreDeal(deal));
-    case 'next-step-recommendation':
-      if (!flags.aiNextStepRecommendation) return makeSkip('aiNextStepRecommendation=false');
-      if (!chains.recommendNextStep) return makeSkip('chain-not-wired');
-      return makeOk(await chains.recommendNextStep(deal));
-    case 'win-loss-prediction':
-      if (!flags.aiWinLossPrediction) return makeSkip('aiWinLossPrediction=false');
-      if (!chains.predictWinLoss) return makeSkip('chain-not-wired');
-      return makeOk(await chains.predictWinLoss(deal));
-    default:
-      return makeSkip('unknown-operation');
-  }
+  return dispatchDealOperation(data.operation, deal, flags, chains, makeSkip, makeOk);
+}
+
+type DealOperationSpec = {
+  flagKey: keyof typeof _dealFlagPlaceholder;
+  flagLabel: string;
+  chainKey: keyof DealAiChainBundle;
+};
+
+// Phantom type helper — never instantiated, used only for keyof inference.
+declare const _dealFlagPlaceholder: {
+  aiDuplicateDetection: boolean;
+  aiDealScoring: boolean;
+  aiNextStepRecommendation: boolean;
+  aiWinLossPrediction: boolean;
+};
+
+const DEAL_OPERATION_MAP: Record<DealAiAutomationJobData['operation'], DealOperationSpec> = {
+  'duplicate-detection': {
+    flagKey: 'aiDuplicateDetection',
+    flagLabel: 'aiDuplicateDetection=false',
+    chainKey: 'detectDuplicates',
+  },
+  scoring: {
+    flagKey: 'aiDealScoring',
+    flagLabel: 'aiDealScoring=false',
+    chainKey: 'scoreDeal',
+  },
+  'next-step-recommendation': {
+    flagKey: 'aiNextStepRecommendation',
+    flagLabel: 'aiNextStepRecommendation=false',
+    chainKey: 'recommendNextStep',
+  },
+  'win-loss-prediction': {
+    flagKey: 'aiWinLossPrediction',
+    flagLabel: 'aiWinLossPrediction=false',
+    chainKey: 'predictWinLoss',
+  },
+};
+
+/** Route a single deal operation through its flag-check → chain-call pipeline. */
+async function dispatchDealOperation(
+  operation: DealAiAutomationJobData['operation'],
+  deal: unknown,
+  flags: Record<string, boolean>,
+  chains: DealAiChainBundle,
+  makeSkip: (reason: string) => DealAiAutomationJobResult,
+  makeOk: (result: unknown) => DealAiAutomationJobResult
+): Promise<DealAiAutomationJobResult> {
+  const spec = DEAL_OPERATION_MAP[operation];
+  if (!spec) return makeSkip('unknown-operation');
+  if (!flags[spec.flagKey]) return makeSkip(spec.flagLabel);
+  const handler = chains[spec.chainKey];
+  if (!handler) return makeSkip('chain-not-wired');
+  return makeOk(await handler(deal));
 }

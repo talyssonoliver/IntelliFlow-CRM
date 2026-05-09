@@ -13,11 +13,9 @@
   "target_duration_minutes": 120,
   "actual_duration_minutes": 30,
   "dependencies": {
-    "required": [
-      "IFC-006"
-    ],
+    "required": ["IFC-006"],
     "all_satisfied": true,
-    "verified_at": "2026-04-26T11:17:07.641Z"
+    "verified_at": "2026-04-29T21:54:51.937Z"
   },
   "status_history": [
     {
@@ -46,10 +44,7 @@
     "completed_at": "2026-02-09T14:29:00.000Z",
     "duration_minutes": 29,
     "executor": "Claude Code /exec (validation + remediation)",
-    "agents": [
-      "Foundation",
-      "Security"
-    ],
+    "agents": ["Foundation", "Security"],
     "retry_count": 0,
     "last_error": null
   },
@@ -119,7 +114,5 @@
   },
   "blockers": [],
   "notes": "Validation + remediation of IFC-169. Added 7 tests: 5 production-mode throw tests, 1 dev-mode warn test, 1 verifyToken mock-key rejection test. Removed 2 stale eslint-disable directives. 37/37 tests pass, 0 lint errors/warnings, typecheck clean, build clean.",
-  "dependencies_resolved": [
-    "IFC-006"
-  ]
+  "dependencies_resolved": ["IFC-006"]
 }

@@ -29,15 +29,11 @@ describe('publicFeedbackInputSchema', () => {
   });
 
   it.each([0, 6, -1, 1.5])('rejects rating out of 1..5: %s', (rating) => {
-    expect(() =>
-      publicFeedbackInputSchema.parse({ ...base, rating })
-    ).toThrow();
+    expect(() => publicFeedbackInputSchema.parse({ ...base, rating })).toThrow();
   });
 
   it('rejects non-integer rating', () => {
-    expect(() =>
-      publicFeedbackInputSchema.parse({ ...base, rating: 3.5 })
-    ).toThrow();
+    expect(() => publicFeedbackInputSchema.parse({ ...base, rating: 3.5 })).toThrow();
   });
 
   it('rejects comment longer than 1000 chars', () => {
@@ -59,9 +55,7 @@ describe('publicFeedbackInputSchema', () => {
   });
 
   it('rejects invalid email', () => {
-    expect(() =>
-      publicFeedbackInputSchema.parse({ ...base, email: 'not-an-email' })
-    ).toThrow();
+    expect(() => publicFeedbackInputSchema.parse({ ...base, email: 'not-an-email' })).toThrow();
   });
 
   it('rejects email longer than 254 chars', () => {
@@ -76,15 +70,11 @@ describe('publicFeedbackInputSchema', () => {
   });
 
   it('rejects missing source', () => {
-    expect(() =>
-      publicFeedbackInputSchema.parse({ rating: 3 } as never)
-    ).toThrow();
+    expect(() => publicFeedbackInputSchema.parse({ rating: 3 } as never)).toThrow();
   });
 
   it('rejects non-empty __honeypot (literal empty string only)', () => {
-    expect(() =>
-      publicFeedbackInputSchema.parse({ ...base, __honeypot: 'spam' })
-    ).toThrow();
+    expect(() => publicFeedbackInputSchema.parse({ ...base, __honeypot: 'spam' })).toThrow();
   });
 
   it('rejects userAgent longer than 500 chars', () => {
@@ -110,35 +100,25 @@ describe('tourStepSchema', () => {
   });
 
   it('requires targetSelector', () => {
-    expect(() =>
-      tourStepSchema.parse({ ...baseStep, targetSelector: '' })
-    ).toThrow();
+    expect(() => tourStepSchema.parse({ ...baseStep, targetSelector: '' })).toThrow();
   });
 
   it('limits title to 60 chars', () => {
-    expect(() =>
-      tourStepSchema.parse({ ...baseStep, title: 'x'.repeat(61) })
-    ).toThrow();
+    expect(() => tourStepSchema.parse({ ...baseStep, title: 'x'.repeat(61) })).toThrow();
   });
 
   it('limits description to 240 chars', () => {
-    expect(() =>
-      tourStepSchema.parse({ ...baseStep, description: 'x'.repeat(241) })
-    ).toThrow();
+    expect(() => tourStepSchema.parse({ ...baseStep, description: 'x'.repeat(241) })).toThrow();
   });
 
   it('accepts valid placement enum', () => {
     for (const placement of ['top', 'bottom', 'left', 'right', 'center'] as const) {
-      expect(() =>
-        tourStepSchema.parse({ ...baseStep, placement })
-      ).not.toThrow();
+      expect(() => tourStepSchema.parse({ ...baseStep, placement })).not.toThrow();
     }
   });
 
   it('rejects unknown placement', () => {
-    expect(() =>
-      tourStepSchema.parse({ ...baseStep, placement: 'diagonal' as never })
-    ).toThrow();
+    expect(() => tourStepSchema.parse({ ...baseStep, placement: 'diagonal' as never })).toThrow();
   });
 
   it('accepts optional cta with label and href', () => {
@@ -179,9 +159,7 @@ describe('tourConfigSchema', () => {
   });
 
   it('requires route starting with /', () => {
-    expect(() =>
-      tourConfigSchema.parse({ ...baseTour, route: 'features' })
-    ).toThrow();
+    expect(() => tourConfigSchema.parse({ ...baseTour, route: 'features' })).toThrow();
   });
 
   it('requires at least one step', () => {
@@ -214,9 +192,7 @@ describe('onboardingConfigSchema', () => {
   };
 
   it('accepts a config with one tour', () => {
-    expect(() =>
-      onboardingConfigSchema.parse({ tours: [tour] })
-    ).not.toThrow();
+    expect(() => onboardingConfigSchema.parse({ tours: [tour] })).not.toThrow();
   });
 
   it('requires at least one tour', () => {

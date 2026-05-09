@@ -16,18 +16,10 @@ vi.mock('../SLAIndicator', () => ({
 
 // Mock Card from @intelliflow/ui
 vi.mock('@intelliflow/ui', () => ({
-  Card: ({ children, className, onClick, role, ...props }: any) => (
-    // eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/prefer-tag-over-role -- test renders component with event handlers
-    <div
-      className={className}
-      onClick={onClick}
-      role={role ?? 'button'}
-      tabIndex={0}
-      onKeyDown={vi.fn()}
-      {...props}
-    >
+  Card: ({ children, className, onClick, ...props }: any) => (
+    <button type="button" className={className} onClick={onClick} {...props}>
       {children}
-    </div>
+    </button>
   ),
 }));
 
@@ -107,16 +99,20 @@ describe('TicketCard', () => {
   it('calls onClick when card clicked', () => {
     render(<TicketCard ticket={mockTicket} onClick={onClick} />);
 
-    const card = screen.getByRole('article');
+    const card = screen.getByRole('button', {
+      name: `Ticket ${mockTicket.ticketNumber}: ${mockTicket.subject}`,
+    });
     fireEvent.click(card);
 
     expect(onClick).toHaveBeenCalled();
   });
 
-  it('has accessible card structure (role="article")', () => {
+  it('has accessible card structure with aria-label', () => {
     render(<TicketCard ticket={mockTicket} onClick={onClick} />);
 
-    const card = screen.getByRole('article');
+    const card = screen.getByRole('button', {
+      name: `Ticket ${mockTicket.ticketNumber}: ${mockTicket.subject}`,
+    });
     expect(card).toBeInTheDocument();
     expect(card).toHaveAttribute(
       'aria-label',

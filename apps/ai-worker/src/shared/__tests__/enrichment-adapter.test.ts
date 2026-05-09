@@ -134,10 +134,7 @@ describe('EnrichmentProvider port + adapter (IFC-312)', () => {
 
       const mod = await import('../enrichment-adapter.js');
       const adapter = new mod.LiteLLMEnrichmentAdapter();
-      await adapter.enrichContact(
-        { email: 'jane@acme.com', firstName: 'Jane' },
-        'tenant-abc'
-      );
+      await adapter.enrichContact({ email: 'jane@acme.com', firstName: 'Jane' }, 'tenant-abc');
 
       expect(createLLMForTenant).toHaveBeenCalledTimes(1);
       const [purpose, tier, opts] = createLLMForTenant.mock.calls[0]!;

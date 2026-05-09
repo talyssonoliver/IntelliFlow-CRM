@@ -739,9 +739,10 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
                 />
               </div>
               <p className="text-sm text-slate-600 dark:text-slate-300">
-                Enable <strong>AI insight generation</strong> and <strong>AI account scoring</strong>{' '}
-                in account settings to populate this surface. Data is written by the ai-worker
-                pipeline and reflected here via the <code>account.getAiInsight</code> query.
+                Enable <strong>AI insight generation</strong> and{' '}
+                <strong>AI account scoring</strong> in account settings to populate this surface.
+                Data is written by the ai-worker pipeline and reflected here via the{' '}
+                <code>account.getAiInsight</code> query.
               </p>
             </div>
           )}

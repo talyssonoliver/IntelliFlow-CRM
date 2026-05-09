@@ -96,7 +96,7 @@ describe('ContactService', () => {
     });
 
     it('should fail if account not found', async () => {
-      const fakeAccountId = '00000000-0000-0000-0000-000000000000';
+      const fakeAccountId = '00000000-0000-4000-8000-000000000000';
 
       const result = await service.createContact({
         email: 'john@example.com',
@@ -148,7 +148,7 @@ describe('ContactService', () => {
     });
 
     it('should fail if contact not found', async () => {
-      const fakeId = '00000000-0000-0000-0000-000000000000';
+      const fakeId = '00000000-0000-4000-8000-000000000000';
 
       const result = await service.updateContactInfo(fakeId, { firstName: 'New' }, 'updater');
 
@@ -274,7 +274,7 @@ describe('ContactService', () => {
       }).value;
       await accountRepository.save(account);
 
-      const fakeContactId = '00000000-0000-0000-0000-000000000000';
+      const fakeContactId = '00000000-0000-4000-8000-000000000000';
       const result = await service.associateWithAccount(fakeContactId, account.id.value, 'user');
 
       expect(result.isFailure).toBe(true);
@@ -290,7 +290,7 @@ describe('ContactService', () => {
       }).value;
       await contactRepository.save(contact);
 
-      const fakeAccountId = '00000000-0000-0000-0000-000000000000';
+      const fakeAccountId = '00000000-0000-4000-8000-000000000000';
       const result = await service.associateWithAccount(contact.id.value, fakeAccountId, 'user');
 
       expect(result.isFailure).toBe(true);
@@ -322,7 +322,7 @@ describe('ContactService', () => {
     });
 
     it('should fail if contact not found', async () => {
-      const fakeContactId = '00000000-0000-0000-0000-000000000000';
+      const fakeContactId = '00000000-0000-4000-8000-000000000000';
       const result = await service.disassociateFromAccount(fakeContactId, 'user');
 
       expect(result.isFailure).toBe(true);
@@ -381,7 +381,7 @@ describe('ContactService', () => {
     });
 
     it('should return empty array for non-existent contact', async () => {
-      const fakeId = '00000000-0000-0000-0000-000000000000';
+      const fakeId = '00000000-0000-4000-8000-000000000000';
       const duplicates = await service.findPotentialDuplicates(fakeId);
 
       expect(duplicates).toHaveLength(0);
@@ -464,7 +464,7 @@ describe('ContactService', () => {
       }).value;
       await contactRepository.save(secondary);
 
-      const fakeId = '00000000-0000-0000-0000-000000000000';
+      const fakeId = '00000000-0000-4000-8000-000000000000';
       const result = await service.mergeContacts(fakeId, secondary.id.value, 'merger');
 
       expect(result.isFailure).toBe(true);
@@ -480,7 +480,7 @@ describe('ContactService', () => {
       }).value;
       await contactRepository.save(primary);
 
-      const fakeId = '00000000-0000-0000-0000-000000000000';
+      const fakeId = '00000000-0000-4000-8000-000000000000';
       const result = await service.mergeContacts(primary.id.value, fakeId, 'merger');
 
       expect(result.isFailure).toBe(true);
@@ -620,7 +620,7 @@ describe('ContactService', () => {
     });
 
     it('should fail if contact not found', async () => {
-      const fakeId = '00000000-0000-0000-0000-000000000000';
+      const fakeId = '00000000-0000-4000-8000-000000000000';
 
       const result = await service.deleteContact(fakeId);
 

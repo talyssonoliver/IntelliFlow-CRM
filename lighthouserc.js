@@ -60,10 +60,17 @@ module.exports = {
       // Number of runs per URL (for statistical reliability)
       numberOfRuns: 3,
 
-      // Start a local server before testing
-      startServerCommand: 'pnpm run build && pnpm run start',
-      startServerReadyPattern: 'ready on',
-      startServerReadyTimeout: 60000, // 60 seconds
+      // Start a local server before testing — local dev only.
+      // CI (GitHub Actions) runs against a deployed Vercel preview URL,
+      // so the server-start step is skipped to avoid `pnpm: not found` in
+      // the lighthouse job (it doesn't install pnpm or the lockfile).
+      ...(process.env.CI
+        ? {}
+        : {
+            startServerCommand: 'pnpm run build && pnpm run start',
+            startServerReadyPattern: 'ready on',
+            startServerReadyTimeout: 60000, // 60 seconds
+          }),
 
       // Chromium settings
       settings: {

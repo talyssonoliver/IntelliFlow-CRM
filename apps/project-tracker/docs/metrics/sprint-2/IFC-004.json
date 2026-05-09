@@ -5,18 +5,13 @@
   "description": "PHASE-002: Next.js 16.0.10 Lead Capture UI",
   "owner": "Frontend Dev + UX",
   "dependencies": {
-    "required": [
-      "IFC-003"
-    ],
-    "verified_at": "2026-04-26T11:17:07.264Z",
+    "required": ["IFC-003"],
+    "verified_at": "2026-04-29T21:54:51.714Z",
     "all_satisfied": true,
     "notes": "IFC-003 tRPC API foundation completed - lead.create mutation available"
   },
   "implements": {
-    "flows": [
-      "FLOW-002",
-      "FLOW-003"
-    ],
+    "flows": ["FLOW-002", "FLOW-003"],
     "description": "Implements Lead Dashboard (FLOW-002) and Lead Capture (FLOW-003) user flows",
     "verified_at": "2025-12-26T18:30:00Z"
   },
@@ -60,9 +55,7 @@
         "reason": "Mobile screenshots require device emulation"
       }
     },
-    "created": [
-      "apps/web/src/app/leads/(list)/new/page.tsx"
-    ]
+    "created": ["apps/web/src/app/leads/(list)/new/page.tsx"]
   },
   "validations": [
     {
@@ -140,9 +133,7 @@
   },
   "stoa_verdicts": {
     "lead": "Domain",
-    "supporting": [
-      "Quality"
-    ],
+    "supporting": ["Quality"],
     "domain_verdict": "PASS",
     "quality_verdict": "PASS",
     "consensus": "PASS"
@@ -165,7 +156,5 @@
   "notes": "Lead capture form component created with react-hook-form, Zod validation, and tRPC integration. Modal-based UI with proper error handling and success feedback. All required fields (email, firstName, lastName, company, title, phone, source) implemented. Form integrates with existing lead.create tRPC mutation.",
   "completed_at": "2025-12-22T20:28:00Z",
   "started_at": "2025-12-22T07:50:00Z",
-  "dependencies_resolved": [
-    "IFC-003"
-  ]
+  "dependencies_resolved": ["IFC-003"]
 }

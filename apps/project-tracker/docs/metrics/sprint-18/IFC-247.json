@@ -11,7 +11,7 @@
   "dependencies": {
     "required": [],
     "all_satisfied": true,
-    "verified_at": "2026-04-26T11:17:07.518Z"
+    "verified_at": "2026-04-29T21:54:51.862Z"
   },
   "dependencies_resolved": [],
   "started_at": null,
@@ -36,12 +36,8 @@
     }
   },
   "artifacts": {
-    "expected": [
-      "apps/web/src/app/leads/[id]/__tests__/page.test.tsx"
-    ],
-    "created": [
-      "apps/web/src/app/leads/[id]/__tests__/page.test.tsx"
-    ],
+    "expected": ["apps/web/src/app/leads/[id]/__tests__/page.test.tsx"],
+    "created": ["apps/web/src/app/leads/[id]/__tests__/page.test.tsx"],
     "missing": []
   },
   "validations": [],

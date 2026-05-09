@@ -19,7 +19,8 @@ describe('ContactReplyDraftChain (IFC-312)', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     createLLMForTenant = ((await import('../lib/llm-factory.js')) as any).createLLMForTenant;
-    sanitizeStringField = ((await import('../utils/input-sanitizer.js')) as any).sanitizeStringField;
+    sanitizeStringField = ((await import('../utils/input-sanitizer.js')) as any)
+      .sanitizeStringField;
   });
 
   it('returns {success: false, reason: "no-thread-context"} on empty thread', async () => {
@@ -42,7 +43,12 @@ describe('ContactReplyDraftChain (IFC-312)', () => {
       contactId: 'c-1',
       tenantId: 't-1',
       emailThread: [
-        { from: 'customer@acme.com', subject: 'Pricing', body: 'Can you send pricing?', at: '2026-01-01' },
+        {
+          from: 'customer@acme.com',
+          subject: 'Pricing',
+          body: 'Can you send pricing?',
+          at: '2026-01-01',
+        },
       ],
     });
     expect(out.success).toBe(true);
@@ -62,9 +68,7 @@ describe('ContactReplyDraftChain (IFC-312)', () => {
     const out = await mod.draftContactReply({
       contactId: 'c-1',
       tenantId: 't-1',
-      emailThread: [
-        { from: 'x@y.com', subject: 's', body: 'b', at: '2026-01-01' },
-      ],
+      emailThread: [{ from: 'x@y.com', subject: 's', body: 'b', at: '2026-01-01' }],
     });
     expect(out.success).toBe(true);
     if (out.success) {

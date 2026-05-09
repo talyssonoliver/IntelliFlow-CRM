@@ -72,20 +72,18 @@ export async function scoreAccount(input: ScoreAccountInput): Promise<ScoreAccou
   try {
     const model = await createLLMForTenant('scoring', 'standard', { tenantId });
     const structured = model.withStructuredOutput(ScoreLLMSchema);
-    const raw = await structured.invoke(
-      [
-        {
-          role: 'system',
-          content:
-            'You produce a fit + engagement score for a CRM account. Return: ' +
-            'score (0-100), confidence (0-1), factors[] with {name, impact (-50..+50), reasoning}.',
-        },
-        {
-          role: 'user',
-          content: `Signals: ${JSON.stringify(signals)}. Score the account.`,
-        },
-      ] as unknown as Parameters<typeof structured.invoke>[0]
-    );
+    const raw = await structured.invoke([
+      {
+        role: 'system',
+        content:
+          'You produce a fit + engagement score for a CRM account. Return: ' +
+          'score (0-100), confidence (0-1), factors[] with {name, impact (-50..+50), reasoning}.',
+      },
+      {
+        role: 'user',
+        content: `Signals: ${JSON.stringify(signals)}. Score the account.`,
+      },
+    ] as unknown as Parameters<typeof structured.invoke>[0]);
     const safe = ScoreLLMSchema.safeParse(raw);
     if (safe.success) parsed = safe.data;
     else source = 'fallback';

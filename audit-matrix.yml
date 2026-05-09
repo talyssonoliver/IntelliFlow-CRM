@@ -133,7 +133,12 @@ tools:
   - id: snyk
     tier: 1
     enabled: true
-    required: true
+    # Pre-MVP: required=false until SNYK_TOKEN is wired in repo secrets.
+    # Today the gate always reports `skipped` (requires_env unmet), and a
+    # skipped required tier-1 gate fails the whole audit. Flip to true
+    # once the token is configured and the Snyk CLI is installed in the
+    # audit workflow.
+    required: false
     owner: 'Security'
     scope: 'workspace'
     command: 'snyk test --severity-threshold=high'
@@ -146,14 +151,22 @@ tools:
   - id: trivy-image
     tier: 1
     enabled: true
-    required: true
+    # Pre-MVP: required=false until a Docker build + push step exists in CI
+    # that publishes an image and exports TRIVY_IMAGE_TAG. Today the gate
+    # always reports `skipped` (no image to scan). Flip to true once the
+    # image-build step lands.
+    required: false
     owner: 'Security'
     scope: 'workspace'
-    command: 'trivy image --severity HIGH,CRITICAL --exit-code 1 intelliflow-crm:latest'
+    # TRIVY_IMAGE_TAG must be set by the workflow after a docker build step.
+    # When unset (no image built in this run) the tool is skipped — not failed.
+    # Set TRIVY_IMAGE_TAG=intelliflow-crm:latest in the workflow env after build.
+    command: 'trivy image --severity HIGH,CRITICAL --exit-code 1 $TRIVY_IMAGE_TAG'
     thresholds:
       max_high: 0
       max_critical: 0
     expected_outputs: ['log']
+    requires_env: ['TRIVY_IMAGE_TAG']
 
   - id: semgrep-security-audit
     tier: 1

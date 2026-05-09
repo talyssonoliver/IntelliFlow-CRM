@@ -67,11 +67,9 @@ const PRIORITY_STRIPE: Record<string, string> = {
 function formatRelativeDate(date: Date): string {
   const now = new Date();
   const d = new Date(date);
-  // Use local getters consistently — comparing two local midnights avoids
-  // timezone-induced off-by-one errors when both values use the same getter.
-  // eslint-disable-next-line no-restricted-syntax
-  const nowDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-  const targetDay = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  // Compare UTC midnights to avoid server-local timezone influence on day boundaries.
+  const nowDay = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  const targetDay = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
   const diffDays = Math.round((targetDay - nowDay) / 86400000);
   if (diffDays === 0) return 'Today';
   if (diffDays === 1) return 'Tomorrow';

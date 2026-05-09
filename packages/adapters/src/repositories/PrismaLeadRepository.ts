@@ -246,7 +246,7 @@ export class PrismaLeadRepository implements LeadRepository {
   async findForScoring(limit: number): Promise<Lead[]> {
     // Find leads with score = 0 or updated > 30 days ago
     const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    thirtyDaysAgo.setUTCDate(thirtyDaysAgo.getUTCDate() - 30);
 
     const records = await this.prisma.lead.findMany({
       where: {

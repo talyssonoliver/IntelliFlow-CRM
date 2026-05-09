@@ -37,6 +37,12 @@ function getThemeIcon(t: string): string {
   return 'contrast';
 }
 
+function getProviderIcon(provider: string): string {
+  if (provider === 'google') return 'g_translate';
+  if (provider === 'github') return 'code';
+  return 'login';
+}
+
 export default function AccountSettingsContent() {
   const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
 
@@ -362,12 +368,7 @@ export default function AccountSettingsContent() {
                   <span className="text-sm text-muted-foreground">Signed in with</span>
                   <Badge variant="secondary" className="capitalize">
                     <span className="material-symbols-outlined text-[12px] mr-1" aria-hidden="true">
-                      {/* eslint-disable-next-line no-nested-ternary */}
-                      {provider === 'google'
-                        ? 'g_translate'
-                        : provider === 'github'
-                          ? 'code'
-                          : 'login'}
+                      {getProviderIcon(provider)}
                     </span>
                     {provider}
                   </Badge>

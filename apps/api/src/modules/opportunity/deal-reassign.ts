@@ -28,7 +28,7 @@ export type DealReassignVerdict =
 
 export async function performDealReassign(
   ctx: Context,
-  input: { id: string; ownerId: string },
+  input: { id: string; ownerId: string }
 ): Promise<DealReassignVerdict> {
   const typedCtx = getTenantContext(ctx);
   const tenantId = typedCtx.tenant.tenantId;
@@ -103,7 +103,7 @@ function buildDealBoundNotifier(ctx: Context): DealNotifier {
             entityId: (input.payload.opportunityId as string | undefined) ?? null,
             metadata: input.payload,
           } as never,
-          ctx.services?.notificationOrchestrator,
+          ctx.services?.notificationOrchestrator
         );
       }
     },
@@ -118,7 +118,7 @@ export async function emitDealReassignSideEffects(
     previousOwnerId: string;
     newOwnerId: string;
     flags: Pick<DealAutomationFlags, 'notifyOnOwnerChange'>;
-  },
+  }
 ): Promise<{ notified: boolean }> {
   const typedCtx = getTenantContext(ctx);
   const tenantId = typedCtx.tenant.tenantId;
@@ -144,7 +144,7 @@ export async function emitDealReassignSideEffects(
         newOwnerId: args.newOwnerId,
         actorId,
       },
-      args.flags,
+      args.flags
     );
     return { notified: true };
   } catch (err) {
@@ -153,11 +153,7 @@ export async function emitDealReassignSideEffects(
   }
 }
 
-export function logDealReassignPermissionDenied(
-  ctx: Context,
-  id: string,
-  reason: string,
-): void {
+export function logDealReassignPermissionDenied(ctx: Context, id: string, reason: string): void {
   const typedCtx = getTenantContext(ctx);
   getAuditLogger(ctx.prisma)
     .logPermissionDenied('opportunity', id, reason, typedCtx.tenant.tenantId, {

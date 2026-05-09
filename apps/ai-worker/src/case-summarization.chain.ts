@@ -52,21 +52,19 @@ export async function generateCaseSummary(
   try {
     const model = await createLLMForTenant('qualification', 'standard', { tenantId });
     const structured = model.withStructuredOutput(SummaryLLMSchema);
-    const raw = await structured.invoke(
-      [
-        {
-          role: 'system',
-          content:
-            'You summarize a legal case for a busy attorney. Return a short ' +
-            'paragraph (max 2000 chars) covering current status, key parties, ' +
-            'and what the next action should be.',
-        },
-        {
-          role: 'user',
-          content: `Case context: ${JSON.stringify(context)}. Generate summary.`,
-        },
-      ] as unknown as Parameters<typeof structured.invoke>[0]
-    );
+    const raw = await structured.invoke([
+      {
+        role: 'system',
+        content:
+          'You summarize a legal case for a busy attorney. Return a short ' +
+          'paragraph (max 2000 chars) covering current status, key parties, ' +
+          'and what the next action should be.',
+      },
+      {
+        role: 'user',
+        content: `Case context: ${JSON.stringify(context)}. Generate summary.`,
+      },
+    ] as unknown as Parameters<typeof structured.invoke>[0]);
     const safe = SummaryLLMSchema.safeParse(raw);
     if (safe.success) parsed = safe.data;
     else source = 'fallback';

@@ -1,7 +1,7 @@
 # IntelliFlow CRM - Sitemap
 
-> **Location**: `docs/design/sitemap.md` **Last Updated**: 2026-04-16 **Total
-> Pages**: 207 **Total Flows**: 42 (linked) **Layouts**: 37 **API Routers**: 56
+> **Location**: `docs/design/sitemap.md` **Last Updated**: 2026-05-02 **Total
+> Pages**: 208 **Total Flows**: 42 (linked) **Layouts**: 37 **API Routers**: 60
 > (232 procedures)
 
 ---

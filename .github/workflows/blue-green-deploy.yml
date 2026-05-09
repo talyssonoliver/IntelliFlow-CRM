@@ -20,7 +20,7 @@ on:
   workflow_dispatch:
     inputs:
       action:
-        description: "Deployment action"
+        description: 'Deployment action'
         required: true
         type: choice
         options:
@@ -29,7 +29,7 @@ on:
           - rollback
           - status
       target_environment:
-        description: "Target environment (blue or green)"
+        description: 'Target environment (blue or green)'
         required: false
         type: choice
         options:
@@ -38,15 +38,15 @@ on:
           - green
         default: auto
       skip_health_checks:
-        description: "Skip health checks (emergency only)"
+        description: 'Skip health checks (emergency only)'
         required: false
         type: boolean
         default: false
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-  NODE_VERSION: "22"
-  PNPM_VERSION: "10.33.0"
+  NODE_VERSION: '22'
+  PNPM_VERSION: '10.33.0'
   NODE_OPTIONS: --max-old-space-size=4096
   HEALTH_CHECK_TIMEOUT: 60
   HEALTH_CHECK_RETRIES: 3
@@ -150,7 +150,7 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile

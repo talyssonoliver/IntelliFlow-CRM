@@ -383,11 +383,9 @@ export function CaseForm({
             {/* ── Dropdown results ── */}
             {}
             {clientDropdownOpen && !formData.clientId && debouncedClientSearch.length >= 2 && (
-              // eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- custom dropdown requires div for positioning
               <ul
                 id="client-listbox"
                 className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-background shadow-lg max-h-56 overflow-y-auto list-none m-0 p-0"
-                role="listbox"
               >
                 {contactQuery.isLoading && (
                   <li className="flex items-center gap-2 px-3 py-3 text-sm text-muted-foreground">
@@ -407,7 +405,7 @@ export function CaseForm({
                 )}
                 {!contactQuery.isLoading &&
                   clientResults.map((client) => (
-                    <li key={client.id} role="option" aria-selected={false}>
+                    <li key={client.id}>
                       <button
                         type="button"
                         onClick={() => handleClientSelect(client.id, client.name)}

@@ -78,9 +78,7 @@ function sanitizeThread(thread: EmailThreadEntry[]): EmailThreadEntry[] {
 
 function buildFallback(thread: EmailThreadEntry[]): ReplyDraftPayload {
   const last = thread[thread.length - 1];
-  const subject = last?.subject
-    ? `Re: ${last.subject.replace(/^re:\s*/i, '')}`
-    : 'Following up';
+  const subject = last?.subject ? `Re: ${last.subject.replace(/^re:\s*/i, '')}` : 'Following up';
   return {
     draftSubject: subject,
     draftBody:
@@ -108,22 +106,20 @@ export async function draftContactReply(
   try {
     const model = await createLLMForTenant('email', 'standard', { tenantId });
     const structured = model.withStructuredOutput(DraftLLMSchema);
-    const raw = await structured.invoke(
-      [
-        {
-          role: 'system',
-          content:
-            'You draft an email reply to a CRM contact. Return: draftSubject, draftBody, ' +
-            'tone (formal|friendly|direct), confidence (0-1). ' +
-            'Drafts are reviewed by humans before sending — never imply auto-send. ' +
-            (instructions ? `User instructions: ${instructions}` : ''),
-        },
-        {
-          role: 'user',
-          content: `Email thread (oldest-first): ${JSON.stringify(sanitized)}. Draft the reply.`,
-        },
-      ] as unknown as Parameters<typeof structured.invoke>[0]
-    );
+    const raw = await structured.invoke([
+      {
+        role: 'system',
+        content:
+          'You draft an email reply to a CRM contact. Return: draftSubject, draftBody, ' +
+          'tone (formal|friendly|direct), confidence (0-1). ' +
+          'Drafts are reviewed by humans before sending — never imply auto-send. ' +
+          (instructions ? `User instructions: ${instructions}` : ''),
+      },
+      {
+        role: 'user',
+        content: `Email thread (oldest-first): ${JSON.stringify(sanitized)}. Draft the reply.`,
+      },
+    ] as unknown as Parameters<typeof structured.invoke>[0]);
 
     const parsed = DraftLLMSchema.safeParse(raw);
     if (!parsed.success) {

@@ -9,11 +9,9 @@
   "phase": "",
   "stream": null,
   "dependencies": {
-    "required": [
-      "PG-180"
-    ],
+    "required": ["PG-180"],
     "all_satisfied": true,
-    "verified_at": "2026-04-26T11:17:07.533Z"
+    "verified_at": "2026-04-29T21:54:51.871Z"
   },
   "started_at": null,
   "completed_at": null,
@@ -43,7 +41,5 @@
     }
   ],
   "notes": "Tiptap editor supporting headings, bold, italic, lists, links, images, code blocks. Exports structured sections (heading + content pairs) for HelpArticle compatibility.",
-  "dependencies_resolved": [
-    "PG-180"
-  ]
+  "dependencies_resolved": ["PG-180"]
 }

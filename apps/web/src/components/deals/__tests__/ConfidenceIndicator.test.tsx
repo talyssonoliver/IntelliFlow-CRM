@@ -100,13 +100,15 @@ describe('ConfidenceIndicator', () => {
     expect(screen.getByTestId('confidence-label')).toHaveTextContent('High confidence');
   });
 
-  it('has correct aria attributes', () => {
-    render(<ConfidenceIndicator confidence={0.72} />);
+  it('has correct aria attributes on the meter element', () => {
+    const { container } = render(<ConfidenceIndicator confidence={0.72} />);
 
-    const meter = screen.getByTestId('confidence-indicator');
-    expect(meter).toHaveAttribute('role', 'meter');
-    expect(meter).toHaveAttribute('aria-valuenow', '72');
-    expect(meter).toHaveAttribute('aria-valuemin', '0');
-    expect(meter).toHaveAttribute('aria-valuemax', '100');
+    // The component uses a semantic <meter> element (sr-only) for accessibility.
+    // Native <meter> exposes min/max/value without needing explicit aria-* attributes.
+    const meter = container.querySelector('meter');
+    expect(meter).not.toBeNull();
+    expect(meter).toHaveAttribute('min', '0');
+    expect(meter).toHaveAttribute('max', '100');
+    expect(meter).toHaveAttribute('value', '72');
   });
 });

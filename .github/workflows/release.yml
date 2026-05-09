@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       release-type:
-        description: "Release type (major, minor, patch, prerelease)"
+        description: 'Release type (major, minor, patch, prerelease)'
         required: true
-        default: "patch"
+        default: 'patch'
         type: choice
         options:
           - major
@@ -28,8 +28,8 @@ permissions:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-  NODE_VERSION: "22"
-  PNPM_VERSION: "10.33.0"
+  NODE_VERSION: '22'
+  PNPM_VERSION: '10.33.0'
   NODE_OPTIONS: --max-old-space-size=4096
 
 jobs:
@@ -189,7 +189,7 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile

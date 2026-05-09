@@ -210,7 +210,7 @@ function push(section, id, name, verdict, detail, mandatory = true) {
   const disc = readTextSafe(DISCUSSION_PATH);
   if (!disc) push('SPEC', '0.75', 'Codebase Exploration', 'MISSING', 'no discussion file');
   else {
-    const hasCites = /[a-zA-Z_/\-]+\.(ts|tsx|prisma|md)(:\d+|\b)/i.test(disc);
+    const hasCites = /[a-zA-Z_/-]+\.(ts|tsx|prisma|md)(:\d+|\b)/i.test(disc);
     const hasAnalysis = /ANALYSIS|Round\s*1|Phase\s*1/i.test(disc);
     if (hasCites && hasAnalysis)
       push('SPEC', '0.75', 'Codebase Exploration', 'PASS', 'file citations present in discussion');

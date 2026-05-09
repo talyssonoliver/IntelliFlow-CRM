@@ -9,19 +9,11 @@
   "phase": "",
   "stream": null,
   "dependencies": {
-    "required": [
-      "PG-178",
-      "PG-152",
-      "PG-192"
-    ],
+    "required": ["PG-178", "PG-152", "PG-192"],
     "all_satisfied": true,
-    "verified_at": "2026-04-26T11:17:07.550Z"
+    "verified_at": "2026-04-29T21:54:51.881Z"
   },
-  "dependencies_resolved": [
-    "PG-178",
-    "PG-152",
-    "PG-192"
-  ],
+  "dependencies_resolved": ["PG-178", "PG-152", "PG-192"],
   "started_at": null,
   "completed_at": null,
   "execution": {
@@ -36,9 +28,7 @@
       "packages/validators/src/model-config.ts",
       ".specify/sprints/sprint-18/attestations/PG-199/context_ack.json"
     ],
-    "created": [
-      "apps/web/src/app/agent-approvals/model-config/page.tsx"
-    ],
+    "created": ["apps/web/src/app/agent-approvals/model-config/page.tsx"],
     "missing": [
       "apps/web/src/app/agent-approvals/model-config/ModelConfigContent.tsx",
       "apps/api/src/modules/agent-approval/model-config.router.ts",

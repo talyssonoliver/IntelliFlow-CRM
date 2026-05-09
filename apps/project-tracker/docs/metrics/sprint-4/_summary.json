@@ -13,7 +13,7 @@
     "not_started": 0,
     "failed": 0
   },
-  "notes": "10/10 tasks DONE (100%). Last synced: 2026-04-26T11:17:07.313Z",
+  "notes": "10/10 tasks DONE (100%). Last synced: 2026-04-29T21:54:51.740Z",
   "completed_tasks": [
     {
       "task_id": "IFC-009",
@@ -72,10 +72,7 @@
     "working_hours_per_day": 8,
     "working_days_per_week": 5,
     "critical_path": {
-      "task_ids": [
-        "IFC-108",
-        "IFC-137"
-      ],
+      "task_ids": ["IFC-108", "IFC-137"],
       "total_duration_minutes": 520,
       "completion_percentage": 100,
       "bottleneck_task_id": null
@@ -85,6 +82,6 @@
       "spi": 1,
       "status": "on_track"
     },
-    "calculated_at": "2026-04-26T11:17:07.806Z"
+    "calculated_at": "2026-04-29T21:54:52.041Z"
   }
 }

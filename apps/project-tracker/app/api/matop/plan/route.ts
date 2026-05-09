@@ -8,11 +8,7 @@ import {
   canProceedToSession,
   type TaskRecord,
 } from '@/lib/csv-status';
-import {
-  isValidTaskId,
-  resolveSprintPath,
-  sanitizeSprintNumber,
-} from '@/lib/paths';
+import { isValidTaskId, resolveSprintPath, sanitizeSprintNumber } from '@/lib/paths';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;

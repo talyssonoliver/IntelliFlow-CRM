@@ -2,11 +2,9 @@
   "task_id": "ENV-006-AI",
   "status": "DONE",
   "dependencies": {
-    "required": [
-      "ENV-004-AI"
-    ],
+    "required": ["ENV-004-AI"],
     "all_satisfied": true,
-    "verified_at": "2026-04-26T11:17:07.203Z"
+    "verified_at": "2026-04-29T21:54:51.678Z"
   },
   "validations": [
     {
@@ -27,7 +25,5 @@
   "started_at": "2026-04-13T00:27:36.730Z",
   "actual_duration_minutes": 15,
   "description": "Prisma Schema with Generated Optimizations",
-  "dependencies_resolved": [
-    "ENV-004-AI"
-  ]
+  "dependencies_resolved": ["ENV-004-AI"]
 }

@@ -14,7 +14,8 @@ export interface AccountScoreBadgeProps {
 }
 
 function tier(score: number): { tone: string; label: string } {
-  if (score >= 70) return { tone: 'bg-emerald-100 text-emerald-800 border-emerald-300', label: 'High' };
+  if (score >= 70)
+    return { tone: 'bg-emerald-100 text-emerald-800 border-emerald-300', label: 'High' };
   if (score >= 40) return { tone: 'bg-amber-100 text-amber-800 border-amber-300', label: 'Mid' };
   return { tone: 'bg-rose-100 text-rose-800 border-rose-300', label: 'Low' };
 }
@@ -32,11 +33,12 @@ export function AccountScoreBadge({
   const title = [
     `Account score: ${score}/100 (${label})`,
     modelVersion ? `Model: ${modelVersion}` : null,
-    scoredAt
-      ? `Scored: ${new Date(scoredAt).toLocaleString('en-US', { timeZone: 'UTC' })}`
-      : null,
+    scoredAt ? `Scored: ${new Date(scoredAt).toLocaleString('en-US', { timeZone: 'UTC' })}` : null,
     factors && factors.length > 0
-      ? `Top factors: ${factors.slice(0, 3).map((f) => f.name).join(', ')}`
+      ? `Top factors: ${factors
+          .slice(0, 3)
+          .map((f) => f.name)
+          .join(', ')}`
       : null,
   ]
     .filter(Boolean)

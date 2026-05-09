@@ -329,7 +329,6 @@ export class PrismaConversationSearchRepository implements ConversationRepositor
   // embeddingService handles the "not configured" path before reaching here.
   // -------------------------------------------------------------------------
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async searchByEmbedding(_params: SemanticSearchParams): Promise<ConversationSearchResult[]> {
     // TODO: pgvector embedding search — deferred pending ingestion pipeline.
     // See ConversationSearchService.semanticSearch() — it guards on

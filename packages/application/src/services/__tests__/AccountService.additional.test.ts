@@ -60,7 +60,7 @@ describe('AccountService (additional coverage)', () => {
     });
 
     it('should fail when account not found', async () => {
-      const fakeId = '00000000-0000-0000-0000-000000000000';
+      const fakeId = '00000000-0000-4000-8000-000000000000';
       const result = await service.getAccountById(fakeId);
 
       expect(result.isFailure).toBe(true);
@@ -550,7 +550,7 @@ describe('AccountService (additional coverage)', () => {
     });
 
     it('should fail if account not found', async () => {
-      const fakeId = '00000000-0000-0000-0000-000000000000';
+      const fakeId = '00000000-0000-4000-8000-000000000000';
       const result = await service.getAccountContacts(
         fakeId,
         '11111111-1111-4111-8111-111111111111',
@@ -714,7 +714,7 @@ describe('AccountService (additional coverage)', () => {
     });
 
     it('should fail if account not found', async () => {
-      const fakeId = '00000000-0000-0000-0000-000000000000';
+      const fakeId = '00000000-0000-4000-8000-000000000000';
       const result = await service.getAccountOpportunities(
         fakeId,
         '11111111-1111-4111-8111-111111111111',
@@ -866,7 +866,7 @@ describe('AccountService (additional coverage)', () => {
     });
 
     it('should fail if account not found', async () => {
-      const fakeId = '00000000-0000-0000-0000-000000000000';
+      const fakeId = '00000000-0000-4000-8000-000000000000';
       const result = await service.getAccountActivity(
         fakeId,
         '11111111-1111-4111-8111-111111111111',
@@ -1042,7 +1042,7 @@ describe('AccountService (additional coverage)', () => {
   // =========================================================================
   describe('deleteAccount() - extended', () => {
     it('should fail if account not found', async () => {
-      const fakeId = '00000000-0000-0000-0000-000000000000';
+      const fakeId = '00000000-0000-4000-8000-000000000000';
       const result = await service.deleteAccount(fakeId);
 
       expect(result.isFailure).toBe(true);

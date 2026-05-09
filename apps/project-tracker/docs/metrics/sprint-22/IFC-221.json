@@ -9,17 +9,11 @@
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
-    "required": [
-      "IFC-144",
-      "IFC-099"
-    ],
+    "required": ["IFC-144", "IFC-099"],
     "all_satisfied": true,
-    "verified_at": "2026-04-26T11:17:07.613Z"
+    "verified_at": "2026-04-29T21:54:51.920Z"
   },
-  "dependencies_resolved": [
-    "IFC-144",
-    "IFC-099"
-  ],
+  "dependencies_resolved": ["IFC-144", "IFC-099"],
   "started_at": null,
   "completed_at": null,
   "target_duration_minutes": 120,
@@ -47,9 +41,7 @@
       "packages/db/prisma/schema.prisma",
       ".specify/sprints/sprint-22/attestations/IFC-221/context_ack.json"
     ],
-    "created": [
-      "packages/db/prisma/schema.prisma"
-    ],
+    "created": ["packages/db/prisma/schema.prisma"],
     "missing": [
       "apps/api/src/modules/email/tracking.router.ts",
       ".specify/sprints/sprint-22/attestations/IFC-221/context_ack.json"

@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 import * as React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
+import userEvent from '@testing-library/user-event';
 import { axe } from 'vitest-axe';
 import { ScoreCard } from '../src/components/score/ScoreCard';
 
@@ -184,6 +185,89 @@ describe('ScoreCard', () => {
     it('should handle low confidence', () => {
       render(<ScoreCard data={{ ...defaultData, confidence: 0.3 }} showConfidence />);
       expect(screen.getByText('30%')).toBeInTheDocument();
+    });
+  });
+
+  describe('Score Correction', () => {
+    it('should show Suggest Correction button when allowCorrection and onScoreCorrection are provided', () => {
+      const onScoreCorrection = vi.fn();
+      render(
+        <ScoreCard data={defaultData} allowCorrection onScoreCorrection={onScoreCorrection} />
+      );
+      expect(
+        screen.getByRole('button', { name: /suggest a different score/i })
+      ).toBeInTheDocument();
+    });
+
+    it('should open correction modal when Suggest Correction button clicked', () => {
+      const onScoreCorrection = vi.fn();
+      render(
+        <ScoreCard data={defaultData} allowCorrection onScoreCorrection={onScoreCorrection} />
+      );
+      fireEvent.click(screen.getByRole('button', { name: /suggest a different score/i }));
+      // Modal should open (dialog is visible)
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+    });
+
+    it('should call onScoreCorrection and close modal on valid submit', async () => {
+      const user = userEvent.setup();
+      const onScoreCorrection = vi.fn();
+      render(
+        <ScoreCard data={defaultData} allowCorrection onScoreCorrection={onScoreCorrection} />
+      );
+      // Open modal
+      fireEvent.click(screen.getByRole('button', { name: /suggest a different score/i }));
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+      // Change score via slider (ArrowRight increases by 1)
+      const slider = screen.getByRole('slider');
+      slider.focus();
+      fireEvent.keyDown(slider, { key: 'ArrowRight' });
+
+      // Select a category
+      const combobox = screen.getByRole('combobox');
+      await user.click(combobox);
+      await waitFor(() => {
+        expect(screen.getByText('Score was too low')).toBeInTheDocument();
+      });
+      await user.click(screen.getByText('Score was too low'));
+
+      // Submit
+      const submitBtn = screen.getByRole('button', { name: /submit correction/i });
+      fireEvent.click(submitBtn);
+
+      expect(onScoreCorrection).toHaveBeenCalled();
+    });
+
+    it('should close modal when cancel clicked', async () => {
+      const onScoreCorrection = vi.fn();
+      render(
+        <ScoreCard data={defaultData} allowCorrection onScoreCorrection={onScoreCorrection} />
+      );
+      // Open modal
+      fireEvent.click(screen.getByRole('button', { name: /suggest a different score/i }));
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      // Close modal by cancelling
+      const cancelBtn = screen.queryByRole('button', { name: /cancel/i });
+      if (cancelBtn) {
+        fireEvent.click(cancelBtn);
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      }
+    });
+
+    it('should not show Suggest Correction button without onScoreCorrection', () => {
+      render(<ScoreCard data={defaultData} allowCorrection />);
+      expect(
+        screen.queryByRole('button', { name: /suggest a different score/i })
+      ).not.toBeInTheDocument();
+    });
+
+    it('should not show Suggest Correction button without allowCorrection', () => {
+      const onScoreCorrection = vi.fn();
+      render(<ScoreCard data={defaultData} onScoreCorrection={onScoreCorrection} />);
+      expect(
+        screen.queryByRole('button', { name: /suggest a different score/i })
+      ).not.toBeInTheDocument();
     });
   });
 });

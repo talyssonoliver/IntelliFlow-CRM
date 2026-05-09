@@ -9,17 +9,11 @@
   "phase": "",
   "stream": null,
   "dependencies": {
-    "required": [
-      "PG-178",
-      "PG-189"
-    ],
+    "required": ["PG-178", "PG-189"],
     "all_satisfied": true,
-    "verified_at": "2026-04-26T11:17:07.554Z"
+    "verified_at": "2026-04-29T21:54:51.885Z"
   },
-  "dependencies_resolved": [
-    "PG-178",
-    "PG-189"
-  ],
+  "dependencies_resolved": ["PG-178", "PG-189"],
   "started_at": null,
   "completed_at": null,
   "execution": {
@@ -34,9 +28,7 @@
       "packages/validators/src/event-types.ts",
       ".specify/sprints/sprint-18/attestations/PG-203/context_ack.json"
     ],
-    "created": [
-      "apps/web/src/app/calendar/event-types/page.tsx"
-    ],
+    "created": ["apps/web/src/app/calendar/event-types/page.tsx"],
     "missing": [
       "apps/web/src/app/calendar/event-types/EventTypesContent.tsx",
       "apps/api/src/modules/calendar/event-types.router.ts",

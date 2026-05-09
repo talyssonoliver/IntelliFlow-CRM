@@ -23,7 +23,12 @@ import { TEST_UUIDS } from '../../../test/setup';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TRPCError } from '@trpc/server';
 import { accountRouter } from '../account.router';
-import { prismaMock, createTestContext, createAdminContext, mockAccount } from '../../../test/setup';
+import {
+  prismaMock,
+  createTestContext,
+  createAdminContext,
+  mockAccount,
+} from '../../../test/setup';
 import * as auditLoggerModule from '../../../security/audit-logger';
 
 const newOwnerUuid = TEST_UUIDS.user2;
@@ -220,10 +225,7 @@ describe('account.reassign (IFC-311)', () => {
   it("AC-A7: source code uses entity-string 'account' (not 'contact') in audit call", async () => {
     const fs = await import('node:fs/promises');
     const { resolve } = await import('node:path');
-    const src = await fs.readFile(
-      resolve(process.cwd(), 'src/modules/account/account-reassign.ts'),
-      'utf8'
-    );
+    const src = await fs.readFile(resolve(__dirname, '../account-reassign.ts'), 'utf8');
     // Two audit-log call sites: emitAccountReassignSideEffects + logAccountReassignPermissionDenied
     expect(src).toMatch(/\.logAction\('UPDATE',\s*'account'/);
     expect(src).toMatch(/\.logPermissionDenied\('account'/);
@@ -379,8 +381,9 @@ describe('account.bulkReassign (IFC-311)', () => {
 
   // ─── AC-AB4: 101 ids → Zod reject ────────────────────────────────────────
   it('AC-AB4: 101 ids is rejected by Zod', async () => {
-    const ids = Array.from({ length: 101 }, (_, i) =>
-      `${i.toString(16).padStart(8, '0')}-0000-4000-8000-000000000000`
+    const ids = Array.from(
+      { length: 101 },
+      (_, i) => `${i.toString(16).padStart(8, '0')}-0000-4000-8000-000000000000`
     );
     await expect(adminCaller.bulkReassign({ ids, ownerId: newOwnerUuid })).rejects.toThrow();
   });
@@ -410,8 +413,9 @@ describe('account.bulkReassign (IFC-311)', () => {
 
   // ─── AC-CB6: 100-row batch under 2s ──────────────────────────────────────
   it('AC-CB6: 100 rows complete under 2000ms', async () => {
-    const ids = Array.from({ length: 100 }, (_, i) =>
-      `${i.toString(16).padStart(8, '0')}-0000-4000-8000-000000000000`
+    const ids = Array.from(
+      { length: 100 },
+      (_, i) => `${i.toString(16).padStart(8, '0')}-0000-4000-8000-000000000000`
     );
     prismaMock.account.findFirst.mockImplementation((async ({ where }: any) => ({
       ...mockAccount,
@@ -632,10 +636,7 @@ describe('logAuditFailure direct coverage', () => {
     const mod = (await import('../account-reassign.js' as string)) as any;
     const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     expect(() => mod.logAuditFailure(new Error('db down'))).not.toThrow();
-    expect(errSpy).toHaveBeenCalledWith(
-      '[account.reassign] Audit log failed:',
-      expect.any(Error)
-    );
+    expect(errSpy).toHaveBeenCalledWith('[account.reassign] Audit log failed:', expect.any(Error));
     errSpy.mockRestore();
   });
 });
@@ -647,9 +648,7 @@ describe('IFC-311 module wiring sanity', () => {
   });
 
   it('imports createNotification from notifications.router', async () => {
-    const mod = (await import(
-      '../../notifications/notifications.router.js' as string
-    )) as any;
+    const mod = (await import('../../notifications/notifications.router.js' as string)) as any;
     expect(typeof mod.createNotification).toBe('function');
   });
 

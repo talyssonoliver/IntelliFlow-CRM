@@ -227,6 +227,11 @@ vi.mock('@intelliflow/adapters', () => ({
       return { name: 'conversationSearchRepo' };
     }
   },
+  PrismaPublicFeedbackRepository: class {
+    constructor() {
+      return { name: 'publicFeedbackRepo' };
+    }
+  },
 }));
 
 vi.mock('../modules/calendar/calendar-webhook.service', () => ({

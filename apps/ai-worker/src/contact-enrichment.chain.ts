@@ -16,7 +16,10 @@ import pino from 'pino';
 import { prisma } from '@intelliflow/db';
 import { getEnrichmentAdapter, type ContactSeed } from './shared/enrichment-adapter.js';
 
-const logger = pino({ name: 'contact-enrichment.chain', level: process.env['LOG_LEVEL'] ?? 'info' });
+const logger = pino({
+  name: 'contact-enrichment.chain',
+  level: process.env['LOG_LEVEL'] ?? 'info',
+});
 
 export interface EnrichContactInput {
   contactId: string;

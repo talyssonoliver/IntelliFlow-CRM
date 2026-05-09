@@ -19,7 +19,11 @@ vi.mock('@intelliflow/db', async () => {
     prisma: {
       contactAutomationSetting: prismaContactSettingMock,
       accountAutomationSetting: prismaAccountSettingMock,
-      contact: { findUnique: prismaContactMock.findUnique, count: prismaContactCountMock, update: vi.fn().mockResolvedValue({}) },
+      contact: {
+        findUnique: prismaContactMock.findUnique,
+        count: prismaContactCountMock,
+        update: vi.fn().mockResolvedValue({}),
+      },
       account: { findUnique: prismaAccountMock.findUnique, update: vi.fn().mockResolvedValue({}) },
       opportunity: { count: prismaOpportunityMock.count },
       contactReplyDraft: prismaReplyDraftMock,

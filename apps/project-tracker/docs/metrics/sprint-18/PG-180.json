@@ -9,11 +9,9 @@
   "phase": "exec",
   "stream": null,
   "dependencies": {
-    "required": [
-      "IFC-299"
-    ],
+    "required": ["IFC-299"],
     "all_satisfied": true,
-    "verified_at": "2026-04-26T11:17:07.532Z"
+    "verified_at": "2026-04-29T21:54:51.871Z"
   },
   "started_at": "2026-04-19T22:15:00Z",
   "completed_at": "2026-04-19T22:50:00Z",
@@ -142,7 +140,5 @@
     }
   ],
   "notes": "Admin page at /settings/help-center/articles with article list, status badges (draft/published), category filters, search, create/edit/delete actions. Delivered on top of IFC-299 tRPC router. 38 tests, 4 mandatory validations all green. Lighthouse deferred to CI run (route added to lighthouserc.js).",
-  "dependencies_resolved": [
-    "IFC-299"
-  ]
+  "dependencies_resolved": ["IFC-299"]
 }

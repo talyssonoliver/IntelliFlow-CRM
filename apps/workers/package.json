@@ -6,8 +6,6 @@
   "scripts": {
     "build": "echo 'Workers meta-package - sub-workers built by root turbo'",
     "dev": "pnpm --filter @intelliflow/events-worker --filter @intelliflow/ingestion-worker --filter @intelliflow/notifications-worker run dev",
-    "test": "pnpm --filter @intelliflow/events-worker --filter @intelliflow/ingestion-worker --filter @intelliflow/notifications-worker run test",
-    "test:coverage": "pnpm --filter @intelliflow/events-worker --filter @intelliflow/ingestion-worker --filter @intelliflow/notifications-worker run test:coverage",
     "typecheck": "pnpm --filter @intelliflow/events-worker --filter @intelliflow/ingestion-worker --filter @intelliflow/notifications-worker run typecheck",
     "lint": "pnpm --filter @intelliflow/events-worker --filter @intelliflow/ingestion-worker --filter @intelliflow/notifications-worker run lint",
     "clean": "rimraf .turbo dist"

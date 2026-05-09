@@ -1,4 +1,4 @@
-import { generateUuid as uuidv4, isValidUuid as uuidValidate } from '../../shared/uuid';
+import { generateUuid as uuidv4, isValidEntityId } from '../../shared/uuid';
 import { ValueObject } from '../../shared/ValueObject';
 import { Result, DomainError } from '../../shared/Result';
 
@@ -30,12 +30,12 @@ export class TicketId extends ValueObject<TicketIdProps> {
   }
 
   /**
-   * Creates a TicketId from an existing UUID string.
-   * @param value - The UUID string to validate and wrap
+   * Creates a TicketId from an existing UUID or Prisma cuid string.
+   * @param value - The id string to validate and wrap
    * @returns Result with TicketId or InvalidTicketIdError
    */
   static create(value: string): Result<TicketId, InvalidTicketIdError> {
-    if (!value || !uuidValidate(value)) {
+    if (!value || !isValidEntityId(value)) {
       return Result.fail(new InvalidTicketIdError(value));
     }
     return Result.ok(new TicketId({ value }));

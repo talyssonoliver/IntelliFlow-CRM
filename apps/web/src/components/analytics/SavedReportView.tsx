@@ -595,9 +595,9 @@ function RevenueBarChart({
       />
     );
   }
-  // eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- complex SVG/chart visualization requires div wrapper
+
   return (
-    <div className="h-64" role="img" aria-label="Revenue bar chart">
+    <figure className="h-64 m-0" aria-label="Revenue bar chart">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
@@ -627,7 +627,7 @@ function RevenueBarChart({
           <Bar dataKey="value" radius={[4, 4, 0, 0]} className="fill-primary" />
         </BarChart>
       </ResponsiveContainer>
-    </div>
+    </figure>
   );
 }
 
@@ -651,7 +651,7 @@ function GrowthTrendChart({
     );
   }
   return (
-    <div className="h-64" role="img" aria-label="12-month revenue trend line chart">
+    <figure className="h-64 m-0" aria-label="12-month revenue trend line chart">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
@@ -688,7 +688,7 @@ function GrowthTrendChart({
           />
         </LineChart>
       </ResponsiveContainer>
-    </div>
+    </figure>
   );
 }
 
@@ -710,7 +710,7 @@ function LeadSourceChart({
     );
   }
   return (
-    <div className="h-64" role="img" aria-label="Lead source distribution chart">
+    <figure className="h-64 m-0" aria-label="Lead source distribution chart">
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
@@ -736,6 +736,6 @@ function LeadSourceChart({
           />
         </PieChart>
       </ResponsiveContainer>
-    </div>
+    </figure>
   );
 }

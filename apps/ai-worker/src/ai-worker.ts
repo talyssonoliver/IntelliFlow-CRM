@@ -196,6 +196,14 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     await this.startDashboard();
 
     // IFC-297: Initialize Prisma and start monitoring data flush to DB
+    await this.initPrismaAndMonitoring();
+
+    // H4 + M3 + IFC-310: wire prisma-dependent services
+    await this.initPrismaDependentServices();
+  }
+
+  /** IFC-297: Boot Prisma client and start the monitoring flush service. */
+  private async initPrismaAndMonitoring(): Promise<void> {
     try {
       const { prisma } = await import('@intelliflow/db');
       // M4 encryption is ACTIVE — prisma from @intelliflow/db is the
@@ -211,81 +219,95 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
         'Failed to initialize MonitoringFlushService — monitoring data will remain in-memory only'
       );
     }
+  }
 
-    // H4: Wire AuditLogPort so logAIAgentAction() writes to DB in addition to pino.
-    if (this.prisma) {
-      try {
-        const { DurableAuditLogAdapter } = await import('@intelliflow/adapters');
-        const signingKey = Buffer.from(
-          process.env.AUDIT_SIGNING_KEY || 'insecure-dev-key-replace-in-production',
-          'utf8'
-        );
-        const auditAdapter = new DurableAuditLogAdapter(this.prisma as any, signingKey);
-        setAuditLogAdapter(auditAdapter);
-        this.logger.info('AuditLogPort wired — audit trail will write to DB');
-      } catch (err) {
-        this.logger.warn(
-          { err: err instanceof Error ? err.message : String(err) },
-          'Failed to wire AuditLogPort — falling back to pino-only audit trail'
-        );
-      }
-    }
-
-    // M3: Wire RetrievalService into the global ragContextChain singleton so that
-    // NextBestActionAgent (and any other consumer of the singleton) can perform
-    // real pgvector-backed RAG retrieval instead of throwing at invocation time.
-    if (this.prisma) {
-      try {
-        const { ragContextChain } = await import('./chains/rag-context.chain.js');
-        const { RetrievalService } = await import('./services/retrieval-service.js');
-        const retrievalService = new RetrievalService(this.prisma);
-        ragContextChain.setRetrievalService(retrievalService);
-        this.logger.info('RetrievalService wired into ragContextChain — RAG retrieval enabled');
-      } catch (error) {
-        this.logger.warn(
-          { error: error instanceof Error ? error.message : String(error) },
-          'Failed to wire RetrievalService into ragContextChain — RAG calls will throw until resolved'
-        );
-      }
-    } else {
+  /** H4 + M3 + IFC-310: Wire services that depend on Prisma being available. */
+  private async initPrismaDependentServices(): Promise<void> {
+    if (!this.prisma) {
       this.logger.warn(
-        'Prisma unavailable — skipping RetrievalService wiring; ragContextChain will throw on invocation'
+        'Prisma unavailable — skipping AuditLogPort, RetrievalService, and ContactEmbedWorker wiring'
+      );
+      return;
+    }
+    await this.wireAuditLogAdapter();
+    await this.wireRetrievalService();
+    await this.bootContactEmbedWorker();
+  }
+
+  /** H4: Wire AuditLogPort so logAIAgentAction() writes to DB in addition to pino. */
+  private async wireAuditLogAdapter(): Promise<void> {
+    try {
+      const { DurableAuditLogAdapter } = await import('@intelliflow/adapters');
+      const signingKey = Buffer.from(
+        process.env.AUDIT_SIGNING_KEY || 'insecure-dev-key-replace-in-production',
+        'utf8'
+      );
+      const auditAdapter = new DurableAuditLogAdapter(this.prisma as any, signingKey);
+      setAuditLogAdapter(auditAdapter);
+      this.logger.info('AuditLogPort wired — audit trail will write to DB');
+    } catch (err) {
+      this.logger.warn(
+        { err: err instanceof Error ? err.message : String(err) },
+        'Failed to wire AuditLogPort — falling back to pino-only audit trail'
       );
     }
+  }
 
-    // IFC-310: boot the ContactEmbedWorker. Consumes intelliflow-contact-embed
-    // jobs dispatched by ContactDuplicateDetectionService post-commit.
-    if (this.prisma) {
-      try {
-        const { ContactEmbedWorker } = await import('./workers/contact-embed-worker.js');
-        const { embeddingChain } = await import('./chains/embedding.chain.js');
-        const { updateContactEmbedding } = await import('@intelliflow/db');
-        const redisConnection = {
-          host: process.env.REDIS_HOST || 'localhost',
-          port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
-          ...(process.env.REDIS_PASSWORD ? { password: process.env.REDIS_PASSWORD } : {}),
-        };
-        this.contactEmbedWorker = new ContactEmbedWorker(
-          this.prisma,
-          redisConnection,
-          {
-            generateEmbedding: async (text: string) => {
-              const result = await embeddingChain.generateEmbedding({ text });
-              return result?.vector ?? null;
-            },
+  /**
+   * M3: Wire RetrievalService into the global ragContextChain singleton so that
+   * NextBestActionAgent (and any other consumer of the singleton) can perform
+   * real pgvector-backed RAG retrieval instead of throwing at invocation time.
+   */
+  private async wireRetrievalService(): Promise<void> {
+    try {
+      const { ragContextChain } = await import('./chains/rag-context.chain.js');
+      const { RetrievalService } = await import('./services/retrieval-service.js');
+      const retrievalService = new RetrievalService(this.prisma!);
+      ragContextChain.setRetrievalService(retrievalService);
+      this.logger.info('RetrievalService wired into ragContextChain — RAG retrieval enabled');
+    } catch (error) {
+      this.logger.warn(
+        { error: error instanceof Error ? error.message : String(error) },
+        'Failed to wire RetrievalService into ragContextChain — RAG calls will throw until resolved'
+      );
+    }
+  }
+
+  /**
+   * IFC-310: Boot the ContactEmbedWorker.
+   * Consumes intelliflow-contact-embed jobs dispatched by
+   * ContactDuplicateDetectionService post-commit.
+   */
+  private async bootContactEmbedWorker(): Promise<void> {
+    try {
+      const { ContactEmbedWorker } = await import('./workers/contact-embed-worker.js');
+      const { embeddingChain } = await import('./chains/embedding.chain.js');
+      const { updateContactEmbedding } = await import('@intelliflow/db');
+      const redisConnection = {
+        host: process.env.REDIS_HOST || 'localhost',
+        port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
+        ...(process.env.REDIS_PASSWORD ? { password: process.env.REDIS_PASSWORD } : {}),
+      };
+      this.contactEmbedWorker = new ContactEmbedWorker(
+        this.prisma!,
+        redisConnection,
+        {
+          generateEmbedding: async (text: string) => {
+            const result = await embeddingChain.generateEmbedding({ text });
+            return result?.vector ?? null;
           },
-          async (_prisma, contactId, _tenantId, embedding) => {
-            await updateContactEmbedding(contactId, embedding);
-          },
-        );
-        await this.contactEmbedWorker.start();
-        this.logger.info('ContactEmbedWorker started — intelliflow-contact-embed queue consumed');
-      } catch (error) {
-        this.logger.warn(
-          { error: error instanceof Error ? error.message : String(error) },
-          'Failed to boot ContactEmbedWorker — contact embeddings will not be populated'
-        );
-      }
+        },
+        async (_prisma, contactId, _tenantId, embedding) => {
+          await updateContactEmbedding(contactId, embedding);
+        }
+      );
+      await this.contactEmbedWorker.start();
+      this.logger.info('ContactEmbedWorker started — intelliflow-contact-embed queue consumed');
+    } catch (error) {
+      this.logger.warn(
+        { error: error instanceof Error ? error.message : String(error) },
+        'Failed to boot ContactEmbedWorker — contact embeddings will not be populated'
+      );
     }
   }
 
@@ -554,10 +576,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
           opts: { removeOnComplete: 100, removeOnFail: 500 },
         }
       );
-      this.logger.info(
-        { cron: accountScoringCron },
-        'Scheduled account-scoring job registered'
-      );
+      this.logger.info({ cron: accountScoringCron }, 'Scheduled account-scoring job registered');
     } catch (error) {
       this.logger.warn(
         { error: error instanceof Error ? error.message : String(error) },

@@ -18,9 +18,7 @@ describe('preparePublicFeedbackPayload', () => {
   });
 
   it('throws on invalid rating', () => {
-    expect(() =>
-      preparePublicFeedbackPayload({ rating: 6, source: '/x' } as never)
-    ).toThrow();
+    expect(() => preparePublicFeedbackPayload({ rating: 6, source: '/x' } as never)).toThrow();
   });
 
   it('throws on non-empty honeypot', () => {
@@ -35,9 +33,7 @@ describe('preparePublicFeedbackPayload', () => {
 
   it('re-exports the input schema', () => {
     expect(publicFeedbackInputSchema).toBeDefined();
-    expect(
-      publicFeedbackInputSchema.safeParse({ rating: 4, source: '/x' }).success
-    ).toBe(true);
+    expect(publicFeedbackInputSchema.safeParse({ rating: 4, source: '/x' }).success).toBe(true);
   });
 });
 
@@ -54,37 +50,26 @@ describe('client rate limit', () => {
   it('blocks submission within 10-minute window', () => {
     const now = new Date('2026-04-24T10:00:00Z');
     markFeedbackSubmittedClientSide(now);
-    expect(
-      canSubmitFeedbackClientRateLimit(now.getTime() + 5 * 60 * 1000)
-    ).toBe(false);
+    expect(canSubmitFeedbackClientRateLimit(now.getTime() + 5 * 60 * 1000)).toBe(false);
   });
 
   it('allows submission after 10 minutes', () => {
     const now = new Date('2026-04-24T10:00:00Z');
     markFeedbackSubmittedClientSide(now);
-    expect(
-      canSubmitFeedbackClientRateLimit(now.getTime() + 10 * 60 * 1000)
-    ).toBe(true);
+    expect(canSubmitFeedbackClientRateLimit(now.getTime() + 10 * 60 * 1000)).toBe(true);
   });
 
   it('clearFeedbackClientRateLimit resets the window', () => {
     const now = new Date('2026-04-24T10:00:00Z');
     markFeedbackSubmittedClientSide(now);
-    expect(
-      canSubmitFeedbackClientRateLimit(now.getTime() + 1 * 60 * 1000)
-    ).toBe(false);
+    expect(canSubmitFeedbackClientRateLimit(now.getTime() + 1 * 60 * 1000)).toBe(false);
     clearFeedbackClientRateLimit();
-    expect(
-      canSubmitFeedbackClientRateLimit(now.getTime() + 1 * 60 * 1000)
-    ).toBe(true);
+    expect(canSubmitFeedbackClientRateLimit(now.getTime() + 1 * 60 * 1000)).toBe(true);
   });
 
   it('ignores malformed timestamps gracefully (returns true)', () => {
     if (typeof window !== 'undefined') {
-      window.localStorage.setItem(
-        'intelliflow.public.feedback.submitted_at',
-        'not-a-date'
-      );
+      window.localStorage.setItem('intelliflow.public.feedback.submitted_at', 'not-a-date');
     }
     expect(canSubmitFeedbackClientRateLimit()).toBe(true);
   });
@@ -94,9 +79,7 @@ describe('client rate limit', () => {
     markFeedbackSubmittedClientSide(now);
     const stored =
       typeof window !== 'undefined'
-        ? window.localStorage.getItem(
-            'intelliflow.public.feedback.submitted_at'
-          )
+        ? window.localStorage.getItem('intelliflow.public.feedback.submitted_at')
         : null;
     expect(stored).toBe(now.toISOString());
   });

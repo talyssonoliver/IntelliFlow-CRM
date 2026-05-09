@@ -5,10 +5,7 @@ vi.mock('@intelliflow/api-client', () => ({
   trpc: {
     contact: {
       listReplyDrafts: {
-        useQuery: (
-          _input: unknown,
-          options?: { enabled?: boolean }
-        ) => ({
+        useQuery: (_input: unknown, options?: { enabled?: boolean }) => ({
           data: options?.enabled ? { drafts: [] } : undefined,
           isLoading: false,
         }),

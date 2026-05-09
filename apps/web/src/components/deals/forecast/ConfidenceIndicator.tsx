@@ -51,16 +51,17 @@ export function ConfidenceIndicator({
   const label = getConfidenceLabel(clamped);
 
   return (
-    // eslint-disable-next-line jsx-a11y/prefer-tag-over-role
     <span
       className={`inline-flex flex-col ${size === 'sm' ? 'gap-0.5' : 'gap-1'}`}
       data-testid="confidence-indicator"
-      role="meter"
-      aria-valuenow={percentage}
-      aria-valuemin={0}
-      aria-valuemax={100}
-      aria-label="Data confidence"
     >
+      <meter
+        min={0}
+        max={100}
+        value={percentage}
+        aria-label="Data confidence"
+        className="sr-only"
+      />
       <span className="flex items-center gap-2">
         <span
           className={`font-semibold ${size === 'sm' ? 'text-sm' : 'text-base'} ${colorClass}`}

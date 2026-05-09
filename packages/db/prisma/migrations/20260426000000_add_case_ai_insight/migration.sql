@@ -9,8 +9,14 @@
 -- generatedAt + source). Each chain populates a subset of the AI-generated
 -- fields, so all are nullable. predictedPriority reuses the existing
 -- CasePriority enum (LOW|MEDIUM|HIGH|URGENT) for compile-time safety.
+--
+-- NOTE (2026-05-02 fix): Migration 20260424100000_case_ai_insight already
+-- created this table, so all CREATE/ALTER statements use IF NOT EXISTS guards.
+-- The only net-new change is ensuring generatedAt has a DEFAULT CURRENT_TIMESTAMP
+-- (the Apr-24 migration omitted it). The guarded CREATE statement is a no-op
+-- when the table already exists; the ALTER COLUMN is also guarded.
 
-CREATE TABLE "case_ai_insights" (
+CREATE TABLE IF NOT EXISTS "case_ai_insights" (
     "id"                  TEXT NOT NULL,
     "caseId"              TEXT NOT NULL,
     "tenantId"            TEXT NOT NULL,
@@ -27,15 +33,31 @@ CREATE TABLE "case_ai_insights" (
     CONSTRAINT "case_ai_insights_pkey" PRIMARY KEY ("id")
 );
 
-CREATE UNIQUE INDEX "case_ai_insights_caseId_key" ON "case_ai_insights" ("caseId");
-CREATE INDEX "case_ai_insights_tenantId_idx" ON "case_ai_insights" ("tenantId");
+CREATE UNIQUE INDEX IF NOT EXISTS "case_ai_insights_caseId_key" ON "case_ai_insights" ("caseId");
+CREATE INDEX IF NOT EXISTS "case_ai_insights_tenantId_idx" ON "case_ai_insights" ("tenantId");
 
-ALTER TABLE "case_ai_insights"
-  ADD CONSTRAINT "case_ai_insights_caseId_fkey"
-  FOREIGN KEY ("caseId") REFERENCES "cases"("id")
-  ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+  ALTER TABLE "case_ai_insights"
+    ADD CONSTRAINT "case_ai_insights_caseId_fkey"
+    FOREIGN KEY ("caseId") REFERENCES "cases"("id")
+    ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
+DO $$ BEGIN
+  ALTER TABLE "case_ai_insights"
+    ADD CONSTRAINT "case_ai_insights_tenantId_fkey"
+    FOREIGN KEY ("tenantId") REFERENCES "tenants"("id")
+    ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+-- Ensure generatedAt carries the default that the schema.prisma @default(now())
+-- declaration expects. This is idempotent: SET DEFAULT on an already-defaulted
+-- column is a no-op in PostgreSQL.
 ALTER TABLE "case_ai_insights"
-  ADD CONSTRAINT "case_ai_insights_tenantId_fkey"
-  FOREIGN KEY ("tenantId") REFERENCES "tenants"("id")
-  ON DELETE CASCADE ON UPDATE CASCADE;
+  ALTER COLUMN "generatedAt" SET DEFAULT CURRENT_TIMESTAMP;
+
+-- Re-assert RLS so this migration is self-contained regardless of run order.
+-- ENABLE ROW LEVEL SECURITY is idempotent in PostgreSQL.
+ALTER TABLE "case_ai_insights" ENABLE ROW LEVEL SECURITY;

@@ -11067,6 +11067,69 @@
       "notes": ""
     },
     {
+      "route": "/settings/help-center/articles",
+      "file_path": "apps/web/src/app/settings/help-center/articles/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Settings",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, intelligent pipeline analytics, and automated workflows for modern sales teams.",
+          "source": "root-layout",
+          "length": 155
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelliflow-crm.com",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
       "route": "/settings/integrations",
       "file_path": "apps/web/src/app/settings/integrations/page.tsx",
       "access_tier": "auth-gated",
@@ -13168,12 +13231,12 @@
     }
   ],
   "summary": {
-    "total_routes": 207,
+    "total_routes": 208,
     "public_routes": 32,
-    "auth_gated_routes": 161,
+    "auth_gated_routes": 162,
     "developer_routes": 14,
     "routes_with_seo_score": 32,
-    "routes_pending_runtime_measurement": 207,
+    "routes_pending_runtime_measurement": 208,
     "average_seo_score_public": 80,
     "legal_pages_missing": [],
     "ghost_link_count": 0

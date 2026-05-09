@@ -10,9 +10,7 @@ import type { AccountAutomationFlags } from '../account-automation';
 const TENANT_A = 'tenant-A';
 const USER = 'user-1';
 
-function makeFlags(
-  overrides: Partial<AccountAutomationFlags> = {},
-): AccountAutomationFlags {
+function makeFlags(overrides: Partial<AccountAutomationFlags> = {}): AccountAutomationFlags {
   return {
     autoAssignOwner: false,
     autoLinkContactsByDomain: false,
@@ -31,12 +29,14 @@ function makeFlags(
   };
 }
 
-function buildCtx(overrides?: Partial<{
-  rules: unknown[];
-  accounts: unknown[];
-  contacts: unknown[];
-  updateManyCount: number;
-}>): HasTenantContext & { _calls: Record<string, unknown[][]> } {
+function buildCtx(
+  overrides?: Partial<{
+    rules: unknown[];
+    accounts: unknown[];
+    contacts: unknown[];
+    updateManyCount: number;
+  }>
+): HasTenantContext & { _calls: Record<string, unknown[][]> } {
   const calls: Record<string, unknown[][]> = {
     rulesFindMany: [],
     accountFindMany: [],
@@ -112,33 +112,37 @@ describe('AccountDuplicateDetectionService — checkForCreate', () => {
     const result = await accountDuplicateDetectionService.checkForCreate(
       ctx,
       { name: 'Acme' },
-      makeFlags(),
+      makeFlags()
     );
     expect(result).toEqual({ action: 'proceed', matches: [] });
   });
 
   it('AC-009: returns flag when notifyOnDuplicate=true and name match found', async () => {
     const ctx = buildCtx({
-      rules: [{ field: 'name', matchStrategy: 'exact', threshold: 100, isActive: true, sortOrder: 0 }],
+      rules: [
+        { field: 'name', matchStrategy: 'exact', threshold: 100, isActive: true, sortOrder: 0 },
+      ],
       accounts: [{ id: 'acc-1', name: 'Acme Inc', tenantId: TENANT_A }],
     });
     const result = await accountDuplicateDetectionService.checkForCreate(
       ctx,
       { name: 'Acme Inc' },
-      makeFlags({ notifyOnDuplicate: true }),
+      makeFlags({ notifyOnDuplicate: true })
     );
     expect(result.action).toBe('flag');
   });
 
   it('AC-009: NEVER returns auto-merge (accounts have no auto-merge branch)', async () => {
     const ctx = buildCtx({
-      rules: [{ field: 'name', matchStrategy: 'exact', threshold: 100, isActive: true, sortOrder: 0 }],
+      rules: [
+        { field: 'name', matchStrategy: 'exact', threshold: 100, isActive: true, sortOrder: 0 },
+      ],
       accounts: [{ id: 'acc-1', name: 'Acme Inc', tenantId: TENANT_A }],
     });
     const result = await accountDuplicateDetectionService.checkForCreate(
       ctx,
       { name: 'Acme Inc' },
-      makeFlags({ notifyOnDuplicate: true }),
+      makeFlags({ notifyOnDuplicate: true })
     );
     // Discriminated union — TypeScript narrows on 'flag' | 'proceed' only
     expect(['flag', 'proceed']).toContain(result.action);
@@ -147,26 +151,30 @@ describe('AccountDuplicateDetectionService — checkForCreate', () => {
 
   it('returns proceed when flags.notifyOnDuplicate=false even on match', async () => {
     const ctx = buildCtx({
-      rules: [{ field: 'name', matchStrategy: 'exact', threshold: 100, isActive: true, sortOrder: 0 }],
+      rules: [
+        { field: 'name', matchStrategy: 'exact', threshold: 100, isActive: true, sortOrder: 0 },
+      ],
       accounts: [{ id: 'acc-1', name: 'Acme Inc', tenantId: TENANT_A }],
     });
     const result = await accountDuplicateDetectionService.checkForCreate(
       ctx,
       { name: 'Acme Inc' },
-      makeFlags({ notifyOnDuplicate: false }),
+      makeFlags({ notifyOnDuplicate: false })
     );
     expect(result.action).toBe('proceed');
   });
 
   it('emits account_duplicate_suspected notification (not contact_duplicate_suspected)', async () => {
     const ctx = buildCtx({
-      rules: [{ field: 'name', matchStrategy: 'exact', threshold: 100, isActive: true, sortOrder: 0 }],
+      rules: [
+        { field: 'name', matchStrategy: 'exact', threshold: 100, isActive: true, sortOrder: 0 },
+      ],
       accounts: [{ id: 'acc-1', name: 'Acme Inc', tenantId: TENANT_A }],
     });
     await accountDuplicateDetectionService.checkForCreate(
       ctx,
       { name: 'Acme Inc' },
-      makeFlags({ notifyOnDuplicate: true }),
+      makeFlags({ notifyOnDuplicate: true })
     );
     const notif = ctx._calls.notificationCreate.at(-1)?.[0] as {
       data?: { subject?: string; metadata?: Record<string, unknown> };
@@ -181,14 +189,16 @@ describe('AccountDuplicateDetectionService — checkForCreate', () => {
 describe('AccountDuplicateDetectionService — checkForUpdate', () => {
   it('excludes the account being updated from candidates', async () => {
     const ctx = buildCtx({
-      rules: [{ field: 'name', matchStrategy: 'exact', threshold: 100, isActive: true, sortOrder: 0 }],
+      rules: [
+        { field: 'name', matchStrategy: 'exact', threshold: 100, isActive: true, sortOrder: 0 },
+      ],
       accounts: [{ id: 'acc-2', name: 'Acme Inc', tenantId: TENANT_A }],
     });
     const result = await accountDuplicateDetectionService.checkForUpdate(
       ctx,
       'acc-1',
       { name: 'Acme Inc' },
-      makeFlags({ notifyOnDuplicate: true }),
+      makeFlags({ notifyOnDuplicate: true })
     );
     expect(result.action).toBe('flag');
     const call = ctx._calls.accountFindMany[0][0] as { where: { NOT?: Record<string, unknown> } };
@@ -205,7 +215,7 @@ describe('AccountDuplicateDetectionService — linkContactsByDomain', () => {
     const ids = await accountDuplicateDetectionService.linkContactsByDomain(
       ctx,
       'acc-1',
-      'acme.com',
+      'acme.com'
     );
     expect(ids).toEqual(['c-1', 'c-2']);
     const updateCall = ctx._calls.contactUpdateMany[0][0] as {
@@ -219,10 +229,10 @@ describe('AccountDuplicateDetectionService — linkContactsByDomain', () => {
   it('returns empty array on invalid / empty domain', async () => {
     const ctx = buildCtx();
     await expect(
-      accountDuplicateDetectionService.linkContactsByDomain(ctx, 'acc-1', ''),
+      accountDuplicateDetectionService.linkContactsByDomain(ctx, 'acc-1', '')
     ).resolves.toEqual([]);
     await expect(
-      accountDuplicateDetectionService.linkContactsByDomain(ctx, 'acc-1', 'bad-domain'),
+      accountDuplicateDetectionService.linkContactsByDomain(ctx, 'acc-1', 'bad-domain')
     ).resolves.toEqual([]);
   });
 
@@ -232,7 +242,7 @@ describe('AccountDuplicateDetectionService — linkContactsByDomain', () => {
     const ids = await accountDuplicateDetectionService.linkContactsByDomain(
       ctx,
       'acc-1',
-      'acme.com',
+      'acme.com'
     );
     expect(ids).toEqual([]);
     expect(ctx._calls.notificationCreate.length).toBeGreaterThan(0);
@@ -243,11 +253,7 @@ describe('AccountDuplicateDetectionService — linkContactsByDomain', () => {
       contacts: [{ id: 'c-1' }],
       updateManyCount: 1,
     });
-    await accountDuplicateDetectionService.linkContactsByDomain(
-      ctx,
-      'acc-1',
-      'acme.com',
-    );
+    await accountDuplicateDetectionService.linkContactsByDomain(ctx, 'acc-1', 'acme.com');
     const call = ctx._calls.contactUpdateMany[0][0] as {
       where: { tenantId: string };
     };
@@ -260,14 +266,20 @@ describe('AccountDuplicateDetectionService — candidate OR-clause branches', ()
     const service = createAccountDuplicateDetectionService();
     const ctx = buildCtx({
       rules: [
-        { field: 'website', matchStrategy: 'normalized', threshold: 100, isActive: true, sortOrder: 0 },
+        {
+          field: 'website',
+          matchStrategy: 'normalized',
+          threshold: 100,
+          isActive: true,
+          sortOrder: 0,
+        },
       ],
       accounts: [{ id: 'acc-1', website: 'acme.com', tenantId: TENANT_A }],
     });
     await service.checkForCreate(
       ctx,
       { website: 'acme.com' },
-      makeFlags({ notifyOnDuplicate: true }),
+      makeFlags({ notifyOnDuplicate: true })
     );
     const call = ctx._calls.accountFindMany[0][0] as { where: { OR: unknown[] } };
     expect(JSON.stringify(call.where.OR)).toContain('website');
@@ -284,7 +296,7 @@ describe('AccountDuplicateDetectionService — candidate OR-clause branches', ()
     await service.checkForCreate(
       ctx,
       { phone: '+14155551212' },
-      makeFlags({ notifyOnDuplicate: true }),
+      makeFlags({ notifyOnDuplicate: true })
     );
     const call = ctx._calls.accountFindMany[0][0] as { where: { OR: unknown[] } };
     expect(JSON.stringify(call.where.OR)).toContain('+14155551212');
@@ -310,7 +322,7 @@ describe('AccountDuplicateDetectionService — candidate OR-clause branches', ()
     const result = await service.checkForCreate(
       ctx,
       { name: 'Acme' },
-      makeFlags({ notifyOnDuplicate: true }),
+      makeFlags({ notifyOnDuplicate: true })
     );
     expect(result.action).toBe('flag');
     warnSpy.mockRestore();

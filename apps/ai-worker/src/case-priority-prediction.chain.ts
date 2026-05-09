@@ -60,21 +60,19 @@ export async function predictCasePriority(
   try {
     const model = await createLLMForTenant('qualification', 'standard', { tenantId });
     const structured = model.withStructuredOutput(PriorityLLMSchema);
-    const raw = await structured.invoke(
-      [
-        {
-          role: 'system',
-          content:
-            'Given a legal case, predict its appropriate priority: LOW|MEDIUM|HIGH|URGENT. ' +
-            'Consider deadline proximity, task complexity, and open-task count. ' +
-            'Return only the priority plus a one-sentence rationale.',
-        },
-        {
-          role: 'user',
-          content: `Case context: ${JSON.stringify(context)}.`,
-        },
-      ] as unknown as Parameters<typeof structured.invoke>[0]
-    );
+    const raw = await structured.invoke([
+      {
+        role: 'system',
+        content:
+          'Given a legal case, predict its appropriate priority: LOW|MEDIUM|HIGH|URGENT. ' +
+          'Consider deadline proximity, task complexity, and open-task count. ' +
+          'Return only the priority plus a one-sentence rationale.',
+      },
+      {
+        role: 'user',
+        content: `Case context: ${JSON.stringify(context)}.`,
+      },
+    ] as unknown as Parameters<typeof structured.invoke>[0]);
     const safe = PriorityLLMSchema.safeParse(raw);
     if (safe.success) parsed = safe.data;
     else source = 'fallback';

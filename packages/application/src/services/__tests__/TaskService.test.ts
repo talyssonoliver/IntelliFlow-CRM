@@ -138,7 +138,7 @@ describe('TaskService', () => {
     });
 
     it('should fail if lead not found', async () => {
-      const fakeLeadId = '00000000-0000-0000-0000-000000000000';
+      const fakeLeadId = '00000000-0000-4000-8000-000000000000';
 
       const result = await service.createTask({
         title: 'Invalid Lead Task',
@@ -182,7 +182,7 @@ describe('TaskService', () => {
 
     it('should fail if due date is in the past', async () => {
       const pastDate = new Date();
-      pastDate.setDate(pastDate.getDate() - 7);
+      pastDate.setUTCDate(pastDate.getUTCDate() - 7);
 
       const result = await service.createTask({
         title: 'Past Due Task',
@@ -226,7 +226,7 @@ describe('TaskService', () => {
     });
 
     it('should fail if task not found', async () => {
-      const fakeId = '00000000-0000-0000-0000-000000000000';
+      const fakeId = '00000000-0000-4000-8000-000000000000';
 
       const result = await service.updateTaskInfo(fakeId, { title: 'New' });
 
@@ -292,7 +292,7 @@ describe('TaskService', () => {
     });
 
     it('should fail if task not found', async () => {
-      const fakeId = '00000000-0000-0000-0000-000000000000';
+      const fakeId = '00000000-0000-4000-8000-000000000000';
 
       const result = await service.startTask(fakeId, 'user');
 
@@ -316,7 +316,7 @@ describe('TaskService', () => {
     });
 
     it('should fail if task not found', async () => {
-      const fakeId = '00000000-0000-0000-0000-000000000000';
+      const fakeId = '00000000-0000-4000-8000-000000000000';
 
       const result = await service.completeTask(fakeId, 'user');
 
@@ -353,7 +353,7 @@ describe('TaskService', () => {
     });
 
     it('should fail if task not found', async () => {
-      const fakeId = '00000000-0000-0000-0000-000000000000';
+      const fakeId = '00000000-0000-4000-8000-000000000000';
 
       const result = await service.cancelTask(fakeId, 'Reason', 'user');
 
@@ -377,7 +377,7 @@ describe('TaskService', () => {
     });
 
     it('should fail if task not found', async () => {
-      const fakeId = '00000000-0000-0000-0000-000000000000';
+      const fakeId = '00000000-0000-4000-8000-000000000000';
 
       const result = await service.changePriority(fakeId, 'HIGH', 'user');
 
@@ -394,7 +394,7 @@ describe('TaskService', () => {
       await taskRepository.save(task);
 
       const futureDate = new Date();
-      futureDate.setDate(futureDate.getDate() + 14);
+      futureDate.setUTCDate(futureDate.getUTCDate() + 14);
 
       const result = await service.updateDueDate(task.id.value, futureDate, 'user');
 
@@ -409,7 +409,7 @@ describe('TaskService', () => {
       await taskRepository.save(task);
 
       const pastDate = new Date();
-      pastDate.setDate(pastDate.getDate() - 7);
+      pastDate.setUTCDate(pastDate.getUTCDate() - 7);
 
       const result = await service.updateDueDate(task.id.value, pastDate, 'user');
 
@@ -418,7 +418,7 @@ describe('TaskService', () => {
     });
 
     it('should fail if task not found', async () => {
-      const fakeId = '00000000-0000-0000-0000-000000000000';
+      const fakeId = '00000000-0000-4000-8000-000000000000';
 
       const result = await service.updateDueDate(fakeId, new Date(), 'user');
 
@@ -493,7 +493,7 @@ describe('TaskService', () => {
       }).value;
       await taskRepository.save(task);
 
-      const fakeContactId = '00000000-0000-0000-0000-000000000000';
+      const fakeContactId = '00000000-0000-4000-8000-000000000000';
 
       const result = await service.assignToContact(task.id.value, fakeContactId, 'user');
 
@@ -543,7 +543,7 @@ describe('TaskService', () => {
   describe('getOverdueTasks()', () => {
     it('should return overdue tasks', async () => {
       const pastDate = new Date();
-      pastDate.setDate(pastDate.getDate() - 3);
+      pastDate.setUTCDate(pastDate.getUTCDate() - 3);
 
       const task = Task.create({
         title: 'Overdue Task',
@@ -559,7 +559,7 @@ describe('TaskService', () => {
 
     it('should not include completed tasks', async () => {
       const pastDate = new Date();
-      pastDate.setDate(pastDate.getDate() - 3);
+      pastDate.setUTCDate(pastDate.getUTCDate() - 3);
 
       const task = Task.create({
         title: 'Completed Overdue',
@@ -629,7 +629,7 @@ describe('TaskService', () => {
       }).value;
       await taskRepository.save(task);
 
-      const fakeId = '00000000-0000-0000-0000-000000000000';
+      const fakeId = '00000000-0000-4000-8000-000000000000';
 
       const result = await service.bulkComplete([task.id.value, fakeId], 'user');
 
@@ -641,13 +641,13 @@ describe('TaskService', () => {
   describe('getDueDateMetrics()', () => {
     it('should calculate due date metrics', async () => {
       const pastDate = new Date();
-      pastDate.setDate(pastDate.getDate() - 2);
+      pastDate.setUTCDate(pastDate.getUTCDate() - 2);
 
       const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
 
       const nextWeek = new Date();
-      nextWeek.setDate(nextWeek.getDate() + 5);
+      nextWeek.setUTCDate(nextWeek.getUTCDate() + 5);
 
       const overdueTask = Task.create({
         title: 'Overdue',
@@ -764,7 +764,7 @@ describe('TaskService', () => {
     });
 
     it('should fail if task not found', async () => {
-      const fakeId = '00000000-0000-0000-0000-000000000000';
+      const fakeId = '00000000-0000-4000-8000-000000000000';
 
       const result = await service.deleteTask(fakeId);
 

@@ -44,6 +44,15 @@ describe('TaskId', () => {
       expect(result.value.value).toBe(seededTaskId);
     });
 
+    it('should create with Prisma cuid (default for Task.id)', () => {
+      const cuid = 'cmmwjoi5400054sp5ujwv5y8k';
+      const result = TaskId.create(cuid);
+
+      expect(result.isSuccess).toBe(true);
+      expect(result.value).toBeInstanceOf(TaskId);
+      expect(result.value.value).toBe(cuid);
+    });
+
     it('should reject empty string', () => {
       const result = TaskId.create('');
 

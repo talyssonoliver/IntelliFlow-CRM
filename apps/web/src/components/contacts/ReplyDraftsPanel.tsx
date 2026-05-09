@@ -23,10 +23,7 @@ export interface ReplyDraftsPanelProps {
 }
 
 export function ReplyDraftsPanel({ contactId, enabled }: Readonly<ReplyDraftsPanelProps>) {
-  const query = trpc.contact.listReplyDrafts.useQuery(
-    { contactId, limit: 5 },
-    { enabled }
-  );
+  const query = trpc.contact.listReplyDrafts.useQuery({ contactId, limit: 5 }, { enabled });
 
   if (!enabled) return null;
 

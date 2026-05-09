@@ -78,7 +78,7 @@ vi.mock('../../services/document-indexer', () => ({
   DocumentIndexer: vi.fn(),
 }));
 
-vi.mock('@intelliflow/db', () => ({ PrismaClient: vi.fn() }));
+vi.mock('@intelliflow/db', () => ({ PrismaClient: vi.fn(), prisma: {} }));
 
 import { ReindexWorker, REINDEX_QUEUE_NAME } from '../reindex-worker';
 

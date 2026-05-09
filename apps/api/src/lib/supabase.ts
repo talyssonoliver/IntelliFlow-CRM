@@ -365,7 +365,6 @@ export async function getUser(): Promise<{ user: User | null; error: Error | nul
 //
 // jose is ESM-only, so we use dynamic import() and cache the module.
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let cachedVerifier: { jwtVerify: any; jwks: any } | null = null;
 
 async function getJoseVerifier(): Promise<{ jwtVerify: any; jwks: any } | null> {
@@ -378,6 +377,29 @@ async function getJoseVerifier(): Promise<{ jwtVerify: any; jwks: any } | null> 
     return cachedVerifier;
   } catch {
     return null;
+  }
+}
+
+/** Fallback: verify token using the Supabase Admin HTTP endpoint. */
+async function verifyTokenViaAdmin(
+  token: string,
+  jwtError?: unknown
+): Promise<{ user: User | null; error: Error | null }> {
+  try {
+    const { data, error } = await supabaseAdmin.auth.getUser(token);
+    if (error && jwtError) {
+      console.error(
+        '[verifyToken] Both local and remote verification failed:',
+        jwtError,
+        error.message
+      );
+    }
+    return { user: data.user, error };
+  } catch (unexpectedError) {
+    return {
+      user: null,
+      error: unexpectedError instanceof Error ? unexpectedError : new Error('Unknown error'),
+    };
   }
 }
 
@@ -404,15 +426,7 @@ export async function verifyToken(
 
   if (!verifier) {
     // Fall back to remote verification in test/mock environments
-    try {
-      const { data, error } = await supabaseAdmin.auth.getUser(token);
-      return { user: data.user, error };
-    } catch (unexpectedError) {
-      return {
-        user: null,
-        error: unexpectedError instanceof Error ? unexpectedError : new Error('Unknown error'),
-      };
-    }
+    return verifyTokenViaAdmin(token);
   }
 
   try {
@@ -435,22 +449,7 @@ export async function verifyToken(
   } catch (jwtError) {
     // JWT verification failed (expired, invalid signature, etc.)
     // Fall back to Supabase Admin for definitive answer
-    try {
-      const { data, error } = await supabaseAdmin.auth.getUser(token);
-      if (error) {
-        console.error(
-          '[verifyToken] Both local and remote verification failed:',
-          jwtError,
-          error.message
-        );
-      }
-      return { user: data.user, error };
-    } catch (unexpectedError) {
-      return {
-        user: null,
-        error: unexpectedError instanceof Error ? unexpectedError : new Error('Unknown error'),
-      };
-    }
+    return verifyTokenViaAdmin(token, jwtError);
   }
 }
 

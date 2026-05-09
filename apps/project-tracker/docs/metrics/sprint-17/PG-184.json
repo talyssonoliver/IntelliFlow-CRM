@@ -9,13 +9,9 @@
   "phase": "",
   "stream": null,
   "dependencies": {
-    "required": [
-      "PG-178",
-      "PG-182",
-      "PG-183"
-    ],
+    "required": ["PG-178", "PG-182", "PG-183"],
     "all_satisfied": true,
-    "verified_at": "2026-04-26T11:17:07.492Z"
+    "verified_at": "2026-04-29T21:54:51.844Z"
   },
   "started_at": "2026-04-15T12:00:00Z",
   "completed_at": "2026-04-16T21:10:00Z",
@@ -176,9 +172,5 @@
     }
   ],
   "notes": "Iteration 4 of 10 landed: dealSettingsRouter + router tests + api typecheck clean. Iteration 4.5 (enforcement): Layer 1+3 preflight scripts + real Plan-Reviewer subagent caught 3 ERRORs missed by self-review. Next iteration (5): G-6 opportunity.router.ts consumer wiring + G-7 web orchestrator shell.",
-  "dependencies_resolved": [
-    "PG-178",
-    "PG-182",
-    "PG-183"
-  ]
+  "dependencies_resolved": ["PG-178", "PG-182", "PG-183"]
 }

@@ -82,9 +82,7 @@ export class InMemoryContactRepository implements ContactRepository {
    * IFC-310: In-memory merge — no child tables to re-parent, so this is
    * essentially a field-merge + delete. Matches the transactional contract.
    */
-  async mergeInTransaction(
-    input: MergeInTransactionInput
-  ): Promise<MergeInTransactionResult> {
+  async mergeInTransaction(input: MergeInTransactionInput): Promise<MergeInTransactionResult> {
     const { primaryId, secondaryId, tenantId, mergeFields } = input;
 
     const primary = this.contacts.get(primaryId);
@@ -117,7 +115,10 @@ export class InMemoryContactRepository implements ContactRepository {
     }
 
     if (Object.keys(updates).length > 0) {
-      primary.updateContactInfo(updates as Parameters<typeof primary.updateContactInfo>[0], input.mergedBy);
+      primary.updateContactInfo(
+        updates as Parameters<typeof primary.updateContactInfo>[0],
+        input.mergedBy
+      );
     }
 
     this.contacts.delete(secondaryId);
@@ -142,7 +143,10 @@ export class InMemoryContactRepository implements ContactRepository {
     input: LinkContactsByDomainInput
   ): Promise<LinkContactsByDomainResult> {
     const { accountId, domain, tenantId, maxBatch } = input;
-    const normalizedDomain = domain.trim().toLowerCase().replace(/^www\./, '');
+    const normalizedDomain = domain
+      .trim()
+      .toLowerCase()
+      .replace(/^www\./, '');
     if (!normalizedDomain || !normalizedDomain.includes('.')) {
       return { overflow: false, linkedIds: [] };
     }

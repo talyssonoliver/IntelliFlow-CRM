@@ -18,7 +18,7 @@ export function prepareEntry(
   config: RequiredAuditLoggerConfig
 ): AuditLogInput & { eventId: string; retentionExpiresAt: Date } {
   const retentionExpiresAt = new Date();
-  retentionExpiresAt.setDate(retentionExpiresAt.getDate() + config.defaultRetentionDays);
+  retentionExpiresAt.setUTCDate(retentionExpiresAt.getUTCDate() + config.defaultRetentionDays);
 
   return {
     ...input,

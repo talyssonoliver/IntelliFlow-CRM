@@ -50,13 +50,44 @@ function normalizePath(value: string): string {
     .toLowerCase();
 }
 
+/** Returns true for Windows-style absolute paths (e.g. "C:/foo" or "C:\\foo").
+ *  On Linux, `path.isAbsolute` returns false for these, which breaks path
+ *  resolution when coverage keys were emitted on Windows. */
+function isWindowsAbsolutePath(filePath: string): boolean {
+  return /^[A-Za-z]:[\\/]/.test(filePath);
+}
+
 function resolveAbsolutePath(repoRoot: string, filePath: string): string {
-  return normalizePath(isAbsolute(filePath) ? resolve(filePath) : resolve(repoRoot, filePath));
+  // If the platform considers it absolute, use resolve() normally.
+  // If it's a Windows-style absolute path on a non-Windows host, keep it
+  // as-is after normalization so coverage-key matching remains consistent.
+  if (isAbsolute(filePath) || isWindowsAbsolutePath(filePath)) {
+    return normalizePath(filePath);
+  }
+  // Relative artifact path: anchor to repoRoot.
+  if (isAbsolute(repoRoot) || isWindowsAbsolutePath(repoRoot)) {
+    return normalizePath(repoRoot + '/' + filePath);
+  }
+  return normalizePath(resolve(repoRoot, filePath));
 }
 
 function resolveRelativePath(repoRoot: string, filePath: string): string {
-  const absolutePath = isAbsolute(filePath) ? resolve(filePath) : resolve(repoRoot, filePath);
-  return normalizePath(relative(repoRoot, absolutePath));
+  const normalRoot = normalizePath(
+    isAbsolute(repoRoot) || isWindowsAbsolutePath(repoRoot) ? repoRoot : resolve(repoRoot)
+  );
+  const normalFile = resolveAbsolutePath(repoRoot, filePath);
+
+  // Strip the root prefix (with or without trailing slash).
+  const prefix = normalRoot.endsWith('/') ? normalRoot : normalRoot + '/';
+  if (normalFile.startsWith(prefix)) {
+    return normalFile.slice(prefix.length);
+  }
+
+  // Fallback: let the platform handle it (both paths are native-absolute).
+  if (isAbsolute(repoRoot) && isAbsolute(filePath)) {
+    return normalizePath(relative(repoRoot, filePath));
+  }
+  return normalFile;
 }
 
 function inferCoverageMetric(kpiName: string): keyof CoverageThresholds | null {

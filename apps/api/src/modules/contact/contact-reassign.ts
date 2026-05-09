@@ -133,11 +133,7 @@ export async function emitContactReassignSideEffects(
   }
 }
 
-export function logContactReassignPermissionDenied(
-  ctx: Context,
-  id: string,
-  reason: string
-): void {
+export function logContactReassignPermissionDenied(ctx: Context, id: string, reason: string): void {
   const typedCtx = getTenantContext(ctx);
   getAuditLogger(ctx.prisma)
     .logPermissionDenied('contact', id, reason, typedCtx.tenant.tenantId, {
@@ -145,4 +141,3 @@ export function logContactReassignPermissionDenied(
     })
     .catch(logAuditFailure);
 }
-

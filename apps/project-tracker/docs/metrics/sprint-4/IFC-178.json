@@ -71,10 +71,8 @@
     ],
     "pending": [],
     "all_satisfied": true,
-    "verified_at": "2026-04-26T11:17:07.305Z",
-    "required": [
-      "IFC-128"
-    ]
+    "verified_at": "2026-04-29T21:54:51.736Z",
+    "required": ["IFC-128"]
   },
   "artifacts": {
     "created": [
@@ -151,10 +149,7 @@
       "exit_code": 0,
       "executed_at": "2026-02-04T19:26:55.000Z",
       "details": {
-        "tables_verified": [
-          "ai_output_reviews",
-          "ai_output_review_audit"
-        ],
+        "tables_verified": ["ai_output_reviews", "ai_output_review_audit"],
         "indexes_verified": 10
       }
     }
@@ -183,9 +178,7 @@
     }
   },
   "notes": "IFC-178 fully implemented and deployed. Database tables created (ai_output_reviews, ai_output_review_audit) with RLS policies for tenant isolation. Helper functions public.get_current_tenant_id() and public.is_service_role() created for RLS. All 37 tests pass. Audit table is immutable (append-only, no UPDATE/DELETE policies).",
-  "dependencies_resolved": [
-    "IFC-128"
-  ],
+  "dependencies_resolved": ["IFC-128"],
   "planning": {
     "plan_document": ".specify/sprints/sprint-4/planning/IFC-178-plan.md",
     "tdd_phases": 3,

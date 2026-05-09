@@ -132,16 +132,18 @@ describe('EmailList', () => {
   it('calls onEmailSelect when email is clicked', async () => {
     const user = userEvent.setup();
     render(<EmailList {...defaultProps} />);
-    const items = screen.getAllByRole('option');
-    await user.click(items[0]);
+    const items = Array.from(document.querySelectorAll('[data-email-item] button[type="button"]'));
+    await user.click(items[0] as HTMLElement);
     expect(defaultProps.onEmailSelect).toHaveBeenCalledWith('e1');
   });
 
   it('highlights active/selected email', () => {
     render(<EmailList {...defaultProps} selectedEmailId="e1" />);
-    const items = screen.getAllByRole('option');
-    expect(items[0].className).toMatch(/primary|bg-/);
-    expect(items[0]).toHaveAttribute('aria-selected', 'true');
+    // The <li> gets the background highlight; the button carries aria-pressed
+    const li = document.querySelector('[data-email-item]') as HTMLElement;
+    expect(li.className).toMatch(/primary|bg-/);
+    const btn = li.querySelector('button[type="button"]') as HTMLElement;
+    expect(btn).toHaveAttribute('aria-pressed', 'true');
   });
 
   it('shows empty state when no emails', () => {
@@ -179,20 +181,22 @@ describe('EmailList', () => {
   it('supports arrow key navigation', async () => {
     const user = userEvent.setup();
     render(<EmailList {...defaultProps} />);
-    // Email list uses a role="none" wrapper with the arrow-key handler on the
-    // <div>; keyboard events bubble from the focused option, so focus an item
-    // first to mirror real keyboard flow.
-    const items = screen.getAllByRole('option');
-    items[0].focus();
+    // Arrow-key handler focuses the button inside each email item.
+    const btns = Array.from(
+      document.querySelectorAll('[data-email-item] button[type="button"]')
+    ) as HTMLElement[];
+    btns[0].focus();
     await user.keyboard('{ArrowDown}');
-    expect(document.activeElement).toBe(items[1]);
+    expect(document.activeElement).toBe(btns[1]);
   });
 
   it('selects email on Enter key', async () => {
     const user = userEvent.setup();
     render(<EmailList {...defaultProps} />);
-    const items = screen.getAllByRole('option');
-    items[0].focus();
+    const btns = Array.from(
+      document.querySelectorAll('[data-email-item] button[type="button"]')
+    ) as HTMLElement[];
+    btns[0].focus();
     await user.keyboard('{Enter}');
     expect(defaultProps.onEmailSelect).toHaveBeenCalledWith('e1');
   });

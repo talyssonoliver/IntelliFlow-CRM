@@ -192,7 +192,7 @@ describe('MfaQrGenerator', () => {
     it('should have proper aria-label on QR code container', () => {
       render(<MfaQrGenerator {...defaultProps} />);
 
-      const qrContainer = screen.getByRole('img', { name: /qr code for setting up/i });
+      const qrContainer = document.querySelector('figure[aria-label*="QR code for setting up"]');
       expect(qrContainer).toBeInTheDocument();
     });
 
@@ -220,7 +220,7 @@ describe('MfaQrGenerator', () => {
     it('should have white background for QR code', () => {
       render(<MfaQrGenerator {...defaultProps} />);
 
-      const qrContainer = screen.getByRole('img', { name: /qr code/i });
+      const qrContainer = document.querySelector('figure[aria-label*="QR code"]');
       expect(qrContainer).toHaveClass('bg-white');
     });
   });

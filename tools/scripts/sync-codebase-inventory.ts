@@ -223,57 +223,64 @@ function extractDatabaseInventory(schemaPath: string): DatabaseInventory {
 }
 
 /**
+ * Map a middleware export name to its type tag, using the same heuristics
+ * the original inline conditional used (kept verbatim to preserve output).
+ */
+function classifyMiddlewareType(name: string): MiddlewareInfo['type'] {
+  const lower = name.toLowerCase();
+  if (lower.includes('auth')) return 'auth';
+  if (lower.includes('log') || lower.includes('performance')) return 'logging';
+  if (lower.includes('rate')) return 'rate-limit';
+  if (lower.includes('valid')) return 'validation';
+  if (lower.includes('error')) return 'error';
+  return 'other';
+}
+
+/** Parse one `export { foo, bar }` block into an array of trimmed names. */
+function parseExportBlock(exportBlock: string): string[] {
+  return exportBlock
+    .replace(/export\s*\{/, '')
+    .replace(/\}/, '')
+    .split(',')
+    .map((n) => n.trim())
+    .filter((n) => n && !n.startsWith('//'));
+}
+
+/** Build a MiddlewareInfo record for one detected name. */
+function buildMiddlewareInfo(name: string, indexContent: string): MiddlewareInfo {
+  const isCommented = indexContent.includes(`// ${name}`) || indexContent.includes(`//${name}`);
+  return {
+    name,
+    type: classifyMiddlewareType(name),
+    description: generateMiddlewareDescription(name),
+    enabled: !isCommented,
+  };
+}
+
+/**
  * Extract middleware stack from API middleware directory
  */
 function extractMiddlewareInventory(middlewareDir: string): MiddlewareInventory {
   const middleware: MiddlewareInfo[] = [];
+  const empty: MiddlewareInventory = { total_middleware: 0, by_type: {}, middleware: [] };
 
   if (!existsSync(middlewareDir)) {
     console.log('  Middleware directory not found');
-    return { total_middleware: 0, by_type: {}, middleware: [] };
+    return empty;
   }
 
-  // Read index.ts to find exported middleware
   const indexPath = join(middlewareDir, 'index.ts');
-  if (existsSync(indexPath)) {
-    const content = readFileSync(indexPath, 'utf-8');
+  if (!existsSync(indexPath)) {
+    return empty;
+  }
 
-    // Extract middleware names from exports
-    const exportMatches = content.match(/export\s*\{([^}]+)\}/g);
-    if (exportMatches) {
-      for (const exportBlock of exportMatches) {
-        const names = exportBlock
-          .replace(/export\s*\{/, '')
-          .replace(/\}/, '')
-          .split(',')
-          .map((n) => n.trim())
-          .filter((n) => n && !n.startsWith('//'));
+  const indexContent = readFileSync(indexPath, 'utf-8');
+  const exportMatches = indexContent.match(/export\s*\{([^}]+)\}/g) ?? [];
 
-        for (const name of names) {
-          if (name.includes('Middleware') || name.includes('middleware')) {
-            let type: MiddlewareInfo['type'] = 'other';
-            if (name.toLowerCase().includes('auth')) type = 'auth';
-            else if (
-              name.toLowerCase().includes('log') ||
-              name.toLowerCase().includes('performance')
-            )
-              type = 'logging';
-            else if (name.toLowerCase().includes('rate')) type = 'rate-limit';
-            else if (name.toLowerCase().includes('valid')) type = 'validation';
-            else if (name.toLowerCase().includes('error')) type = 'error';
-
-            // Check if it's commented out (disabled)
-            const isCommented = content.includes(`// ${name}`) || content.includes(`//${name}`);
-
-            middleware.push({
-              name,
-              type,
-              description: generateMiddlewareDescription(name),
-              enabled: !isCommented,
-            });
-          }
-        }
-      }
+  for (const exportBlock of exportMatches) {
+    for (const name of parseExportBlock(exportBlock)) {
+      if (!name.toLowerCase().includes('middleware')) continue;
+      middleware.push(buildMiddlewareInfo(name, indexContent));
     }
   }
 
@@ -454,6 +461,52 @@ function generateIntegrationDescription(category: string, provider: string): str
   }
 }
 
+/** Decide which aggregate an event belongs to (event-type prefix wins, then filename). */
+function inferEventAggregate(eventType: string, fileName: string): string {
+  if (eventType.includes('.')) return eventType.split('.')[0];
+  if (fileName.includes('case')) return 'case';
+  if (fileName.includes('lead')) return 'lead';
+  return 'unknown';
+}
+
+/** Parse `class FooEvent extends DomainEvent` declarations from one file. */
+function parseEventsFromFile(filePath: string, fileName: string): DomainEventInfo[] {
+  const content = readFileSync(filePath, 'utf-8');
+  const eventClassRegex = /class\s+(\w+Event)\s+extends\s+DomainEvent/g;
+  const out: DomainEventInfo[] = [];
+  let match: RegExpExecArray | null;
+
+  while ((match = eventClassRegex.exec(content)) !== null) {
+    const eventName = match[1];
+    const typeMatch = content.match(
+      new RegExp(`${eventName}[\\s\\S]*?eventType\\s*=\\s*['"]([^'"]+)['"]`)
+    );
+    const eventType = typeMatch?.[1] ?? eventName;
+    out.push({
+      name: eventName,
+      eventType,
+      aggregate: inferEventAggregate(eventType, fileName),
+    });
+  }
+  return out;
+}
+
+/** Annotate each event with `workflowEngine` if case-events.ts has a mapping. */
+function applyWorkflowRouting(events: DomainEventInfo[], eventsDir: string): void {
+  const caseEventsPath = join(eventsDir, 'case-events.ts');
+  if (!existsSync(caseEventsPath)) return;
+
+  const content = readFileSync(caseEventsPath, 'utf-8');
+  const routingMatch = content.match(/CASE_EVENT_WORKFLOW_ROUTING[^{]*\{([^}]+)\}/s);
+  if (!routingMatch) return;
+
+  const routingContent = routingMatch[1];
+  for (const event of events) {
+    const engineMatch = routingContent.match(new RegExp(`'${event.eventType}'\\s*:\\s*'(\\w+)'`));
+    if (engineMatch) event.workflowEngine = engineMatch[1];
+  }
+}
+
 /**
  * Extract domain events inventory
  */
@@ -474,66 +527,16 @@ function extractDomainEventsInventory(eventsDir: string): DomainEventsInventory 
       (f) =>
         (f.includes('Event') || f.includes('event')) && f.endsWith('.ts') && !f.includes('.test')
     );
-
     for (const file of files) {
-      const filePath = join(eventPath, file);
-      const content = readFileSync(filePath, 'utf-8');
-
-      // Extract event classes
-      const eventClassRegex = /class\s+(\w+Event)\s+extends\s+DomainEvent/g;
-      let match;
-
-      while ((match = eventClassRegex.exec(content)) !== null) {
-        const eventName = match[1];
-
-        // Try to find eventType
-        const typeMatch = content.match(
-          new RegExp(`${eventName}[\\s\\S]*?eventType\\s*=\\s*['"]([^'"]+)['"]`)
-        );
-        const eventType = typeMatch?.[1] ?? eventName;
-
-        // Determine aggregate from event type or file name
-        let aggregate = 'unknown';
-        if (eventType.includes('.')) {
-          aggregate = eventType.split('.')[0];
-        } else if (file.includes('case')) {
-          aggregate = 'case';
-        } else if (file.includes('lead')) {
-          aggregate = 'lead';
-        }
-
-        events.push({
-          name: eventName,
-          eventType,
-          aggregate,
-        });
-      }
+      events.push(...parseEventsFromFile(join(eventPath, file), file));
     }
   }
 
-  // Look for workflow routing mapping
-  const caseEventsPath = join(eventsDir, 'case-events.ts');
-  if (existsSync(caseEventsPath)) {
-    const content = readFileSync(caseEventsPath, 'utf-8');
-    const routingMatch = content.match(/CASE_EVENT_WORKFLOW_ROUTING[^{]*\{([^}]+)\}/s);
-
-    if (routingMatch) {
-      const routingContent = routingMatch[1];
-      for (const event of events) {
-        const engineMatch = routingContent.match(
-          new RegExp(`'${event.eventType}'\\s*:\\s*'(\\w+)'`)
-        );
-        if (engineMatch) {
-          event.workflowEngine = engineMatch[1];
-        }
-      }
-    }
-  }
+  applyWorkflowRouting(events, eventsDir);
 
   // Count by aggregate
   const byAggregate: Record<string, number> = {};
   const byWorkflowEngine: Record<string, number> = {};
-
   for (const event of events) {
     byAggregate[event.aggregate] = (byAggregate[event.aggregate] || 0) + 1;
     if (event.workflowEngine) {
@@ -675,6 +678,11 @@ function updateBaselineJson(baselinePath: string, inventory: CodebaseInventory):
 
   const content = readFileSync(baselinePath, 'utf-8');
   const baseline = JSON.parse(content);
+  const previousTimestamp = baseline.timestamp;
+
+  // Snapshot previous state (without timestamp) for change detection
+  const previousState = JSON.parse(content);
+  delete previousState.timestamp;
 
   // Update inventory sections
   baseline.database_inventory = inventory.database;
@@ -685,8 +693,16 @@ function updateBaselineJson(baselinePath: string, inventory: CodebaseInventory):
   baseline.validators_inventory = inventory.validators;
   baseline.cache_inventory = inventory.cache;
 
-  // Update timestamp
-  baseline.timestamp = new Date().toISOString();
+  // Determine if real content changed (excluding timestamp). This keeps the
+  // pre-push drift gate stable: if the inventory data is identical, the
+  // timestamp stays put and `git diff` reports no change. Without this,
+  // every sync run would mark baseline.json dirty and force an amend on
+  // every push — even when nothing in the codebase actually changed.
+  const nextState = { ...baseline };
+  delete nextState.timestamp;
+  const contentChanged = JSON.stringify(nextState) !== JSON.stringify(previousState);
+
+  baseline.timestamp = contentChanged ? new Date().toISOString() : previousTimestamp;
 
   // Write back
   writeFileSync(baselinePath, JSON.stringify(baseline, null, 2) + '\n', 'utf-8');

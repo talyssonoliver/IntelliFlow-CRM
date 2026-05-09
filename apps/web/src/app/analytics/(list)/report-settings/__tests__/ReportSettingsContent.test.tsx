@@ -126,7 +126,7 @@ describe('ReportSettingsContent', () => {
         screen.getByRole('radiogroup', { name: /default report date range/i })
       ).toBeInTheDocument();
     });
-    expect(screen.getByRole('combobox', { name: /select display currency/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /select display currency/i })).toBeInTheDocument();
     expect(screen.getByRole('switch', { name: /enable scheduled delivery/i })).toBeInTheDocument();
   });
 

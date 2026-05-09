@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { Card, Button } from '@intelliflow/ui';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import { PageHeader } from '@/components/shared';
 
@@ -64,6 +64,15 @@ export default function QualityReportDetailClient() {
   const [report, setReport] = useState<QualityReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [iframeLoaded, setIframeLoaded] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  useEffect(() => {
+    const iframe = iframeRef.current;
+    if (!iframe) return;
+    const handleLoad = () => setIframeLoaded(true);
+    iframe.addEventListener('load', handleLoad);
+    return () => iframe.removeEventListener('load', handleLoad);
+  }, [report]);
 
   useEffect(() => {
     async function fetchReport() {
@@ -272,12 +281,12 @@ export default function QualityReportDetailClient() {
                 </div>
               )}
               {}
-              {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- report section handles keyboard navigation */}
+              {}
               <iframe
+                ref={iframeRef}
                 src={`/api/quality-reports/view?report=${reportId}`}
                 className="w-full h-full border-0"
                 title={`${config.title} Report`}
-                onLoad={() => setIframeLoaded(true)}
               />
             </div>
           </Card>

@@ -11,10 +11,7 @@
  * directly and only uses this module for (a) schema validation, (b)
  * client-side rate limiting, and (c) prepared payload construction.
  */
-import {
-  publicFeedbackInputSchema,
-  type PublicFeedbackInput,
-} from '@intelliflow/validators';
+import { publicFeedbackInputSchema, type PublicFeedbackInput } from '@intelliflow/validators';
 
 const CLIENT_SUBMIT_KEY = 'intelliflow.public.feedback.submitted_at';
 const CLIENT_RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
@@ -24,9 +21,7 @@ const CLIENT_RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
  * widget should surface the "thanks, already received" state without
  * attempting a network request.
  */
-export function canSubmitFeedbackClientRateLimit(
-  now: number = Date.now()
-): boolean {
+export function canSubmitFeedbackClientRateLimit(now: number = Date.now()): boolean {
   if (typeof window === 'undefined') return true;
   try {
     const stamp = window.localStorage.getItem(CLIENT_SUBMIT_KEY);
@@ -39,9 +34,7 @@ export function canSubmitFeedbackClientRateLimit(
   }
 }
 
-export function markFeedbackSubmittedClientSide(
-  now: Date = new Date()
-): void {
+export function markFeedbackSubmittedClientSide(now: Date = new Date()): void {
   if (typeof window === 'undefined') return;
   try {
     window.localStorage.setItem(CLIENT_SUBMIT_KEY, now.toISOString());
@@ -64,9 +57,7 @@ export function clearFeedbackClientRateLimit(): void {
  * the input is invalid. Returns a payload safe to pass to the tRPC
  * mutation.
  */
-export function preparePublicFeedbackPayload(
-  input: PublicFeedbackInput
-): PublicFeedbackInput {
+export function preparePublicFeedbackPayload(input: PublicFeedbackInput): PublicFeedbackInput {
   return publicFeedbackInputSchema.parse(input);
 }
 

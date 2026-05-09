@@ -9,13 +9,9 @@
   "phase": "",
   "stream": null,
   "dependencies": {
-    "required": [
-      "PG-182",
-      "PG-183",
-      "IFC-310"
-    ],
+    "required": ["PG-182", "PG-183", "IFC-310"],
     "all_satisfied": true,
-    "verified_at": "2026-04-26T11:17:07.574Z",
+    "verified_at": "2026-04-29T21:54:51.897Z",
     "notes": "PG-182 + PG-183 Completed (attestations present). IFC-310 is a parallel coordination task (Specifying); IFC-312 is the producer of the shared EnrichmentProvider port/adapter — IFC-310 will consume post-landing. See spec §3.3 and plan §9."
   },
   "started_at": "2026-04-20T22:30:00Z",
@@ -196,9 +192,5 @@
     }
   ],
   "notes": "Very large task (50 files, 21-32 hours PERT expected). Completed across two Ralph loops (10-iter initial + 70-iter extended). Re-attested 2026-04-24 after /task-code-audit identified 7 findings (2 High, 4 Medium, 1 Low) — see attestation `notes` for the gap-close ledger. Spec at .specify/sprints/sprint-19/specifications/IFC-312-spec.md; plan at .specify/sprints/sprint-19/planning/IFC-312-plan.md; attestation at .specify/sprints/sprint-19/attestations/IFC-312/attestation.json; delivery at .specify/sprints/sprint-19/execution/IFC-312/run-2026-04-20T22-58-55Z/IFC-312-delivery.md.",
-  "dependencies_resolved": [
-    "PG-182",
-    "PG-183",
-    "IFC-310"
-  ]
+  "dependencies_resolved": ["PG-182", "PG-183", "IFC-310"]
 }

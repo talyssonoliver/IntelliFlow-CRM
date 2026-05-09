@@ -390,10 +390,7 @@ export function trackPageView(options: { path: string; title?: string; referrer?
 /**
  * Track public product tour start (PG-126)
  */
-export function trackTourStarted(options: {
-  tourId: string;
-  totalSteps: number;
-}): void {
+export function trackTourStarted(options: { tourId: string; totalSteps: number }): void {
   trackEvent({
     name: 'tour_started',
     category: 'onboarding',

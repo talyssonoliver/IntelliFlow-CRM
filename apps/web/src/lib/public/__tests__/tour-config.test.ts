@@ -7,12 +7,15 @@
  */
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { onboardingConfigSchema } from '@intelliflow/validators';
-import {
-  FEATURES_TOUR_CONFIG,
-  ONBOARDING_CONFIG,
-} from '../tour-config';
+import { FEATURES_TOUR_CONFIG, ONBOARDING_CONFIG } from '../tour-config';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+// Resolve to the monorepo root (this file lives at apps/web/src/lib/public/__tests__)
+const REPO_ROOT = resolve(__dirname, '../../../../../../');
 
 describe('FEATURES_TOUR_CONFIG', () => {
   it('is id=features-v1 and route=/features', () => {
@@ -36,11 +39,7 @@ describe('FEATURES_TOUR_CONFIG', () => {
 
 describe('artifacts/misc/onboarding-config.json', () => {
   it('parses and matches the inlined TS config', () => {
-    const artifactPath = resolve(
-      process.cwd(),
-      '../..',
-      'artifacts/misc/onboarding-config.json'
-    );
+    const artifactPath = resolve(REPO_ROOT, 'artifacts/misc/onboarding-config.json');
     const raw = readFileSync(artifactPath, 'utf8');
     const parsed = onboardingConfigSchema.parse(JSON.parse(raw));
     expect(parsed.tours[0].id).toBe('features-v1');

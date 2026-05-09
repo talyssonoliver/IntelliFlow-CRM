@@ -267,7 +267,7 @@ export class AuditEncryption {
   private initializeKeyVersion(version: number): void {
     const now = new Date();
     const expiresAt = new Date(now);
-    expiresAt.setDate(expiresAt.getDate() + this.keyRotationDays);
+    expiresAt.setUTCDate(expiresAt.getUTCDate() + this.keyRotationDays);
 
     this.keyVersions.set(version, {
       version,

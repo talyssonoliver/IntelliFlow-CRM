@@ -11,7 +11,10 @@ import pino from 'pino';
 import { prisma } from '@intelliflow/db';
 import { getEnrichmentAdapter, type AccountSeed } from './shared/enrichment-adapter.js';
 
-const logger = pino({ name: 'account-enrichment.chain', level: process.env['LOG_LEVEL'] ?? 'info' });
+const logger = pino({
+  name: 'account-enrichment.chain',
+  level: process.env['LOG_LEVEL'] ?? 'info',
+});
 
 export interface EnrichAccountInput {
   accountId: string;
@@ -45,6 +48,53 @@ function isEmpty(v: unknown): boolean {
   );
 }
 
+/**
+ * Validate an industry key against the tenant's active vocabulary.
+ * Returns the key if allowed, undefined otherwise.
+ */
+async function resolveValidIndustryKey(
+  industry: string,
+  tenantId: string
+): Promise<string | undefined> {
+  try {
+    const vocabulary = await prisma.accountIndustryOption.findMany({
+      where: { tenantId, isActive: true },
+      select: { key: true },
+    });
+    const allowed = new Set(vocabulary.map((v: { key: string }) => v.key));
+    return allowed.has(industry) ? industry : undefined;
+  } catch (err) {
+    logger.warn({ err, tenantId }, 'vocabulary lookup failed');
+    return undefined;
+  }
+}
+
+/**
+ * Build the Prisma `data` patch from enrichment output.
+ * Only writes fields where the current record is empty.
+ */
+function buildEnrichmentPatch(
+  enrichment: Record<string, unknown>,
+  current: Record<string, unknown>,
+  validIndustryKey: string | undefined
+): Record<string, unknown> {
+  const data: Record<string, unknown> = {};
+  for (const [enrichKey, colKey] of Object.entries(FIELD_MAP)) {
+    if (enrichKey === 'industry') {
+      if (validIndustryKey && isEmpty(current[colKey])) {
+        data[colKey] = validIndustryKey;
+      }
+      continue;
+    }
+    const enrichVal = enrichment[enrichKey];
+    if (enrichVal === undefined || enrichVal === null) continue;
+    if (isEmpty(current[colKey])) {
+      data[colKey] = enrichVal;
+    }
+  }
+  return data;
+}
+
 export async function enrichAccount(input: EnrichAccountInput): Promise<EnrichAccountResult> {
   const { accountId, tenantId, seed } = input;
 
@@ -72,36 +122,15 @@ export async function enrichAccount(input: EnrichAccountInput): Promise<EnrichAc
   }
 
   // Validate industry against tenant vocabulary — drop if not present.
-  let validIndustryKey: string | undefined;
-  if (enrichment.industry) {
-    try {
-      const vocabulary = await prisma.accountIndustryOption.findMany({
-        where: { tenantId, isActive: true },
-        select: { key: true },
-      });
-      const allowed = new Set(vocabulary.map((v: { key: string }) => v.key));
-      if (allowed.has(enrichment.industry)) {
-        validIndustryKey = enrichment.industry;
-      }
-    } catch (err) {
-      logger.warn({ err, tenantId }, 'vocabulary lookup failed');
-    }
-  }
+  const validIndustryKey = enrichment.industry
+    ? await resolveValidIndustryKey(enrichment.industry, tenantId)
+    : undefined;
 
-  const data: Record<string, unknown> = {};
-  for (const [enrichKey, colKey] of Object.entries(FIELD_MAP)) {
-    if (enrichKey === 'industry') {
-      if (validIndustryKey && isEmpty(current[colKey])) {
-        data[colKey] = validIndustryKey;
-      }
-      continue;
-    }
-    const enrichVal = (enrichment as Record<string, unknown>)[enrichKey];
-    if (enrichVal === undefined || enrichVal === null) continue;
-    if (isEmpty(current[colKey])) {
-      data[colKey] = enrichVal;
-    }
-  }
+  const data = buildEnrichmentPatch(
+    enrichment as Record<string, unknown>,
+    current,
+    validIndustryKey
+  );
 
   if (Object.keys(data).length === 0) {
     return {

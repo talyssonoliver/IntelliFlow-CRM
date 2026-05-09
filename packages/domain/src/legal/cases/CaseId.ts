@@ -1,4 +1,4 @@
-import { generateUuid as uuidv4, isValidUuid as uuidValidate } from '../../shared/uuid';
+import { generateUuid as uuidv4, isValidEntityId } from '../../shared/uuid';
 import { ValueObject } from '../../shared/ValueObject';
 import { Result, DomainError } from '../../shared/Result';
 
@@ -28,7 +28,7 @@ export class CaseId extends ValueObject<CaseIdProps> {
   }
 
   static create(value: string): Result<CaseId, InvalidCaseIdError> {
-    if (!value || !uuidValidate(value)) {
+    if (!value || !isValidEntityId(value)) {
       return Result.fail(new InvalidCaseIdError(value));
     }
     return Result.ok(new CaseId({ value }));

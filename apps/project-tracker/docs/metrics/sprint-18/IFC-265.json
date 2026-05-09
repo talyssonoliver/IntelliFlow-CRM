@@ -11,7 +11,7 @@
   "dependencies": {
     "required": [],
     "all_satisfied": true,
-    "verified_at": "2026-04-26T11:17:07.522Z"
+    "verified_at": "2026-04-29T21:54:51.865Z"
   },
   "dependencies_resolved": [],
   "started_at": null,
@@ -35,9 +35,7 @@
       "apps/web/src/app/contacts/[id]/__tests__/page.test.tsx",
       "apps/api/src/modules/contact/__tests__/contact.router.tenant.test.ts"
     ],
-    "created": [
-      "apps/web/src/app/contacts/[id]/__tests__/page.test.tsx"
-    ],
+    "created": ["apps/web/src/app/contacts/[id]/__tests__/page.test.tsx"],
     "missing": [
       "apps/api/src/modules/contact/__tests__/contact.router.tenant.test.ts"
     ]

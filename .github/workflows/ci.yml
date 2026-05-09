@@ -12,8 +12,8 @@ concurrency:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-  NODE_VERSION: "22"
-  PNPM_VERSION: "10.33.0"
+  NODE_VERSION: '22'
+  PNPM_VERSION: '10.33.0'
   TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
   TURBO_TEAM: ${{ vars.TURBO_TEAM }}
   NODE_OPTIONS: --max-old-space-size=4096
@@ -32,7 +32,7 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -54,10 +54,13 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: pnpm turbo run build --filter=!@intelliflow/web --filter=!@intelliflow/api --filter=!@intelliflow/project-tracker --filter=!@intelliflow/workers
 
       - name: Type check
         run: pnpm run typecheck
@@ -73,10 +76,13 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: pnpm turbo run build --filter=!@intelliflow/web --filter=!@intelliflow/api --filter=!@intelliflow/project-tracker --filter=!@intelliflow/workers
 
       - name: Run tests
         run: pnpm run test -- --coverage
@@ -102,7 +108,7 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -145,7 +151,10 @@ jobs:
     needs: [test]
     services:
       postgres:
-        image: postgres:15-alpine
+        # pgvector image so the baseline migration's `CREATE EXTENSION vector`
+        # works during integration test setup. Vanilla postgres:15-alpine
+        # doesn't ship pgvector binaries.
+        image: pgvector/pgvector:pg15
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -178,10 +187,33 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: pnpm turbo run build --filter=!@intelliflow/web --filter=!@intelliflow/api --filter=!@intelliflow/project-tracker --filter=!@intelliflow/workers
+
+      - name: Bootstrap Supabase schemas + roles
+        run: |
+          PGPASSWORD=postgres psql -h localhost -U postgres -d intelliflow_test -v ON_ERROR_STOP=1 <<'SQL'
+            CREATE SCHEMA IF NOT EXISTS extensions;
+            DO $$
+            BEGIN
+              IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
+                CREATE ROLE anon NOLOGIN;
+              END IF;
+              IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
+                CREATE ROLE authenticated NOLOGIN;
+              END IF;
+              IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'service_role') THEN
+                CREATE ROLE service_role NOLOGIN BYPASSRLS;
+              END IF;
+            END
+            $$;
+            GRANT USAGE ON SCHEMA extensions TO postgres, anon, authenticated, service_role;
+          SQL
 
       - name: Setup database
         run: |
@@ -217,7 +249,7 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -230,6 +262,20 @@ jobs:
 
       - name: Build
         run: pnpm run build
+        env:
+          NODE_ENV: production
+          # All module-load guards must be satisfied or `next build` fails
+          # at page-data collection. See pr-checks.yml > Build Preview for
+          # the full rationale; mirror that env block here.
+          PRISMA_FIELD_ENCRYPTION_KEY: ${{ secrets.PRISMA_FIELD_ENCRYPTION_KEY || 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=' }}
+          AI_AUDIT_SIGNING_KEY: ${{ secrets.AI_AUDIT_SIGNING_KEY || 'ci-build-stub-key-not-used-at-runtime' }}
+          DATABASE_URL: postgresql://stub:stub@localhost:5432/stub
+          DIRECT_URL: postgresql://stub:stub@localhost:5432/stub
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL || 'https://stub.supabase.co' }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY || 'ci-stub-anon-not-a-real-supabase-key-do-not-use-at-runtime' }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || 'ci-stub-service-role-not-a-real-supabase-key-do-not-use-at-runtime' }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://stub.supabase.co' }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'ci-stub-anon-not-a-real-supabase-key-do-not-use-at-runtime' }}
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v7
@@ -251,7 +297,7 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -276,14 +322,14 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
-          cache: "pip"
+          python-version: '3.11'
+          cache: 'pip'
           cache-dependency-path: tools/plan/pyproject.toml
 
       - name: Install plan-lint dependencies
         run: |
           cd tools/plan
-          pip install -e .
+          pip install -e ".[dev]"
 
       - name: Run plan linter (Sprint 0)
         run: |
@@ -318,7 +364,7 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile

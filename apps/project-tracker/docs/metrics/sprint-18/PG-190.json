@@ -9,11 +9,9 @@
   "phase": "",
   "stream": null,
   "dependencies": {
-    "required": [
-      "PG-178"
-    ],
+    "required": ["PG-178"],
     "all_satisfied": true,
-    "verified_at": "2026-04-26T11:17:07.539Z"
+    "verified_at": "2026-04-29T21:54:51.875Z"
   },
   "started_at": "2026-04-19T00:00:00.000Z",
   "completed_at": "2026-04-19T02:05:00.000Z",
@@ -22,13 +20,9 @@
     "last_error": null
   },
   "artifacts": {
-    "expected": [
-      "apps/web/src/app/cases/case-settings/page.tsx"
-    ],
+    "expected": ["apps/web/src/app/cases/case-settings/page.tsx"],
     "created": [],
-    "missing": [
-      "apps/web/src/app/cases/case-settings/page.tsx"
-    ]
+    "missing": ["apps/web/src/app/cases/case-settings/page.tsx"]
   },
   "validations": [
     {
@@ -109,7 +103,5 @@
     }
   ],
   "notes": "Module Settings - Cases page at /cases/case-settings. Bento grid layout, tRPC router (get/update/resetToDefaults), Prisma CaseSetting model with upsert-on-read, cross-field Zod validation. Web build fails on pre-existing unrelated errors (queues.router, ai-review.router).",
-  "dependencies_resolved": [
-    "PG-178"
-  ]
+  "dependencies_resolved": ["PG-178"]
 }

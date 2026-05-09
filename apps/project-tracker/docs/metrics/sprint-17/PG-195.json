@@ -10,10 +10,8 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-04-26T11:17:07.495Z",
-    "required": [
-      "PG-056"
-    ]
+    "verified_at": "2026-04-29T21:54:51.847Z",
+    "required": ["PG-056"]
   },
   "started_at": "2026-04-15T19:59:31.398Z",
   "completed_at": "2026-04-15T20:14:31.398Z",
@@ -96,8 +94,6 @@
   "current_phase": "BACKLOG",
   "updated_at": "2026-04-12T23:35:00Z",
   "attempt": 0,
-  "dependencies_resolved": [
-    "PG-056"
-  ],
+  "dependencies_resolved": ["PG-056"],
   "actual_duration_minutes": 15
 }

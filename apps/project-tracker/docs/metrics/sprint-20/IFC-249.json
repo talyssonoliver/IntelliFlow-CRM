@@ -11,7 +11,7 @@
   "dependencies": {
     "required": [],
     "all_satisfied": true,
-    "verified_at": "2026-04-26T11:17:07.592Z"
+    "verified_at": "2026-04-29T21:54:51.908Z"
   },
   "dependencies_resolved": [],
   "started_at": null,
@@ -40,12 +40,8 @@
       "apps/web/src/app/leads/[id]/edit/__tests__/page.test.tsx",
       "tests/e2e/lead-crud.spec.ts"
     ],
-    "created": [
-      "apps/web/src/app/leads/[id]/edit/__tests__/page.test.tsx"
-    ],
-    "missing": [
-      "tests/e2e/lead-crud.spec.ts"
-    ]
+    "created": ["apps/web/src/app/leads/[id]/edit/__tests__/page.test.tsx"],
+    "missing": ["tests/e2e/lead-crud.spec.ts"]
   },
   "validations": [],
   "blockers": [],

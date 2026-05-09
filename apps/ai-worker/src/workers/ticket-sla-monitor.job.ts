@@ -67,13 +67,13 @@ export class TicketSlaMonitorWorker {
   constructor(
     private readonly prisma: PrismaClient,
     private readonly redisConnection: { host: string; port: number; password?: string },
-    private readonly deps: SlaMonitorDeps,
+    private readonly deps: SlaMonitorDeps
   ) {}
 
   async start(): Promise<void> {
     this.queue = new Queue<TicketSlaMonitorJobData, TicketSlaMonitorJobResult>(
       TICKET_SLA_MONITOR_QUEUE_NAME,
-      { connection: this.redisConnection },
+      { connection: this.redisConnection }
     );
     this.queueEvents = new QueueEvents(TICKET_SLA_MONITOR_QUEUE_NAME, {
       connection: this.redisConnection,
@@ -81,10 +81,10 @@ export class TicketSlaMonitorWorker {
     this.worker = new Worker<TicketSlaMonitorJobData, TicketSlaMonitorJobResult>(
       TICKET_SLA_MONITOR_QUEUE_NAME,
       async (job) => this.process(job),
-      { connection: this.redisConnection, concurrency: 1 },
+      { connection: this.redisConnection, concurrency: 1 }
     );
     this.worker.on('failed', (job, error) =>
-      console.warn(`[ticket-sla-monitor] job ${job?.id} failed:`, error?.message),
+      console.warn(`[ticket-sla-monitor] job ${job?.id} failed:`, error?.message)
     );
   }
 
@@ -102,7 +102,9 @@ export class TicketSlaMonitorWorker {
         findMany: (args: {
           where?: Record<string, unknown>;
           select?: Record<string, boolean>;
-        }) => Promise<Array<{ tenantId: string; notifyOnSlaBreach: boolean; notifyOnSlaWarning: boolean }>>;
+        }) => Promise<
+          Array<{ tenantId: string; notifyOnSlaBreach: boolean; notifyOnSlaWarning: boolean }>
+        >;
       };
       ticket: {
         findMany: (args: Record<string, unknown>) => Promise<
@@ -146,8 +148,7 @@ export class TicketSlaMonitorWorker {
       for (const t of tickets) {
         if (!t.slaDeadline) continue;
         const deadlineMs = t.slaDeadline.getTime();
-        const elapsedPct =
-          (now - t.createdAt.getTime()) / (deadlineMs - t.createdAt.getTime());
+        const elapsedPct = (now - t.createdAt.getTime()) / (deadlineMs - t.createdAt.getTime());
 
         const breached = now >= deadlineMs && t.slaBreachedAt == null;
         const warning = !breached && elapsedPct >= 0.8;
@@ -198,7 +199,7 @@ export class TicketSlaMonitorWorker {
 export function createTicketSlaMonitorWorker(
   prisma: PrismaClient,
   redisConnection: { host: string; port: number; password?: string },
-  deps: SlaMonitorDeps,
+  deps: SlaMonitorDeps
 ): TicketSlaMonitorWorker {
   return new TicketSlaMonitorWorker(prisma, redisConnection, deps);
 }

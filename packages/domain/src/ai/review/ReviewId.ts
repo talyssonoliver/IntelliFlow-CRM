@@ -1,4 +1,4 @@
-import { generateUuid as uuidv4, isValidUuid } from '../../shared/uuid';
+import { generateUuid as uuidv4, isValidEntityId } from '../../shared/uuid';
 import { ValueObject } from '../../shared/ValueObject';
 import { DomainError } from '../../shared/Result';
 
@@ -27,12 +27,12 @@ export class ReviewId extends ValueObject<ReviewIdProps> {
 
   /**
    * Creates a new ReviewId
-   * @param value - Optional UUID string. If not provided, a new UUID is generated
-   * @throws InvalidReviewIdError if provided value is not a valid UUID
+   * @param value - Optional UUID or Prisma cuid string. If not provided, a new UUID is generated
+   * @throws InvalidReviewIdError if provided value is not a valid entity id
    */
   static create(value?: string): ReviewId {
     if (value !== undefined) {
-      if (!value || !isValidUuid(value)) {
+      if (!value || !isValidEntityId(value)) {
         throw new InvalidReviewIdError(value || '');
       }
       return new ReviewId({ value });

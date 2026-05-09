@@ -67,21 +67,21 @@ export interface ContactDuplicateDetectionService {
   checkForCreate(
     ctx: HasTenantContext,
     payload: ContactCheckInput,
-    flags: ContactAutomationFlags,
+    flags: ContactAutomationFlags
   ): Promise<DuplicateCheckResult>;
 
   checkForUpdate(
     ctx: HasTenantContext,
     contactId: string,
     payload: ContactCheckInput,
-    flags: ContactAutomationFlags,
+    flags: ContactAutomationFlags
   ): Promise<DuplicateCheckResult>;
 
   applyAutoMerge(
     ctx: HasTenantContext,
     primaryId: string,
     secondaryId: string,
-    mergedBy: string,
+    mergedBy: string
   ): Promise<{
     survivingContactId: string;
     mergedContactId: string;
@@ -95,7 +95,7 @@ interface FindSimilarContacts {
     prisma: PrismaClient,
     tenantId: string,
     embedding: number[],
-    options?: { limit?: number; threshold?: number },
+    options?: { limit?: number; threshold?: number }
   ): Promise<Array<{ id: string; similarity: number }>>;
 }
 
@@ -115,7 +115,7 @@ export interface ContactDuplicateDetectionDeps {
     ctx: HasTenantContext,
     primaryId: string,
     secondaryId: string,
-    mergedBy: string,
+    mergedBy: string
   ) => Promise<{
     survivingContactId: string;
     mergedContactId: string;
@@ -136,7 +136,7 @@ function rulesFromRows(
     threshold: number;
     isActive: boolean;
     sortOrder: number;
-  }>,
+  }>
 ): EvaluableRule[] {
   const validFields: EvaluableRule['field'][] = [
     'email',
@@ -146,18 +146,12 @@ function rulesFromRows(
     'website',
     'name_address',
   ];
-  const validStrategies: EvaluableRule['matchStrategy'][] = [
-    'exact',
-    'normalized',
-    'fuzzy',
-  ];
+  const validStrategies: EvaluableRule['matchStrategy'][] = ['exact', 'normalized', 'fuzzy'];
   return rows
     .filter(
       (r) =>
         validFields.includes(r.field as EvaluableRule['field']) &&
-        validStrategies.includes(
-          r.matchStrategy as EvaluableRule['matchStrategy'],
-        ),
+        validStrategies.includes(r.matchStrategy as EvaluableRule['matchStrategy'])
     )
     .map((r) => ({
       field: r.field as EvaluableRule['field'],
@@ -169,7 +163,15 @@ function rulesFromRows(
 }
 
 function contactToEmbeddableText(
-  c: { firstName?: string | null; lastName?: string | null; email?: string | null; company?: string | null } | null | undefined,
+  c:
+    | {
+        firstName?: string | null;
+        lastName?: string | null;
+        email?: string | null;
+        company?: string | null;
+      }
+    | null
+    | undefined
 ): string {
   if (!c) return '';
   return [c.firstName, c.lastName, c.email, c.company]
@@ -178,10 +180,7 @@ function contactToEmbeddableText(
     .trim();
 }
 
-async function fireAndForget<T>(
-  promise: Promise<T> | T,
-  label: string,
-): Promise<void> {
+async function fireAndForget<T>(promise: Promise<T> | T, label: string): Promise<void> {
   try {
     await Promise.resolve(promise);
   } catch (error) {
@@ -190,13 +189,11 @@ async function fireAndForget<T>(
 }
 
 export function createContactDuplicateDetectionService(
-  deps: ContactDuplicateDetectionDeps = {},
+  deps: ContactDuplicateDetectionDeps = {}
 ): ContactDuplicateDetectionService {
   const now = deps.now ?? (() => new Date());
 
-  async function loadActiveRules(
-    ctx: HasTenantContext,
-  ): Promise<EvaluableRule[]> {
+  async function loadActiveRules(ctx: HasTenantContext): Promise<EvaluableRule[]> {
     const prismaWithTenant = ctx.prismaWithTenant as unknown as {
       contactDuplicateRule: {
         findMany: (args: {
@@ -223,14 +220,11 @@ export function createContactDuplicateDetectionService(
   async function fetchCandidates(
     ctx: HasTenantContext,
     payload: ContactCheckInput,
-    excludeId?: string,
+    excludeId?: string
   ): Promise<Contact[]> {
     const prismaWithTenant = ctx.prismaWithTenant as unknown as {
       contact: {
-        findMany: (args: {
-          where: Record<string, unknown>;
-          take: number;
-        }) => Promise<Contact[]>;
+        findMany: (args: { where: Record<string, unknown>; take: number }) => Promise<Contact[]>;
       };
     };
     const orClauses: Record<string, unknown>[] = [];
@@ -272,7 +266,7 @@ export function createContactDuplicateDetectionService(
     ctx: HasTenantContext,
     payload: ContactCheckInput,
     deterministicMatches: DuplicateMatch<Contact>[],
-    flags: ContactAutomationFlags,
+    flags: ContactAutomationFlags
   ): Promise<DuplicateMatch<Contact>[]> {
     if (!flags.aiDuplicateDetection) return deterministicMatches;
     if (!deps.findSimilarContacts || !deps.generateEmbedding) return deterministicMatches;
@@ -288,7 +282,7 @@ export function createContactDuplicateDetectionService(
         ctx.prismaWithTenant,
         ctx.tenant.tenantId,
         embedding,
-        { limit: AI_SIMILARITY_LIMIT, threshold: AI_SIMILARITY_THRESHOLD },
+        { limit: AI_SIMILARITY_LIMIT, threshold: AI_SIMILARITY_THRESHOLD }
       );
 
       const seen = new Set(deterministicMatches.map((m) => m.candidate.id));
@@ -296,13 +290,17 @@ export function createContactDuplicateDetectionService(
         similar
           .filter((s) => !seen.has(s.id) && s.id !== payload.id)
           .map(async (s) => {
-            const row = await (ctx.prismaWithTenant as unknown as {
-              contact: { findFirst: (args: { where: Record<string, unknown> }) => Promise<Contact | null> };
-            }).contact.findFirst({
+            const row = await (
+              ctx.prismaWithTenant as unknown as {
+                contact: {
+                  findFirst: (args: { where: Record<string, unknown> }) => Promise<Contact | null>;
+                };
+              }
+            ).contact.findFirst({
               where: { id: s.id, tenantId: ctx.tenant.tenantId },
             });
             return row ? { row, similarity: s.similarity } : null;
-          }),
+          })
       );
 
       const aiMatches: DuplicateMatch<Contact>[] = fullCandidates
@@ -316,7 +314,10 @@ export function createContactDuplicateDetectionService(
 
       return [...deterministicMatches, ...aiMatches];
     } catch (error) {
-      console.warn('[contact-duplicate-detection] AI branch failed, degrading to deterministic-only:', error);
+      console.warn(
+        '[contact-duplicate-detection] AI branch failed, degrading to deterministic-only:',
+        error
+      );
       return deterministicMatches;
     }
   }
@@ -324,16 +325,13 @@ export function createContactDuplicateDetectionService(
   function decide(
     matches: DuplicateMatch<Contact>[],
     payload: ContactCheckInput,
-    flags: ContactAutomationFlags,
+    flags: ContactAutomationFlags
   ): DuplicateCheckResult {
     if (matches.length === 0) return { action: 'proceed', matches: [] };
 
     const exactEmailMatch = payload.email
       ? matches.find(
-          (m) =>
-            m.ruleField === 'email' &&
-            m.matchStrategy !== 'fuzzy' &&
-            m.score === 100,
+          (m) => m.ruleField === 'email' && m.matchStrategy !== 'fuzzy' && m.score === 100
         )
       : undefined;
 
@@ -355,7 +353,7 @@ export function createContactDuplicateDetectionService(
   async function emitFlagNotification(
     ctx: HasTenantContext,
     matches: DuplicateMatch<Contact>[],
-    action: 'flagged' | 'auto-merged',
+    action: 'flagged' | 'auto-merged'
   ): Promise<void> {
     if (!ctx.prisma && !ctx.prismaWithTenant) return;
     const prisma = ctx.prisma ?? ctx.prismaWithTenant;
@@ -382,16 +380,16 @@ export function createContactDuplicateDetectionService(
             candidateIds: matches.map((m) => m.candidate.id),
           },
         } as any,
-        ctx.services?.notificationOrchestrator,
+        ctx.services?.notificationOrchestrator
       ),
-      'flag notification',
+      'flag notification'
     );
   }
 
   async function enqueueEmbed(
     ctx: HasTenantContext,
     contactId: string,
-    reason: 'create' | 'update' | 'merge',
+    reason: 'create' | 'update' | 'merge'
   ): Promise<void> {
     if (!deps.enqueueEmbeddingJob) return;
     await fireAndForget(
@@ -400,7 +398,7 @@ export function createContactDuplicateDetectionService(
         tenantId: ctx.tenant.tenantId,
         reason,
       }),
-      'embedding enqueue',
+      'embedding enqueue'
     );
   }
 
@@ -408,7 +406,7 @@ export function createContactDuplicateDetectionService(
     ctx: HasTenantContext,
     payload: ContactCheckInput,
     flags: ContactAutomationFlags,
-    excludeId?: string,
+    excludeId?: string
   ): Promise<DuplicateCheckResult> {
     const rules = await loadActiveRules(ctx);
     if (rules.length === 0) return { action: 'proceed', matches: [] };
@@ -419,14 +417,14 @@ export function createContactDuplicateDetectionService(
     const deterministic = evaluateDuplicateRules<Contact & { id: string }>(
       payload as Partial<Contact>,
       existing as unknown as Array<Contact & { id: string }>,
-      rules,
+      rules
     );
 
     const fullMatches = await runAiBranch(
       ctx,
       payload,
       deterministic as DuplicateMatch<Contact>[],
-      flags,
+      flags
     );
 
     const decision = decide(fullMatches, payload, flags);
@@ -459,7 +457,7 @@ export function createContactDuplicateDetectionService(
           // call ContactService.mergeContacts — this path is only exercised in
           // tests without a merger spy.
           throw new Error(
-            'ContactDuplicateDetectionService.applyAutoMerge requires a mergeContacts dep',
+            'ContactDuplicateDetectionService.applyAutoMerge requires a mergeContacts dep'
           );
         });
 
@@ -487,5 +485,4 @@ export function createContactDuplicateDetectionService(
   };
 }
 
-export const contactDuplicateDetectionService =
-  createContactDuplicateDetectionService();
+export const contactDuplicateDetectionService = createContactDuplicateDetectionService();

@@ -70,9 +70,7 @@ beforeEach(() => {
   constructorCalls.closed.queue = 0;
 });
 
-function buildPrisma(
-  overrides?: Partial<{ contact: unknown | null }>,
-): any {
+function buildPrisma(overrides?: Partial<{ contact: unknown | null }>): any {
   return {
     contact: {
       findFirst: async () =>
@@ -106,7 +104,7 @@ describe('contactToEmbeddableText', () => {
         lastName: 'Lovelace',
         email: 'ada@a.com',
         company: 'Analytical',
-      }),
+      })
     ).toBe('Ada Lovelace ada@a.com Analytical');
   });
 
@@ -117,7 +115,7 @@ describe('contactToEmbeddableText', () => {
         lastName: null,
         email: null,
         company: null,
-      }),
+      })
     ).toBe('Ada');
   });
 });
@@ -138,7 +136,7 @@ describe('ContactEmbedJobDataSchema', () => {
         contactId: 'c-1',
         tenantId: 't-1',
         reason: 'unknown',
-      }),
+      })
     ).toThrow();
   });
 });
@@ -153,19 +151,14 @@ describe('ContactEmbedWorker.process', () => {
       buildPrisma(),
       { host: 'localhost', port: 6379 },
       embeddingChain,
-      updateEmbed,
+      updateEmbed
     );
 
     const result = await worker.process(
-      buildJob({ contactId: 'c-1', tenantId: 't-1', reason: 'create' }),
+      buildJob({ contactId: 'c-1', tenantId: 't-1', reason: 'create' })
     );
     expect(embeddingChain.generateEmbedding).toHaveBeenCalled();
-    expect(updateEmbed).toHaveBeenCalledWith(
-      expect.anything(),
-      'c-1',
-      't-1',
-      [0.1, 0.2, 0.3],
-    );
+    expect(updateEmbed).toHaveBeenCalledWith(expect.anything(), 'c-1', 't-1', [0.1, 0.2, 0.3]);
     expect(result.embedded).toBe(true);
     expect(result.contactId).toBe('c-1');
   });
@@ -176,10 +169,10 @@ describe('ContactEmbedWorker.process', () => {
       buildPrisma({ contact: null }),
       { host: 'localhost', port: 6379 },
       { generateEmbedding: generate },
-      vi.fn(async () => {}),
+      vi.fn(async () => {})
     );
     const result = await worker.process(
-      buildJob({ contactId: 'c-missing', tenantId: 't-1', reason: 'create' }),
+      buildJob({ contactId: 'c-missing', tenantId: 't-1', reason: 'create' })
     );
     expect(result.embedded).toBe(false);
     expect(generate).not.toHaveBeenCalled();
@@ -193,10 +186,10 @@ describe('ContactEmbedWorker.process', () => {
       }),
       { host: 'localhost', port: 6379 },
       { generateEmbedding: generate },
-      vi.fn(async () => {}),
+      vi.fn(async () => {})
     );
     const result = await worker.process(
-      buildJob({ contactId: 'c-1', tenantId: 't-1', reason: 'create' }),
+      buildJob({ contactId: 'c-1', tenantId: 't-1', reason: 'create' })
     );
     expect(result.embedded).toBe(false);
     expect(generate).not.toHaveBeenCalled();
@@ -207,10 +200,10 @@ describe('ContactEmbedWorker.process', () => {
       buildPrisma(),
       { host: 'localhost', port: 6379 },
       { generateEmbedding: async () => null },
-      vi.fn(async () => {}),
+      vi.fn(async () => {})
     );
     const result = await worker.process(
-      buildJob({ contactId: 'c-1', tenantId: 't-1', reason: 'create' }),
+      buildJob({ contactId: 'c-1', tenantId: 't-1', reason: 'create' })
     );
     expect(result.embedded).toBe(false);
   });
@@ -224,12 +217,10 @@ describe('ContactEmbedWorker.process', () => {
           throw new Error('LiteLLM down');
         },
       },
-      vi.fn(async () => {}),
+      vi.fn(async () => {})
     );
     await expect(
-      worker.process(
-        buildJob({ contactId: 'c-1', tenantId: 't-1', reason: 'create' }),
-      ),
+      worker.process(buildJob({ contactId: 'c-1', tenantId: 't-1', reason: 'create' }))
     ).rejects.toThrow(/LiteLLM down/);
   });
 });
@@ -240,7 +231,7 @@ describe('ContactEmbedWorker — lifecycle (start/stop/listeners)', () => {
       buildPrisma(),
       { host: 'localhost', port: 6379 },
       { generateEmbedding: async () => [0.1] },
-      vi.fn(async () => {}),
+      vi.fn(async () => {})
     );
     await worker.start();
     expect(constructorCalls.Queue).toHaveLength(1);
@@ -257,7 +248,7 @@ describe('ContactEmbedWorker — lifecycle (start/stop/listeners)', () => {
       buildPrisma(),
       { host: 'localhost', port: 6379 },
       { generateEmbedding: async () => [0.1] },
-      vi.fn(async () => {}),
+      vi.fn(async () => {})
     );
     await worker.start();
     expect(constructorCalls.workerOn.some(([evt]) => evt === 'failed')).toBe(true);
@@ -268,16 +259,13 @@ describe('ContactEmbedWorker — lifecycle (start/stop/listeners)', () => {
       buildPrisma(),
       { host: 'localhost', port: 6379 },
       { generateEmbedding: async () => [0.1] },
-      vi.fn(async () => {}),
+      vi.fn(async () => {})
     );
     await worker.start();
     const [, handler] = constructorCalls.workerOn.find(([evt]) => evt === 'failed') ?? [];
     expect(typeof handler).toBe('function');
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    (handler as (job: unknown, err: Error) => void)(
-      { id: 'failed-job' },
-      new Error('boom'),
-    );
+    (handler as (job: unknown, err: Error) => void)({ id: 'failed-job' }, new Error('boom'));
     expect(warnSpy).toHaveBeenCalled();
     warnSpy.mockRestore();
   });
@@ -287,7 +275,7 @@ describe('ContactEmbedWorker — lifecycle (start/stop/listeners)', () => {
       buildPrisma(),
       { host: 'localhost', port: 6379 },
       { generateEmbedding: async () => [0.1] },
-      vi.fn(async () => {}),
+      vi.fn(async () => {})
     );
     await worker.start();
     await worker.stop();
@@ -301,7 +289,7 @@ describe('ContactEmbedWorker — lifecycle (start/stop/listeners)', () => {
       buildPrisma(),
       { host: 'localhost', port: 6379 },
       { generateEmbedding: async () => [0.1] },
-      vi.fn(async () => {}),
+      vi.fn(async () => {})
     );
     // Should not throw — all three private fields are null.
     await expect(worker.stop()).resolves.toBeUndefined();
@@ -312,7 +300,7 @@ describe('ContactEmbedWorker — lifecycle (start/stop/listeners)', () => {
       buildPrisma(),
       { host: 'localhost', port: 6379 },
       { generateEmbedding: async () => [0.1] },
-      vi.fn(async () => {}),
+      vi.fn(async () => {})
     );
     expect(instance).toBeInstanceOf(ContactEmbedWorker);
   });
@@ -323,7 +311,7 @@ describe('ContactEmbedWorker — lifecycle (start/stop/listeners)', () => {
       buildPrisma(),
       { host: 'localhost', port: 6379 },
       { generateEmbedding: async () => [0.1, 0.2] },
-      updateEmbed,
+      updateEmbed
     );
     await worker.start();
     // The Worker ctor was called with (queueName, jobHandler, opts) — pull the
@@ -332,7 +320,7 @@ describe('ContactEmbedWorker — lifecycle (start/stop/listeners)', () => {
     const workerCtorArgs = constructorCalls.Worker[0] as unknown[];
     const handler = workerCtorArgs[1] as (job: unknown) => Promise<unknown>;
     const result = (await handler(
-      buildJob({ contactId: 'c-1', tenantId: 't-1', reason: 'create' }),
+      buildJob({ contactId: 'c-1', tenantId: 't-1', reason: 'create' })
     )) as { embedded: boolean };
     expect(result.embedded).toBe(true);
     expect(updateEmbed).toHaveBeenCalled();

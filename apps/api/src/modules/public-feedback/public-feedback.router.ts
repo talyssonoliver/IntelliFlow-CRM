@@ -14,10 +14,7 @@ import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, publicProcedure } from '../../trpc';
 import { publicFeedbackInputSchema } from '@intelliflow/validators';
 import type { Context } from '../../context';
-import {
-  publicFeedbackLimiter,
-  PublicRateLimiter,
-} from '../../security/public-rate-limiter';
+import { publicFeedbackLimiter, PublicRateLimiter } from '../../security/public-rate-limiter';
 
 /**
  * Best-effort client IP extraction from a fetch-style Request. Falls back to
@@ -38,8 +35,7 @@ export function extractClientIp(req: Request | undefined): string {
 }
 
 function getPublicFeedbackService(ctx: Context) {
-  const service = (ctx.services as { publicFeedback?: unknown } | undefined)
-    ?.publicFeedback;
+  const service = (ctx.services as { publicFeedback?: unknown } | undefined)?.publicFeedback;
   if (!service) {
     throw new TRPCError({
       code: 'INTERNAL_SERVER_ERROR',
@@ -55,42 +51,39 @@ function getPublicFeedbackService(ctx: Context) {
 }
 
 export const publicFeedbackRouter = createTRPCRouter({
-  submit: publicProcedure
-    .input(publicFeedbackInputSchema)
-    .mutation(async ({ ctx, input }) => {
-      // Honeypot trip — reject before persistence. Schema already enforces
-      // the literal empty string, but we keep this as a defence-in-depth
-      // check for historical reasons / safety nets.
-      if (input.__honeypot !== undefined && input.__honeypot !== '') {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Honeypot tripped.',
-        });
-      }
+  submit: publicProcedure.input(publicFeedbackInputSchema).mutation(async ({ ctx, input }) => {
+    // Honeypot trip — reject before persistence. Schema already enforces
+    // the literal empty string, but we keep this as a defence-in-depth
+    // check for historical reasons / safety nets.
+    if (input.__honeypot !== undefined && input.__honeypot !== '') {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: 'Honeypot tripped.',
+      });
+    }
 
-      // PG-126: IP hashing salt.
-      // PROD → must be set, or the endpoint refuses to persist submissions so
-      // hashed IPs can't be rainbow-tabled back to raw IPs via a
-      // public-in-repo salt.
-      // TEST/DEV → fall back to a local development salt so the widget is
-      // runnable out of the box.
-      const salt = process.env.PUBLIC_FEEDBACK_IP_SALT;
-      if (!salt && process.env.NODE_ENV === 'production') {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message:
-            'Public feedback is disabled: PUBLIC_FEEDBACK_IP_SALT is not configured.',
-        });
-      }
-      const ipHash = PublicRateLimiter.hashIp(
-        extractClientIp(ctx.req),
-        salt ?? 'pg-126-dev-salt-NEVER-USE-IN-PROD'
-      );
+    // PG-126: IP hashing salt.
+    // PROD → must be set, or the endpoint refuses to persist submissions so
+    // hashed IPs can't be rainbow-tabled back to raw IPs via a
+    // public-in-repo salt.
+    // TEST/DEV → fall back to a local development salt so the widget is
+    // runnable out of the box.
+    const salt = process.env.PUBLIC_FEEDBACK_IP_SALT;
+    if (!salt && process.env.NODE_ENV === 'production') {
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Public feedback is disabled: PUBLIC_FEEDBACK_IP_SALT is not configured.',
+      });
+    }
+    const ipHash = PublicRateLimiter.hashIp(
+      extractClientIp(ctx.req),
+      salt ?? 'pg-126-dev-salt-NEVER-USE-IN-PROD'
+    );
 
-      publicFeedbackLimiter.check(ipHash);
+    publicFeedbackLimiter.check(ipHash);
 
-      const service = getPublicFeedbackService(ctx);
-      const { __honeypot: _honey, ...cleanInput } = input;
-      return service.submit(cleanInput, ipHash);
-    }),
+    const service = getPublicFeedbackService(ctx);
+    const { __honeypot: _honey, ...cleanInput } = input;
+    return service.submit(cleanInput, ipHash);
+  }),
 });

@@ -266,7 +266,7 @@ export function fieldEncryptionExtension(config: FieldEncryptionConfig) {
 
   return Prisma.defineExtension({
     name: 'field-encryption',
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     query: modelOverrides as any,
   });
 }

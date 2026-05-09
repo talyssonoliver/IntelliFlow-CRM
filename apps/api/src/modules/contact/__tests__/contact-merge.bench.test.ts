@@ -27,9 +27,7 @@ const IS_CI = process.env.CI === 'true';
 const TENANT = 'tenant-bench';
 const USER = 'user-bench';
 
-function makeFlags(
-  overrides: Partial<ContactAutomationFlags> = {}
-): ContactAutomationFlags {
+function makeFlags(overrides: Partial<ContactAutomationFlags> = {}): ContactAutomationFlags {
   return {
     autoMergeOnExactEmail: false,
     notifyOnDuplicate: false,
@@ -191,7 +189,9 @@ describe.skipIf(IS_CI)('IFC-310 merge benchmark', () => {
       durations.push(performance.now() - start);
       // No cross-tenant matches: our mocked prisma only returns rows for the
       // current ctx's seeded set, which is tenant-correct by construction.
-      expect(result.matches.every((m) => (m.candidate as any).tenantId === ctx.tenant.tenantId)).toBe(true);
+      expect(
+        result.matches.every((m) => (m.candidate as any).tenantId === ctx.tenant.tenantId)
+      ).toBe(true);
     }
     const stats = summarize(durations);
     writeBenchRecord('cross-tenant-isolation', { samples: durations.length, ...stats });

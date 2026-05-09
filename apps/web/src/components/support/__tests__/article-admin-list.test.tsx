@@ -467,8 +467,13 @@ describe('ArticleAdminList', () => {
     });
     expect(input.value).toBe('hello');
 
+    // The Escape handler uses document.addEventListener and checks
+    // searchRegionRef.current.contains(document.activeElement).
+    // Focus the input first so activeElement is inside the search region,
+    // then fire the keydown event on document.
     act(() => {
-      fireEvent.keyDown(input, { key: 'Escape' });
+      input.focus();
+      fireEvent.keyDown(document, { key: 'Escape' });
     });
     const refreshed = screen.getByTestId('search-input') as HTMLInputElement;
     expect(refreshed.value).toBe('');

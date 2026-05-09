@@ -110,6 +110,7 @@ vi.mock('../../services/document-indexer', () => ({
 
 vi.mock('@intelliflow/db', () => ({
   PrismaClient: vi.fn(),
+  prisma: {},
 }));
 
 import {

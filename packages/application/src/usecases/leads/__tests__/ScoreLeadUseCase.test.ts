@@ -60,7 +60,7 @@ describe('ScoreLeadUseCase', () => {
 
     it('should fail when lead is not found', async () => {
       const input: ScoreLeadInput = {
-        leadId: '00000000-0000-0000-0000-000000000000',
+        leadId: '00000000-0000-4000-8000-000000000000',
       };
 
       const result = await useCase.execute(input);

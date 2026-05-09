@@ -78,7 +78,7 @@ export class InMemoryLeadRepository implements LeadRepository {
 
   async findForScoring(limit: number): Promise<Lead[]> {
     const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    thirtyDaysAgo.setUTCDate(thirtyDaysAgo.getUTCDate() - 30);
 
     return Array.from(this.leads.values())
       .filter((lead) => {

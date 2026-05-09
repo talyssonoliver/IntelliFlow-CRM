@@ -235,8 +235,8 @@ export class CostTracker {
     report += `Total Cost: $${stats.totalCost.toFixed(2)}\n`;
     report += `Total Operations: ${stats.totalOperations}\n`;
     report += `Average Cost per Operation: $${stats.averageCostPerOperation.toFixed(4)}\n`;
-    report += `Total Input Tokens: ${stats.totalInputTokens.toLocaleString()}\n`;
-    report += `Total Output Tokens: ${stats.totalOutputTokens.toLocaleString()}\n\n`;
+    report += `Total Input Tokens: ${stats.totalInputTokens.toLocaleString('en-US')}\n`;
+    report += `Total Output Tokens: ${stats.totalOutputTokens.toLocaleString('en-US')}\n\n`;
 
     report += 'Cost by Model:\n';
     for (const [model, cost] of Object.entries(stats.costByModel)) {

@@ -12,32 +12,22 @@ vi.mock('@intelliflow/ui', async (importOriginal) => {
       <SelectContext.Provider value={{ value, onValueChange }}>{children}</SelectContext.Provider>
     ),
     SelectTrigger: ({ children, ...props }: any) => (
-      // eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- test renders custom modal/dropdown
-      <div role="combobox" aria-controls="select-listbox" aria-expanded={false} {...props}>
+      <select aria-controls="select-listbox" {...props}>
         {children}
-      </div>
+      </select>
     ),
     SelectValue: ({ placeholder }: any) => <span>{placeholder}</span>,
-    SelectContent: ({ children }: any) => <div data-testid="select-content">{children}</div>,
+    SelectContent: ({ children }: any) => <>{children}</>,
     SelectItem: ({ children, value: itemValue }: any) => (
       <SelectContext.Consumer>
         {(ctx: any) => (
-          // eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- test renders custom modal/dropdown
-          <div
-            role="option"
-            tabIndex={0}
+          <option
+            value={itemValue}
             aria-selected={ctx?.value === itemValue}
-            data-value={itemValue}
             onClick={() => ctx?.onValueChange?.(itemValue)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                ctx?.onValueChange?.(itemValue);
-              }
-            }}
           >
             {children}
-          </div>
+          </option>
         )}
       </SelectContext.Consumer>
     ),

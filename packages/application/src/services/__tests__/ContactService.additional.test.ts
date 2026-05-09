@@ -58,7 +58,7 @@ describe('ContactService (additional coverage)', () => {
     });
 
     it('should fail when contact not found', async () => {
-      const fakeId = '00000000-0000-0000-0000-000000000000';
+      const fakeId = '00000000-0000-4000-8000-000000000000';
       const result = await service.getContactById(fakeId);
 
       expect(result.isFailure).toBe(true);
@@ -315,7 +315,7 @@ describe('ContactService (additional coverage)', () => {
       } as any).value;
       await leadRepository.save(lead);
 
-      const fakeContactId = '00000000-0000-0000-0000-000000000000';
+      const fakeContactId = '00000000-0000-4000-8000-000000000000';
       const result = await service.linkToLead(fakeContactId, lead.id.value, 'linker');
 
       expect(result.isFailure).toBe(true);
@@ -332,7 +332,7 @@ describe('ContactService (additional coverage)', () => {
       } as any).value;
       await contactRepository.save(contact);
 
-      const fakeLeadId = '00000000-0000-0000-0000-000000000000';
+      const fakeLeadId = '00000000-0000-4000-8000-000000000000';
       const result = await service.linkToLead(contact.id.value, fakeLeadId, 'linker');
 
       expect(result.isFailure).toBe(true);
@@ -342,7 +342,7 @@ describe('ContactService (additional coverage)', () => {
     it('should fail with invalid contact ID', async () => {
       const result = await service.linkToLead(
         'bad-id',
-        '00000000-0000-0000-0000-000000000000',
+        '00000000-0000-4000-8000-000000000000',
         'linker'
       );
 
@@ -460,7 +460,7 @@ describe('ContactService (additional coverage)', () => {
     });
 
     it('should fail if contact not found', async () => {
-      const fakeId = '00000000-0000-0000-0000-000000000000';
+      const fakeId = '00000000-0000-4000-8000-000000000000';
       const result = await service.unlinkFromLead(fakeId, 'unlinker');
 
       expect(result.isFailure).toBe(true);
@@ -672,7 +672,7 @@ describe('ContactService (additional coverage)', () => {
     it('should fail associateWithAccount with invalid contact ID', async () => {
       const result = await service.associateWithAccount(
         'bad-id',
-        '00000000-0000-0000-0000-000000000000',
+        '00000000-0000-4000-8000-000000000000',
         'u'
       );
       expect(result.isFailure).toBe(true);
@@ -704,7 +704,7 @@ describe('ContactService (additional coverage)', () => {
     it('should fail mergeContacts with invalid primary ID', async () => {
       const result = await service.mergeContacts(
         'bad-id',
-        '00000000-0000-0000-0000-000000000000',
+        '00000000-0000-4000-8000-000000000000',
         'u'
       );
       expect(result.isFailure).toBe(true);
@@ -712,7 +712,7 @@ describe('ContactService (additional coverage)', () => {
 
     it('should fail mergeContacts with invalid secondary ID', async () => {
       const result = await service.mergeContacts(
-        '00000000-0000-0000-0000-000000000000',
+        '00000000-0000-4000-8000-000000000000',
         'bad-id',
         'u'
       );
@@ -932,7 +932,7 @@ describe('ContactService (additional coverage)', () => {
   // =========================================================================
   describe('updateContactEmail() - extended', () => {
     it('should fail if contact not found', async () => {
-      const fakeId = '00000000-0000-0000-0000-000000000000';
+      const fakeId = '00000000-0000-4000-8000-000000000000';
       const result = await service.updateContactEmail(fakeId, 'new@test.com', 'updater');
 
       expect(result.isFailure).toBe(true);

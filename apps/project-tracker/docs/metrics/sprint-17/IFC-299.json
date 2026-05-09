@@ -9,11 +9,9 @@
   "phase": "",
   "stream": null,
   "dependencies": {
-    "required": [
-      "IFC-298"
-    ],
+    "required": ["IFC-298"],
     "all_satisfied": true,
-    "verified_at": "2026-04-26T11:17:07.484Z"
+    "verified_at": "2026-04-29T21:54:51.840Z"
   },
   "started_at": "2026-03-18T12:00:00Z",
   "completed_at": "2026-03-19T00:22:57.642Z",
@@ -64,8 +62,6 @@
     }
   ],
   "notes": "Tenant-scoped tRPC router with list/getBySlug/getByCategory/getRelated/create/update/delete/publish/unpublish procedures.",
-  "dependencies_resolved": [
-    "IFC-298"
-  ],
+  "dependencies_resolved": ["IFC-298"],
   "actual_duration_minutes": 15
 }

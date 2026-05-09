@@ -9,6 +9,7 @@ node_modules/
 # testing
 /coverage
 coverage/
+!apps/web/src/app/governance/quality-reports/coverage/
 artifacts/coverage-vitest/
 artifacts/coverage-parts/
 test-results/
@@ -52,6 +53,7 @@ out/
 # production
 /build
 build/
+!apps/project-tracker/app/api/tracking/build/
 dist/
 .tsup/
 .output/
@@ -98,6 +100,7 @@ next-env.d.ts
 __pycache__/
 *.pyc
 .pytest_cache/
+*.egg-info/
 
 # IDE
 .vscode/
@@ -129,6 +132,7 @@ tmp/
 
 # logs
 logs/
+!apps/web/src/app/agent-approvals/logs/
 *.log
 
 # Keep artifacts/logs/ directory (but do not commit *.log files)

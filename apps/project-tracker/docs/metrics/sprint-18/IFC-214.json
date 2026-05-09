@@ -9,19 +9,11 @@
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
-    "required": [
-      "IFC-015",
-      "IFC-168",
-      "IFC-197"
-    ],
+    "required": ["IFC-015", "IFC-168", "IFC-197"],
     "all_satisfied": true,
-    "verified_at": "2026-04-26T11:17:07.511Z"
+    "verified_at": "2026-04-29T21:54:51.856Z"
   },
-  "dependencies_resolved": [
-    "IFC-015",
-    "IFC-168",
-    "IFC-197"
-  ],
+  "dependencies_resolved": ["IFC-015", "IFC-168", "IFC-197"],
   "started_at": null,
   "completed_at": null,
   "target_duration_minutes": 240,
@@ -60,16 +52,16 @@
       ".specify/sprints/sprint-18/attestations/IFC-214/context_ack.json"
     ],
     "created": [
-      "apps/api/src/modules/ai-monitoring/ai-monitoring.router.ts"
+      "apps/api/src/modules/ai-monitoring/ai-monitoring.router.ts",
+      ".specify/sprints/sprint-18/specifications/IFC-214-spec.md",
+      ".specify/sprints/sprint-18/planning/IFC-214-plan.md",
+      ".specify/sprints/sprint-18/attestations/IFC-214/context_ack.json"
     ],
     "missing": [
       "apps/api/src/modules/ai-monitoring/ai-monitoring.redis-store.ts",
       "apps/api/src/modules/ai-monitoring/__tests__/ai-monitoring.redis.integration.test.ts",
       "apps/ai-worker/src/monitoring/redis-monitoring-publisher.ts",
-      "apps/ai-worker/src/monitoring/__tests__/redis-monitoring-publisher.test.ts",
-      ".specify/sprints/sprint-18/specifications/IFC-214-spec.md",
-      ".specify/sprints/sprint-18/planning/IFC-214-plan.md",
-      ".specify/sprints/sprint-18/attestations/IFC-214/context_ack.json"
+      "apps/ai-worker/src/monitoring/__tests__/redis-monitoring-publisher.test.ts"
     ]
   },
   "validations": [],

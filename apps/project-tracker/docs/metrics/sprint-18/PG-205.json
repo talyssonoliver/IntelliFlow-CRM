@@ -9,17 +9,11 @@
   "phase": "",
   "stream": null,
   "dependencies": {
-    "required": [
-      "PG-178",
-      "PG-182"
-    ],
+    "required": ["PG-178", "PG-182"],
     "all_satisfied": true,
-    "verified_at": "2026-04-26T11:17:07.556Z"
+    "verified_at": "2026-04-29T21:54:51.886Z"
   },
-  "dependencies_resolved": [
-    "PG-178",
-    "PG-182"
-  ],
+  "dependencies_resolved": ["PG-178", "PG-182"],
   "started_at": null,
   "completed_at": null,
   "execution": {
@@ -34,9 +28,7 @@
       "packages/validators/src/contact-types.ts",
       ".specify/sprints/sprint-18/attestations/PG-205/context_ack.json"
     ],
-    "created": [
-      "apps/web/src/app/contacts/(list)/contact-types/page.tsx"
-    ],
+    "created": ["apps/web/src/app/contacts/(list)/contact-types/page.tsx"],
     "missing": [
       "apps/web/src/app/contacts/(list)/contact-types/ContactTypesContent.tsx",
       "apps/api/src/modules/contact/contact-types.router.ts",

@@ -9,15 +9,11 @@
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
-    "required": [
-      "IFC-069"
-    ],
+    "required": ["IFC-069"],
     "all_satisfied": true,
-    "verified_at": "2026-04-26T11:17:07.616Z"
+    "verified_at": "2026-04-29T21:54:51.922Z"
   },
-  "dependencies_resolved": [
-    "IFC-069"
-  ],
+  "dependencies_resolved": ["IFC-069"],
   "started_at": null,
   "completed_at": null,
   "target_duration_minutes": 120,
@@ -45,9 +41,7 @@
       "apps/api/src/router.ts",
       ".specify/sprints/sprint-22/attestations/IFC-235/context_ack.json"
     ],
-    "created": [
-      "apps/api/src/router.ts"
-    ],
+    "created": ["apps/api/src/router.ts"],
     "missing": [
       "apps/web/src/components/leads/LeadChatPanel.tsx",
       ".specify/sprints/sprint-22/attestations/IFC-235/context_ack.json"

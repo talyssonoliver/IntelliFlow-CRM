@@ -9,15 +9,11 @@
   "stream": null,
   "status": "DONE",
   "dependencies": {
-    "required": [
-      "DOC-009"
-    ],
+    "required": ["DOC-009"],
     "all_satisfied": true,
-    "verified_at": "2026-04-26T11:17:07.424Z"
+    "verified_at": "2026-04-29T21:54:51.806Z"
   },
-  "dependencies_resolved": [
-    "DOC-009"
-  ],
+  "dependencies_resolved": ["DOC-009"],
   "started_at": "2026-03-03T01:40:43.818Z",
   "completed_at": "2026-03-03T01:55:43.818Z",
   "target_duration_minutes": null,

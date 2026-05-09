@@ -5,11 +5,8 @@
   "description": "Continuously maintain ADR registry and developer guide updates",
   "owner": "Tech Lead",
   "dependencies": {
-    "required": [
-      "IFC-100",
-      "GOV-001"
-    ],
-    "verified_at": "2026-04-26T11:17:07.673Z",
+    "required": ["IFC-100", "GOV-001"],
+    "verified_at": "2026-04-29T21:54:51.952Z",
     "all_satisfied": true
   },
   "status": "DONE",
@@ -55,8 +52,5 @@
   "started_at": "2025-12-31T06:30:00Z",
   "completed_at": "2025-12-31T07:00:00Z",
   "actual_duration_minutes": 30,
-  "dependencies_resolved": [
-    "IFC-100",
-    "GOV-001"
-  ]
+  "dependencies_resolved": ["IFC-100", "GOV-001"]
 }

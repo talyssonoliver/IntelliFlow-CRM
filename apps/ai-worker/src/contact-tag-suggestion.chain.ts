@@ -79,21 +79,19 @@ export async function suggestContactTags(
   try {
     const model = await createLLMForTenant('structured', 'free', { tenantId });
     const structured = model.withStructuredOutput(LLMOutputSchema);
-    const raw = await structured.invoke(
-      [
-        {
-          role: 'system',
-          content:
-            'You suggest CRM tags for a contact profile. Return up to 5 suggestions. ' +
-            'Each suggestion includes a short tag label, confidence (0-1), and one-sentence reason. ' +
-            'Only emit suggestions you are confident in. Confidence must reflect evidence strength.',
-        },
-        {
-          role: 'user',
-          content: `Profile: ${JSON.stringify(sanitized)}. Return up to 5 tag suggestions.`,
-        },
-      ] as unknown as Parameters<typeof structured.invoke>[0]
-    );
+    const raw = await structured.invoke([
+      {
+        role: 'system',
+        content:
+          'You suggest CRM tags for a contact profile. Return up to 5 suggestions. ' +
+          'Each suggestion includes a short tag label, confidence (0-1), and one-sentence reason. ' +
+          'Only emit suggestions you are confident in. Confidence must reflect evidence strength.',
+      },
+      {
+        role: 'user',
+        content: `Profile: ${JSON.stringify(sanitized)}. Return up to 5 tag suggestions.`,
+      },
+    ] as unknown as Parameters<typeof structured.invoke>[0]);
 
     const parsed = LLMOutputSchema.safeParse(raw);
     if (!parsed.success) {

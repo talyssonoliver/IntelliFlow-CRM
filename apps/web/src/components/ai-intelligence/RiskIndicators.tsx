@@ -39,19 +39,19 @@ export function RiskIndicators({ distribution, total }: Readonly<RiskIndicatorsP
               >
                 {level}
               </span>
-              {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role */}
-              <span
-                role="progressbar"
-                aria-valuenow={pct}
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-label={`${level}: ${pct}%`}
-                className="flex-1 h-2 rounded-full bg-muted overflow-hidden block"
-              >
-                <span
-                  className={`h-full rounded-full transition-all block ${LEVEL_COLORS[level] ?? 'bg-slate-500'}`}
-                  style={{ width: `${pct}%` }}
+              <span className="flex-1 relative h-2 block">
+                <progress
+                  max={100}
+                  value={pct}
+                  aria-label={`${level}: ${pct}%`}
+                  className="sr-only"
                 />
+                <span className="absolute inset-0 rounded-full bg-muted overflow-hidden">
+                  <span
+                    className={`h-full rounded-full transition-all block ${LEVEL_COLORS[level] ?? 'bg-slate-500'}`}
+                    style={{ width: `${pct}%` }}
+                  />
+                </span>
               </span>
               <span className="text-xs text-muted-foreground w-16 text-right">
                 {count} ({pct}%)

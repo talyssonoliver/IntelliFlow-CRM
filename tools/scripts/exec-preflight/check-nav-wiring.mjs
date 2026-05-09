@@ -137,7 +137,7 @@ function extractSection(planContent, headingPatterns) {
 function listFilePaths(sectionText) {
   const found = new Set();
   const re =
-    /(?:(?:apps|packages|docs|tools|\.specify|\.claude|\.github|\.agents)\/[^\s'"`\]\)]+)/g;
+    /(?:(?:apps|packages|docs|tools|\.specify|\.claude|\.github|\.agents)\/[^\s'"`[\]()]+)/g;
   let match;
   while ((match = re.exec(sectionText)) !== null) {
     const raw = match[0].replace(/[.,;:)\]`]+$/, '');

@@ -83,25 +83,33 @@ export async function processCaseAiAutomationJob(
     switch (operation) {
       case 'insight-generation': {
         if (!setting?.aiInsightGeneration) return makeSkip('aiInsightGeneration=false');
-        const context = (data.context ?? {}) as Parameters<typeof generateCaseInsight>[0]['context'];
+        const context = (data.context ?? {}) as Parameters<
+          typeof generateCaseInsight
+        >[0]['context'];
         const result = await generateCaseInsight({ caseId, tenantId, context });
         return makeOk(result);
       }
       case 'summarization': {
         if (!setting?.aiCaseSummarization) return makeSkip('aiCaseSummarization=false');
-        const context = (data.context ?? {}) as Parameters<typeof generateCaseSummary>[0]['context'];
+        const context = (data.context ?? {}) as Parameters<
+          typeof generateCaseSummary
+        >[0]['context'];
         const result = await generateCaseSummary({ caseId, tenantId, context });
         return makeOk(result);
       }
       case 'priority-prediction': {
         if (!setting?.aiPriorityPrediction) return makeSkip('aiPriorityPrediction=false');
-        const context = (data.context ?? {}) as Parameters<typeof predictCasePriority>[0]['context'];
+        const context = (data.context ?? {}) as Parameters<
+          typeof predictCasePriority
+        >[0]['context'];
         const result = await predictCasePriority({ caseId, tenantId, context });
         return makeOk(result);
       }
       case 'resolution-suggestion': {
         if (!setting?.aiResolutionSuggestion) return makeSkip('aiResolutionSuggestion=false');
-        const context = (data.context ?? {}) as Parameters<typeof suggestCaseResolution>[0]['context'];
+        const context = (data.context ?? {}) as Parameters<
+          typeof suggestCaseResolution
+        >[0]['context'];
         const result = await suggestCaseResolution({ caseId, tenantId, context });
         return makeOk(result);
       }

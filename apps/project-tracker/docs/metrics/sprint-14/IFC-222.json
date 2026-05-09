@@ -5,11 +5,9 @@
   "description": "Implement real Twilio SMS SDK calls (Resolves R-006)",
   "owner": "Backend Dev (STOA-Domain)",
   "dependencies": {
-    "required": [
-      "IFC-170"
-    ],
+    "required": ["IFC-170"],
     "all_satisfied": true,
-    "verified_at": "2026-04-26T11:17:07.395Z"
+    "verified_at": "2026-04-29T21:54:51.789Z"
   },
   "prerequisites": [
     "FILE:apps/workers/notifications-worker/src/channels/sms.ts"
@@ -22,16 +20,12 @@
     "ARTIFACT:apps/workers/notifications-worker/src/channels/sms.ts",
     "EVIDENCE:.specify/sprints/sprint-14/attestations/IFC-222/context_ack.json"
   ],
-  "validation_method": [
-    "VALIDATE:pnpm test"
-  ],
+  "validation_method": ["VALIDATE:pnpm test"],
   "estimate": "60/120/240",
   "percent_complete": 0,
   "created_at": "2026-03-04T23:51:20.000Z",
   "updated_at": "2026-03-04T23:51:20.000Z",
-  "dependencies_resolved": [
-    "IFC-170"
-  ],
+  "dependencies_resolved": ["IFC-170"],
   "completed_at": "2026-03-06T22:15:29.590Z",
   "started_at": "2026-03-06T22:00:29.590Z",
   "actual_duration_minutes": 15,

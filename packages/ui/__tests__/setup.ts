@@ -7,6 +7,20 @@ import * as vitestAxeMatchers from 'vitest-axe/matchers';
 expect.extend(matchers);
 expect.extend(vitestAxeMatchers);
 
+// Mock IntersectionObserver for components that use it (e.g. EmptyState entity mode)
+if (typeof globalThis.IntersectionObserver === 'undefined') {
+  globalThis.IntersectionObserver = class MockIntersectionObserver implements IntersectionObserver {
+    readonly root = null;
+    readonly rootMargin = '';
+    readonly thresholds = [];
+    observe = vi.fn();
+    unobserve = vi.fn();
+    disconnect = vi.fn();
+    takeRecords = vi.fn(() => []);
+    constructor(_callback: IntersectionObserverCallback, _options?: IntersectionObserverInit) {}
+  };
+}
+
 // Store original implementations for cleanup
 let originalHasPointerCapture: typeof Element.prototype.hasPointerCapture | undefined;
 let originalSetPointerCapture: typeof Element.prototype.setPointerCapture | undefined;

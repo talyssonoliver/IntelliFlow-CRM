@@ -99,6 +99,21 @@ export function AppSidebar({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { user } = useAuth();
+  const navRef = React.useRef<HTMLElement>(null);
+
+  // Attach hover tracking imperatively to avoid jsx-a11y/no-noninteractive-element-interactions
+  React.useEffect(() => {
+    const el = navRef.current;
+    if (!el) return;
+    const onEnter = () => setHovered(true);
+    const onLeave = () => setHovered(false);
+    el.addEventListener('mouseenter', onEnter);
+    el.addEventListener('mouseleave', onLeave);
+    return () => {
+      el.removeEventListener('mouseenter', onEnter);
+      el.removeEventListener('mouseleave', onLeave);
+    };
+  }, [setHovered]);
 
   // Filter out items that require specific roles the current user doesn't have
   const filteredSections = React.useMemo(() => {
@@ -143,8 +158,8 @@ export function AppSidebar({
   );
 
   return (
-    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- sidebar navigation item handles keyboard events
     <nav
+      ref={navRef}
       className={cn(
         'fixed left-0 top-16 bottom-0 z-30 flex flex-col bg-card border-r border-border',
         'transition-all duration-300 ease-in-out',
@@ -152,8 +167,6 @@ export function AppSidebar({
         'hidden lg:flex',
         className
       )}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
       aria-label={`${config.moduleTitle} navigation`}
     >
       {/* Module Header */}

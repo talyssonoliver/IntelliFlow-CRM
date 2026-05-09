@@ -3,6 +3,7 @@ packages/db/generated/**
 .scannerwork/**
 .specify/**
 .claude/worktrees/**
+.claude/worktree-pool/**
 apps/project-tracker/docs/metrics/.locks/**
 apps/project-tracker/docs/metrics/backups/**
 pnpm-lock.yaml

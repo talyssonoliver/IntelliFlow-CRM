@@ -2,12 +2,9 @@
   "task_id": "EP-001-AI",
   "status": "DONE",
   "dependencies": {
-    "required": [
-      "ENV-003-AI",
-      "ENV-008-AI"
-    ],
+    "required": ["ENV-003-AI", "ENV-008-AI"],
     "all_satisfied": true,
-    "verified_at": "2026-04-26T11:17:07.215Z"
+    "verified_at": "2026-04-29T21:54:51.685Z"
   },
   "validations": [
     {
@@ -28,8 +25,5 @@
   "started_at": "2026-04-13T00:27:36.740Z",
   "actual_duration_minutes": 15,
   "description": "EasyPanel Internal Tools Deployment (Push-based OTLP Pipeline)",
-  "dependencies_resolved": [
-    "ENV-003-AI",
-    "ENV-008-AI"
-  ]
+  "dependencies_resolved": ["ENV-003-AI", "ENV-008-AI"]
 }

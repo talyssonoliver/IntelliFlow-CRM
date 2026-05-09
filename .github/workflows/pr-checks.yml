@@ -11,8 +11,8 @@ concurrency:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-  NODE_VERSION: "22"
-  PNPM_VERSION: "10.33.0"
+  NODE_VERSION: '22'
+  PNPM_VERSION: '10.33.0'
   TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
   TURBO_TEAM: ${{ vars.TURBO_TEAM }}
   NODE_OPTIONS: --max-old-space-size=4096
@@ -74,10 +74,13 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: pnpm turbo run build --filter=!@intelliflow/web --filter=!@intelliflow/api --filter=!@intelliflow/project-tracker --filter=!@intelliflow/workers
 
       - name: Lint
         run: pnpm run lint
@@ -91,7 +94,7 @@ jobs:
       - name: A11y route reconciliation
         run: pnpm run validate:a11y-routes
         env:
-          VALIDATION_STRICT: "1"
+          VALIDATION_STRICT: '1'
 
       - name: Artifact path linting
         run: pnpm run lint:artifacts
@@ -116,7 +119,7 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -152,7 +155,7 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -161,6 +164,34 @@ jobs:
         run: pnpm run build
         env:
           NODE_ENV: production
+          # Real key from repo's GitHub Actions secret. Configure at
+          # Settings → Secrets and variables → Actions → New repository secret
+          # named PRISMA_FIELD_ENCRYPTION_KEY (the same key that lives in
+          # .env.local locally). The `||` fallback is a 32-byte zero-key
+          # safety net for forked PRs where secrets are not exposed; the
+          # build only needs the value to satisfy the AES-256 key-length
+          # guard in `packages/db/src/field-encryption.ts` at module load.
+          # NEVER use the fallback at runtime.
+          PRISMA_FIELD_ENCRYPTION_KEY: ${{ secrets.PRISMA_FIELD_ENCRYPTION_KEY || 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=' }}
+          # Stub connection strings prevent Prisma / pg-adapter from throwing at
+          # module-load time when the route.ts dynamic export is not sufficient to
+          # prevent eager evaluation (belt-and-suspenders for CI build isolation).
+          DATABASE_URL: postgresql://stub:stub@localhost:5432/stub
+          DIRECT_URL: postgresql://stub:stub@localhost:5432/stub
+          # Prevents the AI_AUDIT_SIGNING_KEY production guard in container.ts
+          # from throwing before the request handler is ever invoked.
+          AI_AUDIT_SIGNING_KEY: ${{ secrets.AI_AUDIT_SIGNING_KEY || 'ci-build-stub-key-not-used-at-runtime' }}
+          # Supabase config — apps/api/src/lib/supabase.ts throws at module
+          # load when NODE_ENV=production and any of these are missing. The
+          # web build imports the api package via the tRPC chain, so the
+          # module-load guard fires during `next build` page-data collection.
+          # Real values come from repo secrets; stubs are RFC-shaped placeholders
+          # for forked PRs that don't have secret access. NEVER use stubs at runtime.
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL || 'https://stub.supabase.co' }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY || 'ci-stub-anon-not-a-real-supabase-key-do-not-use-at-runtime' }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || 'ci-stub-service-role-not-a-real-supabase-key-do-not-use-at-runtime' }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://stub.supabase.co' }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'ci-stub-anon-not-a-real-supabase-key-do-not-use-at-runtime' }}
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v7
@@ -175,10 +206,22 @@ jobs:
     name: Deploy Preview
     runs-on: ubuntu-latest
     needs: [build-preview]
-    if: github.event.pull_request.draft == false && github.event.pull_request.head.repo.full_name == github.repository
+    # Gate on the VERCEL_PROJECT_ID variable: variables are visible in logs (so
+    # the gate is auditable) while the actual token stays a secret. To enable,
+    # set the VERCEL_PROJECT_ID repo variable AND the VERCEL_TOKEN / VERCEL_ORG_ID
+    # / VERCEL_PROJECT_ID secrets.
+    if: github.event.pull_request.draft == false && github.event.pull_request.head.repo.full_name == github.repository && vars.VERCEL_PROJECT_ID != ''
+    permissions:
+      pull-requests: write
+      issues: write
     environment:
       name: preview-pr-${{ github.event.pull_request.number }}
-      url: https://intelliflow-pr-${{ github.event.pull_request.number }}.vercel.app
+      url: ${{ steps.deploy.outputs.preview-url }}
+    outputs:
+      preview-url: ${{ steps.deploy.outputs.preview-url }}
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
     steps:
       - uses: actions/checkout@v6
 
@@ -187,42 +230,51 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
+          cache: 'pnpm'
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Install Vercel CLI
+        # amondnet/vercel-action@v25 is unmaintained and ships Vercel CLI 25.1.0,
+        # which the deploy endpoint rejects ("requires version 47.2.2 or later").
+        # Use the modern CLI directly: pull → build → deploy --prebuilt.
+        run: pnpm add -g vercel@latest
 
-      - name: Download build artifacts
-        uses: actions/download-artifact@v8
-        with:
-          name: pr-build-${{ github.event.pull_request.number }}
+      - name: Pull Vercel environment (preview)
+        # Downloads project config + env vars to .vercel/. VERCEL_ORG_ID +
+        # VERCEL_PROJECT_ID env vars take the place of `.vercel/project.json`.
+        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build with Vercel
+        # Uses the env vars pulled above; output goes to .vercel/output/.
+        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy to Vercel Preview
         id: deploy
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          github-comment: true
-          scope: ${{ secrets.VERCEL_ORG_ID }}
+        # --archive=tgz uploads the build as a single tarball instead of
+        # streaming thousands of individual files. The Hobby plan caps file
+        # uploads at 5000 per 24h; a typical Next.js production build creates
+        # ~3000+ chunks, so two or three preview deploys per day exhaust the
+        # quota without the archive flag.
+        run: |
+          DEPLOY_URL=$(vercel deploy --prebuilt --archive=tgz --token=${{ secrets.VERCEL_TOKEN }})
+          echo "preview-url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"
+          echo "Preview URL: $DEPLOY_URL"
 
       - name: Comment preview URL
         uses: actions/github-script@v7
         with:
           script: |
-            const output = `#### Preview Deployment
+            const url = `${{ steps.deploy.outputs.preview-url }}`;
+            const body = `#### Preview Deployment
 
-            Preview URL: ${{ steps.deploy.outputs.preview-url }}
+            Preview URL: ${url}
 
             Status: ✅ Deployed successfully`;
-
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: output
-            })
+              body,
+            });
 
   security-scan:
     name: Security Scan
@@ -238,7 +290,7 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -259,19 +311,32 @@ jobs:
     name: Lighthouse Performance
     runs-on: ubuntu-latest
     needs: [deploy-preview]
-    if: github.event.pull_request.draft == false && github.event.pull_request.head.repo.full_name == github.repository
+    # Gate matches deploy-preview so this job doesn't try to run if the
+    # preview URL was never produced (Vercel infra not wired).
+    if: github.event.pull_request.draft == false && github.event.pull_request.head.repo.full_name == github.repository && needs.deploy-preview.outputs.preview-url != ''
+    permissions:
+      # Comment Lighthouse scores step uses github.rest.issues.createComment;
+      # default GITHUB_TOKEN doesn't grant PR write on default jobs, so the
+      # POST returns 403 "Resource not accessible by integration" and fails
+      # the whole job. Grant at job level (kept minimal — not workflow-wide).
+      pull-requests: write
+      issues: write
     steps:
       - uses: actions/checkout@v6
 
       - name: Run Lighthouse CI
         uses: treosh/lighthouse-ci-action@v11
         with:
-          configPath: "./lighthouserc.js"
+          configPath: './lighthouserc.js'
+          # Use the dynamic Vercel preview URL produced by deploy-preview.
+          # Modern Vercel preview URLs follow the
+          # `<project>-<hash>-<scope>.vercel.app` shape and aren't
+          # predictable from the PR number alone.
           urls: |
-            https://intelliflow-pr-${{ github.event.pull_request.number }}.vercel.app
-            https://intelliflow-pr-${{ github.event.pull_request.number }}.vercel.app/login
-            https://intelliflow-pr-${{ github.event.pull_request.number }}.vercel.app/signup
-            https://intelliflow-pr-${{ github.event.pull_request.number }}.vercel.app/pricing
+            ${{ needs.deploy-preview.outputs.preview-url }}
+            ${{ needs.deploy-preview.outputs.preview-url }}/login
+            ${{ needs.deploy-preview.outputs.preview-url }}/signup
+            ${{ needs.deploy-preview.outputs.preview-url }}/pricing
           uploadArtifacts: true
           temporaryPublicStorage: true
           runs: 3
@@ -302,9 +367,17 @@ jobs:
   pr-summary:
     name: PR Summary
     runs-on: ubuntu-latest
-    needs:
-      [pr-validation, quality-checks, test-coverage, build-preview, lighthouse]
+    needs: [pr-validation, quality-checks, test-coverage, build-preview, lighthouse]
     if: always() && github.event.pull_request.draft == false
+    permissions:
+      # Default GITHUB_TOKEN doesn't grant PR-write on fork PRs, so the
+      # github.rest.issues.createComment call in the script below 403s with
+      # "Resource not accessible by integration". Granting pull-requests:write
+      # at the JOB level (not workflow level — keeps it minimal) lets the
+      # bot comment on the PR. issues:write is also needed because PR
+      # comments are technically issue comments under the hood.
+      pull-requests: write
+      issues: write
     steps:
       - name: Generate summary
         uses: actions/github-script@v7

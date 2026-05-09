@@ -56,7 +56,7 @@ describe('StatusUpdater', () => {
 
     await user.click(screen.getByRole('button', { name: /change status/i }));
 
-    const options = screen.getAllByRole('option');
+    const options = screen.getAllByRole('menuitem');
     expect(options).toHaveLength(5);
     expect(screen.getByText('IN_PROGRESS')).toBeInTheDocument();
     expect(screen.getByText('WAITING_ON_CUSTOMER')).toBeInTheDocument();
@@ -71,8 +71,8 @@ describe('StatusUpdater', () => {
 
     await user.click(screen.getByRole('button', { name: /change status/i }));
 
-    const listbox = screen.getByRole('listbox');
-    expect(within(listbox).queryByText('ARCHIVED')).not.toBeInTheDocument();
+    const menu = screen.getByRole('menu');
+    expect(within(menu).queryByText('ARCHIVED')).not.toBeInTheDocument();
   });
 
   it('shows 2 targets for RESOLVED status (OPEN and CLOSED, no ARCHIVED)', async () => {
@@ -81,7 +81,7 @@ describe('StatusUpdater', () => {
 
     await user.click(screen.getByRole('button', { name: /change status/i }));
 
-    const options = screen.getAllByRole('option');
+    const options = screen.getAllByRole('menuitem');
     expect(options).toHaveLength(2);
     expect(screen.getByText('OPEN')).toBeInTheDocument();
     expect(screen.getByText('CLOSED')).toBeInTheDocument();
@@ -94,7 +94,7 @@ describe('StatusUpdater', () => {
     render(<StatusUpdater currentStatus="OPEN" onStatusChange={mockOnStatusChange} />);
 
     await user.click(screen.getByRole('button', { name: /change status/i }));
-    await user.click(screen.getByRole('option', { name: /IN_PROGRESS/i }));
+    await user.click(screen.getByRole('menuitem', { name: /IN_PROGRESS/i }));
 
     expect(mockOnStatusChange).toHaveBeenCalledWith('IN_PROGRESS');
   });

@@ -59,21 +59,19 @@ export async function generateCaseInsight(
   try {
     const model = await createLLMForTenant('qualification', 'standard', { tenantId });
     const structured = model.withStructuredOutput(InsightLLMSchema);
-    const raw = await structured.invoke(
-      [
-        {
-          role: 'system',
-          content:
-            'You analyze a legal case and produce a structured insight. ' +
-            'Return: summary (short narrative), predictedPriority (LOW|MEDIUM|HIGH|URGENT), ' +
-            'suggestedResolution (brief recommended next action), recommendations[].',
-        },
-        {
-          role: 'user',
-          content: `Case context: ${JSON.stringify(context)}. Generate insight.`,
-        },
-      ] as unknown as Parameters<typeof structured.invoke>[0]
-    );
+    const raw = await structured.invoke([
+      {
+        role: 'system',
+        content:
+          'You analyze a legal case and produce a structured insight. ' +
+          'Return: summary (short narrative), predictedPriority (LOW|MEDIUM|HIGH|URGENT), ' +
+          'suggestedResolution (brief recommended next action), recommendations[].',
+      },
+      {
+        role: 'user',
+        content: `Case context: ${JSON.stringify(context)}. Generate insight.`,
+      },
+    ] as unknown as Parameters<typeof structured.invoke>[0]);
     const safe = InsightLLMSchema.safeParse(raw);
     if (safe.success) {
       parsed = safe.data;

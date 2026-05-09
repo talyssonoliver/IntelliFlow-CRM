@@ -8,20 +8,12 @@
   "phase": "phase-1-core-crm",
   "stream": null,
   "dependencies": {
-    "required": [
-      "IFC-102",
-      "IFC-107",
-      "IFC-003"
-    ],
-    "verified_at": "2026-04-26T11:17:07.307Z",
+    "required": ["IFC-102", "IFC-107", "IFC-003"],
+    "verified_at": "2026-04-29T21:54:51.736Z",
     "all_satisfied": true,
     "notes": "All dependencies verified as DONE during context hydration"
   },
-  "dependencies_resolved": [
-    "IFC-102",
-    "IFC-107",
-    "IFC-003"
-  ],
+  "dependencies_resolved": ["IFC-102", "IFC-107", "IFC-003"],
   "status": "DONE",
   "started_at": "2026-02-04T12:00:00Z",
   "completed_at": "2026-02-05T18:22:00Z",
@@ -64,9 +56,7 @@
     "completed_at": "2026-02-05T18:22:00Z",
     "duration_minutes": 14,
     "executor": "Claude Code /exec IFC-184",
-    "agents": [
-      "TDD-Executor"
-    ],
+    "agents": ["TDD-Executor"],
     "execution_log": ".specify/sprints/sprint-4/planning/IFC-184-plan.md",
     "log_path": ".specify/sprints/sprint-4/planning/IFC-184-plan.md",
     "retry_count": 0,

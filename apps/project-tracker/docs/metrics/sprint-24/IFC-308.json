@@ -9,17 +9,11 @@
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
-    "required": [
-      "IFC-168",
-      "IFC-024"
-    ],
+    "required": ["IFC-168", "IFC-024"],
     "all_satisfied": true,
-    "verified_at": "2026-04-26T11:17:07.792Z"
+    "verified_at": "2026-04-29T21:54:52.024Z"
   },
-  "dependencies_resolved": [
-    "IFC-168",
-    "IFC-024"
-  ],
+  "dependencies_resolved": ["IFC-168", "IFC-024"],
   "started_at": null,
   "completed_at": null,
   "target_duration_minutes": 600,

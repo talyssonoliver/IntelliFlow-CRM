@@ -5,11 +5,8 @@
   "description": "Design Tokens Integration Plan (Tailwind/shadcn theme mapping)",
   "owner": "UX Designer + Frontend Dev",
   "dependencies": {
-    "required": [
-      "BRAND-001",
-      "ENV-002-AI"
-    ],
-    "verified_at": "2026-04-26T11:17:07.250Z",
+    "required": ["BRAND-001", "ENV-002-AI"],
+    "verified_at": "2026-04-29T21:54:51.706Z",
     "all_satisfied": true
   },
   "status": "DONE",
@@ -35,14 +32,8 @@
     "execution_log": "logs/sprint-1/BRAND-002.log"
   },
   "artifacts": {
-    "expected": [
-      "docs/design/token-mapping.md",
-      "docs/design/token-naming.md"
-    ],
-    "created": [
-      "docs/design/token-mapping.md",
-      "docs/design/token-naming.md"
-    ],
+    "expected": ["docs/design/token-mapping.md", "docs/design/token-naming.md"],
+    "created": ["docs/design/token-mapping.md", "docs/design/token-naming.md"],
     "missing": []
   },
   "validations": [
@@ -74,8 +65,5 @@
   "completed_at": "2025-12-27T11:33:39.043Z",
   "started_at": "2025-12-27T11:18:39.043Z",
   "actual_duration_minutes": 15,
-  "dependencies_resolved": [
-    "BRAND-001",
-    "ENV-002-AI"
-  ]
+  "dependencies_resolved": ["BRAND-001", "ENV-002-AI"]
 }

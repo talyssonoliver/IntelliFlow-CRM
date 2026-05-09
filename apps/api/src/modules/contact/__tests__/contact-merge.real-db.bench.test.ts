@@ -82,13 +82,22 @@ describe.skipIf(!RUN_INTEGRATION || !HAS_DB_URL)(
       const { prisma } = (await import('@intelliflow/db')) as {
         prisma: { $disconnect(): Promise<void> };
       };
-      const { PrismaContactRepository, PrismaAccountRepository, PrismaLeadRepository, InMemoryEventBus } =
-        await import('@intelliflow/adapters');
+      const {
+        PrismaContactRepository,
+        PrismaAccountRepository,
+        PrismaLeadRepository,
+        InMemoryEventBus,
+      } = await import('@intelliflow/adapters');
       const { ContactService } = await import('@intelliflow/application');
       const contactRepo = new PrismaContactRepository(prisma as never);
       const accountRepo = new PrismaAccountRepository(prisma as never);
       const leadRepo = new PrismaLeadRepository(prisma as never);
-      const service = new ContactService(contactRepo, accountRepo, leadRepo, new InMemoryEventBus());
+      const service = new ContactService(
+        contactRepo,
+        accountRepo,
+        leadRepo,
+        new InMemoryEventBus()
+      );
 
       // Seed data, measure, record — abridged because real-DB seeding is
       // installation-specific (tenant, owner, FK-graph). The detailed seed

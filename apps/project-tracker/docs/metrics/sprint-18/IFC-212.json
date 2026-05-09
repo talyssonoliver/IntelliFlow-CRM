@@ -9,19 +9,11 @@
   "stream": null,
   "status": "BACKLOG",
   "dependencies": {
-    "required": [
-      "IFC-015",
-      "IFC-125",
-      "IFC-168"
-    ],
+    "required": ["IFC-015", "IFC-125", "IFC-168"],
     "all_satisfied": true,
-    "verified_at": "2026-04-26T11:17:07.510Z"
+    "verified_at": "2026-04-29T21:54:51.855Z"
   },
-  "dependencies_resolved": [
-    "IFC-015",
-    "IFC-125",
-    "IFC-168"
-  ],
+  "dependencies_resolved": ["IFC-015", "IFC-125", "IFC-168"],
   "started_at": null,
   "completed_at": null,
   "target_duration_minutes": 180,
@@ -57,13 +49,13 @@
       ".specify/sprints/sprint-18/attestations/IFC-212/context_ack.json"
     ],
     "created": [
-      "apps/api/src/container.ts"
+      "apps/api/src/container.ts",
+      ".specify/sprints/sprint-18/attestations/IFC-212/context_ack.json"
     ],
     "missing": [
       "apps/api/src/services/queue/QueueAIService.ts",
       "apps/api/src/modules/leads/__tests__/LeadService.queue-ai.test.ts",
-      "apps/ai-worker/src/queue/jobs/scoring.job.ts",
-      ".specify/sprints/sprint-18/attestations/IFC-212/context_ack.json"
+      "apps/ai-worker/src/queue/jobs/scoring.job.ts"
     ]
   },
   "validations": [],

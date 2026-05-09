@@ -257,9 +257,7 @@ export class PrismaContactRepository implements ContactRepository {
    * All table writes happen inside a single `$transaction`; any failure
    * rolls back the whole operation.
    */
-  async mergeInTransaction(
-    input: MergeInTransactionInput,
-  ): Promise<MergeInTransactionResult> {
+  async mergeInTransaction(input: MergeInTransactionInput): Promise<MergeInTransactionResult> {
     const { primaryId, secondaryId, tenantId, mergeFields } = input;
 
     return this.prisma.$transaction(async (tx) => {
@@ -297,12 +295,7 @@ export class PrismaContactRepository implements ContactRepository {
       // permitted "skip" is when the delegate is absent from the tx proxy
       // (e.g., mocked test harnesses that don't stub every relation table).
       const reparent = async (
-        table:
-          | 'contactActivity'
-          | 'contactNote'
-          | 'opportunity'
-          | 'task'
-          | 'contactAIInsight',
+        table: 'contactActivity' | 'contactNote' | 'opportunity' | 'task' | 'contactAIInsight'
       ): Promise<number> => {
         const t = txAny[table];
         if (!t?.updateMany) return 0;
@@ -400,7 +393,10 @@ export class PrismaContactRepository implements ContactRepository {
     input: LinkContactsByDomainInput
   ): Promise<LinkContactsByDomainResult> {
     const { accountId, domain, tenantId, maxBatch } = input;
-    const normalizedDomain = domain.trim().toLowerCase().replace(/^www\./, '');
+    const normalizedDomain = domain
+      .trim()
+      .toLowerCase()
+      .replace(/^www\./, '');
     if (!normalizedDomain || !normalizedDomain.includes('.')) {
       return { overflow: false, linkedIds: [] };
     }

@@ -62,13 +62,13 @@ export class TicketAutoCloseWorker {
   constructor(
     private readonly prisma: PrismaClient,
     private readonly redisConnection: { host: string; port: number; password?: string },
-    private readonly deps: AutoCloseDeps,
+    private readonly deps: AutoCloseDeps
   ) {}
 
   async start(): Promise<void> {
     this.queue = new Queue<TicketAutoCloseJobData, TicketAutoCloseJobResult>(
       TICKET_AUTO_CLOSE_QUEUE_NAME,
-      { connection: this.redisConnection },
+      { connection: this.redisConnection }
     );
     this.queueEvents = new QueueEvents(TICKET_AUTO_CLOSE_QUEUE_NAME, {
       connection: this.redisConnection,
@@ -76,10 +76,10 @@ export class TicketAutoCloseWorker {
     this.worker = new Worker<TicketAutoCloseJobData, TicketAutoCloseJobResult>(
       TICKET_AUTO_CLOSE_QUEUE_NAME,
       async (job) => this.process(job),
-      { connection: this.redisConnection, concurrency: 1 },
+      { connection: this.redisConnection, concurrency: 1 }
     );
     this.worker.on('failed', (job, error) =>
-      console.warn(`[ticket-auto-close] job ${job?.id} failed:`, error?.message),
+      console.warn(`[ticket-auto-close] job ${job?.id} failed:`, error?.message)
     );
   }
 
@@ -96,9 +96,7 @@ export class TicketAutoCloseWorker {
 
     const prisma = this.prisma as unknown as {
       ticketAutomationSetting: {
-        findMany: (args: {
-          where?: Record<string, unknown>;
-        }) => Promise<
+        findMany: (args: { where?: Record<string, unknown> }) => Promise<
           Array<{
             tenantId: string;
             autoCloseIdleDays: number;
@@ -135,74 +133,11 @@ export class TicketAutoCloseWorker {
     let notificationsWritten = 0;
 
     for (const s of settings) {
-      if (!s.autoCloseAppliesToWaitingCustomer && !s.autoCloseAppliesToResolved) continue;
-
-      const eligibleStatuses: string[] = [];
-      if (s.autoCloseAppliesToWaitingCustomer) eligibleStatuses.push('WAITING_ON_CUSTOMER');
-      if (s.autoCloseAppliesToResolved) eligibleStatuses.push('RESOLVED');
-      if (eligibleStatuses.length === 0) continue;
-
-      const cutoff = new Date(now.getTime() - s.autoCloseIdleDays * 24 * 60 * 60 * 1000);
-
-      const tickets = await prisma.ticket.findMany({
-        where: {
-          tenantId: s.tenantId,
-          status: { in: eligibleStatuses },
-          OR: [
-            { lastActivityAt: { lte: cutoff } },
-            { AND: [{ lastActivityAt: null }, { updatedAt: { lte: cutoff } }] },
-          ],
-        },
-        take: 500,
-      });
-      ticketsScanned += tickets.length;
-
-      if (tickets.length === 0) continue;
-
-      const ids = tickets.map((t) => t.id);
-
-      if (!data.dryRun) {
-        const updated = await prisma.ticket.updateMany({
-          where: { id: { in: ids }, tenantId: s.tenantId },
-          data: {
-            status: 'CLOSED',
-            closedAt: now,
-          },
-        });
-        ticketsClosed += updated.count;
-      } else {
-        ticketsClosed += tickets.length;
-      }
-
-      if (s.autoCloseNotifyCustomer) {
-        for (const t of tickets) {
-          const recipient = t.reporterUserId ?? t.reporterId;
-          if (!recipient) continue;
-          try {
-            await this.deps.createNotification({
-              tenantId: t.tenantId,
-              userId: recipient,
-              type: 'ticket_auto_closed',
-              title: `Ticket auto-closed: ${t.ticketNumber}`,
-              body: `Ticket "${t.subject}" was automatically closed after ${s.autoCloseIdleDays} idle day(s). Reply to reopen.`,
-              priority: 'normal',
-              entityType: 'ticket',
-              entityId: t.id,
-              actionUrl: `/tickets/${t.id}`,
-              metadata: {
-                previousStatus: t.status,
-                idleDays: s.autoCloseIdleDays,
-              },
-            });
-            notificationsWritten++;
-          } catch (err) {
-            console.warn(
-              '[ticket-auto-close] notification failed (fire-and-forget):',
-              err,
-            );
-          }
-        }
-      }
+      const counts = await this.processTenantSetting(s, prisma, data.dryRun, now);
+      if (counts === null) continue;
+      ticketsScanned += counts.scanned;
+      ticketsClosed += counts.closed;
+      notificationsWritten += counts.notified;
     }
 
     return {
@@ -215,12 +150,129 @@ export class TicketAutoCloseWorker {
       completedAt: now.toISOString(),
     };
   }
+
+  private async processTenantSetting(
+    s: {
+      tenantId: string;
+      autoCloseIdleDays: number;
+      autoCloseAppliesToWaitingCustomer: boolean;
+      autoCloseAppliesToResolved: boolean;
+      autoCloseNotifyCustomer: boolean;
+    },
+    prisma: {
+      ticket: {
+        findMany: (args: Record<string, unknown>) => Promise<
+          Array<{
+            id: string;
+            tenantId: string;
+            ticketNumber: string;
+            subject: string;
+            status: string;
+            reporterId: string | null;
+            reporterUserId: string | null;
+            contactEmail: string | null;
+            updatedAt: Date;
+            lastActivityAt: Date | null;
+          }>
+        >;
+        updateMany: (args: Record<string, unknown>) => Promise<{ count: number }>;
+      };
+    },
+    dryRun: boolean,
+    now: Date
+  ): Promise<{ scanned: number; closed: number; notified: number } | null> {
+    const eligibleStatuses = buildEligibleStatuses(s);
+    if (eligibleStatuses.length === 0) return null;
+
+    const cutoff = new Date(now.getTime() - s.autoCloseIdleDays * 24 * 60 * 60 * 1000);
+    const tickets = await prisma.ticket.findMany({
+      where: {
+        tenantId: s.tenantId,
+        status: { in: eligibleStatuses },
+        OR: [
+          { lastActivityAt: { lte: cutoff } },
+          { AND: [{ lastActivityAt: null }, { updatedAt: { lte: cutoff } }] },
+        ],
+      },
+      take: 500,
+    });
+
+    if (tickets.length === 0) return { scanned: 0, closed: 0, notified: 0 };
+
+    const ids = tickets.map((t) => t.id);
+    let closed: number;
+    if (!dryRun) {
+      const updated = await prisma.ticket.updateMany({
+        where: { id: { in: ids }, tenantId: s.tenantId },
+        data: { status: 'CLOSED', closedAt: now },
+      });
+      closed = updated.count;
+    } else {
+      closed = tickets.length;
+    }
+
+    const notified = s.autoCloseNotifyCustomer
+      ? await this.sendAutoCloseNotifications(tickets, s.autoCloseIdleDays)
+      : 0;
+
+    return { scanned: tickets.length, closed, notified };
+  }
+
+  private async sendAutoCloseNotifications(
+    tickets: Array<{
+      id: string;
+      tenantId: string;
+      ticketNumber: string;
+      subject: string;
+      status: string;
+      reporterId: string | null;
+      reporterUserId: string | null;
+    }>,
+    autoCloseIdleDays: number
+  ): Promise<number> {
+    let count = 0;
+    for (const t of tickets) {
+      const recipient = t.reporterUserId ?? t.reporterId;
+      if (!recipient) continue;
+      try {
+        await this.deps.createNotification({
+          tenantId: t.tenantId,
+          userId: recipient,
+          type: 'ticket_auto_closed',
+          title: `Ticket auto-closed: ${t.ticketNumber}`,
+          body: `Ticket "${t.subject}" was automatically closed after ${autoCloseIdleDays} idle day(s). Reply to reopen.`,
+          priority: 'normal',
+          entityType: 'ticket',
+          entityId: t.id,
+          actionUrl: `/tickets/${t.id}`,
+          metadata: {
+            previousStatus: t.status,
+            idleDays: autoCloseIdleDays,
+          },
+        });
+        count++;
+      } catch (err) {
+        console.warn('[ticket-auto-close] notification failed (fire-and-forget):', err);
+      }
+    }
+    return count;
+  }
+}
+
+function buildEligibleStatuses(s: {
+  autoCloseAppliesToWaitingCustomer: boolean;
+  autoCloseAppliesToResolved: boolean;
+}): string[] {
+  const statuses: string[] = [];
+  if (s.autoCloseAppliesToWaitingCustomer) statuses.push('WAITING_ON_CUSTOMER');
+  if (s.autoCloseAppliesToResolved) statuses.push('RESOLVED');
+  return statuses;
 }
 
 export function createTicketAutoCloseWorker(
   prisma: PrismaClient,
   redisConnection: { host: string; port: number; password?: string },
-  deps: AutoCloseDeps,
+  deps: AutoCloseDeps
 ): TicketAutoCloseWorker {
   return new TicketAutoCloseWorker(prisma, redisConnection, deps);
 }

@@ -2,11 +2,9 @@
   "task_id": "AI-SETUP-003",
   "status": "DONE",
   "dependencies": {
-    "required": [
-      "AI-SETUP-001"
-    ],
+    "required": ["AI-SETUP-001"],
     "all_satisfied": true,
-    "verified_at": "2026-04-26T11:17:07.197Z"
+    "verified_at": "2026-04-29T21:54:51.673Z"
   },
   "validations": [
     {
@@ -27,7 +25,5 @@
   "started_at": "2026-04-13T00:27:36.723Z",
   "actual_duration_minutes": 15,
   "description": "External AI Tools Integration (Codex, Jules)",
-  "dependencies_resolved": [
-    "AI-SETUP-001"
-  ]
+  "dependencies_resolved": ["AI-SETUP-001"]
 }

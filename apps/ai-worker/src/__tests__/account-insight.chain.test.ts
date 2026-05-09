@@ -92,9 +92,12 @@ describe('AccountInsightChain (IFC-312)', () => {
 
   it('engagementScore clamped to 0-100', async () => {
     createLLMForTenant.mockResolvedValueOnce({
-      withStructuredOutput: vi.fn(() => ({ invoke: vi.fn().mockResolvedValue({
-        ...INSIGHT_PAYLOAD, engagementScore: 999,
-      }) })),
+      withStructuredOutput: vi.fn(() => ({
+        invoke: vi.fn().mockResolvedValue({
+          ...INSIGHT_PAYLOAD,
+          engagementScore: 999,
+        }),
+      })),
     });
     const mod = await import('../account-insight.chain.js');
     await mod.generateAccountInsight({
@@ -122,7 +125,9 @@ describe('AccountInsightChain (IFC-312)', () => {
 
   it('emits fallback source when Zod parse fails', async () => {
     createLLMForTenant.mockResolvedValueOnce({
-      withStructuredOutput: vi.fn(() => ({ invoke: vi.fn().mockResolvedValue({ wrong: 'shape' }) })),
+      withStructuredOutput: vi.fn(() => ({
+        invoke: vi.fn().mockResolvedValue({ wrong: 'shape' }),
+      })),
     });
     const mod = await import('../account-insight.chain.js');
     const out = await mod.generateAccountInsight({

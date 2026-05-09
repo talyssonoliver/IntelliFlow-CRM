@@ -9,15 +9,11 @@
   "stream": null,
   "status": "DONE",
   "dependencies": {
-    "required": [
-      "IFC-095"
-    ],
+    "required": ["IFC-095"],
     "all_satisfied": true,
-    "verified_at": "2026-04-26T11:17:07.445Z"
+    "verified_at": "2026-04-29T21:54:51.818Z"
   },
-  "dependencies_resolved": [
-    "IFC-095"
-  ],
+  "dependencies_resolved": ["IFC-095"],
   "started_at": "2026-03-12T23:00:00Z",
   "completed_at": "2026-03-12T23:27:00Z",
   "target_duration_minutes": 60,

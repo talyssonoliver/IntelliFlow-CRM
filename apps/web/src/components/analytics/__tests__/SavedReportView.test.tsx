@@ -532,10 +532,12 @@ describe('SavedReportView', () => {
       mockQueries.getTimeSeriesData = { data: mockTimeSeries7d, isLoading: false };
     });
 
-    it('charts have role="img" with aria-label', () => {
+    it('charts use semantic figure element with aria-label', () => {
       render(<SavedReportView config={weeklyConfig} />);
-      const chartImg = screen.getByRole('img', { name: /revenue bar chart/i });
-      expect(chartImg).toBeInTheDocument();
+      // Chart was refactored from <div role="img"> to semantic <figure> element.
+      // <figure> has implicit ARIA role "figure", not "img".
+      const chartFigure = screen.getByRole('figure', { name: /revenue bar chart/i });
+      expect(chartFigure).toBeInTheDocument();
     });
 
     it('metric section has section aria-label', () => {

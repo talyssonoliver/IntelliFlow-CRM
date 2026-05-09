@@ -54,7 +54,7 @@ export interface TicketAiChainBundle {
 export async function processTicketAiAutomationJob(
   job: Job<TicketAiAutomationJobData>,
   prisma: PrismaClient,
-  chains: TicketAiChainBundle,
+  chains: TicketAiChainBundle
 ): Promise<TicketAiAutomationJobResult> {
   const start = Date.now();
   const data = TicketAiAutomationJobDataSchema.parse(job.data);
@@ -107,24 +107,59 @@ export async function processTicketAiAutomationJob(
 
   if (!ticket) return makeSkip('ticket-not-found');
 
-  switch (data.operation) {
-    case 'duplicate-detection':
-      if (!flags.aiDuplicateDetection) return makeSkip('aiDuplicateDetection=false');
-      if (!chains.detectDuplicates) return makeSkip('chain-not-wired');
-      return makeOk(await chains.detectDuplicates(ticket));
-    case 'auto-categorization':
-      if (!flags.aiAutoCategorization) return makeSkip('aiAutoCategorization=false');
-      if (!chains.categorize) return makeSkip('chain-not-wired');
-      return makeOk(await chains.categorize(ticket));
-    case 'sentiment-analysis':
-      if (!flags.aiSentimentAnalysis) return makeSkip('aiSentimentAnalysis=false');
-      if (!chains.analyzeSentiment) return makeSkip('chain-not-wired');
-      return makeOk(await chains.analyzeSentiment(ticket));
-    case 'next-step-recommendation':
-      if (!flags.aiNextStepRecommendation) return makeSkip('aiNextStepRecommendation=false');
-      if (!chains.recommendNextStep) return makeSkip('chain-not-wired');
-      return makeOk(await chains.recommendNextStep(ticket));
-    default:
-      return makeSkip('unknown-operation');
-  }
+  return dispatchTicketOperation(data.operation, ticket, flags, chains, makeSkip, makeOk);
+}
+
+type TicketOperationSpec = {
+  flagKey: keyof typeof _ticketFlagPlaceholder;
+  flagLabel: string;
+  chainKey: keyof TicketAiChainBundle;
+};
+
+// Phantom type helper — never instantiated, used only for keyof inference.
+declare const _ticketFlagPlaceholder: {
+  aiDuplicateDetection: boolean;
+  aiAutoCategorization: boolean;
+  aiSentimentAnalysis: boolean;
+  aiNextStepRecommendation: boolean;
+};
+
+const TICKET_OPERATION_MAP: Record<TicketAiAutomationJobData['operation'], TicketOperationSpec> = {
+  'duplicate-detection': {
+    flagKey: 'aiDuplicateDetection',
+    flagLabel: 'aiDuplicateDetection=false',
+    chainKey: 'detectDuplicates',
+  },
+  'auto-categorization': {
+    flagKey: 'aiAutoCategorization',
+    flagLabel: 'aiAutoCategorization=false',
+    chainKey: 'categorize',
+  },
+  'sentiment-analysis': {
+    flagKey: 'aiSentimentAnalysis',
+    flagLabel: 'aiSentimentAnalysis=false',
+    chainKey: 'analyzeSentiment',
+  },
+  'next-step-recommendation': {
+    flagKey: 'aiNextStepRecommendation',
+    flagLabel: 'aiNextStepRecommendation=false',
+    chainKey: 'recommendNextStep',
+  },
+};
+
+/** Route a single ticket operation through its flag-check → chain-call pipeline. */
+async function dispatchTicketOperation(
+  operation: TicketAiAutomationJobData['operation'],
+  ticket: unknown,
+  flags: Record<string, boolean>,
+  chains: TicketAiChainBundle,
+  makeSkip: (reason: string) => TicketAiAutomationJobResult,
+  makeOk: (result: unknown) => TicketAiAutomationJobResult
+): Promise<TicketAiAutomationJobResult> {
+  const spec = TICKET_OPERATION_MAP[operation];
+  if (!spec) return makeSkip('unknown-operation');
+  if (!flags[spec.flagKey]) return makeSkip(spec.flagLabel);
+  const handler = chains[spec.chainKey];
+  if (!handler) return makeSkip('chain-not-wired');
+  return makeOk(await handler(ticket));
 }

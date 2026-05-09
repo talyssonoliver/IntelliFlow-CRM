@@ -1,10 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import {
-  getTourSeenAt,
-  markTourSeen,
-  clearTourSeen,
-  tourSeenKey,
-} from '../tour-storage';
+import { getTourSeenAt, markTourSeen, clearTourSeen, tourSeenKey } from '../tour-storage';
 
 describe('tour-storage', () => {
   beforeEach(() => {
@@ -14,9 +9,7 @@ describe('tour-storage', () => {
   });
 
   it('derives key as intelliflow.public.tour.{tourId}.seen', () => {
-    expect(tourSeenKey('features-v1')).toBe(
-      'intelliflow.public.tour.features-v1.seen'
-    );
+    expect(tourSeenKey('features-v1')).toBe('intelliflow.public.tour.features-v1.seen');
   });
 
   describe('SSR guard', () => {

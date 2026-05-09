@@ -390,7 +390,7 @@ def transform(content: str) -> str:
 
         # ── Chain coverage description ──
         if 'Entity -> Domain -> Database -> Adapter -> Router -> Frontend' in line:
-            line = line.replaceAll(
+            line = line.replace(
                 'Entity -> Domain -> Database -> Adapter -> Router -> Frontend',
                 'Entity -> Domain -> Database -> Adapter -> Router -> Frontend-List/Detail + Events/Security gates'
             )

@@ -80,7 +80,7 @@ describe('QualifyLeadUseCase', () => {
 
     it('should fail when lead is not found', async () => {
       const input: QualifyLeadInput = {
-        leadId: '00000000-0000-0000-0000-000000000000',
+        leadId: '00000000-0000-4000-8000-000000000000',
         qualifiedBy: 'sales-rep-1',
         reason: 'Some reason',
       };

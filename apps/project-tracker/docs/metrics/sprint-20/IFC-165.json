@@ -10,12 +10,8 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-04-26T11:17:07.580Z",
-    "required": [
-      "ENV-015-AI",
-      "IFC-003",
-      "ENV-005-AI"
-    ]
+    "verified_at": "2026-04-29T21:54:51.901Z",
+    "required": ["ENV-015-AI", "IFC-003", "ENV-005-AI"]
   },
   "started_at": "2026-02-13T23:23:16+00:00",
   "completed_at": null,
@@ -43,9 +39,5 @@
   "current_phase": "ARCHITECT_SPEC",
   "updated_at": "2026-02-13T23:23:17+00:00",
   "attempt": 0,
-  "dependencies_resolved": [
-    "ENV-015-AI",
-    "IFC-003",
-    "ENV-005-AI"
-  ]
+  "dependencies_resolved": ["ENV-015-AI", "IFC-003", "ENV-005-AI"]
 }

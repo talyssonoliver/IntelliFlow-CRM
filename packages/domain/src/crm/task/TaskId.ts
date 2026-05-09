@@ -1,4 +1,4 @@
-import { generateUuid as uuidv4, isValidUuid as uuidValidate } from '../../shared/uuid';
+import { generateUuid as uuidv4, isValidEntityId } from '../../shared/uuid';
 import { ValueObject } from '../../shared/ValueObject';
 import { Result, DomainError } from '../../shared/Result';
 
@@ -30,7 +30,7 @@ export class TaskId extends ValueObject<TaskIdProps> {
   }
 
   static create(value: string): Result<TaskId, InvalidTaskIdError> {
-    if (!value || (!uuidValidate(value) && !SEEDED_TASK_ID_PATTERN.test(value))) {
+    if (!value || (!isValidEntityId(value) && !SEEDED_TASK_ID_PATTERN.test(value))) {
       return Result.fail(new InvalidTaskIdError(value));
     }
     return Result.ok(new TaskId({ value }));
