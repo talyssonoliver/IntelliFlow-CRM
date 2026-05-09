@@ -5,6 +5,12 @@
 > paths, and RACI assignments **Last Updated**: 2026-04-16 (as of Sprint 17)
 > **Total Pages**: 208
 
+> **Canonical counts**: "Total Pages" reflects the filesystem total emitted by
+> `tools/scripts/content-audit.ts` (each `page.tsx` under `apps/web/src/app/**`
+> counts once; route groups stripped; `[id]` collapses; `app/api/` excluded).
+> See `docs/design/content-audit.md` for the full counting rule. Verified:
+> 2026-04-26.
+
 ---
 
 ## Path Conventions

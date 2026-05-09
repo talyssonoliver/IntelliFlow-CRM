@@ -88,7 +88,7 @@ convenient |
 | R-013 | OPS      | Deployment Failure        | Production deployments fail causing extended downtime          | 3          | 3      | 9     | DevOps        | Mitigating |
 | R-014 | AI       | AI Cost Overrun           | LLM API costs exceed budget due to unexpected usage patterns   | 4          | 2      | 8     | ML Engineer   | Mitigating |
 | R-015 | REG      | Cookie Consent Violations | Tracking cookies set without proper user consent               | 2          | 4      | 8     | Frontend Lead | Planned    |
-| R-016 | TECH     | Cache Poisoning           | Redis cache corruption affecting data integrity                | 2          | 4      | 8     | Backend Lead  | Planned    |
+| R-016 | TECH     | Cache Poisoning           | Redis cache corruption affecting data integrity                | 2          | 2      | 4     | Backend Lead  | Mitigated  |
 | R-017 | BUS      | Market Timing Risk        | Product launch timing misaligns with market readiness          | 3          | 3      | 9     | PM            | Monitoring |
 | R-018 | PPL      | Skills Gap                | Team lacks expertise in specific required technologies         | 3          | 3      | 9     | CTO           | Mitigating |
 

@@ -4,6 +4,13 @@
 > 2026-05-02 **Total Pages**: 208 | **Total Flows**: 48 | **API Routers**: 60
 > (366 procedures) | **Ghost Links**: 0
 
+> **Canonical counts**: "Total Pages" reflects the filesystem total emitted by
+> `tools/scripts/content-audit.ts` (each `page.tsx` under `apps/web/src/app/**`
+> counts once; route groups stripped; `[id]` collapses; `app/api/` excluded).
+> The Section 8 summary table below uses the same canonical denominator. See
+> `docs/design/content-audit.md` for the full counting rule. Verified:
+> 2026-04-26.
+
 ---
 
 ## 1. Introduction & Scope
@@ -523,10 +530,10 @@ Four distinct layout patterns used across modules.
 
 | Category        | Count |
 | --------------- | ----- |
-| **Total Pages** | 118   |
-| Public Pages    | 27    |
+| **Total Pages** | 208   |
+| Public Pages    | 32    |
 | Developer Pages | 14    |
-| Protected Pages | 77    |
+| Protected Pages | 162   |
 
 ### Flow Coverage
 
