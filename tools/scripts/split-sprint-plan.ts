@@ -5,6 +5,18 @@
  * Generated Files: Sprint_plan_A.csv, Sprint_plan_B.csv, Sprint_plan_C.csv, Sprint_plan_D.csv
  *
  * This script is called automatically by data-sync when the source CSV changes.
+ *
+ * Column layout (20 columns as of Wave 3.2):
+ *   1  Task ID             2  Section             3  Description
+ *   4  Owner               5  Dependencies        6  Pre-requisites
+ *   7  Definition of Done  8  Status              9  KPIs
+ *   10 Target Sprint       11 Artifacts To Track  12 Validation Method
+ *   13 Estimate (O/M/P)    14 Planned Start       15 Planned Finish
+ *   16 Percent Complete    17 Dependency Types    18 Cadence
+ *   19 Branch              20 Integration Status   ← added Wave 3.2 (integrator)
+ *
+ * The splitter is column-agnostic: it splits on token count, not column count.
+ * New columns automatically flow through to all split files unchanged.
  */
 
 import { readFileSync, writeFileSync, existsSync, unlinkSync } from 'node:fs';
@@ -78,6 +90,33 @@ function estimateTokens(text: string): number {
   return Math.ceil(text.length / CHARS_PER_TOKEN);
 }
 
+/** Writes one part file and pushes metadata. Throws if PART_NAMES exhausted. */
+function flushPart(
+  header: string,
+  partLines: string[],
+  startRow: number,
+  partIndex: number,
+  parts: PartInfo[]
+): void {
+  if (partIndex >= PART_NAMES.length) {
+    throw new Error(
+      `File too large: needs more than ${PART_NAMES.length} parts. ` +
+        `Consider increasing MAX_TOKENS_PER_FILE or adding more PART_NAMES.`
+    );
+  }
+  const partName = PART_NAMES[partIndex];
+  const partPath = join(METRICS_DIR, `Sprint_plan_${partName}.csv`);
+  const partContent = header + '\n' + partLines.join('\n');
+  writeFileSync(partPath, partContent, 'utf-8');
+  parts.push({
+    name: partName,
+    path: partPath,
+    rows: partLines.length,
+    startRow,
+    endRow: startRow + partLines.length - 1,
+  });
+}
+
 export function splitSprintPlan(): SplitResult {
   try {
     const content = readFileSync(SOURCE_CSV, 'utf-8');
@@ -101,26 +140,7 @@ export function splitSprintPlan(): SplitResult {
       // Check if adding this line would exceed the limit
       // (but always add at least one line per part)
       if (currentPartLines.length > 0 && currentPartChars + lineChars > MAX_CHARS_PER_FILE) {
-        // Save current part
-        if (partIndex >= PART_NAMES.length) {
-          throw new Error(
-            `File too large: needs more than ${PART_NAMES.length} parts. ` +
-              `Consider increasing MAX_TOKENS_PER_FILE or adding more PART_NAMES.`
-          );
-        }
-
-        const partName = PART_NAMES[partIndex];
-        const partPath = join(METRICS_DIR, `Sprint_plan_${partName}.csv`);
-        const partContent = header + '\n' + currentPartLines.join('\n');
-        writeFileSync(partPath, partContent, 'utf-8');
-
-        parts.push({
-          name: partName,
-          path: partPath,
-          rows: currentPartLines.length,
-          startRow: currentStartRow,
-          endRow: currentStartRow + currentPartLines.length - 1,
-        });
+        flushPart(header, currentPartLines, currentStartRow, partIndex, parts);
 
         // Start new part
         partIndex++;
@@ -136,26 +156,7 @@ export function splitSprintPlan(): SplitResult {
 
     // Save final part if there are remaining lines
     if (currentPartLines.length > 0) {
-      if (partIndex >= PART_NAMES.length) {
-        throw new Error(
-          `File too large: needs more than ${PART_NAMES.length} parts. ` +
-            `Consider increasing MAX_TOKENS_PER_FILE or adding more PART_NAMES.`
-        );
-      }
-
-      const partName = PART_NAMES[partIndex];
-      const partPath = join(METRICS_DIR, `Sprint_plan_${partName}.csv`);
-      const partContent = header + '\n' + currentPartLines.join('\n');
-      writeFileSync(partPath, partContent, 'utf-8');
-
-      parts.push({
-        name: partName,
-        path: partPath,
-        rows: currentPartLines.length,
-        startRow: currentStartRow,
-        endRow: currentStartRow + currentPartLines.length - 1,
-      });
-
+      flushPart(header, currentPartLines, currentStartRow, partIndex, parts);
       partIndex++;
     }
 

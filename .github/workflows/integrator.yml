@@ -1,0 +1,44 @@
+name: Integrator (agent branches)
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Run mode (--dry-run is default for first month)'
+        required: false
+        default: '--dry-run'
+        type: choice
+        options:
+          - '--dry-run'
+          - '--no-dry-run'
+          - '--watch'
+
+  # schedule:                # Commented out for first month — promote after manual runs settle
+  #   - cron: '*/15 * * * *' # 15-min loop
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v5
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run integrator
+        run: node tools/scripts/integrator/integrate.mjs --once ${{ inputs.mode || '--dry-run' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
