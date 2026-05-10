@@ -542,7 +542,12 @@ describe('Contact360Page - Company-to-Account Link (IFC-227)', () => {
   it('NF-003: contact with linked account but empty company string shows account name in link', () => {
     mockContactQueryState.data = {
       ...mockContactQueryState.data,
-      account: { id: 'account-1', name: 'Acme Corp', industry: 'SaaS', website: null as unknown as string },
+      account: {
+        id: 'account-1',
+        name: 'Acme Corp',
+        industry: 'SaaS',
+        website: null as unknown as string,
+      },
     };
     render(<Contact360Page />);
     const accountLinks = screen

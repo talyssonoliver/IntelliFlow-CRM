@@ -448,7 +448,8 @@ function filterActivity(
 }
 
 function getCallOutcomeBadge(outcome: string | undefined): { cls: string; label: string } {
-  if (outcome === 'connected') return { cls: 'bg-green-100 text-green-700', label: 'Ô£ô Connected' };
+  if (outcome === 'connected')
+    return { cls: 'bg-green-100 text-green-700', label: 'Ô£ô Connected' };
   if (outcome === 'voicemail')
     return { cls: 'bg-yellow-100 text-yellow-700', label: '­ƒô× Voicemail' };
   return { cls: 'bg-red-100 text-red-700', label: 'Ô£ù No Answer' };
@@ -1342,7 +1343,10 @@ function LeadOverviewTab({
             <dt className="text-sm text-slate-500 dark:text-slate-400">Company</dt>
             <dd className="text-sm font-medium">
               {lead.accountId && lead.account ? (
-                <Link href={`/accounts/${lead.accountId}`} className="text-[#137fec] hover:underline">
+                <Link
+                  href={`/accounts/${lead.accountId}`}
+                  className="text-[#137fec] hover:underline"
+                >
                   {lead.company}
                 </Link>
               ) : (

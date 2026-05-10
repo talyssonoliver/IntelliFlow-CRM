@@ -503,9 +503,9 @@ describe('LeadDetailPage - Company-to-Account Link (IFC-227)', () => {
     mockLeadQueryState.data.accountId = null;
     mockLeadQueryState.data.account = null;
     render(<Lead360Page />);
-    const companyLinks = screen.queryAllByRole('link', { name: /Acme Corp/i }).filter(
-      (l) => l.getAttribute('href')?.startsWith('/accounts/')
-    );
+    const companyLinks = screen
+      .queryAllByRole('link', { name: /Acme Corp/i })
+      .filter((l) => l.getAttribute('href')?.startsWith('/accounts/'));
     expect(companyLinks).toHaveLength(0);
   });
 });

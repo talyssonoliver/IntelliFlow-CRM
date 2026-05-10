@@ -200,11 +200,26 @@ export const mockServices = {
 function bindAiMonitoringStoreToService(): void {
   const svc = mockServices.aiMonitoringService as any;
   mockServices.aiMonitoringStore = {
-    getStatus: vi.fn(async (opts: any) => ({ source: 'db' as const, value: await svc.getStatus(opts) })),
-    getDriftMetrics: vi.fn(async (opts: any) => ({ source: 'db' as const, value: await svc.getDriftMetrics(opts) })),
-    getLatencyMetrics: vi.fn(async (opts: any) => ({ source: 'db' as const, value: await svc.getLatencyMetrics(opts) })),
-    getHallucinationReport: vi.fn(async (opts: any) => ({ source: 'db' as const, value: await svc.getHallucinationReport(opts) })),
-    getROIMetrics: vi.fn(async (opts: any) => ({ source: 'db' as const, value: await svc.getROIMetrics(opts) })),
+    getStatus: vi.fn(async (opts: any) => ({
+      source: 'db' as const,
+      value: await svc.getStatus(opts),
+    })),
+    getDriftMetrics: vi.fn(async (opts: any) => ({
+      source: 'db' as const,
+      value: await svc.getDriftMetrics(opts),
+    })),
+    getLatencyMetrics: vi.fn(async (opts: any) => ({
+      source: 'db' as const,
+      value: await svc.getLatencyMetrics(opts),
+    })),
+    getHallucinationReport: vi.fn(async (opts: any) => ({
+      source: 'db' as const,
+      value: await svc.getHallucinationReport(opts),
+    })),
+    getROIMetrics: vi.fn(async (opts: any) => ({
+      source: 'db' as const,
+      value: await svc.getROIMetrics(opts),
+    })),
   };
 }
 bindAiMonitoringStoreToService();

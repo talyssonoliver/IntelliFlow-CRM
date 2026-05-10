@@ -2465,7 +2465,8 @@ New edges:
 
 Cross-cutting:
 
-See ADR-037 (AI output review), ADR-047 (hexagonal adapter), ADR-048 (hybrid AI inference), ADR-050 (duplicate-detection parallel).
+See ADR-037 (AI output review), ADR-047 (hexagonal adapter), ADR-048 (hybrid AI
+inference), ADR-050 (duplicate-detection parallel).
 
 ---
 
@@ -2477,12 +2478,16 @@ See ADR-037 (AI output review), ADR-047 (hexagonal adapter), ADR-048 (hybrid AI 
 
 `leads.account_id → accounts.id` (nullable, `ON DELETE SET NULL`)
 
-- `Lead` model gains `accountId String?` + `account Account? @relation("LeadAccount")`.
+- `Lead` model gains `accountId String?` +
+  `account Account? @relation("LeadAccount")`.
 - `Account` model gains `leads Lead[] @relation("LeadAccount")`.
-- Migration: `packages/db/prisma/migrations/20260427_add_account_to_lead/migration.sql`
+- Migration:
+  `packages/db/prisma/migrations/20260427_add_account_to_lead/migration.sql`
 
 ### Updated Chains
 
 - `lead.getById → Prisma(Lead { include: account { select: { id, name } } }) → leads/[id]/page.tsx → Link /accounts/[accountId]`
-- `contacts/[id]/page.tsx → Link /accounts/[contact.account.id]` (null-safe — conditional render only when `contact.account` non-null; `company || account.name` prevents empty link text)
+- `contacts/[id]/page.tsx → Link /accounts/[contact.account.id]` (null-safe —
+  conditional render only when `contact.account` non-null;
+  `company || account.name` prevents empty link text)
 - `deals/[id]/page.tsx` — reference implementation, unchanged.
