@@ -111,7 +111,6 @@ __pycache__/
 
 # Claude AI
 .claude/commands/
-.claude/skills/
 .claude/hooks/state/
 .claude/ralph-loops/
 .claude/worktrees/

@@ -51,6 +51,15 @@ const DESTRUCTIVE_PATTERNS = [
     reason: 'Deletion of remote main via empty source ref is blocked.',
   },
   {
+    // Catches `git push origin master:main`, `git push origin foo:main`,
+    // `git push origin agent/IFC-001:main`, etc. The earlier HEAD:main
+    // pattern only matched the literal `HEAD` source ref — this catches
+    // every other source-ref form pushing to main. The `git push origin main`
+    // form is still caught by its own pattern above.
+    pattern: /\bgit\s+push\s+\S+\s+\S+:main\b/,
+    reason: 'Direct push to main via <ref>:main refspec is blocked. Push to agent/<TASK_ID> and open a PR. See docs/runbooks/gate-4b-recovery.md.',
+  },
+  {
     pattern: /\bgit\s+reset\s+--hard\b/,
     reason: 'git reset --hard is blocked — it permanently discards uncommitted changes. Use git reset --soft instead.',
   },
