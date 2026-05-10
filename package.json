@@ -75,6 +75,7 @@
     "validate:sprint": "tsx tools/scripts/sprint-validation.ts",
     "validate:sprint0:report": "tsx tools/scripts/capture-validation-output.ts --output artifacts/sprint0/codex-run/validation-output.txt",
     "validate:sprint:report": "tsx tools/scripts/capture-validation-output.ts",
+    "regenerate:derived": "tsx tools/scripts/regenerate-derived.ts",
     "validate:sprint-data": "tsx tools/scripts/validate-sprint-data.ts",
     "report:current-state": "npx tsx apps/project-tracker/scripts/generate-current-state-report.ts",
     "sync:metrics": "cd apps/project-tracker && npx tsx scripts/sync-metrics.ts",
