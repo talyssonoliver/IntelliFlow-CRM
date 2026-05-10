@@ -48,8 +48,8 @@ jobs:
       - name: Check branch name
         run: |
           branch="${{ github.head_ref }}"
-          if [[ ! "$branch" =~ ^(feat|fix|docs|refactor|test|chore)/.+ ]]; then
-            echo "Branch name must follow pattern: feat/*, fix/*, docs/*, refactor/*, test/*, chore/*"
+          if [[ ! "$branch" =~ ^(feat|fix|docs|refactor|test|chore|agent)/.+ ]]; then
+            echo "Branch name must follow pattern: feat/*, fix/*, docs/*, refactor/*, test/*, chore/*, agent/*"
             exit 1
           fi
 

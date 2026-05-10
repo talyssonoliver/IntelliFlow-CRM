@@ -1,0 +1,125 @@
+{
+  "version": 1,
+  "generated_at": "2026-04-28T18:36:27.957Z",
+  "agents": [
+    {
+      "name": "a11y-expert",
+      "tier": "A",
+      "ram_ceiling_mb": 300,
+      "concurrent_cap": null,
+      "description": "WCAG 2.1 / ARIA / keyboard navigation reviewer for spec sessions"
+    },
+    {
+      "name": "ai-specialist",
+      "tier": "A",
+      "ram_ceiling_mb": 300,
+      "concurrent_cap": null,
+      "description": "LangChain, CrewAI, pgvector, prompt engineering reviewer"
+    },
+    {
+      "name": "backend-architect",
+      "tier": "A",
+      "ram_ceiling_mb": 300,
+      "concurrent_cap": null,
+      "description": "tRPC, Prisma, Postgres, hexagonal architecture reviewer"
+    },
+    {
+      "name": "compliance",
+      "tier": "A",
+      "ram_ceiling_mb": 300,
+      "concurrent_cap": null,
+      "description": "GDPR, ISO 42001, DSAR, consent management reviewer"
+    },
+    {
+      "name": "data-engineer",
+      "tier": "A",
+      "ram_ceiling_mb": 300,
+      "concurrent_cap": null,
+      "description": "Prisma schema, Supabase, query optimization reviewer"
+    },
+    {
+      "name": "devops-lead",
+      "tier": "A",
+      "ram_ceiling_mb": 300,
+      "concurrent_cap": null,
+      "description": "Docker, CI/CD, Turborepo, Railway/Vercel reviewer"
+    },
+    {
+      "name": "domain-expert",
+      "tier": "A",
+      "ram_ceiling_mb": 300,
+      "concurrent_cap": null,
+      "description": "CRM DDD, business rules, sales pipeline reviewer"
+    },
+    {
+      "name": "frontend-lead",
+      "tier": "A",
+      "ram_ceiling_mb": 300,
+      "concurrent_cap": null,
+      "description": "Next.js 16, shadcn, Tailwind, tRPC client reviewer"
+    },
+    {
+      "name": "plan-reviewer",
+      "tier": "A",
+      "ram_ceiling_mb": 300,
+      "concurrent_cap": null,
+      "description": "Critiques TDD execution plans; spawned by /plan-session"
+    },
+    {
+      "name": "security-lead",
+      "tier": "A",
+      "ram_ceiling_mb": 300,
+      "concurrent_cap": null,
+      "description": "OWASP, RBAC, JWT, AI sanitization reviewer"
+    },
+    {
+      "name": "stoa-automation",
+      "tier": "C",
+      "ram_ceiling_mb": 6144,
+      "concurrent_cap": 2,
+      "description": "Validates factory mechanics, artifact contracts, registry integrity"
+    },
+    {
+      "name": "stoa-domain",
+      "tier": "C",
+      "ram_ceiling_mb": 6144,
+      "concurrent_cap": 2,
+      "description": "Validates API contracts, DB schema, DDD boundaries"
+    },
+    {
+      "name": "stoa-foundation",
+      "tier": "C",
+      "ram_ceiling_mb": 6144,
+      "concurrent_cap": 2,
+      "description": "Validates TypeScript build, lint, Docker, dependencies"
+    },
+    {
+      "name": "stoa-intelligence",
+      "tier": "C",
+      "ram_ceiling_mb": 6144,
+      "concurrent_cap": 2,
+      "description": "Validates LangChain chains, AI safety, guardrails"
+    },
+    {
+      "name": "stoa-quality",
+      "tier": "C",
+      "ram_ceiling_mb": 6144,
+      "concurrent_cap": 2,
+      "description": "Validates test coverage, regression prevention, benchmarks"
+    },
+    {
+      "name": "stoa-security",
+      "tier": "C",
+      "ram_ceiling_mb": 6144,
+      "concurrent_cap": 2,
+      "description": "Secret scanning, SAST, dependency vulnerabilities, OWASP"
+    },
+    {
+      "name": "test-engineer",
+      "tier": "A",
+      "ram_ceiling_mb": 300,
+      "concurrent_cap": null,
+      "description": "Vitest, Playwright, TDD, coverage reviewer"
+    }
+  ]
+}

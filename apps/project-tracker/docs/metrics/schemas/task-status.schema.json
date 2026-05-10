@@ -449,6 +449,35 @@
     "notes": {
       "description": "Additional notes or context",
       "type": "string"
+    },
+    "branch_url": {
+      "description": "GitHub URL of the agent branch for this task",
+      "type": "string",
+      "pattern": "^https://github\\.com/.+/tree/agent/.+$"
+    },
+    "integration_status": {
+      "description": "Current integration pipeline status for this task's branch",
+      "type": "string",
+      "enum": [
+        "pending",
+        "rebasing",
+        "validating",
+        "merged",
+        "needs_rework",
+        "validation_failed",
+        "abandoned",
+        "lost"
+      ]
+    },
+    "integration_duration_seconds": {
+      "description": "Cumulative time (seconds) across all integration attempts for this task",
+      "type": "integer",
+      "minimum": 0
+    },
+    "time_from_completion_to_merge_seconds": {
+      "description": "Wall-clock seconds from Gate 4b PASS to first successful merge to master",
+      "type": "integer",
+      "minimum": 0
     }
   },
   "required": ["task_id", "status"],

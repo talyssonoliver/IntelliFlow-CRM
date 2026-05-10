@@ -10,10 +10,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { spawnSync } from 'node:child_process';
 import Papa from 'papaparse';
 import type { RawCSVRow } from '../../../../lib/types';
 
 export const dynamic = 'force-dynamic';
+
+type BranchStatus = 'landed' | 'orphan' | 'no_branch';
 
 interface CompletedTask {
   taskId: string;
@@ -24,6 +27,7 @@ interface CompletedTask {
   kpisMet: number;
   kpisTotal: number;
   artifacts: string[];
+  branch_status: BranchStatus;
 }
 
 interface SprintCompletion {
@@ -41,6 +45,53 @@ interface SprintCompletion {
 
 function getProjectRoot(): string {
   return process.cwd().replace(/[\\/]apps[\\/]project-tracker$/, '');
+}
+
+/**
+ * Determine whether a task's agent branch has landed on main.
+ * Uses git ls-remote (no local ref pollution) inside a try/catch so
+ * a missing remote or network error never crashes the endpoint.
+ */
+function computeBranchStatus(taskId: string): BranchStatus {
+  try {
+    const projectRoot = getProjectRoot();
+    const branchRef = `refs/heads/agent/${taskId}`;
+
+    // Step 1: does the branch exist on the remote?
+    const lsResult = spawnSync('git', ['-C', projectRoot, 'ls-remote', 'origin', branchRef], {
+      encoding: 'utf8',
+      timeout: 10_000,
+    });
+
+    if (lsResult.status !== 0 || !lsResult.stdout?.trim()) {
+      return 'no_branch';
+    }
+
+    // Step 2: does it have commits past master?
+    const branchSha = lsResult.stdout.trim().split('\t')[0];
+    const masterResult = spawnSync('git', ['-C', projectRoot, 'rev-parse', 'origin/main'], {
+      encoding: 'utf8',
+      timeout: 5_000,
+    });
+
+    if (masterResult.status !== 0 || !masterResult.stdout?.trim()) {
+      // Cannot determine — treat branch existence as landed
+      return 'landed';
+    }
+
+    const masterSha = masterResult.stdout.trim();
+    const countResult = spawnSync(
+      'git',
+      ['-C', projectRoot, 'rev-list', '--count', `${masterSha}..${branchSha}`],
+      { encoding: 'utf8', timeout: 10_000 }
+    );
+
+    const commitCount = parseInt(countResult.stdout?.trim() || '0', 10);
+    return commitCount === 0 ? 'orphan' : 'landed';
+  } catch {
+    // Network unavailable or git error — do not crash the endpoint
+    return 'no_branch';
+  }
 }
 
 // Get fallback file path pattern
@@ -97,13 +148,14 @@ interface RowAccumulator {
 
 // Process a single CSV row for a completed task and accumulate results
 function processCompletedRow(row: RawCSVRow, acc: RowAccumulator): void {
-  const attestation = row['Task ID'] ? loadTaskAttestation(row['Task ID']) : null;
+  const taskId = row['Task ID'] || '';
+  const attestation = taskId ? loadTaskAttestation(taskId) : null;
   const kpiResults = attestation?.kpi_results || [];
   const kpisMet = kpiResults.filter((k: any) => k.met).length;
   acc.totalKpis += kpiResults.length;
   acc.metKpis += kpisMet;
   acc.tasks.push({
-    taskId: row['Task ID'] || '',
+    taskId,
     description: row['Description'] || '',
     section: row['Section'] || '',
     completedAt: attestation?.attestation_timestamp || '',
@@ -111,6 +163,7 @@ function processCompletedRow(row: RawCSVRow, acc: RowAccumulator): void {
     kpisMet,
     kpisTotal: kpiResults.length,
     artifacts: attestation?.artifact_hashes ? Object.keys(attestation.artifact_hashes) : [],
+    branch_status: computeBranchStatus(taskId),
   });
 }
 
@@ -365,7 +418,11 @@ export async function GET(request: NextRequest) {
         description: t.description.substring(0, 60),
         completedAt: t.completedAt,
         kpiSuccess: t.kpisTotal > 0 ? `${t.kpisMet}/${t.kpisTotal}` : 'N/A',
+        branch_status: t.branch_status,
       })),
+      orphanedTasks: tasks
+        .filter((t) => t.branch_status === 'orphan' || t.branch_status === 'no_branch')
+        .map((t) => ({ taskId: t.taskId, branch_status: t.branch_status })),
       artifacts: tasks.flatMap((t) => t.artifacts).slice(0, 20),
       recommendation: getCompletionRecommendation(completion),
     };

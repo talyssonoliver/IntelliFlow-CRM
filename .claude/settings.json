@@ -11,6 +11,17 @@
             "statusMessage": "Checking git safety..."
           }
         ]
+      },
+      {
+        "matcher": "Edit|Write|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/agent-tier-guard.mjs",
+            "timeout": 30,
+            "statusMessage": "Checking agent tier permissions..."
+          }
+        ]
       }
     ],
     "Stop": [

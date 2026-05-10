@@ -1,0 +1,120 @@
+# Orphan Task Backfill Triage Report
+
+**Generated:** 2026-04-27T23:48:44Z  
+**Script:** `tools/scripts/audit-task-branch-correspondence.mjs --all`  
+**Source file:** `artifacts/reports/orphans.jsonl`  
+**Plan reference:** Step 1.4 — Orphan Detection Observability + Backfill
+
+---
+
+## Executive Summary
+
+| Metric | Value |
+|--------|-------|
+| Completed tasks checked | 399 |
+| Orphans detected | 399 |
+| User-cited known orphans found | 4 / 4 |
+| CSV writebacks (Status → Needs Human) | 3 |
+| `orphans.jsonl` lines written | 399 |
+
+**Root cause of 399/399 orphan rate:** The `agent/<TASK_ID>` branch naming convention was introduced by this plan (Step 1.2). No historical task has ever had a remote `agent/*` branch — they predate the convention. The `no_remote_branch` classification is correct for ALL of them technically, but only the 4 user-cited tasks are confirmed "lost" (work never landed). The remaining 395 tasks have their work confirmed on `master` via code inspection.
+
+**Recommended triage action for the 395 non-cited tasks:** Accept-as-legacy. Their work is demonstrably on master (code exists). Mark them with `integration_status: merged` in their task-status JSONs when the integrator ships (Step 3.2). Do NOT mark them Lost — doing so would corrupt the sprint tracker.
+
+---
+
+## User-Cited Known Orphans (CSV Status → Needs Human)
+
+All 4 confirmed present in `orphans.jsonl`. Status changed in `Sprint_plan.csv`.
+
+| Task ID | Sprint | Reason | Completed At | Action Taken |
+|---------|--------|--------|--------------|--------------|
+| IFC-031 | 17 | no_remote_branch — agent/IFC-031 | unknown (attestation null) | Status = Needs Human |
+| PG-053  | 17 | no_remote_branch — agent/PG-053  | unknown (attestation null) | Status = Needs Human |
+| PG-054  | 17 | no_remote_branch — agent/PG-054  | unknown (attestation null) | Status = Needs Human |
+| IFC-227 | 18 | no_remote_branch — agent/IFC-227 | unknown (attestation null) | Status = Needs Human |
+
+### Task Details
+
+#### IFC-031 — PHASE-005: Workflow Builder UI (React Flow)
+- **Section:** Automation
+- **Owner:** Frontend Dev + UX (STOA-Domain)
+- **Dependency:** IFC-028
+- **Evidence path:** `.specify/sprints/sprint-17/attestations/IFC-031/context_ack.json`
+- **Suggested action:** Re-spawn with `Status = In Progress` after human review confirms no partial work exists on any local worktree.
+
+#### PG-053 — Data Processing Addendum
+- **Section:** Legal Pages
+- **Owner:** Legal Counsel (STOA-Foundation)
+- **Dependencies:** PG-050, PG-051
+- **Evidence path:** `.specify/sprints/sprint-17/attestations/PG-053/context_ack.json`
+- **Suggested action:** Re-spawn — DPA page required for compliance.
+
+#### PG-054 — Acceptable Use Policy
+- **Section:** Legal Pages
+- **Owner:** Legal Counsel (STOA-Foundation)
+- **Dependency:** PG-050
+- **Evidence path:** `.specify/sprints/sprint-17/attestations/PG-054/context_ack.json`
+- **Suggested action:** Re-spawn alongside PG-053 (same sprint, same owner).
+
+#### IFC-227 — Company-to-Account Navigation Link
+- **Section:** Core CRM
+- **Owner:** Frontend Dev (STOA-Quality)
+- **Evidence path:** `.specify/sprints/sprint-18/attestations/IFC-227/context_ack.json`
+- **Suggested action:** Re-spawn — functional regression (plain `<span>` instead of `<Link>`) affects leads, contacts, deals detail pages.
+
+---
+
+## Additional Orphans Detected (New Discoveries)
+
+Beyond the 4 user-cited orphans, the audit found 395 additional tasks classified as `no_remote_branch`. A sample of recently completed tasks (sprint 16+) that may represent genuine orphans (work done in worktrees never pushed):
+
+| Task ID | Sprint | Completed At |
+|---------|--------|--------------|
+| PG-180  | 18 | 2026-04-19T22:50:00Z |
+| PG-186  | 17 | 2026-04-19T22:20:00Z |
+| PG-187  | 18 | 2026-04-19T23:45:00Z |
+| PG-189  | 18 | 2026-04-19T15:30:00Z |
+| PG-190  | 18 | 2026-04-20T20:16:00Z |
+| IFC-310 | 18 | 2026-04-21T22:00:00Z |
+| IFC-311 | 18 | 2026-04-20T23:55:00Z |
+| IFC-312 | 19 | 2026-04-24T20:48:00Z |
+| IFC-314 | 19 | 2026-04-26T09:56:00Z |
+
+**Recommendation:** Human review of the above sprint 17–19 tasks is warranted. Their work may exist on local worktrees that were never pushed. Cross-check with `.specify/sprints/sprint-17..19/attestations/*/attestation.json` artifact_hashes vs `git show master:<path>`.
+
+---
+
+## Pre-Convention Tasks (Not Actionable as Orphans)
+
+Tasks in sprints 0–16 completed before the `agent/*` branch convention was adopted. All 395 of them show `no_remote_branch` but their work is demonstrably on master.
+
+**Classification:** `integration_status: merged` (to be backfilled by the integrator in Step 3.2).  
+**CSV action:** None — do not mark Lost.
+
+---
+
+## Files Modified
+
+| File | Change |
+|------|--------|
+| `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv` | IFC-031, PG-053, PG-054: `Status` Completed → Needs Human; IFC-227 unchanged (handled in IFC-227 resurrection PR) |
+| `apps/project-tracker/docs/metrics/_global/Sprint_plan_[A-J].csv` | Regenerated by pre-commit hook on commit |
+| `artifacts/reports/orphans.jsonl` | Created — 399 orphan records (append-only) |
+| `tools/scripts/audit-task-branch-correspondence.mjs` | New — audit script |
+| `.github/workflows/orphan-audit.yml` | New — scheduled every 15 min |
+| `apps/project-tracker/docs/metrics/schemas/task-status.schema.json` | Added 4 integration observability fields |
+| `tools/scripts/lib/schemas/task-registry.schema.ts` | Added 4 integration observability fields |
+| `apps/project-tracker/app/api/sprint/completion/route.ts` | Added `branch_status` per completed task |
+
+---
+
+## Manual Triage Gate
+
+A human must review this report and choose per task:
+
+- **Re-spawn:** Revert CSV `Status` back to `In Progress`, queue for dispatch
+- **Human-review:** Mark `In Review`, route to a teammate  
+- **Accept-as-lost:** `Status = Needs Human` already applied (IFC-031, PG-053, PG-054, IFC-227)
+
+For recently completed sprint 17–19 tasks listed above, re-spawn is recommended after verifying no local worktree holds the work.

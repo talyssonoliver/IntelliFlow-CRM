@@ -55,6 +55,18 @@ export const tasksByStatusSchema = z.object({
   IN_REVIEW: z.array(z.string()).optional(),
 });
 
+// Integration status enum (orphan observability — Step 1.4)
+export const integrationStatusSchema = z.enum([
+  'pending',
+  'rebasing',
+  'validating',
+  'merged',
+  'needs_rework',
+  'validation_failed',
+  'abandoned',
+  'lost',
+]);
+
 // Task detail entry
 export const taskDetailSchema = z.object({
   section: z.string(),
@@ -65,6 +77,14 @@ export const taskDetailSchema = z.object({
   completed_at: z.iso.datetime().optional(),
   duration_minutes: z.number().int().min(0).optional(),
   metrics_file: z.string().optional(),
+  // Orphan observability fields (Step 1.4)
+  branch_url: z
+    .string()
+    .regex(/^https:\/\/github\.com\/.+\/tree\/agent\/.+$/)
+    .optional(),
+  integration_status: integrationStatusSchema.optional(),
+  integration_duration_seconds: z.number().int().min(0).optional(),
+  time_from_completion_to_merge_seconds: z.number().int().min(0).optional(),
 });
 
 // Main task registry schema
