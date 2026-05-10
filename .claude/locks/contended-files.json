@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "description": "Files where multiple agents may collide on Edit/Write. claim.mjs requires alphabetical acquisition order across this list to prevent deadlock. Add only files where the contention is real and the cost of serialization is justified.",
+  "contended_paths": [
+    ".github/workflows/ci.yml",
+    "apps/api/src/container.ts",
+    "apps/api/src/context.ts",
+    "apps/project-tracker/docs/metrics/_global/Sprint_plan.csv",
+    "apps/project-tracker/docs/metrics/_global/dependency-graph.json",
+    "apps/project-tracker/docs/metrics/_global/task-registry.json",
+    "docs/architecture/diagrams/complete-dependency-chains.md",
+    "package.json",
+    "packages/db/prisma/schema.prisma",
+    "pnpm-lock.yaml"
+  ]
+}

@@ -181,7 +181,8 @@ apps/project-tracker/docs/metrics/_global/dependency-graph.json
 .turbo-shared/
 .next-cache-shared/
 .claude/worktree-pool/
-.claude/locks/
+.claude/locks/*.lock
+.claude/locks/*.lock.json
 .cache/regenerate-derived-state.json
 
 # ============================================

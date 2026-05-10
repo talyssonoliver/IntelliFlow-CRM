@@ -7,8 +7,9 @@
  * User can always Ctrl+C to force quit.
  */
 
-import { readFileSync } from 'node:fs';
+import { readFileSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
+import { locksHeldByTask, repoRootFromHook } from './lib/agent-context.mjs';
 
 const REQUIRED_PHASES = ['exec-gates', 'exec-attestation', 'compliance-check', 'exec-metrics'];
 
@@ -16,7 +17,39 @@ function getStateDir() {
   return process.env.CLAUDE_SCRATCHPAD || join(process.cwd(), '.claude', 'hooks', 'state');
 }
 
+/**
+ * Wave 3.1 — release any locks held by this task before stopping.
+ *
+ * Opt-in via CLAUDE_TASK_ID env var. Without it, no release is attempted
+ * (the lock-sweep CI workflow still reaps orphans on a 15-min cadence).
+ *
+ * Failures here MUST be silent — Stop hook output goes back to the user
+ * verbatim, and a lock-release error from a background utility shouldn't
+ * change whether the session can stop.
+ */
+function releaseLocksOnStop() {
+  const taskId = process.env.CLAUDE_TASK_ID;
+  if (!taskId) return 0;
+  try {
+    const repoRoot = repoRootFromHook(import.meta.url);
+    const held = locksHeldByTask(taskId, repoRoot);
+    for (const l of held) {
+      try {
+        unlinkSync(join(repoRoot, '.claude', 'locks', l.file));
+      } catch {
+        /* ignore — sweep will reap orphans */
+      }
+    }
+    return held.length;
+  } catch {
+    return 0;
+  }
+}
+
 async function main() {
+  // Release locks first; this happens whether or not phases are complete.
+  releaseLocksOnStop();
+
   process.stdin.setEncoding('utf8');
   // Drain stdin (content not used by this hook)
   for await (const _chunk of process.stdin) {
