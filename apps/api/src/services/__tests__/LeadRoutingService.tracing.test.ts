@@ -26,6 +26,7 @@ import {
   BasicTracerProvider,
   SimpleSpanProcessor,
 } from '@intelliflow/observability';
+import type { ReadableSpan } from '@opentelemetry/sdk-trace-base';
 import { LeadRoutingService, setWorkflowTracer } from '../LeadRoutingService';
 
 const TENANT_ID = 'tenant-001';
@@ -133,7 +134,7 @@ describe('Section F: Tracing (IFC-032)', () => {
     const result = await service.routeLead({ leadId: LEAD_ID, tenantId: TENANT_ID });
 
     const spans = exporter.getFinishedSpans();
-    const parent = spans.find((s) => s.name === 'workflow.lead.route');
+    const parent = spans.find((s: ReadableSpan) => s.name === 'workflow.lead.route');
     expect(parent).toBeDefined();
     expect(parent!.attributes['workflow.id']).toBeDefined();
     expect(parent!.attributes['lead.id']).toBe(LEAD_ID);
@@ -150,7 +151,7 @@ describe('Section F: Tracing (IFC-032)', () => {
     await service.routeLead({ leadId: LEAD_ID, tenantId: TENANT_ID });
 
     const spans = exporter.getFinishedSpans();
-    const child = spans.find((s) => s.name === 'workflow.lead.route.evaluate_rules');
+    const child = spans.find((s: ReadableSpan) => s.name === 'workflow.lead.route.evaluate_rules');
     expect(child).toBeDefined();
     expect(child!.attributes['workflow.id']).toBeDefined();
     expect(child!.attributes['tenant.id']).toBe(TENANT_ID);
@@ -161,7 +162,7 @@ describe('Section F: Tracing (IFC-032)', () => {
     await service.routeLead({ leadId: LEAD_ID, tenantId: TENANT_ID });
 
     const spans = exporter.getFinishedSpans();
-    const child = spans.find((s) => s.name === 'workflow.lead.route.score_agents');
+    const child = spans.find((s: ReadableSpan) => s.name === 'workflow.lead.route.score_agents');
     expect(child).toBeDefined();
     expect(child!.attributes['workflow.id']).toBeDefined();
     expect(typeof child!.attributes['agents.eligible_count']).toBe('number');
@@ -172,7 +173,7 @@ describe('Section F: Tracing (IFC-032)', () => {
     await service.routeLead({ leadId: LEAD_ID, tenantId: TENANT_ID });
 
     const spans = exporter.getFinishedSpans();
-    const child = spans.find((s) => s.name === 'workflow.lead.route.persist_audit');
+    const child = spans.find((s: ReadableSpan) => s.name === 'workflow.lead.route.persist_audit');
     expect(child).toBeDefined();
     expect(child!.attributes['workflow.id']).toBeDefined();
     expect(child!.attributes['lead.id']).toBe(LEAD_ID);
@@ -185,10 +186,10 @@ describe('Section F: Tracing (IFC-032)', () => {
     await expect(service.routeLead({ leadId: LEAD_ID, tenantId: TENANT_ID })).rejects.toThrow();
 
     const spans = exporter.getFinishedSpans();
-    const parent = spans.find((s) => s.name === 'workflow.lead.route');
+    const parent = spans.find((s: ReadableSpan) => s.name === 'workflow.lead.route');
     expect(parent).toBeDefined();
     expect(parent!.status.code).toBe(SpanStatusCode.ERROR);
-    expect(parent!.events.some((e) => e.name === 'exception')).toBe(true);
+    expect(parent!.events.some((e: { name: string }) => e.name === 'exception')).toBe(true);
   });
 
   it('F6: workflowId is persisted on RoutingAudit.create input and matches parent span attribute', async () => {
@@ -206,7 +207,7 @@ describe('Section F: Tracing (IFC-032)', () => {
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
     );
     const spans = exporter.getFinishedSpans();
-    const parent = spans.find((s) => s.name === 'workflow.lead.route');
+    const parent = spans.find((s: ReadableSpan) => s.name === 'workflow.lead.route');
     expect(parent!.attributes['workflow.id']).toBe(result.workflowId);
   });
 });

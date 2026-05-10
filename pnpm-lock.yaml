@@ -373,6 +373,9 @@ importers:
       '@opentelemetry/sdk-node':
         specifier: 0.212.0
         version: 0.212.0(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-trace-base':
+        specifier: 2.5.1
+        version: 2.5.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/semantic-conventions':
         specifier: ^1.40.0
         version: 1.40.0
@@ -14193,7 +14196,7 @@ snapshots:
   '@opentelemetry/sql-common@0.41.2(@opentelemetry/api@1.9.0)':
     dependencies:
       '@opentelemetry/api': 1.9.0
-      '@opentelemetry/core': 2.5.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/core': 2.7.0(@opentelemetry/api@1.9.0)
 
   '@opentelemetry/winston-transport@0.22.0':
     dependencies:

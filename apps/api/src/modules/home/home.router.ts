@@ -16,7 +16,7 @@
 import { context as otelContext, propagation } from '@opentelemetry/api';
 import type { PrismaClient } from '@intelliflow/db';
 import { TRPCError } from '@trpc/server';
-import { createTRPCRouter, tenantProcedure } from '../../trpc';
+import { createTRPCRouter, tenantProcedure, adminTenantProcedure } from '../../trpc';
 import { type Context } from '../../context';
 import { loadBullMQ } from '../../lib/load-bullmq';
 import {
@@ -24,6 +24,8 @@ import {
   unpinItemInputSchema,
   reorderPinnedItemsInputSchema,
   updateDailyGoalInputSchema,
+  setTeamMemberGoalInputSchema,
+  setOrgGoalDefaultInputSchema,
   getAllInsightsQuerySchema,
   GOAL_DEFAULTS,
   type WelcomeSummary,
@@ -33,6 +35,9 @@ import {
   type PinnedItemsResponse,
   type GoalType,
 } from '@intelliflow/validators';
+import { type RoleName } from '../../security/types';
+import { RBACService } from '../../security/rbac';
+import { getAuditLogger } from '../../security/audit-logger';
 import { z } from 'zod';
 import {
   startOfDayInTimezone,

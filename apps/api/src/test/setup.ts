@@ -341,6 +341,31 @@ export function createAdminContext(overrides?: Partial<BaseContext>): BaseContex
 }
 
 /**
+ * Create manager context for testing manager-only procedures (IFC-211)
+ */
+export function createManagerContext(overrides?: Partial<BaseContext>): BaseContext {
+  const managerId = TEST_UUIDS.manager1;
+  const tenantId = TEST_UUIDS.tenant;
+
+  return createTestContext({
+    user: {
+      userId: managerId,
+      email: 'manager@example.com',
+      role: 'MANAGER',
+      tenantId,
+    },
+    tenant: {
+      tenantId,
+      tenantType: 'user' as const,
+      userId: managerId,
+      role: 'MANAGER',
+      canAccessAllTenantData: false,
+    },
+    ...overrides,
+  });
+}
+
+/**
  * Create unauthenticated context for testing public procedures
  */
 export function createPublicContext(overrides?: Partial<BaseContext>): BaseContext {
@@ -384,6 +409,11 @@ export const TEST_UUIDS = {
   admin1: generateTestUUID('admin-user'),
   nonExistent: generateTestUUID('non-existent'),
   score1: generateTestUUID('score-1'),
+  // IFC-211: RBAC goal / cross-tenant test fixtures
+  manager1: generateTestUUID('manager-user'),
+  teamMember1: generateTestUUID('team-member-1'),
+  otherTenant: generateTestUUID('other-tenant'),
+  otherTenantUser: generateTestUUID('other-tenant-user'),
 };
 
 /**

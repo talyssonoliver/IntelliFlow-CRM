@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-05-09T22:37:02.859Z",
+  "timestamp": "2026-05-10T00:23:11.419Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1016,9 +1016,9 @@
   },
   "api_inventory": {
     "total_routers": 61,
-    "total_endpoints": 541,
-    "total_queries": 249,
-    "total_mutations": 292,
+    "total_endpoints": 543,
+    "total_queries": 250,
+    "total_mutations": 293,
     "routers": [
       {
         "name": "contact",
@@ -1105,6 +1105,12 @@
         "mutations": 10
       },
       {
+        "name": "home",
+        "endpoints": 14,
+        "queries": 7,
+        "mutations": 7
+      },
+      {
         "name": "task",
         "endpoints": 14,
         "queries": 5,
@@ -1121,12 +1127,6 @@
         "endpoints": 13,
         "queries": 6,
         "mutations": 7
-      },
-      {
-        "name": "home",
-        "endpoints": 12,
-        "queries": 6,
-        "mutations": 6
       },
       {
         "name": "cases",
@@ -4675,6 +4675,16 @@
         "name": "home.updateDailyGoal",
         "method": "POST",
         "description": "Update daily goal"
+      },
+      {
+        "name": "home.setTeamMemberGoal",
+        "method": "POST",
+        "description": "Set team member goal"
+      },
+      {
+        "name": "home.getOrgGoalDefault",
+        "method": "GET",
+        "description": "Get org goal default"
       },
       {
         "name": "home.getPinnedItems",

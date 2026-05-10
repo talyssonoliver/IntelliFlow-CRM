@@ -75,6 +75,15 @@ export {
 // Export request-scoped log context (AsyncLocalStorage-backed)
 export { runWithLogContext, getCurrentLogContext, type LogRequestContext } from './log-context';
 
+// Re-export OTel SDK testing primitives so test files can import from one place.
+// InMemorySpanExporter / BasicTracerProvider / SimpleSpanProcessor are test-only
+// constructs — they are NOT included in production bundles.
+export {
+  InMemorySpanExporter,
+  BasicTracerProvider,
+  SimpleSpanProcessor,
+} from '@opentelemetry/sdk-trace-base';
+
 /**
  * Initialize all observability systems
  *

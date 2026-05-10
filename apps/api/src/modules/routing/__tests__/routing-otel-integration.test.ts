@@ -43,6 +43,7 @@ vi.mock('@opentelemetry/api', async () => {
 
 import { mockDeep, type DeepMockProxy } from 'vitest-mock-extended';
 import type { PrismaClient } from '@intelliflow/db';
+import type { ReadableSpan } from '@opentelemetry/sdk-trace-base';
 
 const TENANT_ID = '00000000-0000-4000-8000-000000000001';
 const LEAD_ID = '00000000-0000-4000-8000-00000000000a';
@@ -122,9 +123,8 @@ describe('routing/autoRouteLead OTel integration (IFC-032)', () => {
     vi.resetModules();
     const sdk = await import('@intelliflow/observability');
     const { routingRouter } = await import('../routing.router.js');
-    const { LeadRoutingService, setWorkflowTracer } = await import(
-      '../../../services/LeadRoutingService.js'
-    );
+    const { LeadRoutingService, setWorkflowTracer } =
+      await import('../../../services/LeadRoutingService.js');
     const { setApiTracerForTesting } = await import('../../../tracing/middleware.js');
     const { createTestContext, mockServices } = await import('../../../test/setup.js');
 
@@ -160,7 +160,7 @@ describe('routing/autoRouteLead OTel integration (IFC-032)', () => {
 
       expect(result.assignedUserId).toBe(AGENT_ID_1);
 
-      const spans = exporter.getFinishedSpans();
+      const spans: ReadableSpan[] = exporter.getFinishedSpans();
       const trpcParent = spans.find((s) => s.name === 'trpc.mutation.autoRouteLead');
       const workflow = spans.find((s) => s.name === 'workflow.lead.route');
       const evaluate = spans.find((s) => s.name === 'workflow.lead.route.evaluate_rules');

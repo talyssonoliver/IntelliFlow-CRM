@@ -29,6 +29,18 @@ export interface LeadScoringResult {
   };
 }
 
+/**
+ * Options for AI service calls.
+ * Allows callers to pass per-request metadata such as tenantId and leadId
+ * without altering the core LeadScoringInput shape.
+ */
+export interface AIServiceCallOptions {
+  /** Tenant ID to scope the AI call (overrides service-level default). */
+  tenantId?: string;
+  /** Lead ID to associate with the scoring job (defaults to a synthetic UUID). */
+  leadId?: string;
+}
+
 export interface AIServicePort {
   /**
    * Score a lead using AI

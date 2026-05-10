@@ -1,4 +1,6 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
+import type { Span } from '@opentelemetry/api';
+import type { ReadableSpan } from '@opentelemetry/sdk-trace-base';
 
 vi.mock('@opentelemetry/api', async () => {
   const actual = await vi.importActual<typeof import('@opentelemetry/api')>('@opentelemetry/api');
@@ -23,8 +25,11 @@ describe('router-probe3', () => {
     provider = new BasicTracerProvider({ spanProcessors: [new SimpleSpanProcessor(exporter)] });
     prismaMock = mockDeep<PrismaClient>();
     const t = provider.getTracer('probe', '0');
-    t.startActiveSpan('beforeEach.probe', (s) => s.end());
-    console.log('[bf probe] spans:', exporter.getFinishedSpans().map((s) => s.name));
+    t.startActiveSpan('beforeEach.probe', (s: Span) => s.end());
+    console.log(
+      '[bf probe] spans:',
+      exporter.getFinishedSpans().map((s: ReadableSpan) => s.name)
+    );
   });
 
   it('works', () => {
