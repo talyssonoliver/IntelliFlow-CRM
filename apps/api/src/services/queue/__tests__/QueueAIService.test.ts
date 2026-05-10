@@ -21,7 +21,7 @@ type MockJob = {
 type MockState = {
   queueAddImpl: (name: string, payload: unknown) => Promise<MockJob>;
   jobWaitImpl: (events: unknown, timeoutMs?: number) => Promise<unknown>;
-  queueCtorImpl: () => void;       // throw to simulate Redis-down
+  queueCtorImpl: () => void; // throw to simulate Redis-down
   queueClose: ReturnType<typeof vi.fn>;
   eventsClose: ReturnType<typeof vi.fn>;
   queueCtorCallCount: number;
@@ -195,7 +195,7 @@ describe('QueueAIService', () => {
   // --------------------------------------------------------------------------
   it('case 4: lazy init creates exactly one Queue and one QueueEvents under N concurrent calls', async () => {
     const calls = await Promise.all(
-      Array.from({ length: 5 }).map(() => service.scoreLead(sampleInput)),
+      Array.from({ length: 5 }).map(() => service.scoreLead(sampleInput))
     );
     expect(calls.every((r) => r.isSuccess)).toBe(true);
     expect(mockState.queueCtorCallCount).toBe(1);

@@ -94,8 +94,19 @@ describe('IFC-211 — home.updateDailyGoal RBAC', () => {
 
   it('SALES_REP can write own goal — audit UPDATE with metadata.scope=self', async () => {
     const ctx = createTestContext({
-      user: { userId: TEST_UUIDS.user1, email: 'r@x', role: 'SALES_REP', tenantId: TEST_UUIDS.tenant },
-      tenant: { tenantId: TEST_UUIDS.tenant, tenantType: 'user' as const, userId: TEST_UUIDS.user1, role: 'SALES_REP', canAccessAllTenantData: false },
+      user: {
+        userId: TEST_UUIDS.user1,
+        email: 'r@x',
+        role: 'SALES_REP',
+        tenantId: TEST_UUIDS.tenant,
+      },
+      tenant: {
+        tenantId: TEST_UUIDS.tenant,
+        tenantType: 'user' as const,
+        userId: TEST_UUIDS.user1,
+        role: 'SALES_REP',
+        canAccessAllTenantData: false,
+      },
     });
     const caller = homeRouter.createCaller(ctx);
     const result = await caller.updateDailyGoal(goalInput);
@@ -138,10 +149,21 @@ describe('IFC-211 — home.updateDailyGoal RBAC', () => {
   });
 
   it('VIEWER is denied write — FORBIDDEN + logPermissionDenied', async () => {
-    mockCan.mockResolvedValue({ granted: false, reason: 'Role VIEWER does not have write permission on goal', checkedPermissions: [], roleLevel: 0 });
+    mockCan.mockResolvedValue({
+      granted: false,
+      reason: 'Role VIEWER does not have write permission on goal',
+      checkedPermissions: [],
+      roleLevel: 0,
+    });
     const ctx = createTestContext({
       user: { userId: TEST_UUIDS.user1, email: 'v@x', role: 'VIEWER', tenantId: TEST_UUIDS.tenant },
-      tenant: { tenantId: TEST_UUIDS.tenant, tenantType: 'user' as const, userId: TEST_UUIDS.user1, role: 'VIEWER', canAccessAllTenantData: false },
+      tenant: {
+        tenantId: TEST_UUIDS.tenant,
+        tenantType: 'user' as const,
+        userId: TEST_UUIDS.user1,
+        role: 'VIEWER',
+        canAccessAllTenantData: false,
+      },
     });
     const caller = homeRouter.createCaller(ctx);
     await expect(caller.updateDailyGoal(goalInput)).rejects.toThrow(TRPCError);
@@ -203,10 +225,26 @@ describe('IFC-211 — home.setTeamMemberGoal RBAC', () => {
   });
 
   it('SALES_REP role → FORBIDDEN (no goal:manage)', async () => {
-    mockCan.mockResolvedValue({ granted: false, reason: 'Role SALES_REP does not have manage permission on goal', checkedPermissions: [], roleLevel: 20 });
+    mockCan.mockResolvedValue({
+      granted: false,
+      reason: 'Role SALES_REP does not have manage permission on goal',
+      checkedPermissions: [],
+      roleLevel: 20,
+    });
     const ctx = createTestContext({
-      user: { userId: TEST_UUIDS.user1, email: 's@x', role: 'SALES_REP', tenantId: TEST_UUIDS.tenant },
-      tenant: { tenantId: TEST_UUIDS.tenant, tenantType: 'user' as const, userId: TEST_UUIDS.user1, role: 'SALES_REP', canAccessAllTenantData: false },
+      user: {
+        userId: TEST_UUIDS.user1,
+        email: 's@x',
+        role: 'SALES_REP',
+        tenantId: TEST_UUIDS.tenant,
+      },
+      tenant: {
+        tenantId: TEST_UUIDS.tenant,
+        tenantType: 'user' as const,
+        userId: TEST_UUIDS.user1,
+        role: 'SALES_REP',
+        canAccessAllTenantData: false,
+      },
     });
     const caller = homeRouter.createCaller(ctx);
     await expect(caller.setTeamMemberGoal(baseInput(TEST_UUIDS.user2))).rejects.toThrow(TRPCError);
@@ -218,7 +256,9 @@ describe('IFC-211 — home.setTeamMemberGoal RBAC', () => {
     mockIsUserOnManagerTeam.mockResolvedValue(false);
     const ctx = createManagerContext();
     const caller = homeRouter.createCaller(ctx);
-    await expect(caller.setTeamMemberGoal(baseInput(TEST_UUIDS.otherTenantUser))).rejects.toThrow(TRPCError);
+    await expect(caller.setTeamMemberGoal(baseInput(TEST_UUIDS.otherTenantUser))).rejects.toThrow(
+      TRPCError
+    );
     await new Promise((r) => setImmediate(r));
     expect(mockLogPermissionDenied).toHaveBeenCalled();
   });
@@ -226,7 +266,9 @@ describe('IFC-211 — home.setTeamMemberGoal RBAC', () => {
   it('targetUserId === actor → BAD_REQUEST (use updateDailyGoal for self)', async () => {
     const ctx = createManagerContext();
     const caller = homeRouter.createCaller(ctx);
-    await expect(caller.setTeamMemberGoal(baseInput(TEST_UUIDS.manager1))).rejects.toThrow(/updateDailyGoal/);
+    await expect(caller.setTeamMemberGoal(baseInput(TEST_UUIDS.manager1))).rejects.toThrow(
+      /updateDailyGoal/
+    );
     expect(mockLogAction).not.toHaveBeenCalled();
     expect(mockLogPermissionDenied).not.toHaveBeenCalled();
   });
@@ -407,17 +449,32 @@ describe('IFC-211 — Audit log assertions', () => {
   it('every successful goal write calls logAction once', async () => {
     const ctx = createTestContext();
     const caller = homeRouter.createCaller(ctx);
-    await caller.updateDailyGoal({ type: 'calls', targetValue: 20, label: undefined, customUnit: undefined });
+    await caller.updateDailyGoal({
+      type: 'calls',
+      targetValue: 20,
+      label: undefined,
+      customUnit: undefined,
+    });
     await new Promise((r) => setImmediate(r));
     expect(mockLogAction).toHaveBeenCalledTimes(1);
   });
 
   it('every FORBIDDEN denial calls logPermissionDenied once', async () => {
-    mockCan.mockResolvedValue({ granted: false, reason: 'denied', checkedPermissions: [], roleLevel: 0 });
+    mockCan.mockResolvedValue({
+      granted: false,
+      reason: 'denied',
+      checkedPermissions: [],
+      roleLevel: 0,
+    });
     const ctx = createTestContext();
     const caller = homeRouter.createCaller(ctx);
     await expect(
-      caller.updateDailyGoal({ type: 'revenue', targetValue: 100, label: undefined, customUnit: undefined })
+      caller.updateDailyGoal({
+        type: 'revenue',
+        targetValue: 100,
+        label: undefined,
+        customUnit: undefined,
+      })
     ).rejects.toThrow();
     await new Promise((r) => setImmediate(r));
     expect(mockLogPermissionDenied).toHaveBeenCalledTimes(1);
@@ -440,15 +497,13 @@ describe('IFC-211 — Audit log assertions', () => {
 
     // team (admin bypass)
     const adminCtx = createAdminContext();
-    await homeRouter
-      .createCaller(adminCtx)
-      .setTeamMemberGoal({
-        type: 'tasks',
-        targetValue: 5,
-        label: undefined,
-        customUnit: undefined,
-        targetUserId: TEST_UUIDS.user1,
-      });
+    await homeRouter.createCaller(adminCtx).setTeamMemberGoal({
+      type: 'tasks',
+      targetValue: 5,
+      label: undefined,
+      customUnit: undefined,
+      targetUserId: TEST_UUIDS.user1,
+    });
     await new Promise((r) => setImmediate(r));
     expect(mockLogAction).toHaveBeenLastCalledWith(
       'UPDATE',
@@ -459,9 +514,12 @@ describe('IFC-211 — Audit log assertions', () => {
     );
 
     // org
-    await homeRouter
-      .createCaller(adminCtx)
-      .setOrgGoalDefault({ type: 'tasks', targetValue: 5, label: undefined, customUnit: undefined });
+    await homeRouter.createCaller(adminCtx).setOrgGoalDefault({
+      type: 'tasks',
+      targetValue: 5,
+      label: undefined,
+      customUnit: undefined,
+    });
     await new Promise((r) => setImmediate(r));
     expect(mockLogAction).toHaveBeenLastCalledWith(
       'UPDATE',

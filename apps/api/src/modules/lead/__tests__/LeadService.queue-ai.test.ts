@@ -22,11 +22,7 @@ import {
   type AccountRepository,
 } from '@intelliflow/domain';
 import { LeadService } from '@intelliflow/application';
-import type {
-  EventBusPort,
-  AuditLogPort,
-  AuditLogResult,
-} from '@intelliflow/application';
+import type { EventBusPort, AuditLogPort, AuditLogResult } from '@intelliflow/application';
 import { GuardrailsAIService, type GuardrailsConfig } from '@intelliflow/adapters';
 
 // ============================================================================
@@ -315,7 +311,7 @@ describe('LeadService → GuardrailsAIService → QueueAIService roundtrip', () 
     const { leadService, lead, auditLog, queueAI } = buildHarness();
     await leadService.scoreLead(lead.id.value);
     expect(auditLog.logSecurityEvent.mock.calls.length).toBe(0); // happy path => no security event
-    expect(typeof auditLog.logSecurityEvent).toBe('function');    // wiring proven
+    expect(typeof auditLog.logSecurityEvent).toBe('function'); // wiring proven
     await queueAI.close();
   });
 

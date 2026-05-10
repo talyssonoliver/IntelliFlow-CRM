@@ -35,7 +35,10 @@ describe('IFC-211 RBAC — DEFAULT_PERMISSIONS.goal matrix', () => {
     expect(await rbac.canDelete('u', 'ADMIN', 'goal')).toBe(true);
     expect(await rbac.canManage('u', 'ADMIN', 'goal')).toBe(true);
     expect(await rbac.canExport('u', 'ADMIN', 'goal')).toBe(true);
-    expect((await rbac.can({ userId: 'u', userRole: 'ADMIN', resourceType: 'goal', action: 'admin' })).granted).toBe(true);
+    expect(
+      (await rbac.can({ userId: 'u', userRole: 'ADMIN', resourceType: 'goal', action: 'admin' }))
+        .granted
+    ).toBe(true);
   });
 
   it('MANAGER holds read+write+manage on goal', async () => {
@@ -43,7 +46,10 @@ describe('IFC-211 RBAC — DEFAULT_PERMISSIONS.goal matrix', () => {
     expect(await rbac.canRead('m', 'MANAGER', 'goal')).toBe(true);
     expect(await rbac.canWrite('m', 'MANAGER', 'goal')).toBe(true);
     expect(await rbac.canManage('m', 'MANAGER', 'goal')).toBe(true);
-    expect((await rbac.can({ userId: 'm', userRole: 'MANAGER', resourceType: 'goal', action: 'admin' })).granted).toBe(false);
+    expect(
+      (await rbac.can({ userId: 'm', userRole: 'MANAGER', resourceType: 'goal', action: 'admin' }))
+        .granted
+    ).toBe(false);
   });
 
   it('SALES_REP holds read+write on goal (no manage)', async () => {

@@ -366,7 +366,7 @@ export class RBACService {
   async isUserOnManagerTeam(
     managerId: string,
     targetUserId: string,
-    tenantId: string,
+    tenantId: string
   ): Promise<boolean> {
     if (managerId === targetUserId) return false;
     try {

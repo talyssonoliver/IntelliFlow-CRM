@@ -132,27 +132,35 @@ export class QueueAIService implements AIServicePort {
    * The second positional argument also accepts a string for backwards
    * compatibility with the original `tenantIdOverride` signature.
    */
+  /** Normalize the overloaded opts-or-tenantId argument into a plain options object. */
+  private resolveScoreLeadOpts(optsOrTenantId: AIServiceCallOptions | string | undefined): {
+    tenantId: string;
+    leadId: string;
+  } {
+    const opts: AIServiceCallOptions =
+      typeof optsOrTenantId === 'string' ? { tenantId: optsOrTenantId } : (optsOrTenantId ?? {});
+    return {
+      tenantId: opts.tenantId ?? this.opts.defaultTenantId,
+      leadId: opts.leadId ?? randomUUID(),
+    };
+  }
+
   async scoreLead(
     input: LeadScoringInput,
-    optsOrTenantId?: AIServiceCallOptions | string,
+    optsOrTenantId?: AIServiceCallOptions | string
   ): Promise<Result<LeadScoringResult, DomainError>> {
     if (this.closed) {
       return Result.fail(new PersistenceError('QueueAIService is closed'));
     }
-    const opts: AIServiceCallOptions =
-      typeof optsOrTenantId === 'string'
-        ? { tenantId: optsOrTenantId }
-        : (optsOrTenantId ?? {});
-    const tenantId = opts.tenantId ?? this.opts.defaultTenantId;
-    const leadId = opts.leadId ?? randomUUID();
+    const { tenantId, leadId } = this.resolveScoreLeadOpts(optsOrTenantId);
 
     try {
       await this.ensureInit();
     } catch (err) {
       return Result.fail(
         new PersistenceError(
-          `AI scoring queue connect failed: ${err instanceof Error ? err.message : String(err)}`,
-        ),
+          `AI scoring queue connect failed: ${err instanceof Error ? err.message : String(err)}`
+        )
       );
     }
     if (!this.queue || !this.events) {
@@ -188,8 +196,8 @@ export class QueueAIService implements AIServicePort {
     } catch (err) {
       return Result.fail(
         new PersistenceError(
-          `AI scoring enqueue failed: ${err instanceof Error ? err.message : String(err)}`,
-        ),
+          `AI scoring enqueue failed: ${err instanceof Error ? err.message : String(err)}`
+        )
       );
     }
 
@@ -211,9 +219,7 @@ export class QueueAIService implements AIServicePort {
     }
     const { score, confidence, modelVersion } = parsed.data;
     if (confidence < 0 || confidence > 1) {
-      return Result.fail(
-        new PersistenceError('Invalid scoring result: confidence out of range'),
-      );
+      return Result.fail(new PersistenceError('Invalid scoring result: confidence out of range'));
     }
 
     return Result.ok({
@@ -232,7 +238,7 @@ export class QueueAIService implements AIServicePort {
    */
   async qualifyLead(
     input: LeadScoringInput,
-    opts?: AIServiceCallOptions,
+    opts?: AIServiceCallOptions
   ): Promise<Result<boolean, DomainError>> {
     const r = await this.scoreLead(input, opts);
     if (r.isFailure) return Result.fail(r.error);
@@ -247,8 +253,8 @@ export class QueueAIService implements AIServicePort {
   async generateEmail(_leadId: string, _template: string): Promise<Result<string, DomainError>> {
     return Result.fail(
       new ValidationError(
-        'generateEmail not supported by QueueAIService — requires dedicated email generation queue',
-      ),
+        'generateEmail not supported by QueueAIService — requires dedicated email generation queue'
+      )
     );
   }
 
