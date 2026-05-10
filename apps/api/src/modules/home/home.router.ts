@@ -1655,20 +1655,16 @@ export const homeRouter = createTRPCRouter({
     });
 
     const prefs = (user?.preferences as any) || {};
-    const goalPrefSchema = z.object({
-      type: z.enum(['revenue', 'calls', 'meetings', 'tasks', 'custom']),
-      targetValue: z.number().int().positive(),
-      label: z.string().optional(),
-      customUnit: z.string().optional(),
-    });
-    const parsed = goalPrefSchema.safeParse(prefs.dailyGoal);
+    const userGoalPref = tryParseUserGoalPref(prefs);
 
-    const goalType: GoalType = parsed.success ? parsed.data.type : 'revenue';
+    // IFC-211: resolution order — user override > tenant default > hardcoded default
+    const goalPref = userGoalPref ?? (await loadTenantGoalDefault(ctx.prismaWithTenant, tenantId));
+
+    const goalType: GoalType = goalPref?.type ?? 'revenue';
     const defaults = GOAL_DEFAULTS[goalType];
-    const targetValue = parsed.success ? parsed.data.targetValue : defaults.targetValue;
-    const label = (parsed.success && parsed.data.label) || defaults.label;
-    const unit =
-      (parsed.success && goalType === 'custom' && parsed.data.customUnit) || defaults.unit;
+    const targetValue = goalPref?.targetValue ?? defaults.targetValue;
+    const label = goalPref?.label || defaults.label;
+    const unit = (goalType === 'custom' && goalPref?.customUnit) || defaults.unit;
 
     // Compute currentValue based on goal type
     let currentValue = 0;
@@ -1765,7 +1761,29 @@ export const homeRouter = createTRPCRouter({
     .input(updateDailyGoalInputSchema)
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.tenant.userId;
+      const tenantId = ctx.tenant.tenantId;
+      const role = ctx.tenant.role as RoleName;
       const { type, targetValue, label, customUnit } = input;
+
+      // IFC-211: RBAC check — any role with goal:write (all except VIEWER) can update own goal.
+      const rbac = new RBACService(ctx.prisma);
+      const auditLogger = getAuditLogger(ctx.prisma);
+      const canWrite = await rbac.can({
+        userId,
+        userRole: role,
+        resourceType: 'goal',
+        action: 'write',
+      });
+
+      if (!canWrite.granted) {
+        await auditLogger
+          .logPermissionDenied('goal', userId, 'goal:write', tenantId, { actorId: userId })
+          .catch(() => {});
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: canWrite.reason ?? 'Cannot update goal',
+        });
+      }
 
       // Get current preferences
       const user = await ctx.prismaWithTenant.user.findUnique({
@@ -1774,6 +1792,8 @@ export const homeRouter = createTRPCRouter({
       });
 
       const prefs = (user?.preferences as any) || {};
+      const beforeState = prefs.dailyGoal ?? null;
+      const afterState = { type, targetValue, label, customUnit };
 
       // Merge dailyGoal into preferences
       await ctx.prismaWithTenant.user.update({
@@ -1781,10 +1801,20 @@ export const homeRouter = createTRPCRouter({
         data: {
           preferences: {
             ...prefs,
-            dailyGoal: { type, targetValue, label, customUnit },
+            dailyGoal: afterState,
           },
         },
       });
+
+      auditLogger
+        .logAction('UPDATE', 'goal', userId, tenantId, {
+          actorId: userId,
+          actorRole: role,
+          beforeState,
+          afterState,
+          metadata: { scope: 'self' },
+        })
+        .catch(() => {});
 
       return { success: true, message: 'Daily goal updated successfully' };
     }),

@@ -14,6 +14,10 @@ export interface LeadScoringInput {
   title?: string;
   phone?: string;
   source: string;
+  /** IFC-212: Tenant scoping — forwarded to QueueAIService payload so the worker can tag the job. */
+  tenantId?: string;
+  /** IFC-212: Lead correlation — forwarded to QueueAIService payload so the worker result is linked to the right lead. */
+  leadId?: string;
 }
 
 export interface LeadScoringResult {

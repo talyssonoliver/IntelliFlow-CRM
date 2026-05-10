@@ -200,6 +200,9 @@ export class LeadService {
       title: lead.title,
       phone: lead.phone?.value,
       source: lead.source,
+      /** IFC-212: Thread real tenantId + leadId so the queue payload is tagged correctly. */
+      tenantId: lead.tenantId,
+      leadId: lead.id.value,
     });
 
     if (scoringResult.isFailure) {

@@ -50,6 +50,7 @@ import { InMemoryFeatureFlagProvider } from '@intelliflow/platform/feature-flags
 import { TicketService } from './services/TicketService';
 import { TicketRoutingService } from './services/TicketRoutingService';
 import { LeadRoutingService } from './services/LeadRoutingService';
+import { QueueAIService } from './services/queue';
 import {
   LeadService,
   ContactService,
@@ -215,12 +216,20 @@ function createCacheAdapter(): CachePort {
 
 /**
  * Select and instantiate the base AI service based on AI_PROVIDER env var.
- *   AI_PROVIDER=litellm (default) or openai → LiteLLMAIService (routes through LiteLLM proxy)
- *   AI_PROVIDER=ollama                       → OllamaAIService (offline / local dev escape hatch)
- *   AI_PROVIDER=mock (or unset in test env)  → MockAIService (deterministic, no network)
+ *   AI_PROVIDER=mock (or unset in test env) → MockAIService (deterministic, no network)
+ *   AI_PROVIDER=ollama                      → OllamaAIService (offline / local dev escape hatch)
+ *   AI_PROVIDER=litellm                     → LiteLLMAIService (routes through LiteLLM proxy)
+ *   AI_PROVIDER unset (non-test)            → QueueAIService (IFC-212: default BullMQ-backed path)
  */
-function createBaseAIService(): MockAIService | OllamaAIService | LiteLLMAIService {
+function createBaseAIService():
+  | MockAIService
+  | OllamaAIService
+  | LiteLLMAIService
+  | QueueAIService {
   const aiProvider = process.env.AI_PROVIDER;
+  if (aiProvider === 'mock' || (!aiProvider && process.env.NODE_ENV === 'test')) {
+    return new MockAIService();
+  }
   if (aiProvider === 'ollama') {
     return new OllamaAIService({
       baseUrl: process.env.OLLAMA_BASE_URL || 'http://localhost:11434',
@@ -233,17 +242,21 @@ function createBaseAIService(): MockAIService | OllamaAIService | LiteLLMAIServi
         : 60_000,
     });
   }
-  if (aiProvider === 'mock' || (!aiProvider && process.env.NODE_ENV === 'test')) {
-    return new MockAIService();
+  if (aiProvider === 'litellm') {
+    // Explicit opt-in: route through the LiteLLM proxy instead of the queue.
+    return new LiteLLMAIService({
+      baseUrl: process.env.LITELLM_BASE_URL || 'http://localhost:4000/v1',
+      masterKey: process.env.LITELLM_MASTER_KEY || 'dev-master-key',
+      timeout: process.env.LITELLM_TIMEOUT
+        ? Number.parseInt(process.env.LITELLM_TIMEOUT, 10)
+        : 120_000,
+    });
   }
-  // Default: litellm or openai — LiteLLMAIService routes through the LiteLLM proxy
-  return new LiteLLMAIService({
-    baseUrl: process.env.LITELLM_BASE_URL || 'http://localhost:4000/v1',
-    masterKey: process.env.LITELLM_MASTER_KEY || 'dev-master-key',
-    timeout: process.env.LITELLM_TIMEOUT
-      ? Number.parseInt(process.env.LITELLM_TIMEOUT, 10)
-      : 120_000,
+  // Default (AI_PROVIDER unset, non-test): IFC-212 BullMQ-backed async scoring queue.
+  const baseAIService = new QueueAIService({
+    defaultTenantId: process.env.DEFAULT_TENANT_ID || 'default',
   });
+  return baseAIService;
 }
 
 /**

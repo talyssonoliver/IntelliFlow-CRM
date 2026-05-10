@@ -132,16 +132,18 @@ export class QueueAIService implements AIServicePort {
    * The second positional argument also accepts a string for backwards
    * compatibility with the original `tenantIdOverride` signature.
    */
-  /** Normalize the overloaded opts-or-tenantId argument into a plain options object. */
-  private resolveScoreLeadOpts(optsOrTenantId: AIServiceCallOptions | string | undefined): {
-    tenantId: string;
-    leadId: string;
-  } {
+  /** Normalize the overloaded opts-or-tenantId argument into a plain options object.
+   * IFC-212: input.tenantId / input.leadId (threaded from LeadService) take precedence over
+   * caller opts so the queue payload is always tagged with the real entity values. */
+  private resolveScoreLeadOpts(
+    input: LeadScoringInput,
+    optsOrTenantId: AIServiceCallOptions | string | undefined
+  ): { tenantId: string; leadId: string } {
     const opts: AIServiceCallOptions =
       typeof optsOrTenantId === 'string' ? { tenantId: optsOrTenantId } : (optsOrTenantId ?? {});
     return {
-      tenantId: opts.tenantId ?? this.opts.defaultTenantId,
-      leadId: opts.leadId ?? randomUUID(),
+      tenantId: opts.tenantId ?? input.tenantId ?? this.opts.defaultTenantId,
+      leadId: opts.leadId ?? input.leadId ?? randomUUID(),
     };
   }
 
@@ -152,7 +154,7 @@ export class QueueAIService implements AIServicePort {
     if (this.closed) {
       return Result.fail(new PersistenceError('QueueAIService is closed'));
     }
-    const { tenantId, leadId } = this.resolveScoreLeadOpts(optsOrTenantId);
+    const { tenantId, leadId } = this.resolveScoreLeadOpts(input, optsOrTenantId);
 
     try {
       await this.ensureInit();
