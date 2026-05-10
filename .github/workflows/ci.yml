@@ -20,79 +20,16 @@ env:
 
 jobs:
   lint:
-    name: Lint & Format
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - uses: pnpm/action-setup@v5
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Lint
-        run: pnpm run lint
-
-      - name: Format check
-        run: pnpm run format:check
+    uses: ./.github/workflows/_lint.yml
+    secrets: inherit
 
   typecheck:
-    name: Type Check
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-
-      - uses: pnpm/action-setup@v5
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build packages
-        run: pnpm turbo run build --filter=!@intelliflow/web --filter=!@intelliflow/api --filter=!@intelliflow/project-tracker --filter=!@intelliflow/workers
-
-      - name: Type check
-        run: pnpm run typecheck
+    uses: ./.github/workflows/_typecheck.yml
+    secrets: inherit
 
   test:
-    name: Unit Tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-
-      - uses: pnpm/action-setup@v5
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build packages
-        run: pnpm turbo run build --filter=!@intelliflow/web --filter=!@intelliflow/api --filter=!@intelliflow/project-tracker --filter=!@intelliflow/workers
-
-      - name: Run tests
-        run: pnpm run test -- --coverage
-
-      - name: Upload coverage
-        uses: codecov/codecov-action@v4
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./artifacts/coverage/lcov.info
-          fail_ci_if_error: false
+    uses: ./.github/workflows/_test.yml
+    secrets: inherit
 
   # ==========================================
   # IFC-131: Architecture Boundary Enforcement
@@ -238,53 +175,9 @@ jobs:
           retention-days: 7
 
   build:
-    name: Build
-    runs-on: ubuntu-latest
+    uses: ./.github/workflows/_build.yml
     needs: [lint, typecheck, test, architecture, integration]
-    steps:
-      - uses: actions/checkout@v6
-
-      - uses: pnpm/action-setup@v5
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      # PG-195: enforce glyph-audit coverage before the production build so
-      # a new unlisted icon cannot ship as tofu (also enforced on PRs via
-      # pr-checks.yml > Quality Checks).
-      - name: Audit Material Symbols glyph coverage
-        run: pnpm --filter @intelliflow/web audit:material-symbols
-
-      - name: Build
-        run: pnpm run build
-        env:
-          NODE_ENV: production
-          # All module-load guards must be satisfied or `next build` fails
-          # at page-data collection. See pr-checks.yml > Build Preview for
-          # the full rationale; mirror that env block here.
-          PRISMA_FIELD_ENCRYPTION_KEY: ${{ secrets.PRISMA_FIELD_ENCRYPTION_KEY || 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=' }}
-          AI_AUDIT_SIGNING_KEY: ${{ secrets.AI_AUDIT_SIGNING_KEY || 'ci-build-stub-key-not-used-at-runtime' }}
-          DATABASE_URL: postgresql://stub:stub@localhost:5432/stub
-          DIRECT_URL: postgresql://stub:stub@localhost:5432/stub
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL || 'https://stub.supabase.co' }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY || 'ci-stub-anon-not-a-real-supabase-key-do-not-use-at-runtime' }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || 'ci-stub-service-role-not-a-real-supabase-key-do-not-use-at-runtime' }}
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://stub.supabase.co' }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'ci-stub-anon-not-a-real-supabase-key-do-not-use-at-runtime' }}
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v7
-        with:
-          name: build-output
-          path: |
-            apps/*/dist
-            apps/*/.next
-          retention-days: 7
+    secrets: inherit
 
   security-scan:
     name: Security Scan
