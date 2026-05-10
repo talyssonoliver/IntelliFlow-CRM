@@ -25,25 +25,24 @@ dashboard APIs.
 
 ## Sprint Plan CSV
 
-`docs/metrics/_global/Sprint_plan.csv` (589 rows, ~316 tasks, sprints 0–29).
+`docs/metrics/_global/Sprint_plan.csv` (~590 rows, sprints 0–29). Wave 3.2 added
+two columns: `Branch` and `Integration Status`.
 
-**DO NOT read `Sprint_plan.csv` directly** — exceeds the 25K token limit. Use
-the split files:
+**DO NOT read `Sprint_plan.csv` directly** — exceeds the 25K token limit. The
+range-split files (`Sprint_plan_A.csv` … `Sprint_plan_J.csv`) are derived and
+gitignored as of Wave 4. To read a range:
 
-```
-Sprint_plan_A.csv  (EXC-INIT-001 → IFC-042)
-Sprint_plan_B.csv  (IFC-043 → PG-015)
-Sprint_plan_C.csv  (PG-016 → SALES-002)
-Sprint_plan_D.csv  (PM-OPS-001 → IFC-123)
-Sprint_plan_E.csv  (IFC-124 → IFC-170)
-Sprint_plan_F.csv  (IFC-171 → PG-156)
-Sprint_plan_G.csv  (PG-157 → IFC-233)
-Sprint_plan_H.csv  (IFC-234 → IFC-296)
-Sprint_plan_I.csv  (IFC-297 → IFC-308)
-```
+- Local: `pnpm regenerate:derived` (cache-aware; cold ~10 s, warm hits <100 ms).
+  Splits land in the same `_global/` directory but stay untracked.
+- API: `GET http://localhost:3002/api/sprint-plan?range=<A..J>` (project-tracker
+  running). The endpoint regenerates lazily and caches per request.
 
-Regenerate splits: `npx tsx tools/scripts/split-sprint-plan.ts`. Full guide:
-`docs/claude-refs/sprint-plan-guide.md`.
+`task-registry.json` and `dependency-graph.json` are also derived files now;
+produce them with `node tools/scripts/build-task-registry.mjs` /
+`node tools/scripts/build-dependency-graph.mjs`, or all three at once via
+`pnpm regenerate:derived`.
+
+Full guide: `docs/claude-refs/sprint-plan-guide.md`.
 
 ## JSON Schemas (CRITICAL)
 
@@ -251,8 +250,9 @@ references `.specify/` via `execution.log_path` on task-status files).
 
 ```
 docs/metrics/
-├── _global/                    # Sprint_plan.csv/json, Sprint_plan_A..I.csv,
-│                               #   task-registry.json, dependency-graph.json,
+├── _global/                    # Sprint_plan.csv (committed) + derived files:
+│                               #   Sprint_plan_[A-J].csv (gitignored — `pnpm regenerate:derived`),
+│                               #   task-registry.json, dependency-graph.json (gitignored — same regenerator),
 │                               #   kpi-definitions.json, phase-validations/,
 │                               #   continuous/, flows/
 ├── schemas/                    # 12 schemas (see list above)

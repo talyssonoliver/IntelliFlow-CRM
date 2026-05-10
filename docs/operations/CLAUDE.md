@@ -90,8 +90,9 @@ docs/operations/
   pointing into `docs/operations/runbooks/`. If you move or rename a runbook,
   update that URL — the link is served to on-call during real incidents.
 - `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv` +
-  `task-registry.json` — many task prerequisites reference paths under
-  `docs/operations/`. Run
+  `task-registry.json` (the registry is derived and gitignored as of Wave 4;
+  regenerate via `pnpm regenerate:derived`) — many task prerequisites reference
+  paths under `docs/operations/`. Run
   `pnpm --filter @intelliflow/project-tracker exec tsx scripts/sync-metrics.ts`
   after any move.
 

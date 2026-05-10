@@ -49,11 +49,11 @@ Execute these gates in order, logging output to
 
 ## Canonical File Locations
 
-| File               | Expected Location                                     |
-| ------------------ | ----------------------------------------------------- |
-| Sprint_plan.csv    | `apps/project-tracker/docs/metrics/_global/`          |
-| task-registry.json | `apps/project-tracker/docs/metrics/_global/`          |
-| Task JSON files    | `apps/project-tracker/docs/metrics/sprint-*/phase-*/` |
+| File               | Expected Location                                     | Notes                                                                   |
+| ------------------ | ----------------------------------------------------- | ----------------------------------------------------------------------- |
+| Sprint_plan.csv    | `apps/project-tracker/docs/metrics/_global/`          | Source of truth — committed                                             |
+| task-registry.json | `apps/project-tracker/docs/metrics/_global/`          | Derived (Wave 4) — gitignored; regenerate via `pnpm regenerate:derived` |
+| Task JSON files    | `apps/project-tracker/docs/metrics/sprint-*/phase-*/` | Derived from `.specify/**` + CSV; rebuilt by sync                       |
 
 ## Forbidden Locations
 
