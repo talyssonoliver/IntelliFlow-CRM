@@ -1,0 +1,34 @@
+name: Lock Sweep (CI belt)
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Run lock sweep
+        run: node tools/scripts/locks/sweep.mjs --ci
+
+      - name: Commit reaped audit log if changed
+        run: |
+          if ! git diff --quiet -- .claude/locks/audit.jsonl 2>/dev/null; then
+            git config user.name 'lock-sweep[bot]'
+            git config user.email 'lock-sweep@noreply.github.com'
+            git add -f .claude/locks/audit.jsonl
+            git commit -m "chore(lock-sweep): reap orphans [skip ci]"
+            git push origin main || echo 'push failed (protected branch); audit log left local'
+          fi
