@@ -31,3 +31,11 @@ c9125ce75192 fix(ci): historical AI-coauthor trailer — pre-policy, pushed
 bf166c82a704 fix(ci): historical AI-coauthor trailer — pre-policy, pushed
 086effdf9ff7 fix(ci): historical AI-coauthor trailer — pre-policy, pushed
 975a1adf88fd fix(ci): historical AI-coauthor trailer — pre-policy, pushed
+a0917310d166 fix(db): historical AI-coauthor trailer — pre-policy (2026-04-26), pushed
+
+# main branch post-policy squash-merge commits — the GitHub squash UI
+# owns the subject/body, so the local commit-msg hook doesn't gate it.
+# Reviewed: 2026-05-14. Follow-up: enforce squash-message rules via the
+# GitHub merge-commit-message template or a workflow lint instead.
+692e2f5cba95 feat(orchestration): Wave 0+1+2a — squashed body line 148 chars (PR #58)
+0535abd5776b fix(ci): PR #46 squashed subject 101 chars + header 110 chars
