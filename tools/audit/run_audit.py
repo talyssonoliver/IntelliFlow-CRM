@@ -583,11 +583,17 @@ def _compute_aggregate_result(tools: list[dict[str, Any]]) -> dict[str, Any]:
         status = t.get("status")
         if status in counts:
             counts[status] += 1
+        # Required tier-1 gates: count as failed only when they actually FAIL.
+        # Scope-skips ("no TS files changed -> skip turbo-typecheck") and
+        # env-skips (SNYK_TOKEN not configured) are emitted as `skipped` but
+        # are not failures — the runner correctly determined the tool doesn't
+        # apply to the current PR. Treating those as "required failed" turned
+        # every CI-config-only or docs-only PR red without cause.
         if (
             int(t.get("tier", 0)) == 1
             and bool(t.get("required"))
             and bool(t.get("enabled", True))
-            and status != "pass"
+            and status not in ("pass", "skipped")
         ):
             tier1_required_failed += 1
         if int(t.get("tier", 0)) == 2 and status in {"warn", "fail"}:
