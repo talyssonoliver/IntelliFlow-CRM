@@ -71,7 +71,7 @@
     "@types/react-dom": "^19.2.3",
     "@typescript-eslint/eslint-plugin": "^8.56.1",
     "@typescript-eslint/parser": "^8.56.1",
-    "@vitejs/plugin-react": "^5.0.0",
+    "@vitejs/plugin-react": "^6.0.2",
     "axe-core": "^4.8.4",
     "eslint": "^10.0.2",
     "eslint-plugin-jsx-a11y": "^6.10.2",
