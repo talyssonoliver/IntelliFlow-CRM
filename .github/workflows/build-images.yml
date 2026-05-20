@@ -1,0 +1,68 @@
+name: Build & Push Images
+
+# Builds the API and AI-worker Docker images and publishes them to GitHub
+# Container Registry (GHCR). These images are what infra/terraform deploys
+# to Railway, so they must exist before `terraform apply`.
+#
+# Published images:
+#   ghcr.io/<owner>/intelliflow-crm-api:latest
+#   ghcr.io/<owner>/intelliflow-crm-ai-worker:latest
+#
+# Trigger manually from the Actions tab (workflow_dispatch), on a version
+# tag, or on push to main.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    tags: ['v*']
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: api
+            dockerfile: infra/docker/Dockerfile.api
+          - service: ai-worker
+            dockerfile: infra/docker/Dockerfile.ai-worker
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/intelliflow-crm-${{ matrix.service }}
+          tags: |
+            type=raw,value=latest
+            type=sha,format=short
+            type=ref,event=tag
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
