@@ -29,6 +29,7 @@ export default defineConfig({
       '@intelliflow/application': path.resolve(monorepoRoot, 'packages/application/src'),
       '@intelliflow/db': path.resolve(monorepoRoot, 'packages/db/src'),
       '@intelliflow/webhooks': path.resolve(monorepoRoot, 'packages/webhooks/src'),
+      '@intelliflow/observability': path.resolve(monorepoRoot, 'packages/observability/src'),
       // Web app path alias
       '@': path.resolve(monorepoRoot, 'apps/web/src'),
     },

@@ -18,6 +18,21 @@
 
 import type { PrismaClient } from '@intelliflow/db';
 import { LeadRoutedEvent, type LeadId } from '@intelliflow/domain';
+import type { Tracer } from '@opentelemetry/api';
+import { SpanStatusCode } from '@opentelemetry/api';
+import { randomUUID } from 'node:crypto';
+
+// ── Module-level tracer (IFC-032: OTel span emission for capture-trace-examples) ──
+let _workflowTracer: Tracer | null = null;
+
+/**
+ * Set (or clear) the OTel Tracer used to emit `workflow.lead.route` spans.
+ * Called by tools/scripts/observability/capture-trace-examples.ts during
+ * hermetic trace capture. In production the tracer is never set — zero overhead.
+ */
+export function setWorkflowTracer(tracer: Tracer | null): void {
+  _workflowTracer = tracer;
+}
 
 // ── Interfaces ──────────────────────────────────────────────
 
@@ -195,6 +210,32 @@ export class LeadRoutingService {
    * 5. Post-transaction: emit LeadRoutedEvent
    */
   async routeLead(params: LeadRouteParams): Promise<LeadRoutingResult> {
+    // IFC-032: if a tracer is set (capture-trace-examples script), wrap in a span.
+    if (_workflowTracer) {
+      // Generate a per-invocation workflow UUID so the span attribute satisfies the
+      // UUID pattern required by trace-examples.schema.json#/properties/workflow_id.
+      const workflowId = randomUUID();
+      return _workflowTracer.startActiveSpan('workflow.lead.route', async (span) => {
+        try {
+          const r = await this._routeLeadImpl(params);
+          span.setAttribute('workflow.id', workflowId);
+          span.setAttribute('route.id', r.ruleId ? `rule:${r.ruleId}` : 'rule:none');
+          span.setAttribute('routing.method', r.routingMethod);
+          span.setAttribute('routing.score', r.score);
+          span.setStatus({ code: SpanStatusCode.OK });
+          return r;
+        } catch (err) {
+          span.setStatus({ code: SpanStatusCode.ERROR });
+          throw err;
+        } finally {
+          span.end();
+        }
+      });
+    }
+    return this._routeLeadImpl(params);
+  }
+
+  private async _routeLeadImpl(params: LeadRouteParams): Promise<LeadRoutingResult> {
     const startTime = performance.now();
 
     const result = await this.prisma.$transaction(async (tx: any) => {

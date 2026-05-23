@@ -75,7 +75,8 @@ import {
   recordToolCall,
   type AgentStatusContext,
 } from './services/agent-status';
-import { hallucinationChecker } from './monitoring';
+import { hallucinationChecker, RedisMonitoringPublisher } from './monitoring';
+import type { MonitoringRedisLike } from './monitoring';
 import { MonitoringFlushService } from './monitoring/monitoring-flush.service';
 import { setAuditLogAdapter } from './utils/audit-log';
 import { tenantContextStore } from './tracing/tenant-context.js';
@@ -125,6 +126,8 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
   private configLoaded = false;
   private dashboardServer: Server | null = null;
   private monitoringFlushService?: MonitoringFlushService;
+  // IFC-214: Redis-backed live snapshot publisher (paired with API-side store).
+  private redisMonitoringPublisher?: RedisMonitoringPublisher;
   private prisma?: import('@intelliflow/db').PrismaClient;
   // IFC-310: contact embedding worker for duplicate-detection runtime.
   private contactEmbedWorker?: import('./workers/contact-embed-worker.js').ContactEmbedWorker;
@@ -213,6 +216,34 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
       this.monitoringFlushService = new MonitoringFlushService(this.prisma as never);
       this.monitoringFlushService.start();
       this.logger.info('MonitoringFlushService started — flushing metrics to DB every 60s');
+
+      // IFC-214: start Redis-backed snapshot publisher alongside the DB flush service.
+      // Lazy `require` (matches apps/api/src/container.ts:188 pattern) avoids
+      // bundling ioredis statically — a transitive dep via BullMQ.
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const IORedis = require('ioredis') as { default?: unknown } & Record<string, unknown>;
+        const RedisCtor = (IORedis.default ?? IORedis) as new (
+          opts: Record<string, unknown>
+        ) => MonitoringRedisLike;
+        const client = new RedisCtor({
+          host: process.env.REDIS_HOST || 'localhost',
+          port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
+          password: process.env.REDIS_PASSWORD || undefined,
+          db: Number.parseInt(process.env.REDIS_DB || '0', 10),
+          lazyConnect: true,
+          enableOfflineQueue: false,
+          maxRetriesPerRequest: 1,
+        });
+        this.redisMonitoringPublisher = new RedisMonitoringPublisher(client, this.prisma as never);
+        this.redisMonitoringPublisher.start();
+        this.logger.info('RedisMonitoringPublisher started — publishing snapshots every 5s');
+      } catch (innerErr) {
+        this.logger.warn(
+          { err: innerErr instanceof Error ? innerErr.message : String(innerErr) },
+          'RedisMonitoringPublisher init failed — API will fall through to DB tier'
+        );
+      }
     } catch (error) {
       this.logger.warn(
         { error: error instanceof Error ? error.message : String(error) },
@@ -628,31 +659,24 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     });
   }
 
-  /**
-   * Cleanup on shutdown
-   */
-  protected async onStop(): Promise<void> {
-    this.logger.info('Shutting down AI Worker...');
-
-    // IFC-297: Drain monitoring data before shutdown
-    if (this.monitoringFlushService) {
-      await this.monitoringFlushService.stop();
+  /** Try to stop a stoppable service, logging any error without re-throwing. */
+  private async tryStop(
+    service: { stop(): Promise<void> } | null | undefined,
+    label: string
+  ): Promise<void> {
+    if (!service) return;
+    try {
+      await service.stop();
+    } catch (err) {
+      this.logger.warn(
+        { err: err instanceof Error ? err.message : String(err) },
+        `${label} stop failed`
+      );
     }
+  }
 
-    // IFC-310: Stop the contact embedding worker cleanly.
-    if (this.contactEmbedWorker) {
-      try {
-        await this.contactEmbedWorker.stop();
-        this.logger.info('ContactEmbedWorker stopped');
-      } catch (err) {
-        this.logger.warn(
-          { err: err instanceof Error ? err.message : String(err) },
-          'Error stopping ContactEmbedWorker'
-        );
-      }
-    }
-
-    // H8: Close DLQ queue and lifecycle event listeners
+  /** Close all queued event listeners and the DLQ queue gracefully. */
+  private async closeQueueResources(): Promise<void> {
     for (const queueEvents of this.queueEventListeners) {
       await queueEvents.close().catch((err: unknown) => {
         this.logger.warn(
@@ -672,6 +696,30 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
       });
       this.dlqQueue = null;
     }
+  }
+
+  /**
+   * Cleanup on shutdown
+   */
+  protected async onStop(): Promise<void> {
+    this.logger.info('Shutting down AI Worker...');
+
+    // IFC-297: Drain monitoring data before shutdown
+    if (this.monitoringFlushService) {
+      await this.monitoringFlushService.stop();
+    }
+
+    // IFC-214: Stop Redis snapshot publisher cleanly (final tick + redis.quit).
+    await this.tryStop(this.redisMonitoringPublisher, 'RedisMonitoringPublisher');
+
+    // IFC-310: Stop the contact embedding worker cleanly.
+    await this.tryStop(this.contactEmbedWorker, 'ContactEmbedWorker');
+    if (this.contactEmbedWorker) {
+      this.logger.info('ContactEmbedWorker stopped');
+    }
+
+    // H8: Close DLQ queue and lifecycle event listeners
+    await this.closeQueueResources();
 
     // Close dashboard server
     if (this.dashboardServer) {

@@ -68,7 +68,11 @@ export const aiMonitoringRouter = createTRPCRouter({
    */
   getStatus: tenantProcedure.query(async ({ ctx }) => {
     try {
-      return await ctx.services!.aiMonitoringService!.getStatus({ tenantId: ctx.tenant.tenantId });
+      // IFC-214: read from Redis-backed store with DB fall-through.
+      const result = await ctx.services!.aiMonitoringStore!.getStatus({
+        tenantId: ctx.tenant.tenantId,
+      });
+      return result.value;
     } catch (error) {
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
@@ -84,10 +88,12 @@ export const aiMonitoringRouter = createTRPCRouter({
    */
   getDriftMetrics: tenantProcedure.input(driftQuerySchema).query(async ({ ctx, input }) => {
     try {
-      return await ctx.services!.aiMonitoringService!.getDriftMetrics({
+      // IFC-214: store merges tenant + global drift snapshots; falls through to DB on miss.
+      const result = await ctx.services!.aiMonitoringStore!.getDriftMetrics({
         ...input,
         tenantId: ctx.tenant.tenantId,
       });
+      return result.value;
     } catch (error) {
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
@@ -103,10 +109,12 @@ export const aiMonitoringRouter = createTRPCRouter({
    */
   getLatencyMetrics: tenantProcedure.input(latencyQuerySchema).query(async ({ ctx, input }) => {
     try {
-      return await ctx.services!.aiMonitoringService!.getLatencyMetrics({
+      // IFC-214: Redis snapshot read with DB fall-through.
+      const result = await ctx.services!.aiMonitoringStore!.getLatencyMetrics({
         ...input,
         tenantId: ctx.tenant.tenantId,
       });
+      return result.value;
     } catch (error) {
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
@@ -150,10 +158,12 @@ export const aiMonitoringRouter = createTRPCRouter({
     .input(hallucinationQuerySchema)
     .query(async ({ ctx, input }) => {
       try {
-        return await ctx.services!.aiMonitoringService!.getHallucinationReport({
+        // IFC-214: Redis snapshot read with DB fall-through.
+        const result = await ctx.services!.aiMonitoringStore!.getHallucinationReport({
           ...input,
           tenantId: ctx.tenant.tenantId,
         });
+        return result.value;
       } catch (error) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
@@ -169,10 +179,12 @@ export const aiMonitoringRouter = createTRPCRouter({
    */
   getROIMetrics: tenantProcedure.input(timeRangeSchema).query(async ({ ctx, input }) => {
     try {
-      return await ctx.services!.aiMonitoringService!.getROIMetrics({
+      // IFC-214: Redis snapshot read with DB fall-through.
+      const result = await ctx.services!.aiMonitoringStore!.getROIMetrics({
         ...input,
         tenantId: ctx.tenant.tenantId,
       });
+      return result.value;
     } catch (error) {
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',

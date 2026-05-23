@@ -86,6 +86,11 @@ import {
 import { loadFeatureFlagsConfig } from './config/feature-flags.config';
 import { CalendarWebhookService } from './modules/calendar/calendar-webhook.service';
 import { AIMonitoringService } from './services/AIMonitoringService';
+import { QueueAIService } from './services/queue';
+import {
+  RedisAIMonitoringStore,
+  type RedisLike as MonitoringRedisLike,
+} from './modules/ai-monitoring/ai-monitoring.redis-store';
 import { HomeCacheService } from './modules/home/home.cache';
 import { PublicFeedbackService } from './modules/public-feedback/public-feedback.service';
 import type { CachePort } from '@intelliflow/application';
@@ -214,36 +219,36 @@ function createCacheAdapter(): CachePort {
 }
 
 /**
- * Select and instantiate the base AI service based on AI_PROVIDER env var.
- *   AI_PROVIDER=litellm (default) or openai → LiteLLMAIService (routes through LiteLLM proxy)
- *   AI_PROVIDER=ollama                       → OllamaAIService (offline / local dev escape hatch)
- *   AI_PROVIDER=mock (or unset in test env)  → MockAIService (deterministic, no network)
+ * IFC-214: Build a minimal Redis client for the AI monitoring snapshot store.
+ *
+ * Returns null when ioredis is unavailable or REDIS_HOST is unset in test —
+ * the store falls through to the DB-backed AIMonitoringService, so missing
+ * Redis just means slightly slower (DB-tier) reads, never a 500.
  */
-function createBaseAIService(): MockAIService | OllamaAIService | LiteLLMAIService {
-  const aiProvider = process.env.AI_PROVIDER;
-  if (aiProvider === 'ollama') {
-    return new OllamaAIService({
-      baseUrl: process.env.OLLAMA_BASE_URL || 'http://localhost:11434',
-      model: process.env.OLLAMA_MODEL || 'mistral',
-      temperature: process.env.OLLAMA_TEMPERATURE
-        ? Number.parseFloat(process.env.OLLAMA_TEMPERATURE)
-        : 0.1,
-      timeout: process.env.OLLAMA_TIMEOUT
-        ? Number.parseInt(process.env.OLLAMA_TIMEOUT, 10)
-        : 60_000,
+function createMonitoringRedisClient(): MonitoringRedisLike | null {
+  if (process.env.AI_MONITORING_REDIS_DISABLED === '1') return null;
+  if (process.env.NODE_ENV === 'test' && !process.env.REDIS_HOST) return null;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const IORedis = require('ioredis');
+    const RedisCtor = IORedis.default ?? IORedis;
+    const client = new RedisCtor({
+      host: process.env.REDIS_HOST || 'localhost',
+      port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
+      password: process.env.REDIS_PASSWORD || undefined,
+      db: Number.parseInt(process.env.REDIS_DB || '0', 10),
+      lazyConnect: true,
+      enableOfflineQueue: false,
+      maxRetriesPerRequest: 1,
     });
+    return client as MonitoringRedisLike;
+  } catch (err) {
+    console.warn(
+      '[ai-monitoring.redis] ioredis unavailable — store falls through to DB',
+      err instanceof Error ? err.message : err
+    );
+    return null;
   }
-  if (aiProvider === 'mock' || (!aiProvider && process.env.NODE_ENV === 'test')) {
-    return new MockAIService();
-  }
-  // Default: litellm or openai — LiteLLMAIService routes through the LiteLLM proxy
-  return new LiteLLMAIService({
-    baseUrl: process.env.LITELLM_BASE_URL || 'http://localhost:4000/v1',
-    masterKey: process.env.LITELLM_MASTER_KEY || 'dev-master-key',
-    timeout: process.env.LITELLM_TIMEOUT
-      ? Number.parseInt(process.env.LITELLM_TIMEOUT, 10)
-      : 120_000,
-  });
 }
 
 /**
@@ -313,8 +318,47 @@ const createAdapters = (prismaClient: PrismaClient) => {
   // External services
   const eventBus = new InMemoryEventBus();
 
-  const baseAIService = createBaseAIService();
-
+  // AI provider selection (IFC-212):
+  //   AI_PROVIDER=ollama                       → OllamaAIService (offline / local dev escape hatch)
+  //   AI_PROVIDER=mock (or unset in test env)  → MockAIService (deterministic, no network)
+  //   AI_PROVIDER=litellm                      → LiteLLMAIService (legacy in-process LLM call)
+  //   AI_PROVIDER unset (non-test) [DEFAULT]   → QueueAIService (BullMQ ai-scoring queue,
+  //                                              consumed by apps/ai-worker.processScoringJob).
+  //
+  // The default flips from LiteLLMAIService to QueueAIService per IFC-212 — synchronous
+  // in-process LLM calls move to the worker process behind the queue. The
+  // GuardrailsAIService decorator (line ~365) wraps whichever base service is selected.
+  const aiProvider = process.env.AI_PROVIDER;
+  let baseAIService: MockAIService | OllamaAIService | LiteLLMAIService | QueueAIService;
+  if (aiProvider === 'ollama') {
+    baseAIService = new OllamaAIService({
+      baseUrl: process.env.OLLAMA_BASE_URL || 'http://localhost:11434',
+      model: process.env.OLLAMA_MODEL || 'mistral',
+      temperature: process.env.OLLAMA_TEMPERATURE
+        ? Number.parseFloat(process.env.OLLAMA_TEMPERATURE)
+        : 0.1,
+      timeout: process.env.OLLAMA_TIMEOUT
+        ? Number.parseInt(process.env.OLLAMA_TIMEOUT, 10)
+        : 60_000,
+    });
+  } else if (aiProvider === 'mock' || (!aiProvider && process.env.NODE_ENV === 'test')) {
+    baseAIService = new MockAIService();
+  } else if (aiProvider === 'litellm') {
+    // Explicit opt-in for the legacy in-process LLM path (LiteLLM proxy).
+    baseAIService = new LiteLLMAIService({
+      baseUrl: process.env.LITELLM_BASE_URL || 'http://localhost:4000/v1',
+      masterKey: process.env.LITELLM_MASTER_KEY || 'dev-master-key',
+      timeout: process.env.LITELLM_TIMEOUT
+        ? Number.parseInt(process.env.LITELLM_TIMEOUT, 10)
+        : 120_000,
+    });
+  } else {
+    // IFC-212 default — queue-backed AI scoring via BullMQ ai-scoring queue.
+    baseAIService = new QueueAIService({
+      defaultTenantId: process.env.DEFAULT_TENANT_ID || 'default',
+      eagerInit: true,
+    });
+  }
   // IFC-196: Prefer Redis-backed cache, fall back to InMemoryCache.
   const cache: CachePort = createCacheAdapter();
 
@@ -553,6 +597,15 @@ const createServices = (prismaClient: PrismaClient) => {
   // IFC-297: AI Monitoring persistence service
   const aiMonitoringService = new AIMonitoringService(prismaClient);
 
+  // IFC-214: Redis-backed live snapshot store in front of aiMonitoringService.
+  // Reads from Redis (populated by ai-worker's RedisMonitoringPublisher) and
+  // falls through to AIMonitoringService.* on cache miss / outage / poison.
+  // See ADR-052.
+  const aiMonitoringStore = new RedisAIMonitoringStore({
+    redis: createMonitoringRedisClient(),
+    service: aiMonitoringService,
+  });
+
   // IFC-148: Conversation Search Service — wired with real Prisma repository
   const conversationSearchRepository = new PrismaConversationSearchRepository(prismaClient);
   const conversationSearchService = new ConversationSearchService(conversationSearchRepository);
@@ -683,6 +736,8 @@ const createServices = (prismaClient: PrismaClient) => {
     adapters,
     // IFC-297: AI Monitoring persistence service
     aiMonitoringService,
+    // IFC-214: Redis-backed live snapshot store
+    aiMonitoringStore,
     // IFC-148: Conversation Search Service
     conversationSearchService,
     // IFC-196: Home Page Response Caching
