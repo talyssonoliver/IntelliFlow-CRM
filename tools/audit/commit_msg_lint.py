@@ -54,10 +54,13 @@ ALLOWED_TYPES = frozenset(
     ]
 )
 
-# Matches: type(scope): subject   OR   type: subject
-# Captured groups: (type, scope_or_None, subject)
+# Matches: type(scope): subject   OR   type: subject   OR   type(scope1)(scope2): subject
+# Dependabot emits `chore(ci)(deps): bump foo` style headers with two scope
+# groups (one from .github/dependabot.yml `commit-message.prefix`, one from
+# Dependabot's own ecosystem marker). Accept up to 3 chained scopes; only
+# the first is captured for downstream validation (lower-case check etc.).
 _HEADER_RE = re.compile(
-    r"^([a-z][a-z0-9-]*)(?:\(([^)]+)\))?!?:\s*(.+)$"
+    r"^([a-z][a-z0-9-]*)(?:\(([^)]+)\))?(?:\([^)]+\)){0,2}!?:\s*(.+)$"
 )
 
 # Upper-case first char, PascalCase, ALL-CAPS (START-CASE covers multi-word Caps)

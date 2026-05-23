@@ -39,3 +39,5 @@ a0917310d166 fix(db): historical AI-coauthor trailer — pre-policy (2026-04-26)
 # GitHub merge-commit-message template or a workflow lint instead.
 692e2f5cba95 feat(orchestration): Wave 0+1+2a — squashed body line 148 chars (PR #58)
 0535abd5776b fix(ci): PR #46 squashed subject 101 chars + header 110 chars
+e648b333cf09 chore(ci): PR #69 squashed body line 130 chars ("Admin-merged:..." line)
+5d2244f97dc5 ci: PR #80 build-images workflow — body lines 160/222/256 chars + --no-verify note
