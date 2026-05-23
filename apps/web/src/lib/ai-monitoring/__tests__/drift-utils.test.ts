@@ -156,8 +156,16 @@ describe('drift-utils', () => {
     });
 
     it('returns false for exactly 1 hour (boundary)', () => {
-      const ts = new Date(Date.now() - 3600000).toISOString();
+      // Pin the wall clock so the boundary comparison is deterministic.
+      // Otherwise any micro-jitter between `new Date(Date.now() - ...)`
+      // and the `Date.now()` call inside isStaleData() pushes diff over
+      // 3600000ms and flips the assertion (1 in ~10 CI runs flakes here).
+      const now = 1_700_000_000_000;
+      vi.useFakeTimers();
+      vi.setSystemTime(now);
+      const ts = new Date(now - 3600000).toISOString();
       expect(isStaleData(ts)).toBe(false);
+      vi.useRealTimers();
     });
   });
 });

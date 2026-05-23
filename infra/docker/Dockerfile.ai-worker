@@ -82,9 +82,9 @@ COPY --from=builder --chown=aiworker:nodejs /app/apps/ai-worker/dist ./apps/ai-w
 COPY --from=builder --chown=aiworker:nodejs /app/apps/ai-worker/package.json ./apps/ai-worker/
 COPY --from=builder --chown=aiworker:nodejs /app/package.json ./
 
-# Install Python dependencies for AI operations
-COPY --from=builder --chown=aiworker:nodejs /app/apps/ai-worker/requirements.txt ./apps/ai-worker/
-RUN pip3 install --no-cache-dir -r apps/ai-worker/requirements.txt || true
+# Python dependencies: no requirements.txt is committed today (the
+# worker is pure Node/@langchain/* per apps/ai-worker/package.json).
+# Reintroduce the COPY + pip install lines if Python code lands later.
 
 # Switch to non-root user
 USER aiworker
