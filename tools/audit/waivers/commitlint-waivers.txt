@@ -53,3 +53,4 @@ e648b333cf09 chore(ci): PR #69 squashed body line 130 chars ("Admin-merged:..." 
 # starts with proper noun "Redis" (Conventional Commits flags this). Same
 # pattern as 214d0abd7fab (proper noun "Linux"). Pushed to main; cannot rewrite.
 1d90766e687e feat(IFC-212): PR #59 squashed subject — proper noun "Redis" upper-case
+8a74610c472f fix: PR #97 squashed subject 103 chars — too-long PR title used verbatim via squash_merge_commit_title=PR_TITLE
