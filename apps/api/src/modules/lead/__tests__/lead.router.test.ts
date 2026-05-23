@@ -129,6 +129,39 @@ describe('Lead Router', () => {
         })
       );
     });
+
+    it('AC-008 (IFC-227): getById include clause requests account select { id, name }', async () => {
+      const mockLeadWithAccount = {
+        ...mockLead,
+        accountId: TEST_UUIDS.account1 ?? 'acc-uuid-1',
+        account: { id: TEST_UUIDS.account1 ?? 'acc-uuid-1', name: 'Acme Corp' },
+        owner: {
+          id: TEST_UUIDS.user1,
+          email: 'user@example.com',
+          name: 'Test User',
+          avatarUrl: null,
+          role: 'MEMBER',
+        },
+        activities: [],
+        notes: [],
+        files: [],
+        aiInsight: null,
+        aiInsights: [],
+        tasks: [],
+      };
+
+      prismaMock.lead.findUnique.mockResolvedValue(mockLeadWithAccount as any);
+
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
+
+      await callerWithService.getById({ id: TEST_UUIDS.lead1 });
+
+      // Verify the include clause contains account with id+name select
+      const callArgs = prismaMock.lead.findUnique.mock.calls[0]?.[0] as any;
+      expect(callArgs?.include).toHaveProperty('account');
+      expect(callArgs.include.account).toMatchObject({ select: { id: true, name: true } });
+    });
   });
 
   describe('list', () => {
