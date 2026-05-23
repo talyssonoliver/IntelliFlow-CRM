@@ -16,7 +16,8 @@ export default function manifest(): MetadataRoute.Manifest {
     name: 'IntelliFlow CRM',
     short_name: 'IntelliFlow',
     description:
-      'AI-powered Customer Relationship Management — lead scoring, pipeline analytics, automated workflows.',
+      'AI-powered Customer Relationship Management — lead scoring, ' +
+      'pipeline analytics, automated workflows.',
     start_url: '/',
     display: 'standalone',
     orientation: 'portrait-primary',
