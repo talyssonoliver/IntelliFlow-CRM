@@ -107,11 +107,11 @@ def _is_waived(full_sha: str, waivers: set[str]) -> bool:
 # ---------------------------------------------------------------------------
 
 
-def _git_log(count: int) -> list[tuple[str, str]]:
+def _git_log(count: int) -> list[tuple[str, str, str]]:
     """
-    Return a list of (full_sha, raw_commit_message) for the last *count*
-    commits.  The raw message includes the subject line, blank line, and body
-    (if any).
+    Return a list of (full_sha, raw_commit_message, author_email) for the last
+    *count* commits.  The raw message includes the subject line, blank line,
+    and body (if any).
 
     Strategy: fetch SHAs first, then retrieve each body individually.  This
     avoids NUL-separator issues on Windows when embedding NUL in a format
@@ -130,11 +130,11 @@ def _git_log(count: int) -> list[tuple[str, str]]:
 
     shas = [line.strip() for line in sha_result.stdout.splitlines() if line.strip()]
 
-    commits: list[tuple[str, str]] = []
+    commits: list[tuple[str, str, str]] = []
     for sha in shas:
-        # Step 2: fetch the commit message body for each SHA
+        # Step 2: fetch the commit message body + author email for each SHA
         msg_result = subprocess.run(
-            ["git", "log", "-1", "--format=%B", sha],
+            ["git", "log", "-1", "--format=%B%x00%ae", sha],
             capture_output=True,
             text=True,
             cwd=str(REPO_ROOT),
@@ -146,9 +146,38 @@ def _git_log(count: int) -> list[tuple[str, str]]:
                 file=sys.stderr,
             )
             continue
-        commits.append((sha, msg_result.stdout.strip()))
+        # %B%x00%ae produces: <body>\0<email>. Split on the NUL byte.
+        payload = msg_result.stdout.rstrip("\n")
+        if "\0" in payload:
+            body, author_email = payload.rsplit("\0", 1)
+        else:
+            body, author_email = payload, ""
+        commits.append((sha, body.strip(), author_email.strip()))
 
     return commits
+
+
+# Bot authors whose commits we don't gate. They use their own commit-message
+# conventions (often with very long bodies listing version bumps) that we
+# don't control. The bot-author check is sufficient auth signal.
+_BOT_AUTHORS = frozenset(
+    {
+        "49699333+dependabot[bot]@users.noreply.github.com",  # Dependabot
+        "support@github.com",  # Dependabot signed-off-by
+        "noreply@github.com",  # GitHub web UI / merges
+    }
+)
+
+
+def _is_bot_author(author_email: str) -> bool:
+    """True if the commit was authored by a known bot we don't gate."""
+    if not author_email:
+        return False
+    email = author_email.lower()
+    if email in _BOT_AUTHORS:
+        return True
+    # Catch-all for `*[bot]@users.noreply.github.com` shape
+    return email.endswith("[bot]@users.noreply.github.com")
 
 
 # ---------------------------------------------------------------------------
@@ -272,9 +301,16 @@ def main(argv: list[str] | None = None) -> int:
     failed_count = 0
     all_violations: list[str] = []
 
-    for sha, msg in commits:
+    for sha, msg, author_email in commits:
         if _is_waived(sha, waivers):
             print(f"[commitlint] WAIVE {sha[:12]}  (in waivers file)")
+            waived_count += 1
+            continue
+
+        if _is_bot_author(author_email):
+            # Bots (Dependabot, Renovate, etc.) use their own commit-message
+            # conventions we don't gate. Author identity is the auth signal.
+            print(f"[commitlint] SKIP  {sha[:12]}  bot author={author_email}")
             waived_count += 1
             continue
 

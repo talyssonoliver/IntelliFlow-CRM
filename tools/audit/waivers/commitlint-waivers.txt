@@ -41,3 +41,10 @@ a0917310d166 fix(db): historical AI-coauthor trailer — pre-policy (2026-04-26)
 0535abd5776b fix(ci): PR #46 squashed subject 101 chars + header 110 chars
 e648b333cf09 chore(ci): PR #69 squashed body line 130 chars ("Admin-merged:..." line)
 5d2244f97dc5 ci: PR #80 build-images workflow — body lines 160/222/256 chars + --no-verify note
+
+# PR #59 (feat/ifc-212-rebased) historical commits — subject starts uppercase,
+# already pushed, cannot be rewritten without force-push that would invalidate
+# in-flight review. Subjects describe what the commits do; they just don't
+# match Conventional Commits subject-case. Future commits gated as usual.
+5cc713068838 fix(IFC-212): "OTel collector config..." subject upper-case — pushed, cannot rewrite
+161402780303 fix(IFC-212): "Redis monitoring snapshot bridge..." subject upper-case — pushed, cannot rewrite
