@@ -205,14 +205,6 @@ export default defineConfig({
             // TDD RED-phase tests that import unimplemented modules — excluded until
             // the source modules they reference are created
             'tests/compliance/data-governance.spec.ts',
-            // route-total-consistency requires docs/design/*.md files to cite
-            // a specific canonical phrasing ("Total Pages: 208" etc.) that the
-            // docs currently use a different format for ("> Pages**: 208"). The
-            // test was added by PR #59 / DOC-015 alongside IFC-212 but the
-            // doc-side changes weren't bundled. Re-enable after the docs are
-            // updated to match the canonical pattern (`Total Pages|Total
-            // Routes|page.tsx entries|filesystem total`).
-            'tools/scripts/route-total-consistency.test.ts',
           ],
         },
       },

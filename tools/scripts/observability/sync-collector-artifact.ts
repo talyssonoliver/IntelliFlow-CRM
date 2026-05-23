@@ -123,13 +123,11 @@ async function main() {
   const { check } = parseArgs(process.argv.slice(2));
   const result = syncCollectorArtifact({ check });
   if (!result.ok) {
-    // eslint-disable-next-line no-console
     console.error(
       `[sync-collector-artifact] ${check ? 'CHECK FAILED' : 'WRITE FAILED'}: ${result.reason}`
     );
     process.exit(1);
   }
-  // eslint-disable-next-line no-console
   console.log(
     check
       ? `[sync-collector-artifact] OK — body SHA256 matches (${result.sourceSha.slice(0, 12)}…)`
@@ -139,7 +137,6 @@ async function main() {
 
 if (require.main === module) {
   main().catch((err) => {
-    // eslint-disable-next-line no-console
     console.error('[sync-collector-artifact] ERROR:', err);
     process.exit(1);
   });

@@ -136,12 +136,16 @@ export default defineConfig({
   ],
 
   // Web Server configuration
-  // Automatically start the dev server before running tests
+  // Automatically start the dev server before running tests.
+  // CI uses `pnpm run build && pnpm run start` which on a cold turbo cache
+  // exceeds the previous 120s timeout (monorepo build is heavy). 300s is the
+  // GH Actions default function timeout — well within the runner's wall clock
+  // and matches Vercel's function default per the platform knowledge update.
   webServer: {
     command: process.env.CI ? 'pnpm run build && pnpm run start' : 'pnpm run dev',
     url: process.env.E2E_BASE_URL || 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
+    timeout: 300 * 1000,
     stdout: 'pipe',
     stderr: 'pipe',
     env: {
