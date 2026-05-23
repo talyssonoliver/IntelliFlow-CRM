@@ -124,14 +124,20 @@ tools:
     required: true
     owner: 'Security'
     scope: 'workspace'
-    # Temporarily gated at `critical` while the 22 high-severity transitive
-    # vulns ride out via Dependabot (@lhci/cli > proxy-agent transitives,
-    # fast-uri, etc.). Tighten back to `high` once the Dependabot wave
-    # (#62-#67) drains the baseline. Tracked alongside the matching
-    # `--audit-level=critical` change in security.yml.
+    # Audit gate runs at --audit-level=critical (fails the workflow on any
+    # critical vuln) PLUS a numerical ratchet on `max_high`. Current baseline
+    # is 22 high-severity transitives from @lhci/cli > proxy-agent chain,
+    # fast-uri, basic-ftp. The ratchet is set to 25 so adding any NEW high
+    # vuln triggers the gate (3-vuln buffer for transient lockfile churn);
+    # tighten toward 0 as Dependabot lands fixes upstream.
+    #
+    # Why not --audit-level=high: that would block every PR while we have
+    # any high vuln on main, even ones that aren't this PR's fault. The
+    # ratchet model lets a PR pass if it doesn't make things worse, while
+    # still catching regression. Lower max_high as the count drops upstream.
     command: 'pnpm audit --audit-level=critical'
     thresholds:
-      max_high: 99
+      max_high: 25
       max_critical: 0
     expected_outputs: ['log', 'json']
 

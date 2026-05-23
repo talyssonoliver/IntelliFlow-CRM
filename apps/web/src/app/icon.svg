@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="IntelliFlow CRM">
+  <!--
+    PWA icon (any + maskable). 512×512 viewBox with the brand mark drawn
+    inside the central 80% (safe area for maskable variants — Android adds
+    masking up to a 10% radius). Background fills the full area in the
+    brand dark color so masked variants don't show transparent edges.
+  -->
+  <rect width="512" height="512" fill="#0f172a" rx="80"/>
+  <!-- Central glyph: "IF" monogram in white with a subtle gradient -->
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#60a5fa"/>
+      <stop offset="100%" stop-color="#a78bfa"/>
+    </linearGradient>
+  </defs>
+  <g fill="url(#g)" font-family="system-ui, -apple-system, sans-serif" font-weight="700">
+    <text x="256" y="332" text-anchor="middle" font-size="240" letter-spacing="-12">IF</text>
+  </g>
+</svg>
