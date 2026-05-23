@@ -46,8 +46,23 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: '2mb',
     },
-    // Optimize package imports
-    optimizePackageImports: ['@intelliflow/ui', '@intelliflow/validators', '@intelliflow/domain', 'recharts'],
+    // Optimize package imports (barrel-file tree-shaking — Next.js 13.5+).
+    // Adding @tanstack/*, react-hook-form, and zod (heavy aggregate, frequently
+    // imported via barrel files) addresses the Lighthouse script-bundle audit
+    // (#84). Each added package can save 50-300KB from the client bundle when
+    // consumers import only specific exports. Only listed packages that have
+    // actual imports in apps/web/src or packages/ (verified via grep).
+    optimizePackageImports: [
+      '@intelliflow/ui',
+      '@intelliflow/validators',
+      '@intelliflow/domain',
+      'recharts',
+      '@tanstack/react-query',
+      '@tanstack/react-table',
+      '@tanstack/react-virtual',
+      'react-hook-form',
+      'zod',
+    ],
     // Enable 'use cache' directive, cacheLife(), cacheTag() without PPR
     useCache: true,
   },
