@@ -172,21 +172,17 @@ async function main() {
   const raw = readFileSync(RULES_PATH, 'utf8');
   const { ok, errors } = lintAlertsContent(raw);
   if (!ok) {
-    // eslint-disable-next-line no-console
     console.error('[lint-alerts] FAILED:');
     for (const err of errors) {
-      // eslint-disable-next-line no-console
       console.error('  - ' + err);
     }
     process.exit(1);
   }
-  // eslint-disable-next-line no-console
   console.log('[lint-alerts] OK — all 4 IFC-032 alert rules conform.');
 }
 
 if (require.main === module) {
   main().catch((err) => {
-    // eslint-disable-next-line no-console
     console.error('[lint-alerts] ERROR:', err);
     process.exit(1);
   });

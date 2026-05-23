@@ -302,13 +302,11 @@ export async function captureAndWrite(
 async function main() {
   const { out } = parseArgs(process.argv.slice(2));
   const { count } = await captureAndWrite(out);
-  // eslint-disable-next-line no-console
   console.log(`[capture-trace-examples] Wrote ${count} examples → ${out}`);
 }
 
 if (require.main === module) {
   main().catch((err) => {
-    // eslint-disable-next-line no-console
     console.error('[capture-trace-examples] FAILED:', err);
     process.exit(1);
   });

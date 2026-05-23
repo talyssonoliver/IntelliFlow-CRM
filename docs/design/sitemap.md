@@ -1,8 +1,9 @@
 # IntelliFlow CRM - Sitemap
 
-> **Location**: `docs/design/sitemap.md` **Last Updated**: 2026-04-26 **Total
-> Pages**: 208 **Total Flows**: 42 (linked) **Layouts**: 37 **API Routers**: 60
-> (232 procedures)
+> **Location**: `docs/design/sitemap.md` **Last Updated**: 2026-04-26
+>
+> **Total Pages**: 208 | **Total Flows**: 42 (linked) | **Layouts**: 37 |
+> **API Routers**: 60 (232 procedures)
 
 > **Canonical counts**: "Total Pages" reflects the filesystem total emitted by
 > `tools/scripts/content-audit.ts` — each `page.tsx` under `apps/web/src/app/**`

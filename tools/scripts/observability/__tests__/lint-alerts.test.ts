@@ -27,7 +27,6 @@ describe('lint-alerts (IFC-032)', () => {
     const raw = readFileSync(CANONICAL_PATH, 'utf8');
     const result = lintAlertsContent(raw);
     if (!result.ok) {
-      // eslint-disable-next-line no-console
       console.error('lint errors:', result.errors);
     }
     expect(result.ok).toBe(true);
