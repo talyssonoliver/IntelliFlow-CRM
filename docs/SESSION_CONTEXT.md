@@ -1,25 +1,18 @@
 # Session Context Snapshot
+_Generated: 2026-05-23T14:16:07.560Z • Branch: main_
 
-_Generated: 2026-04-26T21:29:48.987Z • Branch: master_
-
-> Auto-generated from `apps/project-tracker/docs/metrics/`. **Do not edit by
-> hand** — regenerate with
-> `npx tsx apps/project-tracker/scripts/generate-context.ts`.
+> Auto-generated from `apps/project-tracker/docs/metrics/`. **Do not edit by hand** — regenerate with `npx tsx apps/project-tracker/scripts/generate-context.ts`.
 
 ## Where We Left Off
 
-Active sprint: **Sprint 18** (sprint-18) — 17% complete (10/60 tasks). 0 task(s)
-in progress, 0 open blocker(s) across the registry. Registry last updated 19m
-ago; 571 total tasks across the project.
+Active sprint: **Sprint 18** (sprint-18) — 17% complete (10/60 tasks). 0 task(s) in progress, 0 open blocker(s) across the registry. Registry last updated 23d ago; 590 total tasks across the project.
 
 ## Project Health
 
-- **Progress:** 393/591 tasks completed (66.5%) — 198 backlog, 0 blocked, 0 in
-  progress.
+- **Progress:** 393/590 tasks completed (66.61%) — 197 backlog, 0 blocked, 0 in progress.
 - **Focus band:** Sprints 18, 19, 20, 21 carry the earliest remaining backlog.
-- **Evidence health:** Clean — no attestation gaps or mismatches.
-- _Source: `docs/CURRENT_STATE_REPORT.md` (0s ago) — full sprint-by-sprint
-  breakdown._
+- **Evidence issues:** 1 attested but CSV not updated.
+- _Source: `docs/CURRENT_STATE_REPORT.md` (0s ago) — full sprint-by-sprint breakdown._
 
 ## Active Tasks (IN_PROGRESS)
 
@@ -27,50 +20,33 @@ _None. The active sprint has no tasks currently in progress._
 
 ## Recently Completed (last 5)
 
-- **IFC-078** — 19m ago (15m)
-- **PG-132** — 19m ago (15m)
-- **IFC-311** — 5d ago (15m)
-- **IFC-310** — 5d ago (15m)
-- **PG-059** — 6d ago (15m)
+- **IFC-078** — 23d ago (15m)
+- **PG-132** — 23d ago (15m)
+- **IFC-311** — 1mo ago (15m)
+- **IFC-310** — 1mo ago (15m)
+- **PG-059** — 1mo ago (15m)
 
 ## Next Up (unblocked)
 
-- **DOC-015** (sprint 18) — Docs Integrity Reconciliation - Regenerate and sync
-  conflicting design-document route tota
+- **DOC-015** (sprint 18) — Docs Integrity Reconciliation - Regenerate and sync conflicting design-document route tota
 - **IFC-032** (sprint 18) — PHASE-005: OpenTelemetry Monitoring
-- **IFC-211** (sprint 18) — Goal Settings RBAC - Role-based permissions for
-  daily goal management (manager team goals
+- **IFC-211** (sprint 18) — Goal Settings RBAC - Role-based permissions for daily goal management (manager team goals 
 
 ## Git Activity
 
-- **Branch:** `master` (444 dirty file(s))
-- **Dirty preview:**
-  `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv`,
-  `apps/project-tracker/docs/metrics/_global/Sprint_plan.json`,
-  `apps/project-tracker/docs/metrics/_global/Sprint_plan_I.csv`,
-  `apps/project-tracker/docs/metrics/_global/Sprint_plan_J.csv`,
-  `apps/project-tracker/docs/metrics/_global/dependency-graph.json` …
+- **Branch:** `main` (3 dirty file(s))
+- **Dirty preview:** `artifacts/reports/current-state-report.json`, `docs/CURRENT_STATE_REPORT.md`, `docs/SESSION_CONTEXT.md`
 - **Last 10 commits:**
-  - `97a2173e` fix(tracker): derive active_sprint when missing from
-    task-registry.json — talyssonoliver, 56 seconds ago
-  - `a0917310` fix(db): enable RLS on public_feedback table (PG-126 follow-up) —
-    talyssonoliver, 9 minutes ago
-  - `2e2d28d9` chore: sync code-scanning-alerts + spec-tracker snapshots —
-    talyssonoliver, 58 minutes ago
-  - `5e730d90` chore: sync sprint metrics JSON files (431 task records) —
-    talyssonoliver, 58 minutes ago
-  - `efcd9beb` chore(ci): bump GitHub Actions to v6 across all 28 workflows —
-    talyssonoliver, 58 minutes ago
-  - `7d5ba531` fix(security): inline path sanitiser at fs sinks (CodeQL r4) +
-    fix OWASP DC out path — talyssonoliver, 8 hours ago
-  - `e580e491` fix(docker): build observability before web in Dockerfile.web —
-    talyssonoliver, 10 hours ago
-  - `c13c7ba9` chore: sync code-scanning-alerts snapshot (post-CodeQL-exclusion
-    refresh) — talyssonoliver, 11 hours ago
-  - `403f5de0` fix(security): inline path.basename sanitiser at fs sinks (CodeQL
-    r3) — talyssonoliver, 11 hours ago
-  - `bf2ef7a4` fix(security): exclude artifacts/ and generated dirs from CodeQL
-    scans — talyssonoliver, 11 hours ago
+  - `25855a869` fix: ship PWA manifest + audit ratchet + final cleanup (#102) — Talysson Da Silva Oliveira, 3 minutes ago
+  - `6d5ba89ff` fix(web): explicit viewport export + themeColor (Lighthouse easy wins) (#101) — Talysson Da Silva Oliveira, 88 minutes ago
+  - `8707006b0` ci: delete broken orphan-audit workflow file (#100) — Talysson Da Silva Oliveira, 88 minutes ago
+  - `2c0f902ec` ci: mark E2E job continue-on-error (#99) — Talysson Da Silva Oliveira, 3 hours ago
+  - `63f0cc5e8` ci: delete broken terraform-drift workflow (#98) — Talysson Da Silva Oliveira, 4 hours ago
+  - `8a74610c4` fix: properly resolve test exclusions + chronic CI debt (replaces issue documentation with fixes) (#97) — Talysson Da Silva Oliveira, 4 hours ago
+  - `d17688738` fix(test): exclude *.crossprocess.test.ts from Unit Tests — fixes main CI (#93) — Talysson Da Silva Oliveira, 5 hours ago
+  - `1d90766e6` feat(IFC-212): Redis monitoring snapshot bridge for AI metrics (#59) — Talysson Da Silva Oliveira, 7 hours ago
+  - `c50cc560e` chore(deps-dev)(deps-dev): bump puppeteer from 24.40.0 to 25.0.3 (#78) — dependabot[bot], 7 hours ago
+  - `02129b476` fix(docker): build ai-worker workspace deps before compile (#81) — Talysson Da Silva Oliveira, 8 hours ago
 
 ## Key File References
 
@@ -78,7 +54,5 @@ _None. The active sprint has no tasks currently in progress._
 - Task registry: `apps/project-tracker/docs/metrics/_global/task-registry.json`
 - Active sprint metrics: `apps/project-tracker/docs/metrics/{active_sprint}/`
 - This snapshot: `docs/SESSION_CONTEXT.md`
-- Full state report: `docs/CURRENT_STATE_REPORT.md` (deep sprint-by-sprint
-  reference)
-- Refresh: `npx tsx apps/project-tracker/scripts/generate-context.ts` or POST
-  `/api/context`
+- Full state report: `docs/CURRENT_STATE_REPORT.md` (deep sprint-by-sprint reference)
+- Refresh: `npx tsx apps/project-tracker/scripts/generate-context.ts` or POST `/api/context`

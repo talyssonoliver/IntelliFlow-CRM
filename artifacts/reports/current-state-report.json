@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-13T20:21:03.392Z",
+  "generatedAt": "2026-05-23T14:16:07.458Z",
   "sources": {
     "metricsDir": "apps/project-tracker/docs/metrics",
     "specifySprintsDir": ".specify/sprints",
@@ -308,6 +308,7 @@
       ".specify/sprints/sprint-17/attestations/IFC-196/attestation.json",
       ".specify/sprints/sprint-17/attestations/IFC-298/attestation.json",
       ".specify/sprints/sprint-17/attestations/IFC-299/attestation.json",
+      ".specify/sprints/sprint-17/attestations/IFC-300/attestation.json",
       ".specify/sprints/sprint-17/attestations/IFC-303/attestation.json",
       ".specify/sprints/sprint-17/attestations/PG-050/attestation.json",
       ".specify/sprints/sprint-17/attestations/PG-051/attestation.json",
@@ -316,9 +317,27 @@
       ".specify/sprints/sprint-17/attestations/PG-054/attestation.json",
       ".specify/sprints/sprint-17/attestations/PG-055/attestation.json",
       ".specify/sprints/sprint-17/attestations/PG-056/attestation.json",
+      ".specify/sprints/sprint-17/attestations/PG-057/attestation.json",
+      ".specify/sprints/sprint-17/attestations/PG-126/attestation.json",
+      ".specify/sprints/sprint-17/attestations/PG-182/attestation.json",
+      ".specify/sprints/sprint-17/attestations/PG-183/attestation.json",
+      ".specify/sprints/sprint-17/attestations/PG-184/attestation.json",
+      ".specify/sprints/sprint-17/attestations/PG-185/attestation.json",
+      ".specify/sprints/sprint-17/attestations/PG-186/attestation.json",
+      ".specify/sprints/sprint-17/attestations/PG-195/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-070/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-078/attestation.json",
+      ".specify/sprints/sprint-18/attestations/IFC-212/attestation.json",
+      ".specify/sprints/sprint-18/attestations/IFC-227/attestation.json",
+      ".specify/sprints/sprint-18/attestations/IFC-310/attestation.json",
+      ".specify/sprints/sprint-18/attestations/IFC-311/attestation.json",
+      ".specify/sprints/sprint-18/attestations/PG-059/attestation.json",
       ".specify/sprints/sprint-18/attestations/PG-132/attestation.json",
+      ".specify/sprints/sprint-18/attestations/PG-180/attestation.json",
+      ".specify/sprints/sprint-18/attestations/PG-187/attestation.json",
+      ".specify/sprints/sprint-18/attestations/PG-189/attestation.json",
+      ".specify/sprints/sprint-18/attestations/PG-190/attestation.json",
+      ".specify/sprints/sprint-19/attestations/IFC-312/attestation.json",
       ".specify/sprints/sprint-19/attestations/PG-166/attestation.json",
       ".specify/sprints/sprint-2/attestations/IFC-004/attestation.json",
       ".specify/sprints/sprint-2/attestations/IFC-005/attestation.json",
@@ -448,15 +467,15 @@
   "overview": {
     "numberedSprintCount": 30,
     "numberedSprintRange": "0-29",
-    "totalTasks": 571,
-    "totalNumberedSprintTasks": 566,
+    "totalTasks": 590,
+    "totalNumberedSprintTasks": 585,
     "continuousTaskCount": 5,
-    "completedTasks": 373,
-    "backlogTasks": 196,
+    "completedTasks": 393,
+    "backlogTasks": 197,
     "blockedTasks": 0,
-    "completionPercentage": 65.32,
-    "inProgressTasks": 1,
-    "otherTasks": 1
+    "completionPercentage": 66.61,
+    "inProgressTasks": 0,
+    "otherTasks": 0
   },
   "inconsistencies": {
     "missingSpecifySprintSummaries": [],
@@ -464,16 +483,10 @@
     "completedWithoutCanonicalAttestation": [],
     "attestedButNotCompletedInCsv": [
       {
-        "taskId": "IFC-031",
-        "status": "Needs Human",
-        "sprint": 17,
-        "attestationPath": ".specify/sprints/sprint-17/attestations/IFC-031/attestation.json"
-      },
-      {
-        "taskId": "PG-054",
-        "status": "In Progress",
-        "sprint": 17,
-        "attestationPath": ".specify/sprints/sprint-17/attestations/PG-054/attestation.json"
+        "taskId": "IFC-212",
+        "status": "Backlog",
+        "sprint": 18,
+        "attestationPath": ".specify/sprints/sprint-18/attestations/IFC-212/attestation.json"
       }
     ],
     "duplicateCanonicalAttestations": [],
@@ -635,295 +648,6 @@
     "blockedTasks": [],
     "readyToStart": [
       {
-        "taskId": "IFC-300",
-        "sprint": 17,
-        "status": "Backlog",
-        "section": "Support",
-        "title": "Help Article Seed Script — Static to DB Migration",
-        "description": "Help Article Seed Script — Static to DB Migration",
-        "summary": "Seed script migrates DEFAULT_HELP_ARTICLES into DB; idempotent (skip existing slugs); validates data integrity post-seed",
-        "definitionOfDone": "Seed script migrates DEFAULT_HELP_ARTICLES into DB; idempotent (skip existing slugs); validates data integrity post-seed; verified by: pnpm test",
-        "definitionOfDoneSnapshot": "Seed script migrates DEFAULT_HELP_ARTICLES into DB; idempotent (skip existing slugs); validates data integrity post-seed",
-        "dependencies": [
-          "IFC-298"
-        ],
-        "attestation": {
-          "exists": false,
-          "path": null,
-          "verdict": null,
-          "timestamp": null,
-          "sprintFolder": null
-        },
-        "validationSummary": {
-          "total": 0,
-          "passed": 0,
-          "failed": 0,
-          "failingNames": []
-        },
-        "kpiSummary": {
-          "total": 0,
-          "met": 0,
-          "missed": 0
-        }
-      },
-      {
-        "taskId": "PG-057",
-        "sprint": 17,
-        "status": "Backlog",
-        "section": "System Pages",
-        "title": "Maintenance",
-        "description": "Maintenance",
-        "summary": "response under 200ms, Lighthouse 90, status shown",
-        "definitionOfDone": "Response <200ms, Lighthouse ≥90, status shown; artifacts: page.tsx, maintenance-mode.ts, status-updater.ts",
-        "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, status shown",
-        "dependencies": [
-          "PG-055"
-        ],
-        "attestation": {
-          "exists": false,
-          "path": null,
-          "verdict": null,
-          "timestamp": null,
-          "sprintFolder": null
-        },
-        "validationSummary": {
-          "total": 0,
-          "passed": 0,
-          "failed": 0,
-          "failingNames": []
-        },
-        "kpiSummary": {
-          "total": 0,
-          "met": 0,
-          "missed": 0
-        }
-      },
-      {
-        "taskId": "PG-126",
-        "sprint": 17,
-        "status": "Backlog",
-        "section": "Public Pages",
-        "title": "Add in‑app onboarding, guided product tours and feedback collection",
-        "description": "Add in‑app onboarding, guided product tours and feedback collection",
-        "summary": "Users see guided tours on first login; ability to replay; feedback widget integrated",
-        "definitionOfDone": "Users see guided tours on first login; ability to replay; feedback widget integrated; targets: >=70%; verified by: pnpm test",
-        "definitionOfDoneSnapshot": "Users see guided tours on first login; ability to replay; feedback widget integrated",
-        "dependencies": [
-          "PG-001",
-          "PG-002"
-        ],
-        "attestation": {
-          "exists": false,
-          "path": null,
-          "verdict": null,
-          "timestamp": null,
-          "sprintFolder": null
-        },
-        "validationSummary": {
-          "total": 0,
-          "passed": 0,
-          "failed": 0,
-          "failingNames": []
-        },
-        "kpiSummary": {
-          "total": 0,
-          "met": 0,
-          "missed": 0
-        }
-      },
-      {
-        "taskId": "PG-182",
-        "sprint": 17,
-        "status": "Backlog",
-        "section": "Settings",
-        "title": "Module Settings - Contacts (/contacts/contact-settings)",
-        "description": "Module Settings - Contacts (/contacts/contact-settings)",
-        "summary": "Contact settings page at /contacts/contact-settings with duplicate detection, required fields, tags config; uses in-module settings sidebar pattern; Lighthouse >=90",
-        "definitionOfDone": "Contact settings page at /contacts/contact-settings with duplicate detection, required fields, tags config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
-        "definitionOfDoneSnapshot": "Contact settings page at /contacts/contact-settings with duplicate detection, required fields, tags config; uses in-module settings sidebar pattern; Lighthouse >=90",
-        "dependencies": [
-          "PG-178"
-        ],
-        "attestation": {
-          "exists": false,
-          "path": null,
-          "verdict": null,
-          "timestamp": null,
-          "sprintFolder": null
-        },
-        "validationSummary": {
-          "total": 0,
-          "passed": 0,
-          "failed": 0,
-          "failingNames": []
-        },
-        "kpiSummary": {
-          "total": 0,
-          "met": 0,
-          "missed": 0
-        }
-      },
-      {
-        "taskId": "PG-183",
-        "sprint": 17,
-        "status": "Backlog",
-        "section": "Settings",
-        "title": "Module Settings - Accounts (/accounts/account-settings)",
-        "description": "Module Settings - Accounts (/accounts/account-settings)",
-        "summary": "Account settings page at /accounts/account-settings with hierarchy, industry, custom fields config; uses in-module settings sidebar pattern; Lighthouse >=90",
-        "definitionOfDone": "Account settings page at /accounts/account-settings with hierarchy, industry, custom fields config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
-        "definitionOfDoneSnapshot": "Account settings page at /accounts/account-settings with hierarchy, industry, custom fields config; uses in-module settings sidebar pattern; Lighthouse >=90",
-        "dependencies": [
-          "PG-178"
-        ],
-        "attestation": {
-          "exists": false,
-          "path": null,
-          "verdict": null,
-          "timestamp": null,
-          "sprintFolder": null
-        },
-        "validationSummary": {
-          "total": 0,
-          "passed": 0,
-          "failed": 0,
-          "failingNames": []
-        },
-        "kpiSummary": {
-          "total": 0,
-          "met": 0,
-          "missed": 0
-        }
-      },
-      {
-        "taskId": "PG-184",
-        "sprint": 17,
-        "status": "Backlog",
-        "section": "Settings",
-        "title": "Module Settings - Deals (/deals/deal-settings)",
-        "description": "Module Settings - Deals (/deals/deal-settings)",
-        "summary": "Deal settings page at /deals/deal-settings with pipeline stages, win-loss reasons, scoring config; uses in-module settings sidebar pattern; Lighthouse >=90",
-        "definitionOfDone": "Deal settings page at /deals/deal-settings with pipeline stages, win-loss reasons, scoring config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
-        "definitionOfDoneSnapshot": "Deal settings page at /deals/deal-settings with pipeline stages, win-loss reasons, scoring config; uses in-module settings sidebar pattern; Lighthouse >=90",
-        "dependencies": [
-          "PG-178"
-        ],
-        "attestation": {
-          "exists": false,
-          "path": null,
-          "verdict": null,
-          "timestamp": null,
-          "sprintFolder": null
-        },
-        "validationSummary": {
-          "total": 0,
-          "passed": 0,
-          "failed": 0,
-          "failingNames": []
-        },
-        "kpiSummary": {
-          "total": 0,
-          "met": 0,
-          "missed": 0
-        }
-      },
-      {
-        "taskId": "PG-185",
-        "sprint": 17,
-        "status": "Backlog",
-        "section": "Settings",
-        "title": "Module Settings - Tickets (/tickets/sla-policies)",
-        "description": "Module Settings - Tickets (/tickets/sla-policies)",
-        "summary": "Ticket settings page at /tickets/sla-policies with default SLA, auto-close, notification triggers config; uses in-module settings sidebar pattern; Lighthouse >=90",
-        "definitionOfDone": "Ticket settings page at /tickets/sla-policies with default SLA, auto-close, notification triggers config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
-        "definitionOfDoneSnapshot": "Ticket settings page at /tickets/sla-policies with default SLA, auto-close, notification triggers config; uses in-module settings sidebar pattern; Lighthouse >=90",
-        "dependencies": [
-          "PG-178"
-        ],
-        "attestation": {
-          "exists": false,
-          "path": null,
-          "verdict": null,
-          "timestamp": null,
-          "sprintFolder": null
-        },
-        "validationSummary": {
-          "total": 0,
-          "passed": 0,
-          "failed": 0,
-          "failingNames": []
-        },
-        "kpiSummary": {
-          "total": 0,
-          "met": 0,
-          "missed": 0
-        }
-      },
-      {
-        "taskId": "PG-186",
-        "sprint": 17,
-        "status": "Backlog",
-        "section": "Settings",
-        "title": "Module Settings - Documents (/documents/document-settings)",
-        "description": "Module Settings - Documents (/documents/document-settings)",
-        "summary": "Document settings page at /documents/document-settings with file types, size limits, antivirus, retention config; uses in-module settings sidebar pattern; Lighthouse >=90",
-        "definitionOfDone": "Document settings page at /documents/document-settings with file types, size limits, antivirus, retention config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
-        "definitionOfDoneSnapshot": "Document settings page at /documents/document-settings with file types, size limits, antivirus, retention config; uses in-module settings sidebar pattern; Lighthouse >=90",
-        "dependencies": [
-          "PG-178"
-        ],
-        "attestation": {
-          "exists": false,
-          "path": null,
-          "verdict": null,
-          "timestamp": null,
-          "sprintFolder": null
-        },
-        "validationSummary": {
-          "total": 0,
-          "passed": 0,
-          "failed": 0,
-          "failingNames": []
-        },
-        "kpiSummary": {
-          "total": 0,
-          "met": 0,
-          "missed": 0
-        }
-      },
-      {
-        "taskId": "PG-195",
-        "sprint": 17,
-        "status": "Backlog",
-        "section": "Performance",
-        "title": "Subset Material Symbols font to unblock Lighthouse Performance >=90 gate — reduces 3.5 MB MaterialSymbolsOutlined.woff2 shipped by root layout to every route (PG-056 Lighthouse=63 baseline). Audit the 1,421 .material-symbols-outlined call sites, build a subsetter script that extracts the exact glyph set, regenerate a smaller woff2 (<500 KB target), add CI guard so new glyphs are added to the audit list.",
-        "description": "Subset Material Symbols font to unblock Lighthouse Performance >=90 gate — reduces 3.5 MB MaterialSymbolsOutlined.woff2 shipped by root layout to every route (PG-056 Lighthouse=63 baseline). Audit the 1,421 .material-symbols-outlined call sites, build a subsetter script that extracts the exact glyph set, regenerate a smaller woff2 (<500 KB target), add CI guard so new glyphs are added to the audit list.",
-        "summary": "Subsetted font replaces full Material Symbols woff2 (<500 KB); Lighthouse Performance >=90 for /404 and /500 on desktop production build; zero visual regressions across the 1,421 .material-symbols-outlined call sites;...",
-        "definitionOfDone": "Subsetted font replaces full Material Symbols woff2 (<500 KB); Lighthouse Performance >=90 for /404 and /500 on desktop production build; zero visual regressions across the 1,421 .material-symbols-outlined call sites; subsetter script committed + reproducible; glyph-audit JSON enumerates the used glyph set; artifacts: subsetted woff2, glyph-audit.json, subset script, updated layout.tsx",
-        "definitionOfDoneSnapshot": "Subsetted font replaces full Material Symbols woff2 (<500 KB); Lighthouse Performance >=90 for /404 and /500 on desktop production build; zero visual regressions across the 1,421 .material-symbols-outlined call sites;...",
-        "dependencies": [
-          "PG-056"
-        ],
-        "attestation": {
-          "exists": false,
-          "path": null,
-          "verdict": null,
-          "timestamp": null,
-          "sprintFolder": null
-        },
-        "validationSummary": {
-          "total": 0,
-          "passed": 0,
-          "failed": 0,
-          "failingNames": []
-        },
-        "kpiSummary": {
-          "total": 0,
-          "met": 0,
-          "missed": 0
-        }
-      },
-      {
         "taskId": "DOC-015",
         "sprint": 18,
         "status": "Backlog",
@@ -956,13 +680,296 @@
           "met": 0,
           "missed": 0
         }
+      },
+      {
+        "taskId": "IFC-032",
+        "sprint": 18,
+        "status": "Backlog",
+        "section": "Automation",
+        "title": "PHASE-005: OpenTelemetry Monitoring",
+        "description": "PHASE-005: OpenTelemetry Monitoring",
+        "summary": "Distributed tracing, metrics, logs unified; trace-examples.json must contain real trace IDs from actual service calls, not fabricated examples",
+        "definitionOfDone": "Distributed tracing, metrics, logs unified; artifacts: otel-collector-config.yaml, trace-examples.json, context_ack.json; trace-examples.json must contain real trace IDs from actual service calls, not fabricated examples",
+        "definitionOfDoneSnapshot": "Distributed tracing, metrics, logs unified; trace-examples.json must contain real trace IDs from actual service calls, not fabricated examples",
+        "dependencies": [
+          "IFC-030"
+        ],
+        "attestation": {
+          "exists": false,
+          "path": null,
+          "verdict": null,
+          "timestamp": null,
+          "sprintFolder": null
+        },
+        "validationSummary": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0,
+          "failingNames": []
+        },
+        "kpiSummary": {
+          "total": 0,
+          "met": 0,
+          "missed": 0
+        }
+      },
+      {
+        "taskId": "IFC-211",
+        "sprint": 18,
+        "status": "Backlog",
+        "section": "Core CRM",
+        "title": "Goal Settings RBAC - Role-based permissions for daily goal management (manager team goals and admin org defaults)",
+        "description": "Goal Settings RBAC - Role-based permissions for daily goal management (manager team goals and admin org defaults)",
+        "summary": "Manager can set goals for team members via targetUserId param; admin can define org-wide default goals; self-service respects RBAC boundaries; goal resource type added to RBAC permission matrix; audit trail logs goal changes",
+        "definitionOfDone": "Manager can set goals for team members via targetUserId param; admin can define org-wide default goals; self-service respects RBAC boundaries; goal resource type added to RBAC permission matrix; audit trail logs goal changes; verified by: pnpm test",
+        "definitionOfDoneSnapshot": "Manager can set goals for team members via targetUserId param; admin can define org-wide default goals; self-service respects RBAC boundaries; goal resource type added to RBAC permission matrix; audit trail logs goal changes",
+        "dependencies": [
+          "IFC-195",
+          "IFC-098"
+        ],
+        "attestation": {
+          "exists": false,
+          "path": null,
+          "verdict": null,
+          "timestamp": null,
+          "sprintFolder": null
+        },
+        "validationSummary": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0,
+          "failingNames": []
+        },
+        "kpiSummary": {
+          "total": 0,
+          "met": 0,
+          "missed": 0
+        }
+      },
+      {
+        "taskId": "IFC-212",
+        "sprint": 18,
+        "status": "Backlog",
+        "section": "AI/ML",
+        "title": "Wire API container to QueueAIService for BullMQ-backed lead scoring",
+        "description": "Wire API container to QueueAIService for BullMQ-backed lead scoring",
+        "summary": "IFC-212 exec phase complete with 5 audit findings remediated honestly (2026-04-27 audit-fix iteration): [HIGH-1 FIXED] tenantId='default' regression — extended AIServicePort.scoreLead/qualifyLead with optional `opts:......",
+        "definitionOfDone": "API container resolves QueueAIService for lead scoring requests; GuardrailsAIService remains decorator over queue-backed provider; lead scoring jobs are enqueued with correlation metadata and consumed by ai-scoring worker contract; retry and failure handling follow BullMQ defaults; verified by: pnpm test --filter api;pnpm test --filter ai-worker",
+        "definitionOfDoneSnapshot": "API container resolves QueueAIService for lead scoring requests; GuardrailsAIService remains decorator over queue-backed provider; Lead scoring jobs enqueued with correlation metadata and consumed by ai-scoring worker contract",
+        "dependencies": [
+          "IFC-015",
+          "IFC-125",
+          "IFC-168"
+        ],
+        "attestation": {
+          "exists": true,
+          "path": ".specify/sprints/sprint-18/attestations/IFC-212/attestation.json",
+          "verdict": "COMPLETE",
+          "timestamp": "2026-04-27T20:55:00Z",
+          "sprintFolder": 18
+        },
+        "validationSummary": {
+          "total": 4,
+          "passed": 4,
+          "failed": 0,
+          "failingNames": []
+        },
+        "kpiSummary": {
+          "total": 4,
+          "met": 1,
+          "missed": 3
+        }
+      },
+      {
+        "taskId": "IFC-214",
+        "sprint": 18,
+        "status": "Backlog",
+        "section": "AI/ML",
+        "title": "Redis-backed AI Monitoring State Bridge - Replace process-local singleton reads with shared Redis telemetry store",
+        "description": "Redis-backed AI Monitoring State Bridge - Replace process-local singleton reads with shared Redis telemetry store",
+        "summary": "ai-worker publishes tenant-scoped monitoring snapshots to Redis and aiMonitoring router reads Redis-backed metrics (getStatus/getDriftMetrics/getLatencyMetrics/getHallucinationReport/getROIMetrics) instead of in-process singletons;...",
+        "definitionOfDone": "ai-worker publishes tenant-scoped monitoring snapshots to Redis and aiMonitoring router reads Redis-backed metrics (getStatus/getDriftMetrics/getLatencyMetrics/getHallucinationReport/getROIMetrics) instead of in-process singletons; cache-poisoning mitigations enforced (key namespacing, schema validation, TTL/versioning); Redis outage fallback returns safe empty payloads; cross-process integration test verifies worker writes are visible to API; verified by: pnpm test --filter api;pnpm test --filter ai-worker",
+        "definitionOfDoneSnapshot": "ai-worker publishes tenant-scoped monitoring snapshots to Redis and aiMonitoring router reads Redis-backed metrics (getStatus/getDriftMetrics/getLatencyMetrics/getHallucinationReport/getROIMetrics) instead of in-process singletons;...",
+        "dependencies": [
+          "IFC-015",
+          "IFC-168",
+          "IFC-197"
+        ],
+        "attestation": {
+          "exists": false,
+          "path": null,
+          "verdict": null,
+          "timestamp": null,
+          "sprintFolder": null
+        },
+        "validationSummary": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0,
+          "failingNames": []
+        },
+        "kpiSummary": {
+          "total": 0,
+          "met": 0,
+          "missed": 0
+        }
+      },
+      {
+        "taskId": "IFC-230",
+        "sprint": 18,
+        "status": "Backlog",
+        "section": "Core CRM",
+        "title": "Unify Lead Create/Edit Form - Create page (leads/(list)/new/page.tsx, 1029 lines) and Edit page (leads/[id]/edit/page.tsx, 464 lines) share no components. Issues: different API clients (trpc vs api), different field sets (BANT only in create but silently dropped), different styling, different validation, no auth guard on create. Fix: extract shared LeadForm component, unify API client, include all fields in both views, consistent styling.",
+        "description": "Unify Lead Create/Edit Form - Create page (leads/(list)/new/page.tsx, 1029 lines) and Edit page (leads/[id]/edit/page.tsx, 464 lines) share no components. Issues: different API clients (trpc vs api), different field sets (BANT only in create but silently dropped), different styling, different validation, no auth guard on create. Fix: extract shared LeadForm component, unify API client, include all fields in both views, consistent styling.",
+        "summary": "Shared LeadForm component used by both create and edit; consistent field set (BANT fields not silently dropped); unified API client; consistent styling; auth guard on create; tests >=90%",
+        "definitionOfDone": "Shared LeadForm component used by both create and edit; consistent field set (BANT fields not silently dropped); unified API client; consistent styling; auth guard on create; tests >=90%",
+        "definitionOfDoneSnapshot": "Shared LeadForm component used by both create and edit; consistent field set (BANT fields not silently dropped); unified API client; consistent styling; auth guard on create; tests >=90%",
+        "dependencies": [],
+        "attestation": {
+          "exists": false,
+          "path": null,
+          "verdict": null,
+          "timestamp": null,
+          "sprintFolder": null
+        },
+        "validationSummary": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0,
+          "failingNames": []
+        },
+        "kpiSummary": {
+          "total": 0,
+          "met": 0,
+          "missed": 0
+        }
+      },
+      {
+        "taskId": "IFC-234",
+        "sprint": 18,
+        "status": "Backlog",
+        "section": "Core CRM",
+        "title": "Settings Pages Wiring - 4 settings pages with hardcoded data and inert buttons. Team: hardcoded 4-person array, inert Invite/Remove/Role buttons. Integrations: hardcoded provider list, inert Connect/Disconnect buttons. Notifications: hardcoded const, no useState, no onClick on toggles. Account: profile name/email has no save mutation, 3 security buttons (Change Password, Enable 2FA, Download Data) have no onClick. Wire all to real tRPC mutations and queries.",
+        "description": "Settings Pages Wiring - 4 settings pages with hardcoded data and inert buttons. Team: hardcoded 4-person array, inert Invite/Remove/Role buttons. Integrations: hardcoded provider list, inert Connect/Disconnect buttons. Notifications: hardcoded const, no useState, no onClick on toggles. Account: profile name/email has no save mutation, 3 security buttons (Change Password, Enable 2FA, Download Data) have no onClick. Wire all to real tRPC mutations and queries.",
+        "summary": "Team page loads real users from API with working Invite/Remove/Role; Integrations shows real connection status; Notifications toggles persist via mutation; Account profile saves name/email; security buttons functional; tests >=90%",
+        "definitionOfDone": "Team page loads real users from API with working Invite/Remove/Role; Integrations shows real connection status; Notifications toggles persist via mutation; Account profile saves name/email; security buttons functional; tests >=90%",
+        "definitionOfDoneSnapshot": "Team page loads real users from API with working Invite/Remove/Role; Integrations shows real connection status; Notifications toggles persist via mutation; Account profile saves name/email; security buttons functional; tests >=90%",
+        "dependencies": [],
+        "attestation": {
+          "exists": false,
+          "path": null,
+          "verdict": null,
+          "timestamp": null,
+          "sprintFolder": null
+        },
+        "validationSummary": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0,
+          "failingNames": []
+        },
+        "kpiSummary": {
+          "total": 0,
+          "met": 0,
+          "missed": 0
+        }
+      },
+      {
+        "taskId": "IFC-240",
+        "sprint": 18,
+        "status": "Backlog",
+        "section": "Core CRM",
+        "title": "Lead Audit Logging. Add audit log entries to all 20 lead router procedures using SecurityAuditService. GDPR-relevant operations (delete, bulkDelete, convert, export) MUST have audit trail. Include: actor (userId), action, entityType (Lead), entityId, tenantId, timestamp, metadata (old/new values for mutations). Integrate with existing audit infrastructure at apps/api/src/security/audit/.",
+        "description": "Lead Audit Logging. Add audit log entries to all 20 lead router procedures using SecurityAuditService. GDPR-relevant operations (delete, bulkDelete, convert, export) MUST have audit trail. Include: actor (userId), action, entityType (Lead), entityId, tenantId, timestamp, metadata (old/new values for mutations). Integrate with existing audit infrastructure at apps/api/src/security/audit/.",
+        "summary": "All 20 lead procedures emit audit entries; delete/convert/bulk ops have before/after snapshots; audit entries queryable via audit API; GDPR compliance verified; tests >=90%",
+        "definitionOfDone": "All 20 lead procedures emit audit entries; delete/convert/bulk ops have before/after snapshots; audit entries queryable via audit API; GDPR compliance verified; tests >=90%",
+        "definitionOfDoneSnapshot": "All 20 lead procedures emit audit entries; delete/convert/bulk ops have before/after snapshots; audit entries queryable via audit API; GDPR compliance verified; tests >=90%",
+        "dependencies": [],
+        "attestation": {
+          "exists": false,
+          "path": null,
+          "verdict": null,
+          "timestamp": null,
+          "sprintFolder": null
+        },
+        "validationSummary": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0,
+          "failingNames": []
+        },
+        "kpiSummary": {
+          "total": 0,
+          "met": 0,
+          "missed": 0
+        }
+      },
+      {
+        "taskId": "IFC-242",
+        "sprint": 18,
+        "status": "Backlog",
+        "section": "Core CRM",
+        "title": "Lead Create Form Fixes - BANT Drop, Revenue Mapping, Validation. Fix 3 HIGH issues: (1) BANT fields (Budget, Authority, Need, Timeline) collected in create form but silently dropped on submit - never sent to API [F3]. (2) annualRevenue mapped to estimatedValue - semantic mismatch between company annual revenue and deal estimated value [F4]. (3) Edit form uses 'as any' cast with no client-side Zod validation - no inline field errors [F9]. Fix: Send BANT to API (add to createLeadSchema if needed), map annualRevenue correctly, add Zod resolver to edit form, remove as any.",
+        "description": "Lead Create Form Fixes - BANT Drop, Revenue Mapping, Validation. Fix 3 HIGH issues: (1) BANT fields (Budget, Authority, Need, Timeline) collected in create form but silently dropped on submit - never sent to API [F3]. (2) annualRevenue mapped to estimatedValue - semantic mismatch between company annual revenue and deal estimated value [F4]. (3) Edit form uses 'as any' cast with no client-side Zod validation - no inline field errors [F9]. Fix: Send BANT to API (add to createLeadSchema if needed), map annualRevenue correctly, add Zod resolver to edit form, remove as any.",
+        "summary": "BANT fields persisted on create; annualRevenue and estimatedValue are distinct fields; edit form uses zodResolver with inline errors; no 'as any' casts; sourceOther sent to API; tests >=90%",
+        "definitionOfDone": "BANT fields persisted on create; annualRevenue and estimatedValue are distinct fields; edit form uses zodResolver with inline errors; no 'as any' casts; sourceOther sent to API; tests >=90%",
+        "definitionOfDoneSnapshot": "BANT fields persisted on create; annualRevenue and estimatedValue are distinct fields; edit form uses zodResolver with inline errors; no 'as any' casts; sourceOther sent to API; tests >=90%",
+        "dependencies": [],
+        "attestation": {
+          "exists": false,
+          "path": null,
+          "verdict": null,
+          "timestamp": null,
+          "sprintFolder": null
+        },
+        "validationSummary": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0,
+          "failingNames": []
+        },
+        "kpiSummary": {
+          "total": 0,
+          "met": 0,
+          "missed": 0
+        }
+      },
+      {
+        "taskId": "IFC-247",
+        "sprint": 18,
+        "status": "Backlog",
+        "section": "Core CRM",
+        "title": "Lead Detail Page Tests. Lead detail page (2200+ lines) has ZERO component tests [T1]. Also untested: addNote procedure [T4] and logActivity procedure [T5] added 2026-03-04. Write comprehensive tests: (1) Component render tests for all tabs (Overview, Activity, AI Insights, Lead IQ, Notes, Files, Emails, Tasks). (2) Mutation tests for addNote and logActivity. (3) Error state tests (404, 500, retry). (4) AI insight null-state rendering. (5) Activity feed toggle. Must cover 2026-03-04 wiring fixes.",
+        "description": "Lead Detail Page Tests. Lead detail page (2200+ lines) has ZERO component tests [T1]. Also untested: addNote procedure [T4] and logActivity procedure [T5] added 2026-03-04. Write comprehensive tests: (1) Component render tests for all tabs (Overview, Activity, AI Insights, Lead IQ, Notes, Files, Emails, Tasks). (2) Mutation tests for addNote and logActivity. (3) Error state tests (404, 500, retry). (4) AI insight null-state rendering. (5) Activity feed toggle. Must cover 2026-03-04 wiring fixes.",
+        "summary": "Lead detail page test file exists with >=20 test cases; addNote mutation tested; logActivity mutation tested; error states tested; AI insight null-state tested; coverage >=90% for tested paths",
+        "definitionOfDone": "Lead detail page test file exists with >=20 test cases; addNote mutation tested; logActivity mutation tested; error states tested; AI insight null-state tested; coverage >=90% for tested paths",
+        "definitionOfDoneSnapshot": "Lead detail page test file exists with >=20 test cases; addNote mutation tested; logActivity mutation tested; error states tested; AI insight null-state tested; coverage >=90% for tested paths",
+        "dependencies": [],
+        "attestation": {
+          "exists": false,
+          "path": null,
+          "verdict": null,
+          "timestamp": null,
+          "sprintFolder": null
+        },
+        "validationSummary": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0,
+          "failingNames": []
+        },
+        "kpiSummary": {
+          "total": 0,
+          "met": 0,
+          "missed": 0
+        }
       }
     ],
     "activeFocusSprints": [
-      17,
       18,
       19,
-      20
+      20,
+      21
     ]
   },
   "sprints": [
@@ -6281,7 +6288,7 @@
           "section": "Governance",
           "title": "ADR Registry & Compliance Reporting",
           "description": "ADR Registry & Compliance Reporting",
-          "summary": "ADR template already existed at docs/architecture/adr/template.md Existing ADRs were inventoried and registered in the index Compliance checklists aligned with existing GDPR checklist format ISO 42001 checklist builds on existing gap an......",
+          "summary": "ADR template already existed at docs/architecture/adr/000-template.md Existing ADRs were inventoried and registered in the index Compliance checklists aligned with existing GDPR checklist format ISO 42001 checklist builds on existing gap an......",
           "definitionOfDone": "ADR repo active, compliance docs ready; artifacts: adr-index.md, compliance-dashboard-mockup.md, context_ack.json",
           "definitionOfDoneSnapshot": "ADR repo active, compliance docs ready",
           "dependencies": [
@@ -6797,11 +6804,9 @@
           },
           "validationSummary": {
             "total": 4,
-            "passed": 3,
-            "failed": 1,
-            "failingNames": [
-              "Build"
-            ]
+            "passed": 4,
+            "failed": 0,
+            "failingNames": []
           },
           "kpiSummary": {
             "total": 5,
@@ -6831,11 +6836,9 @@
           },
           "validationSummary": {
             "total": 4,
-            "passed": 3,
-            "failed": 1,
-            "failingNames": [
-              "Build"
-            ]
+            "passed": 4,
+            "failed": 0,
+            "failingNames": []
           },
           "kpiSummary": {
             "total": 0,
@@ -7845,11 +7848,9 @@
           },
           "validationSummary": {
             "total": 4,
-            "passed": 3,
-            "failed": 1,
-            "failingNames": [
-              "Build"
-            ]
+            "passed": 4,
+            "failed": 0,
+            "failingNames": []
           },
           "kpiSummary": {
             "total": 3,
@@ -14301,8 +14302,8 @@
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 2,
+            "met": 2,
             "missed": 0
           }
         },
@@ -16494,11 +16495,11 @@
       "name": "Sprint 17",
       "summarySource": "specify",
       "totalTasks": 22,
-      "completedTasks": 11,
-      "backlogTasks": 9,
+      "completedTasks": 22,
+      "backlogTasks": 0,
       "blockedTasks": 0,
-      "inProgressTasks": 1,
-      "attestedCompletedTasks": 11,
+      "inProgressTasks": 0,
+      "attestedCompletedTasks": 22,
       "missingCompletedAttestations": [],
       "context": "Primary focus areas: Legal Pages (5), Settings (5), Support (4).",
       "notableCompleted": [
@@ -16520,6 +16521,103 @@
             "path": ".specify/sprints/sprint-17/attestations/PG-050/attestation.json",
             "verdict": "COMPLETE",
             "timestamp": "2026-03-10T20:54:00Z",
+            "sprintFolder": 17
+          },
+          "validationSummary": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 4,
+            "met": 4,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "PG-056",
+          "sprint": 17,
+          "status": "Completed",
+          "section": "System Pages",
+          "title": "500 Error",
+          "description": "500 Error",
+          "summary": "Implementation was completed in a prior session. This session: verified all artifacts, updated sitemap-fixes.test.ts count (28→29, pre-existing drift from /status static route addition), ran all validations, checked plan checkboxes (14/14),......",
+          "definitionOfDone": "Response <200ms, Lighthouse ≥90, errors logged; artifacts: page.tsx, incident-creator.ts, error-notifier.ts",
+          "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, errors logged",
+          "dependencies": [
+            "PG-055"
+          ],
+          "attestation": {
+            "exists": true,
+            "path": ".specify/sprints/sprint-17/attestations/PG-056/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": null,
+            "sprintFolder": 17
+          },
+          "validationSummary": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 7,
+            "met": 6,
+            "missed": 1
+          }
+        },
+        {
+          "taskId": "PG-126",
+          "sprint": 17,
+          "status": "Completed",
+          "section": "Public Pages",
+          "title": "Add in‑app onboarding, guided product tours and feedback collection",
+          "description": "Add in‑app onboarding, guided product tours and feedback collection",
+          "summary": "ADR-051 forbids tour libraries; custom implementation built on shadcn/ui Dialog + Material Symbols; ADR-046 icon policy: Material Symbols Outlined only;... Users see guided tours on first login (interpreted as first visit to /features); Ability to replay;...",
+          "definitionOfDone": "Users see guided tours on first login; ability to replay; feedback widget integrated; targets: >=70%; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Users see guided tours on first login (interpreted as first visit to /features); Ability to replay; Feedback widget integrated",
+          "dependencies": [
+            "PG-001",
+            "PG-002"
+          ],
+          "attestation": {
+            "exists": true,
+            "path": ".specify/sprints/sprint-17/attestations/PG-126/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-04-24T22:27:00.000Z",
+            "sprintFolder": 17
+          },
+          "validationSummary": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 6,
+            "met": 5,
+            "missed": 1
+          }
+        },
+        {
+          "taskId": "PG-183",
+          "sprint": 17,
+          "status": "Completed",
+          "section": "Settings",
+          "title": "Module Settings - Accounts (/accounts/account-settings)",
+          "description": "Module Settings - Accounts (/accounts/account-settings)",
+          "summary": "PG-183 — Account Settings page at /accounts/account-settings. 8 bento sections (Hierarchy, Industry, Custom Fields, Duplicate Detection, Required Fields, Automation, AI & Intelligence, Tags) + Configuration Summary, mirroring /contacts/cont......",
+          "definitionOfDone": "Account settings page at /accounts/account-settings with 8 sections: hierarchy, industry taxonomy, custom fields, duplicate detection, required fields, automation, AI & intelligence, tags; bento grid layout matching /contacts/contact-settings; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Account settings page at /accounts/account-settings with 8 sections: hierarchy, industry taxonomy, custom fields, duplicate detection, required fields, automation, AI & intelligence, tags;...",
+          "dependencies": [
+            "PG-178"
+          ],
+          "attestation": {
+            "exists": true,
+            "path": ".specify/sprints/sprint-17/attestations/PG-183/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": null,
             "sprintFolder": 17
           },
           "validationSummary": {
@@ -16566,311 +16664,51 @@
             "met": 6,
             "missed": 0
           }
-        },
-        {
-          "taskId": "IFC-299",
-          "sprint": 17,
-          "status": "Completed",
-          "section": "Support",
-          "title": "Help Article CRUD tRPC Router",
-          "description": "Help Article CRUD tRPC Router",
-          "summary": "Help Article CRUD tRPC router with 9 tenant-scoped procedures (list, getBySlug, getByCategory, getRelated, create, update, delete, publish, unpublish). 49 tests pass, coverage meets all thresholds.......",
-          "definitionOfDone": "helpArticle tRPC router with list/getBySlug/getByCategory/getRelated/create/update/delete/publish/unpublish; tenant-scoped; coverage >=90%; verified by: pnpm test",
-          "definitionOfDoneSnapshot": "helpArticle tRPC router with list/getBySlug/getByCategory/getRelated/create/update/delete/publish/unpublish; tenant-scoped; coverage >=90%",
-          "dependencies": [
-            "IFC-298"
-          ],
-          "attestation": {
-            "exists": true,
-            "path": ".specify/sprints/sprint-17/attestations/IFC-299/attestation.json",
-            "verdict": "COMPLETE",
-            "timestamp": "2026-03-19T00:21:00Z",
-            "sprintFolder": 17
-          },
-          "validationSummary": {
-            "total": 4,
-            "passed": 4,
-            "failed": 0,
-            "failingNames": []
-          },
-          "kpiSummary": {
-            "total": 4,
-            "met": 4,
-            "missed": 0
-          }
-        },
-        {
-          "taskId": "IFC-030",
-          "sprint": 17,
-          "status": "Completed",
-          "section": "Automation",
-          "title": "PHASE-005: Smart Lead Routing",
-          "description": "PHASE-005: Smart Lead Routing",
-          "summary": "LeadRoutingService implements 3-strategy cascade (rule→skill→load_balance). CRITICAL: writes only schema-valid fields to RoutingAudit (no phantom-field bug). 62 service tests + 33 router tests + 15 container tests = 110 total. Coverage:......",
-          "definitionOfDone": "Score-based routing with load balancing; artifacts: routing-rules-config.yaml, routing-simulation-results.csv, sla-compliance.pdf; targets: >=100%; routing-simulation-results.csv must contain real lead routing data from test database, not generated fake data",
-          "definitionOfDoneSnapshot": "Score-based routing with load balancing; routing-simulation-results.csv must contain real lead routing data from test database, not generated fake data",
-          "dependencies": [
-            "IFC-029"
-          ],
-          "attestation": {
-            "exists": true,
-            "path": ".specify/sprints/sprint-17/attestations/IFC-030/attestation.json",
-            "verdict": "COMPLETE",
-            "timestamp": "2026-03-03T01:00:00Z",
-            "sprintFolder": 17
-          },
-          "validationSummary": {
-            "total": 4,
-            "passed": 4,
-            "failed": 0,
-            "failingNames": []
-          },
-          "kpiSummary": {
-            "total": 0,
-            "met": 0,
-            "missed": 0
-          }
-        },
-        {
-          "taskId": "IFC-298",
-          "sprint": 17,
-          "status": "Completed",
-          "section": "Support",
-          "title": "HelpArticle Prisma Model + Migration",
-          "description": "HelpArticle Prisma Model + Migration",
-          "summary": "Schema-only task — 3 models (HelpArticle, ArticleSection, ArticleFeedback) + 1 enum (ArticleStatus) + migration. No runtime behavior changes. IFC-299/300/303 consume these models downstream.... HelpArticle, ArticleSection, ArticleFeedback Prisma models;...",
-          "definitionOfDone": "HelpArticle, ArticleSection, ArticleFeedback Prisma models; migration applied; fields match HelpArticle TS interface; status enum (draft/published); verified by: pnpm test",
-          "definitionOfDoneSnapshot": "HelpArticle, ArticleSection, ArticleFeedback Prisma models; migration applied; fields match HelpArticle TS interface; status enum (draft/published)",
-          "dependencies": [
-            "PG-045"
-          ],
-          "attestation": {
-            "exists": true,
-            "path": ".specify/sprints/sprint-17/attestations/IFC-298/attestation.json",
-            "verdict": "COMPLETE",
-            "timestamp": "2026-03-10T21:54:00Z",
-            "sprintFolder": 17
-          },
-          "validationSummary": {
-            "total": 4,
-            "passed": 4,
-            "failed": 0,
-            "failingNames": []
-          },
-          "kpiSummary": {
-            "total": 0,
-            "met": 0,
-            "missed": 0
-          }
         }
       ],
-      "openTasks": [
-        {
-          "taskId": "PG-054",
-          "sprint": 17,
-          "status": "In Progress",
-          "section": "Legal Pages",
-          "title": "Acceptable Use Policy",
-          "description": "Acceptable Use Policy",
-          "summary": "PG-054 scope is code-complete: 44/44 AUP tests pass; 16/16 acceptance criteria satisfied; runtime wiring verified end-to-end (getAup -> aup/page.tsx; buildViolationRecord -> violation-tracker.test.ts MVP consumer;......",
-          "definitionOfDone": "Response <200ms, Lighthouse ≥90, AUP displayed; artifacts: page.tsx, aup-content.md, violation-tracker.ts",
-          "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, AUP displayed",
-          "dependencies": [
-            "PG-050"
-          ],
-          "attestation": {
-            "exists": true,
-            "path": ".specify/sprints/sprint-17/attestations/PG-054/attestation.json",
-            "verdict": "COMPLETE",
-            "timestamp": null,
-            "sprintFolder": 17
-          },
-          "validationSummary": {
-            "total": 4,
-            "passed": 3,
-            "failed": 1,
-            "failingNames": [
-              "Tests"
-            ]
-          },
-          "kpiSummary": {
-            "total": 7,
-            "met": 6,
-            "missed": 1
-          }
-        },
-        {
-          "taskId": "PG-057",
-          "sprint": 17,
-          "status": "Backlog",
-          "section": "System Pages",
-          "title": "Maintenance",
-          "description": "Maintenance",
-          "summary": "response under 200ms, Lighthouse 90, status shown",
-          "definitionOfDone": "Response <200ms, Lighthouse ≥90, status shown; artifacts: page.tsx, maintenance-mode.ts, status-updater.ts",
-          "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, status shown",
-          "dependencies": [
-            "PG-055"
-          ],
-          "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
-          },
-          "validationSummary": {
-            "total": 0,
-            "passed": 0,
-            "failed": 0,
-            "failingNames": []
-          },
-          "kpiSummary": {
-            "total": 0,
-            "met": 0,
-            "missed": 0
-          }
-        },
-        {
-          "taskId": "PG-126",
-          "sprint": 17,
-          "status": "Backlog",
-          "section": "Public Pages",
-          "title": "Add in‑app onboarding, guided product tours and feedback collection",
-          "description": "Add in‑app onboarding, guided product tours and feedback collection",
-          "summary": "Users see guided tours on first login; ability to replay; feedback widget integrated",
-          "definitionOfDone": "Users see guided tours on first login; ability to replay; feedback widget integrated; targets: >=70%; verified by: pnpm test",
-          "definitionOfDoneSnapshot": "Users see guided tours on first login; ability to replay; feedback widget integrated",
-          "dependencies": [
-            "PG-001",
-            "PG-002"
-          ],
-          "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
-          },
-          "validationSummary": {
-            "total": 0,
-            "passed": 0,
-            "failed": 0,
-            "failingNames": []
-          },
-          "kpiSummary": {
-            "total": 0,
-            "met": 0,
-            "missed": 0
-          }
-        },
-        {
-          "taskId": "IFC-300",
-          "sprint": 17,
-          "status": "Backlog",
-          "section": "Support",
-          "title": "Help Article Seed Script — Static to DB Migration",
-          "description": "Help Article Seed Script — Static to DB Migration",
-          "summary": "Seed script migrates DEFAULT_HELP_ARTICLES into DB; idempotent (skip existing slugs); validates data integrity post-seed",
-          "definitionOfDone": "Seed script migrates DEFAULT_HELP_ARTICLES into DB; idempotent (skip existing slugs); validates data integrity post-seed; verified by: pnpm test",
-          "definitionOfDoneSnapshot": "Seed script migrates DEFAULT_HELP_ARTICLES into DB; idempotent (skip existing slugs); validates data integrity post-seed",
-          "dependencies": [
-            "IFC-298"
-          ],
-          "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
-          },
-          "validationSummary": {
-            "total": 0,
-            "passed": 0,
-            "failed": 0,
-            "failingNames": []
-          },
-          "kpiSummary": {
-            "total": 0,
-            "met": 0,
-            "missed": 0
-          }
-        },
-        {
-          "taskId": "PG-182",
-          "sprint": 17,
-          "status": "Backlog",
-          "section": "Settings",
-          "title": "Module Settings - Contacts (/contacts/contact-settings)",
-          "description": "Module Settings - Contacts (/contacts/contact-settings)",
-          "summary": "Contact settings page at /contacts/contact-settings with duplicate detection, required fields, tags config; uses in-module settings sidebar pattern; Lighthouse >=90",
-          "definitionOfDone": "Contact settings page at /contacts/contact-settings with duplicate detection, required fields, tags config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
-          "definitionOfDoneSnapshot": "Contact settings page at /contacts/contact-settings with duplicate detection, required fields, tags config; uses in-module settings sidebar pattern; Lighthouse >=90",
-          "dependencies": [
-            "PG-178"
-          ],
-          "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
-          },
-          "validationSummary": {
-            "total": 0,
-            "passed": 0,
-            "failed": 0,
-            "failingNames": []
-          },
-          "kpiSummary": {
-            "total": 0,
-            "met": 0,
-            "missed": 0
-          }
-        }
-      ],
+      "openTasks": [],
       "sectionSummary": [
         {
           "section": "Legal Pages",
           "total": 5,
-          "completed": 4,
-          "open": 1
+          "completed": 5,
+          "open": 0
         },
         {
           "section": "Settings",
           "total": 5,
-          "completed": 0,
-          "open": 5
+          "completed": 5,
+          "open": 0
         },
         {
           "section": "Support",
           "total": 4,
-          "completed": 3,
-          "open": 1
+          "completed": 4,
+          "open": 0
         },
         {
           "section": "System Pages",
           "total": 3,
-          "completed": 2,
-          "open": 1
+          "completed": 3,
+          "open": 0
         },
         {
           "section": "Automation",
           "total": 2,
-          "completed": 1,
-          "open": 1
+          "completed": 2,
+          "open": 0
         },
         {
           "section": "Performance",
           "total": 2,
-          "completed": 1,
-          "open": 1
+          "completed": 2,
+          "open": 0
         },
         {
           "section": "Public Pages",
           "total": 1,
-          "completed": 0,
-          "open": 1
+          "completed": 1,
+          "open": 0
         }
       ],
       "tasks": [
@@ -16909,11 +16747,11 @@
         {
           "taskId": "IFC-031",
           "sprint": 17,
-          "status": "Needs Human",
+          "status": "Completed",
           "section": "Automation",
           "title": "PHASE-005: Workflow Builder UI (React Flow)",
           "description": "PHASE-005: Workflow Builder UI (React Flow)",
-          "summary": "Verdict is NEEDS_HUMAN (not COMPLETE) because two pre-existing repo-wide issues gate the full-repo TypeScript/Lint/Build runs:... Visual workflow creation, node-based editor",
+          "summary": "COMPLETE: All four validation gates (TypeScript, Tests, Lint, Build) PASS for the IFC-031 scope, including the new Phase 5/6 deliverables. Build compiles successfully in 84s with all 3 new automation routes prerendered as static.......",
           "definitionOfDone": "Visual workflow creation, node-based editor; artifacts: usability-test-video.mp4, context_ack.json; verified by: pnpm build",
           "definitionOfDoneSnapshot": "Visual workflow creation, node-based editor",
           "dependencies": [
@@ -16922,19 +16760,15 @@
           "attestation": {
             "exists": true,
             "path": ".specify/sprints/sprint-17/attestations/IFC-031/attestation.json",
-            "verdict": "NEEDS_HUMAN",
-            "timestamp": "2026-04-13T18:20:00Z",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-04-14T23:25:00Z",
             "sprintFolder": 17
           },
           "validationSummary": {
             "total": 4,
-            "passed": 1,
-            "failed": 3,
-            "failingNames": [
-              "TypeScript",
-              "Lint",
-              "Build"
-            ]
+            "passed": 4,
+            "failed": 0,
+            "failingNames": []
           },
           "kpiSummary": {
             "total": 0,
@@ -17079,11 +16913,11 @@
         {
           "taskId": "PG-054",
           "sprint": 17,
-          "status": "In Progress",
+          "status": "Completed",
           "section": "Legal Pages",
           "title": "Acceptable Use Policy",
           "description": "Acceptable Use Policy",
-          "summary": "PG-054 scope is code-complete: 44/44 AUP tests pass; 16/16 acceptance criteria satisfied; runtime wiring verified end-to-end (getAup -> aup/page.tsx; buildViolationRecord -> violation-tracker.test.ts MVP consumer;......",
+          "summary": "PG-054 refreshed during /fix-incomplete-tasks on 2026-04-19. Scope code-complete: 16/16 AC satisfied; 59/59 in-scope tests pass (violation-tracker 37, aup/page 7, sitemap 15); typecheck 0; build 0 with /aup in route manifest as dynamic (ƒ);......",
           "definitionOfDone": "Response <200ms, Lighthouse ≥90, AUP displayed; artifacts: page.tsx, aup-content.md, violation-tracker.ts",
           "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, AUP displayed",
           "dependencies": [
@@ -17101,7 +16935,7 @@
             "passed": 3,
             "failed": 1,
             "failingNames": [
-              "Tests"
+              "Lint"
             ]
           },
           "kpiSummary": {
@@ -17169,74 +17003,74 @@
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
-            "missed": 0
+            "total": 7,
+            "met": 6,
+            "missed": 1
           }
         },
         {
           "taskId": "PG-057",
           "sprint": 17,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "System Pages",
           "title": "Maintenance",
           "description": "Maintenance",
-          "summary": "response under 200ms, Lighthouse 90, status shown",
+          "summary": "Delivered 10 new files (page, shared content, client island, 2 helpers, 5 test suites) with 32 passing tests and scoped coverage 94.91/97.82/100/96.15 (all thresholds met).... response under 200ms, Lighthouse 90, status shown",
           "definitionOfDone": "Response <200ms, Lighthouse ≥90, status shown; artifacts: page.tsx, maintenance-mode.ts, status-updater.ts",
           "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, status shown",
           "dependencies": [
             "PG-055"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
+            "exists": true,
+            "path": ".specify/sprints/sprint-17/attestations/PG-057/attestation.json",
+            "verdict": "COMPLETE",
             "timestamp": null,
-            "sprintFolder": null
+            "sprintFolder": 17
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 4,
+            "met": 4,
             "missed": 0
           }
         },
         {
           "taskId": "PG-126",
           "sprint": 17,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Public Pages",
           "title": "Add in‑app onboarding, guided product tours and feedback collection",
           "description": "Add in‑app onboarding, guided product tours and feedback collection",
-          "summary": "Users see guided tours on first login; ability to replay; feedback widget integrated",
+          "summary": "ADR-051 forbids tour libraries; custom implementation built on shadcn/ui Dialog + Material Symbols; ADR-046 icon policy: Material Symbols Outlined only;... Users see guided tours on first login (interpreted as first visit to /features); Ability to replay;...",
           "definitionOfDone": "Users see guided tours on first login; ability to replay; feedback widget integrated; targets: >=70%; verified by: pnpm test",
-          "definitionOfDoneSnapshot": "Users see guided tours on first login; ability to replay; feedback widget integrated",
+          "definitionOfDoneSnapshot": "Users see guided tours on first login (interpreted as first visit to /features); Ability to replay; Feedback widget integrated",
           "dependencies": [
             "PG-001",
             "PG-002"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-17/attestations/PG-126/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-04-24T22:27:00.000Z",
+            "sprintFolder": 17
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
-            "missed": 0
+            "total": 6,
+            "met": 5,
+            "missed": 1
           }
         },
         {
@@ -17339,32 +17173,32 @@
         {
           "taskId": "IFC-300",
           "sprint": 17,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Support",
           "title": "Help Article Seed Script — Static to DB Migration",
           "description": "Help Article Seed Script — Static to DB Migration",
-          "summary": "Seed script migrates DEFAULT_HELP_ARTICLES into DB; idempotent (skip existing slugs); validates data integrity post-seed",
+          "summary": "Seed script + CLI + snapshot generator + scoped tsconfig. 13 tests. Post-audit fixes applied:... Seed script migrates DEFAULT_HELP_ARTICLES into DB; idempotent (skip existing slugs); validates data integrity post-seed",
           "definitionOfDone": "Seed script migrates DEFAULT_HELP_ARTICLES into DB; idempotent (skip existing slugs); validates data integrity post-seed; verified by: pnpm test",
           "definitionOfDoneSnapshot": "Seed script migrates DEFAULT_HELP_ARTICLES into DB; idempotent (skip existing slugs); validates data integrity post-seed",
           "dependencies": [
             "IFC-298"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
+            "exists": true,
+            "path": ".specify/sprints/sprint-17/attestations/IFC-300/attestation.json",
+            "verdict": "COMPLETE",
             "timestamp": null,
-            "sprintFolder": null
+            "sprintFolder": 17
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 6,
+            "met": 6,
             "missed": 0
           }
         },
@@ -17403,192 +17237,198 @@
         {
           "taskId": "PG-182",
           "sprint": 17,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Settings",
           "title": "Module Settings - Contacts (/contacts/contact-settings)",
           "description": "Module Settings - Contacts (/contacts/contact-settings)",
-          "summary": "Contact settings page at /contacts/contact-settings with duplicate detection, required fields, tags config; uses in-module settings sidebar pattern; Lighthouse >=90",
+          "summary": "PG-182 hardening complete. Final reconciliation 2026-04-15: (1) stale DataTable reference removed from spec/plan — TagsTab renders plain card rows, never claimed to use DataTable at runtime;......",
           "definitionOfDone": "Contact settings page at /contacts/contact-settings with duplicate detection, required fields, tags config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
           "definitionOfDoneSnapshot": "Contact settings page at /contacts/contact-settings with duplicate detection, required fields, tags config; uses in-module settings sidebar pattern; Lighthouse >=90",
           "dependencies": [
             "PG-178"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
+            "exists": true,
+            "path": ".specify/sprints/sprint-17/attestations/PG-182/attestation.json",
+            "verdict": "COMPLETE",
             "timestamp": null,
-            "sprintFolder": null
+            "sprintFolder": 17
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 3,
+            "met": 3,
             "missed": 0
           }
         },
         {
           "taskId": "PG-183",
           "sprint": 17,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Settings",
           "title": "Module Settings - Accounts (/accounts/account-settings)",
           "description": "Module Settings - Accounts (/accounts/account-settings)",
-          "summary": "Account settings page at /accounts/account-settings with hierarchy, industry, custom fields config; uses in-module settings sidebar pattern; Lighthouse >=90",
-          "definitionOfDone": "Account settings page at /accounts/account-settings with hierarchy, industry, custom fields config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
-          "definitionOfDoneSnapshot": "Account settings page at /accounts/account-settings with hierarchy, industry, custom fields config; uses in-module settings sidebar pattern; Lighthouse >=90",
+          "summary": "PG-183 — Account Settings page at /accounts/account-settings. 8 bento sections (Hierarchy, Industry, Custom Fields, Duplicate Detection, Required Fields, Automation, AI & Intelligence, Tags) + Configuration Summary, mirroring /contacts/cont......",
+          "definitionOfDone": "Account settings page at /accounts/account-settings with 8 sections: hierarchy, industry taxonomy, custom fields, duplicate detection, required fields, automation, AI & intelligence, tags; bento grid layout matching /contacts/contact-settings; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Account settings page at /accounts/account-settings with 8 sections: hierarchy, industry taxonomy, custom fields, duplicate detection, required fields, automation, AI & intelligence, tags;...",
           "dependencies": [
             "PG-178"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
+            "exists": true,
+            "path": ".specify/sprints/sprint-17/attestations/PG-183/attestation.json",
+            "verdict": "COMPLETE",
             "timestamp": null,
-            "sprintFolder": null
+            "sprintFolder": 17
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 4,
+            "met": 4,
             "missed": 0
           }
         },
         {
           "taskId": "PG-184",
           "sprint": 17,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Settings",
           "title": "Module Settings - Deals (/deals/deal-settings)",
           "description": "Module Settings - Deals (/deals/deal-settings)",
-          "summary": "Deal settings page at /deals/deal-settings with pipeline stages, win-loss reasons, scoring config; uses in-module settings sidebar pattern; Lighthouse >=90",
-          "definitionOfDone": "Deal settings page at /deals/deal-settings with pipeline stages, win-loss reasons, scoring config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
-          "definitionOfDoneSnapshot": "Deal settings page at /deals/deal-settings with pipeline stages, win-loss reasons, scoring config; uses in-module settings sidebar pattern; Lighthouse >=90",
+          "summary": "PG-184 — Deal Settings page at /deals/deal-settings (moved under deals/(list)/ so DealSettingsSidebarNav renders). 7-card bento grid per playbook §1: Pipeline Stages (REUSES pipelineConfigRouter......",
+          "definitionOfDone": "Deal settings at /deals/deal-settings (pipeline stages, win-loss reasons, scoring). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid (NOT ModuleSettingsLayout); canonical EmptyState (entity + phase=passive); Add Rule button = <Button size='sm'>Add Rule</Button> right-aligned, no icon no outline; TagsTab via forwardRef+useImperativeHandle; wrap ALL destructive writes in $transaction; drop skipDuplicates; Zod superRefine for duplicate (field,strategy); colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in deal-automation.ts (mirror contact-automation.ts) OR declare each as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Deal settings at /deals/deal-settings (pipeline stages, win-loss reasons, scoring). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid (NOT ModuleSettingsLayout); canonical EmptyState (entity + phase=passive);...",
           "dependencies": [
-            "PG-178"
+            "PG-178",
+            "PG-182",
+            "PG-183"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
+            "exists": true,
+            "path": ".specify/sprints/sprint-17/attestations/PG-184/attestation.json",
+            "verdict": "COMPLETE",
             "timestamp": null,
-            "sprintFolder": null
+            "sprintFolder": 17
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 3,
+            "met": 3,
             "missed": 0
           }
         },
         {
           "taskId": "PG-185",
           "sprint": 17,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Settings",
           "title": "Module Settings - Tickets (/tickets/sla-policies)",
           "description": "Module Settings - Tickets (/tickets/sla-policies)",
-          "summary": "Ticket settings page at /tickets/sla-policies with default SLA, auto-close, notification triggers config; uses in-module settings sidebar pattern; Lighthouse >=90",
-          "definitionOfDone": "Ticket settings page at /tickets/sla-policies with default SLA, auto-close, notification triggers config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
-          "definitionOfDoneSnapshot": "Ticket settings page at /tickets/sla-policies with default SLA, auto-close, notification triggers config; uses in-module settings sidebar pattern; Lighthouse >=90",
+          "summary": "PG-185 Module Settings — Tickets. Implements /tickets/sla-policies as a 5-card bento (SLA policies [REUSES ticketConfig.slaPolicy], duplicate detection, required fields, tags, automation with 21 controls).......",
+          "definitionOfDone": "Ticket settings at /tickets/sla-policies (default SLA, auto-close, notification triggers). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); Add Rule button system-compliant; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate (field,strategy); colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in ticket-automation.ts (mirror contact-automation.ts) OR declare each as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Ticket settings at /tickets/sla-policies (default SLA, auto-close, notification triggers). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive);...",
           "dependencies": [
-            "PG-178"
+            "PG-178",
+            "PG-182",
+            "PG-183"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
+            "exists": true,
+            "path": ".specify/sprints/sprint-17/attestations/PG-185/attestation.json",
+            "verdict": "COMPLETE",
             "timestamp": null,
-            "sprintFolder": null
+            "sprintFolder": 17
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 6,
+            "met": 6,
             "missed": 0
           }
         },
         {
           "taskId": "PG-186",
           "sprint": 17,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Settings",
           "title": "Module Settings - Documents (/documents/document-settings)",
           "description": "Module Settings - Documents (/documents/document-settings)",
-          "summary": "Document settings page at /documents/document-settings with file types, size limits, antivirus, retention config; uses in-module settings sidebar pattern; Lighthouse >=90",
-          "definitionOfDone": "Document settings page at /documents/document-settings with file types, size limits, antivirus, retention config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
-          "definitionOfDoneSnapshot": "Document settings page at /documents/document-settings with file types, size limits, antivirus, retention config; uses in-module settings sidebar pattern; Lighthouse >=90",
+          "summary": "Post-audit enforcement remediation (run 2026-04-19T22-00Z) — closes five findings the prior 20-00Z run missed:... Document settings at /documents/document-settings (file types, size limits, antivirus, retention)....",
+          "definitionOfDone": "Document settings at /documents/document-settings (file types, size limits, antivirus, retention). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); Add Rule button system-compliant; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate (field,strategy); colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in document-automation.ts (mirror contact-automation.ts) OR declare each as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Document settings at /documents/document-settings (file types, size limits, antivirus, retention). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive);...",
           "dependencies": [
-            "PG-178"
+            "PG-178",
+            "PG-182",
+            "PG-183"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-17/attestations/PG-186/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-04-19T22:20:00Z",
+            "sprintFolder": 17
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 4,
+            "met": 4,
             "missed": 0
           }
         },
         {
           "taskId": "PG-195",
           "sprint": 17,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Performance",
           "title": "Subset Material Symbols font to unblock Lighthouse Performance >=90 gate — reduces 3.5 MB MaterialSymbolsOutlined.woff2 shipped by root layout to every route (PG-056 Lighthouse=63 baseline). Audit the 1,421 .material-symbols-outlined call sites, build a subsetter script that extracts the exact glyph set, regenerate a smaller woff2 (<500 KB target), add CI guard so new glyphs are added to the audit list.",
           "description": "Subset Material Symbols font to unblock Lighthouse Performance >=90 gate — reduces 3.5 MB MaterialSymbolsOutlined.woff2 shipped by root layout to every route (PG-056 Lighthouse=63 baseline). Audit the 1,421 .material-symbols-outlined call sites, build a subsetter script that extracts the exact glyph set, regenerate a smaller woff2 (<500 KB target), add CI guard so new glyphs are added to the audit list.",
-          "summary": "Subsetted font replaces full Material Symbols woff2 (<500 KB); Lighthouse Performance >=90 for /404 and /500 on desktop production build; zero visual regressions across the 1,421 .material-symbols-outlined call sites;...",
+          "summary": "PG-195 COMPLETE — all 12 acceptance criteria met with real runtime measurements. All 4 mandatory validations pass end-to-end:... Subsetted font replaces full Material Symbols woff2 (<500 KB);...",
           "definitionOfDone": "Subsetted font replaces full Material Symbols woff2 (<500 KB); Lighthouse Performance >=90 for /404 and /500 on desktop production build; zero visual regressions across the 1,421 .material-symbols-outlined call sites; subsetter script committed + reproducible; glyph-audit JSON enumerates the used glyph set; artifacts: subsetted woff2, glyph-audit.json, subset script, updated layout.tsx",
           "definitionOfDoneSnapshot": "Subsetted font replaces full Material Symbols woff2 (<500 KB); Lighthouse Performance >=90 for /404 and /500 on desktop production build; zero visual regressions across the 1,421 .material-symbols-outlined call sites;...",
           "dependencies": [
             "PG-056"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
+            "exists": true,
+            "path": ".specify/sprints/sprint-17/attestations/PG-195/attestation.json",
+            "verdict": "COMPLETE",
             "timestamp": null,
-            "sprintFolder": null
+            "sprintFolder": 17
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 17,
+            "met": 17,
             "missed": 0
           }
         }
@@ -17598,14 +17438,14 @@
       "sprint": 18,
       "name": "Sprint 18",
       "summarySource": "specify",
-      "totalTasks": 44,
-      "completedTasks": 3,
-      "backlogTasks": 41,
+      "totalTasks": 60,
+      "completedTasks": 11,
+      "backlogTasks": 49,
       "blockedTasks": 0,
       "inProgressTasks": 0,
-      "attestedCompletedTasks": 3,
+      "attestedCompletedTasks": 11,
       "missingCompletedAttestations": [],
-      "context": "Primary focus areas: Core CRM (25), Settings (5), AI/ML (3).",
+      "context": "Primary focus areas: Core CRM (27), Settings (19), AI/ML (3).",
       "notableCompleted": [
         {
           "taskId": "IFC-070",
@@ -17640,23 +17480,88 @@
           }
         },
         {
-          "taskId": "PG-132",
+          "taskId": "IFC-310",
           "sprint": 18,
           "status": "Completed",
-          "section": "Automation",
-          "title": "Smart Lead Routing UI - Rules configuration assignment dashboard SLA monitoring",
-          "description": "Smart Lead Routing UI - Rules configuration assignment dashboard SLA monitoring",
-          "summary": "PG-132 Smart Lead Routing UI — full implementation with 5 UI components, tRPC router (11 endpoints), validators, useRouting hook, and 64 passing tests. Key fix:... Routing rules CRUD with drag-to-reorder;...",
-          "definitionOfDone": "Response <500ms, Lighthouse >=90; RoutingRulesEditor, AssignmentDashboard, SLAMonitor, LeadQueueView, AgentWorkload components; drag-drop rule priority; real-time assignment view; verified by: pnpm test",
-          "definitionOfDoneSnapshot": "Routing rules CRUD with drag-to-reorder; Assignment dashboard with stats and recent assignments table; SLA monitoring with real-time tracking",
+          "section": "Core CRM",
+          "title": "Duplicate-detection runtime for contacts + accounts (PG-182/PG-183 follow-up) — new DuplicateDetectionService (or per-entity services sharing a rule-evaluator) that reads {Contact,Account}DuplicateRule rows at create/update time and either flags or auto-merges/auto-links records; consumes autoMergeOnExactEmail + autoLinkContactsByDomain + notifyOnDuplicate + aiDuplicateDetection + aiIndustryInference + aiEnrichment toggles from the respective AutomationSetting table; transactional merge combines rows (activities, notes, opportunities, tags, aiInsight) with conflict resolution.",
+          "description": "Duplicate-detection runtime for contacts + accounts (PG-182/PG-183 follow-up) — new DuplicateDetectionService (or per-entity services sharing a rule-evaluator) that reads {Contact,Account}DuplicateRule rows at create/update time and either flags or auto-merges/auto-links records; consumes autoMergeOnExactEmail + autoLinkContactsByDomain + notifyOnDuplicate + aiDuplicateDetection + aiIndustryInference + aiEnrichment toggles from the respective AutomationSetting table; transactional merge combines rows (activities, notes, opportunities, tags, aiInsight) with conflict resolution.",
+          "summary": "IFC-310 iteration-4 — residual concerns from the second audit round fully resolved. No items deferred. R1 (AC-007 AI branch unreachable at runtime): RESOLVED.... Rule evaluator runs {Contact,Account}DuplicateRule checks at create+update time;...",
+          "definitionOfDone": "Rule evaluator runs {Contact,Account}DuplicateRule checks at create+update time; contacts respect autoMergeOnExactEmail/notifyOnDuplicate/aiDuplicateDetection; accounts respect autoLinkContactsByDomain/notifyOnDuplicate; auto-merge/auto-link operations are transactional and preserve the oldest record's id while folding in newer relations; new contact_duplicate and account_duplicate notification types added to NOTIFICATION_TYPES; aiDuplicateDetection uses pgvector similarity on the entity's embeddings; >=90% scoped coverage; all 4 validations pass",
+          "definitionOfDoneSnapshot": "Rule evaluator runs {Contact,Account}DuplicateRule checks at create+update time; contacts respect autoMergeOnExactEmail/notifyOnDuplicate/aiDuplicateDetection; accounts respect autoLinkContactsByDomain/notifyOnDuplicate;...",
           "dependencies": [
-            "IFC-030"
+            "PG-182",
+            "PG-183"
           ],
           "attestation": {
             "exists": true,
-            "path": ".specify/sprints/sprint-18/attestations/PG-132/attestation.json",
+            "path": ".specify/sprints/sprint-18/attestations/IFC-310/attestation.json",
             "verdict": "COMPLETE",
-            "timestamp": "2026-02-15T12:00:00.000Z",
+            "timestamp": "2026-04-21T22:00:00.000Z",
+            "sprintFolder": 18
+          },
+          "validationSummary": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 5,
+            "met": 4,
+            "missed": 1
+          }
+        },
+        {
+          "taskId": "PG-180",
+          "sprint": 18,
+          "status": "Completed",
+          "section": "Support Pages",
+          "title": "Help Article Admin List Page",
+          "description": "Help Article Admin List Page",
+          "summary": "Compliance-check invoked inline: all 4 mandatory validations PASS (typecheck, tests, lint, build), scoped Istanbul coverage 97.26/95.06/91.66/96.96 (aggregate) exceeds 90/80/90/90 thresholds, icon policy PASS (Material Symbols only, zero fo... Articles listed;...",
+          "definitionOfDone": "Response <200ms, Lighthouse >=90; admin page at /settings/help-center/articles with article list, status badges, category filters, search, CRUD actions; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Articles listed; Filters working; CRUD actions functional",
+          "dependencies": [
+            "IFC-299"
+          ],
+          "attestation": {
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/PG-180/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-04-19T22:50:00Z",
+            "sprintFolder": 18
+          },
+          "validationSummary": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 5,
+            "met": 4,
+            "missed": 1
+          }
+        },
+        {
+          "taskId": "PG-187",
+          "sprint": 18,
+          "status": "Completed",
+          "section": "Settings",
+          "title": "Module Settings - Reports (/analytics/report-settings)",
+          "description": "Module Settings - Reports (/analytics/report-settings)",
+          "summary": "Honest record of deviations from plan: (a) Frontend test count 44 vs. plan target 54... Report settings page at /analytics/report-settings with default range, currency, scheduled delivery config; uses in-module settings sidebar pattern; Lighthouse >=90",
+          "definitionOfDone": "Report settings page at /analytics/report-settings with default range, currency, scheduled delivery config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Report settings page at /analytics/report-settings with default range, currency, scheduled delivery config; uses in-module settings sidebar pattern; Lighthouse >=90",
+          "dependencies": [
+            "PG-178"
+          ],
+          "attestation": {
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/PG-187/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-04-19T23:45:00Z",
             "sprintFolder": 18
           },
           "validationSummary": {
@@ -17672,23 +17577,24 @@
           }
         },
         {
-          "taskId": "IFC-078",
+          "taskId": "IFC-311",
           "sprint": 18,
           "status": "Completed",
-          "section": "Platform",
-          "title": "Platform Engineering Foundation",
-          "description": "Platform Engineering Foundation",
-          "summary": "Task completed and verified Internal Developer Platform basics, golden paths",
-          "definitionOfDone": "Internal Developer Platform basics, golden paths; artifacts: self-service-metrics.json, satisfaction-survey.md, context_ack.json",
-          "definitionOfDoneSnapshot": "Internal Developer Platform basics, golden paths",
+          "section": "Core CRM",
+          "title": "Reassign endpoints + notifyOnOwnerChange wiring for contacts + accounts (PG-182/PG-183 follow-up) — add contact.reassign/contact.bulkReassign and account.reassign/account.bulkReassign tRPC procedures; on owner change, invoke the notifyContactReassignment or notifyAccountReassignment helper (both already shipped — PG-182 in contact-automation.ts, PG-183 in account-automation.ts) with the bound createNotification from notifications.router.ts; contact_reassigned is already in NOTIFICATION_TYPES — add account_reassigned alongside it.",
+          "description": "Reassign endpoints + notifyOnOwnerChange wiring for contacts + accounts (PG-182/PG-183 follow-up) — add contact.reassign/contact.bulkReassign and account.reassign/account.bulkReassign tRPC procedures; on owner change, invoke the notifyContactReassignment or notifyAccountReassignment helper (both already shipped — PG-182 in contact-automation.ts, PG-183 in account-automation.ts) with the bound createNotification from notifications.router.ts; contact_reassigned is already in NOTIFICATION_TYPES — add account_reassigned alongside it.",
+          "summary": "IFC-311 wires the two notifyOnOwnerChange Cat-1 toggles that PG-182 + PG-183 shipped but left dormant.... contact.reassign + contact.bulkReassign mutations; account.reassign + account.bulkReassign mutations; All validate caller permission",
+          "definitionOfDone": "contact.reassign + contact.bulkReassign and account.reassign + account.bulkReassign mutations; all validate caller permission; each reads the matching AutomationSetting.notifyOnOwnerChange flag and invokes the notify*Reassignment helper when true; emit contact_reassigned + account_reassigned notifications to both old and new owner; idempotent when new owner == current owner; >=90% scoped coverage",
+          "definitionOfDoneSnapshot": "contact.reassign + contact.bulkReassign mutations; account.reassign + account.bulkReassign mutations; All validate caller permission",
           "dependencies": [
-            "IFC-012"
+            "PG-182",
+            "PG-183"
           ],
           "attestation": {
             "exists": true,
-            "path": ".specify/sprints/sprint-18/attestations/IFC-078/attestation.json",
+            "path": ".specify/sprints/sprint-18/attestations/IFC-311/attestation.json",
             "verdict": "COMPLETE",
-            "timestamp": "2026-02-17T19:33:21.804Z",
+            "timestamp": "2026-04-20T23:55:00Z",
             "sprintFolder": 18
           },
           "validationSummary": {
@@ -17698,8 +17604,8 @@
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 4,
+            "met": 4,
             "missed": 0
           }
         }
@@ -17751,38 +17657,6 @@
             "IFC-089",
             "IFC-091",
             "IFC-095"
-          ],
-          "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
-          },
-          "validationSummary": {
-            "total": 0,
-            "passed": 0,
-            "failed": 0,
-            "failingNames": []
-          },
-          "kpiSummary": {
-            "total": 0,
-            "met": 0,
-            "missed": 0
-          }
-        },
-        {
-          "taskId": "PG-059",
-          "sprint": 18,
-          "status": "Backlog",
-          "section": "Core CRM",
-          "title": "Leads List",
-          "description": "Leads List",
-          "summary": "response under 200ms, Lighthouse 90, pagination working",
-          "definitionOfDone": "Response <200ms, Lighthouse ≥90, pagination working; artifacts: page.tsx, lead-list.tsx, bulk-actions.ts",
-          "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, pagination working",
-          "dependencies": [
-            "IFC-089"
           ],
           "attestation": {
             "exists": false,
@@ -17866,20 +17740,52 @@
             "met": 0,
             "missed": 0
           }
+        },
+        {
+          "taskId": "PG-062",
+          "sprint": 18,
+          "status": "Backlog",
+          "section": "Core CRM",
+          "title": "Edit Lead",
+          "description": "Edit Lead",
+          "summary": "response under 200ms, Lighthouse 90, updates saved",
+          "definitionOfDone": "Response <200ms, Lighthouse ≥90, updates saved; artifacts: page.tsx, lead-editor.tsx, change-tracker.ts",
+          "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, updates saved",
+          "dependencies": [
+            "PG-061"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
         }
       ],
       "sectionSummary": [
         {
           "section": "Core CRM",
-          "total": 25,
-          "completed": 0,
-          "open": 25
+          "total": 27,
+          "completed": 4,
+          "open": 23
         },
         {
           "section": "Settings",
-          "total": 5,
-          "completed": 0,
-          "open": 5
+          "total": 19,
+          "completed": 3,
+          "open": 16
         },
         {
           "section": "AI/ML",
@@ -17902,8 +17808,8 @@
         {
           "section": "Support Pages",
           "total": 2,
-          "completed": 0,
-          "open": 2
+          "completed": 1,
+          "open": 1
         },
         {
           "section": "Compliance",
@@ -18070,32 +17976,32 @@
         {
           "taskId": "PG-059",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Core CRM",
           "title": "Leads List",
           "description": "Leads List",
-          "summary": "response under 200ms, Lighthouse 90, pagination working",
+          "summary": "PG-059 extracts 1,105 LOC from LeadsPageClient.tsx into components/leads/lead-list.tsx (client composition) + lib/leads/bulk-actions.ts (pure factory + runners + getLeadScope sidebar helper) + lib/leads/lead-types.ts (Lead row type).......",
           "definitionOfDone": "Response <200ms, Lighthouse ≥90, pagination working; artifacts: page.tsx, lead-list.tsx, bulk-actions.ts",
           "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, pagination working",
           "dependencies": [
             "IFC-089"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/PG-059/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-04-19T23:45:00Z",
+            "sprintFolder": 18
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 5,
+            "met": 5,
             "missed": 0
           }
         },
@@ -18366,31 +18272,31 @@
           "section": "AI/ML",
           "title": "Wire API container to QueueAIService for BullMQ-backed lead scoring",
           "description": "Wire API container to QueueAIService for BullMQ-backed lead scoring",
-          "summary": "API container resolves QueueAIService for lead scoring requests; GuardrailsAIService remains decorator over queue-backed provider; lead scoring jobs are enqueued with correlation metadata and consumed by ai-scoring worker contract;...",
+          "summary": "IFC-212 exec phase complete with 5 audit findings remediated honestly (2026-04-27 audit-fix iteration): [HIGH-1 FIXED] tenantId='default' regression — extended AIServicePort.scoreLead/qualifyLead with optional `opts:......",
           "definitionOfDone": "API container resolves QueueAIService for lead scoring requests; GuardrailsAIService remains decorator over queue-backed provider; lead scoring jobs are enqueued with correlation metadata and consumed by ai-scoring worker contract; retry and failure handling follow BullMQ defaults; verified by: pnpm test --filter api;pnpm test --filter ai-worker",
-          "definitionOfDoneSnapshot": "API container resolves QueueAIService for lead scoring requests; GuardrailsAIService remains decorator over queue-backed provider; lead scoring jobs are enqueued with correlation metadata and consumed by ai-scoring worker contract;...",
+          "definitionOfDoneSnapshot": "API container resolves QueueAIService for lead scoring requests; GuardrailsAIService remains decorator over queue-backed provider; Lead scoring jobs enqueued with correlation metadata and consumed by ai-scoring worker contract",
           "dependencies": [
             "IFC-015",
             "IFC-125",
             "IFC-168"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/IFC-212/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-04-27T20:55:00Z",
+            "sprintFolder": 18
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
-            "missed": 0
+            "total": 4,
+            "met": 1,
+            "missed": 3
           }
         },
         {
@@ -18464,30 +18370,30 @@
         {
           "taskId": "IFC-227",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Core CRM",
           "title": "Company-to-Account Navigation Link - Lead detail page shows company name as plain <span> in profile card (line 1352) and info panel (line 1656). Replace with Next.js Link component navigating to /accounts/[accountId]. Requires accountId in lead transform/query. Apply same pattern to Contact and Deal detail pages.",
           "description": "Company-to-Account Navigation Link - Lead detail page shows company name as plain <span> in profile card (line 1352) and info panel (line 1656). Replace with Next.js Link component navigating to /accounts/[accountId]. Requires accountId in lead transform/query. Apply same pattern to Contact and Deal detail pages.",
-          "summary": "Company name is clickable Link to /accounts/[accountId] on Lead, Contact, Deal detail pages; accountId included in API response; graceful fallback when no account linked; tests >=90%",
+          "summary": "(no destructive patterns, no policy violations). All validations ran against main project tree (not worktree). Prisma client regenerated after schema.prisma was updated with Lead.accountId FK + Account.leads reverse relation.......",
           "definitionOfDone": "Company name is clickable Link to /accounts/[accountId] on Lead, Contact, Deal detail pages; accountId included in API response; graceful fallback when no account linked; tests >=90%",
           "definitionOfDoneSnapshot": "Company name is clickable Link to /accounts/[accountId] on Lead, Contact, Deal detail pages; accountId included in API response; graceful fallback when no account linked; tests >=90%",
           "dependencies": [],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/IFC-227/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-04-27T21:30:00Z",
+            "sprintFolder": 18
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 2,
+            "met": 2,
             "missed": 0
           }
         },
@@ -19006,33 +18912,33 @@
         {
           "taskId": "PG-180",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Support Pages",
           "title": "Help Article Admin List Page",
           "description": "Help Article Admin List Page",
-          "summary": "response under 200ms, Lighthouse >=90; admin page at /settings/help-center/articles with article list, status badges, category filters, search, CRUD actions",
+          "summary": "Compliance-check invoked inline: all 4 mandatory validations PASS (typecheck, tests, lint, build), scoped Istanbul coverage 97.26/95.06/91.66/96.96 (aggregate) exceeds 90/80/90/90 thresholds, icon policy PASS (Material Symbols only, zero fo... Articles listed;...",
           "definitionOfDone": "Response <200ms, Lighthouse >=90; admin page at /settings/help-center/articles with article list, status badges, category filters, search, CRUD actions; verified by: pnpm test",
-          "definitionOfDoneSnapshot": "response under 200ms, Lighthouse >=90; admin page at /settings/help-center/articles with article list, status badges, category filters, search, CRUD actions",
+          "definitionOfDoneSnapshot": "Articles listed; Filters working; CRUD actions functional",
           "dependencies": [
             "IFC-299"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/PG-180/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-04-19T22:50:00Z",
+            "sprintFolder": 18
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
-            "missed": 0
+            "total": 5,
+            "met": 4,
+            "missed": 1
           }
         },
         {
@@ -19135,32 +19041,32 @@
         {
           "taskId": "PG-187",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Settings",
           "title": "Module Settings - Reports (/analytics/report-settings)",
           "description": "Module Settings - Reports (/analytics/report-settings)",
-          "summary": "Report settings page at /analytics/report-settings with default range, currency, scheduled delivery config; uses in-module settings sidebar pattern; Lighthouse >=90",
+          "summary": "Honest record of deviations from plan: (a) Frontend test count 44 vs. plan target 54... Report settings page at /analytics/report-settings with default range, currency, scheduled delivery config; uses in-module settings sidebar pattern; Lighthouse >=90",
           "definitionOfDone": "Report settings page at /analytics/report-settings with default range, currency, scheduled delivery config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
           "definitionOfDoneSnapshot": "Report settings page at /analytics/report-settings with default range, currency, scheduled delivery config; uses in-module settings sidebar pattern; Lighthouse >=90",
           "dependencies": [
             "PG-178"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/PG-187/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-04-19T23:45:00Z",
+            "sprintFolder": 18
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 4,
+            "met": 4,
             "missed": 0
           }
         },
@@ -19199,65 +19105,65 @@
         {
           "taskId": "PG-189",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Settings",
           "title": "Module Settings - Appointments (/calendar/calendar-settings)",
           "description": "Module Settings - Appointments (/calendar/calendar-settings)",
-          "summary": "Appointment settings page at /calendar/calendar-settings with duration, buffer, calendar integration config; uses in-module settings sidebar pattern; Lighthouse >=90",
+          "summary": "Compliance check (Phase 4.6): self-compliance review executed — (1) Design-system conformance: all UI uses shadcn/@intelliflow/ui primitives, Material Symbols Outlined only, no forbidden icon imports, no inline <svg> icons; (2) Architecture:......",
           "definitionOfDone": "Appointment settings page at /calendar/calendar-settings with duration, buffer, calendar integration config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
           "definitionOfDoneSnapshot": "Appointment settings page at /calendar/calendar-settings with duration, buffer, calendar integration config; uses in-module settings sidebar pattern; Lighthouse >=90",
           "dependencies": [
             "PG-178"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/PG-189/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-04-19T15:30:00Z",
+            "sprintFolder": 18
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
-            "missed": 0
+            "total": 4,
+            "met": 3,
+            "missed": 1
           }
         },
         {
           "taskId": "PG-190",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Settings",
           "title": "Module Settings - Cases (/cases/case-settings)",
           "description": "Module Settings - Cases (/cases/case-settings)",
-          "summary": "Case settings page at /cases/case-settings with case prefix, default priority, auto-assign config; uses in-module settings sidebar pattern; Lighthouse >=90",
+          "summary": "v2-audit-fix (2026-04-20) addresses all 9 findings from external audit. CHANGES: (1) added case-automation.ts runtime consumer, wired `restrictTagCreationToAdmins` via assertCanCreateTag — closes finding #2 (silent unenforced promise);......",
           "definitionOfDone": "Case settings page at /cases/case-settings with case prefix, default priority, auto-assign config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
           "definitionOfDoneSnapshot": "Case settings page at /cases/case-settings with case prefix, default priority, auto-assign config; uses in-module settings sidebar pattern; Lighthouse >=90",
           "dependencies": [
             "PG-178"
           ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/PG-190/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-04-20T20:16:00Z",
+            "sprintFolder": 18
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
-            "missed": 0
+            "total": 3,
+            "met": 2,
+            "missed": 1
           }
         },
         {
@@ -19325,6 +19231,536 @@
             "met": 0,
             "missed": 0
           }
+        },
+        {
+          "taskId": "IFC-310",
+          "sprint": 18,
+          "status": "Completed",
+          "section": "Core CRM",
+          "title": "Duplicate-detection runtime for contacts + accounts (PG-182/PG-183 follow-up) — new DuplicateDetectionService (or per-entity services sharing a rule-evaluator) that reads {Contact,Account}DuplicateRule rows at create/update time and either flags or auto-merges/auto-links records; consumes autoMergeOnExactEmail + autoLinkContactsByDomain + notifyOnDuplicate + aiDuplicateDetection + aiIndustryInference + aiEnrichment toggles from the respective AutomationSetting table; transactional merge combines rows (activities, notes, opportunities, tags, aiInsight) with conflict resolution.",
+          "description": "Duplicate-detection runtime for contacts + accounts (PG-182/PG-183 follow-up) — new DuplicateDetectionService (or per-entity services sharing a rule-evaluator) that reads {Contact,Account}DuplicateRule rows at create/update time and either flags or auto-merges/auto-links records; consumes autoMergeOnExactEmail + autoLinkContactsByDomain + notifyOnDuplicate + aiDuplicateDetection + aiIndustryInference + aiEnrichment toggles from the respective AutomationSetting table; transactional merge combines rows (activities, notes, opportunities, tags, aiInsight) with conflict resolution.",
+          "summary": "IFC-310 iteration-4 — residual concerns from the second audit round fully resolved. No items deferred. R1 (AC-007 AI branch unreachable at runtime): RESOLVED.... Rule evaluator runs {Contact,Account}DuplicateRule checks at create+update time;...",
+          "definitionOfDone": "Rule evaluator runs {Contact,Account}DuplicateRule checks at create+update time; contacts respect autoMergeOnExactEmail/notifyOnDuplicate/aiDuplicateDetection; accounts respect autoLinkContactsByDomain/notifyOnDuplicate; auto-merge/auto-link operations are transactional and preserve the oldest record's id while folding in newer relations; new contact_duplicate and account_duplicate notification types added to NOTIFICATION_TYPES; aiDuplicateDetection uses pgvector similarity on the entity's embeddings; >=90% scoped coverage; all 4 validations pass",
+          "definitionOfDoneSnapshot": "Rule evaluator runs {Contact,Account}DuplicateRule checks at create+update time; contacts respect autoMergeOnExactEmail/notifyOnDuplicate/aiDuplicateDetection; accounts respect autoLinkContactsByDomain/notifyOnDuplicate;...",
+          "dependencies": [
+            "PG-182",
+            "PG-183"
+          ],
+          "attestation": {
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/IFC-310/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-04-21T22:00:00.000Z",
+            "sprintFolder": 18
+          },
+          "validationSummary": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 5,
+            "met": 4,
+            "missed": 1
+          }
+        },
+        {
+          "taskId": "IFC-311",
+          "sprint": 18,
+          "status": "Completed",
+          "section": "Core CRM",
+          "title": "Reassign endpoints + notifyOnOwnerChange wiring for contacts + accounts (PG-182/PG-183 follow-up) — add contact.reassign/contact.bulkReassign and account.reassign/account.bulkReassign tRPC procedures; on owner change, invoke the notifyContactReassignment or notifyAccountReassignment helper (both already shipped — PG-182 in contact-automation.ts, PG-183 in account-automation.ts) with the bound createNotification from notifications.router.ts; contact_reassigned is already in NOTIFICATION_TYPES — add account_reassigned alongside it.",
+          "description": "Reassign endpoints + notifyOnOwnerChange wiring for contacts + accounts (PG-182/PG-183 follow-up) — add contact.reassign/contact.bulkReassign and account.reassign/account.bulkReassign tRPC procedures; on owner change, invoke the notifyContactReassignment or notifyAccountReassignment helper (both already shipped — PG-182 in contact-automation.ts, PG-183 in account-automation.ts) with the bound createNotification from notifications.router.ts; contact_reassigned is already in NOTIFICATION_TYPES — add account_reassigned alongside it.",
+          "summary": "IFC-311 wires the two notifyOnOwnerChange Cat-1 toggles that PG-182 + PG-183 shipped but left dormant.... contact.reassign + contact.bulkReassign mutations; account.reassign + account.bulkReassign mutations; All validate caller permission",
+          "definitionOfDone": "contact.reassign + contact.bulkReassign and account.reassign + account.bulkReassign mutations; all validate caller permission; each reads the matching AutomationSetting.notifyOnOwnerChange flag and invokes the notify*Reassignment helper when true; emit contact_reassigned + account_reassigned notifications to both old and new owner; idempotent when new owner == current owner; >=90% scoped coverage",
+          "definitionOfDoneSnapshot": "contact.reassign + contact.bulkReassign mutations; account.reassign + account.bulkReassign mutations; All validate caller permission",
+          "dependencies": [
+            "PG-182",
+            "PG-183"
+          ],
+          "attestation": {
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/IFC-311/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-04-20T23:55:00Z",
+            "sprintFolder": 18
+          },
+          "validationSummary": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 4,
+            "met": 4,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "PG-196",
+          "sprint": 18,
+          "status": "Backlog",
+          "section": "Settings",
+          "title": "Module Settings - Account Tiers (/accounts/(list)/account-tiers)",
+          "description": "Module Settings - Account Tiers (/accounts/(list)/account-tiers)",
+          "summary": "Account tiers at /accounts/(list)/account-tiers (tier definitions bronze/silver/gold/platinum, point thresholds, benefits matrix, default tier, upgrade/downgrade rules). MUST follow docs/planning/module-settings-playbook.md:...",
+          "definitionOfDone": "Account tiers at /accounts/(list)/account-tiers (tier definitions bronze/silver/gold/platinum, point thresholds, benefits matrix, default tier, upgrade/downgrade rules). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate tier names; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in account-automation.ts OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Account tiers at /accounts/(list)/account-tiers (tier definitions bronze/silver/gold/platinum, point thresholds, benefits matrix, default tier, upgrade/downgrade rules). MUST follow docs/planning/module-settings-playbook.md:...",
+          "dependencies": [
+            "PG-178",
+            "PG-183"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "PG-197",
+          "sprint": 18,
+          "status": "Backlog",
+          "section": "Settings",
+          "title": "Module Settings - Territory Mapping (/accounts/(list)/territory-mapping)",
+          "description": "Module Settings - Territory Mapping (/accounts/(list)/territory-mapping)",
+          "summary": "Territory mapping at /accounts/(list)/territory-mapping (geographic territory rules by region/country/postcode, assignment strategies round-robin/load-balance/manual, overlap resolution priority, default territory)....",
+          "definitionOfDone": "Territory mapping at /accounts/(list)/territory-mapping (geographic territory rules by region/country/postcode, assignment strategies round-robin/load-balance/manual, overlap resolution priority, default territory). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate (region, country) pairs; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in account-automation.ts OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Territory mapping at /accounts/(list)/territory-mapping (geographic territory rules by region/country/postcode, assignment strategies round-robin/load-balance/manual, overlap resolution priority, default territory)....",
+          "dependencies": [
+            "PG-178",
+            "PG-183"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "PG-198",
+          "sprint": 18,
+          "status": "Backlog",
+          "section": "Settings",
+          "title": "Module Settings - Approval Policies (/agent-approvals/approval-policies)",
+          "description": "Module Settings - Approval Policies (/agent-approvals/approval-policies)",
+          "summary": "Approval policies at /agent-approvals/approval-policies (policy rules: auto-approve thresholds, required reviewers, escalation paths, approval timeout SLAs, per-agent overrides). MUST follow docs/planning/module-settings-playbook.md:...",
+          "definitionOfDone": "Approval policies at /agent-approvals/approval-policies (policy rules: auto-approve thresholds, required reviewers, escalation paths, approval timeout SLAs, per-agent overrides). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate (agent, action) pairs; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in agent-approval automation OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Approval policies at /agent-approvals/approval-policies (policy rules: auto-approve thresholds, required reviewers, escalation paths, approval timeout SLAs, per-agent overrides). MUST follow docs/planning/module-settings-playbook.md:...",
+          "dependencies": [
+            "PG-178",
+            "PG-152",
+            "PG-192"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "PG-199",
+          "sprint": 18,
+          "status": "Backlog",
+          "section": "Settings",
+          "title": "Module Settings - Model Config (/agent-approvals/model-config)",
+          "description": "Module Settings - Model Config (/agent-approvals/model-config)",
+          "summary": "Model config at /agent-approvals/model-config (per-agent model selection, temperature, max tokens, fallback chain, per-agent cost ceilings). Respect Never-Downgrade rule for model IDs (memory/feedback_never_downgrade_without_approval.md)....",
+          "definitionOfDone": "Model config at /agent-approvals/model-config (per-agent model selection, temperature, max tokens, fallback chain, per-agent cost ceilings). Respect Never-Downgrade rule for model IDs (memory/feedback_never_downgrade_without_approval.md). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate agent keys; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in agent-approval automation OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Model config at /agent-approvals/model-config (per-agent model selection, temperature, max tokens, fallback chain, per-agent cost ceilings). Respect Never-Downgrade rule for model IDs (memory/feedback_never_downgrade_without_approval.md)....",
+          "dependencies": [
+            "PG-178",
+            "PG-152",
+            "PG-192"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "PG-200",
+          "sprint": 18,
+          "status": "Backlog",
+          "section": "Settings",
+          "title": "Module Settings - Report Templates (/analytics/report-templates)",
+          "description": "Module Settings - Report Templates (/analytics/report-templates)",
+          "summary": "Report templates at /analytics/report-templates (saveable report layouts: filter set + selected columns + chart type + default period + sharing scope). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid;...",
+          "definitionOfDone": "Report templates at /analytics/report-templates (saveable report layouts: filter set + selected columns + chart type + default period + sharing scope). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate template names within scope; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in analytics automation OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Report templates at /analytics/report-templates (saveable report layouts: filter set + selected columns + chart type + default period + sharing scope). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid;...",
+          "dependencies": [
+            "PG-178",
+            "PG-187"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "PG-201",
+          "sprint": 18,
+          "status": "Backlog",
+          "section": "Settings",
+          "title": "Module Settings - Scheduled Reports (/analytics/scheduled-reports)",
+          "description": "Module Settings - Scheduled Reports (/analytics/scheduled-reports)",
+          "summary": "Scheduled reports at /analytics/scheduled-reports (cron schedules, recipient lists, delivery format PDF/CSV/email-body, template ref). IFC-308 BullMQ cron READS these schedules - schema must match job expectations....",
+          "definitionOfDone": "Scheduled reports at /analytics/scheduled-reports (cron schedules, recipient lists, delivery format PDF/CSV/email-body, template ref). IFC-308 BullMQ cron READS these schedules - schema must match job expectations. MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate schedule names; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in analytics automation OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Scheduled reports at /analytics/scheduled-reports (cron schedules, recipient lists, delivery format PDF/CSV/email-body, template ref). IFC-308 BullMQ cron READS these schedules - schema must match job expectations....",
+          "dependencies": [
+            "PG-178",
+            "PG-187"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "PG-202",
+          "sprint": 18,
+          "status": "Backlog",
+          "section": "Settings",
+          "title": "Module Settings - Availability (/calendar/availability)",
+          "description": "Module Settings - Availability (/calendar/availability)",
+          "summary": "Availability at /calendar/availability (working hours per weekday, timezones, buffers before/after, max daily bookings, unavailable date ranges). TIMEZONE-REFACTOR-AWARE:...",
+          "definitionOfDone": "Availability at /calendar/availability (working hours per weekday, timezones, buffers before/after, max daily bookings, unavailable date ranges). TIMEZONE-REFACTOR-AWARE: store UTC in DB, display via useTimezoneContext() (memory/project_timezone_refactor.md). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for overlapping time ranges per weekday; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in calendar automation OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Availability at /calendar/availability (working hours per weekday, timezones, buffers before/after, max daily bookings, unavailable date ranges). TIMEZONE-REFACTOR-AWARE:...",
+          "dependencies": [
+            "PG-178",
+            "PG-189"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "PG-203",
+          "sprint": 18,
+          "status": "Backlog",
+          "section": "Settings",
+          "title": "Module Settings - Event Types (/calendar/event-types)",
+          "description": "Module Settings - Event Types (/calendar/event-types)",
+          "summary": "Event types at /calendar/event-types (meeting type definitions: duration, color, default description, booking link slug, required form fields, location type). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid;...",
+          "definitionOfDone": "Event types at /calendar/event-types (meeting type definitions: duration, color, default description, booking link slug, required form fields, location type). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate booking slugs; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in calendar automation OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Event types at /calendar/event-types (meeting type definitions: duration, color, default description, booking link slug, required form fields, location type). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid;...",
+          "dependencies": [
+            "PG-178",
+            "PG-189"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "PG-204",
+          "sprint": 18,
+          "status": "Backlog",
+          "section": "Settings",
+          "title": "Module Settings - Case Types (/cases/case-types)",
+          "description": "Module Settings - Case Types (/cases/case-types)",
+          "summary": "Case types at /cases/case-types (taxonomy: category, default priority, default SLA, required fields, resolution workflow). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid;...",
+          "definitionOfDone": "Case types at /cases/case-types (taxonomy: category, default priority, default SLA, required fields, resolution workflow). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate type names; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in case automation OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Case types at /cases/case-types (taxonomy: category, default priority, default SLA, required fields, resolution workflow). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid;...",
+          "dependencies": [
+            "PG-178",
+            "PG-190"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "PG-205",
+          "sprint": 18,
+          "status": "Backlog",
+          "section": "Settings",
+          "title": "Module Settings - Contact Types (/contacts/(list)/contact-types)",
+          "description": "Module Settings - Contact Types (/contacts/(list)/contact-types)",
+          "summary": "Contact types at /contacts/(list)/contact-types (taxonomy: person/organization/vendor/partner, required fields per type, default fields, default labels). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid;...",
+          "definitionOfDone": "Contact types at /contacts/(list)/contact-types (taxonomy: person/organization/vendor/partner, required fields per type, default fields, default labels). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate type names; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in contact-automation.ts OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Contact types at /contacts/(list)/contact-types (taxonomy: person/organization/vendor/partner, required fields per type, default fields, default labels). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid;...",
+          "dependencies": [
+            "PG-178",
+            "PG-182"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "PG-206",
+          "sprint": 18,
+          "status": "Backlog",
+          "section": "Settings",
+          "title": "Module Settings - Storage Policies (/documents/(list)/storage-policies)",
+          "description": "Module Settings - Storage Policies (/documents/(list)/storage-policies)",
+          "summary": "Storage policies at /documents/(list)/storage-policies (per-tenant retention periods by doc type, archival rules, cold storage migration thresholds, legal hold exceptions). MUST follow docs/planning/module-settings-playbook.md:...",
+          "definitionOfDone": "Storage policies at /documents/(list)/storage-policies (per-tenant retention periods by doc type, archival rules, cold storage migration thresholds, legal hold exceptions). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate (docType, retentionPeriod) pairs; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in document-automation.ts OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Storage policies at /documents/(list)/storage-policies (per-tenant retention periods by doc type, archival rules, cold storage migration thresholds, legal hold exceptions). MUST follow docs/planning/module-settings-playbook.md:...",
+          "dependencies": [
+            "PG-178",
+            "PG-186"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "PG-207",
+          "sprint": 18,
+          "status": "Backlog",
+          "section": "Settings",
+          "title": "Module Settings - Email (/email/email-settings)",
+          "description": "Module Settings - Email (/email/email-settings)",
+          "summary": "Email settings at /email/email-settings (SMTP/IMAP config per tenant, signatures per user/org, tracking pixel on/off, reply-to override, bounce handling rules). Secrets MUST go through server-side tRPC - never in client bundle....",
+          "definitionOfDone": "Email settings at /email/email-settings (SMTP/IMAP config per tenant, signatures per user/org, tracking pixel on/off, reply-to override, bounce handling rules). Secrets MUST go through server-side tRPC - never in client bundle. MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate signature names; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in email automation OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Email settings at /email/email-settings (SMTP/IMAP config per tenant, signatures per user/org, tracking pixel on/off, reply-to override, bounce handling rules). Secrets MUST go through server-side tRPC - never in client bundle....",
+          "dependencies": [
+            "PG-178",
+            "PG-182"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "PG-208",
+          "sprint": 18,
+          "status": "Backlog",
+          "section": "Settings",
+          "title": "Module Settings - Task Automation (/tasks/(list)/automation)",
+          "description": "Module Settings - Task Automation (/tasks/(list)/automation)",
+          "summary": "Task automation at /tasks/(list)/automation (rule builder: when X happens create/assign task; trigger types = entity event/schedule/webhook; actions = create task, assign by round-robin, notify)....",
+          "definitionOfDone": "Task automation at /tasks/(list)/automation (rule builder: when X happens create/assign task; trigger types = entity event/schedule/webhook; actions = create task, assign by round-robin, notify). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate (trigger, action) pairs; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in task automation OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Task automation at /tasks/(list)/automation (rule builder: when X happens create/assign task; trigger types = entity event/schedule/webhook; actions = create task, assign by round-robin, notify)....",
+          "dependencies": [
+            "PG-178",
+            "PG-191"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "PG-209",
+          "sprint": 18,
+          "status": "Backlog",
+          "section": "Settings",
+          "title": "Module Settings - Task Types (/tasks/(list)/task-types)",
+          "description": "Module Settings - Task Types (/tasks/(list)/task-types)",
+          "summary": "Task types at /tasks/(list)/task-types (taxonomy: category, default duration, default priority, reminder defaults). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive);...",
+          "definitionOfDone": "Task types at /tasks/(list)/task-types (taxonomy: category, default duration, default priority, reminder defaults). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate type names; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in task automation OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Task types at /tasks/(list)/task-types (taxonomy: category, default duration, default priority, reminder defaults). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive);...",
+          "dependencies": [
+            "PG-178",
+            "PG-191"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
         }
       ]
     },
@@ -19332,15 +19768,49 @@
       "sprint": 19,
       "name": "Sprint 19",
       "summarySource": "specify",
-      "totalTasks": 12,
-      "completedTasks": 1,
-      "backlogTasks": 11,
+      "totalTasks": 15,
+      "completedTasks": 2,
+      "backlogTasks": 13,
       "blockedTasks": 0,
       "inProgressTasks": 0,
-      "attestedCompletedTasks": 1,
+      "attestedCompletedTasks": 2,
       "missingCompletedAttestations": [],
-      "context": "Primary focus areas: Core CRM (8), Automation (1), Compliance (1).",
+      "context": "Primary focus areas: Core CRM (9), AI/Intelligence (2), Automation (1).",
       "notableCompleted": [
+        {
+          "taskId": "IFC-312",
+          "sprint": 19,
+          "status": "Completed",
+          "section": "AI/Intelligence",
+          "title": "AI chains for contacts + accounts (PG-182/PG-183 follow-up) — wire the remaining AI toggles on both entities to real LLM/embedding consumers: aiEnrichment (external enrichment API + provider adapter, shared across entities), aiTagSuggestions (LLM prompt + surface on detail pages), aiInsightGeneration (LLM chain writing to {Contact,Account}AIInsight + surface), aiAutoReplyDrafting (contact inbox), aiIndustryInference (account-only LLM classifier that picks the best AccountIndustryOption), aiAccountScoring (account-only LLM scorer that writes to the Account score field).",
+          "description": "AI chains for contacts + accounts (PG-182/PG-183 follow-up) — wire the remaining AI toggles on both entities to real LLM/embedding consumers: aiEnrichment (external enrichment API + provider adapter, shared across entities), aiTagSuggestions (LLM prompt + surface on detail pages), aiInsightGeneration (LLM chain writing to {Contact,Account}AIInsight + surface), aiAutoReplyDrafting (contact inbox), aiIndustryInference (account-only LLM classifier that picks the best AccountIndustryOption), aiAccountScoring (account-only LLM scorer that writes to the Account score field).",
+          "summary": "Originally attested 2026-04-22 with verdict COMPLETE, but a 2026-04-24 code audit (/task-code-audit) identified 7 findings (2 High, 4 Medium, 1 Low) that contradicted the attestation......",
+          "definitionOfDone": "Each AI toggle reads the tenant flag from the matching AutomationSetting before consuming the chain; aiEnrichment (contact+account) backfills empty fields on create via a shared enrichment adapter; aiTagSuggestions renders suggestions on both detail pages; aiInsightGeneration writes to {Contact,Account}AIInsight (both models already exist) and renders on the detail page; aiAutoReplyDrafting drafts contact inbox replies (review-before-send); aiIndustryInference classifies an account against AccountIndustryOption vocabulary; aiAccountScoring writes to Account score + records provenance; >=90% scoped coverage on chain orchestration; AI safety guardrails per stoa-intelligence",
+          "definitionOfDoneSnapshot": "Each AI toggle reads the tenant flag from the matching AutomationSetting before consuming the chain; aiEnrichment (contact+account) backfills empty fields on create via a shared enrichment adapter;...",
+          "dependencies": [
+            "PG-182",
+            "PG-183",
+            "IFC-310"
+          ],
+          "attestation": {
+            "exists": true,
+            "path": ".specify/sprints/sprint-19/attestations/IFC-312/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-04-24T20:48:00Z",
+            "sprintFolder": 19
+          },
+          "validationSummary": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 5,
+            "met": 2,
+            "missed": 3
+          }
+        },
         {
           "taskId": "PG-166",
           "sprint": 19,
@@ -19540,9 +20010,15 @@
       "sectionSummary": [
         {
           "section": "Core CRM",
-          "total": 8,
+          "total": 9,
           "completed": 1,
-          "open": 7
+          "open": 8
+        },
+        {
+          "section": "AI/Intelligence",
+          "total": 2,
+          "completed": 1,
+          "open": 1
         },
         {
           "section": "Automation",
@@ -19936,6 +20412,104 @@
           "definitionOfDoneSnapshot": "compliance-calendar.json has 22 events covering 4 standards (GDPR, SOC 2, ISO 27001, ISO 42001, OWASP); no ISO 14001; all past events status=completed; all future events status=scheduled; date range Oct 2025–Dec 2026;...",
           "dependencies": [
             "IFC-073"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "IFC-312",
+          "sprint": 19,
+          "status": "Completed",
+          "section": "AI/Intelligence",
+          "title": "AI chains for contacts + accounts (PG-182/PG-183 follow-up) — wire the remaining AI toggles on both entities to real LLM/embedding consumers: aiEnrichment (external enrichment API + provider adapter, shared across entities), aiTagSuggestions (LLM prompt + surface on detail pages), aiInsightGeneration (LLM chain writing to {Contact,Account}AIInsight + surface), aiAutoReplyDrafting (contact inbox), aiIndustryInference (account-only LLM classifier that picks the best AccountIndustryOption), aiAccountScoring (account-only LLM scorer that writes to the Account score field).",
+          "description": "AI chains for contacts + accounts (PG-182/PG-183 follow-up) — wire the remaining AI toggles on both entities to real LLM/embedding consumers: aiEnrichment (external enrichment API + provider adapter, shared across entities), aiTagSuggestions (LLM prompt + surface on detail pages), aiInsightGeneration (LLM chain writing to {Contact,Account}AIInsight + surface), aiAutoReplyDrafting (contact inbox), aiIndustryInference (account-only LLM classifier that picks the best AccountIndustryOption), aiAccountScoring (account-only LLM scorer that writes to the Account score field).",
+          "summary": "Originally attested 2026-04-22 with verdict COMPLETE, but a 2026-04-24 code audit (/task-code-audit) identified 7 findings (2 High, 4 Medium, 1 Low) that contradicted the attestation......",
+          "definitionOfDone": "Each AI toggle reads the tenant flag from the matching AutomationSetting before consuming the chain; aiEnrichment (contact+account) backfills empty fields on create via a shared enrichment adapter; aiTagSuggestions renders suggestions on both detail pages; aiInsightGeneration writes to {Contact,Account}AIInsight (both models already exist) and renders on the detail page; aiAutoReplyDrafting drafts contact inbox replies (review-before-send); aiIndustryInference classifies an account against AccountIndustryOption vocabulary; aiAccountScoring writes to Account score + records provenance; >=90% scoped coverage on chain orchestration; AI safety guardrails per stoa-intelligence",
+          "definitionOfDoneSnapshot": "Each AI toggle reads the tenant flag from the matching AutomationSetting before consuming the chain; aiEnrichment (contact+account) backfills empty fields on create via a shared enrichment adapter;...",
+          "dependencies": [
+            "PG-182",
+            "PG-183",
+            "IFC-310"
+          ],
+          "attestation": {
+            "exists": true,
+            "path": ".specify/sprints/sprint-19/attestations/IFC-312/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-04-24T20:48:00Z",
+            "sprintFolder": 19
+          },
+          "validationSummary": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 5,
+            "met": 2,
+            "missed": 3
+          }
+        },
+        {
+          "taskId": "PG-210",
+          "sprint": 19,
+          "status": "Backlog",
+          "section": "Core CRM",
+          "title": "IFC-311 reassign UI wiring follow-up (contacts + accounts) — wire the four new tRPC procedures shipped by IFC-311 (api.contact.reassign, api.contact.bulkReassign, api.account.reassign, api.account.bulkReassign) into real UI so the notifyOnOwnerChange Cat-1 toggle is reachable for end users on both entities. Source: IFC-311 post-completion code review Finding 1 — all four procedures are dead-on-arrival at runtime (zero direct UI callers). The account SINGLE-reassign path is transitively reachable via AccountDetail.tsx:152 → api.account.assignOwner (refactored in IFC-311 to delegate to performAccountReassign, so the notification fires), but api.account.bulkReassign is fully orphaned and the account detail page still calls the legacy name. Scope: (a) contacts-list bulk-actions bar exposes a Reassign action that calls contact.bulkReassign; (b) contact detail page actions expose a Reassign option that calls contact.reassign; (c) accounts-list bulk-actions bar exposes a Reassign action that calls account.bulkReassign (brand-new UI surface — no legacy shim covers this); (d) migrate AccountDetail.tsx:152 from api.account.assignOwner.useMutation to api.account.reassign.useMutation so the canonical IFC-311 name is the production caller (assignOwner stays as a deprecated legacy alias); (e) one integration test per entity that exercises the toggle flipping the notification path end-to-end. Backend API surface is already shipped by IFC-311 — this task is UI + wiring + one cosmetic endpoint migration only.",
+          "description": "IFC-311 reassign UI wiring follow-up (contacts + accounts) — wire the four new tRPC procedures shipped by IFC-311 (api.contact.reassign, api.contact.bulkReassign, api.account.reassign, api.account.bulkReassign) into real UI so the notifyOnOwnerChange Cat-1 toggle is reachable for end users on both entities. Source: IFC-311 post-completion code review Finding 1 — all four procedures are dead-on-arrival at runtime (zero direct UI callers). The account SINGLE-reassign path is transitively reachable via AccountDetail.tsx:152 → api.account.assignOwner (refactored in IFC-311 to delegate to performAccountReassign, so the notification fires), but api.account.bulkReassign is fully orphaned and the account detail page still calls the legacy name. Scope: (a) contacts-list bulk-actions bar exposes a Reassign action that calls contact.bulkReassign; (b) contact detail page actions expose a Reassign option that calls contact.reassign; (c) accounts-list bulk-actions bar exposes a Reassign action that calls account.bulkReassign (brand-new UI surface — no legacy shim covers this); (d) migrate AccountDetail.tsx:152 from api.account.assignOwner.useMutation to api.account.reassign.useMutation so the canonical IFC-311 name is the production caller (assignOwner stays as a deprecated legacy alias); (e) one integration test per entity that exercises the toggle flipping the notification path end-to-end. Backend API surface is already shipped by IFC-311 — this task is UI + wiring + one cosmetic endpoint migration only.",
+          "summary": "api.contact.reassign + api.contact.bulkReassign + api.account.reassign + api.account.bulkReassign each have >=1 production UI caller in apps/web/src;...",
+          "definitionOfDone": "api.contact.reassign + api.contact.bulkReassign + api.account.reassign + api.account.bulkReassign each have >=1 production UI caller in apps/web/src; contacts-list bulk-actions Reassign calls contact.bulkReassign with selected ids + target owner; contact detail Reassign calls contact.reassign; accounts-list bulk-actions Reassign calls account.bulkReassign; AccountDetail.tsx migrated from account.assignOwner to account.reassign (canonical); two integration tests (one per entity) verify both parties receive the matching *_reassigned notification when notifyOnOwnerChange=true; Lighthouse >=90 on contacts-list and accounts-list",
+          "definitionOfDoneSnapshot": "api.contact.reassign + api.contact.bulkReassign + api.account.reassign + api.account.bulkReassign each have >=1 production UI caller in apps/web/src;...",
+          "dependencies": [
+            "IFC-311"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "IFC-313",
+          "sprint": 19,
+          "status": "Backlog",
+          "section": "AI/Intelligence",
+          "title": "Real inbox integration - contact.draftReply real-thread resolver. IFC-312 audit fix F5 follow-up: the draftReply procedure currently requires the client to supply a full emailThread array (server returns PRECONDITION_FAILED otherwise). IFC-313 replaces this with a server-side resolver that takes input.emailThreadId and fetches the actual ContactEmailThread history (pending real inbox ingestion infra - to be scoped separately). Keep the client-supplied emailThread path as a fallback for power users / integrations.",
+          "description": "Real inbox integration - contact.draftReply real-thread resolver. IFC-312 audit fix F5 follow-up: the draftReply procedure currently requires the client to supply a full emailThread array (server returns PRECONDITION_FAILED otherwise). IFC-313 replaces this with a server-side resolver that takes input.emailThreadId and fetches the actual ContactEmailThread history (pending real inbox ingestion infra - to be scoped separately). Keep the client-supplied emailThread path as a fallback for power users / integrations.",
+          "summary": "contact.draftReply resolves emailThreadId to real thread messages when supplied; client-supplied emailThread remains as fallback; zero placeholder drafts persisted in production; regression on IFC-312 assertions; scoped coverage >=90%",
+          "definitionOfDone": "contact.draftReply resolves emailThreadId to real thread messages when supplied; client-supplied emailThread remains as fallback; zero placeholder drafts persisted in production; regression on IFC-312 assertions; scoped coverage >=90%",
+          "definitionOfDoneSnapshot": "contact.draftReply resolves emailThreadId to real thread messages when supplied; client-supplied emailThread remains as fallback; zero placeholder drafts persisted in production; regression on IFC-312 assertions; scoped coverage >=90%",
+          "dependencies": [
+            "IFC-312"
           ],
           "attestation": {
             "exists": false,
