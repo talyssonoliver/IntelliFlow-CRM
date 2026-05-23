@@ -48,3 +48,8 @@ e648b333cf09 chore(ci): PR #69 squashed body line 130 chars ("Admin-merged:..." 
 # match Conventional Commits subject-case. Future commits gated as usual.
 5cc713068838 fix(IFC-212): "OTel collector config..." subject upper-case — pushed, cannot rewrite
 161402780303 fix(IFC-212): "Redis monitoring snapshot bridge..." subject upper-case — pushed, cannot rewrite
+
+# PR #59 squash-merge commit on main — subject "Redis monitoring snapshot..."
+# starts with proper noun "Redis" (Conventional Commits flags this). Same
+# pattern as 214d0abd7fab (proper noun "Linux"). Pushed to main; cannot rewrite.
+1d90766e687e feat(IFC-212): PR #59 squashed subject — proper noun "Redis" upper-case
